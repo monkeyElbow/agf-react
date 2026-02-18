@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 import { sitePages } from '../data/siteMap';
-import { contentBlockBlueprintsByPath, genericWpBlockBlueprint } from '../data/contentBlockBlueprints';
+import { contentBlockBlueprintsByPath, genericPageBlockBlueprint } from '../data/contentBlockBlueprints';
 
 const STORAGE_KEY = 'agf-content-admin-v1';
 const ContentAdminContext = createContext(null);
@@ -57,7 +57,7 @@ function buildDefaultBlocks() {
     }
 
     const blueprint = contentBlockBlueprintsByPath[page.path]
-      || (page.source ? genericWpBlockBlueprint() : []);
+      || genericPageBlockBlueprint();
 
     blocksByPath[page.path] = blueprint.map((block) => ({
       ...block,

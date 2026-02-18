@@ -1,6 +1,6 @@
 export default function PageShell({ title, source, children }) {
-  const badgeText = source === null ? 'React-managed page' : source ? 'WP source mapped' : 'WP source missing';
-  const badgeClass = source === null ? ' is-native' : source ? ' is-mapped' : '';
+  const badgeText = source ? 'Mapped page' : 'React-managed page';
+  const badgeClass = source ? ' is-mapped' : ' is-native';
 
   return (
     <section className="page-shell ag-panel-rail">

@@ -3,14 +3,13 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import SiteLayout from './components/SiteLayout';
-import BlankPage from './components/BlankPage';
+import NativeContentPage from './components/NativeContentPage';
 import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
 import AdminContentPage from './pages/AdminContentPage';
 import PageBreadcrumbs from './components/PageBreadcrumbs';
 import { pageByPath, sitePages } from './data/siteMap';
 
-const WpContentPage = lazy(() => import('./components/WpContentPage'));
 const LoansPage = lazy(() => import('./pages/LoansPage'));
 const InvestmentsPage = lazy(() => import('./pages/InvestmentsPage'));
 const RetirementPage = lazy(() => import('./pages/RetirementPage'));
@@ -91,15 +90,7 @@ function PageRoute({ page }) {
     );
   }
 
-  if (page.source) {
-    return (
-      <Suspense fallback={<div className="wp-page-wrap"><div className="wp-content-shell wp-content-loading" /></div>}>
-        <WpContentPage path={page.path} />
-      </Suspense>
-    );
-  }
-
-  return <BlankPage title={page.title} source={page.source} />;
+  return <NativeContentPage page={page} />;
 }
 
 export default function App() {

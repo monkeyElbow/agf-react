@@ -68,7 +68,7 @@ export default function AdminContentPage() {
   const parentOptions = editablePages.filter((page) => page.path !== selectedPath);
 
   return (
-    <div className="wp-page-wrap admin-content-page-wrap">
+    <div className="page-wrap admin-content-page-wrap">
       <PageShell title="Admin: Content Blocks" source={pageByPath['/admin/content']?.source ?? null}>
         <div className="admin-info-note">
           Static-to-dynamic migration control center. Keep blocks `static` by default, then switch each block to

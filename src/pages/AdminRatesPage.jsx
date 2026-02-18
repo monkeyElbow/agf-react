@@ -60,7 +60,7 @@ export default function AdminRatesPage() {
   }
 
   return (
-    <div className="wp-page-wrap">
+    <div className="page-wrap">
       <PageShell title="Admin: Rates" source={pageByPath['/rates'].source}>
         <div className="admin-info-note">
           Edit both public rate tables here. Changes update the Rates page and the Investments rates section.

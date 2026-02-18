@@ -970,6 +970,84 @@
   margin: 5px auto;
 }
 
+.native-info-page .service-native-hero .ag-panel-rail {
+  min-height: clamp(220px, 28vw, 320px);
+}
+
+.native-info-page.is-compact .service-native-hero .ag-panel-rail {
+  min-height: clamp(170px, 18vw, 230px);
+}
+
+.native-info-page.is-compact .service-native-hero h1 {
+  font-size: clamp(2.1rem, 5.5vw, 3.7rem);
+  letter-spacing: -2px;
+}
+
+.native-info-page .service-native-intro p {
+  max-width: 80ch;
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+}
+
+.native-info-link-list {
+  margin: 1rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.native-info-link-list li {
+  margin: 0.4rem 0;
+}
+
+.native-info-link-list a {
+  color: var(--ag-color-atlantean-dark);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.native-info-link-list a:hover {
+  color: var(--ag-color-atlantean);
+  text-decoration: underline;
+}
+
+.native-info-links-block + .native-info-links-block {
+  margin-top: 2rem;
+}
+
+.native-info-links-block h3 {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.7vw, 2rem);
+  line-height: 1.1;
+}
+
+.native-faq-list {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.native-faq-item {
+  border: 1px solid rgba(65, 64, 66, 0.2);
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.native-faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+  color: var(--ag-color-super-grey);
+  padding: 0.8rem 0.9rem;
+}
+
+.native-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.native-faq-item p {
+  margin: 0;
+  padding: 0 0.9rem 0.9rem;
+}
+
 @media (max-width: 1180px) {
   .service-native-grid,
   .service-native-grid.is-four {

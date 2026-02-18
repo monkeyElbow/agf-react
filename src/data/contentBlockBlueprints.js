@@ -184,15 +184,15 @@ export const contentBlockBlueprintsByPath = {
   ],
 };
 
-export function genericWpBlockBlueprint() {
+export function genericPageBlockBlueprint() {
   return [
     {
-      id: 'wp_content',
-      name: 'Mapped WP Content',
-      kind: 'wp_content',
+      id: 'page_content',
+      name: 'Page Content',
+      kind: 'content',
       mode: 'static',
       settings: {
-        notes: 'Legacy content mapped from exported WP page.',
+        notes: 'Static content placeholder for this route.',
       },
       editableFields: [
         { id: 'notes', label: 'Migration notes', type: 'text' },

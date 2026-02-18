@@ -1,4 +1,4 @@
-/* Match the WP customizer variables that were inline in the saved HTML. */
+/* Project design tokens */
 :root {
   --ag-shell-inline: 20px;
   --ag-nav-inline: 36px;
@@ -13,18 +13,6 @@
   --ag-section-wide-max: var(--ag-panel-wide-max);
   --ag-form-content-max: 760px;
   --ag-section-gutter: var(--ag-panel-gutter);
-  --wp--style--global--content-size: 1200px;
-  --wp--style--global--wide-size: 1400px;
-
-  /* WP preset tokens used by inline block styles from exported pages. */
-  --wp--preset--spacing--20: 0.44rem;
-  --wp--preset--spacing--30: 0.67rem;
-  --wp--preset--spacing--40: 1rem;
-  --wp--preset--spacing--50: 1.5rem;
-  --wp--preset--spacing--60: 2.25rem;
-  --wp--preset--spacing--70: 3.38rem;
-  --wp--preset--spacing--80: 5.06rem;
-  --wp--style--block-gap: 1.5rem;
 
   /* Brand palette tokens */
   --ag-color-atlantean: #00adbb;
@@ -34,17 +22,6 @@
   --ag-color-melon: #f26660;
   --ag-color-super-grey: #414042;
   --ag-color-sandstone-soft: rgba(196, 190, 182, 0.1);
-
-  --wp--preset--color--palette-3364: var(--ag-color-atlantean-dark);
-  --wp--preset--color--palette-443: var(--ag-color-super-grey);
-  --wp--preset--color--palette-444: var(--ag-color-atlantean);
-  --wp--preset--color--palette-445: var(--ag-color-sandstone);
-  --wp--preset--color--palette-446: var(--ag-color-melon);
-  --wp--preset--color--palette-447: var(--ag-color-mango);
-  --wp--preset--color--accent: var(--ag-color-atlantean);
-  --wp--preset--color--accent-alt: var(--ag-color-atlantean-dark);
-  --wp--preset--color--on-accent: #ffffff;
-  --wp--preset--color--on-accent-alt: #f0eee8;
 
   --wpex-palette-3364-color: var(--ag-color-atlantean-dark);
   --wpex-palette-447-color: var(--ag-color-mango);

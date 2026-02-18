@@ -22,3 +22,4 @@ dev-notes/
 
 # Legacy WP saved-page exports (not app source of truth)
 public/wp-pages/
+public/wp-content/
