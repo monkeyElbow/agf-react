@@ -4,6 +4,8 @@ import investIcon from '../../assets/service-icons/Invest.png';
 import loansIcon from '../../assets/service-icons/Loans.png';
 import retireIcon from '../../assets/service-icons/Retire.png';
 import ratesIcon from '../../assets/service-icons/chart.png';
+import ministersHousingImage from '../../assets/ministers-housing.jpg';
+import doTheMathImage from '../../assets/do-the-math.jpg';
 
 export const homePageBlocks = [
   {
@@ -66,7 +68,7 @@ export const homePageBlocks = [
     body: 'This significant tax-saving benefit is available to retired ministers through the AGFinancial 403(b) plan.',
     ctaLabel: 'See the details',
     ctaPath: '/services/retirement/403b#housing',
-    imagePath: '/wp-pages/home/AGFinancial_files/pexels-curtis-adams-1694007-11593507_sm.jpg',
+    imagePath: ministersHousingImage,
     imageAlt: 'Retired couple reviewing financial paperwork',
     imageOnLeft: true,
     sand: true,
@@ -78,7 +80,7 @@ export const homePageBlocks = [
     body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
     ctaLabel: 'Use the calculators',
     ctaPath: '/calculators',
-    imagePath: '/wp-pages/home/AGFinancial_files/kub-liz-GGnTOfvlmiE-unsplash.jpg',
+    imagePath: doTheMathImage,
     imageAlt: 'Calculator and notebook',
     imageOnLeft: false,
   },
