@@ -1,5 +1,24 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+coverage/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editor / OS noise
 .DS_Store
 .vscode/
+.idea/
+*.swp
+
+# Local project notes and scratch files
 dev-notes/
+
+# Legacy WP saved-page exports (not app source of truth)
+public/wp-pages/
