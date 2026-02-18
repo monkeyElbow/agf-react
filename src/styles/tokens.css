@@ -22,37 +22,8 @@
   --ag-color-melon: #f26660;
   --ag-color-super-grey: #414042;
   --ag-color-sandstone-soft: rgba(196, 190, 182, 0.1);
-
-  --wpex-palette-3364-color: var(--ag-color-atlantean-dark);
-  --wpex-palette-447-color: var(--ag-color-mango);
-  --wpex-palette-446-color: var(--ag-color-melon);
-  --wpex-palette-445-color: var(--ag-color-sandstone);
-  --wpex-palette-444-color: var(--ag-color-atlantean);
-  --wpex-palette-443-color: var(--ag-color-super-grey);
-
-  --wpex-accent: var(--ag-color-atlantean);
-  --wpex-accent-alt: var(--ag-color-atlantean-dark);
-  --wpex-border-main: #bebebe;
-  --wpex-text-1: var(--ag-color-super-grey);
-  --wpex-text-2: #000000;
-  --wpex-link-color: var(--wpex-palette-444-color);
-  --wpex-hover-heading-link-color: var(--wpex-palette-444-color);
-  --wpex-btn-border-radius: 6px;
-  --wpex-btn-bg: var(--wpex-palette-3364-color);
-  --wpex-hover-btn-bg: var(--wpex-palette-444-color);
-  --wpex-active-btn-bg: var(--wpex-palette-446-color);
-  --wpex-btn-border-width: 1px;
-  --wpex-primary-bottom-space: 0px;
-  --wpex-sidr-gutter: 10px;
-  --wpex-vc-column-inner-margin-bottom: 40px;
-  --wpex-page-animation-loader-accent: var(--wpex-palette-444-color);
-  --wpex-page-animation-loader-color: var(--wpex-palette-443-color);
-
-  --wpex-body-font-family: helvetica-neue-lt-pro;
-  --wpex-body-font-size: 16px;
-  --wpex-body-line-height: 1.75;
-  --wpex-body-letter-spacing: 0.25px;
-  --wpex-heading-font-weight: 700;
-  --wpex-btn-font-family: helvetica-neue-lt-pro;
-  --wpex-btn-font-weight: 600;
+  --ag-color-border-main: #bebebe;
+  --ag-font-size-body: 16px;
+  --ag-line-height-body: 1.75;
+  --ag-letter-spacing-body: 0px;
 }

@@ -123,7 +123,7 @@ function extractMainContent(fileContent) {
 
   const blogLayoutMatch = fileContent.match(/<div id="content-wrap"[\s\S]*?<\/aside>\s*<\/div>/i);
   if (blogLayoutMatch) {
-    return `<section class="single-page-article wpex-clr">${blogLayoutMatch[0]}</section>`;
+    return `<section class="single-page-article agf-content-shell">${blogLayoutMatch[0]}</section>`;
   }
 
   const fallbackMatch = fileContent.match(/<div class="single-page-content[\s\S]*?<\/div>\s*<\/article>/i);
@@ -132,7 +132,6 @@ function extractMainContent(fileContent) {
 
 function extractInlineCss(fileContent) {
   const styleIds = [
-    'wpex-css',
     'core-block-supports-inline-css',
     'block-style-variation-styles-inline-css',
     'wp-block-library-inline-css',

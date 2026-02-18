@@ -40,7 +40,7 @@ function HeroBlock({ block }) {
         <p className="home-native-eyebrow">
           {block.eyebrowPrefix} <mark>{block.highlight}</mark>.
         </p>
-        <h1 className="home-native-title">
+        <h1 className="home-native-title line1 line2">
           {block.titlePrefix} <mark>{block.accentWord}</mark>.
         </h1>
         <Link to={block.ctaPath} className="home-native-cta">{block.ctaLabel}</Link>

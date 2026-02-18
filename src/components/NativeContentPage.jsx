@@ -21,13 +21,13 @@ function Action({ item }) {
 
 function HeroTitle({ hero }) {
   if (!hero?.highlight) {
-    return <h1>{hero?.title}</h1>;
+    return <h1 className="line1 line2">{hero?.title}</h1>;
   }
 
   const source = String(hero.title || '');
   const splitIdx = source.toLowerCase().indexOf(String(hero.highlight).toLowerCase());
   if (splitIdx < 0) {
-    return <h1>{source}</h1>;
+    return <h1 className="line1 line2">{source}</h1>;
   }
 
   const before = source.slice(0, splitIdx);
@@ -35,7 +35,7 @@ function HeroTitle({ hero }) {
   const after = source.slice(splitIdx + String(hero.highlight).length);
 
   return (
-    <h1>
+    <h1 className="line1 line2">
       {before}
       <mark>{exact}</mark>
       {after}

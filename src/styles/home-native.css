@@ -586,7 +586,7 @@
 }
 
 .services-pie-hero {
-  background: #f0eee8;
+  background: #ffffff;
   padding: clamp(2rem, 6vw, 4rem) 0;
 }
 
@@ -705,14 +705,19 @@
 
 .services-native-card ul {
   margin: 0;
-  padding-left: 1.1rem;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
 }
 
 .services-native-card li {
   margin: 0.38rem 0;
 }
 
-.services-native-card li a {
+.services-native-card li a,
+.services-native-card li a:visited {
   display: inline-flex;
   align-items: center;
   min-height: 34px;
@@ -720,9 +725,9 @@
   border-radius: 6px;
   border: 1px solid rgba(65, 64, 66, 0.22);
   background: #ffffff;
-  text-decoration: none;
+  text-decoration: none !important;
   font-weight: 700;
-  color: var(--ag-color-super-grey);
+  color: var(--ag-color-super-grey) !important;
   transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
 }
 
@@ -745,7 +750,8 @@
 }
 
 .services-native-matters h2 mark {
-  color: #ffffff;
+  background: transparent;
+  color: var(--ag-color-mango);
 }
 
 .services-native-matters p {

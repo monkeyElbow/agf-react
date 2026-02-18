@@ -53,7 +53,7 @@ export default function InvestmentsPage() {
     <div ref={pageRef} className="service-native-page investments-native-page">
       <section className="service-native-hero">
         <div className="ag-panel-rail">
-          <h1>
+          <h1 className="line1 line2">
             Your <mark>investments</mark>. Your <mark>faith</mark>. Better together.
           </h1>
         </div>

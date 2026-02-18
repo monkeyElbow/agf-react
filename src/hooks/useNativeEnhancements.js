@@ -46,6 +46,41 @@ export default function useNativeEnhancements(containerRef) {
         return;
       }
 
+      const line1 = root.querySelector('.line1');
+      const line2 = root.querySelector('.line2');
+
+      if (line1 || line2) {
+        const animateSlideIn = (node, delayMs) => {
+          if (!node || node.dataset.animDone === '1') {
+            return;
+          }
+          node.dataset.animDone = '1';
+          node.style.opacity = '0';
+          node.style.transform = 'translateX(200px)';
+          node.style.transition = 'opacity 1000ms ease, transform 1000ms ease';
+
+          if (prefersReducedMotion) {
+            node.style.opacity = '1';
+            node.style.transform = 'translateX(0)';
+            return;
+          }
+
+          const timer = window.setTimeout(() => {
+            node.style.opacity = '1';
+            node.style.transform = 'translateX(0)';
+          }, delayMs);
+          cleanups.push(() => {
+            window.clearTimeout(timer);
+            node.style.opacity = '1';
+            node.style.transform = 'translateX(0)';
+          });
+        };
+
+        animateSlideIn(line1, 0);
+        animateSlideIn(line2, 300);
+        return;
+      }
+
       const lineBlur = root.querySelector('.lineblur');
       const lineB = root.querySelector('.lineB');
 

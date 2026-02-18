@@ -13,17 +13,17 @@
 body {
   margin: 0;
   background: #ffffff;
-  color: var(--wpex-text-1);
+  color: var(--ag-color-super-grey);
   font-family: var(--ag-font-body);
-  font-size: var(--wpex-body-font-size);
-  line-height: var(--wpex-body-line-height);
-  letter-spacing: var(--wpex-body-letter-spacing);
+  font-size: var(--ag-font-size-body);
+  line-height: var(--ag-line-height-body);
+  letter-spacing: var(--ag-letter-spacing-body);
   overflow-x: clip;
 }
 
 .site-nav {
   background: #fff;
-  border-bottom: 1px solid var(--wpex-border-main);
+  border-bottom: 1px solid var(--ag-color-border-main);
   position: sticky;
   top: 0;
   z-index: 40;
@@ -51,9 +51,9 @@ body {
 
 .site-nav-toggle {
   margin-left: auto;
-  border: 1px solid var(--wpex-border-main);
+  border: 1px solid var(--ag-color-border-main);
   background: #ffffff;
-  color: var(--wpex-palette-443-color);
+  color: var(--ag-color-super-grey);
   border-radius: 4px;
   padding: 0.45rem 0.7rem;
   font-size: 0.9rem;
@@ -91,7 +91,7 @@ body {
 .site-nav-group-link,
 .site-nav-group-toggle,
 .site-nav-dropdown a {
-  color: var(--wpex-palette-443-color);
+  color: var(--ag-color-super-grey);
   font-family: var(--ag-font-body);
   font-size: 15px;
   line-height: 1;
@@ -114,7 +114,24 @@ body {
 .site-nav-group-toggle:hover,
 .site-nav-dropdown a:hover {
   color: #ffffff;
-  background: var(--wpex-palette-444-color);
+  background: var(--ag-color-atlantean);
+}
+
+/* Keep a main nav label + arrow visually unified on hover/focus/open. */
+.site-nav-group-head:hover .site-nav-group-link,
+.site-nav-group-head:hover .site-nav-group-toggle,
+.site-nav-group:focus-within .site-nav-group-link,
+.site-nav-group:focus-within .site-nav-group-toggle,
+.site-nav-group.is-open .site-nav-group-link,
+.site-nav-group.is-open .site-nav-group-toggle {
+  color: #ffffff;
+  background: var(--ag-color-atlantean);
+}
+
+.site-nav-group-head:hover .site-nav-group-toggle,
+.site-nav-group:focus-within .site-nav-group-toggle,
+.site-nav-group.is-open .site-nav-group-toggle {
+  border-left-color: rgba(255, 255, 255, 0.35);
 }
 
 .site-nav a:focus,
@@ -125,14 +142,14 @@ body {
 
 .site-nav a:focus-visible,
 .site-nav button:focus-visible {
-  outline: 2px solid var(--wpex-palette-3364-color);
+  outline: 2px solid var(--ag-color-atlantean-dark);
   outline-offset: 2px;
 }
 
 .site-nav-link.is-active,
 .site-nav-dropdown a.is-active {
   font-weight: 700;
-  color: var(--wpex-palette-3364-color);
+  color: var(--ag-color-atlantean-dark);
 }
 
 .site-nav-group {
@@ -210,6 +227,14 @@ body {
 }
 
 @media (min-width: 1100px) {
+  .site-nav-inner {
+    align-items: stretch;
+  }
+
+  .site-brand {
+    align-self: center;
+  }
+
   .site-nav-toggle {
     display: none;
   }
@@ -218,7 +243,8 @@ body {
     margin-left: auto;
     width: auto;
     flex: 1;
-    display: block;
+    display: flex;
+    align-items: stretch;
     min-width: 0;
   }
 
@@ -230,6 +256,7 @@ body {
     flex-wrap: nowrap;
     justify-content: flex-end;
     width: 100%;
+    height: 100%;
   }
 
   .site-nav-links-primary {
@@ -238,6 +265,7 @@ body {
     gap: clamp(0.4rem, 0.85vw, 0.8rem);
     margin-right: 0;
     flex-wrap: nowrap;
+    height: 100%;
   }
 
   .site-nav-links-utility {
@@ -247,12 +275,14 @@ body {
     margin-left: 0;
     flex-shrink: 0;
     flex-wrap: nowrap;
+    height: 100%;
   }
 
   .site-nav-group {
     position: relative;
     display: flex;
     align-items: stretch;
+    height: 100%;
   }
 
   .site-nav-group.is-admin .site-nav-dropdown {
@@ -264,14 +294,16 @@ body {
   .site-nav-group-toggle,
   .site-nav-link {
     align-self: stretch;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    height: 100%;
+    padding-top: 0;
+    padding-bottom: 0;
     padding-left: 0.62rem;
     padding-right: 0.62rem;
   }
 
   .site-nav-group-head {
     display: flex;
+    height: 100%;
   }
 
   .site-nav-group-toggle {
@@ -476,7 +508,7 @@ body {
 }
 
 .site-footer-col a:hover {
-  color: var(--wpex-palette-444-color);
+  color: var(--ag-color-atlantean);
 }
 
 .site-footer-brand {
@@ -508,7 +540,7 @@ body {
 }
 
 .site-footer-social a:hover {
-  color: var(--wpex-palette-444-color);
+  color: var(--ag-color-atlantean);
 }
 
 .site-footer-social svg {
@@ -568,7 +600,7 @@ body {
 }
 
 .native-breadcrumbs {
-  background: var(--wpex-palette-443-color);
+  background: var(--ag-color-super-grey);
   color: #fefefe;
   width: 100%;
 }
@@ -716,7 +748,7 @@ body {
 
 .page-shell {
   border-radius: 6px;
-  border: 1px solid var(--wpex-border-main);
+  border: 1px solid var(--ag-color-border-main);
   background: #ffffff;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
   margin: clamp(1.2rem, 3.4vw, 2.4rem) auto;
@@ -871,12 +903,12 @@ body {
 
 .action-btn-primary {
   color: #ffffff;
-  background: var(--wpex-palette-3364-color);
-  border-color: var(--wpex-palette-3364-color);
+  background: var(--ag-color-atlantean-dark);
+  border-color: var(--ag-color-atlantean-dark);
 }
 
 .action-btn-outline {
-  color: var(--wpex-palette-443-color);
+  color: var(--ag-color-super-grey);
   background: #ffffff;
   border-color: #97a6b0;
 }
@@ -969,4 +1001,3 @@ body {
     display: none;
   }
 }
-

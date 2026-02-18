@@ -116,7 +116,7 @@ export default function ServicesPage() {
   const activeSlice = serviceSlices[hoveredIndex ?? activeIndex];
 
   return (
-    <div ref={pageRef} className="services-native-page">
+    <div ref={pageRef} className="service-native-page services-native-page">
       <section className="services-pie-hero">
         <div className="ag-panel-rail services-pie-hero-grid">
           <div className="services-pie-wrap fade-up">
@@ -140,7 +140,7 @@ export default function ServicesPage() {
           </div>
 
           <div className="services-pie-title fade-up">
-            <h1 style={{ color: activeSlice.color }}>{activeSlice.title}</h1>
+            <h1 className="line1 line2" style={{ color: activeSlice.color }}>{activeSlice.title}</h1>
           </div>
         </div>
       </section>
