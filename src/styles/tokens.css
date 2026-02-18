@@ -1,0 +1,81 @@
+/* Match the WP customizer variables that were inline in the saved HTML. */
+:root {
+  --ag-shell-inline: 20px;
+  --ag-nav-inline: 36px;
+  --ag-font-body: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --ag-font-heading: 'avenir-next-world', 'Avenir Next', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --ag-font-fallback: 'Helvetica Neue', Arial, sans-serif;
+
+  --ag-panel-content-max: 1040px;
+  --ag-panel-wide-max: 1480px;
+  --ag-panel-gutter: clamp(2.5rem, 9vw, 8rem);
+  --ag-section-content-max: var(--ag-panel-content-max);
+  --ag-section-wide-max: var(--ag-panel-wide-max);
+  --ag-form-content-max: 760px;
+  --ag-section-gutter: var(--ag-panel-gutter);
+  --wp--style--global--content-size: 1200px;
+  --wp--style--global--wide-size: 1400px;
+
+  /* WP preset tokens used by inline block styles from exported pages. */
+  --wp--preset--spacing--20: 0.44rem;
+  --wp--preset--spacing--30: 0.67rem;
+  --wp--preset--spacing--40: 1rem;
+  --wp--preset--spacing--50: 1.5rem;
+  --wp--preset--spacing--60: 2.25rem;
+  --wp--preset--spacing--70: 3.38rem;
+  --wp--preset--spacing--80: 5.06rem;
+  --wp--style--block-gap: 1.5rem;
+
+  /* Brand palette tokens */
+  --ag-color-atlantean: #00adbb;
+  --ag-color-atlantean-dark: #008aab;
+  --ag-color-mango: #faa31a;
+  --ag-color-sandstone: #c4beb6;
+  --ag-color-melon: #f26660;
+  --ag-color-super-grey: #414042;
+  --ag-color-sandstone-soft: rgba(196, 190, 182, 0.1);
+
+  --wp--preset--color--palette-3364: var(--ag-color-atlantean-dark);
+  --wp--preset--color--palette-443: var(--ag-color-super-grey);
+  --wp--preset--color--palette-444: var(--ag-color-atlantean);
+  --wp--preset--color--palette-445: var(--ag-color-sandstone);
+  --wp--preset--color--palette-446: var(--ag-color-melon);
+  --wp--preset--color--palette-447: var(--ag-color-mango);
+  --wp--preset--color--accent: var(--ag-color-atlantean);
+  --wp--preset--color--accent-alt: var(--ag-color-atlantean-dark);
+  --wp--preset--color--on-accent: #ffffff;
+  --wp--preset--color--on-accent-alt: #f0eee8;
+
+  --wpex-palette-3364-color: var(--ag-color-atlantean-dark);
+  --wpex-palette-447-color: var(--ag-color-mango);
+  --wpex-palette-446-color: var(--ag-color-melon);
+  --wpex-palette-445-color: var(--ag-color-sandstone);
+  --wpex-palette-444-color: var(--ag-color-atlantean);
+  --wpex-palette-443-color: var(--ag-color-super-grey);
+
+  --wpex-accent: var(--ag-color-atlantean);
+  --wpex-accent-alt: var(--ag-color-atlantean-dark);
+  --wpex-border-main: #bebebe;
+  --wpex-text-1: var(--ag-color-super-grey);
+  --wpex-text-2: #000000;
+  --wpex-link-color: var(--wpex-palette-444-color);
+  --wpex-hover-heading-link-color: var(--wpex-palette-444-color);
+  --wpex-btn-border-radius: 6px;
+  --wpex-btn-bg: var(--wpex-palette-3364-color);
+  --wpex-hover-btn-bg: var(--wpex-palette-444-color);
+  --wpex-active-btn-bg: var(--wpex-palette-446-color);
+  --wpex-btn-border-width: 1px;
+  --wpex-primary-bottom-space: 0px;
+  --wpex-sidr-gutter: 10px;
+  --wpex-vc-column-inner-margin-bottom: 40px;
+  --wpex-page-animation-loader-accent: var(--wpex-palette-444-color);
+  --wpex-page-animation-loader-color: var(--wpex-palette-443-color);
+
+  --wpex-body-font-family: helvetica-neue-lt-pro;
+  --wpex-body-font-size: 16px;
+  --wpex-body-line-height: 1.75;
+  --wpex-body-letter-spacing: 0.25px;
+  --wpex-heading-font-weight: 700;
+  --wpex-btn-font-family: helvetica-neue-lt-pro;
+  --wpex-btn-font-weight: 600;
+}

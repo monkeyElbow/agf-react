@@ -1,0 +1,22 @@
+{
+  "name": "agf-react",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "search:index": "node scripts/build-search-index.cjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "preview:prod": "vite preview --port 4173 --strictPort"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.4",
+    "vite": "^7.3.1"
+  }
+}

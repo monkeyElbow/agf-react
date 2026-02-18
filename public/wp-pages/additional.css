@@ -1,0 +1,820 @@
+/* Margin for blog */
+.entries{
+	margin-left:25px!important;
+}
+
+
+/* sidebar menu */
+.modern-menu-widget__link-text{
+	padding:5px
+}
+.wpex-icon{padding-left:5px}
+
+.wpex-border-solid{
+	border:none !important;
+}
+
+/* restyle sidebar manually */
+.wpex-border li {
+	transition: transform 0.2s ease;
+}
+
+.wpex-border li:hover {
+	transform: translateX(-4px);
+}
+
+
+
+/* Global responsive H1 
+h1,
+h1.wp-block-heading {
+  font-size: clamp(8rem, 2.8vw + 0.5rem, 3.5rem) !important;
+  line-height: 1.1 !important;
+}
+
+@media (max-width: 768px) {
+  h1,
+  h1.wp-block-heading {
+    font-size: 62px !important; 
+    line-height: 1.15 !important;
+  }
+}
+*/
+
+
+
+/* Footer Layout Fix */
+#footer-widgets {
+  display: flex;
+  justify-content: space-between; /* keeps space between left columns & right logo */
+  flex-wrap: wrap;
+}
+
+/* Make sure first 4 stay grouped left */
+#footer-widgets .footer-box.col-1,
+#footer-widgets .footer-box.col-2,
+#footer-widgets .footer-box.col-3,
+#footer-widgets .footer-box.col-4 {
+  text-align: left;
+}
+
+/* New rule for the logo column */
+#footer-widgets .footer-box.col-5 {
+  margin-left: auto;   /* pushes logo column to the far right */
+  text-align: right;
+  order: 5;
+}
+
+/* If logo container needs flex adjustment */
+#footer-widgets .footer-box.col-5 .footer-widget > div {
+  margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
+	min-height:200px
+}
+@media (max-width: 768px){
+	#footer-widgets .footer-box.col-5 .footer-widget > div {
+  display: flex;
+  justify-content: center;
+	min-height:200px
+}
+	
+}
+
+/* Mobile override: center everything for stacked view - NOT USED */
+/* @media (max-width: 768px) {
+  #footer-widgets {
+    justify-content: center;
+  }
+  #footer-widgets .footer-box {
+    text-align: center !important;
+    margin-left: auto;
+    margin-right: auto;
+  }
+} */
+
+/* Style the first menu item in col-1 and col-2 to look like the title */
+#footer-widgets .col-1 .menu > li:first-child > a,
+#footer-widgets .col-2 .menu > li:first-child > a {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;              /* white text */
+  display: block;
+  margin-bottom: 10px;      /* space below like a title */
+  text-decoration: none;    /* remove underline if present */
+}
+
+/* ------------------- */
+
+/* Just hide it */
+.hide {
+    display: none !important;
+}
+
+/* search entree pad */
+.search-entry {
+	padding-left: 25px;
+}
+#content-area, #sidebar{
+	padding-left:25px;
+	padding-right:25px;
+}
+
+.page-header-title{
+	font-weight:bold !important;
+}
+/* --------------------*/
+
+
+    @media (max-width: 1000px) { /* Adjust breakpoint as needed for mobile */
+        .hideonmobile {
+            max-height:.4vh !important;
+					display:none;
+        }
+    }
+
+
+/* ------------------- */
+/* Fix mobile menu where submenu btn is not visible */
+.wpex-open-submenu {
+  right: 1rem; /* move it right slightly */
+  width: 2.5rem; /* ensure it has space */
+  overflow: visible !important;
+}
+
+.wpex-open-submenu__icon {
+  transform: none !important; /* reset if we nudged it earlier */
+}
+
+/* end mobile menu fix*/
+/* ----------------- */
+
+
+
+/* ------cards------- */
+
+/* Make parent bg white to activate */
+.card1 {
+	z-index: 1;
+	position:relative;
+  border: none !important;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.5) !important;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.5) !important;
+	border-left:1.5px solid rgba(0,125,152,.5) !important;
+		border-top:1.5px solid rgba(0,125,152,.5) !important;
+  background: linear-gradient(
+    142deg,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.85) 100%
+  );
+  
+	background-color: transparent !important;
+	
+ box-shadow: 0 4px 10px rgba(0, 125, 152, 0.25);
+  transform: translateZ(0) !important;
+  transition:
+    transform .45s ease-out,
+    box-shadow .45s ease-out,
+    z-index 0s linear .45s;
+}
+.card1:hover {
+	z-index: 10;
+box-shadow: 0 14px 30px rgba(0, 125, 152, 0.35);
+	
+	transform: scale(1.03)!important;
+}
+
+
+
+
+/* card 2 is for on-white bg*/
+.card2[style] {
+
+  background: linear-gradient(
+    142deg,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(0, 138, 171, .05) 100%
+  );
+	/*
+  background-color: transparent !important;
+	*/
+	border: none !important;
+  border-right: 1.5px solid rgba(200, 200, 200, 0.5) !important;
+  border-bottom: 1.5px solid rgba(200, 200, 200, 0.5) !important;
+	border-left:1.5px solid rgba(0,125,152,.15) !important;
+		border-top:1.5px solid rgba(0,125,152,.15) !important;
+ 
+ box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  transform: translateZ(0) !important;
+  transition:
+    transform .45s ease-out,
+    box-shadow .45s ease-out,
+    z-index 0s linear .45s;
+}
+
+.card2:hover{
+	transform: scale(1.02)!important;
+	 box-shadow: 0 10px 10px rgba(0, 0, 0, .07);
+}
+
+
+/* card3 */
+.card3{
+	z-index: 1;
+	position:relative;
+  border: none !important;
+  border-right: 1.75px solid rgba(255, 255, 255, 0.5) !important;
+  border-bottom: 1.75px solid rgba(255, 255, 255, 0.5) !important;
+	border-left:1.5px solid rgba(0,125,152,.15) !important;
+		border-top:1.5px solid rgba(0,125,152,.15) !important;	
+ box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transform: translateZ(0) !important;
+	
+	
+  transition:
+    transform .45s ease-out,
+    box-shadow .45s ease-out,
+    z-index 0s linear .45s;
+}
+
+/* card3 hover */
+.card3:hover {
+	z-index: 10;
+box-shadow: 0 14px 30px rgba(0, 0, 0, 0.15);
+	
+	transform: scale(1.03)!important;
+}
+
+
+
+/* last card */
+.endcard
+{
+background:rgba(0,0,0,.2) !important;
+
+	border: none !important;
+  border-right: 1.5px solid rgba(200, 200, 200, 0.5) !important;
+	 border-bottom: 1.5px solid rgba(200, 200, 200, 0.5) !important;
+	border-left:1.5px solid rgba(0,125,152,.15) !important;
+		border-top:1.5px solid rgba(0,125,152,.15) !important;
+
+  box-shadow: 0 0 0 1.5px rgba(30,40,167,.15) !important;
+	transform: translateZ(0)!important;
+	
+	 background: linear-gradient(
+    142deg,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.75) 100%
+  );
+	
+	  transition: .5s ease-out;
+}
+
+/* Hover state */
+.endcard:hover {
+  box-shadow: 50 50 50 1px #ffffff !important;
+		transform: scale(1.03)!important;
+}
+
+/* 2nd pass seems to work but not on it's own. */
+.wp-block-column.card3 {
+  border: 1.5px solid rgba(2,2,2,.05) !important;
+
+  box-shadow: 0 0 0 1.5px rgba(30,40,167,.15) !important;
+  transform: translateZ(0) !important;
+  transition: .5s ease-out;
+}
+
+
+/* Dark-background variant */
+.card4[style]{
+	  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(
+    142deg,
+    rgba(255, 255, 255, 0.26) 0%,
+    rgba(255, 255, 255, 0.14) 55%,
+    rgba(0, 0, 0, 0.06) 100%
+  ) !important;
+
+  /* lighter than your 248/242/232 @ .78 */
+  background-color: rgba(252, 248, 240, 0.82) !important;
+
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-top-color: rgba(255, 255, 255, 0.22) !important;
+  border-left-color: rgba(255, 255, 255, 0.18) !important;
+  border-right-color: rgba(0, 0, 0, 0.14) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.16) !important;
+
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
+    0 0 18px rgba(255, 255, 255, 0.06) !important;
+
+  transform: translateZ(0) !important;
+  transition: transform .45s ease-out, box-shadow .45s ease-out, background-color .45s ease-out;
+}
+
+.card4[style]::before{
+  content: "";
+  position: absolute;
+  top: -18%;
+  left: -22%;
+  width: 70%;
+  height: 70%;
+  pointer-events: none;
+  z-index: 1;
+
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.22) 28%,
+    rgba(255, 255, 255, 0.00) 60%
+  );
+
+  transform: translate3d(-10px, -10px, 0) rotate(-12deg);
+  opacity: 0;
+  transition:
+    opacity .55s ease,
+    transform .75s cubic-bezier(.2,.8,.2,1);
+}
+
+/* glint animates on hover */
+.card4:hover::before{
+  opacity: 0.65;
+  transform: translate3d(18px, 16px, 0) rotate(-12deg);
+}
+
+.card4:hover{
+  /* slight lift + brighter “glass” */
+  background-color: rgba(255, 252, 246, 0.88) !important;
+
+  transform: scale(1.02) !important;
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.07),
+    0 0 30px rgba(255, 255, 255, 0.12) !important;
+}
+
+
+
+
+
+/* make the card the link */
+.card-link { cursor: pointer; }
+
+.card-link:focus { outline: 2px solid currentColor; outline-offset: 4px; }
+
+
+/* details - FAQ*/
+summary {
+	font-size:1.2em !important;
+	font-weight:900 !important;
+	color:#00adbb;
+	margin-top:2.2rem !important;
+}
+
+
+/* bring breadcrumbs away from browser edge*/
+.site-breadcrumbs, footer {padding-left: 10px !important;}
+
+/* mobile menu padding */
+#mobile-menu {padding-right:1rem !important;}
+
+/* Blog article padding */
+.single-blog-article{
+	padding-left:3rem !important;
+	padding-right:3rem !important;
+}
+
+/* tighten title leading */
+.page-header-title {line-height:3rem !important;}
+
+
+/* header spacing */
+/* targeting headings here disables customized */
+h5, h4, h6 {
+	letter-spacing:-.03em !important;
+}
+
+/* H & V center */
+.centercenter{
+	display:flex;align-items: center;justify-content: center;
+}
+
+/* Intro block */
+.intro p {
+	font-size:24px !important;
+	line-height:1.5em !important;
+	font-weight:400 !important;
+}
+.intro h2 {
+	font-size:40px !important;
+	font-family: "helvetica-neue-lt-pro", sans-serif;
+font-weight: 700;
+font-style: normal;
+}
+
+/* Zero out slider margin bottom */
+.revslider{
+	margin-bottom:0px !important;
+}
+
+/* TABLES */
+/* ---- Title row ----- */
+table.has-fixed-layout thead tr th {
+  background-color: #444;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Light grey for 1st, 3rd, 5th cells after title */
+table.has-fixed-layout tbody tr td:nth-child(1),
+table.has-fixed-layout tbody tr td:nth-child(3),
+table.has-fixed-layout tbody tr td:nth-child(5) {
+  background-color: #f2f2f2;
+}
+table.has-fixed-layout tbody tr td:nth-child(1) {
+  text-align: left;
+  font-weight: bold;
+}
+
+/* Light teal for 2nd and 4th cells */
+table.has-fixed-layout tbody tr td:nth-child(2),
+table.has-fixed-layout tbody tr td:nth-child(4),
+table.has-fixed-layout tbody tr td:nth-child(6) {
+  background-color: #CCEFF2;
+}
+
+/* end tables */
+/* ---------------------- */
+
+
+    /* GLOBAL FORM FIELD STYLES */
+    input[type="text"],
+    input[type="email"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 18px 14px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: #f8f8f8;
+      color: #333;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #00adbb;
+      background-color: #fff;
+      outline: none;
+    }
+
+    input:placeholder-shown,
+    textarea:placeholder-shown {
+      background-color: #f0f0f0;
+    }
+
+    .form-field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #444;
+    }
+
+    .form-nav-btn {
+      padding: 14px 28px;
+      margin: 10px 5px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 1px solid #ccc;
+      background-color: #f5f5f5;
+      color: #333;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .form-nav-btn:hover {
+      background-color: #e0e0e0;
+      border-color: #999;
+      color: #000;
+    }
+
+    .form-submit-actions .form-nav-btn[type="submit"] {
+      background-color: #00adbb;
+      color: #fff;
+      border-color: #00adbb;
+    }
+
+    .form-submit-actions .form-nav-btn[type="submit"]:hover {
+      background-color: #008aab;
+      border-color: #008aab;
+    }
+
+    .form-nav-actions,
+    .form-submit-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+    }
+/* end FORMS */
+
+
+/* FAQ titles */
+.wp-block-details summary {font-weight:bold; font-size:1.1rem}
+
+
+.fineprint{
+	color:grey;
+}
+
+
+/* FADE OUT - animation */
+.fade-out {
+  opacity: var(--scroll-opacity, 1);
+  transition: opacity 0.1s linear;
+  will-change: opacity;
+}
+
+/* end fade out */
+
+/* slide in content */
+        .slide-in-content {
+            opacity: 0;
+            transform: translateX(200px);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+
+        .slide-in-content.is-visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+.slide-in-content:nth-child(1) { transition-delay: 0s; }
+.slide-in-content:nth-child(2) { transition-delay: 0.1s; }
+.slide-in-content:nth-child(3) { transition-delay: 0.2s; }
+/* end slide in */
+
+
+
+/* ----button stick---- */
+/* Ensure each content box fills the column space and buttons line up across bottom */
+.content-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100%;
+  min-height: 400px; 
+  box-sizing: border-box;
+}
+
+
+.h500 {
+	  min-height: 500px; 
+}
+.h600 {
+	  min-height: 600px; 
+}
+
+/* medium height col */
+	.hm {
+		min-height:550px;
+	}
+.h-ins{
+	min-height:350px;
+}
+	.hs {
+		min-height:300px;
+	}
+
+.hl {
+	min-height:635px;
+}
+
+@media screen and (max-width: 1200px) {
+	.hm {
+		min-height:550px;
+	}
+		.hs {
+		min-height:300px;
+	}
+}
+
+@media screen and (max-width: 900px) {
+	.hm {
+		min-height:650px;
+	}
+		.hs {
+		min-height:300px;
+	}
+	.hl {
+	min-height:730px;
+}
+}
+
+@media screen and (max-width: 781px) {
+	.hm {
+		min-height:450px;
+	}
+		.hl {
+	min-height:130px;
+}
+}
+
+
+/* Make title + paragraph flex and push button down */
+.content-box > *:not(.button-wrap) {
+  flex: 0 0 auto; /* don't stretch text unnecessarily */
+}
+
+.content-box .button-wrap {
+  margin-top: auto; /* this pushes it to the bottom */
+}
+
+
+/* .wp-block-group. */
+
+/* ---------------------- */
+
+
+/* Button alt color */
+.btnalt a,
+.wp-element-button.btnalt
+{
+	background-color:#333 !important;
+	color:666;
+}
+.btnalt a:hover,
+.wp-element-button.btnalt:hover
+
+{
+background-color:#76787b !important;
+}
+
+
+
+
+
+
+.btnrev a,
+.wp-element-button.btnrev
+{
+		border:1.75px solid #2a2a2a;
+
+	background-color:whitesmoke !important;
+	color:#008AAB;
+}
+.btnrev a:hover,
+.wp-element-button.btnalt:hover
+
+{
+	border:1.75px solid white;
+background-color:#2a2a2a !important;
+}
+
+
+/* BUTTONS - soften hover */
+/* Target all Gutenberg buttons */
+.wp-element-button,
+.sub-menu a
+{
+	transition: 
+		background-color 0.55s ease, 
+		color 0.5s ease;
+}
+
+.wp-block-button__link:hover {
+  /* No change needed unless you're overriding colors manually */
+}
+
+/* soften link color change */
+a {
+  transition: color 0.5s ease, color 0.5s ease;
+}
+.footerlogo {
+  transition: fill 0.5s ease;
+}
+
+/* opacity 100% on hover */
+.pulsing-gold-btn:hover {
+	opacity:100% !important;
+}
+.pulsing-gold-btn:hover a {
+	opacity:100% !important;
+	background-color:rgba(777,777,777,0) !important;
+}
+
+/* override sub menu pad */
+.sub-menu{
+padding:0 !important;	
+	margin:0 !important;
+}
+/* Remove unwanted spacing between submenu items */
+ul.sub-menu {
+    gap: 0 !important;
+}
+
+.h-100 {
+	min-height:100% !important;
+}
+.w-100 {
+	min-width:100% !important;
+}
+
+.wp-block-button__link:focus,
+.wp-block-button__link:focus-visible,
+a:focus,
+button:focus {
+  outline: 2px solid #003366;   /* dark brand blue OR use #1a1a1a for 90% black */
+  outline-offset: 3px;
+  box-shadow: none;             /* remove browser’s purple halo */
+}
+
+
+
+/* big num like our impact */
+.bignum {
+	font-size:10em;
+	font-weight:bold;
+	line-height:.75;
+}
+
+/* modal style */
+.wpex-modal {
+	padding:5em;
+	background:#00ADBB;
+	color:white;
+}
+.wpex-modal::backdrop {
+	background:RGB(3,3,3,0.9);
+	
+}
+.wpex-modal__inner{
+	
+}
+
+
+
+/* contact bar on home */
+.contact-bar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;   /* centers groups vertically */
+  width: 100% !important;
+}
+
+/* Only the two main groups inside the bar */
+.contact-bar > .contact-groups {
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+/* LEFT group: button + "Create Login" side-by-side and centered */
+.contact-bar > .contact-groups:first-child {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem; /* space between button and "Create Login" */
+}
+
+/* Make the "Create Login" line behave like a flex item and remove margins */
+.contact-bar > .contact-groups:first-child p {
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;  /* vertically centers the text */
+}
+@media (max-width: 768px) {
+  .contact-bar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem; /* spacing between the two groups */
+  }
+
+  .contact-bar > .contact-groups {
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Right group: stack phone + tagline nicely */
+  .contact-bar > .contact-groups:last-child {
+    flex-direction: column;
+    align-items: center !important;
+  }
+	  .contact-bar > .contact-groups:first-child {
+    margin-bottom: 1rem !important; /* adjust value as needed */
+  }
+}
+/* END OF CONTACT SECTION */
