@@ -26,6 +26,10 @@ export default function SiteLayout({ children }) {
   const isDesktop = desktopQueryMatch && !forceCompactNav;
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
     const media = window.matchMedia(DESKTOP_NAV_QUERY);
     const sync = () => {
       setDesktopQueryMatch(media.matches);
@@ -37,8 +41,14 @@ export default function SiteLayout({ children }) {
       }
     };
     sync();
-    media.addEventListener('change', sync);
-    return () => media.removeEventListener('change', sync);
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', sync);
+      return () => media.removeEventListener('change', sync);
+    }
+
+    media.addListener(sync);
+    return () => media.removeListener(sync);
   }, []);
 
   useEffect(() => {
@@ -75,15 +85,18 @@ export default function SiteLayout({ children }) {
       rafId = window.requestAnimationFrame(measure);
     };
 
-    const observer = new ResizeObserver(queueMeasure);
-    if (navInnerRef.current) {
-      observer.observe(navInnerRef.current);
-    }
-    if (brandRef.current) {
-      observer.observe(brandRef.current);
-    }
-    if (navLinksRef.current) {
-      observer.observe(navLinksRef.current);
+    let observer = null;
+    if (typeof ResizeObserver === 'function') {
+      observer = new ResizeObserver(queueMeasure);
+      if (navInnerRef.current) {
+        observer.observe(navInnerRef.current);
+      }
+      if (brandRef.current) {
+        observer.observe(brandRef.current);
+      }
+      if (navLinksRef.current) {
+        observer.observe(navLinksRef.current);
+      }
     }
     window.addEventListener('resize', queueMeasure);
     document.fonts?.ready?.then(queueMeasure);
@@ -92,7 +105,7 @@ export default function SiteLayout({ children }) {
     return () => {
       window.cancelAnimationFrame(rafId);
       window.removeEventListener('resize', queueMeasure);
-      observer.disconnect();
+      observer?.disconnect();
     };
   }, [location.pathname]);
 
@@ -238,6 +251,9 @@ export default function SiteLayout({ children }) {
                   <div className="site-nav-dropdown">
                     <NavLink to="/admin/content" className={navLinkClass}>
                       Content
+                    </NavLink>
+                    <NavLink to="/admin/resources" className={navLinkClass}>
+                      Resources
                     </NavLink>
                     <NavLink to="/admin/rates" className={navLinkClass}>
                       Rates

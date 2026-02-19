@@ -61,7 +61,7 @@ export default function AdminRatesPage() {
 
   return (
     <div className="page-wrap">
-      <PageShell title="Admin: Rates" source={pageByPath['/rates'].source}>
+      <PageShell title="Admin: Rates" source={pageByPath['/rates'].source} showBadge={false}>
         <div className="admin-info-note">
           Edit both public rate tables here. Changes update the Rates page and the Investments rates section.
         </div>

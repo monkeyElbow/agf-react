@@ -49,6 +49,7 @@ export const sitePages = [
   { path: '/test', title: 'Test', section: 'Core', source: null },
   { path: '/admin/rates', title: 'Admin - Rates', section: 'Admin', source: null },
   { path: '/admin/content', title: 'Admin - Content', section: 'Admin', source: null },
+  { path: '/admin/resources', title: 'Admin - Resources', section: 'Admin', source: null },
 ];
 
 export const pageByPath = Object.fromEntries(sitePages.map((page) => [page.path, page]));

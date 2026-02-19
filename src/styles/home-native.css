@@ -9,13 +9,14 @@
   color: #f0eee8;
 }
 
-.home-native-strip-inner {
+.home-native-strip-fluid {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  width: 100%;
   min-height: 58px;
-  padding: 0.42rem clamp(0.45rem, 1.1vw, 0.85rem);
+  padding: 0.42rem clamp(0.75rem, 2.2vw, var(--ag-nav-inline));
   font-size: 0.95rem;
 }
 
@@ -84,9 +85,9 @@
   color: var(--ag-color-super-grey);
   font-size: clamp(3rem, 9.2vw, 112px);
   font-weight: 800;
+  letter-spacing: -4.48px;
   line-height: 0.9;
   font-family: var(--ag-font-heading);
-  letter-spacing: -4.48px;
 }
 
 .home-native-eyebrow mark {
@@ -98,9 +99,9 @@
   color: var(--ag-color-super-grey);
   font-size: clamp(3rem, 9.2vw, 112px);
   font-weight: 800;
+  letter-spacing: -4.48px;
   line-height: 1;
   font-family: var(--ag-font-heading);
-  letter-spacing: -4.48px;
 }
 
 .home-native-title mark {
@@ -130,7 +131,7 @@
 }
 
 .home-native-services .ag-panel-rail {
-  width: min(980px, calc(100% - (var(--ag-panel-gutter) * 2)));
+  width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-gutter) * 2)));
 }
 
 .home-native-services h2 {
@@ -254,6 +255,11 @@
   padding: clamp(2.5rem, 6vw, 4rem) 0;
 }
 
+.home-native-impact .ag-panel-rail {
+  width: calc(100% - clamp(2rem, 5.5vw, 5rem));
+  max-width: none;
+}
+
 .home-native-impact-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
@@ -276,6 +282,8 @@
 
 .home-native-impact p {
   text-align: center;
+  font-size: clamp(1.08rem, 2vw, 1.36rem);
+  line-height: 1.5;
 }
 
 .home-native-impact-cta-wrap {
@@ -298,7 +306,6 @@
   font-weight: 800;
   color: var(--ag-color-mango);
   line-height: 1;
-  letter-spacing: -0.045em;
   font-variant-numeric: tabular-nums lining-nums;
 }
 
@@ -314,7 +321,6 @@
   margin-top: 0.36rem;
   font-size: clamp(1.05rem, 2.2vw, 1.62rem);
   line-height: 1.08;
-  letter-spacing: -0.02em;
 }
 
 .home-native-cta-form-wrap {
@@ -328,7 +334,6 @@
   color: var(--ag-color-super-grey);
   font-size: clamp(1.9rem, 4.4vw, 3.2rem);
   line-height: 1.04;
-  letter-spacing: -0.04em;
 }
 
 .home-native-cta-form-wrap h2 mark {
@@ -447,10 +452,9 @@
 .home-native-feature-copy h3 {
   margin: 0;
   color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-heading);
+  font-family: var(--ag-font-body);
   font-size: clamp(2rem, 4.6vw, 3.1rem);
   line-height: 1;
-  letter-spacing: -0.04em;
 }
 
 .home-native-feature-copy h3 mark {
@@ -472,9 +476,8 @@
   margin: 0 0 0.8rem;
   color: #ffffff;
   text-align: center;
-  font-family: var(--ag-font-heading);
+  font-family: var(--ag-font-body);
   font-size: clamp(2rem, 4.8vw, 3.2rem);
-  letter-spacing: -4px;
   line-height: 1.05;
 }
 
@@ -522,20 +525,16 @@
 
 .fade-up {
   opacity: 0;
-  transform: translateY(36px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.82s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
 }
 
 .fade-up.is-visible {
   opacity: 1;
-  transform: translateY(0);
-}
-
-@media (max-width: 900px) {
-  .home-native-eyebrow,
-  .home-native-title {
-    letter-spacing: -2px;
-  }
+  transform: translate3d(0, 0, 0);
 }
 
 @media (max-width: 991px) {
@@ -558,16 +557,16 @@
 }
 
 @media (max-width: 767px) {
-  .home-native-strip-inner {
+  .home-native-strip-fluid {
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-between;
     gap: 0.55rem 1rem;
     padding: 0.8rem 0.6rem;
   }
 
   .home-native-strip-right {
     width: 100%;
-    justify-content: center;
+    justify-content: flex-end;
   }
 
   .home-native-services-grid {
@@ -627,7 +626,6 @@
   font-family: var(--ag-font-heading);
   font-size: clamp(2.4rem, 7vw, 4.9rem);
   line-height: 0.9;
-  letter-spacing: -0.02em;
 }
 
 .services-native-intro {
@@ -638,8 +636,9 @@
 .services-native-intro h2 {
   margin: 0;
   color: #ffffff;
-  font-family: var(--ag-font-heading);
-  font-size: clamp(2rem, 5vw, 4rem);
+  font-family: var(--ag-font-body);
+  font-size: clamp(1.7rem, 3.8vw, 2.6rem);
+  font-weight: 700;
   line-height: 0.95;
   text-align: center;
 }

@@ -31,7 +31,7 @@ function formatCountValue(value, decimals) {
   });
 }
 
-export default function useNativeEnhancements(containerRef) {
+export default function useNativeEnhancements(containerRef, rerunKey) {
   useEffect(() => {
     const root = containerRef.current;
     if (!root) {
@@ -150,27 +150,102 @@ export default function useNativeEnhancements(containerRef) {
         return;
       }
 
+      if (!('IntersectionObserver' in window)) {
+        nodes.forEach((el) => el.classList.add('is-visible'));
+        return;
+      }
+
+      const timers = new Map();
+
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const index = Number(entry.target.getAttribute('data-fade-index')) || 0;
-              window.setTimeout(() => {
-                entry.target.classList.add('is-visible');
-              }, index * 75);
-            } else {
-              entry.target.classList.remove('is-visible');
+            if (!entry.isIntersecting) {
+              return;
             }
+
+            const index = Number(entry.target.getAttribute('data-fade-index')) || 0;
+            const delayMs = 90 + (index * 90);
+            const timer = window.setTimeout(() => {
+              requestAnimationFrame(() => {
+                entry.target.classList.add('is-visible');
+              });
+              timers.delete(entry.target);
+            }, delayMs);
+
+            timers.set(entry.target, timer);
+            observer.unobserve(entry.target);
           });
         },
         { rootMargin: '0px 0px -12% 0px' },
       );
 
       nodes.forEach((el, index) => {
+        el.classList.remove('is-visible');
         el.setAttribute('data-fade-index', String(index % 8));
         observer.observe(el);
       });
-      cleanups.push(() => observer.disconnect());
+      cleanups.push(() => {
+        observer.disconnect();
+        timers.forEach((timer) => window.clearTimeout(timer));
+        timers.clear();
+      });
+    };
+
+    const runFadeOut = () => {
+      const nodes = Array.from(root.querySelectorAll('.fade-out'));
+      if (!nodes.length) {
+        return;
+      }
+
+      if (prefersReducedMotion) {
+        nodes.forEach((el) => {
+          el.style.setProperty('--scroll-opacity', '1');
+          el.classList.remove('is-fading');
+        });
+        return;
+      }
+
+      let rafId = 0;
+
+      const update = () => {
+        rafId = 0;
+        const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+        const startY = vh * 0.12;
+        const endY = -vh * 0.24;
+
+        nodes.forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          const progress = clamp((startY - rect.top) / (startY - endY), 0, 1);
+          const opacity = 1 - (0.58 * progress);
+          el.style.setProperty('--scroll-opacity', opacity.toFixed(3));
+          if (progress > 0.04) {
+            el.classList.add('is-fading');
+          } else {
+            el.classList.remove('is-fading');
+          }
+        });
+      };
+
+      const requestUpdate = () => {
+        if (rafId) {
+          return;
+        }
+        rafId = window.requestAnimationFrame(update);
+      };
+
+      update();
+      window.addEventListener('scroll', requestUpdate, { passive: true });
+      window.addEventListener('resize', requestUpdate);
+      cleanups.push(() => {
+        window.cancelAnimationFrame(rafId);
+        window.removeEventListener('scroll', requestUpdate);
+        window.removeEventListener('resize', requestUpdate);
+        nodes.forEach((el) => {
+          el.style.removeProperty('--scroll-opacity');
+          el.classList.remove('is-fading');
+        });
+      });
     };
 
     const runCountUp = () => {
@@ -178,6 +253,25 @@ export default function useNativeEnhancements(containerRef) {
       if (!targets.length) {
         return;
       }
+
+      const rafIds = new Map();
+
+      const setFinalValue = (el) => {
+        if (el.dataset.countupDone === '1') {
+          return false;
+        }
+        const parsed = parseCountText(el.textContent);
+        if (!parsed) {
+          return false;
+        }
+
+        const {
+          value, decimals, prefix, suffix,
+        } = parsed;
+        el.dataset.countupDone = '1';
+        el.textContent = `${prefix}${formatCountValue(value, decimals)}${suffix}`;
+        return true;
+      };
 
       const animate = (el) => {
         if (el.dataset.countupDone === '1') {
@@ -201,16 +295,21 @@ export default function useNativeEnhancements(containerRef) {
           const current = value * eased;
           el.textContent = `${prefix}${formatCountValue(current, decimals)}${suffix}`;
           if (t < 1) {
-            requestAnimationFrame(step);
+            const rafId = requestAnimationFrame(step);
+            rafIds.set(el, rafId);
           } else {
             el.textContent = `${prefix}${formatCountValue(value, decimals)}${suffix}`;
+            rafIds.delete(el);
           }
         };
-        requestAnimationFrame(step);
+        const rafId = requestAnimationFrame(step);
+        rafIds.set(el, rafId);
       };
 
       if (prefersReducedMotion) {
-        targets.forEach((el) => animate(el));
+        targets.forEach((el) => {
+          setFinalValue(el);
+        });
         return;
       }
 
@@ -227,62 +326,101 @@ export default function useNativeEnhancements(containerRef) {
         { threshold: 0.35 },
       );
       targets.forEach((el) => observer.observe(el));
-      cleanups.push(() => observer.disconnect());
+      cleanups.push(() => {
+        observer.disconnect();
+        rafIds.forEach((rafId) => cancelAnimationFrame(rafId));
+        rafIds.clear();
+      });
     };
 
     const runCarouselStack = () => {
-      const stack = root.querySelector('.carousel-stack');
-      if (!stack) {
+      const stacks = Array.from(root.querySelectorAll('.carousel-stack'));
+      if (!stacks.length) {
         return;
       }
-      const slides = Array.from(stack.querySelectorAll('.carousel-frame'));
-      if (!slides.length) {
-        return;
-      }
+      const stackControllers = [];
 
-      let current = 0;
-      let timer = null;
-
-      const setStackHeight = () => {
-        const maxHeight = slides.reduce((max, slide) => {
-          const prevPos = slide.style.position;
-          slide.style.position = 'static';
-          const height = slide.offsetHeight;
-          slide.style.position = prevPos || 'absolute';
-          return Math.max(max, height);
-        }, 0);
-        if (maxHeight) {
-          stack.style.height = `${maxHeight}px`;
+      stacks.forEach((stack) => {
+        const slides = Array.from(stack.querySelectorAll('.carousel-frame'));
+        if (!slides.length) {
+          return;
         }
+
+        let current = 0;
+        let timer = null;
+        let disposed = false;
+
+        const setStackHeight = () => {
+          if (disposed) {
+            return;
+          }
+          const maxHeight = slides.reduce((max, slide) => {
+            const prevPos = slide.style.position;
+            slide.style.position = 'static';
+            const height = slide.offsetHeight;
+            slide.style.position = prevPos || 'absolute';
+            return Math.max(max, height);
+          }, 0);
+          if (maxHeight) {
+            stack.style.height = `${maxHeight}px`;
+          }
+        };
+
+        const scheduleNext = () => {
+          if (disposed || prefersReducedMotion || slides.length < 2) {
+            return;
+          }
+          window.clearTimeout(timer);
+          timer = window.setTimeout(() => {
+            if (disposed) {
+              return;
+            }
+            const next = (current + 1) % slides.length;
+            slides[current]?.classList.remove('is-active');
+            slides[next]?.classList.add('is-active');
+            current = next;
+            scheduleNext();
+          }, 6000);
+        };
+
+        setStackHeight();
+        document.fonts?.ready?.then(setStackHeight);
+        slides.forEach((slide, index) => {
+          slide.classList.toggle('is-active', index === 0);
+        });
+        scheduleNext();
+
+        stackControllers.push({
+          setStackHeight,
+          dispose: () => {
+            disposed = true;
+            window.clearTimeout(timer);
+          },
+        });
+      });
+
+      if (!stackControllers.length) {
+        return;
+      }
+
+      const onResize = () => {
+        stackControllers.forEach((controller) => controller.setStackHeight());
       };
-
-      const showSlide = (next) => {
-        slides[current]?.classList.remove('is-active');
-        slides[next]?.classList.add('is-active');
-        current = next;
-        timer = window.setTimeout(() => showSlide((current + 1) % slides.length), 6000);
-      };
-
-      setStackHeight();
-      document.fonts?.ready?.then(setStackHeight);
-      slides[current].classList.add('is-active');
-      timer = window.setTimeout(() => showSlide((current + 1) % slides.length), 6000);
-
-      const onResize = () => setStackHeight();
       window.addEventListener('resize', onResize);
       cleanups.push(() => {
-        window.clearTimeout(timer);
+        stackControllers.forEach((controller) => controller.dispose());
         window.removeEventListener('resize', onResize);
       });
     };
 
     runHeroHeadingReveal();
     runFadeUp();
+    runFadeOut();
     runCountUp();
     runCarouselStack();
 
     return () => {
       cleanups.forEach((fn) => fn());
     };
-  }, [containerRef]);
+  }, [containerRef, rerunKey]);
 }

@@ -478,7 +478,7 @@ export default function LoansPage() {
             experienced church loan providers, we want to be part of your ministry. Let&apos;s take bold steps together
             for the Kingdom.
           </p>
-          <div className="service-native-action-row" style={{ justifyContent: 'center' }}>
+          <div className="service-native-action-row is-centered">
             <Link to="/services/loans#form" className="service-native-btn">Get started</Link>
           </div>
         </div>
@@ -488,7 +488,7 @@ export default function LoansPage() {
         <div className="ag-panel-rail-wide">
           <h2 className="loans-native-options-title">Every loan, 100% customized.</h2>
           <h3 className="loans-native-options-subtitle">You won&apos;t find this at a bank.</h3>
-          <p className="loans-native-options-lead">
+          <p className="loans-native-options-lead" style={{ textAlign: 'center', marginInline: 'auto' }}>
             We&apos;re more than a financial partner. We&apos;re part of your ministry. It&apos;s our pleasure to design
             a loan with rates and flexible terms <strong>specifically for you</strong>. The loans lineup below might
             give you a great place to start.
@@ -503,7 +503,7 @@ export default function LoansPage() {
             ))}
             <article className="loans-native-option-question fade-up">
               <h3>Which loan is right for me?</h3>
-              <div className="service-native-action-row" style={{ justifyContent: 'center' }}>
+              <div className="service-native-action-row is-centered">
                 <Link to="/services/loans/loans-consultant" className="service-native-btn">Ask my loan expert</Link>
               </div>
             </article>
@@ -512,7 +512,7 @@ export default function LoansPage() {
       </section>
 
       <section className="service-native-section loans-native-inquiry" id="form">
-        <div className="ag-panel-rail-wide loans-native-inquiry-grid">
+        <div className="ag-panel-rail loans-native-inquiry-grid">
           <article className="loans-native-inquiry-card fade-up">
             {!inquirySubmitted ? (
               <form className="loans-native-inquiry-form" onSubmit={onInquirySubmit}>
@@ -619,7 +619,7 @@ export default function LoansPage() {
       </section>
 
       <section className="service-native-section loans-native-calculator-wrap">
-        <div className="ag-panel-rail-wide">
+        <div className="ag-panel-rail">
           <h2 className="loans-native-calculator-title">
             Run some numbers.
             {' '}
@@ -751,7 +751,7 @@ export default function LoansPage() {
           <h2>Vision fuel.</h2>
           <h3>One bold step at a time.</h3>
           <p>Loans guided by your ministry, driven by your mission, and powered by AGFinancial.</p>
-          <div className="service-native-action-row" style={{ justifyContent: 'center' }}>
+          <div className="service-native-action-row is-centered">
             <Link to="/services/loans#form" className="service-native-btn">Start the process</Link>
           </div>
         </div>

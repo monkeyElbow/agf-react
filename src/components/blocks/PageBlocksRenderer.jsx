@@ -20,7 +20,7 @@ function TopStripBlock({ block }) {
 
   return (
     <section className="home-native-strip">
-      <div className="ag-panel-rail home-native-strip-inner">
+      <div className="home-native-strip-fluid">
         <a href={block.loginHref} target="_blank" rel="noreferrer noopener" className="home-native-strip-login-btn">
           {block.loginLabel}
         </a>

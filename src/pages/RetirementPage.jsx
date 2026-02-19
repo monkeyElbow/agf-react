@@ -273,31 +273,33 @@ export default function RetirementPage() {
             Your <mark>future</mark>.
           </h1>
           <h1 className="retirement-native-hero-line line2">
-            Your <mark>plan</mark>.
+            Your <mark className="is-mango">plan</mark>.
           </h1>
         </div>
       </section>
 
-      <section className="service-native-intro">
+      <section className="service-native-intro retirement-native-intro">
         <div className="ag-panel-rail">
           <h2>Invest in tomorrow. Start today.</h2>
           <p>
-            We help ministers, ministry employees, and organizations build retirement strategies that fit ministry
-            life.
+            For decades, we've helped build retirement strategies for ministers, ministry employees, churches, and organizations. Let's create yours.
           </p>
-          <div className="service-native-action-row" style={{ justifyContent: 'center' }}>
-            <Link to="/services/retirement/retirement-consultants" className="service-native-btn">Find my consultant</Link>
+          <p><strong>It's your ministry, your future, your plan.</strong></p>
+          <div className="service-native-action-row is-centered">
+            <Link to="/services/retirement/retirement-consultants" className="service-native-btn is-dark">Find my consultant</Link>
           </div>
         </div>
       </section>
 
       <section className="service-native-section retirement-plan-section">
         <div className="ag-panel-rail-wide">
-          <h2 className="retirement-plan-heading">AGFinancial 403(b) Retirement Plan</h2>
-          <h3 className="retirement-plan-subheading">Smart benefits, strong advantages</h3>
-          <p className="retirement-plan-lead">
-            The <strong>AGFinancial</strong> flagship retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA. Choose from a variety of strategies.
-          </p>
+          <div className="retirement-plan-intro">
+            <h2 className="retirement-plan-heading">AGFinancial 403(b) Retirement Plan</h2>
+            <h3 className="retirement-plan-subheading">Smart benefits, strong advantages</h3>
+            <p className="retirement-plan-lead">
+              The <strong>AGFinancial</strong> flagship retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA. Choose from a variety of strategies.
+            </p>
+          </div>
           <div className="service-native-grid is-four retirement-plan-grid">
             {planFeatures.map((feature) => (
               <article key={feature.title} className="service-native-card fade-up">
@@ -310,16 +312,16 @@ export default function RetirementPage() {
           <h4 className="retirement-plan-footer">
             Includes minister&apos;s housing allowance, higher contribution limits, and more.
           </h4>
-          <div className="service-native-action-row">
+          <div className="service-native-action-row retirement-plan-actions">
             <Link to="/services/retirement/403b" className="service-native-btn">Explore the 403(b)</Link>
           </div>
         </div>
       </section>
 
       <section className="service-native-section retirement-accounts-section">
-        <div className="ag-panel-rail-wide">
-          <div className="service-native-split">
-            <article className="service-native-card card2 retirement-account-card fade-up">
+        <div className="ag-panel-rail">
+          <div className="service-native-grid is-two retirement-account-grid">
+            <article className="retirement-account-card fade-up">
               <h3>Individual Retirement Accounts (IRAs)</h3>
               <p>
                 An IRA (Individual Retirement Account) provides beneficial options, both now and in the future.
@@ -330,7 +332,7 @@ export default function RetirementPage() {
               </div>
             </article>
 
-            <article className="service-native-card card2 retirement-account-card fade-up">
+            <article className="retirement-account-card fade-up">
               <h3>Deferred Compensation Plan (409A)</h3>
               <p>
                 Available exclusively to ministers, ministry employees, and Qualified Church-Controlled Organizations
@@ -347,8 +349,10 @@ export default function RetirementPage() {
 
       <section className="service-native-section retirement-calc-section">
         <div className="ag-panel-rail-wide">
-          <h2 className="retirement-calc-title">Retirement Savings Calculator</h2>
-          <p className="retirement-calc-lead">Plug in some numbers. Take a sneak peek at your financial future.</p>
+          <div className="retirement-calc-intro">
+            <h2 className="retirement-calc-title">Retirement Savings Calculator</h2>
+            <p className="retirement-calc-lead">Plug in some numbers. Take a sneak peek at your financial future.</p>
+          </div>
 
           <div className="retirement-calc-box fade-up">
             <div className="retirement-calc-grid">
@@ -574,7 +578,7 @@ export default function RetirementPage() {
             Retire a little <mark>every day</mark>.
           </h2>
           <h3>Starting now.</h3>
-          <div className="service-native-action-row" style={{ justifyContent: 'center' }}>
+          <div className="service-native-action-row is-centered">
             <Link to="/services/retirement/retirement-consultants" className="service-native-btn">
               Reach my consultant
             </Link>
@@ -583,7 +587,7 @@ export default function RetirementPage() {
       </section>
 
       <section className="service-native-section retirement-feature is-housing">
-        <div className="ag-panel-rail-wide">
+        <div className="ag-panel-rail">
           <div className="retirement-feature-grid">
             <div className="retirement-feature-media">
               <img src={ministersHousingImage} alt="Ministers Housing Allowance" />
@@ -603,7 +607,7 @@ export default function RetirementPage() {
       </section>
 
       <section className="service-native-section retirement-feature is-online">
-        <div className="ag-panel-rail-wide">
+        <div className="ag-panel-rail">
           <div className="retirement-feature-grid">
             <div className="retirement-feature-copy">
               <h3>Online Contributions</h3>

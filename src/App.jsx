@@ -15,7 +15,10 @@ const InvestmentsPage = lazy(() => import('./pages/InvestmentsPage'));
 const RetirementPage = lazy(() => import('./pages/RetirementPage'));
 const RatesPage = lazy(() => import('./pages/RatesPage'));
 const AdminRatesPage = lazy(() => import('./pages/AdminRatesPage'));
+const AdminResourcesPage = lazy(() => import('./pages/AdminResourcesPage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
+const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
+const ResourceArticlePage = lazy(() => import('./pages/ResourceArticlePage'));
 
 function PageRoute({ page }) {
   const showNativeBreadcrumbs = page.source === null
@@ -74,10 +77,26 @@ function PageRoute({ page }) {
     return <AdminContentPage />;
   }
 
+  if (page.path === '/admin/resources') {
+    return (
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <AdminResourcesPage />
+      </Suspense>
+    );
+  }
+
   if (page.path === '/rates') {
     return withBreadcrumbs((
       <Suspense fallback={<div className="route-page-loading" />}>
         <RatesPage />
+      </Suspense>
+    ));
+  }
+
+  if (page.path === '/resources') {
+    return withBreadcrumbs((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <ResourcesPage />
       </Suspense>
     ));
   }
@@ -90,7 +109,7 @@ function PageRoute({ page }) {
     );
   }
 
-  return <NativeContentPage page={page} />;
+  return withBreadcrumbs(<NativeContentPage page={page} />);
 }
 
 export default function App() {
@@ -112,14 +131,28 @@ export default function App() {
   useEffect(() => {
     if (location.hash) {
       const id = decodeURIComponent(location.hash.replace(/^#/, ''));
-      const target = document.getElementById(id);
-      if (target) {
-        target.scrollIntoView({ block: 'start' });
-      }
-      return;
+      let rafId = 0;
+      let attempts = 0;
+
+      const scrollToHashTarget = () => {
+        const target = document.getElementById(id);
+        if (target) {
+          target.scrollIntoView({ block: 'start' });
+          return;
+        }
+        if (attempts >= 10) {
+          return;
+        }
+        attempts += 1;
+        rafId = window.requestAnimationFrame(scrollToHashTarget);
+      };
+
+      scrollToHashTarget();
+      return () => window.cancelAnimationFrame(rafId);
     }
 
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    return undefined;
   }, [location.pathname, location.hash]);
 
   useEffect(() => {
@@ -138,6 +171,14 @@ export default function App() {
         {sitePages.map((page) => (
           <Route key={page.path} path={page.path} element={<PageRoute page={page} />} />
         ))}
+        <Route
+          path="/resources/article/:slug"
+          element={(
+            <Suspense fallback={<div className="route-page-loading" />}>
+              <ResourceArticlePage />
+            </Suspense>
+          )}
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </SiteLayout>

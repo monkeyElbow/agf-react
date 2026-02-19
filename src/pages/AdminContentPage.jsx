@@ -69,7 +69,7 @@ export default function AdminContentPage() {
 
   return (
     <div className="page-wrap admin-content-page-wrap">
-      <PageShell title="Admin: Content Blocks" source={pageByPath['/admin/content']?.source ?? null}>
+      <PageShell title="Admin: Content Blocks" source={pageByPath['/admin/content']?.source ?? null} showBadge={false}>
         <div className="admin-info-note">
           Static-to-dynamic migration control center. Keep blocks `static` by default, then switch each block to
           `dynamic` when its admin editor is ready.
