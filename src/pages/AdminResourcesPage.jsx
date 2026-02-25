@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import PageShell from '../components/PageShell';
+import AdminHtmlEditor from '../components/AdminHtmlEditor';
 import { pageByPath } from '../data/siteMap';
 import { ResourcesProvider, useResources } from '../context/ResourcesContext';
 
@@ -26,6 +27,14 @@ function fromDateTimeLocal(value) {
   return parsed.toISOString();
 }
 
+function toPathSegment(value) {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function AdminResourcesPageContent() {
   const {
     articles,
@@ -37,6 +46,7 @@ function AdminResourcesPageContent() {
 
   const [selectedId, setSelectedId] = useState(articles[0]?.id || null);
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   useEffect(() => {
     if (!articles.length) {
@@ -49,20 +59,29 @@ function AdminResourcesPageContent() {
     }
   }, [articles, selectedId]);
 
+  const availableCategories = useMemo(
+    () => Array.from(new Set(articles.map((item) => item.category).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [articles],
+  );
+
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (!needle) {
-      return articles;
-    }
-
-    return articles.filter((item) => [
-      item.title,
-      item.category,
-      item.slug,
-    ].join(' ').toLowerCase().includes(needle));
-  }, [articles, search]);
+    return articles.filter((item) => {
+      const categoryMatch = categoryFilter === 'all' || item.category === categoryFilter;
+      if (!categoryMatch) return false;
+      if (!needle) return true;
+      return [
+        item.title,
+        item.category,
+        item.slug,
+      ].join(' ').toLowerCase().includes(needle);
+    });
+  }, [articles, categoryFilter, search]);
 
   const selected = articles.find((item) => item.id === selectedId) || null;
+  const articleUrlPreview = selected
+    ? `https://www.agfinancial.org/resources/${toPathSegment(selected.category) || 'article'}/${toPathSegment(selected.slug)}`
+    : '';
 
   return (
     <div className="page-wrap admin-content-page-wrap">
@@ -103,14 +122,32 @@ function AdminResourcesPageContent() {
         </div>
 
         <section className="admin-content-section">
-          <label htmlFor="admin-resources-search" className="search-page-label">Search articles</label>
-          <input
-            id="admin-resources-search"
-            className="search-page-input"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search title, category, or slug"
-          />
+          <div className="admin-content-grid-two">
+            <div>
+              <label htmlFor="admin-resources-search" className="search-page-label">Search articles</label>
+              <input
+                id="admin-resources-search"
+                className="search-page-input"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search title, category, or slug"
+              />
+            </div>
+            <div>
+              <label htmlFor="admin-resources-category-filter" className="search-page-label">Filter by category</label>
+              <select
+                id="admin-resources-category-filter"
+                className="search-page-select"
+                value={categoryFilter}
+                onChange={(event) => setCategoryFilter(event.target.value)}
+              >
+                <option value="all">All categories</option>
+                {availableCategories.map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </section>
 
         <section className="admin-content-section">
@@ -147,6 +184,10 @@ function AdminResourcesPageContent() {
                   onChange={(event) => updateArticle(selected.id, { slug: event.target.value })}
                 />
               </label>
+
+              <p className="blank-state-note">
+                Public URL preview: <strong>{articleUrlPreview}</strong>
+              </p>
 
               <div className="admin-content-grid-two">
                 <label>
@@ -197,14 +238,6 @@ function AdminResourcesPageContent() {
               </label>
 
               <label>
-                <span>Source URL</span>
-                <input
-                  value={selected.sourceUrl}
-                  onChange={(event) => updateArticle(selected.id, { sourceUrl: event.target.value })}
-                />
-              </label>
-
-              <label>
                 <span>Excerpt</span>
                 <textarea
                   rows={4}
@@ -213,12 +246,53 @@ function AdminResourcesPageContent() {
                 />
               </label>
 
+              <div className="admin-content-grid-two">
+                <label>
+                  <span>Social media image URL (1200 x 630px, under 300kb)</span>
+                  <input
+                    value={selected.socialImageUrl || ''}
+                    onChange={(event) => updateArticle(selected.id, { socialImageUrl: event.target.value })}
+                    placeholder="https://media.agfinancial.org/.../social-image.jpg"
+                  />
+                </label>
+
+                <label>
+                  <span>Social image alt text (optional)</span>
+                  <input
+                    value={selected.socialImageAlt || ''}
+                    onChange={(event) => updateArticle(selected.id, { socialImageAlt: event.target.value })}
+                    placeholder="Describe the social image for accessibility"
+                  />
+                </label>
+              </div>
+
+              <div className="admin-content-grid-two">
+                <label>
+                  <span>Social title (optional if different than article title)</span>
+                  <input
+                    value={selected.socialTitle || ''}
+                    onChange={(event) => updateArticle(selected.id, { socialTitle: event.target.value })}
+                    placeholder={selected.title || 'Article title'}
+                  />
+                </label>
+
+                <label>
+                  <span>Social description (optional; leave blank to use excerpt)</span>
+                  <textarea
+                    rows={3}
+                    value={selected.socialDescription || ''}
+                    onChange={(event) => updateArticle(selected.id, { socialDescription: event.target.value })}
+                    placeholder={selected.excerpt || 'Will use excerpt if empty'}
+                  />
+                </label>
+              </div>
+
               <label>
-                <span>Body HTML</span>
-                <textarea
-                  rows={22}
+                <span>Body content</span>
+                <AdminHtmlEditor
                   value={selected.bodyHtml}
-                  onChange={(event) => updateArticle(selected.id, { bodyHtml: event.target.value })}
+                  onChange={(nextHtml) => updateArticle(selected.id, { bodyHtml: nextHtml })}
+                  placeholder="Write the article body here..."
                 />
               </label>
             </div>

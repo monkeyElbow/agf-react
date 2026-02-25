@@ -20,4 +20,6 @@ export const defaultIraRates = [
 export const defaultRatesMeta = {
   certificatesEffectiveDate: 'January 1, 2026',
   iraEffectiveDate: 'January 1, 2026',
+  retirement403bMbaRate: '4.000%',
+  retirement403bMbaApy: '4.07%',
 };

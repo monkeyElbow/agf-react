@@ -4,9 +4,11 @@
   --ag-nav-inline: 36px;
   --ag-font-body: 'helvetica-neue-lt-pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --ag-font-heading: 'avenir-next-world', 'Avenir Next', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --ag-font-helv: var(--ag-font-body);
   --ag-font-fallback: 'Helvetica Neue', Arial, sans-serif;
 
   --ag-panel-content-max: 1040px;
+  --ag-content-max: var(--ag-panel-content-max);
   --ag-panel-wide-max: 1480px;
   --ag-panel-gutter: clamp(2.5rem, 9vw, 8rem);
   --ag-section-content-max: var(--ag-panel-content-max);
@@ -25,4 +27,8 @@
   --ag-color-border-main: #bebebe;
   --ag-font-size-body: 16px;
   --ag-line-height-body: 1.75;
+  /* Typography rule: Helv headings get a small negative track; Avenir headings use the stronger Avenir token. */
+  --ag-letter-spacing-helv-heading: -2px;
+  --ag-letter-spacing-helv-intro: -1.2px;
+  --ag-letter-spacing-avenir-heading: -0.02em;
 }

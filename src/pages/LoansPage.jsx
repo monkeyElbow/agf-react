@@ -618,7 +618,7 @@ export default function LoansPage() {
         </div>
       </section>
 
-      <section className="service-native-section loans-native-calculator-wrap">
+      <section className="service-native-section loans-native-calculator-wrap" id="run-some-numbers">
         <div className="ag-panel-rail">
           <h2 className="loans-native-calculator-title">
             Run some numbers.
@@ -748,8 +748,8 @@ export default function LoansPage() {
 
       <section className="service-native-section loans-native-vision-fuel">
         <div className="ag-panel-rail">
-          <h2>Vision fuel.</h2>
-          <h3>One bold step at a time.</h3>
+          <h2 className="loans-native-vision-fuel-title">Vision fuel.</h2>
+          <h3 className="loans-native-vision-fuel-subtitle">One bold step at a time.</h3>
           <p>Loans guided by your ministry, driven by your mission, and powered by AGFinancial.</p>
           <div className="service-native-action-row is-centered">
             <Link to="/services/loans#form" className="service-native-btn">Start the process</Link>
@@ -760,14 +760,14 @@ export default function LoansPage() {
       <section className="service-native-section loans-native-cta-addon">
         <div className="ag-panel-rail">
           <form className="loans-native-addon-form" onSubmit={onCtaSubmit}>
-            <h4>Explore your options. Zero pressure.</h4>
+            <h4 className="loans-native-addon-title">Explore your options. Zero pressure.</h4>
             <label htmlFor="loan-addon-name">Name</label>
             <input id="loan-addon-name" value={ctaName} onChange={(event) => setCtaName(event.target.value)} required />
             <label htmlFor="loan-addon-email">Email</label>
             <input id="loan-addon-email" type="email" value={ctaEmail} onChange={(event) => setCtaEmail(event.target.value)} required />
             <label htmlFor="loan-addon-phone">Phone</label>
             <input id="loan-addon-phone" value={ctaPhone} placeholder="(555) 555-5555" onChange={(event) => setCtaPhone(formatPhoneInput(event.target.value))} />
-            <h5>Let&apos;s talk about making it happen.</h5>
+            <h5 className="loans-native-addon-subtitle">Let&apos;s talk about making it happen.</h5>
             <button type="submit" className="service-native-btn">Follow-up with me</button>
             {ctaMessage ? <small>{ctaMessage}</small> : null}
           </form>

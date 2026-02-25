@@ -11,7 +11,7 @@ export default function RatesPage() {
 
   return (
     <div ref={pageRef} className="rates-page">
-      <PageShell title="AGFinancial Investment Certificates Rates" source={pageByPath['/rates'].source}>
+      <PageShell title="AGFinancial Investment Certificates Rates" source={pageByPath['/rates'].source} showBadge={false}>
         <p className="rates-page-intro">
           Competitive rates plus commitment to our core faith values.
         </p>

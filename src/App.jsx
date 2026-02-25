@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
 import AdminContentPage from './pages/AdminContentPage';
 import PageBreadcrumbs from './components/PageBreadcrumbs';
+import SiteAnnouncementBar from './components/SiteAnnouncementBar';
 import { pageByPath, sitePages } from './data/siteMap';
 
 const LoansPage = lazy(() => import('./pages/LoansPage'));
@@ -16,18 +17,24 @@ const RetirementPage = lazy(() => import('./pages/RetirementPage'));
 const RatesPage = lazy(() => import('./pages/RatesPage'));
 const AdminRatesPage = lazy(() => import('./pages/AdminRatesPage'));
 const AdminResourcesPage = lazy(() => import('./pages/AdminResourcesPage'));
+const AdminMediaAuditPage = lazy(() => import('./pages/AdminMediaAuditPage'));
+const AdminMessagePage = lazy(() => import('./pages/AdminMessagePage'));
+const AdminConsultantsPage = lazy(() => import('./pages/AdminConsultantsPage'));
+const AdminJobsPage = lazy(() => import('./pages/AdminJobsPage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
 const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
 const ResourceArticlePage = lazy(() => import('./pages/ResourceArticlePage'));
 
 function PageRoute({ page }) {
+  const showAnnouncement = page.path !== '/';
   const showNativeBreadcrumbs = page.source === null
     && page.path !== '/'
     && page.path !== '/search'
     && !page.path.startsWith('/admin/');
 
-  const withBreadcrumbs = (node) => (
+  const withTopBands = (node) => (
     <>
+      {showAnnouncement ? <SiteAnnouncementBar /> : null}
       {showNativeBreadcrumbs ? <PageBreadcrumbs path={page.path} /> : null}
       {node}
     </>
@@ -38,11 +45,11 @@ function PageRoute({ page }) {
   }
 
   if (page.path === '/services') {
-    return withBreadcrumbs(<ServicesPage />);
+    return withTopBands(<ServicesPage />);
   }
 
   if (page.path === '/services/loans') {
-    return withBreadcrumbs((
+    return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <LoansPage />
       </Suspense>
@@ -50,7 +57,7 @@ function PageRoute({ page }) {
   }
 
   if (page.path === '/services/investments') {
-    return withBreadcrumbs((
+    return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <InvestmentsPage />
       </Suspense>
@@ -58,7 +65,7 @@ function PageRoute({ page }) {
   }
 
   if (page.path === '/services/retirement') {
-    return withBreadcrumbs((
+    return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <RetirementPage />
       </Suspense>
@@ -66,27 +73,59 @@ function PageRoute({ page }) {
   }
 
   if (page.path === '/admin/rates') {
-    return (
+    return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <AdminRatesPage />
       </Suspense>
-    );
+    ));
   }
 
   if (page.path === '/admin/content') {
-    return <AdminContentPage />;
+    return withTopBands(<AdminContentPage />);
   }
 
   if (page.path === '/admin/resources') {
-    return (
+    return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <AdminResourcesPage />
       </Suspense>
-    );
+    ));
+  }
+
+  if (page.path === '/admin/media-audit') {
+    return withTopBands((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <AdminMediaAuditPage />
+      </Suspense>
+    ));
+  }
+
+  if (page.path === '/admin/consultants') {
+    return withTopBands((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <AdminConsultantsPage />
+      </Suspense>
+    ));
+  }
+
+  if (page.path === '/admin/jobs') {
+    return withTopBands((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <AdminJobsPage />
+      </Suspense>
+    ));
+  }
+
+  if (page.path === '/admin/message') {
+    return withTopBands((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <AdminMessagePage />
+      </Suspense>
+    ));
   }
 
   if (page.path === '/rates') {
-    return withBreadcrumbs((
+    return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <RatesPage />
       </Suspense>
@@ -94,7 +133,7 @@ function PageRoute({ page }) {
   }
 
   if (page.path === '/resources') {
-    return withBreadcrumbs((
+    return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <ResourcesPage />
       </Suspense>
@@ -102,14 +141,14 @@ function PageRoute({ page }) {
   }
 
   if (page.path === '/search') {
-    return (
+    return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <SearchPage />
       </Suspense>
-    );
+    ));
   }
 
-  return withBreadcrumbs(<NativeContentPage page={page} />);
+  return withTopBands(<NativeContentPage page={page} />);
 }
 
 export default function App() {
@@ -133,11 +172,13 @@ export default function App() {
       const id = decodeURIComponent(location.hash.replace(/^#/, ''));
       let rafId = 0;
       let attempts = 0;
+      const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
 
       const scrollToHashTarget = () => {
         const target = document.getElementById(id);
         if (target) {
-          target.scrollIntoView({ block: 'start' });
+          target.scrollIntoView({ block: 'start', behavior: scrollBehavior });
           return;
         }
         if (attempts >= 10) {

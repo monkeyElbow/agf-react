@@ -1,4 +1,12 @@
 import legacyOpportunityImage from '../assets/legacy-opportunity.jpg';
+import insuranceRiskGuideImage from '../assets/insurance-riskmanagementguide.jpg';
+import churchMutualInsuranceLogo from '../assets/church-mutual-insurance.png';
+import missionAssureLogo from '../assets/mission-assure-logo.png';
+import insuranceMissionAssureImage from '../assets/insurance-mission-assure.jpg';
+import missionAssureMedicalIncludedImage from '../assets/mission-assure-medical-included.png';
+import missionAssureSummerCampSafetyImage from '../assets/mission-assure-summer-camp-safety.jpg';
+import aboutIntroImage from '../assets/about-intro.jpg';
+import ministersHousingImage from '../assets/ministers-housing.jpg';
 
 export function getNativePageContent(path, title) {
   const direct = directContent[path];
@@ -147,27 +155,28 @@ const directContent = {
       },
       {
         title: 'Risk Management',
-        titleHighlights: [{ text: 'Risk', className: 'is-mango' }],
         className: 'insurance-native-risk',
-        body: [
-          'Ministries are often faced with issues that can cause disruptions, loss of resources, and heartache.',
-          'Practicing good risk management helps increase safety and security for children, families, church workers, and leaders while helping your church avoid costly disruptions.',
-          'Our church Risk Management Guide can help you recognize areas of risk and proactively address them.',
-          'Focus on your ministry. We will manage the risk.',
-        ],
-        links: [
-          { label: 'Church Risk Management Guide', href: 'https://www.agfinancial.org/risk-management' },
-          { label: 'Church Risk Management Resource', href: 'https://www.agfinancial.org/resources' },
-        ],
+        hideTitle: true,
+        feature: {
+          title: 'Risk Management',
+          titleHighlights: [{ text: 'Risk', className: 'is-melon' }],
+          image: insuranceRiskGuideImage,
+          imageAlt: 'Church Risk Management Guide',
+          body: [
+            "Focus on your ministry. We'll manage the risk.",
+            'Our church **Risk Management Guide** can help you recognize areas of risk and learn how to proactively address them. From establishing a church safety and security team to financial protection to emergency preparedness, this guide can assist you in protecting your church and congregants.',
+          ],
+          actions: [{ label: 'Download the guide', href: 'https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf' }],
+        },
       },
       {
         title: 'Ready to protect your ministry?',
         className: 'insurance-native-cta',
-        body: [
-          'Share a few details and we will help map your best options.',
-        ],
+        hideTitle: true,
+        body: [],
         form: {
-          title: 'Get a quote. It is on the house.',
+          title: 'What coverage is best for your ministry?',
+          subtitle: 'Let’s walk through the options.',
           fields: [
             { id: 'name', label: 'Name', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true },
@@ -175,18 +184,23 @@ const directContent = {
             { id: 'organization', label: 'Organization', type: 'text' },
             { id: 'coverageFocus', label: 'Coverage focus', type: 'text', placeholder: 'Property, life, mission, or all' },
           ],
-          submitLabel: 'Request quote',
+          submitLabel: 'Follow-up with me',
         },
       },
       {
-        title: 'Mission Assure',
-        logoText: 'Mission Assure',
-        subtitle: 'Full coverage for mission trips, retreats, and everything in between.',
         className: 'insurance-native-mission-assure',
-        body: [
-          "With low per-person, per-day premiums, Mission Assure offers superior protection at minimum cost. Every trip is a step of faith, but you do not have to take it uninsured.",
-        ],
-        actions: [{ label: 'Learn more', to: '/services/insurance/mission-assure' }],
+        hideTitle: true,
+        feature: {
+          image: insuranceMissionAssureImage,
+          imageAlt: 'Mission Assure coverage',
+          logoImage: missionAssureLogo,
+          logoAlt: 'Mission Assure',
+          title: 'Full coverage for mission trips, retreats, and everything in between.',
+          body: [
+            "With low per-person, per-day premiums, Mission Assure offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.",
+          ],
+          actions: [{ label: 'Let’s go', to: '/services/insurance/mission-assure' }],
+        },
       },
       {
         title: 'Defend Yourself Against Fraud',
@@ -217,7 +231,7 @@ const directContent = {
         },
         {
           title: 'With strategy.',
-          highlights: [{ text: 'strategy', className: 'is-mango' }],
+          highlights: [{ text: 'strategy', className: 'is-melon' }],
         },
       ],
     },
@@ -385,7 +399,7 @@ const directContent = {
             'The SECURE 2.0 Act allows you to distribute funds from your IRA into a Charitable Gift Annuity.**',
           ],
           actions: [
-            { label: 'Answer the door', href: 'http://newpublic.agfinancial.org/wordpress/index.php/opportunity-is-knocking/' },
+            { label: 'Answer the door', to: '/resources' },
           ],
         },
       },
@@ -394,75 +408,95 @@ const directContent = {
   },
 
   '/about-us': {
+    pageClass: 'native-info-page--about',
     compact: true,
-    hero: { title: 'Bold, smart steps. Together.', highlight: 'Together' },
+    hero: {
+      lines: [
+        {
+          title: 'Bold, smart steps.',
+          highlights: [{ text: 'steps', className: 'is-atlantean' }],
+        },
+        {
+          title: 'Together.',
+          highlights: [{ text: 'Together', className: 'is-mango' }],
+        },
+      ],
+    },
     intro: {
       heading: 'Connect your faith & finances.',
+      headingHighlights: [{ text: 'faith & finances', className: 'is-white' }],
       body: [
         'Our goal is to deliver the best financial products, services, and experiences that align with biblical values. Our mission is your financial health and ministry growth.',
-        'AGFinancial is a culture where business and faith grow together.',
       ],
+      emphasis: 'AGFinancial is a culture where business and faith grow **together**.',
+      image: aboutIntroImage,
+      imageAlt: 'AGFinancial team collaborating',
+      layout: 'split',
     },
     sections: [
       {
+        className: 'about-native-strategy',
         title: 'Create a complete, robust financial strategy for your ministry and your family.',
+        body: [
+          'It is our honor to serve more than 38,000 clients, and more than 4,000 churches and ministries worldwide. With $10.5 billion+ in assets under management, we are driven to God-honoring stewardship. Through loans, investments, retirement, planned giving, and insurance services, we’re dedicated to providing the best financial experience for both ministries and individuals.',
+        ],
         cards: [
           {
             title: 'Focus',
             body: 'Our faith and our clients’ financial health come first. Everything else flows from our unwavering commitment to both.',
-            cardClass: 'card1',
+            cardClass: 'card3',
           },
           {
             title: 'Responsibility',
             body: 'The highest standards of biblical stewardship and professional integrity guide every decision.',
-            cardClass: 'card1',
+            cardClass: 'card3',
           },
           {
             title: 'Experience',
             body: 'Decades of trusted financial expertise help us successfully navigate challenges for both individuals and ministries.',
-            cardClass: 'card1',
+            cardClass: 'card3',
           },
         ],
         actions: [{ label: 'Explore all services', to: '/services' }],
       },
       {
+        className: 'about-native-allies',
         title: 'Ministry allies.',
         body: [
-          'We’re serving you, alongside you.',
+          'We’re **serving** you, **alongside** you.',
         ],
         actions: [
           { label: 'See what we’re doing together', to: '/about-us/impact' },
-          { label: 'Careers', to: '/about-us/careers', ghost: true },
         ],
       },
       {
-        title: 'Why our work matters',
+        className: 'about-native-history',
+        title: 'Some history things.',
         body: [
-          'This is where business and faith meet to create measurable ministry outcomes.',
-          'Explore the stories and numbers behind the impact.',
+          'This will be a little more info about AGF; some brief historical tidbits, maybe some roots/AG mentions. Not a lot of things, easy to view and read.',
+          'Maybe after that, we send to the “impact” page to show why our work matters, and what sort of difference we’re making…via the button, of course.',
         ],
         actions: [
           { label: 'This is why we matter', to: '/about-us/impact' },
         ],
       },
       {
-        title: 'Explore',
-        cards: [
-          {
-            title: 'Impact',
-            body: 'See how clients and ministries are creating measurable Kingdom impact together.',
-            to: '/about-us/impact',
-            cta: 'View impact',
-          },
-          {
-            title: 'Careers',
-            body: 'Join a team serving churches, ministries, and families with purpose.',
-            to: '/about-us/careers',
-            cta: 'View careers',
-          },
-        ],
+        className: 'about-native-cta-form',
+        title: 'What can we do for you?',
+        copyWrap: true,
+        body: ['Let’s explore a bold, smart financial plan together.'],
+        form: {
+          fields: [
+            { id: 'name', label: 'Name', type: 'text', required: true },
+            { id: 'email', label: 'Email', type: 'email', required: true },
+            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
+          ],
+          submitLabel: 'Follow-up with me',
+          successMessage: 'Got it. We’ll reach out soon.',
+        },
       },
     ],
+    actions: [],
   },
 
   '/resources': {
@@ -514,27 +548,15 @@ const directContent = {
   '/calculators': {
     compact: true,
     hero: { title: 'Calculators', highlight: null },
-    intro: 'Run practical planning scenarios and then discuss next steps with our team.',
+    intro: 'Use the same live calculators found on our core service pages, then discuss next steps with our team.',
     sections: [
       {
-        title: 'Calculator tools',
+        title: 'Live calculator tools',
         cards: [
           {
             title: 'Retirement Savings',
             body: 'Sneak a peek at the future and discover what you need to do now to make retirement a reality.',
-            to: '/services/retirement',
-            cta: 'Launch',
-          },
-          {
-            title: 'Compound Interest',
-            body: 'Watch your money grow over time by earning interest on a deposit and monthly contributions.',
-            href: '/calculators',
-            cta: 'Launch',
-          },
-          {
-            title: 'Increased Contribution',
-            body: 'Explore how much your retirement balance could grow if you increased your contribution now.',
-            href: '/calculators',
+            to: '/services/retirement#retirement-savings-calculator',
             cta: 'Launch',
           },
           {
@@ -544,21 +566,9 @@ const directContent = {
             cta: 'Launch',
           },
           {
-            title: 'Emergency Fund',
-            body: 'Find out how much you need to save in order to cover six months of your expenses.',
-            href: '/calculators',
-            cta: 'Launch',
-          },
-          {
             title: 'Laddering',
             body: 'See how much more you could earn by laddering your investments instead of focusing only on short-term accounts.',
-            to: '/services/investments',
-            cta: 'Launch',
-          },
-          {
-            title: 'Net Worth',
-            body: 'Get a view of your financial position and make adjustments to see how things could change.',
-            href: '/calculators',
+            to: '/services/investments#laddering-calculator',
             cta: 'Launch',
           },
         ],
@@ -628,27 +638,77 @@ const directContent = {
   },
 
   '/online-contributions': {
+    pageClass: 'native-info-page--online-contributions',
     compact: true,
-    hero: { title: 'Employer contributions', highlight: null },
-    intro: 'Minimize monthly data entry and maximize accuracy as you make retirement contributions on behalf of your employees.',
+    hero: {
+      lines: [
+        {
+          title: 'Employer contributions',
+        },
+      ],
+    },
+    intro: {
+      heading: 'Manage Contributions',
+      body: [
+        'Minimize monthly data entry, and maximize accuracy as you make retirement contributions on behalf of your employees.',
+      ],
+    },
     sections: [
       {
+        className: 'online-contrib-native-overview',
         title: 'Set-up is easy',
+        titleClassName: 'online-contrib-native-title',
         body: [
-          'Create a new user account for your company in Online Access.',
-          'Select “403(b) Employer” as the Account Type.',
-          'Contact Client Services at 866.621.1787 or clientservices@agfinancial.org for your Employer Code to complete setup.',
+          'Create a new user account for your company in **Online Access**.',
+          'Select “403(b) Employer” as the **Account Type**.',
+          'Contact Client Services at 866.621.1787 or clientservices@agfinancial.org for your Employer Code to complete your account setup.',
           'When your account is established, you may remit funds by EFT or check.',
+        ],
+        links: [
+          { label: 'Online Access', href: 'https://secure.agfinancial.org/cp/do/user/login' },
+        ],
+      },
+      {
+        className: 'online-contrib-native-steps',
+        fullBleed: true,
+        hideTitle: true,
+        columns: 'three',
+        cards: [
+          {
+            title: '1) Create a new user account for your company.',
+            body: 'Start in Online Access and create a user account for your company.',
+            actions: [{ label: 'Create account', href: 'https://secure.agfinancial.org/cp/do/user/login' }],
+            cardClass: 'card2',
+          },
+          {
+            title: '2) Select “403(b) Employer” as the Account Type',
+            body: 'Choose the employer contribution account type during setup so the account is configured correctly.',
+            cardClass: 'card2',
+          },
+          {
+            title: '3) Get your Employer Code',
+            body: 'Contact Client Services at 866.621.1787 or clientservices@agfinancial.org for your Employer Code to complete your account setup.',
+            actions: [
+              { label: 'Email', href: 'mailto:clientservices@agfinancial.org' },
+              { label: 'Call', href: 'tel:18666211787', ghost: true },
+            ],
+            cardClass: 'card2',
+          },
+        ],
+      },
+      {
+        className: 'online-contrib-native-help',
+        title: 'Need some help? Maybe just curious?',
+        subtitle: 'Let’s talk.',
+        body: [
           'Contact your AGFinancial retirement consultant for more information.',
         ],
         actions: [
-          { label: 'Create account', href: 'https://secure.agfinancial.org/' },
-          { label: 'Email', href: 'mailto:clientservices@agfinancial.org', ghost: true },
-          { label: 'Call', href: 'tel:8666211787', ghost: true },
+          { label: 'Email', href: 'mailto:retirement@agfinancial.org' },
+          { label: 'Call', href: 'tel:18006227526', ghost: true },
         ],
       },
     ],
-    actions: [{ label: 'Contact us', to: '/contact-us' }],
   },
 
   '/prospectus': {
@@ -769,111 +829,169 @@ const directContent = {
 const insuranceChildPages = {
   '/services/insurance/certificate-request': {
     compact: true,
+    pageClass: 'native-info-page--certificate-request',
+    hideIntro: true,
     hero: { title: 'Certificate Request', highlight: null },
-    intro: 'Please complete this form in full, including location details. Incomplete submissions may delay your insurance certificate request.',
     sections: [
       {
-        title: 'Request checklist',
-        body: [
-          'Name of your organization (legal name shown on policy).',
-          'Address, city, zip code, and authorized contact details.',
-          'Event/activity name, description, and location details.',
-          'Event start and end dates.',
-          'Certificate holder name, address, and contact details.',
-          'Attach contract or special wording requirements as needed.',
-        ],
-      },
-      {
-        title: 'Need help with special wording?',
-        body: [
-          'There may be an additional charge for Additional Insured endorsement.',
-          'If so, you will be contacted for authorization.',
-        ],
-        actions: [
-          { label: 'Email cert team', href: 'mailto:cert@agfinancial.org' },
-        ],
+        className: 'certificate-request-native-section',
+        hideTitle: true,
+        body: [],
+        form: {
+          variant: 'certificate-request',
+          title: 'Certificate Request',
+        },
       },
     ],
-    actions: [{ label: 'Email certificate request', href: 'mailto:cert@agfinancial.org' }],
   },
   '/services/insurance/group-term-life-insurance': {
     compact: true,
+    pageClass: 'native-info-page--group-life-quote',
     hero: {
-      title: 'Group Life. Take care of the team.',
-      highlights: [
-        { text: 'Group', className: 'is-atlantean' },
-        { text: 'team', className: 'is-mango' },
+      lines: [
+        {
+          title: 'Get a group quote.',
+          highlights: [
+            { text: 'group', className: 'is-atlantean' },
+            { text: 'quote', className: 'is-atlantean' },
+          ],
+        },
       ],
     },
-    intro: 'Protect the people who power your ministry. Coverage for your team that replaces income and secures families when the unexpected strikes is a benefit that shows your people are valued beyond their workdays.',
+    intro: {
+      heading: 'Take care of the team.',
+      headingHighlights: [{ text: 'team', className: 'is-atlantean' }],
+      body: [
+        'Protect the people who power your ministry. Coverage for your team that replaces income and secures families when the unexpected strikes is a benefit that shows your people are valued beyond their workdays.',
+      ],
+    },
     sections: [
       {
-        title: 'Request a quote for group life',
+        className: 'group-life-native-lead',
+        title: 'Group Term Life',
+        titleHighlights: [{ text: 'Group Term Life', className: 'is-mango' }],
+        body: [
+          'Comprehensive life insurance plans for nonprofits, schools, and businesses—customized for your group. Use the form below to request a quote.',
+        ],
+      },
+      {
+        className: 'group-life-native-quote',
+        copyWrap: true,
+        title: 'Request a quote for group life.',
+        titleHighlights: [{ text: 'group life', className: 'is-white' }],
         body: [
           'Provide a few specifics, and we’ll contact you about a policy customized specifically for your team.',
-          'For Standard Group Life Insurance questions, call Innovo Benefits Administration at 800.829.5601.',
         ],
         form: {
-          title: 'Group Term Life quote request',
-          fields: [
-            { id: 'contactFirstName', label: 'Contact First Name', type: 'text', required: true },
-            { id: 'contactLastName', label: 'Contact Last Name', type: 'text', required: true },
-            { id: 'contactEmail', label: 'Contact Email Address', type: 'email', required: true },
-            { id: 'contactPhone', label: 'Contact Phone Number', type: 'tel', placeholder: '555-555-5555', required: true },
-            { id: 'organizationName', label: 'Organization Name', type: 'text', required: true },
-            { id: 'organizationAddress1', label: 'Organization Address', type: 'text', required: true },
-            { id: 'organizationAddress2', label: 'Street Address Line 2 (optional)', type: 'text' },
-            { id: 'organizationCity', label: 'Organization City', type: 'text', required: true },
-            { id: 'organizationCounty', label: 'Organization County', type: 'text', required: true },
-            { id: 'organizationState', label: 'Organization State', type: 'text', required: true },
-            { id: 'organizationZip', label: 'Organization Zip Code', type: 'text', placeholder: '5-digit zip code', required: true },
+          steps: [
             {
-              id: 'isBroker',
-              label: 'Are you an insurance broker?',
-              type: 'radio',
-              required: true,
-              options: [
-                { value: 'yes', label: 'Yes' },
-                { value: 'no', label: 'No' },
+              id: 'contact',
+              fields: [
+                { id: 'contactFirstName', label: 'Contact First Name', type: 'text', required: true },
+                { id: 'contactLastName', label: 'Contact Last Name', type: 'text', required: true },
+                { id: 'contactEmail', label: 'Contact Email Address', type: 'email', required: true },
+                { id: 'contactPhone', label: 'Contact Phone Number', type: 'tel', placeholder: '555-555-5555', required: true },
               ],
+              nextLabel: 'Next',
+            },
+            {
+              id: 'organization',
+              fields: [
+                { id: 'organizationName', label: 'Organization Name', type: 'text', required: true },
+                { id: 'organizationAddress1', label: 'Organization Address', type: 'text', required: true },
+                { id: 'organizationAddress2', label: 'Street Address Line 2 (optional)', type: 'text' },
+                { id: 'organizationCity', label: 'Organization City', type: 'text', required: true },
+              ],
+              backLabel: 'Back',
+              nextLabel: 'Next',
+            },
+            {
+              id: 'organization-details',
+              fields: [
+                { id: 'organizationCounty', label: 'Organization County', type: 'text', required: true },
+                { id: 'organizationState', label: 'Organization State', type: 'text', required: true },
+                { id: 'organizationZip', label: 'Organization Zip Code', type: 'text', placeholder: '5-digit zip code', required: true },
+                {
+                  id: 'isBroker',
+                  label: 'Are you an insurance broker?',
+                  type: 'radio',
+                  required: true,
+                  options: [
+                    { value: 'yes', label: 'Yes' },
+                    { value: 'no', label: 'No' },
+                  ],
+                },
+              ],
+              backLabel: 'Back',
+              submitLabel: 'Submit quote request',
             },
           ],
-          submitLabel: 'Submit quote request',
         },
       },
       {
-        title: 'Group Term Life',
-        body: [
-          'AGFinancial Insurance offers customized group life insurance plans for nonprofit organizations, schools, and companies, providing comprehensive coverage for your employees.',
-          'We are here to provide customer service both during and after the initial enrollment.',
+        className: 'group-life-native-benefits',
+        fullBleed: true,
+        hideTitle: true,
+        columns: 'three',
+        cards: [
+          {
+            title: 'Coverage for you and your family.',
+            body: 'Extend protection to your spouse and dependent children, all under one plan.',
+            cardClass: 'card4',
+          },
+          {
+            title: 'No medical sign-off.',
+            body: 'Newly credentialed ministers can enroll up to the Guarantee Issue Amount without medical approval during the eligible enrollment period.',
+            cardClass: 'card4',
+          },
+          {
+            title: 'Accelerated benefit.',
+            body: 'Access a portion of your life benefit early to help cover terminal illness expenses when it matters most.',
+            cardClass: 'card4',
+          },
         ],
       },
       {
-        title: 'AG Insurance Program',
-        body: [
-          'Discounted premiums. Exclusively for AG churches. Expanded coverages. No extra charge.',
-          "The AG Insurance Program is offered in exclusive partnership with Standard Insurance Company. Through this program, we offer broader coverage, lower pricing, and value-added services.",
-        ],
+        className: 'group-life-native-divider',
+        hideTitle: true,
+        body: [],
       },
       {
-        title: 'Need to get more nitty gritty?',
-        body: [
-          'For plan details, enrollment support, and servicing questions, connect with our insurance specialists and we will walk through your options.',
-        ],
-        actions: [
-          { label: 'Email insurance team', href: 'mailto:info@agfinancialinsurance.com' },
-          { label: 'Call Innovo', href: 'tel:8008295601', ghost: true },
-        ],
+        className: 'group-life-native-honor',
+        title: 'It’s our honor to administer the group term life plan for the General Council of the Assemblies of God. Available to any credentialed AG minister, the plan is provided through our group carrier, The Standard Insurance Company.',
+        titleHighlights: [{ text: 'General Council of the Assemblies of God', className: 'is-atlantean' }],
+        body: [],
+      },
+      {
+        title: 'Ready to protect your team?',
+        className: 'insurance-native-cta group-life-native-cta',
+        hideTitle: true,
+        body: [],
+        form: {
+          title: 'What coverage is best for your team?',
+          subtitle: 'Let’s walk through the options.',
+          fields: [
+            { id: 'name', label: 'Name', type: 'text', required: true },
+            { id: 'email', label: 'Email', type: 'email', required: true },
+            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555', required: true },
+            { id: 'organization', label: 'Organization', type: 'text' },
+            { id: 'coverageFocus', label: 'Coverage focus', type: 'text', placeholder: 'Group life coverage needs' },
+          ],
+          submitLabel: 'Follow-up with me',
+        },
       },
     ],
-    actions: [{ label: 'Email insurance team', href: 'mailto:info@agfinancialinsurance.com' }],
   },
   '/services/insurance/life-insurance-quote': {
     pageClass: 'native-info-page--life-quote',
     compact: true,
     hero: {
-      title: 'Get a life quote.',
-      highlights: [{ text: 'Get a', className: 'is-mango' }],
+      lines: [
+        {
+          title: 'Get a life quote.',
+          highlights: [{ text: 'Get a', className: 'is-mango' }],
+        },
+      ],
     },
     intro: {
       heading: 'Take care of your family.',
@@ -884,8 +1002,44 @@ const insuranceChildPages = {
     },
     sections: [
       {
+        className: 'life-quote-native-types',
+        fullBleed: true,
+        hideTitle: true,
+        columns: 'three',
+        cards: [
+          {
+            title: 'Term Life',
+            body: 'Coverage for typically 10, 20, or 30 years. Designed to protect your “highest-need” years.',
+            cardClass: 'card4',
+          },
+          {
+            title: 'Whole Life',
+            body: 'Lifelong coverage. Guaranteed death benefit, and grows cash value over time.',
+            cardClass: 'card4',
+          },
+          {
+            title: 'Universal Life',
+            body: 'Flexible lifelong coverage. Premiums and death benefit are adjustable. Builds cash value over time.',
+            cardClass: 'card4',
+          },
+        ],
+      },
+      {
+        className: 'life-quote-native-divider',
+        hideTitle: true,
+        body: [],
+      },
+      {
+        className: 'life-quote-native-bridge',
+        title: 'Which is best for you?',
+        subtitle: 'We’re ready to help.',
+        body: ['Use the quote form below to get started.'],
+        anchorId: 'quote',
+      },
+      {
         className: 'insurance-native-life-quote',
         copyWrap: true,
+        anchorId: 'form',
         title: 'Request a quote for individual life.',
         titleHighlights: [{ text: 'individual life', className: 'is-white' }],
         body: ['Provide a few specifics, and we’ll contact you about a policy customized specifically for you.'],
@@ -963,29 +1117,67 @@ const insuranceChildPages = {
   },
   '/services/insurance/mission-assure': {
     compact: true,
-    hero: { title: 'Packed & covered.', highlight: 'covered' },
-    intro: 'Every trip is a step of faith, but you do not have to take it uninsured. Mission Assure helps take the what-if out of church trips and events.',
+    pageClass: 'native-info-page--mission-assure',
+    hideIntro: true,
+    hero: {
+      lines: [
+        { title: 'Packed &' },
+        {
+          title: 'covered.',
+          highlights: [{ text: 'covered.', className: 'is-white' }],
+        },
+      ],
+    },
     sections: [
       {
-        title: 'Get covered',
+        className: 'mission-assure-native-intro',
+        logoImage: missionAssureLogo,
+        title: 'Every trip is a step of faith, but you don’t have to take it uninsured.',
+        titleHighlights: [{ text: 'faith', className: 'is-atlantean' }],
         body: [
-          'Apply for coverage and manage all your trips in one place.',
-          'As low as $1.25/day for domestic trips and $4.95/day for international trips.',
+          'As low as **$1.25**/day',
+          'Mission Assure helps take the “what if” out of church trips and events. At only $4.95 per person per day for **international** trips, and $1.25 per person per day for **domestic** trips or outings, Mission Assure offers superior short-term insurance at an affordable price. Use the buttons below to apply for coverage, manage your trips, or report a claim.',
         ],
-        actions: [
-          { label: 'Let’s start', href: 'https://www.missionassure.com/' },
-          { label: 'Report a claim', to: '/services/insurance/mission-assure/report-a-claim', ghost: true },
-        ],
+        table: {
+          headers: ['Trip', 'Per person'],
+          rows: [
+            ['Domestic', '$1.25 per day'],
+            ['International', '$4.95 per day'],
+          ],
+        },
       },
       {
-        title: 'Practical safety tips',
-        body: [
-          'Practical safety tips to help your summer camp prevent injuries, protect children, and be prepared for the unexpected.',
-        ],
-        actions: [{ label: 'Go safely!', to: '/resources' }],
+        className: 'mission-assure-native-medical',
+        hideTitle: true,
+        logoImage: missionAssureMedicalIncludedImage,
+        body: [],
+      },
+      {
+        className: 'mission-assure-native-get-covered',
+        title: 'Get covered',
+        body: ['Apply for coverage and manage all your trips in one place.'],
+        actions: [{ label: 'Let’s start', href: 'https://www.missionassure.com/' }],
+      },
+      {
+        className: 'mission-assure-native-report-claim',
+        title: 'Need to report a claim?',
+        body: ['Start here.'],
+        actions: [{ label: 'Report a claim', to: '/services/insurance/mission-assure/report-a-claim' }],
+      },
+      {
+        className: 'mission-assure-native-camp-safety',
+        fullBleed: true,
+        feature: {
+          image: missionAssureSummerCampSafetyImage,
+          imageAlt: 'Summer camp safety',
+          title: 'Summer Camp Safety Tips',
+          body: [
+            'Practical safety tips to help your summer camp prevent injuries, protect children, and be prepared for the unexpected.',
+          ],
+          actions: [{ label: 'Go safely!', to: '/resources' }],
+        },
       },
     ],
-    actions: [{ label: 'Report a claim', to: '/services/insurance/mission-assure/report-a-claim' }],
   },
   '/services/insurance/mission-assure/report-a-claim': {
     compact: true,
@@ -1020,279 +1212,689 @@ const insuranceChildPages = {
   },
   '/services/insurance/property-casualty-insurance': {
     compact: true,
+    pageClass: 'native-info-page--insurance-pc',
     hero: {
-      title: 'Property & Casualty',
-      highlights: [
-        { text: 'Property', className: 'is-atlantean' },
-        { text: 'Casualty', className: 'is-mango' },
+      lines: [
+        {
+          title: 'Property',
+          highlights: [{ text: 'Property', className: 'is-atlantean' }],
+        },
+        {
+          title: '& Casualty',
+          highlights: [{ text: 'Casualty', className: 'is-mango' }],
+        },
       ],
     },
-    intro: 'AG Insurance Program with Church Mutual Insurance offers meaningful extras for Assemblies of God churches.',
+    intro: {
+      body: [
+        "You focus on people. We'll handle the protection-powered confidence to keep your ministry safe and sound. Additionally, our **AG Insurance Program** with Church Mutual Insurance offers some nice extras for Assemblies of God churches.",
+      ],
+      actions: [{ label: 'Jump to the AG program', to: '/services/insurance/property-casualty-insurance#ag-program' }],
+    },
     sections: [
       {
-        title: 'Request a P&C quote',
+        title: 'Request a P&C quote.',
+        titleHighlights: [{ text: 'P&C', className: 'is-white' }],
+        className: 'insurance-pc-native-quote',
+        anchorId: 'quote',
         body: [
           'Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.',
         ],
         form: {
-          title: 'Property and Casualty quote request',
-          fields: [
-            { id: 'contactFirstName', label: 'Contact First Name', type: 'text', required: true },
-            { id: 'contactLastName', label: 'Contact Last Name', type: 'text', required: true },
-            { id: 'contactEmail', label: 'Contact Email Address', type: 'email', required: true },
-            { id: 'contactPhone', label: 'Contact Phone Number', type: 'tel', placeholder: '555-555-5555', required: true },
-            { id: 'organizationName', label: 'Organization Name', type: 'text', required: true },
-            { id: 'organizationAddress1', label: 'Organization Address', type: 'text', required: true },
-            { id: 'organizationAddress2', label: 'Street Address Line 2 (optional)', type: 'text' },
-            { id: 'organizationCity', label: 'Organization City', type: 'text', required: true },
-            { id: 'organizationCounty', label: 'Organization County', type: 'text', required: true },
-            { id: 'organizationState', label: 'Organization State', type: 'text', required: true },
-            { id: 'organizationZip', label: 'Organization Zip Code', type: 'text', placeholder: '5-digit zip code', required: true },
+          steps: [
             {
-              id: 'isBroker',
-              label: 'Are you an insurance broker?',
-              type: 'radio',
-              required: true,
-              options: [
-                { value: 'yes', label: 'Yes' },
-                { value: 'no', label: 'No' },
+              id: 'contact',
+              fields: [
+                { id: 'contactFirstName', label: 'Contact First Name', type: 'text', required: true },
+                { id: 'contactLastName', label: 'Contact Last Name', type: 'text', required: true },
+                { id: 'contactEmail', label: 'Contact Email Address', type: 'email', required: true },
+                { id: 'contactPhone', label: 'Contact Phone Number', type: 'tel', placeholder: '555-555-5555', required: true },
               ],
+              nextLabel: 'Next',
+            },
+            {
+              id: 'organization',
+              fields: [
+                { id: 'organizationName', label: 'Organization Name', type: 'text', required: true },
+                { id: 'organizationAddress1', label: 'Organization Address', type: 'text', required: true },
+                { id: 'organizationAddress2', label: 'Street Address Line 2 (optional)', type: 'text' },
+                { id: 'organizationCity', label: 'Organization City', type: 'text', required: true },
+                { id: 'organizationCounty', label: 'Organization County', type: 'text', required: true },
+              ],
+              backLabel: 'Back',
+              nextLabel: 'Next',
+            },
+            {
+              id: 'details',
+              fields: [
+                { id: 'organizationState', label: 'Organization State', type: 'text', required: true },
+                { id: 'organizationZip', label: 'Organization Zip Code', type: 'text', placeholder: '5-digit zip code', required: true },
+                {
+                  id: 'isBroker',
+                  label: 'Are you an insurance broker?',
+                  type: 'radio',
+                  required: true,
+                  options: [
+                    { value: 'yes', label: 'Yes' },
+                    { value: 'no', label: 'No' },
+                  ],
+                },
+              ],
+              backLabel: 'Back',
+              submitLabel: 'Submit quote request',
             },
           ],
-          submitLabel: 'Submit quote request',
         },
       },
       {
         title: 'AG Insurance Program',
+        anchorId: 'ag-program',
+        className: 'insurance-pc-native-ag-program',
         body: [
-          'Discounted premiums. Exclusively for AG churches. Expanded coverages. No extra charge.',
-          'The AG Insurance Program is offered in exclusive partnership with Church Mutual Insurance Company.',
-          'Through this program, we offer broader coverage, lower pricing, and value-added services with the strength and experience of a leading church insurance provider.',
+          '**Discounted premiums.** Exclusively for AG churches.',
+          '**Expanded coverages.** No extra charge.',
+          '**Kingdom support.** Your participation funds ministry.',
         ],
       },
       {
-        title: 'Identifying and managing against risk',
+        title: 'Church Mutual partnership',
+        hideTitle: true,
+        className: 'insurance-pc-native-partner',
+        logoImage: churchMutualInsuranceLogo,
+        logoAlt: 'Church Mutual Insurance',
         body: [
-          'Risk management helps identify risks, implement smart policies, and obtain the right insurance coverage.',
-          'Taking special precautions to minimize your risks and liabilities is important. Our church risk advisors know how to assist your church and help ensure the continuity of your ministry.',
-          'Access our extensive risk management resources at agfinancial.org/risk-management.',
+          '**The AG Insurance Program is offered in exclusive partnership with Church Mutual Insurance Company.**',
+          'Through this program, we’re pleased to offer broader coverage, lower pricing, and other value-added services-all with the strength and experience of America’s leading church insurance provider.',
         ],
       },
       {
-        title: 'Additional coverages available',
-        body: [
-          'Sexual misconduct liability',
-          'Pastoral/counseling professional liability',
-          "Educator's legal liability",
-          'Directors, officers, and trustees liability',
-          'Umbrella liability',
+        title: 'Coverage and resources',
+        hideTitle: true,
+        className: 'insurance-pc-native-resources',
+        columns: 'two',
+        cards: [
+          {
+            title: 'Additional coverages available',
+            body: '› Sexual misconduct liability\n› Pastoral/counseling professional liability\n› Educator’s legal liability\n› Directors, officers, and trustees liability\n› Medical payments\n› Umbrella liability\n› Religious freedom legal defense',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Extensive risk management resources',
+            body: '› On-site safety and hazard analysis\n› Case management\n› Worker and volunteer screening\n› Water and temperature sensors\n› Swimmer and allergy bands\n› Ergonomic evaluations\n› Online safety tools\n› **Comprehensive risk management guide**',
+            cardClass: 'card2',
+          },
         ],
       },
       {
-        title: 'Extensive risk management resources',
-        links: [
-          { label: 'Church Risk Management Guide', href: 'https://www.agfinancial.org/risk-management' },
-          { label: 'Church Risk Management Resource', href: 'https://www.agfinancial.org/resources' },
-        ],
+        title: 'Your people & property. Safe & sound',
+        titleHighlights: [{ text: 'Safe & sound', className: 'is-sandstone' }],
+        className: 'insurance-pc-native-safe',
+        actions: [{ label: 'Start here', to: '/services/insurance/property-casualty-insurance#quote' }],
       },
       {
         title: 'Coverage notice',
-        fineprint: 'This material may include only a general description of insurance coverages and does not include all terms, conditions, and limitations found in Church Mutual Insurance Company policies. The insurance policy forms the contract between the insured and Church Mutual.',
+        hideTitle: true,
+        className: 'insurance-pc-native-fineprint',
+        fineprint: [
+          '**CM0045 (04-2020)**',
+          'This material may include only a general description of insurance coverages and does not include all terms, conditions, and limitations found in Church Mutual Insurance Company, S.I. (“Church Mutual”) policies. The insurance policy, not any general descriptions of coverage that may be found in this material, will form the contract between the insured and Church Mutual. Neither Church Mutual nor its employees, representatives, or agents shall be liable to any party for the use of any information or statements made or contained herein.',
+          '(C) 2020 Church Mutual Insurance Company, S.I. Church Mutual is a registered trademark of Church Mutual Insurance Company, S.I. S.I.= a stock insurer. AGFinancial Insurance is a service mark of the General Council of the Assemblies of God.',
+        ],
       },
-    ],
-    actions: [
-      { label: 'Email insurance team', href: 'mailto:info@agfinancialinsurance.com' },
-      { label: 'Call insurance team', href: 'tel:8666628210', ghost: true },
     ],
   },
 };
 
 const legacyChildPages = {
   '/services/legacy-giving/charitable-gift-annuities': {
+    pageClass: 'native-info-page--legacy-child native-info-page--legacy-cga',
     compact: true,
-    hero: { title: 'Charitable Gift Annuities', highlight: 'Gift' },
-    intro: 'Create lifetime fixed payments while leaving a gift to the ministry of your choice.',
+    hero: {
+      lines: [
+        { title: 'Generous.' },
+        {
+          title: 'Rewarding, too.',
+          highlights: [{ text: 'Rewarding', className: 'is-mango' }],
+        },
+      ],
+    },
+    intro: {
+      heading: 'Tax benefits. Ministry support. Payments for life.',
+      body: [
+        '...and completely unaffected by the economy. Through a Charitable Gift Annuity (CGA), your generosity has the power to bless both the ministries and the people you love—with fixed payments, potential tax deductions, and attractive rates.',
+      ],
+    },
     sections: [
       {
+        className: 'legacy-child-native-steps',
         title: 'How it works',
-        body: [
-          'A charitable gift annuity allows you to contribute cash or other assets and receive fixed payments for life.',
-          'At the end of the annuity term, the remaining value supports the ministry or cause you select.',
+        fullBleed: true,
+        columns: 'three',
+        cards: [
+          {
+            title: '1. Fund the gift',
+            body: 'You fund the gift with cash or securities, and should receive an immediate charitable deduction.',
+            cardClass: 'card2',
+          },
+          {
+            title: '2. Invest & pay',
+            body: 'AG Foundation invests those assets and pays you a fixed amount (according to your age) every year for the rest of your life.',
+            cardClass: 'card2',
+          },
+          {
+            title: '3. Support',
+            body: 'When you pass away, the remainder goes to support ministry.',
+            cardClass: 'card2',
+          },
         ],
       },
       {
-        title: 'Benefits',
+        className: 'legacy-child-native-assets',
+        title: 'It starts with your gift.',
         body: [
-          'Potential tax savings and dependable lifetime fixed payments.',
-          'A planned legacy gift to the ministry of your choice.',
+          '• Cash (a significant portion of the annuity income may be tax-free)',
+          '• Appreciated securities (may avoid a portion of capital gains tax)',
+          '• $10,000 minimum',
+          'The SECURE 2.0 Act of 2022 allows you to fund a Charitable Gift Annuity with funds distributed from your IRA—up to $50,000* of your annual Qualified Charitable Distribution limit (QCD).** This charitable distribution amount is both retirement income for you, and a gift of support to a ministry you choose. Even better, this distribution can count toward your IRA’s annual Required Minimum Distribution (RMD). You’re permitted to take advantage of this unique opportunity only once.',
+          '*Indexed annually for inflation',
+          '**Also available for Charitable Remainder Unitrust (CRUT) or Charitable Remainder Annuity Trust (CRAT). Restrictions apply.',
+        ],
+        actions: [{ label: 'Learn more about this', to: '/services/legacy-giving/charitable-gift-annuities#demo' }],
+      },
+      {
+        className: 'legacy-child-native-options',
+        title: 'Charitable Gift Annuity Options',
+        columns: 'two',
+        cards: [
+          {
+            title: 'Immediate',
+            body: 'Start receiving payments now. If you desire current income, you may transfer cash or securities in exchange for a contract for payment to begin within four weeks. You should receive a current income tax charitable deduction for the value of your gift to AG Foundation.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Deferred',
+            body: 'Receive payments in the future. Deferment compresses payout into a shorter time frame, so your annual payments will be higher than an immediate CGA. You should receive a current charitable income tax deduction.',
+            cardClass: 'card2',
+          },
+        ],
+        actions: [{ label: 'Try the CGA estimator', to: '/services/legacy-giving/charitable-gift-annuities#demo' }],
+      },
+      {
+        className: 'legacy-child-native-cta',
+        copyWrap: true,
+        title: 'Your gifts are more powerful than you think.',
+        subtitle: 'Plenty of options. Explore other charitable and legacy giving strategies.',
+        body: [
+          'When you’re ready for tax deductions, fixed payments, and attractive rates—all while supporting ministry—we’re ready to walk you through the setup process.',
+        ],
+        form: {
+          title: 'Let’s talk through your options.',
+          subtitle: 'Simple, joyful giving.',
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+          ],
+          submitLabel: 'Discover more',
+        },
+      },
+      {
+        className: 'legacy-child-native-fineprint',
+        hideTitle: true,
+        fineprint: [
+          'Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.',
+          'Additional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.',
+          'Additional information for Oklahoma residents: A Charitable Gift Annuity is not regulated by the Oklahoma Insurance Department and is not protected by a guaranty association with the Oklahoma Insurance Department.',
+          'Additional information for South Dakota residents: Charitable Gift Annuities are not regulated by and are not under the jurisdiction of the South Dakota Division of Insurance.',
         ],
       },
     ],
-    actions: [{ label: 'Gift options', href: 'https://aggift.org/?pageID=123' }],
+    actions: [
+      { label: 'Begin', href: 'https://agfsg.giftlegacy.com/?pageID=152' },
+      { label: 'Discover more', to: '/services/legacy-giving', ghost: true },
+    ],
   },
   '/services/legacy-giving/charitable-trusts': {
+    pageClass: 'native-info-page--legacy-child native-info-page--legacy-trusts',
     compact: true,
-    hero: { title: 'Charitable Trusts', highlight: 'Trusts' },
-    intro: 'Build a charitable trust strategy that aligns giving goals with tax and income planning.',
+    hero: {
+      lines: [
+        { title: 'Complex assets.' },
+        {
+          title: 'Smart giving.',
+          highlights: [{ text: 'giving', className: 'is-mango' }],
+        },
+      ],
+    },
+    intro: {
+      heading: 'Charitable Trusts',
+      body: [
+        'Charitable Trusts create a win-win. You receive regular payments and potentially immediate substantial tax deductions, while ministries you care about receive generous support either now or in the future.',
+        'Income for you. Impact for ministry.',
+      ],
+    },
     sections: [
       {
-        title: 'Trust options',
-        body: [
-          'Charitable Remainder Unitrust',
-          'Charitable Remainder Annuity Trust',
-          'Charitable Lead Trust',
-          'Grantor Lead Trust',
-          'Non-Grantor Lead Trust',
+        className: 'legacy-child-native-trust-choices',
+        fullBleed: true,
+        hideTitle: true,
+        columns: 'two',
+        cards: [
+          {
+            title: 'Charitable Remainder Trust (CRT)',
+            body: 'This option allows you to receive income payments for you and your family while potentially receiving immediate tax benefits. At the completion of the trust, you’ll have the joy of giving to the ministry of your choice. Minimum requirements: $50,000 cash or securities; $100,000 real estate.',
+            actions: [{ label: 'Explore CRT options', to: '/services/legacy-giving/charitable-trusts#crt' }],
+            cardClass: 'card2',
+          },
+          {
+            title: 'Charitable Lead Trust (CLT)',
+            body: 'This option allows ministry to receive income payments for a set term while you potentially receive immediate tax benefits. At the completion of the trust, assets return to you or transfer to your family—often with significant growth. Minimum requirements: $50,000 cash or securities; $100,000 real estate.',
+            actions: [{ label: 'Explore CLT options', to: '/services/legacy-giving/charitable-trusts#clt' }],
+            cardClass: 'card2',
+          },
         ],
       },
       {
-        title: 'Planning support',
+        className: 'legacy-child-native-comparison',
+        title: 'The differences. At a glance.',
+        table: {
+          headers: ['Topic', 'CRT', 'CLT'],
+          rows: [
+            ['Funding', 'Cash, securities, real estate, other marketable assets', 'Cash, securities, real estate, other marketable assets'],
+            ['Tax advantage', 'May avoid capital gains tax when appreciated assets are sold; immediate charitable deduction', 'Can reduce estate taxes and enable tax-efficient transfer to heirs'],
+            ['Best for', 'Appreciated assets you want to sell', 'Estate planning and wealth transfer to heirs'],
+          ],
+        },
+      },
+      {
+        className: 'legacy-child-native-guide',
+        title: 'A Guide to Trust Types',
         body: [
-          'Trust structures can provide support for ministry while the donor receives potential tax and estate planning benefits.',
+          'Charitable Remainder Trusts and Charitable Lead Trusts offer unique benefits and have different requirements.',
+          '**How It Works: Remainder Trusts** — To establish a Charitable Remainder Trust, assets are transferred to AG Foundation which, in turn, pays you income according to the terms of the trust. You can receive lifetime income payments for yourself and a spouse, and up to 20 years to third parties, such as children. Upon completion of the trust’s term, the remainder of the trust’s principal is transferred to the ministry of your choice.',
+          '**Assets You May Give** — A Charitable Remainder Trust is an excellent alternative to an outright sale of appreciated securities, real estate or other marketable assets due to its charitable and capital gain tax benefits, but it can also be funded with cash. Minimum required funding is $50,000 for cash or securities, or $100,000 for real estate.',
+          '**How It Works: Lead Trusts** — A Charitable Lead Trust functions in somewhat the opposite way of a Charitable Remainder Trust. The trust makes income payments to the ministry for a set number of years. Upon completion, the asset then returns back to you or transfers to your family along with any additional growth in value.',
+          '**Assets You May Give** — Best funded with cash, income-producing securities, real estate, or other assets. A Charitable Lead Trust does not have capital gains benefits and income generated by the trust may be taxable to you.',
         ],
+      },
+      {
+        className: 'legacy-child-native-cta',
+        copyWrap: true,
+        title: 'Income and impact.',
+        body: ['Let’s transform your generosity into a tax-saving, ministry-supporting win. Ready when you are.'],
+        form: {
+          title: 'Talk with a gift planner',
+          subtitle: 'We’ll help you compare CRT and CLT options.',
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+          ],
+          submitLabel: 'Start planning',
+        },
       },
     ],
     actions: [{ label: 'Create your plan', href: 'https://aggift.org/?pageID=124' }],
   },
   '/services/legacy-giving/endowments': {
+    pageClass: 'native-info-page--legacy-child native-info-page--legacy-endowments',
     compact: true,
-    hero: { title: 'Endowments', highlight: null },
-    intro: 'Your endowment is a gift that gives forever. Interest earnings support your chosen ministry while the principal remains protected and growing.',
+    hero: {
+      lines: [
+        { title: 'Generosity that lasts.' },
+        { title: 'And lasts.', highlights: [{ text: 'lasts', className: 'is-mango' }] },
+      ],
+    },
+    intro: {
+      heading: 'Create an enduring legacy.',
+      body: [
+        'Your endowment is a gift that gives forever. The interest earnings from your carefully-invested donation support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.',
+        'This generosity never runs out.',
+      ],
+    },
     sections: [
       {
+        className: 'legacy-child-native-duo',
         title: 'How it works',
         body: [
-          'Designated assets are invested to ensure protection and growth.',
-          'Payments are made from ongoing interest earned from the gifted assets.',
-          'An endowment requires the principal to remain intact indefinitely.',
+          'Designated assets are invested to ensure their protection and growth. Payments are made from ongoing interest earned from the gifted asset(s). An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.',
         ],
       },
       {
+        className: 'legacy-child-native-assets',
         title: 'Assets you may give',
         body: [
           'Minimum funding requirements are $10,000 for cash or securities, and $100,000 for real estate.',
-          'Cash, real estate, securities, art, antiques, business interests, and other assets may be used.',
+          'Endowments may be funded with:',
+          '• Cash',
+          '• Real estate',
+          '• Securities (restricted and marketable)',
+          '• Art',
+          '• Antiques',
+          '• Business interests',
+          '• Other assets',
         ],
+      },
+      {
+        className: 'legacy-child-native-cta',
+        copyWrap: true,
+        title: 'A legacy of giving.',
+        body: ['We’re ready to help you explore how your gift can continue to give. And give. And give…'],
+        form: {
+          title: 'See how your endowment can keep giving.',
+          subtitle: 'Talk to a Gift Planner',
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+          ],
+          submitLabel: 'Set up an endowment',
+        },
       },
     ],
     actions: [
-      { label: 'Talk to a Gift Planner', to: '/contact-us' },
-      { label: 'Set up an endowment', href: 'https://sft.agfinancial.org/documents/Send.do', ghost: true },
+      { label: 'Talk to a Gift Planner', href: 'mailto:plannedgiving@agfinancial.org' },
+      { label: 'Set up an endowment', href: 'https://secure.agfinancial.org/generosityfund/signup', ghost: true },
     ],
   },
   '/services/legacy-giving/generosity-fund': {
+    pageClass: 'native-info-page--legacy-child native-info-page--legacy-generosity-fund',
     compact: true,
-    hero: { title: 'Generosity Fund', highlight: 'Generosity' },
-    intro: 'A Generosity Fund is a Donor Advised Fund that provides a convenient, tax-efficient way to manage your giving from tithing to disaster relief and everything in between.',
+    hero: {
+      lines: [
+        { title: 'Your giving.' },
+        { title: 'Managed.', highlights: [{ text: 'Managed', className: 'is-mango' }] },
+      ],
+    },
+    intro: {
+      heading: 'All your charitable giving in one place.',
+      body: [
+        'A **Generosity Fund**® is a Donor Advised Fund (DAF) that provides a convenient, tax-efficient way to manage your giving—from tithing to disaster relief, and all donations in between. Our frictionless process makes even complex securities **easier to give than ever**.',
+      ],
+      actions: [
+        { label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' },
+        { label: 'Terms and Conditions', href: 'http://files.agfinancial.org/Planned-Giving/Generosity-Fund-Terms-Conditions.pdf', ghost: true },
+      ],
+    },
     sections: [
       {
+        className: 'legacy-child-native-steps',
         title: 'How it works',
-        body: [
-          'Open a Generosity Fund online and fund it with cash or appreciated assets.',
-          'AG Foundation tracks your giving and handles administration.',
-          'You continue giving when and to whom you want, and can give anonymously.',
+        fullBleed: true,
+        columns: 'three',
+        cards: [
+          {
+            title: 'Create & contribute',
+            body: 'Open a Generosity Fund® online, and fund it with cash or appreciated assets. You may receive immediate tax benefits.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Frictionless',
+            body: 'AG Foundation takes it from there, keeping track of your giving while handling the details.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Whenever, wherever',
+            body: 'Continue giving when and to whom you want by accessing your Generosity Fund® online. You may even give anonymously.',
+            cardClass: 'card2',
+          },
         ],
       },
       {
-        title: 'Assets you may give',
+        className: 'legacy-child-native-assets',
+        title: 'It starts with what you give.',
         body: [
-          'Start with a minimum of $10,000.',
+          '• Cash',
+          '• Household income',
+          '• Proceeds from selling a home or business',
+          '• Stocks',
+          '• Securities',
+          '• A variety of other funding sources',
+          '• $10,000 minimum',
           'Additional funding can be made with as little as $100, as often as you like.',
-          'Funding can include cash, household income, sale proceeds, stocks, securities, and other sources.',
         ],
+        actions: [{ label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' }],
+      },
+      {
+        className: 'legacy-child-native-cta',
+        copyWrap: true,
+        title: 'Make the most of your giving.',
+        subtitle: 'Simple, joyful giving. Powered by your generosity.',
+        body: ['Let’s discover the best way for you to give, and in the easiest way possible.'],
+        form: {
+          title: 'Start a Generosity Fund®',
+          subtitle: 'We can help with setup and funding questions.',
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+          ],
+          submitLabel: 'Start a Generosity Fund®',
+        },
       },
     ],
     actions: [
-      { label: 'Open a Generosity Fund', href: 'https://sft.agfinancial.org/documents/Send.do' },
-      { label: 'See Terms & Conditions', href: 'https://aggift.org/?pageID=123', ghost: true },
+      { label: 'Open Your Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' },
+      { label: 'See Terms & Conditions', href: 'http://files.agfinancial.org/Planned-Giving/Generosity-Fund-Terms-Conditions.pdf', ghost: true },
     ],
   },
   '/services/legacy-giving/ministry-impact-fund': {
+    pageClass: 'native-info-page--legacy-child native-info-page--legacy-ministry-impact',
     compact: true,
-    hero: { title: 'Ministry Impact Fund', highlight: 'Impact' },
-    intro: 'Most wealth is not cash. A Ministry Impact Fund makes it easy for donors to give in any form while reducing administrative burden for ministries.',
+    hero: {
+      lines: [
+        { title: 'Any gift. Any asset.' },
+        { title: 'Unlocked.', highlights: [{ text: 'Unlocked', className: 'is-mango' }] },
+      ],
+    },
+    intro: {
+      heading: 'Most wealth isn’t cash.',
+      body: [
+        'It’s assets. A Ministry Impact Fund® makes it easy for donors to give in any form. No administrative hassle—just streamlined generosity that expands giving options, maximizes tax deductions, and eliminates capital gains.',
+        'This is generosity without limits.',
+      ],
+    },
     sections: [
       {
+        className: 'legacy-child-native-steps',
         title: 'How it works',
-        body: [
-          'Donors transfer cash or assets to a Ministry Impact Fund and may receive a charitable deduction with reduced or eliminated capital gains.',
-          'AG Foundation liquidates the assets and handles administration.',
-          'Your ministry gains immediate access to cash.',
+        fullBleed: true,
+        columns: 'three',
+        cards: [
+          {
+            title: 'Make the transfer',
+            body: 'Your donor transfers cash or asset(s) to your Ministry Impact Fund®, potentially receiving a charitable deduction and minimized or eliminated capital gains.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Give us the keys',
+            body: 'AG Foundation liquidates the asset(s) for you, handling all administrative details.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Put it to work',
+            body: 'Your ministry gains immediate access to the cash.',
+            cardClass: 'card2',
+          },
         ],
       },
       {
-        title: 'Asset types',
+        className: 'legacy-child-native-assets',
+        title: 'It starts with the donor gift.',
         body: [
-          'Cash, appreciated assets, stock, real estate, gifts-in-kind, and other gifts.',
+          '• Cash',
+          '• Appreciated assets',
+          '• Stock (see below)',
+          '• Real estate',
+          '• Gifts-in-kind',
+          '• A variety of other gifts',
           'Initial contribution required.',
         ],
       },
       {
-        title: 'Transferring stock',
+        className: 'legacy-child-native-stock',
+        title: 'Transferring stock? Start here.',
         body: [
-          'Complete the Intent to Gift of Securities form and submit through secure message.',
-          'Complete a Brokerage Letter of Authorization and submit to your broker/dealer.',
+          'Follow the two steps below. If you have questions or would like help, email plannedgiving@AGFinancial.org or call 417.447.2440.',
+          '**1. Intent to Gift of Securities** — Complete this form (ignore section 3) and submit it via this secure message link. Indicate “Attn: Jason Idell” in the secure message.',
+          '**2. Brokerage Letter of Authorization (LOA)** — Complete this form and submit it to your broker/dealer; however, notify the brokerage firm before sending the completed LOA form. Some broker/dealers may require additional paperwork.',
         ],
+        actions: [
+          { label: 'Intent to Gift form', href: 'https://files.agfinancial.org/Planned-Giving/MIF-Gift-of-Securities.pdf' },
+          { label: 'Secure message upload', href: 'https://uploads.agfinancial.org/', ghost: true },
+          { label: 'Brokerage LOA form', href: 'https://files.agfinancial.org/Planned-Giving/Brokerage-LOA.pdf', ghost: true },
+        ],
+      },
+      {
+        className: 'legacy-child-native-cta',
+        copyWrap: true,
+        title: 'More joy in receiving.',
+        subtitle: 'It’s easier than you think.',
+        body: ['We’re ready to help your ministry receive non-cash assets and turn them into working funds.'],
+        form: {
+          title: 'Talk with planned giving',
+          subtitle: 'Let’s map out the best next step.',
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+          ],
+          submitLabel: 'Contact planned giving',
+        },
       },
     ],
     actions: [
-      { label: 'Open a Ministry Impact Fund', href: 'https://sft.agfinancial.org/documents/Send.do' },
+      { label: 'Open a Ministry Impact Fund', href: 'mailto:plannedgiving@AGFinancial.org' },
       { label: 'Contact planned giving', href: 'mailto:plannedgiving@agfinancial.org', ghost: true },
     ],
   },
 };
 
+const loanConsultantStatesByRegion = {
+  northwest: ['AK', 'ID', 'MT', 'ND', 'OR', 'SD', 'UT', 'WA', 'WY'],
+  south: ['AL', 'FL', 'GA', 'LA', 'MS', 'SC', 'TN'],
+  southCentral: ['AR', 'KS', 'MO', 'NM', 'OK', 'TX'],
+  southwest: ['AZ', 'CA', 'CO', 'HI', 'NV'],
+  northCentral: ['IA', 'IL', 'IN', 'MI', 'MN', 'NE', 'OH', 'WI'],
+  east: ['CT', 'DC', 'DE', 'KY', 'MA', 'MD', 'ME', 'NC', 'NH', 'NJ', 'NY', 'PA', 'RI', 'VA', 'VT', 'WV'],
+};
+
 const loansChildPages = {
   '/services/loans/loans-consultant': {
+    pageClass: 'native-info-page--loans-consultant',
     compact: true,
+    hideIntro: true,
     hero: { title: 'Find A Consultant', highlight: 'Consultant' },
     intro: 'Talk with a consultant. Fill out the form to start a conversation with our consultants or find your region contact below.',
     sections: [
       {
         title: 'Select your location',
+        hideTitle: true,
+        className: 'loans-consultant-native-locations',
+        locationFilter: {
+          type: 'state',
+          label: '',
+          ariaLabel: 'Select your state',
+          placeholder: 'Select your state',
+          requireSelection: false,
+          messageLayout: 'toggle',
+          focusMessageCard: true,
+        },
         cards: [
           {
-            title: 'Northwest Region',
-            body: 'Emily Brinkley • 417.447.2444',
-            href: 'tel:4174472444',
-            cta: 'Call',
+            title: 'Emily Brinkley',
+            subtitle: 'Northwest Region',
+            phone: '417.447.2444',
+            phoneHref: 'tel:4174472444',
+            messagePanel: true,
+            messageCta: 'Message Emily',
+            consultantEmail: 'ebrinkley@agfinancial.org',
+            states: loanConsultantStatesByRegion.northwest,
           },
           {
-            title: 'South Region',
-            body: 'Bruce Gibbons • 417.860.4176',
-            href: 'tel:4178604176',
-            cta: 'Call',
+            title: 'Bruce Gibbons',
+            subtitle: 'South Region',
+            phone: '417.860.4176',
+            phoneHref: 'tel:4178604176',
+            messagePanel: true,
+            messageCta: 'Message Bruce',
+            states: loanConsultantStatesByRegion.south,
           },
           {
-            title: 'South Central Region',
-            body: 'Jason Gibbons • 417.860.6842',
-            href: 'tel:4178606842',
-            cta: 'Call',
+            title: 'Jason Gibbons',
+            subtitle: 'South Central Region',
+            phone: '417.860.6842',
+            phoneHref: 'tel:4178606842',
+            messagePanel: true,
+            messageCta: 'Message Jason',
+            states: loanConsultantStatesByRegion.southCentral,
           },
           {
-            title: 'Southwest Region',
-            body: 'Jason Hopping • 858.349.5728',
-            href: 'tel:8583495728',
-            cta: 'Call',
+            title: 'Jason Hopping',
+            subtitle: 'Southwest Region',
+            phone: '858.349.5728',
+            phoneHref: 'tel:8583495728',
+            messagePanel: true,
+            messageCta: 'Message Jason',
+            states: loanConsultantStatesByRegion.southwest,
           },
           {
-            title: 'North Central Region',
-            body: 'Randy Smith • 417.860.8174',
-            href: 'tel:4178608174',
-            cta: 'Call',
+            title: 'Randy Smith',
+            subtitle: 'North Central Region',
+            phone: '417.860.8174',
+            phoneHref: 'tel:4178608174',
+            messagePanel: true,
+            messageCta: 'Message Randy',
+            states: loanConsultantStatesByRegion.northCentral,
           },
           {
-            title: 'East Region',
-            body: 'Pat Williams • 334.318.6237',
-            href: 'tel:3343186237',
-            cta: 'Call',
+            title: 'Pat Williams',
+            subtitle: 'East Region',
+            phone: '334.318.6237',
+            phoneHref: 'tel:3343186237',
+            messagePanel: true,
+            messageCta: 'Message Pat',
+            states: loanConsultantStatesByRegion.east,
           },
         ],
       },
       {
-        title: 'Send a message',
-        body: ['To: Consultant'],
-        actions: [{ label: 'Contact us', to: '/contact-us' }],
+        title: 'Talk with a consultant.',
+        className: 'loans-consultant-native-contact',
+        copyWrap: true,
+        body: [
+          'Share a few details below and our team will connect you with the right consultant.',
+        ],
+        form: {
+          steps: [
+            {
+              id: 'contact',
+              fields: [
+                { id: 'firstName', label: 'First name*', type: 'text', required: true },
+                { id: 'lastName', label: 'Last name*', type: 'text', required: true },
+                { id: 'email', label: 'Email*', type: 'email', required: true },
+                { id: 'phone', label: 'Phone*', type: 'tel', placeholder: '(555) 555-5555', required: true },
+              ],
+              nextLabel: 'Next',
+            },
+            {
+              id: 'details',
+              fields: [
+                { id: 'ministry', label: 'Ministry name', type: 'text' },
+                { id: 'state', label: 'State', type: 'text', placeholder: 'Enter state' },
+                { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
+              ],
+              backLabel: 'Back',
+              submitLabel: 'Send message',
+            },
+          ],
+          submitLabel: 'Send message',
+        },
       },
     ],
   },
@@ -1300,35 +1902,284 @@ const loansChildPages = {
 
 const retirementChildPages = {
   '/services/retirement/403b': {
+    pageClass: 'native-info-page--retirement-child native-info-page--retirement-403b',
     compact: true,
-    hero: { title: 'AGFinancial 403(b)', highlight: '403(b)' },
-    intro: 'Saving while serving. The AGFinancial 403(b) offers higher contribution limits and potential employer matching and is designed specifically for ministers and ministry employees.',
+    hero: {
+      lines: [
+        {
+          title: 'Saving while serving.',
+          highlights: [
+            { text: 'Saving', className: 'is-atlantean' },
+            { text: 'serving', className: 'is-mango' },
+          ],
+        },
+      ],
+    },
+    intro: {
+      heading: 'Ministry-powered retirement.',
+      body: [
+        'The AGFinancial 403(b) offers higher contribution limits and potential employer matching—advantages you won’t find with an IRA. Designed specifically for ministers and ministry employees, it’s a powerful way to save while you serve.',
+      ],
+    },
     sections: [
       {
-        title: 'Quick links',
-        links: [
-          { label: '403(b) individual enrollment', to: '/services/retirement/403b/403b-individual-enrollment' },
-          { label: '403(b) group enrollment', to: '/services/retirement/403b-for-groups/403b-group-enrollment' },
-          { label: '403(b) terms & definitions', to: '/services/retirement/403b/403b-terms-definitions' },
-          { label: 'Retirement consultants', to: '/services/retirement/retirement-consultants' },
-        ],
+        className: 'retirement-403b-native-rate-table',
+        title: '403(b) Investment Rate',
+        widget: 'retirement-403b-rate-table',
       },
       {
-        title: 'Investment strategies',
-        body: [
-          'MBA Income Fund',
-          'Risk-Based Strategies',
-          'Target-Date Strategies',
-          'Individual Investment Option',
-        ],
-        actions: [{ label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' }],
-      },
-      {
-        title: 'Next steps',
+        className: 'retirement-child-native-strategies',
+        title: 'Investment Strategy Options',
+        fullBleed: true,
+        columns: 'two',
+        actionsBeforeCards: true,
         actions: [
-          { label: 'For myself', to: '/services/retirement/403b/403b-individual-enrollment' },
-          { label: 'For a group', to: '/services/retirement/403b-for-groups/403b-group-enrollment', ghost: true },
+          { label: 'View the monthly performance', href: 'https://files.agfinancial.org/retirement/Performance-Update/Performance-Update.pdf' },
         ],
+        cards: [
+          {
+            title: 'MBA Income Fund',
+            body: 'AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.',
+            links: [
+              { label: 'Download the MBA Income PDF', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf' },
+            ],
+            actions: [
+              { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
+              { label: 'Prospectus', to: '/prospectus', ghost: true },
+            ],
+            cardClass: 'card2',
+          },
+          {
+            title: 'Risk-Based Strategies',
+            body: 'These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.',
+            actions: [
+              { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
+              { label: 'Prospectus', to: '/prospectus', ghost: true },
+            ],
+            accordions: [
+              {
+                title: 'Screened strategy PDFs',
+                links: [
+                  { label: 'Steward Conservative Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
+                  { label: 'Steward Moderate Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
+                  { label: 'Steward Balanced Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
+                  { label: 'Steward Aggressive Growth Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
+                  { label: 'Steward Diversified Equity Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
+                ],
+              },
+              {
+                title: 'Index strategy PDFs',
+                links: [
+                  { label: 'Fidelity Asset Manager 40%', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-40.pdf' },
+                  { label: 'Fidelity Asset Manager 60%', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-60.pdf' },
+                  { label: 'Fidelity Asset Manager 85%', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity%20Asset-Manager%C2%AE-85.pdf' },
+                ],
+              },
+            ],
+            cardClass: 'card2',
+          },
+          {
+            title: 'Target-Date Strategies',
+            body: 'Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.',
+            actions: [
+              { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
+              { label: 'Prospectus', to: '/prospectus', ghost: true },
+            ],
+            accordions: [
+              {
+                title: 'View target-date fund PDFs',
+                links: [
+                  { label: 'Steward Target-Date Strategies', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Target-Date.pdf' },
+                ],
+              },
+            ],
+            cardClass: 'card2',
+          },
+          {
+            title: 'Individual Investment Option',
+            body: 'This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.',
+            actions: [
+              { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
+              { label: 'Prospectus', to: '/prospectus', ghost: true },
+            ],
+            accordions: [
+              {
+                title: 'View fund PDFs',
+                links: [
+                  { label: 'MBA Income Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf' },
+                  { label: 'Steward Select Bond Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Select-Bond.pdf' },
+                  { label: 'Steward Equity Market Neutral Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Equity-Market-Neutral.pdf' },
+                  { label: 'Steward Global Equity Income Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Global-Equity.pdf' },
+                  { label: 'Steward Covered Call Income Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Covered-Call.pdf' },
+                  { label: 'Fidelity 500 Index Fund', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-500-Index-Fund.pdf' },
+                  { label: 'Vanguard Total Bond Market Index Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Vanguard-Total-Bond-Market-Index-Fund.pdf' },
+                ],
+              },
+            ],
+            cardClass: 'card2',
+          },
+        ],
+      },
+      {
+        className: 'retirement-child-native-qualify',
+        title: 'Who qualifies for the AGFinancial 403(b)?',
+        fullBleed: true,
+        columns: 'three',
+        cards: [
+          {
+            title: 'Self-employed credentialed ministers',
+            body: 'Such as pastors, evangelists, or independent ministry leaders.',
+            cardClass: 'card2',
+            titleClassName: 'ret-403b-qualify-card-title',
+          },
+          {
+            title: 'Others serving in a ministerial capacity',
+            body: 'Such as a chaplain, campus pastor, or counselor in a non-ministry organization.',
+            cardClass: 'card2',
+            titleClassName: 'ret-403b-qualify-card-title',
+          },
+          {
+            title: 'Employees of eligible employers',
+            body: 'For example: churches; denominational headquarters or councils; church-affiliated, tax-exempt 501(c)(3) organizations.',
+            cardClass: 'card2',
+            titleClassName: 'ret-403b-qualify-card-title',
+          },
+        ],
+      },
+      {
+        className: 'retirement-child-native-enroll',
+        title: 'Start your enrollment',
+        columns: 'two',
+        cards: [
+          {
+            title: 'For myself',
+            actions: [{ label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' }],
+            cardClass: 'card2',
+          },
+          {
+            title: 'For a group',
+            actions: [{ label: 'Next steps', to: '/services/retirement/403b-for-groups/403b-group-enrollment' }],
+            cardClass: 'card2',
+          },
+        ],
+      },
+      {
+        className: 'retirement-child-native-table',
+        title: 'Annual Contribution Limits',
+        table: {
+          headers: ['403(b) Contribution Limit', '2025', '2024'],
+          rows: [
+            ['Under age 50 deferral limit (pre-tax and Roth after-tax)', 'The lesser of $23,500 or includible compensation.', 'The lesser of $23,000 or includible compensation.'],
+            ['Age 50 and up deferral limit', 'The lesser of $31,000 or includible compensation.', 'The lesser of $30,500 or includible compensation.'],
+            ['Age 60-63 deferral limit*', 'The lesser of $34,750 or includible compensation.', 'N/A'],
+            ['Overall limit under age 50**', '$70,000', '$69,000'],
+            ['Overall limit age 50 and up†', '$77,500', '$76,500'],
+            ['Overall limit age 60-63*', '$81,250', 'N/A'],
+          ],
+        },
+        fineprint: [
+          '*The rule applies to individuals who will attain age 60 in the taxable year and continues until the taxable year in which they turn 64.',
+          '**All types of contributions including deferrals, employer, and traditional after-tax. Cannot exceed includible compensation.',
+          '†All types of contributions including deferrals, employer, and traditional after-tax; amounts over the general overall limit must be age 50 catch-up deferrals. Cannot exceed includible compensation except to the extent that the age 50 or older catch-up deferral has been utilized.',
+          'Contact your own tax advisor before taking any action that would have a tax consequence. This information is not tax advice. Information is from sources deemed reliable. Information is subject to error, omission, withdrawal, or change.',
+        ],
+      },
+      {
+        className: 'retirement-child-native-rollover',
+        title: 'A rollover is easy. Smart, too.',
+        titleHighlights: [{ text: 'Smart, too.', className: 'is-melon' }],
+        body: [
+          'Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple…and undeniably smart. One account. One login.',
+        ],
+        actions: [{ label: 'Let’s simplify things', to: '/services/retirement/rollovers' }],
+      },
+      {
+        className: 'retirement-403b-native-housing',
+        hideTitle: true,
+        feature: {
+          image: ministersHousingImage,
+          imageAlt: 'Living room with fireplace',
+          title: 'Retired Ministers Housing Allowance',
+          body: [
+            'The unique benefit—which gives ministers a significant tax savings—is not available through secular 403(b) plans or IRAs. It allows retired ministers to have distributions from the AGFinancial 403(b) plan designated as clergy housing allowance.',
+            'The maximum housing allowance exemption in any tax year is the lesser of:',
+            '• Your actual expenditures',
+            '• The fair rental value of your home, as furnished, plus utilities',
+            '• The amount distributed by your retirement plan to you and declared in advance as your housing allowance',
+            '**Use the Quick Check feature below.**',
+            '**Compare your annual housing expenses to Fair Rental Value (FRV), and determine the maximum amount you may claim.**',
+          ],
+        },
+      },
+      {
+        className: 'retirement-403b-native-quickcheck',
+        title: 'Quick Check',
+        subtitle: 'Minister’s Housing Allowance',
+        body: [
+          'Answer a few questions, total your annual housing expenses, and compare to Fair Rental Value (FRV). You may save a PDF version of your summary, or submit it to a retirement consultant for review and discussion.',
+        ],
+        widget: 'retirement-minister-housing-quick-check',
+      },
+      {
+        className: 'retirement-403b-native-loans',
+        title: '403(b) Plan Loans',
+        body: [
+          'A 403(b) loan allows you to borrow money from your own retirement savings without incurring early withdrawal tax penalties. The interest paid on this type of loan goes back into your retirement savings. Though convenient, this type of loan can significantly impact your retirement savings growth.',
+        ],
+      },
+      {
+        className: 'retirement-403b-native-loan-details',
+        hideTitle: true,
+        body: [
+          '**Details** The requested 403(b) loan amount cannot be less than $1,500. In addition, the amount borrowed cannot exceed the lesser of:',
+          '• 100% of the total vested account balance if less than $10,000',
+          '• 50% of the total vested account balances',
+          '• or $50,000',
+          'Members may have no more than two loans at a time. The interest rate for plan loans is fixed for the life of the loan at 2.0% above the rate of the MBA Income Fund. All loan payments are made by automatic bank draft on the 20th of each month. The maximum term of a loan is 59 months (5 years) regardless of intended use.',
+          'Due to regulations issued by the U.S. Department of the Treasury, 403(b) plan loans issued after Dec. 31, 2008 require employer verification of loan qualifications with the following exception: your employer has a sole service provider agreement with Ministers Benefit Association, and has not had multiple service providers since 2004.',
+          'Contact your AGFinancial retirement consultant for more information.',
+        ],
+      },
+      {
+        className: 'retirement-403b-native-apply',
+        title: 'How to apply',
+        fullBleed: false,
+        columns: 'two',
+        cards: [
+          {
+            title: '1) Review and understand the loan rules',
+            actions: [{ label: 'Download', href: 'http://files.agfinancial.org/retirement/403(b)-Loan-Rules.pdf', ghost: true }],
+            cardClass: 'card2',
+          },
+          {
+            title: '2) Log in to your profile',
+            actions: [{ label: 'Log in now', href: 'https://secure.agfinancial.org/' }],
+            cardClass: 'card2',
+          },
+          {
+            title: '3) Submit your application',
+            body: 'When logged-in, select your 403(b) account, then choose **MANAGE MY RETIREMENT** below the details.\nIn the top menu, select **Loan Services > Loan Modeling/Request** to apply.',
+            cardClass: 'card2',
+          },
+        ],
+      },
+      {
+        className: 'retirement-child-native-cta retirement-403b-native-cta',
+        copyWrap: true,
+        title: 'Questions about the 403(b)? We’re ready.',
+        titleHighlights: [{ text: 'Questions about the 403(b)? We’re ready.', className: 'is-atlantean' }],
+        subtitle: '',
+        body: [],
+        form: {
+          title: '',
+          subtitle: 'And we’re eager to help.',
+          fields: [
+            { id: 'name', label: 'Name*', type: 'text', required: true },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+          ],
+          submitLabel: 'Follow-up with me',
+        },
       },
     ],
   },
@@ -1431,145 +2282,360 @@ const retirementChildPages = {
     ],
   },
   '/services/retirement/409a': {
+    pageClass: 'native-info-page--retirement-child native-info-page--retirement-409a',
     compact: true,
-    hero: { title: 'Beyond the limits.', highlight: 'limits' },
-    intro: 'Where standard retirement plan contributions max out, a 409A Deferred Compensation Plan steps in. Exclusively for ministers and qualified church organizations, it allows participants to defer additional income and reduce current taxes.',
+    hero: {
+      lines: [
+        { title: 'Beyond the' },
+        { title: 'limits.', highlights: [{ text: 'limits.', className: 'is-mango' }] },
+      ],
+    },
+    intro: {
+      heading: 'Boundary-free future.',
+      body: [
+        'Where standard retirement plan contributions max out, a 409A Deferred Compensation Plan steps in. Exclusively for ministers and qualified church organizations, it allows participants to defer additional income and reduce current taxes.',
+      ],
+      actions: [{ label: 'Find my consultant', to: '/services/retirement/retirement-consultants' }],
+    },
     sections: [
       {
-        title: 'Common scenarios',
-        body: [
-          'Contributing above the AG 403(b) maximum limitation.',
-          'Catch-up funding when employer contributions have not been regular.',
-          'Lump-sum retirement gifts.',
+        className: 'retirement-child-native-scenarios',
+        title: '409A considerations',
+        fullBleed: true,
+        columns: 'three',
+        cards: [
+          {
+            title: 'Maxed-out',
+            body: 'The participant wants to contribute above the maximum limitation of the AG 403(b) plan.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Lost time',
+            body: 'The participant has several years’ worth of contributions from an employer who has not been contributing regularly, and/or the employer wants to send a lump sum plus monthly contributions.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Gift deposit',
+            body: 'The contribution is a lump-sum deposit given to the minister as a retirement gift.',
+            cardClass: 'card2',
+          },
         ],
       },
       {
-        title: 'Boundary-free future',
+        className: 'retirement-child-native-quote',
+        hideTitle: true,
+        title: '409A deferment',
         body: [
-          'A well-drafted Deferred Compensation Plan can allow deferment of taxable compensation until distribution.',
+          'A well-drafted Deferred Compensation Plan can allow for deferment of **all taxable compensation** until distribution. The money still legally belongs to the employer, but it can be set aside and invested for growth in the 409A.',
         ],
-        actions: [{ label: 'Find my consultant', to: '/services/retirement/retirement-consultants' }],
+      },
+      {
+        className: 'retirement-child-native-cta',
+        copyWrap: true,
+        title: 'Is a 409A right for you?',
+        subtitle: 'Let’s walk through it together.',
+        form: {
+          title: 'Start the conversation',
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+            { id: 'organizationName', label: 'Organization Name*', type: 'text', required: true },
+            { id: 'organizationWebsite', label: 'Organization Website', type: 'text' },
+            { id: 'city', label: 'City*', type: 'text', required: true },
+            { id: 'state', label: 'State*', type: 'text', required: true },
+            { id: 'message', label: 'How can we help?', type: 'textarea', rows: 4 },
+          ],
+          submitLabel: 'Follow-up with me',
+        },
+      },
+      {
+        className: 'retirement-child-native-teaser',
+        title: '409A deserves love too.',
+        body: ['The ugly stepchild of retirement. Just ask Kyle.'],
       },
     ],
   },
   '/services/retirement/iras': {
+    pageClass: 'native-info-page--retirement-child native-info-page--retirement-iras',
     compact: true,
-    hero: { title: 'Individual Retirement Account (IRA)', highlight: 'IRA' },
-    intro: 'Tax advantages and broad investment options can anchor your retirement savings. Whether you are starting a nest egg or adding to existing plans, an IRA may be the right fit for your goals.',
+    hero: {
+      lines: [
+        {
+          title: 'Individual Retirement Account (IRA)',
+          highlights: [{ text: '(IRA)', className: 'is-mango' }],
+        },
+      ],
+    },
+    intro: {
+      heading: 'Take that, taxes.',
+      headingHighlights: [{ text: 'that', className: 'is-melon' }],
+      body: [
+        'Tax advantages and a broad range of investment options can anchor your retirement savings. Whether you’re starting a nest egg or adding to existing plans, an IRA may be the perfect fit for your needs and goals.',
+      ],
+      actions: [
+        { label: 'Fund an IRA', to: '/services/retirement/iras/fund-an-ira' },
+        { label: 'Contribution Limits', to: '/services/retirement/iras#IRA-contribution-limits', ghost: true },
+      ],
+    },
     sections: [
       {
-        title: 'Traditional IRA',
-        body: ['A Traditional IRA allows contributions and earnings to grow tax-deferred until retirement distribution.'],
-        actions: [{ label: 'Open Traditional IRA', to: '/services/retirement/iras/fund-an-ira' }],
+        className: 'retirement-child-native-ira-types',
+        hideTitle: true,
+        columns: 'two',
+        cards: [
+          {
+            title: 'Traditional IRA',
+            body: 'A Traditional IRA lets your contributions and earnings grow tax-deferred. You won’t pay taxes on them until you withdraw the money in retirement. This allows your savings to compound faster over time, plus your contributions are deductible on your tax returns.',
+            actions: [{ label: 'Open Traditional IRA', href: 'https://secure.agfinancial.org/invest' }],
+            cardClass: 'card2',
+          },
+          {
+            title: 'Roth IRA',
+            body: 'A Roth IRA lets your savings grow completely tax-free. Unlike a Traditional IRA, you pay taxes on your contributions now, but in retirement you can withdraw everything—including all your earnings—without paying any taxes.',
+            actions: [{ label: 'Open Roth IRA', href: 'https://secure.agfinancial.org/invest' }],
+            cardClass: 'card2',
+          },
+        ],
       },
       {
-        title: 'Roth IRA',
-        body: ['A Roth IRA allows tax-free growth and qualified tax-free withdrawals in retirement.'],
-        actions: [{ label: 'Open Roth IRA', to: '/services/retirement/iras/fund-an-ira' }],
-      },
-      {
-        title: 'At a glance',
-        body: [
-          'Traditional IRA: contributions may be tax-deductible and earnings are tax-deferred.',
-          'Roth IRA: contributions are not tax-deductible and qualified earnings can be tax-free.',
+        className: 'retirement-child-native-comparison',
+        fullBleed: true,
+        title: 'The differences. At a glance.',
+        titleHighlights: [{ text: 'At a glance', className: 'is-mango' }],
+        columns: 'two',
+        cards: [
+          {
+            title: 'Traditional',
+            list: [
+              'Must have earned income',
+              'No income limits to establish',
+              'Contributions may be tax-deductible',
+              'Earnings are tax-deferred until distributed',
+              'Distributions may begin at age 59½',
+              'Early distributions may be subject to penalty',
+              'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
+            ],
+            cardClass: 'card2',
+          },
+          {
+            title: 'Roth',
+            list: [
+              'Income limits must be met for Roth IRA eligibility',
+              'Contributions are not tax-deductible',
+              'No age limit to contribute as long as you have earned income',
+              'Earnings may be tax-free at distribution if qualified',
+              'Principal contributions may be distributed without penalty',
+              'Qualified distributions on earnings may begin at 59½',
+              'Early distributions on earnings are subject to penalty',
+              'No required distribution age',
+              'Traditional IRAs may be converted to Roth IRAs',
+            ],
+            cardClass: 'card2',
+          },
+        ],
+        fineprint: [
           'Contact your tax advisor. Additional AGFinancial early redemption penalties and IRA custodial fees may apply.',
         ],
       },
       {
-        title: 'Contribution limits',
+        className: 'retirement-ira-native-rates',
+        title: 'IRA Investment Rates',
+        widget: 'retirement-ira-rate-table',
+        body: [],
+        fineprint: [
+          'Rates subject to change. Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.',
+          'This is not an offer to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The Offering Circular may be obtained by writing or calling AGFinancial or by clicking **here**.',
+          'Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee.',
+          '**AGFinancial is a DBA of Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group.**',
+        ],
+      },
+      {
+        className: 'retirement-ira-native-limits',
+        anchorId: 'IRA-contribution-limits',
+        title: 'Roth and Traditional IRA Contribution Limits',
+        table: {
+          headers: ['Age', '2025', '2024'],
+          rows: [
+            ['Age 49 and under', '100% of compensation, up to $7,000', '100% of compensation, up to $7,000'],
+            ['Age 50 and older', '100% of compensation, up to $8,000', '100% of compensation, up to $8,000'],
+          ],
+        },
+        fineprint: [
+          'Your modified adjusted gross income (MAGI) may affect your eligibility to make contributions to a Roth IRA, as well as limit the deductibility of contributions to a Traditional IRA.',
+          '**Contact your own tax advisor before taking any action that would have a tax consequence. This information is not tax advice. Information is from sources deemed reliable. Information is subject to error, omission, withdrawal, or change.**',
+        ],
+      },
+      {
+        className: 'retirement-child-native-rollover',
+        title: 'Already have an IRA? Simplify.',
+        titleHighlights: [{ text: 'Simplify.', className: 'is-melon' }],
         body: [
-          'Modified adjusted gross income (MAGI) may affect Roth IRA eligibility and Traditional IRA deductibility.',
-          'Contact your own tax advisor before taking any action that would have a tax consequence.',
+          'Rolling over your other retirement savings into a single AGFinancial 403(b) is surprisingly simple…and undeniably smart. One account. One login.',
         ],
-        actions: [
-          { label: 'Fund an IRA', to: '/services/retirement/iras/fund-an-ira' },
-          { label: 'Reach my consultant', to: '/services/retirement/retirement-consultants', ghost: true },
-        ],
+        actions: [{ label: 'Let’s simplify things', to: '/services/retirement/rollovers' }],
+      },
+      {
+        className: 'retirement-child-native-cta retirement-ira-native-cta',
+        copyWrap: true,
+        title: 'Retire a little every day.',
+        titleHighlights: [{ text: 'every day', className: 'is-mango' }],
+        subtitle: 'Starting now.',
+        body: [],
+        actions: [{ label: 'Reach my consultant', to: '/services/retirement/retirement-consultants' }],
       },
     ],
   },
   '/services/retirement/iras/fund-an-ira': {
+    pageClass: 'native-info-page--retirement-child native-info-page--retirement-simple native-info-page--retirement-fund-ira',
     compact: true,
     hero: { title: 'Fund an IRA', highlight: 'IRA' },
+    hideIntro: true,
     intro: 'Start your IRA funding process and choose the retirement strategy that fits your goals.',
     sections: [
       {
-        title: 'Funding support',
-        body: [
-          'Use this route to start either a Traditional IRA or Roth IRA funding conversation.',
-          'Our team can help with contribution options and rollover or transfer steps.',
-        ],
+        className: 'retirement-fund-ira-native-shell',
+        hideTitle: true,
+        sand: true,
+        widget: 'retirement-fund-ira',
+        body: [],
       },
     ],
-    actions: [{ label: 'Reach my consultant', to: '/services/retirement/retirement-consultants' }],
   },
   '/services/retirement/retirement-consultants': {
+    pageClass: 'native-info-page--loans-consultant native-info-page--retirement-consultants',
     compact: true,
     hero: { title: 'Retirement Consultants', highlight: 'Consultants' },
+    hideIntro: true,
     intro: 'Talk with a consultant. Fill out the form to start a conversation with our consultants or find your region contact below.',
     sections: [
       {
         title: 'Select your location',
-        cards: [
-          {
-            title: 'West Region',
-            body: 'Tim McDowell • 417.379.4274',
-            href: 'tel:4173794274',
-            cta: 'Call',
-          },
-          {
-            title: 'Central Region',
-            body: 'Jacob Rebert CFP • 417.350.5480',
-            href: 'tel:4173505480',
-            cta: 'Call',
-          },
-          {
-            title: 'East Region',
-            body: 'Chris Teague CFP • 417.619.2987',
-            href: 'tel:4176192987',
-            cta: 'Call',
-          },
-        ],
+        hideTitle: true,
+        className: 'loans-consultant-native-locations',
+        locationFilter: {
+          type: 'state',
+          label: '',
+          ariaLabel: 'Select your state',
+          placeholder: 'Select your state',
+          requireSelection: false,
+          messageLayout: 'toggle',
+          focusMessageCard: true,
+        },
+        cards: [],
       },
       {
-        title: 'Send a message',
-        body: ['To: Consultant'],
-        actions: [{ label: 'Contact us', to: '/contact-us' }],
+        title: 'Talk with a consultant.',
+        className: 'loans-consultant-native-contact',
+        copyWrap: true,
+        body: [
+          'Share a few details below and our team will connect you with the right consultant.',
+        ],
+        form: {
+          steps: [
+            {
+              id: 'contact',
+              fields: [
+                { id: 'firstName', label: 'First name*', type: 'text', required: true },
+                { id: 'lastName', label: 'Last name*', type: 'text', required: true },
+                { id: 'email', label: 'Email*', type: 'email', required: true },
+                { id: 'phone', label: 'Phone*', type: 'tel', placeholder: '(555) 555-5555', required: true },
+              ],
+              nextLabel: 'Next',
+            },
+            {
+              id: 'details',
+              fields: [
+                { id: 'churchOrMinistry', label: 'Church or ministry', type: 'text' },
+                { id: 'state', label: 'State', type: 'text', placeholder: 'Enter state' },
+                { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
+              ],
+              backLabel: 'Back',
+              submitLabel: 'Send message',
+            },
+          ],
+          submitLabel: 'Send message',
+        },
       },
     ],
   },
   '/services/retirement/rollovers': {
+    pageClass: 'native-info-page--retirement-child native-info-page--retirement-simple native-info-page--retirement-rollovers',
     compact: true,
-    hero: { title: 'One account. One login.', highlight: 'One' },
-    intro: 'A rollover lets you move funds from one retirement account into an AGFinancial 403(b) without paying taxes or penalties. It is an easier way to access and manage your retirement.',
+    hero: {
+      lines: [
+        { title: 'One account.' },
+        { title: 'One login.', highlights: [{ text: 'login', className: 'is-mango' }] },
+      ],
+    },
+    intro: {
+      heading: 'One future. Yours.',
+      headingHighlights: [{ text: 'Yours.', className: 'is-melon' }],
+      body: [
+        'A rollover lets you move funds from one retirement account into an AGFinancial 403(b) without paying taxes or penalties. It’s just that simple. A rollover is an easier way to access and manage your retirement.',
+      ],
+    },
     sections: [
       {
-        title: 'Rollover',
-        body: [
-          'Traditional IRAs can be rolled over any time.',
-          'Other plans may be rolled over after a qualifying event such as separation from service, disability, or turning age 59½.',
-        ],
-        actions: [{ label: 'Initiate a rollover', to: '/contact-us' }],
-      },
-      {
-        title: 'Transfer',
-        body: [
-          'A transfer occurs between accounts of the same kind.',
-          'AGFinancial must be an approved vendor of your employer in order to transfer a 403(b).',
-        ],
-        actions: [{ label: 'Start a transfer', to: '/contact-us' }],
-      },
-      {
-        title: 'Simple process',
-        body: [
-          'Download and complete the Rollover/Transfer form.',
-          'Return completed form with recent statements to AGFinancial PO Box 2515, Springfield, MO 65801.',
-          'A confirmation letter will be sent when complete.',
+        className: 'retirement-rollovers-native-options',
+        title: 'Move your funds.',
+        columns: 'two',
+        cards: [
+          {
+            title: 'Rollover',
+            body: 'Traditional IRAs can be rolled-over any time. Otherwise, you may roll over because of a qualifying event, such as a separation from service, disability, or turning age 59½. If you meet one of these qualifiers, you may roll over your 401(k), 457, or 403(b).',
+            actions: [{ label: 'Initiate a rollover', to: '/services/retirement/rollovers#start-the-process' }],
+            cardClass: 'card2',
+          },
+          {
+            title: 'Transfer',
+            body: 'A transfer occurs between accounts of the same kind, so you must already have a 403(b) through a current employer and not meet any of the rollover conditions. AGFinancial must be an approved vendor of your employer in order to transfer a 403(b).',
+            actions: [{ label: 'Start a transfer', to: '/services/retirement/rollovers#start-the-process' }],
+            cardClass: 'card2',
+          },
         ],
       },
       {
-        title: 'You can also rollover to your AGFinancial IRA.',
-        actions: [{ label: 'Fund an IRA', to: '/services/retirement/iras/fund-an-ira' }],
+        className: 'retirement-rollovers-native-process',
+        anchorId: 'start-the-process',
+        title: 'Start the process',
+        body: [
+          '1) Download and complete the Rollover/Transfer form below.',
+          '2) Return the completed form, along with the most recent statement(s) from the other account(s) to the address below.',
+          '3) A confirmation letter will be sent to you when your rollover or transfer is complete.',
+        ],
+        addressBlock: {
+          className: 'rollovers-copy-address',
+          title: 'AGFinancial',
+          lines: ['PO Box 2515', 'Springfield MO 65801'],
+        },
+        actions: [
+          {
+            label: 'Rollover/Transfer Form',
+            href: 'https://files.agfinancial.org/Retirement/Incoming-Rollover-Transfer-Request-Form.pdf',
+          },
+        ],
+      },
+      {
+        className: 'retirement-rollovers-native-cta retirement-child-native-cta',
+        copyWrap: true,
+        title: 'Simple is better.',
+        titleHighlights: [{ text: 'Simple', className: 'is-white' }],
+        body: [
+          'Our rollover specialists are happy to help focus your retirement.',
+        ],
+        form: {
+          title: '',
+          subtitle: '',
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+          ],
+          submitLabel: 'Follow-up with me',
+        },
       },
     ],
   },
@@ -1593,66 +2659,177 @@ function serviceChildContent(title, parentPath, links) {
 function companyChildContent(path, title) {
   if (path === '/about-us/careers') {
     return {
+      pageClass: 'native-info-page--careers',
       compact: true,
-      hero: { title: 'Be part of something BIGGER.', highlight: 'BIGGER' },
-      intro: 'Faith + career. You can make a difference in your work at the intersection of ministry and expertise.',
+      hero: {
+        lines: [
+          { title: 'Be part of something' },
+          { title: 'BIGGER.', highlights: [{ text: 'BIGGER', className: 'is-white' }] },
+        ],
+      },
+      intro: {
+        heading: 'Faith + career.',
+        body: [
+          'You can make a difference in your work. We mean that, and our customers experience it. Our office ecosystem is at the intersection of ministry and expertise. At AGFinancial, it’s our desire to honor Jesus by doing great work, and by treating others well.',
+        ],
+        emphasis: 'What you do here truly matters.',
+      },
       sections: [
         {
-          title: 'Just a few reasons you’ll love working here',
-          body: [
-            'Service-based PTO and paid holidays.',
-            'Medical, dental, vision, supplemental, and more.',
-            '403(b) options with company contribution when eligible.',
-            'Student loan and tuition assistance programs available.',
+          title: 'Just a few reasons you’ll love working here…',
+          className: 'careers-native-benefits',
+          fullBleed: true,
+          columns: 'four',
+          cards: [
+            {
+              title: 'Paid Time Off (PTO)',
+              body: 'Service-based, and earns up to 120 hours per year.',
+              cardClass: 'card3',
+            },
+            {
+              title: 'Mortgage program',
+              body: 'Special loan financing rates for full-time employees.',
+              cardClass: 'card3',
+            },
+            {
+              title: 'Bonuses',
+              body: 'Potential annual bonus plan.',
+              cardClass: 'card3',
+            },
+            {
+              title: 'Insurance',
+              body: 'Medical, dental, vision, supplemental, and more.',
+              cardClass: 'card3',
+            },
+            {
+              title: 'Holidays',
+              body: '14 paid holidays per year.',
+              cardClass: 'card3',
+            },
+            {
+              title: 'Retirement',
+              body: '403(b) plan with options, and 8% company contribution (when eligible).',
+              cardClass: 'card3',
+            },
+            {
+              title: 'Students',
+              body: 'Student loan and tuition assistance programs available.',
+              cardClass: 'card3',
+            },
+            {
+              title: 'Perks',
+              body: 'Onsite fitness center, complimentary coffee, espresso, and tea, and more…',
+              cardClass: 'card3',
+            },
           ],
         },
         {
-          title: 'Ready when you are',
-          body: ['See all open positions and apply online.'],
-          actions: [{ label: 'Apply Online', href: '/about-us/careers' }],
+          className: 'careers-native-ready',
+          title: 'Ready when you are.',
+          body: ['See all open positions below and apply online.'],
+        },
+        {
+          className: 'careers-native-jobs-list',
+          title: 'Open positions',
+          hideTitle: true,
+          jobs: [],
+        },
+        {
+          className: 'careers-native-matters',
+          title: 'Your work matters.',
+          titleHighlights: [{ text: 'matters', className: 'is-atlantean' }],
+          body: ['As part of our team, you’ll make a difference every single day.'],
+          actions: [{ label: 'See how we’re helping', to: '/about-us/impact' }],
+        },
+        {
+          className: 'careers-native-fineprint',
+          title: 'Equal opportunity',
+          hideTitle: true,
+          fineprint: 'AGFinancial (AGF) is an equal opportunity/affirmative action employer. AGF considers applicants for all positions without regard to race, color, ancestry, national origin, citizenship, age, sex, marital status, parental status, disability, military or veteran status of an otherwise qualified individual. In addition to being a 501(c)3 tax-exempt corporation, AGF is a faith-based religious organization. As a faith-based religious organization pursuant to the Civil Rights Act of 1964 (42 U.S.C. @2000e-1), AGF hires candidates who agree and attest to our Standards of Conduct.',
         },
       ],
-      actions: [{ label: 'Contact us', to: '/contact-us' }],
+      actions: [],
     };
   }
 
   if (path === '/about-us/impact') {
     return {
+      pageClass: 'native-info-page--impact',
       compact: true,
-      hero: { title: 'We’re making a difference... thanks to you.', highlight: 'difference' },
-      intro: 'Put your money where your faith is. As a customer, you become part of a vision to improve financial health and grow the Kingdom of God.',
+      hero: {
+        lines: [
+          { title: 'We’re making' },
+          {
+            title: 'a difference… thanks to you.',
+            highlights: [
+              { text: 'difference', className: 'is-mango' },
+              { text: 'you', className: 'is-atlantean' },
+            ],
+          },
+        ],
+      },
+      intro: {
+        heading: 'Put your money where your faith is.',
+        body: [
+          'AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health and growing the Kingdom of God. As a customer, you become part of that vision. We’re ministry allies.',
+        ],
+        emphasis: 'It’s our privilege to serve you, **alongside** you.',
+      },
       sections: [
         {
           title: 'Impact highlights',
+          hideTitle: true,
+          className: 'impact-native-stats',
+          fullBleed: true,
+          columns: 'two',
           cards: [
             {
               title: '4,000',
-              body: 'Fueling churches and ministries every year.',
+              titleClassName: 'countup',
+              subtitle: 'Fueling churches and ministries every year.',
+              body: 'From vision loans to construction loans, we are here to support your goals.',
               to: '/services/loans',
               cta: 'Explore Loans',
+              cardClass: 'impact-native-card',
             },
             {
               title: '$40 Million',
-              body: 'Under trusted care for long-term stewardship.',
+              titleClassName: 'countup',
+              subtitle: 'Under trusted care. Your foundation deserves the same.',
+              body: 'Planning your generosity’s future can be messy. We’ve done this since 1989 and our organizational skills show.',
               to: '/services/legacy-giving',
               cta: 'Plan with us',
+              cardClass: 'impact-native-card',
             },
             {
               title: '687',
-              body: 'Mission trips covered.',
-              to: '/services/insurance/mission-assure',
+              titleClassName: 'countup',
+              subtitle: 'Mission trips covered.',
+              body: 'Go boldly. We’ve got your back.',
+              to: '/services/insurance',
               cta: 'Cover your trip',
+              cardClass: 'impact-native-card',
             },
             {
               title: '299',
-              body: 'Ministers retired this year with AGFinancial.',
+              titleClassName: 'countup',
+              subtitle: 'Ministers retired this year with AGFinancial.',
+              body: 'Retirement that honors a lifetime of service.',
               to: '/services/retirement',
               cta: 'Start your plan',
+              cardClass: 'impact-native-card',
             },
           ],
         },
+        {
+          className: 'impact-native-cta',
+          title: 'Bold, smart moves.',
+          subtitle: 'Let’s make them together.',
+          body: ['Business with AGFinancial means ministry with AGFinancial.'],
+          actions: [{ label: 'What’s next for you?', to: '/services' }],
+        },
       ],
-      actions: [{ label: 'Back to About Us', to: '/about-us' }],
+      actions: [],
     };
   }
 

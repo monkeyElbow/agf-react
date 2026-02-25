@@ -347,8 +347,8 @@ export default function RetirementPage() {
         </div>
       </section>
 
-      <section className="service-native-section retirement-calc-section">
-        <div className="ag-panel-rail-wide">
+      <section className="service-native-section retirement-calc-section" id="retirement-savings-calculator">
+        <div className="ag-panel-rail">
           <div className="retirement-calc-intro">
             <h2 className="retirement-calc-title">Retirement Savings Calculator</h2>
             <p className="retirement-calc-lead">Plug in some numbers. Take a sneak peek at your financial future.</p>
@@ -506,7 +506,7 @@ export default function RetirementPage() {
             </div>
 
             <div className="retirement-lead-form">
-              <h4>Ready to take the next step?</h4>
+              <h5>Ready to take the next step?</h5>
               <p>Enter your info below to start a chat about your retirement.</p>
               {leadSubmitted ? (
                 <p className="retirement-lead-thanks">

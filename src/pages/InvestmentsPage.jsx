@@ -636,7 +636,7 @@ export default function InvestmentsPage() {
         </div>
       </section>
 
-      <section className="service-native-section investments-native-ladder-section">
+      <section className="service-native-section investments-native-ladder-section" id="laddering-calculator">
         <div className="ag-panel-rail">
           <div className="investments-native-ladder-box fade-up">
             <h2>Investment Laddering Strategy</h2>

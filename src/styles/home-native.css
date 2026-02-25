@@ -157,7 +157,9 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   text-align: center;
   transform: translateZ(0);
-  transition: transform 0.45s ease-out, box-shadow 0.45s ease-out;
+  transform-origin: center;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, box-shadow;
 }
 
 .home-native-card.is-featured {
@@ -166,7 +168,7 @@
 }
 
 .home-native-card:hover {
-  transform: scale(1.02);
+  transform: translateY(-4px) scale(1.02);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
 }
 
@@ -280,7 +282,7 @@
   color: var(--ag-color-atlantean);
 }
 
-.home-native-impact p {
+.home-native-impact-grid > :first-child > p {
   text-align: center;
   font-size: clamp(1.08rem, 2vw, 1.36rem);
   line-height: 1.5;
@@ -300,24 +302,26 @@
   gap: clamp(0.95rem, 2vw, 1.35rem);
 }
 
-.home-native-stat-value {
+.home-native-impact .home-native-stat-value {
   margin: 0;
-  font-size: clamp(2.9rem, 5.4vw, 4.5rem);
+  font-size: clamp(3.8rem, 7.6vw, 7rem);
   font-weight: 800;
+  letter-spacing: -4.48px;
   color: var(--ag-color-mango);
-  line-height: 1;
+  line-height: 0.9;
+  font-family: var(--ag-font-heading);
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-.home-native-stat-value.is-atlantean {
+.home-native-impact .home-native-stat-value.is-atlantean {
   color: var(--ag-color-atlantean);
 }
 
-.home-native-stat-value.is-sandstone {
+.home-native-impact .home-native-stat-value.is-sandstone {
   color: var(--ag-color-sandstone);
 }
 
-.home-native-stat-label {
+.home-native-impact .home-native-stat-label {
   margin-top: 0.36rem;
   font-size: clamp(1.05rem, 2.2vw, 1.62rem);
   line-height: 1.08;
@@ -525,16 +529,19 @@
 
 .fade-up {
   opacity: 0;
-  transform: translate3d(0, 22px, 0);
+  translate: 0 22px;
   transition:
     opacity 0.72s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.82s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
+    translate 0.82s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.45s ease-out,
+    box-shadow 0.45s ease-out,
+    background-color 0.45s ease-out;
+  will-change: opacity, transform, box-shadow;
 }
 
 .fade-up.is-visible {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
+  translate: 0 0;
 }
 
 @media (max-width: 991px) {
@@ -625,20 +632,22 @@
   margin: 0;
   font-family: var(--ag-font-heading);
   font-size: clamp(2.4rem, 7vw, 4.9rem);
+  letter-spacing: -0.03em;
   line-height: 0.9;
 }
 
 .services-native-intro {
   background: linear-gradient(145deg, #414042 0%, #4c4b4d 65%, #5a5652 100%);
-  padding: clamp(2.2rem, 5.5vw, 3.8rem) 0;
+  padding: clamp(3.8rem, 8vw, 6.2rem) 0;
 }
 
 .services-native-intro h2 {
   margin: 0;
   color: #ffffff;
   font-family: var(--ag-font-body);
-  font-size: clamp(1.7rem, 3.8vw, 2.6rem);
+  font-size: clamp(2.7rem, 6.6vw, 4.4rem);
   font-weight: 700;
+  letter-spacing: 0;
   line-height: 0.95;
   text-align: center;
 }
@@ -657,16 +666,23 @@
   background: #ffffff;
 }
 
+.services-native-grid-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding-left: clamp(1rem, 2.8vw, 2.6rem);
+  padding-right: clamp(1rem, 2.8vw, 2.6rem);
+}
+
 .services-native-grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .services-native-card {
   border: 1px solid rgba(65, 64, 66, 0.18);
   border-radius: 12px;
-  padding: 1.2rem;
+  padding: 1.7rem 1.2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   background: #ffffff;
 }
@@ -677,23 +693,27 @@
   border-bottom: 1.5px solid rgba(200, 200, 200, 0.5);
   border-left: 1.5px solid rgba(0, 125, 152, 0.15);
   border-top: 1.5px solid rgba(0, 125, 152, 0.15);
-  transition: transform 0.45s ease-out, box-shadow 0.45s ease-out;
+  transform-origin: center;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, box-shadow;
 }
 
 .services-native-card.card2:hover {
-  transform: scale(1.02);
-  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.07);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.12);
 }
 
 .services-native-card h3 {
   margin: 0;
-  font-size: 1.65rem;
+  font-size: 1.5rem;
+  font-family: var(--ag-font-heading);
+  letter-spacing: -2px;
   line-height: 1.2;
   text-align: center;
 }
 
 .services-native-card h3 a {
-  color: var(--ag-color-atlantean-dark);
+  color: var(--ag-color-atlantean);
   text-decoration: none;
 }
 
@@ -717,27 +737,24 @@
 
 .services-native-card li a,
 .services-native-card li a:visited {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0.38rem 0.72rem;
-  border-radius: 6px;
-  border: 1px solid rgba(65, 64, 66, 0.22);
-  background: #ffffff;
-  text-decoration: none !important;
-  font-weight: 700;
-  color: var(--ag-color-super-grey) !important;
-  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--ag-color-atlantean-dark);
+  transition: color 0.25s ease, text-decoration-color 0.25s ease;
 }
 
 .services-native-card li a:hover {
-  color: #ffffff;
-  border-color: var(--ag-color-atlantean-dark);
-  background: var(--ag-color-atlantean-dark);
+  color: var(--ag-color-atlantean);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .services-native-matters {
-  background: linear-gradient(130deg, rgb(0, 173, 187) 0%, rgb(0, 99, 124) 100%);
+  background: linear-gradient(145deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
   padding: clamp(2.4rem, 5vw, 4rem) 0;
 }
 
@@ -745,18 +762,21 @@
   margin: 0;
   color: #ffffff;
   text-align: center;
-  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-size: clamp(2.5rem, 5.9vw, 4.3rem);
+  letter-spacing: 0;
 }
 
 .services-native-matters h2 mark {
   background: transparent;
-  color: var(--ag-color-mango);
+  color: #ffffff;
 }
 
 .services-native-matters p {
   margin: 1rem auto 0;
   max-width: 62ch;
   color: #ffffff;
+  font-size: clamp(1.18rem, 2.2vw, 1.5rem);
+  line-height: 1.5;
   text-align: center;
 }
 
@@ -780,11 +800,76 @@
   text-align: center;
 }
 
+.services-native-testimonials .carousel-frame p:first-child {
+  font-weight: 700;
+}
+
 .services-native-testimonials-note {
   margin-top: 1rem;
   text-align: center;
   color: #666666;
   font-size: 0.85rem;
+}
+
+.services-native-connect {
+  background: #ffffff;
+  padding: clamp(2.2rem, 5vw, 3.8rem) 0;
+}
+
+.services-native-connect h2 {
+  margin: 0;
+  text-align: center;
+  color: var(--ag-color-super-grey);
+  font-size: clamp(1.9rem, 4.4vw, 3rem);
+}
+
+.services-native-connect h2 mark {
+  background: transparent;
+  color: var(--ag-color-atlantean);
+}
+
+.services-native-connect-shell {
+  margin: clamp(1.1rem, 2.6vw, 1.8rem) auto 0;
+  width: min(760px, 100%);
+  border: 1px solid rgba(65, 64, 66, 0.25);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: clamp(1.1rem, 2.8vw, 1.6rem);
+}
+
+.services-native-connect-form {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.services-native-connect-form label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ag-color-super-grey);
+}
+
+.services-native-connect-form input,
+.services-native-connect-form textarea {
+  border: 1px solid rgba(65, 64, 66, 0.24);
+  border-radius: 8px;
+  padding: 0.62rem 0.72rem;
+  background: #f5f5f5;
+  color: var(--ag-color-super-grey);
+  font: inherit;
+}
+
+.services-native-connect-form input:focus,
+.services-native-connect-form textarea:focus {
+  outline: 2px solid rgba(0, 173, 187, 0.3);
+  border-color: rgba(0, 173, 187, 0.55);
+  background: #ffffff;
+}
+
+.services-native-connect-success {
+  margin: 0.7rem 0 0;
+  text-align: center;
+  color: var(--ag-color-atlantean-dark);
+  font-weight: 600;
 }
 
 @media (max-width: 991px) {
@@ -794,6 +879,12 @@
 
   .services-native-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1280px) {
+  .services-native-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

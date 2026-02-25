@@ -65,12 +65,12 @@ const testimonials = [
     author: 'Rich Wilkerson Jr, Vous Church',
   },
   {
-    quote: '“Our ministry center would not be here today without AGFinancial’s creative partnership.”',
-    author: 'Bryan Jarrett, Lead Pastor, Northplace Church',
-  },
-  {
     quote: '“We feel like we’re part of the good work AGFinancial is doing.”',
     author: 'Mike, Donor Advised Fund Corporate Client',
+  },
+  {
+    quote: '“Our 120-acre center for ministry for children and rural pastors wouldn’t be here today had it not been for the creative ways that AGFinancial can help leverage people’s resources.”',
+    author: 'Bryan Jarrett, Lead Pastor, Northplace Church, TX',
   },
 ];
 
@@ -85,11 +85,32 @@ function describeWedgePath(cx, cy, radius, startAngle, endAngle) {
   return `M ${cx} ${cy} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y} Z`;
 }
 
+function formatPhoneInput(value) {
+  const digits = String(value || '').replace(/\D/g, '').slice(0, 10);
+  if (!digits) {
+    return '';
+  }
+  if (digits.length <= 3) {
+    return `(${digits}`;
+  }
+  if (digits.length <= 6) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  }
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export default function ServicesPage() {
   const pageRef = useRef(null);
   useNativeEnhancements(pageRef);
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [connectForm, setConnectForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+  });
+  const [connectSubmitted, setConnectSubmitted] = useState(false);
 
   useEffect(() => {
     if (hoveredIndex !== null) {
@@ -114,6 +135,20 @@ export default function ServicesPage() {
   }, []);
 
   const activeSlice = serviceSlices[hoveredIndex ?? activeIndex];
+
+  const onConnectSubmit = (event) => {
+    event.preventDefault();
+    if (!connectForm.name.trim() || !connectForm.email.trim()) {
+      return;
+    }
+    setConnectSubmitted(true);
+    setConnectForm({
+      name: '',
+      email: '',
+      phone: '',
+      message: '',
+    });
+  };
 
   return (
     <div ref={pageRef} className="service-native-page services-native-page">
@@ -160,7 +195,7 @@ export default function ServicesPage() {
       </section>
 
       <section className="services-native-grid-wrap">
-        <div className="ag-panel-rail">
+        <div className="services-native-grid-bleed">
           <div className="services-native-grid">
             {serviceSlices.map((service) => (
               <article key={service.path} className="services-native-card card2 fade-up">
@@ -190,12 +225,57 @@ export default function ServicesPage() {
           <p>
             As an AGFinancial customer, your financial decisions fund real ministry work, transforming lives, including yours.
           </p>
+          <div className="service-native-action-row is-centered">
+            <Link to="/about-us/impact" className="service-native-btn is-dark">See faith & finances connected</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="services-native-connect">
+        <div className="ag-panel-rail">
+          <h2>Connect your <mark>faith & finances</mark>. Start here.</h2>
+          <div className="services-native-connect-shell">
+            <form className="services-native-connect-form" onSubmit={onConnectSubmit}>
+              <label htmlFor="services-connect-name">Name</label>
+              <input
+                id="services-connect-name"
+                value={connectForm.name}
+                onChange={(event) => setConnectForm((prev) => ({ ...prev, name: event.target.value }))}
+                required
+              />
+              <label htmlFor="services-connect-email">Email</label>
+              <input
+                id="services-connect-email"
+                type="email"
+                value={connectForm.email}
+                onChange={(event) => setConnectForm((prev) => ({ ...prev, email: event.target.value }))}
+                required
+              />
+              <label htmlFor="services-connect-phone">Phone</label>
+              <input
+                id="services-connect-phone"
+                type="tel"
+                placeholder="(555) 555-5555"
+                value={connectForm.phone}
+                onChange={(event) => setConnectForm((prev) => ({ ...prev, phone: formatPhoneInput(event.target.value) }))}
+              />
+              <label htmlFor="services-connect-message">Message</label>
+              <textarea
+                id="services-connect-message"
+                rows={4}
+                placeholder="What would you like to discuss?"
+                value={connectForm.message}
+                onChange={(event) => setConnectForm((prev) => ({ ...prev, message: event.target.value }))}
+              />
+              <button type="submit" className="service-native-btn">Follow-up with me</button>
+            </form>
+          </div>
+          {connectSubmitted ? <p className="services-native-connect-success">Thanks. We’ll reach out soon.</p> : null}
         </div>
       </section>
 
       <section className="services-native-testimonials">
         <div className="ag-panel-rail">
-          <h2>Let’s explore what we can do together.</h2>
           <div className="carousel-stack">
             {testimonials.map((item, index) => (
               <article key={item.author} className={`carousel-frame${index === 0 ? ' is-active' : ''}`}>

@@ -50,6 +50,10 @@ export const sitePages = [
   { path: '/admin/rates', title: 'Admin - Rates', section: 'Admin', source: null },
   { path: '/admin/content', title: 'Admin - Content', section: 'Admin', source: null },
   { path: '/admin/resources', title: 'Admin - Resources', section: 'Admin', source: null },
+  { path: '/admin/media-audit', title: 'Admin - Media Audit', section: 'Admin', source: null },
+  { path: '/admin/message', title: 'Admin - Message', section: 'Admin', source: null },
+  { path: '/admin/consultants', title: 'Admin - Consultants', section: 'Admin', source: null },
+  { path: '/admin/jobs', title: 'Admin - Jobs', section: 'Admin', source: null },
 ];
 
 export const pageByPath = Object.fromEntries(sitePages.map((page) => [page.path, page]));

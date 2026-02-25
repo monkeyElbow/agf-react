@@ -5,6 +5,8 @@ const STORAGE_KEY = 'agf-resources-admin-v1';
 const ResourcesContext = createContext(null);
 
 function normalizeArticle(article) {
+  const rawCategory = String(article?.category || 'Article').trim();
+  const category = rawCategory === 'Planned Giving' ? 'Legacy Giving' : rawCategory;
   const slug = String(article?.slug || '')
     .trim()
     .toLowerCase();
@@ -14,13 +16,17 @@ function normalizeArticle(article) {
     slug,
     type: String(article?.type || 'article'),
     title: String(article?.title || ''),
-    category: String(article?.category || 'Article'),
+    category,
     mediaUrl: String(article?.mediaUrl || article?.imageUrl || ''),
     imageUrl: String(article?.imageUrl || article?.mediaUrl || ''),
     sourceUrl: String(article?.sourceUrl || ''),
     publishedAt: String(article?.publishedAt || ''),
     excerpt: String(article?.excerpt || ''),
     bodyHtml: String(article?.bodyHtml || ''),
+    socialImageUrl: String(article?.socialImageUrl || article?.socialMediaUrl || ''),
+    socialTitle: String(article?.socialTitle || ''),
+    socialDescription: String(article?.socialDescription || ''),
+    socialImageAlt: String(article?.socialImageAlt || ''),
     isPublished: article?.isPublished !== false,
   };
 }
@@ -134,6 +140,10 @@ export function ResourcesProvider({ children }) {
           publishedAt: new Date().toISOString(),
           excerpt: '',
           bodyHtml: '<p></p>',
+          socialImageUrl: '',
+          socialTitle: '',
+          socialDescription: '',
+          socialImageAlt: '',
           isPublished: false,
         },
         ...articlesState,
@@ -182,4 +192,3 @@ export function useResources() {
   }
   return context;
 }
-

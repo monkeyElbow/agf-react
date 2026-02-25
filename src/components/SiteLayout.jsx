@@ -252,8 +252,20 @@ export default function SiteLayout({ children }) {
                     <NavLink to="/admin/content" className={navLinkClass}>
                       Content
                     </NavLink>
+                    <NavLink to="/admin/consultants" className={navLinkClass}>
+                      Consultants
+                    </NavLink>
+                    <NavLink to="/admin/jobs" className={navLinkClass}>
+                      Jobs
+                    </NavLink>
+                    <NavLink to="/admin/message" className={navLinkClass}>
+                      Message
+                    </NavLink>
                     <NavLink to="/admin/resources" className={navLinkClass}>
                       Resources
+                    </NavLink>
+                    <NavLink to="/admin/media-audit" className={navLinkClass}>
+                      Media Audit
                     </NavLink>
                     <NavLink to="/admin/rates" className={navLinkClass}>
                       Rates

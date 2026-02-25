@@ -9,12 +9,16 @@ function normalize(text) {
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const term = normalize(query);
+  const searchablePages = useMemo(
+    () => sitePages.filter((page) => !page.path.startsWith('/admin/')),
+    [],
+  );
 
   const matches = useMemo(() => {
     if (!term) {
       return [];
     }
-    return sitePages
+    return searchablePages
       .filter((page) => {
         const haystack = `${page.title} ${page.path} ${page.section}`.toLowerCase();
         return haystack.includes(term);
@@ -26,7 +30,7 @@ export default function SearchPage() {
         const bExact = Number(bTitle.includes(term) || normalize(b.path).includes(term));
         return bExact - aExact || a.path.localeCompare(b.path);
       });
-  }, [term]);
+  }, [searchablePages, term]);
 
   return (
     <div className="search-page">
