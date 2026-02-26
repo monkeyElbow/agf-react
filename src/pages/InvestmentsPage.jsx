@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRates } from '../context/RatesContext';
+import { useDocuments } from '../context/DocumentsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
-
-const OFFERING_CIRCULAR_URL = 'https://media.agfinancial.org/AGLF-Offering-Circular.pdf';
 
 const certificateCards = [
   {
@@ -297,6 +296,9 @@ function defaultLadderInput() {
 export default function InvestmentsPage() {
   const pageRef = useRef(null);
   const { rates, ratesMeta } = useRates();
+  const { resolveDocumentLink } = useDocuments();
+  const offeringCircularDoc = resolveDocumentLink('prospectus-prospectus-download-offering-circular')
+    || resolveDocumentLink('document-aglf-offering-circular');
   const ladderRateSeeds = useMemo(() => buildLadderRateSeeds(rates, MAX_LADDER_YEARS), [rates]);
   const [ladderInput, setLadderInput] = useState(() => defaultLadderInput());
   const [ladderRates, setLadderRates] = useState(() => ladderRateSeeds);
@@ -612,7 +614,7 @@ export default function InvestmentsPage() {
               these securities. The offering is made only by the Offering Circular which includes risk factors. The
               Offering Circular may be obtained by writing or calling AGFinancial or by clicking
               {' '}
-              <a href={OFFERING_CIRCULAR_URL} target="_blank" rel="noreferrer noopener">here</a>
+              <a href={offeringCircularDoc?.url || '/prospectus'} target="_blank" rel="noreferrer noopener">here</a>
               . AGFinancial investments are offered and sold only in states where authorized or exempt from
               authorization. A limited offering is available in Washington. Not available in Ohio.
             </p>

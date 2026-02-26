@@ -78,7 +78,48 @@ function normalizeStoredConfig(payload) {
   }
 
   const pageHierarchy = { ...defaultHierarchy, ...(payload.pageHierarchy || {}) };
-  const blocksByPath = { ...defaultBlocks, ...(payload.blocksByPath || {}) };
+  const storedBlocksByPath = payload.blocksByPath || {};
+  const blocksByPath = { ...defaultBlocks };
+
+  Object.entries(storedBlocksByPath).forEach(([path, storedBlocks]) => {
+    if (!Array.isArray(storedBlocks)) {
+      return;
+    }
+
+    const defaultForPath = Array.isArray(defaultBlocks[path]) ? defaultBlocks[path] : [];
+    const storedById = new Map(
+      storedBlocks
+        .filter((block) => block && typeof block === 'object' && block.id)
+        .map((block) => [block.id, block]),
+    );
+
+    const mergedDefaults = defaultForPath.map((defaultBlock) => {
+      const storedBlock = storedById.get(defaultBlock.id);
+      if (!storedBlock) {
+        return defaultBlock;
+      }
+
+      return {
+        ...defaultBlock,
+        ...storedBlock,
+        settings: {
+          ...(defaultBlock.settings || {}),
+          ...(storedBlock.settings || {}),
+        },
+        // Field schema should come from the current blueprint so admin UI upgrades appear automatically.
+        editableFields: defaultBlock.editableFields,
+      };
+    });
+
+    const extraStoredBlocks = storedBlocks.filter((storedBlock) => (
+      storedBlock
+      && typeof storedBlock === 'object'
+      && storedBlock.id
+      && !defaultForPath.some((defaultBlock) => defaultBlock.id === storedBlock.id)
+    ));
+
+    blocksByPath[path] = [...mergedDefaults, ...extraStoredBlocks];
+  });
 
   return { pageHierarchy, blocksByPath };
 }
@@ -135,78 +176,94 @@ export function ContentAdminProvider({ children }) {
   const value = useMemo(() => {
     const { pageHierarchy, blocksByPath } = state;
 
-    const saveState = (nextState) => {
-      setState(nextState);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-      } catch {
-        // ignore storage failures
-      }
+    const saveState = (nextStateOrUpdater) => {
+      setState((prevState) => {
+        const nextState = typeof nextStateOrUpdater === 'function'
+          ? nextStateOrUpdater(prevState)
+          : nextStateOrUpdater;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+        } catch {
+          // ignore storage failures
+        }
+        return nextState;
+      });
     };
 
     const updatePageHierarchy = (pathname, patch) => {
-      if (!pageHierarchy[pathname]) {
-        return;
-      }
+      saveState((prevState) => {
+        const prevHierarchy = prevState.pageHierarchy || {};
+        if (!prevHierarchy[pathname]) {
+          return prevState;
+        }
 
-      const nextPage = {
-        ...pageHierarchy[pathname],
-        ...patch,
-      };
+        const nextPage = {
+          ...prevHierarchy[pathname],
+          ...patch,
+        };
 
-      const requestedParent = Object.prototype.hasOwnProperty.call(patch, 'parentPath') ? patch.parentPath : nextPage.parentPath;
-      const normalizedParent = requestedParent || null;
+        const requestedParent = Object.prototype.hasOwnProperty.call(patch, 'parentPath')
+          ? patch.parentPath
+          : nextPage.parentPath;
+        const normalizedParent = requestedParent || null;
 
-      if (!isValidParent(pathname, normalizedParent, pageHierarchy)) {
-        return;
-      }
+        if (!isValidParent(pathname, normalizedParent, prevHierarchy)) {
+          return prevState;
+        }
 
-      nextPage.parentPath = normalizedParent;
+        nextPage.parentPath = normalizedParent;
 
-      saveState({
-        ...state,
-        pageHierarchy: {
-          ...pageHierarchy,
-          [pathname]: nextPage,
-        },
+        return {
+          ...prevState,
+          pageHierarchy: {
+            ...prevHierarchy,
+            [pathname]: nextPage,
+          },
+        };
       });
     };
 
     const updateBlock = (pathname, blockId, patch) => {
-      const pageBlocks = blocksByPath[pathname] || [];
-      const nextBlocks = pageBlocks.map((block) => (block.id === blockId ? { ...block, ...patch } : block));
+      saveState((prevState) => {
+        const prevBlocksByPath = prevState.blocksByPath || {};
+        const pageBlocks = prevBlocksByPath[pathname] || [];
+        const nextBlocks = pageBlocks.map((block) => (block.id === blockId ? { ...block, ...patch } : block));
 
-      saveState({
-        ...state,
-        blocksByPath: {
-          ...blocksByPath,
-          [pathname]: nextBlocks,
-        },
+        return {
+          ...prevState,
+          blocksByPath: {
+            ...prevBlocksByPath,
+            [pathname]: nextBlocks,
+          },
+        };
       });
     };
 
     const updateBlockSetting = (pathname, blockId, settingKey, settingValue) => {
-      const pageBlocks = blocksByPath[pathname] || [];
-      const nextBlocks = pageBlocks.map((block) => {
-        if (block.id !== blockId) {
-          return block;
-        }
+      saveState((prevState) => {
+        const prevBlocksByPath = prevState.blocksByPath || {};
+        const pageBlocks = prevBlocksByPath[pathname] || [];
+        const nextBlocks = pageBlocks.map((block) => {
+          if (block.id !== blockId) {
+            return block;
+          }
+
+          return {
+            ...block,
+            settings: {
+              ...(block.settings || {}),
+              [settingKey]: settingValue,
+            },
+          };
+        });
 
         return {
-          ...block,
-          settings: {
-            ...(block.settings || {}),
-            [settingKey]: settingValue,
+          ...prevState,
+          blocksByPath: {
+            ...prevBlocksByPath,
+            [pathname]: nextBlocks,
           },
         };
-      });
-
-      saveState({
-        ...state,
-        blocksByPath: {
-          ...blocksByPath,
-          [pathname]: nextBlocks,
-        },
       });
     };
 

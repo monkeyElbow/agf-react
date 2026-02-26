@@ -28,7 +28,7 @@
   --ag-font-size-body: 16px;
   --ag-line-height-body: 1.75;
   /* Typography rule: Helv headings get a small negative track; Avenir headings use the stronger Avenir token. */
-  --ag-letter-spacing-helv-heading: -2px;
-  --ag-letter-spacing-helv-intro: -1.2px;
+  --ag-letter-spacing-helv-heading: -1px;
+  --ag-letter-spacing-helv-intro: -0.02em;
   --ag-letter-spacing-avenir-heading: -0.02em;
 }

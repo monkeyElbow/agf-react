@@ -7,9 +7,12 @@ import NativeContentPage from './components/NativeContentPage';
 import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
 import AdminContentPage from './pages/AdminContentPage';
+import AdminRedirectsPage from './pages/AdminRedirectsPage';
+import AdminDocumentsPage from './pages/AdminDocumentsPage';
 import PageBreadcrumbs from './components/PageBreadcrumbs';
 import SiteAnnouncementBar from './components/SiteAnnouncementBar';
 import { pageByPath, sitePages } from './data/siteMap';
+import { useRedirects } from './context/RedirectsContext';
 
 const LoansPage = lazy(() => import('./pages/LoansPage'));
 const InvestmentsPage = lazy(() => import('./pages/InvestmentsPage'));
@@ -24,6 +27,16 @@ const AdminJobsPage = lazy(() => import('./pages/AdminJobsPage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
 const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
 const ResourceArticlePage = lazy(() => import('./pages/ResourceArticlePage'));
+
+function ExternalRedirect({ to }) {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && to) {
+      window.location.replace(to);
+    }
+  }, [to]);
+
+  return <div className="route-page-loading" />;
+}
 
 function PageRoute({ page }) {
   const showAnnouncement = page.path !== '/';
@@ -82,6 +95,14 @@ function PageRoute({ page }) {
 
   if (page.path === '/admin/content') {
     return withTopBands(<AdminContentPage />);
+  }
+
+  if (page.path === '/admin/redirects') {
+    return withTopBands(<AdminRedirectsPage />);
+  }
+
+  if (page.path === '/admin/documents') {
+    return withTopBands(<AdminDocumentsPage />);
   }
 
   if (page.path === '/admin/resources') {
@@ -148,11 +169,16 @@ function PageRoute({ page }) {
     ));
   }
 
+  if (page.path === '/yourplan') {
+    return <Navigate to="/" replace />;
+  }
+
   return withTopBands(<NativeContentPage page={page} />);
 }
 
 export default function App() {
   const location = useLocation();
+  const { resolveRedirect } = useRedirects();
 
   useEffect(() => {
     if (!('scrollRestoration' in window.history)) {
@@ -205,6 +231,19 @@ export default function App() {
 
     document.title = page.path === '/' ? 'AGFinancial' : `${page.title} | AGFinancial`;
   }, [location.pathname]);
+
+  const redirectMatch = resolveRedirect({
+    pathname: location.pathname,
+    search: location.search,
+    hash: location.hash,
+  });
+
+  if (redirectMatch) {
+    if (redirectMatch.external) {
+      return <ExternalRedirect to={redirectMatch.to} />;
+    }
+    return <Navigate to={redirectMatch.to} replace />;
+  }
 
   return (
     <SiteLayout>

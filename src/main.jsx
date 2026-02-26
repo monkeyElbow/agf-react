@@ -8,6 +8,8 @@ import { ContentAdminProvider } from './context/ContentAdminContext';
 import { AnnouncementProvider } from './context/AnnouncementContext';
 import { ConsultantsProvider } from './context/ConsultantsContext';
 import { CareersJobsProvider } from './context/CareersJobsContext';
+import { RedirectsProvider } from './context/RedirectsContext';
+import { DocumentsProvider } from './context/DocumentsContext';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -15,11 +17,15 @@ createRoot(document.getElementById('root')).render(
       <ContentAdminProvider>
         <ConsultantsProvider>
           <CareersJobsProvider>
-            <RatesProvider>
-              <BrowserRouter>
-                <App />
-              </BrowserRouter>
-            </RatesProvider>
+            <RedirectsProvider>
+              <DocumentsProvider>
+                <RatesProvider>
+                  <BrowserRouter>
+                    <App />
+                  </BrowserRouter>
+                </RatesProvider>
+              </DocumentsProvider>
+            </RedirectsProvider>
           </CareersJobsProvider>
         </ConsultantsProvider>
       </ContentAdminProvider>

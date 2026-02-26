@@ -118,6 +118,23 @@ export default function SiteLayout({ children }) {
     setOpenDropdown((current) => (current === title ? null : title));
   }
 
+  const handleGroupMouseLeave = (event) => {
+    if (!isDesktop) {
+      return;
+    }
+    const current = event.currentTarget;
+    const related = event.relatedTarget;
+    if (related && current.contains(related)) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      if (current.matches(':hover') || current.querySelector(':hover')) {
+        return;
+      }
+      setOpenDropdown(null);
+    });
+  };
+
   return (
     <>
       <nav className={`site-nav${forceCompactNav ? ' is-force-mobile' : ''}`} aria-label="Main navigation">
@@ -148,11 +165,7 @@ export default function SiteLayout({ children }) {
                         setOpenDropdown(section.title);
                       }
                     }}
-                    onMouseLeave={() => {
-                      if (isDesktop) {
-                        setOpenDropdown(null);
-                      }
-                    }}
+                    onMouseLeave={handleGroupMouseLeave}
                   >
                     <div className="site-nav-group-head">
                       <button
@@ -172,7 +185,16 @@ export default function SiteLayout({ children }) {
                         aria-expanded={openDropdown === section.title}
                         onClick={() => toggleDropdown(section.title)}
                       >
-                        ▼
+                        <svg className="site-nav-group-toggle-icon" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
+                          <path
+                            d="M1 1l4 4 4-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                       </button>
                     </div>
                     <div className="site-nav-dropdown">
@@ -221,11 +243,7 @@ export default function SiteLayout({ children }) {
                       setOpenDropdown('Admin');
                     }
                   }}
-                  onMouseLeave={() => {
-                    if (isDesktop) {
-                      setOpenDropdown(null);
-                    }
-                  }}
+                  onMouseLeave={handleGroupMouseLeave}
                 >
                   <div className="site-nav-group-head">
                     <button
@@ -245,7 +263,16 @@ export default function SiteLayout({ children }) {
                       aria-expanded={openDropdown === 'Admin'}
                       onClick={() => toggleDropdown('Admin')}
                     >
-                      ▼
+                      <svg className="site-nav-group-toggle-icon" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
+                        <path
+                          d="M1 1l4 4 4-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </button>
                   </div>
                   <div className="site-nav-dropdown">
@@ -255,11 +282,17 @@ export default function SiteLayout({ children }) {
                     <NavLink to="/admin/consultants" className={navLinkClass}>
                       Consultants
                     </NavLink>
+                    <NavLink to="/admin/documents" className={navLinkClass}>
+                      Documents
+                    </NavLink>
                     <NavLink to="/admin/jobs" className={navLinkClass}>
                       Jobs
                     </NavLink>
                     <NavLink to="/admin/message" className={navLinkClass}>
                       Message
+                    </NavLink>
+                    <NavLink to="/admin/redirects" className={navLinkClass}>
+                      Redirects
                     </NavLink>
                     <NavLink to="/admin/resources" className={navLinkClass}>
                       Resources

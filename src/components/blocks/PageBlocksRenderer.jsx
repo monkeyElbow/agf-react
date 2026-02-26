@@ -1,5 +1,42 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+
+const CONSTANT_CONTACT_HOME_FORM_ID = '34a993b6-d0fb-48fd-b3c4-faad7332770c';
+
+function ConstantContactInlineForm({ formId }) {
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 10;
+    const tryReload = () => {
+      attempts += 1;
+      if (window._ctct_m && window.CTCTSignUpForm?.reload) {
+        window.CTCTSignUpForm.reload();
+        return true;
+      }
+      return false;
+    };
+
+    if (tryReload()) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      if (tryReload() || attempts >= maxAttempts) {
+        window.clearInterval(timer);
+      }
+    }, 500);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  return <div className="ctct-inline-form" data-form-id={formId} />;
+}
 
 function formatUsPhone(value) {
   const digits = String(value || '').replace(/\D/g, '').slice(0, 10);
@@ -187,18 +224,6 @@ function FeatureSplitBlock({ block }) {
 }
 
 function NewsletterBlock({ block }) {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
-  function onSubmit(event) {
-    event.preventDefault();
-    if (!email) {
-      return;
-    }
-    setSubmitted(true);
-    setEmail('');
-  }
-
   return (
     <section className="home-native-newsletter">
       <div className="ag-panel-rail">
@@ -209,19 +234,9 @@ function NewsletterBlock({ block }) {
           .
         </h2>
         <p>{block.body}</p>
-        <form onSubmit={onSubmit} className="home-native-newsletter-form">
-          <input
-            id="home-newsletter-email"
-            type="email"
-            aria-label="Email address"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Enter your email address"
-            required
-          />
-          <button type="submit">{block.buttonLabel}</button>
-        </form>
-        {submitted ? <p className="home-native-newsletter-success">Thanks, you are on the list.</p> : null}
+        <div className="home-native-newsletter-embed" aria-label="Newsletter signup form">
+          <ConstantContactInlineForm formId={CONSTANT_CONTACT_HOME_FORM_ID} />
+        </div>
       </div>
     </section>
   );

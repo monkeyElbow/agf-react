@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { sitePages } from '../data/siteMap';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
@@ -6,6 +6,14 @@ import { getNativePageContent } from '../data/nativePageContent';
 import { useConsultants } from '../context/ConsultantsContext';
 import { useCareersJobs } from '../context/CareersJobsContext';
 import { useRates } from '../context/RatesContext';
+import { useContentAdmin } from '../context/ContentAdminContext';
+import { useDocuments } from '../context/DocumentsContext';
+import GivingComparisonMatrix from './GivingComparisonMatrix';
+import CharitableGivingTableWidget from './CharitableGivingTableWidget';
+import CharitableGiftTestDriveWidget from './CharitableGiftTestDriveWidget';
+import EmergencyFundCalculatorWidget from './EmergencyFundCalculatorWidget';
+import IncreasedContributionCalculatorWidget from './IncreasedContributionCalculatorWidget';
+import NetWorthCalculatorWidget from './NetWorthCalculatorWidget';
 
 const US_STATE_LABELS = {
   AL: 'Alabama',
@@ -90,16 +98,101 @@ function getLocationOptions(section) {
 }
 
 function Action({ item }) {
-  if (item.href) {
+  const { resolveDocumentLink } = useDocuments();
+  const extraClass = item.className ? ` ${item.className}` : '';
+  const buttonClass = `service-native-btn${item.ghost ? ' is-ghost' : ''}${extraClass}`;
+  const resolved = resolveNativeLinkItem(item, resolveDocumentLink);
+  if (resolved?.href) {
     return (
-      <a href={item.href} target="_blank" rel="noreferrer noopener" className={`service-native-btn${item.ghost ? ' is-ghost' : ''}`}>
-        {item.label}
+      <a
+        href={resolved.href}
+        target={resolved.external ? '_blank' : undefined}
+        rel={resolved.external ? 'noreferrer noopener' : undefined}
+        className={buttonClass}
+      >
+        {resolved.label}
       </a>
     );
   }
+  if (!resolved?.to && !item?.to) {
+    return null;
+  }
   return (
-    <Link to={item.to} className={`service-native-btn${item.ghost ? ' is-ghost' : ''}`}>
-      {item.label}
+    <Link to={resolved?.to || item.to} className={buttonClass}>
+      {resolved?.label || item.label}
+    </Link>
+  );
+}
+
+function isExternalLinkTarget(value) {
+  return /^https?:\/\//i.test(String(value || '').trim());
+}
+
+function resolveNativeLinkItem(item, resolveDocumentLink) {
+  const source = item && typeof item === 'object' ? item : {};
+  if (source.documentId && typeof resolveDocumentLink === 'function') {
+    const doc = resolveDocumentLink(source.documentId);
+    if (doc?.url) {
+      return {
+        label: source.label || doc.title,
+        href: doc.external ? doc.url : undefined,
+        to: doc.external ? undefined : doc.url,
+        external: Boolean(doc.external),
+        document: doc,
+      };
+    }
+  }
+
+  if (source.href) {
+    return {
+      label: source.label,
+      href: source.href,
+      to: undefined,
+      external: isExternalLinkTarget(source.href),
+    };
+  }
+
+  if (source.to) {
+    return {
+      label: source.label,
+      href: undefined,
+      to: source.to,
+      external: false,
+    };
+  }
+
+  return {
+    label: source.label,
+    href: undefined,
+    to: undefined,
+    external: false,
+  };
+}
+
+function NativeLink({ item, className, children }) {
+  const { resolveDocumentLink } = useDocuments();
+  const resolved = resolveNativeLinkItem(item, resolveDocumentLink);
+  const label = children ?? resolved.label ?? item?.label;
+
+  if (resolved.href) {
+    return (
+      <a
+        href={resolved.href}
+        target={resolved.external ? '_blank' : undefined}
+        rel={resolved.external ? 'noreferrer noopener' : undefined}
+        className={className}
+      >
+        {label}
+      </a>
+    );
+  }
+  if (!resolved.to && !item?.to) {
+    return <span className={className}>{label}</span>;
+  }
+
+  return (
+    <Link to={resolved.to || item?.to || '#'} className={className}>
+      {label}
     </Link>
   );
 }
@@ -126,6 +219,221 @@ function formatPostedDate(value) {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+const HERO_COLOR_CLASS_SET = new Set(['is-atlantean', 'is-mango', 'is-melon', 'is-white', 'is-super-grey']);
+const HERO_ANIMATION_PRESET_SET = new Set(['default', 'none', 'loans-unblur']);
+const HERO_HEIGHT_MODE_SET = new Set(['default', 'custom']);
+const HERO_BG_TONE_SET = new Set(['white', 'sand', 'blue', 'grey']);
+const HERO_JUSTIFY_SET = new Set(['left', 'center', 'right']);
+
+function normalizeHeroColorClass(value) {
+  const token = String(value || '').trim();
+  return HERO_COLOR_CLASS_SET.has(token) ? token : '';
+}
+
+function normalizeHeroAnimationPreset(value) {
+  const token = String(value || '').trim();
+  return HERO_ANIMATION_PRESET_SET.has(token) ? token : 'default';
+}
+
+function normalizeHeroHeightMode(value) {
+  const token = String(value || '').trim();
+  return HERO_HEIGHT_MODE_SET.has(token) ? token : 'default';
+}
+
+function normalizeHeroBgTone(value) {
+  const token = String(value || '').trim();
+  return HERO_BG_TONE_SET.has(token) ? token : 'white';
+}
+
+function normalizeHeroJustify(value) {
+  const token = String(value || '').trim();
+  return HERO_JUSTIFY_SET.has(token) ? token : 'center';
+}
+
+function normalizeHeroHeightSvh(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 42;
+  }
+  return Math.max(20, Math.min(90, Math.round(numeric)));
+}
+
+function normalizeHeroLineGapEm(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+  return Math.max(-0.2, Math.min(0.7, Number(numeric.toFixed(2))));
+}
+
+function heroAnimationClassForLine(preset, lineNumber) {
+  const normalized = normalizeHeroAnimationPreset(preset);
+  if (normalized === 'none') {
+    return 'hero-anim-none';
+  }
+  if (normalized === 'loans-unblur') {
+    return lineNumber === 1 ? 'hero-anim-loans-unblur' : 'hero-anim-loans-slide';
+  }
+  return '';
+}
+
+function getHeroRailInlineStyle(hero) {
+  if (!hero || normalizeHeroHeightMode(hero.heightMode) !== 'custom') {
+    return undefined;
+  }
+  const heightSvh = normalizeHeroHeightSvh(hero.heightSvh);
+  return {
+    minHeight: `clamp(220px, ${heightSvh}svh, 700px)`,
+  };
+}
+
+function parseHeroHighlightsJson(raw) {
+  const source = String(raw || '').trim();
+  if (!source) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(source);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .filter((item) => item && typeof item === 'object')
+      .map((item) => {
+        const className = normalizeHeroColorClass(item.className);
+        const hasRange = Number.isFinite(Number(item.start)) && Number.isFinite(Number(item.end));
+        if (hasRange) {
+          return {
+            start: Number(item.start),
+            end: Number(item.end),
+            className,
+            text: String(item.text || ''),
+          };
+        }
+        return {
+          text: String(item.text || ''),
+          className,
+        };
+      })
+      .filter((item) => (
+        item.className
+        && ((Number.isInteger(item.start) && Number.isInteger(item.end) && item.end > item.start) || item.text)
+      ));
+  } catch {
+    return [];
+  }
+}
+
+function buildSimpleHeroHighlight(textValue, colorValue) {
+  const text = String(textValue || '').trim();
+  const className = normalizeHeroColorClass(colorValue);
+  if (!text || !className) {
+    return [];
+  }
+  return [{ text, className }];
+}
+
+function buildTestDynamicHero(block) {
+  if (!block || block.mode !== 'dynamic') {
+    return null;
+  }
+
+  const settings = block.settings || {};
+  const animationPreset = normalizeHeroAnimationPreset(settings.animationPreset);
+  const bgTone = normalizeHeroBgTone(settings.bgTone);
+  const justify = normalizeHeroJustify(settings.justify);
+  const heightMode = normalizeHeroHeightMode(settings.heightMode);
+  const heightSvh = normalizeHeroHeightSvh(settings.heightSvh);
+  const lineGap = normalizeHeroLineGapEm(settings.lineGap);
+  const line1Text = String(settings.line1Text || '').trim();
+  const line2Text = String(settings.line2Text || '').trim();
+
+  const lines = [
+    {
+      title: line1Text,
+      className: normalizeHeroColorClass(settings.line1ClassName),
+      highlights: (() => {
+        const advanced = parseHeroHighlightsJson(settings.line1HighlightsJson);
+        return advanced.length ? advanced : buildSimpleHeroHighlight(settings.line1HighlightText, settings.line1HighlightColor);
+      })(),
+    },
+    {
+      title: line2Text,
+      className: normalizeHeroColorClass(settings.line2ClassName),
+      highlights: (() => {
+        const advanced = parseHeroHighlightsJson(settings.line2HighlightsJson);
+        return advanced.length ? advanced : buildSimpleHeroHighlight(settings.line2HighlightText, settings.line2HighlightColor);
+      })(),
+    },
+  ].filter((line) => line.title);
+
+  if (!lines.length) {
+    return null;
+  }
+
+  return {
+    lines,
+    animationPreset,
+    bgTone,
+    justify,
+    heightMode,
+    heightSvh,
+    lineGap,
+  };
+}
+
+function toActionLinkConfig(label, url, style) {
+  const nextLabel = String(label || '').trim();
+  const nextUrl = String(url || '').trim();
+  if (!nextLabel || !nextUrl) {
+    return null;
+  }
+
+  const normalizedStyle = String(style || '').trim().toLowerCase();
+  const className = normalizedStyle === 'dark' ? 'is-dark' : '';
+  const isExternal = /^(https?:|mailto:|tel:)/i.test(nextUrl);
+
+  return isExternal
+    ? { label: nextLabel, href: nextUrl, className }
+    : { label: nextLabel, to: nextUrl.startsWith('/') ? nextUrl : `/${nextUrl}`, className };
+}
+
+function buildTestDynamicIntro(block) {
+  if (!block || block.mode !== 'dynamic') {
+    return null;
+  }
+
+  const settings = block.settings || {};
+  const heading = String(settings.heading || '').trim();
+  const headingClassName = normalizeHeroColorClass(settings.headingClassName);
+  const headingHighlights = parseHeroHighlightsJson(settings.headingHighlightsJson);
+  const body = String(settings.body || '').trim();
+  const extraLine = String(settings.extraLine || '').trim();
+  const bgTone = String(settings.bgTone || 'sand').trim();
+  const textTone = String(settings.textTone || 'dark').trim();
+  const extraLineTone = String(settings.extraLineTone || 'default').trim();
+  const actions = [
+    toActionLinkConfig(settings.button1Label, settings.button1Url, settings.button1Style),
+    toActionLinkConfig(settings.button2Label, settings.button2Url, settings.button2Style),
+  ].filter(Boolean);
+
+  if (!heading && !body && !extraLine && !actions.length) {
+    return null;
+  }
+
+  return {
+    heading: heading || null,
+    headingClassName: headingClassName || '',
+    headingHighlights: headingHighlights.length ? headingHighlights : [],
+    body: body ? [body] : [],
+    emphasis: extraLine || null,
+    emphasisClassName: extraLine ? `is-${extraLineTone}` : '',
+    actions,
+    className: `test-dynamic-intro is-bg-${bgTone} is-text-${textTone}`,
+  };
 }
 
 const CERTIFICATE_REQUEST_COVERAGE_OPTIONS = [
@@ -1032,13 +1340,54 @@ function ConsultantMessagePanel({ card, layout = 'toggle', onOpenChange }) {
 
 function renderHighlightedText(source, highlights) {
   const text = String(source || '');
-  const rules = Array.isArray(highlights)
-    ? highlights.filter((item) => item && item.text)
-    : [];
+  const rules = Array.isArray(highlights) ? highlights.filter(Boolean) : [];
 
   if (!text || !rules.length) {
     return text;
   }
+
+  const rangeRules = rules
+    .filter((item) => Number.isInteger(item.start) && Number.isInteger(item.end) && item.end > item.start && item.className)
+    .map((item) => ({
+      start: Math.max(0, Math.min(text.length, item.start)),
+      end: Math.max(0, Math.min(text.length, item.end)),
+      className: item.className,
+    }))
+    .filter((item) => item.end > item.start)
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+
+  if (rangeRules.length) {
+    const pieces = [];
+    let cursor = 0;
+    let key = 0;
+    const nextKey = (prefix) => {
+      key += 1;
+      return `${prefix}-${key}`;
+    };
+
+    rangeRules.forEach((rule) => {
+      if (rule.start > cursor) {
+        pieces.push(<span key={nextKey('t')}>{text.slice(cursor, rule.start)}</span>);
+      }
+      const start = Math.max(cursor, rule.start);
+      const end = Math.max(start, rule.end);
+      if (end > start) {
+        pieces.push(
+          <mark key={nextKey('m')} className={rule.className || undefined}>
+            {text.slice(start, end)}
+          </mark>,
+        );
+        cursor = end;
+      }
+    });
+
+    if (cursor < text.length) {
+      pieces.push(<span key={nextKey('t')}>{text.slice(cursor)}</span>);
+    }
+    return pieces;
+  }
+
+  const textRules = rules.filter((item) => item && item.text);
 
   const lower = text.toLowerCase();
   const pieces = [];
@@ -1052,7 +1401,7 @@ function renderHighlightedText(source, highlights) {
   while (cursor < text.length) {
     let next = null;
 
-    rules.forEach((rule) => {
+    textRules.forEach((rule) => {
       const needle = String(rule.text).toLowerCase();
       if (!needle) {
         return;
@@ -1179,6 +1528,37 @@ const FUND_IRA_EXCLUDED_STATES = {
   WA: 'AGFinancial investments are not available to new investors in Washington.',
 };
 
+function getIraDocumentId(iraPrefix, variant) {
+  const prefix = String(iraPrefix || '').toLowerCase();
+  const map = {
+    'application-simplifier': {
+      traditional: 'document-ira-traditional-ira-simplifier-form',
+      roth: 'document-ira-roth-ira-simplifier-form',
+    },
+    'transfer-request': {
+      traditional: 'document-ira-traditional-ira-transfer-request-form',
+      roth: 'document-ira-roth-ira-transfer-request-form',
+    },
+    'open-zip': {
+      traditional: 'document-ira-traditional-open-ira-zip',
+      roth: 'document-ira-roth-open-ira-zip',
+    },
+    'transfer-zip': {
+      traditional: 'document-ira-traditional-transfer-ira-zip',
+      roth: 'document-ira-roth-transfer-ira-zip',
+    },
+    'direct-rollover-zip': {
+      traditional: 'document-ira-traditional-direct-rollover-ira-zip',
+      roth: 'document-ira-roth-direct-rollover-ira-zip',
+    },
+    'indirect-rollover-zip': {
+      traditional: 'document-ira-traditional-indirect-rollover-ira-zip',
+      roth: 'document-ira-roth-indirect-rollover-ira-zip',
+    },
+  };
+  return map[variant]?.[prefix] || null;
+}
+
 function getFundIraDownloadPackage(iraType, fundingOption) {
   if (!iraType || !fundingOption) {
     return null;
@@ -1203,11 +1583,11 @@ function getFundIraDownloadPackage(iraType, fundingOption) {
       actions: [
         {
           label: `${iraPrefix} IRA Simplifier Form*`,
-          href: `http://files.agfinancial.org/IRA/Step-by-Step/${iraPrefix}-IRA-Application-Simplifier.pdf`,
+          documentId: getIraDocumentId(iraPrefix, 'application-simplifier'),
         },
         {
           label: 'Investment Authorization Form',
-          href: 'http://files.agfinancial.org/IRA/Step-by-Step/IRA-Investment-Authorization.pdf',
+          documentId: 'document-ira-investment-authorization-form',
         },
       ],
       bullets: [
@@ -1217,7 +1597,7 @@ function getFundIraDownloadPackage(iraType, fundingOption) {
       noteActions: [
         {
           label: 'Download All Forms',
-          href: `http://files.agfinancial.org/IRA/${iraPrefix}-Open-IRA.zip`,
+          documentId: getIraDocumentId(iraPrefix, 'open-zip'),
         },
       ],
     },
@@ -1226,7 +1606,7 @@ function getFundIraDownloadPackage(iraType, fundingOption) {
       actions: [
         {
           label: 'Investment Authorization Form',
-          href: 'http://files.agfinancial.org/IRA/Step-by-Step/IRA-Investment-Authorization.pdf',
+          documentId: 'document-ira-investment-authorization-form',
         },
       ],
       paragraphs: [
@@ -1240,15 +1620,15 @@ function getFundIraDownloadPackage(iraType, fundingOption) {
       actions: [
         {
           label: `${iraPrefix} IRA Simplifier Form*`,
-          href: `http://files.agfinancial.org/IRA/Step-by-Step/${iraPrefix}-IRA-Application-Simplifier.pdf`,
+          documentId: getIraDocumentId(iraPrefix, 'application-simplifier'),
         },
         {
           label: 'Investment Authorization Form',
-          href: 'http://files.agfinancial.org/IRA/Step-by-Step/IRA-Investment-Authorization.pdf',
+          documentId: 'document-ira-investment-authorization-form',
         },
         {
           label: `${iraPrefix} IRA Transfer Request Form`,
-          href: `http://files.agfinancial.org/IRA/Step-by-Step/${iraPrefix}-IRA-Transfer-Request.pdf`,
+          documentId: getIraDocumentId(iraPrefix, 'transfer-request'),
         },
       ],
       bullets: [
@@ -1258,7 +1638,7 @@ function getFundIraDownloadPackage(iraType, fundingOption) {
       noteActions: [
         {
           label: 'Download All Forms',
-          href: `http://files.agfinancial.org/IRA/${iraPrefix}-Transfer-IRA.zip`,
+          documentId: getIraDocumentId(iraPrefix, 'transfer-zip'),
         },
       ],
       paragraphs: isRoth
@@ -1270,15 +1650,15 @@ function getFundIraDownloadPackage(iraType, fundingOption) {
       actions: [
         {
           label: `${iraPrefix} IRA Simplifier Form*`,
-          href: `http://files.agfinancial.org/IRA/Step-by-Step/${iraPrefix}-IRA-Application-Simplifier.pdf`,
+          documentId: getIraDocumentId(iraPrefix, 'application-simplifier'),
         },
         {
           label: 'Investment Authorization Form',
-          href: 'http://files.agfinancial.org/IRA/Step-by-Step/IRA-Investment-Authorization.pdf',
+          documentId: 'document-ira-investment-authorization-form',
         },
         {
           label: 'Direct Rollover Request Form',
-          href: 'http://files.agfinancial.org/IRA/Step-by-Step/IRA-Direct-Rollover-Request.pdf',
+          documentId: 'document-ira-direct-rollover-request-form',
         },
       ],
       bullets: [
@@ -1288,7 +1668,7 @@ function getFundIraDownloadPackage(iraType, fundingOption) {
       noteActions: [
         {
           label: 'Download All Forms',
-          href: `http://files.agfinancial.org/IRA/${iraPrefix}-Direct-Rollover-IRA.zip`,
+          documentId: getIraDocumentId(iraPrefix, 'direct-rollover-zip'),
         },
       ],
       paragraphs: isRoth
@@ -1300,18 +1680,18 @@ function getFundIraDownloadPackage(iraType, fundingOption) {
       actions: [
         {
           label: `${iraPrefix} IRA Simplifier Form*`,
-          href: `http://files.agfinancial.org/IRA/Step-by-Step/${iraPrefix}-IRA-Application-Simplifier.pdf`,
+          documentId: getIraDocumentId(iraPrefix, 'application-simplifier'),
         },
         {
           label: 'Investment Authorization Form',
-          href: 'http://files.agfinancial.org/IRA/Step-by-Step/IRA-Investment-Authorization.pdf',
+          documentId: 'document-ira-investment-authorization-form',
         },
       ],
       bullets: ['Provide two forms of identification*'],
       noteActions: [
         {
           label: 'Download All Forms',
-          href: `http://files.agfinancial.org/IRA/${iraPrefix}-Indirect-Rollover-IRA.zip`,
+          documentId: getIraDocumentId(iraPrefix, 'indirect-rollover-zip'),
         },
       ],
       paragraphs: isRoth
@@ -1324,6 +1704,7 @@ function getFundIraDownloadPackage(iraType, fundingOption) {
 }
 
 function FundAnIraWidget() {
+  const { resolveDocumentLink } = useDocuments();
   const stateOptions = useMemo(
     () => toStateOptions().sort((a, b) => a.label.localeCompare(b.label)),
     [],
@@ -1339,6 +1720,7 @@ function FundAnIraWidget() {
   const step2Unlocked = isEligible;
   const step3Unlocked = step2Unlocked && agreedCircular;
   const downloadPackage = step3Unlocked ? getFundIraDownloadPackage(iraType, fundingOption) : null;
+  const offeringCircularDoc = resolveDocumentLink('document-investments-aglf-offering-circular');
 
   const stepClassName = (step) => {
     if (step === 1) {
@@ -1432,7 +1814,7 @@ function FundAnIraWidget() {
 
           <div className="fund-ira-action-row">
             <a
-              href="http://files.agfinancial.org/Investments/AGLF-Offering%20Circular.pdf"
+              href={offeringCircularDoc?.url || '/prospectus'}
               target="_blank"
               rel="noreferrer noopener"
               className="service-native-btn"
@@ -1560,6 +1942,318 @@ function FundAnIraWidget() {
   );
 }
 
+const ENDOWMENT_RATE = 0.045;
+const ENDOWMENT_SEGMENTS = [
+  { key: 'cash', label: 'Cash', color: '#00a3b3' },
+  { key: 'securities', label: 'Securities', color: '#22c6d3' },
+  { key: 'realEstate', label: 'Real Estate', color: '#ffa400' },
+  { key: 'other', label: 'Business/Other', color: '#ffcd66' },
+];
+const ENDOWMENT_MONEY_FORMATTER = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
+const ENDOWMENT_NUMBER_FORMATTER = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 0,
+});
+
+function parseEndowmentAmount(value) {
+  return Number(String(value || '').replace(/[^\d.-]/g, '')) || 0;
+}
+
+function formatEndowmentAmount(value) {
+  if (!value) {
+    return '';
+  }
+  return ENDOWMENT_NUMBER_FORMATTER.format(value);
+}
+
+function formatEndowmentMoney(value) {
+  return ENDOWMENT_MONEY_FORMATTER.format(Number(value) || 0);
+}
+
+function buildEndowmentSummary(values, totalGift, totalImpact) {
+  return [
+    (values.name ? `Example prepared for ${values.name}\n` : '') + 'AGFinancial Endowment Illustration',
+    '===========================================',
+    `Total Gift: ${formatEndowmentMoney(totalGift)}`,
+    `Assumed annual distribution rate: ${(ENDOWMENT_RATE * 100).toFixed(1)}%`,
+    `Estimated annual support: ${formatEndowmentMoney(totalImpact)}  (/year)`,
+    `Monthly equivalent: ${formatEndowmentMoney(totalImpact / 12)}`,
+    '',
+    'Breakdown (annual):',
+    `• Cash: ${formatEndowmentMoney(values.cash * ENDOWMENT_RATE)}`,
+    `• Securities: ${formatEndowmentMoney(values.securities * ENDOWMENT_RATE)}`,
+    `• Real Estate: ${formatEndowmentMoney(values.realEstate * ENDOWMENT_RATE)}`,
+    `• Business/Other: ${formatEndowmentMoney(values.other * ENDOWMENT_RATE)}`,
+    '',
+    'Source: agfinancial.org',
+    '',
+    'Notes:',
+    '- Principal remains invested; distributions fund ongoing support.',
+    '- Illustration only. Returns and policies vary; consult AGFinancial and your advisors.',
+  ].join('\n');
+}
+
+function EndowmentCalculatorWidget() {
+  const baseId = useId();
+  const [fields, setFields] = useState({
+    cash: '10,000',
+    securities: '25,000',
+    realEstate: '100,000',
+    other: '50,000',
+    name: '',
+    email: '',
+    phone: '',
+  });
+
+  const amounts = useMemo(() => ({
+    cash: parseEndowmentAmount(fields.cash),
+    securities: parseEndowmentAmount(fields.securities),
+    realEstate: parseEndowmentAmount(fields.realEstate),
+    other: parseEndowmentAmount(fields.other),
+  }), [fields.cash, fields.securities, fields.realEstate, fields.other]);
+
+  const totalGift = amounts.cash + amounts.securities + amounts.realEstate + amounts.other;
+  const impact = {
+    cash: amounts.cash * ENDOWMENT_RATE,
+    securities: amounts.securities * ENDOWMENT_RATE,
+    realEstate: amounts.realEstate * ENDOWMENT_RATE,
+    other: amounts.other * ENDOWMENT_RATE,
+  };
+  const totalImpact = impact.cash + impact.securities + impact.realEstate + impact.other;
+  const emailValue = fields.email.trim();
+  const phoneValue = fields.phone.trim();
+  const nameValue = fields.name.trim();
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+  const canSubmit = Boolean(nameValue && phoneValue && isEmailValid);
+  const summary = useMemo(
+    () => buildEndowmentSummary({ ...amounts, name: nameValue }, totalGift, totalImpact),
+    [amounts, nameValue, totalGift, totalImpact],
+  );
+
+  const updateField = (key) => (event) => {
+    const { value } = event.target;
+    setFields((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const formatAmountField = (key) => () => {
+    setFields((prev) => {
+      const nextValue = formatEndowmentAmount(parseEndowmentAmount(prev[key]));
+      return { ...prev, [key]: nextValue };
+    });
+  };
+
+  const handleTalkToPlanner = () => {
+    if (!canSubmit || typeof window === 'undefined') {
+      return;
+    }
+    const subject = encodeURIComponent('Endowment illustration request');
+    const body = encodeURIComponent(summary);
+    window.location.href = `mailto:plannedgiving@agfinancial.org?subject=${subject}&body=${body}`;
+  };
+
+  const handleDownload = () => {
+    if (!canSubmit || typeof window === 'undefined') {
+      return;
+    }
+    const blob = new Blob([summary], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const safeName = nameValue ? `${nameValue.replace(/[^\w-]+/g, '-')}-` : '';
+    link.href = url;
+    link.download = `${safeName}AGFinancial-Endowment-Illustration.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const chartSegments = ENDOWMENT_SEGMENTS.map((segment) => ({
+    ...segment,
+    value: impact[segment.key],
+  }));
+  const chartTotal = chartSegments.reduce((sum, segment) => sum + segment.value, 0);
+  const radius = 46;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  return (
+    <div className="endowment-calculator">
+      <p className="endowment-calculator-sub">
+        Enter assets you may gift. We’ll show your <em>annual ministry impact</em> from investment earnings (your principal remains invested).
+      </p>
+
+      <div className="endowment-calculator-assets">
+        <div className="endowment-calculator-assets-grid">
+          <label htmlFor={`${baseId}-cash`} className="endowment-calculator-field">
+            <span>Cash ($)</span>
+            <input
+              id={`${baseId}-cash`}
+              type="text"
+              inputMode="numeric"
+              value={fields.cash}
+              onChange={updateField('cash')}
+              onBlur={formatAmountField('cash')}
+              className="endowment-calculator-input"
+            />
+            <span className="endowment-calculator-hint">Minimum guideline: 10,000</span>
+          </label>
+          <label htmlFor={`${baseId}-securities`} className="endowment-calculator-field">
+            <span>Securities ($)</span>
+            <input
+              id={`${baseId}-securities`}
+              type="text"
+              inputMode="numeric"
+              value={fields.securities}
+              onChange={updateField('securities')}
+              onBlur={formatAmountField('securities')}
+              className="endowment-calculator-input"
+            />
+            <span className="endowment-calculator-hint">Restricted or marketable</span>
+          </label>
+          <label htmlFor={`${baseId}-realEstate`} className="endowment-calculator-field">
+            <span>Real Estate ($)</span>
+            <input
+              id={`${baseId}-realEstate`}
+              type="text"
+              inputMode="numeric"
+              value={fields.realEstate}
+              onChange={updateField('realEstate')}
+              onBlur={formatAmountField('realEstate')}
+              className="endowment-calculator-input"
+            />
+            <span className="endowment-calculator-hint">Minimum guideline: 100,000</span>
+          </label>
+          <label htmlFor={`${baseId}-other`} className="endowment-calculator-field">
+            <span>Business/Other ($)</span>
+            <input
+              id={`${baseId}-other`}
+              type="text"
+              inputMode="numeric"
+              value={fields.other}
+              onChange={updateField('other')}
+              onBlur={formatAmountField('other')}
+              className="endowment-calculator-input"
+            />
+            <span className="endowment-calculator-hint">Art, antiques, business interests…</span>
+          </label>
+        </div>
+      </div>
+
+      <div className="endowment-calculator-results">
+        <div className="endowment-calculator-card">
+          {nameValue ? (
+            <div className="endowment-calculator-prepared">Example prepared for {nameValue}</div>
+          ) : null}
+          <div className="endowment-calculator-total">Total Gift: {formatEndowmentMoney(totalGift)}</div>
+          <div className="endowment-calculator-annual">
+            <span className="endowment-calculator-annual-number">{formatEndowmentMoney(totalImpact)}</span>
+            <span className="endowment-calculator-annual-note"> / year — every year</span>
+          </div>
+          <div className="endowment-calculator-monthly">{formatEndowmentMoney(totalImpact / 12)} per month equivalent</div>
+          <div className="endowment-calculator-breakdown">
+            <div>• Cash: {formatEndowmentMoney(impact.cash)} / yr</div>
+            <div>• Securities: {formatEndowmentMoney(impact.securities)} / yr</div>
+            <div>• Real estate: {formatEndowmentMoney(impact.realEstate)} / yr</div>
+            <div>• Business/Other: {formatEndowmentMoney(impact.other)} / yr</div>
+          </div>
+          <p className="endowment-calculator-note">
+            Based on a representative annual distribution rate (4.5%). Actual results vary with markets, rates, and endowment spending policies.
+          </p>
+        </div>
+
+        <div className="endowment-calculator-chart" aria-label="Annual impact breakdown chart">
+          <svg viewBox="0 0 120 120" className="endowment-calculator-donut" role="img">
+            <circle
+              cx="60"
+              cy="60"
+              r={radius}
+              fill="transparent"
+              stroke="#e1e1e1"
+              strokeWidth="18"
+            />
+            {chartTotal > 0 ? chartSegments.map((segment) => {
+              const dash = (segment.value / chartTotal) * circumference;
+              const dashArray = `${dash} ${circumference - dash}`;
+              const segmentOffset = offset;
+              offset += dash;
+              return (
+                <circle
+                  key={segment.key}
+                  cx="60"
+                  cy="60"
+                  r={radius}
+                  fill="transparent"
+                  stroke={segment.color}
+                  strokeWidth="18"
+                  strokeDasharray={dashArray}
+                  strokeDashoffset={-segmentOffset}
+                />
+              );
+            }) : null}
+          </svg>
+          <ul className="endowment-calculator-legend">
+            {chartSegments.map((segment) => (
+              <li key={segment.key}>
+                <span className="endowment-calculator-legend-dot" style={{ backgroundColor: segment.color }} />
+                <span>{segment.label}</span>
+                <span className="endowment-calculator-legend-value">{formatEndowmentMoney(segment.value)} / yr</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="endowment-calculator-form">
+        <div className="endowment-calculator-contact">
+          <input
+            type="text"
+            placeholder="Your name"
+            value={fields.name}
+            onChange={updateField('name')}
+          />
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={fields.email}
+            onChange={updateField('email')}
+          />
+          <input
+            type="tel"
+            placeholder="555-555-5555"
+            value={fields.phone}
+            onChange={updateField('phone')}
+          />
+        </div>
+        <div className="endowment-calculator-actions">
+          <button
+            type="button"
+            className="service-native-btn endowment-calculator-btn"
+            onClick={handleTalkToPlanner}
+            disabled={!canSubmit}
+          >
+            Talk to a Gift Planner
+          </button>
+          <button
+            type="button"
+            className="service-native-btn is-ghost endowment-calculator-btn"
+            onClick={handleDownload}
+            disabled={!canSubmit}
+          >
+            Download Your Example
+          </button>
+        </div>
+      </div>
+
+      <p className="endowment-calculator-fineprint">
+        For illustrative purposes only. Assumptions reflect a generalized annual distribution rate and do not guarantee future results. Actual returns, distribution policies, fees, and spending rules vary by fund, market conditions, and timing. This material is not tax, legal, or investment advice. Consult your advisors and AGFinancial for a personalized illustration and current rates.
+      </p>
+    </div>
+  );
+}
+
 const MINISTER_HOUSING_FIELDS = [
   ['rent', 'Rent'],
   ['down', 'Down payment'],
@@ -1585,6 +2279,12 @@ function escapeHtml(value = '') {
 }
 
 function MinisterHousingQuickCheckWidget() {
+  const STEPS = [
+    { key: 'eligibility', label: 'Eligibility' },
+    { key: 'expenses', label: 'Expenses' },
+    { key: 'frv', label: 'FRV' },
+    { key: 'summary', label: 'Summary' },
+  ];
   const [eligibility, setEligibility] = useState({
     cred: false,
     earned: false,
@@ -1593,6 +2293,7 @@ function MinisterHousingQuickCheckWidget() {
   });
   const [expenses, setExpenses] = useState(() => Object.fromEntries(MINISTER_HOUSING_FIELDS.map(([id]) => [id, ''])));
   const [frv, setFrv] = useState('');
+  const [stepIndex, setStepIndex] = useState(0);
 
   const totalExpenses = useMemo(
     () => MINISTER_HOUSING_FIELDS.reduce((sum, [id]) => sum + (parseFloat(expenses[id] || 0) || 0), 0),
@@ -1602,6 +2303,7 @@ function MinisterHousingQuickCheckWidget() {
   const hasBothAmounts = totalExpenses > 0 && frvValue > 0;
   const maxClaim = hasBothAmounts ? Math.min(totalExpenses, frvValue) : 0;
   const eligibilityPass = Object.values(eligibility).every(Boolean);
+  const isLastStep = stepIndex === STEPS.length - 1;
 
   let resultMessage = 'Complete eligibility checklist and amounts to see your result.';
   let resultClass = '';
@@ -1705,109 +2407,188 @@ function MinisterHousingQuickCheckWidget() {
 
   return (
     <div className="retirement-403b-quickcheck-widget" aria-label="Minister's Housing Allowance Quick Check">
-      <div className="ret403b-qc-card">
-        <h3>Eligibility checklist</h3>
-        <div className="ret403b-qc-grid">
-          {[
-            ['cred', 'I was credentialed during the time the contribution was made.'],
-            ['earned', 'I earned the income for the contribution from ministry.'],
-            ['retired', 'I am retired.'],
-            ['primary', 'I am considering expenses on my primary residence only.'],
-          ].map(([id, label]) => (
-            <label key={id} className="ret403b-qc-check">
-              <input
-                type="checkbox"
-                checked={eligibility[id]}
-                onChange={(event) => setEligibility((prev) => ({ ...prev, [id]: event.target.checked }))}
-              />
-              <span>{label}</span>
-            </label>
-          ))}
-        </div>
-        <p className="ret403b-qc-note">These are the baseline requirements from the worksheet. You’ll see a pass/fail below after you enter amounts.</p>
+      <div className="ret403b-qc-stepper" role="tablist" aria-label="Quick check steps">
+        {STEPS.map((step, index) => (
+          <button
+            key={step.key}
+            type="button"
+            role="tab"
+            aria-selected={index === stepIndex}
+            className={`ret403b-qc-step${index === stepIndex ? ' is-active' : ''}${index < stepIndex ? ' is-complete' : ''}`}
+            onClick={() => setStepIndex(index)}
+          >
+            <span className="ret403b-qc-step-num">{index + 1}</span>
+            <span className="ret403b-qc-step-label">{step.label}</span>
+          </button>
+        ))}
       </div>
 
-      <div className="ret403b-qc-card">
-        <h3>Annual housing expenses</h3>
-        <div className="ret403b-qc-fields">
-          {MINISTER_HOUSING_FIELDS.map(([id, label]) => (
-            <label key={id} className="ret403b-qc-field">
-              <span>{label}</span>
-              <div className="ret403b-qc-money">
-                <span aria-hidden="true">$</span>
+      <div className="ret403b-qc-step-meta">
+        <strong>Step {stepIndex + 1} of {STEPS.length}</strong>
+        <span>Minister&apos;s Housing Allowance Quick Check</span>
+      </div>
+
+      {stepIndex === 0 ? (
+        <div className="ret403b-qc-card">
+          <h3>Eligibility checklist</h3>
+          <div className="ret403b-qc-grid">
+            {[
+              ['cred', 'I was credentialed during the time the contribution was made.'],
+              ['earned', 'I earned the income for the contribution from ministry.'],
+              ['retired', 'I am retired.'],
+              ['primary', 'I am considering expenses on my primary residence only.'],
+            ].map(([id, label]) => (
+              <label key={id} className="ret403b-qc-check">
                 <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={expenses[id]}
-                  onChange={(event) => setExpenses((prev) => ({ ...prev, [id]: event.target.value }))}
+                  type="checkbox"
+                  checked={eligibility[id]}
+                  onChange={(event) => setEligibility((prev) => ({ ...prev, [id]: event.target.checked }))}
                 />
-              </div>
-            </label>
-          ))}
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="ret403b-qc-note">These are the baseline requirements from the worksheet. You’ll see a pass/fail after you enter amounts.</p>
         </div>
-        <p className="ret403b-qc-total"><strong>Total housing expenses:</strong> <span>{formatCurrency(totalExpenses)}</span></p>
-      </div>
+      ) : null}
 
-      <div className="ret403b-qc-card">
-        <h3>Fair rental value (FRV)</h3>
-        <label className="ret403b-qc-field">
-          <span>Actual annual Fair Rental Value (home + furniture + utilities)</span>
-          <div className="ret403b-qc-money">
-            <span aria-hidden="true">$</span>
-            <input type="number" min="0" step="0.01" value={frv} onChange={(event) => setFrv(event.target.value)} />
+      {stepIndex === 1 ? (
+        <div className="ret403b-qc-card">
+          <h3>Annual housing expenses</h3>
+          <div className="ret403b-qc-fields">
+            {MINISTER_HOUSING_FIELDS.map(([id, label]) => (
+              <label key={id} className="ret403b-qc-field">
+                <span>{label}</span>
+                <div className="ret403b-qc-money">
+                  <span aria-hidden="true">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={expenses[id]}
+                    onChange={(event) => setExpenses((prev) => ({ ...prev, [id]: event.target.value }))}
+                  />
+                </div>
+              </label>
+            ))}
           </div>
-        </label>
-      </div>
-
-      <div className="ret403b-qc-card">
-        <h3>Summary</h3>
-        <div className="ret403b-qc-summary">
-          <div className="ret403b-qc-summary-row">
-            <span>Actual annual housing expenses</span>
-            <strong>{formatCurrency(totalExpenses)}</strong>
-          </div>
-          <div className="ret403b-qc-summary-row">
-            <span>Actual annual FRV (home + furniture + utilities)</span>
-            <strong>{formatCurrency(frvValue)}</strong>
-          </div>
-          <div className="ret403b-qc-summary-row is-claim">
-            <span>Maximum amount you may claim</span>
-            <strong>{hasBothAmounts ? formatCurrency(maxClaim) : '$0.00'}</strong>
-          </div>
-          <p className={`ret403b-qc-result ${resultClass}`}>{resultMessage}</p>
+          <p className="ret403b-qc-total"><strong>Total housing expenses:</strong> <span>{formatCurrency(totalExpenses)}</span></p>
         </div>
+      ) : null}
+
+      {stepIndex === 2 ? (
+        <div className="ret403b-qc-card">
+          <h3>Fair rental value (FRV)</h3>
+          <label className="ret403b-qc-field">
+            <span>Actual annual Fair Rental Value (home + furniture + utilities)</span>
+            <div className="ret403b-qc-money">
+              <span aria-hidden="true">$</span>
+              <input type="number" min="0" step="0.01" value={frv} onChange={(event) => setFrv(event.target.value)} />
+            </div>
+          </label>
+          <p className="ret403b-qc-note">Enter your annual FRV estimate to compare against actual housing expenses.</p>
+        </div>
+      ) : null}
+
+      {stepIndex === 3 ? (
+        <div className="ret403b-qc-card">
+          <h3>Summary</h3>
+          <div className="ret403b-qc-summary">
+            <div className="ret403b-qc-summary-row">
+              <span>Actual annual housing expenses</span>
+              <strong>{formatCurrency(totalExpenses)}</strong>
+            </div>
+            <div className="ret403b-qc-summary-row">
+              <span>Actual annual FRV (home + furniture + utilities)</span>
+              <strong>{formatCurrency(frvValue)}</strong>
+            </div>
+            <div className="ret403b-qc-summary-row is-claim">
+              <span>Maximum amount you may claim</span>
+              <strong>{hasBothAmounts ? formatCurrency(maxClaim) : '$0.00'}</strong>
+            </div>
+            <p className={`ret403b-qc-result ${resultClass}`}>{resultMessage}</p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="ret403b-qc-nav">
+        <button
+          type="button"
+          className="action-btn action-btn-outline"
+          onClick={() => setStepIndex((prev) => Math.max(prev - 1, 0))}
+          disabled={stepIndex === 0}
+        >
+          Back
+        </button>
+        <div className="ret403b-qc-nav-status" aria-live="polite">
+          {stepIndex === 0 ? (
+            <span>{Object.values(eligibility).filter(Boolean).length}/4 eligibility items checked</span>
+          ) : null}
+          {stepIndex === 1 ? (
+            <span>Expenses total: <strong>{formatCurrency(totalExpenses)}</strong></span>
+          ) : null}
+          {stepIndex === 2 ? (
+            <span>FRV entered: <strong>{formatCurrency(frvValue)}</strong></span>
+          ) : null}
+          {stepIndex === 3 ? (
+            <span>Review result and save a PDF if helpful.</span>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          className="action-btn action-btn-primary"
+          onClick={() => {
+            if (isLastStep) {
+              setStepIndex(0);
+              return;
+            }
+            setStepIndex((prev) => Math.min(prev + 1, STEPS.length - 1));
+          }}
+        >
+          {isLastStep ? 'Start over' : 'Next'}
+        </button>
       </div>
 
-      <div className="ret403b-qc-actions">
-        <button type="button" className="action-btn action-btn-primary" onClick={handleSavePdf}>
-          Save PDF summary
-        </button>
-        <button type="button" className="action-btn action-btn-outline" disabled title="Coming soon">
-          Send to a consultant (coming soon)
-        </button>
-      </div>
+      {stepIndex === 3 ? (
+        <div className="ret403b-qc-actions">
+          <button type="button" className="action-btn action-btn-primary" onClick={handleSavePdf}>
+            Save PDF summary
+          </button>
+          <button type="button" className="action-btn action-btn-outline" disabled title="Coming soon">
+            Send to a consultant (coming soon)
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
 
 
 function HeroTitle({ hero }) {
+  const heroLineGap = normalizeHeroLineGapEm(hero?.lineGap);
   if (Array.isArray(hero?.lines) && hero.lines.length) {
     return (
       <>
-        {hero.lines.slice(0, 2).map((line, index) => {
+        {hero.lines.slice(0, 3).map((line, index) => {
           const lineConfig = typeof line === 'string' ? { title: line } : line;
           const lineNumber = index + 1;
           const lineClass = `line${lineNumber}`;
+          const animationClass = heroAnimationClassForLine(hero?.animationPreset, lineNumber);
           const source = String(lineConfig?.title || '');
           const highlightRules = Array.isArray(lineConfig?.highlights) && lineConfig.highlights.length
             ? lineConfig.highlights
             : (lineConfig?.highlight ? [{ text: lineConfig.highlight, className: lineConfig.highlightClass }] : []);
           const content = highlightRules.length ? renderHighlightedText(source, highlightRules) : source;
 
+          const lineStyle = index > 0 && heroLineGap
+            ? { marginTop: `${heroLineGap}em` }
+            : undefined;
           return (
-            <h1 key={`${lineClass}-${source}`} className={`${lineClass}${lineConfig?.className ? ` ${lineConfig.className}` : ''}`}>
+            <h1
+              key={`${lineClass}-${source}`}
+              className={`${lineClass}${lineConfig?.className ? ` ${lineConfig.className}` : ''}${animationClass ? ` ${animationClass}` : ''}`}
+              style={lineStyle}
+            >
               {content}
             </h1>
           );
@@ -1837,34 +2618,261 @@ function HeroTitle({ hero }) {
 }
 
 function SitemapSection() {
+  const sectionLabelMap = {
+    Core: 'General',
+  };
+
   const groups = useMemo(() => {
-    const pages = sitePages.filter((page) => !page.path.startsWith('/admin/') && page.path !== '/search');
-    return pages.reduce((acc, page) => {
+    const pages = sitePages.filter((page) => (
+      !page.path.startsWith('/admin/')
+      && page.path !== '/search'
+      && !page.hideFromSitemap
+    ));
+    const grouped = pages.reduce((acc, page) => {
       if (!acc[page.section]) {
         acc[page.section] = [];
       }
       acc[page.section].push(page);
       return acc;
     }, {});
+
+    return Object.entries(grouped)
+      .map(([section, items]) => [
+        section,
+        [...items].sort((a, b) => a.title.localeCompare(b.title)),
+      ])
+      .sort((a, b) => a[0].localeCompare(b[0]));
   }, []);
 
   return (
-    <section className="service-native-section">
+    <section className="service-native-section native-sitemap-section">
       <div className="ag-panel-rail">
-        {Object.entries(groups).map(([section, pages]) => (
-          <div key={section} className="native-info-links-block">
-            <h3>{section}</h3>
-            <ul className="native-info-link-list">
-              {pages.map((page) => (
-                <li key={page.path}>
-                  <Link to={page.path}>{page.title}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <div className="native-sitemap-grid">
+          {groups.map(([section, pages]) => (
+            <div key={section} className="native-info-links-block native-sitemap-group">
+              <h3>{sectionLabelMap[section] || section}</h3>
+              <ul className="native-info-link-list">
+                {pages.map((page) => (
+                  <li key={page.path}>
+                    <Link to={page.path}>{page.title}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
+  );
+}
+
+function ProspectusSection({ content }) {
+  const [query, setQuery] = useState('');
+  const docsSection = Array.isArray(content?.sections)
+    ? content.sections.find((section) => Array.isArray(section?.links) && section.links.length)
+    : null;
+  const docs = Array.isArray(docsSection?.links) ? docsSection.links : [];
+  const filteredDocs = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) {
+      return docs;
+    }
+    return docs.filter((item) => String(item.label || '').toLowerCase().includes(needle));
+  }, [docs, query]);
+
+  return (
+    <section className="service-native-section native-prospectus-section">
+      <div className="ag-panel-rail">
+        <div className="native-prospectus-tools">
+          <label htmlFor="prospectus-doc-search" className="native-prospectus-search">
+            <span>Search documents</span>
+            <input
+              id="prospectus-doc-search"
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Type a fund or provider name"
+            />
+          </label>
+          <p className="native-prospectus-count">
+            {filteredDocs.length} of {docs.length} documents
+          </p>
+        </div>
+        <div className="native-prospectus-grid">
+          {filteredDocs.map((item) => (
+            <article key={`${item.label}-${item.href || item.to || item.documentId}`} className="native-prospectus-card">
+              <h3>{item.label}</h3>
+              <NativeLink item={item}>
+                {item.href ? 'Open PDF' : 'Open'}
+              </NativeLink>
+            </article>
+          ))}
+        </div>
+        {!filteredDocs.length ? (
+          <p className="native-prospectus-empty">No documents match your search.</p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function FormsLibrarySection({ content }) {
+  const [query, setQuery] = useState('');
+  const { documents } = useDocuments();
+  const forms = useMemo(() => {
+    const libraryDocs = Array.isArray(documents)
+      ? documents.filter((doc) => doc.active && doc.category === 'form' && doc.url)
+        .map((doc) => ({
+          topic: doc.topic || 'Other',
+          label: doc.title,
+          href: doc.url,
+          documentId: doc.id,
+        }))
+      : [];
+
+    if (libraryDocs.length) {
+      return libraryDocs;
+    }
+
+    return Array.isArray(content?.forms) ? content.forms : [];
+  }, [content?.forms, documents]);
+  const filteredForms = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) {
+      return forms;
+    }
+    return forms.filter((item) => {
+      const haystack = `${item.topic || ''} ${item.label || ''} ${item.href || ''}`.toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [forms, query]);
+
+  const groups = useMemo(() => {
+    const grouped = filteredForms.reduce((acc, item) => {
+      const topic = String(item.topic || 'Other');
+      if (!acc[topic]) {
+        acc[topic] = [];
+      }
+      acc[topic].push(item);
+      return acc;
+    }, {});
+
+    return Object.entries(grouped)
+      .map(([topic, items]) => [
+        topic,
+        [...items].sort((a, b) => String(a.label || '').localeCompare(String(b.label || ''))),
+      ])
+      .sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filteredForms]);
+
+  return (
+    <section className="service-native-section native-forms-section">
+      <div className="ag-panel-rail">
+        <div className="native-forms-tools">
+          <label htmlFor="forms-library-search" className="native-prospectus-search native-forms-search">
+            <span>Search forms</span>
+            <input
+              id="forms-library-search"
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Type a form name or topic"
+            />
+          </label>
+          <p className="native-prospectus-count native-forms-count">
+            {filteredForms.length} of {forms.length} forms
+          </p>
+        </div>
+
+        {groups.length ? (
+          <div className="native-forms-grid">
+            {groups.map(([topic, items]) => (
+              <article key={topic} className="native-forms-group">
+                <div className="native-forms-group-head">
+                  <h3>{topic}</h3>
+                  <p>{items.length} form{items.length === 1 ? '' : 's'}</p>
+                </div>
+                <ul className="native-forms-list">
+                  {items.map((item) => (
+                    <li key={`${item.topic}-${item.label}-${item.href}`}>
+                      <NativeLink item={item} />
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        ) : null}
+
+        {!groups.length ? (
+          <p className="native-forms-empty">No forms match your search.</p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function LegalDocumentSection({ content, page }) {
+  const doc = content?.legalDocument || {};
+  const toc = Array.isArray(doc.toc) ? doc.toc : [];
+
+  return (
+    <>
+      <section className="native-functional-page-head native-functional-page-head--legal">
+        <div className="ag-panel-rail">
+          <h1>{doc.title || page.title}</h1>
+          {doc.summary ? <p>{doc.summary}</p> : null}
+        </div>
+      </section>
+
+      <section className="service-native-section native-legal-section">
+        <div className="ag-panel-rail">
+          <div className="native-legal-layout">
+            <aside className="native-legal-sidebar" aria-label="Legal page summary">
+              {doc.effectiveDate || doc.contactEmail ? (
+                <div className="native-legal-meta">
+                  {doc.effectiveDate ? (
+                    <p>
+                      <span>Revision date</span>
+                      {doc.effectiveDate}
+                    </p>
+                  ) : null}
+                  {doc.contactEmail ? (
+                    <p>
+                      <span>Contact</span>
+                      <a href={`mailto:${doc.contactEmail}`}>{doc.contactEmail}</a>
+                    </p>
+                  ) : null}
+                  <div className="service-native-action-row">
+                    <Link to="/contact-us" className="service-native-btn">Contact us</Link>
+                  </div>
+                </div>
+              ) : null}
+
+              {toc.length ? (
+                <nav className="native-legal-toc" aria-label="On this page">
+                  <h2>On this page</h2>
+                  <ul>
+                    {toc.map((item) => (
+                      <li key={item.id}>
+                        <a href={`#${item.id}`}>{item.label}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              ) : null}
+            </aside>
+
+            <article className="native-legal-article">
+              <div
+                className="native-legal-article-inner"
+                dangerouslySetInnerHTML={{ __html: doc.html || '' }}
+              />
+            </article>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -1874,18 +2882,41 @@ export default function NativeContentPage({ page }) {
   const { getConsultants } = useConsultants();
   const { getVisibleJobs } = useCareersJobs();
   const { rates, iraRates, ratesMeta } = useRates();
+  const { blocksByPath } = useContentAdmin();
   const baseContent = getNativePageContent(page.path, page.title);
   const content = useMemo(() => {
+    let nextBaseContent = baseContent;
+
+    if (page.path === '/test') {
+      const pageBlocks = blocksByPath['/test'] || [];
+      const heroBlock = pageBlocks.find((block) => block.id === 'hero');
+      const introBlock = pageBlocks.find((block) => block.id === 'intro');
+      const adminHero = buildTestDynamicHero(heroBlock);
+      const adminIntro = buildTestDynamicIntro(introBlock);
+      if (adminHero) {
+        nextBaseContent = {
+          ...nextBaseContent,
+          hero: adminHero,
+        };
+      }
+      if (adminIntro) {
+        nextBaseContent = {
+          ...nextBaseContent,
+          intro: adminIntro,
+        };
+      }
+    }
+
     const consultantService = page.path === '/services/loans/loans-consultant'
       ? 'loans'
       : (page.path === '/services/retirement/retirement-consultants' ? 'retirement' : null);
 
     const isCareersPage = page.path === '/about-us/careers';
     if (!consultantService && !isCareersPage) {
-      return baseContent;
+      return nextBaseContent;
     }
 
-    let nextSections = [...(baseContent.sections || [])];
+    let nextSections = [...(nextBaseContent.sections || [])];
 
     if (consultantService) {
       const consultants = getConsultants(consultantService);
@@ -1944,10 +2975,10 @@ export default function NativeContentPage({ page }) {
     }
 
     return {
-      ...baseContent,
+      ...nextBaseContent,
       sections: nextSections,
     };
-  }, [baseContent, getConsultants, getVisibleJobs, page.path]);
+  }, [baseContent, blocksByPath, getConsultants, getVisibleJobs, page.path]);
   const [locationFilters, setLocationFilters] = useState({});
   const [activeMessageCards, setActiveMessageCards] = useState({});
   const introConfig = content?.intro && typeof content.intro === 'object' ? content.intro : null;
@@ -1957,13 +2988,17 @@ export default function NativeContentPage({ page }) {
     ? (Array.isArray(introConfig.body) ? introConfig.body : (introConfig.body ? [introConfig.body] : []))
     : (content.intro ? [content.intro] : []);
   const introEmphasis = introConfig?.emphasis || null;
+  const introEmphasisClassName = introConfig?.emphasisClassName || '';
   const introActions = Array.isArray(introConfig?.actions) ? introConfig.actions : [];
+  const heroActions = Array.isArray(content.hero?.actions) ? content.hero.actions : [];
+  const heroRailStyle = getHeroRailInlineStyle(content.hero);
   const introImage = introConfig?.image || '';
   const introImageAlt = introConfig?.imageAlt || '';
   const introSplit = Boolean(introImage && introConfig?.layout === 'split');
   const pageClass = content.pageClass ? ` ${content.pageClass}` : '';
   const compactClass = content.compact ? ' is-compact' : '';
   const hideIntro = Boolean(content.hideIntro);
+  const legalDoc = content?.legalDocument || null;
 
   useEffect(() => {
     setLocationFilters({});
@@ -1972,15 +3007,10 @@ export default function NativeContentPage({ page }) {
 
   if (page.path === '/sitemap') {
     return (
-      <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
-        <section className="service-native-hero">
+      <div ref={pageRef} className={`service-native-page native-info-page native-info-page--sitemap${compactClass}${pageClass}`}>
+        <section className="native-functional-page-head native-functional-page-head--sitemap">
           <div className="ag-panel-rail">
-            <HeroTitle hero={{ title: 'Sitemap', highlight: null }} />
-          </div>
-        </section>
-        <section className="service-native-intro">
-          <div className="ag-panel-rail">
-            <p>All current native routes.</p>
+            <h1>Sitemap</h1>
           </div>
         </section>
         <SitemapSection />
@@ -1988,30 +3018,89 @@ export default function NativeContentPage({ page }) {
     );
   }
 
+  if (page.path === '/prospectus') {
+    return (
+      <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
+        <section className="native-functional-page-head native-functional-page-head--prospectus">
+          <div className="ag-panel-rail">
+            <h1 className="native-prospectus-hero-title">
+              <span>Prospectus</span>
+              <span>financialis.</span>
+            </h1>
+            {introParagraphs.length ? <p>{introParagraphs[0]}</p> : null}
+            {Array.isArray(content.actions) && content.actions.length ? (
+              <div className="service-native-action-row">
+                {content.actions.map((item) => (
+                  <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
+        <ProspectusSection content={content} />
+      </div>
+    );
+  }
+
+  if (page.path === '/forms') {
+    return (
+      <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
+        <section className="native-functional-page-head native-functional-page-head--forms">
+          <div className="ag-panel-rail">
+            <h1>Forms</h1>
+            {introParagraphs.length ? <p>{introParagraphs[0]}</p> : null}
+          </div>
+        </section>
+        <FormsLibrarySection content={content} />
+      </div>
+    );
+  }
+
+  if (legalDoc) {
+    return (
+      <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
+        <LegalDocumentSection content={content} page={page} />
+      </div>
+    );
+  }
+
   return (
-    <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
-      <section className="service-native-hero">
-        <div className="ag-panel-rail">
+      <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
+      <section
+        className={`service-native-hero${content.hero?.bgTone ? ` is-bg-${normalizeHeroBgTone(content.hero.bgTone)}` : ''}${content.hero?.justify ? ` is-justify-${normalizeHeroJustify(content.hero.justify)}` : ''}`}
+      >
+        <div className="ag-panel-rail" style={heroRailStyle}>
           <HeroTitle hero={content.hero || { title: page.title }} />
+          {heroActions.length ? (
+            <div className="service-native-action-row is-centered">
+              {heroActions.map((item) => (
+                <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
+              ))}
+            </div>
+          ) : null}
         </div>
       </section>
 
       {!hideIntro ? (
-        <section className={`service-native-intro${introSplit ? ' is-split' : ''}`}>
+        <section className={`service-native-intro${introSplit ? ' is-split' : ''}${introConfig?.className ? ` ${introConfig.className}` : ''}`}>
           <div className="ag-panel-rail">
             <div className={`service-native-intro-shell${introSplit ? ' has-media' : ''}`}>
-              <div className="service-native-intro-copy">
+              <div className={`service-native-intro-copy${introConfig?.copyClassName ? ` ${introConfig.copyClassName}` : ''}`}>
                 {introHeading ? (
-                  <h2>
+                  <h2 className={introConfig?.headingClassName || undefined}>
                     {introHeadingHighlights.length ? renderHighlightedText(introHeading, introHeadingHighlights) : introHeading}
                   </h2>
                 ) : null}
                 {introParagraphs.map((paragraph) => <p key={paragraph}>{renderTextWithStrong(paragraph)}</p>)}
-                {introEmphasis ? <p className="native-info-intro-emphasis">{renderTextWithStrong(introEmphasis)}</p> : null}
+                {introEmphasis ? (
+                  <p className={`native-info-intro-emphasis${introEmphasisClassName ? ` ${introEmphasisClassName}` : ''}`}>
+                    {renderTextWithStrong(introEmphasis)}
+                  </p>
+                ) : null}
                 {introActions.length ? (
                   <div className="service-native-action-row is-centered">
                     {introActions.map((item) => (
-                      <Action key={`${item.label}-${item.to || item.href}`} item={item} />
+                      <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
                     ))}
                   </div>
                 ) : null}
@@ -2092,7 +3181,7 @@ export default function NativeContentPage({ page }) {
                       {Array.isArray(feature.actions) && feature.actions.length ? (
                         <div className="service-native-action-row">
                           {feature.actions.map((item) => (
-                            <Action key={`${item.label}-${item.to || item.href}`} item={item} />
+                            <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
                           ))}
                         </div>
                       ) : null}
@@ -2134,12 +3223,8 @@ export default function NativeContentPage({ page }) {
                 {Array.isArray(section.links) && section.links.length ? (
                   <ul className="native-info-link-list">
                     {section.links.map((item) => (
-                      <li key={`${item.label}-${item.to || item.href}`}>
-                        {item.href ? (
-                          <a href={item.href} target="_blank" rel="noreferrer noopener">{item.label}</a>
-                        ) : (
-                          <Link to={item.to}>{item.label}</Link>
-                        )}
+                      <li key={`${item.label}-${item.to || item.href || item.documentId}`}>
+                        <NativeLink item={item} />
                       </li>
                     ))}
                   </ul>
@@ -2158,12 +3243,8 @@ export default function NativeContentPage({ page }) {
                 {Array.isArray(section.links) && section.links.length ? (
                   <ul className="native-info-link-list">
                     {section.links.map((item) => (
-                      <li key={`${item.label}-${item.to || item.href}`}>
-                        {item.href ? (
-                          <a href={item.href} target="_blank" rel="noreferrer noopener">{item.label}</a>
-                        ) : (
-                          <Link to={item.to}>{item.label}</Link>
-                        )}
+                      <li key={`${item.label}-${item.to || item.href || item.documentId}`}>
+                        <NativeLink item={item} />
                       </li>
                     ))}
                   </ul>
@@ -2203,7 +3284,7 @@ export default function NativeContentPage({ page }) {
             {section.actionsBeforeCards && Array.isArray(section.actions) && section.actions.length ? (
               <div className="service-native-action-row">
                 {section.actions.map((item) => (
-                  <Action key={`${item.label}-${item.to || item.href}`} item={item} />
+                  <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
                 ))}
               </div>
             ) : null}
@@ -2217,8 +3298,12 @@ export default function NativeContentPage({ page }) {
                   return (
                   <article key={card.title} className={`service-native-card ${focusMessageCard ? '' : 'fade-up'} ${card.cardClass || 'card2'}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}`.trim()}>
                     <div className={card.messagePanel && resolvedMessageLayout === 'inline' ? 'consultant-card-details' : undefined}>
-                      <h3 className={card.titleClassName || undefined}>{card.title}</h3>
-                      {card.subtitle ? <p className="service-native-card-subtitle">{card.subtitle}</p> : null}
+                      <h3 className={card.titleClassName || undefined}>
+                        {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                          ? renderHighlightedText(card.title, card.titleHighlights)
+                          : card.title}
+                      </h3>
+                      {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
                       {card.phone ? (
                         <p className="service-native-card-phone">
                           {card.phoneHref ? (
@@ -2237,12 +3322,8 @@ export default function NativeContentPage({ page }) {
                       {Array.isArray(card.links) && card.links.length ? (
                         <ul className="service-native-card-link-list">
                           {card.links.map((item) => (
-                            <li key={`${card.title}-${item.label}-${item.to || item.href}`}>
-                              {item.href ? (
-                                <a href={item.href} target="_blank" rel="noreferrer noopener">{item.label}</a>
-                              ) : (
-                                <Link to={item.to}>{item.label}</Link>
-                              )}
+                            <li key={`${card.title}-${item.label}-${item.to || item.href || item.documentId}`}>
+                              <NativeLink item={item} />
                             </li>
                           ))}
                         </ul>
@@ -2255,12 +3336,8 @@ export default function NativeContentPage({ page }) {
                               {Array.isArray(accordion.links) && accordion.links.length ? (
                                 <ul className="service-native-card-accordion-links">
                                   {accordion.links.map((item) => (
-                                    <li key={`${accordion.title}-${item.label}-${item.to || item.href}`}>
-                                      {item.href ? (
-                                        <a href={item.href} target="_blank" rel="noreferrer noopener">{item.label}</a>
-                                      ) : (
-                                        <Link to={item.to}>{item.label}</Link>
-                                      )}
+                                    <li key={`${accordion.title}-${item.label}-${item.to || item.href || item.documentId}`}>
+                                      <NativeLink item={item} />
                                     </li>
                                   ))}
                                 </ul>
@@ -2285,19 +3362,20 @@ export default function NativeContentPage({ page }) {
                     {!card.messagePanel && Array.isArray(card.actions) && card.actions.length ? (
                       <div className="service-native-action-row">
                         {card.actions.map((item) => (
-                          <Action key={`${item.label}-${item.to || item.href}`} item={item} />
+                          <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
                         ))}
                       </div>
                     ) : null}
-                    {!card.messagePanel && !Array.isArray(card.actions) && (card.to || card.href) ? (
+                    {!card.messagePanel && !Array.isArray(card.actions) && (card.to || card.href || card.documentId) ? (
                       <div className="service-native-action-row">
-                        {card.href ? (
-                          <a href={card.href} target="_blank" rel="noreferrer noopener" className="service-native-btn">
-                            {card.cta || 'Learn more'}
-                          </a>
-                        ) : (
-                          <Link to={card.to} className="service-native-btn">{card.cta || 'Learn more'}</Link>
-                        )}
+                        <Action
+                          item={{
+                            label: card.cta || 'Learn more',
+                            to: card.to,
+                            href: card.href,
+                            documentId: card.documentId,
+                          }}
+                        />
                       </div>
                     ) : null}
                   </article>
@@ -2353,8 +3431,36 @@ export default function NativeContentPage({ page }) {
               <FundAnIraWidget />
             ) : null}
 
+            {section.widget === 'endowment-calculator' ? (
+              <EndowmentCalculatorWidget />
+            ) : null}
+
+            {section.widget === 'giving-comparison-matrix' ? (
+              <GivingComparisonMatrix />
+            ) : null}
+
+            {section.widget === 'charitable-giving-table' ? (
+              <CharitableGivingTableWidget />
+            ) : null}
+
+            {section.widget === 'charitable-gift-test-drive' ? (
+              <CharitableGiftTestDriveWidget />
+            ) : null}
+
             {section.widget === 'retirement-minister-housing-quick-check' ? (
               <MinisterHousingQuickCheckWidget />
+            ) : null}
+
+            {section.widget === 'emergency-fund-calculator' ? (
+              <EmergencyFundCalculatorWidget />
+            ) : null}
+
+            {section.widget === 'net-worth-calculator' ? (
+              <NetWorthCalculatorWidget />
+            ) : null}
+
+            {section.widget === 'increased-contribution-calculator' ? (
+              <IncreasedContributionCalculatorWidget />
             ) : null}
 
             {section.table ? (
@@ -2422,7 +3528,7 @@ export default function NativeContentPage({ page }) {
             {!section.actionsBeforeCards && Array.isArray(section.actions) && section.actions.length ? (
               <div className="service-native-action-row">
                 {section.actions.map((item) => (
-                  <Action key={`${item.label}-${item.to || item.href}`} item={item} />
+                  <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
                 ))}
               </div>
             ) : null}
@@ -2436,7 +3542,7 @@ export default function NativeContentPage({ page }) {
           <div className="ag-panel-rail">
             <div className="service-native-action-row is-centered">
               {content.actions.map((item) => (
-                <Action key={`${item.label}-${item.to || item.href}`} item={item} />
+                <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
               ))}
             </div>
           </div>

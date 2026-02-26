@@ -476,7 +476,7 @@
   padding: clamp(2.5rem, 6vw, 4rem) 0;
 }
 
-.home-native-newsletter h2 {
+.home-native-newsletter > .ag-panel-rail > h2 {
   margin: 0 0 0.8rem;
   color: #ffffff;
   text-align: center;
@@ -485,22 +485,23 @@
   line-height: 1.05;
 }
 
-.home-native-newsletter h2 mark {
+.home-native-newsletter > .ag-panel-rail > h2 mark {
   background: transparent;
   color: var(--ag-color-mango);
 }
 
-.home-native-newsletter p {
+.home-native-newsletter > .ag-panel-rail > p {
   text-align: center;
 }
 
-.home-native-newsletter-form {
+.home-native-newsletter-embed {
   margin: 0.55rem auto 0;
   max-width: 760px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
+}
+
+.home-native-newsletter-embed .ctct-inline-form {
+  width: 100%;
+  min-height: 72px;
 }
 
 .home-native-newsletter-form input {
@@ -563,31 +564,31 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 640px) {
   .home-native-strip-fluid {
-    flex-wrap: wrap;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     gap: 0.55rem 1rem;
     padding: 0.8rem 0.6rem;
   }
 
   .home-native-strip-right {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: center;
+    flex-wrap: wrap;
+    row-gap: 0.35rem;
   }
+}
+
+@media (max-width: 767px) {
 
   .home-native-services-grid {
     grid-template-columns: 1fr;
   }
 
-  .home-native-newsletter-form {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .home-native-newsletter-form input {
+  .home-native-newsletter-embed {
     width: 100%;
-    flex-basis: auto;
   }
 }
 
@@ -647,9 +648,16 @@
   font-family: var(--ag-font-body);
   font-size: clamp(2.7rem, 6.6vw, 4.4rem);
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: var(--ag-letter-spacing-helv-intro);
   line-height: 0.95;
   text-align: center;
+}
+
+.services-native-intro h2 span,
+.services-native-intro h2 mark,
+.services-native-intro h2 strong,
+.services-native-intro h2 em {
+  letter-spacing: inherit;
 }
 
 .services-native-intro mark {

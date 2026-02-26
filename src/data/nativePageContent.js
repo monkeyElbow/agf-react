@@ -7,6 +7,7 @@ import missionAssureMedicalIncludedImage from '../assets/mission-assure-medical-
 import missionAssureSummerCampSafetyImage from '../assets/mission-assure-summer-camp-safety.jpg';
 import aboutIntroImage from '../assets/about-intro.jpg';
 import ministersHousingImage from '../assets/ministers-housing.jpg';
+import { formsLibraryLinks } from './formsLibraryLinks';
 
 export function getNativePageContent(path, title) {
   const direct = directContent[path];
@@ -166,7 +167,7 @@ const directContent = {
             "Focus on your ministry. We'll manage the risk.",
             'Our church **Risk Management Guide** can help you recognize areas of risk and learn how to proactively address them. From establishing a church safety and security team to financial protection to emergency preparedness, this guide can assist you in protecting your church and congregants.',
           ],
-          actions: [{ label: 'Download the guide', href: 'https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf' }],
+          actions: [{ label: 'Download the guide', documentId: 'document-download-the-guide' }],
         },
       },
       {
@@ -297,7 +298,7 @@ const directContent = {
           '*Form to be completed by you and requires review by your attorney. Then, if you prefer, we will be happy to act as trustee, so you can relax, knowing your estate is in good hands.',
         ],
         actions: [
-          { label: 'Download packet', href: 'https://files.agfinancial.org/Planned-Giving/Will-Planning-Packet.pdf', ghost: true },
+          { label: 'Download packet', documentId: 'form-planned-giving-will-planning-document', ghost: true },
           { label: 'Online form*', href: 'https://sft.agfinancial.org/documents/Send.do' },
         ],
       },
@@ -361,6 +362,11 @@ const directContent = {
             ['Charitable Lead Trust', 'Cash, property, or income-producing securities', '$50K cash or securities, $100K real estate', 'After # of years, 100% of principal returned to donor or others', 'Immediate, annuity or unitrust payment for stated term', 'Partial income tax deduction, savings on capital gains tax'],
           ],
         },
+      },
+      {
+        className: 'legacy-giving-comparison-matrix',
+        hideTitle: true,
+        widget: 'giving-comparison-matrix',
       },
       {
         title: 'Testimonials',
@@ -490,6 +496,7 @@ const directContent = {
             { id: 'name', label: 'Name', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true },
             { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
+            { id: 'notes', label: 'What would you like to discuss?', type: 'textarea', rows: 4 },
           ],
           submitLabel: 'Follow-up with me',
           successMessage: 'Got it. We’ll reach out soon.',
@@ -546,67 +553,243 @@ const directContent = {
   },
 
   '/calculators': {
+    pageClass: 'native-info-page--calculators',
     compact: true,
     hero: { title: 'Calculators', highlight: null },
-    intro: 'Use the same live calculators found on our core service pages, then discuss next steps with our team.',
+    hideIntro: true,
     sections: [
       {
-        title: 'Live calculator tools',
+        className: 'calculators-native-directory',
+        hideTitle: true,
+        fullBleed: true,
+        columns: 'four',
         cards: [
           {
             title: 'Retirement Savings',
             body: 'Sneak a peek at the future and discover what you need to do now to make retirement a reality.',
             to: '/services/retirement#retirement-savings-calculator',
             cta: 'Launch',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Compound Interest',
+            body: 'Watch your money grow over time by earning interest on a deposit and monthly contributions.',
+            to: '/services/retirement#retirement-savings-calculator',
+            cta: 'Launch',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Increased Contribution',
+            body: 'Explore how much your retirement balance could grow if you increased your contribution now.',
+            to: '/calculators/increased-contribution',
+            cta: 'Launch',
+            cardClass: 'card2',
           },
           {
             title: 'Loan Payment',
             body: 'Run some numbers to see if the loan you need is in the ballpark.',
             to: '/services/loans#run-some-numbers',
             cta: 'Launch',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Emergency Fund',
+            body: 'Find out how much you need to save in order to cover six months of your expenses.',
+            to: '/calculators/emergency-fund',
+            cta: 'Launch',
+            cardClass: 'card2',
           },
           {
             title: 'Laddering',
             body: 'See how much more you could earn by laddering your investments instead of focusing only on short-term accounts.',
             to: '/services/investments#laddering-calculator',
             cta: 'Launch',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Net Worth',
+            body: 'Get a view of your financial position, and make adjustments to see how things could change.',
+            to: '/calculators/net-worth',
+            cta: 'Launch',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Endowment Investment Earnings',
+            body: 'See how your endowment can keep giving.',
+            to: '/services/legacy-giving/endowments#endowment-investment-earnings-calculator',
+            cta: 'Launch',
+            cardClass: 'card2',
           },
         ],
       },
       {
-        title: 'Numbers are great. People are better.',
+        className: 'calculators-native-contact',
+        anchorId: 'calculator-contact',
+        copyWrap: true,
+        title: 'Numbers are great.',
+        subtitle: 'People are better.',
         body: [
-          'Complete the short contact form below, and one of our team will be in touch within 24 business hours.',
+          'Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.',
         ],
-        actions: [{ label: 'Let’s discuss', to: '/contact-us' }],
+        form: {
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
+            { id: 'message', label: 'What would you like help calculating?', type: 'textarea', rows: 5, required: true },
+          ],
+          submitLabel: 'Let’s discuss',
+        },
       },
     ],
   },
 
-  '/contact-us': {
+  '/calculators/emergency-fund': {
+    pageClass: 'native-info-page--calculator-tool',
     compact: true,
-    hero: { title: 'Contact', highlight: null },
-    intro: 'How can we help? Share some information, and our team will contact you within one business day.',
+    hero: { title: 'Emergency Fund Calculator', highlight: null },
+    hideIntro: true,
     sections: [
       {
-        title: 'AGFinancial',
+        className: 'calculator-tool-shell',
+        copyWrap: true,
+        title: 'Build a cash cushion with a target in mind.',
         body: [
-          '3900 S Overland Avenue, Springfield, Missouri 65807',
-          'clientservices@AGFinancial.org',
-          'Call 866.621.1787',
-          'Fax 417.831.7429',
-          'Hours Monday - Friday, 8 a.m. to 4:30 p.m. CST',
+          'Use a monthly expense total or itemize your spending to estimate your emergency fund goal and see a simple savings plan to reach it.',
         ],
+      },
+      {
+        className: 'calculator-tool-shell calculator-tool-widget',
+        hideTitle: true,
+        widget: 'emergency-fund-calculator',
+      },
+    ],
+    actions: [
+      { label: 'Back to calculators', to: '/calculators' },
+      { label: 'Talk with our team', to: '/calculators#calculator-contact', ghost: true },
+    ],
+  },
+
+  '/calculators/increased-contribution': {
+    pageClass: 'native-info-page--calculator-tool native-info-page--calculator-increased-contribution',
+    compact: true,
+    hero: { title: 'Increased Contribution Calculator', highlight: null },
+    hideIntro: true,
+    sections: [
+      {
+        className: 'calculator-tool-shell',
+        copyWrap: true,
+        title: 'See the impact of a higher contribution rate.',
+        body: [
+          'Compare your current and proposed contribution percentages to estimate how a change today may affect your retirement balance over time.',
+        ],
+      },
+      {
+        className: 'calculator-tool-shell calculator-tool-widget',
+        hideTitle: true,
+        widget: 'increased-contribution-calculator',
+      },
+    ],
+    actions: [
+      { label: 'Back to calculators', to: '/calculators' },
+      { label: 'Talk with our team', to: '/calculators#calculator-contact', ghost: true },
+    ],
+  },
+
+  '/calculators/net-worth': {
+    pageClass: 'native-info-page--calculator-tool',
+    compact: true,
+    hero: { title: 'Net Worth Calculator', highlight: null },
+    hideIntro: true,
+    sections: [
+      {
+        className: 'calculator-tool-shell',
+        copyWrap: true,
+        title: 'Take inventory of your financial picture.',
+        body: [
+          'In order to get where you want to go, you need to know where you are. You can get a view of your financial position by generating a personal net worth statement.',
+          'Over time your net worth will change as your assets earn interest or are depleted and your liabilities increase or decrease. Use this calculator to estimate what your net worth could be in the future based on specified growth rates.',
+        ],
+      },
+      {
+        className: 'calculator-tool-shell calculator-tool-widget',
+        hideTitle: true,
+        widget: 'net-worth-calculator',
+      },
+    ],
+    actions: [
+      { label: 'Back to calculators', to: '/calculators' },
+      { label: 'Talk with our team', to: '/calculators#calculator-contact', ghost: true },
+    ],
+  },
+
+  '/contact-us': {
+    pageClass: 'native-info-page--contact-us',
+    hero: { title: 'Contact', highlight: null },
+    hideIntro: true,
+    sections: [
+      {
+        className: 'contact-us-address',
+        title: 'AGFinancial',
+        titleClassName: 'contact-us-address-title',
+        body: [
+          '3900 S Overland Avenue',
+          'Springfield, Missouri 65807',
+          '**clientservices@AGFinancial.org**',
+          'Call **866.621.1787**',
+          'Fax **417.831.7429**',
+          '**Hours**',
+          'Monday - Friday',
+          '8 a.m. to 4:30 p.m. CST',
+        ],
+      },
+      {
+        className: 'contact-us-request',
+        copyWrap: true,
+        title: 'How can we help?',
+        body: ['Share some information, and our team will contact you within one business day.'],
+        form: {
+          steps: [
+            {
+              id: 'contact',
+              fields: [
+                { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+                { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+                { id: 'email', label: 'Email*', type: 'email', required: true },
+                { id: 'phone', label: 'Phone*', type: 'tel', placeholder: '(555) 555-5555', required: true },
+              ],
+              nextLabel: 'Next',
+            },
+            {
+              id: 'inquiry',
+              fields: [
+                {
+                  id: 'inquiryType',
+                  label: 'Type of inquiry*',
+                  type: 'select',
+                  required: true,
+                  options: [
+                    { value: 'Loans', label: 'Loans' },
+                    { value: 'Investments', label: 'Investments' },
+                    { value: 'Retirement', label: 'Retirement' },
+                    { value: 'Planned Giving', label: 'Planned Giving' },
+                    { value: 'Insurance', label: 'Insurance' },
+                    { value: 'Client Services', label: 'Client Services' },
+                    { value: 'Other', label: 'Other' },
+                  ],
+                },
+                { id: 'message', label: 'Message', type: 'textarea', rows: 5, placeholder: 'How can we help?' },
+              ],
+              backLabel: 'Back',
+              submitLabel: 'Submit',
+            },
+          ],
+        },
       },
       {
         title: 'Help Center Quick Links',
         cards: [
-          {
-            title: 'FAQ',
-            body: 'Find the answers to commonly asked questions.',
-            href: '/resources',
-            cta: 'Open',
-          },
           {
             title: 'Resource Library',
             body: 'Visit our Resource Library and browse several different topics.',
@@ -712,29 +895,41 @@ const directContent = {
   },
 
   '/prospectus': {
+    pageClass: 'native-info-page--prospectus',
     compact: true,
     hero: { title: 'Prospectus', highlight: null },
     intro: 'Reference prospectus and investment documents.',
+    hideIntro: true,
     sections: [
       {
+        className: 'native-prospectus-docs',
         title: 'Documents',
-        body: [
-          'Steward Funds Prospectus',
-          'Fidelity Asset Manager Prospectus',
-          'Fidelity 500 Prospectus',
-          'Fidelity Small Cap Prospectus',
-          'Fidelity International Index Fund Prospectus',
-          'Fidelity NASDAQ Composite Index Fund Prospectus',
-          'Vanguard Mid-Cap Index Fund Prospectus',
-          'Vanguard Total World Stock Index Fund Prospectus',
-          'Vanguard Total Bond Market Index Fund Prospectus',
-          'Vanguard Real Estate Index Fund Prospectus',
-          'JPMorgan Hedged Equity 3 Fund Prospectus',
-          'Russell Life Points Strategies',
+        links: [
+          { label: 'Steward Funds Prospectus', documentId: 'prospectus-prospectus-steward-funds-prospectus' },
+          { label: 'Fidelity Asset Manager® Prospectus', documentId: 'prospectus-prospectus-fidelity-asset-manager-prospectus' },
+          { label: 'Fidelity® 500 Prospectus', documentId: 'prospectus-prospectus-fidelity-500-prospectus' },
+          { label: 'Fidelity® Small Cap Prospectus', documentId: 'prospectus-prospectus-fidelity-small-cap-prospectus' },
+          { label: 'Fidelity® International Index Fund Prospectus', documentId: 'prospectus-prospectus-fidelity-international-index-fund-prospectus' },
+          { label: 'Fidelity® NASDAQ® Composite Index Fund Prospectus', documentId: 'prospectus-prospectus-fidelity-nasdaq-composite-index-fund-prospectus' },
+          { label: 'Vanguard Mid-Cap Index Fund Prospectus', documentId: 'prospectus-prospectus-vanguard-mid-cap-index-fund-prospectus' },
+          { label: 'Vanguard Total World Stock Index Fund Prospectus', documentId: 'prospectus-prospectus-vanguard-total-world-stock-index-fund-prospectus' },
+          { label: 'Vanguard Total Bond Market Index Fund Prospectus', documentId: 'prospectus-prospectus-vanguard-total-bond-market-index-fund-prospectus' },
+          { label: 'Vanguard Real Estate Index Fund Prospectus', documentId: 'prospectus-prospectus-vanguard-real-estate-index-fund-prospectus' },
+          { label: 'JPMorgan Hedged Equity 3 Fund Prospectus', documentId: 'prospectus-prospectus-jpmorgan-hedged-equity-3-fund-prospectus' },
+          { label: 'Russell Life Points® Strategies', documentId: 'prospectus-prospectus-russell-life-points-strategies' },
         ],
       },
     ],
-    actions: [{ label: 'Download offering circular', href: 'https://media.agfinancial.org/AGLF-Offering-Circular.pdf' }],
+    actions: [{ label: 'Download offering circular', documentId: 'document-download-offering-circular' }],
+  },
+
+  '/forms': {
+    pageClass: 'native-info-page--forms',
+    compact: true,
+    hero: { title: 'Forms', highlight: null },
+    intro: 'Browse AGFinancial form links by topic.',
+    hideIntro: true,
+    forms: formsLibraryLinks,
   },
 
   '/subscribe': {
@@ -810,19 +1005,15 @@ const directContent = {
   },
   '/test': {
     compact: true,
-    hero: { title: 'Test', highlight: null },
+    pageClass: 'native-info-page--test',
+    hero: {
+      lines: [
+        { title: 'Dynamic', highlights: [{ text: 'Dynamic', className: 'is-atlantean' }] },
+        { title: 'Panels.', highlights: [{ text: 'Panels.', className: 'is-mango' }] },
+      ],
+    },
     intro: 'Testing route for native page behavior and content rendering.',
-    sections: [
-      {
-        title: 'Primary routes',
-        links: [
-          { label: 'Home', to: '/' },
-          { label: 'Services', to: '/services' },
-          { label: 'Rates', to: '/rates' },
-          { label: 'Search', to: '/search' },
-        ],
-      },
-    ],
+    sections: [],
   },
 };
 
@@ -1359,7 +1550,7 @@ const legacyChildPages = {
       ],
     },
     intro: {
-      heading: 'Tax benefits. Ministry support. Payments for life.',
+      heading: 'Tax benefits.\nMinistry support.\nPayments for life.',
       body: [
         '...and completely unaffected by the economy. Through a Charitable Gift Annuity (CGA), your generosity has the power to bless both the ministries and the people you love—with fixed payments, potential tax deductions, and attractive rates.',
       ],
@@ -1389,59 +1580,88 @@ const legacyChildPages = {
         ],
       },
       {
-        className: 'legacy-child-native-assets',
+        className: 'legacy-child-native-assets legacy-child-native-cga-assets',
         title: 'It starts with your gift.',
-        body: [
-          '• Cash (a significant portion of the annuity income may be tax-free)',
-          '• Appreciated securities (may avoid a portion of capital gains tax)',
-          '• $10,000 minimum',
-          'The SECURE 2.0 Act of 2022 allows you to fund a Charitable Gift Annuity with funds distributed from your IRA—up to $50,000* of your annual Qualified Charitable Distribution limit (QCD).** This charitable distribution amount is both retirement income for you, and a gift of support to a ministry you choose. Even better, this distribution can count toward your IRA’s annual Required Minimum Distribution (RMD). You’re permitted to take advantage of this unique opportunity only once.',
-          '*Indexed annually for inflation',
-          '**Also available for Charitable Remainder Unitrust (CRUT) or Charitable Remainder Annuity Trust (CRAT). Restrictions apply.',
+        titleHighlights: [{ text: 'your gift', className: 'is-atlantean' }],
+        cards: [
+          {
+            title: 'Gift funding options',
+            cardClass: 'card2 cga-assets-card',
+            list: [
+              'Cash (a significant portion of the annuity income may be tax-free)',
+              'Appreciated securities (may avoid a portion of capital gains tax)',
+              '$10,000 minimum',
+              'The SECURE 2.0 Act of 2022 allows you to fund a Charitable Gift Annuity with funds distributed from your IRA up to $50,000* of your annual Qualified Charitable Distribution limit (QCD). This charitable distribution amount is both retirement income for you, and a gift of support to a ministry you choose. Even better, this distribution can count toward your IRA’s annual Required Minimum Distribution (RMD).',
+              '**You’re permitted to take advantage of this unique opportunity only once.**',
+            ],
+          },
         ],
         actions: [{ label: 'Learn more about this', to: '/services/legacy-giving/charitable-gift-annuities#demo' }],
       },
       {
-        className: 'legacy-child-native-options',
+        className: 'legacy-child-native-cga-qcd-fineprint',
+        hideTitle: true,
+        body: ['**Also available for Charitable Remainder Unitrust (CRUT) or Charitable Remainder Annuity Trust (CRAT)**'],
+        links: [
+          { label: 'Charitable Remainder Unitrust (CRUT)', to: '/services/legacy-giving/charitable-trusts#crt' },
+          { label: 'Charitable Remainder Annuity Trust (CRAT)', to: '/services/legacy-giving/charitable-trusts#crt' },
+        ],
+        fineprint: [
+          '*Indexed annually for inflation',
+          'Restrictions apply.',
+        ],
+      },
+      {
+        className: 'legacy-child-native-options legacy-child-native-cga-options',
         title: 'Charitable Gift Annuity Options',
         columns: 'two',
         cards: [
           {
             title: 'Immediate',
-            body: 'Start receiving payments now. If you desire current income, you may transfer cash or securities in exchange for a contract for payment to begin within four weeks. You should receive a current income tax charitable deduction for the value of your gift to AG Foundation.',
+            subtitle: 'Start receiving payments **now**.',
+            body: 'If you desire current income, you may transfer cash or securities in exchange for a contract for payment to begin within four weeks. You should receive a current income tax charitable deduction for the value of your gift to AG Foundation.',
             cardClass: 'card2',
           },
           {
             title: 'Deferred',
-            body: 'Receive payments in the future. Deferment compresses payout into a shorter time frame, so your annual payments will be higher than an immediate CGA. You should receive a current charitable income tax deduction.',
+            subtitle: 'Receive payments in the **future**.',
+            body: 'Deferment compresses payout into a shorter time frame, so your annual payments will be higher than an immediate CGA. You should receive a current charitable income tax deduction.',
             cardClass: 'card2',
           },
         ],
         actions: [{ label: 'Try the CGA estimator', to: '/services/legacy-giving/charitable-gift-annuities#demo' }],
       },
       {
-        className: 'legacy-child-native-cta',
+        className: 'legacy-child-native-cga-comparison',
+        anchorId: 'demo',
+        hideTitle: true,
+        widget: 'charitable-gift-test-drive',
+      },
+      {
+        className: 'legacy-child-native-cga-request',
         copyWrap: true,
         title: 'Your gifts are more powerful than you think.',
-        subtitle: 'Plenty of options. Explore other charitable and legacy giving strategies.',
+        titleHighlights: [{ text: 'powerful', className: 'is-mango' }],
         body: [
           'When you’re ready for tax deductions, fixed payments, and attractive rates—all while supporting ministry—we’re ready to walk you through the setup process.',
         ],
         form: {
-          title: 'Let’s talk through your options.',
-          subtitle: 'Simple, joyful giving.',
           fields: [
             { id: 'firstName', label: 'First Name*', type: 'text', required: true },
             { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
             { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
             { id: 'email', label: 'Email*', type: 'email', required: true },
           ],
-          submitLabel: 'Discover more',
+          submitLabel: 'Submit',
         },
       },
       {
-        className: 'legacy-child-native-fineprint',
-        hideTitle: true,
+        className: 'legacy-child-native-cga-outro',
+        copyWrap: true,
+        title: 'Plenty of options.',
+        subtitle: 'Explore other charitable and legacy giving strategies.',
+        actionsBeforeCards: true,
+        actions: [{ label: 'Discover more', to: '/services/legacy-giving' }],
         fineprint: [
           'Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.',
           'Additional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.',
@@ -1449,10 +1669,6 @@ const legacyChildPages = {
           'Additional information for South Dakota residents: Charitable Gift Annuities are not regulated by and are not under the jurisdiction of the South Dakota Division of Insurance.',
         ],
       },
-    ],
-    actions: [
-      { label: 'Begin', href: 'https://agfsg.giftlegacy.com/?pageID=152' },
-      { label: 'Discover more', to: '/services/legacy-giving', ghost: true },
     ],
   },
   '/services/legacy-giving/charitable-trusts': {
@@ -1476,56 +1692,139 @@ const legacyChildPages = {
     },
     sections: [
       {
-        className: 'legacy-child-native-trust-choices',
-        fullBleed: true,
+        className: 'legacy-child-native-trust-choices legacy-child-native-trust-choices--trusts',
         hideTitle: true,
         columns: 'two',
         cards: [
           {
             title: 'Charitable Remainder Trust (CRT)',
-            body: 'This option allows you to receive income payments for you and your family while potentially receiving immediate tax benefits. At the completion of the trust, you’ll have the joy of giving to the ministry of your choice. Minimum requirements: $50,000 cash or securities; $100,000 real estate.',
+            titleHighlights: [{ text: 'Remainder', className: 'is-melon' }],
+            body: 'This option allows you to receive income payments for you and your family while potentially receiving immediate tax benefits. At the completion of the trust, you’ll have the joy of giving to the ministry of your choice. **Minimum requirements:** $50,000 cash or securities; $100,000 real estate.',
             actions: [{ label: 'Explore CRT options', to: '/services/legacy-giving/charitable-trusts#crt' }],
             cardClass: 'card2',
           },
           {
             title: 'Charitable Lead Trust (CLT)',
-            body: 'This option allows ministry to receive income payments for a set term while you potentially receive immediate tax benefits. At the completion of the trust, assets return to you or transfer to your family—often with significant growth. Minimum requirements: $50,000 cash or securities; $100,000 real estate.',
+            titleHighlights: [{ text: 'Lead', className: 'is-mango' }],
+            body: 'This option allows ministry to receive income payments for a set term while you potentially receive immediate tax benefits. At the completion of the trust, assets return to you or transfer to your family—often with significant growth. **Minimum requirements:** $50,000 cash or securities; $100,000 real estate.',
             actions: [{ label: 'Explore CLT options', to: '/services/legacy-giving/charitable-trusts#clt' }],
             cardClass: 'card2',
           },
         ],
       },
       {
-        className: 'legacy-child-native-comparison',
+        className: 'legacy-child-native-trusts-differences',
         title: 'The differences. At a glance.',
-        table: {
-          headers: ['Topic', 'CRT', 'CLT'],
-          rows: [
-            ['Funding', 'Cash, securities, real estate, other marketable assets', 'Cash, securities, real estate, other marketable assets'],
-            ['Tax advantage', 'May avoid capital gains tax when appreciated assets are sold; immediate charitable deduction', 'Can reduce estate taxes and enable tax-efficient transfer to heirs'],
-            ['Best for', 'Appreciated assets you want to sell', 'Estate planning and wealth transfer to heirs'],
-          ],
-        },
-      },
-      {
-        className: 'legacy-child-native-guide',
-        title: 'A Guide to Trust Types',
-        body: [
-          'Charitable Remainder Trusts and Charitable Lead Trusts offer unique benefits and have different requirements.',
-          '**How It Works: Remainder Trusts** — To establish a Charitable Remainder Trust, assets are transferred to AG Foundation which, in turn, pays you income according to the terms of the trust. You can receive lifetime income payments for yourself and a spouse, and up to 20 years to third parties, such as children. Upon completion of the trust’s term, the remainder of the trust’s principal is transferred to the ministry of your choice.',
-          '**Assets You May Give** — A Charitable Remainder Trust is an excellent alternative to an outright sale of appreciated securities, real estate or other marketable assets due to its charitable and capital gain tax benefits, but it can also be funded with cash. Minimum required funding is $50,000 for cash or securities, or $100,000 for real estate.',
-          '**How It Works: Lead Trusts** — A Charitable Lead Trust functions in somewhat the opposite way of a Charitable Remainder Trust. The trust makes income payments to the ministry for a set number of years. Upon completion, the asset then returns back to you or transfers to your family along with any additional growth in value.',
-          '**Assets You May Give** — Best funded with cash, income-producing securities, real estate, or other assets. A Charitable Lead Trust does not have capital gains benefits and income generated by the trust may be taxable to you.',
+        wide: true,
+        columns: 'three',
+        cards: [
+          {
+            title: 'Funding',
+            titleClassName: 'trusts-difference-title trusts-difference-title--funding',
+            body: '**Both CRTs and CLTs accept these assets:**',
+            list: ['Cash', 'Securities (stocks, bonds, mutual funds)', 'Real estate', 'Other marketable assets'],
+            cardClass: 'trusts-difference-card',
+          },
+          {
+            title: 'CRTs & taxes',
+            titleClassName: 'trusts-difference-title trusts-difference-title--crt',
+            list: [
+              '**Best for:** Appreciated assets you want to sell (stocks, real estate)',
+              '**Tax advantage:** Avoids capital gains tax when assets are sold',
+              '**Note:** Immediate charitable deduction',
+            ],
+            cardClass: 'trusts-difference-card trusts-difference-card--crt',
+          },
+          {
+            title: 'CLTs & taxes',
+            titleClassName: 'trusts-difference-title trusts-difference-title--clt',
+            list: [
+              '**Best for:** Estate planning and wealth transfer to heirs',
+              '**Tax advantage:** Reduces estate taxes, enables tax-efficient transfers to children',
+              '**Note:** No capital gains benefits; trust income may be taxable to you',
+            ],
+            cardClass: 'trusts-difference-card trusts-difference-card--clt',
+          },
         ],
       },
       {
-        className: 'legacy-child-native-cta',
+        className: 'legacy-child-native-trusts-crt',
+        anchorId: 'crt',
+        title: 'Charitable Remainder Trust',
+        body: [
+          'You contribute cash, stocks, real estate, or other assets to AG Foundation to establish the trust. The trust pays you (and your spouse, if married) income for life. You can also designate others, like children, to receive payments for up to 20 years. When the trust ends, the remaining assets go to the ministry(ies) you’ve selected.',
+        ],
+      },
+      {
+        className: 'legacy-child-native-trusts-crt-types',
+        hideTitle: true,
+        columns: 'two',
+        cards: [
+          {
+            title: 'Charitable Remainder Unitrust (CRUT)',
+            list: [
+              'Annual payout is determined by donor',
+              'Account balance is revalued at the beginning of each year',
+              'Minimum required payout of 5%',
+              'Income may fluctuate from year to year',
+            ],
+            cardClass: 'trusts-type-card',
+          },
+          {
+            title: 'Charitable Remainder Annuity (CRAT)',
+            list: [
+              'Donor receives a fixed payment',
+              'Payment can be based on life expectancy or term of years',
+              'Payments may begin immediately upon funding',
+            ],
+            cardClass: 'trusts-type-card',
+          },
+        ],
+      },
+      {
+        className: 'legacy-child-native-trusts-clt',
+        anchorId: 'clt',
+        title: 'Charitable Lead Trust',
+        body: [
+          'A Charitable Lead Trust works in the opposite way of a Charitable Remainder Trust. You contribute cash, stocks, real estate, or other assets to AG Foundation to establish the trust. The trust pays income to the ministry(ies) you’ve selected for a set number of years. When the trust ends, the remaining assets return to you or transfer to your family—often with significant growth in value.',
+        ],
+      },
+      {
+        className: 'legacy-child-native-trusts-clt-types',
+        hideTitle: true,
+        columns: 'two',
+        cards: [
+          {
+            title: 'Grantor Lead Trust',
+            list: [
+              'Donor receives remainder of trust after stated period of time',
+              'Charitable income tax deduction (equal to the total value of the income payments to ministry) is given in the year the trust is created',
+              'Donor is taxed on the trust’s income each year',
+            ],
+            cardClass: 'trusts-type-card trusts-type-card--muted',
+          },
+          {
+            title: 'Non-Grantor Lead Trust',
+            list: [
+              'A named beneficiary, ministry, or heirs receive remainder of trust after predetermined payout period',
+              'Permanent transfer of asset',
+              'Reduces gift or estate tax and removes asset from estate',
+              'Income is taxed at the trust level each year',
+            ],
+            cardClass: 'trusts-type-card trusts-type-card--muted',
+          },
+        ],
+      },
+      {
+        className: 'legacy-child-native-cta legacy-child-native-trusts-cta',
         copyWrap: true,
         title: 'Income and impact.',
+        titleHighlights: [
+          { text: 'and', className: 'is-atlantean' },
+          { text: 'impact', className: 'is-mango' },
+        ],
         body: ['Let’s transform your generosity into a tax-saving, ministry-supporting win. Ready when you are.'],
         form: {
-          title: 'Talk with a gift planner',
-          subtitle: 'We’ll help you compare CRT and CLT options.',
           fields: [
             { id: 'firstName', label: 'First Name*', type: 'text', required: true },
             { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
@@ -1536,14 +1835,13 @@ const legacyChildPages = {
         },
       },
     ],
-    actions: [{ label: 'Create your plan', href: 'https://aggift.org/?pageID=124' }],
   },
   '/services/legacy-giving/endowments': {
     pageClass: 'native-info-page--legacy-child native-info-page--legacy-endowments',
     compact: true,
     hero: {
       lines: [
-        { title: 'Generosity that lasts.' },
+        { title: 'Generosity that lasts.', highlights: [{ text: 'lasts', className: 'is-atlantean' }] },
         { title: 'And lasts.', highlights: [{ text: 'lasts', className: 'is-mango' }] },
       ],
     },
@@ -1551,53 +1849,84 @@ const legacyChildPages = {
       heading: 'Create an enduring legacy.',
       body: [
         'Your endowment is a gift that gives forever. The interest earnings from your carefully-invested donation support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.',
-        'This generosity never runs out.',
+        '**This generosity never runs out.**',
       ],
     },
     sections: [
       {
-        className: 'legacy-child-native-duo',
-        title: 'How it works',
-        body: [
-          'Designated assets are invested to ensure their protection and growth. Payments are made from ongoing interest earned from the gifted asset(s). An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.',
+        className: 'legacy-child-native-endowments-duo',
+        hideTitle: true,
+        fullBleed: true,
+        columns: 'two',
+        cards: [
+          {
+            title: 'How it works',
+            body: 'Designated assets are invested to ensure their protection and growth. Payments are made from ongoing interest earned from the gifted asset(s). An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.',
+            cardClass: 'endowments-duo-card endowments-duo-card--light',
+          },
+          {
+            title: 'Assets you may give',
+            body: 'Minimum funding requirements are **$10,000** for cash or securities, and **$100,000** for real estate. Endowments may be funded with:',
+            list: [
+              'Cash',
+              'Real estate',
+              'Securities (restricted and marketable)',
+              'Art',
+              'Antiques',
+              'Business interests',
+              'Other assets',
+            ],
+            cardClass: 'endowments-duo-card endowments-duo-card--dark',
+          },
         ],
       },
       {
-        className: 'legacy-child-native-assets',
-        title: 'Assets you may give',
-        body: [
-          'Minimum funding requirements are $10,000 for cash or securities, and $100,000 for real estate.',
-          'Endowments may be funded with:',
-          '• Cash',
-          '• Real estate',
-          '• Securities (restricted and marketable)',
-          '• Art',
-          '• Antiques',
-          '• Business interests',
-          '• Other assets',
-        ],
+        className: 'legacy-child-native-endowments-calculator',
+        anchorId: 'endowment-investment-earnings-calculator',
+        title: 'See how your endowment can keep giving.',
+        titleHighlights: [{ text: 'keep giving', className: 'is-atlantean' }],
+        widget: 'endowment-calculator',
       },
       {
-        className: 'legacy-child-native-cta',
+        className: 'legacy-child-native-endowments-inquiry',
         copyWrap: true,
-        title: 'A legacy of giving.',
-        body: ['We’re ready to help you explore how your gift can continue to give. And give. And give…'],
+        title: 'Maybe this is an interest or inquiry form.',
+        body: [
+          'Because this is something that definitely needs to be person-to-person, right? We’ll contact you within 24 business hours. Promise.',
+        ],
         form: {
-          title: 'See how your endowment can keep giving.',
-          subtitle: 'Talk to a Gift Planner',
           fields: [
             { id: 'firstName', label: 'First Name*', type: 'text', required: true },
             { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
-            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true },
             { id: 'email', label: 'Email*', type: 'email', required: true },
           ],
-          submitLabel: 'Set up an endowment',
+          submitLabel: 'Submit',
         },
       },
-    ],
-    actions: [
-      { label: 'Talk to a Gift Planner', href: 'mailto:plannedgiving@agfinancial.org' },
-      { label: 'Set up an endowment', href: 'https://secure.agfinancial.org/generosityfund/signup', ghost: true },
+      {
+        className: 'legacy-child-native-endowments-big-cta',
+        title: 'Give once, forever.',
+        titleHighlights: [{ text: 'forever', className: 'is-atlantean' }],
+        subtitle: 'And bless generations.',
+        actions: [{ label: 'Set up an endowment', href: 'https://secure.agfinancial.org/generosityfund/signup' }],
+      },
+      {
+        className: 'legacy-child-native-endowments-legacy-form',
+        copyWrap: true,
+        title: 'A legacy of giving.',
+        titleHighlights: [{ text: 'legacy', className: 'is-white' }],
+        body: ['We’re ready to help you explore how your gift can continue to give. And give. And give…'],
+        form: {
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+          ],
+          submitLabel: 'Submit',
+        },
+      },
     ],
   },
   '/services/legacy-giving/generosity-fund': {
@@ -1608,15 +1937,15 @@ const legacyChildPages = {
         { title: 'Your giving.' },
         { title: 'Managed.', highlights: [{ text: 'Managed', className: 'is-mango' }] },
       ],
+      actions: [
+        { label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' },
+        { label: 'Terms and Conditions', documentId: 'document-planned-giving-terms-and-conditions', ghost: true },
+      ],
     },
     intro: {
       heading: 'All your charitable giving in one place.',
       body: [
         'A **Generosity Fund**® is a Donor Advised Fund (DAF) that provides a convenient, tax-efficient way to manage your giving—from tithing to disaster relief, and all donations in between. Our frictionless process makes even complex securities **easier to give than ever**.',
-      ],
-      actions: [
-        { label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' },
-        { label: 'Terms and Conditions', href: 'http://files.agfinancial.org/Planned-Giving/Generosity-Fund-Terms-Conditions.pdf', ghost: true },
       ],
     },
     sections: [
@@ -1628,7 +1957,7 @@ const legacyChildPages = {
         cards: [
           {
             title: 'Create & contribute',
-            body: 'Open a Generosity Fund® online, and fund it with cash or appreciated assets. You may receive immediate tax benefits.',
+            body: 'Open a **Generosity Fund®** online, and fund it with cash or appreciated assets. You may receive immediate tax benefits.',
             cardClass: 'card2',
           },
           {
@@ -1638,34 +1967,40 @@ const legacyChildPages = {
           },
           {
             title: 'Whenever, wherever',
-            body: 'Continue giving when and to whom you want by accessing your Generosity Fund® online. You may even give anonymously.',
+            body: 'Continue giving when and to whom you want by accessing your **Generosity Fund®** online. You may even give anonymously.',
             cardClass: 'card2',
           },
         ],
       },
       {
-        className: 'legacy-child-native-assets',
+        className: 'legacy-child-native-assets legacy-child-native-generosity-assets',
         title: 'It starts with what you give.',
-        body: [
-          '• Cash',
-          '• Household income',
-          '• Proceeds from selling a home or business',
-          '• Stocks',
-          '• Securities',
-          '• A variety of other funding sources',
-          '• $10,000 minimum',
-          'Additional funding can be made with as little as $100, as often as you like.',
+        titleHighlights: [{ text: 'what you give', className: 'is-atlantean' }],
+        cards: [
+          {
+            title: 'What you give',
+            cardClass: 'card2 generosity-fund-assets-card',
+            list: [
+              'Cash',
+              'Household income',
+              'Proceeds from selling a home or business',
+              'Stocks',
+              'Securities',
+              'A variety of other funding sources',
+              '$10,000 minimum',
+              'Additional funding can be made with as little as $100, as often as you like.',
+            ],
+          },
         ],
         actions: [{ label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' }],
       },
       {
-        className: 'legacy-child-native-cta',
+        className: 'legacy-child-native-generosity-request',
         copyWrap: true,
         title: 'Make the most of your giving.',
-        subtitle: 'Simple, joyful giving. Powered by your generosity.',
+        titleHighlights: [{ text: 'most', className: 'is-white' }],
         body: ['Let’s discover the best way for you to give, and in the easiest way possible.'],
         form: {
-          title: 'Start a Generosity Fund®',
           subtitle: 'We can help with setup and funding questions.',
           fields: [
             { id: 'firstName', label: 'First Name*', type: 'text', required: true },
@@ -1673,13 +2008,19 @@ const legacyChildPages = {
             { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
             { id: 'email', label: 'Email*', type: 'email', required: true },
           ],
-          submitLabel: 'Start a Generosity Fund®',
+          submitLabel: 'Submit',
         },
       },
-    ],
-    actions: [
-      { label: 'Open Your Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' },
-      { label: 'See Terms & Conditions', href: 'http://files.agfinancial.org/Planned-Giving/Generosity-Fund-Terms-Conditions.pdf', ghost: true },
+      {
+        className: 'legacy-child-native-generosity-outro',
+        copyWrap: true,
+        title: 'Simple, joyful giving.',
+        subtitle: 'Powered by your generosity.',
+        actions: [
+          { label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' },
+          { label: 'Terms and Conditions', documentId: 'document-planned-giving-terms-and-conditions', ghost: true },
+        ],
+      },
     ],
   },
   '/services/legacy-giving/ministry-impact-fund': {
@@ -1687,7 +2028,8 @@ const legacyChildPages = {
     compact: true,
     hero: {
       lines: [
-        { title: 'Any gift. Any asset.' },
+        { title: 'Any gift.', highlights: [{ text: 'gift', className: 'is-atlantean' }] },
+        { title: 'Any asset.', highlights: [{ text: 'asset', className: 'is-atlantean' }] },
         { title: 'Unlocked.', highlights: [{ text: 'Unlocked', className: 'is-mango' }] },
       ],
     },
@@ -1695,7 +2037,7 @@ const legacyChildPages = {
       heading: 'Most wealth isn’t cash.',
       body: [
         'It’s assets. A Ministry Impact Fund® makes it easy for donors to give in any form. No administrative hassle—just streamlined generosity that expands giving options, maximizes tax deductions, and eliminates capital gains.',
-        'This is generosity without limits.',
+        '**This is generosity without limits.**',
       ],
     },
     sections: [
@@ -1709,52 +2051,83 @@ const legacyChildPages = {
             title: 'Make the transfer',
             body: 'Your donor transfers cash or asset(s) to your Ministry Impact Fund®, potentially receiving a charitable deduction and minimized or eliminated capital gains.',
             cardClass: 'card2',
+            actions: [
+              { label: 'Open a Ministry Impact Fund®', to: '#ministry-impact-form' },
+            ],
           },
           {
             title: 'Give us the keys',
             body: 'AG Foundation liquidates the asset(s) for you, handling all administrative details.',
             cardClass: 'card2',
+            actions: [
+              { label: 'Secure message upload', href: 'https://uploads.agfinancial.org/' },
+            ],
           },
           {
             title: 'Put it to work',
             body: 'Your ministry gains immediate access to the cash.',
             cardClass: 'card2',
+            actions: [
+              { label: 'Talk to planned giving', href: 'mailto:plannedgiving@agfinancial.org' },
+            ],
           },
         ],
       },
       {
         className: 'legacy-child-native-assets',
         title: 'It starts with the donor gift.',
-        body: [
-          '• Cash',
-          '• Appreciated assets',
-          '• Stock (see below)',
-          '• Real estate',
-          '• Gifts-in-kind',
-          '• A variety of other gifts',
-          'Initial contribution required.',
+        titleHighlights: [{ text: 'donor gift', className: 'is-atlantean' }],
+        cards: [
+          {
+            title: 'Gift types',
+            titleClassName: 'legacy-child-native-assets-card-title',
+            cardClass: 'card2',
+            list: [
+              '**Cash**',
+              '**Appreciated assets**',
+              '**Stock** (see below)',
+              '**Real estate**',
+              '**Gifts-in-kind**',
+              '**A variety of other gifts**',
+              'Initial contribution required.',
+            ],
+          },
+        ],
+        actions: [
+          { label: 'Open a Ministry Impact Fund®', to: '#ministry-impact-form' },
         ],
       },
       {
         className: 'legacy-child-native-stock',
+        anchorId: 'stock-transfer',
         title: 'Transferring stock? Start here.',
+        titleHighlights: [{ text: 'Start here', className: 'is-atlantean' }],
         body: [
-          'Follow the two steps below. If you have questions or would like help, email plannedgiving@AGFinancial.org or call 417.447.2440.',
+          'Follow the two steps below. If you have questions or would like help, email **plannedgiving@AGFinancial.org** or call 417.447.2440.',
           '**1. Intent to Gift of Securities** — Complete this form (ignore section 3) and submit it via this secure message link. Indicate “Attn: Jason Idell” in the secure message.',
           '**2. Brokerage Letter of Authorization (LOA)** — Complete this form and submit it to your broker/dealer; however, notify the brokerage firm before sending the completed LOA form. Some broker/dealers may require additional paperwork.',
         ],
         actions: [
-          { label: 'Intent to Gift form', href: 'https://files.agfinancial.org/Planned-Giving/MIF-Gift-of-Securities.pdf' },
+          { label: 'Intent to Gift form', documentId: 'document-planned-giving-intent-to-gift-form' },
           { label: 'Secure message upload', href: 'https://uploads.agfinancial.org/', ghost: true },
-          { label: 'Brokerage LOA form', href: 'https://files.agfinancial.org/Planned-Giving/Brokerage-LOA.pdf', ghost: true },
+          { label: 'Brokerage LOA form', documentId: 'document-planned-giving-brokerage-loa-form', ghost: true },
         ],
       },
       {
-        className: 'legacy-child-native-cta',
+        className: 'legacy-child-native-billboard',
         copyWrap: true,
         title: 'More joy in receiving.',
+        titleHighlights: [{ text: 'joy', className: 'is-atlantean' }],
         subtitle: 'It’s easier than you think.',
         body: ['We’re ready to help your ministry receive non-cash assets and turn them into working funds.'],
+      },
+      {
+        className: 'legacy-child-native-request',
+        anchorId: 'ministry-impact-form',
+        copyWrap: true,
+        title: 'A legacy of giving.',
+        titleHighlights: [{ text: 'legacy', className: 'is-white' }],
+        body: ['We’re ready to help you explore how your gift can continue to give. And give. And give…'],
         form: {
           title: 'Talk with planned giving',
           subtitle: 'Let’s map out the best next step.',
@@ -1767,10 +2140,6 @@ const legacyChildPages = {
           submitLabel: 'Contact planned giving',
         },
       },
-    ],
-    actions: [
-      { label: 'Open a Ministry Impact Fund', href: 'mailto:plannedgiving@AGFinancial.org' },
-      { label: 'Contact planned giving', href: 'mailto:plannedgiving@agfinancial.org', ghost: true },
     ],
   },
 };
@@ -1934,14 +2303,14 @@ const retirementChildPages = {
         columns: 'two',
         actionsBeforeCards: true,
         actions: [
-          { label: 'View the monthly performance', href: 'https://files.agfinancial.org/retirement/Performance-Update/Performance-Update.pdf' },
+          { label: 'View the monthly performance', documentId: 'document-view-the-monthly-performance' },
         ],
         cards: [
           {
             title: 'MBA Income Fund',
             body: 'AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.',
             links: [
-              { label: 'Download the MBA Income PDF', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf' },
+              { label: 'Download the MBA Income PDF', documentId: 'fund-descriptor-retirement-download-the-mba-income-pdf' },
             ],
             actions: [
               { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
@@ -1960,19 +2329,19 @@ const retirementChildPages = {
               {
                 title: 'Screened strategy PDFs',
                 links: [
-                  { label: 'Steward Conservative Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
-                  { label: 'Steward Moderate Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
-                  { label: 'Steward Balanced Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
-                  { label: 'Steward Aggressive Growth Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
-                  { label: 'Steward Diversified Equity Strategy', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
+                  { label: 'Steward Conservative Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
+                  { label: 'Steward Moderate Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
+                  { label: 'Steward Balanced Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
+                  { label: 'Steward Aggressive Growth Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
+                  { label: 'Steward Diversified Equity Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
                 ],
               },
               {
                 title: 'Index strategy PDFs',
                 links: [
-                  { label: 'Fidelity Asset Manager 40%', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-40.pdf' },
-                  { label: 'Fidelity Asset Manager 60%', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-60.pdf' },
-                  { label: 'Fidelity Asset Manager 85%', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity%20Asset-Manager%C2%AE-85.pdf' },
+                  { label: 'Fidelity Asset Manager 40%', documentId: 'fund-descriptor-retirement-fidelity-asset-manager-40' },
+                  { label: 'Fidelity Asset Manager 60%', documentId: 'fund-descriptor-retirement-fidelity-asset-manager-60' },
+                  { label: 'Fidelity Asset Manager 85%', documentId: 'fund-descriptor-retirement-fidelity-asset-manager-85' },
                 ],
               },
             ],
@@ -1989,7 +2358,7 @@ const retirementChildPages = {
               {
                 title: 'View target-date fund PDFs',
                 links: [
-                  { label: 'Steward Target-Date Strategies', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Target-Date.pdf' },
+                  { label: 'Steward Target-Date Strategies', documentId: 'fund-descriptor-retirement-steward-target-date-strategies' },
                 ],
               },
             ],
@@ -2006,13 +2375,13 @@ const retirementChildPages = {
               {
                 title: 'View fund PDFs',
                 links: [
-                  { label: 'MBA Income Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf' },
-                  { label: 'Steward Select Bond Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Select-Bond.pdf' },
-                  { label: 'Steward Equity Market Neutral Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Equity-Market-Neutral.pdf' },
-                  { label: 'Steward Global Equity Income Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Global-Equity.pdf' },
-                  { label: 'Steward Covered Call Income Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Covered-Call.pdf' },
-                  { label: 'Fidelity 500 Index Fund', href: 'http://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-500-Index-Fund.pdf' },
-                  { label: 'Vanguard Total Bond Market Index Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Vanguard-Total-Bond-Market-Index-Fund.pdf' },
+                  { label: 'MBA Income Fund', documentId: 'fund-descriptor-retirement-download-the-mba-income-pdf' },
+                  { label: 'Steward Select Bond Fund', documentId: 'fund-descriptor-retirement-steward-select-bond-fund' },
+                  { label: 'Steward Equity Market Neutral Fund', documentId: 'fund-descriptor-retirement-steward-equity-market-neutral-fund' },
+                  { label: 'Steward Global Equity Income Fund', documentId: 'fund-descriptor-retirement-steward-global-equity-income-fund' },
+                  { label: 'Steward Covered Call Income Fund', documentId: 'fund-descriptor-retirement-steward-covered-call-income-fund' },
+                  { label: 'Fidelity 500 Index Fund', documentId: 'fund-descriptor-retirement-fidelity-500-index-fund' },
+                  { label: 'Vanguard Total Bond Market Index Fund', documentId: 'fund-descriptor-retirement-vanguard-total-bond-market-index-fund' },
                 ],
               },
             ],
@@ -2148,7 +2517,7 @@ const retirementChildPages = {
         cards: [
           {
             title: '1) Review and understand the loan rules',
-            actions: [{ label: 'Download', href: 'http://files.agfinancial.org/retirement/403(b)-Loan-Rules.pdf', ghost: true }],
+            actions: [{ label: 'Download', documentId: 'document-download', ghost: true }],
             cardClass: 'card2',
           },
           {
@@ -2613,7 +2982,7 @@ const retirementChildPages = {
         actions: [
           {
             label: 'Rollover/Transfer Form',
-            href: 'https://files.agfinancial.org/Retirement/Incoming-Rollover-Transfer-Request-Form.pdf',
+            documentId: 'document-retirement-rollover-transfer-form',
           },
         ],
       },
@@ -2708,7 +3077,7 @@ function companyChildContent(path, title) {
             },
             {
               title: 'Retirement',
-              body: '403(b) plan with options, and 8% company contribution (when eligible).',
+              body: '403(b) plan with options, and 9% company contribution (when eligible).',
               cardClass: 'card3',
             },
             {
