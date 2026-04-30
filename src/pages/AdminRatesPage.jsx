@@ -1,13 +1,29 @@
 import { useMemo, useState } from 'react';
+import AdminHtmlEditor from '../components/AdminHtmlEditor';
 import PageShell from '../components/PageShell';
+import SafeRichText from '../components/SafeRichText';
 import { pageByPath } from '../data/siteMap';
 import { defaultIraRates, defaultRates, defaultRatesMeta } from '../data/ratesDefault';
 import { useRates } from '../context/RatesContext';
+import { buildDynamicLegalCopyFromBlock, DEFAULT_RATES_LEGAL_COPY_SETTINGS } from '../lib/dynamicPageBlocks';
 import { parseRatesPdf } from '../utils/ratesPdfImport';
 
 export default function AdminRatesPage() {
-  const { rates, iraRates, ratesMeta, setRates, setIraRates, setRatesMeta } = useRates();
-  const [draft, setDraft] = useState({ rates, iraRates, ratesMeta });
+  const {
+    rates,
+    iraRates,
+    ratesMeta,
+    legalCopy,
+    setRates,
+    setIraRates,
+    setRatesMeta,
+    setLegalCopy,
+  } = useRates();
+  const [draft, setDraft] = useState({ rates, iraRates, ratesMeta, legalCopy });
+  const [openDisclosureEditors, setOpenDisclosureEditors] = useState({
+    certificates: false,
+    ira: false,
+  });
 
     // PDF import
     const [importReport, setImportReport] = useState(null);
@@ -86,8 +102,28 @@ export default function AdminRatesPage() {
       JSON.stringify(draft.rates) !== JSON.stringify(rates)
       || JSON.stringify(draft.iraRates) !== JSON.stringify(iraRates)
       || JSON.stringify(draft.ratesMeta) !== JSON.stringify(ratesMeta)
+      || JSON.stringify(draft.legalCopy) !== JSON.stringify(legalCopy)
     ),
-    [draft, rates, iraRates, ratesMeta],
+    [draft, rates, iraRates, ratesMeta, legalCopy],
+  );
+  const disclosurePreview = useMemo(
+    () => buildDynamicLegalCopyFromBlock(
+      {
+        id: 'disclaimer',
+        kind: 'legal_copy',
+        mode: 'dynamic',
+        settings: draft.legalCopy,
+      },
+      {
+        certificatesEffectiveDate: draft.ratesMeta?.certificatesEffectiveDate,
+        iraEffectiveDate: draft.ratesMeta?.iraEffectiveDate,
+      },
+    ),
+    [
+      draft.legalCopy,
+      draft.ratesMeta?.certificatesEffectiveDate,
+      draft.ratesMeta?.iraEffectiveDate,
+    ],
   );
 
   const certificateRowTotal = draft.rates.length;
@@ -111,18 +147,25 @@ export default function AdminRatesPage() {
     setRates(draft.rates);
     setIraRates(draft.iraRates);
     setRatesMeta(draft.ratesMeta);
+    setLegalCopy(draft.legalCopy);
   }
 
   function resetChanges() {
-    setDraft({ rates, iraRates, ratesMeta });
+    setDraft({ rates, iraRates, ratesMeta, legalCopy });
   }
 
   function resetDefaults() {
-    const next = { rates: defaultRates, iraRates: defaultIraRates, ratesMeta: defaultRatesMeta };
+    const next = {
+      rates: defaultRates,
+      iraRates: defaultIraRates,
+      ratesMeta: defaultRatesMeta,
+      legalCopy: { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS },
+    };
     setDraft(next);
     setRates(defaultRates);
     setIraRates(defaultIraRates);
     setRatesMeta(defaultRatesMeta);
+    setLegalCopy(DEFAULT_RATES_LEGAL_COPY_SETTINGS);
   }
 
   function updateMeta(key, value) {
@@ -135,11 +178,28 @@ export default function AdminRatesPage() {
     }));
   }
 
+  function updateLegalCopy(key, value) {
+    setDraft((curr) => ({
+      ...curr,
+      legalCopy: {
+        ...curr.legalCopy,
+        [key]: value,
+      },
+    }));
+  }
+
+  function toggleDisclosureEditor(key) {
+    setOpenDisclosureEditors((current) => ({
+      ...current,
+      [key]: !current[key],
+    }));
+  }
+
   return (
     <div className="page-wrap admin-content-page-wrap">
       <PageShell title="Admin: Rates" source={pageByPath['/rates'].source} showBadge={false}>
         <div className="admin-info-note">
-          Edit both public rate tables here. Changes update the Rates page and the Investments rates section.
+          Edit the public rate tables, disclosure copy, and effective dates here. Changes update the Rates page and the Investments rates section.
         </div>
         <div className="admin-import-panel" style={{ marginBottom: '1rem' }}>
   <h3>Import Rates PDF</h3>
@@ -278,40 +338,115 @@ export default function AdminRatesPage() {
           </table>
         </div>
 
-        <h3 style={{ marginTop: '1.2rem' }}>Disclaimer Dates</h3>
-        <div className="admin-content-field-list">
-          <label>
-            <span>Certificates effective date</span>
-            <input
-              value={draft.ratesMeta?.certificatesEffectiveDate || ''}
-              onChange={(e) => updateMeta('certificatesEffectiveDate', e.target.value)}
-            />
-          </label>
-          <label>
-            <span>IRA effective date</span>
-            <input
-              value={draft.ratesMeta?.iraEffectiveDate || ''}
-              onChange={(e) => updateMeta('iraEffectiveDate', e.target.value)}
-            />
-          </label>
+        <div className="admin-rates-lower-grid">
+          <section className="admin-rates-section-card">
+            <h3>Disclaimer Dates</h3>
+            <div className="admin-content-field-list admin-rates-wide-fields">
+              <label className="is-half">
+                <span>Certificates effective date</span>
+                <input
+                  value={draft.ratesMeta?.certificatesEffectiveDate || ''}
+                  onChange={(e) => updateMeta('certificatesEffectiveDate', e.target.value)}
+                />
+              </label>
+              <label className="is-half">
+                <span>IRA effective date</span>
+                <input
+                  value={draft.ratesMeta?.iraEffectiveDate || ''}
+                  onChange={(e) => updateMeta('iraEffectiveDate', e.target.value)}
+                />
+              </label>
+            </div>
+          </section>
+
+          <section className="admin-rates-section-card">
+            <h3>403(b) Investment Rate (MBA Fixed Income Fund)</h3>
+            <div className="admin-content-field-list admin-rates-wide-fields">
+              <label className="is-half">
+                <span>Rate</span>
+                <input
+                  value={draft.ratesMeta?.retirement403bMbaRate || ''}
+                  onChange={(e) => updateMeta('retirement403bMbaRate', e.target.value)}
+                />
+              </label>
+              <label className="is-half">
+                <span>APY*</span>
+                <input
+                  value={draft.ratesMeta?.retirement403bMbaApy || ''}
+                  onChange={(e) => updateMeta('retirement403bMbaApy', e.target.value)}
+                />
+              </label>
+            </div>
+          </section>
         </div>
 
-        <h3 style={{ marginTop: '1.2rem' }}>403(b) Investment Rate (MBA Fixed Income Fund - Select 403(b))</h3>
-        <div className="admin-content-field-list">
-          <label>
-            <span>Rate</span>
-            <input
-              value={draft.ratesMeta?.retirement403bMbaRate || ''}
-              onChange={(e) => updateMeta('retirement403bMbaRate', e.target.value)}
-            />
-          </label>
-          <label>
-            <span>APY*</span>
-            <input
-              value={draft.ratesMeta?.retirement403bMbaApy || ''}
-              onChange={(e) => updateMeta('retirement403bMbaApy', e.target.value)}
-            />
-          </label>
+        <h3 style={{ marginTop: '1.2rem' }}>Disclosure Copy</h3>
+        <div className="admin-content-field-list admin-rates-wide-fields admin-rates-disclosure-grid">
+          <div className="admin-rates-disclosure-panel">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 600 }}>Certificates disclosure copy</span>
+              <button
+                type="button"
+                className="action-btn action-btn-outline action-btn-compact"
+                onClick={() => toggleDisclosureEditor('certificates')}
+              >
+                {openDisclosureEditors.certificates ? 'Hide editor' : 'Edit disclosure'}
+              </button>
+            </div>
+            <div style={{ border: '1px solid #d7dee5', borderRadius: 10, background: '#fff', padding: '0.9rem 1rem' }}>
+              <SafeRichText
+                as="div"
+                html={disclosurePreview?.certificatesHtml || ''}
+                className="rates-disclaimer"
+              />
+            </div>
+            {openDisclosureEditors.certificates ? (
+              <div style={{ marginTop: '0.75rem' }}>
+                <p style={{ margin: '0 0 0.6rem', fontSize: '0.82rem', color: '#5f6e76' }}>
+                  Automatic effective-date token:
+                  {' '}
+                  <code>{'{{certificatesEffectiveDate}}'}</code>
+                  .
+                </p>
+                <AdminHtmlEditor
+                  value={draft.legalCopy?.certificatesHtml || ''}
+                  onChange={(nextValue) => updateLegalCopy('certificatesHtml', nextValue)}
+                />
+              </div>
+            ) : null}
+          </div>
+          <div className="admin-rates-disclosure-panel">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 600 }}>IRA disclosure copy</span>
+              <button
+                type="button"
+                className="action-btn action-btn-outline action-btn-compact"
+                onClick={() => toggleDisclosureEditor('ira')}
+              >
+                {openDisclosureEditors.ira ? 'Hide editor' : 'Edit disclosure'}
+              </button>
+            </div>
+            <div style={{ border: '1px solid #d7dee5', borderRadius: 10, background: '#fff', padding: '0.9rem 1rem' }}>
+              <SafeRichText
+                as="div"
+                html={disclosurePreview?.iraHtml || ''}
+                className="rates-disclaimer"
+              />
+            </div>
+            {openDisclosureEditors.ira ? (
+              <div style={{ marginTop: '0.75rem' }}>
+                <p style={{ margin: '0 0 0.6rem', fontSize: '0.82rem', color: '#5f6e76' }}>
+                  Automatic effective-date token:
+                  {' '}
+                  <code>{'{{iraEffectiveDate}}'}</code>.
+                </p>
+                <AdminHtmlEditor
+                  value={draft.legalCopy?.iraHtml || ''}
+                  onChange={(nextValue) => updateLegalCopy('iraHtml', nextValue)}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="admin-actions">

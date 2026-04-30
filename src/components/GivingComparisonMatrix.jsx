@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
  * - Program names across top
  * - Features down left
  * - Sticky header + sticky first column
- * - Mobile program selector (choose 1–2)
+ * - Mobile program selector (choose 2-3)
  * - Data-driven structure
  */
 
@@ -138,6 +138,11 @@ const featureRows = [
   { key: 'timing', label: 'Timing' },
 ];
 
+const mobileFeatureRows = [
+  ...featureRows,
+  { key: 'cta', label: 'CTA' },
+];
+
 function parseMinimumNumber(text) {
   if (!text) return Number.MAX_SAFE_INTEGER;
   const match = text.match(/\$?\s*([0-9]+)\s*K/i);
@@ -152,7 +157,7 @@ export default function GivingComparisonMatrix() {
   const [propertyOnly, setPropertyOnly] = useState(false);
   const [maxMinimum, setMaxMinimum] = useState('all');
 
-  const [mobileSelectedIds, setMobileSelectedIds] = useState(['cga', 'daf']);
+  const [mobileSelectedIds, setMobileSelectedIds] = useState(['cga', 'daf', 'endowment']);
 
   const filteredPrograms = useMemo(() => (
     programs.filter((p) => {
@@ -172,16 +177,28 @@ export default function GivingComparisonMatrix() {
 
   const visibleProgramsMobile = useMemo(() => {
     const selected = filteredPrograms.filter((p) => mobileSelectedIds.includes(p.id));
-    if (selected.length > 0) return selected.slice(0, 2);
-    return filteredPrograms.slice(0, 2);
+    if (selected.length > 0) return selected.slice(0, 3);
+    return filteredPrograms.slice(0, 3);
   }, [filteredPrograms, mobileSelectedIds]);
 
   const toggleMobileProgram = (id) => {
     setMobileSelectedIds((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 2) return [prev[1], id];
+      if (prev.length >= 3) return [...prev.slice(1), id];
       return [...prev, id];
     });
+  };
+
+  const renderMobileFieldValue = (program, row) => {
+    if (row.key === 'cta') {
+      return (
+        <a href={program.ctaHref} style={styles.mobileFieldCta}>
+          {program.ctaLabel}
+        </a>
+      );
+    }
+
+    return program[row.key];
   };
 
   return (
@@ -329,7 +346,7 @@ export default function GivingComparisonMatrix() {
       <div className="agf-hide-desktop">
         <div style={styles.mobileCard}>
           <div style={{ marginBottom: 10, fontWeight: 700, color: AGF_COLORS.slate }}>
-            Mobile compare (select up to 2)
+            Mobile compare (select 2 or 3)
           </div>
 
           <div style={styles.mobileSelectorGrid}>
@@ -352,55 +369,35 @@ export default function GivingComparisonMatrix() {
           </div>
         </div>
 
-        <div style={styles.matrixOuter}>
-          <div style={styles.matrixScroll}>
-            <table style={styles.table} role="table" aria-label="Mobile charitable giving comparison">
-              <thead>
-                <tr>
-                  <th style={{ ...styles.th, ...styles.stickyCol, ...styles.featureHeaderCell }}>
-                    Feature
-                  </th>
-                  {visibleProgramsMobile.map((program) => (
-                    <th key={program.id} style={styles.thProgramMobile}>
-                      <div style={styles.programHeaderCard}>
-                        <div style={styles.programTitle}>{program.shortLabel || program.name}</div>
-                        <a href={program.ctaHref} style={styles.headerCta}>
-                          {program.ctaLabel}
-                        </a>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {featureRows.map((row, idx) => (
-                  <tr key={row.key}>
-                    <th
-                      scope="row"
-                      style={{
-                        ...styles.rowLabel,
-                        ...styles.stickyCol,
-                        background: idx % 2 === 0 ? '#fff' : '#fbfbfb',
-                      }}
-                    >
-                      {row.label}
-                    </th>
-                    {visibleProgramsMobile.map((program) => (
-                      <td
-                        key={`${program.id}-${row.key}-m`}
-                        style={{
-                          ...styles.td,
-                          background: idx % 2 === 0 ? '#fff' : '#fbfbfb',
-                        }}
-                      >
-                        {program[row.key]}
-                      </td>
-                    ))}
-                  </tr>
+        <div style={styles.mobileCardsGrid} aria-label="Mobile charitable giving comparison">
+          {visibleProgramsMobile.map((program) => (
+            <article key={program.id} style={styles.mobileProgramCard}>
+              <div style={styles.mobileProgramCardHeader}>
+                <h3 style={styles.mobileProgramTitle}>{program.name}</h3>
+                <p style={styles.mobileProgramSubtitle}>{program.shortLabel || program.name}</p>
+              </div>
+
+              <dl style={styles.mobileFieldList}>
+                {mobileFeatureRows.map((row, idx) => (
+                  <div
+                    key={`${program.id}-${row.key}-mobile-card`}
+                    style={{
+                      ...styles.mobileFieldRow,
+                      ...(idx === mobileFeatureRows.length - 1 ? styles.mobileFieldRowLast : {}),
+                    }}
+                  >
+                    <dt style={styles.mobileFieldLabel}>{row.label}</dt>
+                    <dd style={styles.mobileFieldValue}>{renderMobileFieldValue(program, row)}</dd>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </dl>
+            </article>
+          ))}
+          {visibleProgramsMobile.length === 0 ? (
+            <div style={styles.mobileEmptyState}>
+              No programs match the current filters.
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -637,9 +634,87 @@ const styles = {
     cursor: 'pointer',
   },
   mobileSelectBtnActive: {
-    borderColor: AGF_COLORS.teal,
+    border: `1px solid ${AGF_COLORS.teal}`,
     background: 'rgba(0,173,187,.08)',
     color: AGF_COLORS.teal,
     fontWeight: 700,
+  },
+  mobileCardsGrid: {
+    display: 'grid',
+    gap: 12,
+  },
+  mobileProgramCard: {
+    border: `1px solid ${AGF_COLORS.border}`,
+    borderRadius: 16,
+    background: '#fff',
+    overflow: 'hidden',
+    boxShadow: '0 14px 32px rgba(17, 53, 75, 0.06)',
+  },
+  mobileProgramCardHeader: {
+    padding: '14px 14px 10px',
+    background: 'linear-gradient(180deg, #ffffff 0%, #f7fbfc 100%)',
+    borderBottom: `1px solid ${AGF_COLORS.border}`,
+  },
+  mobileProgramTitle: {
+    margin: 0,
+    fontSize: 18,
+    lineHeight: 1.15,
+    fontWeight: 800,
+    color: AGF_COLORS.slate,
+  },
+  mobileProgramSubtitle: {
+    margin: '5px 0 0',
+    color: AGF_COLORS.teal,
+    fontWeight: 700,
+    fontSize: 12,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+  },
+  mobileFieldList: {
+    margin: 0,
+    padding: 0,
+  },
+  mobileFieldRow: {
+    display: 'grid',
+    gap: 6,
+    padding: '12px 14px',
+    borderBottom: `1px solid ${AGF_COLORS.border}`,
+  },
+  mobileFieldRowLast: {
+    borderBottom: 'none',
+  },
+  mobileFieldLabel: {
+    margin: 0,
+    fontSize: 11,
+    lineHeight: 1.3,
+    fontWeight: 800,
+    color: AGF_COLORS.muted,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+  },
+  mobileFieldValue: {
+    margin: 0,
+    fontSize: 14,
+    lineHeight: 1.45,
+    color: '#1f2937',
+  },
+  mobileFieldCta: {
+    display: 'inline-block',
+    textDecoration: 'none',
+    background: AGF_COLORS.teal,
+    color: '#fff',
+    fontWeight: 700,
+    borderRadius: 10,
+    padding: '10px 12px',
+    fontSize: 13,
+  },
+  mobileEmptyState: {
+    border: `1px dashed ${AGF_COLORS.border}`,
+    borderRadius: 14,
+    background: '#fff',
+    padding: '18px 14px',
+    color: AGF_COLORS.muted,
+    textAlign: 'center',
+    fontSize: 14,
   },
 };

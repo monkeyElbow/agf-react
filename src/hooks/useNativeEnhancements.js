@@ -158,46 +158,56 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
         return;
       }
 
+      const clearPendingState = (target) => {
+        if (!target) {
+          return;
+        }
+        target.removeAttribute('data-fade-state');
+        target.classList.add('is-visible');
+      };
+
       if (prefersReducedMotion) {
-        nodes.forEach((el) => el.classList.add('is-visible'));
+        nodes.forEach((el) => clearPendingState(el));
         return;
       }
 
       if (!('IntersectionObserver' in window)) {
-        nodes.forEach((el) => el.classList.add('is-visible'));
+        nodes.forEach((el) => clearPendingState(el));
         return;
       }
 
       const timers = new Map();
-      const readyIndexes = new Set();
-      const queuedIndexes = new Set();
-      let nextIndexToReveal = 0;
+      const queuedTargets = new WeakSet();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
 
-      const queueReveal = (index) => {
-        const target = nodes[index];
-        if (!target || queuedIndexes.has(index)) {
+      const isInitiallyVisible = (target) => {
+        if (!target || !viewportHeight) {
+          return false;
+        }
+        if (target.classList.contains('fade-up-force-observe')) {
+          return false;
+        }
+        const rect = target.getBoundingClientRect();
+        const triggerBottom = viewportHeight + Math.min(160, viewportHeight * 0.18);
+        return rect.bottom > 0 && rect.top < triggerBottom;
+      };
+
+      const queueReveal = (target, index) => {
+        if (!target || queuedTargets.has(target)) {
           return;
         }
 
-        queuedIndexes.add(index);
+        queuedTargets.add(target);
         const delayMs = 90 + ((index % 8) * 90);
         const timer = window.setTimeout(() => {
           requestAnimationFrame(() => {
-            target.classList.add('is-visible');
+            clearPendingState(target);
           });
           timers.delete(target);
         }, delayMs);
 
         timers.set(target, timer);
       };
-
-      const flushReadyInOrder = () => {
-        while (nextIndexToReveal < nodes.length && readyIndexes.has(nextIndexToReveal)) {
-          queueReveal(nextIndexToReveal);
-          nextIndexToReveal += 1;
-        }
-      };
-
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -212,11 +222,9 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
               return;
             }
 
-            readyIndexes.add(index);
+            queueReveal(entry.target, index);
             observer.unobserve(entry.target);
           });
-
-          flushReadyInOrder();
         },
         { rootMargin: '0px 0px -12% 0px' },
       );
@@ -224,12 +232,20 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
       nodes.forEach((el, index) => {
         el.classList.remove('is-visible');
         el.setAttribute('data-fade-order', String(index));
+        if (isInitiallyVisible(el)) {
+          clearPendingState(el);
+          return;
+        }
+        el.setAttribute('data-fade-state', 'pending');
         observer.observe(el);
       });
       cleanups.push(() => {
         observer.disconnect();
         timers.forEach((timer) => window.clearTimeout(timer));
         timers.clear();
+        nodes.forEach((el) => {
+          el.removeAttribute('data-fade-state');
+        });
       });
     };
 

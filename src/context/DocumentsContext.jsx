@@ -3,7 +3,7 @@ import { formsLibraryLinks } from '../data/formsLibraryLinks';
 import { documentLibrarySeedExtras } from '../data/documentLibrarySeedExtras';
 
 const STORAGE_KEY = 'agf-documents-admin-v1';
-const DocumentsContext = createContext(null);
+export const DocumentsContext = createContext(null);
 
 function toSlug(value) {
   return String(value || '')
@@ -20,8 +20,9 @@ function isExternalUrl(value) {
 
 function inferKindFromUrl(url) {
   const value = String(url || '').trim();
-  if (!value) return 'pdf';
+  if (!value) return 'unassigned';
   if (/\.pdf(?:[?#].*)?$/i.test(value)) return 'pdf';
+  if (/\.zip(?:[?#].*)?$/i.test(value)) return 'zip';
   if (/formsite\.com|secure\.agfinancial\.org\/public\/forms/i.test(value)) return 'web-form';
   return isExternalUrl(value) ? 'external-page' : 'external-page';
 }
@@ -46,12 +47,17 @@ function normalizeDocument(record) {
   const fallbackIdParts = [category, topic, title].map(toSlug).filter(Boolean);
   const fallbackId = fallbackIdParts.length ? fallbackIdParts.join('-') : `document-${Date.now()}`;
   const url = String(safe.url || safe.href || '').trim();
+  const explicitKind = String(safe.kind || '').trim();
+  const inferredKind = inferKindFromUrl(url);
+  const kind = !url
+    ? (explicitKind || inferredKind)
+    : (inferredKind === 'external-page' && explicitKind === 'web-form' ? 'web-form' : inferredKind);
 
   return {
     id: String(safe.id || fallbackId),
     title,
     url,
-    kind: String(safe.kind || inferKindFromUrl(url)),
+    kind,
     category,
     topic,
     tags: normalizeTags(safe.tags),
@@ -170,8 +176,11 @@ function readInitialDocuments() {
 
 function normalizePatch(patch) {
   if (!patch || typeof patch !== 'object') return {};
+  const hasUrl = Object.prototype.hasOwnProperty.call(patch, 'url');
+  const nextUrl = hasUrl ? String(patch.url || '').trim() : '';
   return {
     ...patch,
+    ...(hasUrl ? { kind: inferKindFromUrl(nextUrl) } : {}),
     ...(Object.prototype.hasOwnProperty.call(patch, 'tags') ? { tags: normalizeTags(patch.tags) } : {}),
   };
 }
@@ -200,7 +209,7 @@ export function DocumentsProvider({ children }) {
         id,
         title: seed.title || 'New Document',
         url: seed.url || '',
-        kind: seed.kind || 'pdf',
+        kind: seed.kind || inferKindFromUrl(seed.url || ''),
         category: seed.category || 'form',
         topic: seed.topic || '',
         tags: seed.tags || [],

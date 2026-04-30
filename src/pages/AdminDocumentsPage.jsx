@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import PageShell from '../components/PageShell';
 import { pageByPath } from '../data/siteMap';
-import { detectDocumentKind, useDocuments } from '../context/DocumentsContext';
+import { useDocuments } from '../context/DocumentsContext';
 
 function tagsToCsv(tags) {
   return Array.isArray(tags) ? tags.join(', ') : '';
@@ -16,6 +16,14 @@ function csvToTags(value) {
 
 function isLikelyExternalUrl(value) {
   return /^https?:\/\//i.test(String(value || '').trim());
+}
+
+function formatDocumentKind(kind) {
+  if (kind === 'pdf') return 'PDF';
+  if (kind === 'zip') return 'ZIP';
+  if (kind === 'web-form') return 'Web Form';
+  if (kind === 'external-page') return 'Web URL';
+  return 'Unassigned';
 }
 
 export default function AdminDocumentsPage() {
@@ -95,7 +103,6 @@ export default function AdminDocumentsPage() {
                 title: 'New Document',
                 category: 'form',
                 topic: '',
-                kind: 'pdf',
                 url: '',
                 active: false,
               });
@@ -179,43 +186,47 @@ export default function AdminDocumentsPage() {
           </div>
         </section>
 
-        <section className="admin-content-section">
+        <section className="admin-content-section admin-documents-list-section">
           <h3>Documents ({documents.length})</h3>
           {documents.length ? (
-            <div className="table-scroll">
-              <table className="ag-table ag-table-inputs">
+            <div className="table-scroll admin-documents-table-scroll">
+              <table className="ag-table ag-table-inputs admin-documents-table">
                 <thead>
                   <tr>
                     <th>Active</th>
                     <th>Title</th>
-                    <th>ID</th>
                     <th>Category</th>
                     <th>Topic</th>
                     <th>Kind</th>
-                    <th>URL</th>
+                    <th className="admin-documents-url-col">URL</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((doc) => (
                     <tr
                       key={`row-${doc.id}-${doc.url}`}
-                      style={doc.id === selectedId ? { background: 'rgba(0, 172, 187, 0.06)' } : undefined}
+                      className={`admin-documents-row${doc.id === selectedId ? ' is-selected' : ''}`}
+                      onClick={() => setSelectedId(doc.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setSelectedId(doc.id);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Select document ${doc.title || doc.id}`}
                     >
                       <td>{doc.active ? 'On' : 'Off'}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="action-btn action-btn-outline"
-                          onClick={() => setSelectedId(doc.id)}
-                        >
-                          {doc.title || '(untitled)'}
-                        </button>
-                      </td>
-                      <td><code>{doc.id}</code></td>
+                      <td className="admin-documents-title-cell">{doc.title || '(untitled)'}</td>
                       <td>{doc.category}</td>
                       <td>{doc.topic || '—'}</td>
-                      <td>{doc.kind}</td>
-                      <td style={{ maxWidth: 320, overflowWrap: 'anywhere' }}>{doc.url || '—'}</td>
+                      <td>{formatDocumentKind(doc.kind)}</td>
+                      <td className="admin-documents-url-col">
+                        <span className="admin-documents-url-text" title={doc.url || ''}>
+                          {doc.url || '—'}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -277,15 +288,8 @@ export default function AdminDocumentsPage() {
 
               <div className="admin-content-grid-two">
                 <label>
-                  <span>Kind</span>
-                  <select
-                    value={selected.kind}
-                    onChange={(event) => updateDocument(selected.id, { kind: event.target.value })}
-                  >
-                    <option value="pdf">pdf</option>
-                    <option value="web-form">web-form</option>
-                    <option value="external-page">external-page</option>
-                  </select>
+                  <span>Type (auto from URL)</span>
+                  <input value={formatDocumentKind(selected.kind)} readOnly />
                 </label>
                 <label>
                   <span>Active</span>
@@ -305,10 +309,7 @@ export default function AdminDocumentsPage() {
                   value={selected.url}
                   onChange={(event) => {
                     const nextUrl = event.target.value;
-                    updateDocument(selected.id, {
-                      url: nextUrl,
-                      kind: detectDocumentKind(nextUrl),
-                    });
+                    updateDocument(selected.id, { url: nextUrl });
                   }}
                   placeholder="https://files.agfinancial.org/..."
                 />
@@ -361,4 +362,3 @@ export default function AdminDocumentsPage() {
     </div>
   );
 }
-

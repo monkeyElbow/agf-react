@@ -90,7 +90,7 @@ function rewriteContentLinks(html, sourceFile) {
     return `srcset=${quote}${rewritten.join(', ')}${quote}`;
   });
 
-  output = output.replace(/url\((['"]?)\.\/([^'"\)]+)\1\)/gi, (full, quote, relAsset) => {
+  output = output.replace(/url\((['"]?)\.\/([^'")]+)\1\)/gi, (full, quote, relAsset) => {
     const rel = `${relDir}/${relAsset}`;
     return `url('/wp-pages/${encodePathSegments(rel)}')`;
   });
@@ -126,7 +126,7 @@ function extractInlineCss(fileContent) {
 
   const chunks = [];
   for (const id of styleIds) {
-    const re = new RegExp(`<style[^>]*id=['\"]${id}['\"][^>]*>([\\s\\S]*?)<\\/style>`, 'i');
+    const re = new RegExp(`<style[^>]*id=['"]${id}['"][^>]*>([\\s\\S]*?)</style>`, 'i');
     const match = fileContent.match(re);
     if (match && match[1]) {
       chunks.push(match[1].trim());

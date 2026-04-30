@@ -1,7 +1,6 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
 import SiteLayout from './components/SiteLayout';
 import NativeContentPage from './components/NativeContentPage';
 import HomePage from './pages/HomePage';
@@ -12,10 +11,12 @@ import AdminDocumentsPage from './pages/AdminDocumentsPage';
 import PageBreadcrumbs from './components/PageBreadcrumbs';
 import SiteAnnouncementBar from './components/SiteAnnouncementBar';
 import { pageByPath, sitePages } from './data/siteMap';
+import { useContentAdmin } from './context/ContentAdminContext';
 import { useRedirects } from './context/RedirectsContext';
+import { recordHomeReturnAssistNavigation } from './lib/homeReturnAssist';
 
-const LoansPage = lazy(() => import('./pages/LoansPage'));
 const InvestmentsPage = lazy(() => import('./pages/InvestmentsPage'));
+const LoansPage = lazy(() => import('./pages/LoansPage'));
 const RetirementPage = lazy(() => import('./pages/RetirementPage'));
 const RatesPage = lazy(() => import('./pages/RatesPage'));
 const AdminRatesPage = lazy(() => import('./pages/AdminRatesPage'));
@@ -23,7 +24,9 @@ const AdminResourcesPage = lazy(() => import('./pages/AdminResourcesPage'));
 const AdminMediaAuditPage = lazy(() => import('./pages/AdminMediaAuditPage'));
 const AdminMessagePage = lazy(() => import('./pages/AdminMessagePage'));
 const AdminConsultantsPage = lazy(() => import('./pages/AdminConsultantsPage'));
+const AdminTestimonialsPage = lazy(() => import('./pages/AdminTestimonialsPage'));
 const AdminJobsPage = lazy(() => import('./pages/AdminJobsPage'));
+const AdminBlocksPage = lazy(() => import('./pages/AdminBlocksPage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
 const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
 const ResourceArticlePage = lazy(() => import('./pages/ResourceArticlePage'));
@@ -39,11 +42,12 @@ function ExternalRedirect({ to }) {
 }
 
 function PageRoute({ page }) {
-  const showAnnouncement = page.path !== '/';
+  const routeKey = String(page.routeKey || page.path || '').trim();
+  const showAnnouncement = routeKey !== '/';
   const showNativeBreadcrumbs = page.source === null
-    && page.path !== '/'
-    && page.path !== '/search'
-    && !page.path.startsWith('/admin/');
+    && routeKey !== '/'
+    && routeKey !== '/search'
+    && !routeKey.startsWith('/admin/');
 
   const withTopBands = (node) => (
     <>
@@ -53,23 +57,15 @@ function PageRoute({ page }) {
     </>
   );
 
-  if (page.path === '/') {
+  if (routeKey === '/') {
     return <HomePage />;
   }
 
-  if (page.path === '/services') {
+  if (routeKey === '/services') {
     return withTopBands(<ServicesPage />);
   }
 
-  if (page.path === '/services/loans') {
-    return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
-        <LoansPage />
-      </Suspense>
-    ));
-  }
-
-  if (page.path === '/services/investments') {
+  if (routeKey === '/services/investments') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <InvestmentsPage />
@@ -77,7 +73,15 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/services/retirement') {
+  if (routeKey === '/services/loans') {
+    return withTopBands((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <LoansPage />
+      </Suspense>
+    ));
+  }
+
+  if (routeKey === '/services/retirement') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <RetirementPage />
@@ -85,7 +89,7 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/admin/rates') {
+  if (routeKey === '/admin/rates') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <AdminRatesPage />
@@ -93,19 +97,19 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/admin/content') {
+  if (routeKey === '/admin/content') {
     return withTopBands(<AdminContentPage />);
   }
 
-  if (page.path === '/admin/redirects') {
+  if (routeKey === '/admin/redirects') {
     return withTopBands(<AdminRedirectsPage />);
   }
 
-  if (page.path === '/admin/documents') {
+  if (routeKey === '/admin/documents') {
     return withTopBands(<AdminDocumentsPage />);
   }
 
-  if (page.path === '/admin/resources') {
+  if (routeKey === '/admin/resources') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <AdminResourcesPage />
@@ -113,7 +117,7 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/admin/media-audit') {
+  if (routeKey === '/admin/media-audit') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <AdminMediaAuditPage />
@@ -121,7 +125,7 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/admin/consultants') {
+  if (routeKey === '/admin/consultants') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <AdminConsultantsPage />
@@ -129,7 +133,15 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/admin/jobs') {
+  if (routeKey === '/admin/testimonials') {
+    return withTopBands((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <AdminTestimonialsPage />
+      </Suspense>
+    ));
+  }
+
+  if (routeKey === '/admin/jobs') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <AdminJobsPage />
@@ -137,7 +149,7 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/admin/message') {
+  if (routeKey === '/admin/message') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <AdminMessagePage />
@@ -145,7 +157,15 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/rates') {
+  if (routeKey === '/admin/blocks') {
+    return withTopBands((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <AdminBlocksPage />
+      </Suspense>
+    ));
+  }
+
+  if (routeKey === '/rates') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <RatesPage />
@@ -153,7 +173,7 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/resources') {
+  if (routeKey === '/resources') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <ResourcesPage />
@@ -161,7 +181,7 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/search') {
+  if (routeKey === '/search') {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <SearchPage />
@@ -169,7 +189,7 @@ function PageRoute({ page }) {
     ));
   }
 
-  if (page.path === '/yourplan') {
+  if (routeKey === '/yourplan') {
     return <Navigate to="/" replace />;
   }
 
@@ -178,22 +198,52 @@ function PageRoute({ page }) {
 
 export default function App() {
   const location = useLocation();
+  const isInitialNavigationRef = useRef(true);
+  const { pageHierarchy, resolveManagedPath } = useContentAdmin();
   const { resolveRedirect } = useRedirects();
+  const adminPages = useMemo(
+    () => sitePages
+      .filter((page) => page.path.startsWith('/admin/'))
+      .map((page) => ({
+        ...page,
+        routeKey: page.path,
+        linkRef: String(page.linkRef || page.path),
+      })),
+    [],
+  );
+  const managedPages = useMemo(
+    () => Object.values(pageHierarchy || {})
+      .filter((page) => page && page.path)
+      .sort((a, b) => a.path.localeCompare(b.path)),
+    [pageHierarchy],
+  );
+  const managedPageByPath = useMemo(
+    () => Object.fromEntries(managedPages.map((page) => [page.path, page])),
+    [managedPages],
+  );
+  const routablePages = useMemo(
+    () => [...managedPages, ...adminPages],
+    [managedPages, adminPages],
+  );
+
+  useLayoutEffect(() => {
+    recordHomeReturnAssistNavigation(location.pathname);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!('scrollRestoration' in window.history)) {
       return undefined;
     }
-
-    const previous = window.history.scrollRestoration;
-    window.history.scrollRestoration = 'manual';
-
-    return () => {
-      window.history.scrollRestoration = previous;
-    };
+    window.history.scrollRestoration = 'auto';
+    return undefined;
   }, []);
 
   useEffect(() => {
+    const isInitialNavigation = isInitialNavigationRef.current;
+    if (isInitialNavigation) {
+      isInitialNavigationRef.current = false;
+    }
+
     if (location.hash) {
       const id = decodeURIComponent(location.hash.replace(/^#/, ''));
       let rafId = 0;
@@ -218,19 +268,23 @@ export default function App() {
       return () => window.cancelAnimationFrame(rafId);
     }
 
+    if (isInitialNavigation) {
+      return undefined;
+    }
+
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     return undefined;
   }, [location.pathname, location.hash]);
 
   useEffect(() => {
-    const page = pageByPath[location.pathname];
+    const page = managedPageByPath[location.pathname] || pageByPath[location.pathname];
     if (!page) {
       document.title = 'AGFinancial';
       return;
     }
 
     document.title = page.path === '/' ? 'AGFinancial' : `${page.title} | AGFinancial`;
-  }, [location.pathname]);
+  }, [location.pathname, managedPageByPath]);
 
   const redirectMatch = resolveRedirect({
     pathname: location.pathname,
@@ -245,10 +299,20 @@ export default function App() {
     return <Navigate to={redirectMatch.to} replace />;
   }
 
+  const resolvedManagedPath = resolveManagedPath(location.pathname);
+  if (
+    resolvedManagedPath
+    && resolvedManagedPath !== location.pathname
+    && managedPageByPath[resolvedManagedPath]
+  ) {
+    const to = `${resolvedManagedPath}${location.search || ''}${location.hash || ''}`;
+    return <Navigate to={to} replace />;
+  }
+
   return (
     <SiteLayout>
       <Routes>
-        {sitePages.map((page) => (
+        {routablePages.map((page) => (
           <Route key={page.path} path={page.path} element={<PageRoute page={page} />} />
         ))}
         <Route

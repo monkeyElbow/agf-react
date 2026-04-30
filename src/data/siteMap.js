@@ -2,14 +2,22 @@ export const sitePages = [
   { path: '/', title: 'Home', section: 'Core', source: null },
   { path: '/services', title: 'Services', section: 'Services', source: null },
   { path: '/services/loans', title: 'Loans', section: 'Services', source: null },
-  { path: '/services/loans/loans-consultant', title: 'Find A Consultant', section: 'Services', source: null },
+  { path: '/services/loans/loan-consultants', title: 'Loan Consultants', section: 'Services', source: null },
   { path: '/services/investments', title: 'Investments', section: 'Services', source: null },
   { path: '/services/retirement', title: 'Retirement', section: 'Services', source: null },
   { path: '/services/retirement/403b', title: '403(b)', section: 'Retirement', source: null },
   { path: '/services/retirement/403b/403b-terms-definitions', title: '403(b) Terms & Definitions', section: 'Retirement', source: null },
   { path: '/services/retirement/403b/403b-individual-enrollment', title: '403b Individual Enrollment', section: 'Retirement', source: null },
-  { path: '/services/retirement/403b-for-groups', title: '403b for Groups', section: 'Retirement', source: null },
-  { path: '/services/retirement/403b-for-groups/403b-group-enrollment', title: '403b Group Enrollment', section: 'Retirement', source: null },
+  {
+    path: '/services/retirement/403b/403b-group-enrollment',
+    title: '403b Group Enrollment',
+    section: 'Retirement',
+    source: null,
+    linkRefAliases: [
+      '/services/retirement/403b-for-groups/403b-group-enrollment',
+      '/services/retirement/403b-for-groups',
+    ],
+  },
   { path: '/services/retirement/409a', title: '409A Deferred Compensation Plan', section: 'Retirement', source: null },
   { path: '/services/retirement/iras', title: 'IRAs', section: 'Retirement', source: null },
   { path: '/services/retirement/iras/fund-an-ira', title: 'Fund an IRA', section: 'Retirement', source: null },
@@ -45,6 +53,7 @@ export const sitePages = [
   { path: '/subscribe', title: 'Subscribe', section: 'Core', source: null },
   { path: '/search', title: 'Search', section: 'Core', source: null },
   { path: '/sitemap', title: 'Sitemap', section: 'Core', source: null, hideFromSitemap: true },
+  { path: '/taxguide', title: 'Tax Guide', section: 'Resources', source: null, hideFromSitemap: true },
   { path: '/terms-of-service', title: 'Terms of Service', section: 'Legal', source: null },
   { path: '/privacy-policy', title: 'Privacy Policy', section: 'Legal', source: null },
   { path: '/accessibility', title: 'Accessibility', section: 'Legal', source: null },
@@ -57,12 +66,54 @@ export const sitePages = [
   { path: '/admin/media-audit', title: 'Admin - Media Audit', section: 'Admin', source: null },
   { path: '/admin/message', title: 'Admin - Message', section: 'Admin', source: null },
   { path: '/admin/consultants', title: 'Admin - Consultants', section: 'Admin', source: null },
+  { path: '/admin/testimonials', title: 'Admin - Testimonials', section: 'Admin', source: null },
   { path: '/admin/documents', title: 'Admin - Documents', section: 'Admin', source: null },
   { path: '/admin/jobs', title: 'Admin - Jobs', section: 'Admin', source: null },
   { path: '/admin/redirects', title: 'Admin - Redirects', section: 'Admin', source: null },
+  { path: '/admin/blocks', title: 'Admin - Blocks Audit', section: 'Admin', source: null },
 ];
 
 export const pageByPath = Object.fromEntries(sitePages.map((page) => [page.path, page]));
+export const pageLinkRefByPath = Object.fromEntries(
+  sitePages.map((page) => [page.path, String(page.linkRef || page.path)]),
+);
+
+const pageRefPairs = [];
+sitePages.forEach((page) => {
+  const primaryRef = String(page.linkRef || page.path).trim();
+  if (primaryRef) {
+    pageRefPairs.push([primaryRef, page]);
+  }
+  const aliases = Array.isArray(page.linkRefAliases) ? page.linkRefAliases : [];
+  aliases.forEach((alias) => {
+    const key = String(alias || '').trim();
+    if (key) {
+      pageRefPairs.push([key, page]);
+    }
+  });
+});
+
+export const pageByLinkRef = Object.fromEntries(pageRefPairs);
+
+export function toPageLinkRef(pageLike) {
+  if (!pageLike || typeof pageLike !== 'object') {
+    return '';
+  }
+  return String(pageLike.linkRef || pageLike.path || '').trim();
+}
+
+export function resolvePagePathFromRef(pageRef, fallbackPath = '') {
+  const ref = String(pageRef || '').trim();
+  if (ref && pageByLinkRef[ref]?.path) {
+    return pageByLinkRef[ref].path;
+  }
+
+  const fallback = String(fallbackPath || '').trim();
+  if (!fallback) {
+    return '';
+  }
+  return fallback.startsWith('/') ? fallback : `/${fallback}`;
+}
 
 export const navSections = [
   {
@@ -88,9 +139,9 @@ export const navSections = [
     title: 'Resources',
     rootPath: '/resources',
     items: [
+      { path: '/rates', label: 'Rates' },
       { path: '/calculators', label: 'Calculators' },
       { path: '/forms', label: 'Forms' },
-      { path: '/rates', label: 'Rates' },
       { path: '/sitemap', label: 'Sitemap' },
     ],
   },

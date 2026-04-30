@@ -1,0 +1,104 @@
+{
+  "generatedFrom": [
+    "src/data/siteMap.js"
+  ],
+  "notes": [
+    "Use this dataset first when a user asks where to find something on the AGFinancial site.",
+    "Recommend the most relevant visible public page by title and path.",
+    "Use hidden support routes only when the user is clearly asking for an exact tool, calculator, or specialty page."
+  ],
+  "navSections": [
+    {
+      "title": "Services",
+      "rootPath": "/services",
+      "items": [
+        { "path": "/services/loans", "label": "Loans" },
+        { "path": "/services/investments", "label": "Investments" },
+        { "path": "/services/retirement", "label": "Retirement" },
+        { "path": "/services/legacy-giving", "label": "Legacy Giving" },
+        { "path": "/services/insurance", "label": "Insurance" }
+      ]
+    },
+    {
+      "title": "About",
+      "rootPath": "/about-us",
+      "items": [
+        { "path": "/about-us/careers", "label": "Careers" },
+        { "path": "/about-us/impact", "label": "Impact" }
+      ]
+    },
+    {
+      "title": "Resources",
+      "rootPath": "/resources",
+      "items": [
+        { "path": "/rates", "label": "Rates" },
+        { "path": "/calculators", "label": "Calculators" },
+        { "path": "/forms", "label": "Forms" },
+        { "path": "/sitemap", "label": "Sitemap" }
+      ]
+    }
+  ],
+  "pages": [
+    { "title": "Home", "path": "/", "section": "Core", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Services", "path": "/services", "section": "Services", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Loans", "path": "/services/loans", "section": "Services", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Loan Consultants", "path": "/services/loans/loan-consultants", "section": "Services", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Investments", "path": "/services/investments", "section": "Services", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Retirement", "path": "/services/retirement", "section": "Services", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "403(b)", "path": "/services/retirement/403b", "section": "Retirement", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "403(b) Terms & Definitions", "path": "/services/retirement/403b/403b-terms-definitions", "section": "Retirement", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "403b Individual Enrollment", "path": "/services/retirement/403b/403b-individual-enrollment", "section": "Retirement", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    {
+      "title": "403b Group Enrollment",
+      "path": "/services/retirement/403b/403b-group-enrollment",
+      "section": "Retirement",
+      "hideFromSitemap": false,
+      "recommendationTier": "secondary",
+      "linkRefAliases": [
+        "/services/retirement/403b-for-groups/403b-group-enrollment",
+        "/services/retirement/403b-for-groups"
+      ]
+    },
+    { "title": "409A Deferred Compensation Plan", "path": "/services/retirement/409a", "section": "Retirement", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "IRAs", "path": "/services/retirement/iras", "section": "Retirement", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Fund an IRA", "path": "/services/retirement/iras/fund-an-ira", "section": "Retirement", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Retirement Consultants", "path": "/services/retirement/retirement-consultants", "section": "Retirement", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Rollovers", "path": "/services/retirement/rollovers", "section": "Retirement", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Legacy Giving", "path": "/services/legacy-giving", "section": "Services", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Charitable Gift Annuities", "path": "/services/legacy-giving/charitable-gift-annuities", "section": "Legacy Giving", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Charitable Trusts", "path": "/services/legacy-giving/charitable-trusts", "section": "Legacy Giving", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Endowments", "path": "/services/legacy-giving/endowments", "section": "Legacy Giving", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Generosity Fund", "path": "/services/legacy-giving/generosity-fund", "section": "Legacy Giving", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Ministry Impact Fund", "path": "/services/legacy-giving/ministry-impact-fund", "section": "Legacy Giving", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Insurance", "path": "/services/insurance", "section": "Services", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Certificate Request", "path": "/services/insurance/certificate-request", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Group term life insurance", "path": "/services/insurance/group-term-life-insurance", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Life Insurance Quote", "path": "/services/insurance/life-insurance-quote", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Minister's Group Life Plan", "path": "/services/insurance/ministers-group-life-plan", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Mission Assure", "path": "/services/insurance/mission-assure", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Report a claim", "path": "/services/insurance/mission-assure/report-a-claim", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Property & Casualty Insurance", "path": "/services/insurance/property-casualty-insurance", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "About Us", "path": "/about-us", "section": "Company", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Careers", "path": "/about-us/careers", "section": "Company", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Impact", "path": "/about-us/impact", "section": "Company", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Resources", "path": "/resources", "section": "Resources", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Calculators", "path": "/calculators", "section": "Resources", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Forms", "path": "/forms", "section": "Resources", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Emergency Fund Calculator", "path": "/calculators/emergency-fund", "section": "Resources", "hideFromSitemap": true, "recommendationTier": "hidden-support", "linkRefAliases": [] },
+    { "title": "Increased Contribution Calculator", "path": "/calculators/increased-contribution", "section": "Resources", "hideFromSitemap": true, "recommendationTier": "hidden-support", "linkRefAliases": [] },
+    { "title": "Net Worth Calculator", "path": "/calculators/net-worth", "section": "Resources", "hideFromSitemap": true, "recommendationTier": "hidden-support", "linkRefAliases": [] },
+    { "title": "Contact Us", "path": "/contact-us", "section": "Core", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Online Contributions", "path": "/online-contributions", "section": "Core", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Prospectus", "path": "/prospectus", "section": "Core", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Rates", "path": "/rates", "section": "Core", "hideFromSitemap": false, "recommendationTier": "primary", "linkRefAliases": [] },
+    { "title": "Subscribe", "path": "/subscribe", "section": "Core", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Search", "path": "/search", "section": "Core", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Sitemap", "path": "/sitemap", "section": "Core", "hideFromSitemap": true, "recommendationTier": "hidden-support", "linkRefAliases": [] },
+    { "title": "Tax Guide", "path": "/taxguide", "section": "Resources", "hideFromSitemap": true, "recommendationTier": "hidden-support", "linkRefAliases": [] },
+    { "title": "Terms of Service", "path": "/terms-of-service", "section": "Legal", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Privacy Policy", "path": "/privacy-policy", "section": "Legal", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Accessibility", "path": "/accessibility", "section": "Legal", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Vineyard", "path": "/vineyard", "section": "Core", "hideFromSitemap": true, "recommendationTier": "hidden-support", "linkRefAliases": [] },
+    { "title": "Your Plan", "path": "/yourplan", "section": "Core", "hideFromSitemap": true, "recommendationTier": "hidden-support", "linkRefAliases": [] }
+  ]
+}

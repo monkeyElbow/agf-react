@@ -21,7 +21,7 @@ const FREQUENCY_PERIODS = {
 };
 
 function parseNumber(value) {
-  return Number(String(value || '').replace(/[^0-9.\-]/g, '')) || 0;
+  return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
 }
 
 function formatMoney(value) {

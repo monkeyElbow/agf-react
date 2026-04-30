@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import PageShell from '../components/PageShell';
 import { pageByPath } from '../data/siteMap';
 import { useConsultants } from '../context/ConsultantsContext';
+import { useConsultantResponses } from '../context/ConsultantResponsesContext';
 
 function toStatesCsv(states) {
   if (!Array.isArray(states) || !states.length) {
@@ -17,6 +18,12 @@ function parseStatesCsv(value) {
     .filter((item) => /^[A-Z]{2}$/.test(item));
 }
 
+function formatConsultantLabel(item) {
+  const name = String(item?.name || '').trim();
+  const credentials = String(item?.credentials || '').trim();
+  return `${name || '(unnamed)'}${credentials ? ` ${credentials}` : ''}`;
+}
+
 export default function AdminConsultantsPage() {
   const {
     consultantsByService,
@@ -25,6 +32,7 @@ export default function AdminConsultantsPage() {
     removeConsultant,
     resetConsultants,
   } = useConsultants();
+  const { responses, clearResponses } = useConsultantResponses();
 
   const [service, setService] = useState('loans');
   const list = consultantsByService[service] || [];
@@ -84,7 +92,7 @@ export default function AdminConsultantsPage() {
             >
               {list.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name || '(unnamed)'} {item.region ? `- ${item.region}` : ''}
+                  {formatConsultantLabel(item)} {item.region ? `- ${item.region}` : ''}
                 </option>
               ))}
             </select>
@@ -141,6 +149,14 @@ export default function AdminConsultantsPage() {
                 />
               </label>
               <label>
+                <span>Credentials</span>
+                <input
+                  value={selected.credentials || ''}
+                  onChange={(event) => updateConsultant(service, selected.id, { credentials: event.target.value })}
+                  placeholder="CFP"
+                />
+              </label>
+              <label>
                 <span>Region label</span>
                 <input
                   value={selected.region || ''}
@@ -177,6 +193,64 @@ export default function AdminConsultantsPage() {
             <p className="blank-state-note">No consultant selected. Add one to start editing.</p>
           </section>
         )}
+
+        <section className="admin-content-section">
+          <div className="admin-consultant-responses-head">
+            <h3>Consultant Responses (Demo Queue)</h3>
+            <button
+              type="button"
+              className="action-btn action-btn-outline"
+              disabled={!responses.length}
+              onClick={clearResponses}
+            >
+              Clear Responses
+            </button>
+          </div>
+          <p className="blank-state-note">
+            Captured from consultant message forms as temporary local data. Salesforce posting is not wired yet.
+          </p>
+          {responses.length ? (
+            <div className="table-scroll">
+              <table className="ag-table ag-table-inputs">
+                <thead>
+                  <tr>
+                    <th>Submitted</th>
+                    <th>To</th>
+                    <th>From</th>
+                    <th>Message</th>
+                    <th>Path</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {responses.map((item) => {
+                    const submittedDate = new Date(item.submittedAt);
+                    const submittedLabel = Number.isNaN(submittedDate.getTime())
+                      ? item.submittedAt
+                      : submittedDate.toLocaleString('en-US');
+
+                    return (
+                      <tr key={item.id}>
+                        <td>{submittedLabel}</td>
+                        <td>
+                          <div>{item.consultantName || '-'}</div>
+                          {item.consultantEmail ? <small>{item.consultantEmail}</small> : null}
+                        </td>
+                        <td>
+                          <div>{item.fromName || '-'}</div>
+                          {item.fromEmail ? <small>{item.fromEmail}</small> : null}
+                        </td>
+                        <td className="admin-consultant-response-message">{item.message || '-'}</td>
+                        <td>{item.pagePath || '-'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="blank-state-note">No consultant responses captured yet.</p>
+          )}
+        </section>
       </PageShell>
     </div>
   );

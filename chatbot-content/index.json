@@ -1,0 +1,110 @@
+[
+  {
+    "file": "site-navigation.json",
+    "topic": "Public site navigation dataset",
+    "publicRoutes": [],
+    "sourceFiles": ["src/data/siteMap.js"],
+    "contentType": "navigation",
+    "notes": ["Use this file first for page-finding questions. Prefer visible public routes before hidden support routes."],
+    "reviewRequired": false
+  },
+  {
+    "file": "about-agfinancial.md",
+    "topic": "Organization overview",
+    "publicRoutes": ["/about-us"],
+    "sourceFiles": ["src/data/nativePageContent.js"],
+    "contentType": "organization",
+    "notes": ["Excludes the obvious placeholder history section from /about-us."],
+    "reviewRequired": true
+  },
+  {
+    "file": "services-overview.md",
+    "topic": "Core service navigation and positioning",
+    "publicRoutes": ["/", "/services"],
+    "sourceFiles": ["src/data/pageBlocks/homeBlocks.js", "src/data/nativePageContent.js"],
+    "contentType": "overview",
+    "notes": ["Includes home-page service positioning, calculator teaser, and newsletter summary."],
+    "reviewRequired": false
+  },
+  {
+    "file": "loan-solutions.md",
+    "topic": "Loans overview",
+    "publicRoutes": ["/services/loans"],
+    "sourceFiles": ["src/data/nativePageContent.js"],
+    "contentType": "service-overview",
+    "notes": ["Current pass captures the loans overview route only."],
+    "reviewRequired": true
+  },
+  {
+    "file": "investment-and-rates-overview.md",
+    "topic": "Investments overview, rates, and rate disclosures",
+    "publicRoutes": ["/services/investments", "/rates"],
+    "sourceFiles": ["src/data/nativePageContent.js", "src/pages/RatesPage.jsx", "src/data/ratesDefault.js", "src/lib/dynamicPageBlocks.js"],
+    "contentType": "service-detail",
+    "notes": ["Includes current local default rates and disclosure copy with explicit time-sensitivity warning."],
+    "reviewRequired": true
+  },
+  {
+    "file": "retirement-options.md",
+    "topic": "Retirement overview, 403(b) support content, and online contributions",
+    "publicRoutes": ["/services/retirement", "/online-contributions", "/services/retirement/403b"],
+    "sourceFiles": ["src/data/nativePageContent.js", "src/data/pageBlocks/homeBlocks.js", "src/data/contentBlockBlueprints.js", "src/data/ratesDefault.js"],
+    "contentType": "service-detail",
+    "notes": ["Includes overview content, housing allowance mention, 403(b) compliance copy, and online contributions setup."],
+    "reviewRequired": true
+  },
+  {
+    "file": "insurance-solutions.md",
+    "topic": "Insurance overview and coverage categories",
+    "publicRoutes": ["/services/insurance"],
+    "sourceFiles": ["src/data/nativePageContent.js"],
+    "contentType": "service-detail",
+    "notes": ["Captures public overview, coverage categories, risk management, and Mission Assure messaging."],
+    "reviewRequired": false
+  },
+  {
+    "file": "legacy-giving.md",
+    "topic": "Legacy Giving overview and charitable planning options",
+    "publicRoutes": ["/services/legacy-giving"],
+    "sourceFiles": ["src/data/nativePageContent.js"],
+    "contentType": "service-detail",
+    "notes": ["Keeps factual giving-option copy and scope of the comparison section; does not reproduce every testimonial or table cell."],
+    "reviewRequired": true
+  },
+  {
+    "file": "resources-and-tools.md",
+    "topic": "Resources hub and calculators directory",
+    "publicRoutes": ["/resources", "/calculators", "/calculators/emergency-fund", "/calculators/increased-contribution", "/calculators/net-worth"],
+    "sourceFiles": ["src/data/nativePageContent.js", "src/data/pageBlocks/homeBlocks.js"],
+    "contentType": "resource-hub",
+    "notes": ["Full article-body export is deferred; this pass captures hub summaries and calculator content first."],
+    "reviewRequired": true
+  },
+  {
+    "file": "contact-support.md",
+    "topic": "Contact details and public support flows",
+    "publicRoutes": ["/contact-us", "/online-contributions"],
+    "sourceFiles": ["src/data/nativePageContent.js"],
+    "contentType": "support",
+    "notes": ["Includes address, phone, email, hours, inquiry categories, and online-contribution support details."],
+    "reviewRequired": false
+  },
+  {
+    "file": "forms-and-documents.md",
+    "topic": "Public forms library and prospectus/document-library pages",
+    "publicRoutes": ["/forms", "/prospectus"],
+    "sourceFiles": ["src/data/nativePageContent.js", "src/data/formsLibraryLinks.js"],
+    "contentType": "document-library",
+    "notes": ["Stages topic and document labels only; linked PDFs are not ingested yet."],
+    "reviewRequired": true
+  },
+  {
+    "file": "legal-and-public-disclosures.md",
+    "topic": "Public legal, privacy, accessibility, and disclosure-facing content",
+    "publicRoutes": ["/privacy-policy", "/terms-of-service", "/accessibility", "/rates", "/services/retirement/403b"],
+    "sourceFiles": ["src/data/nativePageContent.js", "src/lib/dynamicPageBlocks.js", "src/data/contentBlockBlueprints.js"],
+    "contentType": "legal",
+    "notes": ["Combines route-level legal copy with public-facing rate and 403(b) compliance disclosures."],
+    "reviewRequired": true
+  }
+]

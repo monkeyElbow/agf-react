@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { resolvePagePathFromRef } from '../data/siteMap';
 import {
   announcementBackgroundSwatches,
   announcementTextColors,
@@ -21,6 +23,9 @@ export default function SiteAnnouncementBar() {
   }, [announcement.backgroundId, announcement.textColorId]);
 
   const message = String(announcement.message || '').trim();
+  const linkTarget = announcement.linkEnabled
+    ? resolvePagePathFromRef(announcement.linkPageRef, announcement.linkPath)
+    : '';
   const today = new Date();
   const todayIso = [
     today.getFullYear(),
@@ -39,7 +44,13 @@ export default function SiteAnnouncementBar() {
   return (
     <section className="site-announcement-bar" style={styles} aria-label="Site message">
       <div className="ag-panel-rail">
-        <p>{message}</p>
+        {linkTarget ? (
+          <Link className="site-announcement-bar-link" to={linkTarget}>
+            <p>{message}</p>
+          </Link>
+        ) : (
+          <p>{message}</p>
+        )}
       </div>
     </section>
   );

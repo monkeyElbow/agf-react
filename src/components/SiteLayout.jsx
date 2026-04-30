@@ -1,28 +1,130 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { navSections } from '../data/siteMap';
+import { useContentAdmin } from '../context/ContentAdminContext';
+import { FrontHudContext } from '../context/FrontHudContext';
 import SiteFooter from './SiteFooter';
-import agfLogo from '../assets/agf-logo.svg';
+import AnimatedBrandLogo from './AnimatedBrandLogo';
+import SiteChatbotWindow from './SiteChatbotWindow';
 
 const DESKTOP_NAV_QUERY = '(min-width: 1100px)';
+const CONTENT_WIDTH_OVERLAY_STORAGE_KEY = 'agf-admin-content-width-overlay-v1';
+const FRONT_HUD_ENABLED_STORAGE_KEY = 'agf-admin-front-hud-enabled-v1';
+const FRONT_HUD_OPACITY_STORAGE_KEY = 'agf-admin-front-hud-opacity-v1';
+const FRONT_HUD_DIM_STRENGTH_STORAGE_KEY = 'agf-admin-front-hud-dim-strength-v1';
+
+function clampFrontHudOpacity(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 15;
+  }
+  return Math.max(5, Math.min(90, Math.round(numeric)));
+}
+
+function clampFrontHudDimStrength(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 42;
+  }
+  return Math.max(0, Math.min(85, Math.round(numeric)));
+}
 
 function navLinkClass({ isActive }) {
   return isActive ? 'is-active' : '';
 }
 
+function isTypingTarget(target) {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+  const tagName = String(target.tagName || '').toLowerCase();
+  if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
+    return true;
+  }
+  if (target.closest('input, textarea, select, [contenteditable="true"]')) {
+    return true;
+  }
+  return target.isContentEditable;
+}
+
 export default function SiteLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { resolveManagedPathFromRef } = useContentAdmin();
+  const isAdminRoute = location.pathname.startsWith('/admin/');
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [desktopQueryMatch, setDesktopQueryMatch] = useState(
     typeof window !== 'undefined' ? window.matchMedia(DESKTOP_NAV_QUERY).matches : false,
   );
   const [forceCompactNav, setForceCompactNav] = useState(false);
+  const [contentWidthOverlayEnabled, setContentWidthOverlayEnabled] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    try {
+      return window.localStorage.getItem(CONTENT_WIDTH_OVERLAY_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [frontHudEnabled, setFrontHudEnabled] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    try {
+      return window.localStorage.getItem(FRONT_HUD_ENABLED_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [frontHudOpacity, setFrontHudOpacity] = useState(() => {
+    if (typeof window === 'undefined') {
+      return 15;
+    }
+    try {
+      const stored = window.localStorage.getItem(FRONT_HUD_OPACITY_STORAGE_KEY);
+      return clampFrontHudOpacity(stored);
+    } catch {
+      return 15;
+    }
+  });
+  const [frontHudRevealToken, setFrontHudRevealToken] = useState(0);
+  const [isFrontHudRevealing, setIsFrontHudRevealing] = useState(false);
+  const [frontHudDimStrength, setFrontHudDimStrength] = useState(() => {
+    if (typeof window === 'undefined') {
+      return 42;
+    }
+    try {
+      const stored = window.localStorage.getItem(FRONT_HUD_DIM_STRENGTH_STORAGE_KEY);
+      return clampFrontHudDimStrength(stored);
+    } catch {
+      return 42;
+    }
+  });
+  const [isApplePlatform] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    const nav = window.navigator;
+    const platform = String(nav?.userAgentData?.platform || nav?.platform || '');
+    const userAgent = String(nav?.userAgent || '');
+    return /Mac|iPhone|iPad|iPod/i.test(`${platform} ${userAgent}`);
+  });
+  const frontHudEnabledRef = useRef(frontHudEnabled);
+  const previousFrontHudEnabledRef = useRef(frontHudEnabled);
+  const frontHudOpacityRef = useRef(frontHudOpacity);
+  const navRef = useRef(null);
   const navInnerRef = useRef(null);
   const brandRef = useRef(null);
   const navLinksRef = useRef(null);
 
+  const resolveManagedNavPath = (pathRef, fallback = '/') => {
+    const resolved = resolveManagedPathFromRef(pathRef, pathRef);
+    return resolved || fallback;
+  };
+  const homePath = resolveManagedNavPath('/', '/');
+  const searchPath = resolveManagedNavPath('/search', '/search');
   const isDesktop = desktopQueryMatch && !forceCompactNav;
 
   useEffect(() => {
@@ -114,9 +216,201 @@ export default function SiteLayout({ children }) {
     setOpenDropdown(null);
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    let rafId = 0;
+    const syncNavHeight = () => {
+      window.cancelAnimationFrame(rafId);
+      rafId = window.requestAnimationFrame(() => {
+        const navHeight = Math.max(0, Math.round(navRef.current?.getBoundingClientRect().height || 0));
+        document.documentElement.style.setProperty('--ag-site-nav-height', `${navHeight}px`);
+      });
+    };
+
+    syncNavHeight();
+    window.addEventListener('resize', syncNavHeight);
+
+    let observer = null;
+    if (typeof ResizeObserver === 'function' && navRef.current) {
+      observer = new ResizeObserver(syncNavHeight);
+      observer.observe(navRef.current);
+    }
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', syncNavHeight);
+      observer?.disconnect();
+    };
+  }, [forceCompactNav, location.pathname, menuOpen, openDropdown]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.localStorage.setItem(CONTENT_WIDTH_OVERLAY_STORAGE_KEY, String(contentWidthOverlayEnabled));
+    } catch {
+      // Local storage can be blocked in some contexts; ignore persistence failure.
+    }
+  }, [contentWidthOverlayEnabled]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.localStorage.setItem(FRONT_HUD_ENABLED_STORAGE_KEY, String(frontHudEnabled));
+    } catch {
+      // Local storage can be blocked in some contexts; ignore persistence failure.
+    }
+  }, [frontHudEnabled]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.localStorage.setItem(FRONT_HUD_OPACITY_STORAGE_KEY, String(frontHudOpacity));
+    } catch {
+      // Local storage can be blocked in some contexts; ignore persistence failure.
+    }
+  }, [frontHudOpacity]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.localStorage.setItem(FRONT_HUD_DIM_STRENGTH_STORAGE_KEY, String(frontHudDimStrength));
+    } catch {
+      // Local storage can be blocked in some contexts; ignore persistence failure.
+    }
+  }, [frontHudDimStrength]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const opacityRatio = clampFrontHudOpacity(frontHudOpacity) / 100;
+    const dimStrengthRatio = clampFrontHudDimStrength(frontHudDimStrength) / 100;
+    document.documentElement.style.setProperty('--ag-admin-front-hud-opacity', String(opacityRatio));
+    document.documentElement.style.setProperty('--ag-admin-front-hud-dim-strength', String(dimStrengthRatio));
+  }, [frontHudEnabled, frontHudOpacity, frontHudDimStrength]);
+
+  useEffect(() => {
+    frontHudEnabledRef.current = frontHudEnabled;
+  }, [frontHudEnabled]);
+
+  useEffect(() => {
+    const previousEnabled = previousFrontHudEnabledRef.current;
+    if (!previousEnabled && frontHudEnabled) {
+      setFrontHudRevealToken((current) => current + 1);
+    }
+    previousFrontHudEnabledRef.current = frontHudEnabled;
+  }, [frontHudEnabled]);
+
+  useEffect(() => {
+    if (!frontHudRevealToken || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    setIsFrontHudRevealing(true);
+    const timeoutId = window.setTimeout(() => {
+      setIsFrontHudRevealing(false);
+    }, 680);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [frontHudRevealToken]);
+
+  useEffect(() => {
+    frontHudOpacityRef.current = frontHudOpacity;
+  }, [frontHudOpacity]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const setHudEnabledImmediate = (nextEnabled) => {
+      frontHudEnabledRef.current = Boolean(nextEnabled);
+      setFrontHudEnabled(Boolean(nextEnabled));
+    };
+
+    const setHudOpacityImmediate = (nextOpacity) => {
+      const clamped = clampFrontHudOpacity(nextOpacity);
+      frontHudOpacityRef.current = clamped;
+      setFrontHudOpacity(clamped);
+      return clamped;
+    };
+
+    const onKeyDown = (event) => {
+      if (event.defaultPrevented) {
+        return;
+      }
+      if (isTypingTarget(event.target)) {
+        return;
+      }
+      const hasPrimaryMod = event.metaKey || event.ctrlKey;
+      const isPrimaryBracketDown = hasPrimaryMod
+        && (event.code === 'BracketLeft' || event.key === '[' || event.key === '{');
+      const isPrimaryBracketUp = hasPrimaryMod
+        && (event.code === 'BracketRight' || event.key === ']' || event.key === '}');
+      const isFallbackDown = !hasPrimaryMod
+        && event.altKey
+        && event.shiftKey
+        && event.code === 'ArrowDown';
+      const isFallbackUp = !hasPrimaryMod
+        && event.altKey
+        && event.shiftKey
+        && event.code === 'ArrowUp';
+      if (isPrimaryBracketDown || isPrimaryBracketUp || isFallbackDown || isFallbackUp) {
+        event.preventDefault();
+        const shouldIncrease = isPrimaryBracketUp || isFallbackUp;
+        const base = clampFrontHudOpacity(frontHudOpacityRef.current);
+        const delta = shouldIncrease ? 5 : -5;
+        setHudOpacityImmediate(base + delta);
+        if (shouldIncrease && !frontHudEnabledRef.current) {
+          setHudEnabledImmediate(true);
+        }
+        return;
+      }
+      if (event.repeat) {
+        return;
+      }
+      const isBackslash = event.key === '\\'
+        || event.key === '|'
+        || event.code === 'Backslash'
+        || event.code === 'IntlBackslash'
+        || event.keyCode === 220
+        || event.which === 220;
+      if (!hasPrimaryMod || !isBackslash) {
+        return;
+      }
+      event.preventDefault();
+      if (frontHudEnabledRef.current) {
+        setHudEnabledImmediate(false);
+        return;
+      }
+      setHudEnabledImmediate(true);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   function toggleDropdown(title) {
     setOpenDropdown((current) => (current === title ? null : title));
   }
+
+  const handleNavItemSelect = () => {
+    setMenuOpen(false);
+    setOpenDropdown(null);
+  };
 
   const handleGroupMouseLeave = (event) => {
     if (!isDesktop) {
@@ -124,7 +418,7 @@ export default function SiteLayout({ children }) {
     }
     const current = event.currentTarget;
     const related = event.relatedTarget;
-    if (related && current.contains(related)) {
+    if (related instanceof Node && current.contains(related)) {
       return;
     }
     window.requestAnimationFrame(() => {
@@ -135,12 +429,33 @@ export default function SiteLayout({ children }) {
     });
   };
 
+  const handleNavLinksMouseLeave = (event) => {
+    if (!isDesktop) {
+      return;
+    }
+    const current = event.currentTarget;
+    const related = event.relatedTarget;
+    if (related instanceof Node && current.contains(related)) {
+      return;
+    }
+    setOpenDropdown(null);
+  };
+
   return (
-    <>
-      <nav className={`site-nav${forceCompactNav ? ' is-force-mobile' : ''}`} aria-label="Main navigation">
+    <FrontHudContext.Provider
+      value={{
+        enabled: frontHudEnabled,
+        opacity: clampFrontHudOpacity(frontHudOpacity),
+        revealToken: frontHudRevealToken,
+        setEnabled: setFrontHudEnabled,
+        setOpacity: setFrontHudOpacity,
+      }}
+    >
+      <>
+      <nav ref={navRef} className={`site-nav${forceCompactNav ? ' is-force-mobile' : ''}${isFrontHudRevealing ? ' is-front-hud-revealing' : ''}`} aria-label="Main navigation">
         <div ref={navInnerRef} className="site-nav-inner">
-          <Link ref={brandRef} to="/" className="site-brand" aria-label="AGFinancial Home">
-            <img src={agfLogo} alt="AGFinancial" className="brand-logo" />
+          <Link ref={brandRef} to={homePath} className="site-brand" aria-label="AGFinancial Home">
+            <AnimatedBrandLogo />
           </Link>
 
           <button
@@ -148,13 +463,19 @@ export default function SiteLayout({ children }) {
             className="site-nav-toggle"
             aria-controls="site-nav-menu"
             aria-expanded={menuOpen}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            Menu
+            <span className="sr-only">{menuOpen ? 'Close menu' : 'Open menu'}</span>
+            <span className={`site-nav-toggle-icon${menuOpen ? ' is-open' : ''}`} aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
           </button>
 
           <div id="site-nav-menu" className={`site-nav-menu${menuOpen ? ' is-open' : ''}`}>
-            <div ref={navLinksRef} className="site-nav-links">
+            <div ref={navLinksRef} className="site-nav-links" onMouseLeave={handleNavLinksMouseLeave}>
               <div className="site-nav-links-primary">
                 {navSections.map((section) => (
                   <div
@@ -172,9 +493,8 @@ export default function SiteLayout({ children }) {
                         type="button"
                         className="site-nav-group-link"
                         onClick={() => {
-                          navigate(section.rootPath || section.items[0]?.path || '/');
-                          setMenuOpen(false);
-                          setOpenDropdown(null);
+                          navigate(resolveManagedNavPath(section.rootPath || section.items[0]?.path, '/'));
+                          handleNavItemSelect();
                         }}
                       >
                         {section.title}
@@ -198,11 +518,14 @@ export default function SiteLayout({ children }) {
                       </button>
                     </div>
                     <div className="site-nav-dropdown">
-                      {section.items.map((item) => (
-                        <NavLink to={item.path} key={item.path} className={navLinkClass}>
-                          {item.label}
-                        </NavLink>
-                      ))}
+                      {section.items.map((item) => {
+                        const itemPath = resolveManagedNavPath(item.path, '/');
+                        return (
+                          <NavLink to={itemPath} key={item.path} className={navLinkClass} onClick={handleNavItemSelect}>
+                            {item.label}
+                          </NavLink>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -225,7 +548,7 @@ export default function SiteLayout({ children }) {
                   </span>
                   <span>Log In</span>
                 </a>
-                <NavLink to="/search" className="site-nav-link nav-search-link" aria-label="Search">
+                <NavLink to={searchPath} className="site-nav-link nav-search-link" aria-label="Search">
                   <span className="nav-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
                       <path
@@ -251,8 +574,7 @@ export default function SiteLayout({ children }) {
                       className="site-nav-group-link"
                       onClick={() => {
                         navigate('/admin/content');
-                        setMenuOpen(false);
-                        setOpenDropdown(null);
+                        handleNavItemSelect();
                       }}
                     >
                       Admin
@@ -276,33 +598,135 @@ export default function SiteLayout({ children }) {
                     </button>
                   </div>
                   <div className="site-nav-dropdown">
-                    <NavLink to="/admin/content" className={navLinkClass}>
-                      Content
-                    </NavLink>
-                    <NavLink to="/admin/consultants" className={navLinkClass}>
-                      Consultants
-                    </NavLink>
-                    <NavLink to="/admin/documents" className={navLinkClass}>
-                      Documents
-                    </NavLink>
-                    <NavLink to="/admin/jobs" className={navLinkClass}>
-                      Jobs
-                    </NavLink>
-                    <NavLink to="/admin/message" className={navLinkClass}>
-                      Message
-                    </NavLink>
-                    <NavLink to="/admin/redirects" className={navLinkClass}>
-                      Redirects
-                    </NavLink>
-                    <NavLink to="/admin/resources" className={navLinkClass}>
-                      Resources
-                    </NavLink>
-                    <NavLink to="/admin/media-audit" className={navLinkClass}>
-                      Media Audit
-                    </NavLink>
-                    <NavLink to="/admin/rates" className={navLinkClass}>
+                    <NavLink to="/admin/rates" className={navLinkClass} onClick={handleNavItemSelect}>
                       Rates
                     </NavLink>
+                    <NavLink to="/admin/content" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Core Content
+                    </NavLink>
+                    <NavLink to="/admin/resources" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Resources
+                    </NavLink>
+                    <NavLink to="/admin/consultants" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Consultants
+                    </NavLink>
+                    <NavLink to="/admin/testimonials" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Testimonials
+                    </NavLink>
+                    <NavLink to="/admin/documents" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Documents
+                    </NavLink>
+                    <NavLink to="/admin/jobs" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Jobs
+                    </NavLink>
+                    <NavLink to="/admin/message" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Message
+                    </NavLink>
+                    <NavLink to="/admin/redirects" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Redirects
+                    </NavLink>
+                    <NavLink to="/admin/media-audit" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Media Audit
+                    </NavLink>
+                    <NavLink to="/admin/blocks" className={navLinkClass} onClick={handleNavItemSelect}>
+                      Blocks Audit
+                    </NavLink>
+                    <div className="site-nav-admin-overlay-grid is-switches">
+                      <div
+                        className="site-nav-admin-overlay-row is-content-width is-switch-card"
+                        role="group"
+                        aria-label="Content width overlay"
+                      >
+                        <span className="site-nav-admin-overlay-label">Content Width Overlay</span>
+                        <div className="site-nav-admin-overlay-selector" role="radiogroup" aria-label="Content width overlay toggle">
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={!contentWidthOverlayEnabled}
+                            className={`site-nav-admin-overlay-option${!contentWidthOverlayEnabled ? ' is-active' : ''}`}
+                            onClick={() => setContentWidthOverlayEnabled(false)}
+                          >
+                            Off
+                          </button>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={contentWidthOverlayEnabled}
+                            className={`site-nav-admin-overlay-option${contentWidthOverlayEnabled ? ' is-active' : ''}`}
+                            onClick={() => setContentWidthOverlayEnabled(true)}
+                          >
+                            On
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        className="site-nav-admin-overlay-row is-front-hud is-switch-card"
+                        role="group"
+                        aria-label="Front-end HUD overlay"
+                      >
+                        <span className="site-nav-admin-overlay-label">
+                          Front-end HUD
+                          <kbd className="site-nav-admin-overlay-hotkey">{isApplePlatform ? 'Cmd+\\' : 'Ctrl+\\'}</kbd>
+                        </span>
+                        <div className="site-nav-admin-overlay-selector" role="radiogroup" aria-label="Front-end HUD toggle">
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={!frontHudEnabled}
+                            className={`site-nav-admin-overlay-option${!frontHudEnabled ? ' is-active' : ''}`}
+                            onClick={() => setFrontHudEnabled(false)}
+                          >
+                            Off
+                          </button>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={frontHudEnabled}
+                            className={`site-nav-admin-overlay-option${frontHudEnabled ? ' is-active' : ''}`}
+                            onClick={() => setFrontHudEnabled(true)}
+                          >
+                            On
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="site-nav-admin-overlay-grid is-sliders">
+                      <label className="site-nav-admin-overlay-row site-nav-admin-overlay-slider is-front-hud-slider" htmlFor="frontHudOpacitySlider">
+                        <div className="site-nav-admin-overlay-slider-head">
+                          <span>Tool Opacity {clampFrontHudOpacity(frontHudOpacity)}%</span>
+                          <kbd className="site-nav-admin-overlay-hotkey">
+                            {isApplePlatform ? 'Cmd+[ / ]' : 'Ctrl+[ / ]'} or Alt+Shift+↑/↓
+                          </kbd>
+                        </div>
+                        <input
+                          id="frontHudOpacitySlider"
+                          type="range"
+                          min="5"
+                          max="90"
+                          step="1"
+                          value={clampFrontHudOpacity(frontHudOpacity)}
+                          onChange={(event) => {
+                            setFrontHudOpacity(clampFrontHudOpacity(event.target.value));
+                          }}
+                        />
+                      </label>
+                      <label className="site-nav-admin-overlay-row site-nav-admin-overlay-slider is-front-hud-slider" htmlFor="frontHudDimStrengthSlider">
+                        <div className="site-nav-admin-overlay-slider-head">
+                          <span>Block Dim {clampFrontHudDimStrength(frontHudDimStrength)}%</span>
+                        </div>
+                        <input
+                          id="frontHudDimStrengthSlider"
+                          type="range"
+                          min="0"
+                          max="85"
+                          step="1"
+                          value={clampFrontHudDimStrength(frontHudDimStrength)}
+                          onChange={(event) => {
+                            setFrontHudDimStrength(clampFrontHudDimStrength(event.target.value));
+                          }}
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -311,12 +735,21 @@ export default function SiteLayout({ children }) {
         </div>
       </nav>
 
-      <main className="app-main">
-        <div className="app-main-shell">
-          {children}
+      {contentWidthOverlayEnabled && !isAdminRoute ? (
+        <div className="admin-content-width-overlay" aria-hidden="true">
+          <div className="admin-content-width-overlay-center" />
         </div>
-      </main>
-      <SiteFooter />
-    </>
-  );
+      ) : null}
+
+          <main className="app-main">
+            <div className="app-main-shell">
+              {children}
+            </div>
+          </main>
+          {/* Mounted at layout scope so the utility can later share global site context without page-by-page wiring. */}
+          {!isAdminRoute && !frontHudEnabled ? <SiteChatbotWindow /> : null}
+            <SiteFooter />
+        </>
+      </FrontHudContext.Provider>
+    );
 }

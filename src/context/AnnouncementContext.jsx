@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react';
+import { resolvePagePathFromRef } from '../data/siteMap';
 
 const STORAGE_KEY = 'agf-site-announcement-v1';
 const AnnouncementContext = createContext(null);
@@ -23,6 +24,9 @@ const defaultAnnouncement = {
   textColorId: 'white',
   startDate: '',
   endDate: '',
+  linkEnabled: false,
+  linkPath: '',
+  linkPageRef: '',
 };
 
 function normalizeDateValue(value) {
@@ -33,6 +37,14 @@ function normalizeDateValue(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : '';
 }
 
+function normalizeLinkPathValue(value) {
+  const text = String(value || '').trim();
+  if (!text) {
+    return '';
+  }
+  return text.startsWith('/') ? text : '';
+}
+
 function normalizeAnnouncement(payload) {
   const safe = payload && typeof payload === 'object' ? payload : {};
   const backgroundId = announcementBackgroundSwatches.some((item) => item.id === safe.backgroundId)
@@ -41,6 +53,8 @@ function normalizeAnnouncement(payload) {
   const textColorId = announcementTextColors.some((item) => item.id === safe.textColorId)
     ? safe.textColorId
     : defaultAnnouncement.textColorId;
+  const linkPageRef = typeof safe.linkPageRef === 'string' ? safe.linkPageRef.trim() : '';
+  const linkPath = resolvePagePathFromRef(linkPageRef, normalizeLinkPathValue(safe.linkPath));
 
   return {
     enabled: typeof safe.enabled === 'boolean' ? safe.enabled : defaultAnnouncement.enabled,
@@ -49,6 +63,9 @@ function normalizeAnnouncement(payload) {
     textColorId,
     startDate: normalizeDateValue(safe.startDate),
     endDate: normalizeDateValue(safe.endDate),
+    linkEnabled: typeof safe.linkEnabled === 'boolean' ? safe.linkEnabled : defaultAnnouncement.linkEnabled,
+    linkPath,
+    linkPageRef,
   };
 }
 
@@ -90,6 +107,9 @@ export function AnnouncementProvider({ children }) {
       setAnnouncementTextColor: (textColorId) => persist({ ...announcement, textColorId }),
       setAnnouncementStartDate: (startDate) => persist({ ...announcement, startDate }),
       setAnnouncementEndDate: (endDate) => persist({ ...announcement, endDate }),
+      setAnnouncementLinkEnabled: (linkEnabled) => persist({ ...announcement, linkEnabled: Boolean(linkEnabled) }),
+      setAnnouncementLinkPath: (linkPath) => persist({ ...announcement, linkPath }),
+      setAnnouncementLinkPageRef: (linkPageRef) => persist({ ...announcement, linkPageRef }),
       resetAnnouncement: () => persist(defaultAnnouncement),
     };
   }, [announcement]);

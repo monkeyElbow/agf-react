@@ -1,14 +1,74 @@
 import legacyOpportunityImage from '../assets/legacy-opportunity.jpg';
 import insuranceRiskGuideImage from '../assets/insurance-riskmanagementguide.jpg';
 import churchMutualInsuranceLogo from '../assets/church-mutual-insurance.png';
-import missionAssureLogo from '../assets/mission-assure-logo.png';
 import insuranceMissionAssureImage from '../assets/insurance-mission-assure.jpg';
 import missionAssureMedicalIncludedImage from '../assets/mission-assure-medical-included.png';
 import missionAssureSummerCampSafetyImage from '../assets/mission-assure-summer-camp-safety.jpg';
+import MissionAssureLogo from '../components/MissionAssureLogo';
 import aboutIntroImage from '../assets/about-intro.jpg';
 import ministersHousingImage from '../assets/ministers-housing.jpg';
 import { formsLibraryLinks } from './formsLibraryLinks';
+import { getResourceArticleFeatureConfig } from './resourceArticles';
 
+const TAX_GUIDE_ACCESS_EMAIL = 'info@agfinancial.org';
+const findFormHref = (topic, label) => (
+  formsLibraryLinks.find((item) => item.topic === topic && item.label === label)?.href || ''
+);
+const GROUP_LIFE_MINISTER_ENROLLMENT_FORM_URL = findFormHref('Insurance', 'Life Enrollment and Change Form (minister)');
+const GROUP_LIFE_EFT_FORM_URL = findFormHref('Insurance', 'Electronic Funds Transfer');
+const GROUP_LIFE_MINISTERS_PLAN_DETAILS_URL = 'https://www.standard.com/eforms/12505vl_646522a.pdf';
+const GROUP_LIFE_STANDARD_PACKET_URL = 'https://www.standard.com/eforms/12505vl_646527a.pdf';
+const GROUP_LIFE_MISSIONARIES_PLAN_DETAILS_URL = 'https://www.standard.com/eforms/12505vl_646524a.pdf';
+const RETIREMENT_403B_PLAN_SUMMARY_URL = 'https://files.agfinancial.org/Retirement/Plansummary.pdf';
+const RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_FORM_URL = 'https://files.agfinancial.org/retirement/403b-Enrollment-Form.pdf';
+const RETIREMENT_403B_PAYROLL_DEDUCTION_FORM_URL = 'https://files.agfinancial.org/retirement/Payroll-Deduction-Form.pdf';
+const RETIREMENT_403B_QCCO_AGREEMENT_URL = 'https://files.agfinancial.org/Retirement/QCCO%20403(b)%20Adoption%20and%20Service%20Agreement.pdf';
+const RETIREMENT_403B_NQCCO_AGREEMENT_URL = 'https://files.agfinancial.org/Retirement/NQCCO%20403(b)%20Adoption%20and%20Service%20Agreement.pdf';
+const RETIREMENT_403B_QCCO_GUIDELINES_URL = 'https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf';
+const RETIREMENT_403B_NQCCO_GUIDELINES_URL = 'https://files.agfinancial.org/retirement/NQCCO-Guidelines.pdf';
+const RETIREMENT_SECURE_UPLOAD_URL = 'https://sft.agfinancial.org/documents/Send.do';
+const RETIREMENT_403B_PLAN_FEATURE_CARDS = [
+  {
+    title: 'MBA Income Fund',
+    titleClassName: 'is-atlantean',
+    body: 'The AGFinancial flagship fixed income investment option provides a fixed rate of return, and helps build churches and ministry facilities.',
+  },
+  {
+    title: 'Screened Investments',
+    titleClassName: 'is-mango',
+    body: 'This unique investment option ensures the securities you own are aligned with biblical ethical standards.',
+  },
+  {
+    title: 'Faith-Based Investments',
+    titleClassName: 'is-super-grey',
+    body: 'Our values, beliefs about stewardship, and our mission are the same as yours.',
+  },
+  {
+    title: 'Roth / Pretax Deferrals',
+    titleClassName: 'is-atlantean',
+    body: 'This option allows taxes to be paid on the contribution now, in order to provide tax-free withdrawals at retirement.',
+  },
+  {
+    title: 'Rollovers',
+    titleClassName: 'is-mango',
+    body: 'Retirement savings can be simplified by consolidating other retirement accounts into a single 403(b).',
+  },
+  {
+    title: 'Variety',
+    titleClassName: 'is-super-grey',
+    body: 'Investment options include low-cost index funds, actively-managed funds, risk-based and target-date strategies, and individual funds.',
+  },
+  {
+    title: 'Your Own Consultant',
+    titleClassName: 'is-atlantean',
+    body: 'Our regional consultants are available to answer your questions, help customize your plan, and assist you with implementation.',
+  },
+  {
+    title: 'Education',
+    titleClassName: 'is-mango',
+    body: 'Onsite education for your participants is available, and includes retirement trends, IRS regulations, and customized action plans.',
+  },
+];
 export function getNativePageContent(path, title) {
   const direct = directContent[path];
   if (direct) {
@@ -18,7 +78,7 @@ export function getNativePageContent(path, title) {
   if (path.startsWith('/services/loans/')) {
     return loansChildPages[path] || serviceChildContent(title, '/services/loans', [
       { label: 'Loans overview', to: '/services/loans' },
-      { label: 'Find A Consultant', to: '/services/loans/loans-consultant' },
+      { label: 'Loan Consultants', to: '/services/loans/loan-consultants' },
     ]);
   }
 
@@ -85,6 +145,94 @@ export function getNativePageContent(path, title) {
 }
 
 const directContent = {
+  '/services/loans': {
+    pageClass: 'loans-native-page native-info-page--loans',
+    hero: {
+      lines: [
+        {
+          title: 'Your vision.',
+          className: 'loans-native-hero-line is-vision lineblur',
+          highlights: [
+            { text: 'Your', className: 'is-super-grey' },
+            { text: '.', className: 'is-super-grey' },
+          ],
+        },
+        {
+          title: 'Our purpose.',
+          className: 'loans-native-hero-line is-purpose lineB',
+          highlights: [
+            { text: 'Our', className: 'is-super-grey' },
+            { text: '.', className: 'is-super-grey' },
+          ],
+        },
+      ],
+      animationPreset: 'none',
+      bgTone: 'white',
+      justify: 'center',
+    },
+    intro: {
+      heading: 'The right loan can change everything.',
+      body: [
+        "Your vision of reaching communities and changing lives drives us. As one of the nation's largest, most experienced church loan providers, we want to be part of your ministry. Let's take bold steps together for the Kingdom.",
+      ],
+      actions: [{ label: 'Get started', to: '/services/loans#form' }],
+      justify: 'center',
+      bgTone: 'blue',
+      textTone: 'white',
+    },
+    sections: [],
+  },
+
+  '/services': {
+    pageClass: 'services-native-page',
+    intro: {
+      heading: 'A complete financial strategy for your ministry and your family.',
+      headingHighlights: [
+        { text: 'your ministry', className: 'is-atlantean' },
+        { text: 'your family', className: 'is-gold' },
+      ],
+      justify: 'center',
+      bgTone: 'grey',
+      textTone: 'white',
+    },
+    sections: [],
+    actions: [],
+  },
+
+  '/services/investments': {
+    pageClass: 'investments-native-page',
+    intro: {
+      heading: 'Invest like it matters. Because it does.',
+      headingHighlights: [{ text: 'Because it does.', className: 'is-atlantean' }],
+      body: [
+        "Your investment dollars don't just multiply-they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.",
+      ],
+      emphasis: "That's the power of faith-driven investing.",
+      justify: 'center',
+      bgTone: 'sand',
+      textTone: 'dark',
+    },
+    sections: [],
+    actions: [],
+  },
+
+  '/services/retirement': {
+    pageClass: 'retirement-native-page',
+    intro: {
+      heading: 'Invest in tomorrow. Start today.',
+      body: [
+        "For decades, we've helped build retirement strategies for ministers, ministry employees, churches, and organizations. Let's create yours.",
+      ],
+      emphasis: "It's your ministry, your future, your plan.",
+      justify: 'center',
+      bgTone: 'blue',
+      textTone: 'white',
+      actions: [],
+    },
+    sections: [],
+    actions: [],
+  },
+
   '/services/insurance': {
     pageClass: 'native-info-page--insurance',
     hero: {
@@ -111,7 +259,7 @@ const directContent = {
             body: "Our specialty is protecting churches, schools, ministries, and other nonprofits, as well as businesses. It's the best coverage at the best possible rates for your organization.",
             to: '/services/insurance/property-casualty-insurance',
             cta: 'Learn more',
-            cardClass: 'card4',
+            cardClass: 'card1',
           },
           {
             title: 'Life Insurance',
@@ -120,14 +268,14 @@ const directContent = {
               { label: 'Individual', to: '/services/insurance/life-insurance-quote' },
               { label: 'Group', to: '/services/insurance/group-term-life-insurance' },
             ],
-            cardClass: 'card4',
+            cardClass: 'card1',
           },
           {
             title: 'Mission Assure',
             body: 'Full coverage for mission trips, camps, retreats, events, and everything in between, with low per-person, per-day premiums. Mission Assure offers superior protection at minimum cost.',
             to: '/services/insurance/mission-assure',
             cta: 'Learn more',
-            cardClass: 'card4',
+            cardClass: 'card1',
           },
           {
             title: 'Bonds',
@@ -135,7 +283,7 @@ const directContent = {
             actions: [
               { label: 'Notary bonds', href: 'https://www.orsurety.com/commercial-bonds' },
             ],
-            cardClass: 'card4',
+            cardClass: 'card1',
           },
         ],
         actions: [
@@ -167,7 +315,7 @@ const directContent = {
             "Focus on your ministry. We'll manage the risk.",
             'Our church **Risk Management Guide** can help you recognize areas of risk and learn how to proactively address them. From establishing a church safety and security team to financial protection to emergency preparedness, this guide can assist you in protecting your church and congregants.',
           ],
-          actions: [{ label: 'Download the guide', documentId: 'document-download-the-guide' }],
+          actions: [{ label: 'Download the guide', documentId: 'document-risk-management-guide' }],
         },
       },
       {
@@ -194,7 +342,7 @@ const directContent = {
         feature: {
           image: insuranceMissionAssureImage,
           imageAlt: 'Mission Assure coverage',
-          logoImage: missionAssureLogo,
+          logoComponent: MissionAssureLogo,
           logoAlt: 'Mission Assure',
           title: 'Full coverage for mission trips, retreats, and everything in between.',
           body: [
@@ -209,13 +357,21 @@ const directContent = {
         hideTitle: true,
         fullBleed: true,
         feature: {
-          title: 'Defend Yourself Against Fraud',
-          image: 'https://media.agfinancial.org/2019_AGF-Blog-Header-FraudSecurity.jpg?v=1591166912',
-          imageAlt: 'Defend Yourself Against Fraud',
+          ...(() => {
+            const article = getResourceArticleFeatureConfig({
+              slug: 'defend-yourself-against-fraud',
+              fallbackImageAlt: 'Defend Yourself Against Fraud',
+            });
+            return {
+              title: article.title || 'Defend Yourself Against Fraud',
+              image: article.image,
+              imageAlt: article.imageAlt,
+              actions: [{ label: 'Read article', to: article.to }],
+            };
+          })(),
           body: [
             'Protect your ministry with practical guidance to reduce fraud risk and strengthen internal controls.',
           ],
-          actions: [{ label: 'Read article', to: '/resources/article/defend-yourself-against-fraud' }],
         },
       },
     ],
@@ -225,6 +381,7 @@ const directContent = {
   '/services/legacy-giving': {
     pageClass: 'native-info-page--legacy-giving',
     hero: {
+      justify: 'right',
       lines: [
         {
           title: 'Generous giving.',
@@ -249,7 +406,7 @@ const directContent = {
         cards: [
           {
             title: 'Donor Advised Funds / Generosity Fund®',
-            body: 'Our Generosity Fund® is a Donor Advised Fund that can be used to simplify your giving—and increase your joy doing so. A Generosity Fund® is a giving tool available to anyone, regardless of income level.',
+            body: 'Our Generosity Fund® is a Donor Advised Fund that can be used to simplify your giving and increase your joy doing so. A Generosity Fund® is a giving tool available to anyone, regardless of income level.',
             actions: [
               { label: 'Watch video', href: 'https://media.agfinancial.org/2021_Generosity-Fund.mp4', ghost: true },
               { label: 'Learn more', to: '/services/legacy-giving/generosity-fund' },
@@ -263,7 +420,7 @@ const directContent = {
           },
           {
             title: 'Charitable Gift Annuities',
-            body: 'A popular planned gift that provides income for you, a Charitable Gift Annuity (CGA) allows you to receive dependable lifetime fixed payments and leave a gift to the ministry of your choice.',
+            body: 'A popular planned gift that provides payments for you, a Charitable Gift Annuity (CGA) allows you to receive dependable lifetime fixed payments and leave a gift to the ministry of your choice.',
             to: '/services/legacy-giving/charitable-gift-annuities',
             cta: 'Learn more',
           },
@@ -298,7 +455,7 @@ const directContent = {
           '*Form to be completed by you and requires review by your attorney. Then, if you prefer, we will be happy to act as trustee, so you can relax, knowing your estate is in good hands.',
         ],
         actions: [
-          { label: 'Download packet', documentId: 'form-planned-giving-will-planning-document', ghost: true },
+          { label: 'Download packet', documentId: 'form-planned-giving-will-planning-document', className: 'is-outline is-tone-atlantean' },
           { label: 'Online form*', href: 'https://sft.agfinancial.org/documents/Send.do' },
         ],
       },
@@ -328,6 +485,10 @@ const directContent = {
         body: [
           'Your charitable giving plan makes it easy to manage both your cash and non-cash assets.',
         ],
+      },
+      {
+        className: 'legacy-giving-cta',
+        hideCopy: true,
         form: {
           title: 'We help every step of the way. Always.',
           subtitle: 'Let’s map out the best strategy together.',
@@ -336,6 +497,29 @@ const directContent = {
             { id: 'name', label: 'Name', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true },
             { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
+            {
+              id: 'legacyProduct',
+              label: 'Legacy giving product of interest*',
+              type: 'select',
+              required: true,
+              placeholder: 'Select one',
+              options: [
+                { value: 'donor-advised-fund', label: 'Donor Advised Fund' },
+                { value: 'endowment', label: 'Endowment' },
+                { value: 'charitable-gift-annuity', label: 'Charitable Gift Annuity' },
+                { value: 'charitable-remainder-trust', label: 'Charitable Remainder Trust' },
+                { value: 'charitable-lead-trust', label: 'Charitable Lead Trust' },
+                { value: 'ministry-impact-fund', label: 'Ministry Impact Fund' },
+              ],
+            },
+            {
+              id: 'message',
+              label: 'Message',
+              type: 'textarea',
+              full: true,
+              rows: 4,
+              placeholder: 'Tell us what you’d like to discuss',
+            },
           ],
         },
       },
@@ -399,13 +583,22 @@ const directContent = {
         fullBleed: true,
         hideTitle: true,
         feature: {
-          title: 'Opportunity is Knocking',
-          image: legacyOpportunityImage,
+          ...(() => {
+            const article = getResourceArticleFeatureConfig({
+              slug: 'opportunity',
+              fallbackImage: legacyOpportunityImage,
+              fallbackImageAlt: 'Opportunity is Knocking',
+              actionLabel: 'Answer the door',
+            });
+            return {
+              title: article.title || 'Opportunity is Knocking',
+              image: article.image,
+              imageAlt: article.imageAlt,
+              actions: [{ label: 'Answer the door', to: article.to }],
+            };
+          })(),
           body: [
             'The SECURE 2.0 Act allows you to distribute funds from your IRA into a Charitable Gift Annuity.**',
-          ],
-          actions: [
-            { label: 'Answer the door', to: '/resources' },
           ],
         },
       },
@@ -567,56 +760,80 @@ const directContent = {
           {
             title: 'Retirement Savings',
             body: 'Sneak a peek at the future and discover what you need to do now to make retirement a reality.',
-            to: '/services/retirement#retirement-savings-calculator',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/services/retirement#retirement-savings-calculator',
+            },
             cta: 'Launch',
             cardClass: 'card2',
           },
           {
             title: 'Compound Interest',
             body: 'Watch your money grow over time by earning interest on a deposit and monthly contributions.',
-            to: '/services/retirement#retirement-savings-calculator',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/services/retirement#retirement-savings-calculator',
+            },
             cta: 'Launch',
             cardClass: 'card2',
           },
           {
             title: 'Increased Contribution',
             body: 'Explore how much your retirement balance could grow if you increased your contribution now.',
-            to: '/calculators/increased-contribution',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/calculators/increased-contribution',
+            },
             cta: 'Launch',
             cardClass: 'card2',
           },
           {
             title: 'Loan Payment',
             body: 'Run some numbers to see if the loan you need is in the ballpark.',
-            to: '/services/loans#run-some-numbers',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/services/loans#run-some-numbers',
+            },
             cta: 'Launch',
             cardClass: 'card2',
           },
           {
             title: 'Emergency Fund',
             body: 'Find out how much you need to save in order to cover six months of your expenses.',
-            to: '/calculators/emergency-fund',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/calculators/emergency-fund',
+            },
             cta: 'Launch',
             cardClass: 'card2',
           },
           {
             title: 'Laddering',
             body: 'See how much more you could earn by laddering your investments instead of focusing only on short-term accounts.',
-            to: '/services/investments#laddering-calculator',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/services/investments#laddering-calculator',
+            },
             cta: 'Launch',
             cardClass: 'card2',
           },
           {
             title: 'Net Worth',
             body: 'Get a view of your financial position, and make adjustments to see how things could change.',
-            to: '/calculators/net-worth',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/calculators/net-worth',
+            },
             cta: 'Launch',
             cardClass: 'card2',
           },
           {
             title: 'Endowment Investment Earnings',
             body: 'See how your endowment can keep giving.',
-            to: '/services/legacy-giving/endowments#endowment-investment-earnings-calculator',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/services/legacy-giving/endowments#endowment-investment-earnings-calculator',
+            },
             cta: 'Launch',
             cardClass: 'card2',
           },
@@ -788,6 +1005,7 @@ const directContent = {
         },
       },
       {
+        hidden: true,
         title: 'Help Center Quick Links',
         cards: [
           {
@@ -797,9 +1015,9 @@ const directContent = {
             cta: 'Browse',
           },
           {
-            title: 'Find a Consultant',
+            title: 'Loan Consultants',
             body: 'Talk one-on-one with one of our experienced representatives.',
-            to: '/services/loans/loans-consultant',
+            to: '/services/loans/loan-consultants',
             cta: 'Find',
           },
           {
@@ -920,7 +1138,7 @@ const directContent = {
         ],
       },
     ],
-    actions: [{ label: 'Download offering circular', documentId: 'document-download-offering-circular' }],
+    actions: [{ label: 'Download offering circular', documentId: 'document-offering-circular' }],
   },
 
   '/forms': {
@@ -943,6 +1161,15 @@ const directContent = {
       },
     ],
     actions: [{ label: 'Go to home signup', to: '/#stay-in-the-loop' }],
+  },
+
+  '/taxguide': {
+    pageClass: 'native-info-page--tax-guide',
+    compact: true,
+    hero: { title: 'Tax Guide', highlight: null },
+    hideIntro: true,
+    sections: [],
+    actions: [],
   },
 
   '/terms-of-service': legalContent('Terms of Service'),
@@ -1069,7 +1296,8 @@ const insuranceChildPages = {
         className: 'group-life-native-quote',
         copyWrap: true,
         title: 'Request a quote for group life.',
-        titleHighlights: [{ text: 'group life', className: 'is-white' }],
+        titleClassName: 'is-super-grey',
+        titleHighlights: [{ start: 20, end: 30, className: 'is-white' }],
         body: [
           'Provide a few specifics, and we’ll contact you about a policy customized specifically for your team.',
         ],
@@ -1083,7 +1311,7 @@ const insuranceChildPages = {
                 { id: 'contactEmail', label: 'Contact Email Address', type: 'email', required: true },
                 { id: 'contactPhone', label: 'Contact Phone Number', type: 'tel', placeholder: '555-555-5555', required: true },
               ],
-              nextLabel: 'Next',
+              nextLabel: 'Go to next step',
             },
             {
               id: 'organization',
@@ -1094,7 +1322,7 @@ const insuranceChildPages = {
                 { id: 'organizationCity', label: 'Organization City', type: 'text', required: true },
               ],
               backLabel: 'Back',
-              nextLabel: 'Next',
+              nextLabel: 'Go to next step',
             },
             {
               id: 'organization-details',
@@ -1120,9 +1348,16 @@ const insuranceChildPages = {
         },
       },
       {
+        className: 'group-life-native-honor',
+        justify: 'center',
+        title: 'AG Ministry Group Life',
+        html: '<p>It’s our honor to administer the group term life plan for the <mark class="is-atlantean">GC of the Assemblies of God</mark>. Available to any credentialed AG minister, the plan is provided through our group carrier, The Standard Insurance Company.</p>',
+      },
+      {
         className: 'group-life-native-benefits',
         fullBleed: true,
         hideTitle: true,
+        justify: 'center',
         columns: 'three',
         cards: [
           {
@@ -1141,35 +1376,7 @@ const insuranceChildPages = {
             cardClass: 'card4',
           },
         ],
-      },
-      {
-        className: 'group-life-native-divider',
-        hideTitle: true,
-        body: [],
-      },
-      {
-        className: 'group-life-native-honor',
-        title: 'It’s our honor to administer the group term life plan for the General Council of the Assemblies of God. Available to any credentialed AG minister, the plan is provided through our group carrier, The Standard Insurance Company.',
-        titleHighlights: [{ text: 'General Council of the Assemblies of God', className: 'is-atlantean' }],
-        body: [],
-      },
-      {
-        title: 'Ready to protect your team?',
-        className: 'insurance-native-cta group-life-native-cta',
-        hideTitle: true,
-        body: [],
-        form: {
-          title: 'What coverage is best for your team?',
-          subtitle: 'Let’s walk through the options.',
-          fields: [
-            { id: 'name', label: 'Name', type: 'text', required: true },
-            { id: 'email', label: 'Email', type: 'email', required: true },
-            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555', required: true },
-            { id: 'organization', label: 'Organization', type: 'text' },
-            { id: 'coverageFocus', label: 'Coverage focus', type: 'text', placeholder: 'Group life coverage needs' },
-          ],
-          submitLabel: 'Follow-up with me',
-        },
+        actions: [{ label: "Ministers' Group Life Plan details", to: '/services/insurance/ministers-group-life-plan' }],
       },
     ],
   },
@@ -1231,9 +1438,10 @@ const insuranceChildPages = {
         className: 'insurance-native-life-quote',
         copyWrap: true,
         anchorId: 'form',
-        title: 'Request a quote for individual life.',
-        titleHighlights: [{ text: 'individual life', className: 'is-white' }],
-        body: ['Provide a few specifics, and we’ll contact you about a policy customized specifically for you.'],
+        title: 'Request a Life Insurance Quote',
+        titleHighlights: [{ text: 'Life Insurance', className: 'is-white' }],
+        subtitle: 'Take care of those you love.',
+        body: ['Share a few details and we’ll follow up with coverage options tailored to your situation.'],
         form: {
           steps: [
             {
@@ -1283,28 +1491,214 @@ const insuranceChildPages = {
   },
   '/services/insurance/ministers-group-life-plan': {
     compact: true,
-    hero: { title: "Minister's Group Life Plan", highlight: 'Life' },
-    intro: 'Enrollment and support options for ministers and missionaries in group term life plans.',
+    hideIntro: true,
+    pageClass: 'native-info-page--ministers-group-life-plan',
+    hero: {
+      bgTone: 'white',
+      lines: [
+        {
+          title: 'AG Ministry',
+          highlights: [{ text: 'AG Ministry', className: 'is-mango' }],
+        },
+        { title: 'Group Life' },
+      ],
+    },
     sections: [
       {
-        title: 'Enroll in the Ministers or Missionary Life Insurance Plans',
-        body: [
-          'Download and complete the appropriate minister or missionary form.',
-          'If applicable, complete the state-specific medical history form.',
-          'Complete the Electronic Funds Transfer (EFT) form.',
-          'Fax or mail completed forms to AGFinancial Insurance.',
+        className: 'ministers-group-life-native-details',
+        title: 'About the plan',
+        subtitle: 'Learn about eligibility requirements, coverage amounts, rates, and more.',
+        columns: 'two',
+        cards: [
+          {
+            title: 'Ministers',
+            cta: 'Plan details (527a PDF)',
+            stretchedLink: {
+              label: 'Plan details (527a PDF)',
+              href: GROUP_LIFE_MINISTERS_PLAN_DETAILS_URL,
+            },
+            cardClass: 'card2 ministers-group-life-details-card',
+          },
+          {
+            title: 'Missionaries',
+            cta: 'Plan details (524a PDF)',
+            stretchedLink: {
+              label: 'Plan details (524a PDF)',
+              href: GROUP_LIFE_MISSIONARIES_PLAN_DETAILS_URL,
+            },
+            cardClass: 'card2 ministers-group-life-details-card',
+          },
         ],
       },
       {
-        title: 'Current client support',
-        body: [
-          'For those currently enrolled in the Group Term Life Plan, review beneficiary, billing, bank change, and address forms.',
-          'For billing support, contact Innovo Benefits Administration at 800.829.5601.',
-          'For more information about policy details, contact 800.447.0446.',
+        className: 'ministers-group-life-native-enroll',
+        fullBleed: true,
+        sand: true,
+        title: 'How to enroll',
+        subtitle: 'Three steps. One clear path.',
+        columns: 'three',
+        cards: [
+          {
+            title: '1. Start with the enrollment form',
+            body: 'Download and complete the enrollment packet that matches your situation.',
+            actions: [
+              {
+                label: 'Minister enrollment form',
+                href: GROUP_LIFE_MINISTER_ENROLLMENT_FORM_URL,
+              },
+              {
+                label: 'Missionary enrollment form',
+                href: GROUP_LIFE_STANDARD_PACKET_URL,
+              },
+            ],
+            cardClass: 'card2 ministers-group-life-step-card',
+          },
+          {
+            title: '2. Add medical history if required',
+            body: 'If applicable, complete the state-specific medical history form as part of your enrollment packet.',
+            actions: [
+              {
+                label: 'Medical history form',
+                href: GROUP_LIFE_STANDARD_PACKET_URL,
+              },
+            ],
+            cardClass: 'card2 ministers-group-life-step-card',
+          },
+          {
+            title: '3. Complete Electronic Funds Transfer',
+            body: 'Use the EFT form so billing details are set up correctly with your enrollment.',
+            actions: [
+              {
+                label: 'Electronic Funds Transfer form',
+                href: GROUP_LIFE_EFT_FORM_URL,
+              },
+            ],
+            cardClass: 'card2 ministers-group-life-step-card',
+          },
+        ],
+        addressBlock: {
+          className: 'ministers-group-life-copy-address',
+          title: 'Mail or fax completed forms to:',
+          lines: ['AGFinancial Insurance', 'PO Box 10263', 'Springfield, MO 65808-0263'],
+        },
+        fineprint: '**FAX:** 417.447.7475',
+      },
+      {
+        className: 'ministers-group-life-native-support',
+        title: 'Support for current clients',
+        subtitle: 'Search by topic, form, or support program.',
+        supportGroupsExpanded: true,
+        supportGroupsCollapsible: false,
+        html: '<p>Please reach out to us with any questions. Call <a href="tel:18004470446">800.447.0446</a> or <a href="#form">use the form below</a>.</p>',
+        supportGroups: [
+          {
+            title: 'Plan details',
+            links: [
+              {
+                label: 'Ministers enrolled before March 1, 2005 (PDF)',
+                documentId: 'policy-insurance-group-life-credentialed-ministers-before-2005',
+              },
+              {
+                label: 'Ministers enrolled after March 1, 2005 (PDF)',
+                documentId: 'policy-insurance-group-life-credentialed-ministers-after-2005',
+              },
+              {
+                label: 'Missionaries or ministers living overseas (PDF)',
+                documentId: 'policy-insurance-group-life-missionaries-overseas',
+              },
+            ],
+          },
+          {
+            title: 'Changes and billing',
+            links: [
+              {
+                label: 'Beneficiary designation form (PDF)',
+                documentId: 'form-insurance-standard-life-beneficiary-designation-change',
+              },
+              {
+                label: 'Address and contact information form (PDF)',
+                documentId: 'form-insurance-contact-information',
+              },
+              {
+                label: 'Bank draft and electronic funds transfer form (PDF)',
+                documentId: 'form-insurance-electronic-funds-transfer',
+              },
+            ],
+          },
+          {
+            title: 'Standard Life certificates',
+            links: [
+              {
+                label: 'AG entity certificate before March 1, 2005 (PDF)',
+                documentId: 'policy-insurance-group-life-ag-entity-before-2005',
+              },
+              {
+                label: 'AG entity certificate March 1, 2005 to February 28, 2009 (PDF)',
+                documentId: 'policy-insurance-group-life-ag-entity-2005-2009',
+              },
+            ],
+          },
+          {
+            title: 'Travel Assistance (Assist America, Inc)',
+            links: [
+              {
+                label: 'Assist America benefits overview (English PDF)',
+                documentId: 'document-insurance-assist-america-benefits-overview-english',
+              },
+              {
+                label: 'Assist America program description (English PDF)',
+                documentId: 'document-insurance-assist-america-program-description-english',
+              },
+              {
+                label: 'Assist America benefits overview (Spanish PDF)',
+                documentId: 'document-insurance-assist-america-benefits-overview-spanish',
+              },
+              {
+                label: 'Assist America program description (Spanish PDF)',
+                documentId: 'document-insurance-assist-america-program-description-spanish',
+              },
+            ],
+          },
+          {
+            title: 'Life Services Toolkit',
+            links: [
+              {
+                label: 'Life Services Toolkit benefits overview (English PDF)',
+                documentId: 'document-insurance-life-services-toolkit-benefits-overview-english',
+              },
+              {
+                label: 'Life Services Toolkit resources and tools (English PDF)',
+                documentId: 'document-insurance-life-services-toolkit-resources-tools-english',
+              },
+              {
+                label: 'Life Services Toolkit benefits overview (Spanish PDF)',
+                documentId: 'document-insurance-life-services-toolkit-benefits-overview-spanish',
+              },
+              {
+                label: 'Life Services Toolkit resources and tools (Spanish PDF)',
+                documentId: 'document-insurance-life-services-toolkit-resources-tools-spanish',
+              },
+            ],
+          },
         ],
       },
+      {
+        anchorId: 'form',
+        className: 'ministers-group-life-native-cta insurance-native-cta',
+        hideCopy: true,
+        form: {
+          title: 'Still need help?',
+          subtitle: '',
+          fields: [
+            { id: 'name', label: 'Name', type: 'text', required: true },
+            { id: 'email', label: 'Email', type: 'email', required: true },
+            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
+            { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
+          ],
+          submitLabel: 'Follow-up with me',
+        },
+      },
     ],
-    actions: [{ label: 'Email insurance team', href: 'mailto:info@agfinancialinsurance.com' }],
   },
   '/services/insurance/mission-assure': {
     compact: true,
@@ -1322,7 +1716,8 @@ const insuranceChildPages = {
     sections: [
       {
         className: 'mission-assure-native-intro',
-        logoImage: missionAssureLogo,
+        logoComponent: MissionAssureLogo,
+        logoAlt: 'Mission Assure',
         title: 'Every trip is a step of faith, but you don’t have to take it uninsured.',
         titleHighlights: [{ text: 'faith', className: 'is-atlantean' }],
         body: [
@@ -1359,13 +1754,23 @@ const insuranceChildPages = {
         className: 'mission-assure-native-camp-safety',
         fullBleed: true,
         feature: {
-          image: missionAssureSummerCampSafetyImage,
-          imageAlt: 'Summer camp safety',
-          title: 'Summer Camp Safety Tips',
+          ...(() => {
+            const article = getResourceArticleFeatureConfig({
+              slug: 'summer-camp-safety-tips',
+              fallbackImage: missionAssureSummerCampSafetyImage,
+              fallbackImageAlt: 'Summer camp safety',
+              actionLabel: 'Go safely!',
+            });
+            return {
+              title: article.title || 'Summer Camp Safety Tips',
+              image: article.image,
+              imageAlt: article.imageAlt,
+              actions: [{ label: 'Go safely!', to: article.to }],
+            };
+          })(),
           body: [
             'Practical safety tips to help your summer camp prevent injuries, protect children, and be prepared for the unexpected.',
           ],
-          actions: [{ label: 'Go safely!', to: '/resources' }],
         },
       },
     ],
@@ -1424,12 +1829,13 @@ const insuranceChildPages = {
     },
     sections: [
       {
-        title: 'Request a P&C quote.',
-        titleHighlights: [{ text: 'P&C', className: 'is-white' }],
+        title: 'Request a Property & Casualty Insurance Quote',
+        titleHighlights: [{ text: 'Property & Casualty', className: 'is-white' }],
         className: 'insurance-pc-native-quote',
         anchorId: 'quote',
+        subtitle: 'We’re passionate about protecting your ministry.',
         body: [
-          'Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.',
+          'Share a few details and we’ll help you explore broader coverage and value-added risk management tailored to your church or organization.',
         ],
         form: {
           steps: [
@@ -1830,6 +2236,17 @@ const legacyChildPages = {
             { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
             { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
             { id: 'email', label: 'Email*', type: 'email', required: true },
+            {
+              id: 'trustProduct',
+              label: 'Trust product of interest*',
+              type: 'select',
+              required: true,
+              placeholder: 'Select one',
+              options: [
+                { value: 'charitable-remainder-trust', label: 'Charitable Remainder Trust' },
+                { value: 'charitable-lead-trust', label: 'Charitable Lead Trust' },
+              ],
+            },
           ],
           submitLabel: 'Start planning',
         },
@@ -1888,35 +2305,17 @@ const legacyChildPages = {
         widget: 'endowment-calculator',
       },
       {
-        className: 'legacy-child-native-endowments-inquiry',
-        copyWrap: true,
-        title: 'Maybe this is an interest or inquiry form.',
-        body: [
-          'Because this is something that definitely needs to be person-to-person, right? We’ll contact you within 24 business hours. Promise.',
-        ],
-        form: {
-          fields: [
-            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
-            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
-            { id: 'phone', label: 'Phone*', type: 'tel', required: true },
-            { id: 'email', label: 'Email*', type: 'email', required: true },
-          ],
-          submitLabel: 'Submit',
-        },
-      },
-      {
         className: 'legacy-child-native-endowments-big-cta',
         title: 'Give once, forever.',
         titleHighlights: [{ text: 'forever', className: 'is-atlantean' }],
         subtitle: 'And bless generations.',
-        actions: [{ label: 'Set up an endowment', href: 'https://secure.agfinancial.org/generosityfund/signup' }],
+        actions: [],
       },
       {
         className: 'legacy-child-native-endowments-legacy-form',
         copyWrap: true,
-        title: 'A legacy of giving.',
-        titleHighlights: [{ text: 'legacy', className: 'is-white' }],
-        body: ['We’re ready to help you explore how your gift can continue to give. And give. And give…'],
+        title: 'Begin the Endowment sign up process',
+        body: [],
         form: {
           fields: [
             { id: 'firstName', label: 'First Name*', type: 'text', required: true },
@@ -1999,9 +2398,8 @@ const legacyChildPages = {
         copyWrap: true,
         title: 'Make the most of your giving.',
         titleHighlights: [{ text: 'most', className: 'is-white' }],
-        body: ['Let’s discover the best way for you to give, and in the easiest way possible.'],
+        body: [],
         form: {
-          subtitle: 'We can help with setup and funding questions.',
           fields: [
             { id: 'firstName', label: 'First Name*', type: 'text', required: true },
             { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
@@ -2154,11 +2552,11 @@ const loanConsultantStatesByRegion = {
 };
 
 const loansChildPages = {
-  '/services/loans/loans-consultant': {
+  '/services/loans/loan-consultants': {
     pageClass: 'native-info-page--loans-consultant',
     compact: true,
     hideIntro: true,
-    hero: { title: 'Find A Consultant', highlight: 'Consultant' },
+    hero: { title: 'Loan Consultants', highlight: 'Consultants' },
     intro: 'Talk with a consultant. Fill out the form to start a conversation with our consultants or find your region contact below.',
     sections: [
       {
@@ -2274,6 +2672,7 @@ const retirementChildPages = {
     pageClass: 'native-info-page--retirement-child native-info-page--retirement-403b',
     compact: true,
     hero: {
+      justify: 'right',
       lines: [
         {
           title: 'Saving while serving.',
@@ -2289,28 +2688,46 @@ const retirementChildPages = {
       body: [
         'The AGFinancial 403(b) offers higher contribution limits and potential employer matching—advantages you won’t find with an IRA. Designed specifically for ministers and ministry employees, it’s a powerful way to save while you serve.',
       ],
+      bgTone: 'sand',
+      textTone: 'dark',
     },
     sections: [
+      {
+        className: 'retirement-403b-native-benefits-copy',
+        title: 'With benefits like these…',
+        subtitle: 'Smart benefits, strong advantages',
+        body: [
+          'The AGFinancial flagship retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA. Choose from a variety of strategies.',
+          'Includes minister’s housing allowance, higher contribution limits, and more.',
+        ],
+      },
+      {
+        className: 'retirement-403b-native-benefits-cards',
+        fullBleed: true,
+        columns: 'four',
+        hideTitle: true,
+        cards: RETIREMENT_403B_PLAN_FEATURE_CARDS,
+      },
       {
         className: 'retirement-403b-native-rate-table',
         title: '403(b) Investment Rate',
         widget: 'retirement-403b-rate-table',
       },
       {
-        className: 'retirement-child-native-strategies',
+        className: 'retirement-child-native-strategies retirement-403b-native-strategy-options',
         title: 'Investment Strategy Options',
         fullBleed: true,
         columns: 'two',
         actionsBeforeCards: true,
         actions: [
-          { label: 'View the monthly performance', documentId: 'document-view-the-monthly-performance' },
+          { label: 'View the monthly performance', documentId: 'document-monthly-performance' },
         ],
         cards: [
           {
             title: 'MBA Income Fund',
             body: 'AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.',
             links: [
-              { label: 'Download the MBA Income PDF', documentId: 'fund-descriptor-retirement-download-the-mba-income-pdf' },
+              { label: 'Download the MBA Fact sheet PDF', documentId: 'fund-descriptor-retirement-mba-income-fund' },
             ],
             actions: [
               { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
@@ -2375,7 +2792,7 @@ const retirementChildPages = {
               {
                 title: 'View fund PDFs',
                 links: [
-                  { label: 'MBA Income Fund', documentId: 'fund-descriptor-retirement-download-the-mba-income-pdf' },
+                  { label: 'MBA Income Fund', documentId: 'fund-descriptor-retirement-mba-income-fund' },
                   { label: 'Steward Select Bond Fund', documentId: 'fund-descriptor-retirement-steward-select-bond-fund' },
                   { label: 'Steward Equity Market Neutral Fund', documentId: 'fund-descriptor-retirement-steward-equity-market-neutral-fund' },
                   { label: 'Steward Global Equity Income Fund', documentId: 'fund-descriptor-retirement-steward-global-equity-income-fund' },
@@ -2396,8 +2813,8 @@ const retirementChildPages = {
         columns: 'three',
         cards: [
           {
-            title: 'Self-employed credentialed ministers',
-            body: 'Such as pastors, evangelists, or independent ministry leaders.',
+            title: 'Employees of eligible employers',
+            body: 'For example: churches; denominational headquarters or councils; church-affiliated, tax-exempt 501(c)(3) organizations.',
             cardClass: 'card2',
             titleClassName: 'ret-403b-qualify-card-title',
           },
@@ -2408,8 +2825,8 @@ const retirementChildPages = {
             titleClassName: 'ret-403b-qualify-card-title',
           },
           {
-            title: 'Employees of eligible employers',
-            body: 'For example: churches; denominational headquarters or councils; church-affiliated, tax-exempt 501(c)(3) organizations.',
+            title: 'Self-employed credentialed ministers',
+            body: 'Such as pastors, evangelists, or independent ministry leaders.',
             cardClass: 'card2',
             titleClassName: 'ret-403b-qualify-card-title',
           },
@@ -2427,7 +2844,7 @@ const retirementChildPages = {
           },
           {
             title: 'For a group',
-            actions: [{ label: 'Next steps', to: '/services/retirement/403b-for-groups/403b-group-enrollment' }],
+            actions: [{ label: 'Next steps', to: '/services/retirement/403b/403b-group-enrollment' }],
             cardClass: 'card2',
           },
         ],
@@ -2489,67 +2906,6 @@ const retirementChildPages = {
         ],
         widget: 'retirement-minister-housing-quick-check',
       },
-      {
-        className: 'retirement-403b-native-loans',
-        title: '403(b) Plan Loans',
-        body: [
-          'A 403(b) loan allows you to borrow money from your own retirement savings without incurring early withdrawal tax penalties. The interest paid on this type of loan goes back into your retirement savings. Though convenient, this type of loan can significantly impact your retirement savings growth.',
-        ],
-      },
-      {
-        className: 'retirement-403b-native-loan-details',
-        hideTitle: true,
-        body: [
-          '**Details** The requested 403(b) loan amount cannot be less than $1,500. In addition, the amount borrowed cannot exceed the lesser of:',
-          '• 100% of the total vested account balance if less than $10,000',
-          '• 50% of the total vested account balances',
-          '• or $50,000',
-          'Members may have no more than two loans at a time. The interest rate for plan loans is fixed for the life of the loan at 2.0% above the rate of the MBA Income Fund. All loan payments are made by automatic bank draft on the 20th of each month. The maximum term of a loan is 59 months (5 years) regardless of intended use.',
-          'Due to regulations issued by the U.S. Department of the Treasury, 403(b) plan loans issued after Dec. 31, 2008 require employer verification of loan qualifications with the following exception: your employer has a sole service provider agreement with Ministers Benefit Association, and has not had multiple service providers since 2004.',
-          'Contact your AGFinancial retirement consultant for more information.',
-        ],
-      },
-      {
-        className: 'retirement-403b-native-apply',
-        title: 'How to apply',
-        fullBleed: false,
-        columns: 'two',
-        cards: [
-          {
-            title: '1) Review and understand the loan rules',
-            actions: [{ label: 'Download', documentId: 'document-download', ghost: true }],
-            cardClass: 'card2',
-          },
-          {
-            title: '2) Log in to your profile',
-            actions: [{ label: 'Log in now', href: 'https://secure.agfinancial.org/' }],
-            cardClass: 'card2',
-          },
-          {
-            title: '3) Submit your application',
-            body: 'When logged-in, select your 403(b) account, then choose **MANAGE MY RETIREMENT** below the details.\nIn the top menu, select **Loan Services > Loan Modeling/Request** to apply.',
-            cardClass: 'card2',
-          },
-        ],
-      },
-      {
-        className: 'retirement-child-native-cta retirement-403b-native-cta',
-        copyWrap: true,
-        title: 'Questions about the 403(b)? We’re ready.',
-        titleHighlights: [{ text: 'Questions about the 403(b)? We’re ready.', className: 'is-atlantean' }],
-        subtitle: '',
-        body: [],
-        form: {
-          title: '',
-          subtitle: 'And we’re eager to help.',
-          fields: [
-            { id: 'name', label: 'Name*', type: 'text', required: true },
-            { id: 'email', label: 'Email*', type: 'email', required: true },
-            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
-          ],
-          submitLabel: 'Follow-up with me',
-        },
-      },
     ],
   },
   '/services/retirement/403b/403b-terms-definitions': {
@@ -2573,79 +2929,192 @@ const retirementChildPages = {
     actions: [{ label: 'Back to 403(b)', to: '/services/retirement/403b' }],
   },
   '/services/retirement/403b/403b-individual-enrollment': {
-    compact: true,
-    hero: { title: 'AGFinancial 403(b) Individual Enrollment', highlight: 'Enrollment' },
-    intro: 'What’s one gotta do to get AGFinancial 403(b)? You’re in luck. We guide you through the process in super simple, easy-to-follow steps.',
+    pageClass: 'native-info-page--retirement-child native-info-page--retirement-403b',
+    hero: {
+      justify: 'center',
+      titleSizeRem: 4.8,
+      lineHeight: 0.92,
+      lines: [
+        {
+          title: 'AGFinancial 403(b)',
+          highlights: [{ text: '403', className: 'is-atlantean' }],
+        },
+        {
+          title: 'Individual Enrollment',
+          highlights: [{ text: 'Individual', className: 'is-mango' }],
+        },
+      ],
+      bgTone: 'white',
+    },
+    intro: {
+      heading: 'Start with the 403(b) plan summary.',
+      body: [
+        'Review the plan summary for eligibility, participation details, and key enrollment information before you complete your forms.',
+      ],
+      actions: [{ label: 'Download 403(b) Summary PDF', href: RETIREMENT_403B_PLAN_SUMMARY_URL }],
+      justify: 'center',
+      bgTone: 'blue',
+      textTone: 'white',
+    },
     sections: [
       {
-        title: 'Complete these four steps to enroll',
-        body: [
-          'Confirm eligibility.',
-          'Complete enrollment form.',
-          'Return enrollment form by mail, fax, or secure online submission.',
-          'Complete payroll deduction agreement form.',
+        className: 'retirement-child-native-qualify',
+        title: 'Confirm eligibility',
+        subtitle: 'The AGFinancial 403(b) Retirement Plan is available to these participant groups.',
+        fullBleed: true,
+        columns: 'three',
+        cards: [
+          {
+            title: 'Self-employed credentialed ministers',
+            body: 'Assemblies of God credentialed ministers who are self-employed within the meaning of Internal Revenue Code 414(e)(5)(A)(i)(I). Example: an evangelist would qualify.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Ministers serving outside AG organizations',
+            body: 'Assemblies of God credentialed ministers who provide ministry-related services to organizations unrelated to the Assemblies of God, such as a chaplain. The employer may contribute, or the minister may contribute directly.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'Employees of eligible employers',
+            body: 'Employees of an Assemblies of God church, the General Council, a District Council, or another organization controlled by or associated with the Assemblies of God that is tax-exempt under 501(c)(3).',
+            cardClass: 'card2',
+          },
+        ],
+        fineprint: [
+          '*501(c)(3) organizations are tax-exempt entities organized and operated exclusively for religious, charitable, scientific, testing for public safety, literary, or educational purposes, among other qualified purposes under the Internal Revenue Code.',
         ],
       },
       {
-        title: 'Enrollment documents',
-        links: [
-          { label: 'Download Plan Summary', href: '/services/retirement/403b' },
-          { label: 'Download Form', href: '/services/retirement/403b' },
+        className: 'retirement-child-native-strategies',
+        title: 'Complete your enrollment',
+        subtitle: 'Three steps. One clear path.',
+        fullBleed: true,
+        sand: true,
+        columns: 'three',
+        cards: [
+          {
+            title: '1. Complete the enrollment form',
+            body: 'Fill out the AGFinancial 403(b) Individual Enrollment form with the information needed to open your account.',
+            actions: [{ label: 'Download Enrollment Form', href: RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_FORM_URL }],
+            cardClass: 'card2 ministers-group-life-step-card',
+          },
+          {
+            title: '2. Return your enrollment form',
+            body: 'Send the completed enrollment form by mail, fax, or secure online submission.',
+            actions: [{ label: 'Submit securely online', href: RETIREMENT_SECURE_UPLOAD_URL }],
+            cardClass: 'card2 ministers-group-life-step-card',
+          },
+          {
+            title: '3. Complete payroll deduction',
+            body: 'Complete the Payroll Deduction Agreement Form to request pre-tax salary reduction contributions or after-tax Roth 403(b) contributions. Keep a copy for your records and send the original form to your employer.',
+            actions: [{ label: 'Download Payroll Deduction Form', href: RETIREMENT_403B_PAYROLL_DEDUCTION_FORM_URL }],
+            cardClass: 'card2 ministers-group-life-step-card',
+          },
         ],
-      },
-      {
-        title: 'Return Enrollment Form',
-        body: [
-          'By Mail: AGFinancial, PO Box 2515, Springfield, MO 65801',
-          'By Fax: 417.520.0406',
-          'To submit securely online, click here.',
-        ],
+        addressBlock: {
+          className: 'ministers-group-life-copy-address',
+          title: 'Mail or fax completed forms to:',
+          lines: ['AGFinancial', 'PO Box 2515', 'Springfield, MO 65801'],
+        },
+        fineprint: '**FAX:** 417.520.0406',
       },
     ],
   },
-  '/services/retirement/403b-for-groups': {
-    compact: true,
-    hero: { title: '403b for Groups', highlight: 'Groups' },
-    intro: 'Group enrollment options and compliance support for churches and organizations.',
+  '/services/retirement/403b/403b-group-enrollment': {
+    pageClass: 'native-info-page--retirement-child native-info-page--retirement-403b',
+    hero: {
+      justify: 'center',
+      lines: [
+        {
+          title: 'AGFinancial 403(b)',
+          highlights: [{ text: '403', className: 'is-atlantean' }],
+        },
+        {
+          title: 'Group Enrollment',
+          highlights: [{ text: 'Group', className: 'is-mango' }],
+        },
+      ],
+      bgTone: 'white',
+    },
+    intro: {
+      heading: 'How do I enroll my staff in AGFinancial 403(b)?',
+      body: [
+        'Use these simple steps to establish your organization’s plan, collect employee enrollment forms, and finish the paperwork needed to begin payroll contributions.',
+      ],
+      actions: [
+        { label: 'Download Plan Summary', href: RETIREMENT_403B_PLAN_SUMMARY_URL },
+      ],
+      justify: 'center',
+      bgTone: 'blue',
+      textTone: 'white',
+    },
     sections: [
       {
-        title: 'Start group enrollment',
-        links: [
-          { label: '403b Group Enrollment', to: '/services/retirement/403b-for-groups/403b-group-enrollment' },
-          { label: '403(b) Terms & Definitions', to: '/services/retirement/403b/403b-terms-definitions' },
+        className: 'retirement-child-native-qualify',
+        title: 'Confirm eligibility',
+        subtitle: 'Use the group enrollment path when your organization is establishing a plan for eligible ministers or ministry employees.',
+        fullBleed: true,
+        columns: 'three',
+        cards: [
+          {
+            title: 'Assemblies of God churches',
+            body: 'Use group enrollment if your church is establishing an AGFinancial 403(b) plan for eligible ministers or ministry employees. This is the employer setup path for churches sponsoring staff participation.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'General and district councils',
+            body: 'The General Council of the Assemblies of God and District Councils use this path when establishing 403(b) participation for employees. It supports employer setup, enrollment collection, and payroll coordination.',
+            cardClass: 'card2',
+          },
+          {
+            title: 'AG-affiliated 501(c)(3) ministries',
+            body: 'Organizations controlled by or associated with the Assemblies of God that are tax-exempt under 501(c)(3) can use group enrollment for eligible employees. Choose the correct agreement below based on whether your ministry is a church or QCCO, or an NQCCO.',
+            cardClass: 'card2',
+          },
         ],
-      },
-    ],
-    actions: [{ label: 'Next steps', to: '/services/retirement/403b-for-groups/403b-group-enrollment' }],
-  },
-  '/services/retirement/403b-for-groups/403b-group-enrollment': {
-    compact: true,
-    hero: { title: 'AGFinancial 403(b) Group Enrollment', highlight: 'Group' },
-    intro: 'What’s one gotta do to get AGFinancial 403(b)? You’re in luck. We guide you through the process in super simple, easy-to-follow steps.',
-    sections: [
-      {
-        title: 'Complete these four steps to enroll',
-        body: [
-          'Confirm eligibility.',
-          'Complete enrollment form.',
-          'Customize your plan with the correct agreement.',
-          'Return forms and complete payroll deduction agreement process.',
-        ],
-      },
-      {
-        title: 'Customize your plan',
-        body: [
-          'Agreement 1: Your ministry is a church or QCCO.',
-          'Agreement 2: Your ministry is an NQCCO.',
-          'See 403(b) Terms & Definitions for full details.',
+        fineprint: [
+          '*501(c)(3) organizations are tax-exempt entities organized and operated exclusively for religious, charitable, scientific, testing for public safety, literary, or educational purposes, among other qualified purposes under the Internal Revenue Code.',
         ],
       },
       {
-        title: '403(b) Compliance Regulations',
-        body: [
-          'IRS regulations require written plan documents and compliant administration.',
-          'If AGFinancial is your exclusive service provider, compliance implementation can be easier.',
-          'For assistance, contact 800.622.7526 or 403bregs@agfinancial.org.',
+        className: 'retirement-child-native-strategies retirement-403b-group-enrollment-steps',
+        title: 'Complete your enrollment',
+        subtitle: 'Easy steps.',
+        fullBleed: true,
+        sand: true,
+        columns: 'two',
+        cards: [
+          {
+            title: '1. Establish your plan',
+            body: 'Start by selecting the agreement that matches your ministry structure, then work through the setup items below in order so employer setup, employee enrollment, and payroll administration all stay aligned.',
+            links: [
+              { label: 'Agreement 1: Church or QCCO', href: RETIREMENT_403B_QCCO_AGREEMENT_URL },
+              { label: 'Agreement 2: NQCCO', href: RETIREMENT_403B_NQCCO_AGREEMENT_URL },
+              { label: '403(b) Terms & Definitions', to: '/services/retirement/403b/403b-terms-definitions' },
+              { label: 'Download Enrollment Form', href: RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_FORM_URL },
+              { label: 'Download Payroll Deduction Form', href: RETIREMENT_403B_PAYROLL_DEDUCTION_FORM_URL },
+              { label: 'Submit securely online', href: RETIREMENT_SECURE_UPLOAD_URL },
+            ],
+            list: [
+              'Choose the correct agreement for your organization type.',
+              'Review the 403(b) terms and definitions before collecting employee paperwork.',
+              'Have each participating employee complete an enrollment form.',
+              'Collect completed forms and return them through secure upload, mail, or fax.',
+              'Complete payroll deduction setup for each participating employee.',
+              'QCCO = Qualified Church-Controlled Organization.',
+              'NQCCO = Nonqualified Church-Controlled Organization.',
+            ],
+            fineprint: [
+              'The service agreement helps define employer and AGFinancial responsibilities for administration, hardship distributions, and plan loans.',
+              'Mail or fax completed forms to:',
+              'AGFinancial',
+              'PO Box 2515',
+              'Springfield, MO 65801',
+              '**FAX:** 417.520.0406',
+            ],
+            actions: [],
+            cardClass: 'card2 ministers-group-life-step-card',
+          },
         ],
       },
     ],
@@ -2757,16 +3226,15 @@ const retirementChildPages = {
           {
             title: 'Traditional IRA',
             body: 'A Traditional IRA lets your contributions and earnings grow tax-deferred. You won’t pay taxes on them until you withdraw the money in retirement. This allows your savings to compound faster over time, plus your contributions are deductible on your tax returns.',
-            actions: [{ label: 'Open Traditional IRA', href: 'https://secure.agfinancial.org/invest' }],
             cardClass: 'card2',
           },
           {
             title: 'Roth IRA',
             body: 'A Roth IRA lets your savings grow completely tax-free. Unlike a Traditional IRA, you pay taxes on your contributions now, but in retirement you can withdraw everything—including all your earnings—without paying any taxes.',
-            actions: [{ label: 'Open Roth IRA', href: 'https://secure.agfinancial.org/invest' }],
             cardClass: 'card2',
           },
         ],
+        actions: [{ label: 'Open IRA', href: 'https://secure.agfinancial.org/invest' }],
       },
       {
         className: 'retirement-child-native-comparison',
@@ -2841,7 +3309,7 @@ const retirementChildPages = {
         title: 'Already have an IRA? Simplify.',
         titleHighlights: [{ text: 'Simplify.', className: 'is-melon' }],
         body: [
-          'Rolling over your other retirement savings into a single AGFinancial 403(b) is surprisingly simple…and undeniably smart. One account. One login.',
+          'Rolling over your other retirement savings into a single AGFinancial IRA is surprisingly simple and undeniably smart. One account. One login.',
         ],
         actions: [{ label: 'Let’s simplify things', to: '/services/retirement/rollovers' }],
       },
@@ -3149,53 +3617,61 @@ function companyChildContent(path, title) {
           title: 'Impact highlights',
           hideTitle: true,
           className: 'impact-native-stats',
-          fullBleed: true,
           columns: 'two',
           cards: [
             {
               title: '4,000',
               titleClassName: 'countup',
-              subtitle: 'Fueling churches and ministries every year.',
-              body: 'From vision loans to construction loans, we are here to support your goals.',
+              subtitle: 'Churches and ministries fueled each year.',
+              body: 'From first conversation to final funding, we help ministries move from idea to opening day with financing that understands church realities.',
               to: '/services/loans',
               cta: 'Explore Loans',
-              cardClass: 'impact-native-card',
+              stretchedLink: {
+                label: 'Explore Loans',
+                to: '/services/loans',
+              },
+              cardClass: 'impact-native-card impact-native-card--loans',
             },
             {
               title: '$40 Million',
               titleClassName: 'countup',
-              subtitle: 'Under trusted care. Your foundation deserves the same.',
-              body: 'Planning your generosity’s future can be messy. We’ve done this since 1989 and our organizational skills show.',
+              subtitle: 'Under trusted care for future ministry.',
+              body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
               to: '/services/legacy-giving',
               cta: 'Plan with us',
-              cardClass: 'impact-native-card',
+              stretchedLink: {
+                label: 'Plan with us',
+                to: '/services/legacy-giving',
+              },
+              cardClass: 'impact-native-card impact-native-card--legacy',
             },
             {
               title: '687',
               titleClassName: 'countup',
-              subtitle: 'Mission trips covered.',
-              body: 'Go boldly. We’ve got your back.',
+              subtitle: 'Mission trips covered with protection in place.',
+              body: 'Teams can travel, serve, and respond quickly because practical coverage is already handled before the wheels ever leave the runway.',
               to: '/services/insurance',
               cta: 'Cover your trip',
-              cardClass: 'impact-native-card',
+              stretchedLink: {
+                label: 'Cover your trip',
+                to: '/services/insurance',
+              },
+              cardClass: 'impact-native-card impact-native-card--insurance',
             },
             {
               title: '299',
               titleClassName: 'countup',
               subtitle: 'Ministers retired this year with AGFinancial.',
-              body: 'Retirement that honors a lifetime of service.',
+              body: 'Retirement planning that respects decades of calling and helps leaders step into the next season with structure, confidence, and care.',
               to: '/services/retirement',
               cta: 'Start your plan',
-              cardClass: 'impact-native-card',
+              stretchedLink: {
+                label: 'Start your plan',
+                to: '/services/retirement',
+              },
+              cardClass: 'impact-native-card impact-native-card--retirement',
             },
           ],
-        },
-        {
-          className: 'impact-native-cta',
-          title: 'Bold, smart moves.',
-          subtitle: 'Let’s make them together.',
-          body: ['Business with AGFinancial means ministry with AGFinancial.'],
-          actions: [{ label: 'What’s next for you?', to: '/services' }],
         },
       ],
       actions: [],

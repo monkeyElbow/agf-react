@@ -17,18 +17,51 @@
   --ag-section-gutter: var(--ag-panel-gutter);
 
   /* Brand palette tokens */
+  --ag-color-white: #ffffff;
+  --ag-color-white-soft: #ededed;
   --ag-color-atlantean: #00adbb;
+  --ag-color-atlantean-rgb: 0, 173, 187;
   --ag-color-atlantean-dark: #008aab;
+  --ag-color-atlantean-dark-rgb: 0, 138, 171;
   --ag-color-mango: #faa31a;
+  --ag-color-mango-dark: #e8991f;
   --ag-color-sandstone: #c4beb6;
+  --ag-color-sandstone-dark: #b1aaa2;
+  --ag-color-sand: #f2eeeb;
+  --ag-color-sand-dark: #dad7d0;
   --ag-color-melon: #f26660;
+  --ag-color-melon-dark: #e56f58;
   --ag-color-super-grey: #414042;
+  --ag-color-super-grey-dark: #636265;
   --ag-color-sandstone-soft: rgba(196, 190, 182, 0.1);
   --ag-color-border-main: #bebebe;
+  /* Shared surface gradients */
+  --ag-surface-blue-angle: 145deg;
+  --ag-surface-blue-gradient: linear-gradient(
+    var(--ag-surface-blue-angle),
+    var(--ag-color-atlantean-dark) 0%,
+    var(--ag-color-atlantean) 100%
+  );
+  --ag-surface-blue-preview-gradient: linear-gradient(
+    var(--ag-surface-blue-angle),
+    rgba(var(--ag-color-atlantean-dark-rgb), 0.96) 0%,
+    rgba(var(--ag-color-atlantean-rgb), 0.96) 100%
+  );
+  --ag-surface-blue-overlay-soft: linear-gradient(
+    var(--ag-surface-blue-angle),
+    rgba(var(--ag-color-atlantean-dark-rgb), 0.34) 0%,
+    rgba(var(--ag-color-atlantean-rgb), 0.24) 100%
+  );
+  --ag-surface-blue-overlay-strong: linear-gradient(
+    var(--ag-surface-blue-angle),
+    rgba(var(--ag-color-atlantean-dark-rgb), 0.8) 0%,
+    rgba(var(--ag-color-atlantean-rgb), 0.45) 100%
+  );
   --ag-font-size-body: 16px;
   --ag-line-height-body: 1.75;
-  /* Typography rule: Helv headings get a small negative track; Avenir headings use the stronger Avenir token. */
-  --ag-letter-spacing-helv-heading: -1px;
+  /* Helv heading baseline: lightly tightened for display headings. */
+  --ag-letter-spacing-helv-heading: -0.01em;
   --ag-letter-spacing-helv-intro: -0.02em;
   --ag-letter-spacing-avenir-heading: -0.02em;
+  --ag-letter-spacing-avenir-hero: -0.03em;
 }

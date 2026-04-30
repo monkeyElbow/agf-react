@@ -1,10 +1,102 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import PageShell from '../components/PageShell';
-import { useContentAdmin } from '../context/ContentAdminContext';
-import { pageByPath, sitePages } from '../data/siteMap';
+import AdminHtmlEditor from '../components/AdminHtmlEditor';
+import BillboardHudEditorPanel from '../components/BillboardHudEditorPanel';
+import AdminNumberInput from '../components/AdminNumberInput';
+import { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
+import ColorPalette from '../components/ColorPalette';
+import { HeroDriftNotice } from '../components/HeroHudEditorShared';
+import {
+  BillboardBlockEditor as MigratedBillboardBlockEditor,
+  ColumnsBlockEditor as MigratedColumnsBlockEditor,
+  CtaFormBlockEditor as MigratedCtaFormBlockEditor,
+  getMigratedBlockEditorComponent,
+  HeroBlockEditor as MigratedHeroBlockEditor,
+  IntroBlockEditor as MigratedIntroBlockEditor,
+  NewsletterBlockEditor as MigratedNewsletterBlockEditor,
+  PageContentBlockEditor as MigratedPageContentBlockEditor,
+  RequestFormBlockEditor as MigratedRequestFormBlockEditor,
+} from '../components/block-editors/migratedBlockEditors';
+import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
+import { useTestimonials } from '../context/TestimonialsContext';
+import { pageByPath } from '../data/siteMap';
+import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
+import heroBlockIcon from '../assets/admin-block-icons/hero.svg';
+import introBlockIcon from '../assets/admin-block-icons/intro.svg';
+import billboardBlockIcon from '../assets/admin-block-icons/billboard.svg';
+import gridBlockIcon from '../assets/admin-block-icons/grid.svg';
+import ctaFormBlockIcon from '../assets/admin-block-icons/cta-form.svg';
+import columnsBlockIcon from '../assets/admin-block-icons/columns.svg';
+import pageContentBlockIcon from '../assets/admin-block-icons/page-content.svg';
+import ratesBlockIcon from '../assets/admin-block-icons/rates.svg';
+import newsletterBlockIcon from '../assets/admin-block-icons/newsletter.svg';
+import topStripBlockIcon from '../assets/admin-block-icons/top-strip.svg';
+import requestFormBlockIcon from '../assets/admin-block-icons/request-form.svg';
+import testimonialsBlockIcon from '../assets/admin-block-icons/testimonials.svg';
+import {
+  applySelectionColor,
+  extractHeroLineColorToken,
+  parseHeroRangeHighlights,
+  readTextSelectionState,
+  remapHighlightsJsonForTextChange,
+  removeSelectionRange,
+  replaceHeroLineColorClass,
+  resolveSelectionRangeColor,
+} from '../lib/heroHudRanges';
+import {
+  BUTTON_TONE_OPTIONS,
+  HERO_TEXT_COLOR_OPTIONS,
+  PANEL_TEXT_TONE_OPTIONS,
+  SURFACE_BG_TONE_OPTIONS,
+  normalizeButtonTone,
+  normalizePanelTextTone as normalizeSharedPanelTextTone,
+  normalizeSemanticTextColorClass,
+  normalizeSurfaceBgTone,
+  resolvePanelTextToneClassName,
+} from '../lib/colorSystem';
+import { buildAdminBlockInsertChoices } from '../lib/adminBlockInsertChoices';
+import { isPageContentKind, isPageContentTemplateId } from '../lib/pageContentIdentity';
+export {
+  MigratedBillboardBlockEditor as BillboardBlockEditor,
+  MigratedColumnsBlockEditor as ColumnsBlockEditor,
+  MigratedCtaFormBlockEditor as CtaFormBlockEditor,
+  MigratedHeroBlockEditor as HeroBlockEditor,
+  MigratedIntroBlockEditor as IntroBlockEditor,
+  MigratedNewsletterBlockEditor as NewsletterBlockEditor,
+  MigratedPageContentBlockEditor as PageContentBlockEditor,
+  MigratedRequestFormBlockEditor as RequestFormBlockEditor,
+};
+
+function normalizeRouteOption(page) {
+  if (!page || typeof page !== 'object') {
+    return null;
+  }
+  const path = String(page.path || page.value || '').trim();
+  if (!path) {
+    return null;
+  }
+  const title = String(page.title || page.label || path).trim() || path;
+  const linkRef = String(page.linkRef || path).trim() || path;
+  return {
+    ...page,
+    path,
+    title,
+    label: String(page.label || title).trim() || title,
+    value: String(page.value || path).trim() || path,
+    linkRef,
+  };
+}
 
 function sortPages(pages) {
-  return [...pages].sort((a, b) => a.path.localeCompare(b.path));
+  return [...pages]
+    .map(normalizeRouteOption)
+    .filter(Boolean)
+    .sort((a, b) => a.path.localeCompare(b.path));
+}
+
+function toManagedPageLinkRef(page) {
+  return String(page?.linkRef || page?.path || '').trim();
 }
 
 function findSearchTargetPage(needle, pages) {
@@ -44,6 +136,241 @@ function toBoolean(value) {
     return value.toLowerCase() === 'true';
   }
   return Boolean(value);
+}
+
+function toBlockKindMonogram(kind) {
+  const token = String(kind || '')
+    .trim()
+    .toUpperCase();
+  if (!token) {
+    return 'BL';
+  }
+  const parts = token.split(/[^A-Z0-9]+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`;
+  }
+  if (parts.length === 1 && parts[0].length >= 2) {
+    return parts[0].slice(0, 2);
+  }
+  return token.slice(0, 2);
+}
+
+const BLOCK_TEMPLATE_ICON_BY_ID = {
+  hero: heroBlockIcon,
+  intro: introBlockIcon,
+  billboard: billboardBlockIcon,
+  grid: gridBlockIcon,
+  columns: columnsBlockIcon,
+  cta_form: ctaFormBlockIcon,
+  certificates_table: ratesBlockIcon,
+  ira_table: ratesBlockIcon,
+  newsletter: newsletterBlockIcon,
+  top_strip: topStripBlockIcon,
+  request_form: requestFormBlockIcon,
+  testimonials: testimonialsBlockIcon,
+};
+
+const BLOCK_TEMPLATE_ICON_BY_KIND = {
+  hero: heroBlockIcon,
+  intro: introBlockIcon,
+  billboard: billboardBlockIcon,
+  card_grid: gridBlockIcon,
+  columns: columnsBlockIcon,
+  cta_form: ctaFormBlockIcon,
+  newsletter: newsletterBlockIcon,
+  top_strip: topStripBlockIcon,
+  request_form: requestFormBlockIcon,
+  testimonials: testimonialsBlockIcon,
+};
+
+function getBlockTemplateIcon(template) {
+  const templateId = String(template?.templateId || '').trim();
+  const kind = String(template?.kind || '').trim();
+  if (isPageContentTemplateId(templateId) || isPageContentKind(kind)) {
+    return pageContentBlockIcon;
+  }
+  return BLOCK_TEMPLATE_ICON_BY_ID[templateId] || BLOCK_TEMPLATE_ICON_BY_KIND[kind] || '';
+}
+
+function toAdminListSnippet(value, maxLength = 34) {
+  const source = String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!source) {
+    return '';
+  }
+  if (source.length <= maxLength) {
+    return source;
+  }
+  return `${source.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}
+
+function getAdminBlockLabel(block) {
+  const kind = String(block?.kind || '').trim().toLowerCase();
+  const baseName = String(block?.name || '').trim();
+  if (kind === 'billboard') {
+    const titlePreview = toAdminListSnippet(block?.settings?.title, 36);
+    return titlePreview ? `Billboard · ${titlePreview}` : 'Billboard';
+  }
+  return baseName || kind || 'Block';
+}
+
+function stripHtmlToText(value) {
+  return String(value || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getAdminBlockInspectSummary(block) {
+  const settings = block?.settings && typeof block.settings === 'object' ? block.settings : {};
+  const candidates = [
+    settings.heading,
+    settings.title,
+    settings.line1Text,
+    settings.body,
+    stripHtmlToText(settings.bodyHtml),
+    settings.subtitle,
+    settings.extraLine,
+  ];
+  const firstNonEmpty = candidates.find((value) => String(value || '').trim());
+  return firstNonEmpty ? toAdminListSnippet(firstNonEmpty, 120) : '';
+}
+
+function formatRelativeTime(value) {
+  const timestamp = Number(value);
+  if (!Number.isFinite(timestamp) || timestamp <= 0) {
+    return '';
+  }
+
+  const deltaMs = Date.now() - timestamp;
+  if (deltaMs < 45_000) {
+    return 'just now';
+  }
+
+  const deltaMinutes = Math.round(deltaMs / 60_000);
+  if (deltaMinutes < 60) {
+    return `${deltaMinutes}m ago`;
+  }
+
+  const deltaHours = Math.round(deltaMs / 3_600_000);
+  if (deltaHours < 24) {
+    return `${deltaHours}h ago`;
+  }
+
+  const deltaDays = Math.round(deltaMs / 86_400_000);
+  if (deltaDays < 7) {
+    return `${deltaDays}d ago`;
+  }
+
+  return new Date(timestamp).toLocaleDateString();
+}
+
+function formatActorName(actor, fallback = 'Unknown') {
+  return String(actor?.displayName || '').trim() || fallback;
+}
+
+function canBlockOpenEditor(block, migratedEditor = null) {
+  return Boolean(
+    (String(block?.mode || '').trim().toLowerCase() === 'dynamic' && migratedEditor)
+    || (Array.isArray(block?.editableFields) && block.editableFields.length)
+  );
+}
+
+function formatBlockModeLabel(mode) {
+  return String(mode || '').trim().toLowerCase() === 'dynamic' ? 'Dynamic' : 'Static';
+}
+
+function getEditEntryLabel(ownershipState, defaultLabel = 'Edit') {
+  if (ownershipState === 'editing-other') {
+    return 'Take over edit';
+  }
+  if (ownershipState === 'drafted-other') {
+    return 'Continue draft';
+  }
+  return defaultLabel;
+}
+
+function summarizeSharedSaveResultForPath(saveResult, pathname) {
+  const normalizedPath = String(pathname || '').trim();
+  if (!saveResult || !normalizedPath) {
+    return null;
+  }
+  const blockedBlocks = (Array.isArray(saveResult.blockedBlocks) ? saveResult.blockedBlocks : [])
+    .filter((entry) => String(entry?.pathname || '').trim() === normalizedPath);
+  const savedBlockIds = Array.isArray(saveResult.savedBlockIdsByPath?.[normalizedPath])
+    ? saveResult.savedBlockIdsByPath[normalizedPath]
+    : [];
+  const changedOnPath = Array.isArray(saveResult.changedPaths)
+    ? saveResult.changedPaths.includes(normalizedPath)
+    : false;
+  if (!changedOnPath && !blockedBlocks.length && !savedBlockIds.length && !saveResult?.error) {
+    return null;
+  }
+  return {
+    error: String(saveResult?.error || '').trim(),
+    updatedAt: Number(saveResult?.updatedAt) || 0,
+    savedBlockIds,
+    blockedBlocks,
+  };
+}
+
+function summarizeSharedPublishResultForPath(publishResult, pathname) {
+  const normalizedPath = String(pathname || '').trim();
+  if (!publishResult || !normalizedPath) {
+    return null;
+  }
+  const blockedBlocks = (Array.isArray(publishResult.blockedBlocks) ? publishResult.blockedBlocks : [])
+    .filter((entry) => String(entry?.pathname || '').trim() === normalizedPath);
+  const publishedBlockIds = Array.isArray(publishResult.publishedBlockIdsByPath?.[normalizedPath])
+    ? publishResult.publishedBlockIdsByPath[normalizedPath]
+    : [];
+  const changedOnPath = Array.isArray(publishResult.changedPaths)
+    ? publishResult.changedPaths.includes(normalizedPath)
+    : false;
+  const publishedOnPath = Array.isArray(publishResult.publishedPaths)
+    ? publishResult.publishedPaths.includes(normalizedPath)
+    : false;
+  if (!changedOnPath && !publishedOnPath && !blockedBlocks.length && !publishedBlockIds.length && !publishResult?.error) {
+    return null;
+  }
+  return {
+    error: String(publishResult?.error || '').trim(),
+    updatedAt: Number(publishResult?.updatedAt) || 0,
+    publishedBlockIds,
+    blockedBlocks,
+    hasOrderChanges: Boolean(publishResult?.hasOrderChangesByPath?.[normalizedPath]),
+    hasPageMetaChanges: Boolean(publishResult?.hasPageMetaChangesByPath?.[normalizedPath]),
+  };
+}
+
+function formatWorkflowScopeLabel(prefix, summary, emptyLabel) {
+  if (!summary?.hasUnsavedChanges) {
+    return emptyLabel;
+  }
+
+  const parts = [];
+  if (summary.changedBlockCount) {
+    parts.push(`${summary.changedBlockCount} block${summary.changedBlockCount === 1 ? '' : 's'}`);
+  }
+  if (summary.hasOrderChanges) {
+    parts.push('order');
+  }
+  if (summary.hasPageMetaChanges) {
+    parts.push('page details');
+  }
+  return `${prefix}: ${parts.join(', ')}`;
+}
+
+function summarizeRevisionBlocks(blocks) {
+  const source = Array.isArray(blocks) ? blocks : [];
+  if (!source.length) {
+    return 'No block metadata';
+  }
+  if (source.length <= 3) {
+    return source.map((block) => String(block?.label || block?.id || 'Block').trim()).filter(Boolean).join(' · ');
+  }
+  return `${source.length} blocks saved`;
 }
 
 function parseHighlightListValue(value) {
@@ -177,14 +504,18 @@ function renderPreviewHighlightedText(source, highlights) {
   return pieces;
 }
 
-const HERO_SWATCH_OPTIONS = [
-  { value: 'is-atlantean', label: 'Blue', swatch: 'linear-gradient(145deg, #00adbb 0%, #008aab 100%)' },
-  { value: 'is-mango', label: 'Mango', swatch: 'linear-gradient(145deg, #f6b146 0%, #e8991f 100%)' },
-  { value: 'is-melon', label: 'Melon', swatch: 'linear-gradient(145deg, #f48f7a 0%, #e56f58 100%)' },
-  { value: 'is-super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
-  { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-  { value: '', label: 'Clear', shortLabel: 'Clear', hideSwatch: true },
+const HERO_SWATCH_OPTIONS = HERO_TEXT_COLOR_OPTIONS;
+const HERO_BG_SWATCH_OPTIONS = SURFACE_BG_TONE_OPTIONS;
+const BILLBOARD_BG_SWATCH_OPTIONS = SURFACE_BG_TONE_OPTIONS;
+const BILLBOARD_TEXT_SWATCH_OPTIONS = PANEL_TEXT_TONE_OPTIONS;
+
+const BILLBOARD_BUTTON_STYLE_OPTIONS = [
+  { value: 'blue', label: 'Blue' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'outline', label: 'Outline' },
 ];
+
+const BILLBOARD_BUTTON_TONE_OPTIONS = BUTTON_TONE_OPTIONS;
 
 const HERO_ANIMATION_PRESET_OPTIONS = [
   { value: 'default', label: 'Default entrance' },
@@ -192,584 +523,195 @@ const HERO_ANIMATION_PRESET_OPTIONS = [
   { value: 'loans-unblur', label: 'Unblur + slide' },
 ];
 
-const HERO_COLOR_CLASS_SET = new Set(HERO_SWATCH_OPTIONS.map((option) => option.value).filter(Boolean));
+const DEFAULT_HERO_LINE_GAP = 0;
+const DEFAULT_INTRO_LINE_SPACING = 1.04;
+const DEFAULT_BILLBOARD_LINE_SPACING = 1;
+const DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT = 800;
+const DEFAULT_BILLBOARD_TITLE_SIZE_REM = 3.4;
+const DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM = -0.03;
+
+const JUSTIFY_ICON_ORDER = ['left', 'center', 'right'];
+const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
 
 function normalizeHeroColorClass(value) {
+  return normalizeSemanticTextColorClass(value);
+}
+
+function normalizeActionButtonStyleToken(value) {
+  const token = String(value || '').trim().toLowerCase();
+  return ACTION_BUTTON_STYLE_SET.has(token) ? token : 'blue';
+}
+
+function normalizeActionButtonToneToken(value, fallback = 'atlantean') {
+  return normalizeButtonTone(value, fallback);
+}
+
+function normalizeJustifySelection(value, options) {
+  const values = (Array.isArray(options) ? options : [])
+    .map((option) => String(option?.value || '').trim())
+    .filter((optionValue) => JUSTIFY_ICON_ORDER.includes(optionValue));
+  const fallback = values.includes('center') ? 'center' : (values[0] || 'center');
   const token = String(value || '').trim();
-  return HERO_COLOR_CLASS_SET.has(token) ? token : '';
+  return values.includes(token) ? token : fallback;
 }
 
-function normalizeHeroRangeHighlights(items, text) {
-  const sourceText = String(text || '');
-  const max = sourceText.length;
-  const normalized = (Array.isArray(items) ? items : [])
-    .map((item) => ({
-      start: Number.isFinite(Number(item?.start)) ? Math.max(0, Math.min(max, Number(item.start))) : null,
-      end: Number.isFinite(Number(item?.end)) ? Math.max(0, Math.min(max, Number(item.end))) : null,
-      className: normalizeHeroColorClass(item?.className),
-    }))
-    .filter((item) => Number.isInteger(item.start) && Number.isInteger(item.end) && item.end > item.start && item.className)
-    .sort((a, b) => a.start - b.start || a.end - b.end);
-
-  const merged = [];
-  normalized.forEach((item) => {
-    const prev = merged[merged.length - 1];
-    if (!prev) {
-      merged.push({ ...item });
-      return;
-    }
-    if (item.start <= prev.end) {
-      if (item.className === prev.className) {
-        prev.end = Math.max(prev.end, item.end);
-      } else if (item.end > prev.end) {
-        merged.push({ ...item, start: prev.end });
-      }
-      return;
-    }
-    if (item.start === prev.end && item.className === prev.className) {
-      prev.end = item.end;
-      return;
-    }
-    merged.push({ ...item });
-  });
-
-  return merged.filter((item) => item.end > item.start);
+function normalizeIntroLineSpacing(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_INTRO_LINE_SPACING;
+  }
+  return Math.max(0.85, Math.min(1.4, Number(numeric.toFixed(2))));
 }
 
-function parseHeroRangeHighlights(value, lineText) {
-  const source = typeof value === 'string' ? value.trim() : '';
-  const text = String(lineText || '');
-  if (!source) {
-    return [];
+function normalizeBillboardLineSpacing(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_BILLBOARD_LINE_SPACING;
   }
-
-  try {
-    const parsed = JSON.parse(source);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    const hasRangeEntries = parsed.some((item) => (
-      item
-      && typeof item === 'object'
-      && Number.isFinite(Number(item.start))
-      && Number.isFinite(Number(item.end))
-    ));
-
-    if (hasRangeEntries) {
-      return normalizeHeroRangeHighlights(parsed, text);
-    }
-
-    const lower = text.toLowerCase();
-    let searchCursor = 0;
-    const ranges = [];
-    parsed.forEach((item) => {
-      const needle = String(item?.text || '');
-      const className = normalizeHeroColorClass(item?.className);
-      if (!needle || !className) return;
-      const idx = lower.indexOf(needle.toLowerCase(), searchCursor);
-      if (idx < 0) return;
-      ranges.push({ start: idx, end: idx + needle.length, className });
-      searchCursor = idx + needle.length;
-    });
-    return normalizeHeroRangeHighlights(ranges, text);
-  } catch {
-    return [];
-  }
+  return Math.max(0.85, Math.min(1.25, Number(numeric.toFixed(2))));
 }
 
-function serializeHeroRangeHighlights(items, lineText) {
-  const normalized = normalizeHeroRangeHighlights(items, lineText);
-  if (!normalized.length) {
-    return '';
-  }
-  const text = String(lineText || '');
-  return JSON.stringify(normalized.map((item) => ({
-    start: item.start,
-    end: item.end,
-    className: item.className,
-    text: text.slice(item.start, item.end),
-  })));
+function normalizeBillboardTitleFontFamily(value) {
+  const token = String(value || '').trim().toLowerCase();
+  return ['heading', 'helv'].includes(token) ? token : 'heading';
 }
 
-function remapHeroRangesForTextChange(ranges, prevText, nextText) {
-  const from = String(prevText || '');
-  const to = String(nextText || '');
-  if (from === to) {
-    return normalizeHeroRangeHighlights(ranges, to);
+function normalizeBillboardTitleSizeRem(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_BILLBOARD_TITLE_SIZE_REM;
   }
-
-  let prefix = 0;
-  const maxPrefix = Math.min(from.length, to.length);
-  while (prefix < maxPrefix && from[prefix] === to[prefix]) {
-    prefix += 1;
-  }
-
-  let suffix = 0;
-  const maxSuffix = Math.min(from.length - prefix, to.length - prefix);
-  while (
-    suffix < maxSuffix
-    && from[from.length - 1 - suffix] === to[to.length - 1 - suffix]
-  ) {
-    suffix += 1;
-  }
-
-  const oldChangedStart = prefix;
-  const oldChangedEnd = from.length - suffix;
-  const delta = to.length - from.length;
-
-  const remapped = [];
-  (Array.isArray(ranges) ? ranges : []).forEach((range) => {
-    if (!Number.isInteger(range?.start) || !Number.isInteger(range?.end) || range.end <= range.start) {
-      return;
-    }
-
-    if (range.end <= oldChangedStart) {
-      remapped.push({ ...range });
-      return;
-    }
-
-    if (range.start >= oldChangedEnd) {
-      remapped.push({
-        ...range,
-        start: range.start + delta,
-        end: range.end + delta,
-      });
-      return;
-    }
-
-    // Range intersects the edited segment. Drop it instead of guessing.
-  });
-
-  return normalizeHeroRangeHighlights(remapped, to);
+  return Math.max(2.4, Math.min(8, Number(numeric.toFixed(2))));
 }
 
-function replaceHeroRangeColor(ranges, start, end, className, lineText) {
-  const text = String(lineText || '');
-  const nextStart = Math.max(0, Math.min(text.length, Number(start) || 0));
-  const nextEnd = Math.max(0, Math.min(text.length, Number(end) || 0));
-  if (nextEnd <= nextStart) {
-    return normalizeHeroRangeHighlights(ranges, text);
+function normalizeBillboardTitleFontWeight(value, fontFamily = 'heading') {
+  const numeric = Number(value);
+  const fallback = fontFamily === 'helv' ? 700 : DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT;
+  if (!Number.isFinite(numeric)) {
+    return fallback;
   }
-
-  const remaining = [];
-  (Array.isArray(ranges) ? ranges : []).forEach((range) => {
-    if (!Number.isInteger(range?.start) || !Number.isInteger(range?.end) || range.end <= range.start) {
-      return;
-    }
-    if (range.end <= nextStart || range.start >= nextEnd) {
-      remaining.push({ ...range });
-      return;
-    }
-    if (range.start < nextStart) {
-      remaining.push({ ...range, end: nextStart });
-    }
-    if (range.end > nextEnd) {
-      remaining.push({ ...range, start: nextEnd });
-    }
-  });
-
-  const normalizedClass = normalizeHeroColorClass(className);
-  if (normalizedClass) {
-    remaining.push({ start: nextStart, end: nextEnd, className: normalizedClass });
-  }
-
-  return normalizeHeroRangeHighlights(remaining, text);
+  const rounded = Math.round(numeric / 100) * 100;
+  return Math.max(400, Math.min(900, rounded));
 }
 
-function HeroBlockEditor({ block, onSettingChange }) {
-  const settings = block.settings || {};
-  const inputRefs = useRef({});
-  const [activeLine, setActiveLine] = useState('line1');
-  const [selectionByLine, setSelectionByLine] = useState({
-    line1: { start: 0, end: 0 },
-    line2: { start: 0, end: 0 },
-  });
+function normalizeBillboardTitleLetterSpacingEm(value, fontFamily = 'heading') {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fontFamily === 'helv' ? -0.015 : DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM;
+  }
+  return Math.max(-0.08, Math.min(0.04, Number(numeric.toFixed(3))));
+}
 
-  const line1Text = String(settings.line1Text ?? '');
-  const line2Text = String(settings.line2Text ?? '');
-  const heroBgTone = (() => {
-    const token = String(settings.bgTone || 'white').trim();
-    return ['white', 'sand', 'blue', 'grey'].includes(token) ? token : 'white';
-  })();
-  const heroJustify = (() => {
-    const token = String(settings.justify || 'center').trim();
-    return ['left', 'center', 'right'].includes(token) ? token : 'center';
-  })();
-  const heroHeightMode = String(settings.heightMode || 'default') === 'custom' ? 'custom' : 'default';
-  const heroHeightSvh = (() => {
-    const numeric = Number(settings.heightSvh);
-    if (!Number.isFinite(numeric)) {
-      return 42;
-    }
-    return Math.max(20, Math.min(90, Math.round(numeric)));
-  })();
-  const heroLineGap = (() => {
-    const numeric = Number(settings.lineGap);
-    if (!Number.isFinite(numeric)) {
-      return 0;
-    }
-    return Math.max(-0.2, Math.min(0.7, Number(numeric.toFixed(2))));
-  })();
-  const line1ClassName = String(settings.line1ClassName || '').trim();
-  const line2ClassName = String(settings.line2ClassName || '').trim();
-  const line1Highlights = useMemo(() => parseHeroRangeHighlights(settings.line1HighlightsJson, line1Text), [settings.line1HighlightsJson, line1Text]);
-  const line2Highlights = useMemo(() => parseHeroRangeHighlights(settings.line2HighlightsJson, line2Text), [settings.line2HighlightsJson, line2Text]);
-  const editableFields = Array.isArray(block.editableFields) ? block.editableFields : [];
-  const heroAppearanceFields = editableFields.filter((field) => field.id === 'bgTone');
+function normalizePanelBgTone(value) {
+  return normalizeSurfaceBgTone(value, 'white');
+}
 
-  const lineConfigs = [
-    {
-      key: 'line1',
-      label: 'Line 1',
-      placeholder: 'Line 1 text',
-      text: line1Text,
-      className: line1ClassName,
-      highlights: line1Highlights,
-    },
-    {
-      key: 'line2',
-      label: 'Line 2',
-      placeholder: 'Line 2 text',
-      text: line2Text,
-      className: line2ClassName,
-      highlights: line2Highlights,
-    },
-  ];
+function normalizePanelTextTone(value, fallback = 'dark') {
+  return normalizeSharedPanelTextTone(value, fallback);
+}
 
-  const lineByKey = {
-    line1: lineConfigs[0],
-    line2: lineConfigs[1],
-  };
+function getPanelTextTonePreviewClassName(value, fallback = 'dark') {
+  const previewClassName = resolvePanelTextToneClassName(value, fallback);
+  return previewClassName === 'is-atlantean' ? 'is-blue' : previewClassName;
+}
 
-  const activeConfig = lineByKey[activeLine] || lineByKey.line1;
-  const activeSelection = selectionByLine[activeLine] || { start: 0, end: 0 };
-  const hasSelection = activeSelection.end > activeSelection.start;
-  const selectedRangeColor = hasSelection
-    ? (activeConfig.highlights.find((item) => item.start <= activeSelection.start && item.end >= activeSelection.end)?.className || '')
-    : '';
+function mergePreviewClassNames(lineClassName, previewClassName) {
+  const lineClasses = String(lineClassName || '').trim().split(/\s+/).filter(Boolean);
+  const previewClasses = String(previewClassName || '').trim().split(/\s+/).filter(Boolean);
+  const hasExplicitLineColor = lineClasses.some((token) => Boolean(normalizeHeroColorClass(token)));
+  const filteredPreviewClasses = hasExplicitLineColor
+    ? previewClasses.filter((token) => !['is-white', 'is-super-grey', 'is-blue'].includes(token))
+    : previewClasses;
+  return [...lineClasses, ...filteredPreviewClasses].join(' ').trim();
+}
 
-  const syncSelection = (lineKey) => {
-    const el = inputRefs.current[lineKey];
-    if (!el) return;
-    const start = Number.isFinite(el.selectionStart) ? el.selectionStart : 0;
-    const end = Number.isFinite(el.selectionEnd) ? el.selectionEnd : start;
-    setSelectionByLine((prev) => ({
-      ...prev,
-      [lineKey]: { start, end },
-    }));
-  };
-
-  const updateLineText = (lineKey, nextText) => {
-    const prevText = String(settings?.[`${lineKey}Text`] ?? '');
-    const prevRanges = parseHeroRangeHighlights(settings?.[`${lineKey}HighlightsJson`], prevText);
-    const remappedRanges = remapHeroRangesForTextChange(prevRanges, prevText, nextText);
-    onSettingChange(`${lineKey}Text`, nextText);
-    onSettingChange(`${lineKey}HighlightsJson`, serializeHeroRangeHighlights(remappedRanges, nextText));
-
-    setSelectionByLine((prev) => {
-      const current = prev[lineKey] || { start: 0, end: 0 };
-      const max = nextText.length;
-      return {
-        ...prev,
-        [lineKey]: {
-          start: Math.max(0, Math.min(max, current.start)),
-          end: Math.max(0, Math.min(max, current.end)),
-        },
-      };
-    });
-  };
-
-  const applySwatch = (colorValue) => {
-    const targetLine = activeLine || 'line1';
-    const line = lineByKey[targetLine] || lineByKey.line1;
-    if (!line) return;
-
-    const el = inputRefs.current[targetLine];
-    if (el) {
-      el.focus();
-      syncSelection(targetLine);
-    }
-
-    const currentSelection = (() => {
-      if (!el) return selectionByLine[targetLine] || { start: 0, end: 0 };
-      const start = Number.isFinite(el.selectionStart) ? el.selectionStart : 0;
-      const end = Number.isFinite(el.selectionEnd) ? el.selectionEnd : start;
-      return { start, end };
-    })();
-
-    if (currentSelection.end > currentSelection.start) {
-      const nextRanges = replaceHeroRangeColor(
-        line.highlights,
-        currentSelection.start,
-        currentSelection.end,
-        colorValue,
-        line.text,
-      );
-      onSettingChange(`${targetLine}HighlightsJson`, serializeHeroRangeHighlights(nextRanges, line.text));
-      return;
-    }
-
-    onSettingChange(`${targetLine}ClassName`, colorValue);
-  };
-
-  const clearLineHighlights = (lineKey) => {
-    onSettingChange(`${lineKey}HighlightsJson`, '');
-  };
-
-  const removeHighlightAtIndex = (lineKey, index) => {
-    const line = lineByKey[lineKey];
-    if (!line) return;
-    const nextRanges = line.highlights.filter((_, itemIndex) => itemIndex !== index);
-    onSettingChange(`${lineKey}HighlightsJson`, serializeHeroRangeHighlights(nextRanges, line.text));
-  };
+function JustifyIcon({ align }) {
+  const offsets = align === 'left'
+    ? [2, 2, 2]
+    : align === 'right'
+      ? [7, 5, 3]
+      : [4, 3, 4];
 
   return (
-    <div className="admin-hero-editor">
-      <div className="admin-hero-inline-controls">
-        <label>
-          <span>Hero animation</span>
-          <select
-            value={String(settings.animationPreset || 'default')}
-            onChange={(event) => onSettingChange('animationPreset', event.target.value)}
-          >
-            {HERO_ANIMATION_PRESET_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Hero justify</span>
-          <select
-            value={heroJustify}
-            onChange={(event) => onSettingChange('justify', event.target.value)}
-          >
-            <option value="center">Center</option>
-            <option value="left">Left</option>
-            <option value="right">Right</option>
-          </select>
-        </label>
-        <label>
-          <span>Hero height</span>
-          <select
-            value={heroHeightMode}
-            onChange={(event) => onSettingChange('heightMode', event.target.value)}
-          >
-            <option value="default">Default</option>
-            <option value="custom">Custom (% viewport)</option>
-          </select>
-        </label>
-        {heroHeightMode === 'custom' ? (
-          <label className="admin-hero-inline-height-control">
-            <span>Viewport height ({heroHeightSvh}%)</span>
-            <div className="admin-hero-inline-height-row">
-              <input
-                type="range"
-                min="20"
-                max="90"
-                step="1"
-                value={heroHeightSvh}
-                onChange={(event) => onSettingChange('heightSvh', Number(event.target.value))}
-                aria-label="Hero height percent of viewport"
-              />
-              <input
-                className="admin-hero-inline-height-number"
-                type="number"
-                min="20"
-                max="90"
-                step="1"
-                value={heroHeightSvh}
-                onChange={(event) => {
-                  const nextRaw = event.target.value;
-                  if (nextRaw === '') {
-                    onSettingChange('heightSvh', '');
-                    return;
-                  }
-                  onSettingChange('heightSvh', Number(nextRaw));
-                }}
-                aria-label="Hero height percent"
-              />
-              <span className="admin-hero-inline-height-unit">svh</span>
-            </div>
-          </label>
-        ) : null}
-        <label className="admin-hero-inline-height-control">
-          <span>Line spacing (between lines) ({heroLineGap.toFixed(2)}em)</span>
-          <div className="admin-hero-inline-height-row">
-            <input
-              type="range"
-              min="-0.2"
-              max="0.7"
-              step="0.01"
-              value={heroLineGap}
-              onChange={(event) => onSettingChange('lineGap', Number(event.target.value))}
-              aria-label="Hero line spacing between line 1 and line 2"
-            />
-            <input
-              className="admin-hero-inline-height-number"
-              type="number"
-              min="-0.2"
-              max="0.7"
-              step="0.01"
-              value={heroLineGap}
-              onChange={(event) => {
-                const nextRaw = event.target.value;
-                if (nextRaw === '') {
-                  onSettingChange('lineGap', '');
-                  return;
-                }
-                onSettingChange('lineGap', Number(nextRaw));
-              }}
-              aria-label="Hero line spacing number"
-            />
-            <span className="admin-hero-inline-height-unit">em</span>
-          </div>
-        </label>
-      </div>
+    <svg className="admin-justify-pill-icon" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+      <rect x={offsets[0]} y="3" width="8" height="1.5" rx="0.75" />
+      <rect x={offsets[1]} y="6.25" width="9" height="1.5" rx="0.75" />
+      <rect x={offsets[2]} y="9.5" width="7" height="1.5" rx="0.75" />
+    </svg>
+  );
+}
 
-      <PanelAppearanceControls
-        fields={heroAppearanceFields}
-        settings={settings}
-        onSettingChange={onSettingChange}
-        title="Hero appearance"
+function VisibilityIcon({ hidden }) {
+  if (hidden) {
+    return (
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path
+          d="M2.2 2.9a.7.7 0 0 1 1 0l10 10a.7.7 0 1 1-1 1l-10-10a.7.7 0 0 1 0-1z"
+          fill="currentColor"
+        />
+        <path
+          d="M8 3.2c3.2 0 5.8 2 7.1 4.8a.7.7 0 0 1 0 .6 8.6 8.6 0 0 1-3.5 3.7l-1-1A7.1 7.1 0 0 0 13.6 8c-1.1-2.1-3.1-3.5-5.6-3.5-1 0-2 .2-2.8.7l-1-1A8 8 0 0 1 8 3.2z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 3.2c3.2 0 5.8 2 7.1 4.8a.7.7 0 0 1 0 .6C13.8 11.4 11.2 13.4 8 13.4S2.2 11.4.9 8.6a.7.7 0 0 1 0-.6C2.2 5.2 4.8 3.2 8 3.2zm0 1.3c-2.5 0-4.5 1.4-5.6 3.5 1.1 2.1 3.1 3.5 5.6 3.5s4.5-1.4 5.6-3.5c-1.1-2.1-3.1-3.5-5.6-3.5z"
+        fill="currentColor"
       />
+      <circle cx="8" cy="8" r="1.9" fill="currentColor" />
+    </svg>
+  );
+}
 
-      <div className="admin-hero-inline-line-control-row">
-        {lineConfigs.map((line) => (
-          <div key={`${line.key}-controls`} className="admin-hero-inline-line-control-item">
-            <button
-              type="button"
-              className={`admin-hero-inline-line-tag${activeLine === line.key ? ' is-active' : ''}`}
-              onClick={() => {
-                setActiveLine(line.key);
-                inputRefs.current[line.key]?.focus();
-              }}
-            >
-              {line.label}
-            </button>
-            {line.highlights.length ? (
-              <button
-                type="button"
-                className="admin-hero-inline-clear-highlights"
-                onClick={() => clearLineHighlights(line.key)}
-              >
-                Clear spans
-              </button>
-            ) : null}
-          </div>
-        ))}
-      </div>
+function AddBlockIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 3.1a.8.8 0 0 1 .8.8v3.3h3.3a.8.8 0 1 1 0 1.6H8.8v3.3a.8.8 0 1 1-1.6 0V8.8H3.9a.8.8 0 1 1 0-1.6h3.3V3.9a.8.8 0 0 1 .8-.8z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
 
-      <div className={`admin-hero-inline-stage is-bg-${heroBgTone} is-justify-${heroJustify}`} aria-label="Hero editor preview surface">
-        {lineConfigs.map((line, index) => (
-          <div
-            key={line.key}
-            className={`admin-hero-inline-line-wrap${activeLine === line.key ? ' is-active' : ''}`}
+function JustifyPillControl({ label, value, options, onChange, className = '' }) {
+  const optionByValue = new Map(
+    (Array.isArray(options) ? options : [])
+      .map((option) => [String(option?.value || '').trim(), option]),
+  );
+  const orderedOptions = JUSTIFY_ICON_ORDER
+    .map((optionValue) => optionByValue.get(optionValue))
+    .filter(Boolean);
+  const normalizedOptions = orderedOptions.length
+    ? orderedOptions
+    : JUSTIFY_ICON_ORDER.map((optionValue) => ({ value: optionValue, label: optionValue }));
+  const selectedValue = normalizeJustifySelection(value, normalizedOptions);
+
+  return (
+    <div className={`admin-justify-pill-control${className ? ` ${className}` : ''}`} role="radiogroup" aria-label={label}>
+      {normalizedOptions.map((option) => {
+        const optionValue = String(option.value || '').trim();
+        const isActive = selectedValue === optionValue;
+        return (
+          <button
+            key={`${label}-${optionValue}`}
+            type="button"
+            role="radio"
+            aria-checked={isActive}
+            aria-label={option.label}
+            className={`admin-justify-pill-btn${isActive ? ' is-active' : ''}`}
+            title={option.label}
+            onClick={() => onChange(optionValue)}
           >
-            <div
-              className={`admin-hero-inline-line-stage${line.className ? ` ${line.className}` : ''}`}
-              style={index > 0 ? { marginTop: `${heroLineGap}em` } : undefined}
-            >
-              <div
-                className={`admin-hero-inline-line-mirror${line.className ? ` ${line.className}` : ''}`}
-                aria-hidden="true"
-              >
-                {line.text
-                  ? renderPreviewHighlightedText(line.text, line.highlights)
-                  : <span className="admin-hero-inline-line-placeholder">{line.placeholder}</span>}
-              </div>
-              <input
-                ref={(node) => {
-                  inputRefs.current[line.key] = node;
-                }}
-                type="text"
-                className={`admin-hero-inline-line-input${line.className ? ` ${line.className}` : ''}`}
-                value={line.text}
-                onFocus={() => {
-                  setActiveLine(line.key);
-                  syncSelection(line.key);
-                }}
-                onClick={() => {
-                  setActiveLine(line.key);
-                  syncSelection(line.key);
-                }}
-                onSelect={() => syncSelection(line.key)}
-                onKeyUp={() => syncSelection(line.key)}
-                onMouseUp={() => syncSelection(line.key)}
-                onChange={(event) => updateLineText(line.key, event.target.value)}
-                placeholder={line.placeholder}
-                aria-label={`${line.label} text`}
-                autoComplete="off"
-                spellCheck="false"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="admin-hero-inline-toolbar">
-        <div className="admin-swatch-list is-compact admin-hero-inline-swatch-list" role="radiogroup" aria-label="Hero color controls">
-          {HERO_SWATCH_OPTIONS.map((option) => {
-            const activeValue = hasSelection ? selectedRangeColor : (activeConfig.className || '');
-            const isActive = activeValue === option.value;
-            return (
-              <button
-                key={`hero-inline-swatch-${option.value || 'clear'}`}
-                type="button"
-                role="radio"
-                aria-checked={isActive}
-                className={`admin-swatch-option${isActive ? ' is-active' : ''}${option.value === '' ? ' is-clear' : ''}`}
-                onMouseDown={(event) => event.preventDefault()}
-                title={hasSelection
-                  ? `${option.label} (apply to selection)`
-                  : `${option.label} (apply to ${activeConfig.label})`}
-                onClick={() => applySwatch(option.value)}
-              >
-                {!option.hideSwatch ? (
-                  <span className="admin-swatch-chip" aria-hidden="true" style={{ background: option.swatch || '#ddd' }} />
-                ) : null}
-                <span>{option.shortLabel || option.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="admin-hero-inline-spans">
-        {lineConfigs.map((line) => (
-          <div key={`${line.key}-spans`} className="admin-hero-inline-spans-row">
-            <p className="admin-hero-inline-spans-label">{line.label} spans</p>
-            {line.highlights.length ? (
-              <div className="admin-hero-inline-span-chip-list">
-                {line.highlights.map((range, index) => {
-                  const snippet = line.text.slice(range.start, range.end);
-                  const swatch = HERO_SWATCH_OPTIONS.find((option) => option.value === range.className);
-                  return (
-                    <button
-                      key={`${line.key}-span-${range.start}-${range.end}-${range.className}`}
-                      type="button"
-                      className="admin-hero-inline-span-chip"
-                      onClick={() => removeHighlightAtIndex(line.key, index)}
-                      title="Remove span"
-                    >
-                      <span
-                        className="admin-hero-inline-span-chip-color"
-                        aria-hidden="true"
-                        style={{ background: swatch?.swatch || '#ddd' }}
-                      />
-                      <span className="admin-hero-inline-span-chip-text">
-                        “{snippet || ' '}” ({range.start}-{range.end})
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="admin-hero-inline-spans-empty">No colored spans yet.</p>
-            )}
-          </div>
-        ))}
-      </div>
+            <JustifyIcon align={optionValue} />
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -785,30 +727,39 @@ function ColorTextSelectionEditor({
   placeholder = '',
   rows = 2,
   className = '',
+  inputNearSwatches = false,
+  unifiedPreviewEditor = false,
+  previewClassName = '',
+  previewWrapClassName = '',
+  previewStyle = undefined,
+  previewOverlay = null,
+  afterSwatches = null,
+  spanDetailsUnderToggle = false,
+  useResetForClear = false,
+  swatchOptions = HERO_SWATCH_OPTIONS,
 }) {
   const inputRef = useRef(null);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showSpanDetails, setShowSpanDetails] = useState(false);
   const value = String(text ?? '');
   const normalizedLineClass = String(lineClassName || '').trim();
+  const mergedPreviewClassName = mergePreviewClassNames(normalizedLineClass, previewClassName);
   const highlights = useMemo(() => parseHeroRangeHighlights(highlightsJson, value), [highlightsJson, value]);
   const hasSelection = selection.end > selection.start;
   const selectedRangeColor = hasSelection
-    ? (highlights.find((item) => item.start <= selection.start && item.end >= selection.end)?.className || '')
+    ? resolveSelectionRangeColor(highlights, selection.start, selection.end)
     : '';
 
   const syncSelection = () => {
-    const el = inputRef.current;
-    if (!el) return;
-    const start = Number.isFinite(el.selectionStart) ? el.selectionStart : 0;
-    const end = Number.isFinite(el.selectionEnd) ? el.selectionEnd : start;
-    setSelection({ start, end });
+    const nextSelection = readTextSelectionState(inputRef.current, selection, value);
+    setSelection({ start: nextSelection.start, end: nextSelection.end });
   };
 
   const handleTextChange = (nextText) => {
     const prevText = value;
-    const nextRanges = remapHeroRangesForTextChange(highlights, prevText, nextText);
     onTextChange(nextText);
-    onHighlightsJsonChange(serializeHeroRangeHighlights(nextRanges, nextText));
+    onHighlightsJsonChange(remapHighlightsJsonForTextChange(highlightsJson, prevText, nextText));
     setSelection((prev) => ({
       start: Math.max(0, Math.min(nextText.length, prev.start)),
       end: Math.max(0, Math.min(nextText.length, prev.end)),
@@ -817,136 +768,258 @@ function ColorTextSelectionEditor({
 
   const applySwatch = (colorValue) => {
     const el = inputRef.current;
-    if (el) {
+    if (!isInputFocused) {
+      onLineClassNameChange(replaceHeroLineColorClass(normalizedLineClass, colorValue));
+      setSelection({ start: 0, end: 0 });
+      return;
+    }
+
+    if (el && document.activeElement !== el) {
       el.focus();
     }
     const currentSelection = (() => {
-      if (!el) {
-        return selection;
-      }
-      const start = Number.isFinite(el.selectionStart) ? el.selectionStart : 0;
-      const end = Number.isFinite(el.selectionEnd) ? el.selectionEnd : start;
-      return { start, end };
+      const nextSelection = readTextSelectionState(el, selection, value);
+      return { start: nextSelection.start, end: nextSelection.end };
     })();
 
     if (currentSelection.end > currentSelection.start) {
-      const nextRanges = replaceHeroRangeColor(
-        highlights,
-        currentSelection.start,
-        currentSelection.end,
-        colorValue,
-        value,
+      onHighlightsJsonChange(
+        applySelectionColor(
+          highlightsJson,
+          value,
+          currentSelection.start,
+          currentSelection.end,
+          colorValue,
+        ),
       );
-      onHighlightsJsonChange(serializeHeroRangeHighlights(nextRanges, value));
       setSelection(currentSelection);
       return;
     }
 
-    onLineClassNameChange(colorValue);
+    onLineClassNameChange(replaceHeroLineColorClass(normalizedLineClass, colorValue));
   };
 
   const removeHighlightAtIndex = (index) => {
-    const nextRanges = highlights.filter((_, itemIndex) => itemIndex !== index);
-    onHighlightsJsonChange(serializeHeroRangeHighlights(nextRanges, value));
+    onHighlightsJsonChange(removeSelectionRange(highlightsJson, value, index));
+  };
+
+  const clearAllColorFormatting = () => {
+    onLineClassNameChange(replaceHeroLineColorClass(normalizedLineClass, ''));
+    onHighlightsJsonChange('');
+    setShowSpanDetails(false);
   };
 
   const clearHighlights = () => {
     onHighlightsJsonChange('');
+    setShowSpanDetails(false);
   };
 
-  const activeValue = hasSelection ? selectedRangeColor : normalizedLineClass;
+  const activeValue = hasSelection ? selectedRangeColor : extractHeroLineColorToken(normalizedLineClass);
+  const hasSpanDetails = highlights.length > 0;
+  const resolvedSwatchOptions = useResetForClear
+    ? (Array.isArray(swatchOptions) ? swatchOptions.filter((option) => option.value !== '') : [])
+    : (Array.isArray(swatchOptions) ? swatchOptions : []);
+
+  const textInput = (
+    <textarea
+      ref={inputRef}
+      rows={rows}
+      className="admin-color-text-input"
+      value={value}
+      placeholder={placeholder}
+      onFocus={() => {
+        setIsInputFocused(true);
+        syncSelection();
+      }}
+      onBlur={() => {
+        setIsInputFocused(false);
+        setSelection({ start: 0, end: 0 });
+      }}
+      onClick={syncSelection}
+      onSelect={syncSelection}
+      onKeyUp={syncSelection}
+      onMouseUp={syncSelection}
+      onChange={(event) => handleTextChange(event.target.value)}
+    />
+  );
+
+  const preview = (
+    <div className={`admin-color-text-preview-wrap${previewWrapClassName ? ` ${previewWrapClassName}` : ''}${previewOverlay ? ' has-overlay' : ''}${useResetForClear ? ' has-reset-btn' : ''}`}>
+      <p
+        className={`admin-color-text-preview${mergedPreviewClassName ? ` ${mergedPreviewClassName}` : ''}`}
+        style={previewStyle}
+        aria-live="polite"
+      >
+        {value
+          ? renderPreviewHighlightedText(value, highlights)
+          : <span className="admin-color-text-placeholder">{placeholder || 'Preview'}</span>}
+      </p>
+      {useResetForClear ? (
+        <button
+          type="button"
+          className="admin-hero-inline-reset-btn admin-color-text-reset-btn"
+          onClick={clearAllColorFormatting}
+          title="Reset text color and spans"
+          aria-label="Reset text color and spans"
+        >
+          ↺
+        </button>
+      ) : null}
+      {previewOverlay ? (
+        <div className="admin-color-text-preview-overlay">
+          {previewOverlay}
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const unifiedPreview = (
+    <div className={`admin-color-text-preview-wrap admin-color-text-unified-editor${previewWrapClassName ? ` ${previewWrapClassName}` : ''}${previewOverlay ? ' has-overlay' : ''}${useResetForClear ? ' has-reset-btn' : ''}`}>
+      <p
+        className={`admin-color-text-preview${mergedPreviewClassName ? ` ${mergedPreviewClassName}` : ''}`}
+        style={previewStyle}
+        aria-live="polite"
+      >
+        {value
+          ? renderPreviewHighlightedText(value, highlights)
+          : <span className="admin-color-text-placeholder">{placeholder || 'Preview'}</span>}
+      </p>
+      <textarea
+        ref={inputRef}
+        rows={rows}
+        className={`admin-color-text-inline-input${mergedPreviewClassName ? ` ${mergedPreviewClassName}` : ''}`}
+        value={value}
+        placeholder={placeholder}
+        onFocus={() => {
+          setIsInputFocused(true);
+          syncSelection();
+        }}
+        onBlur={() => {
+          setIsInputFocused(false);
+          setSelection({ start: 0, end: 0 });
+        }}
+        onClick={syncSelection}
+        onSelect={syncSelection}
+        onKeyUp={syncSelection}
+        onMouseUp={syncSelection}
+        onChange={(event) => handleTextChange(event.target.value)}
+        aria-label={`${label} text`}
+        spellCheck="false"
+      />
+      {useResetForClear ? (
+        <button
+          type="button"
+          className="admin-hero-inline-reset-btn admin-color-text-reset-btn"
+          onClick={clearAllColorFormatting}
+          title="Reset text color and spans"
+          aria-label="Reset text color and spans"
+        >
+          ↺
+        </button>
+      ) : null}
+      {previewOverlay ? (
+        <div className="admin-color-text-preview-overlay">
+          {previewOverlay}
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const spanDetails = (
+    <div className="admin-color-text-spans">
+      {hasSpanDetails ? (
+        <div className="admin-hero-inline-span-chip-list">
+          {highlights.map((range, index) => {
+            const snippet = value.slice(range.start, range.end);
+            const swatch = (Array.isArray(swatchOptions) ? swatchOptions : HERO_SWATCH_OPTIONS)
+              .find((option) => option.value === range.className);
+            return (
+              <button
+                key={`${label}-span-${range.start}-${range.end}-${range.className}`}
+                type="button"
+                className="admin-hero-inline-span-chip"
+                onClick={() => removeHighlightAtIndex(index)}
+                title="Remove span"
+              >
+                <span
+                  className="admin-hero-inline-span-chip-color"
+                  aria-hidden="true"
+                  style={{ background: swatch?.swatch || '#ddd' }}
+                />
+                <span className="admin-hero-inline-span-chip-text">
+                  “{snippet || ' '}” ({range.start}-{range.end})
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="admin-color-text-spans-empty">No colored spans yet.</p>
+      )}
+    </div>
+  );
 
   return (
     <div className={`admin-color-text-editor${className ? ` ${className}` : ''}`}>
       <div className="admin-color-text-editor-top">
         <span className="admin-color-text-editor-label">{label}</span>
-        {highlights.length ? (
+        {highlights.length && !useResetForClear ? (
           <button type="button" className="admin-color-text-clear-spans" onClick={clearHighlights}>
             Clear spans
           </button>
         ) : null}
       </div>
 
-      <textarea
-        ref={inputRef}
-        rows={rows}
-        className="admin-color-text-input"
-        value={value}
-        placeholder={placeholder}
-        onFocus={syncSelection}
-        onClick={syncSelection}
-        onSelect={syncSelection}
-        onKeyUp={syncSelection}
-        onMouseUp={syncSelection}
-        onChange={(event) => handleTextChange(event.target.value)}
-      />
+      {unifiedPreviewEditor ? unifiedPreview : (
+        <>
+          {inputNearSwatches ? preview : textInput}
+          {inputNearSwatches ? textInput : preview}
+        </>
+      )}
 
-      <div className="admin-color-text-preview-wrap">
-        <p className={`admin-color-text-preview${normalizedLineClass ? ` ${normalizedLineClass}` : ''}`} aria-live="polite">
-          {value
-            ? renderPreviewHighlightedText(value, highlights)
-            : <span className="admin-color-text-placeholder">{placeholder || 'Preview'}</span>}
-        </p>
-      </div>
+      <div className="admin-color-text-controls-row">
+        <div className="admin-color-text-controls-topline">
+          <ColorPalette
+            variant="admin"
+            className="is-compact is-icon-only admin-color-text-swatch-list"
+            ariaLabel={`${label} color controls`}
+            options={resolvedSwatchOptions}
+            value={activeValue}
+            preventMouseDown
+            onChange={(nextValue) => applySwatch(nextValue)}
+            getOptionClassName={(option, state) => `${state.active ? ' is-active' : ''}${option.value === '' ? ' is-clear' : ''}`}
+            getOptionShortLabel={(option) => option.shortLabel || option.label}
+            hideSwatchForOption={(option) => Boolean(option.hideSwatch)}
+          />
 
-      <div className="admin-swatch-list is-compact admin-color-text-swatch-list" role="radiogroup" aria-label={`${label} color controls`}>
-        {HERO_SWATCH_OPTIONS.map((option) => {
-          const isActive = activeValue === option.value;
-          return (
-            <button
-              key={`${label}-${option.value || 'clear'}`}
-              type="button"
-              role="radio"
-              aria-checked={isActive}
-              className={`admin-swatch-option${isActive ? ' is-active' : ''}${option.value === '' ? ' is-clear' : ''}`}
-              title={option.label}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => applySwatch(option.value)}
-            >
-              {!option.hideSwatch ? (
-                <span className="admin-swatch-chip" aria-hidden="true" style={{ background: option.swatch || '#ddd' }} />
-              ) : null}
-              <span>{option.shortLabel || option.label}</span>
-            </button>
-          );
-        })}
-      </div>
+          <button
+            type="button"
+            className="admin-hero-inline-span-toggle admin-color-text-span-toggle"
+            onClick={() => setShowSpanDetails((current) => !current)}
+          >
+            {showSpanDetails ? 'Hide span details ▴' : 'Show span details ▾'}
+          </button>
+        </div>
 
-      <div className="admin-color-text-spans">
-        {highlights.length ? (
-          <div className="admin-hero-inline-span-chip-list">
-            {highlights.map((range, index) => {
-              const snippet = value.slice(range.start, range.end);
-              const swatch = HERO_SWATCH_OPTIONS.find((option) => option.value === range.className);
-              return (
-                <button
-                  key={`${label}-span-${range.start}-${range.end}-${range.className}`}
-                  type="button"
-                  className="admin-hero-inline-span-chip"
-                  onClick={() => removeHighlightAtIndex(index)}
-                  title="Remove span"
-                >
-                  <span
-                    className="admin-hero-inline-span-chip-color"
-                    aria-hidden="true"
-                    style={{ background: swatch?.swatch || '#ddd' }}
-                  />
-                  <span className="admin-hero-inline-span-chip-text">
-                    “{snippet || ' '}” ({range.start}-{range.end})
-                  </span>
-                </button>
-              );
-            })}
+        {spanDetailsUnderToggle && showSpanDetails ? (
+          <div className="admin-color-text-span-details-under-toggle">
+            {spanDetails}
           </div>
-        ) : (
-          <p className="admin-color-text-spans-empty">No colored spans yet.</p>
-        )}
+        ) : null}
+
+        {afterSwatches ? (
+          <div className="admin-color-text-after-swatches">
+            {afterSwatches}
+          </div>
+        ) : null}
       </div>
+
+      {!spanDetailsUnderToggle && showSpanDetails ? spanDetails : null}
     </div>
   );
 }
 
-function FieldControlGrid({ fields, settings, onSettingChange, className = '' }) {
+export function FieldControlGrid({ fields, settings, onSettingChange, className = '', routeOptions = [] }) {
   const items = Array.isArray(fields) ? fields.filter(Boolean) : [];
   if (!items.length) {
     return null;
@@ -957,20 +1030,140 @@ function FieldControlGrid({ fields, settings, onSettingChange, className = '' })
       {items.map((field) => (
         <label key={field.id} className={field.layout === 'half' ? 'is-half' : undefined}>
           <span>{field.label}</span>
-          {renderFieldControl(field, settings?.[field.id], (nextValue) => {
-            onSettingChange(field.id, nextValue);
-          })}
+          {renderFieldControl(
+            field,
+            settings?.[field.id],
+            (nextValue) => {
+              onSettingChange(field.id, nextValue);
+            },
+            settings,
+            onSettingChange,
+            routeOptions,
+          )}
         </label>
       ))}
     </div>
   );
 }
 
-function PanelAppearanceControls({ fields, settings, onSettingChange, title = 'Panel appearance' }) {
+function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, routeOptions = [] }) {
+  const [routeSearch, setRouteSearch] = useState('');
+  const allRouteOptions = useMemo(
+    () => sortPages(Array.isArray(routeOptions) ? routeOptions : []),
+    [routeOptions],
+  );
+  const filteredRoutes = useMemo(() => {
+    const needle = routeSearch.trim().toLowerCase();
+    if (!needle) {
+      return allRouteOptions;
+    }
+    return allRouteOptions.filter((page) => {
+      const haystack = `${page.title} ${page.path}`.toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [routeSearch, allRouteOptions]);
+
+  const applyRoutePage = (page) => {
+    if (!page || !page.path) {
+      return;
+    }
+    onChange(page.path);
+    if (typeof onRouteRefChange === 'function') {
+      onRouteRefChange(toManagedPageLinkRef(page));
+    }
+  };
+
+  useEffect(() => {
+    if (!routeRefValue) {
+      if (typeof onRouteRefChange === 'function') {
+        const exactPage = allRouteOptions.find((page) => page.path === String(value || '').trim());
+        if (exactPage) {
+          onRouteRefChange(toManagedPageLinkRef(exactPage));
+        }
+      }
+      return;
+    }
+    const matchedPage = allRouteOptions.find((page) => toManagedPageLinkRef(page) === String(routeRefValue).trim());
+    if (!matchedPage?.path) {
+      return;
+    }
+    if (String(value || '').trim() === matchedPage.path) {
+      return;
+    }
+    onChange(matchedPage.path);
+  }, [routeRefValue, value, onChange, onRouteRefChange, allRouteOptions]);
+
+  return (
+    <div className="admin-route-link-control">
+      <input
+        type="text"
+        value={value ?? ''}
+        placeholder="/contact-us"
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          onChange(nextValue);
+          if (typeof onRouteRefChange === 'function') {
+            const exactPage = allRouteOptions.find((page) => page.path === nextValue.trim());
+            onRouteRefChange(exactPage ? toManagedPageLinkRef(exactPage) : '');
+          }
+        }}
+      />
+      <div className="admin-route-link-search">
+        <input
+          type="search"
+          value={routeSearch}
+          placeholder="Search pages"
+          onChange={(event) => setRouteSearch(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter') {
+              return;
+            }
+            const target = findSearchTargetPage(routeSearch, filteredRoutes.length ? filteredRoutes : allRouteOptions);
+            if (!target) {
+              return;
+            }
+            event.preventDefault();
+            applyRoutePage(target);
+            setRouteSearch('');
+          }}
+        />
+        <select
+          value=""
+          onChange={(event) => {
+            if (!event.target.value) {
+              return;
+            }
+            const selectedPage = allRouteOptions.find((page) => page.path === event.target.value);
+            if (!selectedPage) {
+              return;
+            }
+            applyRoutePage(selectedPage);
+            setRouteSearch('');
+          }}
+        >
+          <option value="">Pick page route…</option>
+          {filteredRoutes.map((page) => (
+            <option key={`route-link-${page.path}`} value={page.path}>
+              {page.path} — {page.title}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function PanelAppearanceControls({
+  fields,
+  settings,
+  onSettingChange,
+  className = '',
+  compactSwatches = true,
+}) {
   const items = (Array.isArray(fields) ? fields : [])
     .filter(Boolean)
     .map((field) => (
-      field.type === 'swatch'
+      field.type === 'swatch' && compactSwatches
         ? { ...field, compact: true }
         : field
     ));
@@ -979,11 +1172,7 @@ function PanelAppearanceControls({ fields, settings, onSettingChange, title = 'P
   }
 
   return (
-    <section className="admin-panel-appearance">
-      <div className="admin-panel-appearance-head">
-        <h4>{title}</h4>
-        <p>Reusable panel-level presentation controls.</p>
-      </div>
+    <section className={`admin-panel-appearance${className ? ` ${className}` : ''}`}>
       <FieldControlGrid
         fields={items}
         settings={settings}
@@ -994,74 +1183,103 @@ function PanelAppearanceControls({ fields, settings, onSettingChange, title = 'P
   );
 }
 
-function IntroBlockEditor({ block, onSettingChange }) {
-  const settings = block.settings || {};
-  const allFields = Array.isArray(block.editableFields) ? block.editableFields : [];
-  const fieldById = new Map(allFields.map((field) => [field.id, field]));
-  const appearanceFields = ['bgTone', 'textTone']
-    .map((id) => fieldById.get(id))
-    .filter(Boolean);
-  const contentFields = allFields.filter((field) => (
-    field.id !== 'heading'
-    && field.id !== 'bgTone'
-    && field.id !== 'textTone'
-  ));
+function toEditorHtml(value, fallbackText = '') {
+  const source = String(value || '').trim();
+  if (source) {
+    return source;
+  }
+  const text = String(fallbackText || '').trim();
+  if (!text) {
+    return '<p></p>';
+  }
+  const escaped = text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+  return `<p>${escaped}</p>`;
+}
+
+function EditorButtonPreview({ buttons }) {
+  const items = Array.isArray(buttons) ? buttons : [];
+  const visible = items
+    .map((item, index) => {
+      const label = String(item?.label || '').trim() || `Button ${index + 1}`;
+      const style = normalizeActionButtonStyleToken(item?.style);
+      const defaultTone = style === 'dark' ? 'super-grey' : 'atlantean';
+      const tone = style === 'outline'
+        ? normalizeActionButtonToneToken(item?.tone, defaultTone)
+        : defaultTone;
+      const className = [
+        'service-native-btn',
+        style === 'outline' ? 'is-outline' : '',
+        `is-tone-${tone}`,
+      ].filter(Boolean).join(' ');
+      return { label, className };
+    });
 
   return (
-    <div className="admin-intro-block-editor">
-      <div className="admin-dynamic-panel-primary-grid">
-        <ColorTextSelectionEditor
-          label="Heading"
-          text={settings.heading ?? ''}
-          lineClassName={settings.headingClassName ?? ''}
-          highlightsJson={settings.headingHighlightsJson ?? ''}
-          onTextChange={(nextValue) => onSettingChange('heading', nextValue)}
-          onLineClassNameChange={(nextValue) => onSettingChange('headingClassName', nextValue)}
-          onHighlightsJsonChange={(nextValue) => onSettingChange('headingHighlightsJson', nextValue)}
-          placeholder="Intro heading"
-          rows={2}
-          className="is-intro-heading"
-        />
-
-        <PanelAppearanceControls
-          fields={appearanceFields}
-          settings={settings}
-          onSettingChange={onSettingChange}
-        />
+    <div className="admin-button-preview-wrap" aria-label="Button preview">
+      <span className="admin-button-preview-label">Button preview</span>
+      <div className="admin-button-preview-row">
+        {visible.map((item, index) => (
+          <span key={`btn-preview-${index}`} className={item.className}>{item.label}</span>
+        ))}
       </div>
-
-      <FieldControlGrid
-        fields={contentFields}
-        settings={settings}
-        onSettingChange={onSettingChange}
-        className="admin-content-field-list--inline"
-      />
     </div>
   );
 }
 
-function renderFieldControl(field, value, onChange) {
+function renderFieldControl(field, value, onChange, settings, onSettingChange, routeOptions = []) {
   if (field.type === 'boolean') {
+    const activeValue = toBoolean(value);
     return (
-      <select value={String(toBoolean(value))} onChange={(event) => onChange(event.target.value === 'true')}>
-        <option value="true">True</option>
-        <option value="false">False</option>
-      </select>
+      <div className="admin-boolean-pill" role="group" aria-label={field.label || 'Boolean setting'}>
+        <button
+          type="button"
+          className={`admin-boolean-pill-option${activeValue ? ' is-active' : ''}`}
+          onClick={() => onChange(true)}
+        >
+          On
+        </button>
+        <button
+          type="button"
+          className={`admin-boolean-pill-option${!activeValue ? ' is-active' : ''}`}
+          onClick={() => onChange(false)}
+        >
+          Off
+        </button>
+      </div>
     );
   }
 
   if (field.type === 'number') {
+    const min = Number.isFinite(Number(field.min)) ? Number(field.min) : undefined;
+    const max = Number.isFinite(Number(field.max)) ? Number(field.max) : undefined;
+    const step = Number.isFinite(Number(field.step)) ? Number(field.step) : 'any';
     return (
-      <input
-        type="number"
+      <AdminNumberInput
         value={value ?? ''}
-        onChange={(event) => onChange(event.target.value === '' ? '' : Number(event.target.value))}
+        min={min}
+        max={max}
+        step={step}
+        onChange={onChange}
       />
     );
   }
 
   if (field.type === 'select') {
     const options = Array.isArray(field.options) ? field.options : [];
+    if (field.id === 'justify') {
+      return (
+        <JustifyPillControl
+          label={field.label}
+          value={value ?? 'center'}
+          options={options}
+          onChange={onChange}
+        />
+      );
+    }
+
     return (
       <select value={value ?? ''} onChange={(event) => onChange(event.target.value)}>
         {options.map((option) => (
@@ -1074,26 +1292,28 @@ function renderFieldControl(field, value, onChange) {
   if (field.type === 'swatch') {
     const options = Array.isArray(field.options) ? field.options : [];
     const selectedValue = value ?? '';
+    const swatchClassName = String(field.swatchClassName || '');
+    const useCompactPalette = field.compact !== false;
+    const useIconOnlyPalette = field.iconOnly !== false;
+    const usesBgPaletteStyle = swatchClassName.includes('admin-button-tone-swatch-list')
+      || swatchClassName.includes('admin-intro-bg-palette-swatch-list')
+      || swatchClassName.includes('admin-control-swatch-palette');
     return (
-      <div className={`admin-swatch-list${field.compact ? ' is-compact' : ''}`} role="radiogroup" aria-label={field.label}>
-        {options.map((option) => {
-          const active = selectedValue === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              className={`admin-swatch-option${active ? ' is-active' : ''}`}
-              title={option.label}
-              onClick={() => onChange(option.value)}
-            >
-              <span className="admin-swatch-chip" aria-hidden="true" style={{ background: option.swatch || '#ddd' }} />
-              <span>{field.compact ? (option.shortLabel || option.label) : option.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      <ColorPalette
+        variant="admin"
+        className={`${useCompactPalette ? ' is-compact' : ''}${useIconOnlyPalette ? ' is-icon-only' : ''}${swatchClassName ? ` ${swatchClassName}` : ''}`}
+        ariaLabel={field.label}
+        options={options}
+        value={selectedValue}
+        onChange={(nextValue) => onChange(nextValue)}
+        getOptionClassName={(option, state) => {
+          const optionToken = String(option.value || '').trim().toLowerCase();
+          const isWhiteTone = optionToken === 'white';
+          return `${usesBgPaletteStyle ? ' admin-bg-swatch-option' : ''}${state.active ? ' is-active' : ''}${isWhiteTone ? ' is-white-tone' : ''}${option.value === '' ? ' is-clear' : ''}`;
+        }}
+        getOptionShortLabel={(option) => (useCompactPalette ? (option.shortLabel || option.label) : option.label)}
+        hideSwatchForOption={(option) => Boolean(option.hideSwatch)}
+      />
     );
   }
 
@@ -1120,29 +1340,22 @@ function renderFieldControl(field, value, onChange) {
                 updateItems(nextItems);
               }}
             />
-            <div className="admin-highlight-color-swatches" role="radiogroup" aria-label={`${field.label} color ${index + 1}`}>
-              {options.map((option) => {
-                const active = item.className === option.value;
-                return (
-                  <button
-                    key={`${field.id}-${index}-${option.value}`}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    className={`admin-highlight-swatch-btn${active ? ' is-active' : ''}`}
-                    title={option.label}
-                    onClick={() => {
-                      const nextItems = [...items];
-                      nextItems[index] = { ...nextItems[index], className: option.value };
-                      updateItems(nextItems);
-                    }}
-                  >
-                    <span className="admin-highlight-swatch-chip" aria-hidden="true" style={{ background: option.swatch || '#ddd' }} />
-                    <span className="admin-highlight-swatch-label">{option.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <ColorPalette
+              variant="admin"
+              className="is-compact is-icon-only admin-highlight-color-swatches"
+              ariaLabel={`${field.label} color ${index + 1}`}
+              options={options}
+              value={item.className || ''}
+              preventMouseDown
+              onChange={(nextValue) => {
+                const nextItems = [...items];
+                nextItems[index] = { ...nextItems[index], className: nextValue };
+                updateItems(nextItems);
+              }}
+              getOptionClassName={(option, state) => `admin-highlight-swatch-btn${state.active ? ' is-active' : ''}`}
+              getOptionLabel={(option) => option.label}
+              getOptionShortLabel={(option) => option.shortLabel || option.label}
+            />
             <button
               type="button"
               className="admin-highlight-remove-btn"
@@ -1178,7 +1391,31 @@ function renderFieldControl(field, value, onChange) {
       <textarea
         rows={field.rows || 4}
         value={value ?? ''}
+        placeholder={field.placeholder || undefined}
         onChange={(event) => onChange(event.target.value)}
+      />
+    );
+  }
+
+  if (field.type === 'html') {
+    return (
+      <AdminHtmlEditor
+        value={value ?? ''}
+        onChange={onChange}
+        placeholder={field.placeholder || 'Start writing...'}
+      />
+    );
+  }
+
+  if (field.type === 'route_link') {
+    const routeRefFieldId = String(field.routeRefFieldId || '').trim();
+    return (
+      <RouteLinkField
+        value={value}
+        routeRefValue={routeRefFieldId ? settings?.[routeRefFieldId] : ''}
+        onChange={onChange}
+        onRouteRefChange={routeRefFieldId ? (nextValue) => onSettingChange(routeRefFieldId, nextValue) : undefined}
+        routeOptions={routeOptions}
       />
     );
   }
@@ -1187,30 +1424,108 @@ function renderFieldControl(field, value, onChange) {
 }
 
 export default function AdminContentPage() {
-  const editablePages = useMemo(
-    () => sortPages(sitePages.filter((page) => !page.path.startsWith('/admin/') && page.path !== '/search')),
-    [],
-  );
-
-  const [selectedPath, setSelectedPath] = useState(editablePages[0]?.path || '/');
+  const location = useLocation();
+  const [selectedPath, setSelectedPath] = useState('/');
   const [selectedBlockId, setSelectedBlockId] = useState(null);
+  const [insertAtIndex, setInsertAtIndex] = useState(null);
+  const [insertChoiceId, setInsertChoiceId] = useState('');
+  const [pendingRemoveBlockId, setPendingRemoveBlockId] = useState(null);
   const [breadcrumbEditMode, setBreadcrumbEditMode] = useState(null);
   const [pageSearch, setPageSearch] = useState('');
+  const [isRouteEditMode, setIsRouteEditMode] = useState(false);
+  const [routePathDraft, setRoutePathDraft] = useState('');
+  const [routePathMessage, setRoutePathMessage] = useState('');
+  const [routePathError, setRoutePathError] = useState(false);
+  const [insertTemplateModeFilter, setInsertTemplateModeFilter] = useState('dynamic');
+  const [insertTemplateSearch, setInsertTemplateSearch] = useState('');
+  const [draggingBlockId, setDraggingBlockId] = useState('');
+  const [dragOverInsertIndex, setDragOverInsertIndex] = useState(-1);
+  const [isDevIdentityEditMode, setIsDevIdentityEditMode] = useState(false);
+  const [devIdentityDraft, setDevIdentityDraft] = useState('');
+  const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
+  const [revisionEntries, setRevisionEntries] = useState([]);
+  const [revisionLoading, setRevisionLoading] = useState(false);
+  const [revisionError, setRevisionError] = useState('');
+  const [revisionActionBusy, setRevisionActionBusy] = useState('');
+  const [revisionBlockSelectionById, setRevisionBlockSelectionById] = useState({});
+  const [draftSaveNote, setDraftSaveNote] = useState('');
+  const [activeEditorBlockId, setActiveEditorBlockId] = useState(null);
+  const routeEditorRef = useRef(null);
 
   const {
+    devIdentity,
     pageHierarchy,
     blocksByPath,
     updatePageHierarchy,
+    renamePagePath,
     updateBlock,
-    updateBlockSetting,
+    addBlock,
+    removeBlock,
+    moveBlock,
+    moveBlockToIndex,
+    availableBlockTemplates,
     getBreadcrumbTrail,
+    renameDevIdentity,
+    getBlockCollaboration,
+    getPageHistory,
+    lastSharedSaveResult,
+    lastSharedPublishResult,
+    sharedSnapshotUpdatedAt,
+    isPageDirty,
+    getPageChangeSummary,
+    getPagePublishSummary,
+    getPageWorkflowActivity,
+    saveSharedDraftNow,
+    publishSharedPageNow,
+    getPageRevisionHistory,
+    restorePageRevision,
+    restoreBlockRevision,
+    setActiveBlockLock,
     resetContentAdmin,
+    claimBufferedBlockEdit = () => false,
+    commitBlockSettingsPatch = () => false,
+    registerExternalDraftFlushHandler = null,
   } = useContentAdmin();
+  const { testimonials: testimonialsLibrary } = useTestimonials();
+
+  const editablePages = useMemo(
+    () => sortPages(
+      Object.values(pageHierarchy || {})
+        .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search'),
+    ),
+    [pageHierarchy],
+  );
+  const routeLinkOptions = useMemo(
+    () => sortPages(
+      Object.values(pageHierarchy || {})
+        .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search'),
+    ),
+    [pageHierarchy],
+  );
 
   const selectedPage = pageHierarchy[selectedPath] || null;
-  const selectedBlocks = blocksByPath[selectedPath] || [];
-  const selectedBlock = selectedBlocks.find((block) => block.id === selectedBlockId) || selectedBlocks[0] || null;
+  const selectedBlocksSource = blocksByPath[selectedPath] || [];
+  const { blocks: selectedBlocks, stageLocalBlockSetting } = useLocalBlockDrafts({
+    pathname: selectedPath,
+    blocks: selectedBlocksSource,
+    claimBufferedBlockEdit,
+    commitBlockSettingsPatch,
+    registerExternalDraftFlushHandler,
+  });
+  const selectedBlock = selectedBlocks.find((block) => block.id === selectedBlockId) || null;
+  const selectedBlockMeta = selectedBlock
+    ? getBlockCollaboration(selectedPath, selectedBlock.id)
+    : null;
+  const recentPageHistory = getPageHistory(selectedPath).slice(0, 6);
+  const MigratedSelectedBlockEditor = selectedBlock
+    ? getMigratedBlockEditorComponent(selectedBlock.kind, 'admin')
+    : null;
+  const canEditSelectedBlock = canBlockOpenEditor(selectedBlock, MigratedSelectedBlockEditor);
+  const selectedBlockIsEditing = Boolean(selectedBlock && selectedBlock.id === activeEditorBlockId);
   const breadcrumbTrail = getBreadcrumbTrail(selectedPath);
+  const selectedPathChangeSummary = getPageChangeSummary(selectedPath);
+  const selectedPathPublishSummary = getPagePublishSummary(selectedPath);
+  const selectedPathWorkflowActivity = getPageWorkflowActivity(selectedPath);
 
   const parentOptions = editablePages.filter((page) => page.path !== selectedPath);
   const filteredEditablePages = useMemo(() => {
@@ -1237,10 +1552,366 @@ export default function AdminContentPage() {
   }, [editablePages, filteredEditablePages, selectedPath]);
   const breadcrumbParentTrail = breadcrumbTrail.slice(0, -1);
   const breadcrumbCurrent = breadcrumbTrail[breadcrumbTrail.length - 1] || null;
+  const filteredInsertChoices = useMemo(() => buildAdminBlockInsertChoices(availableBlockTemplates, {
+    mode: insertTemplateModeFilter,
+    search: insertTemplateSearch,
+  }), [availableBlockTemplates, insertTemplateModeFilter, insertTemplateSearch]);
 
   useEffect(() => {
     setBreadcrumbEditMode(null);
   }, [selectedPath]);
+
+  useEffect(() => {
+    if (!editablePages.length) {
+      setSelectedPath('/');
+      setSelectedBlockId(null);
+      return;
+    }
+    if (!editablePages.some((page) => page.path === selectedPath)) {
+      setSelectedPath(editablePages[0].path);
+      setSelectedBlockId(null);
+    }
+  }, [editablePages, selectedPath]);
+
+  useEffect(() => {
+    if (!editablePages.length) {
+      return;
+    }
+    const requestedPath = String(new URLSearchParams(location.search).get('page') || '').trim();
+    if (!requestedPath || requestedPath === selectedPath) {
+      return;
+    }
+    if (!editablePages.some((page) => page.path === requestedPath)) {
+      return;
+    }
+    setSelectedPath(requestedPath);
+    setSelectedBlockId(null);
+    setInsertAtIndex(null);
+    setPendingRemoveBlockId(null);
+  }, [editablePages, location.search, selectedPath]);
+
+  useEffect(() => {
+    setRoutePathDraft(selectedPath || '');
+    setRoutePathMessage('');
+    setRoutePathError(false);
+    setIsRouteEditMode(false);
+    setInsertAtIndex(null);
+    setPendingRemoveBlockId(null);
+    setDraggingBlockId('');
+    setDragOverInsertIndex(-1);
+    setActiveEditorBlockId(null);
+  }, [selectedPath]);
+
+  useEffect(() => {
+    if (!selectedBlockId) {
+      return;
+    }
+    if (selectedBlocks.some((block) => block.id === selectedBlockId)) {
+      return;
+    }
+    setSelectedBlockId(null);
+  }, [selectedBlockId, selectedBlocks]);
+
+  useEffect(() => {
+    if (!activeEditorBlockId) {
+      return;
+    }
+    const activeEditorBlock = selectedBlocks.find((block) => block.id === activeEditorBlockId) || null;
+    const activeEditor = activeEditorBlock
+      ? getMigratedBlockEditorComponent(activeEditorBlock.kind, 'admin')
+      : null;
+    if (activeEditorBlock && canBlockOpenEditor(activeEditorBlock, activeEditor)) {
+      return;
+    }
+    setActiveEditorBlockId(null);
+  }, [activeEditorBlockId, selectedBlocks]);
+
+  useEffect(() => {
+    if (insertChoiceId && filteredInsertChoices.some((choice) => choice.id === insertChoiceId)) {
+      return;
+    }
+    if (!filteredInsertChoices.length) {
+      setInsertChoiceId('');
+      return;
+    }
+    setInsertChoiceId(filteredInsertChoices[0].id);
+  }, [filteredInsertChoices, insertChoiceId]);
+
+  useEffect(() => {
+    setDevIdentityDraft(devIdentity?.displayName || '');
+  }, [devIdentity]);
+
+  useEffect(() => {
+    setRevisionEntries([]);
+    setRevisionError('');
+    setRevisionBlockSelectionById({});
+  }, [selectedPath]);
+
+  useEffect(() => {
+    if (!isRouteEditMode) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      const container = routeEditorRef.current;
+      if (!container) {
+        return;
+      }
+      if (container.contains(event.target)) {
+        return;
+      }
+      setIsRouteEditMode(false);
+      setRoutePathDraft(selectedPath || '');
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, [isRouteEditMode, selectedPath]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadRevisionHistory = async () => {
+      setRevisionLoading(true);
+      setRevisionError('');
+      try {
+        const nextEntries = await getPageRevisionHistory(selectedPath);
+        if (cancelled) {
+          return;
+        }
+        setRevisionEntries(Array.isArray(nextEntries) ? nextEntries : []);
+      } catch {
+        if (cancelled) {
+          return;
+        }
+        setRevisionError('Unable to load page revision history right now.');
+      } finally {
+        if (!cancelled) {
+          setRevisionLoading(false);
+        }
+      }
+    };
+
+    loadRevisionHistory();
+    return () => {
+      cancelled = true;
+    };
+  }, [getPageRevisionHistory, selectedPath, lastSharedSaveResult?.updatedAt, sharedSnapshotUpdatedAt]);
+
+  const clearBlockDragState = () => {
+    setDraggingBlockId('');
+    setDragOverInsertIndex(-1);
+  };
+
+  const handleBlockDragStart = (event, blockId) => {
+    const normalizedId = String(blockId || '').trim();
+    if (!normalizedId) {
+      return;
+    }
+
+    setInsertAtIndex(null);
+    setPendingRemoveBlockId(null);
+    setDraggingBlockId(normalizedId);
+    setDragOverInsertIndex(-1);
+    setSelectedBlockId(normalizedId);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', normalizedId);
+  };
+
+  const handleBlockDropAtInsertIndex = (event, insertIndex) => {
+    event.preventDefault();
+    const sourceBlockId = String(
+      draggingBlockId
+      || event.dataTransfer.getData('text/plain')
+      || '',
+    ).trim();
+    if (!sourceBlockId) {
+      clearBlockDragState();
+      return;
+    }
+
+    const fromIndex = selectedBlocks.findIndex((block) => block.id === sourceBlockId);
+    if (fromIndex < 0) {
+      clearBlockDragState();
+      return;
+    }
+
+    const requestedInsertIndex = Number(insertIndex);
+    if (!Number.isFinite(requestedInsertIndex)) {
+      clearBlockDragState();
+      return;
+    }
+
+    const normalizedInsertIndex = Math.max(0, Math.min(selectedBlocks.length, Math.round(requestedInsertIndex)));
+    const toIndex = normalizedInsertIndex > fromIndex
+      ? normalizedInsertIndex - 1
+      : normalizedInsertIndex;
+
+    if (toIndex !== fromIndex) {
+      moveBlockToIndex(selectedPath, sourceBlockId, toIndex);
+    }
+    setSelectedBlockId(sourceBlockId);
+    clearBlockDragState();
+  };
+
+  const selectedPagePreviewHref = selectedPath || '/';
+  const selectedPathDirty = isPageDirty(selectedPath);
+  const selectedBlockOwnership = getBlockOwnershipVisual(selectedBlockMeta, devIdentity?.userId);
+  const selectedBlockLockedByCurrentUser = selectedBlockOwnership.state === 'editing-self';
+  const selectedBlockLockedByOther = selectedBlockOwnership.state === 'editing-other';
+  const selectedBlockDraftedByOther = selectedBlockOwnership.state === 'drafted-other';
+  const selectedPathSaveResult = summarizeSharedSaveResultForPath(lastSharedSaveResult, selectedPath);
+  const selectedPathPublishResult = summarizeSharedPublishResultForPath(lastSharedPublishResult, selectedPath);
+  const selectedBlockSaveConflict = selectedBlock && selectedPathSaveResult
+    ? selectedPathSaveResult.blockedBlocks.find((entry) => entry.blockId === selectedBlock.id) || null
+    : null;
+  const selectedBlockWasSaved = Boolean(
+    selectedBlock
+    && selectedPathSaveResult
+    && selectedPathSaveResult.savedBlockIds.includes(selectedBlock.id)
+  );
+  const selectedBlockHasSaveFeedback = Boolean(
+    selectedPathSaveResult
+    && (selectedPathSaveResult.error || selectedBlockSaveConflict || selectedBlockWasSaved)
+  );
+  const latestRevisionEntry = revisionEntries[0] || null;
+  const pageSaveFeedback = selectedPathSaveResult?.error
+    ? `Last save failed${selectedPathSaveResult.updatedAt ? ` ${formatRelativeTime(selectedPathSaveResult.updatedAt)}` : ''}`
+    : selectedPathSaveResult
+      ? `Last save: ${selectedPathSaveResult.savedBlockIds.length} block${selectedPathSaveResult.savedBlockIds.length === 1 ? '' : 's'} saved${selectedPathSaveResult.blockedBlocks.length ? `, ${selectedPathSaveResult.blockedBlocks.length} conflicting block${selectedPathSaveResult.blockedBlocks.length === 1 ? '' : 's'} skipped` : ''}${selectedPathSaveResult.updatedAt ? ` ${formatRelativeTime(selectedPathSaveResult.updatedAt)}` : ''}`
+      : '';
+  const pagePublishFeedback = selectedPathPublishResult?.error === 'publish-blocked-by-other-draft'
+    ? `Last publish blocked${selectedPathPublishResult.updatedAt ? ` ${formatRelativeTime(selectedPathPublishResult.updatedAt)}` : ''}`
+    : selectedPathPublishResult?.error === 'already-live'
+      ? 'Already live'
+      : selectedPathPublishResult?.error
+        ? `Last publish failed${selectedPathPublishResult.updatedAt ? ` ${formatRelativeTime(selectedPathPublishResult.updatedAt)}` : ''}`
+        : selectedPathPublishResult
+          ? `Last live publish: ${selectedPathPublishResult.publishedBlockIds.length} block${selectedPathPublishResult.publishedBlockIds.length === 1 ? '' : 's'}${selectedPathPublishResult.hasOrderChanges ? ', order' : ''}${selectedPathPublishResult.hasPageMetaChanges ? ', page details' : ''}${selectedPathPublishResult.updatedAt ? ` ${formatRelativeTime(selectedPathPublishResult.updatedAt)}` : ''}`
+          : '';
+  const draftScopeLabel = formatWorkflowScopeLabel('Draft save', selectedPathChangeSummary, 'Draft save: clean');
+  const publishScopeLabel = formatWorkflowScopeLabel('Make live', selectedPathPublishSummary, 'Make live: already live');
+  const publishBlockedByOtherDraft = Boolean(selectedPathWorkflowActivity?.hasOtherActorDraft);
+  const canMakeLive = !publishBlockedByOtherDraft
+    && (selectedPathDirty || Boolean(selectedPathPublishSummary?.hasUnsavedChanges));
+  const makeLiveTitle = publishBlockedByOtherDraft
+    ? `${selectedPathWorkflowActivity?.otherActorBlockCount || 1} other-admin block${selectedPathWorkflowActivity?.otherActorBlockCount === 1 ? '' : 's'} must be resolved before publishing live.`
+    : selectedPathPublishSummary?.hasUnsavedChanges || selectedPathDirty
+      ? 'Save local edits if needed, then publish this page live.'
+      : 'This page is already live.';
+  const selectedBlockTakeoverLabel = selectedBlockOwnership.state === 'editing-other'
+    ? 'Take over edit'
+    : 'Continue draft';
+  const changedBlockCount = Number(selectedPathChangeSummary?.changedBlockCount) || 0;
+  const changedBlockLabel = changedBlockCount
+    ? `${changedBlockCount} block${changedBlockCount === 1 ? '' : 's'} changed`
+    : '';
+  const pageStateLabel = selectedPathDirty ? 'In progress' : 'Saved';
+  const pageStateHeadline = selectedPathDirty ? 'Unsaved changes' : 'Draft saved';
+
+  const beginEditingBlock = (blockId, lockOptions = undefined) => {
+    const normalizedBlockId = String(blockId || '').trim();
+    if (!normalizedBlockId) {
+      return;
+    }
+    const nextBlock = selectedBlocks.find((block) => block.id === normalizedBlockId) || null;
+    const nextEditor = nextBlock ? getMigratedBlockEditorComponent(nextBlock.kind, 'admin') : null;
+    setSelectedBlockId(normalizedBlockId);
+    setInsertAtIndex(null);
+    setPendingRemoveBlockId(null);
+    if (!canBlockOpenEditor(nextBlock, nextEditor)) {
+      setActiveEditorBlockId(null);
+      return;
+    }
+    const lockResult = lockOptions
+      ? setActiveBlockLock(selectedPath, normalizedBlockId, lockOptions)
+      : setActiveBlockLock(selectedPath, normalizedBlockId);
+    if (lockResult?.ok === false) {
+      setActiveEditorBlockId((current) => (current === normalizedBlockId ? null : current));
+      return;
+    }
+    setActiveEditorBlockId(normalizedBlockId);
+  };
+
+  const stopEditingSelectedBlock = () => {
+    setActiveEditorBlockId((current) => (current === selectedBlock?.id ? null : current));
+  };
+
+  const toggleBlockVisibility = (block) => {
+    if (!block?.id) {
+      return;
+    }
+    updateBlock(selectedPath, block.id, { hidden: !toBoolean(block.hidden) });
+  };
+
+  const handleRemoveBlockAction = (block) => {
+    const normalizedBlockId = String(block?.id || '').trim();
+    if (!normalizedBlockId) {
+      return;
+    }
+    if (pendingRemoveBlockId !== normalizedBlockId) {
+      setPendingRemoveBlockId(normalizedBlockId);
+      return;
+    }
+    removeBlock(selectedPath, normalizedBlockId);
+    setPendingRemoveBlockId(null);
+    setSelectedBlockId((current) => (current === normalizedBlockId ? null : current));
+    setActiveEditorBlockId((current) => (current === normalizedBlockId ? null : current));
+  };
+
+  const handleSaveDraft = async () => {
+    const result = await saveSharedDraftNow(draftSaveNote);
+    if (result?.ok) {
+      setDraftSaveNote('');
+      setActiveEditorBlockId(null);
+    }
+  };
+
+  const handleMakeLive = async () => {
+    const result = await publishSharedPageNow(selectedPath, draftSaveNote);
+    if (result?.ok) {
+      setDraftSaveNote('');
+      setActiveEditorBlockId(null);
+    }
+  };
+
+  const handlePreviewDraft = async () => {
+    if (selectedPathDirty) {
+      await handleSaveDraft();
+    }
+    window.open(selectedPagePreviewHref, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleRestorePageRevision = async (revisionId) => {
+    setRevisionActionBusy(`page:${revisionId}`);
+    try {
+      await restorePageRevision(selectedPath, revisionId);
+    } finally {
+      setRevisionActionBusy('');
+    }
+  };
+
+  const handleRestoreSelectedBlocks = async (revisionId) => {
+    const selectedBlockIds = Array.isArray(revisionBlockSelectionById?.[revisionId])
+      ? revisionBlockSelectionById[revisionId]
+      : [];
+    if (!selectedBlockIds.length) {
+      return;
+    }
+    setRevisionActionBusy(`blocks:${revisionId}`);
+    try {
+      for (const blockId of selectedBlockIds) {
+        // The shared authority copies revision data into the current draft one block at a time.
+        // Sequential restore keeps later restores based on the latest current draft state.
+        await restoreBlockRevision(selectedPath, revisionId, blockId);
+      }
+    } finally {
+      setRevisionActionBusy('');
+    }
+  };
 
   return (
     <div className="page-wrap admin-content-page-wrap">
@@ -1249,34 +1920,162 @@ export default function AdminContentPage() {
         source={pageByPath['/admin/content']?.source ?? null}
         showBadge={false}
         headerActions={(
-          <button type="button" onClick={resetContentAdmin} className="action-btn action-btn-danger">
-            Reset content admin state
-          </button>
+          <div className="admin-content-header-actions">
+            <div className="admin-dev-identity-badge">
+              <span
+                className="admin-dev-identity-initials"
+                style={{ backgroundColor: devIdentity?.accentColor || '#00adbb' }}
+                aria-hidden="true"
+              >
+                {devIdentity?.initials || 'DV'}
+              </span>
+              {isDevIdentityEditMode ? (
+                <div className="admin-dev-identity-edit">
+                  <input
+                    type="text"
+                    className="search-page-input admin-dev-identity-input"
+                    value={devIdentityDraft}
+                    onChange={(event) => setDevIdentityDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        setIsDevIdentityEditMode(false);
+                        setDevIdentityDraft(devIdentity?.displayName || '');
+                      }
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        renameDevIdentity(devIdentityDraft);
+                        setIsDevIdentityEditMode(false);
+                      }
+                    }}
+                    aria-label="Developer display name"
+                  />
+                  <button
+                    type="button"
+                    className="action-btn action-btn-outline"
+                    onClick={() => {
+                      renameDevIdentity(devIdentityDraft);
+                      setIsDevIdentityEditMode(false);
+                    }}
+                  >
+                    Save name
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="admin-dev-identity-copy">
+                    <strong>{devIdentity?.displayName || 'Developer'}</strong>
+                    <span>Dev authoring identity</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="action-btn action-btn-outline"
+                    onClick={() => setIsDevIdentityEditMode(true)}
+                  >
+                    Rename
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         )}
       >
-        <div className="admin-info-note">
-          Static-to-dynamic migration control center. Keep blocks `static` by default, then switch each block to
-          `dynamic` when its admin editor is ready.
-        </div>
-
         <section className="admin-content-section">
-          <h3>1. Select Page</h3>
           <div className="admin-content-grid-two">
             <div>
               <label htmlFor="admin-content-page-select" className="search-page-label">Page route</label>
-              <select
-                id="admin-content-page-select"
-                className="search-page-input"
-                value={selectedPath}
-                onChange={(event) => {
-                  setSelectedPath(event.target.value);
-                  setSelectedBlockId(null);
-                }}
-              >
-                {pageOptionsForSelect.map((page) => (
-                  <option key={page.path} value={page.path}>{page.path} — {page.title}</option>
-                ))}
-              </select>
+              <div className="admin-route-link-search" ref={routeEditorRef}>
+                {isRouteEditMode ? (
+                  <input
+                    id="admin-content-page-route-edit"
+                    className="search-page-input"
+                    autoFocus
+                    type="text"
+                    value={routePathDraft}
+                    onChange={(event) => {
+                      setRoutePathDraft(event.target.value);
+                      if (routePathMessage) {
+                        setRoutePathMessage('');
+                        setRoutePathError(false);
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        setIsRouteEditMode(false);
+                        setRoutePathDraft(selectedPath || '');
+                        return;
+                      }
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        const result = renamePagePath(selectedPath, routePathDraft);
+                        if (!result?.ok) {
+                          setRoutePathError(true);
+                          setRoutePathMessage(result?.error || 'Route update failed.');
+                          return;
+                        }
+                        setRoutePathError(false);
+                        setRoutePathMessage(`Updated route to ${result.path}`);
+                        setSelectedPath(result.path);
+                        setSelectedBlockId(null);
+                        setIsRouteEditMode(false);
+                      }
+                    }}
+                    placeholder="/services/example"
+                    aria-label="Rename selected page route"
+                  />
+                ) : (
+                  <select
+                    id="admin-content-page-select"
+                    className="search-page-input"
+                    value={selectedPath}
+                    onChange={(event) => {
+                      setSelectedPath(event.target.value);
+                      setSelectedBlockId(null);
+                      setInsertAtIndex(null);
+                      setPendingRemoveBlockId(null);
+                    }}
+                  >
+                    {pageOptionsForSelect.map((page) => (
+                      <option key={page.path} value={page.path}>{page.path} — {page.title}</option>
+                    ))}
+                  </select>
+                )}
+                <div className="admin-route-link-actions">
+                  <button
+                    type="button"
+                    className="action-btn action-btn-outline admin-route-edit-btn"
+                    title={isRouteEditMode
+                      ? 'Save route change'
+                      : 'Editing route updates managed internal links sitewide.'}
+                    onClick={() => {
+                      if (!isRouteEditMode) {
+                        setRoutePathDraft(selectedPath || '');
+                        setRoutePathMessage('');
+                        setRoutePathError(false);
+                        setIsRouteEditMode(true);
+                        return;
+                      }
+                      const result = renamePagePath(selectedPath, routePathDraft);
+                      if (!result?.ok) {
+                        setRoutePathError(true);
+                        setRoutePathMessage(result?.error || 'Route update failed.');
+                        return;
+                      }
+                      setRoutePathError(false);
+                      setRoutePathMessage(`Updated route to ${result.path}`);
+                      setSelectedPath(result.path);
+                      setSelectedBlockId(null);
+                      setIsRouteEditMode(false);
+                    }}
+                  >
+                    {isRouteEditMode ? 'Save' : 'Update route'}
+                  </button>
+                </div>
+              </div>
+              {routePathMessage ? (
+                <small style={{ color: routePathError ? '#b42318' : '#006f7c', display: 'block', marginTop: '0.35rem' }}>
+                  {routePathMessage}
+                </small>
+              ) : null}
             </div>
 
             <div>
@@ -1297,18 +2096,16 @@ export default function AdminContentPage() {
                   event.preventDefault();
                   setSelectedPath(target.path);
                   setSelectedBlockId(null);
+                  setInsertAtIndex(null);
+                  setPendingRemoveBlockId(null);
                 }}
                 placeholder="Start typing page name or route"
               />
             </div>
           </div>
-          <p className="blank-state-note">
-            Type in Quick find to filter by title or route. Press Enter to jump to an exact / first matching page.
-          </p>
         </section>
 
         <section className="admin-content-section">
-          <h3>2. Breadcrumb Hierarchy</h3>
           {selectedPage ? (
             <div className="admin-breadcrumb-preview admin-breadcrumb-editor">
               <div className="admin-breadcrumb-editor-row">
@@ -1369,40 +2166,478 @@ export default function AdminContentPage() {
                   </button>
                 )}
               </div>
+            </div>
+          ) : null}
+        </section>
 
-              <div className="admin-breadcrumb-editor-note">
-                Click the path to change parent route, or click the page name to edit the label.
+        <section className="admin-content-section admin-page-save-bar-wrap">
+          <div className="admin-page-save-bar">
+            <div className="admin-page-save-bar-copy">
+              <div className="admin-page-save-bar-context">
+                <strong>{selectedPage?.title || 'Selected page'}</strong>
+                <span>{selectedPath || '/'}</span>
               </div>
+              <div className="admin-page-save-bar-head">
+                <strong>{pageStateHeadline}</strong>
+                <span className={`admin-page-save-bar-status${selectedPathDirty ? ' is-dirty' : ''}`}>
+                  {pageStateLabel}
+                </span>
+              </div>
+              <div className="admin-page-save-bar-meta">
+                {changedBlockLabel ? (
+                  <span>{changedBlockLabel}</span>
+                ) : null}
+                <span>{draftScopeLabel}</span>
+                <span>{publishScopeLabel}</span>
+                {selectedPathChangeSummary?.hasOrderChanges ? (
+                  <span>Order changed</span>
+                ) : null}
+                {selectedPathChangeSummary?.hasPageMetaChanges ? (
+                  <span>Page details changed</span>
+                ) : null}
+                {selectedPathWorkflowActivity?.otherActorBlockCount ? (
+                  <span>{selectedPathWorkflowActivity.otherActorBlockCount} other-admin block{selectedPathWorkflowActivity.otherActorBlockCount === 1 ? '' : 's'}</span>
+                ) : null}
+                {selectedPathSaveResult?.blockedBlocks.length ? (
+                  <span>{selectedPathSaveResult.blockedBlocks.length} conflict{selectedPathSaveResult.blockedBlocks.length === 1 ? '' : 's'}</span>
+                ) : null}
+                {selectedPathPublishResult?.blockedBlocks.length ? (
+                  <span>{selectedPathPublishResult.blockedBlocks.length} publish block{selectedPathPublishResult.blockedBlocks.length === 1 ? '' : 's'}</span>
+                ) : null}
+                {pageSaveFeedback ? (
+                  <span>{pageSaveFeedback}</span>
+                ) : null}
+                {pagePublishFeedback ? (
+                  <span>{pagePublishFeedback}</span>
+                ) : null}
+                {latestRevisionEntry?.actor?.displayName ? (
+                  <span>
+                    Last saved by {formatActorName(latestRevisionEntry.actor)}
+                    {latestRevisionEntry?.createdAt ? ` ${formatRelativeTime(latestRevisionEntry.createdAt)}` : ''}
+                  </span>
+                ) : (
+                  <span>No shared revision saved yet for this page.</span>
+                )}
+                {latestRevisionEntry?.summary ? (
+                  <span>Note: {latestRevisionEntry.summary}</span>
+                ) : null}
+              </div>
+            </div>
+            <div className="admin-page-save-bar-actions">
+              <div className="admin-page-save-bar-primary-actions">
+                <input
+                  type="text"
+                  className="search-page-input admin-page-save-note-input"
+                  value={draftSaveNote}
+                  onChange={(event) => setDraftSaveNote(event.target.value)}
+                  placeholder="Optional save note"
+                  aria-label="Optional save note"
+                />
+                <button
+                  type="button"
+                  className="action-btn"
+                  onClick={handleSaveDraft}
+                  disabled={!selectedPathDirty}
+                >
+                  Save draft
+                </button>
+              </div>
+              <div className="admin-page-save-bar-secondary-actions">
+                <button
+                  type="button"
+                  className="action-btn action-btn-outline"
+                  onClick={handlePreviewDraft}
+                >
+                  Preview
+                </button>
+                <button
+                  type="button"
+                  className="action-btn action-btn-outline"
+                  onClick={() => setHistoryDrawerOpen((current) => !current)}
+                  aria-expanded={historyDrawerOpen}
+                >
+                  {historyDrawerOpen ? 'Hide history' : 'History'}
+                </button>
+                <button
+                  type="button"
+                  className="action-btn action-btn-outline"
+                  onClick={handleMakeLive}
+                  disabled={!canMakeLive}
+                  title={makeLiveTitle}
+                >
+                  Make live
+                </button>
+                <button type="button" onClick={resetContentAdmin} className="action-btn action-btn-danger">
+                  Reset from seed
+                </button>
+              </div>
+            </div>
+          </div>
+          {historyDrawerOpen ? (
+            <div className="admin-page-history-drawer">
+              <div className="admin-page-history-drawer-head">
+                <div>
+                  <h3>Revision history</h3>
+                  <p>Restore the whole page or copy selected blocks from a prior save into the current draft.</p>
+                </div>
+              </div>
+              {revisionLoading ? (
+                <p className="blank-state-note">Loading revision history…</p>
+              ) : revisionError ? (
+                <p className="blank-state-note">{revisionError}</p>
+              ) : revisionEntries.length ? (
+                <div className="admin-page-history-list">
+                  {revisionEntries.map((revision) => {
+                    const selectedRevisionBlocks = Array.isArray(revisionBlockSelectionById?.[revision.id])
+                      ? revisionBlockSelectionById[revision.id]
+                      : [];
+                    const revisionBlocks = Array.isArray(revision.blocks) ? revision.blocks : [];
+                    return (
+                      <article key={revision.id} className="admin-page-history-card">
+                        <div className="admin-page-history-card-head">
+                          <div className="admin-page-history-card-copy">
+                            <strong>{formatActorName(revision.actor)}</strong>
+                            <span>
+                              Saved {revision.createdAt ? formatRelativeTime(revision.createdAt) : 'recently'}
+                              {revision.summary ? ` · ${revision.summary}` : ''}
+                            </span>
+                            <span>{summarizeRevisionBlocks(revisionBlocks)}</span>
+                          </div>
+                          <div className="admin-page-history-card-actions">
+                            <button
+                              type="button"
+                              className="action-btn action-btn-outline"
+                              onClick={() => handleRestorePageRevision(revision.id)}
+                              disabled={Boolean(revisionActionBusy)}
+                            >
+                              {revisionActionBusy === `page:${revision.id}` ? 'Restoring…' : 'Restore page'}
+                            </button>
+                          </div>
+                        </div>
+                        {revisionBlocks.length ? (
+                          <div className="admin-page-history-block-picker">
+                            <div className="admin-page-history-block-list">
+                              {revisionBlocks.map((block) => {
+                                const checked = selectedRevisionBlocks.includes(block.id);
+                                return (
+                                  <label key={`${revision.id}-${block.id}`} className="admin-page-history-block-option">
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={(event) => {
+                                        setRevisionBlockSelectionById((previous) => {
+                                          const current = Array.isArray(previous?.[revision.id]) ? previous[revision.id] : [];
+                                          const next = event.target.checked
+                                            ? [...new Set([...current, block.id])]
+                                            : current.filter((value) => value !== block.id);
+                                          return {
+                                            ...previous,
+                                            [revision.id]: next,
+                                          };
+                                        });
+                                      }}
+                                    />
+                                    <span>{block.label}</span>
+                                    <small>{block.kind}</small>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            <div className="admin-page-history-block-actions">
+                              <button
+                                type="button"
+                                className="action-btn action-btn-outline"
+                                onClick={() => handleRestoreSelectedBlocks(revision.id)}
+                                disabled={!selectedRevisionBlocks.length || Boolean(revisionActionBusy)}
+                              >
+                                {revisionActionBusy === `blocks:${revision.id}`
+                                  ? 'Restoring blocks…'
+                                  : `Restore selected blocks${selectedRevisionBlocks.length ? ` (${selectedRevisionBlocks.length})` : ''}`}
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="blank-state-note">No revisions saved yet for this page.</p>
+              )}
             </div>
           ) : null}
         </section>
 
         <section className="admin-content-section">
-          <h3>3. Blocks (Static / Dynamic)</h3>
+          <h3>Blocks</h3>
           <div className="table-scroll">
             <table className="ag-table ag-table-inputs">
               <thead>
                 <tr>
                   <th>Block</th>
                   <th>Type</th>
-                  <th>Status</th>
+                  <th>Mode</th>
+                  <th>Visible</th>
+                  <th>Layer</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {selectedBlocks.map((block) => (
-                  <tr key={block.id} onClick={() => setSelectedBlockId(block.id)} className={selectedBlock?.id === block.id ? 'admin-block-selected-row' : ''}>
-                    <td>{block.name}</td>
-                    <td>{block.kind}</td>
-                    <td>
-                      <select
-                        value={block.mode}
-                        onChange={(event) => updateBlock(selectedPath, block.id, { mode: event.target.value })}
-                      >
-                        <option value="static">static</option>
-                        <option value="dynamic">dynamic</option>
-                      </select>
-                    </td>
-                  </tr>
+                {Array.from({ length: selectedBlocks.length + 1 }, (_, insertIndex) => (
+                  <Fragment key={`insert-slot-${insertIndex}`}>
+                    <tr
+                      className={`admin-block-insert-row${insertAtIndex === insertIndex ? ' is-open' : ''}${draggingBlockId && dragOverInsertIndex === insertIndex ? ' is-drag-target' : ''}`}
+                      onDragOver={(event) => {
+                        if (!draggingBlockId || insertAtIndex !== null) {
+                          return;
+                        }
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = 'move';
+                        if (dragOverInsertIndex !== insertIndex) {
+                          setDragOverInsertIndex(insertIndex);
+                        }
+                      }}
+                      onDrop={(event) => {
+                        if (!draggingBlockId || insertAtIndex !== null) {
+                          return;
+                        }
+                        handleBlockDropAtInsertIndex(event, insertIndex);
+                      }}
+                    >
+                      <td colSpan={6}>
+                        {insertAtIndex === insertIndex ? (
+                          <div className="admin-block-insert-editor">
+                            <div className="admin-block-insert-picker" role="radiogroup" aria-label="Select block family or preset to insert">
+                              <button
+                                type="button"
+                                className="admin-block-template-filter-link"
+                                onClick={() => setInsertTemplateModeFilter((current) => (current === 'dynamic' ? 'static' : 'dynamic'))}
+                              >
+                                {insertTemplateModeFilter === 'dynamic' ? 'Show static blocks' : 'Show dynamic blocks'}
+                              </button>
+                              <input
+                                type="search"
+                                className="admin-block-template-search"
+                                value={insertTemplateSearch}
+                                onChange={(event) => setInsertTemplateSearch(event.target.value)}
+                                placeholder="Filter block families and presets..."
+                                aria-label="Filter block families and presets"
+                              />
+                              <div className="admin-block-template-grid">
+                                {filteredInsertChoices.map((choice) => {
+                                  const isSelected = insertChoiceId === choice.id;
+                                  const iconSrc = getBlockTemplateIcon({ templateId: choice.templateId, kind: choice.kind });
+                                  return (
+                                    <button
+                                      key={choice.id}
+                                      type="button"
+                                      role="radio"
+                                      aria-checked={isSelected}
+                                      className={`admin-block-template-tile${isSelected ? ' is-active' : ''}`}
+                                      onClick={() => setInsertChoiceId(choice.id)}
+                                      title={`${choice.name} (${choice.kind}${choice.templateId ? ` · ${choice.templateId}` : ''})`}
+                                    >
+                                      <span className="admin-block-template-icon-wrap" aria-hidden="true">
+                                        {iconSrc ? (
+                                          <img src={iconSrc} alt="" className="admin-block-template-icon" />
+                                        ) : (
+                                          <span className="admin-block-kind-icon">
+                                            {toBlockKindMonogram(choice.kind)}
+                                          </span>
+                                        )}
+                                      </span>
+                                      <span className="admin-block-template-name">{choice.name}</span>
+                                      <span className="admin-block-template-kind">
+                                        {choice.description}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              {!filteredInsertChoices.length ? (
+                                <p className="admin-block-template-empty">No blocks match that filter.</p>
+                              ) : null}
+                            </div>
+                            <div className="admin-block-template-actions">
+                              <button
+                                type="button"
+                                className="action-btn"
+                                onClick={() => {
+                                  const selectedInsertChoice = filteredInsertChoices.find((choice) => choice.id === insertChoiceId);
+                                  if (!selectedInsertChoice?.createTemplateId) {
+                                    return;
+                                  }
+                                  addBlock(selectedPath, selectedInsertChoice.createTemplateId, insertIndex);
+                                  setInsertAtIndex(null);
+                                  setInsertTemplateSearch('');
+                                  setPendingRemoveBlockId(null);
+                                  setSelectedBlockId(null);
+                                }}
+                              >
+                                Add block
+                              </button>
+                              <button
+                                type="button"
+                                className="action-btn action-btn-outline"
+                                onClick={() => {
+                                  setInsertAtIndex(null);
+                                  setInsertTemplateSearch('');
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="admin-block-insert-btn"
+                            onClick={() => {
+                              setInsertAtIndex(insertIndex);
+                              setInsertTemplateSearch('');
+                              setPendingRemoveBlockId(null);
+                            }}
+                            aria-label={`Insert block at position ${insertIndex + 1}`}
+                            title="Insert block"
+                          >
+                            <AddBlockIcon />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {insertIndex < selectedBlocks.length ? (() => {
+                      const block = selectedBlocks[insertIndex];
+                      const blockIndex = insertIndex;
+                      const blockLabel = getAdminBlockLabel(block);
+                      const blockMeta = getBlockCollaboration(selectedPath, block.id);
+                      const blockOwnership = getBlockOwnershipVisual(blockMeta, devIdentity?.userId);
+                      const blockEditEntryLabel = getEditEntryLabel(blockOwnership.state, 'Edit');
+                      return (
+                        <tr
+                          key={block.id}
+                          onClick={() => {
+                            setSelectedBlockId(block.id);
+                            setInsertAtIndex(null);
+                            setPendingRemoveBlockId(null);
+                          }}
+                          className={`admin-block-row${selectedBlock?.id === block.id ? ' admin-block-selected-row' : ''}${toBoolean(block.hidden) ? ' admin-block-hidden-row' : ''}${draggingBlockId === block.id ? ' is-dragging' : ''}${String(block.mode || '').toLowerCase() === 'dynamic' ? ' admin-block-row--dynamic' : ''}`}
+                        >
+                          <td>
+                            <div className="admin-block-name-cell">
+                              {getBlockTemplateIcon({ templateId: block.id, kind: block.kind }) ? (
+                                <span className="admin-block-kind-icon is-svg" aria-hidden="true">
+                                  <img
+                                    src={getBlockTemplateIcon({ templateId: block.id, kind: block.kind })}
+                                    alt=""
+                                    className="admin-block-kind-icon-image"
+                                  />
+                                </span>
+                              ) : (
+                                <span className="admin-block-kind-icon" aria-hidden="true">{toBlockKindMonogram(block.kind)}</span>
+                              )}
+                              <span className="admin-block-name-copy">
+                                <span>{blockLabel}</span>
+                              </span>
+                            </div>
+                          </td>
+                          <td>{block.kind}</td>
+                          <td className="admin-block-status-cell">
+                            <span className={`admin-block-mode-pill${String(block.mode || '').trim().toLowerCase() === 'dynamic' ? ' is-dynamic' : ''}`}>
+                              {formatBlockModeLabel(block.mode)}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className={`admin-block-visibility-btn${toBoolean(block.hidden) ? ' is-hidden' : ''}`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleBlockVisibility(block);
+                              }}
+                              aria-label={`${toBoolean(block.hidden) ? 'Show' : 'Hide'} ${blockLabel}`}
+                              title={toBoolean(block.hidden) ? 'Currently hidden - click to show' : 'Currently visible - click to hide'}
+                            >
+                              <VisibilityIcon hidden={toBoolean(block.hidden)} />
+                            </button>
+                          </td>
+                          <td>
+                            <div className="admin-layer-order-controls" role="group" aria-label={`Reorder ${blockLabel}`}>
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                className={`admin-layer-drag-handle${draggingBlockId === block.id ? ' is-active' : ''}`}
+                                draggable
+                                onClick={(event) => event.stopPropagation()}
+                                onDragStart={(event) => {
+                                  event.stopPropagation();
+                                  handleBlockDragStart(event, block.id);
+                                }}
+                                onDragEnd={(event) => {
+                                  event.stopPropagation();
+                                  clearBlockDragState();
+                                }}
+                                aria-label={`Drag to reorder ${blockLabel}`}
+                                title="Drag to reorder"
+                                onKeyDown={(event) => {
+                                  if (event.key !== 'Enter' && event.key !== ' ') {
+                                    return;
+                                  }
+                                  event.preventDefault();
+                                }}
+                              >
+                                ≡
+                              </span>
+                              <button
+                                type="button"
+                                className="admin-layer-order-btn"
+                                disabled={blockIndex === 0}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  moveBlock(selectedPath, block.id, 'up');
+                                }}
+                                aria-label={`Move ${blockLabel} up`}
+                                title="Move up"
+                              >
+                                ↑
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-layer-order-btn"
+                                disabled={blockIndex === selectedBlocks.length - 1}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  moveBlock(selectedPath, block.id, 'down');
+                                }}
+                                aria-label={`Move ${blockLabel} down`}
+                                title="Move down"
+                              >
+                                ↓
+                              </button>
+                            </div>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="action-btn action-btn-outline admin-block-edit-entry-btn"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                beginEditingBlock(
+                                  block.id,
+                                  blockOwnership.state === 'editing-other' || blockOwnership.state === 'drafted-other'
+                                    ? { force: true }
+                                    : undefined,
+                                );
+                              }}
+                              disabled={!canBlockOpenEditor(block, getMigratedBlockEditorComponent(block.kind, 'admin'))}
+                              aria-label={`${blockEditEntryLabel} ${blockLabel}`}
+                            >
+                              {blockEditEntryLabel}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })() : null}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -1410,46 +2645,178 @@ export default function AdminContentPage() {
         </section>
 
         <section className="admin-content-section">
-          <h3>4. Block-Specific Fields</h3>
           {selectedBlock ? (
             <>
-              <p>
-                Editing block:
-                {' '}
-                <strong>{selectedBlock.name}</strong>
-                {' '}
-                (`{selectedBlock.mode}`)
-              </p>
-              {(selectedBlock.editableFields || []).length ? (
+              <div className="admin-selected-block-head">
+                <p>
+                  Selected block
+                  {' '}
+                  <strong>{getAdminBlockLabel(selectedBlock)}</strong>
+                </p>
+                <div className="admin-selected-block-meta">
+                  {!selectedBlockIsEditing && canEditSelectedBlock ? (
+                    <span>Inspecting only until you click Edit.</span>
+                  ) : null}
+                </div>
+                {selectedBlockHasSaveFeedback ? (
+                  <div className={`admin-selected-block-save-banner${selectedPathSaveResult.error ? ' is-error' : selectedBlockSaveConflict ? ' is-conflict' : ' is-success'}`}>
+                    <div className="admin-selected-block-save-copy">
+                      {selectedPathSaveResult.error ? (
+                        <span>Shared save failed. Local changes were not confirmed on the host authority.</span>
+                      ) : selectedBlockWasSaved ? (
+                        <span>
+                          This block is saved.
+                          {!selectedBlockLockedByCurrentUser ? ' No active edit lock remains.' : ''}
+                          {selectedPathSaveResult.updatedAt ? ` ${formatRelativeTime(selectedPathSaveResult.updatedAt)}.` : ''}
+                        </span>
+                      ) : (
+                        <span>
+                          No safe changes for this block were saved.
+                          {selectedPathSaveResult.updatedAt ? ` ${formatRelativeTime(selectedPathSaveResult.updatedAt)}.` : ''}
+                        </span>
+                      )}
+                      {selectedBlockSaveConflict ? (
+                        <span>
+                          This block was not included in the last save.
+                        </span>
+                      ) : null}
+                    </div>
+                    {selectedBlockSaveConflict ? (
+                      <button
+                        type="button"
+                        className="action-btn action-btn-outline"
+                        onClick={() => setActiveBlockLock(selectedPath, selectedBlock.id, { force: true })}
+                      >
+                        {selectedBlockTakeoverLabel}
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+              {selectedBlockIsEditing ? (
+                <div className="admin-selected-block-edit-toolbar" aria-label="Block edit toolbar">
+                  <label className="admin-selected-block-mode-control">
+                    <span>Mode</span>
+                    <select
+                      aria-label="Block mode"
+                      className="search-page-input admin-selected-block-mode-select"
+                      value={selectedBlock.mode}
+                      onChange={(event) => updateBlock(selectedPath, selectedBlock.id, { mode: event.target.value })}
+                    >
+                      <option value="static">Static</option>
+                      <option value="dynamic">Dynamic</option>
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    className="action-btn action-btn-outline"
+                    onClick={stopEditingSelectedBlock}
+                  >
+                    Done editing
+                  </button>
+                </div>
+              ) : null}
+              {selectedBlockIsEditing && canEditSelectedBlock ? (
                 <div className="admin-block-fields-editor">
-                  {selectedPath === '/test' && selectedBlock.id === 'hero' ? (
-                    <HeroBlockEditor
+                  {selectedBlock.mode === 'dynamic' && MigratedSelectedBlockEditor ? (
+                    <MigratedSelectedBlockEditor
                       block={selectedBlock}
-                      onSettingChange={(settingKey, nextValue) => updateBlockSetting(selectedPath, selectedBlock.id, settingKey, nextValue)}
-                    />
-                  ) : selectedPath === '/test' && selectedBlock.id === 'intro' ? (
-                    <IntroBlockEditor
-                      block={selectedBlock}
-                      onSettingChange={(settingKey, nextValue) => updateBlockSetting(selectedPath, selectedBlock.id, settingKey, nextValue)}
+                      pathname={selectedPath}
+                      routeOptions={routeLinkOptions}
+                      testimonialsLibrary={testimonialsLibrary}
+                      onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(selectedBlock.id, settingKey, nextValue)}
                     />
                   ) : (
                     <FieldControlGrid
                       fields={selectedBlock.editableFields}
                       settings={selectedBlock.settings}
+                      className={selectedBlock.kind === 'top_strip' ? 'admin-top-strip-grid' : ''}
+                      routeOptions={routeLinkOptions}
                       onSettingChange={(settingKey, nextValue) => {
-                        updateBlockSetting(selectedPath, selectedBlock.id, settingKey, nextValue);
+                        stageLocalBlockSetting(selectedBlock.id, settingKey, nextValue);
                       }}
                     />
                   )}
                 </div>
+              ) : canEditSelectedBlock ? (
+                <div className="admin-selected-block-inspect-card">
+                  <div className="admin-selected-block-inspect-head">
+                    <span className="admin-selected-block-inspect-type">
+                      {selectedBlock.mode === 'dynamic' ? 'Dynamic block' : 'Static block'}
+                    </span>
+                    <span className="admin-selected-block-inspect-kind">{selectedBlock.kind}</span>
+                  </div>
+                  {getAdminBlockInspectSummary(selectedBlock) ? (
+                    <p className="admin-selected-block-inspect-summary">{getAdminBlockInspectSummary(selectedBlock)}</p>
+                  ) : (
+                    <p className="admin-selected-block-inspect-summary">Review the block, then click Edit when you want live controls and collaboration ownership to begin.</p>
+                  )}
+                  <div className="admin-selected-block-inspect-actions">
+                    <button
+                      type="button"
+                      className="action-btn"
+                      onClick={() => beginEditingBlock(
+                        selectedBlock.id,
+                        selectedBlockLockedByOther || selectedBlockDraftedByOther ? { force: true } : undefined,
+                      )}
+                    >
+                      {getEditEntryLabel(selectedBlockOwnership.state, 'Edit block')}
+                    </button>
+                    <button
+                      type="button"
+                      className="action-btn action-btn-outline"
+                      onClick={() => toggleBlockVisibility(selectedBlock)}
+                    >
+                      {toBoolean(selectedBlock.hidden) ? 'Show block' : 'Hide block'}
+                    </button>
+                    <button
+                      type="button"
+                      className={`action-btn action-btn-outline admin-selected-block-remove-btn${pendingRemoveBlockId === selectedBlock.id ? ' is-confirm' : ''}`}
+                      onClick={() => handleRemoveBlockAction(selectedBlock)}
+                    >
+                      {pendingRemoveBlockId === selectedBlock.id ? 'Confirm remove' : 'Remove block'}
+                    </button>
+                    <button
+                      type="button"
+                      className="action-btn action-btn-outline"
+                      onClick={() => setHistoryDrawerOpen(true)}
+                    >
+                      History
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <p className="blank-state-note">
-                  This block does not have custom fields yet. Keep it `static` until its editor schema is defined.
+                  {selectedBlock.mode === 'static'
+                    ? 'This block is static and not currently editable.'
+                    : 'This dynamic block does not have custom fields yet.'}
                 </p>
               )}
+              {recentPageHistory.length ? (
+                <div className="admin-block-history">
+                  <h4>Recent page activity</h4>
+                  <ul className="admin-block-history-list">
+                    {recentPageHistory.map((entry) => (
+                      <li key={entry.id} className="admin-block-history-item">
+                        <strong>{formatActorName(entry.actor)}</strong>
+                        {' '}
+                        <span>{entry.action.replace(/-/g, ' ')}</span>
+                        {entry.blockId ? <span> · {entry.blockId}</span> : null}
+                        {entry.previousActor ? <span> · from {formatActorName(entry.previousActor)}</span> : null}
+                        {entry.details ? <span> · {entry.details}</span> : null}
+                        <time>{formatRelativeTime(entry.createdAt)}</time>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </>
           ) : (
-            <p className="blank-state-note">No blocks found for this page yet.</p>
+            <p className="blank-state-note">
+              {selectedBlocks.length
+                ? 'Select a block to inspect it. Editing starts only after you click Edit.'
+                : 'No blocks found for this page yet.'}
+            </p>
           )}
         </section>
       </PageShell>

@@ -207,6 +207,19 @@ export function RedirectsProvider({ children }) {
       const pathname = stripPathQueryHash(locationInput.pathname);
       if (!pathname || pathname.startsWith('/admin')) return null;
 
+      // Legacy route support: old loan consultants slug now maps to the clearer URL.
+      if (pathname === '/services/loans/loans-consultant') {
+        return buildResolvedTarget(
+          {
+            id: 'legacy-loan-consultants-slug',
+            to: '/services/loans/loan-consultants',
+            preserveQuery: true,
+            statusCode: '301',
+          },
+          locationInput,
+        );
+      }
+
       for (const rule of redirectsState) {
         if (!rule.enabled) continue;
         if (!rule.from || !rule.to) continue;
@@ -241,4 +254,3 @@ export function useRedirects() {
 export function normalizeRedirectPath(value) {
   return normalizePath(value);
 }
-

@@ -1,4 +1,3 @@
-import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
@@ -10,25 +9,29 @@ import { ConsultantsProvider } from './context/ConsultantsContext';
 import { CareersJobsProvider } from './context/CareersJobsContext';
 import { RedirectsProvider } from './context/RedirectsContext';
 import { DocumentsProvider } from './context/DocumentsContext';
+import { ConsultantResponsesProvider } from './context/ConsultantResponsesContext';
+import { TestimonialsProvider } from './context/TestimonialsContext';
 
 createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <AnnouncementProvider>
-      <ContentAdminProvider>
-        <ConsultantsProvider>
+  <AnnouncementProvider>
+    <ContentAdminProvider>
+      <ConsultantsProvider>
+        <ConsultantResponsesProvider>
           <CareersJobsProvider>
             <RedirectsProvider>
-              <DocumentsProvider>
-                <RatesProvider>
-                  <BrowserRouter>
-                    <App />
-                  </BrowserRouter>
-                </RatesProvider>
-              </DocumentsProvider>
+              <TestimonialsProvider>
+                <DocumentsProvider>
+                  <RatesProvider>
+                    <BrowserRouter>
+                      <App />
+                    </BrowserRouter>
+                  </RatesProvider>
+                </DocumentsProvider>
+              </TestimonialsProvider>
             </RedirectsProvider>
           </CareersJobsProvider>
-        </ConsultantsProvider>
-      </ContentAdminProvider>
-    </AnnouncementProvider>
-  </React.StrictMode>
+        </ConsultantResponsesProvider>
+      </ConsultantsProvider>
+    </ContentAdminProvider>
+  </AnnouncementProvider>,
 );

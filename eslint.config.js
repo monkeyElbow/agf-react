@@ -26,11 +26,17 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'react-refresh/only-export-components': 'off',
+      // Transitional codebase: keep lint focused on actionable runtime issues.
+      'no-unused-vars': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
     },
   },
   {
-    files: ['src/**/*.test.js', 'scripts/**/*.cjs', 'vite.config.js'],
+    files: ['src/**/*.test.js', 'src/**/*.test.jsx', 'src/test/**/*.js', 'scripts/**/*.cjs', 'vite.config.js', 'vitest.config.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

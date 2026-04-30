@@ -80,7 +80,8 @@ const defaultConsultantsByService = {
     },
     {
       id: 'retirement-jacob-rebert',
-      name: 'Jacob Rebert CFP',
+      name: 'Jacob Rebert',
+      credentials: 'CFP',
       region: 'Central Region',
       phone: '417.350.5480',
       email: 'jrebert@agfinancial.org',
@@ -88,7 +89,8 @@ const defaultConsultantsByService = {
     },
     {
       id: 'retirement-chris-teague',
-      name: 'Chris Teague CFP',
+      name: 'Chris Teague',
+      credentials: 'CFP',
       region: 'East Region',
       phone: '417.619.2987',
       email: 'cteague@agfinancial.org',
@@ -111,11 +113,51 @@ function normalizeStates(value) {
   return Array.from(new Set(next));
 }
 
+const KNOWN_CONSULTANT_CREDENTIALS = new Set([
+  'AIF',
+  'CFA',
+  'CFP',
+  'CHFC',
+  'CIMA',
+  'CLU',
+  'CPA',
+  'CRPC',
+  'RICP',
+]);
+
+function splitTrailingCredentials(rawName, rawCredentials) {
+  const name = String(rawName || '').trim();
+  const explicitCredentials = String(rawCredentials || '').trim();
+  if (!name) {
+    return { name: '', credentials: explicitCredentials };
+  }
+  if (explicitCredentials) {
+    return { name, credentials: explicitCredentials };
+  }
+
+  const match = name.match(/^(.*?)(?:,\s*|\s+)([A-Za-z.]{2,10})$/);
+  if (!match) {
+    return { name, credentials: '' };
+  }
+
+  const trailingToken = String(match[2] || '').replace(/\./g, '').toUpperCase();
+  if (!KNOWN_CONSULTANT_CREDENTIALS.has(trailingToken)) {
+    return { name, credentials: '' };
+  }
+
+  return {
+    name: String(match[1] || '').trim(),
+    credentials: String(match[2] || '').trim(),
+  };
+}
+
 function normalizeConsultant(service, payload) {
   const item = payload && typeof payload === 'object' ? payload : {};
+  const { name, credentials } = splitTrailingCredentials(item.name, item.credentials);
   return {
     id: String(item.id || makeId(service)),
-    name: String(item.name || '').trim(),
+    name,
+    credentials,
     region: String(item.region || '').trim(),
     phone: String(item.phone || '').trim(),
     email: String(item.email || '').trim(),

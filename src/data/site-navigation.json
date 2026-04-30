@@ -1,0 +1,182 @@
+[
+  {
+    "title": "About Us",
+    "url": "/about-us",
+    "summary": "Overview of AGFinancial's mission, values, and organization background.",
+    "keywords": ["about", "about us", "company", "mission", "values", "organization", "who is agfinancial"],
+    "audience": "general",
+    "contentFile": "about-agfinancial.md",
+    "priority": 7
+  },
+  {
+    "title": "Services",
+    "url": "/services",
+    "summary": "High-level entry point for loans, investments, retirement, legacy giving, insurance, and rates.",
+    "keywords": ["services", "service overview", "options", "products", "financial services", "where to start"],
+    "audience": "general",
+    "contentFile": "services-overview.md",
+    "priority": 10
+  },
+  {
+    "title": "Loans",
+    "url": "/services/loans",
+    "summary": "Public overview of AGFinancial loan solutions for ministry-focused lending and next-step guidance.",
+    "keywords": ["loan", "loans", "borrowing", "lending", "church loan", "loan solutions", "ministry loan"],
+    "audience": "ministry",
+    "contentFile": "loan-solutions.md",
+    "priority": 9
+  },
+  {
+    "title": "Loan Consultants",
+    "url": "/services/loans/loan-consultants",
+    "summary": "Consultant route for users who want loan-specific help after reviewing the loans overview page.",
+    "keywords": ["loan consultant", "loan consultants", "loan help", "talk to someone about a loan"],
+    "audience": "ministry",
+    "contentFile": null,
+    "priority": 6
+  },
+  {
+    "title": "Investments",
+    "url": "/services/investments",
+    "summary": "Overview of AGFinancial investment offerings and faith-driven investing positioning.",
+    "keywords": ["investments", "invest", "investment options", "faith-driven investing", "certificate"],
+    "audience": "general",
+    "contentFile": "investment-and-rates-overview.md",
+    "priority": 8
+  },
+  {
+    "title": "Retirement",
+    "url": "/services/retirement",
+    "summary": "Overview of AGFinancial retirement solutions for ministers, ministry employees, churches, and organizations.",
+    "keywords": ["retirement", "retirement options", "retirement plan", "ira", "rollover", "retirement help"],
+    "audience": "general",
+    "contentFile": "retirement-options.md",
+    "priority": 10
+  },
+  {
+    "title": "403(b)",
+    "url": "/services/retirement/403b",
+    "summary": "403(b) retirement plan route with public support content, compliance guidance, and enrollment help context.",
+    "keywords": ["403b", "403(b)", "retirement plan", "403b plan", "compliance", "housing allowance", "enrollment"],
+    "audience": "general",
+    "contentFile": "retirement-options.md",
+    "priority": 10
+  },
+  {
+    "title": "403b Individual Enrollment",
+    "url": "/services/retirement/403b/403b-individual-enrollment",
+    "summary": "Specific route for users looking for individual 403(b) enrollment information.",
+    "keywords": ["403b individual", "403(b) individual", "individual enrollment", "individual 403b", "retirement individual enrollment"],
+    "audience": "individual",
+    "contentFile": "retirement-options.md",
+    "priority": 9
+  },
+  {
+    "title": "Online Contributions",
+    "url": "/online-contributions",
+    "summary": "Employer-focused route for 403(b) contribution setup, employer codes, and online contribution steps.",
+    "keywords": ["online contributions", "employer contributions", "403b employer", "employer code", "contribution setup"],
+    "audience": "employer",
+    "contentFile": "retirement-options.md",
+    "priority": 8
+  },
+  {
+    "title": "Rates",
+    "url": "/rates",
+    "summary": "Current public investment certificate and IRA rates with effective dates and disclosure copy.",
+    "keywords": ["rates", "rate", "apy", "certificate rates", "ira rates", "current rates", "effective date"],
+    "audience": "general",
+    "contentFile": "investment-and-rates-overview.md",
+    "priority": 10
+  },
+  {
+    "title": "Insurance",
+    "url": "/services/insurance",
+    "summary": "Overview of AGFinancial insurance coverage options, risk management, and quote paths.",
+    "keywords": ["insurance", "coverage", "life insurance", "property and casualty", "mission assure", "risk management"],
+    "audience": "general",
+    "contentFile": "insurance-solutions.md",
+    "priority": 8
+  },
+  {
+    "title": "Legacy Giving",
+    "url": "/services/legacy-giving",
+    "summary": "Overview of charitable planning options including donor advised funds, endowments, and charitable gift strategies.",
+    "keywords": ["legacy giving", "planned giving", "charitable giving", "donor advised fund", "endowment", "gift annuity"],
+    "audience": "general",
+    "contentFile": "legacy-giving.md",
+    "priority": 7
+  },
+  {
+    "title": "Resources",
+    "url": "/resources",
+    "summary": "Resources hub for articles, stewardship tools, and topic-based public learning content.",
+    "keywords": ["resources", "articles", "helpful articles", "planning tools", "church risk management"],
+    "audience": "general",
+    "contentFile": "resources-and-tools.md",
+    "priority": 6
+  },
+  {
+    "title": "Calculators",
+    "url": "/calculators",
+    "summary": "Public calculator directory for retirement, loan, emergency fund, laddering, and net worth tools.",
+    "keywords": ["calculators", "calculator", "loan payment", "emergency fund", "net worth", "compound interest"],
+    "audience": "general",
+    "contentFile": "resources-and-tools.md",
+    "priority": 7
+  },
+  {
+    "title": "Forms",
+    "url": "/forms",
+    "summary": "Forms library organized by public topics including loans, insurance, investments, planned giving, and retirement.",
+    "keywords": ["forms", "documents", "form library", "download forms", "retirement forms", "investment forms"],
+    "audience": "general",
+    "contentFile": "forms-and-documents.md",
+    "priority": 8
+  },
+  {
+    "title": "Prospectus",
+    "url": "/prospectus",
+    "summary": "Public document route for prospectus and investment document links, including the offering circular.",
+    "keywords": ["prospectus", "offering circular", "investment documents", "fund documents"],
+    "audience": "general",
+    "contentFile": "forms-and-documents.md",
+    "priority": 7
+  },
+  {
+    "title": "Contact Us",
+    "url": "/contact-us",
+    "summary": "Primary contact page with email, phone, hours, and inquiry routing for loans, investments, retirement, insurance, and client services.",
+    "keywords": ["contact", "contact us", "phone", "email", "call", "hours", "client services", "consultant", "speak to someone"],
+    "audience": "general",
+    "contentFile": "contact-support.md",
+    "priority": 10
+  },
+  {
+    "title": "Privacy Policy",
+    "url": "/privacy-policy",
+    "summary": "Public privacy policy covering personal information collection, sharing, retention, and policy updates.",
+    "keywords": ["privacy", "privacy policy", "personal information", "data retention"],
+    "audience": "general",
+    "contentFile": "legal-and-public-disclosures.md",
+    "priority": 5
+  },
+  {
+    "title": "Terms of Service",
+    "url": "/terms-of-service",
+    "summary": "Public terms of service for website use, restrictions, and general legal disclaimers.",
+    "keywords": ["terms", "terms of service", "website terms", "legal terms"],
+    "audience": "general",
+    "contentFile": "legal-and-public-disclosures.md",
+    "priority": 5
+  },
+  {
+    "title": "Accessibility",
+    "url": "/accessibility",
+    "summary": "Public accessibility statement with WCAG conformance status and contact guidance for barriers.",
+    "keywords": ["accessibility", "wcag", "accessible", "barriers", "screen reader"],
+    "audience": "general",
+    "contentFile": "legal-and-public-disclosures.md",
+    "priority": 5
+  }
+]

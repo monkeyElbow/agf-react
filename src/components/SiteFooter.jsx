@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useContentAdmin } from '../context/ContentAdminContext';
 import agfLogo from '../assets/agf-logo-footer.svg';
 
 const footerCols = [
@@ -75,7 +76,12 @@ const socialLinks = [
 ];
 
 export default function SiteFooter() {
+  const { resolveManagedPathFromRef } = useContentAdmin();
   const currentYear = new Date().getFullYear();
+  const resolveFooterPath = (pathRef, fallback = '/') => {
+    const resolved = resolveManagedPathFromRef(pathRef, pathRef);
+    return resolved || fallback;
+  };
 
   return (
     <>
@@ -85,12 +91,12 @@ export default function SiteFooter() {
             {footerCols.map((col) => (
               <div key={col.heading} className="site-footer-col">
                 <h4>
-                  <Link to={col.headingPath}>{col.heading}</Link>
+                  <Link to={resolveFooterPath(col.headingPath, '/')}>{col.heading}</Link>
                 </h4>
                 <ul>
                   {col.links.map(([to, label]) => (
                     <li key={to}>
-                      <Link to={to}>{label}</Link>
+                      <Link to={resolveFooterPath(to, '/')}>{label}</Link>
                     </li>
                   ))}
                 </ul>
@@ -98,7 +104,7 @@ export default function SiteFooter() {
             ))}
 
             <div className="site-footer-col site-footer-brand">
-              <Link to="/" className="site-footer-logo-link" aria-label="AGFinancial Home">
+              <Link to={resolveFooterPath('/', '/')} className="site-footer-logo-link" aria-label="AGFinancial Home">
                 <img src={agfLogo} alt="AGFinancial" className="site-footer-logo-white" />
               </Link>
               <div className="site-footer-social" aria-label="AGFinancial social links">

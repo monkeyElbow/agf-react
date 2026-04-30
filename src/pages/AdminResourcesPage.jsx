@@ -78,6 +78,21 @@ function AdminResourcesPageContent() {
     });
   }, [articles, categoryFilter, search]);
 
+  const [sortOrder, setSortOrder] = useState('recent');
+  const [viewMode, setViewMode] = useState('grid');
+
+  const sortedFiltered = useMemo(() => {
+    const compareDate = (a, b) => {
+      const aTime = new Date(a.publishedAt || '').getTime() || 0;
+      const bTime = new Date(b.publishedAt || '').getTime() || 0;
+      if (sortOrder === 'oldest') {
+        return aTime - bTime;
+      }
+      return bTime - aTime;
+    };
+    return [...filtered].sort(compareDate);
+  }, [filtered, sortOrder]);
+
   const selected = articles.find((item) => item.id === selectedId) || null;
   const articleUrlPreview = selected
     ? `https://www.agfinancial.org/resources/${toPathSegment(selected.category) || 'article'}/${toPathSegment(selected.slug)}`
@@ -121,10 +136,10 @@ function AdminResourcesPageContent() {
           ) : null}
         </div>
 
-        <section className="admin-content-section">
-          <div className="admin-content-grid-two">
-            <div>
-              <label htmlFor="admin-resources-search" className="search-page-label">Search articles</label>
+        <section className="admin-content-section admin-resources-toolbar">
+          <div className="admin-resources-toolbar-grid">
+            <label htmlFor="admin-resources-search" className="search-page-label">
+              Search articles
               <input
                 id="admin-resources-search"
                 className="search-page-input"
@@ -132,9 +147,9 @@ function AdminResourcesPageContent() {
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search title, category, or slug"
               />
-            </div>
-            <div>
-              <label htmlFor="admin-resources-category-filter" className="search-page-label">Filter by category</label>
+            </label>
+            <label htmlFor="admin-resources-category-filter" className="search-page-label">
+              Filter by category
               <select
                 id="admin-resources-category-filter"
                 className="search-page-select"
@@ -146,24 +161,79 @@ function AdminResourcesPageContent() {
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
+            </label>
+            <label htmlFor="admin-resources-sort-order" className="search-page-label">
+              Sort
+              <select
+                id="admin-resources-sort-order"
+                className="search-page-select"
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value)}
+              >
+                <option value="recent">Most recent first</option>
+                <option value="oldest">Oldest first</option>
+              </select>
+            </label>
+          </div>
+          <div className="admin-resources-toolbar-actions">
+            <div className="admin-resources-view-toggle" role="group" aria-label="Article view mode">
+              <button
+                type="button"
+                className={viewMode === 'grid' ? 'is-active' : ''}
+                onClick={() => setViewMode('grid')}
+              >
+                Grid cards
+              </button>
+              <button
+                type="button"
+                className={viewMode === 'list' ? 'is-active' : ''}
+                onClick={() => setViewMode('list')}
+              >
+                Compact list
+              </button>
             </div>
           </div>
         </section>
 
         <section className="admin-content-section">
-          <label htmlFor="admin-resources-select" className="search-page-label">Select article</label>
-          <select
-            id="admin-resources-select"
-            className="search-page-select"
-            value={selectedId || ''}
-            onChange={(event) => setSelectedId(event.target.value || null)}
-          >
-            {filtered.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.title} ({item.category})
-              </option>
-            ))}
-          </select>
+          {sortedFiltered.length ? (
+            <div className={`admin-resources-gallery is-${viewMode}`}>
+              {sortedFiltered.map((item) => {
+                const isActive = item.id === selectedId;
+                const publishedLabel = item.isPublished ? 'Published' : 'Draft';
+                const backgroundImage = item.mediaUrl ? { backgroundImage: `url(${item.mediaUrl})` } : {};
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`admin-resources-card${isActive ? ' is-active' : ''}`}
+                    onClick={() => setSelectedId(item.id)}
+                    aria-pressed={isActive}
+                  >
+                    <div className="admin-resources-card-media" style={backgroundImage}>
+                      {!item.mediaUrl ? <span>No media</span> : null}
+                    </div>
+                    <div className="admin-resources-card-body">
+                      <p className="admin-resources-card-title">{item.title || 'Untitled article'}</p>
+                      <p className="admin-resources-card-meta">
+                        {item.category || 'Uncategorized'} · {publishedLabel}
+                      </p>
+                      {item.publishedAt ? (
+                        <p className="admin-resources-card-meta">
+                          {new Date(item.publishedAt).toLocaleDateString()}
+                        </p>
+                      ) : null}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="blank-state">
+              <p>No articles match the filters.</p>
+              <p className="blank-state-note">Try adjusting the search or category selection.</p>
+            </div>
+          )}
         </section>
 
         {selected ? (
@@ -186,7 +256,12 @@ function AdminResourcesPageContent() {
               </label>
 
               <p className="blank-state-note">
-                Public URL preview: <strong>{articleUrlPreview}</strong>
+                Public URL preview:&nbsp;
+                {articleUrlPreview ? (
+                  <a href={articleUrlPreview} target="_blank" rel="noreferrer">{articleUrlPreview}</a>
+                ) : (
+                  <span>adjust the slug or category to build a preview</span>
+                )}
               </p>
 
               <div className="admin-content-grid-two">
@@ -254,6 +329,9 @@ function AdminResourcesPageContent() {
                     onChange={(event) => updateArticle(selected.id, { socialImageUrl: event.target.value })}
                     placeholder="https://media.agfinancial.org/.../social-image.jpg"
                   />
+                  <p className="admin-content-note">
+                    Point to the shared social media folder so these cards align with the media plan.
+                  </p>
                 </label>
 
                 <label>

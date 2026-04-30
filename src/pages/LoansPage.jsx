@@ -1,6 +1,33 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import BlockHudPanelHost from '../components/BlockHudPanelHost';
+import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
+import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
+import FrontHudPanelShell from '../components/FrontHudPanelShell';
+import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
+import DynamicCtaSection from '../components/DynamicCtaSection';
+import DynamicRequestFormSection from '../components/DynamicRequestFormSection';
+import SafeRichText from '../components/SafeRichText';
+import { ColumnsBlock } from '../components/blocks/PageBlocksRenderer';
+import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
+import { useFrontHud } from '../context/FrontHudContext';
+import { useContentAdmin } from '../context/ContentAdminContext';
+import { useTestimonials } from '../context/TestimonialsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
+import useHudDockOrder from '../hooks/useHudDockOrder';
+import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
+import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
+import { resolveTestimonialsBlockData } from '../lib/testimonials';
+import {
+  actionButtonClassName,
+  buildDynamicBillboardFromBlock,
+  buildDynamicHeroFromBlock,
+  buildDynamicIntroFromBlock,
+  heroAnimationClassForLine,
+  isExternalLinkHref,
+  parseTextHighlights,
+  renderTextWithHighlights,
+} from '../lib/dynamicPageBlocks';
 
 const loanOptions = [
   {
@@ -65,6 +92,12 @@ const testimonials = [
     author: 'Mike Santiago, Focus Church',
   },
 ];
+const defaultLoansTestimonialsFineprint = 'Testimonials found on this site are examples of what we have done for other clients, and what some of our clients have said about us. However, we cannot guarantee the results in any case. Your results may vary and every situation is different. No compensation was provided for these testimonials.';
+const LOANS_TARIFFS_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
+  slug: 'tariffs-timing-truth-keep-building-through-the-chaos',
+  title: 'Tariffs, Timing & Truth: Keep Building Through the Chaos',
+  fallbackImageAlt: 'Tariffs, Timing & Truth',
+});
 
 const estimatedLoanAmountOptions = [
   '$100,000-$499,999',
@@ -86,20 +119,58 @@ const states = [
   ['VA', 'Virginia'], ['WA', 'Washington'], ['WV', 'West Virginia'], ['WI', 'Wisconsin'], ['WY', 'Wyoming'],
 ];
 
-const inquiryDefaults = {
-  firstName: '',
-  lastName: '',
-  phone: '',
-  email: '',
-  ministryName: '',
-  ministryWebsite: '',
-  city: '',
-  state: '',
-  estimatedLoanAmount: '',
-  purpose: '',
-  attendance: '',
-  heardAbout: '',
+const defaultLoanInquiryBodyHtml = 'First things first, whether you\'re simply curious or ready to greenlight your project: <mark>complete the inquiry form</mark>. It\'s short, sweet, and vital. The information you provide will help share your vision with your consultant.';
+const defaultLoansCtaSettings = {
+  title: 'Explore your options. Zero pressure.',
+  titleClassName: '',
+  titleHighlightsJson: '',
+  bodyHtml: '<p>Let\'s talk about making it happen.</p>',
+  bgTone: 'white',
+  submitLabel: 'Follow-up with me',
+  successMessage: 'Thanks. We\'ll reach out soon.',
+  salesforceUrl: '',
+  field1Enabled: true,
+  field1Type: 'text',
+  field1Label: 'Name',
+  field1Placeholder: '',
+  field1Options: '',
+  field1Required: true,
+  field2Enabled: true,
+  field2Type: 'email',
+  field2Label: 'Email',
+  field2Placeholder: '',
+  field2Options: '',
+  field2Required: true,
+  field3Enabled: true,
+  field3Type: 'tel',
+  field3Label: 'Phone',
+  field3Placeholder: '(555) 555-5555',
+  field3Options: '',
+  field3Required: false,
+  field4Enabled: true,
+  field4Type: 'textarea',
+  field4Label: 'Message',
+  field4Placeholder: 'What would you like to discuss?',
+  field4Options: '',
+  field4Required: false,
 };
+const LOANS_HUD_ANCHOR_SELECTOR_BY_ID = {
+  hero: '.service-native-hero',
+  intro: '.service-native-intro',
+  request_form: '.loans-native-inquiry',
+  value_cards: '.loans-native-more',
+  vision_fuel: '.loans-native-vision-fuel',
+  cta_form: '.native-dynamic-cta',
+  testimonials: '.loans-native-testimonials',
+};
+
+function clampFrontHudOpacity(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 15;
+  }
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+}
 
 function validEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
@@ -138,6 +209,267 @@ function formatCurrency(value) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+function parseLoanRequestFieldOptions(options) {
+  if (!Array.isArray(options)) {
+    return [];
+  }
+  return options
+    .map((option) => ({
+      value: String(option?.value || '').trim(),
+      label: String(option?.label || '').trim(),
+    }))
+    .filter((option) => option.value || option.label);
+}
+
+function parseLoanRequestFields(rawValue) {
+  if (!rawValue) {
+    return [];
+  }
+  try {
+    const parsed = typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .map((field) => ({
+        id: String(field?.id || '').trim(),
+        label: String(field?.label || '').trim(),
+        type: String(field?.type || 'text').trim().toLowerCase(),
+        required: Boolean(field?.required),
+        placeholder: String(field?.placeholder || '').trim(),
+        format: String(field?.format || '').trim().toLowerCase(),
+        maxLength: Number(field?.maxLength) || undefined,
+        rows: Number(field?.rows) || undefined,
+        options: parseLoanRequestFieldOptions(field?.options),
+      }))
+      .filter((field) => field.id && field.label);
+  } catch {
+    return [];
+  }
+}
+
+function buildLoanInquiryConfigFromBlock(block) {
+  if (!block || block.mode !== 'dynamic') {
+    return null;
+  }
+  const settings = block.settings || {};
+  const title = String(settings.title || '').trim() || 'Ready to grow\nwhen you are.';
+  const titleHighlightsJson = String(settings.titleHighlightsJson || '').trim();
+  const titleLines = title.split(/\n+/).map((part) => part.trim()).filter(Boolean);
+  const derivedSecondLineHighlight = !titleHighlightsJson && titleLines.length > 1
+    ? JSON.stringify([
+      {
+        start: title.indexOf(titleLines[1]),
+        end: title.indexOf(titleLines[1]) + titleLines[1].length,
+        className: 'is-white',
+      },
+    ])
+    : titleHighlightsJson;
+  const subtitle = String(settings.subtitle || '').trim();
+  const bodyHtml = String(settings.bodyHtml || '').trim() || (!subtitle.includes('<') ? '' : subtitle);
+  const steps = [1, 2, 3, 4, 5]
+    .map((slot) => ({
+      id: `step${slot}`,
+      title: String(settings[`step${slot}Title`] || '').trim(),
+      note: String(settings[`step${slot}Note`] || '').trim(),
+      fields: parseLoanRequestFields(settings[`step${slot}FieldsJson`]),
+    }))
+    .filter((step) => step.fields.length);
+
+  if (!steps.length) {
+    return null;
+  }
+
+  return {
+    title,
+    titleClassName: String(settings.titleClassName || '').trim(),
+    titleHighlightsJson: derivedSecondLineHighlight,
+    subtitle: subtitle && !subtitle.includes('<') ? subtitle : '',
+    bodyHtml: bodyHtml || defaultLoanInquiryBodyHtml,
+    hideStepTitles: true,
+    submitLabel: String(settings.submitLabel || '').trim() || 'Submit',
+    successMessage: String(settings.successMessage || '').trim() || 'Your submission has been received. We\'ll be in touch shortly.',
+    steps,
+  };
+}
+
+function buildDefaultLoanInquiryConfig() {
+  return {
+    title: 'Ready to grow\nwhen you are.',
+    titleClassName: '',
+    titleHighlightsJson: JSON.stringify([
+      {
+        start: 'Ready to grow\n'.length,
+        end: 'Ready to grow\nwhen you are.'.length,
+        className: 'is-white',
+      },
+    ]),
+    subtitle: '',
+    bodyHtml: defaultLoanInquiryBodyHtml,
+    hideStepTitles: true,
+    submitLabel: 'Submit',
+    successMessage: 'Your submission has been received. We\'ll be in touch shortly.',
+    steps: [
+      {
+        id: 'step1',
+        title: 'Contact',
+        note: '',
+        fields: [
+          { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+          { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+          { id: 'phone', label: 'Phone*', type: 'tel', required: true, format: 'phone' },
+          { id: 'email', label: 'Email*', type: 'email', required: true },
+        ],
+      },
+      {
+        id: 'step2',
+        title: 'Ministry',
+        note: '',
+        fields: [
+          { id: 'ministryName', label: 'Ministry Name*', type: 'text', required: true },
+          { id: 'ministryWebsite', label: 'Ministry Website', type: 'text' },
+          { id: 'city', label: 'City*', type: 'text', required: true },
+          {
+            id: 'state',
+            label: 'State*',
+            type: 'select',
+            required: true,
+            placeholder: 'Choose one',
+            options: states.map(([value, label]) => ({ value, label })),
+          },
+        ],
+      },
+      {
+        id: 'step3',
+        title: 'Project details',
+        note: '',
+        fields: [
+          {
+            id: 'estimatedLoanAmount',
+            label: 'Estimated Loan Amount*',
+            type: 'select',
+            required: true,
+            placeholder: 'Choose one',
+            options: estimatedLoanAmountOptions.map((value) => ({ value, label: value })),
+          },
+          { id: 'purpose', label: 'Purpose of Loan', type: 'text' },
+          { id: 'attendance', label: 'Weekly attendance (if applicable)', type: 'text' },
+          { id: 'heardAbout', label: 'How did you hear about us?*', type: 'text', required: true },
+        ],
+      },
+    ],
+  };
+}
+
+function toBooleanFlag(value) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+  const token = String(value || '').trim().toLowerCase();
+  if (!token) {
+    return false;
+  }
+  return !['false', '0', 'no', 'off'].includes(token);
+}
+
+function buildLoanValueCardsFallbackBlock() {
+  return {
+    id: 'value_cards',
+    kind: 'columns',
+    type: 'columns',
+    mode: 'dynamic',
+    templateId: 'value_cards',
+    presetId: 'value-cards',
+    settings: {
+      title: "There's more to every loan.",
+      leadLine: '',
+      followupLine: '',
+      titleClassName: '',
+      titleHighlightsJson: '',
+      bodyHtml: '',
+      justify: 'center',
+      columnsStyle: 'loans-value',
+      bgTone: 'white',
+      contentWidth: 'browser',
+      columns: 'three',
+      col1Enabled: true,
+      col1Type: 'text',
+      col1Title: valueCards[0]?.title || 'Smart consulting.',
+      col1Body: valueCards[0]?.body || '',
+      col2Enabled: true,
+      col2Type: 'text',
+      col2Title: valueCards[1]?.title || 'Teamwork.',
+      col2Body: valueCards[1]?.body || '',
+      col3Enabled: true,
+      col3Type: 'text',
+      col3Title: valueCards[2]?.title || 'Roots with values.',
+      col3Body: valueCards[2]?.body || '',
+      col4Enabled: false,
+      col4Type: 'text',
+      col4Title: '',
+      col4Body: '',
+    },
+  };
+}
+
+function buildLoanValueCardsRenderableBlock(block) {
+  const fallbackBlock = buildLoanValueCardsFallbackBlock();
+  if (!block || block.mode !== 'dynamic') {
+    return fallbackBlock;
+  }
+
+  return {
+    ...block,
+    kind: 'columns',
+    type: 'columns',
+    templateId: String(block.templateId || '').trim() || 'value_cards',
+    presetId: String(block.presetId || '').trim() || 'value-cards',
+    settings: {
+      ...(fallbackBlock.settings || {}),
+      ...(block.settings || {}),
+      columnsStyle: 'loans-value',
+      bgTone: 'white',
+      contentWidth: 'browser',
+      columns: 'three',
+    },
+  };
+}
+
+function buildLoanVisionFuelConfigFromBlock(block) {
+  if (!block || block.mode !== 'dynamic') {
+    return null;
+  }
+
+  const dynamicBillboard = buildDynamicBillboardFromBlock(block);
+  const settings = block.settings || {};
+  const subtitle = String(settings.subtitle || '').trim();
+  const body = String(settings.body || '').trim();
+  const buttonClassName = dynamicBillboard?.action
+    ? actionButtonClassName(dynamicBillboard.action.style, dynamicBillboard.action.tone)
+    : 'service-native-btn';
+
+  if (!dynamicBillboard && !subtitle && !body) {
+    return null;
+  }
+
+  return {
+    title: dynamicBillboard?.title || 'Vision fuel.',
+    titleClassName: dynamicBillboard?.titleClassName || '',
+    titleHighlights: dynamicBillboard?.titleHighlights || parseTextHighlights(settings.titleHighlightsJson),
+    titleStyle: dynamicBillboard?.titleStyle || undefined,
+    subtitle: subtitle || 'One bold step at a time.',
+    bodyHtml: String(dynamicBillboard?.bodyHtml || '').trim(),
+    body: body || 'Loans guided by your ministry, driven by your mission, and powered by AGFinancial.',
+    buttonLabel: dynamicBillboard?.action?.label || 'Start the process',
+    buttonHref: dynamicBillboard?.action?.to || dynamicBillboard?.action?.href || '/services/loans#form',
+    buttonOpenInNewWindow: Boolean(dynamicBillboard?.action?.openInNewWindow) || toBooleanFlag(settings.buttonOpenInNewWindow),
+    buttonClassName,
+  };
 }
 
 function calculateLoanSchedule({
@@ -282,12 +614,21 @@ function buildLoanPdf(summaryText, rows) {
   return new Blob([encoder.encode(pdfString)], { type: 'application/pdf' });
 }
 
-export default function LoansPage() {
+export default function LoansPage({ sectionsOnly = false }) {
   const pageRef = useRef(null);
-  const [inquiryStep, setInquiryStep] = useState(0);
-  const [inquiry, setInquiry] = useState(inquiryDefaults);
-  const [inquirySubmitted, setInquirySubmitted] = useState(false);
-  const [inquiryError, setInquiryError] = useState('');
+  const {
+    blocksByPath,
+    pageHierarchy,
+    resolveManagedPathFromRef = (pathRef, fallback = '/') => String(pathRef || '').trim() || fallback,
+    setActiveBlockLock = () => ({ ok: false }),
+    getBlockCollaboration = () => null,
+    devIdentity = null,
+    claimBufferedBlockEdit = () => false,
+    commitBlockSettingsPatch = () => false,
+    registerExternalDraftFlushHandler = null,
+  } = useContentAdmin();
+  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const { testimonials: testimonialsLibrary } = useTestimonials();
 
   const [loanAmount, setLoanAmount] = useState('');
   const [interestRate, setInterestRate] = useState('');
@@ -303,69 +644,169 @@ export default function LoansPage() {
   const [loanState, setLoanState] = useState('');
   const [loanPhone, setLoanPhone] = useState('');
   const [loanPhoneNote, setLoanPhoneNote] = useState('');
-
-  const [ctaName, setCtaName] = useState('');
-  const [ctaEmail, setCtaEmail] = useState('');
-  const [ctaPhone, setCtaPhone] = useState('');
-  const [ctaMessage, setCtaMessage] = useState('');
+  const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
+  const [activeHudPanelId, setActiveHudPanelId] = useState('');
 
   useNativeEnhancements(pageRef);
+
+  const managedBlocksSource = useMemo(() => {
+    return Array.isArray(blocksByPath?.['/services/loans']) ? blocksByPath['/services/loans'] : [];
+  }, [blocksByPath]);
+  const { blocks: managedBlocks, stageLocalBlockSetting } = useLocalBlockDrafts({
+    pathname: '/services/loans',
+    blocks: managedBlocksSource,
+    claimBufferedBlockEdit,
+    commitBlockSettingsPatch,
+    registerExternalDraftFlushHandler,
+  });
+
+  const heroBlock = useMemo(() => {
+    return managedBlocks.find((block) => block?.id === 'hero' && block?.mode === 'dynamic') || null;
+  }, [managedBlocks]);
+
+  const introBlock = useMemo(() => {
+    return managedBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic') || null;
+  }, [managedBlocks]);
+
+  const requestFormBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'request_form'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
+  const valueCardsBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'value_cards'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
+  const visionFuelBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'vision_fuel'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
+  const ctaBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'cta_form'
+      && block?.kind === 'cta_form'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
+  const testimonialsBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'testimonials'
+      && block?.kind === 'testimonials'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
+
+  const inquiryConfig = useMemo(
+    () => buildLoanInquiryConfigFromBlock(requestFormBlock) || buildDefaultLoanInquiryConfig(),
+    [requestFormBlock],
+  );
+  const renderedValueCardsBlock = useMemo(
+    () => buildLoanValueCardsRenderableBlock(valueCardsBlock),
+    [valueCardsBlock],
+  );
+  const dynamicVisionFuel = useMemo(
+    () => buildLoanVisionFuelConfigFromBlock(visionFuelBlock),
+    [visionFuelBlock],
+  );
+  const visionFuelTitle = dynamicVisionFuel?.title || 'Vision fuel.';
+  const visionFuelSubtitle = dynamicVisionFuel?.subtitle || 'One bold step at a time.';
+  const visionFuelBodyHtml = String(dynamicVisionFuel?.bodyHtml || '').trim();
+  const visionFuelBody = dynamicVisionFuel?.body || 'Loans guided by your ministry, driven by your mission, and powered by AGFinancial.';
+  const visionFuelButtonLabel = dynamicVisionFuel?.buttonLabel || 'Start the process';
+  const visionFuelButtonHref = dynamicVisionFuel?.buttonHref || '/services/loans#form';
+  const visionFuelButtonOpenInNewWindow = Boolean(dynamicVisionFuel?.buttonOpenInNewWindow);
+  const visionFuelButtonClassName = String(dynamicVisionFuel?.buttonClassName || 'service-native-btn').trim() || 'service-native-btn';
+  const testimonialsData = useMemo(
+    () => resolveTestimonialsBlockData({
+      block: testimonialsBlock,
+      library: testimonialsLibrary,
+      fallbackItems: testimonials,
+      fallbackFineprint: defaultLoansTestimonialsFineprint,
+      defaultTag: 'loans',
+    }),
+    [testimonialsBlock, testimonialsLibrary],
+  );
+  const routeLinkOptions = useMemo(
+    () => Object.values(pageHierarchy || {})
+      .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search')
+      .sort((a, b) => a.path.localeCompare(b.path)),
+    [pageHierarchy],
+  );
+  const frontHudOpacityRatio = clampFrontHudOpacity(frontHudOpacity) / 100;
+  const hudPanels = useMemo(
+    () => buildHudPanelsFromBlocks(managedBlocks, { anchorSelectorById: LOANS_HUD_ANCHOR_SELECTOR_BY_ID }),
+    [managedBlocks],
+  );
+  const showFrontHud = !sectionsOnly && frontHudEnabled && hudPanels.length > 0;
+  const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanelId);
+  const activeHudPanel = useMemo(
+    () => hudPanels.find((panel) => panel.id === activeHudPanelId) || null,
+    [activeHudPanelId, hudPanels],
+  );
+  const hudPanelByBlockId = useMemo(() => (
+    hudPanels.reduce((next, panel) => {
+      const blockId = String(panel?.blockId || '').trim();
+      if (blockId) {
+        next[blockId] = panel;
+      }
+      return next;
+    }, {})
+  ), [hudPanels]);
+  const activeHudBlockId = hasOpenHudPanel ? String(activeHudPanel?.blockId || activeHudPanel?.block?.id || '').trim() : '';
+  const getHudBlockStateClassName = (blockId) => {
+    const normalizedBlockId = String(blockId || '').trim();
+    if (!hasOpenHudPanel || !normalizedBlockId) {
+      return '';
+    }
+    return activeHudBlockId === normalizedBlockId ? ' is-hud-focus-target' : ' is-hud-dimmed';
+  };
+  const getOwnershipVisualForBlockId = (blockId) => {
+    if (!showFrontHud || !blockId) {
+      return { className: '', overlayLabel: '', overlayDetail: '', state: 'none', isOwnedByOther: false };
+    }
+    return getBlockOwnershipVisual(getBlockCollaboration('/services/loans', blockId), devIdentity?.userId);
+  };
+  const {
+    orderedPanels: orderedHudPanels,
+    getDockTabDragProps,
+    isPanelDragging,
+    isPanelDragOver,
+    getPanelDropPosition,
+    isDockDragging,
+  } = useHudDockOrder({
+    panels: hudPanels,
+    storageKey: 'loans',
+  });
+
+  useEffect(() => {
+    if (!showFrontHud) {
+      setHudDockCollapsed(true);
+      setActiveHudPanelId('');
+    }
+  }, [showFrontHud]);
+
+  const dynamicHero = useMemo(() => buildDynamicHeroFromBlock(heroBlock), [heroBlock]);
+  const dynamicIntro = useMemo(() => buildDynamicIntroFromBlock(introBlock), [introBlock]);
 
   const canDownload = useMemo(
     () => loanRows.length > 0 && downloadName.trim() && validEmail(downloadEmail),
     [loanRows.length, downloadEmail, downloadName],
   );
-
-  function updateInquiryValue(key, value) {
-    setInquiry((current) => ({ ...current, [key]: value }));
-  }
-
-  function validateInquiryStep(step) {
-    if (step === 0) {
-      if (!inquiry.firstName.trim() || !inquiry.lastName.trim() || !inquiry.phone.trim() || !validEmail(inquiry.email)) {
-        return 'Enter first name, last name, phone, and a valid email to continue.';
-      }
-    }
-    if (step === 1) {
-      if (!inquiry.ministryName.trim() || !inquiry.city.trim() || !inquiry.state.trim()) {
-        return 'Enter ministry name, city, and state to continue.';
-      }
-    }
-    if (step === 2) {
-      if (!inquiry.estimatedLoanAmount.trim() || !inquiry.heardAbout.trim()) {
-        return 'Select estimated loan amount and tell us how you heard about us.';
-      }
-    }
-    return '';
-  }
-
-  function onInquiryNext() {
-    const error = validateInquiryStep(inquiryStep);
-    if (error) {
-      setInquiryError(error);
-      return;
-    }
-    setInquiryError('');
-    setInquiryStep((current) => Math.min(2, current + 1));
-  }
-
-  function onInquiryBack() {
-    setInquiryError('');
-    setInquiryStep((current) => Math.max(0, current - 1));
-  }
-
-  function onInquirySubmit(event) {
-    event.preventDefault();
-    const error = validateInquiryStep(2);
-    if (error) {
-      setInquiryError(error);
-      return;
-    }
-    setInquirySubmitted(true);
-    setInquiryError('');
-    setInquiryStep(0);
-    setInquiry(inquiryDefaults);
-  }
 
   function runLoanCalculation() {
     const result = calculateLoanSchedule({
@@ -422,72 +863,268 @@ export default function LoansPage() {
     setLoanPhoneNote('Thanks! We will reach out soon.');
   }
 
-  function onCtaSubmit(event) {
-    event.preventDefault();
-    if (!ctaName.trim() || !validEmail(ctaEmail)) {
-      setCtaMessage('Add your name and email to connect.');
+  const scrollToSelector = (selector, extraOffset = 8) => {
+    if (!selector || typeof document === 'undefined' || typeof window === 'undefined') {
       return;
     }
+    const target = document.querySelector(selector);
+    if (!target) {
+      return;
+    }
+    const nav = document.querySelector('.site-nav');
+    const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+    const top = target.getBoundingClientRect().top + window.scrollY - navHeight - extraOffset;
+    window.scrollTo({
+      top: Math.max(0, top),
+      behavior: 'smooth',
+    });
+  };
 
-    const payload = {
-      name: ctaName.trim(),
-      email: ctaEmail.trim(),
-      phone: ctaPhone.trim(),
-      loan: {
-        amount: parseNumber(loanAmount),
-        rateAnnualPct: Number.parseFloat(interestRate) || 0,
-        termYears: Number.parseFloat(loanTerm) || 0,
-        displayOption,
-        estPayment: Number(estimatedPayment.toFixed(2)),
-        estTotalPaid: Number(estimatedTotalPaid.toFixed(2)),
-        estTotalInterest: Number(estimatedTotalInterest.toFixed(2)),
-      },
+  const setHudPanelOpen = (panelId, anchorSelector, options = {}) => {
+    const shouldScroll = options.scrollToTarget !== false;
+    setHudDockCollapsed(false);
+    setActiveHudPanelId(panelId);
+    if (shouldScroll) {
+      scrollToSelector(anchorSelector);
+    }
+  };
+
+  const toggleHudPanel = (panelId, anchorSelector) => {
+    if (!hudDockCollapsed && activeHudPanelId === panelId) {
+      setHudDockCollapsed(true);
+      setActiveHudPanelId('');
+      return;
+    }
+    setHudPanelOpen(panelId, anchorSelector);
+  };
+
+  const closeHudDock = () => {
+    setHudDockCollapsed(true);
+    setActiveHudPanelId('');
+  };
+  const resolveHudAnchor = (blockId) => {
+    if (!showFrontHud) {
+      return null;
+    }
+    const panel = hudPanelByBlockId[String(blockId || '').trim()];
+    if (!panel) {
+      return null;
+    }
+    return {
+      label: panel.label,
+      isActive: !hudDockCollapsed && activeHudPanelId === panel.id,
+      onClick: () => toggleHudPanel(panel.id, panel.anchorSelector),
+      style: { '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) },
     };
+  };
+  const renderHudAnchor = (blockId) => {
+    const hudAnchor = resolveHudAnchor(blockId);
+    if (!hudAnchor) {
+      return null;
+    }
+    return (
+      <FrontHudAnchorTag
+        label={hudAnchor.label}
+        isActive={hudAnchor.isActive}
+        onClick={hudAnchor.onClick}
+        style={hudAnchor.style}
+      />
+    );
+  };
+  const resolveRoutePath = (pathRef, fallback = '/') => {
+    const resolved = resolveManagedPathFromRef(pathRef, pathRef);
+    return resolved || fallback;
+  };
 
-    document.dispatchEvent(new CustomEvent('agf:cta-submit', { detail: payload }));
-    setCtaMessage('Got it. We will reach out soon.');
-    setCtaName('');
-    setCtaEmail('');
-    setCtaPhone('');
-  }
+  const updateLoansBlockSetting = (block, settingKey, settingValue) => {
+    if (!block) {
+      return;
+    }
+    stageLocalBlockSetting(block.id, settingKey, settingValue);
+  };
 
   return (
-    <div ref={pageRef} className="service-native-page loans-native-page">
-      <section className="service-native-hero">
+    <div
+      ref={sectionsOnly ? undefined : pageRef}
+      className={`${sectionsOnly ? '' : 'service-native-page '}loans-native-page${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
+    >
+      {showFrontHud ? (
+        <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
+          <div className={`admin-front-hud-dock-tabs${isDockDragging ? ' is-drag-active' : ''}`}>
+            {orderedHudPanels.map((panel) => (
+              <button
+                key={panel.id}
+                type="button"
+                className={`admin-front-hud-dock-tab${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
+                onClick={() => toggleHudPanel(panel.id, panel.anchorSelector)}
+                {...getDockTabDragProps(panel.id)}
+              >
+                <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
+                <span className="admin-front-hud-visually-hidden">{panel.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="admin-front-hud-dock-actions">
+            <button
+              type="button"
+              className="admin-front-hud-dock-collapse"
+              onClick={() => setHudDockCollapsed((current) => !current)}
+              aria-label={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
+              title={hudDockCollapsed ? 'Show panels' : 'Hide panels'}
+            >
+              {hudDockCollapsed ? '▢' : '×'}
+            </button>
+          </div>
+        </aside>
+      ) : null}
+      {showFrontHud ? (
+        <FrontHudPageWorkflow pathname="/services/loans" reviewHref="/admin/content?page=%2Fservices%2Floans" placement="bar" />
+      ) : null}
+      {hasOpenHudPanel && activeHudPanel ? (
+        <FrontHudPanelShell
+          title={activeHudPanel.label}
+          onClose={closeHudDock}
+          style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+        >
+          <BlockHudPanelHost
+            block={activeHudPanel.block}
+            pathname="/services/loans"
+            routeOptions={routeLinkOptions}
+            testimonialsLibrary={testimonialsLibrary}
+            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+            onOwnershipAction={() => {
+              if (!activeHudPanel?.block?.id) {
+                return;
+              }
+              setActiveBlockLock('/services/loans', activeHudPanel.block.id, { force: true });
+            }}
+            onSettingChange={(settingKey, nextValue) => updateLoansBlockSetting(activeHudPanel.block, settingKey, nextValue)}
+          />
+        </FrontHudPanelShell>
+      ) : null}
+      {!sectionsOnly ? (
+      <section
+        className={`service-native-hero${dynamicHero ? ` is-bg-${dynamicHero.bgTone || 'white'} is-justify-${dynamicHero.justify || 'center'}` : ''}${getHudBlockStateClassName('hero')}${getOwnershipVisualForBlockId('hero').className || ''}`}
+        data-block-id="hero"
+      >
+        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero')} />
+        {renderHudAnchor('hero')}
         <div className="ag-panel-rail">
-          <h1 className="lineblur loans-native-hero-line is-vision">
-            <mark>Your</mark>
-            {' '}
-            vision
-            <mark>.</mark>
-          </h1>
-          <h1 className="lineB loans-native-hero-line is-purpose">
-            <mark>Our</mark>
-            {' '}
-            purpose
-            <mark>.</mark>
-          </h1>
+          {dynamicHero?.lines?.length ? dynamicHero.lines.map((line, index) => {
+            const animationClass = heroAnimationClassForLine(dynamicHero.animationPreset, index + 1);
+            const lineClassName = ['loans-native-hero-line', animationClass, line.className].filter(Boolean).join(' ');
+            const headingHtml = renderTextWithHighlights(line.text, line.highlights);
+            return (
+              <h1
+                key={`loans-hero-line-${line.id || index + 1}`}
+                className={lineClassName}
+                style={{
+                  lineHeight: dynamicHero.lineHeight,
+                }}
+              >
+                <span dangerouslySetInnerHTML={{ __html: headingHtml }} />
+              </h1>
+            );
+          }) : (
+            <>
+              <h1 className="lineblur loans-native-hero-line is-vision">
+                <mark>Your</mark>
+                {' '}
+                vision
+                <mark>.</mark>
+              </h1>
+              <h1 className="lineB loans-native-hero-line is-purpose">
+                <mark>Our</mark>
+                {' '}
+                purpose
+                <mark>.</mark>
+              </h1>
+            </>
+          )}
         </div>
       </section>
+      ) : null}
 
-      <section className="service-native-intro loans-native-intro">
+      {!sectionsOnly ? (
+      <section
+        className={`service-native-intro loans-native-intro${dynamicIntro ? ' dynamic-intro' : ''}${dynamicIntro ? ` is-bg-${dynamicIntro.bgTone || 'sand'} is-text-${dynamicIntro.textTone || 'dark'}` : ''}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`}
+        data-block-id="intro"
+      >
+        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
+        {renderHudAnchor('intro')}
         <div className="ag-panel-rail">
-          <h2>The right loan can change everything.</h2>
-          <p>
-            Your vision of reaching communities and changing lives drives us. As one of the nation&apos;s largest, most
-            experienced church loan providers, we want to be part of your ministry. Let&apos;s take bold steps together
-            for the Kingdom.
-          </p>
-          <div className="service-native-action-row is-centered">
-            <Link to="/services/loans#form" className="service-native-btn">Get started</Link>
+          <div
+            className={`service-native-intro-copy is-justify-${dynamicIntro?.justify || 'center'}`}
+            style={{ '--intro-heading-line-height': dynamicIntro?.lineSpacing || 1.05 }}
+          >
+            <h2 className={dynamicIntro?.headingClassName || undefined}>
+              {dynamicIntro ? (
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: renderTextWithHighlights(dynamicIntro.heading, dynamicIntro.headingHighlights),
+                  }}
+                />
+              ) : 'The right loan can change everything.'}
+            </h2>
+            {dynamicIntro?.bodyHtml ? (
+              <SafeRichText as="div" className="native-info-rich-html" html={dynamicIntro.bodyHtml} />
+            ) : (
+              <p>
+                {dynamicIntro?.body
+                  || "Your vision of reaching communities and changing lives drives us. As one of the nation's largest, most experienced church loan providers, we want to be part of your ministry. Let's take bold steps together for the Kingdom."}
+              </p>
+            )}
+            {dynamicIntro?.extraLine ? (
+              <p
+                className={`native-info-intro-emphasis${dynamicIntro?.extraLineClassName ? ` ${dynamicIntro.extraLineClassName}` : ''}`}
+                style={dynamicIntro?.extraLineStyle}
+              >
+                {dynamicIntro.extraLine}
+              </p>
+            ) : null}
+            {(dynamicIntro?.actions || []).length ? (
+              <div className={`service-native-action-row${(dynamicIntro?.justify || 'center') === 'center' ? ' is-centered' : ''}`}>
+                {dynamicIntro.actions.map((action) => {
+                  const actionTarget = action.to || action.href || '';
+                  const isInternal = Boolean(action.to || (action.href && !isExternalLinkHref(action.href) && action.href.startsWith('/')));
+                  const buttonClassName = actionButtonClassName(action.style);
+                  return isInternal ? (
+                    <Link
+                      key={actionTarget}
+                      to={actionTarget}
+                      className={buttonClassName}
+                      target={action.openInNewWindow ? '_blank' : undefined}
+                      rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                    >
+                      {action.label}
+                    </Link>
+                  ) : (
+                    <a
+                      key={actionTarget}
+                      href={actionTarget}
+                      className={buttonClassName}
+                      target={action.openInNewWindow ? '_blank' : undefined}
+                      rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                    >
+                      {action.label}
+                    </a>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="service-native-action-row is-centered">
+                <Link to="/services/loans#form" className="service-native-btn">Get started</Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
+      ) : null}
 
       <section className="service-native-section loans-native-options" id="loan-options">
         <div className="ag-panel-rail-wide">
-          <h2 className="loans-native-options-title">Every loan, 100% customized.</h2>
-          <h3 className="loans-native-options-subtitle">You won&apos;t find this at a bank.</h3>
+          <h2 className="loans-native-display-heading loans-native-options-title">Every loan, 100% customized.</h2>
+          <h3 className="loans-native-display-heading loans-native-options-subtitle">You won&apos;t find this at a bank.</h3>
           <p className="loans-native-options-lead" style={{ textAlign: 'center', marginInline: 'auto' }}>
             We&apos;re more than a financial partner. We&apos;re part of your ministry. It&apos;s our pleasure to design
             a loan with rates and flexible terms <strong>specifically for you</strong>. The loans lineup below might
@@ -504,119 +1141,29 @@ export default function LoansPage() {
             <article className="loans-native-option-question fade-up">
               <h3>Which loan is right for me?</h3>
               <div className="service-native-action-row is-centered">
-                <Link to="/services/loans/loans-consultant" className="service-native-btn">Ask my loan expert</Link>
+                <Link to="/services/loans/loan-consultants" className="service-native-btn">Ask my loan expert</Link>
               </div>
             </article>
           </div>
         </div>
       </section>
 
-      <section className="service-native-section loans-native-inquiry" id="form">
-        <div className="ag-panel-rail loans-native-inquiry-grid">
-          <article className="loans-native-inquiry-card fade-up">
-            {!inquirySubmitted ? (
-              <form className="loans-native-inquiry-form" onSubmit={onInquirySubmit}>
-                {inquiryStep === 0 ? (
-                  <>
-                    <label htmlFor="loan-inquiry-first-name">First Name*</label>
-                    <input id="loan-inquiry-first-name" value={inquiry.firstName} onChange={(event) => updateInquiryValue('firstName', event.target.value)} required />
-                    <label htmlFor="loan-inquiry-last-name">Last Name*</label>
-                    <input id="loan-inquiry-last-name" value={inquiry.lastName} onChange={(event) => updateInquiryValue('lastName', event.target.value)} required />
-                    <label htmlFor="loan-inquiry-phone">Phone*</label>
-                    <input id="loan-inquiry-phone" value={inquiry.phone} onChange={(event) => updateInquiryValue('phone', formatPhoneInput(event.target.value))} required />
-                    <label htmlFor="loan-inquiry-email">Email*</label>
-                    <input id="loan-inquiry-email" type="email" value={inquiry.email} onChange={(event) => updateInquiryValue('email', event.target.value)} required />
-                  </>
-                ) : null}
-
-                {inquiryStep === 1 ? (
-                  <>
-                    <label htmlFor="loan-inquiry-ministry">Ministry Name*</label>
-                    <input id="loan-inquiry-ministry" value={inquiry.ministryName} onChange={(event) => updateInquiryValue('ministryName', event.target.value)} required />
-                    <label htmlFor="loan-inquiry-website">Ministry Website</label>
-                    <input id="loan-inquiry-website" value={inquiry.ministryWebsite} onChange={(event) => updateInquiryValue('ministryWebsite', event.target.value)} />
-                    <label htmlFor="loan-inquiry-city">City*</label>
-                    <input id="loan-inquiry-city" value={inquiry.city} onChange={(event) => updateInquiryValue('city', event.target.value)} required />
-                    <label htmlFor="loan-inquiry-state">State*</label>
-                    <select id="loan-inquiry-state" value={inquiry.state} onChange={(event) => updateInquiryValue('state', event.target.value)} required>
-                      <option value="" disabled>Choose one</option>
-                      {states.map(([code, label]) => (
-                        <option key={code} value={code}>{label}</option>
-                      ))}
-                    </select>
-                  </>
-                ) : null}
-
-                {inquiryStep === 2 ? (
-                  <>
-                    <label htmlFor="loan-inquiry-estimated">Estimated Loan Amount*</label>
-                    <select id="loan-inquiry-estimated" value={inquiry.estimatedLoanAmount} onChange={(event) => updateInquiryValue('estimatedLoanAmount', event.target.value)} required>
-                      <option value="" disabled>Choose one</option>
-                      {estimatedLoanAmountOptions.map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                    <label htmlFor="loan-inquiry-purpose">Purpose of Loan</label>
-                    <input id="loan-inquiry-purpose" value={inquiry.purpose} onChange={(event) => updateInquiryValue('purpose', event.target.value)} />
-                    <label htmlFor="loan-inquiry-attendance">Weekly attendance (if applicable)</label>
-                    <input id="loan-inquiry-attendance" value={inquiry.attendance} onChange={(event) => updateInquiryValue('attendance', event.target.value)} />
-                    <label htmlFor="loan-inquiry-heard-about">How did you hear about us?*</label>
-                    <input id="loan-inquiry-heard-about" value={inquiry.heardAbout} onChange={(event) => updateInquiryValue('heardAbout', event.target.value)} required />
-                  </>
-                ) : null}
-
-                {inquiryError ? <p className="loans-native-form-error">{inquiryError}</p> : null}
-
-                <div className="loans-native-inquiry-actions">
-                  {inquiryStep > 0 ? <button type="button" className="service-native-btn is-ghost" onClick={onInquiryBack}>Back</button> : <span />}
-                  {inquiryStep < 2 ? <button type="button" className="service-native-btn" onClick={onInquiryNext}>Next</button> : <button type="submit" className="service-native-btn">Submit</button>}
-                </div>
-
-                <div className="loans-native-form-progress" aria-hidden="true">
-                  {[0, 1, 2].map((dot) => (
-                    <span key={dot} className={`loans-native-form-dot${inquiryStep === dot ? ' is-active' : ''}`} />
-                  ))}
-                </div>
-              </form>
-            ) : (
-              <div className="loans-native-form-thankyou">
-                <h3>Thank you!</h3>
-                <p>Your submission has been received. We&apos;ll be in touch shortly.</p>
-              </div>
-            )}
-          </article>
-
-          <aside className="loans-native-inquiry-copy fade-up">
-            <h3>
-              Ready to grow
-              <br />
-              <mark>when you are.</mark>
-            </h3>
-            <p>
-              First things first, whether you&apos;re simply curious or ready to greenlight your project:
-              {' '}
-              <mark>complete the inquiry form</mark>
-              . It&apos;s short, sweet, and vital. The information you provide will help share your vision with your consultant.
-            </p>
-          </aside>
+      <section className={`service-native-section loans-native-inquiry native-dynamic-request is-bg-blue is-text-white${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`} id="form" data-block-id="request_form">
+        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('request_form')} />
+        {renderHudAnchor('request_form')}
+        <div className="ag-panel-rail">
+          <DynamicRequestFormSection config={inquiryConfig} />
         </div>
       </section>
 
-      <section className="service-native-section loans-native-more" id="theresmore">
-        <div className="ag-panel-rail-wide">
-          <h2 className="loans-native-more-title">There&apos;s more to every loan.</h2>
-          <div className="service-native-grid loans-native-more-grid">
-            {valueCards.map((card) => (
-              <article key={card.title} className="service-native-card loans-native-more-card fade-up">
-                <h3 className={card.tone}>
-                  <mark>{card.title}</mark>
-                </h3>
-                <p>{card.body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ColumnsBlock
+        block={renderedValueCardsBlock}
+        resolveTo={resolveRoutePath}
+        ownership={getOwnershipVisualForBlockId('value_cards')}
+        hudAnchor={resolveHudAnchor('value_cards')}
+        sectionId="theresmore"
+        extraSectionClassName={`loans-native-more${getHudBlockStateClassName('value_cards')}`}
+      />
 
       <section className="service-native-section loans-native-calculator-wrap" id="run-some-numbers">
         <div className="ag-panel-rail">
@@ -746,45 +1293,93 @@ export default function LoansPage() {
         </div>
       </section>
 
-      <section className="service-native-section loans-native-vision-fuel">
+      <section className={`service-native-section loans-native-vision-fuel${getHudBlockStateClassName('vision_fuel')}${getOwnershipVisualForBlockId('vision_fuel').className || ''}`} data-block-id="vision_fuel">
+        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('vision_fuel')} />
+        {renderHudAnchor('vision_fuel')}
         <div className="ag-panel-rail">
-          <h2 className="loans-native-vision-fuel-title">Vision fuel.</h2>
-          <h3 className="loans-native-vision-fuel-subtitle">One bold step at a time.</h3>
-          <p>Loans guided by your ministry, driven by your mission, and powered by AGFinancial.</p>
+          <h2
+            className={`loans-native-vision-fuel-title${dynamicVisionFuel?.titleClassName ? ` ${dynamicVisionFuel.titleClassName}` : ''}`}
+            style={dynamicVisionFuel?.titleStyle}
+          >
+            {dynamicVisionFuel ? (
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: renderTextWithHighlights(visionFuelTitle, dynamicVisionFuel.titleHighlights),
+                }}
+              />
+            ) : visionFuelTitle}
+          </h2>
+          <h3 className="loans-native-vision-fuel-subtitle">{visionFuelSubtitle}</h3>
+          {visionFuelBodyHtml ? (
+            <SafeRichText as="div" className="native-info-rich-html" html={visionFuelBodyHtml} />
+          ) : (
+            <p>{visionFuelBody}</p>
+          )}
           <div className="service-native-action-row is-centered">
-            <Link to="/services/loans#form" className="service-native-btn">Start the process</Link>
+            {visionFuelButtonHref.startsWith('/') ? (
+              <Link
+                to={visionFuelButtonHref}
+                className={visionFuelButtonClassName}
+                target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
+                rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
+              >
+                {visionFuelButtonLabel}
+              </Link>
+            ) : (
+              <a
+                href={visionFuelButtonHref}
+                className={visionFuelButtonClassName}
+                target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
+                rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
+              >
+                {visionFuelButtonLabel}
+              </a>
+            )}
           </div>
         </div>
       </section>
 
-      <section className="service-native-section loans-native-cta-addon">
-        <div className="ag-panel-rail">
-          <form className="loans-native-addon-form" onSubmit={onCtaSubmit}>
-            <h4 className="loans-native-addon-title">Explore your options. Zero pressure.</h4>
-            <label htmlFor="loan-addon-name">Name</label>
-            <input id="loan-addon-name" value={ctaName} onChange={(event) => setCtaName(event.target.value)} required />
-            <label htmlFor="loan-addon-email">Email</label>
-            <input id="loan-addon-email" type="email" value={ctaEmail} onChange={(event) => setCtaEmail(event.target.value)} required />
-            <label htmlFor="loan-addon-phone">Phone</label>
-            <input id="loan-addon-phone" value={ctaPhone} placeholder="(555) 555-5555" onChange={(event) => setCtaPhone(formatPhoneInput(event.target.value))} />
-            <h5 className="loans-native-addon-subtitle">Let&apos;s talk about making it happen.</h5>
-            <button type="submit" className="service-native-btn">Follow-up with me</button>
-            {ctaMessage ? <small>{ctaMessage}</small> : null}
-          </form>
-        </div>
-      </section>
+      <DynamicCtaSection
+        managedBlocks={managedBlocks}
+        defaultSettings={defaultLoansCtaSettings}
+        sectionClassName="service-native-section loans-native-cta-addon"
+        sectionHudClassName={getHudBlockStateClassName('cta_form').trim()}
+        ownership={getOwnershipVisualForBlockId('cta_form')}
+        hudAnchor={renderHudAnchor('cta_form')}
+        formWrapperClassName="loans-native-addon-form"
+        fieldIdPrefix="loans-connect"
+        onSubmitData={({ values }) => {
+          const payload = {
+            fields: values,
+            loan: {
+              amount: parseNumber(loanAmount),
+              rateAnnualPct: Number.parseFloat(interestRate) || 0,
+              termYears: Number.parseFloat(loanTerm) || 0,
+              displayOption,
+              estPayment: Number(estimatedPayment.toFixed(2)),
+              estTotalPaid: Number(estimatedTotalPaid.toFixed(2)),
+              estTotalInterest: Number(estimatedTotalInterest.toFixed(2)),
+            },
+          };
+          document.dispatchEvent(new CustomEvent('agf:cta-submit', { detail: payload }));
+        }}
+      />
 
-      <section className="service-native-section loans-native-testimonials">
+      <section className={`service-native-section loans-native-testimonials${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials">
+        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
+        {renderHudAnchor('testimonials')}
         <div className="ag-panel-rail">
           <div className="carousel-stack">
-            {testimonials.map((item, index) => (
-              <article key={item.author} className={`carousel-frame${index === 0 ? ' is-active' : ''}`}>
+            {testimonialsData.items.map((item, index) => (
+              <article key={`${item.author}-${item.quote.slice(0, 24)}`} className={`carousel-frame${index === 0 ? ' is-active' : ''}`}>
                 <p className="loans-native-testimonial-quote"><strong>{item.quote}</strong></p>
                 <p className="loans-native-testimonial-author">-<strong>{item.author}</strong></p>
               </article>
             ))}
           </div>
-          <p className="loans-native-fineprint">Testimonials found on this site are examples of what we have done for other clients, and what some of our clients have said about us. However, we cannot guarantee the results in any case. Your results may vary and every situation is different. No compensation was provided for these testimonials.</p>
+          {testimonialsData.showFineprint ? (
+            <p className="loans-native-fineprint">{testimonialsData.fineprint}</p>
+          ) : null}
         </div>
       </section>
 
@@ -792,12 +1387,19 @@ export default function LoansPage() {
         <div className="ag-panel-rail-wide">
           <div className="service-native-dark-feature fade-up">
             <div className="service-native-dark-feature-inner">
-              <div className="service-native-dark-feature-media loans-native-tariffs-media" />
+              <div
+                className="service-native-dark-feature-media loans-native-tariffs-media"
+                role="img"
+                aria-label={LOANS_TARIFFS_ARTICLE_FEATURE.imageAlt || 'Tariffs, Timing & Truth'}
+                style={LOANS_TARIFFS_ARTICLE_FEATURE.image ? {
+                  backgroundImage: `var(--ag-surface-blue-overlay-soft), radial-gradient(circle at 30% 38%, rgba(250, 163, 26, 0.42), transparent 52%), url(${LOANS_TARIFFS_ARTICLE_FEATURE.image})`,
+                } : undefined}
+              />
               <div className="service-native-dark-feature-copy">
                 <h3>Tariffs, Timing &amp; Truth</h3>
                 <p>Keep your ministry&apos;s building plan moving forward, even through chaotic markets.</p>
                 <div className="service-native-action-row">
-                  <Link to="/resources" className="service-native-btn">See the strategies</Link>
+                  <Link to={LOANS_TARIFFS_ARTICLE_FEATURE.to} className="service-native-btn">See the strategies</Link>
                 </div>
               </div>
             </div>

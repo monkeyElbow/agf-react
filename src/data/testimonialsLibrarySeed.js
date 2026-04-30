@@ -1,0 +1,88 @@
+export const DEFAULT_TESTIMONIAL_FINEPRINT = 'Testimonials found on this site are examples of what we have done for other clients, and what some of our clients have said about us. However, we cannot guarantee the results in any case. Your results may vary and every situation is different. No compensation was provided for these testimonials.';
+
+export const defaultTestimonialsLibrary = [
+  {
+    id: 'jen-deweerdt-city-first',
+    quote: '“With AGFinancial’s partnership, we’re excited for what’s ahead.”',
+    author: 'Jen DeWeerdt, City First Church',
+    authorTitle: '',
+    tags: ['loans'],
+  },
+  {
+    id: 'rich-wilkerson-vous',
+    quote: '“Their experience has been a game-changer for us.”',
+    author: 'Rich Wilkerson Jr, Vous Church',
+    authorTitle: '',
+    tags: ['loans', 'services'],
+  },
+  {
+    id: 'mike-santiago-focus',
+    quote: '“We couldn’t be more pleased with how easy it is to work with their team.”',
+    author: 'Mike Santiago, Focus Church',
+    authorTitle: '',
+    tags: ['loans'],
+  },
+  {
+    id: 'mike-daf-corporate-client',
+    quote: '“We feel like we’re part of the good work AGFinancial is doing.”',
+    author: 'Mike, Donor Advised Fund Corporate Client',
+    authorTitle: '',
+    tags: ['services', 'legacy-giving'],
+  },
+  {
+    id: 'bryan-jarrett-northplace-legacy',
+    quote: '“Our 120-acre center for ministry for children and rural pastors wouldn’t be here today had it not been for the creative ways that AGFinancial can help leverage people’s resources.”',
+    author: 'Bryan Jarrett, Lead Pastor, Northplace Church, TX',
+    authorTitle: '',
+    tags: ['services', 'legacy-giving'],
+  },
+  {
+    id: 'jeremy-johnson-nwu',
+    quote: '"It\'s an easy yes for me to continue to recommend AGFinancial."',
+    author: 'Jeremy Johnson',
+    authorTitle: 'President, Northwest University',
+    tags: ['investments'],
+  },
+  {
+    id: 'bryan-jarrett-two-returns',
+    quote: '"There are two returns. There\'s a return on the investment, and there\'s a return to the Kingdom."',
+    author: 'Bryan Jarrett',
+    authorTitle: 'Pastor, Northplace Church, TX',
+    tags: ['investments'],
+  },
+  {
+    id: 'hal-donaldson-convoy',
+    quote: '"Convoy of Hope would not be where we are without our partnership with AGFinancial."',
+    author: 'Hal Donaldson',
+    authorTitle: 'President, Convoy of Hope',
+    tags: ['investments'],
+  },
+  {
+    id: 'russell-bryan-johnson-pursuit',
+    quote: '“I so appreciate AGFinancial for making sure our church team is set up for success.”',
+    author: 'Russell Bryan Johnson, Lead Pastor, Pursuit NW',
+    authorTitle: '',
+    tags: ['retirement'],
+  },
+  {
+    id: 'nino-gonzales-calvario',
+    quote: 'AGFinancial is more than a financial institution. They are my partners and coworkers who are also involved in ministry, so they speak my language.',
+    author: 'Nino Gonzales, Lead Pastor, Calvario City Church, FL',
+    authorTitle: '',
+    tags: ['retirement'],
+  },
+  {
+    id: 'mike-mcclaflin-convoy',
+    quote: '“I absolutely trust what they stand for. I trust the people who work there…professional, godly, friendly.”',
+    author: 'Mike McClaflin, AGWM, Convoy of Hope',
+    authorTitle: '',
+    tags: ['retirement'],
+  },
+  {
+    id: 'andy-daf-client',
+    quote: '“The speed, elegance and ease of interacting with AGFinancial is fantastic. It really is a much more enjoyable process.”',
+    author: 'Andy, Donor Advised Fund Client',
+    authorTitle: '',
+    tags: ['legacy-giving'],
+  },
+];
