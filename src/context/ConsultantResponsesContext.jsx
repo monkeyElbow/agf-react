@@ -52,21 +52,24 @@ export function ConsultantResponsesProvider({ children }) {
   const [responses, setResponses] = useState(readInitialState);
 
   const value = useMemo(() => {
-    const persist = (nextValue) => {
-      const normalized = normalizeResponseList(nextValue);
-      setResponses(normalized);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      } catch {
-        // ignore local storage failures
-      }
+    const persist = (updater) => {
+      setResponses((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        const normalized = normalizeResponseList(next);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        } catch {
+          // ignore local storage failures
+        }
+        return normalized;
+      });
     };
 
     return {
       responses,
       addResponse: (payload) => {
         const normalized = normalizeResponseItem(payload);
-        persist([normalized, ...responses].slice(0, MAX_ITEMS));
+        persist((prev) => [normalized, ...prev].slice(0, MAX_ITEMS));
       },
       clearResponses: () => persist([]),
     };
