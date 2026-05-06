@@ -135,73 +135,78 @@ export function CareersJobsProvider({ children }) {
   const [jobs, setJobs] = useState(readInitialJobs);
 
   const value = useMemo(() => {
-    const persist = (nextValue) => {
-      const normalized = normalizePayload(nextValue);
-      setJobs(normalized);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      } catch {
-        // ignore storage write failures
-      }
-      return normalized;
+    const persist = (updater) => {
+      setJobs((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        const normalized = normalizePayload(next);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        } catch {
+          // ignore storage write failures
+        }
+        return normalized;
+      });
     };
 
     return {
       jobs,
       addJob: () => {
-        const nextOrder = jobs.length ? Math.max(...jobs.map((item) => item.displayOrder || 0)) + 10 : 10;
-        const nextJob = normalizeJob({
-          id: `job-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          title: 'New Role',
-          location: '',
-          summary: '',
-          note: '',
-          applyUrl: DEFAULT_APPLY_URL,
-          buttonLabel: 'Apply Online',
-          postedDate: normalizeDate(new Date().toISOString()),
-          publishAt: '',
-          expireAt: '',
-          isPublished: false,
-          displayOrder: nextOrder,
-        }, jobs.length);
-        persist([...jobs, nextJob]);
-        return nextJob.id;
+        const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        persist((prev) => {
+          const nextOrder = prev.length ? Math.max(...prev.map((item) => item.displayOrder || 0)) + 10 : 10;
+          const nextJob = normalizeJob({
+            id,
+            title: 'New Role',
+            location: '',
+            summary: '',
+            note: '',
+            applyUrl: DEFAULT_APPLY_URL,
+            buttonLabel: 'Apply Online',
+            postedDate: normalizeDate(new Date().toISOString()),
+            publishAt: '',
+            expireAt: '',
+            isPublished: false,
+            displayOrder: nextOrder,
+          }, prev.length);
+          return [...prev, nextJob];
+        });
+        return id;
       },
       updateJob: (id, patch) => {
         if (!id) {
           return;
         }
-        persist(jobs.map((item) => {
-          if (item.id !== id) {
-            return item;
-          }
-          return normalizeJob({ ...item, ...(patch || {}) });
-        }));
+        persist((prev) => prev.map((item) =>
+          item.id !== id
+            ? item
+            : normalizeJob({ ...item, ...(patch || {}) }),
+        ));
       },
       deleteJob: (id) => {
         if (!id) {
           return;
         }
-        persist(jobs.filter((item) => item.id !== id));
+        persist((prev) => prev.filter((item) => item.id !== id));
       },
       duplicateJob: (id) => {
         const source = jobs.find((item) => item.id === id);
         if (!source) {
           return null;
         }
-
-        const clone = normalizeJob({
-          ...source,
-          id: `job-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          title: `${source.title} (Copy)`,
-          isPublished: false,
-          publishAt: '',
-          expireAt: '',
-          displayOrder: (source.displayOrder || 0) + 1,
+        const cloneId = `job-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        persist((prev) => {
+          const clone = normalizeJob({
+            ...source,
+            id: cloneId,
+            title: `${source.title} (Copy)`,
+            isPublished: false,
+            publishAt: '',
+            expireAt: '',
+            displayOrder: (source.displayOrder || 0) + 1,
+          });
+          return [...prev, clone];
         });
-
-        persist([...jobs, clone]);
-        return clone.id;
+        return cloneId;
       },
       resetJobs: () => persist(defaultJobs),
       getVisibleJobs: (now = new Date()) => sortJobs(jobs.filter((item) => isVisibleNow(item, now))),
