@@ -160,15 +160,17 @@ export function RedirectsProvider({ children }) {
   const [redirectsState, setRedirectsState] = useState(readInitialRedirects);
 
   const value = useMemo(() => {
-    const save = (next) => {
-      const normalized = Array.isArray(next) ? next.map(normalizeRule) : [];
-      setRedirectsState(normalized);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      } catch {
-        // ignore storage failures
-      }
-      return normalized;
+    const save = (updater) => {
+      setRedirectsState((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        const normalized = Array.isArray(next) ? next.map(normalizeRule) : [];
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        } catch {
+          // ignore storage failures
+        }
+        return normalized;
+      });
     };
 
     const createRedirect = (seed = {}) => {
@@ -177,18 +179,18 @@ export function RedirectsProvider({ children }) {
         id: `redirect-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         ...seed,
       });
-      save([...redirectsState, created]);
+      save((prev) => [...prev, created]);
       return created.id;
     };
 
     const updateRedirect = (id, patch) => {
       if (!id) return;
-      save(redirectsState.map((rule) => (rule.id === id ? normalizeRule({ ...rule, ...patch, id }) : rule)));
+      save((prev) => prev.map((rule) => (rule.id === id ? normalizeRule({ ...rule, ...patch, id }) : rule)));
     };
 
     const deleteRedirect = (id) => {
       if (!id) return;
-      save(redirectsState.filter((rule) => rule.id !== id));
+      save((prev) => prev.filter((rule) => rule.id !== id));
     };
 
     const resetRedirects = () => {

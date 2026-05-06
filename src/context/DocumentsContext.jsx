@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { formsLibraryLinks } from '../data/formsLibraryLinks';
 import { documentLibrarySeedExtras } from '../data/documentLibrarySeedExtras';
 
@@ -188,7 +188,10 @@ function normalizePatch(patch) {
 export function DocumentsProvider({ children }) {
   const [documentsState, setDocumentsState] = useState(readInitialDocuments);
   const documentsStateRef = useRef(documentsState);
-  documentsStateRef.current = documentsState;
+
+  useEffect(() => {
+    documentsStateRef.current = documentsState;
+  }, [documentsState]);
 
   const value = useMemo(() => {
     const save = (nextOrUpdater) => {
