@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useRef, useState } from 'react';
 import { formsLibraryLinks } from '../data/formsLibraryLinks';
 import { documentLibrarySeedExtras } from '../data/documentLibrarySeedExtras';
 
@@ -187,10 +187,16 @@ function normalizePatch(patch) {
 
 export function DocumentsProvider({ children }) {
   const [documentsState, setDocumentsState] = useState(readInitialDocuments);
+  const documentsStateRef = useRef(documentsState);
+  documentsStateRef.current = documentsState;
 
   const value = useMemo(() => {
-    const save = (next) => {
+    const save = (nextOrUpdater) => {
+      const next = typeof nextOrUpdater === 'function'
+        ? nextOrUpdater(documentsStateRef.current)
+        : nextOrUpdater;
       const normalized = sortDocuments((Array.isArray(next) ? next : []).map(normalizeDocument));
+      documentsStateRef.current = normalized;
       setDocumentsState(normalized);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
@@ -203,7 +209,7 @@ export function DocumentsProvider({ children }) {
     const createDocument = (seed = {}) => {
       const timestamp = Date.now();
       const baseId = toSlug(seed.id || seed.title || `document-${timestamp}`) || `document-${timestamp}`;
-      const usedIds = new Set(documentsState.map((doc) => doc.id));
+      const usedIds = new Set(documentsStateRef.current.map((doc) => doc.id));
       const id = makeUniqueId(baseId, usedIds);
       const created = normalizeDocument({
         id,
@@ -218,7 +224,7 @@ export function DocumentsProvider({ children }) {
         notes: seed.notes || '',
         seedSource: seed.seedSource || '',
       });
-      save([...documentsState, created]);
+      save((current) => [...current, created]);
       return created.id;
     };
 
@@ -229,10 +235,10 @@ export function DocumentsProvider({ children }) {
         ? String(safePatch.id || '').trim()
         : null;
       const nextId = requestedId
-        && !documentsState.some((doc) => doc.id === requestedId && doc.id !== id)
+        && !documentsStateRef.current.some((doc) => doc.id === requestedId && doc.id !== id)
         ? requestedId
         : id;
-      save(documentsState.map((doc) => {
+      save((current) => current.map((doc) => {
         if (doc.id !== id) return doc;
         const next = normalizeDocument({
           ...doc,
@@ -246,11 +252,12 @@ export function DocumentsProvider({ children }) {
 
     const deleteDocument = (id) => {
       if (!id) return;
-      save(documentsState.filter((doc) => doc.id !== id));
+      save((current) => current.filter((doc) => doc.id !== id));
     };
 
     const resetDocuments = () => {
       const defaults = buildSeedDocuments();
+      documentsStateRef.current = defaults;
       setDocumentsState(defaults);
       try {
         localStorage.removeItem(STORAGE_KEY);
