@@ -73,15 +73,17 @@ export function ResourcesProvider({ children }) {
   const [articlesState, setArticlesState] = useState(readInitialState);
 
   const value = useMemo(() => {
-    const save = (next) => {
-      const normalized = sortArticles(next.map(normalizeArticle));
-      setArticlesState(normalized);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      } catch {
-        // Ignore storage failures and keep in-memory state.
-      }
-      return normalized;
+    const save = (nextOrUpdater) => {
+      setArticlesState((current) => {
+        const next = typeof nextOrUpdater === 'function' ? nextOrUpdater(current) : nextOrUpdater;
+        const normalized = sortArticles(next.map(normalizeArticle));
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        } catch {
+          // Ignore storage failures and keep in-memory state.
+        }
+        return normalized;
+      });
     };
 
     const updateArticle = (id, patch) => {
@@ -89,7 +91,7 @@ export function ResourcesProvider({ children }) {
         return null;
       }
 
-      const next = articlesState.map((article) => {
+      save((current) => current.map((article) => {
         if (article.id !== id) {
           return article;
         }
@@ -118,37 +120,35 @@ export function ResourcesProvider({ children }) {
         }
 
         return normalizeArticle(merged);
-      });
-
-      save(next);
+      }));
       return id;
     };
 
     const createArticle = () => {
       const timestamp = Date.now();
       const id = `article-${timestamp}`;
-      const next = [
-        {
-          id,
-          slug: `new-article-${timestamp}`,
-          type: 'article',
-          title: 'New Article',
-          category: 'Article',
-          mediaUrl: '',
-          imageUrl: '',
-          sourceUrl: '',
-          publishedAt: new Date().toISOString(),
-          excerpt: '',
-          bodyHtml: '<p></p>',
-          socialImageUrl: '',
-          socialTitle: '',
-          socialDescription: '',
-          socialImageAlt: '',
-          isPublished: false,
-        },
-        ...articlesState,
-      ];
-      save(next);
+      const created = {
+        id,
+        slug: `new-article-${timestamp}`,
+        type: 'article',
+        title: 'New Article',
+        category: 'Article',
+        mediaUrl: '',
+        imageUrl: '',
+        sourceUrl: '',
+        publishedAt: new Date().toISOString(),
+        excerpt: '',
+        bodyHtml: '<p></p>',
+        socialImageUrl: '',
+        socialTitle: '',
+        socialDescription: '',
+        socialImageAlt: '',
+        isPublished: false,
+      };
+      save((current) => [
+        created,
+        ...current,
+      ]);
       return id;
     };
 
@@ -156,7 +156,7 @@ export function ResourcesProvider({ children }) {
       if (!id) {
         return;
       }
-      save(articlesState.filter((article) => article.id !== id));
+      save((current) => current.filter((article) => article.id !== id));
     };
 
     const resetArticles = () => {
