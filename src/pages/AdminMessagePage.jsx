@@ -209,6 +209,7 @@ export default function AdminMessagePage() {
       setAnnouncementEndDate('');
       return;
     }
+    setAnnouncementStartDate(new Date().toISOString().slice(0, 10));
     setAnnouncementEnabled(true);
   };
 

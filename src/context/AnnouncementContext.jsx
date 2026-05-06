@@ -89,27 +89,30 @@ export function AnnouncementProvider({ children }) {
   const [announcement, setAnnouncement] = useState(readInitialAnnouncement);
 
   const value = useMemo(() => {
-    const persist = (nextAnnouncement) => {
-      const normalized = normalizeAnnouncement(nextAnnouncement);
-      setAnnouncement(normalized);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      } catch {
-        // ignore storage failures
-      }
+    const persist = (updater) => {
+      setAnnouncement((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        const normalized = normalizeAnnouncement(next);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        } catch {
+          // ignore storage failures
+        }
+        return normalized;
+      });
     };
 
     return {
       announcement,
-      setAnnouncementEnabled: (enabled) => persist({ ...announcement, enabled: Boolean(enabled) }),
-      setAnnouncementMessage: (message) => persist({ ...announcement, message: String(message || '') }),
-      setAnnouncementBackground: (backgroundId) => persist({ ...announcement, backgroundId }),
-      setAnnouncementTextColor: (textColorId) => persist({ ...announcement, textColorId }),
-      setAnnouncementStartDate: (startDate) => persist({ ...announcement, startDate }),
-      setAnnouncementEndDate: (endDate) => persist({ ...announcement, endDate }),
-      setAnnouncementLinkEnabled: (linkEnabled) => persist({ ...announcement, linkEnabled: Boolean(linkEnabled) }),
-      setAnnouncementLinkPath: (linkPath) => persist({ ...announcement, linkPath }),
-      setAnnouncementLinkPageRef: (linkPageRef) => persist({ ...announcement, linkPageRef }),
+      setAnnouncementEnabled: (enabled) => persist((prev) => ({ ...prev, enabled: Boolean(enabled) })),
+      setAnnouncementMessage: (message) => persist((prev) => ({ ...prev, message: String(message || '') })),
+      setAnnouncementBackground: (backgroundId) => persist((prev) => ({ ...prev, backgroundId })),
+      setAnnouncementTextColor: (textColorId) => persist((prev) => ({ ...prev, textColorId })),
+      setAnnouncementStartDate: (startDate) => persist((prev) => ({ ...prev, startDate })),
+      setAnnouncementEndDate: (endDate) => persist((prev) => ({ ...prev, endDate })),
+      setAnnouncementLinkEnabled: (linkEnabled) => persist((prev) => ({ ...prev, linkEnabled: Boolean(linkEnabled) })),
+      setAnnouncementLinkPath: (linkPath) => persist((prev) => ({ ...prev, linkPath })),
+      setAnnouncementLinkPageRef: (linkPageRef) => persist((prev) => ({ ...prev, linkPageRef })),
       resetAnnouncement: () => persist(defaultAnnouncement),
     };
   }, [announcement]);
@@ -124,3 +127,4 @@ export function useAnnouncement() {
   }
   return context;
 }
+
