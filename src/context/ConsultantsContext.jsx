@@ -210,14 +210,17 @@ export function ConsultantsProvider({ children }) {
   const [consultantsByService, setConsultantsByService] = useState(readInitialConsultants);
 
   const value = useMemo(() => {
-    const persist = (nextValue) => {
-      const normalized = normalizeConsultantsPayload(nextValue);
-      setConsultantsByService(normalized);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      } catch {
-        // ignore storage failures
-      }
+    const persist = (updater) => {
+      setConsultantsByService((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        const normalized = normalizeConsultantsPayload(next);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        } catch {
+          // ignore storage failures
+        }
+        return normalized;
+      });
     };
 
     return {
@@ -227,43 +230,50 @@ export function ConsultantsProvider({ children }) {
         if (!consultantsByService[service]) {
           return null;
         }
-        const nextItem = normalizeConsultant(service, {
-          id: makeId(service),
-          name: 'New Consultant',
-          region: '',
-          phone: '',
-          email: '',
-          states: [],
+        const id = makeId(service);
+        persist((prev) => {
+          if (!Array.isArray(prev[service])) return prev;
+          const nextItem = normalizeConsultant(service, {
+            id,
+            name: 'New Consultant',
+            region: '',
+            phone: '',
+            email: '',
+            states: [],
+          });
+          return {
+            ...prev,
+            [service]: [...prev[service], nextItem],
+          };
         });
-        persist({
-          ...consultantsByService,
-          [service]: [...consultantsByService[service], nextItem],
-        });
-        return nextItem.id;
+        return id;
       },
       updateConsultant: (service, id, patch) => {
         if (!consultantsByService[service]) {
           return;
         }
-        const nextList = consultantsByService[service].map((item) => {
-          if (item.id !== id) {
-            return item;
-          }
-          const merged = { ...item, ...(patch || {}) };
-          return normalizeConsultant(service, merged);
-        });
-        persist({
-          ...consultantsByService,
-          [service]: nextList,
+        persist((prev) => {
+          if (!Array.isArray(prev[service])) return prev;
+          return {
+            ...prev,
+            [service]: prev[service].map((item) =>
+              item.id !== id
+                ? item
+                : normalizeConsultant(service, { ...item, ...(patch || {}) }),
+            ),
+          };
         });
       },
       removeConsultant: (service, id) => {
         if (!consultantsByService[service]) {
           return;
         }
-        persist({
-          ...consultantsByService,
-          [service]: consultantsByService[service].filter((item) => item.id !== id),
+        persist((prev) => {
+          if (!Array.isArray(prev[service])) return prev;
+          return {
+            ...prev,
+            [service]: prev[service].filter((item) => item.id !== id),
+          };
         });
       },
       resetConsultants: () => persist(defaultConsultantsByService),
