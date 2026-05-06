@@ -50,15 +50,17 @@ export function TestimonialsProvider({ children }) {
   const [testimonials, setTestimonials] = useState(readInitialTestimonials);
 
   const value = useMemo(() => {
-    const persist = (nextValue) => {
-      const normalized = normalizePayload(nextValue);
-      setTestimonials(normalized);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      } catch {
-        // ignore storage write failures
-      }
-      return normalized;
+    const persist = (updater) => {
+      setTestimonials((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        const normalized = normalizePayload(next);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        } catch {
+          // ignore storage write failures
+        }
+        return normalized;
+      });
     };
 
     return {
@@ -71,35 +73,33 @@ export function TestimonialsProvider({ children }) {
           authorTitle: '',
           tags: ['services'],
         });
-        persist([...testimonials, next]);
+        persist((prev) => [...prev, next]);
         return next.id;
       },
       updateTestimonial: (id, patch) => {
         if (!id) {
           return;
         }
-        persist(testimonials.map((item) => {
-          if (item.id !== id) {
-            return item;
-          }
-          return normalizeTestimonialRecord({ ...item, ...(patch || {}) }, item.id);
-        }));
+        persist((prev) => prev.map((item) =>
+          item.id !== id
+            ? item
+            : normalizeTestimonialRecord({ ...item, ...(patch || {}) }, item.id),
+        ));
       },
       removeTestimonial: (id) => {
         if (!id) {
           return;
         }
-        persist(testimonials.filter((item) => item.id !== id));
+        persist((prev) => prev.filter((item) => item.id !== id));
       },
       bulkUpdateTestimonials: (updater) => {
         if (typeof updater !== 'function') {
           return;
         }
-        const nextValue = updater(testimonials.map((item) => ({ ...item })));
-        if (!Array.isArray(nextValue)) {
-          return;
-        }
-        persist(nextValue);
+        persist((prev) => {
+          const nextValue = updater(prev.map((item) => ({ ...item })));
+          return Array.isArray(nextValue) ? nextValue : prev;
+        });
       },
       resetTestimonials: () => persist(defaultTestimonialsLibrary),
     };
