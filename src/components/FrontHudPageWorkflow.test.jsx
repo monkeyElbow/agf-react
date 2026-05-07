@@ -1,11 +1,9 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import FrontHudPageWorkflow from './FrontHudPageWorkflow';
-
-void FrontHudPageWorkflow;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -124,7 +122,7 @@ describe('FrontHudPageWorkflow', () => {
     );
 
     expect(screen.getByRole('region', { name: 'Page workflow' })).toBeTruthy();
-    expect(screen.getByText('Unpublished changes')).toBeTruthy();
+    expect(screen.getByText('Editing draft')).toBeTruthy();
     expect(screen.getByText('Draft')).toBeTruthy();
     expect(screen.getByText('Live sync')).toBeTruthy();
     expect(screen.getByText('Draft saves 2 blocks, page details')).toBeTruthy();
@@ -132,7 +130,8 @@ describe('FrontHudPageWorkflow', () => {
     expect(screen.getByText('Page details changed')).toBeTruthy();
     expect(screen.getByText('Live sync pending')).toBeTruthy();
     expect(screen.getByText('Not live yet in dev authority')).toBeTruthy();
-    expect(screen.getByText('Live sync sending changes...')).toBeTruthy();
+    expect(screen.getByText('Changes stay local while you type.')).toBeTruthy();
+    expect(screen.getByText('Live sync catching up in the background.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
     expect(screen.getByRole('link', { name: 'Open page admin' }).getAttribute('href')).toBe('/admin/content?page=%2Fservices%2Floans');
@@ -185,6 +184,73 @@ describe('FrontHudPageWorkflow', () => {
     expect(screen.getByRole('button', { name: 'Save draft' }).disabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(true);
     expect(screen.getByRole('link', { name: 'Open page admin' })).toBeTruthy();
+  });
+
+  it('holds the workflow strip in a calm updating state through quick draft-sync churn before settling', () => {
+    vi.useFakeTimers();
+    try {
+      const { rerender } = render(
+        <FrontHudPageWorkflow
+          pathname="/services/loans"
+          reviewHref="/admin/content?page=%2Fservices%2Floans"
+        />,
+      );
+
+      expect(screen.getByText('Editing draft')).toBeTruthy();
+      expect(screen.getByText('Changes stay local while you type.')).toBeTruthy();
+
+      mockDirty = false;
+      mockChangeSummary = {
+        changedBlockCount: 0,
+        hasOrderChanges: false,
+        hasPageMetaChanges: false,
+        hasUnsavedChanges: false,
+      };
+      mockPublishSummary = {
+        changedBlockCount: 0,
+        hasOrderChanges: false,
+        hasPageMetaChanges: false,
+        hasUnsavedChanges: false,
+      };
+      mockSharedSyncStatus = {
+        isPending: false,
+        pendingMutationCount: 0,
+        hasQueuedDraftSync: false,
+        lastQueuedAt: Date.now() - 5_000,
+        lastSettledAt: Date.now() - 1_000,
+        lastAppliedAt: Date.now() - 2_000,
+      };
+      mockLastSharedSaveResult = {
+        changedPaths: ['/services/loans'],
+        savedBlockIdsByPath: {
+          '/services/loans': ['hero', 'cta_form'],
+        },
+        blockedBlocks: [],
+        updatedAt: Date.now() - 1_000,
+      };
+
+      rerender(
+        <FrontHudPageWorkflow
+          pathname="/services/loans"
+          reviewHref="/admin/content?page=%2Fservices%2Floans"
+        />,
+      );
+
+      expect(screen.getByText('Updating draft')).toBeTruthy();
+      expect(screen.getByText('Draft updates are settling in the background.')).toBeTruthy();
+      expect(screen.queryByText(/^Last draft save /)).toBeNull();
+
+      act(() => {
+        vi.advanceTimersByTime(1401);
+      });
+
+      expect(screen.getByText('Draft saved')).toBeTruthy();
+      expect(screen.getByText(/^Last draft save /)).toBeTruthy();
+      expect(screen.getByText(/^Live sync caught up /)).toBeTruthy();
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
   });
 
   it('keeps draft controls inside the dock and hides them from other admins while preserving page admin access', () => {

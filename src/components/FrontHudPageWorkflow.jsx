@@ -4,6 +4,7 @@ import { useFrontHud } from '../context/FrontHudContext';
 
 let workflowHeightResetTimeoutId = null;
 const DEFAULT_BAR_HEIGHT_PX = 60;
+const HUD_WORKFLOW_SETTLED_STATUS_DELAY_MS = 1400;
 
 function formatRelativeTime(value) {
   const timestamp = Number(value);
@@ -173,8 +174,32 @@ export default function FrontHudPageWorkflow({
   const changedBlockCount = Number(changeSummary?.changedBlockCount) || 0;
   const draftScopeLabel = formatWorkflowScopeLabel('Draft saves', changeSummary, 'Draft save clean');
   const publishScopeLabel = formatWorkflowScopeLabel('Make live publishes', publishSummary, 'Already live');
+  const syncPending = Boolean(sharedSyncStatus?.isPending);
+  const hasDraftActivitySignal = pageDirty || isSaving || syncPending;
+  const [showSettledStatus, setShowSettledStatus] = useState(() => !hasDraftActivitySignal);
+  const shouldUseCalmDraftPresentation = !showSettledStatus && !saveError && !pathSaveResult?.error;
+
+  useEffect(() => {
+    if (hasDraftActivitySignal) {
+      setShowSettledStatus(false);
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowSettledStatus(true);
+    }, HUD_WORKFLOW_SETTLED_STATUS_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [hasDraftActivitySignal]);
+
   const saveFeedbackLabel = saveError
     ? saveError
+    : pageDirty || isSaving
+      ? 'Changes stay local while you type.'
+      : shouldUseCalmDraftPresentation
+        ? 'Draft updates are settling in the background.'
     : pathSaveResult?.error
       ? `Last save failed${pathSaveResult.updatedAt ? ` ${formatRelativeTime(pathSaveResult.updatedAt)}` : ''}`
       : pathSaveResult?.updatedAt
@@ -191,30 +216,37 @@ export default function FrontHudPageWorkflow({
           : pathPublishResult?.updatedAt
             ? `Last live publish ${formatRelativeTime(pathPublishResult.updatedAt)}`
             : 'Not live yet in dev authority';
-  const syncPending = Boolean(sharedSyncStatus?.isPending);
   const liveSyncLabel = syncPending
-    ? 'Live sync sending changes...'
+    ? (pageDirty || isSaving || shouldUseCalmDraftPresentation
+        ? 'Live sync catching up in the background.'
+        : 'Live sync sending changes...')
     : sharedSyncStatus?.lastSettledAt
       ? `Live sync caught up ${formatRelativeTime(sharedSyncStatus.lastSettledAt)}`
       : sharedSyncStatus?.lastAppliedAt
         ? `Live sync updated ${formatRelativeTime(sharedSyncStatus.lastAppliedAt)}`
         : 'Live sync idle';
-  const headline = pageDirty ? 'Unpublished changes' : 'Draft saved';
+  const headline = saveError || pathSaveResult?.error
+    ? 'Unpublished changes'
+    : pageDirty || isSaving
+      ? 'Editing draft'
+      : shouldUseCalmDraftPresentation
+        ? 'Updating draft'
+        : 'Draft saved';
   const statusToneClassName = saveError || pathSaveResult?.error
     ? 'is-error'
-    : pageDirty
+    : pageDirty || isSaving || shouldUseCalmDraftPresentation
       ? 'is-dirty'
       : 'is-saved';
   const draftMarkerToneClassName = saveError || pathSaveResult?.error
     ? 'is-error'
-    : pageDirty
-      ? 'is-red'
+    : pageDirty || isSaving || shouldUseCalmDraftPresentation
+      ? 'is-amber'
       : pathSaveResult?.updatedAt
-        ? 'is-amber'
+        ? 'is-green'
         : 'is-green';
   const syncMarkerToneClassName = saveError || pathSaveResult?.error || publishError || (pathPublishResult?.error && pathPublishResult.error !== 'already-live')
     ? 'is-error'
-    : syncPending || Boolean(publishSummary?.hasUnsavedChanges)
+    : syncPending || Boolean(publishSummary?.hasUnsavedChanges) || shouldUseCalmDraftPresentation
       ? 'is-amber'
       : 'is-green';
 
