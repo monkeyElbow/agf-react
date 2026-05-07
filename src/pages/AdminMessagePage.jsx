@@ -230,9 +230,11 @@ export default function AdminMessagePage() {
   if (announcementMode === 'always') {
     scheduleSummary = 'Always active.';
   } else if (announcementMode === 'scheduled') {
-    scheduleSummary = `Active window: ${announcement.startDate || '...'} to ${announcement.endDate || '...'}`;
+    const startLabel = announcement.startDate || 'starts immediately';
+    const endLabel = announcement.endDate || 'no end date';
+    scheduleSummary = `Active window: ${startLabel} to ${endLabel}`;
     if (!isWindowActive) {
-      scheduleSummary = `Scheduled window: ${announcement.startDate || '...'} to ${announcement.endDate || '...'}`;
+      scheduleSummary = `Scheduled window: ${startLabel} to ${endLabel}`;
     }
   }
   const hasLinkTarget = Boolean(String(announcement.linkPath || '').trim());
