@@ -19,7 +19,7 @@ const AGF_COLORS = {
   soft: '#f8fafc',
 };
 
-const programs = [
+export const givingComparisonPrograms = [
   {
     id: 'daf',
     name: 'Donor Advised Fund',
@@ -127,7 +127,7 @@ const programs = [
   },
 ];
 
-const featureRows = [
+export const givingComparisonFeatureRows = [
   { key: 'fundedBy', label: 'How it’s Funded' },
   { key: 'minimumRequired', label: 'Minimum to Start' },
   { key: 'donorIncome', label: 'Provides Donor Income?' },
@@ -138,8 +138,8 @@ const featureRows = [
   { key: 'timing', label: 'Timing' },
 ];
 
-const mobileFeatureRows = [
-  ...featureRows,
+export const givingComparisonMobileRows = [
+  ...givingComparisonFeatureRows,
   { key: 'cta', label: 'CTA' },
 ];
 
@@ -160,7 +160,7 @@ export default function GivingComparisonMatrix() {
   const [mobileSelectedIds, setMobileSelectedIds] = useState(['cga', 'daf', 'endowment']);
 
   const filteredPrograms = useMemo(() => (
-    programs.filter((p) => {
+    givingComparisonPrograms.filter((p) => {
       if (incomeOnly && !String(p.donorIncome).toLowerCase().includes('yes')) return false;
       if (propertyOnly && !String(p.propertyAllowed).toLowerCase().includes('yes')) return false;
 
@@ -247,7 +247,7 @@ export default function GivingComparisonMatrix() {
       </div>
 
       <div style={styles.resultCount}>
-        Showing {filteredPrograms.length} of {programs.length} programs
+        Showing {filteredPrograms.length} of {givingComparisonPrograms.length} programs
       </div>
 
       <div className="agf-hide-mobile">
@@ -274,7 +274,7 @@ export default function GivingComparisonMatrix() {
               </thead>
 
               <tbody>
-                {featureRows.map((row, idx) => (
+                {givingComparisonFeatureRows.map((row, idx) => (
                   <tr key={row.key}>
                     <th
                       scope="row"
@@ -369,29 +369,50 @@ export default function GivingComparisonMatrix() {
           </div>
         </div>
 
-        <div style={styles.mobileCardsGrid} aria-label="Mobile charitable giving comparison">
-          {visibleProgramsMobile.map((program) => (
-            <article key={program.id} style={styles.mobileProgramCard}>
-              <div style={styles.mobileProgramCardHeader}>
-                <h3 style={styles.mobileProgramTitle}>{program.name}</h3>
-                <p style={styles.mobileProgramSubtitle}>{program.shortLabel || program.name}</p>
-              </div>
+        {visibleProgramsMobile.length > 0 ? (
+          <nav style={styles.mobileJumpNav} aria-label="Mobile comparison sections">
+            {givingComparisonMobileRows.map((row) => (
+              <a
+                key={`mobile-jump-${row.key}`}
+                href={`#mobile-comparison-${row.key}`}
+                style={styles.mobileJumpChip}
+              >
+                {row.label}
+              </a>
+            ))}
+          </nav>
+        ) : null}
 
-              <dl style={styles.mobileFieldList}>
-                {mobileFeatureRows.map((row, idx) => (
-                  <div
-                    key={`${program.id}-${row.key}-mobile-card`}
-                    style={{
-                      ...styles.mobileFieldRow,
-                      ...(idx === mobileFeatureRows.length - 1 ? styles.mobileFieldRowLast : {}),
-                    }}
-                  >
-                    <dt style={styles.mobileFieldLabel}>{row.label}</dt>
-                    <dd style={styles.mobileFieldValue}>{renderMobileFieldValue(program, row)}</dd>
-                  </div>
-                ))}
-              </dl>
-            </article>
+        <div style={styles.mobileSections} aria-label="Mobile charitable giving comparison">
+          {givingComparisonMobileRows.map((row) => (
+            visibleProgramsMobile.length > 0 ? (
+              <section
+                key={`mobile-section-${row.key}`}
+                id={`mobile-comparison-${row.key}`}
+                style={styles.mobileSectionCard}
+                aria-labelledby={`mobile-comparison-heading-${row.key}`}
+              >
+                <div style={styles.mobileSectionHeader}>
+                  <h3 id={`mobile-comparison-heading-${row.key}`} style={styles.mobileSectionTitle}>
+                    {row.label}
+                  </h3>
+                </div>
+                <div style={styles.mobileAnswerList}>
+                  {visibleProgramsMobile.map((program, idx) => (
+                    <div
+                      key={`${row.key}-${program.id}-mobile-answer`}
+                      style={{
+                        ...styles.mobileAnswerRow,
+                        ...(idx === visibleProgramsMobile.length - 1 ? styles.mobileAnswerRowLast : {}),
+                      }}
+                    >
+                      <div style={styles.mobileAnswerProgram}>{program.name}</div>
+                      <div style={styles.mobileAnswerValue}>{renderMobileFieldValue(program, row)}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null
           ))}
           {visibleProgramsMobile.length === 0 ? (
             <div style={styles.mobileEmptyState}>
@@ -639,61 +660,69 @@ const styles = {
     color: AGF_COLORS.teal,
     fontWeight: 700,
   },
-  mobileCardsGrid: {
+  mobileJumpNav: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  mobileJumpChip: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '7px 10px',
+    borderRadius: 999,
+    textDecoration: 'none',
+    fontSize: 12,
+    fontWeight: 700,
+    lineHeight: 1.2,
+    color: AGF_COLORS.teal,
+    background: 'rgba(0,173,187,.08)',
+    border: '1px solid rgba(0,173,187,.18)',
+  },
+  mobileSections: {
     display: 'grid',
     gap: 12,
   },
-  mobileProgramCard: {
+  mobileSectionCard: {
     border: `1px solid ${AGF_COLORS.border}`,
     borderRadius: 16,
     background: '#fff',
-    overflow: 'hidden',
     boxShadow: '0 14px 32px rgba(17, 53, 75, 0.06)',
   },
-  mobileProgramCardHeader: {
+  mobileSectionHeader: {
     padding: '14px 14px 10px',
     background: 'linear-gradient(180deg, #ffffff 0%, #f7fbfc 100%)',
     borderBottom: `1px solid ${AGF_COLORS.border}`,
   },
-  mobileProgramTitle: {
+  mobileSectionTitle: {
     margin: 0,
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 1.15,
     fontWeight: 800,
     color: AGF_COLORS.slate,
   },
-  mobileProgramSubtitle: {
-    margin: '5px 0 0',
-    color: AGF_COLORS.teal,
-    fontWeight: 700,
-    fontSize: 12,
-    letterSpacing: '0.04em',
-    textTransform: 'uppercase',
+  mobileAnswerList: {
+    display: 'grid',
   },
-  mobileFieldList: {
-    margin: 0,
-    padding: 0,
-  },
-  mobileFieldRow: {
+  mobileAnswerRow: {
     display: 'grid',
     gap: 6,
     padding: '12px 14px',
     borderBottom: `1px solid ${AGF_COLORS.border}`,
   },
-  mobileFieldRowLast: {
+  mobileAnswerRowLast: {
     borderBottom: 'none',
   },
-  mobileFieldLabel: {
-    margin: 0,
-    fontSize: 11,
-    lineHeight: 1.3,
+  mobileAnswerProgram: {
+    fontSize: 12,
+    lineHeight: 1.25,
     fontWeight: 800,
-    color: AGF_COLORS.muted,
-    letterSpacing: '0.05em',
+    color: AGF_COLORS.teal,
+    letterSpacing: '0.03em',
     textTransform: 'uppercase',
   },
-  mobileFieldValue: {
-    margin: 0,
+  mobileAnswerValue: {
     fontSize: 14,
     lineHeight: 1.45,
     color: '#1f2937',
