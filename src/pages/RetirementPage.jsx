@@ -1513,7 +1513,7 @@ export default function RetirementPage() {
                 tabIndex={showFrontHud && introBlock ? 0 : undefined}
                 aria-label={showFrontHud && introBlock ? 'Edit intro body HTML' : undefined}
               >
-                For decades, we've helped build retirement strategies for ministers, ministry employees, churches, and organizations. Let's create yours.
+                Retirement is your future. It’s where your career journey leads. For decades, we’ve helped build thoughtful retirement plans for individuals, churches, and other ministries.
               </p>
             )}
             {dynamicIntro?.extraLine ? (

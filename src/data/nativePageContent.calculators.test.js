@@ -23,6 +23,21 @@ describe('calculators native page content', () => {
       '/services/legacy-giving/endowments#endowment-investment-earnings-calculator',
     ]);
     expect(contactSection?.anchorId).toBe('calculator-contact');
+    expect(contactSection?.hideCopy).toBe(true);
+    expect(contactSection?.form?.variant).toBe('dynamic-request');
+    expect(contactSection?.form?.title).toBe('Numbers are great.');
+    expect(contactSection?.form?.subtitle).toBe('People are better.');
+    expect(contactSection?.title).toBeUndefined();
+    expect(contactSection?.body).toBeUndefined();
+    expect(Array.isArray(contactSection?.form?.steps)).toBe(true);
+    expect(contactSection?.form?.steps).toHaveLength(1);
+    expect(contactSection?.form?.steps?.[0]?.fields?.map((field) => field.id)).toEqual([
+      'firstName',
+      'lastName',
+      'email',
+      'phone',
+      'message',
+    ]);
     expect(contactSection?.form?.submitLabel).toBe('Let’s discuss');
   });
 });

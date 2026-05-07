@@ -843,18 +843,23 @@ const directContent = {
         className: 'calculators-native-contact',
         anchorId: 'calculator-contact',
         copyWrap: true,
-        title: 'Numbers are great.',
-        subtitle: 'People are better.',
-        body: [
-          'Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.',
-        ],
+        hideCopy: true,
         form: {
-          fields: [
-            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
-            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
-            { id: 'email', label: 'Email*', type: 'email', required: true },
-            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
-            { id: 'message', label: 'What would you like help calculating?', type: 'textarea', rows: 5, required: true },
+          variant: 'dynamic-request',
+          title: 'Numbers are great.',
+          subtitle: 'People are better.',
+          body: 'Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.',
+          steps: [
+            {
+              id: 'calculator-request',
+              fields: [
+                { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+                { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+                { id: 'email', label: 'Email*', type: 'email', required: true },
+                { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
+                { id: 'message', label: 'What would you like help calculating?', type: 'textarea', rows: 5, required: true },
+              ],
+            },
           ],
           submitLabel: 'Let’s discuss',
         },

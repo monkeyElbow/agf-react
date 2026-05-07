@@ -18617,7 +18617,8 @@
 }
 
 .native-info-page--legacy-generosity-fund .legacy-child-native-steps > .native-info-full-bleed > h2 {
-  font-size: clamp(2.6rem, 5.4vw, 4.2rem);
+  font-size: clamp(3.4rem, 7vw, 5.8rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 
 .native-info-page--legacy-generosity-fund .legacy-child-native-steps .service-native-card {
