@@ -226,7 +226,7 @@ export default function AdminMessagePage() {
   const isAfterStart = !announcement.startDate || todayIso >= announcement.startDate;
   const isBeforeEnd = !announcement.endDate || todayIso <= announcement.endDate;
   const isWindowActive = isAfterStart && isBeforeEnd;
-  let scheduleSummary = 'Currently off.';
+  let scheduleSummary = 'Currently off — preview only.';
   if (announcementMode === 'always') {
     scheduleSummary = 'Always active.';
   } else if (announcementMode === 'scheduled') {
@@ -258,7 +258,7 @@ export default function AdminMessagePage() {
           <h3>Preview</h3>
           <p className="admin-message-status">{scheduleSummary}</p>
           <div
-            className={`admin-message-preview${announcement.linkEnabled && hasLinkTarget ? ' is-link' : ''}`}
+            className={`admin-message-preview${announcement.linkEnabled && hasLinkTarget ? ' is-link' : ''}${announcementMode === 'off' ? ' is-inactive' : ''}`}
             style={{ backgroundColor: previewBackground.color, color: previewTextColor.color }}
           >
             {announcement.message?.trim() || 'Your message preview appears here.'}

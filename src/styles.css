@@ -8013,6 +8013,14 @@ button.action-btn {
   text-underline-offset: 0.12em;
 }
 
+.admin-message-preview.is-inactive {
+  opacity: 0.55;
+  filter: grayscale(0.25);
+  outline: 2px dashed #9ca3af;
+  outline-offset: 2px;
+  cursor: default;
+}
+
 .admin-message-preview-section {
   margin-top: 1rem;
 }
