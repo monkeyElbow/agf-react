@@ -5,8 +5,6 @@ import { ContentAdminProvider, useContentAdmin } from '../context/ContentAdminCo
 import HomePage from './HomePage';
 import AdminContentPage from './AdminContentPage';
 
-void [MemoryRouter, ContentAdminProvider, HomePage, AdminContentPage];
-
 vi.mock('../context/FrontHudContext', () => ({
   useFrontHud: () => ({ enabled: false, opacity: 15 }),
 }));
