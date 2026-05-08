@@ -12,13 +12,13 @@ const AUTO_REQUEST_FORM_ROUTES = [
   '/services/insurance/life-insurance-quote',
   '/services/insurance/property-casualty-insurance',
   '/services/legacy-giving/charitable-gift-annuities',
-  '/services/legacy-giving/endowments',
-  '/services/legacy-giving/generosity-fund',
   '/services/legacy-giving/ministry-impact-fund',
   '/services/loans/loan-consultants',
 ];
 
 const EXPLICIT_REQUEST_FORM_ROUTES = [
+  '/services/legacy-giving/endowments',
+  '/services/legacy-giving/generosity-fund',
   '/services/insurance/group-term-life-insurance',
   '/services/insurance/certificate-request',
   '/services/retirement/retirement-consultants',

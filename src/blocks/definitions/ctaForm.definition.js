@@ -46,7 +46,6 @@ const sections = [
         options: CTA_FORM_HIGHLIGHT_TONE_OPTIONS,
       }),
       defineEditorField({ id: 'bodyHtml', label: 'Lead copy HTML', type: 'html' }),
-      defineEditorField({ id: 'subtitle', label: 'Copy below form fields', type: 'textarea', rows: 2 }),
       defineEditorField({ id: 'fieldsJson', label: 'CTA field definitions JSON', type: 'textarea', rows: 8 }),
       defineEditorField({ id: 'includeContactPreference', label: 'Ask for contact preference', type: 'boolean' }),
       defineEditorField({
