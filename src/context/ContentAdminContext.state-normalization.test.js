@@ -444,6 +444,23 @@ describe('ContentAdminContext state normalization', () => {
     });
   });
 
+  it('keeps the charitable-trusts CTA seed fields aligned through the shared CTA max-field cap', () => {
+    const normalized = normalizeStoredConfig({});
+    const charitableTrustsBlocks = normalized.blocksByPath['/services/legacy-giving/charitable-trusts'] || [];
+    const ctaBlock = charitableTrustsBlocks.find((block) => block?.kind === 'cta_form');
+    const fields = JSON.parse(String(ctaBlock?.settings?.fieldsJson || '[]'));
+
+    expect(ctaBlock?.settings?.targetSectionClassName).toBe('legacy-child-native-cta legacy-child-native-trusts-cta');
+    expect(fields.map((field) => field.id)).toEqual([
+      'firstname',
+      'lastname',
+      'phone',
+      'email',
+      'trustproduct',
+      'message',
+    ]);
+  });
+
   it('drops stale request-form blocks from the other audited CTA-owned form routes and restores the CTA block', () => {
     const auditedRoutes = [
       ['/services/insurance', 'insurance-native-cta'],

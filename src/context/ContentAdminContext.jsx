@@ -16,6 +16,7 @@ import {
 } from '../data/contentBlockBlueprints';
 import { getSingletonBlockKinds } from '../blocks/registry';
 import {
+  CTA_FORM_MAX_FIELDS,
   buildCtaFormSettingsPatch,
   formatFormChoiceOptionsText,
   normalizeCtaFormFieldType,
@@ -2043,7 +2044,7 @@ function pickCtaFields(form) {
     return [];
   }
 
-  const selected = candidates.slice(0, 5);
+  const selected = candidates.slice(0, CTA_FORM_MAX_FIELDS);
 
   const requiredSpecial = candidates.find((field) => field.required && !isBasicContactField(field));
   if (requiredSpecial && !selected.some((field) => field.id === requiredSpecial.id)) {
@@ -2062,7 +2063,7 @@ function pickCtaFields(form) {
     deduped.push(field);
   });
 
-  return deduped.slice(0, 5);
+  return deduped.slice(0, CTA_FORM_MAX_FIELDS);
 }
 
 function isRequestDynamicPath(pathname) {
