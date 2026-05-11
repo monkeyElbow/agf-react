@@ -524,7 +524,10 @@ export default function InvestmentsPage() {
     }
     return buildDynamicHeroFromBlock({
       ...heroBlock,
-      settings: heroHudSettings,
+      settings: {
+        ...heroHudSettings,
+        animationPreset: heroHudSettings.animationPreset || heroBlock.settings?.animationPreset || 'default',
+      },
     });
   }, [heroBlock, heroHudSettings]);
   const featurePanelRuntime = useMemo(() => {
