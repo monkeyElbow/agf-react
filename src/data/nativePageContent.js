@@ -2179,6 +2179,7 @@ const legacyChildPages = {
               'Minimum required payout of 5%',
               'Income may fluctuate from year to year',
             ],
+            actions: [{ label: 'Start the process', to: '#charitable-trusts-form' }],
             cardClass: 'trusts-type-card',
           },
           {
@@ -2188,6 +2189,7 @@ const legacyChildPages = {
               'Payment can be based on life expectancy or term of years',
               'Payments may begin immediately upon funding',
             ],
+            actions: [{ label: 'Start the process', to: '#charitable-trusts-form' }],
             cardClass: 'trusts-type-card',
           },
         ],
@@ -2228,6 +2230,7 @@ const legacyChildPages = {
       },
       {
         className: 'legacy-child-native-cta legacy-child-native-trusts-cta',
+        anchorId: 'charitable-trusts-form',
         copyWrap: true,
         title: 'Income and impact.',
         titleHighlights: [
@@ -2252,6 +2255,7 @@ const legacyChildPages = {
                 { value: 'charitable-lead-trust', label: 'Charitable Lead Trust' },
               ],
             },
+            { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
           ],
           submitLabel: 'Start planning',
         },
@@ -2343,7 +2347,7 @@ const legacyChildPages = {
       ],
       actions: [
         { label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' },
-        { label: 'Terms and Conditions', documentId: 'document-planned-giving-terms-and-conditions', ghost: true },
+        { label: 'Open a traditional DAF', to: '#traditional-daf-form', className: 'is-outline is-tone-super-grey' },
       ],
     },
     intro: {
@@ -2399,6 +2403,7 @@ const legacyChildPages = {
         actions: [{ label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' }],
       },
       {
+        anchorId: 'traditional-daf-form',
         className: 'legacy-child-native-generosity-request',
         copyWrap: true,
         title: 'Make the most of your giving.',
@@ -2406,8 +2411,7 @@ const legacyChildPages = {
         body: [],
         form: {
           fields: [
-            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
-            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'name', label: 'Name*', type: 'text', required: true },
             { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
             { id: 'email', label: 'Email*', type: 'email', required: true },
           ],
