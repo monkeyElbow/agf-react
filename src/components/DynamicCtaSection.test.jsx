@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import DynamicCtaSection from './DynamicCtaSection';
 
@@ -227,5 +227,73 @@ describe('DynamicCtaSection', () => {
     expect(screen.getByLabelText('Full name')).toBeTruthy();
     expect(screen.getByLabelText('Preferred contact method')).toBeTruthy();
     expect(screen.getByLabelText('Text me updates')).toBeTruthy();
+  });
+
+  it('applies external inline-reveal presentation classes without rendering an extra trigger button', () => {
+    const { container } = render(
+      <DynamicCtaSection
+        managedBlocks={[
+          {
+            id: 'cta_form',
+            kind: 'cta_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'Start here.',
+              displayMode: 'inline_reveal',
+              triggerMode: 'external',
+              submitLabel: 'Send',
+              field1Label: 'Email',
+              field1Type: 'email',
+              field1Required: true,
+              field2Enabled: false,
+              field3Enabled: false,
+              field4Enabled: false,
+            },
+          },
+        ]}
+        defaultSettings={{}}
+      />,
+    );
+
+    const section = container.querySelector('section.native-dynamic-cta');
+    const formShell = container.querySelector('.dynamic-cta-form');
+
+    expect(section?.className).toContain('is-display-inline-reveal');
+    expect(section?.className).toContain('is-trigger-external');
+    expect(section?.className).toContain('is-external-inline-reveal');
+    expect(formShell?.getAttribute('data-cta-display-mode')).toBe('inline_reveal');
+    expect(formShell?.getAttribute('data-cta-trigger-mode')).toBe('external');
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Send']);
+  });
+
+  it('marks the CTA shell as success after submit', () => {
+    const { container } = render(
+      <DynamicCtaSection
+        managedBlocks={[
+          {
+            id: 'cta_form',
+            kind: 'cta_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'Start here.',
+              submitLabel: 'Send',
+              field1Label: 'Email',
+              field1Type: 'email',
+              field1Required: true,
+              field2Enabled: false,
+              field3Enabled: false,
+              field4Enabled: false,
+            },
+          },
+        ]}
+        defaultSettings={{}}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'hello@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    expect(container.querySelector('.dynamic-cta-form')?.getAttribute('data-cta-state')).toBe('success');
+    expect(screen.getByRole('status').textContent).toContain('Thank you.');
   });
 });

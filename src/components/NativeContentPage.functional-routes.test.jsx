@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NativeContentPage from './NativeContentPage';
@@ -74,6 +74,7 @@ vi.mock('../context/ContentAdminContext', async () => {
 
 describe('NativeContentPage functional routes', () => {
   beforeEach(() => {
+    window.scrollTo = vi.fn();
     mockBlocksByPath = {};
     mockVisibleJobs = [];
     mockPageHierarchy = {
@@ -95,6 +96,16 @@ describe('NativeContentPage functional routes', () => {
       '/services/test-cta': {
         path: '/services/test-cta',
         title: 'Test CTA',
+        section: 'Services',
+      },
+      '/services/legacy-giving/charitable-trusts': {
+        path: '/services/legacy-giving/charitable-trusts',
+        title: 'Charitable Trusts',
+        section: 'Services',
+      },
+      '/services/legacy-giving/generosity-fund': {
+        path: '/services/legacy-giving/generosity-fund',
+        title: 'Generosity Fund',
         section: 'Services',
       },
       '/prospectus': {
@@ -247,5 +258,47 @@ describe('NativeContentPage functional routes', () => {
 
     expect(screen.getByRole('status')).toBeTruthy();
     expect(screen.getByText('Thanks. We will reach out soon.')).toBeTruthy();
+  });
+
+  it('reveals an external inline CTA shell from the charitable trusts card trigger', async () => {
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving/charitable-trusts',
+            title: 'Charitable Trusts',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Start planning' })).toBeNull();
+
+    fireEvent.click(screen.getAllByRole('link', { name: 'Start the process' })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Start planning' })).toBeTruthy();
+    });
+
+    const revealedSection = document.querySelector('#charitable-trusts-form');
+    expect(revealedSection?.getAttribute('data-cta-display-mode')).toBe('inline_reveal');
+    expect(revealedSection?.getAttribute('data-cta-trigger-mode')).toBe('external');
+    expect(window.scrollTo).toHaveBeenCalled();
+  });
+
+  it('keeps request-form pages on their existing visible hash-link flow', () => {
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving/generosity-fund',
+            title: 'Generosity Fund',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Open a traditional DAF' }).getAttribute('href')).toContain('#traditional-daf-form');
   });
 });

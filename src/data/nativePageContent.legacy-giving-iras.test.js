@@ -37,6 +37,8 @@ describe('legacy giving and IRA native page content', () => {
       expect.objectContaining({ label: 'Start the process', to: '#charitable-trusts-form' }),
     ]);
     expect(charitableTrustsCta?.anchorId).toBe('charitable-trusts-form');
+    expect(charitableTrustsCta?.form?.displayMode).toBe('inline_reveal');
+    expect(charitableTrustsCta?.form?.triggerMode).toBe('external');
     expect(charitableTrustsCta?.form?.fields?.map((field) => field.id)).toEqual([
       'firstName',
       'lastName',

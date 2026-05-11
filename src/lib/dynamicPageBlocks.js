@@ -1369,6 +1369,37 @@ function buildDynamicCtaFieldsFromSource(primarySource, fallbackSource = null) {
     : baseFields;
 }
 
+const CTA_DISPLAY_MODE_SET = new Set(['default', 'inline_reveal']);
+const CTA_TRIGGER_MODE_SET = new Set(['default', 'external']);
+
+export function normalizeDynamicCtaDisplayMode(value) {
+  const token = String(value || '').trim().toLowerCase();
+  return CTA_DISPLAY_MODE_SET.has(token) ? token : 'default';
+}
+
+export function normalizeDynamicCtaTriggerMode(value) {
+  const token = String(value || '').trim().toLowerCase();
+  return CTA_TRIGGER_MODE_SET.has(token) ? token : 'default';
+}
+
+export function buildDynamicCtaPresentationClassName(source = {}) {
+  const displayMode = normalizeDynamicCtaDisplayMode(source?.displayMode);
+  const triggerMode = normalizeDynamicCtaTriggerMode(source?.triggerMode);
+  const classNames = [];
+
+  if (displayMode === 'inline_reveal') {
+    classNames.push('is-display-inline-reveal');
+  }
+  if (triggerMode === 'external') {
+    classNames.push('is-trigger-external');
+  }
+  if (displayMode === 'inline_reveal' && triggerMode === 'external') {
+    classNames.push('is-external-inline-reveal');
+  }
+
+  return classNames.join(' ');
+}
+
 export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, fallbackFields = [] } = {}) {
   const settings = resolveCtaFormSource(block);
   if (!settings) {
@@ -1401,6 +1432,12 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
   const fields = configuredFields.length
     ? configuredFields
     : (Array.isArray(fallbackFields) ? fallbackFields : []).filter(Boolean);
+  const displayMode = normalizeDynamicCtaDisplayMode(
+    resolveCtaFormSetting(settings, fallbackSettings, 'displayMode'),
+  );
+  const triggerMode = normalizeDynamicCtaTriggerMode(
+    resolveCtaFormSetting(settings, fallbackSettings, 'triggerMode'),
+  );
 
   if (!title && !bodyHtml && !fields.length) {
     return null;
@@ -1412,6 +1449,8 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     titleClassName,
     titleHighlights,
     targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
+    displayMode,
+    triggerMode,
     bodyHtml,
     subtitle,
     bgTone,

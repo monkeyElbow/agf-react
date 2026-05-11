@@ -97,4 +97,33 @@ describe('PageBlocksRenderer CTA form', () => {
     expect(copy?.textContent).not.toContain('It starts with a conversation. We’re happy to reach out.');
     expect(screen.getByRole('button', { name: 'Follow-up with me' })).toBeTruthy();
   });
+
+  it('applies external inline-reveal presentation classes to CTA form blocks', () => {
+    const { container } = renderCtaBlock({
+      id: 'cta_form',
+      type: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      title: 'Ready to talk?',
+      displayMode: 'inline_reveal',
+      triggerMode: 'external',
+      submitLabel: 'Follow-up with me',
+      field1Label: 'Name',
+      field1Type: 'text',
+      field1Required: true,
+      field2Enabled: false,
+      field3Enabled: false,
+      field4Enabled: false,
+    });
+
+    const section = container.querySelector('section.native-dynamic-cta');
+    const formShell = container.querySelector('.dynamic-cta-form');
+
+    expect(section?.className).toContain('is-display-inline-reveal');
+    expect(section?.className).toContain('is-trigger-external');
+    expect(section?.className).toContain('is-external-inline-reveal');
+    expect(formShell?.getAttribute('data-cta-display-mode')).toBe('inline_reveal');
+    expect(formShell?.getAttribute('data-cta-trigger-mode')).toBe('external');
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Follow-up with me']);
+  });
 });

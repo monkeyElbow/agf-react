@@ -5,6 +5,7 @@ import {
   validateRequiredFormFields,
 } from '../blocks/foundation/forms';
 import {
+  buildDynamicCtaPresentationClassName,
   buildDynamicCtaFormFromBlock,
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
@@ -108,6 +109,10 @@ export default function DynamicCtaSection({
   );
   const fields = Array.isArray(runtime?.fields) ? runtime.fields : [];
   const renderTitleInsideShell = titlePlacement === 'inside';
+  const presentationClassName = useMemo(
+    () => buildDynamicCtaPresentationClassName(runtime),
+    [runtime],
+  );
 
   useEffect(() => {
     setValues(createInitialFormValues(fields, { multiValueTypes: ['multiselect'], booleanTypes: ['checkbox'] }));
@@ -176,8 +181,10 @@ export default function DynamicCtaSection({
 
   return (
     <section
-      className={`${sectionClassName} native-dynamic-cta is-bg-${bgTone}${sectionHudClassName ? ` ${sectionHudClassName}` : ''}${ownership?.className || ''}`}
+      className={`${sectionClassName} native-dynamic-cta is-bg-${bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}${sectionHudClassName ? ` ${sectionHudClassName}` : ''}${ownership?.className || ''}`}
       data-block-id={dynamicCtaBlock?.id || 'cta_form'}
+      data-cta-display-mode={runtime?.displayMode || 'default'}
+      data-cta-trigger-mode={runtime?.triggerMode || 'default'}
     >
       <BlockOwnershipOverlay ownership={ownership} />
       {hudAnchor}
@@ -195,7 +202,13 @@ export default function DynamicCtaSection({
         ) : null}
 
         {submitted ? (
-          <div className={formClassName} aria-label={title}>
+          <div
+            className={formClassName}
+            aria-label={title}
+            data-cta-state="success"
+            data-cta-display-mode={runtime?.displayMode || 'default'}
+            data-cta-trigger-mode={runtime?.triggerMode || 'default'}
+          >
             {renderTitleInsideShell ? headingMarkup : null}
             <div className="dynamic-cta-form-success" role="status">
               <h5>Thank you.</h5>
@@ -206,7 +219,13 @@ export default function DynamicCtaSection({
             </div>
           </div>
         ) : (
-          <div className={formClassName} aria-label={title}>
+          <div
+            className={formClassName}
+            aria-label={title}
+            data-cta-state="ready"
+            data-cta-display-mode={runtime?.displayMode || 'default'}
+            data-cta-trigger-mode={runtime?.triggerMode || 'default'}
+          >
             <form onSubmit={onSubmit} noValidate>
               {renderTitleInsideShell ? headingMarkup : null}
               {fields.map((field) => {

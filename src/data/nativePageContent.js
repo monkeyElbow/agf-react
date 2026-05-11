@@ -2239,6 +2239,8 @@ const legacyChildPages = {
         ],
         body: ['Let’s transform your generosity into a tax-saving, ministry-supporting win. Ready when you are.'],
         form: {
+          displayMode: 'inline_reveal',
+          triggerMode: 'external',
           fields: [
             { id: 'firstName', label: 'First Name*', type: 'text', required: true },
             { id: 'lastName', label: 'Last Name*', type: 'text', required: true },

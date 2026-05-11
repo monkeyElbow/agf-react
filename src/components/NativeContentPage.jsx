@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BlockHudPanelHost from './BlockHudPanelHost';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual } from './BlockOwnershipOverlay';
@@ -42,6 +42,7 @@ import {
 } from '../lib/testimonials';
 import {
   buildDynamicBillboardFromBlock,
+  buildDynamicCtaPresentationClassName,
   buildDynamicCtaFormFromBlock,
   buildDynamicColumnsFromBlock,
   buildDynamicFeaturePanelFromBlock,
@@ -53,6 +54,8 @@ import {
   buildDynamicRequestFormFromBlock,
   buildDynamicSiteFeatureFromBlock,
   buildDynamicTestimonialsFromBlock,
+  normalizeDynamicCtaDisplayMode,
+  normalizeDynamicCtaTriggerMode,
   parseTextHighlights,
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
@@ -242,14 +245,119 @@ function isMobileHudSelectionInteractiveTarget(target) {
     && Boolean(target.closest(MOBILE_HUD_SELECTION_INTERACTIVE_SELECTOR));
 }
 
+const CTA_REVEAL_ACTION_TYPE = 'open_cta_form';
+const InlineCtaRevealContext = createContext(null);
+
+function buildInlineCtaTargetKey(kind, value) {
+  const normalizedValue = String(value || '').trim();
+  if (!kind || !normalizedValue) {
+    return '';
+  }
+  return `${kind}:${normalizedValue}`;
+}
+
+function collectInlineCtaTargetKeys(item) {
+  const source = item && typeof item === 'object' ? item : {};
+  const keys = [];
+  const targetBlockId = String(source.targetBlockId || '').trim();
+  const targetAnchorId = String(source.targetAnchorId || '').trim();
+  const toValue = String(source.to || '').trim();
+
+  if (targetBlockId) {
+    keys.push(buildInlineCtaTargetKey('block', targetBlockId));
+  }
+  if (targetAnchorId) {
+    keys.push(buildInlineCtaTargetKey('anchor', targetAnchorId));
+  }
+  if (toValue.startsWith('#') && toValue.length > 1) {
+    keys.push(buildInlineCtaTargetKey('anchor', toValue.slice(1)));
+  }
+
+  return Array.from(new Set(keys.filter(Boolean)));
+}
+
+function resolveInlineCtaRevealAction(item, lookup) {
+  if (!lookup || typeof lookup.get !== 'function') {
+    return null;
+  }
+
+  const source = item && typeof item === 'object' ? item : {};
+  const hasExplicitRevealAction = String(source.action || '').trim().toLowerCase() === CTA_REVEAL_ACTION_TYPE;
+  const targetKeys = collectInlineCtaTargetKeys(source);
+
+  if (!hasExplicitRevealAction && !targetKeys.length) {
+    return null;
+  }
+
+  const targetEntry = targetKeys
+    .map((key) => lookup.get(key))
+    .find(Boolean);
+
+  return targetEntry
+    ? {
+        source,
+        targetEntry,
+      }
+    : null;
+}
+
+function isInlineCtaSectionShape(section) {
+  const sectionClassName = String(section?.className || '').trim();
+  const formVariant = String(section?.form?.variant || '').trim().toLowerCase();
+  return Boolean(
+    section?.form
+    && typeof section.form === 'object'
+    && (formVariant === 'dynamic-cta' || sectionClassName.includes('cta'))
+  );
+}
+
+function getInlineCtaPresentationRuntime(section) {
+  if (!isInlineCtaSectionShape(section)) {
+    return {
+      displayMode: 'default',
+      triggerMode: 'default',
+      className: '',
+      isExternalInlineReveal: false,
+    };
+  }
+
+  const displayMode = normalizeDynamicCtaDisplayMode(section?.form?.displayMode);
+  const triggerMode = normalizeDynamicCtaTriggerMode(section?.form?.triggerMode);
+  const className = buildDynamicCtaPresentationClassName({ displayMode, triggerMode });
+
+  return {
+    displayMode,
+    triggerMode,
+    className,
+    isExternalInlineReveal: displayMode === 'inline_reveal' && triggerMode === 'external',
+  };
+}
+
 function Action({ item }) {
   const { resolveDocumentLink } = useDocuments();
   const { resolveManagedPathFromRef } = useContentAdmin();
+  const inlineCtaReveal = useContext(InlineCtaRevealContext);
   const extraClass = item.className ? ` ${item.className}` : '';
   const buttonClass = `service-native-btn${item.ghost ? ' is-ghost' : ''}${extraClass}`;
   const resolved = resolveNativeLinkItem(item, resolveDocumentLink, resolveManagedPathFromRef);
+  const revealAction = resolveInlineCtaRevealAction(item, inlineCtaReveal?.lookup);
   const targetBlank = Boolean(resolved && (resolved.external || resolved.openInNewWindow));
   const relAttr = targetBlank ? 'noreferrer noopener' : undefined;
+  const onClick = revealAction
+    ? (event) => {
+        event.preventDefault();
+        inlineCtaReveal?.onReveal?.(revealAction.targetEntry);
+      }
+    : undefined;
+
+  if (revealAction && !resolved?.href && !resolved?.to && !item?.to) {
+    return (
+      <button type="button" className={buttonClass} onClick={onClick}>
+        {resolved?.label || item.label}
+      </button>
+    );
+  }
+
   if (resolved?.href) {
     return (
       <a
@@ -257,6 +365,7 @@ function Action({ item }) {
         target={targetBlank ? '_blank' : undefined}
         rel={relAttr}
         className={buttonClass}
+        onClick={onClick}
       >
         {resolved.label}
       </a>
@@ -271,6 +380,7 @@ function Action({ item }) {
       className={buttonClass}
       target={targetBlank ? '_blank' : undefined}
       rel={relAttr}
+      onClick={onClick}
     >
       {resolved?.label || item.label}
     </Link>
@@ -362,10 +472,22 @@ function resolveNativeLinkItem(item, resolveDocumentLink, resolveManagedPathFrom
 function NativeLink({ item, className, children }) {
   const { resolveDocumentLink } = useDocuments();
   const { resolveManagedPathFromRef } = useContentAdmin();
+  const inlineCtaReveal = useContext(InlineCtaRevealContext);
   const resolved = resolveNativeLinkItem(item, resolveDocumentLink, resolveManagedPathFromRef);
+  const revealAction = resolveInlineCtaRevealAction(item, inlineCtaReveal?.lookup);
   const label = children ?? resolved.label ?? item?.label;
   const targetBlank = Boolean(resolved && (resolved.external || resolved.openInNewWindow));
   const relAttr = targetBlank ? 'noreferrer noopener' : undefined;
+  const onClick = revealAction
+    ? (event) => {
+        event.preventDefault();
+        inlineCtaReveal?.onReveal?.(revealAction.targetEntry);
+      }
+    : undefined;
+
+  if (revealAction && !resolved?.href && !resolved?.to && !item?.to) {
+    return <button type="button" className={className} onClick={onClick}>{label}</button>;
+  }
 
   if (resolved.href) {
     return (
@@ -374,6 +496,7 @@ function NativeLink({ item, className, children }) {
         target={targetBlank ? '_blank' : undefined}
         rel={relAttr}
         className={className}
+        onClick={onClick}
       >
         {label}
       </a>
@@ -389,6 +512,7 @@ function NativeLink({ item, className, children }) {
       className={className}
       target={targetBlank ? '_blank' : undefined}
       rel={relAttr}
+      onClick={onClick}
     >
       {label}
     </Link>
@@ -1021,13 +1145,14 @@ function buildDynamicCtaSection(block, pathname) {
 
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-cta' : 'native-dynamic-cta';
   const submitButtonConfig = toActionButtonClassConfig(runtime.submitStyle, runtime.submitTone);
+  const presentationClassName = buildDynamicCtaPresentationClassName(runtime);
 
   return {
     id: `${pathname}-dynamic-cta-${String(block.id || 'cta_form').trim() || 'cta_form'}`,
     blockId: String(block?.id || '').trim() || undefined,
     targetSectionKey: runtime.targetSectionKey || '',
     copyWrap: true,
-    className: `${sectionClassBase} is-bg-${runtime.bgTone}`,
+    className: `${sectionClassBase} is-bg-${runtime.bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}`,
     title: runtime.title,
     titleClassName: runtime.titleClassName || undefined,
     titleHighlights: runtime.titleHighlights?.length ? runtime.titleHighlights : [],
@@ -1040,6 +1165,8 @@ function buildDynamicCtaSection(block, pathname) {
       submitClassName: submitButtonConfig.className,
       successMessage: runtime.successMessage,
       salesforceUrl: runtime.salesforceUrl,
+      displayMode: runtime.displayMode,
+      triggerMode: runtime.triggerMode,
       fields: runtime.fields,
     },
   };
@@ -1953,7 +2080,13 @@ function DynamicCtaForm({ config }) {
 
   if (submitted) {
     return (
-      <div className="native-info-inline-form dynamic-cta-form" aria-label={config?.title || 'CTA form'}>
+      <div
+        className="native-info-inline-form dynamic-cta-form"
+        aria-label={config?.title || 'CTA form'}
+        data-cta-state="success"
+        data-cta-display-mode={config?.displayMode || 'default'}
+        data-cta-trigger-mode={config?.triggerMode || 'default'}
+      >
         <div className="dynamic-cta-form-success" role="status">
           <h5>Thank you.</h5>
           <p>{successMessage}</p>
@@ -1966,7 +2099,13 @@ function DynamicCtaForm({ config }) {
   }
 
   return (
-    <div className="native-info-inline-form dynamic-cta-form" aria-label={config?.title || 'CTA form'}>
+    <div
+      className="native-info-inline-form dynamic-cta-form"
+      aria-label={config?.title || 'CTA form'}
+      data-cta-state="ready"
+      data-cta-display-mode={config?.displayMode || 'default'}
+      data-cta-trigger-mode={config?.triggerMode || 'default'}
+    >
       {config?.title ? <h5>{config.title}</h5> : null}
       <form onSubmit={onSubmit} noValidate>
         {fields.map((field) => {
@@ -3850,6 +3989,7 @@ export default function NativeContentPage({ page }) {
   const heroHudSectionRef = useRef(null);
   const introHudSectionRef = useRef(null);
   const dynamicHudSectionRefs = useRef({});
+  const inlineCtaRevealSectionRefs = useRef({});
   const [heroActiveLine, setHeroActiveLine] = useState('');
   const [heroShowOptionalLine3, setHeroShowOptionalLine3] = useState(false);
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
@@ -4319,6 +4459,49 @@ export default function NativeContentPage({ page }) {
       sections: nextSections,
     };
   }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isTestPage, templatePath, testimonialsLibrary]);
+  const inlineCtaRevealTargets = useMemo(() => {
+    const lookup = new Map();
+    const entries = (Array.isArray(content?.sections) ? content.sections : [])
+      .map((section, sectionIndex) => {
+        const presentation = getInlineCtaPresentationRuntime(section);
+        if (!presentation.isExternalInlineReveal) {
+          return null;
+        }
+
+        const blockId = String(section?.blockId || '').trim();
+        const anchorId = String(section?.anchorId || '').trim();
+        const id = blockId || anchorId || `section-${sectionIndex + 1}`;
+        const keys = [
+          buildInlineCtaTargetKey('block', blockId),
+          buildInlineCtaTargetKey('anchor', anchorId),
+        ].filter(Boolean);
+
+        if (!keys.length) {
+          return null;
+        }
+
+        return {
+          id,
+          blockId,
+          anchorId,
+          sectionIndex,
+          keys,
+        };
+      })
+      .filter(Boolean);
+
+    entries.forEach((entry) => {
+      entry.keys.forEach((key) => {
+        if (!lookup.has(key)) {
+          lookup.set(key, entry);
+        }
+      });
+    });
+
+    return { entries, lookup };
+  }, [content]);
+  const [revealedInlineCtaIds, setRevealedInlineCtaIds] = useState(() => new Set());
+  const [pendingInlineCtaScrollId, setPendingInlineCtaScrollId] = useState('');
   const [locationFilters, setLocationFilters] = useState({});
   const [activeMessageCards, setActiveMessageCards] = useState({});
   const introConfig = content?.intro && typeof content.intro === 'object' ? content.intro : null;
@@ -4571,10 +4754,11 @@ export default function NativeContentPage({ page }) {
     }
     const nav = document.querySelector('.site-nav');
     const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     const top = target.getBoundingClientRect().top + window.scrollY - navHeight - extraOffset;
     window.scrollTo({
       top: Math.max(0, top),
-      behavior: 'smooth',
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
     });
   };
 
@@ -4603,6 +4787,60 @@ export default function NativeContentPage({ page }) {
       return;
     }
     scrollElementWithNavOffset(fallbackTarget);
+  };
+
+  useEffect(() => {
+    const validIds = new Set(inlineCtaRevealTargets.entries.map((entry) => entry.id));
+    setRevealedInlineCtaIds((prev) => {
+      const next = new Set(Array.from(prev).filter((id) => validIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+    setPendingInlineCtaScrollId((prev) => (prev && !validIds.has(prev) ? '' : prev));
+  }, [inlineCtaRevealTargets]);
+
+  useEffect(() => {
+    if (!pendingInlineCtaScrollId || !revealedInlineCtaIds.has(pendingInlineCtaScrollId)) {
+      return undefined;
+    }
+
+    const scrollToRevealTarget = () => {
+      const target = inlineCtaRevealSectionRefs.current[pendingInlineCtaScrollId] || null;
+      if (target) {
+        scrollElementWithNavOffset(target, 12);
+      }
+      setPendingInlineCtaScrollId('');
+    };
+
+    const usesAnimationFrame = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function';
+    const frameId = usesAnimationFrame
+      ? window.requestAnimationFrame(scrollToRevealTarget)
+      : window.setTimeout(scrollToRevealTarget, 0);
+
+    return () => {
+      if (usesAnimationFrame && typeof frameId === 'number' && typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
+        window.cancelAnimationFrame(frameId);
+        return;
+      }
+      if (!usesAnimationFrame && typeof frameId === 'number' && typeof window !== 'undefined') {
+        window.clearTimeout(frameId);
+      }
+    };
+  }, [pendingInlineCtaScrollId, revealedInlineCtaIds]);
+
+  const revealInlineCtaTarget = (targetEntry) => {
+    if (!targetEntry?.id) {
+      return;
+    }
+
+    setRevealedInlineCtaIds((prev) => {
+      if (prev.has(targetEntry.id)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.add(targetEntry.id);
+      return next;
+    });
+    setPendingInlineCtaScrollId(targetEntry.id);
   };
 
   const openHudPanel = (panelId, options = {}) => {
@@ -4948,6 +5186,10 @@ export default function NativeContentPage({ page }) {
     setLocationFilters({});
     setActiveMessageCards({});
   }, [activePath]);
+  const inlineCtaRevealContextValue = {
+    lookup: inlineCtaRevealTargets.lookup,
+    onReveal: revealInlineCtaTarget,
+  };
 
   if (templatePath === '/sitemap') {
     return (
@@ -4961,42 +5203,49 @@ export default function NativeContentPage({ page }) {
 
   if (templatePath === '/prospectus') {
     return (
-      <NativeProspectusRouteRenderer
-        pageRef={pageRef}
-        compactClass={compactClass}
-        pageClass={pageClass}
-        hasOpenHudPanel={hasOpenHudPanel}
-        intro={introParagraphs[0] || ''}
-        actions={content.actions}
-        sections={content.sections}
-        ActionRenderer={Action}
-        NativeLinkRenderer={NativeLink}
-      />
+      <InlineCtaRevealContext.Provider value={inlineCtaRevealContextValue}>
+        <NativeProspectusRouteRenderer
+          pageRef={pageRef}
+          compactClass={compactClass}
+          pageClass={pageClass}
+          hasOpenHudPanel={hasOpenHudPanel}
+          intro={introParagraphs[0] || ''}
+          actions={content.actions}
+          sections={content.sections}
+          ActionRenderer={Action}
+          NativeLinkRenderer={NativeLink}
+        />
+      </InlineCtaRevealContext.Provider>
     );
   }
 
   if (templatePath === '/forms') {
     return (
-      <NativeFormsRouteRenderer
-        pageRef={pageRef}
-        compactClass={compactClass}
-        pageClass={pageClass}
-        intro={introParagraphs[0] || ''}
-        seedForms={content.forms}
-        NativeLinkRenderer={NativeLink}
-      />
+      <InlineCtaRevealContext.Provider value={inlineCtaRevealContextValue}>
+        <NativeFormsRouteRenderer
+          pageRef={pageRef}
+          compactClass={compactClass}
+          pageClass={pageClass}
+          intro={introParagraphs[0] || ''}
+          seedForms={content.forms}
+          NativeLinkRenderer={NativeLink}
+        />
+      </InlineCtaRevealContext.Provider>
     );
   }
 
   if (legalDoc) {
     return (
-      <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
-        <LegalDocumentSection content={content} page={page} />
-      </div>
+      <InlineCtaRevealContext.Provider value={inlineCtaRevealContextValue}>
+        <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
+          <LegalDocumentSection content={content} page={page} />
+        </div>
+      </InlineCtaRevealContext.Provider>
     );
   }
 
   return (
+    <InlineCtaRevealContext.Provider value={inlineCtaRevealContextValue}>
       <div
         ref={pageRef}
         className={`service-native-page native-info-page${compactClass}${pageClass}${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
@@ -5235,11 +5484,7 @@ export default function NativeContentPage({ page }) {
         const sectionClassName = String(section.className || '');
         const formVariant = String(section?.form?.variant || '').trim().toLowerCase();
         const SectionLogoComponent = typeof section.logoComponent === 'function' ? section.logoComponent : null;
-        const isInlineCtaSection = Boolean(
-          section.form
-          && typeof section.form === 'object'
-          && sectionClassName.includes('cta')
-        );
+        const isInlineCtaSection = isInlineCtaSectionShape(section);
         const resolvedFormConfig = isInlineCtaSection
           ? {
               ...section.form,
@@ -5247,6 +5492,10 @@ export default function NativeContentPage({ page }) {
               subtitle: String(section.form.subtitle || section.subtitle || '').trim(),
             }
           : section.form;
+        const ctaPresentation = getInlineCtaPresentationRuntime({
+          ...section,
+          form: resolvedFormConfig,
+        });
         const isLegacyHighlightColumns = section.columnsStyle === 'legacy-highlight';
         const showSectionCopy = !section.hideCopy && !isInlineCtaSection;
         const hasSectionCopyContent = showSectionCopy && Boolean(
@@ -5268,11 +5517,22 @@ export default function NativeContentPage({ page }) {
         );
         const hasManagedRequestShell = formVariant === 'dynamic-request';
         const hasInlineCtaShell = isInlineCtaSection;
+        const isHiddenPendingInlineCtaReveal = ctaPresentation.isExternalInlineReveal
+          && !revealedInlineCtaIds.has(
+            String(section?.blockId || '').trim()
+            || String(section?.anchorId || '').trim()
+            || `section-${sectionIndex + 1}`
+          )
+          && !showFrontHud;
         const isDynamicBillboardSection = section.id === 'dynamic-billboard' || sectionClassName.includes('test-dynamic-billboard');
         const isDynamicCtaSection = sectionClassName.includes('dynamic-cta');
         const isDynamicPageContentSection = sectionClassName.includes('dynamic-page-content');
         const isDynamicRequestSection = sectionClassName.includes('native-dynamic-request');
         const dynamicSectionBlockId = String(section?.blockId || '').trim();
+
+        if (isHiddenPendingInlineCtaReveal) {
+          return null;
+        }
         const dynamicSectionPanel = dynamicSectionBlockId ? (hudPanelByBlockId[dynamicSectionBlockId] || null) : null;
         const dynamicSectionHudPanelId = dynamicSectionPanel?.id || '';
         const firstDynamicSectionIndex = dynamicSectionBlockId
@@ -5390,9 +5650,21 @@ export default function NativeContentPage({ page }) {
               if (dynamicSectionBlockId && isDynamicSectionHudTarget) {
                 dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;
               }
+              const inlineCtaRevealId = String(section?.blockId || '').trim()
+                || String(section?.anchorId || '').trim()
+                || `section-${sectionIndex + 1}`;
+              if (ctaPresentation.isExternalInlineReveal) {
+                if (node) {
+                  inlineCtaRevealSectionRefs.current[inlineCtaRevealId] = node;
+                } else {
+                  delete inlineCtaRevealSectionRefs.current[inlineCtaRevealId];
+                }
+              }
             }}
-            className={`service-native-section${section.sand ? ' is-sand' : ''}${section.className ? ` ${section.className}` : ''}${hasInlineRequestShell ? ' has-inline-request-shell' : ''}${hasManagedRequestShell ? ' has-managed-request-shell' : ''}${hasInlineCtaShell ? ' has-inline-cta-shell' : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${sectionHudFocusClass}${sectionOwnership.className || ''}`}
+            className={`service-native-section${section.sand ? ' is-sand' : ''}${section.className ? ` ${section.className}` : ''}${ctaPresentation.className ? ` ${ctaPresentation.className}` : ''}${hasInlineRequestShell ? ' has-inline-request-shell' : ''}${hasManagedRequestShell ? ' has-managed-request-shell' : ''}${hasInlineCtaShell ? ' has-inline-cta-shell' : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${sectionHudFocusClass}${sectionOwnership.className || ''}`}
             data-block-id={dynamicSectionBlockId || undefined}
+            data-cta-display-mode={hasInlineCtaShell ? ctaPresentation.displayMode : undefined}
+            data-cta-trigger-mode={hasInlineCtaShell ? ctaPresentation.triggerMode : undefined}
             data-mobile-front-hud-selectable={showSectionHud && isMobileFrontHud ? 'true' : undefined}
             data-mobile-front-hud-selected={isMobileHudPanelSelected(dynamicSectionHudPanelId) ? 'true' : undefined}
             data-mobile-front-hud-label={showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Section') : undefined}
@@ -5917,6 +6189,7 @@ export default function NativeContentPage({ page }) {
           </div>
         </section>
       ) : null}
-    </div>
+      </div>
+    </InlineCtaRevealContext.Provider>
   );
 }

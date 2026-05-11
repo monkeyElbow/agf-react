@@ -13,6 +13,7 @@ import {
   toDynamicColumnsCountToken,
 } from '../../lib/dynamicColumns';
 import {
+  buildDynamicCtaPresentationClassName,
   buildDynamicCtaFormFromBlock,
   buildDynamicFeaturePanelFromBlock,
   buildDynamicImpactStatFromBlock,
@@ -733,6 +734,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
   const submitLabel = String(runtime.submitLabel || '').trim() || 'Follow-up with me';
   const successMessage = String(runtime.successMessage || '').trim() || 'Thanks. We will reach out soon.';
   const salesforceUrl = String(runtime.salesforceUrl || '').trim();
+  const presentationClassName = buildDynamicCtaPresentationClassName(runtime);
   const submitClassName = [
     toActionButtonClassName(runtime.submitStyle, runtime.submitTone),
     String(block.submitClassName || '').trim(),
@@ -767,7 +769,12 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
   };
 
   return (
-    <section className={`service-native-section native-dynamic-cta is-bg-${bgTone}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+    <section
+      className={`service-native-section native-dynamic-cta is-bg-${bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}${ownership?.className || ''}`}
+      data-block-id={block?.id || undefined}
+      data-cta-display-mode={runtime?.displayMode || 'default'}
+      data-cta-trigger-mode={runtime?.triggerMode || 'default'}
+    >
       <BlockOwnershipOverlay ownership={ownership} />
       <SharedBlockHudAnchor hudAnchor={hudAnchor} />
       <div className="ag-panel-rail">
@@ -782,7 +789,13 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
         ) : null}
 
         {submitted ? (
-          <div className="native-info-inline-form dynamic-cta-form" aria-label={resolvedTitle || 'CTA form'}>
+          <div
+            className="native-info-inline-form dynamic-cta-form"
+            aria-label={resolvedTitle || 'CTA form'}
+            data-cta-state="success"
+            data-cta-display-mode={runtime?.displayMode || 'default'}
+            data-cta-trigger-mode={runtime?.triggerMode || 'default'}
+          >
             <div className="dynamic-cta-form-success" role="status">
               <h5>Thank you.</h5>
               <p>{successMessage}</p>
@@ -792,7 +805,13 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
             </div>
           </div>
         ) : (
-          <div className="native-info-inline-form dynamic-cta-form" aria-label={resolvedTitle || 'CTA form'}>
+          <div
+            className="native-info-inline-form dynamic-cta-form"
+            aria-label={resolvedTitle || 'CTA form'}
+            data-cta-state="ready"
+            data-cta-display-mode={runtime?.displayMode || 'default'}
+            data-cta-trigger-mode={runtime?.triggerMode || 'default'}
+          >
             <form onSubmit={onSubmit} noValidate>
               {fields.map((field) => {
                 const fieldId = `home-dynamic-cta-${field.id}`;
