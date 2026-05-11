@@ -56,7 +56,7 @@ export const HERO_SEED_CONTRACTS_BY_PATH = {
     actions: [],
   },
   '/services/investments': {
-    animationPreset: 'default',
+    animationPreset: 'loans-unblur',
     bgTone: 'white',
     justify: 'left',
     actionJustify: 'left',

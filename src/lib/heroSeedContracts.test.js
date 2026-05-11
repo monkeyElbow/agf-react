@@ -164,9 +164,9 @@ describe('hero seed guardrails', () => {
     ]));
   });
 
-  it('upgrades legacy hero animation presets from none to default on managed pages', () => {
+  it('upgrades legacy hero animation presets from none to the managed preset for each page', () => {
     expect(normalizeDynamicHeroSettings('/', { animationPreset: 'none' }).animationPreset).toBe('default');
-    expect(normalizeDynamicHeroSettings('/services/investments', { animationPreset: 'none' }).animationPreset).toBe('default');
+    expect(normalizeDynamicHeroSettings('/services/investments', { animationPreset: 'none' }).animationPreset).toBe('loans-unblur');
     expect(normalizeDynamicHeroSettings('/services/retirement', { animationPreset: 'none' }).animationPreset).toBe('default');
   });
 
@@ -184,7 +184,7 @@ describe('hero seed guardrails', () => {
       line3HighlightsJson: '',
     });
 
-    expect(normalized.animationPreset).toBe('default');
+    expect(normalized.animationPreset).toBe('loans-unblur');
     expect(normalized.line1Text).toBe('Your investments.');
     expect(normalized.line1ClassName).toBe('line1');
     expect(normalized.line1HighlightsJson).toBe('[{"text":"investments","className":"is-atlantean"}]');
