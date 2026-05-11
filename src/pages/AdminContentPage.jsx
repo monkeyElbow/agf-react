@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import PageShell from '../components/PageShell';
 import AdminHtmlEditor from '../components/AdminHtmlEditor';
 import BillboardHudEditorPanel from '../components/BillboardHudEditorPanel';
@@ -1425,6 +1425,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
 
 export default function AdminContentPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [selectedPath, setSelectedPath] = useState('/');
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [insertAtIndex, setInsertAtIndex] = useState(null);
@@ -1557,6 +1558,36 @@ export default function AdminContentPage() {
     search: insertTemplateSearch,
   }), [availableBlockTemplates, insertTemplateModeFilter, insertTemplateSearch]);
 
+  const applySelectedPath = useCallback((nextPath, options = {}) => {
+    const normalizedPath = String(nextPath || '').trim();
+    if (!normalizedPath) {
+      return;
+    }
+
+    const { replace = false, syncUrl = true } = options;
+    setSelectedPath(normalizedPath);
+    setSelectedBlockId(null);
+    setInsertAtIndex(null);
+    setPendingRemoveBlockId(null);
+
+    if (!syncUrl) {
+      return;
+    }
+
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('page') === normalizedPath) {
+      return;
+    }
+    searchParams.set('page', normalizedPath);
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?${searchParams.toString()}`,
+      },
+      { replace },
+    );
+  }, [location.pathname, location.search, navigate]);
+
   useEffect(() => {
     setBreadcrumbEditMode(null);
   }, [selectedPath]);
@@ -1584,11 +1615,8 @@ export default function AdminContentPage() {
     if (!editablePages.some((page) => page.path === requestedPath)) {
       return;
     }
-    setSelectedPath(requestedPath);
-    setSelectedBlockId(null);
-    setInsertAtIndex(null);
-    setPendingRemoveBlockId(null);
-  }, [editablePages, location.search, selectedPath]);
+    applySelectedPath(requestedPath, { syncUrl: false });
+  }, [applySelectedPath, editablePages, location.search, selectedPath]);
 
   useEffect(() => {
     setRoutePathDraft(selectedPath || '');
@@ -2014,8 +2042,7 @@ export default function AdminContentPage() {
                         }
                         setRoutePathError(false);
                         setRoutePathMessage(`Updated route to ${result.path}`);
-                        setSelectedPath(result.path);
-                        setSelectedBlockId(null);
+                        applySelectedPath(result.path);
                         setIsRouteEditMode(false);
                       }
                     }}
@@ -2028,10 +2055,7 @@ export default function AdminContentPage() {
                     className="search-page-input"
                     value={selectedPath}
                     onChange={(event) => {
-                      setSelectedPath(event.target.value);
-                      setSelectedBlockId(null);
-                      setInsertAtIndex(null);
-                      setPendingRemoveBlockId(null);
+                      applySelectedPath(event.target.value);
                     }}
                   >
                     {pageOptionsForSelect.map((page) => (
@@ -2062,8 +2086,7 @@ export default function AdminContentPage() {
                       }
                       setRoutePathError(false);
                       setRoutePathMessage(`Updated route to ${result.path}`);
-                      setSelectedPath(result.path);
-                      setSelectedBlockId(null);
+                      applySelectedPath(result.path);
                       setIsRouteEditMode(false);
                     }}
                   >
@@ -2094,10 +2117,7 @@ export default function AdminContentPage() {
                     return;
                   }
                   event.preventDefault();
-                  setSelectedPath(target.path);
-                  setSelectedBlockId(null);
-                  setInsertAtIndex(null);
-                  setPendingRemoveBlockId(null);
+                  applySelectedPath(target.path);
                 }}
                 placeholder="Start typing page name or route"
               />
