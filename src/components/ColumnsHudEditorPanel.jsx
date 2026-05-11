@@ -19,6 +19,7 @@ import {
   replaceHeroLineColorClass,
   resolveSelectionRangeColor,
 } from '../lib/heroHudRanges';
+import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
 
 export const COLUMNS_HUD_BG_OPTIONS = SURFACE_BG_TONE_OPTIONS;
 
@@ -47,6 +48,10 @@ const PHOTO_ASPECT_OPTIONS = [
   { value: 'landscape', label: 'Wide' },
   { value: 'portrait', label: 'Tall' },
 ];
+
+function getColumnButtonHrefDraftFieldId(slot) {
+  return `col${slot}ButtonHrefDraft`;
+}
 
 function captureSelection(inputRef, setter) {
   const input = inputRef.current;
@@ -240,6 +245,9 @@ function ColumnSlotEditor({
   slot,
   settings,
   onSettingChange,
+  draftValues,
+  updateDraftValue,
+  commitDraftValue,
   textColorOptions = COLUMNS_HUD_TEXT_COLOR_OPTIONS,
   className = 'admin-front-hud-card admin-front-hud-columns-slot-card',
 }) {
@@ -260,12 +268,23 @@ function ColumnSlotEditor({
     ? Number(settings.photoCornerRadiusPx)
     : 29;
   const photoAspect = String(settings.photoAspect || 'square').trim().toLowerCase() || 'square';
-  const titleValue = String(settings[`col${slot}Title`] || '');
+  const titleFieldId = `col${slot}Title`;
+  const titleHighlightsFieldId = `col${slot}TitleHighlightsJson`;
+  const bodyFieldId = `col${slot}Body`;
+  const imageUrlFieldId = `col${slot}ImageUrl`;
+  const imageAltFieldId = `col${slot}ImageAlt`;
+  const buttonLabelFieldId = `col${slot}ButtonLabel`;
+  const buttonHrefFieldId = getColumnButtonHrefDraftFieldId(slot);
+  const externalTitleValue = String(settings[titleFieldId] || '');
+  const titleValue = String(draftValues[titleFieldId] ?? externalTitleValue);
   const titleClassName = String(settings[`col${slot}TitleClassName`] || '').trim();
   const titleColor = extractHeroLineColorToken(titleClassName);
+  const titleHighlightsJson = titleValue === externalTitleValue
+    ? settings[titleHighlightsFieldId]
+    : remapHighlightsJsonForTextChange(settings[titleHighlightsFieldId], externalTitleValue, titleValue);
   const titleHighlights = useMemo(
-    () => parseHeroRangeHighlights(settings[`col${slot}TitleHighlightsJson`], titleValue),
-    [settings, slot, titleValue],
+    () => parseHeroRangeHighlights(titleHighlightsJson, titleValue),
+    [titleHighlightsJson, titleValue],
   );
   const resolvedTitleSelection = readSelection(titleSelection, titleValue);
   const selectedTitleText = String(resolvedTitleSelection.text || '').trim();
@@ -279,13 +298,19 @@ function ColumnSlotEditor({
   const titleColorLabel = hasTitleSelection
     ? `${titleLabel} Selection Color ("${selectedTitlePreview}")`
     : `${titleLabel} Color`;
+  const bodyValue = String(draftValues[bodyFieldId] ?? settings[bodyFieldId] ?? '');
+  const imageUrlValue = String(draftValues[imageUrlFieldId] ?? settings[imageUrlFieldId] ?? '');
+  const imageAltValue = String(draftValues[imageAltFieldId] ?? settings[imageAltFieldId] ?? '');
+  const buttonLabelValue = String(draftValues[buttonLabelFieldId] ?? settings[buttonLabelFieldId] ?? '');
+  const buttonHrefValue = String(
+    draftValues[buttonHrefFieldId]
+    ?? settings[`col${slot}ButtonPageRef`]
+    ?? settings[`col${slot}ButtonUrl`]
+    ?? '',
+  );
 
   const handleTitleChange = (nextTitleValue) => {
-    onSettingChange(`col${slot}Title`, nextTitleValue);
-    onSettingChange(
-      `col${slot}TitleHighlightsJson`,
-      remapHighlightsJsonForTextChange(settings[`col${slot}TitleHighlightsJson`], titleValue, nextTitleValue),
-    );
+    updateDraftValue(titleFieldId, nextTitleValue);
     setTitleSelection({ start: 0, end: 0, text: '' });
   };
 
@@ -339,16 +364,18 @@ function ColumnSlotEditor({
             <span>Photo URL</span>
             <input
               type="text"
-              value={String(settings[`col${slot}ImageUrl`] || '')}
-              onChange={(event) => onSettingChange(`col${slot}ImageUrl`, event.target.value)}
+              value={imageUrlValue}
+              onChange={(event) => updateDraftValue(imageUrlFieldId, event.target.value)}
+              onBlur={() => commitDraftValue(imageUrlFieldId)}
             />
           </label>
           <label className="admin-front-hud-field">
             <span>Alt text</span>
             <input
               type="text"
-              value={String(settings[`col${slot}ImageAlt`] || '')}
-              onChange={(event) => onSettingChange(`col${slot}ImageAlt`, event.target.value)}
+              value={imageAltValue}
+              onChange={(event) => updateDraftValue(imageAltFieldId, event.target.value)}
+              onBlur={() => commitDraftValue(imageAltFieldId)}
             />
           </label>
           <label className="admin-front-hud-range">
@@ -412,6 +439,7 @@ function ColumnSlotEditor({
             type="text"
             value={titleValue}
             onChange={(event) => handleTitleChange(event.target.value)}
+            onBlur={() => commitDraftValue(titleFieldId)}
             onSelect={() => captureSelection(titleInputRef, setTitleSelection)}
             onMouseUp={() => captureSelection(titleInputRef, setTitleSelection)}
             onKeyUp={() => captureSelection(titleInputRef, setTitleSelection)}
@@ -426,11 +454,12 @@ function ColumnSlotEditor({
             const currentSelection = readSelection(titleSelection, titleValue);
             const safeStart = Math.max(0, Math.min(Number(currentSelection.start) || 0, titleValue.length));
             const safeEnd = Math.max(safeStart, Math.min(Number(currentSelection.end) || 0, titleValue.length));
+            commitDraftValue(titleFieldId);
             if (safeEnd > safeStart) {
               onSettingChange(
-                `col${slot}TitleHighlightsJson`,
+                titleHighlightsFieldId,
                 applySelectionColor(
-                  settings[`col${slot}TitleHighlightsJson`],
+                  titleHighlightsJson,
                   titleValue,
                   safeStart,
                   safeEnd,
@@ -446,12 +475,16 @@ function ColumnSlotEditor({
           }}
           sourceText={titleValue}
           highlightRanges={titleHighlights}
-          onRemoveSpan={(index) => onSettingChange(
-            `col${slot}TitleHighlightsJson`,
-            removeSelectionRange(settings[`col${slot}TitleHighlightsJson`], titleValue, index),
-          )}
+          onRemoveSpan={(index) => {
+            commitDraftValue(titleFieldId);
+            onSettingChange(
+              titleHighlightsFieldId,
+              removeSelectionRange(titleHighlightsJson, titleValue, index),
+            );
+          }}
           onClearSpans={() => {
-            onSettingChange(`col${slot}TitleHighlightsJson`, '');
+            commitDraftValue(titleFieldId);
+            onSettingChange(titleHighlightsFieldId, '');
             setTitleSelection({ start: 0, end: 0, text: '' });
           }}
           layout="row"
@@ -462,8 +495,9 @@ function ColumnSlotEditor({
           <span>{bodyLabel}</span>
           <textarea
             rows={4}
-            value={String(settings[`col${slot}Body`] || '')}
-            onChange={(event) => onSettingChange(`col${slot}Body`, event.target.value)}
+            value={bodyValue}
+            onChange={(event) => updateDraftValue(bodyFieldId, event.target.value)}
+            onBlur={() => commitDraftValue(bodyFieldId)}
           />
         </label>
       </section>
@@ -475,16 +509,18 @@ function ColumnSlotEditor({
               <span>Photo URL</span>
               <input
                 type="text"
-                value={String(settings[`col${slot}ImageUrl`] || '')}
-                onChange={(event) => onSettingChange(`col${slot}ImageUrl`, event.target.value)}
+                value={imageUrlValue}
+                onChange={(event) => updateDraftValue(imageUrlFieldId, event.target.value)}
+                onBlur={() => commitDraftValue(imageUrlFieldId)}
               />
             </label>
             <label className="admin-front-hud-field">
               <span>Alt text</span>
               <input
                 type="text"
-                value={String(settings[`col${slot}ImageAlt`] || '')}
-                onChange={(event) => onSettingChange(`col${slot}ImageAlt`, event.target.value)}
+                value={imageAltValue}
+                onChange={(event) => updateDraftValue(imageAltFieldId, event.target.value)}
+                onBlur={() => commitDraftValue(imageAltFieldId)}
               />
             </label>
           </div>
@@ -497,19 +533,18 @@ function ColumnSlotEditor({
             <span>Label</span>
             <input
               type="text"
-              value={String(settings[`col${slot}ButtonLabel`] || '')}
-              onChange={(event) => onSettingChange(`col${slot}ButtonLabel`, event.target.value)}
+              value={buttonLabelValue}
+              onChange={(event) => updateDraftValue(buttonLabelFieldId, event.target.value)}
+              onBlur={() => commitDraftValue(buttonLabelFieldId)}
             />
           </label>
           <label className="admin-front-hud-field">
             <span>URL / path</span>
             <input
               type="text"
-              value={String(settings[`col${slot}ButtonPageRef`] || settings[`col${slot}ButtonUrl`] || '')}
-              onChange={(event) => {
-                onSettingChange(`col${slot}ButtonUrl`, event.target.value);
-                onSettingChange(`col${slot}ButtonPageRef`, event.target.value);
-              }}
+              value={buttonHrefValue}
+              onChange={(event) => updateDraftValue(buttonHrefFieldId, event.target.value)}
+              onBlur={() => commitDraftValue(buttonHrefFieldId)}
             />
           </label>
           <SegmentField
@@ -554,16 +589,132 @@ export default function ColumnsHudEditorPanel({
   const [activeColumnSlot, setActiveColumnSlot] = useState(() => visibleColumnSlots[0] || 1);
   const headingClassName = String(settings.titleClassName || '').trim();
   const headingHighlightsJson = settings.titleHighlightsJson;
-  const titleValue = String(settings.title || '');
+  const externalTitleValue = String(settings.title || '');
   const titleColor = extractHeroLineColorToken(headingClassName);
   const activeColumnType = String(settings[`col${activeColumnSlot}Type`] || 'text').trim().toLowerCase() || 'text';
   const activeColumnEnabled = settings[`col${activeColumnSlot}Enabled`] !== false;
   const columnTitleSizeRem = Number.isFinite(Number(settings.columnTitleSizeRem))
     ? Number(settings.columnTitleSizeRem)
     : 2.4;
+  const canAddColumn = visibleColumnSlots.length < 4;
+  const canRemoveColumn = visibleColumnSlots.length > 2;
+  const bufferedFields = useMemo(() => {
+    const fields = [
+      {
+        id: 'title',
+        value: String(settings.title || ''),
+        mode: 'blur',
+        commit: (nextValue, { previousValue }) => {
+          onSettingChange('title', nextValue);
+          onSettingChange(
+            'titleHighlightsJson',
+            remapHighlightsJsonForTextChange(
+              settings.titleHighlightsJson,
+              String(previousValue || ''),
+              nextValue,
+            ),
+          );
+        },
+      },
+      {
+        id: 'bodyHtml',
+        value: String(settings.bodyHtml || ''),
+        mode: 'blur',
+        commit: (nextValue) => onSettingChange('bodyHtml', nextValue),
+      },
+    ];
+
+    for (let slot = 1; slot <= 4; slot += 1) {
+      const titleFieldId = `col${slot}Title`;
+      const titleHighlightsFieldId = `col${slot}TitleHighlightsJson`;
+      const bodyFieldId = `col${slot}Body`;
+      const imageUrlFieldId = `col${slot}ImageUrl`;
+      const imageAltFieldId = `col${slot}ImageAlt`;
+      const buttonLabelFieldId = `col${slot}ButtonLabel`;
+      const buttonUrlFieldId = `col${slot}ButtonUrl`;
+      const buttonPageRefFieldId = `col${slot}ButtonPageRef`;
+
+      fields.push(
+        {
+          id: titleFieldId,
+          value: String(settings[titleFieldId] || ''),
+          mode: 'blur',
+          commit: (nextValue, { previousValue }) => {
+            onSettingChange(titleFieldId, nextValue);
+            onSettingChange(
+              titleHighlightsFieldId,
+              remapHighlightsJsonForTextChange(
+                settings[titleHighlightsFieldId],
+                String(previousValue || ''),
+                nextValue,
+              ),
+            );
+          },
+        },
+        {
+          id: bodyFieldId,
+          value: String(settings[bodyFieldId] || ''),
+          mode: 'blur',
+          commit: (nextValue) => onSettingChange(bodyFieldId, nextValue),
+        },
+        {
+          id: imageUrlFieldId,
+          value: String(settings[imageUrlFieldId] || ''),
+          mode: 'blur',
+          commit: (nextValue) => onSettingChange(imageUrlFieldId, nextValue),
+        },
+        {
+          id: imageAltFieldId,
+          value: String(settings[imageAltFieldId] || ''),
+          mode: 'blur',
+          commit: (nextValue) => onSettingChange(imageAltFieldId, nextValue),
+        },
+        {
+          id: buttonLabelFieldId,
+          value: String(settings[buttonLabelFieldId] || ''),
+          mode: 'blur',
+          commit: (nextValue) => onSettingChange(buttonLabelFieldId, nextValue),
+        },
+        {
+          id: getColumnButtonHrefDraftFieldId(slot),
+          value: String(settings[buttonPageRefFieldId] || settings[buttonUrlFieldId] || ''),
+          mode: 'blur',
+          commit: (nextValue) => {
+            onSettingChange(buttonUrlFieldId, nextValue);
+            onSettingChange(buttonPageRefFieldId, nextValue);
+          },
+        },
+      );
+    }
+
+    return fields;
+  }, [onSettingChange, settings]);
+  const {
+    draftValues,
+    updateDraftValue,
+    commitDraftValue,
+  } = useBufferedFieldDrafts({
+    fields: bufferedFields,
+  });
+
+  useEffect(() => {
+    if (visibleColumnSlots.includes(activeColumnSlot)) {
+      return;
+    }
+    setActiveColumnSlot(visibleColumnSlots[0] || 1);
+  }, [activeColumnSlot, visibleColumnSlots]);
+
+  const handleTitleChange = (nextTitleValue) => {
+    updateDraftValue('title', nextTitleValue);
+    setTitleSelection({ start: 0, end: 0, text: '' });
+  };
+  const titleValue = String(draftValues.title ?? externalTitleValue);
+  const headingDraftHighlightsJson = titleValue === externalTitleValue
+    ? headingHighlightsJson
+    : remapHighlightsJsonForTextChange(headingHighlightsJson, externalTitleValue, titleValue);
   const titleHighlights = useMemo(
-    () => parseHeroRangeHighlights(headingHighlightsJson, titleValue),
-    [headingHighlightsJson, titleValue],
+    () => parseHeroRangeHighlights(headingDraftHighlightsJson, titleValue),
+    [headingDraftHighlightsJson, titleValue],
   );
   const resolvedTitleSelection = readSelection(titleSelection, titleValue);
   const selectedTitleText = String(resolvedTitleSelection.text || '').trim();
@@ -577,24 +728,6 @@ export default function ColumnsHudEditorPanel({
   const headingColorLabel = hasTitleSelection
     ? `Heading Selection Color ("${selectedTitlePreview}")`
     : 'Heading Color';
-  const canAddColumn = visibleColumnSlots.length < 4;
-  const canRemoveColumn = visibleColumnSlots.length > 2;
-
-  useEffect(() => {
-    if (visibleColumnSlots.includes(activeColumnSlot)) {
-      return;
-    }
-    setActiveColumnSlot(visibleColumnSlots[0] || 1);
-  }, [activeColumnSlot, visibleColumnSlots]);
-
-  const handleTitleChange = (nextTitleValue) => {
-    onSettingChange('title', nextTitleValue);
-    onSettingChange(
-      'titleHighlightsJson',
-      remapHighlightsJsonForTextChange(settings.titleHighlightsJson, titleValue, nextTitleValue),
-    );
-    setTitleSelection({ start: 0, end: 0, text: '' });
-  };
 
   const handleAddColumn = () => {
     const nextSlot = visibleColumnSlots.length + 1;
@@ -636,6 +769,7 @@ export default function ColumnsHudEditorPanel({
               type="text"
               value={titleValue}
               onChange={(event) => handleTitleChange(event.target.value)}
+              onBlur={() => commitDraftValue('title')}
               onSelect={() => captureSelection(titleInputRef, setTitleSelection)}
               onMouseUp={() => captureSelection(titleInputRef, setTitleSelection)}
               onKeyUp={() => captureSelection(titleInputRef, setTitleSelection)}
@@ -650,11 +784,12 @@ export default function ColumnsHudEditorPanel({
               const currentSelection = readSelection(titleSelection, titleValue);
               const safeStart = Math.max(0, Math.min(Number(currentSelection.start) || 0, titleValue.length));
               const safeEnd = Math.max(safeStart, Math.min(Number(currentSelection.end) || 0, titleValue.length));
+              commitDraftValue('title');
               if (safeEnd > safeStart) {
                 onSettingChange(
                   'titleHighlightsJson',
                   applySelectionColor(
-                    headingHighlightsJson,
+                    headingDraftHighlightsJson,
                     titleValue,
                     safeStart,
                     safeEnd,
@@ -670,11 +805,15 @@ export default function ColumnsHudEditorPanel({
             }}
             sourceText={titleValue}
             highlightRanges={titleHighlights}
-            onRemoveSpan={(index) => onSettingChange(
-              'titleHighlightsJson',
-              removeSelectionRange(headingHighlightsJson, titleValue, index),
-            )}
+            onRemoveSpan={(index) => {
+              commitDraftValue('title');
+              onSettingChange(
+                'titleHighlightsJson',
+                removeSelectionRange(headingDraftHighlightsJson, titleValue, index),
+              );
+            }}
             onClearSpans={() => {
+              commitDraftValue('title');
               onSettingChange('titleHighlightsJson', '');
               setTitleSelection({ start: 0, end: 0, text: '' });
             }}
@@ -685,8 +824,9 @@ export default function ColumnsHudEditorPanel({
             <span>Body HTML</span>
             <textarea
               rows={5}
-              value={String(settings.bodyHtml || '')}
-              onChange={(event) => onSettingChange('bodyHtml', event.target.value)}
+              value={String(draftValues.bodyHtml ?? settings.bodyHtml ?? '')}
+              onChange={(event) => updateDraftValue('bodyHtml', event.target.value)}
+              onBlur={() => commitDraftValue('bodyHtml')}
             />
           </label>
         </section>
@@ -773,6 +913,9 @@ export default function ColumnsHudEditorPanel({
           slot={activeColumnSlot}
           settings={settings}
           onSettingChange={onSettingChange}
+          draftValues={draftValues}
+          updateDraftValue={updateDraftValue}
+          commitDraftValue={commitDraftValue}
           textColorOptions={textColorOptions}
           className="admin-front-hud-columns-slot-card"
         />

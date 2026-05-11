@@ -1,10 +1,43 @@
+import { useState } from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ColumnsHudEditorPanel from './ColumnsHudEditorPanel';
 
-void ColumnsHudEditorPanel;
+function BufferedColumnsHarness({ initialSettings = {}, onSettingChange = vi.fn() }) {
+  const [settings, setSettings] = useState(initialSettings);
+  const [rerenderCount, setRerenderCount] = useState(0);
+
+  const handleSettingChange = (key, value) => {
+    onSettingChange(key, value);
+    setSettings((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  };
+
+  return (
+    <div>
+      <button type="button" onClick={() => setRerenderCount((current) => current + 1)}>
+        Force rerender
+      </button>
+      <span data-testid="rerender-count">{rerenderCount}</span>
+      <ColumnsHudEditorPanel
+        settings={settings}
+        onSettingChange={handleSettingChange}
+      />
+    </div>
+  );
+}
 
 describe('ColumnsHudEditorPanel', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('shows one active column editor at a time and switches slots', () => {
     const onSettingChange = vi.fn();
 
@@ -32,6 +65,7 @@ describe('ColumnsHudEditorPanel', () => {
     fireEvent.change(screen.getByLabelText('Title'), {
       target: { value: 'Updated column two title' },
     });
+    fireEvent.blur(screen.getByLabelText('Title'));
 
     expect(onSettingChange).toHaveBeenCalledWith('col2Title', 'Updated column two title');
   });
@@ -108,6 +142,8 @@ describe('ColumnsHudEditorPanel', () => {
     fireEvent.change(screen.getByLabelText('Body HTML'), {
       target: { value: '<p>Updated intro body</p>' },
     });
+    fireEvent.blur(screen.getByLabelText('Heading'));
+    fireEvent.blur(screen.getByLabelText('Body HTML'));
 
     expect(onSettingChange).toHaveBeenCalledWith('title', 'Updated intro heading');
     expect(onSettingChange).toHaveBeenCalledWith('bodyHtml', '<p>Updated intro body</p>');
@@ -381,5 +417,125 @@ describe('ColumnsHudEditorPanel', () => {
     });
 
     expect(onSettingChange).toHaveBeenCalledWith('col1WidthShare', 1.55);
+  });
+
+  it('keeps text-like column fields stable across rerenders and commits them on blur', () => {
+    const onSettingChange = vi.fn();
+
+    render(
+      <BufferedColumnsHarness
+        initialSettings={{
+          col1Title: 'Column one title',
+          col1Body: 'Column one body',
+          col1ImageUrl: '/images/original.jpg',
+          col1ImageAlt: 'Original alt',
+          col1ButtonLabel: 'Original button',
+          col1ButtonUrl: '/original-path',
+          col1ButtonPageRef: '/original-path',
+        }}
+        onSettingChange={onSettingChange}
+      />,
+    );
+
+    const titleInput = screen.getByLabelText('Title');
+    const bodyInput = screen.getByLabelText('Body');
+
+    fireEvent.change(titleInput, { target: { value: 'Draft title value' } });
+    fireEvent.change(bodyInput, { target: { value: 'Draft body value' } });
+    fireEvent.click(screen.getByText('Image'));
+    fireEvent.change(screen.getByLabelText('Photo URL'), { target: { value: '/images/draft.jpg' } });
+    fireEvent.change(screen.getByLabelText('Alt text'), { target: { value: 'Draft alt text' } });
+    fireEvent.click(screen.getByText('Button'));
+    fireEvent.change(screen.getByLabelText('Label'), { target: { value: 'Draft button' } });
+    fireEvent.change(screen.getByLabelText('URL / path'), { target: { value: '/draft-path' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Force rerender' }));
+
+    expect(screen.getByLabelText('Title').value).toBe('Draft title value');
+    expect(screen.getByLabelText('Body').value).toBe('Draft body value');
+    fireEvent.click(screen.getByText('Image'));
+    expect(screen.getByLabelText('Photo URL').value).toBe('/images/draft.jpg');
+    expect(screen.getByLabelText('Alt text').value).toBe('Draft alt text');
+    fireEvent.click(screen.getByText('Button'));
+    expect(screen.getByLabelText('Label').value).toBe('Draft button');
+    expect(screen.getByLabelText('URL / path').value).toBe('/draft-path');
+    expect(onSettingChange).not.toHaveBeenCalledWith('col1Title', 'Draft title value');
+
+    fireEvent.blur(screen.getByLabelText('Title'));
+    fireEvent.blur(screen.getByLabelText('Body'));
+    fireEvent.click(screen.getByText('Image'));
+    fireEvent.blur(screen.getByLabelText('Photo URL'));
+    fireEvent.blur(screen.getByLabelText('Alt text'));
+    fireEvent.click(screen.getByText('Button'));
+    fireEvent.blur(screen.getByLabelText('Label'));
+    fireEvent.blur(screen.getByLabelText('URL / path'));
+
+    expect(onSettingChange).toHaveBeenCalledWith('col1Title', 'Draft title value');
+    expect(onSettingChange).toHaveBeenCalledWith('col1Body', 'Draft body value');
+    expect(onSettingChange).toHaveBeenCalledWith('col1ImageUrl', '/images/draft.jpg');
+    expect(onSettingChange).toHaveBeenCalledWith('col1ImageAlt', 'Draft alt text');
+    expect(onSettingChange).toHaveBeenCalledWith('col1ButtonLabel', 'Draft button');
+    expect(onSettingChange).toHaveBeenCalledWith('col1ButtonUrl', '/draft-path');
+    expect(onSettingChange).toHaveBeenCalledWith('col1ButtonPageRef', '/draft-path');
+  });
+
+  it('keeps section heading and body drafts stable and commits them on blur without debounce commits', () => {
+    const onSettingChange = vi.fn();
+
+    render(
+      <BufferedColumnsHarness
+        initialSettings={{
+          title: 'Retirement tools',
+          bodyHtml: '<p>Intro copy above the columns.</p>',
+        }}
+        onSettingChange={onSettingChange}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Heading'), {
+      target: { value: 'Draft intro heading' },
+    });
+    fireEvent.change(screen.getByLabelText('Body HTML'), {
+      target: { value: '<p>Draft intro body</p>' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Force rerender' }));
+
+    expect(screen.getByLabelText('Heading').value).toBe('Draft intro heading');
+    expect(screen.getByLabelText('Body HTML').value).toBe('<p>Draft intro body</p>');
+    expect(onSettingChange).not.toHaveBeenCalledWith('title', 'Draft intro heading');
+    expect(onSettingChange).not.toHaveBeenCalledWith('bodyHtml', '<p>Draft intro body</p>');
+
+    vi.runAllTimers();
+
+    expect(onSettingChange).not.toHaveBeenCalledWith('title', 'Draft intro heading');
+    expect(onSettingChange).not.toHaveBeenCalledWith('bodyHtml', '<p>Draft intro body</p>');
+
+    fireEvent.blur(screen.getByLabelText('Heading'));
+    fireEvent.blur(screen.getByLabelText('Body HTML'));
+
+    expect(onSettingChange).toHaveBeenCalledWith('title', 'Draft intro heading');
+    expect(onSettingChange).toHaveBeenCalledWith('bodyHtml', '<p>Draft intro body</p>');
+  });
+
+  it('keeps discrete controls immediate while text inputs stay buffered', () => {
+    const onSettingChange = vi.fn();
+
+    render(
+      <BufferedColumnsHarness
+        initialSettings={{
+          col1Title: 'Column one title',
+          col1ButtonLabel: 'Original button',
+          col1ButtonStyle: 'blue',
+        }}
+        onSettingChange={onSettingChange}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Title'), {
+      target: { value: 'Buffered title draft' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Photo' }));
+
+    expect(onSettingChange).toHaveBeenCalledWith('col1Type', 'photo');
+    expect(onSettingChange).not.toHaveBeenCalledWith('col1Title', 'Buffered title draft');
   });
 });
