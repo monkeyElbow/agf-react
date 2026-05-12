@@ -2179,7 +2179,6 @@ const legacyChildPages = {
               'Minimum required payout of 5%',
               'Income may fluctuate from year to year',
             ],
-            actions: [{ label: 'Start the process', to: '#charitable-trusts-form' }],
             cardClass: 'trusts-type-card',
           },
           {
@@ -2189,10 +2188,55 @@ const legacyChildPages = {
               'Payment can be based on life expectancy or term of years',
               'Payments may begin immediately upon funding',
             ],
-            actions: [{ label: 'Start the process', to: '#charitable-trusts-form' }],
             cardClass: 'trusts-type-card',
           },
         ],
+      },
+      {
+        className: 'legacy-child-native-trusts-crt-trigger',
+        hideTitle: true,
+        hideCopy: true,
+        justify: 'center',
+        actions: [{
+          label: 'Start the process',
+          action: 'open_cta_form',
+          targetAnchorId: 'charitable-trusts-inline-form',
+          className: 'is-outline is-tone-atlantean',
+        }],
+      },
+      {
+        className: 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline',
+        anchorId: 'charitable-trusts-inline-form',
+        copyWrap: true,
+        title: 'Income and impact.',
+        titleHighlights: [
+          { text: 'and', className: 'is-atlantean' },
+          { text: 'impact', className: 'is-mango' },
+        ],
+        body: ['Let’s transform your generosity into a tax-saving, ministry-supporting win. Ready when you are.'],
+        form: {
+          displayMode: 'inline_reveal',
+          triggerMode: 'external',
+          fields: [
+            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+            {
+              id: 'trustProduct',
+              label: 'Trust product of interest*',
+              type: 'select',
+              required: true,
+              placeholder: 'Select one',
+              options: [
+                { value: 'charitable-remainder-trust', label: 'Charitable Remainder Trust' },
+                { value: 'charitable-lead-trust', label: 'Charitable Lead Trust' },
+              ],
+            },
+            { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
+          ],
+          submitLabel: 'Start planning',
+        },
       },
       {
         className: 'legacy-child-native-trusts-clt',
@@ -2239,8 +2283,6 @@ const legacyChildPages = {
         ],
         body: ['Let’s transform your generosity into a tax-saving, ministry-supporting win. Ready when you are.'],
         form: {
-          displayMode: 'inline_reveal',
-          triggerMode: 'external',
           fields: [
             { id: 'firstName', label: 'First Name*', type: 'text', required: true },
             { id: 'lastName', label: 'Last Name*', type: 'text', required: true },

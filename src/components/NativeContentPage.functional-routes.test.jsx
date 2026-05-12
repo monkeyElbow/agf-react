@@ -260,7 +260,7 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Thanks. We will reach out soon.')).toBeTruthy();
   });
 
-  it('reveals an external inline CTA shell from the charitable trusts card trigger', async () => {
+  it('reveals an external inline CTA shell from a single charitable trusts trigger while keeping the later form visible', async () => {
     render(
       <MemoryRouter>
         <NativeContentPage
@@ -272,18 +272,27 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.queryByRole('button', { name: 'Start planning' })).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(1);
+    expect(screen.queryByRole('link', { name: 'Start the process' })).toBeNull();
+    expect(document.querySelector('#charitable-trusts-inline-form')).toBeNull();
+    expect(document.querySelector('#charitable-trusts-form')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Start planning' })).toHaveLength(1);
 
-    fireEvent.click(screen.getAllByRole('link', { name: 'Start the process' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Start the process' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Start planning' })).toBeTruthy();
+      expect(document.querySelector('#charitable-trusts-inline-form')).toBeTruthy();
     });
 
-    const revealedSection = document.querySelector('#charitable-trusts-form');
+    const revealedSection = document.querySelector('#charitable-trusts-inline-form');
+    expect(document.querySelector('#charitable-trusts-form')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Start planning' })).toHaveLength(2);
     expect(revealedSection?.getAttribute('data-cta-display-mode')).toBe('inline_reveal');
     expect(revealedSection?.getAttribute('data-cta-trigger-mode')).toBe('external');
-    expect(window.scrollTo).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(window.scrollTo).toHaveBeenCalled();
+    });
   });
 
   it('keeps request-form pages on their existing visible hash-link flow', () => {

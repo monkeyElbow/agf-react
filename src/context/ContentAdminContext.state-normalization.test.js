@@ -427,7 +427,6 @@ describe('ContentAdminContext state normalization', () => {
     const normalized = normalizeStoredConfig({});
     const auditedRoutes = [
       ['/services/insurance', 'insurance-native-cta'],
-      ['/services/legacy-giving/charitable-trusts', 'legacy-child-native-cta legacy-child-native-trusts-cta'],
       ['/services/retirement/409a', 'retirement-child-native-cta'],
       ['/services/retirement/rollovers', 'retirement-rollovers-native-cta retirement-child-native-cta'],
     ];
@@ -444,13 +443,23 @@ describe('ContentAdminContext state normalization', () => {
     });
   });
 
-  it('keeps the charitable-trusts CTA seed fields aligned through the shared CTA max-field cap', () => {
+  it('keeps the charitable-trusts CTA seed fields and presentation settings aligned through the shared CTA max-field cap', () => {
     const normalized = normalizeStoredConfig({});
-    const charitableTrustsBlocks = normalized.blocksByPath['/services/legacy-giving/charitable-trusts'] || [];
-    const ctaBlock = charitableTrustsBlocks.find((block) => block?.kind === 'cta_form');
-    const fields = JSON.parse(String(ctaBlock?.settings?.fieldsJson || '[]'));
+    const charitableTrustsBlocks = (normalized.blocksByPath['/services/legacy-giving/charitable-trusts'] || [])
+      .filter((block) => block?.kind === 'cta_form');
+    const inlineCtaBlock = charitableTrustsBlocks.find((block) => (
+      block?.settings?.targetSectionClassName === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline'
+    ));
+    const fallbackCtaBlock = charitableTrustsBlocks.find((block) => (
+      block?.settings?.targetSectionClassName === 'legacy-child-native-cta legacy-child-native-trusts-cta'
+    ));
+    const fields = JSON.parse(String(inlineCtaBlock?.settings?.fieldsJson || '[]'));
 
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('legacy-child-native-cta legacy-child-native-trusts-cta');
+    expect(charitableTrustsBlocks).toHaveLength(2);
+    expect(inlineCtaBlock?.settings?.displayMode).toBe('inline_reveal');
+    expect(inlineCtaBlock?.settings?.triggerMode).toBe('external');
+    expect(fallbackCtaBlock?.settings?.displayMode).toBeUndefined();
+    expect(fallbackCtaBlock?.settings?.triggerMode).toBeUndefined();
     expect(fields.map((field) => field.id)).toEqual([
       'firstname',
       'lastname',
@@ -461,10 +470,50 @@ describe('ContentAdminContext state normalization', () => {
     ]);
   });
 
+  it('repairs stored charitable-trusts CTA blocks by restoring inline reveal presentation settings from the native seed', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/legacy-giving/charitable-trusts': [
+          {
+            id: 'cta_form',
+            kind: 'cta_form',
+            mode: 'dynamic',
+            settings: {
+              targetSectionKey: 'class:legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline',
+              targetSectionClassName: 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline',
+              title: 'Income and impact.',
+            },
+          },
+          {
+            id: 'cta_form_legacy_child_native_cta_legacy_child_native_trusts_cta',
+            kind: 'cta_form',
+            mode: 'dynamic',
+            settings: {
+              targetSectionKey: 'class:legacy-child-native-cta legacy-child-native-trusts-cta',
+              targetSectionClassName: 'legacy-child-native-cta legacy-child-native-trusts-cta',
+              title: 'Income and impact.',
+            },
+          },
+        ],
+      },
+    });
+
+    const charitableTrustsBlocks = (normalized.blocksByPath['/services/legacy-giving/charitable-trusts'] || [])
+      .filter((block) => block?.kind === 'cta_form');
+    const inlineCtaBlock = charitableTrustsBlocks.find((block) => block?.id === 'cta_form');
+    const fallbackCtaBlock = charitableTrustsBlocks.find((block) => (
+      block?.id === 'cta_form_legacy_child_native_cta_legacy_child_native_trusts_cta'
+    ));
+
+    expect(inlineCtaBlock?.settings?.displayMode).toBe('inline_reveal');
+    expect(inlineCtaBlock?.settings?.triggerMode).toBe('external');
+    expect(fallbackCtaBlock?.settings?.displayMode).toBeUndefined();
+    expect(fallbackCtaBlock?.settings?.triggerMode).toBeUndefined();
+  });
+
   it('drops stale request-form blocks from the other audited CTA-owned form routes and restores the CTA block', () => {
     const auditedRoutes = [
       ['/services/insurance', 'insurance-native-cta'],
-      ['/services/legacy-giving/charitable-trusts', 'legacy-child-native-cta legacy-child-native-trusts-cta'],
       ['/services/retirement/409a', 'retirement-child-native-cta'],
       ['/services/retirement/rollovers', 'retirement-rollovers-native-cta retirement-child-native-cta'],
     ];

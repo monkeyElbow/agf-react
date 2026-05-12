@@ -18515,6 +18515,16 @@
   gap: clamp(1rem, 3vw, 1.8rem);
 }
 
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger {
+  padding: 0 0 clamp(1.5rem, 3vw, 2.25rem);
+  background: #ffffff;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-action-row {
+  margin-top: 0;
+  justify-content: center;
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-trusts .trusts-type-card {
   border-radius: 9px;
   border: none;

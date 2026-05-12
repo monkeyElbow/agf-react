@@ -2859,6 +2859,8 @@ function buildDynamicCtaDefaultBlocksForPath(pathname, pageTitle, currentBlocks,
     existingIds.add(blockId);
 
     const inferredBgTone = inferCtaBgTone(section);
+    const displayMode = String(form?.displayMode || '').trim();
+    const triggerMode = String(form?.triggerMode || '').trim();
     const settings = {
       ...(clone.settings || {}),
       title: String(section?.title || form?.title || clone.settings?.title || '').trim() || clone.settings?.title || '',
@@ -2874,6 +2876,13 @@ function buildDynamicCtaDefaultBlocksForPath(pathname, pageTitle, currentBlocks,
       targetSectionClassName: String(section?.className || '').trim(),
       targetSectionIndex: sectionIndex,
     };
+
+    if (displayMode) {
+      settings.displayMode = displayMode;
+    }
+    if (triggerMode) {
+      settings.triggerMode = triggerMode;
+    }
 
     Object.assign(settings, buildCtaFormSettingsPatch({ fields: fieldList }));
 
@@ -3420,6 +3429,29 @@ export function normalizeStoredConfig(payload) {
               targetSectionKey: '',
               targetSectionClassName: '',
               targetSectionIndex: 0,
+            },
+          };
+        }
+      }
+      if (
+        storedKind === 'cta_form'
+        && storedMode === 'dynamic'
+        && defaultBlock
+      ) {
+        const defaultDisplayMode = String(defaultBlock?.settings?.displayMode || '').trim();
+        const defaultTriggerMode = String(defaultBlock?.settings?.triggerMode || '').trim();
+        const storedDisplayMode = String(nextStoredBlock?.settings?.displayMode || '').trim();
+        const storedTriggerMode = String(nextStoredBlock?.settings?.triggerMode || '').trim();
+        const needsDisplayMode = !storedDisplayMode && defaultDisplayMode;
+        const needsTriggerMode = !storedTriggerMode && defaultTriggerMode;
+
+        if (needsDisplayMode || needsTriggerMode) {
+          nextStoredBlock = {
+            ...nextStoredBlock,
+            settings: {
+              ...(nextStoredBlock?.settings || {}),
+              ...(needsDisplayMode ? { displayMode: defaultDisplayMode } : {}),
+              ...(needsTriggerMode ? { triggerMode: defaultTriggerMode } : {}),
             },
           };
         }
