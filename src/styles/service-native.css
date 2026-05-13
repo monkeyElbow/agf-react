@@ -18627,6 +18627,11 @@
   justify-content: center;
 }
 
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-action-row .service-native-btn,
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-action-row .service-native-btn:visited {
+  font-size: 1rem;
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-trusts .trusts-type-card {
   border-radius: 9px;
   border: none;
