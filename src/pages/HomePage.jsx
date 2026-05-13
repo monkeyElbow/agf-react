@@ -152,8 +152,8 @@ function HomeReturnAssistSearchPanel() {
       variant="return-assist"
       documents={documents}
       articles={articles}
-      placeholder="Return assist"
-      label="Return assist"
+      placeholder="What can we help you find?"
+      label="What can we help you find?"
       autoFocus
     />
   );

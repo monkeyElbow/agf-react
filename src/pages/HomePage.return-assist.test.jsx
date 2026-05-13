@@ -94,8 +94,8 @@ describe('HomePage return assist', () => {
 
     renderHomePage(['/']);
 
-    expect(await screen.findByRole('searchbox', { name: 'Return assist' })).toBeTruthy();
-    expect(screen.getByPlaceholderText('Return assist')).toBeTruthy();
+    expect(await screen.findByRole('searchbox', { name: "What can we help you find?" })).toBeTruthy();
+    expect(screen.getByPlaceholderText('What can we help you find?')).toBeTruthy();
   });
 
   it.each(serviceReturnPaths)('appears on home during the immediate return render from %s', async (servicePath) => {
@@ -104,7 +104,7 @@ describe('HomePage return assist', () => {
 
     renderHomePage(['/']);
 
-    expect(await screen.findByRole('searchbox', { name: 'Return assist' })).toBeTruthy();
+    expect(await screen.findByRole('searchbox', { name: "What can we help you find?" })).toBeTruthy();
   });
 
   it('stays hidden on repeated home renders after dismissal', async () => {
@@ -114,14 +114,14 @@ describe('HomePage return assist', () => {
 
     const firstRender = renderHomePage(['/']);
 
-    expect(await screen.findByRole('searchbox', { name: 'Return assist' })).toBeTruthy();
+    expect(await screen.findByRole('searchbox', { name: "What can we help you find?" })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss return assist' }));
-    expect(screen.queryByRole('searchbox', { name: 'Return assist' })).toBeNull();
+    expect(screen.queryByRole('searchbox', { name: "What can we help you find?" })).toBeNull();
 
     firstRender.unmount();
     renderHomePage(['/']);
 
-    expect(screen.queryByRole('searchbox', { name: 'Return assist' })).toBeNull();
+    expect(screen.queryByRole('searchbox', { name: "What can we help you find?" })).toBeNull();
   });
 
   it('does not alter the main hero when shown', async () => {
@@ -131,7 +131,7 @@ describe('HomePage return assist', () => {
 
     renderHomePage(['/']);
 
-    expect(await screen.findByRole('searchbox', { name: 'Return assist' })).toBeTruthy();
+    expect(await screen.findByRole('searchbox', { name: "What can we help you find?" })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Explore investments' })).toBeTruthy();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
@@ -142,7 +142,7 @@ describe('HomePage return assist', () => {
     recordHomeReturnAssistNavigation('/', now + 200);
 
     renderHomePage(['/']);
-    const searchInput = await screen.findByRole('searchbox', { name: 'Return assist' });
+    const searchInput = await screen.findByRole('searchbox', { name: "What can we help you find?" });
 
     fireEvent.change(searchInput, { target: { value: 'rates' } });
 
