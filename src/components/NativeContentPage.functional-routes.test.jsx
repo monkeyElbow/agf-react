@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NativeContentPage from './NativeContentPage';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 
 let mockPageHierarchy = {};
 let mockBlocksByPath = {};
@@ -112,6 +113,11 @@ describe('NativeContentPage functional routes', () => {
         path: '/services/legacy-giving/generosity-fund',
         title: 'Generosity Fund',
         section: 'Services',
+      },
+      '/services/retirement/403b': {
+        path: '/services/retirement/403b',
+        title: '403(b)',
+        section: 'Retirement',
       },
       '/prospectus': {
         path: '/prospectus',
@@ -312,6 +318,34 @@ describe('NativeContentPage functional routes', () => {
       : false).toBe(true);
     expect(comparisonSection?.id).toBe('charitable-giving-plan-comparison');
     expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
+  });
+
+  it('renders the 403(b) online contributions block on the intended retirement feature preset', () => {
+    mockBlocksByPath = {
+      '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
+        .filter((block) => block?.mode !== 'static'),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/403b',
+            title: '403(b)',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const heading = screen.getByRole('heading', { name: 'Online Contributions' });
+    const section = heading.closest('section');
+    const button = screen.getByRole('link', { name: 'Submit contributions' });
+
+    expect(section?.className).toContain('native-dynamic-columns');
+    expect(section?.className).toContain('is-columns-preset-do-the-math');
+    expect(section?.className).toContain('is-columns-style-retirement');
+    expect(screen.queryByText('Column 2')).toBeNull();
+    expect(button.className).toContain('service-native-btn');
   });
 
   it('reveals an external inline CTA shell from a single centered charitable trusts trigger while keeping the later form visible', async () => {

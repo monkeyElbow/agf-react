@@ -206,7 +206,7 @@ describe('content block blueprint coverage', () => {
     expect(loanApplyBlock?.settings?.card2ButtonPageRef).toBe('');
     expect(String(loanApplyBlock?.settings?.card3Body || '')).toContain('Loan Services > Loan Modeling/Request');
     expect(onlineContributionsBlock?.mode).toBe('dynamic');
-    expect(onlineContributionsBlock?.presetId).toBe('default');
+    expect(onlineContributionsBlock?.presetId).toBe('do-the-math');
     expect(onlineContributionsBlock?.settings?.col1Title).toBe('Online Contributions');
     expect(onlineContributionsBlock?.settings?.col1ButtonUrl).toBe('/online-contributions');
   });

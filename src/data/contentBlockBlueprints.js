@@ -839,6 +839,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     createDynamicColumnsBlueprint({
       id: 'online_contributions',
       name: 'Online Contributions',
+      presetId: 'do-the-math',
       settings: {
         title: '',
         leadLine: '',

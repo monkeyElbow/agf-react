@@ -1077,7 +1077,7 @@ function buildDynamicColumnsSection(block, pathname) {
     .map((item) => ({
       slot: item.slot,
       type: isLegacyHighlight ? 'text' : item.type,
-      title: item.title || `Column ${item.slot}`,
+      title: item.title || '',
       body: !isLegacyHighlight && item.body ? [item.body] : [],
       image: !isLegacyHighlight ? (item.imageUrl || '') : '',
       imageAlt: !isLegacyHighlight ? (item.imageAlt || '') : '',
