@@ -533,6 +533,49 @@ describe('ContentAdminContext state normalization', () => {
           ],
         },
       });
+  it('repairs stale generosity fund hero hash actions into the inline CTA reveal trigger', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/legacy-giving/generosity-fund': [
+          {
+            id: 'hero',
+            kind: 'hero',
+            mode: 'dynamic',
+            settings: {
+              line1Text: 'Your giving.',
+              line2Text: 'Managed.',
+              button1Label: 'Open a Generosity Fund®',
+              button1Url: 'https://secure.agfinancial.org/generosityfund/signup',
+              button2Label: 'Open a traditional DAF',
+              button2Url: '#traditional-daf-form',
+              button2PageRef: '',
+              button2Action: undefined,
+              button2TargetAnchorId: undefined,
+              button2TargetBlockId: undefined,
+              button2Style: 'outline',
+              button2Tone: 'super-grey',
+            },
+          },
+        ],
+      },
+    });
+
+    const heroBlock = (normalized.blocksByPath['/services/legacy-giving/generosity-fund'] || [])
+      .find((block) => block?.id === 'hero');
+
+    expect(heroBlock?.settings?.button2Action).toBe('open_cta_form');
+    expect(heroBlock?.settings?.button2TargetAnchorId).toBe('traditional-daf-inline-form');
+    expect(heroBlock?.settings?.button2TargetBlockId).toBe('');
+    expect(heroBlock?.settings?.button2Url).toBe('');
+    expect(heroBlock?.settings?.button2PageRef).toBe('');
+    expect(heroBlock?.settings?.button1Url).toBe('https://secure.agfinancial.org/generosityfund/signup');
+    expect(heroBlock?.editableFields?.map((field) => field?.id)).toEqual(expect.arrayContaining([
+      'button2Action',
+      'button2TargetAnchorId',
+      'button2TargetBlockId',
+    ]));
+  });
+
 
       const blocks = normalized.blocksByPath[pathname] || [];
       const ctaBlock = blocks.find((block) => block?.kind === 'cta_form');

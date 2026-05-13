@@ -7,7 +7,7 @@ import {
   DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
   DEFAULT_HERO_TITLE_SIZE_REM,
 } from '../../lib/heroTitleSize';
-import { validateLegacyLinkFieldGroups } from '../../lib/linkValue';
+import { validateLegacyActionFieldGroup } from '../../lib/linkValue';
 
 const HERO_LINE_TONE_OPTIONS = [
   { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
@@ -41,20 +41,33 @@ const HERO_BACKGROUND_OPTIONS = [
   { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
 ];
 
+const HERO_ACTION_TYPE_OPTIONS = [
+  { value: '', label: 'Link action' },
+  { value: 'open_cta_form', label: 'Reveal CTA form' },
+];
+
+function validateHeroAction(settings, buttonNumber) {
+  const label = String(settings?.[`button${buttonNumber}Label`] || '').trim();
+  const explicitAction = String(settings?.[`button${buttonNumber}Action`] || '').trim();
+  const targetAnchorId = String(settings?.[`button${buttonNumber}TargetAnchorId`] || '').trim();
+  const targetBlockId = String(settings?.[`button${buttonNumber}TargetBlockId`] || '').trim();
+  const hasExplicitTarget = Boolean(targetAnchorId || targetBlockId);
+
+  if (explicitAction || hasExplicitTarget) {
+    return Boolean(label && explicitAction && hasExplicitTarget);
+  }
+
+  return validateLegacyActionFieldGroup(settings, {
+    labelKeys: [`button${buttonNumber}Label`],
+    hrefKeys: [`button${buttonNumber}Url`],
+    toKeys: [`button${buttonNumber}PageRef`],
+    openInNewWindowKeys: [`button${buttonNumber}OpenInNewWindow`],
+  });
+}
+
 function validateHeroLinks(block) {
   const settings = block?.settings || {};
-  return validateLegacyLinkFieldGroups(settings, [
-    {
-      hrefKeys: ['button1Url'],
-      toKeys: ['button1PageRef'],
-      openInNewWindowKeys: ['button1OpenInNewWindow'],
-    },
-    {
-      hrefKeys: ['button2Url'],
-      toKeys: ['button2PageRef'],
-      openInNewWindowKeys: ['button2OpenInNewWindow'],
-    },
-  ]);
+  return [1, 2].every((buttonNumber) => validateHeroAction(settings, buttonNumber));
 }
 
 const sections = [
@@ -135,22 +148,40 @@ const sections = [
     title: 'Actions',
     surfaces: ['hud', 'admin'],
     fields: [
-      ...[1, 2].flatMap((buttonNumber) => defineTransitionalActionFields({
-        labelId: `button${buttonNumber}Label`,
-        labelLabel: `Button ${buttonNumber} label`,
-        hrefId: `button${buttonNumber}Url`,
-        hrefLabel: `Button ${buttonNumber} URL`,
-        toId: `button${buttonNumber}PageRef`,
-        toLabel: `Button ${buttonNumber} internal page path`,
-        openInNewWindowId: `button${buttonNumber}OpenInNewWindow`,
-        openInNewWindowLabel: `Button ${buttonNumber} opens in new window`,
-        styleId: `button${buttonNumber}Style`,
-        styleLabel: `Button ${buttonNumber} style`,
-        styleOptions: HERO_BUTTON_STYLE_OPTIONS,
-        toneId: `button${buttonNumber}Tone`,
-        toneLabel: `Button ${buttonNumber} color`,
-        toneOptions: HERO_BUTTON_TONE_OPTIONS,
-      })),
+      ...[1, 2].flatMap((buttonNumber) => ([
+        ...defineTransitionalActionFields({
+          labelId: `button${buttonNumber}Label`,
+          labelLabel: `Button ${buttonNumber} label`,
+          hrefId: `button${buttonNumber}Url`,
+          hrefLabel: `Button ${buttonNumber} URL`,
+          toId: `button${buttonNumber}PageRef`,
+          toLabel: `Button ${buttonNumber} internal page path`,
+          openInNewWindowId: `button${buttonNumber}OpenInNewWindow`,
+          openInNewWindowLabel: `Button ${buttonNumber} opens in new window`,
+          styleId: `button${buttonNumber}Style`,
+          styleLabel: `Button ${buttonNumber} style`,
+          styleOptions: HERO_BUTTON_STYLE_OPTIONS,
+          toneId: `button${buttonNumber}Tone`,
+          toneLabel: `Button ${buttonNumber} color`,
+          toneOptions: HERO_BUTTON_TONE_OPTIONS,
+        }),
+        defineEditorField({
+          id: `button${buttonNumber}Action`,
+          label: `Button ${buttonNumber} action type`,
+          type: 'select',
+          options: HERO_ACTION_TYPE_OPTIONS,
+        }),
+        defineEditorField({
+          id: `button${buttonNumber}TargetAnchorId`,
+          label: `Button ${buttonNumber} target anchor ID`,
+          type: 'text',
+        }),
+        defineEditorField({
+          id: `button${buttonNumber}TargetBlockId`,
+          label: `Button ${buttonNumber} target block ID`,
+          type: 'text',
+        }),
+      ])),
     ],
   },
 ];

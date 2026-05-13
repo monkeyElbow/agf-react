@@ -1392,13 +1392,20 @@ function getStaticHeroDefaultsForPath(pathname) {
         .slice(0, 2)
         .map((action) => ({
           label: String(action?.label || '').trim(),
+          action: String(action?.action || '').trim(),
+          targetAnchorId: String(action?.targetAnchorId || '').trim(),
+          targetBlockId: String(action?.targetBlockId || '').trim(),
           pageRef: String(action?.to || '').trim(),
           url: String(action?.href || '').trim(),
           style: String(action?.style || (action?.ghost ? 'outline' : '') || '').trim(),
           tone: String(action?.tone || '').trim(),
           openInNewWindow: Boolean(action?.openInNewWindow),
         }))
-        .filter((action) => action.label && (action.pageRef || action.url)),
+        .filter((action) => action.label && (
+          action.pageRef
+          || action.url
+          || (action.action && (action.targetAnchorId || action.targetBlockId))
+        )),
       lines,
     };
   } catch {
@@ -1413,6 +1420,9 @@ function withDefaultHeroActions(settings, defaults) {
   defaultActions.forEach((action, index) => {
     const buttonNumber = index + 1;
     const labelKey = `button${buttonNumber}Label`;
+    const actionKey = `button${buttonNumber}Action`;
+    const targetAnchorIdKey = `button${buttonNumber}TargetAnchorId`;
+    const targetBlockIdKey = `button${buttonNumber}TargetBlockId`;
     const pageRefKey = `button${buttonNumber}PageRef`;
     const urlKey = `button${buttonNumber}Url`;
     const styleKey = `button${buttonNumber}Style`;
@@ -1429,6 +1439,15 @@ function withDefaultHeroActions(settings, defaults) {
         next[urlKey] = action.url;
       }
     }
+    if (!String(next[actionKey] || '').trim() && action.action) {
+      next[actionKey] = action.action;
+    }
+    if (!String(next[targetAnchorIdKey] || '').trim() && action.targetAnchorId) {
+      next[targetAnchorIdKey] = action.targetAnchorId;
+    }
+    if (!String(next[targetBlockIdKey] || '').trim() && action.targetBlockId) {
+      next[targetBlockIdKey] = action.targetBlockId;
+    }
     if (!String(next[styleKey] || '').trim() && action.style) {
       next[styleKey] = action.style;
     }
@@ -1439,6 +1458,35 @@ function withDefaultHeroActions(settings, defaults) {
       next[openKey] = Boolean(action.openInNewWindow);
     }
   });
+
+  return next;
+}
+
+function normalizeGenerosityFundHeroSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+  const next = { ...settings };
+  const button2Label = String(next.button2Label || '').trim();
+  const button2Url = String(next.button2Url || '').trim();
+  const button2PageRef = String(next.button2PageRef || '').trim();
+  const button2Action = String(next.button2Action || '').trim();
+  const button2TargetAnchorId = String(next.button2TargetAnchorId || '').trim();
+  const hasLegacyTraditionalDafHash = (
+    button2Label === 'Open a traditional DAF'
+    && (button2Url === '#traditional-daf-form' || button2PageRef === '#traditional-daf-form')
+  );
+
+  if (hasLegacyTraditionalDafHash || (
+    button2Label === 'Open a traditional DAF'
+    && !button2Action
+    && !button2TargetAnchorId
+  )) {
+    next.button2Action = 'open_cta_form';
+    next.button2TargetAnchorId = 'traditional-daf-inline-form';
+    next.button2TargetBlockId = '';
+    next.button2Url = '';
+    next.button2PageRef = '';
+    next.button2OpenInNewWindow = false;
+  }
 
   return next;
 }
@@ -1669,6 +1717,10 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
   });
 
   next = withDefaultHeroActions(next, staticHeroDefaults);
+
+  if (pathname === '/services/legacy-giving/generosity-fund') {
+    next = normalizeGenerosityFundHeroSettings(next);
+  }
 
   return next;
 }

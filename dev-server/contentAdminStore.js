@@ -3,6 +3,7 @@ import path from 'node:path';
 import { normalizePresetBearingBlocks } from '../src/lib/blockPresetIdentity.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
+const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/legacy-giving/generosity-fund';
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -87,7 +88,7 @@ function normalizeSharedState(rawState) {
     blocksByPath: Object.fromEntries(
       Object.entries(source.blocksByPath || {}).map(([pathname, blocks]) => [
         pathname,
-        normalizePageBlocksState(blocks),
+        normalizePageBlocksState(pathname, blocks),
       ]),
     ),
     pathAliases: cloneJson(source.pathAliases || {}),
@@ -388,9 +389,51 @@ function aliasesForPath(pathAliases, pathname) {
   return entries;
 }
 
-function normalizePageBlocksState(blocks) {
+function normalizeGenerosityFundHeroSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+  const next = { ...settings };
+  const button2Label = String(next.button2Label || '').trim();
+  const button2Url = String(next.button2Url || '').trim();
+  const button2PageRef = String(next.button2PageRef || '').trim();
+  const button2Action = String(next.button2Action || '').trim();
+  const button2TargetAnchorId = String(next.button2TargetAnchorId || '').trim();
+  const hasLegacyTraditionalDafHash = (
+    button2Label === 'Open a traditional DAF'
+    && (button2Url === '#traditional-daf-form' || button2PageRef === '#traditional-daf-form')
+  );
+
+  if (hasLegacyTraditionalDafHash || (
+    button2Label === 'Open a traditional DAF'
+    && !button2Action
+    && !button2TargetAnchorId
+  )) {
+    next.button2Action = 'open_cta_form';
+    next.button2TargetAnchorId = 'traditional-daf-inline-form';
+    next.button2TargetBlockId = '';
+    next.button2Url = '';
+    next.button2PageRef = '';
+    next.button2OpenInNewWindow = false;
+  }
+
+  return next;
+}
+
+function normalizePageBlockState(pathname, block) {
+  const nextBlock = cloneJson(block);
+  if (
+    pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH
+    && String(nextBlock?.id || '').trim() === 'hero'
+    && String(nextBlock?.kind || '').trim().toLowerCase() === 'hero'
+    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+  ) {
+    nextBlock.settings = normalizeGenerosityFundHeroSettings(nextBlock?.settings);
+  }
+  return nextBlock;
+}
+
+function normalizePageBlocksState(pathname, blocks) {
   return normalizePresetBearingBlocks(
-    (Array.isArray(blocks) ? blocks : []).map((block) => cloneJson(block)),
+    (Array.isArray(blocks) ? blocks : []).map((block) => normalizePageBlockState(pathname, block)),
   );
 }
 
@@ -408,8 +451,8 @@ function summarizePageAuthoringDiff(currentState, baselineState, pathname) {
 
   const current = normalizeSharedState(currentState);
   const baseline = normalizeSharedState(baselineState);
-  const currentBlocks = normalizePageBlocksState(current.blocksByPath?.[normalizedPath]);
-  const baselineBlocks = normalizePageBlocksState(baseline.blocksByPath?.[normalizedPath]);
+  const currentBlocks = normalizePageBlocksState(normalizedPath, current.blocksByPath?.[normalizedPath]);
+  const baselineBlocks = normalizePageBlocksState(normalizedPath, baseline.blocksByPath?.[normalizedPath]);
   const currentBlockIds = currentBlocks.map((block) => String(block?.id || '').trim()).filter(Boolean);
   const baselineBlockIds = baselineBlocks.map((block) => String(block?.id || '').trim()).filter(Boolean);
   const orderedBlockIds = [...new Set([...currentBlockIds, ...baselineBlockIds])];

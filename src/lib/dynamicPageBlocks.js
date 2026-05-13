@@ -1965,24 +1965,40 @@ export function buildDynamicHeroFromBlock(block) {
     return null;
   }
 
-  const actions = [
-    buildCanonicalActionLinkFromFields(settings, {
-      labelKeys: ['button1Label'],
-      hrefKeys: ['button1Url'],
-      toKeys: ['button1PageRef'],
-      styleKeys: ['button1Style'],
-      toneKeys: ['button1Tone'],
-      openInNewWindowKeys: ['button1OpenInNewWindow'],
-    }),
-    buildCanonicalActionLinkFromFields(settings, {
-      labelKeys: ['button2Label'],
-      hrefKeys: ['button2Url'],
-      toKeys: ['button2PageRef'],
-      styleKeys: ['button2Style'],
-      toneKeys: ['button2Tone'],
-      openInNewWindowKeys: ['button2OpenInNewWindow'],
-    }),
-  ].filter(Boolean);
+  const actions = [1, 2]
+    .map((buttonNumber) => {
+      const explicitAction = readFirstStringValue(settings, [`button${buttonNumber}Action`]);
+      const targetAnchorId = readFirstStringValue(settings, [`button${buttonNumber}TargetAnchorId`]);
+      const targetBlockId = readFirstStringValue(settings, [`button${buttonNumber}TargetBlockId`]);
+      const linkedAction = buildCanonicalActionLinkFromFields(settings, {
+        labelKeys: [`button${buttonNumber}Label`],
+        hrefKeys: [`button${buttonNumber}Url`],
+        toKeys: [`button${buttonNumber}PageRef`],
+        styleKeys: [`button${buttonNumber}Style`],
+        toneKeys: [`button${buttonNumber}Tone`],
+        openInNewWindowKeys: [`button${buttonNumber}OpenInNewWindow`],
+      });
+
+      if (linkedAction) {
+        return linkedAction;
+      }
+
+      const label = readFirstStringValue(settings, [`button${buttonNumber}Label`]);
+      if (!label || !explicitAction || (!targetAnchorId && !targetBlockId)) {
+        return null;
+      }
+
+      return {
+        label,
+        action: explicitAction,
+        targetAnchorId,
+        targetBlockId,
+        style: readFirstStringValue(settings, [`button${buttonNumber}Style`]),
+        tone: readFirstStringValue(settings, [`button${buttonNumber}Tone`]),
+        openInNewWindow: false,
+      };
+    })
+    .filter(Boolean);
 
   const justifyToken = String(settings.justify || 'center').trim().toLowerCase();
   const justify = justifyToken === 'left' || justifyToken === 'right' ? justifyToken : 'center';

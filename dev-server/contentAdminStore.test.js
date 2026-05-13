@@ -150,6 +150,47 @@ function buildPresetSeedState() {
   };
 }
 
+function buildGenerosityFundSeedState() {
+  return {
+    pageHierarchy: {
+      '/services/legacy-giving/generosity-fund': {
+        path: '/services/legacy-giving/generosity-fund',
+        title: 'Generosity Fund',
+      },
+    },
+    blocksByPath: {
+      '/services/legacy-giving/generosity-fund': [
+        {
+          id: 'hero',
+          kind: 'hero',
+          mode: 'dynamic',
+          settings: {
+            line1Text: 'Your giving.',
+            line2Text: 'Managed.',
+            button1Label: 'Open a Generosity Fund®',
+            button1Url: 'https://secure.agfinancial.org/generosityfund/signup',
+            button2Label: 'Open a traditional DAF',
+            button2Url: '#traditional-daf-form',
+            button2PageRef: '',
+            button2Action: undefined,
+            button2TargetAnchorId: undefined,
+            button2TargetBlockId: undefined,
+            button2Style: 'outline',
+            button2Tone: 'super-grey',
+          },
+        },
+      ],
+    },
+    pathAliases: {},
+    collaborationByPath: {
+      '/services/legacy-giving/generosity-fund': {
+        blocks: {},
+        history: [],
+      },
+    },
+  };
+}
+
 function createStore(persistenceFile) {
   return createDevContentAuthorityStore({
     persistenceFile,
@@ -245,6 +286,27 @@ describe('createDevContentAuthorityStore', () => {
     expect(valueCards.presetId).toBe('value-cards');
     expect(investorCta.presetId).toBe('dashboard-login');
     expect(loanApply.presetId).toBe('step-cards');
+  });
+
+  it('repairs the stale generosity fund hero CTA fields in shared snapshots', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+
+    store.resetFromSeed(buildGenerosityFundSeedState(), { actor: createActor() });
+
+    const heroBlock = store.getSnapshot().state.blocksByPath['/services/legacy-giving/generosity-fund'][0];
+    expect(heroBlock.settings.button1Url).toBe('https://secure.agfinancial.org/generosityfund/signup');
+    expect(heroBlock.settings.button2Url).toBe('');
+    expect(heroBlock.settings.button2PageRef).toBe('');
+    expect(heroBlock.settings.button2Action).toBe('open_cta_form');
+    expect(heroBlock.settings.button2TargetAnchorId).toBe('traditional-daf-inline-form');
+    expect(heroBlock.settings.button2TargetBlockId).toBe('');
+
+    const reloaded = createStore(persistenceFile);
+    const reloadedHero = reloaded.getSnapshot().state.blocksByPath['/services/legacy-giving/generosity-fund'][0];
+    expect(reloadedHero.settings.button2Url).toBe('');
+    expect(reloadedHero.settings.button2Action).toBe('open_cta_form');
+    expect(reloadedHero.settings.button2TargetAnchorId).toBe('traditional-daf-inline-form');
   });
 
   it('restoring a page revision creates new current draft state without mutating the old revision', () => {
