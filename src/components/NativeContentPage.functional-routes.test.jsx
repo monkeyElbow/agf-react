@@ -227,6 +227,35 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getAllByText('Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.')).toHaveLength(1);
   });
 
+  it('renders charitable gift annuities from explicit managed blocks without a fallback page-content section', () => {
+    mockBlocksByPath = {
+      '/services/legacy-giving/charitable-gift-annuities': (
+        contentBlockBlueprintsByPath['/services/legacy-giving/charitable-gift-annuities'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving/charitable-gift-annuities',
+            title: 'Charitable Gift Annuities',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(container.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(container.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(container.querySelector('.legacy-child-native-cga-request.native-dynamic-request')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Generous.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Tax benefits\.\s+Ministry support\.\s+Payments for life\./ })).toBeTruthy();
+  });
+
   it('renders the careers route through NativeContentPage with delegated jobs behavior intact', () => {
     mockVisibleJobs = [
       {

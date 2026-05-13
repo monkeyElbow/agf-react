@@ -364,6 +364,39 @@ describe('ContentAdminContext state normalization', () => {
     expect(retirement403bBlocks.some((block) => block?.kind === 'cta_form')).toBe(true);
   });
 
+  it('seeds charitable gift annuities with explicit managed blocks and no fallback page content', () => {
+    const normalized = normalizeStoredConfig({});
+    const annuitiesBlocks = normalized.blocksByPath['/services/legacy-giving/charitable-gift-annuities'] || [];
+
+    expect(annuitiesBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(annuitiesBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(annuitiesBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(annuitiesBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form' && block?.mode === 'dynamic')).toBe(true);
+    expect(annuitiesBlocks.some((block) => block?.id === 'outro' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
+  });
+
+  it('drops stale charitable gift annuities page-content blocks from stored config', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/legacy-giving/charitable-gift-annuities': [
+          {
+            id: 'page_content',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: '<p>Old legacy content</p>',
+            },
+          },
+        ],
+      },
+    });
+
+    const annuitiesBlocks = normalized.blocksByPath['/services/legacy-giving/charitable-gift-annuities'] || [];
+
+    expect(annuitiesBlocks.some((block) => block?.id === 'page_content')).toBe(false);
+    expect(annuitiesBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+  });
+
   it('seeds calculators with a request-form block instead of a CTA block', () => {
     const normalized = normalizeStoredConfig({});
     const calculatorBlocks = normalized.blocksByPath['/calculators'] || [];

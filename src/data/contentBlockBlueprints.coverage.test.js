@@ -89,6 +89,37 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
+  it('seeds charitable gift annuities with explicit managed blocks instead of fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/legacy-giving/charitable-gift-annuities'] || [];
+    const requestBlock = blocks.find((block) => block?.id === 'request_form');
+    const outroBlock = blocks.find((block) => block?.id === 'outro' && block?.mode === 'dynamic');
+
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'how_it_works' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'gift_assets' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'qcd_fineprint' && block?.kind === 'legal_copy' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'annuity_options' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(requestBlock).toMatchObject({
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'Your gifts are more powerful than you think.',
+        targetSectionClassName: 'legacy-child-native-cga-request',
+      },
+    });
+    expect(outroBlock).toMatchObject({
+      kind: 'billboard',
+      settings: {
+        title: 'Plenty of options.',
+        targetSectionClassName: 'legacy-child-native-cga-outro',
+      },
+    });
+  });
+
   it('seeds calculators with an explicit request-form block alongside managed page content', () => {
     const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
     const requestBlock = blocks.find((block) => block?.id === 'request_form');

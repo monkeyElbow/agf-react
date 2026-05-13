@@ -3302,6 +3302,12 @@ export function normalizeStoredConfig(payload) {
         return;
       }
       if (
+        path === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
+        && isPageContentBlock(storedBlock)
+      ) {
+        return;
+      }
+      if (
         path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH
         && isPageContentBlock(storedBlock)
       ) {
