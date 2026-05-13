@@ -3313,6 +3313,13 @@ export function normalizeStoredConfig(payload) {
       ) {
         return;
       }
+      if (
+        (path === RETIREMENT_403B_PATH || path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH)
+        && storedBlock.id === 'intro'
+        && storedKind === 'intro'
+      ) {
+        return;
+      }
       if (path === '/rates' && storedBlock.id === 'disclaimer' && storedKind === 'legal_copy') {
         return;
       }

@@ -329,8 +329,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(heroBlock).toBeTruthy();
     expect(heroBlock?.mode).toBe('dynamic');
     expect(heroBlock?.settings?.justify).toBe('right');
-    expect(introBlock?.settings?.bgTone).toBe('sand');
-    expect(introBlock?.settings?.textTone).toBe('dark');
+    expect(introBlock).toBeUndefined();
     expect(requestBlock).toBeUndefined();
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock.mode).toBe('dynamic');
@@ -723,7 +722,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(String(pageContentBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
   });
 
-  it('refreshes the stored 403(b) intro block to the sand treatment from native defaults', () => {
+  it('drops stale stored 403(b) intro blocks so the native intro stays authoritative', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -745,8 +744,7 @@ describe('ContentAdminContext state normalization', () => {
     const introBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
       .find((block) => block?.id === 'intro' && block?.kind === 'intro');
 
-    expect(introBlock?.settings?.bgTone).toBe('sand');
-    expect(introBlock?.settings?.textTone).toBe('dark');
+    expect(introBlock).toBeUndefined();
   });
 
   it('strips stale stored intro buttons from group term life insurance', () => {
@@ -788,10 +786,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.button2OpenInNewWindow).toBe(false);
   });
 
-  it('refreshes stale 403(b) individual enrollment intro blocks from the current native summary callout', () => {
-    const defaultIntroBlock = (normalizeStoredConfig({}).blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [])
-      .find((block) => block?.id === 'intro');
-
+  it('drops stale 403(b) individual enrollment intro blocks so the native summary callout stays authoritative', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b/403b-individual-enrollment': [
@@ -813,16 +808,10 @@ describe('ContentAdminContext state normalization', () => {
     const introBlock = (normalized.blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [])
       .find((block) => block?.id === 'intro');
 
-    expect(introBlock?.settings?.heading).toBe(defaultIntroBlock?.settings?.heading);
-    expect(introBlock?.settings?.bodyHtml).toBe(defaultIntroBlock?.settings?.bodyHtml);
-    expect(introBlock?.settings?.button1Label).toBe(defaultIntroBlock?.settings?.button1Label);
-    expect(introBlock?.settings?.button1Url).toBe(defaultIntroBlock?.settings?.button1Url);
+    expect(introBlock).toBeUndefined();
   });
 
-  it('replaces the leaked loans intro seed on 403(b) individual enrollment with the route-native summary intro', () => {
-    const defaultIntroBlock = (normalizeStoredConfig({}).blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [])
-      .find((block) => block?.id === 'intro');
-
+  it('drops leaked loans intro blocks from 403(b) individual enrollment', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b/403b-individual-enrollment': [
@@ -845,10 +834,7 @@ describe('ContentAdminContext state normalization', () => {
     const introBlock = (normalized.blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [])
       .find((block) => block?.id === 'intro');
 
-    expect(introBlock?.settings?.heading).toBe(defaultIntroBlock?.settings?.heading);
-    expect(introBlock?.settings?.bodyHtml).toBe(defaultIntroBlock?.settings?.bodyHtml);
-    expect(introBlock?.settings?.button1Label).toBe(defaultIntroBlock?.settings?.button1Label);
-    expect(introBlock?.settings?.button1Url).toBe(defaultIntroBlock?.settings?.button1Url);
+    expect(introBlock).toBeUndefined();
   });
 
   it('drops stale generic page-content blocks from 403(b) individual enrollment', () => {
@@ -869,7 +855,8 @@ describe('ContentAdminContext state normalization', () => {
 
     const blocks = normalized.blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [];
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
-    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro')).toBe(false);
+    expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
   });
 
   it('drops the stale enrollment-help billboard from 403(b) individual enrollment and restores the request form block', () => {
