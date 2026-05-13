@@ -996,6 +996,36 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       ],
     });
   });
+
+  it('maps the legacy giving stewardship story to its reviewed runtime and preserves the targeted native section key', () => {
+    const runtime = buildDynamicSiteFeatureFromBlock({
+      id: 'stewardship_story',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'legacy_giving_stewardship_story',
+        targetSectionKey: 'id:legacy-giving-stewardship-story',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      type: 'site_feature',
+      featureId: 'legacy_giving_stewardship_story',
+      runtimeKey: 'legacy_giving_stewardship_story',
+      targetSectionKey: 'id:legacy-giving-stewardship-story',
+      title: 'Smart stewardship—for today and tomorrow.',
+      beats: [
+        'Generate more retirement income',
+        'Transition out of appreciated assets',
+        'Leave a legacy for family and ministry',
+        'Smart stewardship—for today and tomorrow.',
+      ],
+      action: {
+        label: 'Learn more',
+        to: '#charitable-giving-plan-comparison',
+      },
+    });
+  });
 });
 
 describe('buildDynamicSplitPanelFromBlock', () => {

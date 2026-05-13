@@ -115,4 +115,24 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.getByLabelText('CTA URL / Path override')).toBeTruthy();
     expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
   });
+
+  it('keeps the legacy giving stewardship story editor surface limited to headline and CTA overrides', () => {
+    render(
+      createElement(SiteFeatureBlockEditor, {
+        block: createBlock({
+          settings: {
+            featureId: 'legacy_giving_stewardship_story',
+          },
+        }),
+        onSettingChange: vi.fn(),
+        routeOptions: [],
+      }),
+    );
+
+    expect(screen.getByLabelText('Headline override')).toBeTruthy();
+    expect(screen.queryByLabelText('Body override')).toBeNull();
+    expect(screen.getByLabelText('CTA label override')).toBeTruthy();
+    expect(screen.getByLabelText('CTA URL / Path override')).toBeTruthy();
+    expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
+  });
 });

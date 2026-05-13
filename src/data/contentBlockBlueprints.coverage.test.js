@@ -114,9 +114,20 @@ describe('content block blueprint coverage', () => {
   });
 
   it('seeds explicit managed blocks for endowments, generosity fund, and IRAs without fallback page content', () => {
+    const legacyGivingBlocks = contentBlockBlueprintsByPath['/services/legacy-giving'] || [];
     const endowmentBlocks = contentBlockBlueprintsByPath['/services/legacy-giving/endowments'] || [];
     const generosityBlocks = contentBlockBlueprintsByPath['/services/legacy-giving/generosity-fund'] || [];
     const iraBlocks = contentBlockBlueprintsByPath['/services/retirement/iras'] || [];
+
+    expect(legacyGivingBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(true);
+    expect(legacyGivingBlocks.find((block) => block?.id === 'stewardship_story')).toMatchObject({
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'legacy_giving_stewardship_story',
+        targetSectionKey: 'id:legacy-giving-stewardship-story',
+      },
+    });
 
     expect(endowmentBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(endowmentBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);

@@ -69,6 +69,7 @@ import IncreasedContributionCalculatorWidget from './IncreasedContributionCalcul
 import NetWorthCalculatorWidget from './NetWorthCalculatorWidget';
 import FrontHudPanelShell from './FrontHudPanelShell';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from './HeroHudEditorShared';
+import LegacyGivingStewardshipStoryFeature from './LegacyGivingStewardshipStoryFeature';
 import DynamicRequestFormSection from './DynamicRequestFormSection';
 import FrontHudAnchorTag from './FrontHudAnchorTag';
 import NewsletterSignupForm from './NewsletterSignupForm';
@@ -1287,7 +1288,9 @@ function buildDynamicSiteFeatureSection(block, pathname) {
   return {
     id: `${pathname}-dynamic-site-feature-${String(block.id || 'site-feature').trim() || 'site-feature'}`,
     blockId: String(block?.id || '').trim() || undefined,
+    targetSectionKey: runtime.targetSectionKey || '',
     className: pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature',
+    siteFeatureRuntime: runtime,
     feature: {
       title: runtime.title,
       body: runtime.body ? [runtime.body] : [],
@@ -4041,11 +4044,13 @@ export default function NativeContentPage({ page }) {
     const consumedDynamicCtaBlockIds = new Set();
     const consumedDynamicFeaturePanelBlockIds = new Set();
     const consumedDynamicRequestBlockIds = new Set();
+    const consumedDynamicSiteFeatureBlockIds = new Set();
     const consumedDynamicTestimonialsBlockIds = new Set();
     const consumedDynamicBillboardBlockIds = new Set();
     const targetedDynamicCtaSections = new Map();
     const targetedDynamicFeatureSections = new Map();
     const targetedDynamicRequestSections = new Map();
+    const targetedDynamicSiteFeatureSections = new Map();
     const targetedDynamicTestimonialsSections = new Map();
     const targetedDynamicTestimonialsFineprintSections = new Map();
     const targetedDynamicBillboardSections = new Map();
@@ -4075,6 +4080,15 @@ export default function NativeContentPage({ page }) {
         return;
       }
       targetedDynamicFeatureSections.set(targetKey, { block, mappedSection });
+    });
+
+    visibleBlocks.forEach((block) => {
+      const mappedSection = buildDynamicSiteFeatureSection(block, activePath);
+      const targetKey = String(mappedSection?.targetSectionKey || '').trim();
+      if (!mappedSection || !targetKey || targetedDynamicSiteFeatureSections.has(targetKey)) {
+        return;
+      }
+      targetedDynamicSiteFeatureSections.set(targetKey, { block, mappedSection });
     });
 
     visibleBlocks.forEach((block) => {
@@ -4231,6 +4245,29 @@ export default function NativeContentPage({ page }) {
       };
     }
 
+    if (targetedDynamicSiteFeatureSections.size && Array.isArray(nextBaseContent.sections) && nextBaseContent.sections.length) {
+      nextBaseContent = {
+        ...nextBaseContent,
+        sections: nextBaseContent.sections.map((section, sectionIndex) => {
+          const targetKey = getSectionTargetKeys(section, sectionIndex).find((key) => targetedDynamicSiteFeatureSections.has(key));
+          if (!targetKey) {
+            return section;
+          }
+
+          const targetEntry = targetedDynamicSiteFeatureSections.get(targetKey);
+          consumedDynamicSiteFeatureBlockIds.add(targetEntry.block.id);
+          const mappedSection = targetEntry.mappedSection;
+
+          return {
+            ...section,
+            blockId: mappedSection.blockId || section.blockId,
+            className: mergeClassNames(section.className, mappedSection.className),
+            siteFeatureRuntime: mappedSection.siteFeatureRuntime || null,
+          };
+        }),
+      };
+    }
+
     if (targetedDynamicRequestSections.size && Array.isArray(nextBaseContent.sections) && nextBaseContent.sections.length) {
       nextBaseContent = {
         ...nextBaseContent,
@@ -4346,6 +4383,9 @@ export default function NativeContentPage({ page }) {
       }
 
       if (block.mode === 'dynamic' && block.kind === 'site_feature') {
+        if (consumedDynamicSiteFeatureBlockIds.has(block.id)) {
+          return acc;
+        }
         const siteFeatureSection = buildDynamicSiteFeatureSection(block, activePath);
         if (siteFeatureSection) {
           acc.push(siteFeatureSection);
@@ -5615,6 +5655,44 @@ export default function NativeContentPage({ page }) {
         const showCtaSectionHud = isDynamicCtaSection && showSectionHud;
         const showPageContentSectionHud = isDynamicPageContentSection && showSectionHud;
         const showRequestSectionHud = isDynamicRequestSection && showSectionHud;
+
+        if (section.siteFeatureRuntime?.runtimeKey === 'legacy_giving_stewardship_story') {
+          const runtime = section.siteFeatureRuntime;
+
+          return (
+            <section
+              key={sectionKey}
+              id={section.anchorId || undefined}
+              ref={(node) => {
+                if (dynamicSectionBlockId && isDynamicSectionHudTarget) {
+                  dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;
+                }
+              }}
+              className={`service-native-section${section.sand ? ' is-sand' : ''}${section.className ? ` ${section.className}` : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${sectionHudFocusClass}${sectionOwnership.className || ''}`}
+              data-block-id={dynamicSectionBlockId || undefined}
+              data-mobile-front-hud-selectable={showSectionHud && isMobileFrontHud ? 'true' : undefined}
+              data-mobile-front-hud-selected={isMobileHudPanelSelected(dynamicSectionHudPanelId) ? 'true' : undefined}
+              data-mobile-front-hud-label={showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Section') : undefined}
+              style={section.sectionStyle || undefined}
+            >
+              <BlockOwnershipOverlay ownership={sectionOwnership} />
+              <LegacyGivingStewardshipStoryFeature
+                headline={runtime.title}
+                beats={runtime.beats}
+                action={runtime.action}
+                resolveTo={resolveManagedPathFromRef}
+              />
+              {showSectionHud && !isMobileFrontHud ? (
+                <FrontHudAnchorTag
+                  label={dynamicSectionPanel?.label || 'Section'}
+                  isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
+                  onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
+                  style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                />
+              ) : null}
+            </section>
+          );
+        }
 
         if (section.feature) {
           const feature = section.feature;

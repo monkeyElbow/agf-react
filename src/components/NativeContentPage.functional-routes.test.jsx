@@ -103,6 +103,11 @@ describe('NativeContentPage functional routes', () => {
         title: 'Charitable Trusts',
         section: 'Services',
       },
+      '/services/legacy-giving': {
+        path: '/services/legacy-giving',
+        title: 'Legacy Giving',
+        section: 'Services',
+      },
       '/services/legacy-giving/generosity-fund': {
         path: '/services/legacy-giving/generosity-fund',
         title: 'Generosity Fund',
@@ -258,6 +263,55 @@ describe('NativeContentPage functional routes', () => {
 
     expect(screen.getByRole('status')).toBeTruthy();
     expect(screen.getByText('Thanks. We will reach out soon.')).toBeTruthy();
+  });
+
+  it('renders the legacy giving stewardship site feature in place of the static stewardship section and wires its CTA to the comparison anchor', () => {
+    mockBlocksByPath = {
+      '/services/legacy-giving': [
+        {
+          id: 'stewardship_story',
+          kind: 'site_feature',
+          mode: 'dynamic',
+          settings: {
+            featureId: 'legacy_giving_stewardship_story',
+            targetSectionKey: 'id:legacy-giving-stewardship-story',
+          },
+        },
+      ],
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving',
+            title: 'Legacy Giving',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const willsHeading = screen.getByRole('heading', { name: 'Wills & Estate Services' });
+    const stewardshipHeading = screen.getByRole('heading', { name: 'Smart stewardship—for today and tomorrow.' });
+    const joyHeading = screen.getByText((_, element) => (
+      element?.tagName === 'H2' && element.textContent === 'More joy in giving.'
+    ));
+    const stewardshipSection = stewardshipHeading.closest('section');
+    const willsSection = willsHeading.closest('section');
+    const joySection = joyHeading.closest('section');
+    const comparisonSection = document.querySelector('#charitable-giving-plan-comparison');
+
+    expect(screen.getByText('Generate more retirement income')).toBeTruthy();
+    expect(stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]')?.textContent).toBe('Learn more');
+    expect(stewardshipSection?.className).toContain('legacy-giving-stewardship');
+    expect(willsSection && stewardshipSection
+      ? Boolean(willsSection.compareDocumentPosition(stewardshipSection) & Node.DOCUMENT_POSITION_FOLLOWING)
+      : false).toBe(true);
+    expect(stewardshipSection && joySection
+      ? Boolean(stewardshipSection.compareDocumentPosition(joySection) & Node.DOCUMENT_POSITION_FOLLOWING)
+      : false).toBe(true);
+    expect(comparisonSection?.id).toBe('charitable-giving-plan-comparison');
+    expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
   });
 
   it('reveals an external inline CTA shell from a single charitable trusts trigger while keeping the later form visible', async () => {

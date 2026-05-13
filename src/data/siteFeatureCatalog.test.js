@@ -14,7 +14,7 @@ describe('site feature catalog', () => {
     const catalog = getSiteFeatureCatalog();
     const defaultEntry = getDefaultSiteFeatureCatalogEntry();
 
-    expect(catalog).toHaveLength(2);
+    expect(catalog).toHaveLength(3);
     expect(defaultEntry).toMatchObject({
       featureId: 'editorial_spotlight',
       label: 'Editorial spotlight',
@@ -29,10 +29,12 @@ describe('site feature catalog', () => {
   it('keeps option values and editable field governance aligned to the catalog entry', () => {
     const entry = getSiteFeatureCatalogEntry('editorial_spotlight');
     const homeImpactEntry = getSiteFeatureCatalogEntry('home_impact_story');
+    const legacyGivingEntry = getSiteFeatureCatalogEntry('legacy_giving_stewardship_story');
 
     expect(getSiteFeatureOptions()).toEqual([
       { value: 'editorial_spotlight', label: 'Editorial spotlight' },
       { value: 'home_impact_story', label: 'Home impact story' },
+      { value: 'legacy_giving_stewardship_story', label: 'Legacy Giving stewardship story' },
     ]);
     expect(getAllowedSiteFeatureEditableFieldIds('editorial_spotlight')).toEqual(entry?.allowedEditableFieldIds);
     expect(entry?.allowedEditableFieldIds).toEqual([
@@ -53,9 +55,19 @@ describe('site feature catalog', () => {
       'buttonUrl',
       'buttonPageRef',
     ]);
+    expect(getAllowedSiteFeatureEditableFieldIds('legacy_giving_stewardship_story')).toEqual(legacyGivingEntry?.allowedEditableFieldIds);
+    expect(legacyGivingEntry?.allowedEditableFieldIds).toEqual([
+      'featureId',
+      'headline',
+      'buttonLabel',
+      'buttonUrl',
+      'buttonPageRef',
+    ]);
     expect(entry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
     expect(homeImpactEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
+    expect(legacyGivingEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
     expect(homeImpactEntry?.routeAllowlist).toEqual(['/']);
+    expect(legacyGivingEntry?.routeAllowlist).toEqual(['/services/legacy-giving']);
   });
 
   it('falls back unknown ids to the default reviewed entry', () => {

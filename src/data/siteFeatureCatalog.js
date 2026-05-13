@@ -23,6 +23,13 @@ export const SITE_FEATURE_MINIMAL_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'buttonUrl',
   'buttonPageRef',
 ]);
+export const SITE_FEATURE_HEADLINE_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
+  'featureId',
+  'headline',
+  'buttonLabel',
+  'buttonUrl',
+  'buttonPageRef',
+]);
 
 const SITE_FEATURE_CATALOG = Object.freeze([
   Object.freeze({
@@ -70,6 +77,32 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       ]),
       imageUrl: '',
       imageAlt: '',
+    }),
+  }),
+  Object.freeze({
+    featureId: 'legacy_giving_stewardship_story',
+    label: 'Legacy Giving stewardship story',
+    description: 'Premium Legacy Giving story sequence with a static-safe fallback and a restrained desktop-only held stage.',
+    runtimeKey: 'legacy_giving_stewardship_story',
+    allowedEditableFieldIds: SITE_FEATURE_HEADLINE_ACTION_EDITABLE_FIELD_IDS,
+    routeAllowlist: Object.freeze(['/services/legacy-giving']),
+    previewLabel: 'Legacy Giving stewardship story',
+    previewThumbnail: '',
+    experimental: false,
+    internalOnly: false,
+    buildRuntime: () => ({
+      title: 'Smart stewardship—for today and tomorrow.',
+      beats: Object.freeze([
+        'Generate more retirement income',
+        'Transition out of appreciated assets',
+        'Leave a legacy for family and ministry',
+        'Smart stewardship—for today and tomorrow.',
+      ]),
+      action: {
+        label: 'Learn more',
+        to: '#charitable-giving-plan-comparison',
+        openInNewWindow: false,
+      },
     }),
   }),
 ]);

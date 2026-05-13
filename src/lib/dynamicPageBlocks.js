@@ -923,33 +923,51 @@ export function buildDynamicSiteFeatureFromBlock(block) {
   }
   const featureId = String(featureEntry.featureId || '').trim();
   const featureDefinition = featureEntry.buildRuntime({ settings });
+  const featureRuntime = featureDefinition && typeof featureDefinition === 'object'
+    ? featureDefinition
+    : {};
+  const defaultTitle = String(featureRuntime.title || '').trim();
+  const defaultBody = String(featureRuntime.body || '').trim();
+  const defaultImageUrl = String(featureRuntime.imageUrl || '').trim();
+  const defaultImageAlt = String(featureRuntime.imageAlt || '').trim();
 
-  const headline = readFirstStringValue(settings, ['headline']) || featureDefinition.title;
-  const body = readFirstStringValue(settings, ['body']) || featureDefinition.body;
+  const headline = readFirstStringValue(settings, ['headline']) || defaultTitle;
+  const body = readFirstStringValue(settings, ['body']) || defaultBody;
   const action = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
     hrefKeys: ['buttonUrl'],
     toKeys: ['buttonPageRef'],
     openInNewWindowKeys: ['buttonOpenInNewWindow'],
-  }) || featureDefinition.action;
+  }) || featureRuntime.action;
 
   if (!headline && !body && !action) {
     return null;
   }
 
   return {
+    ...Object.fromEntries(
+      Object.entries(featureRuntime).filter(([key]) => ![
+        'title',
+        'body',
+        'action',
+        'imageUrl',
+        'imageAlt',
+        'metrics',
+      ].includes(key)),
+    ),
     type: 'site_feature',
     featureId,
     runtimeKey: String(featureEntry.runtimeKey || featureId).trim() || featureId,
     catalogLabel: String(featureEntry.label || '').trim() || featureId,
     isCodeManaged: true,
+    targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
     title: headline,
     body,
-    imageUrl: String(featureDefinition.imageUrl || '').trim(),
-    imageAlt: String(featureDefinition.imageAlt || '').trim(),
+    imageUrl: defaultImageUrl,
+    imageAlt: defaultImageAlt,
     action,
-    metrics: Array.isArray(featureDefinition.metrics)
-      ? featureDefinition.metrics
+    metrics: Array.isArray(featureRuntime.metrics)
+      ? featureRuntime.metrics
         .filter((metric) => metric && typeof metric === 'object')
         .map((metric) => ({
           value: String(metric.value || '').trim(),
@@ -957,6 +975,11 @@ export function buildDynamicSiteFeatureFromBlock(block) {
           tone: String(metric.tone || '').trim() || 'mango',
         }))
         .filter((metric) => metric.value && metric.label)
+      : [],
+    beats: Array.isArray(featureRuntime.beats)
+      ? featureRuntime.beats
+        .map((beat) => String(beat || '').trim())
+        .filter(Boolean)
       : [],
   };
 }

@@ -460,6 +460,7 @@ const directContent = {
         ],
       },
       {
+        id: 'legacy-giving-stewardship-story',
         title: 'Smart stewardship—for today and tomorrow.',
         className: 'legacy-giving-stewardship',
         cards: [
@@ -524,8 +525,9 @@ const directContent = {
         },
       },
       {
-        title: 'Which Legacy Giving plan is right for you?',
-        titleHighlights: [{ text: 'Legacy Giving', className: 'is-atlantean' }],
+        anchorId: 'charitable-giving-plan-comparison',
+        title: 'Which Charitable Giving plan is right for you?',
+        titleHighlights: [{ text: 'Charitable Giving', className: 'is-atlantean' }],
         className: 'legacy-giving-comparison',
         table: {
           headers: [

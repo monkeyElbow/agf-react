@@ -36,6 +36,7 @@ import {
 import DynamicRequestFormSection from '../DynamicRequestFormSection';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../HeroHudEditorShared';
 import HomeImpactStoryFeature, { HomeImpactStoryStaticContent } from '../HomeImpactStoryFeature';
+import LegacyGivingStewardshipStoryFeature from '../LegacyGivingStewardshipStoryFeature';
 import NewsletterSignupForm from '../NewsletterSignupForm';
 import { extractHeroLineColorToken } from '../../lib/heroHudRanges';
 import {
@@ -987,6 +988,21 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
           body={runtime.body}
           action={runtime.action}
           metrics={runtime.metrics}
+          resolveTo={resolveTo}
+        />
+      </section>
+    );
+  }
+
+  if (runtime.runtimeKey === 'legacy_giving_stewardship_story') {
+    return (
+      <section className={`service-native-section legacy-giving-stewardship legacy-stewardship-story${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+        <BlockOwnershipOverlay ownership={ownership} />
+        <SharedBlockHudAnchor hudAnchor={hudAnchor} />
+        <LegacyGivingStewardshipStoryFeature
+          headline={runtime.title}
+          beats={runtime.beats}
+          action={runtime.action}
           resolveTo={resolveTo}
         />
       </section>

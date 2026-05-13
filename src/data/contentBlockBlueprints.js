@@ -1946,6 +1946,23 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicPageContentEditableFields,
     },
+    {
+      id: 'stewardship_story',
+      name: 'Site Feature · Legacy Giving stewardship story',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'legacy_giving_stewardship_story',
+        headline: '',
+        body: '',
+        buttonLabel: '',
+        buttonUrl: '',
+        buttonPageRef: '',
+        buttonOpenInNewWindow: false,
+        targetSectionKey: 'id:legacy-giving-stewardship-story',
+      },
+      editableFields: siteFeatureEditableFields,
+    },
   ],
   '/services/legacy-giving/endowments': [
     {
