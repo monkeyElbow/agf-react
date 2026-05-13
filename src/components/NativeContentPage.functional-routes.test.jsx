@@ -114,6 +114,11 @@ describe('NativeContentPage functional routes', () => {
         title: 'Generosity Fund',
         section: 'Services',
       },
+      '/services/legacy-giving/ministry-impact-fund': {
+        path: '/services/legacy-giving/ministry-impact-fund',
+        title: 'Ministry Impact Fund',
+        section: 'Services',
+      },
       '/services/retirement/403b': {
         path: '/services/retirement/403b',
         title: '403(b)',
@@ -254,6 +259,35 @@ describe('NativeContentPage functional routes', () => {
     expect(container.querySelector('.legacy-child-native-cga-request.native-dynamic-request')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Generous.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Tax benefits\.\s+Ministry support\.\s+Payments for life\./ })).toBeTruthy();
+  });
+
+  it('renders ministry impact fund from explicit managed blocks without a fallback page-content section', () => {
+    mockBlocksByPath = {
+      '/services/legacy-giving/ministry-impact-fund': (
+        contentBlockBlueprintsByPath['/services/legacy-giving/ministry-impact-fund'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving/ministry-impact-fund',
+            title: 'Ministry Impact Fund',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(container.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(container.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(container.querySelector('.legacy-child-native-request.native-dynamic-request')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Unlocked.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Most wealth isn’t cash.' })).toBeTruthy();
   });
 
   it('renders the careers route through NativeContentPage with delegated jobs behavior intact', () => {

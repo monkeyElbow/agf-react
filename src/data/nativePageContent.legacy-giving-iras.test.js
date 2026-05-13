@@ -6,6 +6,7 @@ describe('legacy giving and IRA native page content', () => {
     const legacyContent = getNativePageContent('/services/legacy-giving', '');
     const endowmentsContent = getNativePageContent('/services/legacy-giving/endowments', '');
     const generosityContent = getNativePageContent('/services/legacy-giving/generosity-fund', '');
+    const ministryImpactContent = getNativePageContent('/services/legacy-giving/ministry-impact-fund', '');
     const charitableTrustsContent = getNativePageContent('/services/legacy-giving/charitable-trusts', '');
 
     const legacyCards = legacyContent?.sections?.find((section) => section?.className === 'legacy-giving-types')?.cards || [];
@@ -19,6 +20,9 @@ describe('legacy giving and IRA native page content', () => {
     const generosityInlineCtaIndex = generosityPreIntroSections.findIndex((section) => section?.className === 'legacy-child-native-generosity-request legacy-child-native-generosity-cta legacy-child-native-generosity-request-inline');
     const generosityStepsIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-steps');
     const generosityRequestIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-generosity-request');
+    const ministryImpactSections = Array.isArray(ministryImpactContent?.sections) ? ministryImpactContent.sections : [];
+    const ministryImpactStockSection = ministryImpactSections.find((section) => section?.className === 'legacy-child-native-stock');
+    const ministryImpactRequestSection = ministryImpactSections.find((section) => section?.className === 'legacy-child-native-request');
     const charitableTrustsTypes = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-crt-types');
     const charitableTrustsTrigger = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-crt-trigger');
     const charitableTrustsInlineCta = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline');
@@ -66,6 +70,17 @@ describe('legacy giving and IRA native page content', () => {
     expect(generosityInlineCtaIndex).toBe(0);
     expect(generosityStepsIndex).toBe(0);
     expect(generosityRequestIndex).toBeGreaterThan(generosityStepsIndex);
+    expect(ministryImpactContent?.intro?.heading).toBe('Most wealth isn’t cash.');
+    expect(ministryImpactSections.find((section) => section?.className === 'legacy-child-native-steps')?.cards).toHaveLength(3);
+    expect(ministryImpactStockSection?.actions).toHaveLength(3);
+    expect(ministryImpactRequestSection?.form?.title).toBe('Talk with planned giving');
+    expect(ministryImpactRequestSection?.form?.subtitle).toBe('Let’s map out the best next step.');
+    expect(ministryImpactRequestSection?.form?.fields).toEqual([
+      expect.objectContaining({ id: 'firstName', label: 'First Name*', type: 'text', required: true }),
+      expect.objectContaining({ id: 'lastName', label: 'Last Name*', type: 'text', required: true }),
+      expect.objectContaining({ id: 'phone', label: 'Phone*', type: 'tel', required: true }),
+      expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
+    ]);
     expect(charitableTrustsTypes?.actions).toBeUndefined();
     expect(charitableTrustsTrigger?.justify).toBe('center');
     expect(charitableTrustsTrigger?.hideCopy).toBe(true);

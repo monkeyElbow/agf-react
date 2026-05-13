@@ -397,6 +397,39 @@ describe('ContentAdminContext state normalization', () => {
     expect(annuitiesBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
   });
 
+  it('seeds ministry impact fund with explicit managed blocks and no fallback page content', () => {
+    const normalized = normalizeStoredConfig({});
+    const ministryImpactBlocks = normalized.blocksByPath['/services/legacy-giving/ministry-impact-fund'] || [];
+
+    expect(ministryImpactBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(ministryImpactBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(ministryImpactBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(ministryImpactBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form' && block?.mode === 'dynamic')).toBe(true);
+    expect(ministryImpactBlocks.some((block) => block?.id === 'outro' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
+  });
+
+  it('drops stale ministry impact fund page-content blocks from stored config', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/legacy-giving/ministry-impact-fund': [
+          {
+            id: 'page_content',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: '<p>Old legacy content</p>',
+            },
+          },
+        ],
+      },
+    });
+
+    const ministryImpactBlocks = normalized.blocksByPath['/services/legacy-giving/ministry-impact-fund'] || [];
+
+    expect(ministryImpactBlocks.some((block) => block?.id === 'page_content')).toBe(false);
+    expect(ministryImpactBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+  });
+
   it('seeds calculators with a request-form block instead of a CTA block', () => {
     const normalized = normalizeStoredConfig({});
     const calculatorBlocks = normalized.blocksByPath['/calculators'] || [];

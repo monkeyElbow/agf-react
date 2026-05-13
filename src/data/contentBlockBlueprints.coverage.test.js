@@ -120,6 +120,36 @@ describe('content block blueprint coverage', () => {
     });
   });
 
+  it('seeds ministry impact fund with explicit managed blocks instead of fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/legacy-giving/ministry-impact-fund'] || [];
+    const requestBlock = blocks.find((block) => block?.id === 'request_form');
+    const outroBlock = blocks.find((block) => block?.id === 'outro' && block?.mode === 'dynamic');
+
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'how_it_works' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'gift_types' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'stock_transfer' && block?.kind === 'billboard' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(requestBlock).toMatchObject({
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'A legacy of giving.',
+        targetSectionClassName: 'legacy-child-native-request',
+      },
+    });
+    expect(outroBlock).toMatchObject({
+      kind: 'billboard',
+      settings: {
+        title: 'More joy in receiving.',
+        targetSectionClassName: 'legacy-child-native-billboard',
+      },
+    });
+  });
+
   it('seeds calculators with an explicit request-form block alongside managed page content', () => {
     const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
     const requestBlock = blocks.find((block) => block?.id === 'request_form');
