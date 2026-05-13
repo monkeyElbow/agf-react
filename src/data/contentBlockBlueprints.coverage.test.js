@@ -130,7 +130,7 @@ describe('content block blueprint coverage', () => {
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Label).toBe('Open a traditional DAF');
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Url).toBe('#traditional-daf-form');
     expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.title).toBe('Make the most of your giving.');
-    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.targetSectionKey).toBe('class:legacy-child-native-generosity-request');
+    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.targetSectionKey).toBe('id:traditional-daf-form');
     expect(JSON.parse(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.step1FieldsJson || '[]')).toEqual([
       expect.objectContaining({ id: 'name', label: 'Name*', type: 'text', required: true }),
       expect.objectContaining({ id: 'phone', label: 'Phone*', type: 'tel', required: true }),

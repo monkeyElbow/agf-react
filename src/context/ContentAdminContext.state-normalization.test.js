@@ -180,7 +180,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(String(requestBlocks[0]?.settings?.step1Title || '')).toBe('');
   });
 
-  it('drops duplicate generosity-fund request-form blocks and keeps the canonical request target', () => {
+  it('drops duplicate generosity fund request-form blocks and keeps the canonical request target', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/legacy-giving/generosity-fund': [
@@ -214,8 +214,30 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks).toHaveLength(1);
     expect(requestBlocks[0]?.id).toBe('request_form');
     expect(requestBlocks[0]?.settings?.title).toBe('Make the most of your giving.');
-    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('class:legacy-child-native-generosity-request');
+    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('id:traditional-daf-form');
     expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('legacy-child-native-generosity-request');
+    expect(requestBlocks[0]?.settings?.targetSectionIndex).toBe(3);
+    expect(JSON.parse(requestBlocks[0]?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
+      'name',
+      'phone',
+      'email',
+    ]);
+  });
+
+  it('seeds the generosity fund request-form block from the later fallback form instead of the inline CTA reveal shell', () => {
+    const normalized = normalizeStoredConfig({});
+    const requestBlock = (normalized.blocksByPath['/services/legacy-giving/generosity-fund'] || [])
+      .find((block) => String(block?.kind || '').trim().toLowerCase() === 'request_form');
+
+    expect(requestBlock?.id).toBe('request_form');
+    expect(requestBlock?.settings?.targetSectionKey).toBe('id:traditional-daf-form');
+    expect(requestBlock?.settings?.targetSectionClassName).toBe('legacy-child-native-generosity-request');
+    expect(requestBlock?.settings?.targetSectionIndex).toBe(3);
+    expect(JSON.parse(requestBlock?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
+      'name',
+      'phone',
+      'email',
+    ]);
   });
 
   it('drops duplicate charitable-gift-annuities request-form blocks and restores the canonical dynamic request target', () => {

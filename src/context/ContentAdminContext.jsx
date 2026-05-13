@@ -2264,19 +2264,34 @@ function findStaticRequestFormSection(pathname, rawSettings) {
 
   if (targetKey) {
     const exact = sections.find((section, index) => toSectionTargetKey(section, index) === targetKey);
-    if (exact?.form) {
+    if (exact?.form && !isInlineRevealRequestInferenceSection(exact)) {
       return exact;
     }
   }
 
   if (targetClassName) {
     const exact = sections.find((section) => String(section?.className || '').trim().toLowerCase() === targetClassName);
-    if (exact?.form) {
+    if (exact?.form && !isInlineRevealRequestInferenceSection(exact)) {
       return exact;
     }
   }
 
-  return sections.find((section) => section?.form && typeof section.form === 'object') || null;
+  return sections.find((section) => (
+    section?.form
+    && typeof section.form === 'object'
+    && !isInlineRevealRequestInferenceSection(section)
+  )) || null;
+}
+
+function isInlineRevealRequestInferenceSection(section) {
+  const form = section?.form && typeof section.form === 'object' ? section.form : null;
+  if (!form) {
+    return false;
+  }
+
+  const displayMode = String(form.displayMode || '').trim().toLowerCase();
+  const triggerMode = String(form.triggerMode || '').trim().toLowerCase();
+  return displayMode === 'inline_reveal' || triggerMode === 'external';
 }
 
 function getDynamicRequestTemplateSettings() {
@@ -2475,7 +2490,13 @@ export function normalizeDynamicRequestFormSettings(pathname, rawSettings) {
   ) {
     next.textTone = expectedTextTone;
   }
-  if (!hasValidTarget || shouldRestoreRequestSetting(next.targetSectionKey, '', expectedTargetSectionKey)) {
+  const shouldCanonicalizeTargetKeyToSectionId = Boolean(section?.id)
+    && String(next.targetSectionKey || '').trim() !== expectedTargetSectionKey;
+  if (
+    shouldCanonicalizeTargetKeyToSectionId
+    || !hasValidTarget
+    || shouldRestoreRequestSetting(next.targetSectionKey, '', expectedTargetSectionKey)
+  ) {
     next.targetSectionKey = expectedTargetSectionKey;
   }
   if (!hasValidTarget || shouldRestoreRequestSetting(next.targetSectionClassName, '', expectedTargetSectionClassName)) {
@@ -2573,6 +2594,9 @@ export function buildDynamicRequestDefaultBlocksForPath(pathname, pageTitle, cur
   sections.forEach((section, sectionIndex) => {
     const form = section?.form;
     if (!form || typeof form !== 'object') {
+      return;
+    }
+    if (isInlineRevealRequestInferenceSection(section)) {
       return;
     }
     if (String(form.variant || '').trim().toLowerCase() === 'certificate-request') {
