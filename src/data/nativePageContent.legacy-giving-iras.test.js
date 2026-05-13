@@ -11,7 +11,12 @@ describe('legacy giving and IRA native page content', () => {
     const legacyCards = legacyContent?.sections?.find((section) => section?.className === 'legacy-giving-types')?.cards || [];
     const endowmentSections = Array.isArray(endowmentsContent?.sections) ? endowmentsContent.sections : [];
     const generosityHeroActions = Array.isArray(generosityContent?.hero?.actions) ? generosityContent.hero.actions : [];
+    const generosityPreIntroSections = Array.isArray(generosityContent?.preIntroSections) ? generosityContent.preIntroSections : [];
+    const generosityInlineCta = generosityPreIntroSections.find((section) => section?.className === 'legacy-child-native-generosity-request legacy-child-native-generosity-cta legacy-child-native-generosity-request-inline');
     const generosityRequest = generosityContent?.sections?.find((section) => section?.className === 'legacy-child-native-generosity-request');
+    const generosityInlineCtaIndex = generosityPreIntroSections.findIndex((section) => section?.className === 'legacy-child-native-generosity-request legacy-child-native-generosity-cta legacy-child-native-generosity-request-inline');
+    const generosityStepsIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-steps');
+    const generosityRequestIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-generosity-request');
     const charitableTrustsTypes = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-crt-types');
     const charitableTrustsTrigger = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-crt-trigger');
     const charitableTrustsInlineCta = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline');
@@ -29,16 +34,32 @@ describe('legacy giving and IRA native page content', () => {
     expect(endowmentSections.find((section) => section?.className === 'legacy-child-native-endowments-legacy-form')?.title).toBe('Begin the Endowment sign up process');
     expect(generosityHeroActions).toEqual([
       expect.objectContaining({ label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' }),
-      expect.objectContaining({ label: 'Open a traditional DAF', to: '#traditional-daf-form' }),
+      expect.objectContaining({
+        label: 'Open a traditional DAF',
+        action: 'open_cta_form',
+        targetAnchorId: 'traditional-daf-inline-form',
+        className: 'is-outline is-tone-super-grey',
+      }),
     ]);
+    expect(generosityInlineCta?.anchorId).toBe('traditional-daf-inline-form');
+    expect(generosityInlineCta?.form?.displayMode).toBe('inline_reveal');
+    expect(generosityInlineCta?.form?.triggerMode).toBe('external');
+    expect(generosityInlineCta?.id).toBeUndefined();
+    expect(generosityRequest?.id).toBe('traditional-daf-form');
     expect(generosityRequest?.anchorId).toBe('traditional-daf-form');
     expect(generosityRequest?.body).toEqual([]);
     expect(generosityRequest?.form?.subtitle).toBeUndefined();
+    expect(generosityRequest?.form?.displayMode).toBeUndefined();
+    expect(generosityRequest?.form?.triggerMode).toBeUndefined();
     expect(generosityRequest?.form?.fields).toEqual([
       expect.objectContaining({ id: 'name', label: 'Name*', type: 'text', required: true }),
       expect.objectContaining({ id: 'phone', label: 'Phone*', type: 'tel', required: true }),
       expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
     ]);
+    expect(generosityContent?.intro?.heading).toBe('All your charitable giving in one place.');
+    expect(generosityInlineCtaIndex).toBe(0);
+    expect(generosityStepsIndex).toBe(0);
+    expect(generosityRequestIndex).toBeGreaterThan(generosityStepsIndex);
     expect(charitableTrustsTypes?.actions).toBeUndefined();
     expect(charitableTrustsTrigger?.justify).toBe('center');
     expect(charitableTrustsTrigger?.hideCopy).toBe(true);

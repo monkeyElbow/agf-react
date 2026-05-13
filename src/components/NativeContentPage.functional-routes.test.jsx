@@ -295,7 +295,30 @@ describe('NativeContentPage functional routes', () => {
     });
   });
 
-  it('keeps request-form pages on their existing visible hash-link flow', () => {
+  it('reveals the generosity fund traditional DAF form inline from the hero when the admin-backed hero uses explicit CTA action fields', async () => {
+    mockBlocksByPath = {
+      '/services/legacy-giving/generosity-fund': [
+        {
+          id: 'hero',
+          kind: 'hero',
+          mode: 'dynamic',
+          settings: {
+            line1Text: 'Your giving.',
+            line2Text: 'Managed.',
+            button1Label: 'Open a Generosity Fund®',
+            button1Url: 'https://secure.agfinancial.org/generosityfund/signup',
+            button2Label: 'Open a traditional DAF',
+            button2Action: 'open_cta_form',
+            button2TargetAnchorId: 'traditional-daf-inline-form',
+            button2Url: '',
+            button2PageRef: '',
+            button2Style: 'outline',
+            button2Tone: 'super-grey',
+          },
+        },
+      ],
+    };
+
     render(
       <MemoryRouter>
         <NativeContentPage
@@ -307,7 +330,35 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Open a traditional DAF' }).getAttribute('href')).toContain('#traditional-daf-form');
+    expect(screen.getAllByRole('link', { name: 'Open a Generosity Fund®' })[0].getAttribute('href')).toContain('secure.agfinancial.org/generosityfund/signup');
+    expect(screen.getByRole('button', { name: 'Open a traditional DAF' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Open a traditional DAF' })).toBeNull();
+    expect(document.querySelector('#traditional-daf-inline-form')).toBeNull();
+    expect(document.querySelector('#traditional-daf-form')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Submit' })).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open a traditional DAF' }));
+
+    await waitFor(() => {
+      expect(document.querySelector('#traditional-daf-inline-form')).toBeTruthy();
+    });
+
+    const revealedSection = document.querySelector('#traditional-daf-inline-form');
+    const introHeading = screen.getByRole('heading', { name: 'All your charitable giving in one place.' });
+    const introSection = introHeading.closest('section');
+    const fallbackSection = document.querySelector('#traditional-daf-form');
+    expect(document.querySelector('#traditional-daf-form')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Submit' })).toHaveLength(2);
+    expect(revealedSection?.getAttribute('data-cta-display-mode')).toBe('inline_reveal');
+    expect(revealedSection?.getAttribute('data-cta-trigger-mode')).toBe('external');
+    expect(revealedSection && introSection
+      ? Boolean(revealedSection.compareDocumentPosition(introSection) & Node.DOCUMENT_POSITION_FOLLOWING)
+      : false).toBe(true);
+    expect(introSection && fallbackSection
+      ? Boolean(introSection.compareDocumentPosition(fallbackSection) & Node.DOCUMENT_POSITION_FOLLOWING)
+      : false).toBe(true);
+    await waitFor(() => {
+      expect(window.scrollTo).toHaveBeenCalled();
+    });
   });
 });

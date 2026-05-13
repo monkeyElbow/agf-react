@@ -2391,7 +2391,12 @@ const legacyChildPages = {
       ],
       actions: [
         { label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' },
-        { label: 'Open a traditional DAF', to: '#traditional-daf-form', className: 'is-outline is-tone-super-grey' },
+        {
+          label: 'Open a traditional DAF',
+          action: 'open_cta_form',
+          targetAnchorId: 'traditional-daf-inline-form',
+          className: 'is-outline is-tone-super-grey',
+        },
       ],
     },
     intro: {
@@ -2400,6 +2405,26 @@ const legacyChildPages = {
         'A **Generosity Fund**® is a Donor Advised Fund (DAF) that provides a convenient, tax-efficient way to manage your giving—from tithing to disaster relief, and all donations in between. Our frictionless process makes even complex securities **easier to give than ever**.',
       ],
     },
+    preIntroSections: [
+      {
+        anchorId: 'traditional-daf-inline-form',
+        className: 'legacy-child-native-generosity-request legacy-child-native-generosity-cta legacy-child-native-generosity-request-inline',
+        copyWrap: true,
+        title: 'Make the most of your giving.',
+        titleHighlights: [{ text: 'most', className: 'is-white' }],
+        body: [],
+        form: {
+          displayMode: 'inline_reveal',
+          triggerMode: 'external',
+          fields: [
+            { id: 'name', label: 'Name*', type: 'text', required: true },
+            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
+            { id: 'email', label: 'Email*', type: 'email', required: true },
+          ],
+          submitLabel: 'Submit',
+        },
+      },
+    ],
     sections: [
       {
         className: 'legacy-child-native-steps',
@@ -2447,6 +2472,7 @@ const legacyChildPages = {
         actions: [{ label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' }],
       },
       {
+        id: 'traditional-daf-form',
         anchorId: 'traditional-daf-form',
         className: 'legacy-child-native-generosity-request',
         copyWrap: true,

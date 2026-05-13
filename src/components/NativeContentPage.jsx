@@ -4459,9 +4459,12 @@ export default function NativeContentPage({ page }) {
       sections: nextSections,
     };
   }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isTestPage, templatePath, testimonialsLibrary]);
+  const preIntroSections = Array.isArray(content.preIntroSections) ? content.preIntroSections : [];
+  const postIntroSections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionList = [...preIntroSections, ...postIntroSections];
   const inlineCtaRevealTargets = useMemo(() => {
     const lookup = new Map();
-    const entries = (Array.isArray(content?.sections) ? content.sections : [])
+    const entries = sectionList
       .map((section, sectionIndex) => {
         const presentation = getInlineCtaPresentationRuntime(section);
         if (!presentation.isExternalInlineReveal) {
@@ -4499,7 +4502,7 @@ export default function NativeContentPage({ page }) {
     });
 
     return { entries, lookup };
-  }, [content]);
+  }, [sectionList]);
   const [revealedInlineCtaIds, setRevealedInlineCtaIds] = useState(() => new Set());
   const [pendingInlineCtaScrollId, setPendingInlineCtaScrollId] = useState('');
   const [locationFilters, setLocationFilters] = useState({});
@@ -4704,7 +4707,6 @@ export default function NativeContentPage({ page }) {
       devIdentity?.userId,
     );
   };
-  const sectionList = Array.isArray(content.sections) ? content.sections : [];
   const firstDynamicSectionIndexByBlockId = useMemo(() => {
     const firstIndexByBlock = {};
     sectionList.forEach((section, sectionIndex) => {
@@ -5353,6 +5355,58 @@ export default function NativeContentPage({ page }) {
         </section>
       ) : null}
 
+      {preIntroSections.map((section, sectionIndex) => {
+        const sectionKey = `${activePath}-pre-intro-${sectionIndex}-${section.title || 'section'}`;
+        const sectionClassName = String(section.className || '');
+        const formVariant = String(section?.form?.variant || '').trim().toLowerCase();
+        const isInlineCtaSection = isInlineCtaSectionShape(section);
+        const resolvedFormConfig = isInlineCtaSection
+          ? {
+              ...section.form,
+              title: String(section.form.title || section.title || '').trim(),
+              subtitle: String(section.form.subtitle || section.subtitle || '').trim(),
+            }
+          : section.form;
+        const ctaPresentation = getInlineCtaPresentationRuntime({
+          ...section,
+          form: resolvedFormConfig,
+        });
+        const inlineCtaRevealId = String(section?.blockId || '').trim()
+          || String(section?.anchorId || '').trim()
+          || `section-${sectionIndex + 1}`;
+        const isHiddenPendingInlineCtaReveal = ctaPresentation.isExternalInlineReveal
+          && !revealedInlineCtaIds.has(inlineCtaRevealId)
+          && !showFrontHud;
+
+        if (isHiddenPendingInlineCtaReveal) {
+          return null;
+        }
+
+        return (
+          <section
+            key={sectionKey}
+            id={section.anchorId || undefined}
+            ref={(node) => {
+              if (ctaPresentation.isExternalInlineReveal) {
+                if (node) {
+                  inlineCtaRevealSectionRefs.current[inlineCtaRevealId] = node;
+                } else {
+                  delete inlineCtaRevealSectionRefs.current[inlineCtaRevealId];
+                }
+              }
+            }}
+            className={`service-native-section${sectionClassName ? ` ${sectionClassName}` : ''}${ctaPresentation.className ? ` ${ctaPresentation.className}` : ''}${isInlineCtaSection ? ' has-inline-cta-shell' : ''}`}
+            data-cta-display-mode={isInlineCtaSection ? ctaPresentation.displayMode : undefined}
+            data-cta-trigger-mode={isInlineCtaSection ? ctaPresentation.triggerMode : undefined}
+            style={section.sectionStyle || undefined}
+          >
+            <div className={section.fullBleed ? 'ag-panel-rail-wide native-info-full-bleed' : (section.wide ? 'ag-panel-rail-wide' : 'ag-panel-rail')} style={section.railStyle || undefined}>
+              {resolvedFormConfig ? <NativeContentForm config={resolvedFormConfig} /> : null}
+            </div>
+          </section>
+        );
+      })}
+
       {!hideIntro ? (
         <section
           ref={dynamicIntroBlock ? introHudSectionRef : undefined}
@@ -5448,13 +5502,14 @@ export default function NativeContentPage({ page }) {
         </section>
       ) : null}
 
-      {(content.sections || []).map((section, sectionIndex) => {
+      {postIntroSections.map((section, sectionIndex) => {
+        const globalSectionIndex = preIntroSections.length + sectionIndex;
         if (section?.hidden) {
           return null;
         }
         const cards = Array.isArray(section.cards) ? section.cards : [];
         const columnsItems = Array.isArray(section.columnsItems) ? section.columnsItems : [];
-        const sectionKey = `${activePath}-${sectionIndex}-${section.title || 'section'}`;
+        const sectionKey = `${activePath}-${globalSectionIndex}-${section.title || 'section'}`;
         const sectionHtml = normalizeHtmlContent(section.html);
         const sectionJustifyToken = typeof section.justify === 'string' && section.justify.trim()
           ? normalizeHeroJustify(section.justify)
@@ -5521,7 +5576,7 @@ export default function NativeContentPage({ page }) {
           && !revealedInlineCtaIds.has(
             String(section?.blockId || '').trim()
             || String(section?.anchorId || '').trim()
-            || `section-${sectionIndex + 1}`
+            || `section-${globalSectionIndex + 1}`
           )
           && !showFrontHud;
         const isDynamicBillboardSection = section.id === 'dynamic-billboard' || sectionClassName.includes('test-dynamic-billboard');
@@ -5652,7 +5707,7 @@ export default function NativeContentPage({ page }) {
               }
               const inlineCtaRevealId = String(section?.blockId || '').trim()
                 || String(section?.anchorId || '').trim()
-                || `section-${sectionIndex + 1}`;
+                || `section-${globalSectionIndex + 1}`;
               if (ctaPresentation.isExternalInlineReveal) {
                 if (node) {
                   inlineCtaRevealSectionRefs.current[inlineCtaRevealId] = node;
