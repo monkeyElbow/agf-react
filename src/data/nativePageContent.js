@@ -2181,12 +2181,6 @@ const legacyChildPages = {
               'Minimum required payout of 5%',
               'Income may fluctuate from year to year',
             ],
-            actions: [{
-              label: 'Start the process',
-              action: 'open_cta_form',
-              targetAnchorId: 'charitable-trusts-inline-form',
-              className: 'is-outline is-tone-atlantean',
-            }],
             cardClass: 'trusts-type-card',
           },
           {
@@ -2196,15 +2190,21 @@ const legacyChildPages = {
               'Payment can be based on life expectancy or term of years',
               'Payments may begin immediately upon funding',
             ],
-            actions: [{
-              label: 'Start the process',
-              action: 'open_cta_form',
-              targetAnchorId: 'charitable-trusts-inline-form',
-              className: 'is-outline is-tone-atlantean',
-            }],
             cardClass: 'trusts-type-card',
           },
         ],
+      },
+      {
+        className: 'legacy-child-native-trusts-crt-trigger',
+        hideTitle: true,
+        hideCopy: true,
+        justify: 'center',
+        actions: [{
+          label: 'Start the process',
+          action: 'open_cta_form',
+          targetAnchorId: 'charitable-trusts-inline-form',
+          className: 'is-outline is-tone-atlantean',
+        }],
       },
       {
         className: 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline',
