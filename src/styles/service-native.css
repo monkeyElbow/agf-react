@@ -3898,6 +3898,7 @@
   background: var(--btn-bg);
   color: var(--btn-text);
   text-decoration: none;
+  font-size: 1rem;
   font-weight: 100;
   letter-spacing: 0.45px;
   min-height: 44px;
@@ -18625,11 +18626,6 @@
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-action-row {
   margin-top: 0;
   justify-content: center;
-}
-
-.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-action-row .service-native-btn,
-.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-action-row .service-native-btn:visited {
-  font-size: 1rem;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .trusts-type-card {
