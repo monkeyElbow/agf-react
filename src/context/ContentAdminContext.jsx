@@ -3320,6 +3320,13 @@ export function normalizeStoredConfig(payload) {
       ) {
         return;
       }
+      if (
+        path === '/services/insurance/group-term-life-insurance'
+        && storedBlock.id === 'intro'
+        && storedKind === 'intro'
+      ) {
+        return;
+      }
       if (path === '/rates' && storedBlock.id === 'disclaimer' && storedKind === 'legal_copy') {
         return;
       }

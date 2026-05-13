@@ -554,6 +554,16 @@ describe('ContentAdminContext state normalization', () => {
           ],
         },
       });
+
+      const blocks = normalized.blocksByPath[pathname] || [];
+      const ctaBlock = blocks.find((block) => block?.kind === 'cta_form');
+
+      expect(blocks.some((block) => block?.kind === 'request_form'), pathname).toBe(false);
+      expect(ctaBlock, pathname).toBeTruthy();
+      expect(ctaBlock?.settings?.targetSectionClassName, pathname).toBe(targetSectionClassName);
+    });
+  });
+
   it('repairs stale generosity fund hero hash actions into the inline CTA reveal trigger', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
@@ -595,16 +605,6 @@ describe('ContentAdminContext state normalization', () => {
       'button2TargetAnchorId',
       'button2TargetBlockId',
     ]));
-  });
-
-
-      const blocks = normalized.blocksByPath[pathname] || [];
-      const ctaBlock = blocks.find((block) => block?.kind === 'cta_form');
-
-      expect(blocks.some((block) => block?.kind === 'request_form'), pathname).toBe(false);
-      expect(ctaBlock, pathname).toBeTruthy();
-      expect(ctaBlock?.settings?.targetSectionClassName, pathname).toBe(targetSectionClassName);
-    });
   });
 
   it('drops stale contact-us CTA blocks from stored config and keeps the request form', () => {
@@ -747,7 +747,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock).toBeUndefined();
   });
 
-  it('strips stale stored intro buttons from group term life insurance', () => {
+  it('drops stale stored intro blocks from group term life insurance', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/insurance/group-term-life-insurance': [
@@ -775,15 +775,7 @@ describe('ContentAdminContext state normalization', () => {
     const groupLifeBlocks = normalized.blocksByPath['/services/insurance/group-term-life-insurance'] || [];
     const introBlock = groupLifeBlocks.find((block) => block?.id === 'intro');
 
-    expect(introBlock).toBeTruthy();
-    expect(introBlock?.settings?.button1Label).toBe('');
-    expect(introBlock?.settings?.button1Url).toBe('');
-    expect(introBlock?.settings?.button1PageRef).toBe('');
-    expect(introBlock?.settings?.button1OpenInNewWindow).toBe(false);
-    expect(introBlock?.settings?.button2Label).toBe('');
-    expect(introBlock?.settings?.button2Url).toBe('');
-    expect(introBlock?.settings?.button2PageRef).toBe('');
-    expect(introBlock?.settings?.button2OpenInNewWindow).toBe(false);
+    expect(introBlock).toBeUndefined();
   });
 
   it('drops stale 403(b) individual enrollment intro blocks so the native summary callout stays authoritative', () => {
