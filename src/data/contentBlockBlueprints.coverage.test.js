@@ -89,6 +89,29 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
+  it('seeds calculators with an explicit request-form block alongside managed page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
+    const requestBlock = blocks.find((block) => block?.id === 'request_form');
+
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content' && block?.mode === 'dynamic')).toBe(true);
+    expect(requestBlock).toMatchObject({
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'Numbers are great.',
+        subtitle: 'People are better.',
+        targetSectionClassName: 'calculators-native-contact',
+      },
+    });
+    expect(JSON.parse(requestBlock?.settings?.step1FieldsJson || '[]')).toEqual([
+      expect.objectContaining({ id: 'firstName', label: 'First Name*', type: 'text', required: true }),
+      expect.objectContaining({ id: 'lastName', label: 'Last Name*', type: 'text', required: true }),
+      expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
+      expect.objectContaining({ id: 'phone', label: 'Phone', type: 'tel' }),
+      expect.objectContaining({ id: 'message', label: 'What would you like help calculating?', type: 'textarea', required: true }),
+    ]);
+  });
+
   it('seeds a real hero block for 403(b) group enrollment while retaining page content editing', () => {
     const blocks = contentBlockBlueprintsByPath['/services/retirement/403b/403b-group-enrollment'] || [];
     const complianceBillboard = blocks.find((block) => block?.id === 'billboard');

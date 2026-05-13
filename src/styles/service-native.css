@@ -247,7 +247,7 @@
 }
 
 .native-info-page--calculators .calculators-native-directory {
-  padding-top: 0;
+  padding-top: clamp(1.1rem, 2.5vw, 1.9rem);
   padding-bottom: clamp(1.25rem, 2.6vw, 2rem);
 }
 
@@ -509,6 +509,14 @@
   text-align: center;
 }
 
+.native-info-page--calculators .calculators-native-contact.native-dynamic-request .dynamic-request-copy > h2 {
+  color: var(--ag-color-atlantean);
+  font-family: var(--ag-font-helv);
+  font-size: clamp(2.3rem, 3.5vw, 3rem);
+  letter-spacing: -0.03em;
+  text-align: center;
+}
+
 .native-info-page--calculators .calculators-native-contact .native-info-section-subtitle {
   margin: 0.15rem 0 0;
   color: var(--ag-color-super-grey);
@@ -520,7 +528,26 @@
   text-align: center;
 }
 
+.native-info-page--calculators .calculators-native-contact.native-dynamic-request .dynamic-request-subtitle {
+  margin: 0.15rem 0 0;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-size: clamp(1.85rem, 2.8vw, 2.35rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  text-align: center;
+}
+
 .native-info-page--calculators .calculators-native-contact .native-info-section-copy > p {
+  font-size: clamp(1.05rem, 1.45vw, 1.18rem);
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 62ch;
+}
+
+.native-info-page--calculators .calculators-native-contact.native-dynamic-request .dynamic-request-body {
   font-size: clamp(1.05rem, 1.45vw, 1.18rem);
   text-align: center;
   margin-left: auto;

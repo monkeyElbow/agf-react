@@ -68,6 +68,7 @@ const LEGACY_GIVING_ENDOWMENTS_PATH = '/services/legacy-giving/endowments';
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/legacy-giving/generosity-fund';
 const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/legacy-giving/ministry-impact-fund';
 const REQUEST_FORM_DYNAMIC_PATHS = new Set([
+  '/calculators',
   '/contact-us',
   '/services/loans',
   '/services/insurance/certificate-request',
@@ -3447,25 +3448,6 @@ export function normalizeStoredConfig(payload) {
             ? defaultBlock.editableFields
             : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
         };
-      }
-      if (
-        path === '/calculators'
-        && String(storedBlock?.kind || '').trim().toLowerCase() === 'cta_form'
-        && storedMode === 'dynamic'
-      ) {
-        const settings = storedBlock?.settings || {};
-        const targetClassName = String(settings.targetSectionClassName || '').trim().toLowerCase();
-        if (targetClassName.includes('calculators-native-contact')) {
-          const titleClassName = String(settings.titleClassName || '').trim();
-          nextStoredBlock = {
-            ...storedBlock,
-            settings: {
-              ...settings,
-              bgTone: 'white',
-              titleClassName: titleClassName || 'is-atlantean',
-            },
-          };
-        }
       }
       if (
         path === RETIREMENT_403B_GROUP_ENROLLMENT_PATH

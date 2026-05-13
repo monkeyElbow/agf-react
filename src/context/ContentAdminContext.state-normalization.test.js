@@ -364,32 +364,32 @@ describe('ContentAdminContext state normalization', () => {
     expect(retirement403bBlocks.some((block) => block?.kind === 'cta_form')).toBe(true);
   });
 
-  it('seeds calculators with a CTA block instead of a request-form block', () => {
+  it('seeds calculators with a request-form block instead of a CTA block', () => {
     const normalized = normalizeStoredConfig({});
     const calculatorBlocks = normalized.blocksByPath['/calculators'] || [];
     const requestBlock = calculatorBlocks.find((block) => block?.kind === 'request_form');
     const ctaBlock = calculatorBlocks.find((block) => block?.kind === 'cta_form');
 
-    expect(requestBlock).toBeUndefined();
-    expect(ctaBlock).toBeTruthy();
-    expect(ctaBlock?.mode).toBe('dynamic');
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('calculators-native-contact');
-    expect(ctaBlock?.settings?.bgTone).toBe('white');
-    expect(ctaBlock?.settings?.titleClassName).toBe('is-atlantean');
-    expect(ctaBlock?.settings?.field1Label).toBe('First Name*');
-    expect(ctaBlock?.settings?.field5Label).toBe('What would you like help calculating?');
+    expect(requestBlock).toBeTruthy();
+    expect(requestBlock?.mode).toBe('dynamic');
+    expect(requestBlock?.settings?.targetSectionClassName).toBe('calculators-native-contact');
+    expect(requestBlock?.settings?.bgTone).toBe('white');
+    expect(requestBlock?.settings?.titleClassName).toBe('is-atlantean');
+    expect(requestBlock?.settings?.step1FieldsJson).toContain('"id":"firstName"');
+    expect(requestBlock?.settings?.step1FieldsJson).toContain('"id":"message"');
+    expect(ctaBlock).toBeUndefined();
   });
 
-  it('drops stale calculators request-form blocks from stored config and keeps the CTA block', () => {
+  it('drops stale calculators CTA blocks from stored config and keeps the request-form block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/calculators': [
           {
-            id: 'request_form',
-            kind: 'request_form',
+            id: 'cta_form',
+            kind: 'cta_form',
             mode: 'dynamic',
             settings: {
-              title: 'Old calculator request block',
+              title: 'Old calculator CTA block',
             },
           },
         ],
@@ -397,12 +397,12 @@ describe('ContentAdminContext state normalization', () => {
     });
 
     const calculatorBlocks = normalized.blocksByPath['/calculators'] || [];
-    const ctaBlock = calculatorBlocks.find((block) => block?.kind === 'cta_form');
+    const requestBlock = calculatorBlocks.find((block) => block?.kind === 'request_form');
 
-    expect(calculatorBlocks.some((block) => block?.kind === 'request_form')).toBe(false);
-    expect(ctaBlock).toBeTruthy();
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('calculators-native-contact');
-    expect(ctaBlock?.settings?.bgTone).toBe('white');
+    expect(calculatorBlocks.some((block) => block?.kind === 'cta_form')).toBe(false);
+    expect(requestBlock).toBeTruthy();
+    expect(requestBlock?.settings?.targetSectionClassName).toBe('calculators-native-contact');
+    expect(requestBlock?.settings?.bgTone).toBe('white');
   });
 
   it('seeds about us with a CTA block instead of a request-form block', () => {

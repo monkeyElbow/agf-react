@@ -200,6 +200,33 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByRole('link', { name: 'Life Enrollment and Change Form' })).toBeTruthy();
   });
 
+  it('renders calculators with the shared request-form shell and a single calculator intro copy', () => {
+    mockBlocksByPath = {
+      '/calculators': (contentBlockBlueprintsByPath['/calculators'] || []).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/calculators',
+            title: 'Calculators',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(container.querySelector('.calculators-native-contact.native-dynamic-request')).toBeTruthy();
+    expect(container.querySelector('.calculators-native-contact .dynamic-request-layout')).toBeTruthy();
+    expect(container.querySelector('.calculators-native-contact .native-info-inline-form.dynamic-request-form')).toBeTruthy();
+    expect(container.querySelector('.calculators-native-contact .native-info-inline-form:not(.dynamic-request-form)')).toBeNull();
+    expect(screen.getAllByText('Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.')).toHaveLength(1);
+  });
+
   it('renders the careers route through NativeContentPage with delegated jobs behavior intact', () => {
     mockVisibleJobs = [
       {
