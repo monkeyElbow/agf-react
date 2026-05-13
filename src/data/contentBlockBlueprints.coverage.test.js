@@ -115,6 +115,7 @@ describe('content block blueprint coverage', () => {
 
   it('seeds explicit managed blocks for endowments, generosity fund, and IRAs without fallback page content', () => {
     const legacyGivingBlocks = contentBlockBlueprintsByPath['/services/legacy-giving'] || [];
+    const charitableTrustsBlocks = contentBlockBlueprintsByPath['/services/legacy-giving/charitable-trusts'] || [];
     const endowmentBlocks = contentBlockBlueprintsByPath['/services/legacy-giving/endowments'] || [];
     const generosityBlocks = contentBlockBlueprintsByPath['/services/legacy-giving/generosity-fund'] || [];
     const iraBlocks = contentBlockBlueprintsByPath['/services/retirement/iras'] || [];
@@ -128,6 +129,10 @@ describe('content block blueprint coverage', () => {
         targetSectionKey: 'id:legacy-giving-stewardship-story',
       },
     });
+
+    expect(charitableTrustsBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(charitableTrustsBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(charitableTrustsBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
 
     expect(endowmentBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(endowmentBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);

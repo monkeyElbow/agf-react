@@ -314,7 +314,7 @@ describe('NativeContentPage functional routes', () => {
     expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
   });
 
-  it('reveals an external inline CTA shell from a single charitable trusts trigger while keeping the later form visible', async () => {
+  it('reveals an external inline CTA shell from the charitable trusts CRUT and CRAT triggers while keeping the later form visible', async () => {
     render(
       <MemoryRouter>
         <NativeContentPage
@@ -326,13 +326,13 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(2);
     expect(screen.queryByRole('link', { name: 'Start the process' })).toBeNull();
     expect(document.querySelector('#charitable-trusts-inline-form')).toBeNull();
     expect(document.querySelector('#charitable-trusts-form')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Start planning' })).toHaveLength(1);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Start the process' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Start the process' })[0]);
 
     await waitFor(() => {
       expect(document.querySelector('#charitable-trusts-inline-form')).toBeTruthy();
@@ -340,7 +340,7 @@ describe('NativeContentPage functional routes', () => {
 
     const revealedSection = document.querySelector('#charitable-trusts-inline-form');
     expect(document.querySelector('#charitable-trusts-form')).toBeTruthy();
-    expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(2);
     expect(screen.getAllByRole('button', { name: 'Start planning' })).toHaveLength(2);
     expect(revealedSection?.getAttribute('data-cta-display-mode')).toBe('inline_reveal');
     expect(revealedSection?.getAttribute('data-cta-trigger-mode')).toBe('external');
