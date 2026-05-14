@@ -18987,6 +18987,10 @@
   padding: clamp(3rem, 6vw, 5rem) 0;
 }
 
+.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-request-inline {
+  background: #ffffff;
+}
+
 .native-info-page--legacy-generosity-fund .legacy-child-native-generosity-request:not(.native-dynamic-request) > .ag-panel-rail {
   max-width: var(--ag-content-max);
   display: grid;

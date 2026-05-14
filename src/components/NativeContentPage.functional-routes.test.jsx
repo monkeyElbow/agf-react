@@ -698,6 +698,7 @@ describe('NativeContentPage functional routes', () => {
     const fallbackSection = document.querySelector('#traditional-daf-form');
     expect(document.querySelector('#traditional-daf-form')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Submit' })).toHaveLength(2);
+    expect(revealedSection?.className).toContain('legacy-child-native-generosity-request-inline');
     expect(revealedSection?.getAttribute('data-cta-display-mode')).toBe('inline_reveal');
     expect(revealedSection?.getAttribute('data-cta-trigger-mode')).toBe('external');
     expect(revealedSection && introSection
