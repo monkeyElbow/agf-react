@@ -11,6 +11,7 @@ describe('legacy giving and IRA native page content', () => {
 
     const legacyCards = legacyContent?.sections?.find((section) => section?.className === 'legacy-giving-types')?.cards || [];
     const stewardshipSection = legacyContent?.sections?.find((section) => section?.className === 'legacy-giving-stewardship');
+    const joySection = legacyContent?.sections?.find((section) => String(section?.className || '').includes('legacy-giving-joy'));
     const comparisonSection = legacyContent?.sections?.find((section) => section?.className === 'legacy-giving-comparison');
     const endowmentSections = Array.isArray(endowmentsContent?.sections) ? endowmentsContent.sections : [];
     const generosityHeroActions = Array.isArray(generosityContent?.hero?.actions) ? generosityContent.hero.actions : [];
@@ -37,6 +38,9 @@ describe('legacy giving and IRA native page content', () => {
     expect(legacyCards[2]?.body).toContain('provides payments for you');
     expect(stewardshipSection?.id).toBe('legacy-giving-stewardship-story');
     expect(stewardshipSection?.title).toBe('Smart stewardship—for today and tomorrow.');
+    expect(joySection?.className).toContain('fade-out');
+    expect(joySection?.copyWrap).toBe(true);
+    expect(joySection?.copyClassName).toBe('fade-up');
     expect(comparisonSection?.anchorId).toBe('charitable-giving-plan-comparison');
     expect(comparisonSection?.title).toBe('Which Charitable Giving plan is right for you?');
     expect(endowmentSections.some((section) => section?.className === 'legacy-child-native-endowments-inquiry')).toBe(false);

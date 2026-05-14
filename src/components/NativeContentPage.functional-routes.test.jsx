@@ -406,6 +406,8 @@ describe('NativeContentPage functional routes', () => {
     expect(stewardshipSection && joySection
       ? Boolean(stewardshipSection.compareDocumentPosition(joySection) & Node.DOCUMENT_POSITION_FOLLOWING)
       : false).toBe(true);
+    expect(joySection?.className).toContain('fade-out');
+    expect(joySection?.querySelector('.native-info-section-copy.fade-up')).toBeTruthy();
     expect(comparisonSection?.id).toBe('charitable-giving-plan-comparison');
     expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
   });

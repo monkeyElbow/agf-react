@@ -482,7 +482,9 @@ const directContent = {
         title: 'More joy in giving.',
         titleHighlights: [{ text: 'joy', className: 'is-atlantean' }],
         subtitle: 'It’s easier than you think.',
-        className: 'legacy-giving-joy',
+        className: 'legacy-giving-joy fade-out',
+        copyWrap: true,
+        copyClassName: 'fade-up',
         body: [
           'Your charitable giving plan makes it easy to manage both your cash and non-cash assets.',
         ],
