@@ -221,6 +221,10 @@ const INTRO_LOCAL_DRAFT_FIELD_IDS = Object.freeze([
   'button2Label',
   'button2Url',
 ]);
+const HERO_BUTTON_LOCAL_DRAFT_FIELD_IDS = Object.freeze({
+  1: Object.freeze(['button1Label', 'button1Url']),
+  2: Object.freeze(['button2Label', 'button2Url']),
+});
 const REQUEST_FORM_LOCAL_DRAFT_FIELD_IDS = Object.freeze([
   'salesforceUrl',
   'submitLabel',
@@ -3599,12 +3603,13 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
             <p className="admin-hero-settings-group-kicker">Button 1</p>
             <p className="admin-hero-settings-group-title">Primary label, destination, and style</p>
           </div>
-          <FieldControlGrid
+          <DraftBackedFieldControlGrid
             fields={button1Fields}
             settings={settings}
             onSettingChange={onSettingChange}
             className="admin-content-field-list--inline admin-hero-action-fields"
             routeOptions={routeOptions}
+            draftFieldIds={HERO_BUTTON_LOCAL_DRAFT_FIELD_IDS[1]}
           />
         </section>
 
@@ -3613,12 +3618,13 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
             <p className="admin-hero-settings-group-kicker">Button 2</p>
             <p className="admin-hero-settings-group-title">Secondary label, destination, and style</p>
           </div>
-          <FieldControlGrid
+          <DraftBackedFieldControlGrid
             fields={button2Fields}
             settings={settings}
             onSettingChange={onSettingChange}
             className="admin-content-field-list--inline admin-hero-action-fields"
             routeOptions={routeOptions}
+            draftFieldIds={HERO_BUTTON_LOCAL_DRAFT_FIELD_IDS[2]}
           />
         </section>
 

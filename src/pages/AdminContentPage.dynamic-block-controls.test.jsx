@@ -290,6 +290,89 @@ describe('dynamic block control wiring', () => {
     expect(within(button2Group).getByText('Destination')).toBeTruthy();
   });
 
+  it('keeps hero button label drafts stable through stale shared rerenders', () => {
+    vi.useFakeTimers();
+    const onSettingChange = vi.fn();
+
+    try {
+      const { rerender } = render(
+        <HeroBlockEditor
+          block={getDynamicBlock('hero')}
+          onSettingChange={onSettingChange}
+          routeOptions={[{ title: 'Contact us', path: '/contact-us' }]}
+        />,
+      );
+
+      const button1Group = screen.getByLabelText('Button 1 settings');
+      const labelInput = within(button1Group).getByLabelText('Label');
+      fireEvent.change(labelInput, {
+        target: { value: 'Draft hero button label' },
+      });
+
+      expect(labelInput.value).toBe('Draft hero button label');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button1Label', 'Draft hero button label');
+
+      rerender(
+        <HeroBlockEditor
+          block={getDynamicBlock('hero')}
+          onSettingChange={onSettingChange}
+          routeOptions={[{ title: 'Contact us', path: '/contact-us' }]}
+        />,
+      );
+
+      expect(within(screen.getByLabelText('Button 1 settings')).getByLabelText('Label').value).toBe('Draft hero button label');
+
+      act(() => {
+        vi.advanceTimersByTime(350);
+      });
+
+      expect(onSettingChange).toHaveBeenCalledWith('button1Label', 'Draft hero button label');
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps hero button links on the buffered route-sync path', () => {
+    vi.useFakeTimers();
+    const block = getDynamicBlock('hero');
+    const onSettingChange = vi.fn();
+
+    try {
+      render(
+        <HeroBlockEditor
+          block={block}
+          onSettingChange={onSettingChange}
+          routeOptions={[{ title: 'Contact us', path: '/contact-us' }]}
+        />,
+      );
+
+      const button1Group = screen.getByLabelText('Button 1 settings');
+      const button2Group = screen.getByLabelText('Button 2 settings');
+      fireEvent.change(within(button1Group).getByLabelText('Destination'), {
+        target: { value: '/contact-us' },
+      });
+      fireEvent.change(within(button2Group).getByLabelText('Destination'), {
+        target: { value: '/contact-us' },
+      });
+
+      expect(onSettingChange).toHaveBeenCalledWith('button1PageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button1Url', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('button2PageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button2Url', '/contact-us');
+
+      act(() => {
+        vi.advanceTimersByTime(350);
+      });
+
+      expect(onSettingChange).toHaveBeenCalledWith('button1Url', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('button2Url', '/contact-us');
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps hero background swatches visible even when field options are missing', () => {
     const block = getDynamicBlock('hero');
     const onSettingChange = vi.fn();
