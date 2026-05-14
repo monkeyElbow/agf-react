@@ -1920,6 +1920,66 @@ function paragraphizeText(value) {
   return text ? `<p>${escapeHtmlText(text)}</p>` : '';
 }
 
+function decodeIntroHtmlTextEntities(value) {
+  return String(value || '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&mdash;/gi, '—')
+    .replace(/&#8212;/gi, '—')
+    .replace(/&ndash;/gi, '–')
+    .replace(/&#8211;/gi, '–')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, '\'')
+    .replace(/&apos;/gi, '\'')
+    .replace(/&rsquo;/gi, '’')
+    .replace(/&#8217;/gi, '’')
+    .replace(/&lsquo;/gi, '‘')
+    .replace(/&#8216;/gi, '‘')
+    .replace(/&ldquo;/gi, '“')
+    .replace(/&#8220;/gi, '“')
+    .replace(/&rdquo;/gi, '”')
+    .replace(/&#8221;/gi, '”')
+    .replace(/&reg;/gi, '®')
+    .replace(/&#174;/gi, '®');
+}
+
+function stripIntroHtmlToText(value) {
+  const source = String(value || '').trim();
+  if (!source) {
+    return '';
+  }
+
+  return decodeIntroHtmlTextEntities(
+    source
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|section|article|h[1-6]|ul|ol)>/gi, '\n\n')
+      .replace(/<li\b[^>]*>/gi, '• ')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\r/g, ''),
+  )
+    .split(/\n+/)
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+function normalizeIntroBodyMirror(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return settings;
+  }
+
+  const nextSettings = { ...settings };
+  const body = String(nextSettings.body || '').trim();
+  const bodyHtml = String(nextSettings.bodyHtml || '').trim();
+  if (!body && bodyHtml) {
+    nextSettings.body = stripIntroHtmlToText(bodyHtml);
+  }
+  return nextSettings;
+}
+
 function isPlaceholderIntroSettings(settings) {
   if (!settings || typeof settings !== 'object') {
     return true;
@@ -2891,7 +2951,7 @@ function buildDynamicIntroSettingsFromNative(intro, pageTitle, templateDefaults 
     settings.button2OpenInNewWindow = Boolean(actions[1].openInNewWindow);
   }
 
-  return settings;
+  return normalizeIntroBodyMirror(settings);
 }
 
 function buildDynamicCtaDefaultBlocksForPath(pathname, pageTitle, currentBlocks, ctaTemplate) {
@@ -3026,11 +3086,17 @@ function buildDefaultBlocks() {
         }
       }
 
-      return {
+      const nextBlock = {
         ...block,
         settings: { ...(block.settings || {}) },
         editableFields: [...(block.editableFields || [])],
       };
+
+      if (nextBlock?.id === 'intro' && nextBlock?.kind === 'intro' && nextBlock?.mode === 'dynamic') {
+        nextBlock.settings = normalizeIntroBodyMirror(nextBlock.settings);
+      }
+
+      return nextBlock;
     });
 
     const dynamicCtaBlocks = buildDynamicCtaDefaultBlocksForPath(
@@ -3845,10 +3911,17 @@ export function normalizeStoredConfig(payload) {
         ),
         mode: storedMode,
         kind: nextStoredBlock.kind || modeVariant.kind,
-        settings: {
-          ...(modeVariant.settings || {}),
-          ...(nextStoredBlock.settings || {}),
-        },
+        settings: (
+          storedBlock.id === 'intro' && storedMode === 'dynamic'
+            ? normalizeIntroBodyMirror({
+              ...(modeVariant.settings || {}),
+              ...(nextStoredBlock.settings || {}),
+            })
+            : {
+                ...(modeVariant.settings || {}),
+                ...(nextStoredBlock.settings || {}),
+              }
+        ),
         // Field schema should come from the current mode variant blueprint so admin UI upgrades appear automatically.
         editableFields: Array.isArray(modeVariant.editableFields) ? modeVariant.editableFields : [],
       });
@@ -3867,9 +3940,19 @@ export function normalizeStoredConfig(payload) {
       ));
 
       if (insertBeforeIndex === -1) {
-        mergedWithMissingDefaults.push(missingBlock);
+        mergedWithMissingDefaults.push(
+          missingBlock?.id === 'intro' && missingBlock?.kind === 'intro' && missingBlock?.mode === 'dynamic'
+            ? { ...missingBlock, settings: normalizeIntroBodyMirror(missingBlock.settings) }
+            : missingBlock,
+        );
       } else {
-        mergedWithMissingDefaults.splice(insertBeforeIndex, 0, missingBlock);
+        mergedWithMissingDefaults.splice(
+          insertBeforeIndex,
+          0,
+          missingBlock?.id === 'intro' && missingBlock?.kind === 'intro' && missingBlock?.mode === 'dynamic'
+            ? { ...missingBlock, settings: normalizeIntroBodyMirror(missingBlock.settings) }
+            : missingBlock,
+        );
       }
     });
     blocksByPath[path] = normalizePageBlocksState(mergedWithMissingDefaults);

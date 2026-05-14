@@ -120,6 +120,43 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock.settings.field5Type).toBe('textarea');
   });
 
+  it('hydrates HTML-backed intro seeds with full body content before any admin edits', () => {
+    const introBlock = (normalizeStoredConfig({}).blocksByPath['/services/retirement/iras'] || [])
+      .find((block) => block?.id === 'intro' && block?.kind === 'intro');
+
+    expect(introBlock?.mode).toBe('dynamic');
+    expect(introBlock?.settings?.heading).toBe('Take that, taxes.');
+    expect(introBlock?.settings?.bodyHtml).toBe('<p>Tax advantages and a broad range of investment options can anchor your retirement savings. Whether you’re starting a nest egg or adding to existing plans, an IRA may be the perfect fit for your needs and goals.</p>');
+    expect(introBlock?.settings?.body).toBe('Tax advantages and a broad range of investment options can anchor your retirement savings. Whether you’re starting a nest egg or adding to existing plans, an IRA may be the perfect fit for your needs and goals.');
+  });
+
+  it('backfills stored intro body text from seeded HTML during initial admin hydration', () => {
+    const defaultIntroBlock = (normalizeStoredConfig({}).blocksByPath['/services/retirement/iras'] || [])
+      .find((block) => block?.id === 'intro' && block?.kind === 'intro');
+
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/iras': [
+          {
+            id: 'intro',
+            kind: 'intro',
+            mode: 'dynamic',
+            settings: {
+              ...defaultIntroBlock?.settings,
+              body: '',
+            },
+          },
+        ],
+      },
+    });
+
+    const introBlock = (normalized.blocksByPath['/services/retirement/iras'] || [])
+      .find((block) => block?.id === 'intro' && block?.kind === 'intro');
+
+    expect(introBlock?.settings?.bodyHtml).toBe(defaultIntroBlock?.settings?.bodyHtml);
+    expect(introBlock?.settings?.body).toBe(defaultIntroBlock?.settings?.body);
+  });
+
   it('drops stale legacy-giving request-form blocks from stored config and keeps the CTA block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
