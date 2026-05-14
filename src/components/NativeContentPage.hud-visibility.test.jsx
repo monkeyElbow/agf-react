@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NativeContentPage from './NativeContentPage';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 
 void [MemoryRouter, NativeContentPage];
 
@@ -263,6 +264,38 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Page Content HUD panel' })).toBeTruthy();
     expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
+  });
+
+  it('shows hero and intro HUD controls on the managed legacy giving overview page', () => {
+    mockFrontHudEnabled = true;
+    mockBlocksByPath = {
+      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+        .filter((block) => block?.mode === 'dynamic'),
+    };
+    mockPageHierarchy = {
+      '/services/legacy-giving': {
+        path: '/services/legacy-giving',
+        title: 'Legacy Giving',
+        breadcrumbLabel: 'Legacy Giving',
+        parentPath: '/services',
+      },
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving',
+            title: 'Legacy Giving',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: /Generous.*giving\./i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Edit intro heading' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open Intro HUD panel' })).toBeTruthy();
   });
 
   it('switches mobile HUD to selection mode without rendering the desktop dock chrome', () => {

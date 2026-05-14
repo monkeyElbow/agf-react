@@ -204,6 +204,21 @@ describe('content block blueprint coverage', () => {
     const generosityBlocks = contentBlockBlueprintsByPath['/services/legacy-giving/generosity-fund'] || [];
     const iraBlocks = contentBlockBlueprintsByPath['/services/retirement/iras'] || [];
 
+    expect(legacyGivingBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(legacyGivingBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(legacyGivingBlocks.find((block) => block?.id === 'hero' && block?.mode === 'dynamic')).toMatchObject({
+      settings: {
+        line1Text: 'Generous giving.',
+        line2Text: 'With strategy.',
+      },
+    });
+    expect(legacyGivingBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(legacyGivingBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'static')).toBe(true);
+    expect(legacyGivingBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')).toMatchObject({
+      settings: {
+        heading: 'Make a difference that lasts for generations.',
+      },
+    });
     expect(legacyGivingBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(true);
     expect(legacyGivingBlocks.find((block) => block?.id === 'stewardship_story')).toMatchObject({
       kind: 'site_feature',

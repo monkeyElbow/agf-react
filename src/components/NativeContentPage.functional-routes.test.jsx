@@ -443,6 +443,36 @@ describe('NativeContentPage functional routes', () => {
     expect(joySection?.textContent).toContain('Your charitable giving plan makes it easy to manage both your cash and non-cash assets.');
   });
 
+  it('renders the legacy giving hero and intro through explicit managed blocks without changing the current copy', () => {
+    mockBlocksByPath = {
+      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+        .filter((block) => block?.mode === 'dynamic'),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving',
+            title: 'Legacy Giving',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const heroLineOne = screen.getByRole('heading', { name: /Generous.*giving\./i });
+    const heroLineTwo = screen.getByRole('heading', { name: /With.*strategy\./i });
+    const introHeading = screen.getByRole('heading', { name: 'Make a difference that lasts for generations.' });
+    const heroSection = heroLineOne.closest('section');
+    const introSection = introHeading.closest('section');
+
+    expect(heroLineTwo).toBeTruthy();
+    expect(heroSection?.getAttribute('data-block-id')).toBe('hero');
+    expect(introSection?.getAttribute('data-block-id')).toBe('intro');
+    expect(introSection?.textContent).toContain('Your generosity has the power to bless both the ministries and people you love.');
+    expect(introSection?.textContent).toContain('potential tax savings and income generation');
+  });
+
   it('renders the 403(b) online contributions block on the intended retirement feature preset', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
