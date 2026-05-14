@@ -12216,7 +12216,7 @@
   text-align: center;
   font-family: var(--ag-font-helv);
   font-weight: 700;
-  font-size: clamp(2.95rem, 5.9vw, 4.9rem);
+  font-size: clamp(2.95rem, 5.9vw, 4.59375rem);
   line-height: 0.94;
   letter-spacing: clamp(-0.03em, -0.02vw, -0.01em);
   text-wrap: balance;

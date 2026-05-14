@@ -2394,6 +2394,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         textTone: 'dark',
         justify: 'center',
         lineSpacing: 1,
+        titleSizeRem: 4.59375,
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
           hrefField: 'buttonUrl',
