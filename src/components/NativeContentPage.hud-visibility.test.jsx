@@ -692,17 +692,19 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       </MemoryRouter>,
     );
 
-    const requestHeading = screen.getByRole('heading', { name: /Make the most of your giving\./ });
-    const requestSection = requestHeading.closest('section');
+    const requestSection = document.querySelector(
+      'section[data-block-id="request_form"].legacy-child-native-generosity-request.native-dynamic-request',
+    );
 
     expect(requestSection).toBeTruthy();
     expect(requestSection?.className).toContain('legacy-child-native-generosity-request');
     expect(requestSection?.className).toContain('native-dynamic-request');
     expect(requestSection?.className).toContain('has-managed-request-shell');
+    expect(within(requestSection).getByRole('heading', { name: /Make the most of your giving\./ })).toBeTruthy();
     expect(requestSection?.querySelectorAll('.dynamic-request-layout')).toHaveLength(1);
     expect(requestSection?.querySelector('.native-info-section-copy.dynamic-request-copy')).toBeTruthy();
     expect(requestSection?.querySelector(':scope > .ag-panel-rail > .native-info-section-copy:not(.dynamic-request-copy)')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Open Request Form HUD panel' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Request Form' })).toBeTruthy();
   });
 
   it('shows the request-form HUD control on the managed charitable-gift-annuities request section', () => {
@@ -1005,7 +1007,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(billboardSection).toBeTruthy();
     expect(billboardSection?.className).toContain('legacy-child-native-generosity-outro');
     expect(billboardSection?.className).toContain('dynamic-billboard');
-    expect(screen.getByRole('button', { name: 'Open Billboard HUD panel' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Billboard' })).toBeTruthy();
     expect(within(billboardSection).getByRole('link', { name: 'Terms and Conditions' })).toBeTruthy();
   });
 
