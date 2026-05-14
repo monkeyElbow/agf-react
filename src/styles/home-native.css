@@ -1813,22 +1813,22 @@
   text-underline-offset: 2px;
 }
 
-.services-native-card--search {
+.services-native-card.card2.services-native-card--search {
   background: var(--ag-surface-blue-gradient);
   border-color: rgba(255, 255, 255, 0.18);
   box-shadow: 0 18px 30px rgba(0, 138, 171, 0.18);
 }
 
-.services-native-card--search h3 {
+.services-native-card.card2.services-native-card--search h3 {
   color: #ffffff;
 }
 
-.services-native-card--search p {
+.services-native-card.card2.services-native-card--search p {
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 1.1rem;
 }
 
-.services-native-card--search .service-native-action-row {
+.services-native-card.card2.services-native-card--search .service-native-action-row {
   margin-top: 0.15rem;
 }
 
