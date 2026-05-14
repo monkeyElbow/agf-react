@@ -168,13 +168,13 @@
 .service-native-hero h1.hero-anim-loans-slide {
   opacity: 0;
   transform: translateX(60px);
-  animation: loans-hero-slide 2000ms ease 400ms forwards;
+  animation: loans-hero-slide 600ms ease 400ms forwards;
 }
 
 .service-native-hero h1.hero-anim-loans-slide-followup {
   opacity: 0;
   transform: translateX(60px);
-  animation: loans-hero-slide 2000ms ease 800ms forwards;
+  animation: loans-hero-slide 600ms ease 800ms forwards;
 }
 
 .service-native-hero p {
@@ -3190,7 +3190,7 @@
 .loans-native-page .lineB {
   opacity: 0;
   transform: translateX(60px);
-  animation: loans-hero-slide 2000ms ease 400ms forwards;
+  animation: loans-hero-slide 600ms ease 400ms forwards;
 }
 
 @keyframes loans-hero-unblur {
