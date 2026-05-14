@@ -268,7 +268,15 @@ describe('content block blueprint coverage', () => {
     expect(investmentStrategyOptionsBlock?.settings?.columns).toBe('two');
     expect(investmentStrategyOptionsBlock?.settings?.card1LinksJson).toContain('Download the MBA Fact sheet PDF');
     expect(investmentStrategyOptionsBlock?.settings?.card1LinksJson).toContain('fund-descriptor-retirement-mba-income-fund');
+    expect(investmentStrategyOptionsBlock?.settings?.card1ButtonLabel).toBe('');
+    expect(investmentStrategyOptionsBlock?.settings?.card1ButtonPageRef).toBe('');
     expect(investmentStrategyOptionsBlock?.settings?.card2AccordionsJson).toContain('fund-descriptor-retirement-fidelity-asset-manager-40');
+    expect(investmentStrategyOptionsBlock?.settings?.card2ButtonLabel).toBe('');
+    expect(investmentStrategyOptionsBlock?.settings?.card2ButtonPageRef).toBe('');
+    expect(investmentStrategyOptionsBlock?.settings?.card3ButtonLabel).toBe('');
+    expect(investmentStrategyOptionsBlock?.settings?.card3ButtonPageRef).toBe('');
+    expect(investmentStrategyOptionsBlock?.settings?.card4ButtonLabel).toBe('');
+    expect(investmentStrategyOptionsBlock?.settings?.card4ButtonPageRef).toBe('');
     expect(investmentStrategyOptionsBlock?.settings?.card4Button2PageRef).toBe('/prospectus');
     expect(whoQualifiesBlock?.presetId).toBe('eligibility-cards');
     expect(whoQualifiesBlock?.templateId).toBe('who_qualifies');

@@ -17,7 +17,19 @@ export function composeRetirement403bSections({ pathname, baseContent, dynamicSe
   const strategyBillboardSection = runtimeSections.find((section) => section?.blockId === 'investment_strategy_heading') || null;
   const strategyGridSection = runtimeSections.find((section) => section?.blockId === 'investment_strategy_options') || null;
   const qualifyGridSection = runtimeSections.find((section) => section?.blockId === 'who_qualifies') || null;
-  const injectedSections = [strategyBillboardSection, strategyGridSection, qualifyGridSection].filter(Boolean);
+  const strategyEnrollCtaSection = strategyGridSection
+    ? (
+      sections.find(
+        (section) => String(section?.className || '').includes('retirement-403b-native-strategy-enroll-cta'),
+      ) || null
+    )
+    : null;
+  const injectedSections = [
+    strategyBillboardSection,
+    strategyGridSection,
+    strategyEnrollCtaSection,
+    qualifyGridSection,
+  ].filter(Boolean);
 
   if (!injectedSections.length) {
     return {
@@ -34,6 +46,9 @@ export function composeRetirement403bSections({ pathname, baseContent, dynamicSe
   const trimmedSections = sections.filter((section) => {
     const className = String(section?.className || '');
     if ((strategyBillboardSection || strategyGridSection) && className.includes('retirement-child-native-strategies')) {
+      return false;
+    }
+    if (strategyEnrollCtaSection && className.includes('retirement-403b-native-strategy-enroll-cta')) {
       return false;
     }
     if (qualifyGridSection && className.includes('retirement-child-native-qualify')) {

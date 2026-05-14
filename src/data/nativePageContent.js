@@ -2811,7 +2811,6 @@ const retirementChildPages = {
               { label: 'Download the MBA Fact sheet PDF', documentId: 'fund-descriptor-retirement-mba-income-fund' },
             ],
             actions: [
-              { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
               { label: 'Prospectus', to: '/prospectus', ghost: true },
             ],
             cardClass: 'card2',
@@ -2820,7 +2819,6 @@ const retirementChildPages = {
             title: 'Risk-Based Strategies',
             body: 'These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.',
             actions: [
-              { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
               { label: 'Prospectus', to: '/prospectus', ghost: true },
             ],
             accordions: [
@@ -2849,7 +2847,6 @@ const retirementChildPages = {
             title: 'Target-Date Strategies',
             body: 'Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.',
             actions: [
-              { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
               { label: 'Prospectus', to: '/prospectus', ghost: true },
             ],
             accordions: [
@@ -2866,7 +2863,6 @@ const retirementChildPages = {
             title: 'Individual Investment Option',
             body: 'This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.',
             actions: [
-              { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
               { label: 'Prospectus', to: '/prospectus', ghost: true },
             ],
             accordions: [
@@ -2885,6 +2881,14 @@ const retirementChildPages = {
             ],
             cardClass: 'card2',
           },
+        ],
+      },
+      {
+        className: 'retirement-403b-native-strategy-enroll-cta',
+        hideTitle: true,
+        justify: 'center',
+        actions: [
+          { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
         ],
       },
       {

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NativeContentPage from './NativeContentPage';
@@ -436,6 +436,32 @@ describe('NativeContentPage functional routes', () => {
     expect(section?.className).toContain('is-columns-style-retirement');
     expect(screen.queryByText('Column 2')).toBeNull();
     expect(button.className).toContain('service-native-btn');
+  });
+
+  it('renders a single centered 403(b) enroll CTA below the investment strategy options grid', () => {
+    mockBlocksByPath = {
+      '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
+        .filter((block) => block?.mode !== 'static'),
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/403b',
+            title: '403(b)',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const strategyGridSection = container.querySelector('.native-dynamic-grid.is-card-grid-preset-investment-options');
+    const strategyEnrollSection = container.querySelector('.retirement-403b-native-strategy-enroll-cta');
+
+    expect(strategyGridSection).toBeTruthy();
+    expect(strategyEnrollSection).toBeTruthy();
+    expect(within(strategyGridSection).queryByRole('link', { name: 'Enroll now' })).toBeNull();
+    expect(within(strategyEnrollSection).getByRole('link', { name: 'Enroll now' }).getAttribute('href')).toBe('/services/retirement/403b/403b-individual-enrollment');
   });
 
   it('reveals an external inline CTA shell from a single centered charitable trusts trigger while keeping the later form visible', async () => {

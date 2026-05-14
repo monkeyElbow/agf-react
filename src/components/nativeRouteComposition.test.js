@@ -10,6 +10,7 @@ describe('native route composition helpers', () => {
       sections: [
         { className: 'retirement-403b-native-rate-table', title: 'Rates' },
         { className: 'retirement-child-native-strategies retirement-403b-native-strategy-options', title: 'Fallback strategies' },
+        { className: 'retirement-403b-native-strategy-enroll-cta', title: 'Strategy enroll CTA' },
         { className: 'retirement-child-native-qualify', title: 'Fallback qualify' },
         { className: 'retirement-child-native-enroll', title: 'Enroll' },
         { className: 'retirement-child-native-table', title: 'Limits' },
@@ -32,6 +33,7 @@ describe('native route composition helpers', () => {
       'Rates',
       'Strategy heading',
       'Strategy grid',
+      'Strategy enroll CTA',
       'Qualify grid',
       'Enroll',
       'Limits',
@@ -43,6 +45,7 @@ describe('native route composition helpers', () => {
     const baseContent = {
       sections: [
         { className: 'retirement-child-native-strategies retirement-403b-native-strategy-options', title: 'Fallback strategies' },
+        { className: 'retirement-403b-native-strategy-enroll-cta', title: 'Strategy enroll CTA' },
         { className: 'retirement-child-native-qualify', title: 'Fallback qualify' },
         { className: 'retirement-child-native-enroll', title: 'Enroll' },
       ],
