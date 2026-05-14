@@ -1059,6 +1059,11 @@
   letter-spacing: inherit;
 }
 
+.home-native-page .service-native-section.native-dynamic-cta .native-info-section-copy > h2 {
+  font-family: var(--ag-font-heading);
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
+}
+
 .home-native-cta-shell {
   margin-top: 1.25rem;
   padding: clamp(1rem, 2.3vw, 2rem);

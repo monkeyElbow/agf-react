@@ -731,6 +731,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
 
   const resolvedTitle = String(runtime.title || '').trim();
   const bodyHtml = String(runtime.bodyHtml || '').trim();
+  const subtitle = String(runtime.subtitle || '').trim();
   const bgTone = normalizePanelBgTone(runtime.bgTone || 'white');
   const submitLabel = String(runtime.submitLabel || '').trim() || 'Follow-up with me';
   const successMessage = String(runtime.successMessage || '').trim() || 'Thanks. We will reach out soon.';
@@ -786,6 +787,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
                 {renderHighlightedText(resolvedTitle, runtime.titleHighlights || [])}
               </h2>
             ) : null}
+            {subtitle ? <p className="native-info-section-subtitle">{subtitle}</p> : null}
           </div>
         ) : null}
 

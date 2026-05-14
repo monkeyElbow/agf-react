@@ -98,6 +98,31 @@ describe('PageBlocksRenderer CTA form', () => {
     expect(screen.getByRole('button', { name: 'Follow-up with me' })).toBeTruthy();
   });
 
+  it('renders CTA subtitle in the section copy above the form', () => {
+    const { container } = renderCtaBlock({
+      id: 'cta_form',
+      type: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      title: 'Ready to talk?',
+      subtitle: 'It starts with a conversation. We’re happy to reach out.',
+      submitLabel: 'Follow-up with me',
+      field1Label: 'Name',
+      field1Type: 'text',
+      field1Required: true,
+      field2Enabled: false,
+      field3Enabled: false,
+      field4Enabled: false,
+    });
+
+    const copy = container.querySelector('.native-info-section-copy');
+    const form = container.querySelector('.dynamic-cta-form form');
+    const subtitle = screen.getByText('It starts with a conversation. We’re happy to reach out.');
+
+    expect(copy?.contains(subtitle)).toBe(true);
+    expect(form?.contains(subtitle)).toBe(false);
+  });
+
   it('applies external inline-reveal presentation classes to CTA form blocks', () => {
     const { container } = renderCtaBlock({
       id: 'cta_form',

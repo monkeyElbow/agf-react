@@ -1185,6 +1185,9 @@ export default function HomePage() {
           titleHighlightsJson: String(
             readCtaSetting('titleHighlightsJson') ?? block.titleHighlightsJson ?? fallbackLegacyHighlightsJson,
           ).trim(),
+          subtitle: String(
+            readCtaSetting('subtitle') ?? block.subtitle ?? '',
+          ).trim(),
           bodyHtml: String(
             readCtaSetting('bodyHtml') ?? block.bodyHtml ?? fallbackBodyHtml,
           ).trim(),

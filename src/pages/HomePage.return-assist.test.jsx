@@ -136,6 +136,18 @@ describe('HomePage return assist', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
+  it('keeps the home CTA lead copy in the section heading area instead of inside the form', () => {
+    renderHomePage(['/']);
+
+    const copy = screen.getByText('It starts with a conversation. We’re happy to reach out.');
+    const ctaSection = copy.closest('section');
+    const copyShell = copy.closest('.native-info-section-copy');
+    const form = ctaSection?.querySelector('.dynamic-cta-form form');
+
+    expect(copyShell?.contains(copy)).toBe(true);
+    expect(form?.contains(copy)).toBe(false);
+  });
+
   it('uses the shared site search results inside the compact return assist shell', async () => {
     const now = Date.now();
     recordHomeReturnAssistNavigation('/services/legacy-giving', now);
