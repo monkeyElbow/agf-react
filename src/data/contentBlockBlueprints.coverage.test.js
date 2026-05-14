@@ -309,6 +309,8 @@ describe('content block blueprint coverage', () => {
       expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
     ]);
     expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.targetSectionKey).toBe('class:legacy-child-native-generosity-outro');
+    expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.button2Style).toBe('ghost');
+    expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.button2Tone).toBe('super-grey');
     expect(generosityBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
 
     expect(iraBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);

@@ -418,6 +418,28 @@ function normalizeGenerosityFundHeroSettings(rawSettings) {
   return next;
 }
 
+function normalizeGenerosityFundJoyfulGivingBillboardSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+  const next = { ...settings };
+  const button2Label = String(next.button2Label || '').trim();
+  const button2DocumentId = String(next.button2DocumentId || '').trim();
+  const button2Style = String(next.button2Style || '').trim().toLowerCase();
+  const button2Tone = String(next.button2Tone || '').trim().toLowerCase();
+  const hasStaleTermsButtonStyle = (
+    button2Label === 'Terms and Conditions'
+    && button2DocumentId === 'document-planned-giving-terms-and-conditions'
+    && (!button2Style || button2Style === 'blue')
+    && (!button2Tone || button2Tone === 'atlantean')
+  );
+
+  if (hasStaleTermsButtonStyle) {
+    next.button2Style = 'ghost';
+    next.button2Tone = 'super-grey';
+  }
+
+  return next;
+}
+
 function normalizePageBlockState(pathname, block) {
   const nextBlock = cloneJson(block);
   if (
@@ -427,6 +449,14 @@ function normalizePageBlockState(pathname, block) {
     && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
   ) {
     nextBlock.settings = normalizeGenerosityFundHeroSettings(nextBlock?.settings);
+  }
+  if (
+    pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH
+    && String(nextBlock?.id || '').trim() === 'joyful_giving_billboard'
+    && String(nextBlock?.kind || '').trim().toLowerCase() === 'billboard'
+    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+  ) {
+    nextBlock.settings = normalizeGenerosityFundJoyfulGivingBillboardSettings(nextBlock?.settings);
   }
   return nextBlock;
 }

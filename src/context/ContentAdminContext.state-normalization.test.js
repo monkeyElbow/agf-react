@@ -710,6 +710,40 @@ describe('ContentAdminContext state normalization', () => {
     ]));
   });
 
+  it('repairs stale generosity fund joyful giving billboard secondary action styling back to the ghost treatment', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/legacy-giving/generosity-fund': [
+          {
+            id: 'joyful_giving_billboard',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: {
+              title: 'Simple, joyful giving.',
+              buttonLabel: 'Open a Generosity Fund®',
+              buttonUrl: 'https://secure.agfinancial.org/generosityfund/signup',
+              buttonStyle: 'blue',
+              buttonTone: 'atlantean',
+              button2Label: 'Terms and Conditions',
+              button2DocumentId: 'document-planned-giving-terms-and-conditions',
+              button2Style: 'blue',
+              button2Tone: 'atlantean',
+              targetSectionKey: 'class:legacy-child-native-generosity-outro',
+            },
+          },
+        ],
+      },
+    });
+
+    const billboardBlock = (normalized.blocksByPath['/services/legacy-giving/generosity-fund'] || [])
+      .find((block) => block?.id === 'joyful_giving_billboard');
+
+    expect(billboardBlock?.settings?.button2Style).toBe('ghost');
+    expect(billboardBlock?.settings?.button2Tone).toBe('super-grey');
+    expect(billboardBlock?.settings?.button2DocumentId).toBe('document-planned-giving-terms-and-conditions');
+    expect(billboardBlock?.settings?.buttonLabel).toBe('Open a Generosity Fund®');
+  });
+
   it('drops stale contact-us CTA blocks from stored config and keeps the request form', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {

@@ -555,6 +555,49 @@ describe('NativeContentPage functional routes', () => {
     expect(willsSection?.textContent).toContain('requires review by your attorney');
   });
 
+  it('renders the generosity fund joyful giving section through the targeted billboard block while preserving the current action styles', () => {
+    mockDocuments = [
+      ...mockDocuments,
+      {
+        id: 'document-planned-giving-terms-and-conditions',
+        title: 'Terms and Conditions',
+        url: 'https://files.example.com/planned-giving-terms-and-conditions.pdf',
+        external: true,
+      },
+    ];
+    mockBlocksByPath = {
+      '/services/legacy-giving/generosity-fund': (contentBlockBlueprintsByPath['/services/legacy-giving/generosity-fund'] || [])
+        .filter((block) => block?.mode === 'dynamic'),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving/generosity-fund',
+            title: 'Generosity Fund',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const joyfulHeading = screen.getByRole('heading', { name: 'Simple, joyful giving.' });
+    const joyfulSection = joyfulHeading.closest('section');
+    const openFundLink = within(joyfulSection).getByRole('link', { name: 'Open a Generosity Fund®' });
+    const termsLink = within(joyfulSection).getByRole('link', { name: 'Terms and Conditions' });
+
+    expect(joyfulSection?.getAttribute('data-block-id')).toBe('joyful_giving_billboard');
+    expect(joyfulSection?.className).toContain('legacy-child-native-generosity-outro');
+    expect(joyfulSection?.className).toContain('dynamic-billboard');
+    expect(joyfulSection?.className).toContain('is-bg-white');
+    expect(joyfulSection?.className).toContain('is-text-dark');
+    expect(openFundLink.className).toContain('is-tone-atlantean');
+    expect(openFundLink.className).not.toContain('is-ghost');
+    expect(termsLink.className).toContain('is-ghost');
+    expect(termsLink.className).toContain('is-tone-super-grey');
+    expect(joyfulSection?.textContent).toContain('Powered by your generosity.');
+  });
+
   it('renders the 403(b) online contributions block on the intended retirement feature preset', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])

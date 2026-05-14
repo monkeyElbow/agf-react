@@ -18,9 +18,11 @@ describe('legacy giving and IRA native page content', () => {
     const generosityPreIntroSections = Array.isArray(generosityContent?.preIntroSections) ? generosityContent.preIntroSections : [];
     const generosityInlineCta = generosityPreIntroSections.find((section) => section?.className === 'legacy-child-native-generosity-request legacy-child-native-generosity-cta legacy-child-native-generosity-request-inline');
     const generosityRequest = generosityContent?.sections?.find((section) => section?.className === 'legacy-child-native-generosity-request');
+    const generosityOutro = generosityContent?.sections?.find((section) => section?.className === 'legacy-child-native-generosity-outro');
     const generosityInlineCtaIndex = generosityPreIntroSections.findIndex((section) => section?.className === 'legacy-child-native-generosity-request legacy-child-native-generosity-cta legacy-child-native-generosity-request-inline');
     const generosityStepsIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-steps');
     const generosityRequestIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-generosity-request');
+    const generosityOutroIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-generosity-outro');
     const ministryImpactSections = Array.isArray(ministryImpactContent?.sections) ? ministryImpactContent.sections : [];
     const ministryImpactStockSection = ministryImpactSections.find((section) => section?.className === 'legacy-child-native-stock');
     const ministryImpactRequestSection = ministryImpactSections.find((section) => section?.className === 'legacy-child-native-request');
@@ -70,10 +72,17 @@ describe('legacy giving and IRA native page content', () => {
       expect.objectContaining({ id: 'phone', label: 'Phone*', type: 'tel', required: true }),
       expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
     ]);
+    expect(generosityOutro?.title).toBe('Simple, joyful giving.');
+    expect(generosityOutro?.subtitle).toBe('Powered by your generosity.');
+    expect(generosityOutro?.actions).toEqual([
+      expect.objectContaining({ label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' }),
+      expect.objectContaining({ label: 'Terms and Conditions', documentId: 'document-planned-giving-terms-and-conditions', ghost: true }),
+    ]);
     expect(generosityContent?.intro?.heading).toBe('All your charitable giving in one place.');
     expect(generosityInlineCtaIndex).toBe(0);
     expect(generosityStepsIndex).toBe(0);
     expect(generosityRequestIndex).toBeGreaterThan(generosityStepsIndex);
+    expect(generosityOutroIndex).toBeGreaterThan(generosityRequestIndex);
     expect(ministryImpactContent?.intro?.heading).toBe('Most wealth isn’t cash.');
     expect(ministryImpactSections.find((section) => section?.className === 'legacy-child-native-steps')?.cards).toHaveLength(3);
     expect(ministryImpactStockSection?.actions).toHaveLength(3);
