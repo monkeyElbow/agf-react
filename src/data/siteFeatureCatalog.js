@@ -93,7 +93,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
     buildRuntime: () => ({
       title: 'Smart stewardship—for today and tomorrow.',
       beats: Object.freeze([
-        'Generate more retirement income',
+        'Receive payments for life.',
         'Transition out of appreciated assets',
         'Leave a legacy for family and ministry',
         'Smart stewardship—for today and tomorrow.',

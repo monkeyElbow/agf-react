@@ -397,7 +397,7 @@ describe('NativeContentPage functional routes', () => {
     const joySection = joyHeading.closest('section');
     const comparisonSection = document.querySelector('#charitable-giving-plan-comparison');
 
-    expect(screen.getByText('Generate more retirement income')).toBeTruthy();
+    expect(screen.getByText('Receive payments for life.')).toBeTruthy();
     expect(stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]')?.textContent).toBe('Learn more');
     expect(stewardshipSection?.className).toContain('legacy-giving-stewardship');
     expect(willsSection && stewardshipSection

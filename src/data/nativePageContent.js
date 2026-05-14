@@ -465,7 +465,7 @@ const directContent = {
         className: 'legacy-giving-stewardship',
         cards: [
           {
-            title: 'Generate more retirement income',
+            title: 'Receive payments for life.',
             cardClass: 'card2',
           },
           {

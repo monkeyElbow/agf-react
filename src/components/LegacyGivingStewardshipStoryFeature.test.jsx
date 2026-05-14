@@ -6,7 +6,7 @@ import LegacyGivingStewardshipStoryFeature from './LegacyGivingStewardshipStoryF
 const DEFAULT_PROPS = {
   headline: 'Smart stewardship—for today and tomorrow.',
   beats: [
-    'Generate more retirement income',
+    'Receive payments for life.',
     'Transition out of appreciated assets',
     'Leave a legacy for family and ministry',
     'Smart stewardship—for today and tomorrow.',
@@ -83,11 +83,12 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
 
     expect(container.querySelector('.legacy-stewardship-story-static')).toBeTruthy();
     expect(container.querySelector('.legacy-stewardship-story-shell')).toBeNull();
-    expect(screen.getByText('Generate more retirement income')).toBeTruthy();
+    expect(screen.getByText('Receive payments for life.')).toBeTruthy();
     expect(screen.getByText('Transition out of appreciated assets')).toBeTruthy();
     expect(screen.getByText('Leave a legacy for family and ministry')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Smart stewardship—for today and tomorrow.' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Learn more' }).getAttribute('href')).toBe('#charitable-giving-plan-comparison');
+    expect(container.querySelector('.legacy-stewardship-story-static-beats li[data-tone="atlantean"]')?.textContent).toBe('Receive payments for life.');
   });
 
   it('keeps the smaller-viewport path on the safe static fallback instead of requiring the pinned stage', () => {
@@ -113,6 +114,7 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
 
     const finalActor = screen.getByText('Smart stewardship—for today and tomorrow.').closest('.legacy-stewardship-story-beat-actor');
     expect(finalActor?.getAttribute('data-motion-state')).toBe('holding');
+    expect(finalActor?.getAttribute('data-tone')).toBe('atlantean');
     expect(screen.getByRole('link', { name: 'Learn more' }).getAttribute('href')).toBe('#charitable-giving-plan-comparison');
   });
 });

@@ -1015,7 +1015,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       targetSectionKey: 'id:legacy-giving-stewardship-story',
       title: 'Smart stewardship—for today and tomorrow.',
       beats: [
-        'Generate more retirement income',
+        'Receive payments for life.',
         'Transition out of appreciated assets',
         'Leave a legacy for family and ministry',
         'Smart stewardship—for today and tomorrow.',

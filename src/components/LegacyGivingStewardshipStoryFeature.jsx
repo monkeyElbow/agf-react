@@ -6,6 +6,7 @@ const LEGACY_STORY_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const LEGACY_STORY_MIN_WIDTH_PX = 1100;
 const LEGACY_STORY_DESKTOP_RUNWAY_VH = 360;
 const LEGACY_STORY_RELEASE_START = 0.9;
+const LEGACY_STORY_TONE_SEQUENCE = Object.freeze(['atlantean', 'super-grey', 'atlantean-dark']);
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -27,6 +28,16 @@ function normalizeBeats(beats = [], headline = '') {
     return normalized;
   }
   return [...normalized, finalBeat];
+}
+
+function getStoryTone(index, beatCount) {
+  if (index < 0 || !beatCount) {
+    return 'super-grey';
+  }
+  if (index === beatCount - 1) {
+    return 'atlantean';
+  }
+  return LEGACY_STORY_TONE_SEQUENCE[index % LEGACY_STORY_TONE_SEQUENCE.length];
 }
 
 function StoryAction({ action, resolveTo, className = 'service-native-btn is-outline is-tone-atlantean' }) {
@@ -83,29 +94,31 @@ function getStoryActors(beats, progress) {
 
   const incomingBeat = beats[activeIndex];
   if (incomingBeat) {
-    const enterProgress = clamp(localProgress / 0.56, 0, 1);
+    const enterProgress = clamp((localProgress - 0.12) / 0.4, 0, 1);
     const isFinalBeat = activeIndex === beatCount - 1;
     actors.push({
       key: `incoming-${activeIndex}`,
       text: incomingBeat,
+      tone: getStoryTone(activeIndex, beatCount),
       role: isFinalBeat && enterProgress >= 1 ? 'holding' : 'incoming',
       motionState: isFinalBeat && enterProgress >= 1 ? 'holding' : (enterProgress < 1 ? 'entering' : 'holding'),
-      opacity: 0.18 + (enterProgress * 0.82),
-      translateY: (1 - enterProgress) * 72,
-      scale: 0.985 + (enterProgress * 0.015),
+      opacity: 0.04 + (enterProgress * 0.96),
+      translateY: (1 - enterProgress) * 64,
+      scale: 0.988 + (enterProgress * 0.012),
     });
   }
 
   const outgoingBeat = activeIndex > 0 ? beats[activeIndex - 1] : '';
-  if (outgoingBeat && localProgress < 0.58) {
-    const exitProgress = clamp(localProgress / 0.58, 0, 1);
+  if (outgoingBeat && localProgress < 0.44) {
+    const exitProgress = clamp(localProgress / 0.44, 0, 1);
     actors.unshift({
       key: `outgoing-${activeIndex - 1}`,
       text: outgoingBeat,
+      tone: getStoryTone(activeIndex - 1, beatCount),
       role: 'outgoing',
       motionState: 'exiting',
       opacity: 1 - (exitProgress * 0.94),
-      translateY: -(exitProgress * 62),
+      translateY: -(exitProgress * 72),
       scale: 1 - (exitProgress * 0.02),
     });
   }
@@ -129,13 +142,22 @@ export function LegacyGivingStewardshipStoryStaticContent({
       <div className="legacy-stewardship-story-static-shell">
         {leadBeats.length ? (
           <ol className="legacy-stewardship-story-static-beats">
-            {leadBeats.map((beat) => (
-              <li key={beat} className={reveal ? 'fade-up' : undefined}>{beat}</li>
+            {leadBeats.map((beat, index) => (
+              <li
+                key={beat}
+                className={reveal ? 'fade-up' : undefined}
+                data-tone={getStoryTone(index, normalizedBeats.length)}
+              >
+                {beat}
+              </li>
             ))}
           </ol>
         ) : null}
         {finalBeat ? (
-          <div className={`legacy-stewardship-story-static-final${reveal ? ' fade-up' : ''}`}>
+          <div
+            className={`legacy-stewardship-story-static-final${reveal ? ' fade-up' : ''}`}
+            data-tone={getStoryTone(normalizedBeats.length - 1, normalizedBeats.length)}
+          >
             <h2>{finalBeat}</h2>
             <div className="legacy-stewardship-story-cta-wrap">
               <StoryAction action={action} resolveTo={resolveTo} className="service-native-btn is-outline is-tone-atlantean legacy-stewardship-story-cta" />
@@ -274,6 +296,7 @@ export default function LegacyGivingStewardshipStoryFeature({
                     className="legacy-stewardship-story-beat-actor"
                     data-actor-role={actor.role}
                     data-motion-state={actor.motionState}
+                    data-tone={actor.tone}
                     style={{
                       opacity: actor.opacity,
                       transform: `translate3d(0, ${actor.translateY}px, 0) scale(${actor.scale})`,
