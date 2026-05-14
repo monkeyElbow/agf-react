@@ -219,6 +219,23 @@ describe('content block blueprint coverage', () => {
         heading: 'Make a difference that lasts for generations.',
       },
     });
+    expect(legacyGivingBlocks.find((block) => (
+      block?.id === 'giving_options'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        title: 'This is legacy planning and charitable giving made easy.',
+        targetSectionKey: 'class:legacy-giving-types',
+        card1ButtonStyle: 'ghost',
+        card4Button2Style: 'ghost',
+      },
+    });
+    expect(legacyGivingBlocks.some((block) => (
+      block?.id === 'giving_options'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'static'
+    ))).toBe(true);
     expect(legacyGivingBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(true);
     expect(legacyGivingBlocks.find((block) => block?.id === 'stewardship_story')).toMatchObject({
       kind: 'site_feature',

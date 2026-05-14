@@ -328,7 +328,7 @@ function parseCardGridAccordionsJson(value) {
   }
 }
 
-const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
+const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline', 'ghost']);
 const IMPACT_STAT_TONE_SET = new Set(['atlantean', 'mango', 'melon', 'sandstone', 'super-grey', 'white']);
 const DYNAMIC_COLUMNS_STYLE_SET = new Set(['retirement', 'legacy-highlight', 'loans-value']);
 const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo']);
@@ -1850,6 +1850,7 @@ export function buildDynamicGridFromBlock(block) {
     cardBodySizeRem,
     cardBodyLineHeight,
     cards,
+    targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
   };
 }
 

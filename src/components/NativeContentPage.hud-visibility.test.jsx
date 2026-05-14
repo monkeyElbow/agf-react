@@ -296,6 +296,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getByRole('button', { name: 'Edit intro heading' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Intro HUD panel' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open Card Grid · Flexible cards HUD panel' })).toBeTruthy();
   });
 
   it('switches mobile HUD to selection mode without rendering the desktop dock chrome', () => {

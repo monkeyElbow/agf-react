@@ -596,7 +596,7 @@ const HERO_ANIMATION_PRESET_SET = new Set(['default', 'none', 'loans-unblur']);
 const HERO_HEIGHT_MODE_SET = new Set(['default', 'custom']);
 const HERO_BG_TONE_SET = new Set(['white', 'sand', 'blue', 'grey']);
 const HERO_JUSTIFY_SET = new Set(['left', 'center', 'right']);
-const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
+const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline', 'ghost']);
 const NATIVE_HERO_LINE_KEYS = ['line1', 'line2', 'line3'];
 const NATIVE_HERO_LINE_CLASS_FALLBACKS = {
   line1: 'line1',
@@ -757,12 +757,13 @@ function normalizeActionButtonTone(value, fallback = 'atlantean') {
 
 function toActionButtonClassConfig(style, tone) {
   const normalizedStyle = normalizeActionButtonStyle(style);
-  const defaultTone = normalizedStyle === 'dark' ? 'super-grey' : 'atlantean';
+  const defaultTone = normalizedStyle === 'dark' || normalizedStyle === 'ghost' ? 'super-grey' : 'atlantean';
   const normalizedTone = normalizedStyle === 'outline'
     ? normalizeActionButtonTone(tone, defaultTone)
     : defaultTone;
   const className = [
     normalizedStyle === 'dark' ? 'is-dark' : '',
+    normalizedStyle === 'ghost' ? 'is-ghost' : '',
     normalizedStyle === 'outline' ? 'is-outline' : '',
     `is-tone-${normalizedTone}`,
   ].filter(Boolean).join(' ');
@@ -1002,6 +1003,7 @@ function buildDynamicGridSection(block, pathname) {
     cardBodySizeRem,
     cardBodyLineHeight,
     cards: runtimeCards,
+    targetSectionKey,
   } = runtime;
   const hasIntroCopy = Boolean(title || body || bodyHtml);
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-grid' : 'native-dynamic-grid';
@@ -1040,6 +1042,7 @@ function buildDynamicGridSection(block, pathname) {
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
     },
+    targetSectionKey: targetSectionKey || '',
     className: `${sectionClassBase} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-divider-tone-${dividerTone} ${presetRuntimeClassName}${cardStyle === 'none' ? ' is-card-none' : ''}${showTitleDivider ? ' is-divider-on' : ' is-divider-off'}`,
   };
 }
@@ -4043,12 +4046,14 @@ export default function NativeContentPage({ page }) {
 
     const consumedDynamicCtaBlockIds = new Set();
     const consumedDynamicFeaturePanelBlockIds = new Set();
+    const consumedDynamicGridBlockIds = new Set();
     const consumedDynamicRequestBlockIds = new Set();
     const consumedDynamicSiteFeatureBlockIds = new Set();
     const consumedDynamicTestimonialsBlockIds = new Set();
     const consumedDynamicBillboardBlockIds = new Set();
     const targetedDynamicCtaSections = new Map();
     const targetedDynamicFeatureSections = new Map();
+    const targetedDynamicGridSections = new Map();
     const targetedDynamicRequestSections = new Map();
     const targetedDynamicSiteFeatureSections = new Map();
     const targetedDynamicTestimonialsSections = new Map();
@@ -4071,6 +4076,15 @@ export default function NativeContentPage({ page }) {
         return;
       }
       targetedDynamicCtaSections.set(targetKey, { block, mappedSection });
+    });
+
+    visibleBlocks.forEach((block) => {
+      const mappedSection = buildDynamicGridSection(block, activePath);
+      const targetKey = String(mappedSection?.targetSectionKey || '').trim();
+      if (!mappedSection || !targetKey || targetedDynamicGridSections.has(targetKey)) {
+        return;
+      }
+      targetedDynamicGridSections.set(targetKey, { block, mappedSection });
     });
 
     visibleBlocks.forEach((block) => {
@@ -4147,6 +4161,40 @@ export default function NativeContentPage({ page }) {
               ...(mappedSection.railStyle || {}),
             },
             actions: mappedSection.actions?.length ? mappedSection.actions : section.actions,
+          };
+        }),
+      };
+    }
+
+    if (targetedDynamicGridSections.size && Array.isArray(nextBaseContent.sections) && nextBaseContent.sections.length) {
+      nextBaseContent = {
+        ...nextBaseContent,
+        sections: nextBaseContent.sections.map((section, sectionIndex) => {
+          const targetKey = getSectionTargetKeys(section, sectionIndex).find((key) => targetedDynamicGridSections.has(key));
+          if (!targetKey) {
+            return section;
+          }
+
+          const targetEntry = targetedDynamicGridSections.get(targetKey);
+          consumedDynamicGridBlockIds.add(targetEntry.block.id);
+          const mappedSection = targetEntry.mappedSection;
+
+          return {
+            ...section,
+            blockId: mappedSection.blockId || section.blockId,
+            className: mergeClassNames(section.className, mappedSection.className),
+            hideTitle: mappedSection.hideTitle,
+            title: mappedSection.title || section.title,
+            titleClassName: mappedSection.titleClassName || section.titleClassName,
+            titleHighlights: mappedSection.titleHighlights?.length ? mappedSection.titleHighlights : section.titleHighlights,
+            body: mappedSection.body?.length ? mappedSection.body : section.body,
+            html: mappedSection.html || section.html,
+            columns: mappedSection.columns || section.columns,
+            cards: mappedSection.cards?.length ? mappedSection.cards : section.cards,
+            sectionStyle: {
+              ...(section.sectionStyle || {}),
+              ...(mappedSection.sectionStyle || {}),
+            },
           };
         }),
       };
@@ -4348,6 +4396,9 @@ export default function NativeContentPage({ page }) {
       }
 
       if (block.mode === 'dynamic' && block.kind === 'card_grid') {
+        if (consumedDynamicGridBlockIds.has(block.id)) {
+          return acc;
+        }
         const gridSection = buildDynamicGridSection(block, activePath);
         if (gridSection) {
           acc.push(gridSection);

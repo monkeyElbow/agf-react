@@ -473,6 +473,38 @@ describe('NativeContentPage functional routes', () => {
     expect(introSection?.textContent).toContain('potential tax savings and income generation');
   });
 
+  it('renders the legacy giving types section through the managed card grid target without changing its current design shell', () => {
+    mockBlocksByPath = {
+      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+        .filter((block) => block?.mode === 'dynamic'),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving',
+            title: 'Legacy Giving',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const givingOptionsSection = document.querySelector('section.legacy-giving-types');
+    const watchVideoLink = within(givingOptionsSection).getByRole('link', { name: 'Watch video' });
+    const createPlanLink = within(givingOptionsSection).getByRole('link', { name: 'Create your plan' });
+
+    expect(givingOptionsSection?.getAttribute('data-block-id')).toBe('giving_options');
+    expect(givingOptionsSection?.className).toContain('legacy-giving-types');
+    expect(givingOptionsSection?.className).toContain('native-dynamic-grid');
+    expect(givingOptionsSection?.textContent).toContain('This is legacy planning and charitable giving made easy.');
+    expect(givingOptionsSection?.querySelector('mark.is-atlantean')?.textContent).toBe('made easy');
+    expect(givingOptionsSection?.querySelectorAll('.service-native-card')).toHaveLength(6);
+    expect(watchVideoLink.className).toContain('is-ghost');
+    expect(createPlanLink.className).toContain('is-ghost');
+    expect(document.querySelectorAll('section[data-block-id="giving_options"]')).toHaveLength(1);
+  });
+
   it('renders the 403(b) online contributions block on the intended retirement feature preset', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])

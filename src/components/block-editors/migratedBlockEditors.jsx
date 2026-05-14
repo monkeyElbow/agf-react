@@ -278,7 +278,7 @@ const BUFFERED_STRING_DRAFT_BLOCK_KINDS = Object.freeze([
 ]);
 
 const JUSTIFY_ICON_ORDER = ['left', 'center', 'right'];
-const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
+const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline', 'ghost']);
 const HERO_SWATCH_OPTIONS = HERO_TEXT_COLOR_OPTIONS;
 const BILLBOARD_BG_SWATCH_OPTIONS = SURFACE_BG_TONE_OPTIONS;
 const BILLBOARD_TEXT_SWATCH_OPTIONS = PANEL_TEXT_TONE_OPTIONS;
@@ -1551,12 +1551,13 @@ function EditorButtonPreview({ buttons }) {
     .map((item, index) => {
       const label = String(item?.label || '').trim() || `Button ${index + 1}`;
       const style = normalizeActionButtonStyleToken(item?.style);
-      const defaultTone = style === 'dark' ? 'super-grey' : 'atlantean';
+      const defaultTone = style === 'dark' || style === 'ghost' ? 'super-grey' : 'atlantean';
       const tone = style === 'outline'
         ? normalizeActionButtonToneToken(item?.tone, defaultTone)
         : defaultTone;
       const className = [
         'service-native-btn',
+        style === 'ghost' ? 'is-ghost' : '',
         style === 'outline' ? 'is-outline' : '',
         `is-tone-${tone}`,
       ].filter(Boolean).join(' ');
