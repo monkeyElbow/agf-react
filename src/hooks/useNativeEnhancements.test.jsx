@@ -46,9 +46,24 @@ function FadeOutHookHarness() {
   );
 }
 
+function CssHeroAnimationHookHarness() {
+  const ref = useRef(null);
+  useNativeEnhancements(ref, 'css-hero-test');
+
+  return (
+    <div ref={ref} className="service-native-page">
+      <section className="service-native-hero">
+        <h1 data-testid="css-hero-line-1" className="line1 hero-anim-loans-unblur">Your investments.</h1>
+        <h1 data-testid="css-hero-line-2" className="line2 hero-anim-loans-slide">Your faith.</h1>
+      </section>
+    </div>
+  );
+}
+
 void HookHarness;
 void ForceObserveHookHarness;
 void FadeOutHookHarness;
+void CssHeroAnimationHookHarness;
 
 describe('useNativeEnhancements fade-up reveal', () => {
   let observerCallback = null;
@@ -245,5 +260,24 @@ describe('useNativeEnhancements fade-out timing', () => {
     expect(defaultFade.classList.contains('is-fading')).toBe(true);
     expect(customFade.style.getPropertyValue('--scroll-opacity')).toBe('1.000');
     expect(customFade.classList.contains('is-fading')).toBe(false);
+  });
+});
+
+describe('useNativeEnhancements hero animation ownership', () => {
+  beforeEach(() => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false, addListener: vi.fn(), removeListener: vi.fn() });
+  });
+
+  it('does not inject legacy inline transitions onto CSS-driven hero preset lines', () => {
+    const { getByTestId } = render(<CssHeroAnimationHookHarness />);
+    const lineOne = getByTestId('css-hero-line-1');
+    const lineTwo = getByTestId('css-hero-line-2');
+
+    expect(lineOne.style.transition).toBe('');
+    expect(lineOne.style.opacity).toBe('');
+    expect(lineOne.style.transform).toBe('');
+    expect(lineTwo.style.transition).toBe('');
+    expect(lineTwo.style.opacity).toBe('');
+    expect(lineTwo.style.transform).toBe('');
   });
 });

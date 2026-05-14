@@ -46,6 +46,7 @@ import {
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
 import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
+import { getHeroSeedContract } from '../lib/heroSeedContracts';
 import { buildPresetFamilyRuntimeClassName } from '../lib/presetFamilyContract';
 
 const certificateCards = [
@@ -120,6 +121,16 @@ const CHURCH_CASH_RESERVES_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   title: 'Church Cash Reserves',
   fallbackImageAlt: 'Church Cash Reserves',
 });
+const INVESTMENTS_HERO_ANIMATION_PRESET = getHeroSeedContract('/services/investments')?.animationPreset || 'loans-unblur';
+
+function resolveInvestmentsHeroAnimationPreset(value) {
+  const normalized = String(value || '').trim();
+  if (!normalized || normalized === 'default') {
+    return INVESTMENTS_HERO_ANIMATION_PRESET;
+  }
+  return normalized;
+}
+
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
@@ -526,7 +537,9 @@ export default function InvestmentsPage() {
       ...heroBlock,
       settings: {
         ...heroHudSettings,
-        animationPreset: heroHudSettings.animationPreset || heroBlock.settings?.animationPreset || 'default',
+        animationPreset: resolveInvestmentsHeroAnimationPreset(
+          heroHudSettings.animationPreset || heroBlock.settings?.animationPreset,
+        ),
       },
     });
   }, [heroBlock, heroHudSettings]);

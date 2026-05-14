@@ -1,5 +1,12 @@
 import { useEffect } from 'react';
 
+const CSS_DRIVEN_HERO_ANIMATION_SELECTOR = [
+  '.hero-anim-none',
+  '.hero-anim-loans-unblur',
+  '.hero-anim-loans-slide',
+  '.hero-anim-loans-slide-followup',
+].join(', ');
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
@@ -61,6 +68,13 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
       root.dataset.heroRevealKey = heroKey;
 
       const heroRoot = root.querySelector('.service-native-hero') || root;
+      const cssDrivenHeroLines = Array.from(heroRoot.querySelectorAll(CSS_DRIVEN_HERO_ANIMATION_SELECTOR))
+        .filter((node, index, arr) => arr.indexOf(node) === index);
+
+      if (cssDrivenHeroLines.length) {
+        return;
+      }
+
       const lineNodes = Array.from(heroRoot.querySelectorAll('.line1, .line2'))
         .filter((node, index, arr) => arr.indexOf(node) === index);
 

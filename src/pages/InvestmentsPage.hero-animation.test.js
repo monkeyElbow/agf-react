@@ -17,7 +17,14 @@ describe('InvestmentsPage fallback hero animation', () => {
     const filePath = path.resolve(process.cwd(), 'src/pages/InvestmentsPage.jsx');
     const source = fs.readFileSync(filePath, 'utf8');
 
-    expect(source).toContain('animationPreset: heroHudSettings.animationPreset || heroBlock.settings?.animationPreset');
+    expect(source).toContain('animationPreset: resolveInvestmentsHeroAnimationPreset(');
+  });
+
+  it('coerces stale default investments hero presets back to the managed loans animation', () => {
+    const filePath = path.resolve(process.cwd(), 'src/pages/InvestmentsPage.jsx');
+    const source = fs.readFileSync(filePath, 'utf8');
+
+    expect(source).toContain("const INVESTMENTS_HERO_ANIMATION_PRESET = getHeroSeedContract('/services/investments')?.animationPreset || 'loans-unblur';");
+    expect(source).toContain("if (!normalized || normalized === 'default') {");
   });
 });
-
