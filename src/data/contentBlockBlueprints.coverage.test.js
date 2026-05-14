@@ -213,6 +213,22 @@ describe('content block blueprint coverage', () => {
         targetSectionKey: 'id:legacy-giving-stewardship-story',
       },
     });
+    expect(legacyGivingBlocks.find((block) => (
+      block?.id === 'joy_billboard'
+      && block?.kind === 'billboard'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        title: 'More joy in giving.',
+        subtitle: 'It’s easier than you think.',
+        targetSectionKey: 'class:legacy-giving-joy',
+      },
+    });
+    expect(legacyGivingBlocks.some((block) => (
+      block?.id === 'joy_billboard'
+      && block?.kind === 'billboard'
+      && block?.mode === 'static'
+    ))).toBe(true);
 
     expect(charitableTrustsBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(charitableTrustsBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);

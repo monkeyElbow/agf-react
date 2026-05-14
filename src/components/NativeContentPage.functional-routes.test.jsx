@@ -412,6 +412,37 @@ describe('NativeContentPage functional routes', () => {
     expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
   });
 
+  it('renders the legacy giving joy section through the billboard block target while preserving the native motion classes', () => {
+    mockBlocksByPath = {
+      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+        .filter((block) => block?.mode === 'dynamic'),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving',
+            title: 'Legacy Giving',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const joyHeading = screen.getByText((_, element) => (
+      element?.tagName === 'H2' && element.textContent === 'More joy in giving.'
+    ));
+    const joySection = joyHeading.closest('section');
+
+    expect(joySection?.getAttribute('data-block-id')).toBe('joy_billboard');
+    expect(joySection?.className).toContain('legacy-giving-joy');
+    expect(joySection?.className).toContain('dynamic-billboard');
+    expect(joySection?.className).toContain('fade-out');
+    expect(joySection?.querySelector('.native-info-section-copy.fade-up')).toBeTruthy();
+    expect(joySection?.textContent).toContain('It’s easier than you think.');
+    expect(joySection?.textContent).toContain('Your charitable giving plan makes it easy to manage both your cash and non-cash assets.');
+  });
+
   it('renders the 403(b) online contributions block on the intended retirement feature preset', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
