@@ -2515,7 +2515,7 @@
 .investments-native-dashboard-title {
   margin: 0;
   color: var(--ag-color-mango);
-  font-size: clamp(2.2rem, 4.4vw, 3rem);
+  font-size: clamp(4.4rem, 8.8vw, 6rem);
 }
 
 .service-native-cta-band.is-cta-band-preset-dashboard-login .investments-native-dashboard-title + p {
