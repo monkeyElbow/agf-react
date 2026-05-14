@@ -11963,7 +11963,7 @@
   margin-right: auto;
   text-align: center;
   margin-bottom: clamp(2rem, 4vw, 3rem);
-  letter-spacing: 0;
+  letter-spacing: -0.03em;
   font-size: clamp(2.3rem, 4.8vw, 3.85rem);
 }
 
@@ -12006,6 +12006,24 @@
   font-size: clamp(1.4rem, 2.2vw, 2rem);
   line-height: 1.05;
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
+}
+
+.native-info-page--legacy-giving .legacy-giving-wills.dynamic-billboard .native-info-section-copy > h2 {
+  text-align: center;
+  font-family: var(--ag-font-heading);
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  line-height: 1.05;
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
+}
+
+.native-info-page--legacy-giving .legacy-giving-wills.dynamic-billboard .native-info-rich-html {
+  width: min(760px, 100%);
+}
+
+.native-info-page--legacy-giving .legacy-giving-wills.dynamic-billboard .native-info-rich-html p {
+  margin-top: 0.7rem;
+  font-size: clamp(1.05rem, 1.55vw, 1.22rem);
+  line-height: 1.55;
 }
 
 .native-info-page--legacy-giving .legacy-giving-wills p:last-of-type {

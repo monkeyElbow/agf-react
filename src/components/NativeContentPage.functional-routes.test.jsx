@@ -151,6 +151,14 @@ describe('NativeContentPage functional routes', () => {
         topic: 'Insurance',
         active: true,
       },
+      {
+        id: 'form-planned-giving-will-planning-document',
+        title: 'Will Planning Document',
+        url: 'https://files.example.com/will-planning-document.pdf',
+        category: 'form',
+        topic: 'Legacy Giving',
+        active: true,
+      },
     ];
   });
 
@@ -214,7 +222,7 @@ describe('NativeContentPage functional routes', () => {
       })),
     };
 
-    const { container } = render(
+    render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -225,10 +233,10 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(container.querySelector('.calculators-native-contact.native-dynamic-request')).toBeTruthy();
-    expect(container.querySelector('.calculators-native-contact .dynamic-request-layout')).toBeTruthy();
-    expect(container.querySelector('.calculators-native-contact .native-info-inline-form.dynamic-request-form')).toBeTruthy();
-    expect(container.querySelector('.calculators-native-contact .native-info-inline-form:not(.dynamic-request-form)')).toBeNull();
+    expect(document.querySelector('.calculators-native-contact.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('.calculators-native-contact .dynamic-request-layout')).toBeTruthy();
+    expect(document.querySelector('.calculators-native-contact .native-info-inline-form.dynamic-request-form')).toBeTruthy();
+    expect(document.querySelector('.calculators-native-contact .native-info-inline-form:not(.dynamic-request-form)')).toBeNull();
     expect(screen.getAllByText('Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.')).toHaveLength(1);
   });
 
@@ -243,7 +251,7 @@ describe('NativeContentPage functional routes', () => {
       })),
     };
 
-    const { container } = render(
+    render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -254,9 +262,9 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(container.querySelector('[data-block-id="page_content"]')).toBeNull();
-    expect(container.querySelector('[data-block-id="request_form"]')).toBeTruthy();
-    expect(container.querySelector('.legacy-child-native-cga-request.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(document.querySelector('.legacy-child-native-cga-request.native-dynamic-request')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Generous.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Tax benefits\.\s+Ministry support\.\s+Payments for life\./ })).toBeTruthy();
   });
@@ -272,7 +280,7 @@ describe('NativeContentPage functional routes', () => {
       })),
     };
 
-    const { container } = render(
+    render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -283,9 +291,9 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(container.querySelector('[data-block-id="page_content"]')).toBeNull();
-    expect(container.querySelector('[data-block-id="request_form"]')).toBeTruthy();
-    expect(container.querySelector('.legacy-child-native-request.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(document.querySelector('.legacy-child-native-request.native-dynamic-request')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Unlocked.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Most wealth isn’t cash.' })).toBeTruthy();
   });
@@ -469,8 +477,10 @@ describe('NativeContentPage functional routes', () => {
     expect(heroLineTwo).toBeTruthy();
     expect(heroSection?.getAttribute('data-block-id')).toBe('hero');
     expect(introSection?.getAttribute('data-block-id')).toBe('intro');
+    expect(introSection?.className).toContain('is-bg-sand');
     expect(introSection?.textContent).toContain('Your generosity has the power to bless both the ministries and people you love.');
     expect(introSection?.textContent).toContain('potential tax savings and income generation');
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
   });
 
   it('renders the legacy giving types section through the managed card grid target without changing its current design shell', () => {
@@ -491,7 +501,9 @@ describe('NativeContentPage functional routes', () => {
     );
 
     const givingOptionsSection = document.querySelector('section.legacy-giving-types');
-    const watchVideoLink = within(givingOptionsSection).getByRole('link', { name: 'Watch video' });
+    const firstCard = givingOptionsSection?.querySelector('.service-native-card');
+    const watchVideoLink = within(firstCard).getByRole('link', { name: 'Watch video' });
+    const learnMoreLink = within(firstCard).getByRole('link', { name: 'Learn more' });
     const createPlanLink = within(givingOptionsSection).getByRole('link', { name: 'Create your plan' });
 
     expect(givingOptionsSection?.getAttribute('data-block-id')).toBe('giving_options');
@@ -501,8 +513,46 @@ describe('NativeContentPage functional routes', () => {
     expect(givingOptionsSection?.querySelector('mark.is-atlantean')?.textContent).toBe('made easy');
     expect(givingOptionsSection?.querySelectorAll('.service-native-card')).toHaveLength(6);
     expect(watchVideoLink.className).toContain('is-ghost');
+    expect(learnMoreLink.className).toContain('is-tone-atlantean');
+    expect(learnMoreLink.className).not.toContain('is-outline');
+    expect(learnMoreLink.className).not.toContain('is-ghost');
     expect(createPlanLink.className).toContain('is-ghost');
     expect(document.querySelectorAll('section[data-block-id="giving_options"]')).toHaveLength(1);
+  });
+
+  it('renders the legacy giving wills section through the targeted billboard block while preserving the current action styles', () => {
+    mockBlocksByPath = {
+      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+        .filter((block) => block?.mode === 'dynamic'),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/legacy-giving',
+            title: 'Legacy Giving',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const willsHeading = screen.getByRole('heading', { name: 'Wills & Estate Services' });
+    const willsSection = willsHeading.closest('section');
+    const downloadPacketLink = within(willsSection).getByRole('link', { name: 'Download packet' });
+    const onlineFormLink = within(willsSection).getByRole('link', { name: 'Online form*' });
+
+    expect(willsSection?.getAttribute('data-block-id')).toBe('wills_estate_billboard');
+    expect(willsSection?.className).toContain('legacy-giving-wills');
+    expect(willsSection?.className).toContain('dynamic-billboard');
+    expect(willsSection?.className).toContain('is-sand');
+    expect(downloadPacketLink.className).toContain('is-outline');
+    expect(downloadPacketLink.className).toContain('is-tone-atlantean');
+    expect(onlineFormLink.className).toContain('is-tone-atlantean');
+    expect(onlineFormLink.className).not.toContain('is-outline');
+    expect(onlineFormLink.className).not.toContain('is-ghost');
+    expect(willsSection?.textContent).toContain('This service is provided free of charge');
+    expect(willsSection?.textContent).toContain('requires review by your attorney');
   });
 
   it('renders the 403(b) online contributions block on the intended retirement feature preset', () => {

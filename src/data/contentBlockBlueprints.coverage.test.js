@@ -217,6 +217,7 @@ describe('content block blueprint coverage', () => {
     expect(legacyGivingBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')).toMatchObject({
       settings: {
         heading: 'Make a difference that lasts for generations.',
+        bgTone: 'sand',
       },
     });
     expect(legacyGivingBlocks.find((block) => (
@@ -228,7 +229,25 @@ describe('content block blueprint coverage', () => {
         title: 'This is legacy planning and charitable giving made easy.',
         targetSectionKey: 'class:legacy-giving-types',
         card1ButtonStyle: 'ghost',
+        card1Button2Style: 'blue',
         card4Button2Style: 'ghost',
+      },
+    });
+    expect(legacyGivingBlocks.find((block) => (
+      block?.id === 'wills_estate_billboard'
+      && block?.kind === 'billboard'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        title: 'Wills & Estate Services',
+        bgTone: 'sand',
+        textTone: 'dark',
+        buttonLabel: 'Download packet',
+        buttonDocumentId: 'form-planned-giving-will-planning-document',
+        buttonStyle: 'outline',
+        button2Label: 'Online form*',
+        button2Url: 'https://sft.agfinancial.org/documents/Send.do',
+        targetSectionKey: 'class:legacy-giving-wills',
       },
     });
     expect(legacyGivingBlocks.some((block) => (
@@ -236,7 +255,12 @@ describe('content block blueprint coverage', () => {
       && block?.kind === 'card_grid'
       && block?.mode === 'static'
     ))).toBe(true);
-    expect(legacyGivingBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(true);
+    expect(legacyGivingBlocks.some((block) => (
+      block?.id === 'wills_estate_billboard'
+      && block?.kind === 'billboard'
+      && block?.mode === 'static'
+    ))).toBe(true);
+    expect(legacyGivingBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(legacyGivingBlocks.find((block) => block?.id === 'stewardship_story')).toMatchObject({
       kind: 'site_feature',
       mode: 'dynamic',

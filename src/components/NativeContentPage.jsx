@@ -4138,6 +4138,8 @@ export default function NativeContentPage({ page }) {
           const targetEntry = targetedDynamicBillboardSections.get(targetKey);
           consumedDynamicBillboardBlockIds.add(targetEntry.block.id);
           const mappedSection = targetEntry.mappedSection;
+          const hasMappedHtml = Boolean(mappedSection.html);
+          const hasMappedBody = Array.isArray(mappedSection.body) && mappedSection.body.length > 0;
 
           return {
             ...section,
@@ -4149,8 +4151,8 @@ export default function NativeContentPage({ page }) {
             titleStyle: mappedSection.titleStyle || section.titleStyle,
             titleHighlights: mappedSection.titleHighlights?.length ? mappedSection.titleHighlights : section.titleHighlights,
             subtitle: mappedSection.subtitle || section.subtitle,
-            html: mappedSection.html || section.html,
-            body: mappedSection.body?.length ? mappedSection.body : section.body,
+            html: hasMappedHtml ? mappedSection.html : (hasMappedBody ? '' : section.html),
+            body: hasMappedBody ? mappedSection.body : (hasMappedHtml ? [] : section.body),
             justify: mappedSection.justify || section.justify,
             sectionStyle: {
               ...(section.sectionStyle || {}),
