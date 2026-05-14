@@ -1611,7 +1611,11 @@ export default function InvestmentsPage() {
             <mark>Minister</mark>.
           </h2>
 
-          <div className="service-native-grid investments-native-growth-grid fade-out">
+          <div
+            className="service-native-grid investments-native-growth-grid fade-out"
+            data-fade-out-start-vh="0.02"
+            data-fade-out-end-vh="-0.22"
+          >
             {growthCards.map((card) => (
               <article key={card.title} className="investments-native-growth-card fade-up">
                 <h3>{card.title}</h3>

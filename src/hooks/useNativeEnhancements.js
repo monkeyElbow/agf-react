@@ -4,6 +4,14 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function parseNumericAttribute(value, fallback) {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+  const numeric = Number.parseFloat(String(value).trim());
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
 function parseCountText(text) {
   const trimmed = (text || '').trim();
   const match = trimmed.match(/-?[\d,.]+(?:\.\d+)?/);
@@ -255,8 +263,16 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
         return;
       }
 
+      const fadeConfigs = nodes.map((el) => ({
+        el,
+        startVh: parseNumericAttribute(el.getAttribute('data-fade-out-start-vh'), 0.12),
+        endVh: parseNumericAttribute(el.getAttribute('data-fade-out-end-vh'), -0.24),
+        maxReduction: parseNumericAttribute(el.getAttribute('data-fade-out-max-reduction'), 0.58),
+        classThreshold: parseNumericAttribute(el.getAttribute('data-fade-out-class-threshold'), 0.04),
+      }));
+
       if (prefersReducedMotion) {
-        nodes.forEach((el) => {
+        fadeConfigs.forEach(({ el }) => {
           el.style.setProperty('--scroll-opacity', '1');
           el.classList.remove('is-fading');
         });
@@ -268,15 +284,22 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
       const update = () => {
         rafId = 0;
         const vh = window.innerHeight || document.documentElement.clientHeight || 0;
-        const startY = vh * 0.12;
-        const endY = -vh * 0.24;
 
-        nodes.forEach((el) => {
+        fadeConfigs.forEach((config) => {
+          const {
+            el,
+            startVh,
+            endVh,
+            maxReduction,
+            classThreshold,
+          } = config;
+          const startY = vh * startVh;
+          const endY = vh * endVh;
           const rect = el.getBoundingClientRect();
           const progress = clamp((startY - rect.top) / (startY - endY), 0, 1);
-          const opacity = 1 - (0.58 * progress);
+          const opacity = 1 - (maxReduction * progress);
           el.style.setProperty('--scroll-opacity', opacity.toFixed(3));
-          if (progress > 0.04) {
+          if (progress > classThreshold) {
             el.classList.add('is-fading');
           } else {
             el.classList.remove('is-fading');
@@ -298,7 +321,7 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
         window.cancelAnimationFrame(rafId);
         window.removeEventListener('scroll', requestUpdate);
         window.removeEventListener('resize', requestUpdate);
-        nodes.forEach((el) => {
+        fadeConfigs.forEach(({ el }) => {
           el.style.removeProperty('--scroll-opacity');
           el.classList.remove('is-fading');
         });
