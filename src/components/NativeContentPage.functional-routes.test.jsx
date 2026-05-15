@@ -676,6 +676,8 @@ describe('NativeContentPage functional routes', () => {
     const intro = document.querySelector('.service-native-intro.dynamic-intro');
     const trustChoices = document.querySelector('.legacy-child-native-trust-choices--trusts.native-dynamic-grid');
     const trustDifferences = document.querySelector('.legacy-child-native-trusts-differences.native-dynamic-grid');
+    const charitableRemainderTrust = document.querySelector('.legacy-child-native-trusts-crt.dynamic-billboard');
+    const charitableRemainderTrustTypes = document.querySelector('.legacy-child-native-trusts-crt-types.native-dynamic-grid');
 
     expect(intro?.className).toContain('is-text-white');
     expect(trustChoices).toBeTruthy();
@@ -688,6 +690,15 @@ describe('NativeContentPage functional routes', () => {
     expect(within(trustDifferences).getByText('Cash')).toBeTruthy();
     expect(within(trustDifferences).getByText('CRTs & taxes')).toBeTruthy();
     expect(within(trustDifferences).getByText('CLTs & taxes')).toBeTruthy();
+    expect(charitableRemainderTrust).toBeTruthy();
+    expect(within(charitableRemainderTrust).getByRole('heading', { name: 'Charitable Remainder Trust' })).toBeTruthy();
+    expect(within(charitableRemainderTrust).getByText(/The trust pays you \(and your spouse, if married\) income for life\./)).toBeTruthy();
+    expect(charitableRemainderTrustTypes).toBeTruthy();
+    expect(charitableRemainderTrustTypes?.querySelectorAll('.service-native-card')).toHaveLength(2);
+    expect(within(charitableRemainderTrustTypes).getByText('Charitable Remainder Unitrust (CRUT)')).toBeTruthy();
+    expect(within(charitableRemainderTrustTypes).getByText('Minimum required payout of 5%')).toBeTruthy();
+    expect(within(charitableRemainderTrustTypes).getByText('Charitable Remainder Annuity (CRAT)')).toBeTruthy();
+    expect(within(charitableRemainderTrustTypes).getByText('Payments may begin immediately upon funding')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(1);
     expect(screen.queryByRole('link', { name: 'Start the process' })).toBeNull();
     expect(document.querySelector('#charitable-trusts-inline-form')).toBeNull();

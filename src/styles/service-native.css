@@ -18749,6 +18749,40 @@
   text-align: left;
 }
 
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt.dynamic-billboard > .ag-panel-rail {
+  width: min(var(--dynamic-billboard-max-width, var(--ag-content-max)), calc(100% - (var(--ag-panel-gutter) * 2)));
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt.dynamic-billboard .native-info-section-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt.dynamic-billboard .native-info-section-copy > h2 {
+  margin: 0;
+  font-family: var(--ag-font-helv);
+  letter-spacing: 0;
+  font-size: clamp(2.6rem, 5vw, 4rem);
+  line-height: 1.05;
+  width: min(72ch, 100%);
+  text-align: center;
+  color: #ffffff;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt.dynamic-billboard .native-info-rich-html {
+  width: min(72ch, 100%);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt.dynamic-billboard .native-info-rich-html p {
+  margin: 0.9rem 0 0;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  line-height: 1.6;
+  text-align: left;
+  color: #ffffff;
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-types,
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-clt-types {
   padding: clamp(2.6rem, 5vw, 4.2rem) 0;
@@ -18807,6 +18841,36 @@
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .trusts-type-card .service-native-card-bullet-list li + li {
+  margin-top: 0.65rem;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 {
+  border-radius: 9px;
+  border: none;
+  background: #ffffff;
+  box-shadow: none;
+  padding: clamp(2rem, 4vw, 3rem);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 h3 {
+  font-family: var(--ag-font-helv);
+  letter-spacing: 0;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  line-height: 1.05;
+  color: var(--ag-color-atlantean);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list {
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  line-height: 1.6;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list li + li {
   margin-top: 0.65rem;
 }
 

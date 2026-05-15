@@ -337,6 +337,41 @@ describe('content block blueprint coverage', () => {
       && block?.kind === 'card_grid'
       && block?.mode === 'static'
     ))).toBe(true);
+    expect(charitableTrustsBlocks.find((block) => (
+      block?.id === 'remainder_trust_billboard'
+      && block?.kind === 'billboard'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        title: 'Charitable Remainder Trust',
+        bgTone: 'blue',
+        textTone: 'white',
+        targetSectionKey: 'class:legacy-child-native-trusts-crt',
+      },
+    });
+    expect(charitableTrustsBlocks.some((block) => (
+      block?.id === 'remainder_trust_billboard'
+      && block?.kind === 'billboard'
+      && block?.mode === 'static'
+    ))).toBe(true);
+    expect(charitableTrustsBlocks.find((block) => (
+      block?.id === 'remainder_trust_type_cards'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        columns: 'two',
+        showTitleDivider: false,
+        targetSectionKey: 'class:legacy-child-native-trusts-crt-types',
+        card1Title: 'Charitable Remainder Unitrust (CRUT)',
+        card2Title: 'Charitable Remainder Annuity (CRAT)',
+      },
+    });
+    expect(charitableTrustsBlocks.some((block) => (
+      block?.id === 'remainder_trust_type_cards'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'static'
+    ))).toBe(true);
     expect(charitableTrustsBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
 
     expect(endowmentBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
