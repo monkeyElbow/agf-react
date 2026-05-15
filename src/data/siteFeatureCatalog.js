@@ -145,7 +145,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
           eyebrow: 'Legacy Giving',
           label: 'Under trusted care for future ministry.',
           body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
-          tone: 'sandstone',
+          tone: 'mango',
           action: Object.freeze({
             label: 'Plan with us',
             to: '/services/legacy-giving',

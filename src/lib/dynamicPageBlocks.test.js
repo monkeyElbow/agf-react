@@ -1060,7 +1060,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
           value: '$40 Million',
           eyebrow: 'Legacy Giving',
           label: 'Under trusted care for future ministry.',
-          tone: 'sandstone',
+          tone: 'mango',
           action: {
             label: 'Plan with us',
             to: '/services/legacy-giving',

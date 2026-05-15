@@ -20,7 +20,7 @@ const DEFAULT_PROPS = {
       eyebrow: 'Legacy Giving',
       label: 'Under trusted care for future ministry.',
       body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
-      tone: 'sandstone',
+      tone: 'mango',
       action: { label: 'Plan with us', to: '/services/legacy-giving' },
     },
     {
@@ -65,7 +65,9 @@ describe('ImpactProofStoryFeature', () => {
     expect(screen.queryByText('Impact highlights')).toBeNull();
     expect(container.querySelector('.impact-proof-story-summary')).toBeNull();
     expect(container.querySelector('.impact-proof-story-stage')).toBeNull();
+    expect(container.querySelector('.impact-proof-story-proof-rule')).toBeNull();
     expect(container.querySelectorAll('.impact-proof-story-proof')).toHaveLength(4);
+    expect(container.querySelectorAll('.impact-proof-story-proof.fade-up')).toHaveLength(4);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-left')).toHaveLength(2);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-right')).toHaveLength(2);
     expect(screen.getByText('Churches and ministries fueled each year.')).toBeTruthy();
@@ -82,7 +84,7 @@ describe('ImpactProofStoryFeature', () => {
     expect(screen.getByRole('link', { name: 'Cover your trip' }).getAttribute('href')).toBe('/services/insurance');
     expect(screen.getByRole('link', { name: 'Start your plan' }).getAttribute('href')).toBe('/services/retirement');
     expect(container.querySelector('.impact-proof-story-proof-value.is-tone-atlantean')).toBeTruthy();
-    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-sandstone')).toBeTruthy();
+    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-mango')).toBeTruthy();
     expect(container.querySelector('.impact-proof-story-proof-value.is-tone-super-grey')).toBeTruthy();
     expect(container.querySelector('.impact-proof-story-proof-value.is-tone-atlantean-dark')).toBeTruthy();
   });
