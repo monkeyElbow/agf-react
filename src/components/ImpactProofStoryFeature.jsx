@@ -98,7 +98,7 @@ export function ImpactProofStoryEditorialContent({
 
   return (
     <div
-      className="ag-panel-rail impact-proof-story-shell"
+      className="impact-proof-story-shell"
       data-proof-layout="editorial-stack"
       data-proof-focus="reading-flow"
     >
