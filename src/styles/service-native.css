@@ -18564,6 +18564,37 @@
   font-size: clamp(2.1rem, 3.8vw, 3.2rem);
 }
 
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-grid {
+  margin-top: 0;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3 {
+  display: block;
+  min-height: 0;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3::after {
+  display: none;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3 strong {
+  font-weight: inherit;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card:nth-child(1) h3 strong {
+  color: var(--ag-color-melon);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card:nth-child(2) h3 strong {
+  color: var(--ag-color-mango);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card .service-native-action-row:last-child {
+  padding-top: 0;
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-differences {
   background: #ffffff;
   padding: clamp(3rem, 6vw, 5rem) 0;

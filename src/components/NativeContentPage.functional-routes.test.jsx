@@ -653,6 +653,15 @@ describe('NativeContentPage functional routes', () => {
   });
 
   it('reveals an external inline CTA shell from a single centered charitable trusts trigger while keeping the later form visible', async () => {
+    mockBlocksByPath = {
+      '/services/legacy-giving/charitable-trusts': (
+        contentBlockBlueprintsByPath['/services/legacy-giving/charitable-trusts'] || []
+      ).map((block) => ({
+        ...block,
+        hidden: false,
+      })),
+    };
+
     render(
       <MemoryRouter>
         <NativeContentPage
@@ -664,6 +673,14 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
+    const intro = document.querySelector('.service-native-intro.dynamic-intro');
+    const trustChoices = document.querySelector('.legacy-child-native-trust-choices--trusts.native-dynamic-grid');
+
+    expect(intro?.className).toContain('is-text-white');
+    expect(trustChoices).toBeTruthy();
+    expect(trustChoices?.querySelectorAll('.service-native-card')).toHaveLength(2);
+    expect(within(trustChoices).getByRole('link', { name: 'Explore CRT options' }).getAttribute('href')).toBe('/services/legacy-giving/charitable-trusts#crt');
+    expect(within(trustChoices).getByRole('link', { name: 'Explore CLT options' }).getAttribute('href')).toBe('/services/legacy-giving/charitable-trusts#clt');
     expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(1);
     expect(screen.queryByRole('link', { name: 'Start the process' })).toBeNull();
     expect(document.querySelector('#charitable-trusts-inline-form')).toBeNull();

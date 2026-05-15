@@ -30,6 +30,7 @@ describe('legacy giving and IRA native page content', () => {
     const charitableTrustsTrigger = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-crt-trigger');
     const charitableTrustsInlineCta = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline');
     const charitableTrustsCta = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta');
+    const charitableTrustsChoiceCards = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trust-choices legacy-child-native-trust-choices--trusts');
     const charitableTrustsTypesIndex = charitableTrustsContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-trusts-crt-types');
     const charitableTrustsTriggerIndex = charitableTrustsContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-trusts-crt-trigger');
     const charitableTrustsInlineCtaIndex = charitableTrustsContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline');
@@ -93,6 +94,13 @@ describe('legacy giving and IRA native page content', () => {
       expect.objectContaining({ id: 'lastName', label: 'Last Name*', type: 'text', required: true }),
       expect.objectContaining({ id: 'phone', label: 'Phone*', type: 'tel', required: true }),
       expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
+    ]);
+    expect(charitableTrustsChoiceCards?.cards).toHaveLength(2);
+    expect(charitableTrustsChoiceCards?.cards?.[0]?.actions).toEqual([
+      expect.objectContaining({ label: 'Explore CRT options', to: '/services/legacy-giving/charitable-trusts#crt' }),
+    ]);
+    expect(charitableTrustsChoiceCards?.cards?.[1]?.actions).toEqual([
+      expect.objectContaining({ label: 'Explore CLT options', to: '/services/legacy-giving/charitable-trusts#clt' }),
     ]);
     expect(charitableTrustsTypes?.actions).toBeUndefined();
     expect(charitableTrustsTrigger?.justify).toBe('center');

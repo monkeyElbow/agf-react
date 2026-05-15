@@ -288,6 +288,34 @@ describe('content block blueprint coverage', () => {
 
     expect(charitableTrustsBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(charitableTrustsBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(charitableTrustsBlocks.find((block) => (
+      block?.id === 'intro'
+      && block?.kind === 'intro'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        heading: 'Charitable Trusts',
+        textTone: 'white',
+      },
+    });
+    expect(charitableTrustsBlocks.find((block) => (
+      block?.id === 'trust_type_cards'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        columns: 'two',
+        showTitleDivider: false,
+        targetSectionKey: 'class:legacy-child-native-trust-choices--trusts',
+        card1Title: 'Charitable **Remainder** Trust (CRT)',
+        card2Title: 'Charitable **Lead** Trust (CLT)',
+      },
+    });
+    expect(charitableTrustsBlocks.some((block) => (
+      block?.id === 'trust_type_cards'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'static'
+    ))).toBe(true);
     expect(charitableTrustsBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
 
     expect(endowmentBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
