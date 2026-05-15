@@ -473,6 +473,7 @@ describe('ContentAdminContext state normalization', () => {
     const requestBlock = calculatorBlocks.find((block) => block?.kind === 'request_form');
     const ctaBlock = calculatorBlocks.find((block) => block?.kind === 'cta_form');
 
+    expect(calculatorBlocks.some((block) => block?.id === 'page_content')).toBe(false);
     expect(requestBlock).toBeTruthy();
     expect(requestBlock?.mode).toBe('dynamic');
     expect(requestBlock?.settings?.targetSectionClassName).toBe('calculators-native-contact');

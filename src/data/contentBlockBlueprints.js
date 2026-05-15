@@ -712,7 +712,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     },
   ],
   '/calculators': [
-    genericPageContentBlueprintBlock(),
     {
       id: 'request_form',
       name: 'Calculator Request Form',

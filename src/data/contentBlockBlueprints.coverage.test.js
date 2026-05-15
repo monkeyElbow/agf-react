@@ -165,11 +165,11 @@ describe('content block blueprint coverage', () => {
     });
   });
 
-  it('seeds calculators with an explicit request-form block alongside managed page content', () => {
+  it('seeds calculators with an explicit request-form block without inert page content', () => {
     const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
     const requestBlock = blocks.find((block) => block?.id === 'request_form');
 
-    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
     expect(requestBlock).toMatchObject({
       kind: 'request_form',
       mode: 'dynamic',

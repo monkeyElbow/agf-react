@@ -237,6 +237,8 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.calculators-native-contact .dynamic-request-layout')).toBeTruthy();
     expect(document.querySelector('.calculators-native-contact .native-info-inline-form.dynamic-request-form')).toBeTruthy();
     expect(document.querySelector('.calculators-native-contact .native-info-inline-form:not(.dynamic-request-form)')).toBeNull();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
     expect(screen.getAllByText('Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.')).toHaveLength(1);
   });
 
