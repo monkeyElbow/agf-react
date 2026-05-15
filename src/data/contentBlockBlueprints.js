@@ -3439,6 +3439,24 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: sharedDynamicBillboardEditableFields,
     },
     createStaticBlueprintStub({ id: 'billboard', name: 'Billboard', kind: 'billboard' }),
+    {
+      id: 'impact_proof_story',
+      name: 'Site Feature · Impact proof story',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'impact_proof_story',
+        headline: 'Impact highlights',
+        body: '',
+        buttonLabel: '',
+        buttonUrl: '',
+        buttonPageRef: '',
+        buttonOpenInNewWindow: false,
+        targetSectionKey: 'class:impact-native-stats',
+      },
+      editableFields: siteFeatureEditableFields,
+    },
+    createStaticBlueprintStub({ id: 'impact_proof_story', name: 'Site Feature · Impact proof story', kind: 'site_feature' }),
   ],
   '/services/retirement': [
     {

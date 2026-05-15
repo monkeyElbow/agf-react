@@ -36,6 +36,7 @@ import {
 import DynamicRequestFormSection from '../DynamicRequestFormSection';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../HeroHudEditorShared';
 import HomeImpactStoryFeature, { HomeImpactStoryStaticContent } from '../HomeImpactStoryFeature';
+import ImpactProofStoryFeature from '../ImpactProofStoryFeature';
 import LegacyGivingStewardshipStoryFeature from '../LegacyGivingStewardshipStoryFeature';
 import NewsletterSignupForm from '../NewsletterSignupForm';
 import { extractHeroLineColorToken } from '../../lib/heroHudRanges';
@@ -1005,6 +1006,22 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
           headline={runtime.title}
           beats={runtime.beats}
           action={runtime.action}
+          resolveTo={resolveTo}
+        />
+      </section>
+    );
+  }
+
+  if (runtime.runtimeKey === 'impact_proof_story') {
+    return (
+      <section className={`service-native-section impact-native-stats impact-proof-story${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+        <BlockOwnershipOverlay ownership={ownership} />
+        <SharedBlockHudAnchor hudAnchor={hudAnchor} />
+        <ImpactProofStoryFeature
+          headline={runtime.title}
+          body={runtime.body}
+          action={runtime.action}
+          metrics={runtime.metrics}
           resolveTo={resolveTo}
         />
       </section>

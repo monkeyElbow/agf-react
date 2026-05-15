@@ -953,8 +953,37 @@ export function buildDynamicSiteFeatureFromBlock(block) {
     toKeys: ['buttonPageRef'],
     openInNewWindowKeys: ['buttonOpenInNewWindow'],
   }) || featureRuntime.action;
+  const metrics = Array.isArray(featureRuntime.metrics)
+    ? featureRuntime.metrics
+      .filter((metric) => metric && typeof metric === 'object')
+      .map((metric) => {
+        const metricAction = metric.action && typeof metric.action === 'object'
+          ? {
+            label: String(metric.action.label || '').trim(),
+            href: String(metric.action.href || '').trim(),
+            to: String(metric.action.to || '').trim(),
+            openInNewWindow: Boolean(metric.action.openInNewWindow),
+          }
+          : null;
+        const hasMetricAction = Boolean(metricAction?.label && (metricAction?.href || metricAction?.to));
+        return {
+          value: String(metric.value || '').trim(),
+          label: String(metric.label || '').trim(),
+          tone: String(metric.tone || '').trim() || 'mango',
+          body: String(metric.body || '').trim(),
+          eyebrow: String(metric.eyebrow || '').trim(),
+          action: hasMetricAction ? metricAction : null,
+        };
+      })
+      .filter((metric) => metric.value && metric.label)
+    : [];
+  const beats = Array.isArray(featureRuntime.beats)
+    ? featureRuntime.beats
+      .map((beat) => String(beat || '').trim())
+      .filter(Boolean)
+    : [];
 
-  if (!headline && !body && !action) {
+  if (!headline && !body && !action && !metrics.length && !beats.length) {
     return null;
   }
 
@@ -980,21 +1009,8 @@ export function buildDynamicSiteFeatureFromBlock(block) {
     imageUrl: defaultImageUrl,
     imageAlt: defaultImageAlt,
     action,
-    metrics: Array.isArray(featureRuntime.metrics)
-      ? featureRuntime.metrics
-        .filter((metric) => metric && typeof metric === 'object')
-        .map((metric) => ({
-          value: String(metric.value || '').trim(),
-          label: String(metric.label || '').trim(),
-          tone: String(metric.tone || '').trim() || 'mango',
-        }))
-        .filter((metric) => metric.value && metric.label)
-      : [],
-    beats: Array.isArray(featureRuntime.beats)
-      ? featureRuntime.beats
-        .map((beat) => String(beat || '').trim())
-        .filter(Boolean)
-      : [],
+    metrics,
+    beats,
   };
 }
 

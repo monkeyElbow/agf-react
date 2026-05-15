@@ -537,6 +537,28 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           settings: {},
           editableFields: [],
         },
+        {
+          id: 'impact_proof_story',
+          name: 'Site Feature · Impact proof story',
+          kind: 'site_feature',
+          mode: 'dynamic',
+          hidden: false,
+          settings: {
+            featureId: 'impact_proof_story',
+            headline: 'Impact highlights',
+            targetSectionKey: 'class:impact-native-stats',
+          },
+          editableFields: [],
+        },
+        {
+          id: 'impact_proof_story',
+          name: 'Site Feature · Impact proof story',
+          kind: 'site_feature',
+          mode: 'static',
+          hidden: true,
+          settings: {},
+          editableFields: [],
+        },
       ],
     };
 
@@ -557,6 +579,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Intro HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Billboard HUD panel' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open Site Feature · Impact proof story HUD panel' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Open Page Content HUD panel' })).toBeNull();
   });
 

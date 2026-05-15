@@ -105,6 +105,73 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       },
     }),
   }),
+  Object.freeze({
+    featureId: 'impact_proof_story',
+    label: 'Impact proof story',
+    description: 'Code-owned Impact proof sequence with a safe stacked fallback and a restrained desktop-only metric reveal.',
+    runtimeKey: 'impact_proof_story',
+    allowedEditableFieldIds: SITE_FEATURE_MINIMAL_ACTION_EDITABLE_FIELD_IDS,
+    routeAllowlist: Object.freeze(['/about-us/impact']),
+    previewLabel: 'Impact proof story',
+    previewThumbnail: '',
+    experimental: false,
+    internalOnly: false,
+    buildRuntime: () => ({
+      title: 'Impact highlights',
+      body: '',
+      action: null,
+      metrics: Object.freeze([
+        Object.freeze({
+          value: '4,000',
+          eyebrow: 'Loans',
+          label: 'Churches and ministries fueled each year.',
+          body: 'From first conversation to final funding, we help ministries move from idea to opening day with financing that understands church realities.',
+          tone: 'atlantean',
+          action: Object.freeze({
+            label: 'Explore Loans',
+            to: '/services/loans',
+            openInNewWindow: false,
+          }),
+        }),
+        Object.freeze({
+          value: '$40 Million',
+          eyebrow: 'Legacy Giving',
+          label: 'Under trusted care for future ministry.',
+          body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
+          tone: 'sandstone',
+          action: Object.freeze({
+            label: 'Plan with us',
+            to: '/services/legacy-giving',
+            openInNewWindow: false,
+          }),
+        }),
+        Object.freeze({
+          value: '687',
+          eyebrow: 'Insurance',
+          label: 'Mission trips covered with protection in place.',
+          body: 'Teams can travel, serve, and respond quickly because practical coverage is already handled before the wheels ever leave the runway.',
+          tone: 'super-grey',
+          action: Object.freeze({
+            label: 'Cover your trip',
+            to: '/services/insurance',
+            openInNewWindow: false,
+          }),
+        }),
+        Object.freeze({
+          value: '299',
+          eyebrow: 'Retirement',
+          label: 'Ministers retired this year with AGFinancial.',
+          body: 'Retirement planning that respects decades of calling and helps leaders step into the next season with structure, confidence, and care.',
+          tone: 'atlantean-dark',
+          action: Object.freeze({
+            label: 'Start your plan',
+            to: '/services/retirement',
+            openInNewWindow: false,
+          }),
+        }),
+      ]),
+    }),
+  }),
 ]);
 
 const SITE_FEATURE_CATALOG_BY_ID = Object.freeze(

@@ -298,6 +298,54 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByRole('heading', { name: 'Most wealth isn’t cash.' })).toBeTruthy();
   });
 
+  it('replaces the impact native stats grid in place with the managed proof story feature while keeping the native fallback when blocks are absent', () => {
+    mockBlocksByPath = {
+      '/about-us/impact': (
+        contentBlockBlueprintsByPath['/about-us/impact'] || []
+      ).map((block) => ({
+        ...block,
+        hidden: false,
+      })),
+    };
+
+    const { unmount } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/about-us/impact',
+            title: 'Impact',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const managedProofSection = document.querySelector('.impact-native-stats.native-dynamic-site-feature');
+    expect(managedProofSection).toBeTruthy();
+    expect(managedProofSection?.querySelector('.impact-proof-story-shell, .impact-proof-story-static')).toBeTruthy();
+    expect(managedProofSection?.querySelectorAll('.impact-native-card')).toHaveLength(0);
+    expect(within(managedProofSection).getByText('Churches and ministries fueled each year.')).toBeTruthy();
+    expect(within(managedProofSection).getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
+
+    unmount();
+    mockBlocksByPath = {};
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/about-us/impact',
+            title: 'Impact',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const fallbackStatsSection = document.querySelector('.impact-native-stats');
+    expect(fallbackStatsSection).toBeTruthy();
+    expect(fallbackStatsSection?.querySelectorAll('.impact-native-card')).toHaveLength(4);
+    expect(fallbackStatsSection?.querySelector('.impact-proof-story-shell, .impact-proof-story-static')).toBeNull();
+  });
+
   it('renders the careers route through NativeContentPage with delegated jobs behavior intact', () => {
     mockVisibleJobs = [
       {

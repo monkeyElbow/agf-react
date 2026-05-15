@@ -1026,6 +1026,72 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       },
     });
   });
+
+  it('maps the impact proof story to its reviewed runtime and keeps the metric sequence code-owned', () => {
+    const runtime = buildDynamicSiteFeatureFromBlock({
+      id: 'impact_proof_story',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'impact_proof_story',
+        headline: 'Impact highlights',
+        targetSectionKey: 'class:impact-native-stats',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      type: 'site_feature',
+      featureId: 'impact_proof_story',
+      runtimeKey: 'impact_proof_story',
+      targetSectionKey: 'class:impact-native-stats',
+      title: 'Impact highlights',
+      metrics: [
+        {
+          value: '4,000',
+          eyebrow: 'Loans',
+          label: 'Churches and ministries fueled each year.',
+          tone: 'atlantean',
+          action: {
+            label: 'Explore Loans',
+            to: '/services/loans',
+          },
+        },
+        {
+          value: '$40 Million',
+          eyebrow: 'Legacy Giving',
+          label: 'Under trusted care for future ministry.',
+          tone: 'sandstone',
+          action: {
+            label: 'Plan with us',
+            to: '/services/legacy-giving',
+          },
+        },
+        {
+          value: '687',
+          eyebrow: 'Insurance',
+          label: 'Mission trips covered with protection in place.',
+          tone: 'super-grey',
+          action: {
+            label: 'Cover your trip',
+            to: '/services/insurance',
+          },
+        },
+        {
+          value: '299',
+          eyebrow: 'Retirement',
+          label: 'Ministers retired this year with AGFinancial.',
+          tone: 'atlantean-dark',
+          action: {
+            label: 'Start your plan',
+            to: '/services/retirement',
+          },
+        },
+      ],
+    });
+    expect(runtime?.metrics).toHaveLength(4);
+    expect(runtime?.metrics?.[2]?.body).toContain('practical coverage');
+    expect(runtime?.metrics?.[3]?.action?.to).toBe('/services/retirement');
+  });
 });
 
 describe('buildDynamicSplitPanelFromBlock', () => {

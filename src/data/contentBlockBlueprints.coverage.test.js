@@ -79,6 +79,21 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'static')).toBe(true);
     expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'static')).toBe(true);
+    expect(blocks.find((block) => (
+      block?.id === 'impact_proof_story'
+      && block?.kind === 'site_feature'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        featureId: 'impact_proof_story',
+        targetSectionKey: 'class:impact-native-stats',
+      },
+    });
+    expect(blocks.some((block) => (
+      block?.id === 'impact_proof_story'
+      && block?.kind === 'site_feature'
+      && block?.mode === 'static'
+    ))).toBe(true);
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 

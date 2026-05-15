@@ -70,6 +70,7 @@ import NetWorthCalculatorWidget from './NetWorthCalculatorWidget';
 import FrontHudPanelShell from './FrontHudPanelShell';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from './HeroHudEditorShared';
 import LegacyGivingStewardshipStoryFeature from './LegacyGivingStewardshipStoryFeature';
+import ImpactProofStoryFeature from './ImpactProofStoryFeature';
 import DynamicRequestFormSection from './DynamicRequestFormSection';
 import FrontHudAnchorTag from './FrontHudAnchorTag';
 import NewsletterSignupForm from './NewsletterSignupForm';
@@ -5734,6 +5735,45 @@ export default function NativeContentPage({ page }) {
                 headline={runtime.title}
                 beats={runtime.beats}
                 action={runtime.action}
+                resolveTo={resolveManagedPathFromRef}
+              />
+              {showSectionHud && !isMobileFrontHud ? (
+                <FrontHudAnchorTag
+                  label={dynamicSectionPanel?.label || 'Section'}
+                  isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
+                  onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
+                  style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                />
+              ) : null}
+            </section>
+          );
+        }
+
+        if (section.siteFeatureRuntime?.runtimeKey === 'impact_proof_story') {
+          const runtime = section.siteFeatureRuntime;
+
+          return (
+            <section
+              key={sectionKey}
+              id={section.anchorId || undefined}
+              ref={(node) => {
+                if (dynamicSectionBlockId && isDynamicSectionHudTarget) {
+                  dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;
+                }
+              }}
+              className={`service-native-section${section.sand ? ' is-sand' : ''}${section.className ? ` ${section.className}` : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${sectionHudFocusClass}${sectionOwnership.className || ''}`}
+              data-block-id={dynamicSectionBlockId || undefined}
+              data-mobile-front-hud-selectable={showSectionHud && isMobileFrontHud ? 'true' : undefined}
+              data-mobile-front-hud-selected={isMobileHudPanelSelected(dynamicSectionHudPanelId) ? 'true' : undefined}
+              data-mobile-front-hud-label={showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Section') : undefined}
+              style={section.sectionStyle || undefined}
+            >
+              <BlockOwnershipOverlay ownership={sectionOwnership} />
+              <ImpactProofStoryFeature
+                headline={runtime.title}
+                body={runtime.body}
+                action={runtime.action}
+                metrics={runtime.metrics}
                 resolveTo={resolveManagedPathFromRef}
               />
               {showSectionHud && !isMobileFrontHud ? (

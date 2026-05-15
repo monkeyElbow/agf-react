@@ -14,7 +14,7 @@ describe('site feature catalog', () => {
     const catalog = getSiteFeatureCatalog();
     const defaultEntry = getDefaultSiteFeatureCatalogEntry();
 
-    expect(catalog).toHaveLength(3);
+    expect(catalog).toHaveLength(4);
     expect(defaultEntry).toMatchObject({
       featureId: 'editorial_spotlight',
       label: 'Editorial spotlight',
@@ -30,11 +30,13 @@ describe('site feature catalog', () => {
     const entry = getSiteFeatureCatalogEntry('editorial_spotlight');
     const homeImpactEntry = getSiteFeatureCatalogEntry('home_impact_story');
     const legacyGivingEntry = getSiteFeatureCatalogEntry('legacy_giving_stewardship_story');
+    const impactProofEntry = getSiteFeatureCatalogEntry('impact_proof_story');
 
     expect(getSiteFeatureOptions()).toEqual([
       { value: 'editorial_spotlight', label: 'Editorial spotlight' },
       { value: 'home_impact_story', label: 'Home impact story' },
       { value: 'legacy_giving_stewardship_story', label: 'Legacy Giving stewardship story' },
+      { value: 'impact_proof_story', label: 'Impact proof story' },
     ]);
     expect(getAllowedSiteFeatureEditableFieldIds('editorial_spotlight')).toEqual(entry?.allowedEditableFieldIds);
     expect(entry?.allowedEditableFieldIds).toEqual([
@@ -68,6 +70,17 @@ describe('site feature catalog', () => {
     expect(legacyGivingEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
     expect(homeImpactEntry?.routeAllowlist).toEqual(['/']);
     expect(legacyGivingEntry?.routeAllowlist).toEqual(['/services/legacy-giving']);
+    expect(getAllowedSiteFeatureEditableFieldIds('impact_proof_story')).toEqual(impactProofEntry?.allowedEditableFieldIds);
+    expect(impactProofEntry?.allowedEditableFieldIds).toEqual([
+      'featureId',
+      'headline',
+      'body',
+      'buttonLabel',
+      'buttonUrl',
+      'buttonPageRef',
+    ]);
+    expect(impactProofEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
+    expect(impactProofEntry?.routeAllowlist).toEqual(['/about-us/impact']);
   });
 
   it('falls back unknown ids to the default reviewed entry', () => {

@@ -135,4 +135,24 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.getByLabelText('CTA URL / Path override')).toBeTruthy();
     expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
   });
+
+  it('keeps the impact proof story editor surface limited to headline, body, and CTA path overrides', () => {
+    render(
+      createElement(SiteFeatureBlockEditor, {
+        block: createBlock({
+          settings: {
+            featureId: 'impact_proof_story',
+          },
+        }),
+        onSettingChange: vi.fn(),
+        routeOptions: [],
+      }),
+    );
+
+    expect(screen.getByLabelText('Headline override')).toBeTruthy();
+    expect(screen.getByLabelText('Body override')).toBeTruthy();
+    expect(screen.getByLabelText('CTA label override')).toBeTruthy();
+    expect(screen.getByLabelText('CTA URL / Path override')).toBeTruthy();
+    expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
+  });
 });
