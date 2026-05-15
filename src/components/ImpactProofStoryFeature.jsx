@@ -107,11 +107,18 @@ export function ImpactProofStoryEditorialContent({
         {normalizedMetrics.map((metric, index) => (
           <article
             key={`${metric.value}-${metric.label}`}
-            className={`impact-proof-story-proof fade-up is-tone-${metric.tone} ${index % 2 === 0 ? 'is-left' : 'is-right'}`}
+            className={`impact-proof-story-proof is-tone-${metric.tone} ${index % 2 === 0 ? 'is-left' : 'is-right'}`}
             data-proof-index={String(index)}
             data-tone={metric.tone}
           >
-            <div className="impact-proof-story-proof-content">
+            <div
+              className="impact-proof-story-proof-content fade-up fade-out"
+              data-fade-out-start-vh="0.16"
+              data-fade-out-end-vh="-0.08"
+              data-fade-out-max-reduction="0.28"
+              data-scroll-enter-start-vh="1.12"
+              data-scroll-enter-end-vh="0.68"
+            >
               {metric.eyebrow ? <p className="impact-proof-story-proof-eyebrow">{metric.eyebrow}</p> : null}
               <h2 className={`impact-proof-story-proof-value is-tone-${metric.tone}`}>{metric.value}</h2>
               <p className="impact-proof-story-proof-label">{metric.label}</p>

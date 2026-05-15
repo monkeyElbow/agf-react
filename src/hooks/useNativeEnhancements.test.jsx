@@ -39,6 +39,8 @@ function FadeOutHookHarness() {
         className="fade-out"
         data-fade-out-start-vh="0.02"
         data-fade-out-end-vh="-0.22"
+        data-scroll-enter-start-vh="1.2"
+        data-scroll-enter-end-vh="0.8"
       >
         Custom
       </div>
@@ -232,15 +234,16 @@ describe('useNativeEnhancements fade-out timing', () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: false, addListener: vi.fn(), removeListener: vi.fn() });
     window.innerHeight = 1000;
     Element.prototype.getBoundingClientRect = function mockedRect() {
+      const isCustom = this.getAttribute('data-testid') === 'fade-out-custom';
       return {
-        top: 60,
-        bottom: 220,
+        top: isCustom ? 840 : 60,
+        bottom: isCustom ? 1000 : 220,
         left: 0,
         right: 0,
         width: 0,
-        height: 160,
+        height: isCustom ? 160 : 160,
         x: 0,
-        y: 60,
+        y: isCustom ? 840 : 60,
         toJSON: () => ({}),
       };
     };
@@ -259,6 +262,7 @@ describe('useNativeEnhancements fade-out timing', () => {
     expect(defaultFade.style.getPropertyValue('--scroll-opacity')).not.toBe('1.000');
     expect(defaultFade.classList.contains('is-fading')).toBe(true);
     expect(customFade.style.getPropertyValue('--scroll-opacity')).toBe('1.000');
+    expect(customFade.style.getPropertyValue('--scroll-entry-progress')).toBe('0.500');
     expect(customFade.classList.contains('is-fading')).toBe(false);
   });
 });

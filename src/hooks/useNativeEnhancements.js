@@ -283,11 +283,15 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
         endVh: parseNumericAttribute(el.getAttribute('data-fade-out-end-vh'), -0.24),
         maxReduction: parseNumericAttribute(el.getAttribute('data-fade-out-max-reduction'), 0.58),
         classThreshold: parseNumericAttribute(el.getAttribute('data-fade-out-class-threshold'), 0.04),
+        entryStartVh: parseNumericAttribute(el.getAttribute('data-scroll-enter-start-vh'), 1.08),
+        entryEndVh: parseNumericAttribute(el.getAttribute('data-scroll-enter-end-vh'), 0.7),
       }));
 
       if (prefersReducedMotion) {
         fadeConfigs.forEach(({ el }) => {
           el.style.setProperty('--scroll-opacity', '1');
+          el.style.setProperty('--scroll-fade-progress', '0');
+          el.style.setProperty('--scroll-entry-progress', '1');
           el.classList.remove('is-fading');
         });
         return;
@@ -306,13 +310,20 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
             endVh,
             maxReduction,
             classThreshold,
+            entryStartVh,
+            entryEndVh,
           } = config;
           const startY = vh * startVh;
           const endY = vh * endVh;
           const rect = el.getBoundingClientRect();
           const progress = clamp((startY - rect.top) / (startY - endY), 0, 1);
+          const entryStartY = vh * entryStartVh;
+          const entryEndY = vh * entryEndVh;
+          const entryProgress = clamp((entryStartY - rect.bottom) / (entryStartY - entryEndY), 0, 1);
           const opacity = 1 - (maxReduction * progress);
           el.style.setProperty('--scroll-opacity', opacity.toFixed(3));
+          el.style.setProperty('--scroll-fade-progress', progress.toFixed(3));
+          el.style.setProperty('--scroll-entry-progress', entryProgress.toFixed(3));
           if (progress > classThreshold) {
             el.classList.add('is-fading');
           } else {
@@ -337,6 +348,8 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
         window.removeEventListener('resize', requestUpdate);
         fadeConfigs.forEach(({ el }) => {
           el.style.removeProperty('--scroll-opacity');
+          el.style.removeProperty('--scroll-fade-progress');
+          el.style.removeProperty('--scroll-entry-progress');
           el.classList.remove('is-fading');
         });
       });

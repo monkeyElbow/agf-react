@@ -67,7 +67,8 @@ describe('ImpactProofStoryFeature', () => {
     expect(container.querySelector('.impact-proof-story-stage')).toBeNull();
     expect(container.querySelector('.impact-proof-story-proof-rule')).toBeNull();
     expect(container.querySelectorAll('.impact-proof-story-proof')).toHaveLength(4);
-    expect(container.querySelectorAll('.impact-proof-story-proof.fade-up')).toHaveLength(4);
+    expect(container.querySelectorAll('.impact-proof-story-proof.fade-up')).toHaveLength(0);
+    expect(container.querySelectorAll('.impact-proof-story-proof-content.fade-up.fade-out')).toHaveLength(4);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-left')).toHaveLength(2);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-right')).toHaveLength(2);
     expect(screen.getByText('Churches and ministries fueled each year.')).toBeTruthy();
