@@ -31,6 +31,7 @@ describe('legacy giving and IRA native page content', () => {
     const charitableTrustsInlineCta = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline');
     const charitableTrustsCta = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta');
     const charitableTrustsChoiceCards = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trust-choices legacy-child-native-trust-choices--trusts');
+    const charitableTrustsDifferences = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-differences');
     const charitableTrustsTypesIndex = charitableTrustsContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-trusts-crt-types');
     const charitableTrustsTriggerIndex = charitableTrustsContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-trusts-crt-trigger');
     const charitableTrustsInlineCtaIndex = charitableTrustsContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline');
@@ -102,6 +103,16 @@ describe('legacy giving and IRA native page content', () => {
     expect(charitableTrustsChoiceCards?.cards?.[1]?.actions).toEqual([
       expect.objectContaining({ label: 'Explore CLT options', to: '/services/legacy-giving/charitable-trusts#clt' }),
     ]);
+    expect(charitableTrustsDifferences?.title).toBe('The differences. At a glance.');
+    expect(charitableTrustsDifferences?.cards).toHaveLength(3);
+    expect(charitableTrustsDifferences?.cards?.[0]?.list).toEqual([
+      'Cash',
+      'Securities (stocks, bonds, mutual funds)',
+      'Real estate',
+      'Other marketable assets',
+    ]);
+    expect(charitableTrustsDifferences?.cards?.[1]?.list?.[0]).toContain('**Best for:** Appreciated assets');
+    expect(charitableTrustsDifferences?.cards?.[2]?.list?.[0]).toContain('**Best for:** Estate planning');
     expect(charitableTrustsTypes?.actions).toBeUndefined();
     expect(charitableTrustsTrigger?.justify).toBe('center');
     expect(charitableTrustsTrigger?.hideCopy).toBe(true);

@@ -316,6 +316,27 @@ describe('content block blueprint coverage', () => {
       && block?.kind === 'card_grid'
       && block?.mode === 'static'
     ))).toBe(true);
+    expect(charitableTrustsBlocks.find((block) => (
+      block?.id === 'trust_differences'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        title: 'The differences. At a glance.',
+        columns: 'three',
+        cardStyle: 'none',
+        showTitleDivider: false,
+        targetSectionKey: 'class:legacy-child-native-trusts-differences',
+        card1ListJson: '["Cash","Securities (stocks, bonds, mutual funds)","Real estate","Other marketable assets"]',
+        card2Title: 'CRTs & taxes',
+        card3Title: 'CLTs & taxes',
+      },
+    });
+    expect(charitableTrustsBlocks.some((block) => (
+      block?.id === 'trust_differences'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'static'
+    ))).toBe(true);
     expect(charitableTrustsBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
 
     expect(endowmentBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);

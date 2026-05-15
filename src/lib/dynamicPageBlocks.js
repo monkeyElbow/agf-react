@@ -328,6 +328,20 @@ function parseCardGridAccordionsJson(value) {
   }
 }
 
+function parseCardGridListJson(value) {
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value || '[]') : value;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .map((item) => String(item || '').trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline', 'ghost']);
 const IMPACT_STAT_TONE_SET = new Set(['atlantean', 'mango', 'melon', 'sandstone', 'super-grey', 'white']);
 const DYNAMIC_COLUMNS_STYLE_SET = new Set(['retirement', 'legacy-highlight', 'loans-value']);
@@ -1805,10 +1819,11 @@ export function buildDynamicGridFromBlock(block) {
         toneKeys: [`__card${slot}SecondaryTone`],
       });
       const cardDividerTone = normalizeDynamicGridCardDividerTone(settings[`card${slot}DividerTone`]);
+      const cardList = parseCardGridListJson(settings[`card${slot}ListJson`]);
       const cardLinks = parseCardGridLinkItemsJson(settings[`card${slot}LinksJson`]);
       const cardAccordions = parseCardGridAccordionsJson(settings[`card${slot}AccordionsJson`]);
       const cardActions = [cardPrimaryAction, cardSecondaryAction].filter(Boolean);
-      if (!cardTitle && !cardBody && !cardActions.length && !cardLinks.length && !cardAccordions.length) {
+      if (!cardTitle && !cardBody && !cardList.length && !cardActions.length && !cardLinks.length && !cardAccordions.length) {
         return null;
       }
 
@@ -1816,6 +1831,7 @@ export function buildDynamicGridFromBlock(block) {
         slot,
         title: cardTitle || `Card ${slot}`,
         body: cardBody,
+        list: cardList,
         cardClass: resolvedCardClass,
         dividerTone: cardDividerTone || undefined,
         action: cardActions[0] || null,

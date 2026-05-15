@@ -1013,6 +1013,7 @@ function buildDynamicGridSection(block, pathname) {
       slot: card.slot,
       title: card.title,
       body: card.body,
+      list: Array.isArray(card.list) ? card.list : undefined,
       cardClass: card.cardClass,
       dividerTone: card.dividerTone,
       actions: (Array.isArray(card.actions) ? card.actions : (card.action ? [card.action] : []))

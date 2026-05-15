@@ -1292,6 +1292,7 @@ describe('buildDynamicGridFromBlock', () => {
         cardBodyLineHeight: 1.8,
         card1Title: 'First option',
         card1Body: 'Primary copy',
+        card1ListJson: '["First bullet","Second bullet"]',
         card1DividerTone: 'melon',
         card1ButtonLabel: 'Learn more',
         card1ButtonPageRef: '/services/retirement',
@@ -1322,6 +1323,7 @@ describe('buildDynamicGridFromBlock', () => {
         slot: 1,
         title: 'First option',
         body: 'Primary copy',
+        list: ['First bullet', 'Second bullet'],
         cardClass: 'card1',
         dividerTone: 'melon',
         action: expect.objectContaining({

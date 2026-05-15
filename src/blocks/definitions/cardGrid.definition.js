@@ -141,6 +141,7 @@ const sections = [
       ...[1, 2, 3, 4, 5, 6, 7, 8].flatMap((slot) => ([
         defineEditorField({ id: `card${slot}Title`, label: `Card ${slot} title`, type: 'text' }),
         defineEditorField({ id: `card${slot}Body`, label: `Card ${slot} body`, type: 'textarea', rows: 2 }),
+        defineEditorField({ id: `card${slot}ListJson`, label: `Card ${slot} bullet list JSON`, type: 'textarea', rows: 5 }),
         defineEditorField({ id: `card${slot}LinksJson`, label: `Card ${slot} PDF / link list JSON`, type: 'textarea', rows: 4 }),
         defineEditorField({ id: `card${slot}AccordionsJson`, label: `Card ${slot} accordion JSON`, type: 'textarea', rows: 6 }),
         defineEditorField({

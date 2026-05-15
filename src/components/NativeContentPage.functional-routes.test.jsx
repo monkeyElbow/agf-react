@@ -675,12 +675,19 @@ describe('NativeContentPage functional routes', () => {
 
     const intro = document.querySelector('.service-native-intro.dynamic-intro');
     const trustChoices = document.querySelector('.legacy-child-native-trust-choices--trusts.native-dynamic-grid');
+    const trustDifferences = document.querySelector('.legacy-child-native-trusts-differences.native-dynamic-grid');
 
     expect(intro?.className).toContain('is-text-white');
     expect(trustChoices).toBeTruthy();
     expect(trustChoices?.querySelectorAll('.service-native-card')).toHaveLength(2);
     expect(within(trustChoices).getByRole('link', { name: 'Explore CRT options' }).getAttribute('href')).toBe('/services/legacy-giving/charitable-trusts#crt');
     expect(within(trustChoices).getByRole('link', { name: 'Explore CLT options' }).getAttribute('href')).toBe('/services/legacy-giving/charitable-trusts#clt');
+    expect(trustDifferences).toBeTruthy();
+    expect(within(trustDifferences).getByRole('heading', { name: 'The differences. At a glance.' })).toBeTruthy();
+    expect(trustDifferences?.querySelectorAll('.service-native-card')).toHaveLength(3);
+    expect(within(trustDifferences).getByText('Cash')).toBeTruthy();
+    expect(within(trustDifferences).getByText('CRTs & taxes')).toBeTruthy();
+    expect(within(trustDifferences).getByText('CLTs & taxes')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(1);
     expect(screen.queryByRole('link', { name: 'Start the process' })).toBeNull();
     expect(document.querySelector('#charitable-trusts-inline-form')).toBeNull();

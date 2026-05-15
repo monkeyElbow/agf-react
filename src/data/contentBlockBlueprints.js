@@ -200,6 +200,7 @@ function seedBlueprintServicesGridCardFields(cardNumber, {
 function seedBlueprintCardGridCardFields(cardNumber, {
   title = '',
   body = '',
+  listJson = '',
   dividerTone = '',
   buttonLabel = '',
   buttonHref = '',
@@ -213,6 +214,7 @@ function seedBlueprintCardGridCardFields(cardNumber, {
   return {
     [`card${cardNumber}Title`]: title,
     [`card${cardNumber}Body`]: body,
+    [`card${cardNumber}ListJson`]: listJson,
     [`card${cardNumber}LinksJson`]: linksJson,
     [`card${cardNumber}AccordionsJson`]: accordionsJson,
     [`card${cardNumber}DividerTone`]: dividerTone,
@@ -1013,6 +1015,47 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: sharedDynamicGridEditableFields,
     },
     createStaticCardGridBlueprintStub({ id: 'trust_type_cards', name: 'Trust Type Cards' }),
+    {
+      id: 'trust_differences',
+      name: 'Trust Differences',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        title: 'The differences. At a glance.',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        body: '',
+        bodyHtml: '',
+        bgTone: 'white',
+        contentWidth: 'browser',
+        columns: 'three',
+        cardStyle: 'none',
+        showTitleDivider: false,
+        dividerTone: 'auto',
+        cardPaddingRem: 1.35,
+        cardTitleSizeRem: 1.14,
+        cardBodySizeRem: 1,
+        cardBodyLineHeight: 1.58,
+        titleTone: 'super-grey',
+        bodyTone: 'super-grey',
+        targetSectionKey: 'class:legacy-child-native-trusts-differences',
+        ...seedBlueprintCardGridCardFields(1, {
+          title: 'Funding',
+          body: '**Both CRTs and CLTs accept these assets:**',
+          listJson: '["Cash","Securities (stocks, bonds, mutual funds)","Real estate","Other marketable assets"]',
+        }),
+        ...seedBlueprintCardGridCardFields(2, {
+          title: 'CRTs & taxes',
+          listJson: '["**Best for:** Appreciated assets you want to sell (stocks, real estate)","**Tax advantage:** Avoids capital gains tax when assets are sold","**Note:** Immediate charitable deduction"]',
+        }),
+        ...seedBlueprintCardGridCardFields(3, {
+          title: 'CLTs & taxes',
+          listJson: '["**Best for:** Estate planning and wealth transfer to heirs","**Tax advantage:** Reduces estate taxes, enables tax-efficient transfers to children","**Note:** No capital gains benefits; trust income may be taxable to you"]',
+        }),
+      },
+      editableFields: sharedDynamicGridEditableFields,
+    },
+    createStaticCardGridBlueprintStub({ id: 'trust_differences', name: 'Trust Differences' }),
   ],
   '/services/retirement/403b': [
     {
