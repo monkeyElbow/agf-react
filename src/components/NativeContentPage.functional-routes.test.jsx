@@ -533,6 +533,37 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
   });
 
+  it('renders the insurance overview from explicit managed blocks without a fallback page-content section', () => {
+    mockBlocksByPath = {
+      '/services/insurance': (contentBlockBlueprintsByPath['/services/insurance'] || [])
+        .filter((block) => block?.mode === 'dynamic'),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance',
+            title: 'Insurance',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const heroHeading = screen.getByRole('heading', { name: 'Low premiums,' });
+    const heroHighlightHeading = screen.getByRole('heading', { name: 'impressive coverage.' });
+    const introHeading = screen.getByRole('heading', { name: 'Protect what matters most.' });
+    const missionAssureHeading = screen.getByRole('heading', { name: 'Full coverage for mission trips, retreats, and everything in between.' });
+    const quoteFormHeading = screen.getByRole('heading', { name: 'What coverage is best for your ministry?' });
+
+    expect(heroHeading.closest('section')?.getAttribute('data-block-id')).toBe('hero');
+    expect(heroHighlightHeading.closest('section')?.getAttribute('data-block-id')).toBe('hero');
+    expect(introHeading.closest('section')?.getAttribute('data-block-id')).toBe('intro');
+    expect(missionAssureHeading.closest('section')?.getAttribute('data-block-id')).toBe('mission_assure');
+    expect(quoteFormHeading.closest('section')?.className).toContain('insurance-native-cta');
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+  });
+
   it('renders the legacy giving types section through the managed card grid target without changing its current design shell', () => {
     mockBlocksByPath = {
       '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])

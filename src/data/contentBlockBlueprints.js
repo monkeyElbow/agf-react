@@ -3315,7 +3315,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: featurePanelEditableFields,
     },
-    genericPageContentBlueprintBlock(),
   ],
   '/services/insurance/ministers-group-life-plan': [
     {

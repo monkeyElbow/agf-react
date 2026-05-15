@@ -56,7 +56,7 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
     });
     expect(missionAssureBlock?.settings?.targetSectionKey).toBe('class:insurance-native-mission-assure');
-    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
   it('seeds the services overview feature band as a billboard block without changing its intro identity', () => {
