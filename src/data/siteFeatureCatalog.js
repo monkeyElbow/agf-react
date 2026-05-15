@@ -23,6 +23,13 @@ export const SITE_FEATURE_MINIMAL_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'buttonUrl',
   'buttonPageRef',
 ]);
+export const SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
+  'featureId',
+  'body',
+  'buttonLabel',
+  'buttonUrl',
+  'buttonPageRef',
+]);
 export const SITE_FEATURE_HEADLINE_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'featureId',
   'headline',
@@ -108,16 +115,16 @@ const SITE_FEATURE_CATALOG = Object.freeze([
   Object.freeze({
     featureId: 'impact_proof_story',
     label: 'Impact proof story',
-    description: 'Code-owned Impact proof sequence with a safe stacked fallback and a restrained desktop-only metric reveal.',
+    description: 'Code-owned Impact proof story with an editorial proof stack and a narrow, reviewed edit surface.',
     runtimeKey: 'impact_proof_story',
-    allowedEditableFieldIds: SITE_FEATURE_MINIMAL_ACTION_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS,
     routeAllowlist: Object.freeze(['/about-us/impact']),
     previewLabel: 'Impact proof story',
     previewThumbnail: '',
     experimental: false,
     internalOnly: false,
     buildRuntime: () => ({
-      title: 'Impact highlights',
+      title: '',
       body: '',
       action: null,
       metrics: Object.freeze([

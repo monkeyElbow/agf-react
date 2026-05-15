@@ -73,7 +73,6 @@ describe('site feature catalog', () => {
     expect(getAllowedSiteFeatureEditableFieldIds('impact_proof_story')).toEqual(impactProofEntry?.allowedEditableFieldIds);
     expect(impactProofEntry?.allowedEditableFieldIds).toEqual([
       'featureId',
-      'headline',
       'body',
       'buttonLabel',
       'buttonUrl',

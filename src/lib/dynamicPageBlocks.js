@@ -945,7 +945,9 @@ export function buildDynamicSiteFeatureFromBlock(block) {
   const defaultImageUrl = String(featureRuntime.imageUrl || '').trim();
   const defaultImageAlt = String(featureRuntime.imageAlt || '').trim();
 
-  const headline = readFirstStringValue(settings, ['headline']) || defaultTitle;
+  const headline = featureId === 'impact_proof_story'
+    ? defaultTitle
+    : (readFirstStringValue(settings, ['headline']) || defaultTitle);
   const body = readFirstStringValue(settings, ['body']) || defaultBody;
   const action = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],

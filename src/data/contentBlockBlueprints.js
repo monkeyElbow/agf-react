@@ -3446,7 +3446,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       mode: 'dynamic',
       settings: {
         featureId: 'impact_proof_story',
-        headline: 'Impact highlights',
         body: '',
         buttonLabel: '',
         buttonUrl: '',

@@ -1027,7 +1027,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
     });
   });
 
-  it('maps the impact proof story to its reviewed runtime and keeps the metric sequence code-owned', () => {
+  it('maps the impact proof story to its reviewed runtime and keeps the editorial proof layout code-owned', () => {
     const runtime = buildDynamicSiteFeatureFromBlock({
       id: 'impact_proof_story',
       kind: 'site_feature',
@@ -1044,7 +1044,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       featureId: 'impact_proof_story',
       runtimeKey: 'impact_proof_story',
       targetSectionKey: 'class:impact-native-stats',
-      title: 'Impact highlights',
+      title: '',
       metrics: [
         {
           value: '4,000',

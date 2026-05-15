@@ -323,6 +323,8 @@ describe('NativeContentPage functional routes', () => {
     expect(managedProofSection).toBeTruthy();
     expect(managedProofSection?.querySelector('.impact-proof-story-shell, .impact-proof-story-static')).toBeTruthy();
     expect(managedProofSection?.querySelectorAll('.impact-native-card')).toHaveLength(0);
+    expect(within(managedProofSection).queryByText('Impact highlights')).toBeNull();
+    expect(managedProofSection?.querySelector('.impact-proof-story-summary')).toBeNull();
     expect(within(managedProofSection).getByText('Churches and ministries fueled each year.')).toBeTruthy();
     expect(within(managedProofSection).getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
 

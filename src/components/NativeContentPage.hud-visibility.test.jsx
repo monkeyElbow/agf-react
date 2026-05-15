@@ -545,7 +545,6 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           hidden: false,
           settings: {
             featureId: 'impact_proof_story',
-            headline: 'Impact highlights',
             targetSectionKey: 'class:impact-native-stats',
           },
           editableFields: [],

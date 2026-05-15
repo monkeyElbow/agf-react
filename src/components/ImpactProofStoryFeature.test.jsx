@@ -1,9 +1,7 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import ImpactProofStoryFeature from './ImpactProofStoryFeature';
-
-const IMPACT_PROOF_STEP_MS = 2400;
 
 const DEFAULT_PROPS = {
   headline: 'Impact highlights',
@@ -57,66 +55,35 @@ function renderFeature(overrides = {}) {
   );
 }
 
-function mockMatchMedia({ reducedMotion = false } = {}) {
-  window.matchMedia = vi.fn().mockImplementation((query) => ({
-    matches: query === '(prefers-reduced-motion: reduce)' ? reducedMotion : false,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-  }));
-}
-
 describe('ImpactProofStoryFeature', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    mockMatchMedia({ reducedMotion: false });
-    window.innerWidth = 1440;
-  });
-
-  afterEach(() => {
-    vi.runOnlyPendingTimers();
-    vi.useRealTimers();
-  });
-
-  it('falls back to a safe stacked proof layout for reduced motion while preserving all metric copy', () => {
-    mockMatchMedia({ reducedMotion: true });
+  it('renders all proof items in one editorial reading flow and drops the old kicker label', () => {
     const { container } = renderFeature();
+    const shell = container.querySelector('.impact-proof-story-shell');
 
-    expect(container.querySelector('.impact-proof-story-static')).toBeTruthy();
-    expect(container.querySelector('.impact-proof-story-shell')).toBeNull();
-    expect(container.querySelector('[data-proof-layout="stacked"]')).toBeTruthy();
+    expect(shell?.getAttribute('data-proof-layout')).toBe('editorial-stack');
+    expect(shell?.getAttribute('data-proof-focus')).toBe('reading-flow');
+    expect(screen.queryByText('Impact highlights')).toBeNull();
+    expect(container.querySelector('.impact-proof-story-summary')).toBeNull();
+    expect(container.querySelector('.impact-proof-story-stage')).toBeNull();
+    expect(container.querySelectorAll('.impact-proof-story-proof')).toHaveLength(4);
+    expect(container.querySelectorAll('.impact-proof-story-proof.is-left')).toHaveLength(2);
+    expect(container.querySelectorAll('.impact-proof-story-proof.is-right')).toHaveLength(2);
     expect(screen.getByText('Churches and ministries fueled each year.')).toBeTruthy();
     expect(screen.getByText('Under trusted care for future ministry.')).toBeTruthy();
     expect(screen.getByText('Mission trips covered with protection in place.')).toBeTruthy();
     expect(screen.getByText('Ministers retired this year with AGFinancial.')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
-    expect(screen.getByRole('link', { name: 'Start your plan' }).getAttribute('href')).toBe('/services/retirement');
   });
 
-  it('keeps smaller viewports on the safe stacked layout instead of running the desktop sequence', () => {
-    window.innerWidth = 820;
+  it('keeps every metric CTA readable in the same static layout across viewports', () => {
     const { container } = renderFeature();
 
-    expect(container.querySelector('.impact-proof-story-static')).toBeTruthy();
-    expect(container.querySelector('.impact-proof-story-shell')).toBeNull();
-  });
-
-  it('renders the enhanced desktop proof stage one metric at a time and holds on the final beat', () => {
-    const { container } = renderFeature();
-    const shell = container.querySelector('.impact-proof-story-shell');
-
-    expect(shell?.getAttribute('data-proof-layout')).toBe('single-metric-sequence');
-    expect(shell?.getAttribute('data-proof-focus')).toBe('single-metric');
-    expect(container.querySelectorAll('.impact-proof-story-actor[data-motion-state="active"]')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
-
-    act(() => {
-      vi.advanceTimersByTime(IMPACT_PROOF_STEP_MS * 3);
-    });
-
-    expect(shell?.getAttribute('data-active-index')).toBe('3');
-    expect(container.querySelectorAll('.impact-proof-story-actor[data-motion-state="active"]')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: 'Plan with us' }).getAttribute('href')).toBe('/services/legacy-giving');
+    expect(screen.getByRole('link', { name: 'Cover your trip' }).getAttribute('href')).toBe('/services/insurance');
     expect(screen.getByRole('link', { name: 'Start your plan' }).getAttribute('href')).toBe('/services/retirement');
+    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-atlantean')).toBeTruthy();
+    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-sandstone')).toBeTruthy();
+    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-super-grey')).toBeTruthy();
+    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-atlantean-dark')).toBeTruthy();
   });
 });

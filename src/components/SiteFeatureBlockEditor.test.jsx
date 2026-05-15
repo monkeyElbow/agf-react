@@ -136,7 +136,7 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
   });
 
-  it('keeps the impact proof story editor surface limited to headline, body, and CTA path overrides', () => {
+  it('keeps the impact proof story editor surface limited to body and CTA path overrides', () => {
     render(
       createElement(SiteFeatureBlockEditor, {
         block: createBlock({
@@ -149,7 +149,7 @@ describe('SiteFeatureBlockEditor', () => {
       }),
     );
 
-    expect(screen.getByLabelText('Headline override')).toBeTruthy();
+    expect(screen.queryByLabelText('Headline override')).toBeNull();
     expect(screen.getByLabelText('Body override')).toBeTruthy();
     expect(screen.getByLabelText('CTA label override')).toBeTruthy();
     expect(screen.getByLabelText('CTA URL / Path override')).toBeTruthy();
