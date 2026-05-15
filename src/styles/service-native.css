@@ -19000,8 +19000,19 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card .service-native-action-row:last-child {
-  margin-top: 0.75rem;
-  padding-top: 0;
+  margin-top: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  height: 56px;
+  padding-top: 0.75rem;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card .service-native-action-row:last-child .service-native-btn {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card > div {
