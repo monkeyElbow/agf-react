@@ -30,6 +30,8 @@ describe('legacy giving and IRA native page content', () => {
     const charitableTrustsTypes = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-crt-types');
     const charitableTrustsTrigger = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-crt-trigger');
     const charitableTrustsInlineCta = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline');
+    const charitableTrustsClt = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-clt');
+    const charitableTrustsCltTypes = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-clt-types');
     const charitableTrustsCta = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-cta legacy-child-native-trusts-cta');
     const charitableTrustsChoiceCards = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trust-choices legacy-child-native-trust-choices--trusts');
     const charitableTrustsDifferences = charitableTrustsContent?.sections?.find((section) => section?.className === 'legacy-child-native-trusts-differences');
@@ -123,6 +125,14 @@ describe('legacy giving and IRA native page content', () => {
     expect(charitableTrustsTypes?.cards?.[0]?.list).toContain('Minimum required payout of 5%');
     expect(charitableTrustsTypes?.cards?.[1]?.title).toBe('Charitable Remainder Annuity (CRAT)');
     expect(charitableTrustsTypes?.cards?.[1]?.list).toContain('Payments may begin immediately upon funding');
+    expect(charitableTrustsClt?.anchorId).toBe('clt');
+    expect(charitableTrustsClt?.title).toBe('Charitable Lead Trust');
+    expect(charitableTrustsClt?.body?.[0]).toContain('The trust pays income to the ministry(ies) you’ve selected for a set number of years.');
+    expect(charitableTrustsCltTypes?.cards).toHaveLength(2);
+    expect(charitableTrustsCltTypes?.cards?.[0]?.title).toBe('Grantor Lead Trust');
+    expect(charitableTrustsCltTypes?.cards?.[0]?.list).toContain('Donor is taxed on the trust’s income each year');
+    expect(charitableTrustsCltTypes?.cards?.[1]?.title).toBe('Non-Grantor Lead Trust');
+    expect(charitableTrustsCltTypes?.cards?.[1]?.list).toContain('Income is taxed at the trust level each year');
     expect(charitableTrustsTypes?.actions).toBeUndefined();
     expect(charitableTrustsTrigger?.justify).toBe('center');
     expect(charitableTrustsTrigger?.hideCopy).toBe(true);

@@ -678,6 +678,8 @@ describe('NativeContentPage functional routes', () => {
     const trustDifferences = document.querySelector('.legacy-child-native-trusts-differences.native-dynamic-grid');
     const charitableRemainderTrust = document.querySelector('.legacy-child-native-trusts-crt.dynamic-billboard');
     const charitableRemainderTrustTypes = document.querySelector('.legacy-child-native-trusts-crt-types.native-dynamic-grid');
+    const charitableLeadTrust = document.querySelector('.legacy-child-native-trusts-clt.dynamic-billboard');
+    const charitableLeadTrustTypes = document.querySelector('.legacy-child-native-trusts-clt-types.native-dynamic-grid');
 
     expect(intro?.className).toContain('is-text-white');
     expect(trustChoices).toBeTruthy();
@@ -699,6 +701,15 @@ describe('NativeContentPage functional routes', () => {
     expect(within(charitableRemainderTrustTypes).getByText('Minimum required payout of 5%')).toBeTruthy();
     expect(within(charitableRemainderTrustTypes).getByText('Charitable Remainder Annuity (CRAT)')).toBeTruthy();
     expect(within(charitableRemainderTrustTypes).getByText('Payments may begin immediately upon funding')).toBeTruthy();
+    expect(charitableLeadTrust).toBeTruthy();
+    expect(within(charitableLeadTrust).getByRole('heading', { name: 'Charitable Lead Trust' })).toBeTruthy();
+    expect(within(charitableLeadTrust).getByText(/The trust pays income to the ministry\(ies\) you’ve selected for a set number of years\./)).toBeTruthy();
+    expect(charitableLeadTrustTypes).toBeTruthy();
+    expect(charitableLeadTrustTypes?.querySelectorAll('.service-native-card')).toHaveLength(2);
+    expect(within(charitableLeadTrustTypes).getByText('Grantor Lead Trust')).toBeTruthy();
+    expect(within(charitableLeadTrustTypes).getByText('Donor is taxed on the trust’s income each year')).toBeTruthy();
+    expect(within(charitableLeadTrustTypes).getByText('Non-Grantor Lead Trust')).toBeTruthy();
+    expect(within(charitableLeadTrustTypes).getByText('Income is taxed at the trust level each year')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Start the process' })).toHaveLength(1);
     expect(screen.queryByRole('link', { name: 'Start the process' })).toBeNull();
     expect(document.querySelector('#charitable-trusts-inline-form')).toBeNull();
