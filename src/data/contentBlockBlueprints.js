@@ -199,6 +199,7 @@ function seedBlueprintServicesGridCardFields(cardNumber, {
 
 function seedBlueprintCardGridCardFields(cardNumber, {
   title = '',
+  titleHighlightsJson = '',
   body = '',
   listJson = '',
   dividerTone = '',
@@ -213,6 +214,7 @@ function seedBlueprintCardGridCardFields(cardNumber, {
 } = {}) {
   return {
     [`card${cardNumber}Title`]: title,
+    [`card${cardNumber}TitleHighlightsJson`]: titleHighlightsJson,
     [`card${cardNumber}Body`]: body,
     [`card${cardNumber}ListJson`]: listJson,
     [`card${cardNumber}LinksJson`]: linksJson,
@@ -999,13 +1001,15 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         bodyTone: 'super-grey',
         targetSectionKey: 'class:legacy-child-native-trust-choices--trusts',
         ...seedBlueprintCardGridCardFields(1, {
-          title: 'Charitable **Remainder** Trust (CRT)',
+          title: 'Charitable Remainder Trust (CRT)',
+          titleHighlightsJson: '[{"text":"Remainder","className":"is-melon"}]',
           body: 'This option allows you to receive income payments for you and your family while potentially receiving immediate tax benefits. At the completion of the trust, you’ll have the joy of giving to the ministry of your choice. **Minimum requirements:** $50,000 cash or securities; $100,000 real estate.',
           buttonLabel: 'Explore CRT options',
           buttonPageRef: '/services/legacy-giving/charitable-trusts#crt',
         }),
         ...seedBlueprintCardGridCardFields(2, {
-          title: 'Charitable **Lead** Trust (CLT)',
+          title: 'Charitable Lead Trust (CLT)',
+          titleHighlightsJson: '[{"text":"Lead","className":"is-mango"}]',
           body: 'This option allows ministry to receive income payments for a set term while you potentially receive immediate tax benefits. At the completion of the trust, assets return to you or transfer to your family—often with significant growth. **Minimum requirements:** $50,000 cash or securities; $100,000 real estate.',
           buttonLabel: 'Explore CLT options',
           buttonPageRef: '/services/legacy-giving/charitable-trusts#clt',

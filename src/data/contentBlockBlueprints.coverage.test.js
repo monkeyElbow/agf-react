@@ -322,8 +322,10 @@ describe('content block blueprint coverage', () => {
         columns: 'two',
         showTitleDivider: false,
         targetSectionKey: 'class:legacy-child-native-trust-choices--trusts',
-        card1Title: 'Charitable **Remainder** Trust (CRT)',
-        card2Title: 'Charitable **Lead** Trust (CLT)',
+        card1Title: 'Charitable Remainder Trust (CRT)',
+        card1TitleHighlightsJson: '[{"text":"Remainder","className":"is-melon"}]',
+        card2Title: 'Charitable Lead Trust (CLT)',
+        card2TitleHighlightsJson: '[{"text":"Lead","className":"is-mango"}]',
       },
     });
     expect(charitableTrustsBlocks.some((block) => (

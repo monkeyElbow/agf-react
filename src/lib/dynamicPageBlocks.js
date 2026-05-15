@@ -1811,6 +1811,7 @@ export function buildDynamicGridFromBlock(block) {
   const cards = Array.from({ length: 8 }, (_, index) => index + 1)
     .map((slot) => {
       const cardTitle = String(settings[`card${slot}Title`] || '').trim();
+      const cardTitleHighlights = parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
       const cardBody = String(settings[`card${slot}Body`] || '').trim();
       const cardPrimaryAction = buildCanonicalActionLinkFromFields({
         ...settings,
@@ -1848,6 +1849,7 @@ export function buildDynamicGridFromBlock(block) {
       return {
         slot,
         title: cardTitle || `Card ${slot}`,
+        titleHighlights: cardTitleHighlights,
         body: cardBody,
         list: cardList,
         cardClass: resolvedCardClass,

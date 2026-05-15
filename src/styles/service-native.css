@@ -18986,16 +18986,32 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   font-weight: inherit;
 }
 
-.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card:nth-child(1) h3 strong {
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3 mark {
+  background: transparent;
+  font-weight: inherit;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card:nth-child(1) h3 mark {
   color: var(--ag-color-melon);
 }
 
-.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card:nth-child(2) h3 strong {
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card:nth-child(2) h3 mark {
   color: var(--ag-color-mango);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card .service-native-action-row:last-child {
+  margin-top: 0.75rem;
   padding-top: 0;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card > div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card p {
+  margin-bottom: 0;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-differences {
@@ -19319,9 +19335,20 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   padding: clamp(2rem, 4vw, 3rem);
 }
 
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-grid {
+  align-items: start;
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2:hover {
   transform: none;
   box-shadow: none;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100%;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 h3 {
@@ -19330,6 +19357,8 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   font-size: clamp(1.7rem, 3vw, 2.5rem);
   line-height: 1.05;
   color: #a4a099;
+  align-items: flex-start;
+  min-height: 0;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list {

@@ -767,6 +767,13 @@ describe('NativeContentPage functional routes', () => {
     expect(intro?.className).toContain('is-text-white');
     expect(trustChoices).toBeTruthy();
     expect(trustChoices?.querySelectorAll('.service-native-card')).toHaveLength(2);
+    const trustChoiceHeadings = trustChoices?.querySelectorAll('.service-native-card h3') || [];
+    expect(trustChoiceHeadings).toHaveLength(2);
+    expect(trustChoiceHeadings[0]?.textContent).toBe('Charitable Remainder Trust (CRT)');
+    expect(trustChoiceHeadings[0]?.querySelector('mark.is-melon')?.textContent).toBe('Remainder');
+    expect(trustChoiceHeadings[1]?.textContent).toBe('Charitable Lead Trust (CLT)');
+    expect(trustChoiceHeadings[1]?.querySelector('mark.is-mango')?.textContent).toBe('Lead');
+    expect(within(trustChoices).queryByText(/\*\*/)).toBeNull();
     expect(within(trustChoices).getByRole('link', { name: 'Explore CRT options' }).getAttribute('href')).toBe('/services/legacy-giving/charitable-trusts#crt');
     expect(within(trustChoices).getByRole('link', { name: 'Explore CLT options' }).getAttribute('href')).toBe('/services/legacy-giving/charitable-trusts#clt');
     expect(trustDifferences).toBeTruthy();

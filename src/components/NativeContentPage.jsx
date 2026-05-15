@@ -1013,6 +1013,8 @@ function buildDynamicGridSection(block, pathname) {
     .map((card) => ({
       slot: card.slot,
       title: card.title,
+      titleClassName: card.titleClassName,
+      titleHighlights: Array.isArray(card.titleHighlights) ? card.titleHighlights : [],
       body: card.body,
       list: Array.isArray(card.list) ? card.list : undefined,
       cardClass: card.cardClass,
