@@ -313,7 +313,7 @@ export const defaultInvestmentsIntroSettings = {
   heading: 'Invest like it matters. Because it does.',
   headingClassName: '',
   headingHighlightsJson: '[{"text":"Because it does.","className":"is-atlantean"}]',
-  bodyHtml: '<p>Your investment dollars don\'t just multiply-they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.</p>',
+  bodyHtml: '<p>Your investment dollars don\'t just multiply; they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.</p>',
   body: '',
   justify: 'center',
   lineSpacing: 1.04,

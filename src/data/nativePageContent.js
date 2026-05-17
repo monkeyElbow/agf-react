@@ -205,7 +205,7 @@ const directContent = {
       heading: 'Invest like it matters. Because it does.',
       headingHighlights: [{ text: 'Because it does.', className: 'is-atlantean' }],
       body: [
-        "Your investment dollars don't just multiply-they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.",
+        "Your investment dollars don't just multiply; they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.",
       ],
       emphasis: "That's the power of faith-driven investing.",
       justify: 'center',
