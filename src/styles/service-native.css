@@ -4,8 +4,11 @@
 
 .service-native-hero {
   --ag-letter-spacing-avenir-heading: var(--ag-letter-spacing-avenir-hero);
+  --service-native-hero-rail-min-height: 373px;
+  --service-native-hero-heading-font-size: clamp(3rem, 9.2vw, 112px);
+  --service-native-hero-heading-line-height: 0.9;
   background: #ffffff;
-  padding: clamp(1.8rem, 4vw, 2.4rem) 0;
+  padding: clamp(2.45rem, 5.4vw, 3.3rem) 0;
 }
 
 .service-native-hero.is-bg-white {
@@ -25,7 +28,7 @@
 }
 
 .service-native-hero .ag-panel-rail {
-  min-height: clamp(340px, 34vw, 420px);
+  min-height: var(--service-native-hero-rail-min-height);
   display: grid;
   align-content: center;
   justify-items: center;
@@ -35,12 +38,12 @@
   margin: 0;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-heading);
-  font-size: clamp(3rem, 9.2vw, 112px);
+  font-size: var(--service-native-hero-heading-font-size);
   font-weight: 800;
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
   font-style: normal;
   font-synthesis: none;
-  line-height: 0.9;
+  line-height: var(--service-native-hero-heading-line-height);
   text-align: center;
   text-wrap: balance;
 }
@@ -1237,7 +1240,7 @@
 
 .service-native-intro {
   margin: 0;
-  padding: clamp(2.2rem, 5vw, 3.8rem) 0;
+  padding: clamp(3.1rem, 7vw, 5.3rem) 0 clamp(3.65rem, 8.2vw, 6.2rem);
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
   color: var(--ag-color-super-grey);
 }
@@ -2457,12 +2460,14 @@
   color: #ffffff;
   font-family: var(--ag-font-body);
   font-size: clamp(2rem, 4.8vw, 3.6rem);
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
   line-height: 1.05;
 }
 
 .service-native-section h2.investments-native-build-title mark {
   background: transparent;
   color: #f0eee8;
+  letter-spacing: inherit;
 }
 
 .investments-native-growth-grid {
@@ -2486,14 +2491,20 @@
 
 .investments-native-growth-card h3 {
   margin: 0;
+  max-width: 8.5ch;
+  margin-left: auto;
+  margin-right: auto;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-body);
-  font-size: clamp(2.2rem, 3.8vw, 3rem);
-  line-height: 1.1;
+  font-size: clamp(5.75rem, 9.95vw, 7.875rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.94;
+  text-wrap: balance;
 }
 
 .investments-native-growth-card p {
-  margin-top: 0.95rem;
+  margin-top: clamp(1.1rem, 2.1vw, 1.45rem);
   margin-left: auto;
   margin-right: auto;
   max-width: 42ch;
@@ -2516,6 +2527,7 @@
   margin: 0;
   color: var(--ag-color-mango);
   font-size: clamp(4.4rem, 8.8vw, 6rem);
+  letter-spacing: -0.05em;
 }
 
 .service-native-cta-band.is-cta-band-preset-dashboard-login .investments-native-dashboard-title + p {
@@ -2529,6 +2541,7 @@
 
 .service-native-cta-band.is-cta-band-preset-dashboard-login .investments-native-dashboard-title + p {
   margin: 0.02rem 0 0;
+  font-size: clamp(1.4rem, 2.8vw, 1.85rem);
   line-height: 1.05;
 }
 
@@ -3157,10 +3170,6 @@
   background: #ffffff;
 }
 
-.loans-native-page .service-native-hero .ag-panel-rail {
-  min-height: 373px;
-}
-
 .loans-native-hero-line {
   margin: 0;
 }
@@ -3282,7 +3291,7 @@
 
 .loans-native-options {
   padding-top: clamp(2.4rem, 6vw, 4.8rem);
-  padding-bottom: clamp(2.6rem, 6vw, 5.1rem);
+  padding-bottom: clamp(4rem, 8vw, 7rem);
 }
 
 .loans-native-options .ag-panel-rail-wide {
@@ -3297,6 +3306,7 @@
 
 .loans-native-options-subtitle {
   margin-top: clamp(1rem, 2.4vw, 1.7rem);
+  margin-bottom: clamp(12.4rem, 24vw, 18.8rem);
   text-align: center;
   color: var(--ag-color-mango);
   font-size: clamp(1.45rem, 3vw, 2rem);
@@ -3304,7 +3314,7 @@
 }
 
 .loans-native-options-lead {
-  margin: clamp(1.55rem, 3vw, 2.35rem) auto 0;
+  margin: 0 auto 0;
   max-width: 72ch;
   width: min(72ch, 100%);
   font-size: clamp(1.05rem, 1.9vw, 22px);
@@ -3315,7 +3325,7 @@
 }
 
 .loans-native-options-grid {
-  margin-top: clamp(1.4rem, 3vw, 2.2rem);
+  margin-top: clamp(2.8rem, 6vw, 4.4rem);
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 1.25rem;
 }
@@ -3543,6 +3553,7 @@
 
 .loans-native-calculator-wrap {
   background: #ffffff;
+  padding-top: clamp(1.4rem, 3vw, 2.4rem);
 }
 
 .loans-native-calculator-title {
@@ -4161,10 +4172,6 @@
 
 .fade-out.is-fading {
   filter: saturate(0.92);
-}
-
-.native-info-page .service-native-hero .ag-panel-rail {
-  min-height: clamp(220px, 28vw, 320px);
 }
 
 .native-info-page.is-compact .service-native-hero .ag-panel-rail {
@@ -10534,7 +10541,7 @@
 .service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards {
   background: #ffffff;
   padding-top: clamp(3rem, 6vw, 5rem);
-  padding-bottom: clamp(2.4rem, 5vw, 4rem);
+  padding-bottom: clamp(1.2rem, 2.8vw, 2.1rem);
 }
 
 .service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards > .ag-panel-rail-wide {
@@ -10548,7 +10555,7 @@
   line-height: 1;
   letter-spacing: clamp(-0.03em, -0.12vw, -0.01em);
   color: var(--ag-color-super-grey);
-  margin-bottom: clamp(0.7rem, 1.8vw, 1.15rem);
+  margin-bottom: clamp(2.8rem, 7.2vw, 4.6rem);
 }
 
 .service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards .native-columns-grid {
@@ -10602,7 +10609,7 @@
   display: block;
   width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-gutter) * 2)));
   max-width: 100%;
-  margin: clamp(1.6rem, 3vw, 2.4rem) auto 0;
+  margin: clamp(3.2rem, 6vw, 4.8rem) auto 0;
   border-top: 1px solid rgba(65, 64, 66, 0.2);
 }
 
@@ -10674,22 +10681,13 @@
   font-size: clamp(1.16rem, 2vw, 1.58rem);
 }
 
-.native-info-page--contact-us .service-native-hero {
-  padding-top: clamp(2.6rem, 6vw, 4.4rem);
-  padding-bottom: clamp(2.6rem, 6vw, 4.4rem);
-}
-
 .native-info-page--contact-us .service-native-hero .ag-panel-rail {
-  min-height: clamp(260px, 32vw, 380px);
   justify-items: end;
 }
 
 .native-info-page--contact-us .service-native-hero h1 {
   color: var(--ag-color-atlantean);
   text-align: right;
-  font-size: clamp(4rem, 11vw, 8.6rem);
-  line-height: 0.82;
-  letter-spacing: -0.04em;
 }
 
 .native-info-page--contact-us .contact-us-address {
@@ -11945,8 +11943,6 @@
 
 .native-info-page--legacy-giving .service-native-hero h1 {
   text-align: right;
-  font-size: clamp(3.6rem, 8vw, 6.4rem);
-  letter-spacing: clamp(-0.05em, -0.22vw, -0.02em);
 }
 
 .native-info-page--legacy-giving .service-native-hero h1 + h1 {
@@ -11998,6 +11994,10 @@
 .native-info-page--legacy-giving .legacy-giving-types .service-native-card:first-child .service-native-btn.is-outline:hover,
 .native-info-page--legacy-giving .legacy-giving-types .service-native-card:first-child .service-native-btn.is-ghost:hover {
   border-color: var(--ag-color-super-grey);
+}
+
+.native-info-page--legacy-giving .legacy-giving-wills {
+  padding-top: clamp(3.1rem, 6.2vw, 5.4rem);
 }
 
 .native-info-page--legacy-giving .legacy-giving-wills h2 {
@@ -12349,6 +12349,24 @@
 @media (max-width: 760px) {
   .native-info-page--legacy-giving .legacy-giving-types .service-native-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .native-info-page--legacy-giving .legacy-giving-wills {
+    padding-top: clamp(2.8rem, 7.8vw, 3.5rem);
+  }
+
+  .native-info-page--legacy-giving .legacy-giving-opportunity .service-native-dark-feature-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .native-info-page--legacy-giving .legacy-giving-opportunity .service-native-dark-feature-media {
+    min-height: clamp(15rem, 58vw, 22rem);
+  }
+
+  .native-info-page--legacy-giving .legacy-giving-opportunity .service-native-dark-feature-copy {
+    width: 100%;
+    min-width: 0;
+    padding: clamp(1.5rem, 7vw, 2.2rem);
   }
 
   .legacy-stewardship-story .ag-panel-rail {
@@ -13172,14 +13190,39 @@
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card {
   padding: clamp(1.8rem, 3vw, 2.5rem);
+  border-right-color: rgba(255, 255, 255, 0.28);
+  border-bottom-color: rgba(255, 255, 255, 0.22);
+  border-left-color: rgba(255, 255, 255, 0.18);
+  border-top-color: rgba(255, 255, 255, 0.26);
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(138deg, rgba(7, 53, 81, 0.98) 0%, rgba(0, 117, 149, 0.98) 55%, rgba(0, 173, 187, 0.9) 100%);
+  box-shadow: 0 14px 28px rgba(6, 42, 65, 0.18);
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card:hover {
+  box-shadow: 0 18px 36px rgba(6, 42, 65, 0.24);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card h3 {
+  color: #ffffff;
   font-family: var(--ag-font-heading);
   font-size: clamp(1.56rem, 2.55vw, 2.04rem);
   line-height: 1.06;
   text-align: center;
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card p {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card a:not(.service-native-btn) {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card a:not(.service-native-btn):hover {
+  color: #ffffff;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-action-row {
@@ -13188,22 +13231,33 @@
 
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {
   margin-top: clamp(2.4rem, 4vw, 3.2rem);
+  padding: 0.7rem 0.8rem;
+  width: fit-content;
+  margin-inline: auto;
+  border-radius: 999px;
+  background: linear-gradient(138deg, rgba(7, 53, 81, 0.98) 0%, rgba(0, 117, 149, 0.98) 58%, rgba(0, 173, 187, 0.92) 100%);
+  box-shadow: 0 14px 32px rgba(6, 42, 65, 0.14);
+}
+
+.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn {
+  --btn-hover-color: #ffffff;
+  --btn-hover-text: var(--ag-color-atlantean-dark);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(1) h3 {
-  color: var(--ag-color-atlantean);
+  color: #ffffff;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(2) h3 {
-  color: var(--ag-color-atlantean-dark);
+  color: #ffffff;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(3) h3 {
-  color: var(--ag-color-melon);
+  color: #ffffff;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(4) h3 {
-  color: var(--ag-color-super-grey);
+  color: #ffffff;
 }
 
 .native-info-page--insurance .insurance-native-quote h2,
@@ -13215,6 +13269,9 @@
 .native-info-page--insurance .insurance-native-quote h2 {
   color: var(--ag-color-atlantean);
   font-size: clamp(4.9rem, 9.8vw, 8rem);
+  letter-spacing: -0.06em;
+  line-height: 0.88;
+  margin-bottom: clamp(0.95rem, 2.5vw, 1.65rem);
 }
 
 .native-info-page--insurance .insurance-native-quote p {
@@ -13355,22 +13412,6 @@
 .native-info-page--insurance .insurance-native-mission-assure .service-native-action-row {
   margin-top: clamp(0.35rem, 1vw, 0.8rem);
   justify-content: center;
-}
-
-.native-info-page.native-info-page--ministers-group-life-plan.is-compact .service-native-hero .ag-panel-rail {
-  min-height: clamp(290px, 34vw, 420px);
-}
-
-.native-info-page.native-info-page--ministers-group-life-plan.is-compact .service-native-hero h1 {
-  font-size: clamp(3rem, 9.2vw, 112px);
-}
-
-.native-info-page--ministers-group-life-plan .service-native-hero h1 {
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-heading);
-  font-weight: 800;
-  line-height: 0.92;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-details > .ag-panel-rail,
@@ -13823,6 +13864,20 @@
     width: 100%;
   }
 
+  .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {
+    width: min(100%, 22rem);
+    padding: 0.7rem;
+  }
+
+  .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn {
+    width: 100%;
+  }
+
+  .native-info-page--insurance .insurance-native-quote h2 {
+    line-height: 0.76;
+    margin-bottom: 1.2rem;
+  }
+
   .native-info-page--insurance .insurance-native-risk .service-native-dark-feature-media {
     width: min(240px, 100%);
     min-height: clamp(250px, 68vw, 320px);
@@ -13830,9 +13885,26 @@
     justify-self: center;
   }
 
+  /*
+   * Mission Assure also owns a more specific desktop two-column grid than the
+   * shared mobile stack, so it needs an explicit route-scoped collapse to keep
+   * the copy column visible and prevent horizontal overflow on narrow screens.
+   */
+  .native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy {
+    width: 100%;
+    min-width: 0;
+  }
+
   .native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-media {
+    width: min(240px, 100%);
+    min-height: clamp(250px, 68vw, 320px);
     margin: 0 0 1rem;
     border-radius: 10px;
+    justify-self: center;
   }
 
   .native-info-page--insurance .insurance-native-mission-assure .native-info-feature-logo {
@@ -13840,20 +13912,16 @@
   }
 }
 
-.native-info-page.native-info-page--mission-assure.is-compact .service-native-hero .ag-panel-rail {
-  min-height: clamp(220px, 26vw, 340px);
-  justify-items: end;
-}
-
 .native-info-page--mission-assure .service-native-hero {
   background: linear-gradient(135deg, #00b8c7 0%, #00a3b3 58%, #008aab 100%);
 }
 
+.native-info-page.native-info-page--mission-assure.is-compact .service-native-hero .ag-panel-rail {
+  justify-items: end;
+}
+
 .native-info-page.native-info-page--mission-assure.is-compact .service-native-hero h1 {
   text-align: right;
-  font-size: clamp(3.9rem, 10.2vw, 124px);
-  line-height: 0.9;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
   color: #ffffff;
 }
 
@@ -15123,22 +15191,8 @@
   border: 4px solid rgba(255, 255, 255, 0.9);
 }
 
-.native-info-page--impact .service-native-hero {
-  background: #ffffff;
-}
-
-.native-info-page--impact .service-native-hero .ag-panel-rail {
-  min-height: clamp(320px, 34vw, 410px);
-}
-
-.native-info-page--impact .service-native-hero h1 {
-  font-size: clamp(3.2rem, 8.4vw, 5.9rem);
-  line-height: 0.92;
-}
-
 .native-info-page--impact .service-native-intro {
   background: linear-gradient(145deg, #f3f0eb 0%, #e6e1d7 100%);
-  padding-bottom: clamp(2.2rem, 5vw, 3.8rem);
 }
 
 .native-info-page--impact .service-native-intro h2 {
@@ -15185,9 +15239,10 @@
 
 .impact-proof-story-body {
   margin: 0;
-  width: min(calc(100% - (var(--ag-panel-gutter) * 2)), 40rem);
+  width: min(calc(100% - (var(--ag-panel-gutter) * 2)), 68vw);
   margin-inline: auto;
-  max-width: 44rem;
+  max-width: 68vw;
+  min-width: 0;
   color: rgba(65, 64, 66, 0.78);
   font-family: var(--ag-font-heading);
   font-size: clamp(1.2rem, 2vw, 1.55rem);
@@ -15198,7 +15253,7 @@
 }
 
 .impact-proof-story-body--editorial {
-  max-width: 40rem;
+  max-width: 68vw;
 }
 
 .impact-proof-story-editorial-list {
@@ -15225,7 +15280,7 @@
   min-height: clamp(22rem, 31vw, 29rem);
   padding-top: clamp(1.8rem, 4vw, 3.8rem);
   padding-bottom: clamp(3.6rem, 8vw, 7.6rem);
-  padding-inline: max(var(--ag-panel-gutter), calc((100vw - var(--ag-panel-content-max)) / 2));
+  padding-inline: max(var(--ag-panel-gutter), calc((100vw - var(--ag-panel-wide-max)) / 2));
   overflow: hidden;
   overflow: clip;
   background: var(--impact-proof-panel-bg);
@@ -15255,6 +15310,7 @@
   gap: 0.95rem;
   width: 100%;
   max-width: none;
+  min-width: 0;
   transform:
     translate3d(
       calc(
@@ -15352,7 +15408,7 @@
   --impact-proof-enter-x: -0.35rem;
   --impact-proof-exit-x: 0px;
   --impact-proof-transform-origin: left center;
-  grid-column: 1 / span 8;
+  grid-column: 1 / span 10;
   justify-items: start;
   text-align: left;
 }
@@ -15361,7 +15417,7 @@
   --impact-proof-enter-x: 0.35rem;
   --impact-proof-exit-x: 0px;
   --impact-proof-transform-origin: right center;
-  grid-column: 5 / -1;
+  grid-column: 3 / -1;
   justify-items: end;
   text-align: right;
 }
@@ -15406,7 +15462,7 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .impact-proof-story-proof-label {
   margin: 0;
-  max-width: 12ch;
+  max-width: min(15ch, 100%);
   color: var(--impact-proof-panel-label);
   font-family: var(--ag-font-heading);
   font-size: clamp(3.35rem, 6.4vw, 7.4rem);
@@ -15418,7 +15474,7 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .impact-proof-story-proof-body {
   margin: 0;
-  max-width: 36rem;
+  max-width: min(44rem, 100%);
   color: var(--impact-proof-panel-body);
   font-family: var(--ag-font-helv);
   font-size: clamp(1.2rem, 2vw, 1.55rem);
@@ -15432,8 +15488,12 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   gap: 0.8rem;
 }
 
+.impact-proof-story-proof-action {
+  margin-top: clamp(1.3rem, 2vw, 1.75rem);
+}
+
 .impact-proof-story-footer-action {
-  width: min(calc(100% - (var(--ag-panel-gutter) * 2)), var(--ag-panel-content-max));
+  width: min(calc(100% - (var(--ag-panel-gutter) * 2)), 68vw);
   margin-inline: auto;
 }
 
@@ -15456,29 +15516,31 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .impact-proof-story-proof.is-tone-atlantean {
   --impact-proof-panel-bg:
-    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 30%),
-    radial-gradient(circle at 84% 82%, rgba(var(--ag-color-atlantean-dark-rgb), 0.46) 0%, rgba(var(--ag-color-atlantean-dark-rgb), 0) 42%),
+    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 32%),
+    radial-gradient(circle at 82% 78%, rgba(var(--ag-color-atlantean-rgb), 0.3) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 44%),
     linear-gradient(
-      138deg,
-      rgba(var(--ag-color-atlantean-dark-rgb), 1) 0%,
-      rgba(var(--ag-color-atlantean-dark-rgb), 0.98) 28%,
-      rgba(var(--ag-color-atlantean-rgb), 0.94) 72%,
+      136deg,
+      #07131b 0%,
+      rgba(var(--ag-color-atlantean-dark-rgb), 0.99) 34%,
+      rgba(var(--ag-color-atlantean-rgb), 0.95) 76%,
       rgba(var(--ag-color-atlantean-rgb), 0.88) 100%
     );
 }
 
 .impact-proof-story-proof.is-tone-mango {
   --impact-proof-panel-bg:
-    radial-gradient(circle at 18% 20%, rgba(250, 163, 26, 0.28) 0%, rgba(250, 163, 26, 0) 34%),
-    linear-gradient(140deg, rgba(250, 163, 26, 0.76) 0%, rgba(65, 64, 66, 0.98) 46%, rgba(33, 33, 35, 0.98) 100%);
+    radial-gradient(circle at 18% 16%, rgba(250, 163, 26, 0.3) 0%, rgba(250, 163, 26, 0) 32%),
+    radial-gradient(circle at 84% 80%, rgba(var(--ag-color-atlantean-rgb), 0.18) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 38%),
+    linear-gradient(140deg, #1b1b1d 0%, rgba(65, 64, 66, 0.98) 48%, rgba(117, 79, 23, 0.96) 100%);
   --impact-proof-panel-number: var(--ag-color-mango);
   --impact-proof-panel-kicker: rgba(255, 255, 255, 0.76);
 }
 
 .impact-proof-story-proof.is-tone-super-grey {
   --impact-proof-panel-bg:
-    radial-gradient(circle at 82% 24%, rgba(var(--ag-color-atlantean-rgb), 0.24) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 36%),
-    linear-gradient(142deg, rgba(33, 33, 35, 0.98) 0%, rgba(65, 64, 66, 0.98) 62%, rgba(var(--ag-color-atlantean-dark-rgb), 0.84) 100%);
+    radial-gradient(circle at 80% 22%, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 30%),
+    radial-gradient(circle at 18% 78%, rgba(var(--ag-color-atlantean-rgb), 0.28) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 38%),
+    linear-gradient(142deg, #11161a 0%, rgba(33, 33, 35, 0.98) 46%, rgba(65, 64, 66, 0.98) 100%);
 }
 
 .impact-proof-story-proof.is-tone-atlantean-dark {
@@ -15937,7 +15999,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .native-info-page--careers .service-native-hero h1 {
   color: var(--ag-color-super-grey);
-  font-size: clamp(4.6rem, 10.5vw, 8rem);
 }
 
 .native-info-page--careers .service-native-hero h1 mark.is-white {
@@ -16137,17 +16198,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   margin: 0;
 }
 
-.native-info-page--retirement-child.is-compact .service-native-hero .ag-panel-rail {
-  min-height: clamp(220px, 24vw, 310px);
-}
-
-.native-info-page--retirement-child .service-native-hero h1 {
-  font-family: var(--ag-font-heading);
-  font-weight: 800;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
-  line-height: 0.93;
-}
-
 .native-info-page--retirement-child .service-native-intro {
   padding-top: clamp(3rem, 6vw, 4.6rem);
   padding-bottom: clamp(3rem, 6vw, 4.8rem);
@@ -16309,14 +16359,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .native-info-page.native-info-page--retirement-iras.is-compact .service-native-hero .ag-panel-rail {
   min-height: clamp(210px, 22vw, 290px);
-}
-
-.native-info-page--retirement-iras .service-native-hero h1 {
-  font-family: var(--ag-font-heading);
-  font-weight: 800;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
-  font-size: clamp(3rem, 6.2vw, 5.65rem);
-  line-height: 0.92;
 }
 
 .native-info-page--retirement-iras .service-native-intro {
@@ -16700,17 +16742,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 .native-info-page--retirement-403b .retirement-child-native-housing .service-native-action-row,
 .native-info-page--retirement-403b .retirement-child-native-loans .service-native-action-row {
   justify-content: flex-start;
-}
-
-.native-info-page--retirement-403b .service-native-hero .ag-panel-rail {
-  min-height: clamp(250px, 29vw, 360px);
-}
-
-.native-info-page--retirement-403b .service-native-hero h1 {
-  font-size: clamp(2.95rem, 7vw, 5.7rem);
-  line-height: 0.89;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
-  text-align: center;
 }
 
 .native-info-page--retirement-403b .service-native-intro {
@@ -17972,16 +18003,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   margin-top: 0.65rem;
 }
 
-.native-info-page--online-contributions.is-compact .service-native-hero .ag-panel-rail {
-  min-height: clamp(180px, 20vw, 250px);
-}
-
-.native-info-page--online-contributions .service-native-hero h1 {
-  font-family: var(--ag-font-heading);
-  font-weight: 800;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
-}
-
 .native-info-page--online-contributions .service-native-intro {
   background: linear-gradient(135deg, rgba(65, 64, 66, 0.95) 0%, rgba(118, 120, 123, 0.92) 100%);
   padding-top: clamp(2.4rem, 5vw, 3.6rem);
@@ -18040,17 +18061,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 .native-info-page--online-contributions .online-contrib-native-help .native-info-section-subtitle {
   color: var(--ag-color-atlantean);
   letter-spacing: 0;
-}
-
-.native-info-page--legacy-child.is-compact .service-native-hero .ag-panel-rail {
-  min-height: clamp(210px, 23vw, 300px);
-}
-
-.native-info-page--legacy-child .service-native-hero h1 {
-  font-family: var(--ag-font-heading);
-  font-weight: 800;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
-  line-height: 0.93;
 }
 
 .native-info-page--legacy-child .service-native-intro {
@@ -18152,12 +18162,9 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .service-native-hero {
   background: transparent;
-  padding-top: clamp(3rem, 7vw, 5rem);
-  padding-bottom: clamp(3rem, 7vw, 5rem);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .service-native-hero .ag-panel-rail {
-  min-height: clamp(280px, 32vw, 420px);
   align-content: center;
   justify-items: end;
 }
@@ -18165,9 +18172,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .service-native-hero h1 {
   color: var(--ag-color-super-grey);
   text-align: right;
-  font-size: clamp(3.6rem, 9vw, 6.2rem);
-  line-height: 1.02;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .service-native-hero h1 + h1 {
@@ -18468,15 +18472,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .service-native-hero h1:last-child mark {
   color: var(--ag-color-mango);
-}
-
-.native-info-page--legacy-child.native-info-page--legacy-endowments.is-compact .service-native-hero .ag-panel-rail {
-  min-height: clamp(260px, 30vw, 360px);
-}
-
-.native-info-page--legacy-child.native-info-page--legacy-endowments .service-native-hero h1 {
-  font-size: clamp(3.2rem, 7vw, 5.9rem);
-  line-height: 1;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .service-native-intro {
@@ -18871,16 +18866,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   font-size: 0.8rem;
   color: #666666;
   line-height: 1.6;
-}
-
-.native-info-page--legacy-child.native-info-page--legacy-trusts.is-compact .service-native-hero .ag-panel-rail {
-  min-height: clamp(260px, 30vw, 360px);
-}
-
-.native-info-page--legacy-child.native-info-page--legacy-trusts .service-native-hero h1 {
-  font-size: clamp(3.6rem, 8.8vw, 7rem);
-  line-height: 0.92;
-  letter-spacing: -0.04em;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .service-native-hero h1 + h1 {
@@ -19491,10 +19476,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   margin-top: 1.1rem;
 }
 
-.native-info-page.native-info-page--legacy-generosity-fund.is-compact .service-native-hero h1 {
-  font-size: clamp(3rem, 9.2vw, 112px);
-}
-
 .native-info-page--legacy-generosity-fund .service-native-hero .service-native-action-row {
   margin-top: 1.4rem;
 }
@@ -19747,11 +19728,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   letter-spacing: var(--ag-letter-spacing-helv-intro);
 }
 
-.native-info-page--retirement-simple .service-native-hero h1 {
-  font-size: clamp(3.35rem, 7vw, 6.65rem);
-  letter-spacing: -0.04em;
-}
-
 .native-info-page--retirement-simple .service-native-section > .ag-panel-rail > h2 {
   font-family: var(--ag-font-helv);
   color: var(--ag-color-super-grey);
@@ -19778,9 +19754,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .native-info-page.native-info-page--retirement-rollovers .service-native-hero h1 {
   color: var(--ag-color-atlantean);
-  font-size: clamp(3.6rem, 9.2vw, 112px);
-  line-height: 0.9;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading) !important;
 }
 
 .native-info-page--retirement-rollovers .service-native-hero h1 mark.is-mango {
@@ -20022,11 +19995,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   justify-content: center;
 }
 
-.native-info-page--retirement-fund-ira .service-native-hero h1 {
-  font-size: clamp(2.8rem, 6vw, 5.35rem);
-  letter-spacing: -0.04em;
-}
-
 .native-info-page--retirement-fund-ira .retirement-fund-ira-native-shell {
   background: #f0eee8;
   padding-top: clamp(2.8rem, 5.8vw, 4.6rem);
@@ -20265,12 +20233,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   }
 }
 
-.native-info-page--retirement-409a .service-native-hero h1 {
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  font-size: clamp(2.9rem, 6vw, 5.4rem);
-}
-
 .native-info-page--retirement-409a .service-native-intro {
   background: linear-gradient(142deg, rgba(0, 138, 171, 0.96) 0%, rgba(27, 46, 108, 0.95) 100%);
 }
@@ -20399,11 +20361,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   color: #5f6971;
 }
 
-.native-info-page--online-contributions .service-native-hero h1 {
-  font-size: clamp(2.5rem, 5.4vw, 4.6rem);
-  line-height: 0.94;
-}
-
 .native-info-page--online-contributions .online-contrib-native-overview > .ag-panel-rail > h2 {
   font-size: clamp(2rem, 3.3vw, 2.7rem);
   margin-bottom: 1rem;
@@ -20446,10 +20403,6 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .native-info-page--online-contributions .online-contrib-native-help .service-native-action-row {
   justify-content: center;
-}
-
-.native-info-page--legacy-child .service-native-hero h1 {
-  font-size: clamp(2.75rem, 5.9vw, 5.1rem);
 }
 
 .native-info-page--legacy-child .service-native-intro {
@@ -21270,7 +21223,8 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   }
 
   .investments-native-growth-card h3 {
-    font-size: 2.15rem;
+    font-size: clamp(4.95rem, 14vw, 5.65rem);
+    line-height: 0.95;
   }
 
   .investments-native-growth-card p {

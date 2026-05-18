@@ -41,6 +41,10 @@ describe('native intro and billboard renderer guardrail', () => {
   it('keeps shared intro heading color overrides available in generic runtime CSS, not only the test route', () => {
     const cssSource = readSource('../styles/service-native.css');
 
+    expect(cssSource).toContain('.service-native-intro {');
+    expect(cssSource).toContain('padding: clamp(3.1rem, 7vw, 5.3rem) 0 clamp(3.65rem, 8.2vw, 6.2rem);');
+    expect(cssSource).toContain('.native-info-page--impact .service-native-intro {');
+    expect(cssSource).not.toContain('.native-info-page--impact .service-native-intro {\n  background: linear-gradient(145deg, #f3f0eb 0%, #e6e1d7 100%);\n  padding-bottom: clamp(2.2rem, 5vw, 3.8rem);\n}');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro .service-native-intro-copy > h2.is-super-grey,');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro .service-native-intro-copy > h2 mark.is-super-grey,');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro .service-native-intro-copy > h2.is-white,');
@@ -56,5 +60,17 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain('.native-info-rich-html .is-white {');
     expect(cssSource).toContain('.native-info-page--test .service-native-section.test-dynamic-billboard .native-info-section-copy > h2.is-sandstone,');
     expect(cssSource).toContain('.native-info-page--test .service-native-section.test-dynamic-billboard .native-info-section-copy > h2 mark.is-sandstone {');
+  });
+
+  it('keeps white available for intro HUD backgrounds without changing the shared intro runtime palette plumbing', () => {
+    const editorSource = readSource('./block-editors/migratedBlockEditors.jsx');
+    const hudSource = readSource('./IntroHudEditorShared.jsx');
+
+    expect(editorSource).toContain('allowWhiteBackground');
+    expect(editorSource).not.toContain('allowWhiteBackground={false}');
+    expect(hudSource).toContain('allowWhiteBackground = false,');
+    expect(hudSource).toContain('const backgroundOptions = allowWhiteBackground');
+    expect(hudSource).toContain('? SURFACE_BG_TONE_OPTIONS');
+    expect(hudSource).toContain(": SURFACE_BG_TONE_OPTIONS.filter((option) => option.value !== 'white');");
   });
 });

@@ -3989,7 +3989,7 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [] }) {
       onJustifyChange={(nextValue) => onSettingChange('justify', nextValue)}
       lineSpacing={Number.isFinite(Number(settings.lineSpacing)) ? Number(settings.lineSpacing) : 1.04}
       onLineSpacingChange={(nextValue) => onSettingChange('lineSpacing', Number(nextValue))}
-      allowWhiteBackground={false}
+      allowWhiteBackground
       actionsSlot={actionFields.length ? (
         <section className="admin-front-hud-card admin-intro-hud-card admin-intro-hud-card--actions">
           <div className="admin-front-hud-card-head">
