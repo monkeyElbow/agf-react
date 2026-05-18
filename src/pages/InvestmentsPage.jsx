@@ -1533,7 +1533,7 @@ export default function InvestmentsPage() {
                 tabIndex={showFrontHud && introBlock ? 0 : undefined}
                 aria-label={showFrontHud && introBlock ? 'Edit intro body HTML' : undefined}
               >
-                Your investment dollars don't just multiply-they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.
+                Your investment dollars don't just multiply; they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.
               </p>
             )}
             {dynamicIntro?.extraLine ? (
