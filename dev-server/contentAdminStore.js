@@ -649,7 +649,7 @@ export function createDevContentAuthorityStore({
   const persist = () => {
     const dir = path.dirname(persistenceFile);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(persistenceFile, JSON.stringify(record, null, 2));
+    fs.writeFileSync(persistenceFile, JSON.stringify(record));
   };
 
   const load = () => {
