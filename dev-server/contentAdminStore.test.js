@@ -225,6 +225,10 @@ function makeTempFile() {
   return path.join(dir, 'content-admin-shared.json');
 }
 
+function readPersistedRecord(persistenceFile) {
+  return JSON.parse(fs.readFileSync(persistenceFile, 'utf8'));
+}
+
 describe('createDevContentAuthorityStore', () => {
   it('lets multiple clients resolve the same shared page state through one persisted store', () => {
     const persistenceFile = makeTempFile();
@@ -256,6 +260,65 @@ describe('createDevContentAuthorityStore', () => {
     expect(history.length).toBeGreaterThan(0);
     expect(history[0].summary).toBe('cta updated');
     expect(history[0].blocks.map((block) => block.id)).toContain('cta_form');
+  });
+
+  it('persists new revisions without full-tree snapshot state', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'][1].settings.title = 'Updated CTA';
+    store.saveDraft(nextState, { actor: createActor(), summary: 'cta updated' });
+
+    const persisted = readPersistedRecord(persistenceFile);
+    const revision = persisted.revisionsByPath['/services/loans'][0];
+
+    expect(revision.snapshot.state).toBeUndefined();
+    expect(revision.snapshot.pathname).toBe('/services/loans');
+    expect(revision.snapshot.page.path).toBe('/services/loans');
+    expect(revision.snapshot.blocks.map((block) => block.id)).toEqual(['hero', 'cta_form']);
+    expect(revision.snapshot.collaboration.blocks.hero).toBeTruthy();
+    expect(revision.snapshot.collaboration.blocks.cta_form?.draftedBy?.displayName).toBe('Taylor QA');
+    expect(revision.snapshot.collaboration.history[0]?.action).toBe('block-draft-saved');
+    expect(revision.snapshot.pathAliases).toEqual({});
+  });
+
+  it('loads legacy revisions with snapshot.state and still returns revision history', () => {
+    const persistenceFile = makeTempFile();
+    const legacyState = buildSeedState();
+    legacyState.blocksByPath['/services/loans'][1].settings.title = 'Legacy CTA';
+
+    fs.writeFileSync(persistenceFile, JSON.stringify({
+      initialized: true,
+      version: 1,
+      updatedAt: 1710000005000,
+      state: buildSeedState(),
+      baseSnapshot: buildSeedState(),
+      revisionsByPath: {
+        '/services/loans': [
+          {
+            id: '1710000005000-legacy',
+            pathname: '/services/loans',
+            createdAt: 1710000005000,
+            actor: createActor(),
+            reason: 'draft-saved',
+            summary: 'legacy revision',
+            snapshot: {
+              pathname: '/services/loans',
+              state: legacyState,
+            },
+          },
+        ],
+      },
+    }));
+
+    const store = createStore(persistenceFile);
+    const history = store.getRevisionHistory('/services/loans');
+
+    expect(history).toHaveLength(1);
+    expect(history[0].summary).toBe('legacy revision');
+    expect(history[0].blocks.map((block) => block.id)).toEqual(['hero', 'cta_form']);
   });
 
   it('resets the shared state back to seed', () => {
@@ -323,6 +386,10 @@ describe('createDevContentAuthorityStore', () => {
     secondDraft.blocksByPath['/services/loans'][0].settings.line1Text = 'Second draft';
     store.saveDraft(secondDraft, { actor: createActor(), summary: 'second draft' });
 
+    const persistedBeforeRestore = readPersistedRecord(persistenceFile);
+    expect(persistedBeforeRestore.revisionsByPath['/services/loans'][0].snapshot.state).toBeUndefined();
+    expect(persistedBeforeRestore.revisionsByPath['/services/loans'][1].snapshot.state).toBeUndefined();
+
     const restored = store.restorePageRevision('/services/loans', firstRevisionId, { actor: createActor() });
     expect(restored.ok).toBe(true);
     expect(store.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('First draft');
@@ -348,10 +415,59 @@ describe('createDevContentAuthorityStore', () => {
     secondDraft.blocksByPath['/services/loans'][1].settings.title = 'Different CTA';
     store.saveDraft(secondDraft, { actor: createActor(), summary: 'later draft' });
 
+    const persistedBeforeRestore = readPersistedRecord(persistenceFile);
+    expect(persistedBeforeRestore.revisionsByPath['/services/loans'][0].snapshot.state).toBeUndefined();
+    expect(persistedBeforeRestore.revisionsByPath['/services/loans'][1].snapshot.state).toBeUndefined();
+
     const restored = store.restoreBlockFromRevision('/services/loans', revisionId, 'cta_form', { actor: createActor() });
     expect(restored.ok).toBe(true);
     expect(store.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Keep this title');
     expect(store.getSnapshot().state.blocksByPath['/services/loans'][1].settings.title).toBe('Restorable CTA');
+  });
+
+  it('returns mixed history for legacy and compact revision snapshots', () => {
+    const persistenceFile = makeTempFile();
+    const legacyState = buildSeedState();
+    legacyState.blocksByPath['/services/loans'][0].settings.line1Text = 'Legacy title';
+
+    fs.writeFileSync(persistenceFile, JSON.stringify({
+      initialized: true,
+      version: 1,
+      updatedAt: 1710000005000,
+      state: buildSeedState(),
+      baseSnapshot: buildSeedState(),
+      revisionsByPath: {
+        '/services/loans': [
+          {
+            id: '1710000005000-legacy',
+            pathname: '/services/loans',
+            createdAt: 1710000005000,
+            actor: createActor(),
+            reason: 'draft-saved',
+            summary: 'legacy revision',
+            snapshot: {
+              pathname: '/services/loans',
+              state: legacyState,
+            },
+          },
+        ],
+      },
+    }));
+
+    const store = createStore(persistenceFile);
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'][1].settings.title = 'Compact CTA';
+    store.saveDraft(nextState, { actor: createActor(), summary: 'compact revision' });
+
+    const history = store.getRevisionHistory('/services/loans');
+    expect(history).toHaveLength(2);
+    expect(history.map((entry) => entry.summary)).toEqual(['compact revision', 'legacy revision']);
+    expect(history[0].blocks.map((block) => block.id)).toEqual(['hero', 'cta_form']);
+    expect(history[1].blocks.map((block) => block.id)).toEqual(['hero', 'cta_form']);
+
+    const persisted = readPersistedRecord(persistenceFile);
+    expect(persisted.revisionsByPath['/services/loans'][0].snapshot.state).toBeUndefined();
+    expect(persisted.revisionsByPath['/services/loans'][1].snapshot.state).toBeDefined();
   });
 
   it('acquires and releases shared block locks in persisted collaboration state', () => {

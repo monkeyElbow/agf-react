@@ -544,11 +544,53 @@ function buildRevisionSnapshot(state, pathname) {
   const normalizedState = normalizeSharedState(state);
   return {
     pathname,
-    state: normalizedState,
     page: cloneJson(normalizedState.pageHierarchy?.[pathname] || null),
     blocks: cloneJson(normalizedState.blocksByPath?.[pathname] || []),
     collaboration: cloneJson(normalizedState.collaborationByPath?.[pathname] || { blocks: {}, history: [] }),
     pathAliases: aliasesForPath(normalizedState.pathAliases, pathname),
+  };
+}
+
+function hasOwn(value, key) {
+  return Object.prototype.hasOwnProperty.call(value || {}, key);
+}
+
+function resolveRevisionSnapshotPageSlice(snapshot, pathname) {
+  const normalizedPath = String(pathname || snapshot?.pathname || '').trim();
+  const source = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const hasPageSliceFields = (
+    hasOwn(source, 'page')
+    || hasOwn(source, 'blocks')
+    || hasOwn(source, 'collaboration')
+    || hasOwn(source, 'pathAliases')
+  );
+  if (hasPageSliceFields) {
+    return {
+      pathname: normalizedPath,
+      page: cloneJson(source.page || null),
+      blocks: cloneJson(Array.isArray(source.blocks) ? source.blocks : []),
+      collaboration: cloneJson(
+        source.collaboration && typeof source.collaboration === 'object'
+          ? source.collaboration
+          : { blocks: {}, history: [] },
+      ),
+      pathAliases: cloneJson(
+        source.pathAliases && typeof source.pathAliases === 'object'
+          ? source.pathAliases
+          : {},
+      ),
+    };
+  }
+
+  const normalizedState = normalizeSharedState(source.state);
+  return {
+    pathname: normalizedPath,
+    page: cloneJson(normalizedState.pageHierarchy?.[normalizedPath] || null),
+    blocks: cloneJson(normalizedState.blocksByPath?.[normalizedPath] || []),
+    collaboration: cloneJson(
+      normalizedState.collaborationByPath?.[normalizedPath] || { blocks: {}, history: [] },
+    ),
+    pathAliases: aliasesForPath(normalizedState.pathAliases, normalizedPath),
   };
 }
 
@@ -619,7 +661,20 @@ function normalizeRevisionRecord(rawRevision) {
     actor,
     reason: String(source.reason || '').trim(),
     summary: String(source.summary || '').trim(),
-    snapshot: source.snapshot && typeof source.snapshot === 'object' ? source.snapshot : buildRevisionSnapshot({}, pathname),
+    snapshot: (() => {
+      const rawSnapshot = source.snapshot && typeof source.snapshot === 'object'
+        ? cloneJson(source.snapshot)
+        : buildRevisionSnapshot({}, pathname);
+      const pageSlice = resolveRevisionSnapshotPageSlice(rawSnapshot, pathname);
+      return {
+        ...rawSnapshot,
+        pathname: pageSlice.pathname,
+        page: pageSlice.page,
+        blocks: pageSlice.blocks,
+        collaboration: pageSlice.collaboration,
+        pathAliases: pageSlice.pathAliases,
+      };
+    })(),
   };
 }
 
@@ -725,18 +780,16 @@ export function createDevContentAuthorityStore({
   };
 
   const replacePageStateFromRevision = (pathname, revision) => {
-    const snapshotState = normalizeSharedState(revision?.snapshot?.state);
     const nextState = normalizeSharedState(record.state);
-    if (snapshotState.pageHierarchy?.[pathname]) {
-      nextState.pageHierarchy[pathname] = cloneJson(snapshotState.pageHierarchy[pathname]);
+    const pageSlice = resolveRevisionSnapshotPageSlice(revision?.snapshot, pathname);
+    if (pageSlice.page) {
+      nextState.pageHierarchy[pathname] = cloneJson(pageSlice.page);
     }
-    if (snapshotState.blocksByPath?.[pathname]) {
-      nextState.blocksByPath[pathname] = cloneJson(snapshotState.blocksByPath[pathname]);
-    }
+    nextState.blocksByPath[pathname] = cloneJson(pageSlice.blocks);
     nextState.collaborationByPath[pathname] = cloneJson(
-      snapshotState.collaborationByPath?.[pathname] || { blocks: {}, history: [] },
+      pageSlice.collaboration || { blocks: {}, history: [] },
     );
-    Object.entries(snapshotState.pathAliases || {}).forEach(([fromPath, toPath]) => {
+    Object.entries(pageSlice.pathAliases || {}).forEach(([fromPath, toPath]) => {
       nextState.pathAliases[fromPath] = toPath;
     });
     return nextState;
@@ -1065,9 +1118,8 @@ export function createDevContentAuthorityStore({
       if (!revision) {
         return { ok: false, error: 'revision-not-found', snapshot: publishSnapshot() };
       }
-      const snapshotBlocks = Array.isArray(revision?.snapshot?.state?.blocksByPath?.[normalizedPath])
-        ? revision.snapshot.state.blocksByPath[normalizedPath]
-        : [];
+      const pageSlice = resolveRevisionSnapshotPageSlice(revision?.snapshot, normalizedPath);
+      const snapshotBlocks = Array.isArray(pageSlice.blocks) ? pageSlice.blocks : [];
       const snapshotBlock = snapshotBlocks.find((entry) => String(entry?.id || '').trim() === normalizedBlockId);
       if (!snapshotBlock) {
         return { ok: false, error: 'block-not-found', snapshot: publishSnapshot() };
