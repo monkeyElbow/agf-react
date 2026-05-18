@@ -3,7 +3,7 @@ import AdminNumberInput from '../AdminNumberInput';
 import AdminHtmlEditor from '../AdminHtmlEditor';
 import BillboardHudEditorPanel from '../BillboardHudEditorPanel';
 import ColorPalette from '../ColorPalette';
-import { HeroDriftNotice } from '../HeroHudEditorShared';
+import { HeroDriftNotice, useBufferedHeroLineTextDrafts } from '../HeroHudEditorShared';
 import IntroHudEditorPanel from '../IntroHudEditorShared';
 import PageContentHudEditorPanel, { PageContentLayoutControls } from '../PageContentHudEditorPanel';
 import TestimonialsHudEditorPanel from '../TestimonialsHudEditorPanel';
@@ -2972,18 +2972,53 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     includeOptionalLine3: showOptionalLine3,
   });
   const canShowOptionalLine3 = supportsOptionalHeroLine3({ fieldById, settings }) && !showOptionalLine3;
-  const lineConfigs = resolvedLineNumbers.map((lineNumber) => {
+  const rawLineConfigs = resolvedLineNumbers.map((lineNumber) => {
     const lineKey = `line${lineNumber}`;
     const text = String(settings[`${lineKey}Text`] ?? '');
     const className = String(settings[`${lineKey}ClassName`] || '').trim();
-    const highlights = parseHeroRangeHighlights(settings[`${lineKey}HighlightsJson`], text);
     return {
       key: lineKey,
       label: `Line ${lineNumber}`,
       placeholder: `Line ${lineNumber} text`,
       text,
       className,
-      displayClassName: resolveHeroLineDisplayClassName(className, heroBgTone, lineKey),
+    };
+  });
+  const {
+    draftTexts: heroLineDraftTexts,
+    updateLineDraft,
+    commitLineDraftOnBlur,
+    isLineDirty,
+  } = useBufferedHeroLineTextDrafts({
+    lines: rawLineConfigs,
+    onCommitLineText: (lineKey, nextText) => {
+      const previousText = String(settings?.[`${lineKey}Text`] ?? '');
+      onSettingChange(`${lineKey}Text`, nextText);
+      onSettingChange(
+        `${lineKey}HighlightsJson`,
+        remapHighlightsJsonForTextChange(settings?.[`${lineKey}HighlightsJson`], previousText, nextText),
+      );
+    },
+  });
+  const resolveCurrentLineText = (lineKey, fallback = '') => (
+    String(heroLineDraftTexts[lineKey] ?? fallback ?? '')
+  );
+  const resolveCurrentLineHighlightsJson = (lineKey, currentTextValue = '') => {
+    const externalText = String(settings?.[`${lineKey}Text`] ?? '');
+    const currentText = String(currentTextValue ?? '');
+    const rawHighlightsJson = String(settings?.[`${lineKey}HighlightsJson`] ?? '');
+    if (currentText === externalText) {
+      return rawHighlightsJson;
+    }
+    return remapHighlightsJsonForTextChange(rawHighlightsJson, externalText, currentText);
+  };
+  const lineConfigs = rawLineConfigs.map((line) => {
+    const text = resolveCurrentLineText(line.key, line.text);
+    const highlights = parseHeroRangeHighlights(resolveCurrentLineHighlightsJson(line.key, text), text);
+    return {
+      ...line,
+      text,
+      displayClassName: resolveHeroLineDisplayClassName(line.className, heroBgTone, line.key),
       highlights,
     };
   });
@@ -3013,7 +3048,7 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     const nextSelection = readTextSelectionState(
       inputRefs.current[lineKey],
       selectionByLine[lineKey],
-      settings?.[`${lineKey}Text`],
+      resolveCurrentLineText(lineKey, settings?.[`${lineKey}Text`]),
     );
     setSelectionByLine((prev) => ({
       ...prev,
@@ -3023,12 +3058,7 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
   };
 
   const updateLineText = (lineKey, nextText) => {
-    const prevText = String(settings?.[`${lineKey}Text`] ?? '');
-    onSettingChange(`${lineKey}Text`, nextText);
-    onSettingChange(
-      `${lineKey}HighlightsJson`,
-      remapHighlightsJsonForTextChange(settings?.[`${lineKey}HighlightsJson`], prevText, nextText),
-    );
+    updateLineDraft(lineKey, nextText);
 
     setSelectionByLine((prev) => {
       const current = prev[lineKey] || { start: 0, end: 0 };
@@ -3081,10 +3111,13 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     const currentSelection = normalizeRange(selectionSource);
 
     if (currentSelection.end > currentSelection.start) {
+      if (isLineDirty(targetLine)) {
+        onSettingChange(`${targetLine}Text`, line.text);
+      }
       onSettingChange(
         `${targetLine}HighlightsJson`,
         applySelectionColor(
-          settings?.[`${targetLine}HighlightsJson`],
+          resolveCurrentLineHighlightsJson(targetLine, line.text),
           line.text,
           currentSelection.start,
           currentSelection.end,
@@ -3107,9 +3140,12 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
   const removeHighlightAtIndex = (lineKey, index) => {
     const line = lineByKey[lineKey];
     if (!line) return;
+    if (isLineDirty(lineKey)) {
+      onSettingChange(`${lineKey}Text`, line.text);
+    }
     onSettingChange(
       `${lineKey}HighlightsJson`,
-      removeSelectionRange(settings?.[`${lineKey}HighlightsJson`], line.text, index),
+      removeSelectionRange(resolveCurrentLineHighlightsJson(lineKey, line.text), line.text, index),
     );
   };
 
@@ -3227,6 +3263,7 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
                       onKeyUp={() => syncSelection(line.key)}
                       onMouseUp={() => syncSelection(line.key)}
                       onChange={(event) => updateLineText(line.key, event.target.value)}
+                      onBlur={() => commitLineDraftOnBlur(line.key)}
                       placeholder={line.placeholder}
                       aria-label={`${line.label} text`}
                       autoComplete="off"

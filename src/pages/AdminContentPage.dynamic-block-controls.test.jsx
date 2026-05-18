@@ -34,6 +34,7 @@ import {
   TopStripBlockEditor,
 } from '../components/block-editors/migratedBlockEditors';
 import { getLegacyEditableFieldsForKind } from '../blocks/registry';
+import { remapHighlightsJsonForTextChange } from '../lib/heroHudRanges';
 
 void [
   BillboardBlockEditor,
@@ -371,6 +372,103 @@ describe('dynamic block control wiring', () => {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
     }
+  });
+
+  it('keeps hero line text drafts stable through stale shared rerenders', () => {
+    vi.useFakeTimers();
+    const onSettingChange = vi.fn();
+
+    try {
+      const { rerender } = render(
+        <HeroBlockEditor
+          block={getDynamicBlock('hero')}
+          onSettingChange={onSettingChange}
+        />,
+      );
+
+      const lineInput = screen.getByLabelText('Line 1 text');
+      fireEvent.change(lineInput, {
+        target: { value: 'Draft hero line text' },
+      });
+
+      expect(lineInput.value).toBe('Draft hero line text');
+      expect(onSettingChange).not.toHaveBeenCalledWith('line1Text', 'Draft hero line text');
+
+      rerender(
+        <HeroBlockEditor
+          block={getDynamicBlock('hero')}
+          onSettingChange={onSettingChange}
+        />,
+      );
+
+      expect(screen.getByLabelText('Line 1 text').value).toBe('Draft hero line text');
+
+      act(() => {
+        vi.advanceTimersByTime(350);
+      });
+
+      expect(onSettingChange).toHaveBeenCalledWith('line1Text', 'Draft hero line text');
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
+  });
+
+  it('commits hero line text on blur and preserves highlight remapping', () => {
+    const block = getDynamicBlock('hero');
+    const onSettingChange = vi.fn();
+    block.settings = {
+      ...block.settings,
+      line1Text: 'Today',
+      line1HighlightsJson: '[{"start":0,"end":5,"className":"is-mango","text":"Today"}]',
+    };
+
+    render(<HeroBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    const lineInput = screen.getByLabelText('Line 1 text');
+    fireEvent.change(lineInput, {
+      target: { value: 'Tomorrow' },
+    });
+
+    expect(onSettingChange).not.toHaveBeenCalledWith('line1Text', 'Tomorrow');
+
+    fireEvent.blur(lineInput);
+
+    expect(onSettingChange).toHaveBeenCalledWith('line1Text', 'Tomorrow');
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'line1HighlightsJson',
+      remapHighlightsJsonForTextChange(block.settings.line1HighlightsJson, 'Today', 'Tomorrow'),
+    );
+  });
+
+  it('commits dirty hero line drafts immediately when applying a selection highlight color', () => {
+    const block = getDynamicBlock('hero');
+    const onSettingChange = vi.fn();
+    block.settings = {
+      ...block.settings,
+      line1Text: 'Today',
+      line1HighlightsJson: '',
+    };
+
+    render(<HeroBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    const lineInput = screen.getByLabelText('Line 1 text');
+    fireEvent.change(lineInput, {
+      target: { value: 'Tomorrow' },
+    });
+
+    expect(onSettingChange).not.toHaveBeenCalledWith('line1Text', 'Tomorrow');
+
+    lineInput.focus();
+    lineInput.setSelectionRange(0, 3);
+    fireEvent.select(lineInput);
+    fireEvent.click(screen.getByRole('radio', { name: 'Mango (apply to selection)' }));
+
+    expect(onSettingChange).toHaveBeenCalledWith('line1Text', 'Tomorrow');
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'line1HighlightsJson',
+      expect.stringContaining('"start":0,"end":3,"className":"is-mango","text":"Tom"'),
+    );
   });
 
   it('keeps hero background swatches visible even when field options are missing', () => {

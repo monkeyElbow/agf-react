@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ColorPalette from './ColorPalette';
 import TextHighlightColorControls from './TextHighlightColorControls';
 import AdminNumberInput from './AdminNumberInput';
@@ -13,6 +14,141 @@ const HERO_JUSTIFY_OPTIONS = [
   { value: 'center', label: 'Center' },
   { value: 'right', label: 'Right' },
 ];
+const HERO_LINE_TEXT_DRAFT_COMMIT_DELAY_MS = 320;
+
+function readHeroLineDraftTexts(lines) {
+  return (Array.isArray(lines) ? lines : []).reduce((next, line) => {
+    const key = String(line?.key || '').trim();
+    if (!key) {
+      return next;
+    }
+    next[key] = String(line?.text || '');
+    return next;
+  }, {});
+}
+
+export function useBufferedHeroLineTextDrafts({
+  lines,
+  onCommitLineText,
+  onDraftTextChange,
+  commitDelayMs = HERO_LINE_TEXT_DRAFT_COMMIT_DELAY_MS,
+}) {
+  const safeLines = Array.isArray(lines) ? lines : [];
+  const lineKeys = useMemo(
+    () => safeLines.map((line) => String(line?.key || '').trim()).filter(Boolean),
+    [safeLines],
+  );
+  const externalDraftTexts = useMemo(
+    () => readHeroLineDraftTexts(safeLines),
+    [safeLines],
+  );
+  const [draftTexts, setDraftTexts] = useState(() => externalDraftTexts);
+  const [dirtyLineKeys, setDirtyLineKeys] = useState([]);
+  const draftTextsRef = useRef(draftTexts);
+  const commitTimersRef = useRef(new Map());
+
+  useEffect(() => {
+    draftTextsRef.current = draftTexts;
+  }, [draftTexts]);
+
+  useEffect(() => () => {
+    commitTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+    commitTimersRef.current.clear();
+  }, []);
+
+  useEffect(() => {
+    setDraftTexts((current) => {
+      let changed = false;
+      const next = { ...current };
+      lineKeys.forEach((lineKey) => {
+        if (dirtyLineKeys.includes(lineKey)) {
+          return;
+        }
+        const externalValue = externalDraftTexts[lineKey] ?? '';
+        if ((current[lineKey] ?? '') === externalValue) {
+          return;
+        }
+        next[lineKey] = externalValue;
+        changed = true;
+      });
+      return changed ? next : current;
+    });
+  }, [dirtyLineKeys, externalDraftTexts, lineKeys]);
+
+  useEffect(() => {
+    setDirtyLineKeys((current) => {
+      const next = current.filter((lineKey) => (
+        (draftTexts[lineKey] ?? '') !== (externalDraftTexts[lineKey] ?? '')
+      ));
+      return current.length === next.length && current.every((lineKey, index) => lineKey === next[index])
+        ? current
+        : next;
+    });
+  }, [draftTexts, externalDraftTexts]);
+
+  const commitLineDraft = (lineKey, explicitValue) => {
+    const normalizedLineKey = String(lineKey || '').trim();
+    if (!normalizedLineKey) {
+      return;
+    }
+    const timerId = commitTimersRef.current.get(normalizedLineKey);
+    if (timerId) {
+      window.clearTimeout(timerId);
+      commitTimersRef.current.delete(normalizedLineKey);
+    }
+    const nextValue = String(explicitValue ?? draftTextsRef.current[normalizedLineKey] ?? '');
+    onCommitLineText?.(normalizedLineKey, nextValue);
+    onDraftTextChange?.(normalizedLineKey, nextValue);
+  };
+
+  const scheduleLineDraftCommit = (lineKey, nextValue) => {
+    const normalizedLineKey = String(lineKey || '').trim();
+    if (!normalizedLineKey) {
+      return;
+    }
+    const timerId = commitTimersRef.current.get(normalizedLineKey);
+    if (timerId) {
+      window.clearTimeout(timerId);
+    }
+    commitTimersRef.current.set(normalizedLineKey, window.setTimeout(() => {
+      commitLineDraft(normalizedLineKey, nextValue);
+    }, commitDelayMs));
+  };
+
+  const updateLineDraft = (lineKey, nextValue, { commitImmediately = false } = {}) => {
+    const normalizedLineKey = String(lineKey || '').trim();
+    if (!normalizedLineKey) {
+      return;
+    }
+    const normalizedValue = String(nextValue ?? '');
+    setDraftTexts((current) => (
+      (current[normalizedLineKey] ?? '') === normalizedValue
+        ? current
+        : { ...current, [normalizedLineKey]: normalizedValue }
+    ));
+    setDirtyLineKeys((current) => (
+      current.includes(normalizedLineKey) ? current : [...current, normalizedLineKey]
+    ));
+    onDraftTextChange?.(normalizedLineKey, normalizedValue);
+    if (commitImmediately) {
+      commitLineDraft(normalizedLineKey, normalizedValue);
+      return;
+    }
+    scheduleLineDraftCommit(normalizedLineKey, normalizedValue);
+  };
+
+  const commitLineDraftOnBlur = (lineKey) => {
+    commitLineDraft(lineKey, draftTextsRef.current[String(lineKey || '').trim()] ?? '');
+  };
+
+  return {
+    draftTexts,
+    updateLineDraft,
+    commitLineDraft,
+    commitLineDraftOnBlur,
+    isLineDirty: (lineKey) => dirtyLineKeys.includes(String(lineKey || '').trim()),
+  };
+}
 
 function renderTextWithBreaks(source, keyPrefix) {
   const text = String(source || '');
@@ -103,6 +239,7 @@ export function HeroInlineLiveEditor({
   placeholder = 'Type hero line text...',
   showPlaceholders = false,
   onLineTextChange,
+  onLineDraftChange,
   onLineInteract,
   setLineInputRef,
   renderLineContent,
@@ -111,17 +248,35 @@ export function HeroInlineLiveEditor({
 }) {
   const normalizedLetterSpacing = normalizeHeroTitleLetterSpacingEm(letterSpacing);
   const safeLines = Array.isArray(lines) ? lines : [];
-  const nonEmptyLines = safeLines.filter((line) => String(line?.text || '').trim());
+  const {
+    draftTexts,
+    updateLineDraft,
+    commitLineDraftOnBlur,
+  } = useBufferedHeroLineTextDrafts({
+    lines: safeLines,
+    onCommitLineText: onLineTextChange,
+    onDraftTextChange: onLineDraftChange,
+  });
+  const mergedLines = useMemo(() => (
+    safeLines.map((line) => {
+      const lineKey = String(line?.key || '').trim();
+      return {
+        ...line,
+        text: lineKey ? String(draftTexts[lineKey] ?? line?.text ?? '') : String(line?.text || ''),
+      };
+    })
+  ), [draftTexts, safeLines]);
+  const nonEmptyLines = mergedLines.filter((line) => String(line?.text || '').trim());
   const activeLine = String(activeLineKey || '').trim()
-    ? safeLines.find((line) => String(line?.key || '').trim() === String(activeLineKey || '').trim())
+    ? mergedLines.find((line) => String(line?.key || '').trim() === String(activeLineKey || '').trim())
     : null;
-  const lineOrder = new Map(safeLines.map((line, index) => [String(line?.key || `line-${index + 1}`), index]));
+  const lineOrder = new Map(mergedLines.map((line, index) => [String(line?.key || `line-${index + 1}`), index]));
   const visibleLines = (() => {
-    if (!safeLines.length) {
+    if (!mergedLines.length) {
       return [];
     }
 
-    const base = nonEmptyLines.length ? [...nonEmptyLines] : [safeLines[0]];
+    const base = nonEmptyLines.length ? [...nonEmptyLines] : [mergedLines[0]];
     if (activeLine && !base.some((line) => String(line?.key || '').trim() === String(activeLine?.key || '').trim())) {
       base.push(activeLine);
       base.sort((a, b) => (
@@ -201,7 +356,8 @@ export function HeroInlineLiveEditor({
             onSelect={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
             onMouseUp={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
             onKeyUp={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
-            onChange={(event) => onLineTextChange?.(line.key, event.target.value)}
+            onChange={(event) => updateLineDraft(line.key, event.target.value)}
+            onBlur={() => commitLineDraftOnBlur(line.key)}
             spellCheck="false"
             aria-label={line.label || `Line ${index + 1}`}
           />
