@@ -166,7 +166,7 @@ describe('hero seed guardrails', () => {
 
   it('upgrades legacy hero animation presets from none to the managed preset for each page', () => {
     expect(normalizeDynamicHeroSettings('/', { animationPreset: 'none' }).animationPreset).toBe('default');
-    expect(normalizeDynamicHeroSettings('/services/investments', { animationPreset: 'none' }).animationPreset).toBe('loans-unblur');
+    expect(normalizeDynamicHeroSettings('/services/investments', { animationPreset: 'none' }).animationPreset).toBe('default');
     expect(normalizeDynamicHeroSettings('/services/retirement', { animationPreset: 'none' }).animationPreset).toBe('default');
   });
 
@@ -184,7 +184,7 @@ describe('hero seed guardrails', () => {
       line3HighlightsJson: '',
     });
 
-    expect(normalized.animationPreset).toBe('loans-unblur');
+    expect(normalized.animationPreset).toBe('default');
     expect(normalized.line1Text).toBe('Your investments.');
     expect(normalized.line1ClassName).toBe('line1');
     expect(normalized.line1HighlightsJson).toBe('[{"text":"investments","className":"is-atlantean"}]');
@@ -194,5 +194,10 @@ describe('hero seed guardrails', () => {
     expect(normalized.line3Text).toBe('Better together.');
     expect(normalized.line3ClassName).toBe('line3');
     expect(normalized.line3HighlightsJson).toBe('[{"text":"together","className":"is-sandstone"}]');
+  });
+
+  it('keeps the loans hero contract on the unblur animation while investments stays on default', () => {
+    expect(HERO_SEED_CONTRACTS_BY_PATH['/services/loans']?.animationPreset).toBe('loans-unblur');
+    expect(HERO_SEED_CONTRACTS_BY_PATH['/services/investments']?.animationPreset).toBe('default');
   });
 });

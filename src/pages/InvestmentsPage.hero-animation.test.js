@@ -3,14 +3,16 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('InvestmentsPage fallback hero animation', () => {
-  it('applies the third-step animation class to the fallback third line', () => {
+  it('keeps the fallback investments hero off the loans-only unblur animation classes', () => {
     const filePath = path.resolve(process.cwd(), 'src/pages/InvestmentsPage.jsx');
     const source = fs.readFileSync(filePath, 'utf8');
 
-    expect(source).toContain("heroAnimationClassForLine('loans-unblur', 1)");
-    expect(source).toContain("heroAnimationClassForLine('loans-unblur', 2)");
-    expect(source).toContain("heroAnimationClassForLine('loans-unblur', 3)");
-    expect(source).toContain('<h1 className={`line3 ${heroAnimationClassForLine(\'loans-unblur\', 3)}`}>');
+    expect(source).toContain("heroAnimationClassForLine(INVESTMENTS_HERO_ANIMATION_PRESET, 1)");
+    expect(source).toContain("heroAnimationClassForLine(INVESTMENTS_HERO_ANIMATION_PRESET, 2)");
+    expect(source).toContain("heroAnimationClassForLine(INVESTMENTS_HERO_ANIMATION_PRESET, 3)");
+    expect(source).not.toContain("heroAnimationClassForLine('loans-unblur', 1)");
+    expect(source).not.toContain("heroAnimationClassForLine('loans-unblur', 2)");
+    expect(source).not.toContain("heroAnimationClassForLine('loans-unblur', 3)");
   });
 
   it('preserves animationPreset from heroBlock.settings when heroHudSettings drops it', () => {
@@ -20,11 +22,11 @@ describe('InvestmentsPage fallback hero animation', () => {
     expect(source).toContain('animationPreset: resolveInvestmentsHeroAnimationPreset(');
   });
 
-  it('coerces stale default investments hero presets back to the managed loans animation', () => {
+  it('coerces stale investments hero presets back to the managed non-loans preset', () => {
     const filePath = path.resolve(process.cwd(), 'src/pages/InvestmentsPage.jsx');
     const source = fs.readFileSync(filePath, 'utf8');
 
-    expect(source).toContain("const INVESTMENTS_HERO_ANIMATION_PRESET = getHeroSeedContract('/services/investments')?.animationPreset || 'loans-unblur';");
-    expect(source).toContain("if (!normalized || normalized === 'default') {");
+    expect(source).toContain("const INVESTMENTS_HERO_ANIMATION_PRESET = getHeroSeedContract('/services/investments')?.animationPreset || 'default';");
+    expect(source).toContain("if (!normalized || normalized === 'default' || normalized === 'loans-unblur') {");
   });
 });

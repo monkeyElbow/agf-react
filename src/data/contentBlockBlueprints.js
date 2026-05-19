@@ -3106,7 +3106,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       kind: 'hero',
       mode: 'dynamic',
       settings: {
-        animationPreset: 'loans-unblur',
+        animationPreset: 'default',
         bgTone: 'white',
         justify: 'left',
         actionJustify: 'left',
