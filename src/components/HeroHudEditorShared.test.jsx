@@ -140,6 +140,28 @@ describe('HeroInlineLiveEditor', () => {
     expect(input.style.letterSpacing).toBe('-0.08em');
   });
 
+  it('lets a line-specific font size override the shared hero font size for preview and input sync', () => {
+    render(createElement(HeroInlineLiveEditor, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Convenient.',
+        className: 'home-native-eyebrow is-atlantean',
+        fontSize: '8rem',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      fontSize: '5rem',
+      lineHeight: 0.9,
+    }));
+
+    const heading = document.querySelector('.admin-front-hud-hero-live-line .home-native-eyebrow');
+    const input = screen.getByLabelText('Line 1');
+
+    expect(heading?.style.fontSize).toBe('8rem');
+    expect(input.style.fontSize).toBe('8rem');
+  });
+
   it('keeps hero line text drafts stable through stale external prop rerenders and commits on debounce', () => {
     vi.useFakeTimers();
     const onLineTextChange = vi.fn();

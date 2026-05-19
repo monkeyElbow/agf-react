@@ -350,12 +350,15 @@ export function HeroInlineLiveEditor({
             const LineTag = typeof resolveLineTagName === 'function'
               ? (resolveLineTagName(line, index) || 'h1')
               : 'h1';
+            const resolvedFontSize = typeof line?.fontSize === 'string' && line.fontSize.trim()
+              ? line.fontSize.trim()
+              : fontSize;
             return (
               <LineTag
                 className={typeof resolveLineClassName === 'function'
                   ? resolveLineClassName(line, index)
                   : (String(line.className || `line${index + 1}`).trim() || undefined)}
-                style={{ lineHeight, fontSize, letterSpacing: `${normalizedLetterSpacing}em` }}
+                style={{ lineHeight, fontSize: resolvedFontSize, letterSpacing: `${normalizedLetterSpacing}em` }}
               >
                 {String(line.text || '').length
                   ? (typeof renderLineContent === 'function'
@@ -378,7 +381,13 @@ export function HeroInlineLiveEditor({
             rows={1}
             className="admin-front-hud-hero-live-input"
             value={String(line.text || '')}
-            style={{ lineHeight, fontSize, letterSpacing: `${normalizedLetterSpacing}em` }}
+            style={{
+              lineHeight,
+              fontSize: typeof line?.fontSize === 'string' && line.fontSize.trim()
+                ? line.fontSize.trim()
+                : fontSize,
+              letterSpacing: `${normalizedLetterSpacing}em`,
+            }}
             readOnly={readOnly}
             aria-readonly={readOnly}
             onFocus={(event) => notifyLineInteract(line.key, { target: event.currentTarget })}

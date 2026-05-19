@@ -302,6 +302,30 @@
   color: var(--ag-color-mango);
 }
 
+.home-native-hero :is(.home-native-eyebrow, .home-native-title).is-atlantean {
+  color: var(--ag-color-atlantean);
+}
+
+.home-native-hero :is(.home-native-eyebrow, .home-native-title).is-mango {
+  color: var(--ag-color-mango);
+}
+
+.home-native-hero :is(.home-native-eyebrow, .home-native-title).is-melon {
+  color: var(--ag-color-melon);
+}
+
+.home-native-hero :is(.home-native-eyebrow, .home-native-title).is-super-grey {
+  color: var(--ag-color-super-grey);
+}
+
+.home-native-hero :is(.home-native-eyebrow, .home-native-title).is-sandstone {
+  color: var(--ag-color-sandstone);
+}
+
+.home-native-hero :is(.home-native-eyebrow, .home-native-title).is-white {
+  color: #ffffff;
+}
+
 .home-native-hero :is(.home-native-eyebrow, .home-native-title) mark.is-atlantean {
   color: var(--ag-color-atlantean);
 }

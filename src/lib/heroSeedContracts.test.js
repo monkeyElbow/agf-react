@@ -23,6 +23,9 @@ function expectHeroSettingsToMatchContract(settings, contract) {
   expect(settings.bgTone).toBe(contract.bgTone);
   expect(settings.justify).toBe(contract.justify);
   expect(settings.actionJustify || '').toBe(contract.actionJustify || '');
+  if (Number.isFinite(Number(contract.titleSizeRem))) {
+    expect(Number(settings.titleSizeRem)).toBe(Number(contract.titleSizeRem));
+  }
   expect(settings.lineGap).toBe(contract.lineGap);
   expect(settings.lineHeight).toBe(contract.lineHeight);
 
@@ -76,10 +79,10 @@ describe('hero seed guardrails', () => {
 
   it('reports repaired hero fields when defaults have to be restored', () => {
     const report = inspectDynamicHeroSettings('/', {
-      line1Text: "Today's investment.",
+      line1Text: 'Convenient.',
       line1ClassName: '',
       line1HighlightsJson: '[]',
-      line2Text: "Tomorrow's church.",
+      line2Text: 'Tax-efficient.',
       line2ClassName: 'home-native-title',
       line2HighlightsJson: '',
       button1Label: '',
@@ -93,7 +96,9 @@ describe('hero seed guardrails', () => {
       'line1ClassName',
       'line1HighlightsJson',
       'line2ClassName',
-      'line2HighlightsJson',
+      'line3Text',
+      'line3ClassName',
+      'titleSizeRem',
       'button1Label',
       'button1PageRef',
       'button1Style',
@@ -103,22 +108,18 @@ describe('hero seed guardrails', () => {
 
   it('preserves intentional hero styling edits on default text while still repairing missing default highlights', () => {
     const normalized = normalizeDynamicHeroSettings('/', {
-      line1Text: "Today's investment.",
+      line1Text: 'Convenient.',
       line1ClassName: 'home-native-eyebrow is-atlantean',
-      line1HighlightsJson: '[{"start":8,"end":18,"className":"is-melon","text":"investment"}]',
-      line2Text: "Tomorrow's church.",
+      line1HighlightsJson: '',
+      line2Text: 'Tax-efficient.',
       line2ClassName: 'home-native-title line1 line2 is-mango',
-      line2HighlightsJson: '[{"text":"Tomorrow","className":"is-mango"}]',
+      line2HighlightsJson: '',
     });
 
     expect(String(normalized.line1ClassName || '')).toBe('home-native-eyebrow is-atlantean');
-    expect(String(normalized.line1HighlightsJson || '')).toBe(
-      '[{"start":8,"end":18,"className":"is-melon","text":"investment"}]',
-    );
+    expect(String(normalized.line1HighlightsJson || '')).toBe('');
     expect(String(normalized.line2ClassName || '')).toBe('home-native-title line1 line2 is-mango');
-    expect(String(normalized.line2HighlightsJson || '')).toBe(
-      '[{"text":"Tomorrow","className":"is-mango"}]',
-    );
+    expect(String(normalized.line2HighlightsJson || '')).toBe('');
   });
 
   it('repairs non-empty but degraded hero highlight settings when expected highlight tokens are missing', () => {

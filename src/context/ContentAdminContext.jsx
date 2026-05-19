@@ -1562,6 +1562,9 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
       next.bgTone = contract?.bgTone || 'white';
     }
     next.justify = contract?.justify || 'left';
+    if (!Number.isFinite(Number(next.titleSizeRem)) && Number.isFinite(Number(contract?.titleSizeRem))) {
+      next.titleSizeRem = Number(contract.titleSizeRem);
+    }
     if (!Number.isFinite(Number(next.lineHeight))) {
       next.lineHeight = contract?.lineHeight || 0.9;
     }
@@ -1573,19 +1576,19 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
       line: 1,
       defaultText: contract?.lines?.[0]?.text || "Today's investment.",
       defaultClassName: contract?.lines?.[0]?.className || 'home-native-eyebrow',
-      defaultHighlightsJson: contract?.lines?.[0]?.highlightsJson || '[{"text":"investment","className":"is-atlantean"}]',
+      defaultHighlightsJson: contract?.lines?.[0]?.highlightsJson ?? '[{"text":"investment","className":"is-atlantean"}]',
     });
     next = withDefaultHeroLine(next, {
       line: 2,
       defaultText: contract?.lines?.[1]?.text || "Tomorrow's church.",
       defaultClassName: contract?.lines?.[1]?.className || 'home-native-title line1 line2',
-      defaultHighlightsJson: contract?.lines?.[1]?.highlightsJson || '[{"text":"church","className":"is-mango"}]',
+      defaultHighlightsJson: contract?.lines?.[1]?.highlightsJson ?? '[{"text":"church","className":"is-mango"}]',
     });
     next = withDefaultHeroLine(next, {
       line: 3,
       defaultText: contract?.lines?.[2]?.text || '',
       defaultClassName: contract?.lines?.[2]?.className || 'home-native-title line3',
-      defaultHighlightsJson: contract?.lines?.[2]?.highlightsJson || '',
+      defaultHighlightsJson: contract?.lines?.[2]?.highlightsJson ?? '',
     });
     next.line1ClassName = enforceHeroBaseClassName(next.line1ClassName, contract?.lines?.[0]?.className || 'home-native-eyebrow', { preserveCustomTokens: false });
     next.line2ClassName = enforceHeroBaseClassName(next.line2ClassName, contract?.lines?.[1]?.className || 'home-native-title line1 line2', { preserveCustomTokens: false });

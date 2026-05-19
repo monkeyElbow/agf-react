@@ -1,10 +1,16 @@
 import { createElement } from 'react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { homePageBlocks } from '../../data/pageBlocks/homeBlocks';
 import { contentBlockBlueprintsByPath } from '../../data/contentBlockBlueprints';
 import { normalizeDynamicHeroSettings } from '../../context/ContentAdminContext';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 vi.mock('../../context/ContentAdminContext', async () => {
   const actual = await vi.importActual('../../context/ContentAdminContext.jsx');
@@ -38,6 +44,10 @@ function getHomeHeroSeedSettings() {
   return block.settings || {};
 }
 
+function readSource(relativePath) {
+  return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
+}
+
 function renderHomeHero(settings) {
   const heroBlock = {
     ...getHomeHeroTemplate(),
@@ -57,16 +67,22 @@ function renderHomeHero(settings) {
 }
 
 describe('home hero render guardrails', () => {
-  it('renders the seeded home hero highlight colors', () => {
+  it('renders the seeded home hero line text, colors, and per-line sizing split', () => {
     const { container } = renderHomeHero(normalizeDynamicHeroSettings('/', getHomeHeroSeedSettings()));
+    const line1 = container.querySelector('.home-native-hero .home-native-eyebrow.is-atlantean');
+    const line2 = container.querySelector('.home-native-hero .home-native-title.line1.line2.is-mango');
+    const line3 = container.querySelector('.home-native-hero .home-native-title.line3.is-super-grey');
+    const source = readSource('./PageBlocksRenderer.jsx');
 
-    expect(container.querySelector('.home-native-hero .home-native-eyebrow')).toBeTruthy();
-    expect(container.querySelector('.home-native-hero .home-native-title.line1.line2')).toBeTruthy();
-    expect(container.querySelector('.home-native-hero mark.is-atlantean')?.textContent).toBe('investment');
-    expect(container.querySelector('.home-native-hero mark.is-mango')?.textContent).toBe('church');
+    expect(line1?.textContent).toBe('Convenient.');
+    expect(line2?.textContent).toBe('Tax-efficient.');
+    expect(line3?.textContent).toBe('Frictionless.');
+    expect(source).toContain("const HOME_HERO_PRIMARY_LINE_SIZE_CSS = 'clamp(3.4rem, 11vw, 8rem)'");
+    expect(source).toContain("fontSize: HOME_HERO_PRIMARY_LINE_SIZE_CSS,");
+    expect(source).toContain("fontSize: heroTitleSize,");
   });
 
-  it('still renders the seeded highlight colors when hero settings are sparse', () => {
+  it('still renders the seeded line classes when hero settings are sparse', () => {
     const seeded = getHomeHeroSeedSettings();
     const sparse = {
       line1Text: seeded.line1Text,
@@ -87,13 +103,12 @@ describe('home hero render guardrails', () => {
 
     const { container } = renderHomeHero(normalizeDynamicHeroSettings('/', sparse));
 
-    expect(container.querySelector('.home-native-hero .home-native-eyebrow')).toBeTruthy();
-    expect(container.querySelector('.home-native-hero .home-native-title.line1.line2')).toBeTruthy();
-    expect(container.querySelector('.home-native-hero mark.is-atlantean')?.textContent).toBe('investment');
-    expect(container.querySelector('.home-native-hero mark.is-mango')?.textContent).toBe('church');
+    expect(container.querySelector('.home-native-hero .home-native-eyebrow.is-atlantean')?.textContent).toBe('Convenient.');
+    expect(container.querySelector('.home-native-hero .home-native-title.line1.line2.is-mango')?.textContent).toBe('Tax-efficient.');
+    expect(container.querySelector('.home-native-hero .home-native-title.line3.is-super-grey')?.textContent).toBe('Frictionless.');
   });
 
-  it('preserves home hero tag structure and highlight marks in HUD edit mode', () => {
+  it('preserves home hero tag structure, line classes, and per-line sizing in HUD edit mode', () => {
     const heroBlock = {
       ...getHomeHeroTemplate(),
       id: 'hero',
@@ -119,9 +134,20 @@ describe('home hero render guardrails', () => {
       ),
     );
 
-    expect(container.querySelector('.home-native-hero p.home-native-eyebrow')).toBeTruthy();
-    expect(container.querySelector('.home-native-hero h1.home-native-title.line1.line2')).toBeTruthy();
-    expect(container.querySelector('.home-native-hero p.home-native-eyebrow mark.is-atlantean')?.textContent).toBe('investment');
-    expect(container.querySelector('.home-native-hero h1.home-native-title.line1.line2 mark.is-mango')?.textContent).toBe('church');
+    const line1 = container.querySelector('.home-native-hero p.home-native-eyebrow.is-atlantean');
+    const line2 = container.querySelector('.home-native-hero h1.home-native-title.line1.line2.is-mango');
+    const line3 = container.querySelector('.home-native-hero h1.home-native-title.line3.is-super-grey');
+    const line1Input = container.querySelector('.home-native-hero textarea[aria-label="Line 1"]');
+    const line2Input = container.querySelector('.home-native-hero textarea[aria-label="Line 2"]');
+    const rendererSource = readSource('./PageBlocksRenderer.jsx');
+    const editorSource = readSource('../HeroHudEditorShared.jsx');
+
+    expect(line1?.textContent).toBe('Convenient.');
+    expect(line2?.textContent).toBe('Tax-efficient.');
+    expect(line3?.textContent).toBe('Frictionless.');
+    expect(line1Input).toBeTruthy();
+    expect(line2Input).toBeTruthy();
+    expect(rendererSource).toContain("fontSize: HOME_HERO_PRIMARY_LINE_SIZE_CSS,");
+    expect(editorSource).toContain("fontSize: typeof line?.fontSize === 'string' && line.fontSize.trim()");
   });
 });

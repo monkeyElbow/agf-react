@@ -49,6 +49,7 @@ import {
 const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
 const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo']);
 const DYNAMIC_COLUMNS_STYLE_SET = new Set(['retirement', 'legacy-highlight', 'loans-value']);
+const HOME_HERO_PRIMARY_LINE_SIZE_CSS = 'clamp(3.4rem, 11vw, 8rem)';
 const EMPTY_OWNERSHIP = Object.freeze({
   className: '',
   overlayLabel: '',
@@ -388,6 +389,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
       label: 'Line 1',
       text: line1Text,
       className: line1ClassName,
+      fontSize: HOME_HERO_PRIMARY_LINE_SIZE_CSS,
       lineColor: extractHeroLineColorToken(line1ClassName),
       highlights: line1Highlights,
     },
@@ -396,6 +398,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
       label: 'Line 2',
       text: line2Text,
       className: line2ClassName,
+      fontSize: heroTitleSize,
       lineColor: extractHeroLineColorToken(line2ClassName),
       highlights: line2Highlights,
     },
@@ -404,6 +407,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
       label: 'Line 3',
       text: line3Text,
       className: line3ClassName,
+      fontSize: heroTitleSize,
       lineColor: extractHeroLineColorToken(line3ClassName),
       highlights: line3Highlights,
     },
@@ -450,7 +454,10 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
         ) : (
           <>
             {line1Text ? (
-              <p className={line1ClassName} style={{ lineHeight, letterSpacing: heroTitleLetterSpacing }}>
+              <p
+                className={line1ClassName}
+                style={{ lineHeight, fontSize: HOME_HERO_PRIMARY_LINE_SIZE_CSS, letterSpacing: heroTitleLetterSpacing }}
+              >
                 {line1Highlights.length ? renderHighlightedText(line1Text, line1Highlights) : line1Text}
               </p>
             ) : null}
