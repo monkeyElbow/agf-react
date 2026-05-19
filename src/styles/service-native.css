@@ -32,6 +32,7 @@
   display: grid;
   align-content: center;
   justify-items: center;
+  min-width: 0;
 }
 
 .service-native-hero h1 {
@@ -44,8 +45,11 @@
   font-style: normal;
   font-synthesis: none;
   line-height: var(--service-native-hero-heading-line-height);
+  max-width: 100%;
+  min-width: 0;
   text-align: center;
   text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 .service-native-hero h1 mark {
@@ -6198,19 +6202,26 @@
 }
 
 .admin-front-hud-hero-live-editor {
-  width: auto;
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
 }
 
 .admin-front-hud-hero-live-line {
   position: relative;
   display: grid;
+  max-width: 100%;
+  min-width: 0;
   min-height: 0;
 }
 
 .admin-front-hud-hero-live-line > :is(h1, h2, h3, h4, p),
 .admin-front-hud-hero-live-input {
   grid-area: 1 / 1;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .admin-front-hud-hero-live-input {
@@ -6232,6 +6243,8 @@
   font-synthesis: none;
   line-height: inherit;
   text-wrap: balance;
+  white-space: pre-wrap;
+  word-break: normal;
   resize: none;
   overflow: hidden;
 }

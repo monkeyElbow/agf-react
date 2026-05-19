@@ -218,6 +218,10 @@
   padding: clamp(3rem, 8vw, 6rem) 0 clamp(2.5rem, 6vw, 4.5rem);
 }
 
+.home-native-hero .ag-panel-rail {
+  min-width: 0;
+}
+
 .home-native-hero.is-bg-white {
   background: #ffffff !important;
 }
@@ -284,6 +288,13 @@
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
   line-height: 1;
   font-family: var(--ag-font-heading);
+}
+
+.home-native-hero :is(.home-native-eyebrow, .home-native-title) {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .home-native-title mark {
