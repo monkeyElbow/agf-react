@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
  * - Program names across top
  * - Features down left
  * - Sticky header + sticky first column
- * - Mobile program selector (choose 2-3)
+ * - Desktop + mobile program selectors
  * - Data-driven structure
  */
 
@@ -143,6 +143,8 @@ export const givingComparisonMobileRows = [
   { key: 'cta', label: 'CTA' },
 ];
 
+const DEFAULT_MOBILE_SELECTED_IDS = ['cga', 'daf', 'endowment'];
+
 function parseMinimumNumber(text) {
   if (!text) return Number.MAX_SAFE_INTEGER;
   const match = text.match(/\$?\s*([0-9]+)\s*K/i);
@@ -156,8 +158,10 @@ export default function GivingComparisonMatrix() {
   const [incomeOnly, setIncomeOnly] = useState(false);
   const [propertyOnly, setPropertyOnly] = useState(false);
   const [maxMinimum, setMaxMinimum] = useState('all');
-
-  const [mobileSelectedIds, setMobileSelectedIds] = useState(['cga', 'daf', 'endowment']);
+  const [desktopSelectedIds, setDesktopSelectedIds] = useState(
+    () => givingComparisonPrograms.map((program) => program.id),
+  );
+  const [mobileSelectedIds, setMobileSelectedIds] = useState(DEFAULT_MOBILE_SELECTED_IDS);
 
   const filteredPrograms = useMemo(() => (
     givingComparisonPrograms.filter((p) => {
@@ -173,7 +177,9 @@ export default function GivingComparisonMatrix() {
     })
   ), [incomeOnly, propertyOnly, maxMinimum]);
 
-  const visibleProgramsDesktop = filteredPrograms;
+  const visibleProgramsDesktop = useMemo(() => (
+    filteredPrograms.filter((program) => desktopSelectedIds.includes(program.id))
+  ), [desktopSelectedIds, filteredPrograms]);
 
   const visibleProgramsMobile = useMemo(() => {
     const selected = filteredPrograms.filter((p) => mobileSelectedIds.includes(p.id));
@@ -187,6 +193,14 @@ export default function GivingComparisonMatrix() {
       if (prev.length >= 3) return [...prev.slice(1), id];
       return [...prev, id];
     });
+  };
+
+  const toggleDesktopProgram = (id) => {
+    setDesktopSelectedIds((prev) => (
+      prev.includes(id)
+        ? prev.filter((programId) => programId !== id)
+        : [...prev, id]
+    ));
   };
 
   const renderMobileFieldValue = (program, row) => {
@@ -251,96 +265,136 @@ export default function GivingComparisonMatrix() {
       </div>
 
       <div className="agf-hide-mobile">
-        <div style={styles.matrixOuter}>
-          <div style={styles.matrixScroll}>
-            <table style={styles.table} role="table" aria-label="Charitable giving plan comparison">
-              <thead>
-                <tr>
-                  <th style={{ ...styles.th, ...styles.stickyCol, ...styles.featureHeaderCell }}>
-                    Compare Features
-                  </th>
-                  {visibleProgramsDesktop.map((program) => (
-                    <th key={program.id} style={styles.thProgram}>
-                      <div style={styles.programHeaderCard}>
-                        <div style={styles.programTitle}>{program.name}</div>
-                        <div style={styles.programSubtitle}>{program.shortLabel}</div>
-                        <a href={program.ctaHref} style={styles.headerCta}>
-                          {program.ctaLabel}
-                        </a>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+        <div style={styles.desktopSelectorCard}>
+          <div style={styles.desktopSelectorIntro}>
+            <div style={styles.desktopSelectorTitle}>Desktop compare</div>
+            <p style={styles.desktopSelectorHint}>
+              Choose the programs you want to review side by side.
+            </p>
+          </div>
+          <div
+            style={styles.desktopSelectorGrid}
+            role="group"
+            aria-label="Desktop programs to compare"
+          >
+            {filteredPrograms.map((program) => {
+              const selected = desktopSelectedIds.includes(program.id);
+              return (
+                <button
+                  key={program.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => toggleDesktopProgram(program.id)}
+                  style={{
+                    ...styles.desktopSelectBtn,
+                    ...(selected ? styles.desktopSelectBtnActive : {}),
+                  }}
+                >
+                  {program.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-              <tbody>
-                {givingComparisonFeatureRows.map((row, idx) => (
-                  <tr key={row.key}>
+        {visibleProgramsDesktop.length > 0 ? (
+          <div style={styles.matrixOuter}>
+            <div style={styles.matrixScroll}>
+              <table style={styles.table} role="table" aria-label="Charitable giving plan comparison">
+                <thead>
+                  <tr>
+                    <th style={{ ...styles.th, ...styles.stickyCol, ...styles.featureHeaderCell }}>
+                      Compare Features
+                    </th>
+                    {visibleProgramsDesktop.map((program) => (
+                      <th key={program.id} style={styles.thProgram}>
+                        <div style={styles.programHeaderCard}>
+                          <div style={styles.programTitle}>{program.name}</div>
+                          <div style={styles.programSubtitle}>{program.shortLabel}</div>
+                          <a href={program.ctaHref} style={styles.headerCta}>
+                            {program.ctaLabel}
+                          </a>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {givingComparisonFeatureRows.map((row, idx) => (
+                    <tr key={row.key}>
+                      <th
+                        scope="row"
+                        style={{
+                          ...styles.rowLabel,
+                          ...styles.stickyCol,
+                          background: idx % 2 === 0 ? '#fff' : '#fbfbfb',
+                        }}
+                      >
+                        {row.label}
+                      </th>
+
+                      {visibleProgramsDesktop.map((program, colIdx) => (
+                        <td
+                          key={`${program.id}-${row.key}`}
+                          style={{
+                            ...styles.td,
+                            background: idx % 2 === 0 ? '#fff' : '#fbfbfb',
+                            borderRight:
+                              colIdx === visibleProgramsDesktop.length - 1
+                                ? `1px solid ${AGF_COLORS.border}`
+                                : undefined,
+                          }}
+                        >
+                          {program[row.key]}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+
+                  <tr>
                     <th
                       scope="row"
                       style={{
                         ...styles.rowLabel,
                         ...styles.stickyCol,
-                        background: idx % 2 === 0 ? '#fff' : '#fbfbfb',
+                        background: '#fff',
+                        borderBottomLeftRadius: 10,
                       }}
                     >
-                      {row.label}
+                      Next Step
                     </th>
-
-                    {visibleProgramsDesktop.map((program, colIdx) => (
+                    {visibleProgramsDesktop.map((program, idx) => (
                       <td
-                        key={`${program.id}-${row.key}`}
+                        key={`${program.id}-cta`}
                         style={{
                           ...styles.td,
-                          background: idx % 2 === 0 ? '#fff' : '#fbfbfb',
+                          textAlign: 'center',
+                          background: '#fff',
                           borderRight:
-                            colIdx === visibleProgramsDesktop.length - 1
+                            idx === visibleProgramsDesktop.length - 1
                               ? `1px solid ${AGF_COLORS.border}`
                               : undefined,
+                          borderBottom: `1px solid ${AGF_COLORS.border}`,
                         }}
                       >
-                        {program[row.key]}
+                        <a href={program.ctaHref} style={styles.ctaButton}>
+                          {program.ctaLabel}
+                        </a>
                       </td>
                     ))}
                   </tr>
-                ))}
-
-                <tr>
-                  <th
-                    scope="row"
-                    style={{
-                      ...styles.rowLabel,
-                      ...styles.stickyCol,
-                      background: '#fff',
-                      borderBottomLeftRadius: 10,
-                    }}
-                  >
-                    Next Step
-                  </th>
-                  {visibleProgramsDesktop.map((program, idx) => (
-                    <td
-                      key={`${program.id}-cta`}
-                      style={{
-                        ...styles.td,
-                        textAlign: 'center',
-                        background: '#fff',
-                        borderRight:
-                          idx === visibleProgramsDesktop.length - 1
-                            ? `1px solid ${AGF_COLORS.border}`
-                            : undefined,
-                        borderBottom: `1px solid ${AGF_COLORS.border}`,
-                      }}
-                    >
-                      <a href={program.ctaHref} style={styles.ctaButton}>
-                        {program.ctaLabel}
-                      </a>
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={styles.desktopEmptyState}>
+            {filteredPrograms.length > 0
+              ? 'Select at least one program to compare.'
+              : 'No programs match the current filters.'}
+          </div>
+        )}
       </div>
 
       <div className="agf-hide-desktop">
@@ -502,6 +556,51 @@ const styles = {
     fontSize: 14,
     color: AGF_COLORS.muted,
     marginBottom: 10,
+  },
+  desktopSelectorCard: {
+    display: 'grid',
+    gap: 10,
+    marginBottom: 14,
+    padding: 12,
+    border: `1px solid ${AGF_COLORS.border}`,
+    borderRadius: 12,
+    background: '#fff',
+  },
+  desktopSelectorIntro: {
+    display: 'grid',
+    gap: 4,
+  },
+  desktopSelectorTitle: {
+    fontSize: 14,
+    fontWeight: 800,
+    color: AGF_COLORS.slate,
+  },
+  desktopSelectorHint: {
+    margin: 0,
+    fontSize: 13,
+    lineHeight: 1.4,
+    color: AGF_COLORS.muted,
+  },
+  desktopSelectorGrid: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  desktopSelectBtn: {
+    border: `1px solid ${AGF_COLORS.border}`,
+    background: '#fff',
+    color: AGF_COLORS.slate,
+    borderRadius: 999,
+    padding: '8px 12px',
+    fontSize: 13,
+    fontWeight: 700,
+    lineHeight: 1.3,
+    cursor: 'pointer',
+  },
+  desktopSelectBtnActive: {
+    border: `1px solid ${AGF_COLORS.teal}`,
+    background: 'rgba(0,173,187,.08)',
+    color: AGF_COLORS.teal,
   },
   matrixOuter: {
     border: `1px solid ${AGF_COLORS.border}`,
@@ -742,6 +841,15 @@ const styles = {
     borderRadius: 14,
     background: '#fff',
     padding: '18px 14px',
+    color: AGF_COLORS.muted,
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  desktopEmptyState: {
+    border: `1px dashed ${AGF_COLORS.border}`,
+    borderRadius: 14,
+    background: '#fff',
+    padding: '20px 16px',
     color: AGF_COLORS.muted,
     textAlign: 'center',
     fontSize: 14,

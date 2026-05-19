@@ -55,4 +55,20 @@ describe('GivingComparisonMatrix', () => {
     expect(within(jumpNav).getByRole('link', { name: 'How it’s Funded' }).getAttribute('href')).toBe('#mobile-comparison-fundedBy');
     expect(within(jumpNav).getByRole('link', { name: 'CTA' }).getAttribute('href')).toBe('#mobile-comparison-cta');
   });
+
+  it('adds desktop selector controls so desktop users can choose which programs appear in the comparison table', () => {
+    const { container } = render(<GivingComparisonMatrix />);
+    const desktopRoot = container.querySelector('.agf-hide-mobile');
+    const selectorGroup = within(desktopRoot).getByRole('group', { name: 'Desktop programs to compare' });
+    const comparisonTable = within(desktopRoot).getByRole('table', { name: 'Charitable giving plan comparison' });
+
+    expect(within(selectorGroup).getByRole('button', { name: 'Donor Advised Fund' }).getAttribute('aria-pressed')).toBe('true');
+    expect(within(comparisonTable).getByText('Donor Advised Fund')).toBeTruthy();
+
+    fireEvent.click(within(selectorGroup).getByRole('button', { name: 'Donor Advised Fund' }));
+
+    expect(within(selectorGroup).getByRole('button', { name: 'Donor Advised Fund' }).getAttribute('aria-pressed')).toBe('false');
+    expect(within(comparisonTable).queryByText('Donor Advised Fund')).toBeNull();
+    expect(within(comparisonTable).getByText('Charitable Gift Annuity')).toBeTruthy();
+  });
 });
