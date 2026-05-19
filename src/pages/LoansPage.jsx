@@ -1124,7 +1124,12 @@ export default function LoansPage({ sectionsOnly = false }) {
       <section className="service-native-section loans-native-options" id="loan-options">
         <div className="ag-panel-rail-wide">
           <h2 className="loans-native-display-heading loans-native-options-title">Every loan, 100% customized.</h2>
-          <h3 className="loans-native-display-heading loans-native-options-subtitle">You won&apos;t find this at a bank.</h3>
+          <h3
+            className="loans-native-display-heading loans-native-options-subtitle"
+            style={{ marginBottom: 'clamp(2.1rem, 4.5vw, 3.3rem)' }}
+          >
+            You won&apos;t find this at a bank.
+          </h3>
           <p className="loans-native-options-lead" style={{ textAlign: 'center', marginInline: 'auto' }}>
             We&apos;re more than a financial partner. We&apos;re part of your ministry. It&apos;s our pleasure to design
             a loan with rates and flexible terms <strong>specifically for you</strong>. The loans lineup below might
