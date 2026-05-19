@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BlockHudPanelHost from '../components/BlockHudPanelHost';
-import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
+import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
 import ColorPalette from '../components/ColorPalette';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
@@ -1125,6 +1125,9 @@ export default function RetirementPage() {
   };
 
   const handleHeroHudLineTextChange = (lineKey, value) => {
+    if (isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId('hero'))) {
+      return;
+    }
     const normalizedLineKey = lineKey === 'line2' || lineKey === 'line3' ? lineKey : 'line1';
     const previousText = String(heroHudSettings[`${normalizedLineKey}Text`] || '');
     const nextText = String(value || '');
@@ -1432,6 +1435,7 @@ export default function RetirementPage() {
               lineHeight={heroHudLineHeight}
               onLineTextChange={handleHeroHudLineTextChange}
               commitOnBlurOnly
+              readOnly={isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId('hero'))}
               onLineInteract={handleHeroLineInteract}
               setLineInputRef={(lineKey, node) => {
                 heroLineInputRefs.current[lineKey] = node;
@@ -1551,14 +1555,14 @@ export default function RetirementPage() {
             <h2 className="retirement-plan-heading">AGFinancial 403(b) Retirement Plan</h2>
             <h3 className="retirement-plan-subheading">Smart benefits, strong advantages</h3>
             <p className="retirement-plan-lead">
-              The <strong>AGFinancial</strong> flagship retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA. Choose from a variety of strategies.
+              The AGFinancial flagship retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA. Choose from a variety of strategies.
             </p>
           </div>
           <h4 className="retirement-plan-footer">
-            Includes minister&apos;s housing allowance, and more.
+            Includes <mark className="is-mango">minister&apos;s housing allowance</mark>, higher contribution limits than IRAs, and more.
           </h4>
           <div className="service-native-action-row retirement-plan-actions">
-            <Link to="/services/retirement/403b" className="service-native-btn">Explore 403(b)</Link>
+            <Link to="/services/retirement/403b" className="service-native-btn">Explore the 403(b)</Link>
           </div>
         </div>
       </section>

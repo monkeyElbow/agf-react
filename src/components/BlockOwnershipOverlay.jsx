@@ -28,6 +28,14 @@ function toActorDisplayName(actor) {
   return String(actor?.displayName || '').trim();
 }
 
+export function isForeignOwnedBlockOwnershipState(state) {
+  return state === 'editing-other' || state === 'drafted-other';
+}
+
+export function isForeignOwnedBlockOwnership(ownership) {
+  return isForeignOwnedBlockOwnershipState(String(ownership?.state || '').trim());
+}
+
 export function getBlockOwnershipVisual(meta, currentUserId, now = Date.now()) {
   const normalizedCurrentUserId = String(currentUserId || '').trim();
   const lockedBy = meta?.lockedBy || null;

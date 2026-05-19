@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BlockHudPanelHost from './BlockHudPanelHost';
-import BlockOwnershipOverlay, { getBlockOwnershipVisual } from './BlockOwnershipOverlay';
+import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import FrontHudPageWorkflow from './FrontHudPageWorkflow';
 import MobileFrontHudActionTray from './MobileFrontHudActionTray';
 import {
@@ -5201,6 +5201,9 @@ export default function NativeContentPage({ page }) {
     if (!dynamicHeroBlock || !editableBlockPath) {
       return;
     }
+    if (isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId(dynamicHeroBlock.id))) {
+      return;
+    }
     const normalizedLineKey = normalizeNativeHeroLineKey(lineKey);
     const nextText = String(nextTextValue || '');
     if (/[\r\n]/.test(nextText)) {
@@ -5415,6 +5418,7 @@ export default function NativeContentPage({ page }) {
                 letterSpacing={heroHudLetterSpacingEm}
                 onLineTextChange={handleHeroHudLineTextChange}
                 commitOnBlurOnly
+                readOnly={isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId(dynamicHeroBlock?.id))}
                 onLineInteract={(lineKey, interactionMeta) => {
                   openHudPanel(heroHudPanelId);
                   setHeroActiveLine(lineKey);

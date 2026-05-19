@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
+import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
 import { useFrontHud } from '../context/FrontHudContext';
@@ -1095,6 +1095,9 @@ export default function InvestmentsPage() {
   };
 
   const handleHeroHudLineTextChange = (lineKey, value) => {
+    if (isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId('hero'))) {
+      return;
+    }
     const normalizedLineKey = lineKey === 'line2' || lineKey === 'line3' ? lineKey : 'line1';
     const previousText = String(heroHudSettings[`${normalizedLineKey}Text`] || '');
     const nextText = String(value || '');
@@ -1489,6 +1492,7 @@ export default function InvestmentsPage() {
                 lineHeight={heroHudLineHeight}
                 onLineTextChange={handleHeroHudLineTextChange}
                 commitOnBlurOnly
+                readOnly={isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId('hero'))}
                 onLineInteract={handleHeroLineInteract}
                 setLineInputRef={(lineKey, node) => {
                   heroLineInputRefs.current[lineKey] = node;

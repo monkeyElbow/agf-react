@@ -59,6 +59,42 @@ describe('BlockHudPanelHost', () => {
     expect(onOwnershipAction).toHaveBeenCalledTimes(1);
   });
 
+  it('blocks HUD field edits while another admin owns the block', () => {
+    const onSettingChange = vi.fn();
+
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'hero',
+        kind: 'custom_notice',
+        mode: 'dynamic',
+        editableFields: [
+          {
+            id: 'line1Text',
+            label: 'Line 1',
+            type: 'text',
+          },
+        ],
+        settings: {
+          line1Text: 'Build tomorrow faithfully',
+        },
+      },
+      ownership: {
+        state: 'editing-other',
+        overlayLabel: 'Sarah MacBook is editing this block',
+        overlayDetail: 'Saved 5 min ago',
+      },
+      onOwnershipAction: vi.fn(),
+      onSettingChange,
+    }));
+
+    const input = screen.getByLabelText('Line 1');
+    expect(input.closest('fieldset')?.disabled).toBe(true);
+
+    fireEvent.change(input, { target: { value: 'Blocked overwrite' } });
+
+    expect(onSettingChange).not.toHaveBeenCalled();
+  });
+
   it('uses stronger takeover language for active foreign edits in the HUD', () => {
     const onOwnershipAction = vi.fn();
 
@@ -92,6 +128,41 @@ describe('BlockHudPanelHost', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Take over edit' }));
     expect(onOwnershipAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps HUD field edits active when the current admin owns the block', () => {
+    const onSettingChange = vi.fn();
+
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'hero',
+        kind: 'custom_notice',
+        mode: 'dynamic',
+        editableFields: [
+          {
+            id: 'line1Text',
+            label: 'Line 1',
+            type: 'text',
+          },
+        ],
+        settings: {
+          line1Text: 'Build tomorrow faithfully',
+        },
+      },
+      ownership: {
+        state: 'editing-self',
+        overlayLabel: '',
+        overlayDetail: '',
+      },
+      onSettingChange,
+    }));
+
+    const input = screen.getByLabelText('Line 1');
+    expect(input.closest('fieldset')?.disabled).toBe(false);
+
+    fireEvent.change(input, { target: { value: 'Owned draft' } });
+
+    expect(onSettingChange).toHaveBeenCalledWith('line1Text', 'Owned draft');
   });
 
   it('renders request form blocks with the dedicated request form editor', () => {

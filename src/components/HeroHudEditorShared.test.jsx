@@ -268,6 +268,46 @@ describe('HeroInlineLiveEditor', () => {
       vi.useRealTimers();
     }
   });
+
+  it('keeps foreign-owned inline hero inputs read-only until takeover', () => {
+    vi.useFakeTimers();
+    const onLineTextChange = vi.fn();
+
+    try {
+      render(createElement(HeroInlineLiveEditor, {
+        lines: [{
+          key: 'line1',
+          label: 'Line 1',
+          text: 'Plan ahead.',
+          className: 'line1',
+          highlights: [],
+        }],
+        activeLineKey: 'line1',
+        lineHeight: 0.9,
+        onLineTextChange,
+        commitOnBlurOnly: true,
+        readOnly: true,
+      }));
+
+      const input = screen.getByLabelText('Line 1');
+      expect(input.readOnly).toBe(true);
+
+      fireEvent.change(input, {
+        target: { value: 'Blocked takeover' },
+      });
+      fireEvent.blur(input);
+
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(input.value).toBe('Plan ahead.');
+      expect(onLineTextChange).not.toHaveBeenCalled();
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('HeroHudEditorPanel', () => {

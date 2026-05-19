@@ -261,6 +261,7 @@ export function HeroInlineLiveEditor({
   resolveLineClassName,
   resolveLineTagName,
   commitOnBlurOnly = false,
+  readOnly = false,
 }) {
   const normalizedLetterSpacing = normalizeHeroTitleLetterSpacingEm(letterSpacing);
   const safeLines = Array.isArray(lines) ? lines : [];
@@ -378,6 +379,8 @@ export function HeroInlineLiveEditor({
             className="admin-front-hud-hero-live-input"
             value={String(line.text || '')}
             style={{ lineHeight, fontSize, letterSpacing: `${normalizedLetterSpacing}em` }}
+            readOnly={readOnly}
+            aria-readonly={readOnly}
             onFocus={(event) => notifyLineInteract(line.key, { target: event.currentTarget })}
             onSelect={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
             onMouseUp={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
@@ -387,8 +390,8 @@ export function HeroInlineLiveEditor({
               }
               notifyLineInteract(line.key, { defer: true, target: event.currentTarget });
             }}
-            onChange={(event) => updateLineDraft(line.key, event.target.value)}
-            onBlur={() => commitLineDraftOnBlur(line.key)}
+            onChange={readOnly ? undefined : (event) => updateLineDraft(line.key, event.target.value)}
+            onBlur={readOnly ? undefined : () => commitLineDraftOnBlur(line.key)}
             spellCheck="false"
             aria-label={line.label || `Line ${index + 1}`}
           />

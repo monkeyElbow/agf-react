@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import BlockHudPanelHost from '../components/BlockHudPanelHost';
+import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
 import SiteSearchPanel from '../components/SiteSearchPanel';
 import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../components/CtaHudEditorPanel';
 import FrontHudPanelShell from '../components/FrontHudPanelShell';
@@ -318,6 +319,9 @@ export default function HomePage() {
     updateBlock = () => {},
     moveBlock = () => {},
     removeBlock = () => {},
+    getBlockCollaboration = () => null,
+    devIdentity = null,
+    setActiveBlockLock = () => ({ ok: false }),
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
@@ -511,6 +515,12 @@ export default function HomePage() {
   const showFrontHud = frontHudEnabled && hudPanels.length > 0;
   const isMobileFrontHud = showFrontHud && isMobileFrontHudViewport;
   const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanelId);
+  const getOwnershipVisualForBlockId = (blockId) => {
+    if (!showFrontHud || !blockId) {
+      return { className: '', overlayLabel: '', overlayDetail: '', state: 'none', isOwnedByOther: false };
+    }
+    return getBlockOwnershipVisual(getBlockCollaboration('/', blockId), devIdentity?.userId);
+  };
   const homeHudFocusClass = hasOpenHudPanel && activeHudPanelId
     ? ` hud-focus-${activeHudPanelId}`
     : '';
@@ -798,6 +808,9 @@ export default function HomePage() {
   };
 
   const handleHeroHudLineTextChange = (lineKey, value) => {
+    if (isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId('hero'))) {
+      return;
+    }
     const normalizedLineKey = lineKey === 'line2' || lineKey === 'line3' ? lineKey : 'line1';
     const nextText = String(value || '');
     if (/[\r\n]/.test(nextText)) {
@@ -1505,6 +1518,13 @@ export default function HomePage() {
             block={activeHudPanel.block}
             pathname="/"
             routeOptions={routeLinkOptions}
+            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+            onOwnershipAction={() => {
+              if (!activeHudPanel?.block?.id) {
+                return;
+              }
+              setActiveBlockLock('/', activeHudPanel.block.id, { force: true });
+            }}
             onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
           />
         </FrontHudPanelShell>

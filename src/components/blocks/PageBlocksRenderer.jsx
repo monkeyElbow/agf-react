@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../BlockOwnershipOverlay';
+import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../BlockOwnershipOverlay';
 import FrontHudAnchorTag from '../FrontHudAnchorTag';
 import {
   createInitialFormValues,
@@ -440,6 +440,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
             letterSpacing={block.titleLetterSpacingEm}
             onLineTextChange={heroHud.onLineTextChange}
             commitOnBlurOnly={heroHud?.commitOnBlurOnly === true}
+            readOnly={isForeignOwnedBlockOwnership(ownership)}
             onLineInteract={heroHud.onLineInteract}
             setLineInputRef={heroHud.setLineInputRef}
             renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}

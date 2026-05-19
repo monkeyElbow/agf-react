@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/static-components */
 import { useRef, useState } from 'react';
+import { isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import {
   FieldControlGrid,
 } from '../pages/AdminContentPage';
@@ -39,6 +40,10 @@ export default function BlockHudPanelHost({
   const editableFields = Array.isArray(block.editableFields) ? block.editableFields : [];
   const settings = block.settings || {};
   const ctaFields = extractCtaFormFields(settings);
+  const isForeignOwned = isForeignOwnedBlockOwnership(ownership);
+  const blockedOnSettingChange = isForeignOwned
+    ? () => {}
+    : onSettingChange;
   const hudOwnershipNotice = ownership?.state === 'drafted-other'
     ? {
       state: ownership.state,
@@ -93,18 +98,35 @@ export default function BlockHudPanelHost({
     </div>
   ) : null;
 
+  const renderReadOnlyShell = (content) => (
+    <fieldset
+      disabled={isForeignOwned}
+      aria-disabled={isForeignOwned}
+      style={{ margin: 0, padding: 0, border: 0, minWidth: 0 }}
+    >
+      <div
+        className={isForeignOwned ? 'is-admin-front-hud-readonly' : undefined}
+        style={isForeignOwned ? { pointerEvents: 'none', opacity: 0.68 } : undefined}
+      >
+        {content}
+      </div>
+    </fieldset>
+  );
+
   if (MigratedHudEditor && String(block.mode || 'dynamic').trim() === 'dynamic') {
     return (
       <>
         {ownershipNoticeMarkup}
-        <MigratedHudEditor
-          block={block}
-          pathname={pathname}
-          routeOptions={routeOptions}
-          testimonialsLibrary={testimonialsLibrary}
-          ratesContext={ratesContext}
-          onSettingChange={onSettingChange}
-        />
+        {renderReadOnlyShell(
+          <MigratedHudEditor
+            block={block}
+            pathname={pathname}
+            routeOptions={routeOptions}
+            testimonialsLibrary={testimonialsLibrary}
+            ratesContext={ratesContext}
+            onSettingChange={blockedOnSettingChange}
+          />,
+        )}
       </>
     );
   }
@@ -114,66 +136,68 @@ export default function BlockHudPanelHost({
       return (
         <>
           {ownershipNoticeMarkup}
-          <CtaHudEditorPanel
-            settings={settings}
-            bgTone={String(settings.bgTone || 'white')}
-            submitStyle={normalizeCtaHudSubmitStyle(settings.submitStyle)}
-            submitTone={normalizeCtaHudSubmitTone(settings.submitTone, settings.submitStyle)}
-            bodyHtml={String(settings.bodyHtml || '')}
-            titleColor={extractHeroLineColorToken(settings.titleClassName)}
-            titleSelection={ctaTitleSelection}
-            setTitleInputRef={(node) => {
-              ctaTitleInputRef.current = node;
-            }}
-            onTitleSelectionCapture={() => captureGenericSelection(ctaTitleInputRef, setCtaTitleSelection)}
-            onTitleChange={(nextValue) => {
-              onSettingChange('title', nextValue);
-              setCtaTitleSelection({ start: 0, end: 0, text: '' });
-            }}
-            onBodyHtmlChange={(nextValue) => onSettingChange('bodyHtml', nextValue)}
-            fields={ctaFields}
-            includeContactPreference={Boolean(settings.includeContactPreference)}
-            onFieldsChange={(nextFields) => {
-              Object.entries(buildCtaFormSettingsPatch({
-                fields: nextFields,
-                includeContactPreference: settings.includeContactPreference,
-              })).forEach(([fieldId, nextValue]) => {
-                onSettingChange(fieldId, nextValue);
-              });
-            }}
-            onIncludeContactPreferenceChange={(nextValue) => {
-              onSettingChange('includeContactPreference', nextValue);
-            }}
-            onSubmitLabelChange={(nextValue) => onSettingChange('submitLabel', nextValue)}
-            onSubmitStyleChange={(nextValue) => onSettingChange('submitStyle', nextValue)}
-            onSubmitToneChange={(nextValue) => onSettingChange('submitTone', nextValue)}
-            onBgToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-            onApplySelectionColor={(colorValue) => {
-              const sourceText = String(settings.title || '');
-              const safeStart = Math.max(0, Math.min(Number(ctaTitleSelection.start) || 0, sourceText.length));
-              const safeEnd = Math.max(safeStart, Math.min(Number(ctaTitleSelection.end) || 0, sourceText.length));
-              if (safeEnd <= safeStart) {
-                return;
-              }
-              onSettingChange(
-                'titleHighlightsJson',
-                applySelectionColor(settings.titleHighlightsJson, sourceText, safeStart, safeEnd, colorValue),
-              );
-            }}
-            onTitleColorChange={(colorValue) => {
-              onSettingChange('titleClassName', replaceHeroLineColorClass(String(settings.titleClassName || ''), colorValue));
-            }}
-            onRemoveTitleSpan={(index) => {
-              onSettingChange(
-                'titleHighlightsJson',
-                removeSelectionRange(settings.titleHighlightsJson, settings.title, index),
-              );
-            }}
-            onClearTitleSpans={() => {
-              onSettingChange('titleHighlightsJson', '');
-              setCtaTitleSelection({ start: 0, end: 0, text: '' });
-            }}
-          />
+          {renderReadOnlyShell(
+            <CtaHudEditorPanel
+              settings={settings}
+              bgTone={String(settings.bgTone || 'white')}
+              submitStyle={normalizeCtaHudSubmitStyle(settings.submitStyle)}
+              submitTone={normalizeCtaHudSubmitTone(settings.submitTone, settings.submitStyle)}
+              bodyHtml={String(settings.bodyHtml || '')}
+              titleColor={extractHeroLineColorToken(settings.titleClassName)}
+              titleSelection={ctaTitleSelection}
+              setTitleInputRef={(node) => {
+                ctaTitleInputRef.current = node;
+              }}
+              onTitleSelectionCapture={() => captureGenericSelection(ctaTitleInputRef, setCtaTitleSelection)}
+              onTitleChange={(nextValue) => {
+                blockedOnSettingChange('title', nextValue);
+                setCtaTitleSelection({ start: 0, end: 0, text: '' });
+              }}
+              onBodyHtmlChange={(nextValue) => blockedOnSettingChange('bodyHtml', nextValue)}
+              fields={ctaFields}
+              includeContactPreference={Boolean(settings.includeContactPreference)}
+              onFieldsChange={(nextFields) => {
+                Object.entries(buildCtaFormSettingsPatch({
+                  fields: nextFields,
+                  includeContactPreference: settings.includeContactPreference,
+                })).forEach(([fieldId, nextValue]) => {
+                  blockedOnSettingChange(fieldId, nextValue);
+                });
+              }}
+              onIncludeContactPreferenceChange={(nextValue) => {
+                blockedOnSettingChange('includeContactPreference', nextValue);
+              }}
+              onSubmitLabelChange={(nextValue) => blockedOnSettingChange('submitLabel', nextValue)}
+              onSubmitStyleChange={(nextValue) => blockedOnSettingChange('submitStyle', nextValue)}
+              onSubmitToneChange={(nextValue) => blockedOnSettingChange('submitTone', nextValue)}
+              onBgToneChange={(nextValue) => blockedOnSettingChange('bgTone', nextValue)}
+              onApplySelectionColor={(colorValue) => {
+                const sourceText = String(settings.title || '');
+                const safeStart = Math.max(0, Math.min(Number(ctaTitleSelection.start) || 0, sourceText.length));
+                const safeEnd = Math.max(safeStart, Math.min(Number(ctaTitleSelection.end) || 0, sourceText.length));
+                if (safeEnd <= safeStart) {
+                  return;
+                }
+                blockedOnSettingChange(
+                  'titleHighlightsJson',
+                  applySelectionColor(settings.titleHighlightsJson, sourceText, safeStart, safeEnd, colorValue),
+                );
+              }}
+              onTitleColorChange={(colorValue) => {
+                blockedOnSettingChange('titleClassName', replaceHeroLineColorClass(String(settings.titleClassName || ''), colorValue));
+              }}
+              onRemoveTitleSpan={(index) => {
+                blockedOnSettingChange(
+                  'titleHighlightsJson',
+                  removeSelectionRange(settings.titleHighlightsJson, settings.title, index),
+                );
+              }}
+              onClearTitleSpans={() => {
+                blockedOnSettingChange('titleHighlightsJson', '');
+                setCtaTitleSelection({ start: 0, end: 0, text: '' });
+              }}
+            />,
+          )}
         </>
       );
     default:
@@ -188,12 +212,14 @@ export default function BlockHudPanelHost({
       return (
         <>
           {ownershipNoticeMarkup}
-          <FieldControlGrid
-            fields={editableFields}
-            settings={block.settings}
-            onSettingChange={onSettingChange}
-            routeOptions={routeOptions}
-          />
+          {renderReadOnlyShell(
+            <FieldControlGrid
+              fields={editableFields}
+              settings={block.settings}
+              onSettingChange={blockedOnSettingChange}
+              routeOptions={routeOptions}
+            />,
+          )}
         </>
       );
   }
