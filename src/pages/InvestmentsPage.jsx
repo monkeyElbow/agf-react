@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import BlockHudPanelHost from '../components/BlockHudPanelHost';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
@@ -11,12 +10,8 @@ import { useTestimonials } from '../context/TestimonialsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
-import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../components/HeroHudEditorShared';
-import FrontHudPanelShell from '../components/FrontHudPanelShell';
-import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import SafeRichText from '../components/SafeRichText';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
-import { defaultInvestmentsIntroSettings } from '../data/contentBlockBlueprints';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import {
   formatTestimonialAttribution,
@@ -49,6 +44,52 @@ import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
 import { getHeroSeedContract } from '../lib/heroSeedContracts';
 import { buildPresetFamilyRuntimeClassName } from '../lib/presetFamilyContract';
 
+const BlockHudPanelHost = lazy(() => import('../components/BlockHudPanelHost'));
+const FrontHudPanelShell = lazy(() => import('../components/FrontHudPanelShell'));
+const FrontHudPageWorkflow = lazy(() => import('../components/FrontHudPageWorkflow'));
+const HeroInlineLiveEditor = lazy(async () => {
+  const {
+    HeroInlineLiveEditor: HeroInlineLiveEditorComponent,
+    renderHeroRangesAsNodes,
+  } = await import('../components/HeroHudEditorShared');
+  return {
+    default: function InvestmentsHeroInlineLiveEditor(props) {
+      return (
+        <HeroInlineLiveEditorComponent
+          {...props}
+          renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}
+        />
+      );
+    },
+  };
+});
+
+const defaultInvestmentsIntroSettings = {
+  heading: 'Invest like it matters. Because it does.',
+  headingClassName: '',
+  headingHighlightsJson: '[{"text":"Because it does.","className":"is-atlantean"}]',
+  bodyHtml: '<p>Your investment dollars don\'t just multiply; they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.</p>',
+  body: '',
+  justify: 'center',
+  lineSpacing: 1.04,
+  extraLine: 'That\'s the power of faith-driven investing.',
+  extraLineTone: '',
+  bgTone: 'sand',
+  textTone: 'dark',
+  button1Label: '',
+  button1Url: '',
+  button1PageRef: '',
+  button1Style: 'primary',
+  button1Tone: 'atlantean',
+  button1OpenInNewWindow: false,
+  button2Label: '',
+  button2Url: '',
+  button2PageRef: '',
+  button2Style: 'dark',
+  button2Tone: 'super-grey',
+  button2OpenInNewWindow: false,
+};
+
 const certificateCards = [
   {
     titleTop: 'Demand',
@@ -70,7 +111,7 @@ const growthCards = [
     body: 'Why choose between financial growth and spiritual impact? Deliver both at the same time.',
   },
   {
-    title: 'Grow your "Plan B."',
+    title: 'Grow your backup plan.',
     body: "Your church's emergency funds should build the Kingdom while preparing for the unexpected.",
   },
   {
@@ -121,11 +162,11 @@ const CHURCH_CASH_RESERVES_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   title: 'Church Cash Reserves',
   fallbackImageAlt: 'Church Cash Reserves',
 });
-const INVESTMENTS_HERO_ANIMATION_PRESET = getHeroSeedContract('/services/investments')?.animationPreset || 'loans-unblur';
+const INVESTMENTS_HERO_ANIMATION_PRESET = getHeroSeedContract('/services/investments')?.animationPreset || 'default';
 
 function resolveInvestmentsHeroAnimationPreset(value) {
   const normalized = String(value || '').trim();
-  if (!normalized || normalized === 'default') {
+  if (!normalized || normalized === 'default' || normalized === 'loans-unblur') {
     return INVESTMENTS_HERO_ANIMATION_PRESET;
   }
   return normalized;
@@ -1399,29 +1440,33 @@ export default function InvestmentsPage() {
         </aside>
       ) : null}
       {showFrontHud ? (
-        <FrontHudPageWorkflow pathname="/services/investments" reviewHref="/admin/content?page=%2Fservices%2Finvestments" placement="bar" />
+        <Suspense fallback={null}>
+          <FrontHudPageWorkflow pathname="/services/investments" reviewHref="/admin/content?page=%2Fservices%2Finvestments" placement="bar" />
+        </Suspense>
       ) : null}
       {hasOpenHudPanel && activeHudPanel ? (
-        <FrontHudPanelShell
-          title={activeHudPanel.label}
-          onClose={closeHudDock}
-          style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
-        >
-          <BlockHudPanelHost
-            block={activeHudPanel.block}
-            pathname="/services/investments"
-            routeOptions={routeLinkOptions}
-            testimonialsLibrary={testimonialsLibrary}
-            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
-            onOwnershipAction={() => {
-              if (!activeHudPanel?.block?.id) {
-                return;
-              }
-              setActiveBlockLock('/services/investments', activeHudPanel.block.id, { force: true });
-            }}
-            onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
-          />
-        </FrontHudPanelShell>
+        <Suspense fallback={null}>
+          <FrontHudPanelShell
+            title={activeHudPanel.label}
+            onClose={closeHudDock}
+            style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+          >
+            <BlockHudPanelHost
+              block={activeHudPanel.block}
+              pathname="/services/investments"
+              routeOptions={routeLinkOptions}
+              testimonialsLibrary={testimonialsLibrary}
+              ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+              onOwnershipAction={() => {
+                if (!activeHudPanel?.block?.id) {
+                  return;
+                }
+                setActiveBlockLock('/services/investments', activeHudPanel.block.id, { force: true });
+              }}
+              onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
+            />
+          </FrontHudPanelShell>
+        </Suspense>
       ) : null}
       <section
         ref={heroSectionRef}
@@ -1437,18 +1482,20 @@ export default function InvestmentsPage() {
             activeHudPanelId,
             heroHudPanelId: INVESTMENTS_HERO_HUD_PANEL_ID,
           }) ? (
-            <HeroInlineLiveEditor
-              lines={heroHudEditableLines}
-              activeLineKey={heroActiveLineData?.key || ''}
-              lineHeight={heroHudLineHeight}
-              onLineTextChange={handleHeroHudLineTextChange}
-              onLineInteract={handleHeroLineInteract}
-              setLineInputRef={(lineKey, node) => {
-                heroLineInputRefs.current[lineKey] = node;
-              }}
-              renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}
-              resolveLineClassName={(line, index) => line.className || `line${index + 1}`}
-            />
+            <Suspense fallback={null}>
+              <HeroInlineLiveEditor
+                lines={heroHudEditableLines}
+                activeLineKey={heroActiveLineData?.key || ''}
+                lineHeight={heroHudLineHeight}
+                onLineTextChange={handleHeroHudLineTextChange}
+                commitOnBlurOnly
+                onLineInteract={handleHeroLineInteract}
+                setLineInputRef={(lineKey, node) => {
+                  heroLineInputRefs.current[lineKey] = node;
+                }}
+                resolveLineClassName={(line, index) => line.className || `line${index + 1}`}
+              />
+            </Suspense>
           ) : dynamicHero?.lines?.length ? dynamicHero.lines.map((line, index) => {
             const animationClass = heroAnimationClassForLine(dynamicHero.animationPreset, index + 1);
             const className = [line.className, animationClass].filter(Boolean).join(' ');
@@ -1465,13 +1512,13 @@ export default function InvestmentsPage() {
             );
           }) : (
             <>
-              <h1 className={`line1 ${heroAnimationClassForLine('loans-unblur', 1)}`}>
+              <h1 className={['line1', heroAnimationClassForLine(INVESTMENTS_HERO_ANIMATION_PRESET, 1)].filter(Boolean).join(' ')}>
                 Your <mark className="is-atlantean">investments</mark>.
               </h1>
-              <h1 className={`line2 ${heroAnimationClassForLine('loans-unblur', 2)}`}>
+              <h1 className={['line2', heroAnimationClassForLine(INVESTMENTS_HERO_ANIMATION_PRESET, 2)].filter(Boolean).join(' ')}>
                 Your <mark className="is-mango">faith</mark>.
               </h1>
-              <h1 className={`line3 ${heroAnimationClassForLine('loans-unblur', 3)}`}>
+              <h1 className={['line3', heroAnimationClassForLine(INVESTMENTS_HERO_ANIMATION_PRESET, 3)].filter(Boolean).join(' ')}>
                 Better <mark className="is-sandstone">together</mark>.
               </h1>
             </>
@@ -1625,12 +1672,15 @@ export default function InvestmentsPage() {
           </h2>
 
           <div
-            className="service-native-grid investments-native-growth-grid fade-out"
-            data-fade-out-start-vh="0.02"
-            data-fade-out-end-vh="-0.22"
+            className="service-native-grid investments-native-growth-grid"
           >
             {growthCards.map((card) => (
-              <article key={card.title} className="investments-native-growth-card fade-up">
+              <article
+                key={card.title}
+                className="investments-native-growth-card fade-up fade-out"
+                data-fade-out-start-vh="0.02"
+                data-fade-out-end-vh="-0.22"
+              >
                 <h3>{card.title}</h3>
                 <p>{card.body}</p>
               </article>

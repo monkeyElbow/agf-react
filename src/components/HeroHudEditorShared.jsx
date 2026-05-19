@@ -15,6 +15,14 @@ const HERO_JUSTIFY_OPTIONS = [
   { value: 'right', label: 'Right' },
 ];
 const HERO_LINE_TEXT_DRAFT_COMMIT_DELAY_MS = 320;
+const HERO_INTERACTION_KEYUP_KEYS = new Set([
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowUp',
+  'ArrowDown',
+  'Home',
+  'End',
+]);
 
 function readHeroLineDraftTexts(lines) {
   return (Array.isArray(lines) ? lines : []).reduce((next, line) => {
@@ -32,7 +40,11 @@ export function useBufferedHeroLineTextDrafts({
   onCommitLineText,
   onDraftTextChange,
   commitDelayMs = HERO_LINE_TEXT_DRAFT_COMMIT_DELAY_MS,
+  commitOnBlurOnly = false,
 }) {
+  const resolvedCommitDelayMs = Number.isFinite(Number(commitDelayMs))
+    ? Number(commitDelayMs)
+    : HERO_LINE_TEXT_DRAFT_COMMIT_DELAY_MS;
   const safeLines = Array.isArray(lines) ? lines : [];
   const lineKeys = useMemo(
     () => safeLines.map((line) => String(line?.key || '').trim()).filter(Boolean),
@@ -112,7 +124,7 @@ export function useBufferedHeroLineTextDrafts({
     }
     commitTimersRef.current.set(normalizedLineKey, window.setTimeout(() => {
       commitLineDraft(normalizedLineKey, nextValue);
-    }, commitDelayMs));
+    }, resolvedCommitDelayMs));
   };
 
   const updateLineDraft = (lineKey, nextValue, { commitImmediately = false } = {}) => {
@@ -132,6 +144,9 @@ export function useBufferedHeroLineTextDrafts({
     onDraftTextChange?.(normalizedLineKey, normalizedValue);
     if (commitImmediately) {
       commitLineDraft(normalizedLineKey, normalizedValue);
+      return;
+    }
+    if (commitOnBlurOnly) {
       return;
     }
     scheduleLineDraftCommit(normalizedLineKey, normalizedValue);
@@ -245,6 +260,7 @@ export function HeroInlineLiveEditor({
   renderLineContent,
   resolveLineClassName,
   resolveLineTagName,
+  commitOnBlurOnly = false,
 }) {
   const normalizedLetterSpacing = normalizeHeroTitleLetterSpacingEm(letterSpacing);
   const safeLines = Array.isArray(lines) ? lines : [];
@@ -256,6 +272,7 @@ export function HeroInlineLiveEditor({
     lines: safeLines,
     onCommitLineText: onLineTextChange,
     onDraftTextChange: onLineDraftChange,
+    commitOnBlurOnly,
   });
   const mergedLines = useMemo(() => (
     safeLines.map((line) => {
@@ -312,6 +329,15 @@ export function HeroInlineLiveEditor({
     onLineInteract?.(lineKey, meta);
   };
 
+  const shouldSyncInteractionOnKeyUp = (event) => {
+    const key = String(event?.key || '');
+    if (HERO_INTERACTION_KEYUP_KEYS.has(key)) {
+      return true;
+    }
+    const lowerKey = key.toLowerCase();
+    return lowerKey === 'a' && (event?.metaKey || event?.ctrlKey);
+  };
+
   return (
     <div className="admin-front-hud-hero-live-editor">
       {visibleLines.map((line, index) => (
@@ -355,7 +381,12 @@ export function HeroInlineLiveEditor({
             onFocus={(event) => notifyLineInteract(line.key, { target: event.currentTarget })}
             onSelect={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
             onMouseUp={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
-            onKeyUp={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
+            onKeyUp={(event) => {
+              if (!shouldSyncInteractionOnKeyUp(event)) {
+                return;
+              }
+              notifyLineInteract(line.key, { defer: true, target: event.currentTarget });
+            }}
             onChange={(event) => updateLineDraft(line.key, event.target.value)}
             onBlur={() => commitLineDraftOnBlur(line.key)}
             spellCheck="false"

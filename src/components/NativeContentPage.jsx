@@ -5414,6 +5414,7 @@ export default function NativeContentPage({ page }) {
                 lineHeight={heroHudLineHeight}
                 letterSpacing={heroHudLetterSpacingEm}
                 onLineTextChange={handleHeroHudLineTextChange}
+                commitOnBlurOnly
                 onLineInteract={(lineKey, interactionMeta) => {
                   openHudPanel(heroHudPanelId);
                   setHeroActiveLine(lineKey);

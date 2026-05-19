@@ -1431,6 +1431,7 @@ export default function RetirementPage() {
               activeLineKey={heroActiveLineData?.key || ''}
               lineHeight={heroHudLineHeight}
               onLineTextChange={handleHeroHudLineTextChange}
+              commitOnBlurOnly
               onLineInteract={handleHeroLineInteract}
               setLineInputRef={(lineKey, node) => {
                 heroLineInputRefs.current[lineKey] = node;

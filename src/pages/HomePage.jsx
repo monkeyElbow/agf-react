@@ -749,6 +749,19 @@ export default function HomePage() {
   };
 
   const captureHeroSelection = (lineKey, interactionMeta = null) => {
+    const commitHeroSelection = (nextSelection) => {
+      const normalizedSelection = nextSelection && typeof nextSelection === 'object'
+        ? nextSelection
+        : { line: '', start: 0, end: 0, text: '' };
+      setHeroSelection((previous) => (
+        previous.line === normalizedSelection.line
+        && previous.start === normalizedSelection.start
+        && previous.end === normalizedSelection.end
+        && previous.text === normalizedSelection.text
+          ? previous
+          : normalizedSelection
+      ));
+    };
     const meta = interactionMeta && typeof interactionMeta === 'object' ? interactionMeta : null;
     const metaStart = Number(meta?.selectionStart);
     const metaEnd = Number(meta?.selectionEnd);
@@ -756,7 +769,7 @@ export default function HomePage() {
     if (Number.isInteger(metaStart) && Number.isInteger(metaEnd)) {
       const start = Math.max(0, Math.min(metaStart, metaEnd));
       const end = Math.max(start, metaStart, metaEnd);
-      setHeroSelection({
+      commitHeroSelection({
         line: lineKey,
         start,
         end,
@@ -776,7 +789,7 @@ export default function HomePage() {
     const start = Math.max(0, Math.min(rawStart, rawEnd));
     const end = Math.max(start, rawStart, rawEnd);
     const lineText = String(input.value || '');
-    setHeroSelection({
+    commitHeroSelection({
       line: lineKey,
       start,
       end,
@@ -1404,6 +1417,7 @@ export default function HomePage() {
     activeLineKey: heroActiveLine,
     sectionRef: heroSectionRef,
     onLineTextChange: handleHeroHudLineTextChange,
+    commitOnBlurOnly: true,
     onLineInteract: handleHeroLineInteract,
     setLineInputRef: (lineKey, node) => {
       heroLineInputRefs.current[lineKey] = node;

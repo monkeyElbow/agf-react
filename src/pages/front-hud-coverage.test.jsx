@@ -96,4 +96,16 @@ describe('custom page front HUD coverage audit', () => {
     expect(homeSource).toContain('{showFrontHud ? (');
     expect(homeSource).toContain('<FrontHudPageWorkflow pathname="/" reviewHref="/admin/content?page=%2F" placement="bar" />');
   });
+
+  it('keeps Home hero selection capture on a no-op guard so repeated key interactions do not churn page state', () => {
+    const homeSource = readPageSource('./HomePage.jsx');
+
+    expect(homeSource).toContain('const commitHeroSelection = (nextSelection) => {');
+    expect(homeSource).toContain('previous.line === normalizedSelection.line');
+    expect(homeSource).toContain('&& previous.start === normalizedSelection.start');
+    expect(homeSource).toContain('&& previous.end === normalizedSelection.end');
+    expect(homeSource).toContain('&& previous.text === normalizedSelection.text');
+    expect(homeSource).toContain('? previous');
+    expect(homeSource).toContain(': normalizedSelection');
+  });
 });

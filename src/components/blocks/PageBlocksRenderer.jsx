@@ -439,6 +439,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
             lineHeight={lineHeight}
             letterSpacing={block.titleLetterSpacingEm}
             onLineTextChange={heroHud.onLineTextChange}
+            commitOnBlurOnly={heroHud?.commitOnBlurOnly === true}
             onLineInteract={heroHud.onLineInteract}
             setLineInputRef={heroHud.setLineInputRef}
             renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}

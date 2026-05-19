@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { HeroHudEditorPanel, HeroInlineLiveEditor } from './HeroHudEditorShared';
 
 describe('HeroInlineLiveEditor', () => {
-  it('defers selection interaction events so selection state can be captured after browser updates', () => {
+  it('keeps focus, select, and mouse-up interaction events available for parent selection sync', () => {
     const onLineInteract = vi.fn();
     const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
       callback(0);
@@ -26,11 +26,70 @@ describe('HeroInlineLiveEditor', () => {
     }));
 
     const input = screen.getByLabelText('Line 1');
+    fireEvent.focus(input);
     fireEvent.select(input);
     fireEvent.mouseUp(input);
-    fireEvent.keyUp(input, { key: 'ArrowRight' });
 
     expect(onLineInteract.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(onLineInteract.mock.calls.every(([lineKey]) => lineKey === 'line1')).toBe(true);
+
+    rafSpy.mockRestore();
+  });
+
+  it('ignores generic typing keyup events so parent HUD state does not churn on every character', () => {
+    const onLineInteract = vi.fn();
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callback(0);
+      return 1;
+    });
+
+    render(createElement(HeroInlineLiveEditor, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: "Today's investment.",
+        className: 'home-native-eyebrow',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      lineHeight: 0.9,
+      onLineInteract,
+    }));
+
+    const input = screen.getByLabelText('Line 1');
+    fireEvent.keyUp(input, { key: 'a' });
+
+    expect(onLineInteract).not.toHaveBeenCalled();
+    expect(rafSpy).not.toHaveBeenCalled();
+
+    rafSpy.mockRestore();
+  });
+
+  it('keeps navigation and select-all keyup interaction events available for keyboard selection workflows', () => {
+    const onLineInteract = vi.fn();
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callback(0);
+      return 1;
+    });
+
+    render(createElement(HeroInlineLiveEditor, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: "Today's investment.",
+        className: 'home-native-eyebrow',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      lineHeight: 0.9,
+      onLineInteract,
+    }));
+
+    const input = screen.getByLabelText('Line 1');
+    fireEvent.keyUp(input, { key: 'ArrowRight' });
+    fireEvent.keyUp(input, { key: 'a', ctrlKey: true });
+
+    expect(onLineInteract).toHaveBeenCalledTimes(2);
     expect(onLineInteract.mock.calls.every(([lineKey]) => lineKey === 'line1')).toBe(true);
 
     rafSpy.mockRestore();
@@ -163,6 +222,47 @@ describe('HeroInlineLiveEditor', () => {
       });
 
       expect(onLineTextChange).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps front HUD hero drafts local until blur when commit-on-blur mode is enabled', () => {
+    vi.useFakeTimers();
+    const onLineTextChange = vi.fn();
+
+    try {
+      render(createElement(HeroInlineLiveEditor, {
+        lines: [{
+          key: 'line1',
+          label: 'Line 1',
+          text: 'Plan ahead.',
+          className: 'line1',
+          highlights: [],
+        }],
+        activeLineKey: 'line1',
+        lineHeight: 0.9,
+        onLineTextChange,
+        commitOnBlurOnly: true,
+      }));
+
+      const input = screen.getByLabelText('Line 1');
+      fireEvent.change(input, {
+        target: { value: 'Plan farther ahead.' },
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(input.value).toBe('Plan farther ahead.');
+      expect(onLineTextChange).not.toHaveBeenCalled();
+
+      fireEvent.blur(input);
+
+      expect(onLineTextChange).toHaveBeenCalledTimes(1);
+      expect(onLineTextChange).toHaveBeenCalledWith('line1', 'Plan farther ahead.');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
