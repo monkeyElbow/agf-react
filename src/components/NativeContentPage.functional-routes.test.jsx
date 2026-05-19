@@ -327,7 +327,9 @@ describe('NativeContentPage functional routes', () => {
     expect(managedProofSection?.querySelectorAll('.impact-native-card')).toHaveLength(0);
     expect(within(managedProofSection).queryByText('Impact highlights')).toBeNull();
     expect(managedProofSection?.querySelector('.impact-proof-story-summary')).toBeNull();
-    expect(within(managedProofSection).getByText('Churches and ministries fueled each year.')).toBeTruthy();
+    expect(within(managedProofSection).getByText('ministries supported by loans.')).toBeTruthy();
+    expect(within(managedProofSection).getByText('Over the last 10 years, those ministries represent more than 945,000 people.')).toBeTruthy();
+    expect(within(managedProofSection).getByText('ministers retiring with AGFinancial.')).toBeTruthy();
     expect(within(managedProofSection).getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
 
     unmount();

@@ -8,33 +8,33 @@ const DEFAULT_PROPS = {
   body: '',
   metrics: [
     {
-      value: '4,000',
+      value: '1400',
       eyebrow: 'Loans',
-      label: 'Churches and ministries fueled each year.',
-      body: 'From first conversation to final funding, we help ministries move from idea to opening day with financing that understands church realities.',
+      label: 'ministries supported by loans.',
+      body: 'Over the last 10 years, those ministries represent more than 945,000 people.',
       tone: 'atlantean',
       action: { label: 'Explore Loans', to: '/services/loans' },
     },
     {
-      value: '$40 Million',
+      value: '$450 Million',
       eyebrow: 'Legacy Giving',
-      label: 'Under trusted care for future ministry.',
+      label: 'under trusted care for future ministry.',
       body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
       tone: 'mango',
       action: { label: 'Plan with us', to: '/services/legacy-giving' },
     },
     {
-      value: '687',
+      value: '5,117',
       eyebrow: 'Insurance',
-      label: 'Mission trips covered with protection in place.',
+      label: 'mission trips covered with protection in place.',
       body: 'Teams can travel, serve, and respond quickly because practical coverage is already handled before the wheels ever leave the runway.',
       tone: 'super-grey',
       action: { label: 'Cover your trip', to: '/services/insurance' },
     },
     {
-      value: '299',
+      value: '29,000+',
       eyebrow: 'Retirement',
-      label: 'Ministers retired this year with AGFinancial.',
+      label: 'ministers retiring with AGFinancial.',
       body: 'Retirement planning that respects decades of calling and helps leaders step into the next season with structure, confidence, and care.',
       tone: 'atlantean-dark',
       action: { label: 'Start your plan', to: '/services/retirement' },
@@ -71,10 +71,11 @@ describe('ImpactProofStoryFeature', () => {
     expect(container.querySelectorAll('.impact-proof-story-proof-content.fade-up.fade-out')).toHaveLength(4);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-left')).toHaveLength(2);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-right')).toHaveLength(2);
-    expect(screen.getByText('Churches and ministries fueled each year.')).toBeTruthy();
-    expect(screen.getByText('Under trusted care for future ministry.')).toBeTruthy();
-    expect(screen.getByText('Mission trips covered with protection in place.')).toBeTruthy();
-    expect(screen.getByText('Ministers retired this year with AGFinancial.')).toBeTruthy();
+    expect(screen.getByText('ministries supported by loans.')).toBeTruthy();
+    expect(screen.getByText('Over the last 10 years, those ministries represent more than 945,000 people.')).toBeTruthy();
+    expect(screen.getByText('under trusted care for future ministry.')).toBeTruthy();
+    expect(screen.getByText('mission trips covered with protection in place.')).toBeTruthy();
+    expect(screen.getByText('ministers retiring with AGFinancial.')).toBeTruthy();
   });
 
   it('keeps every metric CTA readable in the same static layout across viewports', () => {

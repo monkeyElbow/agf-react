@@ -1049,7 +1049,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         {
           value: '4,000',
           eyebrow: 'Loans',
-          label: 'Churches and ministries fueled each year.',
+          label: 'churches and ministries fueled each year.',
           tone: 'atlantean',
           action: {
             label: 'Explore Loans',
@@ -1057,9 +1057,9 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
           },
         },
         {
-          value: '$40 Million',
+          value: '$450 Million',
           eyebrow: 'Legacy Giving',
-          label: 'Under trusted care for future ministry.',
+          label: 'under trusted care for future ministry.',
           tone: 'mango',
           action: {
             label: 'Plan with us',
@@ -1067,9 +1067,9 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
           },
         },
         {
-          value: '687',
+          value: '5,117',
           eyebrow: 'Insurance',
-          label: 'Mission trips covered with protection in place.',
+          label: 'mission trips covered with protection in place.',
           tone: 'super-grey',
           action: {
             label: 'Cover your trip',
@@ -1077,9 +1077,9 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
           },
         },
         {
-          value: '299',
+          value: '29,000+',
           eyebrow: 'Retirement',
-          label: 'Ministers retired this year with AGFinancial.',
+          label: 'ministers retired with AGFinancial.',
           tone: 'atlantean-dark',
           action: {
             label: 'Start your plan',

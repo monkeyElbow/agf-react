@@ -18,6 +18,13 @@ describe('insurance native page content', () => {
       'Mission Assure',
       'Bonds',
     ]);
+    expect(coverageSection?.actions).toEqual([
+      expect.objectContaining({
+        label: 'Certificate request',
+        to: '/services/insurance/certificate-request',
+        className: 'is-outline is-tone-white',
+      }),
+    ]);
     expect(ctaSection?.title).toBe('Ready to protect your ministry?');
     expect(ctaSection?.form?.title).toBe('What coverage is best for your ministry?');
     expect(ctaSection?.form?.subtitle).toBe('Let’s walk through the options.');

@@ -129,10 +129,10 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       action: null,
       metrics: Object.freeze([
         Object.freeze({
-          value: '4,000',
+          value: '1400',
           eyebrow: 'Loans',
-          label: 'Churches and ministries fueled each year.',
-          body: 'From first conversation to final funding, we help ministries move from idea to opening day with financing that understands church realities.',
+          label: 'ministries supported by loans.',
+          body: 'Over the last 10 years, those ministries represent more than 945,000 people.',
           tone: 'atlantean',
           action: Object.freeze({
             label: 'Explore Loans',
@@ -141,9 +141,9 @@ const SITE_FEATURE_CATALOG = Object.freeze([
           }),
         }),
         Object.freeze({
-          value: '$40 Million',
+          value: '$450 Million',
           eyebrow: 'Legacy Giving',
-          label: 'Under trusted care for future ministry.',
+          label: 'under trusted care for future ministry.',
           body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
           tone: 'mango',
           action: Object.freeze({
@@ -153,9 +153,9 @@ const SITE_FEATURE_CATALOG = Object.freeze([
           }),
         }),
         Object.freeze({
-          value: '687',
+          value: '5,117',
           eyebrow: 'Insurance',
-          label: 'Mission trips covered with protection in place.',
+          label: 'mission trips covered with protection in place.',
           body: 'Teams can travel, serve, and respond quickly because practical coverage is already handled before the wheels ever leave the runway.',
           tone: 'super-grey',
           action: Object.freeze({
@@ -165,9 +165,9 @@ const SITE_FEATURE_CATALOG = Object.freeze([
           }),
         }),
         Object.freeze({
-          value: '299',
+          value: '29,000+',
           eyebrow: 'Retirement',
-          label: 'Ministers retired this year with AGFinancial.',
+          label: 'ministers retiring with AGFinancial.',
           body: 'Retirement planning that respects decades of calling and helps leaders step into the next season with structure, confidence, and care.',
           tone: 'atlantean-dark',
           action: Object.freeze({

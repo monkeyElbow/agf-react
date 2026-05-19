@@ -287,7 +287,11 @@ const directContent = {
           },
         ],
         actions: [
-          { label: 'Certificate request', to: '/services/insurance/certificate-request' },
+          {
+            label: 'Certificate request',
+            to: '/services/insurance/certificate-request',
+            className: 'is-outline is-tone-white',
+          },
         ],
       },
       {
@@ -3679,7 +3683,6 @@ function companyChildContent(path, title) {
   if (path === '/about-us/impact') {
     return {
       pageClass: 'native-info-page--impact',
-      compact: true,
       hero: {
         lines: [
           { title: 'We’re making' },
@@ -3709,7 +3712,7 @@ function companyChildContent(path, title) {
             {
               title: '4,000',
               titleClassName: 'countup',
-              subtitle: 'Churches and ministries fueled each year.',
+              subtitle: 'churches and ministries fueled each year.',
               body: 'From first conversation to final funding, we help ministries move from idea to opening day with financing that understands church realities.',
               to: '/services/loans',
               cta: 'Explore Loans',
@@ -3720,9 +3723,9 @@ function companyChildContent(path, title) {
               cardClass: 'impact-native-card impact-native-card--loans',
             },
             {
-              title: '$40 Million',
+              title: '$450 Million',
               titleClassName: 'countup',
-              subtitle: 'Under trusted care for future ministry.',
+              subtitle: 'under trusted care for future ministry.',
               body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
               to: '/services/legacy-giving',
               cta: 'Plan with us',
@@ -3733,9 +3736,9 @@ function companyChildContent(path, title) {
               cardClass: 'impact-native-card impact-native-card--legacy',
             },
             {
-              title: '687',
+              title: '5,117',
               titleClassName: 'countup',
-              subtitle: 'Mission trips covered with protection in place.',
+              subtitle: 'mission trips covered with protection in place.',
               body: 'Teams can travel, serve, and respond quickly because practical coverage is already handled before the wheels ever leave the runway.',
               to: '/services/insurance',
               cta: 'Cover your trip',
@@ -3746,9 +3749,9 @@ function companyChildContent(path, title) {
               cardClass: 'impact-native-card impact-native-card--insurance',
             },
             {
-              title: '299',
+              title: '29,000+',
               titleClassName: 'countup',
-              subtitle: 'Ministers retired this year with AGFinancial.',
+              subtitle: 'ministers retired with AGFinancial.',
               body: 'Retirement planning that respects decades of calling and helps leaders step into the next season with structure, confidence, and care.',
               to: '/services/retirement',
               cta: 'Start your plan',
