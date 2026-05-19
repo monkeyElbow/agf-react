@@ -1670,7 +1670,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     createStaticBlueprintStub({ id: 'daily_billboard', name: 'Retire Every Day Billboard', kind: 'billboard' }),
   ],
   '/services/retirement/retirement-consultants': [
-    ...genericPageFallbackBlueprint(),
     {
       id: 'request_form',
       name: 'Request Form',
@@ -3894,7 +3893,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     }),
   ],
   '/services/insurance/group-term-life-insurance': [
-    ...genericPageBlockBlueprint().map((block) => {
+    ...genericPageBlockBlueprint().filter((block) => block?.id !== 'page_content').map((block) => {
       if (block.id !== 'request_form') {
         return block;
       }
@@ -3952,7 +3951,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     }),
   ],
   '/services/insurance/certificate-request': [
-    ...genericPageBlockBlueprint().map((block) => {
+    ...genericPageBlockBlueprint().filter((block) => block?.id !== 'page_content').map((block) => {
       if (block.id !== 'request_form') {
         return block;
       }

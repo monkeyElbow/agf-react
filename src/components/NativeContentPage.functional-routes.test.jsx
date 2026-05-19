@@ -242,6 +242,93 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getAllByText('Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.')).toHaveLength(1);
   });
 
+  it('renders certificate request from the targeted request-form block without a fallback page-content section', () => {
+    mockBlocksByPath = {
+      '/services/insurance/certificate-request': (
+        contentBlockBlueprintsByPath['/services/insurance/certificate-request'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/certificate-request',
+            title: 'Certificate Request',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getAllByText('Certificate Request').length).toBeGreaterThan(1);
+    expect(document.querySelector('.certificate-request-native-section')).toBeTruthy();
+    expect(document.querySelector('.certificate-request-native-section .certificate-request-form')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+  });
+
+  it('renders group term life from the targeted request-form block without a fallback page-content section', () => {
+    mockBlocksByPath = {
+      '/services/insurance/group-term-life-insurance': (
+        contentBlockBlueprintsByPath['/services/insurance/group-term-life-insurance'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/group-term-life-insurance',
+            title: 'Group term life insurance',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.service-native-hero h1')?.textContent).toBe('Get a group quote.');
+    expect(document.querySelector('.group-life-native-quote.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getAllByText('Provide a few specifics, and we’ll contact you about a policy customized specifically for your team.')).toHaveLength(1);
+  });
+
+  it('renders retirement consultants from the targeted request-form block without a fallback page-content section', () => {
+    mockBlocksByPath = {
+      '/services/retirement/retirement-consultants': (
+        contentBlockBlueprintsByPath['/services/retirement/retirement-consultants'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/retirement-consultants',
+            title: 'Retirement Consultants',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.service-native-hero h1')?.textContent).toBe('Retirement Consultants');
+    expect(document.querySelector('.loans-consultant-native-contact.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getByLabelText('Select your state')).toBeTruthy();
+  });
+
   it('renders charitable gift annuities from explicit managed blocks without a fallback page-content section', () => {
     mockBlocksByPath = {
       '/services/legacy-giving/charitable-gift-annuities': (
