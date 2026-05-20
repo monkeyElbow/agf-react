@@ -99,6 +99,8 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(panels[0]?.style.getPropertyValue('--home-services-panel-opacity')).not.toBe('');
     expect(panels[0]?.style.getPropertyValue('--home-services-content-opacity')).not.toBe('');
     expect(panels[0]?.style.getPropertyValue('--home-services-content-scale')).not.toBe('');
+    expect(panels[0]?.style.getPropertyValue('--home-services-action-opacity')).not.toBe('');
+    expect(panels[0]?.style.getPropertyValue('--home-services-action-scale')).not.toBe('');
     expect(panels[0]?.style.getPropertyValue('--home-services-dark-angle')).toContain('deg');
   });
 
@@ -120,6 +122,8 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('');
     expect(firstPanel?.style.getPropertyValue('--home-services-content-opacity')).toBe('');
     expect(firstPanel?.style.getPropertyValue('--home-services-content-scale')).toBe('');
+    expect(firstPanel?.style.getPropertyValue('--home-services-action-opacity')).toBe('');
+    expect(firstPanel?.style.getPropertyValue('--home-services-action-scale')).toBe('');
   });
 
   it('drives panel and content opacity from entrance to peak and back down on exit', () => {
@@ -151,8 +155,9 @@ describe('HomeServicesFeatureAnimation', () => {
       vi.advanceTimersByTime(80);
     });
 
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('0.250');
-    expect(firstPanel?.style.getPropertyValue('--home-services-content-opacity')).toBe('0.250');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('0.180');
+    expect(firstPanel?.style.getPropertyValue('--home-services-content-opacity')).toBe('0.160');
+    expect(firstPanel?.style.getPropertyValue('--home-services-action-opacity')).toBe('0.420');
 
     rectState.top = 320;
     act(() => {
@@ -160,8 +165,9 @@ describe('HomeServicesFeatureAnimation', () => {
       vi.advanceTimersByTime(80);
     });
 
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('0.950');
-    expect(firstPanel?.style.getPropertyValue('--home-services-content-opacity')).toBe('0.950');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('0.960');
+    expect(firstPanel?.style.getPropertyValue('--home-services-content-opacity')).toBe('1.000');
+    expect(firstPanel?.style.getPropertyValue('--home-services-action-opacity')).toBe('1.000');
 
     rectState.top = -rectState.height;
     act(() => {
@@ -169,7 +175,8 @@ describe('HomeServicesFeatureAnimation', () => {
       vi.advanceTimersByTime(80);
     });
 
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('0.250');
-    expect(firstPanel?.style.getPropertyValue('--home-services-content-opacity')).toBe('0.250');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('0.180');
+    expect(firstPanel?.style.getPropertyValue('--home-services-content-opacity')).toBe('0.160');
+    expect(firstPanel?.style.getPropertyValue('--home-services-action-opacity')).toBe('0.548');
   });
 });

@@ -6,125 +6,140 @@ const HOME_SERVICES_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 const HOME_SERVICES_PANEL_MOTION_PRESETS = Object.freeze({
   default: Object.freeze({
-    lightStrength: [1.02, 0.16],
-    lightX: [54, 8],
-    lightY: [72, 22],
-    lightWidth: [116, 30],
-    lightHeight: [94, 24],
-    lightSecondaryX: [72, 102],
-    lightSecondaryY: [18, 10],
-    lightSecondaryWidth: [56, 18],
-    lightSecondaryHeight: [42, 12],
-    darkStrength: [0.14, 0.84],
-    darkX: [88, 8],
-    darkY: [18, 8],
-    darkWidth: [66, 132],
-    darkHeight: [56, 118],
-    darkAngle: [124, 184],
-    darkStop1: [24, 4],
-    darkStop2: [52, 16],
-    darkStop3: [82, 30],
+    lightStrength: [1.18, 0.12],
+    lightX: [58, -8],
+    lightY: [78, 14],
+    lightWidth: [136, 34],
+    lightHeight: [112, 26],
+    lightSecondaryX: [72, 106],
+    lightSecondaryY: [14, 4],
+    lightSecondaryWidth: [62, 18],
+    lightSecondaryHeight: [46, 14],
+    darkStrength: [0.24, 1.18],
+    darkX: [82, 18],
+    darkY: [18, 10],
+    darkWidth: [78, 164],
+    darkHeight: [66, 146],
+    darkAngle: [118, 194],
+    darkStop1: [18, 4],
+    darkStop2: [44, 12],
+    darkStop3: [74, 20],
   }),
   0: Object.freeze({
-    lightStrength: [1.12, 0.16],
-    lightX: [96, 6],
-    lightY: [80, 28],
-    lightWidth: [128, 32],
-    lightHeight: [98, 22],
-    lightSecondaryX: [18, -6],
-    lightSecondaryY: [18, 8],
-    lightSecondaryWidth: [72, 34],
-    lightSecondaryHeight: [54, 24],
-    darkStrength: [0.16, 0.94],
-    darkX: [56, 0],
-    darkY: [16, 6],
-    darkWidth: [72, 148],
-    darkHeight: [60, 126],
-    darkAngle: [120, 194],
-    darkStop1: [22, 2],
-    darkStop2: [50, 12],
-    darkStop3: [80, 24],
+    lightStrength: [1.2, 0.08],
+    lightX: [104, 12],
+    lightY: [84, 24],
+    lightWidth: [146, 40],
+    lightHeight: [118, 30],
+    lightSecondaryX: [10, -12],
+    lightSecondaryY: [14, 4],
+    lightSecondaryWidth: [84, 44],
+    lightSecondaryHeight: [62, 28],
+    darkStrength: [0.22, 1.24],
+    darkX: [18, 90],
+    darkY: [12, 18],
+    darkWidth: [92, 192],
+    darkHeight: [78, 172],
+    darkAngle: [108, 202],
+    darkStop1: [18, 2],
+    darkStop2: [44, 10],
+    darkStop3: [74, 18],
   }),
   1: Object.freeze({
-    lightStrength: [0.76, 0.1],
-    lightX: [18, 56],
-    lightY: [20, 48],
-    lightWidth: [96, 28],
-    lightHeight: [86, 22],
-    lightSecondaryX: [14, -2],
-    lightSecondaryY: [18, 8],
-    lightSecondaryWidth: [88, 38],
-    lightSecondaryHeight: [62, 24],
-    darkStrength: [0.24, 0.92],
-    darkX: [76, 12],
-    darkY: [28, 10],
-    darkWidth: [88, 142],
-    darkHeight: [74, 122],
-    darkAngle: [140, 194],
-    darkStop1: [22, 4],
-    darkStop2: [48, 14],
-    darkStop3: [74, 26],
+    lightStrength: [0.88, 0.1],
+    lightX: [12, 64],
+    lightY: [18, 60],
+    lightWidth: [118, 32],
+    lightHeight: [98, 28],
+    lightSecondaryX: [8, -10],
+    lightSecondaryY: [14, 6],
+    lightSecondaryWidth: [96, 46],
+    lightSecondaryHeight: [70, 28],
+    darkStrength: [0.28, 1.18],
+    darkX: [78, 18],
+    darkY: [22, 12],
+    darkWidth: [96, 162],
+    darkHeight: [82, 142],
+    darkAngle: [132, 194],
+    darkStop1: [18, 4],
+    darkStop2: [42, 12],
+    darkStop3: [70, 22],
   }),
   2: Object.freeze({
-    lightStrength: [0.92, 0.16],
-    lightX: [10, 46],
-    lightY: [18, 44],
-    lightWidth: [98, 30],
-    lightHeight: [76, 22],
-    lightSecondaryX: [88, 64],
-    lightSecondaryY: [84, 58],
-    lightSecondaryWidth: [48, 18],
-    lightSecondaryHeight: [34, 12],
-    darkStrength: [0.18, 0.74],
-    darkX: [76, 18],
-    darkY: [26, 12],
-    darkWidth: [72, 112],
-    darkHeight: [64, 96],
-    darkAngle: [138, 180],
-    darkStop1: [20, 6],
-    darkStop2: [44, 18],
-    darkStop3: [76, 34],
+    lightStrength: [1.04, 0.14],
+    lightX: [6, 54],
+    lightY: [14, 54],
+    lightWidth: [116, 36],
+    lightHeight: [88, 26],
+    lightSecondaryX: [96, 58],
+    lightSecondaryY: [86, 52],
+    lightSecondaryWidth: [58, 22],
+    lightSecondaryHeight: [40, 14],
+    darkStrength: [0.22, 0.98],
+    darkX: [82, 22],
+    darkY: [20, 10],
+    darkWidth: [84, 136],
+    darkHeight: [72, 118],
+    darkAngle: [132, 186],
+    darkStop1: [18, 4],
+    darkStop2: [44, 12],
+    darkStop3: [74, 24],
   }),
   3: Object.freeze({
-    lightStrength: [0.78, 0.12],
-    lightX: [16, 42],
-    lightY: [18, 52],
-    lightWidth: [104, 32],
-    lightHeight: [86, 22],
-    lightSecondaryX: [82, 60],
-    lightSecondaryY: [76, 46],
-    lightSecondaryWidth: [58, 18],
-    lightSecondaryHeight: [40, 12],
-    darkStrength: [0.22, 0.84],
-    darkX: [70, 14],
-    darkY: [24, 10],
-    darkWidth: [78, 124],
-    darkHeight: [68, 106],
-    darkAngle: [136, 186],
-    darkStop1: [20, 4],
-    darkStop2: [46, 16],
-    darkStop3: [76, 30],
+    lightStrength: [0.9, 0.1],
+    lightX: [12, 54],
+    lightY: [16, 62],
+    lightWidth: [122, 36],
+    lightHeight: [96, 26],
+    lightSecondaryX: [86, 54],
+    lightSecondaryY: [74, 40],
+    lightSecondaryWidth: [68, 24],
+    lightSecondaryHeight: [44, 14],
+    darkStrength: [0.26, 1.08],
+    darkX: [68, 16],
+    darkY: [22, 12],
+    darkWidth: [88, 146],
+    darkHeight: [74, 128],
+    darkAngle: [134, 188],
+    darkStop1: [18, 4],
+    darkStop2: [44, 12],
+    darkStop3: [72, 22],
   }),
   4: Object.freeze({
-    lightStrength: [1.18, 0.16],
-    lightX: [50, 4],
-    lightY: [68, 84],
-    lightWidth: [122, 44],
-    lightHeight: [106, 40],
-    lightSecondaryX: [70, 108],
-    lightSecondaryY: [24, 10],
-    lightSecondaryWidth: [78, 30],
-    lightSecondaryHeight: [56, 22],
-    darkStrength: [0.12, 0.78],
-    darkX: [82, 24],
-    darkY: [18, 10],
-    darkWidth: [66, 112],
-    darkHeight: [56, 98],
-    darkAngle: [128, 176],
-    darkStop1: [20, 6],
-    darkStop2: [46, 16],
-    darkStop3: [76, 30],
+    lightStrength: [1.24, 0.12],
+    lightX: [54, -6],
+    lightY: [74, 92],
+    lightWidth: [142, 58],
+    lightHeight: [122, 54],
+    lightSecondaryX: [72, 114],
+    lightSecondaryY: [20, 4],
+    lightSecondaryWidth: [88, 36],
+    lightSecondaryHeight: [62, 28],
+    darkStrength: [0.2, 1.02],
+    darkX: [80, 26],
+    darkY: [16, 10],
+    darkWidth: [76, 136],
+    darkHeight: [64, 118],
+    darkAngle: [124, 182],
+    darkStop1: [18, 4],
+    darkStop2: [44, 12],
+    darkStop3: [74, 22],
   }),
+});
+
+const HOME_SERVICES_MOTION_CURVES = Object.freeze({
+  lightTravelStart: 0,
+  lightTravelEnd: 0.62,
+  darkTravelStart: 0.08,
+  darkTravelEnd: 0.86,
+  fadeInStart: 0,
+  fadeInEnd: 0.22,
+  fadeOutStart: 0.6,
+  fadeOutEnd: 0.92,
+  actionRevealStart: 0.1,
+  actionRevealEnd: 0.34,
+  actionFadeStart: 0.68,
+  actionFadeEnd: 0.96,
 });
 
 function clamp(value, min, max) {
@@ -184,6 +199,9 @@ function clearHomeServicesMotionVars(panel) {
     '--home-services-content-opacity',
     '--home-services-content-scale',
     '--home-services-content-shift-y',
+    '--home-services-action-opacity',
+    '--home-services-action-scale',
+    '--home-services-action-shift-y',
     '--home-services-dark-strength',
     '--home-services-dark-x',
     '--home-services-dark-y',
@@ -315,15 +333,45 @@ export default function HomeServicesFeatureAnimation({
         const rect = panel.getBoundingClientRect();
         const viewportTravel = clamp((viewportHeight - rect.top) / (viewportHeight + rect.height || 1), 0, 1);
         const panelPreset = resolvePanelMotionPreset(panel);
-        const lightTravel = smoothstep(0, 0.68, viewportTravel);
-        const darkTravel = smoothstep(0.18, 1, viewportTravel);
-        const fadeIn = smoothstep(0, 0.22, viewportTravel);
-        const fadeOut = smoothstep(0.72, 1, viewportTravel);
-        const visibilityCurve = clamp(fadeIn - fadeOut, 0, 1);
-        const panelOpacity = lerp(0.25, 0.95, visibilityCurve);
-        const contentOpacity = lerp(0.25, 0.95, visibilityCurve);
-        const contentScale = lerp(0.94, 1, visibilityCurve);
-        const contentShiftY = lerp(32, 0, fadeIn) + lerp(0, -16, fadeOut);
+        const lightTravel = smoothstep(
+          HOME_SERVICES_MOTION_CURVES.lightTravelStart,
+          HOME_SERVICES_MOTION_CURVES.lightTravelEnd,
+          viewportTravel,
+        );
+        const darkTravel = smoothstep(
+          HOME_SERVICES_MOTION_CURVES.darkTravelStart,
+          HOME_SERVICES_MOTION_CURVES.darkTravelEnd,
+          viewportTravel,
+        );
+        const fadeIn = smoothstep(
+          HOME_SERVICES_MOTION_CURVES.fadeInStart,
+          HOME_SERVICES_MOTION_CURVES.fadeInEnd,
+          viewportTravel,
+        );
+        const fadeOut = smoothstep(
+          HOME_SERVICES_MOTION_CURVES.fadeOutStart,
+          HOME_SERVICES_MOTION_CURVES.fadeOutEnd,
+          viewportTravel,
+        );
+        const visibilityCurve = clamp(fadeIn - (1.08 * fadeOut), 0, 1);
+        const panelOpacity = lerp(0.18, 0.96, visibilityCurve);
+        const contentOpacity = lerp(0.16, 1, visibilityCurve);
+        const contentScale = clamp(1 - ((1 - fadeIn) * 0.08) - (fadeOut * 0.06), 0.9, 1);
+        const contentShiftY = lerp(36, 0, fadeIn) + lerp(0, -32, fadeOut);
+        const actionReveal = smoothstep(
+          HOME_SERVICES_MOTION_CURVES.actionRevealStart,
+          HOME_SERVICES_MOTION_CURVES.actionRevealEnd,
+          viewportTravel,
+        );
+        const actionFade = smoothstep(
+          HOME_SERVICES_MOTION_CURVES.actionFadeStart,
+          HOME_SERVICES_MOTION_CURVES.actionFadeEnd,
+          viewportTravel,
+        );
+        const actionVisibility = clamp(actionReveal - (0.78 * actionFade), 0, 1);
+        const actionOpacity = lerp(0.42, 1, actionVisibility);
+        const actionScale = clamp(1 - ((1 - actionReveal) * 0.04) - (actionFade * 0.035), 0.94, 1);
+        const actionShiftY = lerp(22, 0, actionReveal) + lerp(0, -14, actionFade);
 
         panel.setAttribute('data-scroll-gradient-motion', 'active');
         applyRangeProperty(panel, '--home-services-light-strength', panelPreset.lightStrength, formatNumber, lightTravel);
@@ -339,6 +387,9 @@ export default function HomeServicesFeatureAnimation({
         panel.style.setProperty('--home-services-content-opacity', contentOpacity.toFixed(3));
         panel.style.setProperty('--home-services-content-scale', contentScale.toFixed(3));
         panel.style.setProperty('--home-services-content-shift-y', `${contentShiftY.toFixed(2)}px`);
+        panel.style.setProperty('--home-services-action-opacity', actionOpacity.toFixed(3));
+        panel.style.setProperty('--home-services-action-scale', actionScale.toFixed(3));
+        panel.style.setProperty('--home-services-action-shift-y', `${actionShiftY.toFixed(2)}px`);
         applyRangeProperty(panel, '--home-services-dark-strength', panelPreset.darkStrength, formatNumber, darkTravel);
         applyRangeProperty(panel, '--home-services-dark-x', panelPreset.darkX, formatPercent, darkTravel);
         applyRangeProperty(panel, '--home-services-dark-y', panelPreset.darkY, formatPercent, darkTravel);
@@ -398,8 +449,10 @@ export default function HomeServicesFeatureAnimation({
             data-proof-index={index}
           >
             <div className="home-services-feature-panel-content">
-              <h3 className="home-services-feature-panel-title">{panel.title}</h3>
-              <p className="home-services-feature-panel-body">{panel.body}</p>
+              <div className="home-services-feature-panel-copy">
+                <h3 className="home-services-feature-panel-title">{panel.title}</h3>
+                <p className="home-services-feature-panel-body">{panel.body}</p>
+              </div>
               {panel.action ? (
                 <div className="home-services-feature-panel-action">
                   <ActionLink action={panel.action} resolveTo={resolveTo} />
