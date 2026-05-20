@@ -15307,15 +15307,16 @@
   --impact-proof-light-secondary-y: 78%;
   --impact-proof-light-secondary-width: 38%;
   --impact-proof-light-secondary-height: 34%;
-  --impact-proof-dark-strength: 0.14;
+  --impact-proof-panel-opacity: 0.95;
+  --impact-proof-dark-strength: 0.18;
   --impact-proof-dark-x: 74%;
   --impact-proof-dark-y: 24%;
-  --impact-proof-dark-width: 68%;
-  --impact-proof-dark-height: 64%;
+  --impact-proof-dark-width: 74%;
+  --impact-proof-dark-height: 70%;
   --impact-proof-dark-angle: 136deg;
-  --impact-proof-dark-stop-1: 20%;
-  --impact-proof-dark-stop-2: 44%;
-  --impact-proof-dark-stop-3: 72%;
+  --impact-proof-dark-stop-1: 22%;
+  --impact-proof-dark-stop-2: 48%;
+  --impact-proof-dark-stop-3: 68%;
   --impact-proof-panel-number: var(--ag-color-white);
   --impact-proof-panel-kicker: rgba(255, 255, 255, 0.82);
   --impact-proof-panel-label: var(--ag-color-white);
@@ -15455,15 +15456,17 @@
   background:
     radial-gradient(
       ellipse var(--impact-proof-light-width) var(--impact-proof-light-height) at var(--impact-proof-light-x) var(--impact-proof-light-y),
-      rgba(var(--impact-proof-motion-light-rgb), calc(0.16 + (var(--impact-proof-light-strength) * 0.24))) 0%,
-      rgba(var(--impact-proof-motion-light-rgb), 0) 100%
+      rgba(var(--impact-proof-motion-light-rgb), calc(0.22 + (var(--impact-proof-light-strength) * 0.3))) 0%,
+      rgba(var(--impact-proof-motion-light-rgb), calc(0.08 + (var(--impact-proof-light-strength) * 0.12))) 36%,
+      rgba(var(--impact-proof-motion-light-rgb), 0) 76%
     ),
     radial-gradient(
       ellipse var(--impact-proof-light-secondary-width) var(--impact-proof-light-secondary-height) at var(--impact-proof-light-secondary-x) var(--impact-proof-light-secondary-y),
-      rgba(255, 255, 255, calc(0.1 + (var(--impact-proof-light-strength) * 0.18))) 0%,
-      rgba(255, 255, 255, 0) 100%
+      rgba(var(--impact-proof-motion-light-rgb), calc(0.12 + (var(--impact-proof-light-strength) * 0.14))) 0%,
+      rgba(var(--impact-proof-motion-light-rgb), calc(0.05 + (var(--impact-proof-light-strength) * 0.06))) 34%,
+      rgba(var(--impact-proof-motion-light-rgb), 0) 88%
     );
-  opacity: calc(0.62 + (var(--impact-proof-light-strength) * 0.56));
+  opacity: calc(var(--impact-proof-panel-opacity) * (0.72 + (var(--impact-proof-light-strength) * 0.2)));
   mix-blend-mode: screen;
   pointer-events: none;
   will-change: opacity;
@@ -15477,17 +15480,18 @@
   background:
     radial-gradient(
       ellipse var(--impact-proof-dark-width) var(--impact-proof-dark-height) at var(--impact-proof-dark-x) var(--impact-proof-dark-y),
-      rgba(var(--impact-proof-motion-dark-rgb), calc(0.1 + (var(--impact-proof-dark-strength) * 0.26))) 0%,
-      rgba(var(--impact-proof-motion-dark-rgb), 0) 100%
+      rgba(var(--impact-proof-motion-dark-rgb), calc(0.18 + (var(--impact-proof-dark-strength) * 0.44))) 0%,
+      rgba(var(--impact-proof-motion-dark-rgb), calc(0.04 + (var(--impact-proof-dark-strength) * 0.12))) 40%,
+      rgba(var(--impact-proof-motion-dark-rgb), 0) 92%
     ),
     linear-gradient(
       var(--impact-proof-dark-angle),
-      rgba(var(--impact-proof-motion-dark-rgb), calc(var(--impact-proof-dark-strength) * 0.34)) 0%,
-      rgba(var(--impact-proof-motion-dark-rgb), calc(var(--impact-proof-dark-strength) * 0.22)) var(--impact-proof-dark-stop-1),
-      rgba(var(--impact-proof-motion-dark-rgb), calc(var(--impact-proof-dark-strength) * 0.12)) var(--impact-proof-dark-stop-2),
+      rgba(var(--impact-proof-motion-dark-rgb), calc(var(--impact-proof-dark-strength) * 0.62)) 0%,
+      rgba(var(--impact-proof-motion-dark-rgb), calc(var(--impact-proof-dark-strength) * 0.4)) var(--impact-proof-dark-stop-1),
+      rgba(var(--impact-proof-motion-dark-rgb), calc(var(--impact-proof-dark-strength) * 0.22)) var(--impact-proof-dark-stop-2),
       rgba(var(--impact-proof-motion-dark-rgb), 0) var(--impact-proof-dark-stop-3)
     );
-  opacity: calc(0.18 + (var(--impact-proof-dark-strength) * 1.08));
+  opacity: calc(var(--impact-proof-panel-opacity) * (0.28 + (var(--impact-proof-dark-strength) * 0.82)));
   mix-blend-mode: multiply;
   pointer-events: none;
   will-change: opacity;
@@ -15531,11 +15535,11 @@ h2.impact-proof-story-proof-stat {
   max-width: 100%;
   color: var(--impact-proof-panel-number);
   font-family: var(--ag-font-heading);
-  font-size: clamp(110px, 8.8vw, 136px);
-  font-weight: 700;
+  font-size: clamp(99px, 7.9vw, 122px);
+  font-weight: 800;
   font-synthesis: none;
-  line-height: 0.82;
-  letter-spacing: -0.038em;
+  line-height: 0.96;
+  letter-spacing: -0.036em;
   text-wrap: pretty;
   text-shadow: none;
 }
@@ -15705,7 +15709,8 @@ p.impact-proof-story-proof-body {
 
   h2.impact-proof-story-proof-stat {
     max-width: 100%;
-    font-size: clamp(82px, 10vw, 108px);
+    font-size: clamp(74px, 9.2vw, 98px);
+    line-height: 1;
   }
 
   .impact-proof-story-proof.is-right .impact-proof-story-proof-action {
@@ -15716,7 +15721,8 @@ p.impact-proof-story-proof-body {
 @media (max-width: 680px) {
   h2.impact-proof-story-proof-stat {
     max-width: 100%;
-    font-size: clamp(52px, 12vw, 72px);
+    font-size: clamp(47px, 11vw, 65px);
+    line-height: 1.02;
   }
 
   .impact-proof-story-proof-label {

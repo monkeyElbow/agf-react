@@ -5,104 +5,104 @@ import { isExternalLinkHref } from '../lib/dynamicPageBlocks';
 const IMPACT_PROOF_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const IMPACT_PROOF_PANEL_MOTION_PRESETS = Object.freeze({
   default: Object.freeze({
-    lightStrength: [0.72, 0.16],
-    lightX: [42, 10],
-    lightY: [64, 32],
-    lightWidth: [82, 34],
-    lightHeight: [70, 30],
-    lightSecondaryX: [70, 88],
-    lightSecondaryY: [22, 14],
-    lightSecondaryWidth: [30, 14],
-    lightSecondaryHeight: [28, 12],
-    darkStrength: [0.06, 0.42],
-    darkX: [72, 12],
-    darkY: [24, 12],
-    darkWidth: [56, 110],
-    darkHeight: [50, 96],
-    darkAngle: [126, 174],
-    darkStop1: [18, 8],
-    darkStop2: [44, 24],
-    darkStop3: [78, 46],
+    lightStrength: [1.08, 0.18],
+    lightX: [52, 2],
+    lightY: [74, 20],
+    lightWidth: [118, 28],
+    lightHeight: [96, 24],
+    lightSecondaryX: [68, 96],
+    lightSecondaryY: [18, 10],
+    lightSecondaryWidth: [44, 10],
+    lightSecondaryHeight: [32, 8],
+    darkStrength: [0.12, 0.88],
+    darkX: [92, 6],
+    darkY: [18, 8],
+    darkWidth: [62, 136],
+    darkHeight: [54, 120],
+    darkAngle: [124, 186],
+    darkStop1: [24, 4],
+    darkStop2: [52, 16],
+    darkStop3: [82, 30],
   }),
   0: Object.freeze({
-    lightStrength: [0.96, 0.14],
-    lightX: [88, 12],
-    lightY: [74, 34],
-    lightWidth: [106, 34],
-    lightHeight: [88, 28],
-    lightSecondaryX: [18, 8],
-    lightSecondaryY: [28, 14],
-    lightSecondaryWidth: [28, 12],
-    lightSecondaryHeight: [24, 10],
-    darkStrength: [0.08, 0.52],
-    darkX: [48, 6],
-    darkY: [16, 8],
-    darkWidth: [66, 124],
-    darkHeight: [58, 108],
-    darkAngle: [122, 178],
-    darkStop1: [18, 6],
-    darkStop2: [46, 20],
-    darkStop3: [76, 40],
+    lightStrength: [1.12, 0.14],
+    lightX: [96, 6],
+    lightY: [80, 28],
+    lightWidth: [128, 30],
+    lightHeight: [98, 22],
+    lightSecondaryX: [18, -6],
+    lightSecondaryY: [18, 8],
+    lightSecondaryWidth: [72, 34],
+    lightSecondaryHeight: [54, 24],
+    darkStrength: [0.14, 0.94],
+    darkX: [56, 0],
+    darkY: [16, 6],
+    darkWidth: [70, 148],
+    darkHeight: [60, 126],
+    darkAngle: [120, 194],
+    darkStop1: [22, 2],
+    darkStop2: [50, 12],
+    darkStop3: [80, 24],
   }),
   1: Object.freeze({
-    lightStrength: [0.62, 0.16],
-    lightX: [10, 42],
-    lightY: [18, 38],
-    lightWidth: [74, 28],
-    lightHeight: [62, 24],
-    lightSecondaryX: [90, 72],
-    lightSecondaryY: [84, 68],
-    lightSecondaryWidth: [28, 14],
-    lightSecondaryHeight: [24, 12],
-    darkStrength: [0.12, 0.34],
-    darkX: [70, 28],
-    darkY: [26, 18],
-    darkWidth: [66, 100],
-    darkHeight: [60, 90],
-    darkAngle: [134, 168],
-    darkStop1: [18, 10],
-    darkStop2: [42, 26],
-    darkStop3: [74, 48],
+    lightStrength: [0.82, 0.14],
+    lightX: [8, 48],
+    lightY: [16, 42],
+    lightWidth: [88, 24],
+    lightHeight: [70, 20],
+    lightSecondaryX: [94, 70],
+    lightSecondaryY: [86, 60],
+    lightSecondaryWidth: [32, 10],
+    lightSecondaryHeight: [22, 8],
+    darkStrength: [0.18, 0.76],
+    darkX: [76, 18],
+    darkY: [28, 12],
+    darkWidth: [72, 116],
+    darkHeight: [64, 102],
+    darkAngle: [138, 180],
+    darkStop1: [20, 6],
+    darkStop2: [44, 18],
+    darkStop3: [76, 34],
   }),
   2: Object.freeze({
-    lightStrength: [1, 0.18],
-    lightX: [52, 6],
-    lightY: [66, 82],
-    lightWidth: [102, 36],
-    lightHeight: [94, 32],
-    lightSecondaryX: [58, 90],
-    lightSecondaryY: [24, 16],
-    lightSecondaryWidth: [30, 12],
-    lightSecondaryHeight: [24, 10],
-    darkStrength: [0.06, 0.34],
-    darkX: [74, 28],
-    darkY: [20, 12],
-    darkWidth: [60, 96],
-    darkHeight: [52, 84],
-    darkAngle: [128, 164],
-    darkStop1: [18, 10],
-    darkStop2: [42, 22],
-    darkStop3: [72, 42],
+    lightStrength: [1.18, 0.16],
+    lightX: [50, 4],
+    lightY: [68, 84],
+    lightWidth: [122, 44],
+    lightHeight: [106, 40],
+    lightSecondaryX: [70, 108],
+    lightSecondaryY: [24, 10],
+    lightSecondaryWidth: [78, 30],
+    lightSecondaryHeight: [56, 22],
+    darkStrength: [0.12, 0.78],
+    darkX: [82, 24],
+    darkY: [18, 10],
+    darkWidth: [66, 112],
+    darkHeight: [56, 98],
+    darkAngle: [128, 176],
+    darkStop1: [20, 6],
+    darkStop2: [46, 16],
+    darkStop3: [76, 30],
   }),
   3: Object.freeze({
-    lightStrength: [0.56, 0.08],
-    lightX: [42, 10],
-    lightY: [44, 28],
-    lightWidth: [68, 28],
-    lightHeight: [58, 24],
-    lightSecondaryX: [82, 64],
-    lightSecondaryY: [70, 54],
-    lightSecondaryWidth: [24, 12],
-    lightSecondaryHeight: [22, 10],
-    darkStrength: [0.14, 0.56],
-    darkX: [66, 14],
-    darkY: [40, 18],
-    darkWidth: [82, 120],
-    darkHeight: [74, 102],
-    darkAngle: [140, 178],
-    darkStop1: [20, 8],
-    darkStop2: [44, 20],
-    darkStop3: [70, 36],
+    lightStrength: [0.72, 0.08],
+    lightX: [44, 10],
+    lightY: [46, 24],
+    lightWidth: [82, 24],
+    lightHeight: [66, 18],
+    lightSecondaryX: [88, 58],
+    lightSecondaryY: [68, 44],
+    lightSecondaryWidth: [28, 10],
+    lightSecondaryHeight: [20, 8],
+    darkStrength: [0.22, 0.88],
+    darkX: [74, 8],
+    darkY: [42, 10],
+    darkWidth: [90, 138],
+    darkHeight: [78, 118],
+    darkAngle: [144, 190],
+    darkStop1: [22, 4],
+    darkStop2: [46, 14],
+    darkStop3: [72, 28],
   }),
 });
 
@@ -159,6 +159,7 @@ function clearImpactProofMotionVars(panel) {
     '--impact-proof-light-secondary-y',
     '--impact-proof-light-secondary-width',
     '--impact-proof-light-secondary-height',
+    '--impact-proof-panel-opacity',
     '--impact-proof-dark-strength',
     '--impact-proof-dark-x',
     '--impact-proof-dark-y',
@@ -314,28 +315,33 @@ export function ImpactProofStoryEditorialContent({
 
       panels.forEach((panel) => {
         const rect = panel.getBoundingClientRect();
-        const viewportProgress = clamp((viewportHeight - rect.top) / (viewportHeight + rect.height || 1), 0, 1);
+        const viewportTravel = clamp((viewportHeight - rect.top) / (viewportHeight + rect.height || 1), 0, 1);
         const panelPreset = resolvePanelMotionPreset(panel);
-        const travel = smoothstep(0.18, 0.78, viewportProgress);
+        const lightTravel = smoothstep(0, 0.68, viewportTravel);
+        const darkTravel = smoothstep(0.18, 1, viewportTravel);
+        const fadeIn = smoothstep(0, 0.22, viewportTravel);
+        const fadeOut = smoothstep(0.72, 1, viewportTravel);
+        const panelOpacity = clamp(0.25 + (0.7 * fadeIn) - (0.55 * fadeOut), 0.25, 0.95);
 
-        applyRangeProperty(panel, '--impact-proof-light-strength', panelPreset.lightStrength, formatNumber, travel);
-        applyRangeProperty(panel, '--impact-proof-light-x', panelPreset.lightX, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-light-y', panelPreset.lightY, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-light-width', panelPreset.lightWidth, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-light-height', panelPreset.lightHeight, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-light-secondary-x', panelPreset.lightSecondaryX, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-light-secondary-y', panelPreset.lightSecondaryY, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-light-secondary-width', panelPreset.lightSecondaryWidth, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-light-secondary-height', panelPreset.lightSecondaryHeight, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-dark-strength', panelPreset.darkStrength, formatNumber, travel);
-        applyRangeProperty(panel, '--impact-proof-dark-x', panelPreset.darkX, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-dark-y', panelPreset.darkY, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-dark-width', panelPreset.darkWidth, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-dark-height', panelPreset.darkHeight, formatPercent, travel);
-        panel.style.setProperty('--impact-proof-dark-angle', `${lerp(panelPreset.darkAngle[0], panelPreset.darkAngle[1], travel).toFixed(2)}deg`);
-        applyRangeProperty(panel, '--impact-proof-dark-stop-1', panelPreset.darkStop1, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-dark-stop-2', panelPreset.darkStop2, formatPercent, travel);
-        applyRangeProperty(panel, '--impact-proof-dark-stop-3', panelPreset.darkStop3, formatPercent, travel);
+        applyRangeProperty(panel, '--impact-proof-light-strength', panelPreset.lightStrength, formatNumber, lightTravel);
+        applyRangeProperty(panel, '--impact-proof-light-x', panelPreset.lightX, formatPercent, lightTravel);
+        applyRangeProperty(panel, '--impact-proof-light-y', panelPreset.lightY, formatPercent, lightTravel);
+        applyRangeProperty(panel, '--impact-proof-light-width', panelPreset.lightWidth, formatPercent, lightTravel);
+        applyRangeProperty(panel, '--impact-proof-light-height', panelPreset.lightHeight, formatPercent, lightTravel);
+        applyRangeProperty(panel, '--impact-proof-light-secondary-x', panelPreset.lightSecondaryX, formatPercent, lightTravel);
+        applyRangeProperty(panel, '--impact-proof-light-secondary-y', panelPreset.lightSecondaryY, formatPercent, lightTravel);
+        applyRangeProperty(panel, '--impact-proof-light-secondary-width', panelPreset.lightSecondaryWidth, formatPercent, lightTravel);
+        applyRangeProperty(panel, '--impact-proof-light-secondary-height', panelPreset.lightSecondaryHeight, formatPercent, lightTravel);
+        panel.style.setProperty('--impact-proof-panel-opacity', panelOpacity.toFixed(3));
+        applyRangeProperty(panel, '--impact-proof-dark-strength', panelPreset.darkStrength, formatNumber, darkTravel);
+        applyRangeProperty(panel, '--impact-proof-dark-x', panelPreset.darkX, formatPercent, darkTravel);
+        applyRangeProperty(panel, '--impact-proof-dark-y', panelPreset.darkY, formatPercent, darkTravel);
+        applyRangeProperty(panel, '--impact-proof-dark-width', panelPreset.darkWidth, formatPercent, darkTravel);
+        applyRangeProperty(panel, '--impact-proof-dark-height', panelPreset.darkHeight, formatPercent, darkTravel);
+        panel.style.setProperty('--impact-proof-dark-angle', `${lerp(panelPreset.darkAngle[0], panelPreset.darkAngle[1], darkTravel).toFixed(2)}deg`);
+        applyRangeProperty(panel, '--impact-proof-dark-stop-1', panelPreset.darkStop1, formatPercent, darkTravel);
+        applyRangeProperty(panel, '--impact-proof-dark-stop-2', panelPreset.darkStop2, formatPercent, darkTravel);
+        applyRangeProperty(panel, '--impact-proof-dark-stop-3', panelPreset.darkStop3, formatPercent, darkTravel);
       });
     };
 

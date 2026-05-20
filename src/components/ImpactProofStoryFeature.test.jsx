@@ -160,6 +160,7 @@ describe('ImpactProofStoryFeature', () => {
     await waitFor(() => {
       expect(firstPanel?.style.getPropertyValue('--impact-proof-light-strength')).not.toBe('');
       expect(firstPanel?.style.getPropertyValue('--impact-proof-light-width')).toContain('%');
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-panel-opacity')).not.toBe('');
       expect(firstPanel?.style.getPropertyValue('--impact-proof-dark-stop-3')).toContain('%');
       expect(firstPanel?.style.getPropertyValue('--impact-proof-dark-angle')).toContain('deg');
     });
@@ -213,6 +214,7 @@ describe('ImpactProofStoryFeature', () => {
     });
 
     const initialLightX = firstPanel?.style.getPropertyValue('--impact-proof-light-x');
+    const initialPanelOpacity = firstPanel?.style.getPropertyValue('--impact-proof-panel-opacity');
     const initialDarkAngle = firstPanel?.style.getPropertyValue('--impact-proof-dark-angle');
 
     topOffset = 240;
@@ -220,6 +222,7 @@ describe('ImpactProofStoryFeature', () => {
 
     await waitFor(() => {
       expect(firstPanel?.style.getPropertyValue('--impact-proof-light-x')).not.toBe(initialLightX);
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-panel-opacity')).not.toBe(initialPanelOpacity);
       expect(firstPanel?.style.getPropertyValue('--impact-proof-dark-angle')).not.toBe(initialDarkAngle);
     });
   });
@@ -233,5 +236,6 @@ describe('ImpactProofStoryFeature', () => {
     expect(shell?.getAttribute('data-scroll-gradient-motion')).toBe('reduced');
     expect(firstPanel?.getAttribute('data-scroll-gradient-motion')).toBe('reduced');
     expect(firstPanel?.style.getPropertyValue('--impact-proof-light-strength')).toBe('');
+    expect(firstPanel?.style.getPropertyValue('--impact-proof-panel-opacity')).toBe('');
   });
 });
