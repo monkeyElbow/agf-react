@@ -5,105 +5,120 @@ import { isExternalLinkHref } from '../lib/dynamicPageBlocks';
 const IMPACT_PROOF_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const IMPACT_PROOF_PANEL_MOTION_PRESETS = Object.freeze({
   default: Object.freeze({
-    lightStrength: [1.08, 0.18],
-    lightX: [52, 2],
-    lightY: [74, 20],
-    lightWidth: [118, 28],
-    lightHeight: [96, 24],
-    lightSecondaryX: [68, 96],
-    lightSecondaryY: [18, 10],
-    lightSecondaryWidth: [44, 10],
-    lightSecondaryHeight: [32, 8],
-    darkStrength: [0.12, 0.88],
-    darkX: [92, 6],
-    darkY: [18, 8],
-    darkWidth: [62, 136],
-    darkHeight: [54, 120],
-    darkAngle: [124, 186],
-    darkStop1: [24, 4],
-    darkStop2: [52, 16],
-    darkStop3: [82, 30],
+    lightStrength: [1.18, 0.12],
+    lightX: [58, -8],
+    lightY: [78, 14],
+    lightWidth: [136, 34],
+    lightHeight: [112, 26],
+    lightSecondaryX: [72, 106],
+    lightSecondaryY: [14, 4],
+    lightSecondaryWidth: [62, 18],
+    lightSecondaryHeight: [46, 14],
+    darkStrength: [0.24, 1.18],
+    darkX: [82, 18],
+    darkY: [18, 10],
+    darkWidth: [78, 164],
+    darkHeight: [66, 146],
+    darkAngle: [118, 194],
+    darkStop1: [18, 4],
+    darkStop2: [44, 12],
+    darkStop3: [74, 20],
   }),
   0: Object.freeze({
-    lightStrength: [1.12, 0.14],
-    lightX: [96, 6],
-    lightY: [80, 28],
-    lightWidth: [128, 30],
-    lightHeight: [98, 22],
-    lightSecondaryX: [18, -6],
-    lightSecondaryY: [18, 8],
-    lightSecondaryWidth: [72, 34],
-    lightSecondaryHeight: [54, 24],
-    darkStrength: [0.14, 0.94],
-    darkX: [56, 0],
-    darkY: [16, 6],
-    darkWidth: [70, 148],
-    darkHeight: [60, 126],
-    darkAngle: [120, 194],
-    darkStop1: [22, 2],
-    darkStop2: [50, 12],
-    darkStop3: [80, 24],
+    lightStrength: [1.2, 0.08],
+    lightX: [104, 12],
+    lightY: [84, 24],
+    lightWidth: [146, 40],
+    lightHeight: [118, 30],
+    lightSecondaryX: [10, -12],
+    lightSecondaryY: [14, 4],
+    lightSecondaryWidth: [84, 44],
+    lightSecondaryHeight: [62, 28],
+    darkStrength: [0.22, 1.24],
+    darkX: [18, 90],
+    darkY: [12, 18],
+    darkWidth: [92, 192],
+    darkHeight: [78, 172],
+    darkAngle: [108, 202],
+    darkStop1: [18, 2],
+    darkStop2: [44, 10],
+    darkStop3: [74, 18],
   }),
   1: Object.freeze({
-    lightStrength: [0.82, 0.14],
-    lightX: [8, 48],
-    lightY: [16, 42],
-    lightWidth: [88, 24],
-    lightHeight: [70, 20],
-    lightSecondaryX: [94, 70],
-    lightSecondaryY: [86, 60],
-    lightSecondaryWidth: [32, 10],
-    lightSecondaryHeight: [22, 8],
-    darkStrength: [0.18, 0.76],
-    darkX: [76, 18],
-    darkY: [28, 12],
-    darkWidth: [72, 116],
-    darkHeight: [64, 102],
-    darkAngle: [138, 180],
-    darkStop1: [20, 6],
-    darkStop2: [44, 18],
-    darkStop3: [76, 34],
+    lightStrength: [0.92, 0.08],
+    lightX: [4, 62],
+    lightY: [12, 56],
+    lightWidth: [112, 30],
+    lightHeight: [88, 24],
+    lightSecondaryX: [108, 60],
+    lightSecondaryY: [88, 54],
+    lightSecondaryWidth: [42, 14],
+    lightSecondaryHeight: [26, 10],
+    darkStrength: [0.28, 1.04],
+    darkX: [84, 24],
+    darkY: [26, 14],
+    darkWidth: [86, 142],
+    darkHeight: [72, 128],
+    darkAngle: [136, 190],
+    darkStop1: [18, 4],
+    darkStop2: [42, 12],
+    darkStop3: [72, 22],
   }),
   2: Object.freeze({
-    lightStrength: [1.18, 0.16],
-    lightX: [50, 4],
-    lightY: [68, 84],
-    lightWidth: [122, 44],
-    lightHeight: [106, 40],
-    lightSecondaryX: [70, 108],
-    lightSecondaryY: [24, 10],
-    lightSecondaryWidth: [78, 30],
-    lightSecondaryHeight: [56, 22],
-    darkStrength: [0.12, 0.78],
-    darkX: [82, 24],
-    darkY: [18, 10],
-    darkWidth: [66, 112],
-    darkHeight: [56, 98],
-    darkAngle: [128, 176],
-    darkStop1: [20, 6],
-    darkStop2: [46, 16],
-    darkStop3: [76, 30],
+    lightStrength: [1.24, 0.12],
+    lightX: [54, -6],
+    lightY: [76, 92],
+    lightWidth: [140, 58],
+    lightHeight: [118, 54],
+    lightSecondaryX: [76, 116],
+    lightSecondaryY: [20, 4],
+    lightSecondaryWidth: [86, 34],
+    lightSecondaryHeight: [62, 28],
+    darkStrength: [0.22, 1.06],
+    darkX: [78, 28],
+    darkY: [16, 12],
+    darkWidth: [78, 144],
+    darkHeight: [64, 126],
+    darkAngle: [122, 184],
+    darkStop1: [18, 4],
+    darkStop2: [44, 12],
+    darkStop3: [74, 22],
   }),
   3: Object.freeze({
-    lightStrength: [0.72, 0.08],
-    lightX: [44, 10],
-    lightY: [46, 24],
-    lightWidth: [82, 24],
-    lightHeight: [66, 18],
-    lightSecondaryX: [88, 58],
-    lightSecondaryY: [68, 44],
-    lightSecondaryWidth: [28, 10],
-    lightSecondaryHeight: [20, 8],
-    darkStrength: [0.22, 0.88],
-    darkX: [74, 8],
-    darkY: [42, 10],
-    darkWidth: [90, 138],
-    darkHeight: [78, 118],
-    darkAngle: [144, 190],
-    darkStop1: [22, 4],
-    darkStop2: [46, 14],
-    darkStop3: [72, 28],
+    lightStrength: [0.84, 0.06],
+    lightX: [48, 8],
+    lightY: [44, 18],
+    lightWidth: [96, 28],
+    lightHeight: [74, 20],
+    lightSecondaryX: [96, 54],
+    lightSecondaryY: [70, 40],
+    lightSecondaryWidth: [34, 14],
+    lightSecondaryHeight: [24, 10],
+    darkStrength: [0.32, 1.18],
+    darkX: [70, 12],
+    darkY: [38, 12],
+    darkWidth: [104, 168],
+    darkHeight: [88, 146],
+    darkAngle: [140, 198],
+    darkStop1: [20, 4],
+    darkStop2: [44, 12],
+    darkStop3: [70, 20],
   }),
+});
+
+const IMPACT_PROOF_MOTION_CURVES = Object.freeze({
+  lightTravelStart: 0,
+  lightTravelEnd: 0.62,
+  darkTravelStart: 0.08,
+  darkTravelEnd: 0.86,
+  fadeInStart: 0,
+  fadeInEnd: 0.22,
+  fadeOutStart: 0.6,
+  fadeOutEnd: 0.92,
+  actionRevealStart: 0.1,
+  actionRevealEnd: 0.34,
+  actionFadeStart: 0.68,
+  actionFadeEnd: 0.96,
 });
 
 function clamp(value, min, max) {
@@ -169,6 +184,12 @@ function clearImpactProofMotionVars(panel) {
     '--impact-proof-dark-stop-1',
     '--impact-proof-dark-stop-2',
     '--impact-proof-dark-stop-3',
+    '--impact-proof-copy-opacity',
+    '--impact-proof-copy-scale',
+    '--impact-proof-copy-shift-y',
+    '--impact-proof-action-opacity',
+    '--impact-proof-action-scale',
+    '--impact-proof-action-shift-y',
   ].forEach((property) => {
     panel.style.removeProperty(property);
   });
@@ -317,11 +338,45 @@ export function ImpactProofStoryEditorialContent({
         const rect = panel.getBoundingClientRect();
         const viewportTravel = clamp((viewportHeight - rect.top) / (viewportHeight + rect.height || 1), 0, 1);
         const panelPreset = resolvePanelMotionPreset(panel);
-        const lightTravel = smoothstep(0, 0.68, viewportTravel);
-        const darkTravel = smoothstep(0.18, 1, viewportTravel);
-        const fadeIn = smoothstep(0, 0.22, viewportTravel);
-        const fadeOut = smoothstep(0.72, 1, viewportTravel);
-        const panelOpacity = clamp(0.25 + (0.7 * fadeIn) - (0.55 * fadeOut), 0.25, 0.95);
+        const lightTravel = smoothstep(
+          IMPACT_PROOF_MOTION_CURVES.lightTravelStart,
+          IMPACT_PROOF_MOTION_CURVES.lightTravelEnd,
+          viewportTravel,
+        );
+        const darkTravel = smoothstep(
+          IMPACT_PROOF_MOTION_CURVES.darkTravelStart,
+          IMPACT_PROOF_MOTION_CURVES.darkTravelEnd,
+          viewportTravel,
+        );
+        const fadeIn = smoothstep(
+          IMPACT_PROOF_MOTION_CURVES.fadeInStart,
+          IMPACT_PROOF_MOTION_CURVES.fadeInEnd,
+          viewportTravel,
+        );
+        const fadeOut = smoothstep(
+          IMPACT_PROOF_MOTION_CURVES.fadeOutStart,
+          IMPACT_PROOF_MOTION_CURVES.fadeOutEnd,
+          viewportTravel,
+        );
+        const visibilityCurve = clamp(fadeIn - (1.08 * fadeOut), 0, 1);
+        const panelOpacity = lerp(0.18, 0.96, visibilityCurve);
+        const copyOpacity = lerp(0.16, 1, visibilityCurve);
+        const copyScale = clamp(1 - ((1 - fadeIn) * 0.08) - (fadeOut * 0.06), 0.9, 1);
+        const copyShiftY = lerp(36, 0, fadeIn) + lerp(0, -32, fadeOut);
+        const actionReveal = smoothstep(
+          IMPACT_PROOF_MOTION_CURVES.actionRevealStart,
+          IMPACT_PROOF_MOTION_CURVES.actionRevealEnd,
+          viewportTravel,
+        );
+        const actionFade = smoothstep(
+          IMPACT_PROOF_MOTION_CURVES.actionFadeStart,
+          IMPACT_PROOF_MOTION_CURVES.actionFadeEnd,
+          viewportTravel,
+        );
+        const actionVisibility = clamp(actionReveal - (0.78 * actionFade), 0, 1);
+        const actionOpacity = lerp(0.42, 1, actionVisibility);
+        const actionScale = clamp(1 - ((1 - actionReveal) * 0.04) - (actionFade * 0.035), 0.94, 1);
+        const actionShiftY = lerp(22, 0, actionReveal) + lerp(0, -14, actionFade);
 
         applyRangeProperty(panel, '--impact-proof-light-strength', panelPreset.lightStrength, formatNumber, lightTravel);
         applyRangeProperty(panel, '--impact-proof-light-x', panelPreset.lightX, formatPercent, lightTravel);
@@ -333,6 +388,12 @@ export function ImpactProofStoryEditorialContent({
         applyRangeProperty(panel, '--impact-proof-light-secondary-width', panelPreset.lightSecondaryWidth, formatPercent, lightTravel);
         applyRangeProperty(panel, '--impact-proof-light-secondary-height', panelPreset.lightSecondaryHeight, formatPercent, lightTravel);
         panel.style.setProperty('--impact-proof-panel-opacity', panelOpacity.toFixed(3));
+        panel.style.setProperty('--impact-proof-copy-opacity', copyOpacity.toFixed(3));
+        panel.style.setProperty('--impact-proof-copy-scale', copyScale.toFixed(3));
+        panel.style.setProperty('--impact-proof-copy-shift-y', `${copyShiftY.toFixed(2)}px`);
+        panel.style.setProperty('--impact-proof-action-opacity', actionOpacity.toFixed(3));
+        panel.style.setProperty('--impact-proof-action-scale', actionScale.toFixed(3));
+        panel.style.setProperty('--impact-proof-action-shift-y', `${actionShiftY.toFixed(2)}px`);
         applyRangeProperty(panel, '--impact-proof-dark-strength', panelPreset.darkStrength, formatNumber, darkTravel);
         applyRangeProperty(panel, '--impact-proof-dark-x', panelPreset.darkX, formatPercent, darkTravel);
         applyRangeProperty(panel, '--impact-proof-dark-y', panelPreset.darkY, formatPercent, darkTravel);
@@ -384,21 +445,16 @@ export function ImpactProofStoryEditorialContent({
             data-tone={metric.tone}
             data-scroll-gradient-motion={prefersReducedMotion ? 'reduced' : 'enabled'}
           >
-            <div
-              className="impact-proof-story-proof-content fade-up fade-out"
-              data-fade-out-start-vh="0.16"
-              data-fade-out-end-vh="-0.08"
-              data-fade-out-max-reduction="0.28"
-              data-scroll-enter-start-vh="1.12"
-              data-scroll-enter-end-vh="0.68"
-            >
-              {metric.eyebrow ? <p className="impact-proof-story-proof-eyebrow">{metric.eyebrow}</p> : null}
-              <h2 className="impact-proof-story-proof-stat">
-                <span className={`impact-proof-story-proof-value is-tone-${metric.tone}`}>{metric.value}</span>
-                {' '}
-                <span className="impact-proof-story-proof-label">{metric.label}</span>
-              </h2>
-              {metric.body ? <p className="impact-proof-story-proof-body">{metric.body}</p> : null}
+            <div className="impact-proof-story-proof-content">
+              <div className="impact-proof-story-proof-copy">
+                {metric.eyebrow ? <p className="impact-proof-story-proof-eyebrow">{metric.eyebrow}</p> : null}
+                <h2 className="impact-proof-story-proof-stat">
+                  <span className={`impact-proof-story-proof-value is-tone-${metric.tone}`}>{metric.value}</span>
+                  {' '}
+                  <span className="impact-proof-story-proof-label">{metric.label}</span>
+                </h2>
+                {metric.body ? <p className="impact-proof-story-proof-body">{metric.body}</p> : null}
+              </div>
               {metric.action ? (
                 <div className="impact-proof-story-proof-action">
                   <ImpactProofAction

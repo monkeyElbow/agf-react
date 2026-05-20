@@ -89,7 +89,8 @@ describe('ImpactProofStoryFeature', () => {
     expect(container.querySelector('.impact-proof-story-proof-rule')).toBeNull();
     expect(container.querySelectorAll('.impact-proof-story-proof')).toHaveLength(4);
     expect(container.querySelectorAll('.impact-proof-story-proof.fade-up')).toHaveLength(0);
-    expect(container.querySelectorAll('.impact-proof-story-proof-content.fade-up.fade-out')).toHaveLength(4);
+    expect(container.querySelectorAll('.impact-proof-story-proof-copy')).toHaveLength(4);
+    expect(container.querySelectorAll('.impact-proof-story-proof-action')).toHaveLength(4);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-left')).toHaveLength(2);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-right')).toHaveLength(2);
     expect(screen.getByRole('heading', { name: '1400 ministries supported by loans.' })).toBeTruthy();
@@ -161,6 +162,8 @@ describe('ImpactProofStoryFeature', () => {
       expect(firstPanel?.style.getPropertyValue('--impact-proof-light-strength')).not.toBe('');
       expect(firstPanel?.style.getPropertyValue('--impact-proof-light-width')).toContain('%');
       expect(firstPanel?.style.getPropertyValue('--impact-proof-panel-opacity')).not.toBe('');
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-copy-opacity')).not.toBe('');
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-action-opacity')).not.toBe('');
       expect(firstPanel?.style.getPropertyValue('--impact-proof-dark-stop-3')).toContain('%');
       expect(firstPanel?.style.getPropertyValue('--impact-proof-dark-angle')).toContain('deg');
     });
@@ -215,7 +218,8 @@ describe('ImpactProofStoryFeature', () => {
 
     const initialLightX = firstPanel?.style.getPropertyValue('--impact-proof-light-x');
     const initialPanelOpacity = firstPanel?.style.getPropertyValue('--impact-proof-panel-opacity');
-    const initialDarkAngle = firstPanel?.style.getPropertyValue('--impact-proof-dark-angle');
+    const initialDarkX = Number.parseFloat(firstPanel?.style.getPropertyValue('--impact-proof-dark-x') || '0');
+    const initialActionShiftY = firstPanel?.style.getPropertyValue('--impact-proof-action-shift-y');
 
     topOffset = 240;
     window.dispatchEvent(new Event('scroll'));
@@ -223,7 +227,8 @@ describe('ImpactProofStoryFeature', () => {
     await waitFor(() => {
       expect(firstPanel?.style.getPropertyValue('--impact-proof-light-x')).not.toBe(initialLightX);
       expect(firstPanel?.style.getPropertyValue('--impact-proof-panel-opacity')).not.toBe(initialPanelOpacity);
-      expect(firstPanel?.style.getPropertyValue('--impact-proof-dark-angle')).not.toBe(initialDarkAngle);
+      expect(Number.parseFloat(firstPanel?.style.getPropertyValue('--impact-proof-dark-x') || '0')).toBeGreaterThan(initialDarkX);
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-action-shift-y')).not.toBe(initialActionShiftY);
     });
   });
 
@@ -237,5 +242,7 @@ describe('ImpactProofStoryFeature', () => {
     expect(firstPanel?.getAttribute('data-scroll-gradient-motion')).toBe('reduced');
     expect(firstPanel?.style.getPropertyValue('--impact-proof-light-strength')).toBe('');
     expect(firstPanel?.style.getPropertyValue('--impact-proof-panel-opacity')).toBe('');
+    expect(firstPanel?.style.getPropertyValue('--impact-proof-copy-opacity')).toBe('');
+    expect(firstPanel?.style.getPropertyValue('--impact-proof-action-opacity')).toBe('');
   });
 });
