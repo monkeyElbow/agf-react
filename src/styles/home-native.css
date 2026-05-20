@@ -856,6 +856,9 @@
   --home-services-content-opacity: 0.96;
   --home-services-content-scale: 1;
   --home-services-content-shift-y: 0px;
+  --home-services-action-opacity: 1;
+  --home-services-action-scale: 1;
+  --home-services-action-shift-y: 0px;
   --home-services-dark-strength: 0.18;
   --home-services-dark-x: 74%;
   --home-services-dark-y: 24%;
@@ -894,17 +897,17 @@
   background:
     radial-gradient(
       ellipse var(--home-services-light-width) var(--home-services-light-height) at var(--home-services-light-x) var(--home-services-light-y),
-      rgba(var(--home-services-motion-light-rgb), calc(0.22 + (var(--home-services-light-strength) * 0.3))) 0%,
-      rgba(var(--home-services-motion-light-rgb), calc(0.08 + (var(--home-services-light-strength) * 0.12))) 36%,
-      rgba(var(--home-services-motion-light-rgb), 0) 76%
+      rgba(var(--home-services-motion-light-rgb), calc(0.18 + (var(--home-services-light-strength) * 0.26))) 0%,
+      rgba(var(--home-services-motion-light-rgb), calc(0.05 + (var(--home-services-light-strength) * 0.1))) 38%,
+      rgba(var(--home-services-motion-light-rgb), 0) 82%
     ),
     radial-gradient(
       ellipse var(--home-services-light-secondary-width) var(--home-services-light-secondary-height) at var(--home-services-light-secondary-x) var(--home-services-light-secondary-y),
-      rgba(var(--home-services-motion-light-rgb), calc(0.12 + (var(--home-services-light-strength) * 0.14))) 0%,
-      rgba(var(--home-services-motion-light-rgb), calc(0.05 + (var(--home-services-light-strength) * 0.06))) 34%,
-      rgba(var(--home-services-motion-light-rgb), 0) 88%
+      rgba(var(--home-services-motion-light-rgb), calc(0.1 + (var(--home-services-light-strength) * 0.12))) 0%,
+      rgba(var(--home-services-motion-light-rgb), calc(0.04 + (var(--home-services-light-strength) * 0.05))) 34%,
+      rgba(var(--home-services-motion-light-rgb), 0) 92%
     );
-  opacity: calc(var(--home-services-panel-opacity) * (0.72 + (var(--home-services-light-strength) * 0.2)));
+  opacity: calc(var(--home-services-panel-opacity) * (0.62 + (var(--home-services-light-strength) * 0.18)));
   mix-blend-mode: screen;
   will-change: opacity;
 }
@@ -913,18 +916,18 @@
   background:
     radial-gradient(
       ellipse var(--home-services-dark-width) var(--home-services-dark-height) at var(--home-services-dark-x) var(--home-services-dark-y),
-      rgba(var(--home-services-motion-dark-rgb), calc(0.18 + (var(--home-services-dark-strength) * 0.44))) 0%,
-      rgba(var(--home-services-motion-dark-rgb), calc(0.04 + (var(--home-services-dark-strength) * 0.12))) 40%,
-      rgba(var(--home-services-motion-dark-rgb), 0) 92%
+      rgba(var(--home-services-motion-dark-rgb), calc(0.22 + (var(--home-services-dark-strength) * 0.54))) 0%,
+      rgba(var(--home-services-motion-dark-rgb), calc(0.08 + (var(--home-services-dark-strength) * 0.18))) 44%,
+      rgba(var(--home-services-motion-dark-rgb), 0) 96%
     ),
     linear-gradient(
       var(--home-services-dark-angle),
-      rgba(var(--home-services-motion-dark-rgb), calc(var(--home-services-dark-strength) * 0.62)) 0%,
-      rgba(var(--home-services-motion-dark-rgb), calc(var(--home-services-dark-strength) * 0.4)) var(--home-services-dark-stop-1),
-      rgba(var(--home-services-motion-dark-rgb), calc(var(--home-services-dark-strength) * 0.22)) var(--home-services-dark-stop-2),
+      rgba(var(--home-services-motion-dark-rgb), calc(var(--home-services-dark-strength) * 0.8)) 0%,
+      rgba(var(--home-services-motion-dark-rgb), calc(var(--home-services-dark-strength) * 0.58)) var(--home-services-dark-stop-1),
+      rgba(var(--home-services-motion-dark-rgb), calc(var(--home-services-dark-strength) * 0.34)) var(--home-services-dark-stop-2),
       rgba(var(--home-services-motion-dark-rgb), 0) var(--home-services-dark-stop-3)
     );
-  opacity: calc(var(--home-services-panel-opacity) * (0.28 + (var(--home-services-dark-strength) * 0.82)));
+  opacity: calc(var(--home-services-panel-opacity) * (0.4 + (var(--home-services-dark-strength) * 0.98)));
   mix-blend-mode: multiply;
   will-change: opacity;
 }
@@ -936,6 +939,12 @@
   gap: clamp(1.9rem, 2.8vw, 2.8rem);
   width: 100%;
   max-width: min(100%, 78rem);
+}
+
+.home-services-feature-panel-copy {
+  display: grid;
+  gap: clamp(1.9rem, 2.8vw, 2.8rem);
+  width: 100%;
   opacity: var(--home-services-content-opacity);
   transform: translate3d(0, var(--home-services-content-shift-y), 0) scale(var(--home-services-content-scale));
   will-change: transform, opacity;
@@ -945,14 +954,32 @@
   margin-right: auto;
   justify-items: start;
   text-align: left;
-  transform-origin: left top;
 }
 
 .home-services-feature-panel.is-right .home-services-feature-panel-content {
   margin-left: auto;
   justify-items: end;
   text-align: right;
+}
+
+.home-services-feature-panel.is-left .home-services-feature-panel-copy,
+.home-services-feature-panel.is-left .home-services-feature-panel-action {
+  transform-origin: left top;
+}
+
+.home-services-feature-panel.is-left .home-services-feature-panel-copy {
+  justify-items: start;
+  text-align: left;
+}
+
+.home-services-feature-panel.is-right .home-services-feature-panel-copy,
+.home-services-feature-panel.is-right .home-services-feature-panel-action {
   transform-origin: right top;
+}
+
+.home-services-feature-panel.is-right .home-services-feature-panel-copy {
+  justify-items: end;
+  text-align: right;
 }
 
 h3.home-services-feature-panel-title {
@@ -975,7 +1002,8 @@ h3.home-services-feature-panel-title {
 
 p.home-services-feature-panel-body {
   margin: 0;
-  max-width: min(62rem, 100%);
+  width: min(100%, 62rem);
+  max-width: 100%;
   color: rgba(242, 238, 235, 0.94);
   font-family: var(--ag-font-heading);
   font-size: clamp(1.7rem, 2.35vw, 2.5rem);
@@ -996,6 +1024,14 @@ p.home-services-feature-panel-body {
   flex-wrap: wrap;
   gap: 0.8rem;
   margin-top: clamp(0.1rem, 0.8vw, 0.5rem);
+  position: relative;
+  z-index: 2;
+  opacity: var(--home-services-action-opacity);
+  transform: translate3d(0, var(--home-services-action-shift-y), 0) scale(var(--home-services-action-scale));
+  transition:
+    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 220ms linear;
+  will-change: transform, opacity;
 }
 
 .home-services-feature-panel.is-right .home-services-feature-panel-action {
@@ -1941,6 +1977,18 @@ p.home-services-feature-panel-body {
     margin-inline: 0;
   }
 
+  .home-services-feature-panel-copy,
+  .home-services-feature-panel-action {
+    transform-origin: left top;
+  }
+
+  .home-services-feature-panel-copy,
+  .home-services-feature-panel.is-right .home-services-feature-panel-copy,
+  .home-services-feature-panel.is-left .home-services-feature-panel-copy {
+    justify-items: start;
+    text-align: left;
+  }
+
   h3.home-services-feature-panel-title {
     font-size: clamp(3rem, 13vw, 5rem);
     line-height: 0.98;
@@ -1967,6 +2015,8 @@ p.home-services-feature-panel-body {
 
 @media (prefers-reduced-motion: reduce) {
   .home-services-feature-panel-content,
+  .home-services-feature-panel-copy,
+  .home-services-feature-panel-action,
   .home-services-feature-panel::before,
   .home-services-feature-panel::after {
     will-change: auto;
