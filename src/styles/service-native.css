@@ -13221,22 +13221,19 @@
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card {
   padding: clamp(1.8rem, 3vw, 2.5rem);
-  border-right-color: rgba(255, 255, 255, 0.28);
-  border-bottom-color: rgba(255, 255, 255, 0.22);
-  border-left-color: rgba(255, 255, 255, 0.18);
-  border-top-color: rgba(255, 255, 255, 0.26);
-  background:
-    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 34%),
-    linear-gradient(138deg, rgba(7, 53, 81, 0.98) 0%, rgba(0, 117, 149, 0.98) 55%, rgba(0, 173, 187, 0.9) 100%);
-  box-shadow: 0 14px 28px rgba(6, 42, 65, 0.18);
+  border-right-color: rgba(255, 255, 255, 0.5);
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+  border-left-color: rgba(0, 125, 152, 0.5);
+  border-top-color: rgba(0, 125, 152, 0.5);
+  background: linear-gradient(142deg, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0.85) 100%);
+  box-shadow: 0 4px 10px rgba(0, 125, 152, 0.25);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:hover {
-  box-shadow: 0 18px 36px rgba(6, 42, 65, 0.24);
+  box-shadow: 0 14px 30px rgba(0, 125, 152, 0.35);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card h3 {
-  color: #ffffff;
   font-family: var(--ag-font-heading);
   font-size: clamp(1.56rem, 2.55vw, 2.04rem);
   line-height: 1.06;
@@ -13245,15 +13242,15 @@
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card p {
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--ag-color-super-grey);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card a:not(.service-native-btn) {
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--ag-color-atlantean-dark);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card a:not(.service-native-btn):hover {
-  color: #ffffff;
+  color: var(--ag-color-atlantean);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-action-row {
@@ -13262,33 +13259,36 @@
 
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {
   margin-top: clamp(2.4rem, 4vw, 3.2rem);
-  padding: 0.7rem 0.8rem;
   width: fit-content;
   margin-inline: auto;
-  border-radius: 999px;
-  background: linear-gradient(138deg, rgba(7, 53, 81, 0.98) 0%, rgba(0, 117, 149, 0.98) 58%, rgba(0, 173, 187, 0.92) 100%);
-  box-shadow: 0 14px 32px rgba(6, 42, 65, 0.14);
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
 }
 
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn {
+  --btn-color: #ffffff;
   --btn-hover-color: #ffffff;
+  --btn-bg: transparent;
+  --btn-text: #ffffff;
   --btn-hover-text: var(--ag-color-atlantean-dark);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(1) h3 {
-  color: #ffffff;
+  color: var(--ag-color-atlantean);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(2) h3 {
-  color: #ffffff;
+  color: var(--ag-color-atlantean-dark);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(3) h3 {
-  color: #ffffff;
+  color: var(--ag-color-melon);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(4) h3 {
-  color: #ffffff;
+  color: var(--ag-color-super-grey);
 }
 
 .native-info-page--insurance .insurance-native-quote h2,
@@ -13896,12 +13896,12 @@
   }
 
   .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {
-    width: min(100%, 22rem);
-    padding: 0.7rem;
+    width: fit-content;
+    padding: 0;
   }
 
   .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn {
-    width: 100%;
+    width: auto;
   }
 
   .native-info-page--insurance .insurance-native-quote h2 {
@@ -15296,6 +15296,26 @@
   --impact-proof-panel-bg:
     radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 36%),
     linear-gradient(140deg, rgba(var(--ag-color-atlantean-dark-rgb), 0.98) 0%, rgba(var(--ag-color-atlantean-rgb), 0.9) 100%);
+  --impact-proof-motion-light-rgb: var(--ag-color-atlantean-rgb);
+  --impact-proof-motion-dark-rgb: 7, 19, 27;
+  --impact-proof-light-strength: 0.34;
+  --impact-proof-light-x: 16%;
+  --impact-proof-light-y: 20%;
+  --impact-proof-light-width: 42%;
+  --impact-proof-light-height: 38%;
+  --impact-proof-light-secondary-x: 82%;
+  --impact-proof-light-secondary-y: 78%;
+  --impact-proof-light-secondary-width: 38%;
+  --impact-proof-light-secondary-height: 34%;
+  --impact-proof-dark-strength: 0.14;
+  --impact-proof-dark-x: 74%;
+  --impact-proof-dark-y: 24%;
+  --impact-proof-dark-width: 68%;
+  --impact-proof-dark-height: 64%;
+  --impact-proof-dark-angle: 136deg;
+  --impact-proof-dark-stop-1: 20%;
+  --impact-proof-dark-stop-2: 44%;
+  --impact-proof-dark-stop-3: 72%;
   --impact-proof-panel-number: var(--ag-color-white);
   --impact-proof-panel-kicker: rgba(255, 255, 255, 0.82);
   --impact-proof-panel-label: var(--ag-color-white);
@@ -15308,9 +15328,9 @@
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   width: 100%;
-  min-height: clamp(22rem, 31vw, 29rem);
-  padding-top: clamp(1.8rem, 4vw, 3.8rem);
-  padding-bottom: clamp(3.6rem, 8vw, 7.6rem);
+  min-height: clamp(24rem, 34vw, 32rem);
+  padding-top: clamp(2.4rem, 4vw, 4.4rem);
+  padding-bottom: clamp(4.4rem, 8vw, 8.4rem);
   padding-inline: max(var(--ag-panel-gutter), calc((100vw - var(--ag-panel-wide-max)) / 2));
   overflow: hidden;
   overflow: clip;
@@ -15337,10 +15357,13 @@
   --impact-proof-exit-y: -18px;
   --impact-proof-exit-scale-drop: 0.028;
   --impact-proof-exit-delay-progress: 0.62;
+  --impact-proof-content-max-width: min(100%, 78rem);
+  position: relative;
+  z-index: 1;
   display: grid;
-  gap: 0.95rem;
+  gap: clamp(1.45rem, 2.1vw, 2rem);
   width: 100%;
-  max-width: none;
+  max-width: var(--impact-proof-content-max-width);
   min-width: 0;
   transform:
     translate3d(
@@ -15428,88 +15451,138 @@
   content: '';
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   background:
-    radial-gradient(circle at 82% 22%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 34%),
-    radial-gradient(circle at 24% 80%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 32%);
+    radial-gradient(
+      ellipse var(--impact-proof-light-width) var(--impact-proof-light-height) at var(--impact-proof-light-x) var(--impact-proof-light-y),
+      rgba(var(--impact-proof-motion-light-rgb), calc(0.16 + (var(--impact-proof-light-strength) * 0.24))) 0%,
+      rgba(var(--impact-proof-motion-light-rgb), 0) 100%
+    ),
+    radial-gradient(
+      ellipse var(--impact-proof-light-secondary-width) var(--impact-proof-light-secondary-height) at var(--impact-proof-light-secondary-x) var(--impact-proof-light-secondary-y),
+      rgba(255, 255, 255, calc(0.1 + (var(--impact-proof-light-strength) * 0.18))) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  opacity: calc(0.62 + (var(--impact-proof-light-strength) * 0.56));
+  mix-blend-mode: screen;
   pointer-events: none;
+  will-change: opacity;
+}
+
+.impact-proof-story-proof::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(
+      ellipse var(--impact-proof-dark-width) var(--impact-proof-dark-height) at var(--impact-proof-dark-x) var(--impact-proof-dark-y),
+      rgba(var(--impact-proof-motion-dark-rgb), calc(0.1 + (var(--impact-proof-dark-strength) * 0.26))) 0%,
+      rgba(var(--impact-proof-motion-dark-rgb), 0) 100%
+    ),
+    linear-gradient(
+      var(--impact-proof-dark-angle),
+      rgba(var(--impact-proof-motion-dark-rgb), calc(var(--impact-proof-dark-strength) * 0.34)) 0%,
+      rgba(var(--impact-proof-motion-dark-rgb), calc(var(--impact-proof-dark-strength) * 0.22)) var(--impact-proof-dark-stop-1),
+      rgba(var(--impact-proof-motion-dark-rgb), calc(var(--impact-proof-dark-strength) * 0.12)) var(--impact-proof-dark-stop-2),
+      rgba(var(--impact-proof-motion-dark-rgb), 0) var(--impact-proof-dark-stop-3)
+    );
+  opacity: calc(0.18 + (var(--impact-proof-dark-strength) * 1.08));
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  will-change: opacity;
 }
 
 .impact-proof-story-proof.is-left .impact-proof-story-proof-content {
   --impact-proof-enter-x: -0.35rem;
   --impact-proof-exit-x: 0px;
   --impact-proof-transform-origin: left center;
-  grid-column: 1 / span 10;
+  grid-column: 1 / -1;
   justify-items: start;
   text-align: left;
+  margin-right: auto;
 }
 
 .impact-proof-story-proof.is-right .impact-proof-story-proof-content {
   --impact-proof-enter-x: 0.35rem;
   --impact-proof-exit-x: 0px;
   --impact-proof-transform-origin: right center;
-  grid-column: 3 / -1;
+  grid-column: 1 / -1;
   justify-items: end;
   text-align: right;
+  margin-left: auto;
 }
 
-.impact-proof-story-proof-eyebrow {
+p.impact-proof-story-proof-eyebrow {
   margin: 0;
   color: var(--impact-proof-panel-kicker);
   font-family: var(--ag-font-heading);
   font-size: clamp(1.05rem, 1.7vw, 1.4rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  font-synthesis: none;
+  letter-spacing: -0.004em;
+  line-height: 1.14;
   text-transform: none;
 }
 
-h2.impact-proof-story-proof-value {
+h2.impact-proof-story-proof-stat {
   margin: 0;
+  width: 100%;
+  max-width: 100%;
   color: var(--impact-proof-panel-number);
   font-family: var(--ag-font-heading);
-  font-size: clamp(3rem, 8.5vw, 8rem);
-  font-weight: 800;
-  line-height: 0.72;
-  letter-spacing: -0.075em;
-  text-wrap: balance;
-  text-shadow: 0 10px 24px rgba(7, 19, 27, 0.14);
+  font-size: clamp(110px, 8.8vw, 136px);
+  font-weight: 700;
+  font-synthesis: none;
+  line-height: 0.82;
+  letter-spacing: -0.038em;
+  text-wrap: pretty;
+  text-shadow: none;
 }
 
-h2.impact-proof-story-proof-value.is-tone-atlantean {
+.impact-proof-story-proof-value {
+  color: var(--impact-proof-panel-number);
+  font-size: 1em;
+  line-height: inherit;
+  letter-spacing: inherit;
+}
+
+.impact-proof-story-proof-value.is-tone-atlantean {
   color: var(--impact-proof-panel-number);
 }
 
-h2.impact-proof-story-proof-value.is-tone-mango {
+.impact-proof-story-proof-value.is-tone-mango {
   color: var(--impact-proof-panel-number);
 }
 
-h2.impact-proof-story-proof-value.is-tone-super-grey {
+.impact-proof-story-proof-value.is-tone-super-grey {
   color: var(--impact-proof-panel-number);
 }
 
-h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
+.impact-proof-story-proof-value.is-tone-atlantean-dark {
   color: var(--impact-proof-panel-number);
 }
 
 .impact-proof-story-proof-label {
   margin: 0;
-  max-width: min(15ch, 100%);
+  display: inline;
   color: var(--impact-proof-panel-label);
   font-family: var(--ag-font-heading);
-  font-size: clamp(3.35rem, 6.4vw, 7.4rem);
-  font-weight: 800;
-  line-height: 0.96;
-  letter-spacing: -0.055em;
-  text-wrap: balance;
+  font-size: 1em;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  text-wrap: pretty;
 }
 
-.impact-proof-story-proof-body {
+p.impact-proof-story-proof-body {
   margin: 0;
-  max-width: min(44rem, 100%);
+  max-width: min(46rem, 100%);
   color: var(--impact-proof-panel-body);
   font-family: var(--ag-font-helv);
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
-  line-height: 1.42;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: 600;
+  line-height: 1.22;
 }
 
 .impact-proof-story-proof-action,
@@ -15520,7 +15593,7 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 }
 
 .impact-proof-story-proof-action {
-  margin-top: clamp(1.3rem, 2vw, 1.75rem);
+  margin-top: clamp(0.45rem, 0.9vw, 0.9rem);
 }
 
 .impact-proof-story-footer-action {
@@ -15530,6 +15603,11 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 
 .impact-proof-story-proof.is-right .impact-proof-story-proof-action {
   justify-content: flex-end;
+}
+
+.impact-proof-story-proof.is-right .impact-proof-story-proof-stat {
+  margin-left: auto;
+  text-align: right;
 }
 
 .impact-proof-story-proof .service-native-btn {
@@ -15546,6 +15624,8 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 }
 
 .impact-proof-story-proof.is-tone-atlantean {
+  --impact-proof-motion-light-rgb: var(--ag-color-atlantean-rgb);
+  --impact-proof-motion-dark-rgb: 7, 19, 27;
   --impact-proof-panel-bg:
     radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 32%),
     radial-gradient(circle at 82% 78%, rgba(var(--ag-color-atlantean-rgb), 0.3) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 44%),
@@ -15559,6 +15639,8 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 }
 
 .impact-proof-story-proof.is-tone-mango {
+  --impact-proof-motion-light-rgb: 250, 163, 26;
+  --impact-proof-motion-dark-rgb: 27, 27, 29;
   --impact-proof-panel-bg:
     radial-gradient(circle at 18% 16%, rgba(250, 163, 26, 0.3) 0%, rgba(250, 163, 26, 0) 32%),
     radial-gradient(circle at 84% 80%, rgba(var(--ag-color-atlantean-rgb), 0.18) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 38%),
@@ -15568,6 +15650,8 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 }
 
 .impact-proof-story-proof.is-tone-super-grey {
+  --impact-proof-motion-light-rgb: var(--ag-color-atlantean-rgb);
+  --impact-proof-motion-dark-rgb: 17, 22, 26;
   --impact-proof-panel-bg:
     radial-gradient(circle at 80% 22%, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 30%),
     radial-gradient(circle at 18% 78%, rgba(var(--ag-color-atlantean-rgb), 0.28) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 38%),
@@ -15575,10 +15659,19 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
 }
 
 .impact-proof-story-proof.is-tone-atlantean-dark {
+  --impact-proof-motion-light-rgb: var(--ag-color-atlantean-rgb);
+  --impact-proof-motion-dark-rgb: 7, 19, 27;
   --impact-proof-panel-bg:
     radial-gradient(circle at 22% 26%, rgba(var(--ag-color-atlantean-rgb), 0.22) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 34%),
     linear-gradient(144deg, #07131b 0%, #0b1e29 52%, rgba(var(--ag-color-atlantean-dark-rgb), 0.92) 100%);
   --impact-proof-panel-number: var(--ag-color-white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .impact-proof-story-proof::before,
+  .impact-proof-story-proof::after {
+    will-change: auto;
+  }
 }
 
 @media (max-width: 980px) {
@@ -15596,7 +15689,7 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
     --impact-proof-exit-x: 0px;
     --impact-proof-transform-origin: left center;
     grid-column: 1 / -1;
-    max-width: min(100%, 42rem);
+    max-width: min(100%, 48rem);
   }
 
   .impact-proof-story-proof.is-left .impact-proof-story-proof-content {
@@ -15610,8 +15703,30 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
     margin-left: auto;
   }
 
+  h2.impact-proof-story-proof-stat {
+    max-width: 100%;
+    font-size: clamp(82px, 10vw, 108px);
+  }
+
   .impact-proof-story-proof.is-right .impact-proof-story-proof-action {
     justify-content: flex-end;
+  }
+}
+
+@media (max-width: 680px) {
+  h2.impact-proof-story-proof-stat {
+    max-width: 100%;
+    font-size: clamp(52px, 12vw, 72px);
+  }
+
+  .impact-proof-story-proof-label {
+    font-size: 1em;
+  }
+
+  .impact-proof-story-proof-body {
+    max-width: 100%;
+    font-size: clamp(1.18rem, 5.6vw, 1.5rem);
+    line-height: 1.3;
   }
 }
 
@@ -15821,12 +15936,11 @@ h2.impact-proof-story-proof-value.is-tone-atlantean-dark {
   }
 
   .impact-proof-story-proof-label {
-    max-width: 12ch;
-    font-size: clamp(2.65rem, 9.8vw, 4.25rem);
+    font-size: 1em;
   }
 
-  h2.impact-proof-story-proof-value {
-    font-size: clamp(2.125rem, 8.5vw, 3.25rem);
+  .impact-proof-story-proof-value {
+    font-size: 1em;
   }
 
   .impact-proof-story-proof-eyebrow {

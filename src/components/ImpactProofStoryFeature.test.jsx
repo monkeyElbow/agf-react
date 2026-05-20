@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import ImpactProofStoryFeature from './ImpactProofStoryFeature';
 
 const DEFAULT_PROPS = {
@@ -55,6 +55,27 @@ function renderFeature(overrides = {}) {
   );
 }
 
+function mockMatchMedia({ reducedMotion = false } = {}) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query) => ({
+      matches: query === '(prefers-reduced-motion: reduce)' ? reducedMotion : false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
 describe('ImpactProofStoryFeature', () => {
   it('renders all proof items in one editorial reading flow and drops the old kicker label', () => {
     const { container } = renderFeature();
@@ -71,11 +92,11 @@ describe('ImpactProofStoryFeature', () => {
     expect(container.querySelectorAll('.impact-proof-story-proof-content.fade-up.fade-out')).toHaveLength(4);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-left')).toHaveLength(2);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-right')).toHaveLength(2);
-    expect(screen.getByText('ministries supported by loans.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '1400 ministries supported by loans.' })).toBeTruthy();
     expect(screen.getByText('Over the last 10 years, those ministries represent more than 945,000 people.')).toBeTruthy();
-    expect(screen.getByText('under trusted care for future ministry.')).toBeTruthy();
-    expect(screen.getByText('mission trips covered with protection in place.')).toBeTruthy();
-    expect(screen.getByText('ministers retiring with AGFinancial.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '$450 Million under trusted care for future ministry.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '5,117 mission trips covered with protection in place.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '29,000+ ministers retiring with AGFinancial.' })).toBeTruthy();
   });
 
   it('keeps every metric CTA readable in the same static layout across viewports', () => {
@@ -89,5 +110,128 @@ describe('ImpactProofStoryFeature', () => {
     expect(container.querySelector('.impact-proof-story-proof-value.is-tone-mango')).toBeTruthy();
     expect(container.querySelector('.impact-proof-story-proof-value.is-tone-super-grey')).toBeTruthy();
     expect(container.querySelector('.impact-proof-story-proof-value.is-tone-atlantean-dark')).toBeTruthy();
+  });
+
+  it('enables scroll-reactive gradient motion variables when reduced motion is off', async () => {
+    mockMatchMedia({ reducedMotion: false });
+    vi.stubGlobal('requestAnimationFrame', (callback) => window.setTimeout(() => callback(Date.now()), 0));
+    vi.stubGlobal('cancelAnimationFrame', (timerId) => window.clearTimeout(timerId));
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function getBoundingClientRect() {
+      if (this.classList?.contains('impact-proof-story-proof')) {
+        const index = Number(this.getAttribute('data-proof-index') || 0);
+        const top = 620 - (index * 170);
+        return {
+          x: 0,
+          y: top,
+          top,
+          left: 0,
+          right: 1280,
+          bottom: top + 380,
+          width: 1280,
+          height: 380,
+          toJSON() {
+            return {};
+          },
+        };
+      }
+
+      return {
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: 1280,
+        bottom: 900,
+        width: 1280,
+        height: 900,
+        toJSON() {
+          return {};
+        },
+      };
+    });
+
+    const { container } = renderFeature();
+    const shell = container.querySelector('.impact-proof-story-shell');
+    const firstPanel = container.querySelector('.impact-proof-story-proof');
+
+    expect(shell?.getAttribute('data-scroll-gradient-motion')).toBe('enabled');
+    expect(firstPanel?.getAttribute('data-scroll-gradient-motion')).toBe('enabled');
+
+    await waitFor(() => {
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-light-strength')).not.toBe('');
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-light-width')).toContain('%');
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-dark-stop-3')).toContain('%');
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-dark-angle')).toContain('deg');
+    });
+  });
+
+  it('changes proof-panel motion variables across scroll states when reduced motion is off', async () => {
+    mockMatchMedia({ reducedMotion: false });
+    vi.stubGlobal('requestAnimationFrame', (callback) => window.setTimeout(() => callback(Date.now()), 0));
+    vi.stubGlobal('cancelAnimationFrame', (timerId) => window.clearTimeout(timerId));
+    let topOffset = 620;
+
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function getBoundingClientRect() {
+      if (this.classList?.contains('impact-proof-story-proof')) {
+        const index = Number(this.getAttribute('data-proof-index') || 0);
+        const top = topOffset - (index * 170);
+        return {
+          x: 0,
+          y: top,
+          top,
+          left: 0,
+          right: 1280,
+          bottom: top + 380,
+          width: 1280,
+          height: 380,
+          toJSON() {
+            return {};
+          },
+        };
+      }
+
+      return {
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: 1280,
+        bottom: 900,
+        width: 1280,
+        height: 900,
+        toJSON() {
+          return {};
+        },
+      };
+    });
+
+    const { container } = renderFeature();
+    const firstPanel = container.querySelector('.impact-proof-story-proof');
+
+    await waitFor(() => {
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-light-x')).not.toBe('');
+    });
+
+    const initialLightX = firstPanel?.style.getPropertyValue('--impact-proof-light-x');
+    const initialDarkAngle = firstPanel?.style.getPropertyValue('--impact-proof-dark-angle');
+
+    topOffset = 240;
+    window.dispatchEvent(new Event('scroll'));
+
+    await waitFor(() => {
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-light-x')).not.toBe(initialLightX);
+      expect(firstPanel?.style.getPropertyValue('--impact-proof-dark-angle')).not.toBe(initialDarkAngle);
+    });
+  });
+
+  it('falls back to static panel gradients when reduced motion is preferred', () => {
+    mockMatchMedia({ reducedMotion: true });
+    const { container } = renderFeature();
+    const shell = container.querySelector('.impact-proof-story-shell');
+    const firstPanel = container.querySelector('.impact-proof-story-proof');
+
+    expect(shell?.getAttribute('data-scroll-gradient-motion')).toBe('reduced');
+    expect(firstPanel?.getAttribute('data-scroll-gradient-motion')).toBe('reduced');
+    expect(firstPanel?.style.getPropertyValue('--impact-proof-light-strength')).toBe('');
   });
 });
