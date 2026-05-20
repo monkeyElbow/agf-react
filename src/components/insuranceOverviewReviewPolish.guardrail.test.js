@@ -11,12 +11,29 @@ function readSource(relativePath) {
 }
 
 describe('insurance overview review polish guardrail', () => {
-  it('keeps the blue product-card treatment and quote heading polish scoped to the insurance overview route', () => {
+  it('keeps insurance coverage cards neutral while leaving impact proof gradients scoped to impact panels', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card {');
-    expect(cssSource).toContain('linear-gradient(138deg, rgba(7, 53, 81, 0.98) 0%, rgba(0, 117, 149, 0.98) 55%, rgba(0, 173, 187, 0.9) 100%);');
+    expect(cssSource).toContain('background: linear-gradient(142deg, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0.85) 100%);');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card p {');
+    expect(cssSource).toContain('color: var(--ag-color-super-grey);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {');
+    expect(cssSource).toContain('background: none;');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn {');
+    expect(cssSource).toContain('--btn-color: #ffffff;');
+    expect(cssSource).toContain('--btn-bg: transparent;');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(1) h3 {');
+    expect(cssSource).toContain('color: var(--ag-color-atlantean);');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(2) h3 {');
+    expect(cssSource).toContain('color: var(--ag-color-atlantean-dark);');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(3) h3 {');
+    expect(cssSource).toContain('color: var(--ag-color-melon);');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(4) h3 {');
+    expect(cssSource).toContain('color: var(--ag-color-super-grey);');
+    expect(cssSource).toContain('.impact-proof-story-proof.is-tone-atlantean {');
+    expect(cssSource).toContain('.impact-proof-story-proof.is-tone-mango {');
+    expect(cssSource).toContain('.impact-proof-story-proof.is-tone-super-grey {');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-quote h2 {');
     expect(cssSource).toContain('letter-spacing: -0.06em;');
     expect(cssSource).toContain('line-height: 0.76;');
