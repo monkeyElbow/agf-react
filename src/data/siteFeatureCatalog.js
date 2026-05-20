@@ -37,6 +37,9 @@ export const SITE_FEATURE_HEADLINE_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'buttonUrl',
   'buttonPageRef',
 ]);
+export const SITE_FEATURE_FEATURE_ONLY_EDITABLE_FIELD_IDS = Object.freeze([
+  'featureId',
+]);
 
 const SITE_FEATURE_CATALOG = Object.freeze([
   Object.freeze({
@@ -56,6 +59,73 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       imageUrl: aboutIntroImage,
       imageAlt: 'AGFinancial editorial feature placeholder',
       action: null,
+    }),
+  }),
+  Object.freeze({
+    featureId: 'home_services_feature_animation',
+    label: 'Home services feature animation',
+    description: 'Home-only animated services stack that replaces the static card grid while keeping that grid available as fallback.',
+    runtimeKey: 'home_services_feature_animation',
+    allowedEditableFieldIds: SITE_FEATURE_FEATURE_ONLY_EDITABLE_FIELD_IDS,
+    routeAllowlist: Object.freeze(['/']),
+    previewLabel: 'Home services feature animation',
+    previewThumbnail: '',
+    experimental: false,
+    internalOnly: false,
+    buildRuntime: () => ({
+      title: 'Bold, smart steps. Together.',
+      panels: Object.freeze([
+        Object.freeze({
+          title: 'Loans',
+          body: 'The right loan for your ministry can change everything.\nLet’s find yours.',
+          tone: 'atlantean',
+          action: Object.freeze({
+            label: 'Explore options',
+            to: '/services/loans',
+            openInNewWindow: false,
+          }),
+        }),
+        Object.freeze({
+          title: 'Retirement',
+          body: 'Time is your ally. Plan, contribute, and build for tomorrow. Starting today.',
+          tone: 'atlantean-dark',
+          action: Object.freeze({
+            label: 'Get started',
+            to: '/services/retirement',
+            openInNewWindow: false,
+          }),
+        }),
+        Object.freeze({
+          title: 'Investments',
+          body: 'Your returns grow while supporting ministries.\nToday’s investment. Tomorrow’s church.',
+          tone: 'super-grey',
+          action: Object.freeze({
+            label: 'See rates',
+            to: '/services/investments',
+            openInNewWindow: false,
+          }),
+        }),
+        Object.freeze({
+          title: 'Legacy Giving',
+          body: 'Generosity and legacy planning, simple and joyful.\nMake a difference that lasts for generations.',
+          tone: 'mango',
+          action: Object.freeze({
+            label: 'Learn & strategize',
+            to: '/services/legacy-giving',
+            openInNewWindow: false,
+          }),
+        }),
+        Object.freeze({
+          title: 'Insurance',
+          body: 'The right coverage means protection, security, and confidence.',
+          tone: 'super-grey',
+          action: Object.freeze({
+            label: 'Start here',
+            to: '/services/insurance',
+            openInNewWindow: false,
+          }),
+        }),
+      ]),
     }),
   }),
   Object.freeze({

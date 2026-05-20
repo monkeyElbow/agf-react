@@ -15,10 +15,13 @@ describe('home page HUD focus exemption guardrail', () => {
     const source = readSource('../styles/service-native.css');
 
     expect(source).toContain('.home-native-page.has-active-front-hud-panel :is(');
+    expect(source).toContain('.home-services-feature,');
     expect(source).toContain('.home-native-services,');
     expect(source).toContain('.home-native-impact,');
+    expect(source).toContain('.home-native-page.has-active-front-hud-panel.hud-focus-home-services-feature-animation [data-block-id="home_services_feature_animation"],');
     expect(source).toContain('.home-native-page.has-active-front-hud-panel.hud-focus-home-services-grid [data-block-id="services_grid"],');
     expect(source).toContain('.home-native-page.has-active-front-hud-panel.hud-focus-home-impact-stat [data-block-id="impact_stat"] {');
+    expect(source).toContain('.home-native-page.has-active-front-hud-panel.hud-focus-home-services-feature-animation [data-block-id="home_services_feature_animation"]::after,');
     expect(source).toContain('.home-native-page.has-active-front-hud-panel.hud-focus-home-services-grid [data-block-id="services_grid"]::after,');
     expect(source).toContain('.home-native-page.has-active-front-hud-panel.hud-focus-home-impact-stat [data-block-id="impact_stat"]::after {');
   });

@@ -581,10 +581,15 @@ describe('content block blueprint coverage', () => {
     const loansBlocks = contentBlockBlueprintsByPath['/services/loans'] || [];
     const testBlocks = contentBlockBlueprintsByPath['/test'] || [];
 
+    const homeServicesFeature = homeBlocks.find((block) => block?.id === 'home_services_feature_animation');
     const servicesGrid = homeBlocks.find((block) => block?.id === 'services_grid');
     const loansValueCards = loansBlocks.find((block) => block?.id === 'value_cards');
     const testGrid = testBlocks.find((block) => block?.id === 'card_grid');
 
+    expect(homeServicesFeature?.kind).toBe('site_feature');
+    expect(homeServicesFeature?.mode).toBe('dynamic');
+    expect(homeServicesFeature?.settings?.featureId).toBe('home_services_feature_animation');
+    expect(homeServicesFeature?.settings?.headline).toBe('Bold, smart steps. Together.');
     expect(servicesGrid?.settings?.browsePath).toBe('/services');
     expect(servicesGrid?.settings?.browsePageRef).toBe('/services');
     expect(servicesGrid?.settings?.card1Path).toBe('/services/loans');

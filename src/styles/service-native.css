@@ -4513,6 +4513,7 @@
 .home-native-page :is(
   .home-native-strip,
   .home-native-hero,
+  .home-services-feature,
   .home-native-services,
   .home-native-impact,
   .service-native-section,
@@ -4527,6 +4528,7 @@
 .home-native-page :is(
   .home-native-strip,
   .home-native-hero,
+  .home-services-feature,
   .home-native-services,
   .home-native-impact,
   .service-native-section,
@@ -4541,6 +4543,7 @@
 .home-native-page :is(
   .home-native-strip,
   .home-native-hero,
+  .home-services-feature,
   .home-native-services,
   .home-native-impact,
   .service-native-section,
@@ -4555,6 +4558,7 @@
 .home-native-page :is(
   .home-native-strip,
   .home-native-hero,
+  .home-services-feature,
   .home-native-services,
   .home-native-impact,
   .service-native-section,
@@ -4630,6 +4634,7 @@
 .home-native-page :is(
   .home-native-strip,
   .home-native-hero,
+  .home-services-feature,
   .home-native-services,
   .home-native-impact,
   .service-native-section,
@@ -4645,6 +4650,7 @@
 .home-native-page :is(
   .home-native-strip,
   .home-native-hero,
+  .home-services-feature,
   .home-native-services,
   .home-native-impact,
   .service-native-section,
@@ -4675,6 +4681,7 @@
 
 .home-native-page.has-active-front-hud-panel.hud-focus-home-top-strip [data-block-id="top_strip"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-hero [data-block-id="hero"],
+.home-native-page.has-active-front-hud-panel.hud-focus-home-services-feature-animation [data-block-id="home_services_feature_animation"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-cta-form [data-block-id="cta_form"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-newsletter [data-block-id="newsletter"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-columns-mha [data-block-id="columns_mha"],
@@ -4688,6 +4695,7 @@
 
 .home-native-page.has-active-front-hud-panel.hud-focus-home-top-strip [data-block-id="top_strip"]::after,
 .home-native-page.has-active-front-hud-panel.hud-focus-home-hero [data-block-id="hero"]::after,
+.home-native-page.has-active-front-hud-panel.hud-focus-home-services-feature-animation [data-block-id="home_services_feature_animation"]::after,
 .home-native-page.has-active-front-hud-panel.hud-focus-home-cta-form [data-block-id="cta_form"]::after,
 .home-native-page.has-active-front-hud-panel.hud-focus-home-newsletter [data-block-id="newsletter"]::after,
 .home-native-page.has-active-front-hud-panel.hud-focus-home-columns-mha [data-block-id="columns_mha"]::after,

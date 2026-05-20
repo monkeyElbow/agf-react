@@ -22,7 +22,10 @@ import {
   applyCanonicalDefinitionsToBlueprintMap,
   getLegacyEditableFieldsForKind,
 } from '../blocks/registry';
-import { getDefaultSiteFeatureCatalogEntry } from './siteFeatureCatalog';
+import {
+  getAllowedSiteFeatureEditableFieldIds,
+  getDefaultSiteFeatureCatalogEntry,
+} from './siteFeatureCatalog';
 import { getResourceArticleFeatureConfig } from './resourceArticles';
 
 const requestFormTitleToneOptions = [
@@ -1870,6 +1873,17 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: sharedDynamicHeroEditableFields,
     },
     createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
+    {
+      id: 'home_services_feature_animation',
+      name: 'Home Services Feature Animation',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'home_services_feature_animation',
+        headline: 'Bold, smart steps. Together.',
+      },
+      editableFields: getAllowedSiteFeatureEditableFieldIds('home_services_feature_animation'),
+    },
     {
       id: 'services_grid',
       name: 'Services Grid',

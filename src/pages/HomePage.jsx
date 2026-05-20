@@ -43,6 +43,7 @@ const HOME_HERO_HUD_PANEL_ID = 'home-hero';
 const HOME_CTA_HUD_PANEL_ID = 'home-cta-form';
 const HOME_NEWSLETTER_HUD_PANEL_ID = 'home-newsletter';
 const HOME_SERVICES_GRID_HUD_PANEL_ID = 'home-services-grid';
+const HOME_SERVICES_FEATURE_HUD_PANEL_ID = 'home-services-feature-animation';
 const HOME_IMPACT_STAT_HUD_PANEL_ID = 'home-impact-stat';
 const HOME_SITE_FEATURE_HUD_PANEL_ID = 'home-site-feature';
 const HOME_COLUMNS_MHA_HUD_PANEL_ID = 'home-columns-mha';
@@ -50,6 +51,7 @@ const HOME_COLUMNS_MATH_HUD_PANEL_ID = 'home-columns-math';
 const HOME_HUD_PANEL_ID_BY_BLOCK_ID = {
   top_strip: HOME_TOP_STRIP_HUD_PANEL_ID,
   hero: HOME_HERO_HUD_PANEL_ID,
+  home_services_feature_animation: HOME_SERVICES_FEATURE_HUD_PANEL_ID,
   services_grid: HOME_SERVICES_GRID_HUD_PANEL_ID,
   impact_stat: HOME_IMPACT_STAT_HUD_PANEL_ID,
   home_impact_story: HOME_SITE_FEATURE_HUD_PANEL_ID,
@@ -61,6 +63,7 @@ const HOME_HUD_PANEL_ID_BY_BLOCK_ID = {
 const HOME_HUD_ANCHOR_SELECTOR_BY_BLOCK_ID = {
   top_strip: '[data-block-id="top_strip"]',
   hero: '[data-block-id="hero"]',
+  home_services_feature_animation: '[data-block-id="home_services_feature_animation"]',
   services_grid: '[data-block-id="services_grid"]',
   impact_stat: '[data-block-id="impact_stat"]',
   home_impact_story: '[data-block-id="home_impact_story"]',
@@ -409,6 +412,16 @@ export default function HomePage() {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
+  const managedHomeServicesFeatureBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'home_services_feature_animation'
+      && block?.kind === 'site_feature'
+    )) || null
+  ), [managedBlocks]);
+  const dynamicHomeServicesFeatureBlock = managedHomeServicesFeatureBlock?.mode === 'dynamic'
+    && isManagedBlockVisible(managedHomeServicesFeatureBlock)
+    ? managedHomeServicesFeatureBlock
+    : null;
   const dynamicImpactStatBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'impact_stat'
@@ -1059,6 +1072,8 @@ export default function HomePage() {
   const blocks = useMemo(() => {
     const impactStatManagedBlock = dynamicImpactStatBlock;
     const homeImpactStoryManagedBlock = dynamicHomeImpactStoryBlock;
+    const homeServicesFeatureManagedBlock = managedHomeServicesFeatureBlock;
+    const homeServicesFeatureIsActive = Boolean(dynamicHomeServicesFeatureBlock || !homeServicesFeatureManagedBlock);
     const newsletterManagedBlock = dynamicNewsletterBlock;
     const servicesGridManagedBlock = dynamicServicesGridBlock;
     const topStripManagedBlock = dynamicTopStripBlock;
@@ -1076,6 +1091,10 @@ export default function HomePage() {
       : null;
     const impactStatSettings = impactStatManagedBlock?.settings && typeof impactStatManagedBlock.settings === 'object'
       ? impactStatManagedBlock.settings
+      : null;
+    const homeServicesFeatureSettings = homeServicesFeatureManagedBlock?.settings
+      && typeof homeServicesFeatureManagedBlock.settings === 'object'
+      ? homeServicesFeatureManagedBlock.settings
       : null;
     const homeImpactStorySettings = homeImpactStoryManagedBlock?.settings && typeof homeImpactStoryManagedBlock.settings === 'object'
       ? homeImpactStoryManagedBlock.settings
@@ -1098,6 +1117,24 @@ export default function HomePage() {
       : null;
 
     const resolvedBlocks = homePageBlocks.map((block) => {
+      if (block.type === 'site_feature' && block.id === 'home_services_feature_animation') {
+        return {
+          ...block,
+          id: homeServicesFeatureManagedBlock?.id || block.id || 'home_services_feature_animation',
+          kind: homeServicesFeatureManagedBlock?.kind || block.kind || 'site_feature',
+          mode: homeServicesFeatureIsActive ? 'dynamic' : (homeServicesFeatureManagedBlock?.mode || block.mode || 'static'),
+          settings: homeServicesFeatureSettings
+            ? {
+                featureId: String(homeServicesFeatureSettings.featureId || block.featureId || 'home_services_feature_animation').trim() || 'home_services_feature_animation',
+                headline: String(homeServicesFeatureSettings.headline ?? block.headline ?? '').trim(),
+              }
+            : {
+                featureId: String(block.featureId || 'home_services_feature_animation').trim() || 'home_services_feature_animation',
+                headline: String(block.headline || '').trim(),
+              },
+        };
+      }
+
       if (block.type === 'newsletter' && newsletterSettings) {
         const fallbackTitle = String(
           block.title || [block.headingPrefix, block.headingHighlight].filter(Boolean).join(' '),
@@ -1142,6 +1179,9 @@ export default function HomePage() {
       }
 
       if (block.type === 'services_grid' && servicesGridSettings) {
+        if (homeServicesFeatureIsActive) {
+          return null;
+        }
         return {
           ...block,
           id: servicesGridManagedBlock?.id || block.id || 'services_grid',
@@ -1149,6 +1189,10 @@ export default function HomePage() {
           mode: servicesGridManagedBlock?.mode || block.mode || 'static',
           settings: servicesGridSettings,
         };
+      }
+
+      if (block.type === 'services_grid' && homeServicesFeatureIsActive) {
+        return null;
       }
 
       if (block.type === 'impact_stat' && impactStatSettings) {
@@ -1340,12 +1384,14 @@ export default function HomePage() {
 
     return resolvedBlocks.concat(extraRenderableManagedBlocks);
   }, [
+    dynamicHomeServicesFeatureBlock,
     dynamicColumnsMathBlock,
     dynamicColumnsMhaBlock,
     dynamicCtaBlock,
     dynamicHeroBlock,
     dynamicHomeImpactStoryBlock,
     dynamicImpactStatBlock,
+    managedHomeServicesFeatureBlock,
     managedBlocks,
     dynamicNewsletterBlock,
     dynamicServicesGridBlock,

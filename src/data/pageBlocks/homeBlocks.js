@@ -46,6 +46,12 @@ export const homePageBlocks = [
     ctaPath: '/services/investments',
   },
   {
+    id: 'home_services_feature_animation',
+    type: 'site_feature',
+    featureId: 'home_services_feature_animation',
+    headline: 'Bold, smart steps. Together.',
+  },
+  {
     type: 'services_grid',
     heading: 'Bold, smart steps. Together.',
     headingSizeRem: 4.5625,

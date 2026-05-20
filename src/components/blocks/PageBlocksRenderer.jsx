@@ -36,6 +36,7 @@ import {
 import DynamicRequestFormSection from '../DynamicRequestFormSection';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../HeroHudEditorShared';
 import HomeImpactStoryFeature, { HomeImpactStoryStaticContent } from '../HomeImpactStoryFeature';
+import HomeServicesFeatureAnimation from '../HomeServicesFeatureAnimation';
 import ImpactProofStoryFeature from '../ImpactProofStoryFeature';
 import LegacyGivingStewardshipStoryFeature from '../LegacyGivingStewardshipStoryFeature';
 import NewsletterSignupForm from '../NewsletterSignupForm';
@@ -1000,6 +1001,20 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
           body={runtime.body}
           action={runtime.action}
           metrics={runtime.metrics}
+          resolveTo={resolveTo}
+        />
+      </section>
+    );
+  }
+
+  if (runtime.runtimeKey === 'home_services_feature_animation') {
+    return (
+      <section className={`home-services-feature${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+        <BlockOwnershipOverlay ownership={ownership} />
+        <SharedBlockHudAnchor hudAnchor={hudAnchor} />
+        <HomeServicesFeatureAnimation
+          headline={runtime.title}
+          panels={runtime.panels}
           resolveTo={resolveTo}
         />
       </section>
