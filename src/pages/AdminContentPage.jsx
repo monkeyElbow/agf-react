@@ -20,6 +20,7 @@ import {
 } from '../components/block-editors/migratedBlockEditors';
 import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
 import { useTestimonials } from '../context/TestimonialsContext';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { pageByPath } from '../data/siteMap';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import heroBlockIcon from '../assets/admin-block-icons/hero.svg';
@@ -275,6 +276,23 @@ function canBlockOpenEditor(block, migratedEditor = null) {
     (String(block?.mode || '').trim().toLowerCase() === 'dynamic' && migratedEditor)
     || (Array.isArray(block?.editableFields) && block.editableFields.length)
   );
+}
+
+function hasBlockModeVariantOnPath(pathname, block, mode) {
+  const targetMode = String(mode || '').trim().toLowerCase();
+  const targetId = String(block?.id || '').trim();
+  const targetKind = String(block?.kind || '').trim().toLowerCase();
+  const candidates = Array.isArray(contentBlockBlueprintsByPath?.[pathname])
+    ? contentBlockBlueprintsByPath[pathname]
+    : [];
+
+  return candidates.some((candidate) => (
+    String(candidate?.mode || '').trim().toLowerCase() === targetMode
+    && (
+      (targetId && String(candidate?.id || '').trim() === targetId)
+      || (targetKind && String(candidate?.kind || '').trim().toLowerCase() === targetKind)
+    )
+  ));
 }
 
 function formatBlockModeLabel(mode) {
@@ -1523,6 +1541,11 @@ export default function AdminContentPage() {
     : null;
   const canEditSelectedBlock = canBlockOpenEditor(selectedBlock, MigratedSelectedBlockEditor);
   const selectedBlockIsEditing = Boolean(selectedBlock && selectedBlock.id === activeEditorBlockId);
+  const canSelectedBlockSwitchToDynamic = Boolean(
+    selectedBlock
+    && String(selectedBlock.mode || '').trim().toLowerCase() === 'static'
+    && hasBlockModeVariantOnPath(selectedPath, selectedBlock, 'dynamic')
+  );
   const breadcrumbTrail = getBreadcrumbTrail(selectedPath);
   const selectedPathChangeSummary = getPageChangeSummary(selectedPath);
   const selectedPathPublishSummary = getPagePublishSummary(selectedPath);
@@ -2806,11 +2829,24 @@ export default function AdminContentPage() {
                   </div>
                 </div>
               ) : (
-                <p className="blank-state-note">
-                  {selectedBlock.mode === 'static'
-                    ? 'This block is static and not currently editable.'
-                    : 'This dynamic block does not have custom fields yet.'}
-                </p>
+                <div className="admin-selected-block-inspect-card">
+                  <p className="blank-state-note">
+                    {selectedBlock.mode === 'static'
+                      ? 'This block is static and not currently editable.'
+                      : 'This dynamic block does not have custom fields yet.'}
+                  </p>
+                  {canSelectedBlockSwitchToDynamic ? (
+                    <div className="admin-selected-block-inspect-actions">
+                      <button
+                        type="button"
+                        className="action-btn"
+                        onClick={() => updateBlock(selectedPath, selectedBlock.id, { mode: 'dynamic' })}
+                      >
+                        Use dynamic block
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               )}
               {recentPageHistory.length ? (
                 <div className="admin-block-history">

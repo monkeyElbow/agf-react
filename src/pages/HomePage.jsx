@@ -378,15 +378,19 @@ export default function HomePage() {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const dynamicHeroBlock = useMemo(() => (
+  const managedHeroBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'hero'
       && block?.kind === 'hero'
-      && block?.mode === 'dynamic'
       && block?.hidden !== true
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
+  const dynamicHeroBlock = useMemo(() => (
+    managedHeroBlock?.mode === 'dynamic'
+      ? managedHeroBlock
+      : null
+  ), [managedHeroBlock]);
   const dynamicNewsletterBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'newsletter'
@@ -1058,7 +1062,7 @@ export default function HomePage() {
     const newsletterManagedBlock = dynamicNewsletterBlock;
     const servicesGridManagedBlock = dynamicServicesGridBlock;
     const topStripManagedBlock = dynamicTopStripBlock;
-    const heroManagedBlock = dynamicHeroBlock;
+    const heroManagedBlock = managedHeroBlock;
     const ctaManagedBlock = dynamicCtaBlock;
     const columnsMhaBlock = dynamicColumnsMhaBlock;
     const columnsMathBlock = dynamicColumnsMathBlock;

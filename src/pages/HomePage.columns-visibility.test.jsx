@@ -112,6 +112,38 @@ describe('HomePage columns visibility', () => {
     expectHomeMathBlockTitle();
   });
 
+  it('renders a managed static home hero instead of falling back to the seed hero copy', () => {
+    mockBlocksByPath = {
+      '/': [
+        {
+          id: 'hero',
+          kind: 'hero',
+          mode: 'static',
+          settings: {
+            line1Text: 'Managed.',
+            line1ClassName: 'home-native-eyebrow is-atlantean',
+            line1HighlightsJson: '',
+            line2Text: 'Static for QA.',
+            line2ClassName: 'home-native-title line1 line2 is-mango',
+            line2HighlightsJson: '',
+            line3Text: 'Still deterministic.',
+            line3ClassName: 'home-native-title line3 is-super-grey',
+            line3HighlightsJson: '',
+            button1Label: 'Review hero',
+            button1PageRef: '/services/investments',
+          },
+        },
+      ],
+    };
+
+    renderHomePage();
+
+    expect(screen.getByText('Managed.')).toBeTruthy();
+    expect(screen.getByText('Static for QA.')).toBeTruthy();
+    expect(screen.getByText('Still deterministic.')).toBeTruthy();
+    expect(screen.queryByText('Convenient.')).toBeNull();
+  });
+
   it('keeps static home columns visible even if a managed static record is hidden', () => {
     mockBlocksByPath = {
       '/': [

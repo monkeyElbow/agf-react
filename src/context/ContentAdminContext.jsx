@@ -4032,6 +4032,25 @@ function readInitialState() {
   }
 }
 
+export async function bootstrapSharedContentAdminState() {
+  if (!isDevContentAuthorityEnabled()) {
+    return null;
+  }
+
+  const seedState = normalizeStoredConfig(null);
+
+  try {
+    let snapshot = await fetchSharedContentSnapshot();
+    if (!snapshot?.initialized) {
+      snapshot = await initializeSharedContentFromSeed(seedState, null);
+    }
+    const nextState = snapshot?.state || snapshot?.payload?.state;
+    return nextState ? normalizeStoredConfig(nextState) : seedState;
+  } catch {
+    return seedState;
+  }
+}
+
 function buildBreadcrumbTrail(pathname, pageHierarchy) {
   const trail = [];
   const visited = new Set();
@@ -4234,9 +4253,9 @@ function summarizePageWorkflowActivity(collaborationByPath, pathname, actor) {
   };
 }
 
-export function ContentAdminProvider({ children }) {
+export function ContentAdminProvider({ children, initialState = null }) {
   const sharedAuthorityEnabled = isDevContentAuthorityEnabled();
-  const [state, setState] = useState(readInitialState);
+  const [state, setState] = useState(() => (initialState ? normalizeStoredConfig(initialState) : readInitialState()));
   const [devIdentity, setDevIdentity] = useState(readInitialDevIdentity);
   const [lastSharedSaveResult, setLastSharedSaveResult] = useState(null);
   const [lastSharedPublishResult, setLastSharedPublishResult] = useState(null);
