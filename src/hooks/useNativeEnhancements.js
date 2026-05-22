@@ -75,7 +75,7 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
         return;
       }
 
-      const lineNodes = Array.from(heroRoot.querySelectorAll('.line1, .line2'))
+      const lineNodes = Array.from(heroRoot.querySelectorAll('.line1, .line2, .line3'))
         .filter((node, index, arr) => arr.indexOf(node) === index);
 
       if (lineNodes.length) {

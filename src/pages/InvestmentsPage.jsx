@@ -1501,11 +1501,12 @@ export default function InvestmentsPage() {
               />
             </Suspense>
           ) : dynamicHero?.lines?.length ? dynamicHero.lines.map((line, index) => {
-            const animationClass = heroAnimationClassForLine(dynamicHero.animationPreset, index + 1);
-            const className = [line.className, animationClass].filter(Boolean).join(' ');
+            const lineNumber = index + 1;
+            const animationClass = heroAnimationClassForLine(dynamicHero.animationPreset, lineNumber);
+            const className = [line.className || `line${lineNumber}`, animationClass].filter(Boolean).join(' ');
             return (
               <h1
-                key={`investments-hero-line-${line.id || index + 1}`}
+                key={`investments-hero-line-${line.id || lineNumber}`}
                 className={className || undefined}
                 style={{
                   lineHeight: dynamicHero.lineHeight,
