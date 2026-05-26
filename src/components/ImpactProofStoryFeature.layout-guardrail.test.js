@@ -21,6 +21,11 @@ describe('impact proof story layout guardrail', () => {
     expect(cssSource).toContain('grid-column: 1 / -1;');
     expect(cssSource).toContain('.impact-proof-story-proof.is-right .impact-proof-story-proof-content {');
     expect(cssSource).toContain('grid-column: 1 / -1;');
+    expect(cssSource).toContain('.impact-proof-story-proof.is-left .impact-proof-story-proof-copy,');
+    expect(cssSource).toContain('.impact-proof-story-proof.is-right .impact-proof-story-proof-copy,');
+    expect(cssSource).toContain('.impact-proof-story-proof.is-right .impact-proof-story-proof-copy {');
+    expect(cssSource).toContain('justify-items: end;');
+    expect(cssSource).toContain('text-align: right;');
     expect(cssSource).toContain('.impact-proof-story-proof-action {');
     expect(cssSource).toContain('margin-top: clamp(0.45rem, 0.9vw, 0.9rem);');
     expect(cssSource).toContain('.impact-proof-story-proof.is-tone-atlantean-dark {');
@@ -54,7 +59,8 @@ describe('impact proof story layout guardrail', () => {
     expect(cssSource).toContain('--impact-proof-content-max-width: min(100%, 78rem);');
     expect(cssSource).toContain('position: relative;');
     expect(cssSource).toContain('z-index: 1;');
-    expect(cssSource).toContain('max-width: min(46rem, 100%);');
+    expect(cssSource).toContain('width: min(46rem, 100%);');
+    expect(cssSource).toContain('max-width: 100%;');
     expect(cssSource).toContain('font-size: clamp(47px, 11vw, 65px);');
     expect(cssSource).toContain('font-size: clamp(1.5rem, 2vw, 2rem);');
     expect(cssSource).toContain('@media (prefers-reduced-motion: reduce) {');

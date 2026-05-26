@@ -15453,6 +15453,26 @@
   margin-left: auto;
 }
 
+.impact-proof-story-proof.is-left .impact-proof-story-proof-copy,
+.impact-proof-story-proof.is-left .impact-proof-story-proof-action {
+  transform-origin: left center;
+}
+
+.impact-proof-story-proof.is-left .impact-proof-story-proof-copy {
+  justify-items: start;
+  text-align: left;
+}
+
+.impact-proof-story-proof.is-right .impact-proof-story-proof-copy,
+.impact-proof-story-proof.is-right .impact-proof-story-proof-action {
+  transform-origin: right center;
+}
+
+.impact-proof-story-proof.is-right .impact-proof-story-proof-copy {
+  justify-items: end;
+  text-align: right;
+}
+
 p.impact-proof-story-proof-eyebrow {
   margin: 0;
   color: var(--impact-proof-panel-kicker);
@@ -15517,7 +15537,8 @@ h2.impact-proof-story-proof-stat {
 
 p.impact-proof-story-proof-body {
   margin: 0;
-  max-width: min(46rem, 100%);
+  width: min(46rem, 100%);
+  max-width: 100%;
   color: var(--impact-proof-panel-body);
   font-family: var(--ag-font-helv);
   font-size: clamp(1.5rem, 2vw, 2rem);
