@@ -1055,9 +1055,14 @@ p.home-services-feature-panel-body {
   --home-services-motion-light-rgb: var(--ag-color-atlantean-rgb);
   --home-services-motion-dark-rgb: 7, 19, 27;
   --home-services-panel-bg:
-    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 32%),
-    radial-gradient(circle at 82% 78%, rgba(var(--ag-color-atlantean-rgb), 0.3) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 44%),
-    linear-gradient(136deg, #07131b 0%, rgba(var(--ag-color-atlantean-dark-rgb), 0.99) 34%, rgba(var(--ag-color-atlantean-rgb), 0.95) 76%, rgba(var(--ag-color-atlantean-rgb), 0.88) 100%);
+    linear-gradient(114.95deg, rgba(var(--ag-color-atlantean-rgb), 0.24) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 34.35%),
+    linear-gradient(180deg, #07131b 0%, rgba(var(--ag-color-atlantean-dark-rgb), 0.98) 42%, var(--ag-color-atlantean) 100%),
+    linear-gradient(244.35deg, rgba(var(--ag-color-atlantean-rgb), 0.92) 0%, rgba(var(--ag-color-atlantean-dark-rgb), 0.98) 50.58%, #07131b 100%),
+    linear-gradient(244.35deg, rgba(216, 251, 255, 0.88) 0%, rgba(var(--ag-color-atlantean-dark-rgb), 0.94) 49.48%, rgba(var(--ag-color-atlantean-rgb), 0.96) 100%),
+    radial-gradient(100% 233.99% at 0% 100%, #07131b 0%, rgba(var(--ag-color-atlantean-dark-rgb), 0.96) 56%, rgba(var(--ag-color-atlantean-rgb), 0.74) 100%),
+    linear-gradient(307.27deg, rgba(var(--ag-color-atlantean-rgb), 0.86) 0.37%, rgba(var(--ag-color-atlantean-dark-rgb), 0.94) 58%, #07131b 100%),
+    radial-gradient(100% 140% at 100% 0%, #d8fbff 0%, rgba(var(--ag-color-atlantean-rgb), 0.76) 26%, var(--ag-color-atlantean-dark) 57.29%, #07131b 100%);
+  background-blend-mode: hard-light, overlay, overlay, overlay, difference, difference, normal;
 }
 
 .home-services-feature-panel.is-tone-mango {
@@ -1069,6 +1074,18 @@ p.home-services-feature-panel-body {
     linear-gradient(140deg, #1b1b1d 0%, rgba(65, 64, 66, 0.98) 48%, rgba(117, 79, 23, 0.96) 100%);
 }
 
+.home-services-feature-panel.is-tone-legacy-warm {
+  --home-services-motion-light-rgb: 250, 163, 26;
+  --home-services-motion-dark-rgb: 111, 68, 16;
+  --home-services-panel-bg:
+    linear-gradient(115.58deg, #fff5da 0%, #8f5716 100.22%),
+    radial-gradient(92.72% 100% at 50% 0%, #fff8df 0%, #6f4410 100%),
+    radial-gradient(92.72% 100% at 50% 0%, #f6b146 0%, #8f5716 100%),
+    radial-gradient(109.21% 213.32% at 100% 0%, #e8991f 0%, #fff0c8 100%),
+    linear-gradient(127.43deg, #9f5411 0%, #f6b146 100%);
+  background-blend-mode: normal, overlay, multiply, soft-light, normal;
+}
+
 .home-services-feature-panel.is-tone-super-grey {
   --home-services-motion-light-rgb: var(--ag-color-atlantean-rgb);
   --home-services-motion-dark-rgb: 17, 22, 26;
@@ -1078,12 +1095,25 @@ p.home-services-feature-panel-body {
     linear-gradient(142deg, #11161a 0%, rgba(33, 33, 35, 0.98) 46%, rgba(65, 64, 66, 0.98) 100%);
 }
 
-.home-services-feature-panel.is-tone-atlantean-dark {
+.home-services-feature-panel.is-tone-investments-blue {
   --home-services-motion-light-rgb: var(--ag-color-atlantean-rgb);
   --home-services-motion-dark-rgb: 7, 19, 27;
   --home-services-panel-bg:
-    radial-gradient(circle at 22% 26%, rgba(var(--ag-color-atlantean-rgb), 0.22) 0%, rgba(var(--ag-color-atlantean-rgb), 0) 34%),
-    linear-gradient(144deg, #07131b 0%, #0b1e29 52%, rgba(var(--ag-color-atlantean-dark-rgb), 0.92) 100%);
+    linear-gradient(90deg, rgba(7, 19, 27, 0.56) 0%, rgba(0, 96, 126, 0.52) 30.21%, rgba(0, 122, 149, 0.52) 44.79%, rgba(0, 148, 170, 0.5) 60.42%, rgba(0, 173, 187, 0.5) 100%),
+    linear-gradient(180deg, #003946 0%, #00546b 13.54%, #007785 32.57%, #008fa0 45.51%, #00a3b2 55.22%, #4bc7d4 67.75%, #86eff6 83.12%, #50c9d5 92.83%, #00adbb 100%);
+  background-blend-mode: overlay, normal;
+}
+
+.home-services-feature-panel.is-tone-atlantean-dark {
+  --home-services-motion-light-rgb: 250, 163, 26;
+  --home-services-motion-dark-rgb: 111, 68, 16;
+  --home-services-panel-bg:
+    radial-gradient(50% 123.47% at 50% 50%, #fff2cf 0%, #b96815 100%),
+    linear-gradient(121.28deg, #9f5411 0%, var(--ag-color-mango) 100%),
+    linear-gradient(360deg, #4f2807 0%, #f7c766 100%),
+    radial-gradient(100% 164.72% at 100% 100%, #d67f18 0%, #f6b146 100%),
+    radial-gradient(100% 148.07% at 0% 0%, #fff7de 0%, #ef9c28 100%);
+  background-blend-mode: screen, color-dodge, overlay, difference, normal;
 }
 
 .home-native-impact {

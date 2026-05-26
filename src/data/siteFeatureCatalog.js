@@ -98,7 +98,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
         Object.freeze({
           title: 'Investments',
           body: 'Your returns grow while supporting ministries.\nToday’s investment. Tomorrow’s church.',
-          tone: 'super-grey',
+          tone: 'investments-blue',
           action: Object.freeze({
             label: 'See rates',
             to: '/services/investments',
@@ -108,7 +108,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
         Object.freeze({
           title: 'Legacy Giving',
           body: 'Generosity and legacy planning, simple and joyful.\nMake a difference that lasts for generations.',
-          tone: 'mango',
+          tone: 'legacy-warm',
           action: Object.freeze({
             label: 'Learn & strategize',
             to: '/services/legacy-giving',
