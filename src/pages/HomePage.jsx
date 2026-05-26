@@ -36,6 +36,7 @@ import {
   dismissHomeReturnAssist,
   shouldShowHomeReturnAssist,
 } from '../lib/homeReturnAssist';
+import { groupHomeRenderItems, planHomeRenderItems } from './homePageRenderPlan';
 
 const HOME_NEWSLETTER_FORM_ID = '34a993b6-d0fb-48fd-b3c4-faad7332770c';
 const HOME_TOP_STRIP_HUD_PANEL_ID = 'home-top-strip';
@@ -48,6 +49,7 @@ const HOME_IMPACT_STAT_HUD_PANEL_ID = 'home-impact-stat';
 const HOME_SITE_FEATURE_HUD_PANEL_ID = 'home-site-feature';
 const HOME_COLUMNS_MHA_HUD_PANEL_ID = 'home-columns-mha';
 const HOME_COLUMNS_MATH_HUD_PANEL_ID = 'home-columns-math';
+const HOME_HERO_TEMPORARILY_HIDDEN = true;
 const HOME_HUD_PANEL_ID_BY_BLOCK_ID = {
   top_strip: HOME_TOP_STRIP_HUD_PANEL_ID,
   hero: HOME_HERO_HUD_PANEL_ID,
@@ -132,6 +134,33 @@ function toBooleanSetting(value, fallback = true) {
 
 function isManagedBlockVisible(block) {
   return block?.hidden !== true && block?.hidden !== 'true';
+}
+
+function getHomeBlockRenderKey(block) {
+  return String(block?.id || block?.type || block?.kind || '').trim();
+}
+
+function reorderHomeTopBlocks(blocks = []) {
+  if (!Array.isArray(blocks) || !blocks.length) {
+    return [];
+  }
+
+  const priorityOrder = ['top_strip', 'home_impact_story', 'home_services_feature_animation', 'hero'];
+  const priorityIndexByKey = new Map(priorityOrder.map((key, index) => [key, index]));
+  const prioritized = new Array(priorityOrder.length).fill(null);
+  const remainder = [];
+
+  blocks.forEach((block) => {
+    const blockKey = getHomeBlockRenderKey(block);
+    const priorityIndex = priorityIndexByKey.get(blockKey);
+    if (priorityIndex === undefined) {
+      remainder.push(block);
+      return;
+    }
+    prioritized[priorityIndex] = block;
+  });
+
+  return prioritized.filter(Boolean).concat(remainder);
 }
 
 function clampFrontHudOpacity(value) {
@@ -1327,10 +1356,10 @@ export default function HomePage() {
         };
       }
 
-      if (block.type === 'hero' && heroSettings) {
+      if (block.type === 'hero') {
         return {
           ...block,
-          ...heroSettings,
+          ...(heroSettings || {}),
           id: 'hero',
           kind: 'hero',
           mode: heroManagedBlock?.mode || block.mode || 'dynamic',
@@ -1382,7 +1411,7 @@ export default function HomePage() {
       return !blockId || !resolvedBlockIds.has(blockId);
     });
 
-    return resolvedBlocks.concat(extraRenderableManagedBlocks);
+    return reorderHomeTopBlocks(resolvedBlocks.concat(extraRenderableManagedBlocks));
   }, [
     dynamicHomeServicesFeatureBlock,
     dynamicColumnsMathBlock,
@@ -1397,20 +1426,9 @@ export default function HomePage() {
     dynamicServicesGridBlock,
     dynamicTopStripBlock,
   ]);
-  const heroBlockIndex = useMemo(
-    () => blocks.findIndex((block) => {
-      const kind = String(block?.kind || block?.type || '').trim().toLowerCase();
-      return kind === 'hero';
-    }),
-    [blocks],
-  );
-  const blocksThroughHero = useMemo(
-    () => (heroBlockIndex >= 0 ? blocks.slice(0, heroBlockIndex + 1) : []),
-    [blocks, heroBlockIndex],
-  );
-  const blocksAfterHero = useMemo(
-    () => (heroBlockIndex >= 0 ? blocks.slice(heroBlockIndex + 1) : blocks),
-    [blocks, heroBlockIndex],
+  const homeRenderItems = useMemo(
+    () => groupHomeRenderItems(planHomeRenderItems(blocks, { showReturnAssist })),
+    [blocks, showReturnAssist],
   );
   const nativeEnhancementsKey = useMemo(
     () => blocks.map((block) => `${String(block?.id || block?.type || '')}:${String(block?.mode || 'static')}`).join('|'),
@@ -1490,7 +1508,7 @@ export default function HomePage() {
   return (
     <div
       ref={pageRef}
-      className={`home-native-page${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${homeHudFocusClass}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
+      className={`home-native-page${HOME_HERO_TEMPORARILY_HIDDEN ? ' is-home-hero-temporarily-hidden' : ''}${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${homeHudFocusClass}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
       onClickCapture={isMobileFrontHud ? handleMobilePageHudClickCapture : undefined}
     >
       {showHomeColumnsDebug ? (
@@ -1580,51 +1598,47 @@ export default function HomePage() {
         </FrontHudPanelShell>
       ) : null}
 
-      {blocksThroughHero.length ? (
-        <PageBlocksRenderer
-          blocks={blocksThroughHero}
-          heroHud={homeHeroHudConfig}
-          ownershipEnabled={showFrontHud}
-          hudAnchorsByBlockId={showFrontHud && !isMobileFrontHud ? hudAnchorPanelsByBlockId : null}
-          activeHudPanelId={activeHudPanelId}
-          hudDockCollapsed={hudDockCollapsed}
-          hudOpacityRatio={frontHudOpacityRatio}
-          onHudAnchorClick={showFrontHud && !isMobileFrontHud ? openHudPanel : null}
-        />
-      ) : null}
+      {homeRenderItems.map((item, index) => {
+        if (item?.type === 'block_run' && Array.isArray(item.blocks) && item.blocks.length) {
+          return (
+            <PageBlocksRenderer
+              key={`block-run-${index}`}
+              blocks={item.blocks}
+              heroHud={homeHeroHudConfig}
+              ownershipEnabled={showFrontHud}
+              hudAnchorsByBlockId={showFrontHud && !isMobileFrontHud ? hudAnchorPanelsByBlockId : null}
+              activeHudPanelId={activeHudPanelId}
+              hudDockCollapsed={hudDockCollapsed}
+              hudOpacityRatio={frontHudOpacityRatio}
+              onHudAnchorClick={showFrontHud && !isMobileFrontHud ? openHudPanel : null}
+            />
+          );
+        }
 
-      {showReturnAssist ? (
-        <section className="home-return-assist" aria-label="Return assist">
-          <ResourcesProvider>
-            <div className="home-return-assist-panel">
-              <div className="home-return-assist-search-shell">
-                <HomeReturnAssistSearchPanel />
-              </div>
-              <button
-                type="button"
-                className="home-return-assist-dismiss"
-                onClick={handleDismissReturnAssist}
-                aria-label="Dismiss return assist"
-              >
-                ×
-              </button>
-            </div>
-          </ResourcesProvider>
-        </section>
-      ) : null}
+        if (item?.type === 'slot' && item.slot === 'return_assist') {
+          return (
+            <section key={`slot-${item.slot}-${index}`} className="home-return-assist" aria-label="Return assist">
+              <ResourcesProvider>
+                <div className="home-return-assist-panel">
+                  <div className="home-return-assist-search-shell">
+                    <HomeReturnAssistSearchPanel />
+                  </div>
+                  <button
+                    type="button"
+                    className="home-return-assist-dismiss"
+                    onClick={handleDismissReturnAssist}
+                    aria-label="Dismiss return assist"
+                  >
+                    ×
+                  </button>
+                </div>
+              </ResourcesProvider>
+            </section>
+          );
+        }
 
-      {blocksAfterHero.length ? (
-        <PageBlocksRenderer
-          blocks={blocksAfterHero}
-          heroHud={null}
-          ownershipEnabled={showFrontHud}
-          hudAnchorsByBlockId={showFrontHud && !isMobileFrontHud ? hudAnchorPanelsByBlockId : null}
-          activeHudPanelId={activeHudPanelId}
-          hudDockCollapsed={hudDockCollapsed}
-          hudOpacityRatio={frontHudOpacityRatio}
-          onHudAnchorClick={showFrontHud && !isMobileFrontHud ? openHudPanel : null}
-        />
-      ) : null}
+        return null;
+      })}
       {isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? (
         <MobileFrontHudActionTray
           blockLabel={mobileSelectedHudPanel.label}
