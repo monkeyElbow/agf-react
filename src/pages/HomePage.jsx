@@ -1093,6 +1093,25 @@ export default function HomePage() {
   const ctaHudSubmitStyle = normalizeCtaHudSubmitStyle(ctaHudSettings.submitStyle);
   const ctaHudSubmitTone = normalizeCtaHudSubmitTone(ctaHudSettings.submitTone, ctaHudSubmitStyle);
   const heroActiveLineData = heroHudEditableLines.find((line) => line.key === heroActiveLine) || heroHudEditableLines[0] || null;
+  const homeHeroRenderContract = useMemo(() => ({
+    bgTone: heroHudBgTone,
+    justify: heroHudJustify,
+    lines: heroHudEditableLines
+      .map((line) => ({
+        text: String(line.text || '').trim(),
+        className: String(line.className || '').trim(),
+        highlightsJson: Array.isArray(line.highlights) ? line.highlights : [],
+      }))
+      .filter((line) => line.text),
+    actions: heroHudCtaLabel
+      ? [{ label: heroHudCtaLabel }]
+      : [],
+  }), [
+    heroHudBgTone,
+    heroHudCtaLabel,
+    heroHudEditableLines,
+    heroHudJustify,
+  ]);
 
   useEffect(() => {
     logHeroDriftWarningOnce(heroInspection, 'Home hero');
@@ -1480,12 +1499,14 @@ export default function HomePage() {
     }
 
     const frameId = window.requestAnimationFrame(() => {
-      const report = inspectHeroRender(pageRef.current, '/');
+      const report = inspectHeroRender(pageRef.current, '/', {
+        heroContract: homeHeroRenderContract,
+      });
       logHeroRenderWarningOnce(report, 'Home hero');
     });
 
     return () => window.cancelAnimationFrame(frameId);
-  }, [blocks]);
+  }, [blocks, homeHeroRenderContract]);
 
   const isHeroHudEditing = shouldRenderHeroInlineEditor({
     hudEnabled: showFrontHud && !isMobileFrontHud,

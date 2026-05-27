@@ -74,7 +74,7 @@ export function logHeroRenderWarningOnce(report, source = 'Hero') {
 
 export function inspectHeroRender(rootNode, pathname, options = {}) {
   const renderContract = HERO_RENDER_CONTRACTS_BY_PATH[String(pathname || '').trim()];
-  const heroContract = HERO_SEED_CONTRACTS_BY_PATH[String(pathname || '').trim()];
+  const heroContract = options?.heroContract || HERO_SEED_CONTRACTS_BY_PATH[String(pathname || '').trim()];
   const scope = rootNode && typeof rootNode.querySelector === 'function' ? rootNode : null;
   const styleReader = typeof options?.styleReader === 'function'
     ? options.styleReader
