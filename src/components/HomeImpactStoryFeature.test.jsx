@@ -248,7 +248,7 @@ describe('HomeImpactStoryFeature', () => {
 
   it('brings the first stat in sooner so the section does not sit blank after the intro', () => {
     const { container } = renderFeatureBlock();
-    setEnhancedShellProgress(container, 0.26);
+    setEnhancedShellProgress(container, 0.24);
 
     act(() => {
       window.dispatchEvent(new Event('scroll'));
@@ -257,9 +257,11 @@ describe('HomeImpactStoryFeature', () => {
 
     const proof = container.querySelector('.home-impact-story-proof');
     const firstMetric = screen.getByText('assets under management').closest('.home-impact-story-metric');
+    const firstActor = firstMetric?.closest('.home-impact-story-metric-actor');
 
     expect(proof?.getAttribute('style')).not.toContain('opacity: 0;');
-    expect(firstMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
+    expect(firstActor?.getAttribute('data-motion-state')).toBe('entering');
+    expect(Number.parseFloat(firstActor?.style.opacity || '0')).toBeGreaterThan(0.1);
   });
 
   it('uses a staged actor sequence instead of mounting a permanent three-metric centered row', () => {
@@ -294,7 +296,7 @@ describe('HomeImpactStoryFeature', () => {
 
   it('keeps the next metric from meaningfully entering too early behind the current one', () => {
     const { container } = renderFeatureBlock();
-    setEnhancedShellProgress(container, 0.58);
+    setEnhancedShellProgress(container, 0.46);
 
     act(() => {
       window.dispatchEvent(new Event('scroll'));
@@ -307,7 +309,7 @@ describe('HomeImpactStoryFeature', () => {
 
     expect(firstMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('exiting');
     expect(secondActor?.getAttribute('data-motion-state')).toBe('entering');
-    expect(secondActor?.getAttribute('style')).toContain('opacity: 0.');
+    expect(Number.parseFloat(secondActor?.style.opacity || '0')).toBeLessThanOrEqual(0.05);
     expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
   });
 
@@ -326,7 +328,7 @@ describe('HomeImpactStoryFeature', () => {
 
   it('counts metric values with scroll progress inside each center window', () => {
     const { container } = renderFeatureBlock();
-    setEnhancedShellProgress(container, 0.34);
+    setEnhancedShellProgress(container, 0.31);
 
     act(() => {
       window.dispatchEvent(new Event('scroll'));
@@ -338,7 +340,7 @@ describe('HomeImpactStoryFeature', () => {
     expect(firstValue?.textContent).not.toBe('$12 billion');
     expect(screen.queryByText('(and growing) clients')).toBeNull();
 
-    setEnhancedShellProgress(container, 0.46);
+    setEnhancedShellProgress(container, 0.42);
     act(() => {
       window.dispatchEvent(new Event('scroll'));
       vi.advanceTimersByTime(50);
@@ -347,7 +349,7 @@ describe('HomeImpactStoryFeature', () => {
     const firstValueLater = getMetricValueNode('assets under management');
     expect(firstValueLater?.textContent).toBe('$12 billion');
 
-    setEnhancedShellProgress(container, 0.56);
+    setEnhancedShellProgress(container, 0.52);
     act(() => {
       window.dispatchEvent(new Event('scroll'));
       vi.advanceTimersByTime(50);

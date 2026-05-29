@@ -12,10 +12,12 @@ const HOME_IMPACT_STORY_COPY_SHIFT_START = 0;
 const HOME_IMPACT_STORY_COPY_SHIFT_DURATION = 0.24;
 const HOME_IMPACT_STORY_COPY_OPACITY_START = 0.04;
 const HOME_IMPACT_STORY_COPY_OPACITY_DURATION = 0.2;
-const HOME_IMPACT_STORY_SEQUENCE_START = 0.27;
+const HOME_IMPACT_STORY_SEQUENCE_START = 0.22;
 const HOME_IMPACT_STORY_SEQUENCE_END = 0.94;
-const HOME_IMPACT_STORY_PROOF_FADE_START = 0.22;
-const HOME_IMPACT_STORY_PROOF_FADE_DURATION = 0.12;
+const HOME_IMPACT_STORY_PROOF_FADE_START = 0.2;
+const HOME_IMPACT_STORY_PROOF_FADE_DURATION = 0.1;
+const HOME_IMPACT_STORY_FIRST_METRIC_ENTER_DURATION = 0.46;
+const HOME_IMPACT_STORY_FIRST_METRIC_OPACITY_EXPONENT = 1.35;
 const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 function clamp(value, min, max) {
@@ -182,7 +184,12 @@ function ImpactStoryMetrics({
   const buildActorState = (metric, index, kind) => {
     const isFinalMetric = index === metrics.length - 1;
     const incomingDelay = getMetricEntryDelay(index);
-    const enterDuration = Math.max(0.24, 0.54 - incomingDelay);
+    const enterDuration = index === 0
+      ? HOME_IMPACT_STORY_FIRST_METRIC_ENTER_DURATION
+      : Math.max(0.24, 0.54 - incomingDelay);
+    const enterOpacityExponent = index === 0
+      ? HOME_IMPACT_STORY_FIRST_METRIC_OPACITY_EXPONENT
+      : 1.75;
     let motionState = 'static';
     let translateY = 0;
     let metricOpacity = 1;
@@ -193,7 +200,7 @@ function ImpactStoryMetrics({
       const enterProgress = clamp((activeLocalProgress - incomingDelay) / enterDuration, 0, 1);
       motionState = enterProgress < 1 ? 'entering' : (isFinalMetric ? 'holding' : 'centered');
       translateY = (1 - enterProgress) * 232;
-      metricOpacity = Math.pow(enterProgress, 1.75);
+      metricOpacity = Math.pow(enterProgress, enterOpacityExponent);
       scale = 0.992 + (enterProgress * 0.008);
       countProgress = clamp((activeLocalProgress - (0.16 + incomingDelay)) / 0.42, 0, 1);
       if (enterProgress >= 1) {
