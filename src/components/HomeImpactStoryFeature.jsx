@@ -8,6 +8,10 @@ const HOME_IMPACT_STORY_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)
 const HOME_IMPACT_STORY_DESKTOP_RUNWAY_VH = 400;
 const HOME_IMPACT_STORY_RELEASE_START = 0.96;
 const HOME_IMPACT_STORY_METRIC_ENTRY_DELAYS = [0, 0.08, 0.14];
+const HOME_IMPACT_STORY_SEQUENCE_START = 0.27;
+const HOME_IMPACT_STORY_SEQUENCE_END = 0.94;
+const HOME_IMPACT_STORY_PROOF_FADE_START = 0.22;
+const HOME_IMPACT_STORY_PROOF_FADE_DURATION = 0.12;
 const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 function clamp(value, min, max) {
@@ -155,10 +159,13 @@ function ImpactStoryMetrics({
   countUp = false,
 }) {
   const metricCount = Math.max(metrics.length, 1);
-  const sequenceStart = 0.35;
-  const sequenceEnd = 0.94;
   const sequenceProgress = animated
-    ? clamp((progress - sequenceStart) / (sequenceEnd - sequenceStart), 0, 1)
+    ? clamp(
+      (progress - HOME_IMPACT_STORY_SEQUENCE_START)
+        / (HOME_IMPACT_STORY_SEQUENCE_END - HOME_IMPACT_STORY_SEQUENCE_START),
+      0,
+      1,
+    )
     : 0;
   const slotSize = 1 / metricCount;
   const activeIndex = animated
@@ -460,7 +467,11 @@ export default function HomeImpactStoryFeature({
   const copyBaseShift = -34;
   const copyOpacity = 1 - clamp((heldProgress - 0.1) / 0.22, 0, 1);
   const copyShift = copyBaseShift + (clamp((heldProgress - 0.08) / 0.26, 0, 1) * -148);
-  const metricsOpacity = clamp((heldProgress - 0.3) / 0.12, 0, 1);
+  const metricsOpacity = clamp(
+    (heldProgress - HOME_IMPACT_STORY_PROOF_FADE_START) / HOME_IMPACT_STORY_PROOF_FADE_DURATION,
+    0,
+    1,
+  );
   const finalCtaOpacity = clamp((heldProgress - 0.86) / 0.08, 0, 1);
   const finalCtaShift = (1 - finalCtaOpacity) * 26;
   const backgroundOffset = 8 - (heldProgress * 16);

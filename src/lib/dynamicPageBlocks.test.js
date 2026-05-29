@@ -823,7 +823,7 @@ describe('buildDynamicServicesGridFromBlock', () => {
       kind: 'services_grid',
       mode: 'dynamic',
       settings: {
-        heading: 'Bold, smart steps. Together.',
+        heading: 'Bold, smart steps.',
         headingSizeRem: 4.5625,
         cardTitleSizeRem: 2.1875,
         cardPaddingRem: 1.85,
@@ -847,7 +847,7 @@ describe('buildDynamicServicesGridFromBlock', () => {
     });
 
     expect(runtime).toMatchObject({
-      heading: 'Bold, smart steps. Together.',
+      heading: 'Bold, smart steps.',
       headingSizeRem: 4.5625,
       cardTitleSizeRem: 2.1875,
       cardPaddingRem: 1.85,
@@ -990,9 +990,9 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         to: '/about-us/impact',
       },
       metrics: [
-        { value: '$11 billion', label: 'assets under management', tone: 'mango' },
-        { value: '1,583', label: 'ministries supported', tone: 'atlantean' },
-        { value: '38,654', label: 'clients served', tone: 'sandstone' },
+        { value: '$12 billion', label: 'assets under management', tone: 'mango' },
+        { value: '38,654', label: '(and growing) clients', tone: 'atlantean' },
+        { value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone' },
       ],
     });
   });

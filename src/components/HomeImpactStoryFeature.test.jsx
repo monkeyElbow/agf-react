@@ -232,6 +232,22 @@ describe('HomeImpactStoryFeature', () => {
     expect(firstMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
   });
 
+  it('brings the first stat in sooner so the section does not sit blank after the intro', () => {
+    const { container } = renderFeatureBlock();
+    setEnhancedShellProgress(container, 0.26);
+
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(100);
+    });
+
+    const proof = container.querySelector('.home-impact-story-proof');
+    const firstMetric = screen.getByText('assets under management').closest('.home-impact-story-metric');
+
+    expect(proof?.getAttribute('style')).not.toContain('opacity: 0;');
+    expect(firstMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
+  });
+
   it('uses a staged actor sequence instead of mounting a permanent three-metric centered row', () => {
     const { container } = renderFeatureBlock();
     setEnhancedShellProgress(container, 0.79);
@@ -296,7 +312,7 @@ describe('HomeImpactStoryFeature', () => {
 
   it('counts metric values with scroll progress inside each center window', () => {
     const { container } = renderFeatureBlock();
-    setEnhancedShellProgress(container, 0.4);
+    setEnhancedShellProgress(container, 0.34);
 
     act(() => {
       window.dispatchEvent(new Event('scroll'));
@@ -308,7 +324,7 @@ describe('HomeImpactStoryFeature', () => {
     expect(firstValue?.textContent).not.toBe('$12 billion');
     expect(screen.queryByText('(and growing) clients')).toBeNull();
 
-    setEnhancedShellProgress(container, 0.52);
+    setEnhancedShellProgress(container, 0.46);
     act(() => {
       window.dispatchEvent(new Event('scroll'));
       vi.advanceTimersByTime(50);
@@ -317,7 +333,7 @@ describe('HomeImpactStoryFeature', () => {
     const firstValueLater = getMetricValueNode('assets under management');
     expect(firstValueLater?.textContent).toBe('$12 billion');
 
-    setEnhancedShellProgress(container, 0.62);
+    setEnhancedShellProgress(container, 0.56);
     act(() => {
       window.dispatchEvent(new Event('scroll'));
       vi.advanceTimersByTime(50);

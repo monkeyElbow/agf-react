@@ -72,6 +72,9 @@ describe('content block blueprint coverage', () => {
 
   it('seeds real hero, intro, and billboard blocks for the impact page without a fallback page-content block', () => {
     const blocks = contentBlockBlueprintsByPath['/about-us/impact'] || [];
+    const dynamicHero = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const dynamicIntro = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const dynamicBillboard = blocks.find((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
@@ -79,6 +82,11 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'static')).toBe(true);
     expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'static')).toBe(true);
+    expect(dynamicHero?.hidden).toBe(true);
+    expect(dynamicIntro?.hidden).toBe(true);
+    expect(dynamicBillboard?.settings?.title).toBe('We’re making');
+    expect(dynamicBillboard?.settings?.subtitle).toBe('a difference… thanks to you.');
+    expect(dynamicBillboard?.settings?.body).toBe('');
     expect(blocks.find((block) => (
       block?.id === 'impact_proof_story'
       && block?.kind === 'site_feature'
@@ -589,7 +597,7 @@ describe('content block blueprint coverage', () => {
     expect(homeServicesFeature?.kind).toBe('site_feature');
     expect(homeServicesFeature?.mode).toBe('dynamic');
     expect(homeServicesFeature?.settings?.featureId).toBe('home_services_feature_animation');
-    expect(homeServicesFeature?.settings?.headline).toBe('Bold, smart steps. Together.');
+    expect(homeServicesFeature?.settings?.headline).toBe('Bold, smart steps.');
     expect(servicesGrid?.settings?.browsePath).toBe('/services');
     expect(servicesGrid?.settings?.browsePageRef).toBe('/services');
     expect(servicesGrid?.settings?.card1Path).toBe('/services/loans');
