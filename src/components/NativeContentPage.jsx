@@ -4299,10 +4299,9 @@ export default function NativeContentPage({ page }) {
       };
     }
 
-    if (targetedDynamicSiteFeatureSections.size && Array.isArray(nextBaseContent.sections) && nextBaseContent.sections.length) {
-      nextBaseContent = {
-        ...nextBaseContent,
-        sections: nextBaseContent.sections.map((section, sectionIndex) => {
+    if (targetedDynamicSiteFeatureSections.size) {
+      const mergeTargetedSiteFeatureSections = (sections = []) => (
+        sections.map((section, sectionIndex) => {
           const targetKey = getSectionTargetKeys(section, sectionIndex).find((key) => targetedDynamicSiteFeatureSections.has(key));
           if (!targetKey) {
             return section;
@@ -4318,7 +4317,17 @@ export default function NativeContentPage({ page }) {
             className: mergeClassNames(section.className, mappedSection.className),
             siteFeatureRuntime: mappedSection.siteFeatureRuntime || null,
           };
-        }),
+        })
+      );
+
+      nextBaseContent = {
+        ...nextBaseContent,
+        preIntroSections: Array.isArray(nextBaseContent.preIntroSections)
+          ? mergeTargetedSiteFeatureSections(nextBaseContent.preIntroSections)
+          : nextBaseContent.preIntroSections,
+        sections: Array.isArray(nextBaseContent.sections)
+          ? mergeTargetedSiteFeatureSections(nextBaseContent.sections)
+          : nextBaseContent.sections,
       };
     }
 
@@ -5777,6 +5786,7 @@ export default function NativeContentPage({ page }) {
             >
               <BlockOwnershipOverlay ownership={sectionOwnership} />
               <ImpactProofStoryFeature
+                intro={section.featureIntro}
                 headline={runtime.title}
                 body={runtime.body}
                 action={runtime.action}

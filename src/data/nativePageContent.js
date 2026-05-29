@@ -3683,6 +3683,8 @@ function companyChildContent(path, title) {
   if (path === '/about-us/impact') {
     return {
       pageClass: 'native-info-page--impact',
+      hideHero: true,
+      hideIntro: true,
       hero: {
         lines: [
           { title: 'We’re making' },
@@ -3698,7 +3700,7 @@ function companyChildContent(path, title) {
       intro: {
         heading: 'Put your money where your faith is.',
         body: [
-          'AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health and growing the Kingdom of God. As a customer, you become part of that vision. We’re ministry allies.',
+          'AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health and growing the Kingdom of God. As a client, you become part of that vision. We’re ministry allies.',
         ],
         emphasis: 'It’s our privilege to serve you, **alongside** you.',
       },
@@ -3707,6 +3709,11 @@ function companyChildContent(path, title) {
           title: 'Impact highlights',
           hideTitle: true,
           className: 'impact-native-stats',
+          featureIntro: {
+            heading: 'Serving you, alongside you.',
+            body: 'AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health while growing God’s kingdom. As a client, you become part of that vision.',
+            emphasis: 'We’re ministry allies.',
+          },
           columns: 'two',
           cards: [
             {

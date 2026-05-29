@@ -281,7 +281,27 @@ function ImpactProofAction({ action, resolveTo, className }) {
   );
 }
 
+function renderImpactIntroHeading(heading) {
+  const normalizedHeading = String(heading || '').trim();
+  if (!normalizedHeading) {
+    return null;
+  }
+
+  if (normalizedHeading === 'Serving you, alongside you.') {
+    return (
+      <>
+        Serving you,
+        <br />
+        alongside you.
+      </>
+    );
+  }
+
+  return normalizedHeading;
+}
+
 export function ImpactProofStoryEditorialContent({
+  intro = null,
   body = '',
   metrics = [],
   action = null,
@@ -427,61 +447,86 @@ export function ImpactProofStoryEditorialContent({
     };
   }, [normalizedMetrics.length, prefersReducedMotion]);
 
+  const introHeading = String(intro?.heading || '').trim();
+  const introBody = String(intro?.body || '').trim();
+  const introEmphasis = String(intro?.emphasis || '').trim();
+  const showIntro = Boolean(introHeading || introBody || introEmphasis);
+
   return (
-    <div
-      ref={shellRef}
-      className="impact-proof-story-shell"
-      data-proof-layout="editorial-stack"
-      data-proof-focus="reading-flow"
-      data-scroll-gradient-motion={prefersReducedMotion ? 'reduced' : 'enabled'}
-    >
-      {body ? <p className="impact-proof-story-body impact-proof-story-body--editorial">{body}</p> : null}
-      <div className="impact-proof-story-editorial-list">
-        {normalizedMetrics.map((metric, index) => (
-          <article
-            key={`${metric.value}-${metric.label}`}
-            className={`impact-proof-story-proof is-tone-${metric.tone} ${index % 2 === 0 ? 'is-left' : 'is-right'}`}
-            data-proof-index={String(index)}
-            data-tone={metric.tone}
-            data-scroll-gradient-motion={prefersReducedMotion ? 'reduced' : 'enabled'}
-          >
-            <div className="impact-proof-story-proof-content">
-              <div className="impact-proof-story-proof-copy">
-                {metric.eyebrow ? <p className="impact-proof-story-proof-eyebrow">{metric.eyebrow}</p> : null}
-                <h2 className="impact-proof-story-proof-stat">
-                  <span className={`impact-proof-story-proof-value is-tone-${metric.tone}`}>{metric.value}</span>
-                  {' '}
-                  <span className="impact-proof-story-proof-label">{metric.label}</span>
+    <>
+      {showIntro ? (
+        <div className="impact-proof-story-intro-shell">
+          <div className="ag-panel-rail impact-proof-story-intro-rail">
+            <div className="impact-proof-story-intro">
+              {introHeading ? (
+                <h2 className="impact-proof-story-intro-heading" aria-label={introHeading}>
+                  {renderImpactIntroHeading(introHeading)}
                 </h2>
-                {metric.body ? <p className="impact-proof-story-proof-body">{metric.body}</p> : null}
-              </div>
-              {metric.action ? (
-                <div className="impact-proof-story-proof-action">
-                  <ImpactProofAction
-                    action={metric.action}
-                    resolveTo={resolveTo}
-                    className={`service-native-btn is-outline is-tone-${metric.tone}`}
-                  />
-                </div>
               ) : null}
+              {introBody ? <p className="impact-proof-story-intro-body">{introBody}</p> : null}
+              {introEmphasis ? <p className="impact-proof-story-intro-emphasis">{introEmphasis}</p> : null}
+              <div className="impact-proof-story-intro-scroll-cue" aria-hidden="true">
+                <span className="impact-proof-story-intro-scroll-cue-mark" />
+              </div>
             </div>
-          </article>
-        ))}
-      </div>
-      {action ? (
-        <div className="impact-proof-story-footer-action">
-          <ImpactProofAction
-            action={action}
-            resolveTo={resolveTo}
-            className="service-native-btn is-outline is-tone-super-grey"
-          />
+          </div>
         </div>
       ) : null}
-    </div>
+      <div
+        ref={shellRef}
+        className="impact-proof-story-shell"
+        data-proof-layout="editorial-stack"
+        data-proof-focus="reading-flow"
+        data-scroll-gradient-motion={prefersReducedMotion ? 'reduced' : 'enabled'}
+      >
+        {body ? <p className="impact-proof-story-body impact-proof-story-body--editorial">{body}</p> : null}
+        <div className="impact-proof-story-editorial-list">
+          {normalizedMetrics.map((metric, index) => (
+            <article
+              key={`${metric.value}-${metric.label}`}
+              className={`impact-proof-story-proof is-tone-${metric.tone} ${index % 2 === 0 ? 'is-left' : 'is-right'}`}
+              data-proof-index={String(index)}
+              data-tone={metric.tone}
+              data-scroll-gradient-motion={prefersReducedMotion ? 'reduced' : 'enabled'}
+            >
+              <div className="impact-proof-story-proof-content">
+                <div className="impact-proof-story-proof-copy">
+                  <h2 className="impact-proof-story-proof-stat">
+                    <span className={`impact-proof-story-proof-value is-tone-${metric.tone}`}>{metric.value}</span>
+                    {' '}
+                    <span className="impact-proof-story-proof-label">{metric.label}</span>
+                  </h2>
+                  {metric.body ? <p className="impact-proof-story-proof-body">{metric.body}</p> : null}
+                </div>
+                {metric.action ? (
+                  <div className="impact-proof-story-proof-action">
+                    <ImpactProofAction
+                      action={metric.action}
+                      resolveTo={resolveTo}
+                      className={`service-native-btn is-outline is-tone-${metric.tone}`}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+        {action ? (
+          <div className="impact-proof-story-footer-action">
+            <ImpactProofAction
+              action={action}
+              resolveTo={resolveTo}
+              className="service-native-btn is-outline is-tone-super-grey"
+            />
+          </div>
+        ) : null}
+      </div>
+    </>
   );
 }
 
 export default function ImpactProofStoryFeature({
+  intro = null,
   body = '',
   metrics = [],
   action = null,
@@ -489,6 +534,7 @@ export default function ImpactProofStoryFeature({
 }) {
   return (
     <ImpactProofStoryEditorialContent
+      intro={intro}
       body={body}
       metrics={metrics}
       action={action}

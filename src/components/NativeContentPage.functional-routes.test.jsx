@@ -163,7 +163,7 @@ describe('NativeContentPage functional routes', () => {
   });
 
   it('renders the sitemap functional route through NativeContentPage', () => {
-    render(
+    const { container } = render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -180,7 +180,7 @@ describe('NativeContentPage functional routes', () => {
   });
 
   it('renders the prospectus functional route through NativeContentPage', () => {
-    render(
+    const { container } = render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -397,7 +397,7 @@ describe('NativeContentPage functional routes', () => {
       })),
     };
 
-    const { unmount } = render(
+    const { container, unmount } = render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -410,6 +410,10 @@ describe('NativeContentPage functional routes', () => {
 
     const managedProofSection = document.querySelector('.impact-native-stats.native-dynamic-site-feature');
     expect(managedProofSection).toBeTruthy();
+    expect(container.querySelector('.service-native-hero')).toBeNull();
+    expect(container.querySelector('.service-native-intro')).toBeNull();
+    expect(within(managedProofSection).getByRole('heading', { name: 'Serving you, alongside you.' })).toBeTruthy();
+    expect(within(managedProofSection).getByText('We’re ministry allies.')).toBeTruthy();
     expect(managedProofSection?.querySelector('.impact-proof-story-shell, .impact-proof-story-static')).toBeTruthy();
     expect(managedProofSection?.querySelectorAll('.impact-native-card')).toHaveLength(0);
     expect(within(managedProofSection).queryByText('Impact highlights')).toBeNull();
@@ -418,6 +422,10 @@ describe('NativeContentPage functional routes', () => {
     expect(within(managedProofSection).getByText('Over the last 10 years, those ministries represent more than 945,000 people.')).toBeTruthy();
     expect(within(managedProofSection).getByText('ministers retiring with AGFinancial.')).toBeTruthy();
     expect(within(managedProofSection).getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
+    expect(screen.getByRole('heading', { name: 'We’re making' })).toBeTruthy();
+    expect(screen.getByText('a difference… thanks to you.')).toBeTruthy();
+    expect(screen.queryByText('Bold, smart moves.')).toBeNull();
+    expect(screen.queryByText('Let’s make them together.')).toBeNull();
 
     unmount();
     mockBlocksByPath = {};

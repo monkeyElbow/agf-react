@@ -402,6 +402,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       name: 'Hero',
       kind: 'hero',
       mode: 'dynamic',
+      hidden: true,
       settings: {
         animationPreset: 'default',
         bgTone: 'white',
@@ -568,6 +569,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       name: 'Hero',
       kind: 'hero',
       mode: 'dynamic',
+      hidden: true,
       settings: {
         animationPreset: 'default',
         bgTone: 'white',
@@ -1880,7 +1882,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       mode: 'dynamic',
       settings: {
         featureId: 'home_services_feature_animation',
-        headline: 'Bold, smart steps. Together.',
+        headline: 'Bold, smart steps.',
       },
       editableFields: getAllowedSiteFeatureEditableFieldIds('home_services_feature_animation'),
     },
@@ -1890,7 +1892,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       kind: 'services_grid',
       mode: 'dynamic',
       settings: {
-        heading: 'Bold, smart steps. Together.',
+        heading: 'Bold, smart steps.',
         headingSizeRem: 4.5625,
         cardTitleSizeRem: 2.1875,
         cardPaddingRem: 1.85,
@@ -3368,6 +3370,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       name: 'Hero',
       kind: 'hero',
       mode: 'dynamic',
+      hidden: true,
       settings: {
         animationPreset: 'default',
         bgTone: 'white',
@@ -3394,11 +3397,12 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       name: 'Intro',
       kind: 'intro',
       mode: 'dynamic',
+      hidden: true,
       settings: {
         heading: 'Put your money where your faith is.',
         headingClassName: '',
         headingHighlightsJson: '',
-        bodyHtml: '<p>AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health and growing the Kingdom of God. As a customer, you become part of that vision. We’re ministry allies.</p>',
+        bodyHtml: '<p>AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health and growing the Kingdom of God. As a client, you become part of that vision. We’re ministry allies.</p>',
         body: '',
         justify: 'center',
         lineSpacing: 1.04,
@@ -3426,12 +3430,12 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       kind: 'billboard',
       mode: 'dynamic',
       settings: {
-        title: 'Bold, smart moves.',
+        title: 'We’re making',
         titleClassName: '',
         titleHighlightsJson: '',
-        subtitle: 'Let’s make them together.',
+        subtitle: 'a difference… thanks to you.',
         bodyHtml: '',
-        body: 'Business with AGFinancial means ministry with AGFinancial.',
+        body: '',
         bgTone: 'white',
         textTone: 'dark',
         justify: 'center',

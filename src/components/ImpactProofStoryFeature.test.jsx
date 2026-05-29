@@ -91,6 +91,7 @@ describe('ImpactProofStoryFeature', () => {
     expect(container.querySelectorAll('.impact-proof-story-proof.fade-up')).toHaveLength(0);
     expect(container.querySelectorAll('.impact-proof-story-proof-copy')).toHaveLength(4);
     expect(container.querySelectorAll('.impact-proof-story-proof-action')).toHaveLength(4);
+    expect(container.querySelectorAll('.impact-proof-story-proof-eyebrow')).toHaveLength(0);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-left')).toHaveLength(2);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-right')).toHaveLength(2);
     expect(screen.getByRole('heading', { name: '1400 ministries supported by loans.' })).toBeTruthy();
@@ -98,6 +99,23 @@ describe('ImpactProofStoryFeature', () => {
     expect(screen.getByRole('heading', { name: '$450 Million under trusted care for future ministry.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: '5,117 mission trips covered with protection in place.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: '29,000+ ministers retiring with AGFinancial.' })).toBeTruthy();
+  });
+
+  it('can render the Impact intro header shell above the proof stack without changing the proof layout', () => {
+    const { container } = renderFeature({
+      intro: {
+        heading: 'Serving you, alongside you.',
+        body: 'AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health while growing God’s kingdom. As a client, you become part of that vision.',
+        emphasis: 'We’re ministry allies.',
+      },
+    });
+
+    expect(screen.getByRole('heading', { name: 'Serving you, alongside you.' })).toBeTruthy();
+    expect(screen.getByText(/improving financial health while growing God’s kingdom/i)).toBeTruthy();
+    expect(screen.getByText('We’re ministry allies.')).toBeTruthy();
+    expect(container.querySelector('.impact-proof-story-intro-scroll-cue')).toBeTruthy();
+    expect(container.querySelector('.impact-proof-story-shell')).toBeTruthy();
+    expect(container.querySelectorAll('.impact-proof-story-proof')).toHaveLength(4);
   });
 
   it('keeps every metric CTA readable in the same static layout across viewports', () => {

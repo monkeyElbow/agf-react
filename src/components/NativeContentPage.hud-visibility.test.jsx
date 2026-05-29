@@ -133,7 +133,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           name: 'Hero',
           kind: 'hero',
           mode: 'dynamic',
-          hidden: false,
+          hidden: true,
           settings: {
             animationPreset: 'default',
             bgTone: 'white',
@@ -201,7 +201,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
   });
 
   it('keeps the ministers group life hero visible when HUD is off and a static stub is hidden', () => {
-    render(
+    const { container } = render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -224,7 +224,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       '/services/legacy-giving': [],
     };
 
-    render(
+    const { container } = render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -245,7 +245,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
   it('keeps the ministers group life hero visible when HUD is on while showing HUD chrome only then', () => {
     mockFrontHudEnabled = true;
 
-    render(
+    const { container } = render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -281,7 +281,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       },
     };
 
-    render(
+    const { container } = render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -343,7 +343,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           name: 'Hero',
           kind: 'hero',
           mode: 'dynamic',
-          hidden: false,
+          hidden: true,
           settings: {
             animationPreset: 'default',
             bgTone: 'white',
@@ -493,10 +493,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           name: 'Intro',
           kind: 'intro',
           mode: 'dynamic',
-          hidden: false,
+          hidden: true,
           settings: {
             heading: 'Put your money where your faith is.',
-            bodyHtml: '<p>AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health and growing the Kingdom of God. As a customer, you become part of that vision. We’re ministry allies.</p>',
+            bodyHtml: '<p>AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health and growing the Kingdom of God. As a client, you become part of that vision. We’re ministry allies.</p>',
             extraLine: 'It’s our privilege to serve you, **alongside** you.',
             bgTone: 'sand',
             textTone: 'dark',
@@ -519,9 +519,9 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           mode: 'dynamic',
           hidden: false,
           settings: {
-            title: 'Bold, smart moves.',
-            subtitle: 'Let’s make them together.',
-            body: 'Business with AGFinancial means ministry with AGFinancial.',
+            title: 'We’re making',
+            subtitle: 'a difference… thanks to you.',
+            body: '',
             bgTone: 'white',
             textTone: 'dark',
             justify: 'center',
@@ -561,7 +561,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       ],
     };
 
-    render(
+    const { container } = render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -572,11 +572,17 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       </MemoryRouter>,
     );
 
+    expect(container.querySelector('.service-native-hero')).toBeNull();
+    expect(container.querySelector('.service-native-intro')).toBeNull();
+    expect(screen.queryByText('Put your money where your faith is.')).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Serving you, alongside you.' })).toBeTruthy();
+    expect(screen.getByText(/improving financial health while growing God’s kingdom/i)).toBeTruthy();
+    expect(screen.getByText('We’re ministry allies.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'We’re making' })).toBeTruthy();
-    expect(screen.getByText('Put your money where your faith is.')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Bold, smart moves.' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Open Intro HUD panel' })).toBeTruthy();
+    expect(screen.getByText('a difference… thanks to you.')).toBeTruthy();
+    expect(screen.queryByText('Let’s make them together.')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Open Hero HUD panel' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Open Intro HUD panel' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Open Billboard HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Site Feature · Impact proof story HUD panel' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Open Page Content HUD panel' })).toBeNull();
