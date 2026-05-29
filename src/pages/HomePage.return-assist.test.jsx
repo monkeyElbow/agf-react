@@ -124,7 +124,7 @@ describe('HomePage return assist', () => {
     expect(screen.queryByRole('searchbox', { name: "What can we help you find?" })).toBeNull();
   });
 
-  it('does not alter the main hero when shown', async () => {
+  it('does not alter the leading home content when shown', async () => {
     const now = Date.now();
     recordHomeReturnAssistNavigation('/services/investments', now);
     recordHomeReturnAssistNavigation('/', now + 200);
@@ -132,8 +132,28 @@ describe('HomePage return assist', () => {
     renderHomePage(['/']);
 
     expect(await screen.findByRole('searchbox', { name: "What can we help you find?" })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Explore investments' })).toBeTruthy();
-    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { name: /What you do here matters/i })).toBeTruthy();
+    expect(document.querySelector('.home-native-page')?.className).toContain('is-home-hero-temporarily-hidden');
+  });
+
+  it('renders the return assist after hero and before the remaining home blocks', async () => {
+    const now = Date.now();
+    recordHomeReturnAssistNavigation('/services/investments', now);
+    recordHomeReturnAssistNavigation('/', now + 200);
+
+    const { container } = renderHomePage(['/']);
+
+    expect(await screen.findByRole('searchbox', { name: "What can we help you find?" })).toBeTruthy();
+
+    const heroBlock = container.querySelector('[data-block-id="hero"]');
+    const returnAssist = container.querySelector('.home-return-assist');
+    const ctaBlock = screen.getByText('It starts with a conversation. We’re happy to reach out.').closest('section');
+
+    expect(heroBlock).toBeTruthy();
+    expect(returnAssist).toBeTruthy();
+    expect(ctaBlock).toBeTruthy();
+    expect(heroBlock?.compareDocumentPosition(returnAssist) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(returnAssist?.compareDocumentPosition(ctaBlock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('keeps the home CTA lead copy in the section heading area instead of inside the form', () => {

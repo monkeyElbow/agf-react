@@ -57,11 +57,19 @@ describe('HomePage columns visibility', () => {
   });
 
   it('renders the home impact story through the site-feature path by default', () => {
-    renderHomePage();
+    const { container } = renderHomePage();
+
+    const heroBlock = container.querySelector('[data-block-id="hero"]');
+    const impactBlock = container.querySelector('[data-block-id="home_impact_story"]');
+    const featureBlock = container.querySelector('[data-block-id="home_services_feature_animation"]');
+    const homePage = container.querySelector('.home-native-page');
 
     expect(screen.getByRole('heading', { name: /What you do here matters/i })).toBeTruthy();
     expect(screen.getByText('assets under management')).toBeTruthy();
-    expect(screen.getByText('clients served')).toBeTruthy();
+    expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
+    expect(heroBlock).toBeTruthy();
+    expect(homePage?.className).toContain('is-home-hero-temporarily-hidden');
+    expect(impactBlock?.compareDocumentPosition(featureBlock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('renders managed home columns in static and dynamic modes', () => {

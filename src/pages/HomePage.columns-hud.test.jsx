@@ -165,6 +165,10 @@ describe('HomePage columns HUD', () => {
     expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Housing HUD panel' })).toBeTruthy();
     expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Hero HUD panel' }));
+
+    expect(screen.getByRole('button', { name: 'Close panel' })).toBeTruthy();
   });
 
   it('uses a selection-based mobile home HUD tray instead of the old anchor clutter', async () => {
