@@ -15269,7 +15269,8 @@
 
 .impact-proof-story-intro-shell {
   background: #ffffff;
-  padding-block: clamp(3rem, 7vw, 5.5rem);
+  padding-top: clamp(4rem, 9vw, 6.75rem);
+  padding-bottom: clamp(3rem, 7vw, 5.5rem);
 }
 
 .impact-proof-story-intro-rail {
@@ -15957,7 +15958,7 @@ p.impact-proof-story-proof-body {
 
 @media (max-width: 680px) {
   .impact-proof-story-intro-shell {
-    padding-top: 2.5rem;
+    padding-top: 3.4rem;
     padding-bottom: 2rem;
   }
 

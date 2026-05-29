@@ -1337,7 +1337,8 @@ p.home-services-feature-panel-body {
   display: grid;
   justify-items: center;
   gap: clamp(3rem, 6vw, 5.25rem);
-  padding-block: clamp(3rem, 7vw, 5.5rem);
+  padding-top: clamp(2rem, 4.8vw, 3.75rem);
+  padding-bottom: clamp(3rem, 7vw, 5.5rem);
 }
 
 .home-impact-story-static-proof {
@@ -1366,7 +1367,10 @@ p.home-services-feature-panel-body {
   width: 100%;
   overflow: hidden;
   overflow: clip;
-  padding: clamp(4rem, 8vw, 7rem) clamp(1.4rem, 5vw, 4.75rem);
+  padding:
+    clamp(2.75rem, 5.8vw, 4.75rem)
+    clamp(1.4rem, 5vw, 4.75rem)
+    clamp(4rem, 8vw, 7rem);
   background:
     var(--home-impact-story-sheen),
     var(--home-impact-story-surface);
@@ -2089,7 +2093,10 @@ p.home-services-feature-panel-body {
   }
 
   .home-impact-story-frame {
-    padding: clamp(3rem, 8vw, 4.25rem) clamp(1.3rem, 5vw, 2.3rem);
+    padding:
+      clamp(2rem, 5.5vw, 3rem)
+      clamp(1.3rem, 5vw, 2.3rem)
+      clamp(3rem, 8vw, 4.25rem);
   }
 
   .home-impact-story-stage {
@@ -2161,7 +2168,8 @@ p.home-services-feature-panel-body {
 
   .home-impact-story-static-grid {
     gap: 2.5rem;
-    padding-block: 2.5rem;
+    padding-top: 1.7rem;
+    padding-bottom: 2.5rem;
   }
 
   .home-impact-story-heading {
