@@ -37,7 +37,7 @@ function createSiteFeatureBlock() {
       featureId: 'home_impact_story',
       headline: 'What you do here matters.',
       body: 'As an AGFinancial client, you are also our ministry ally. Together, we improve financial health while fueling Kingdom growth and support.',
-      buttonLabel: 'Tell me more',
+      buttonLabel: 'Make an impact',
       buttonPageRef: '/about-us/impact',
     },
   };
@@ -110,10 +110,10 @@ describe('HomeImpactStoryFeature', () => {
     expect(container.querySelector('.home-impact-story-static-grid')).toBeTruthy();
     expect(container.querySelector('.home-impact-story-shell')).toBeNull();
     expect(screen.getByRole('heading', { name: /What you do here matters/i })).toBeTruthy();
-    expect(screen.getByText('clients served')).toBeTruthy();
+    expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
     expect(staticCopy?.querySelector('a')).toBeNull();
-    expect(staticProof?.querySelector('a')?.textContent).toBe('Tell me more');
-    expect(screen.getByRole('link', { name: 'Tell me more' }).getAttribute('href')).toBe('/about-us/impact');
+    expect(staticProof?.querySelector('a')?.textContent).toBe('Make an impact');
+    expect(screen.getByRole('link', { name: 'Make an impact' }).getAttribute('href')).toBe('/about-us/impact');
   });
 
   it('renders the enhanced pinned desktop story and lands on the expected metric content', () => {
@@ -134,11 +134,56 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(1200);
     });
 
-    expect(screen.getByText('clients served').closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
-    expect(screen.getByLabelText('38,654')).toBeTruthy();
-    expect(screen.getByText('clients served')).toBeTruthy();
+    expect(screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
+    expect(screen.getByLabelText('$450 million')).toBeTruthy();
+    expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
     expect(screen.queryByText('assets under management')).toBeNull();
-    expect(screen.queryByText('ministries supported')).toBeNull();
+    expect(screen.queryByText('(and growing) clients')).toBeNull();
+  });
+
+  it('measures the pinned story on mount before the first scroll event so the correct metric is ready immediately', () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function getBoundingClientRect() {
+      if (this.classList?.contains('home-impact-story-shell')) {
+        const viewportHeight = window.innerHeight || 900;
+        const shellHeight = 2600;
+        const totalScrollable = shellHeight - viewportHeight;
+        const top = -0.95 * totalScrollable;
+        return {
+          top,
+          bottom: top + shellHeight,
+          left: 0,
+          right: 1200,
+          width: 1200,
+          height: shellHeight,
+          x: 0,
+          y: top,
+          toJSON: () => ({}),
+        };
+      }
+
+      return {
+        top: 0,
+        bottom: 900,
+        left: 0,
+        right: 1200,
+        width: 1200,
+        height: 900,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      };
+    });
+
+    const { container } = renderFeatureBlock();
+
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+
+    const shell = container.querySelector('.home-impact-story-shell');
+    expect(shell).toBeTruthy();
+    expect(screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
+    expect(screen.queryByText('assets under management')).toBeNull();
   });
 
   it('starts the opening copy slightly above neutral center in the desktop animated path', () => {
@@ -200,8 +245,8 @@ describe('HomeImpactStoryFeature', () => {
     const proof = container.querySelector('.home-impact-story-proof');
     const copyLayer = container.querySelector('.home-impact-story-copy-layer');
     const proofLayer = container.querySelector('.home-impact-story-proof-layer');
-    const secondMetric = screen.getByText('ministries supported').closest('.home-impact-story-metric');
-    const thirdMetric = screen.getByText('clients served').closest('.home-impact-story-metric');
+    const secondMetric = screen.getByText('(and growing) clients').closest('.home-impact-story-metric');
+    const thirdMetric = screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric');
 
     expect(metricsRoot?.getAttribute('data-animated-layout')).toBe('actor-sequence');
     expect(metricsRoot?.getAttribute('data-stage-center')).toBe('stable');
@@ -227,13 +272,13 @@ describe('HomeImpactStoryFeature', () => {
     });
 
     const firstMetric = screen.getByText('assets under management').closest('.home-impact-story-metric');
-    const secondMetric = screen.getByText('ministries supported').closest('.home-impact-story-metric');
+    const secondMetric = screen.getByText('(and growing) clients').closest('.home-impact-story-metric');
     const secondActor = secondMetric?.closest('.home-impact-story-metric-actor');
 
     expect(firstMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('exiting');
     expect(secondActor?.getAttribute('data-motion-state')).toBe('entering');
     expect(secondActor?.getAttribute('style')).toContain('opacity: 0.');
-    expect(screen.queryByText('clients served')).toBeNull();
+    expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
   });
 
   it('fully clears the copy by the time later metric phases are active', () => {
@@ -260,8 +305,8 @@ describe('HomeImpactStoryFeature', () => {
 
     const firstValue = getMetricValueNode('assets under management');
     expect(firstValue?.textContent).not.toBe('$0 billion');
-    expect(firstValue?.textContent).not.toBe('$11 billion');
-    expect(screen.queryByText('ministries supported')).toBeNull();
+    expect(firstValue?.textContent).not.toBe('$12 billion');
+    expect(screen.queryByText('(and growing) clients')).toBeNull();
 
     setEnhancedShellProgress(container, 0.52);
     act(() => {
@@ -270,7 +315,7 @@ describe('HomeImpactStoryFeature', () => {
     });
 
     const firstValueLater = getMetricValueNode('assets under management');
-    expect(firstValueLater?.textContent).toBe('$11 billion');
+    expect(firstValueLater?.textContent).toBe('$12 billion');
 
     setEnhancedShellProgress(container, 0.62);
     act(() => {
@@ -278,9 +323,9 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(50);
     });
 
-    const secondValue = getMetricValueNode('ministries supported');
+    const secondValue = getMetricValueNode('(and growing) clients');
     expect(secondValue?.textContent).not.toBe('0');
-    expect(secondValue?.textContent).not.toBe('1,583');
+    expect(secondValue?.textContent).not.toBe('38,654');
   });
 
   it('renders the CTA with the final held metric instead of in the intro copy phase', () => {
@@ -294,11 +339,11 @@ describe('HomeImpactStoryFeature', () => {
 
     const copy = container.querySelector('.home-impact-story-copy');
     const proof = container.querySelector('.home-impact-story-proof');
-    const ctaLink = screen.getByRole('link', { name: 'Tell me more' });
+    const ctaLink = screen.getByRole('link', { name: 'Make an impact' });
 
     expect(copy?.querySelector('a')).toBeNull();
     expect(proof?.querySelector('a')).toBe(ctaLink);
-    expect(screen.getByText('clients served').closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
+    expect(screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
   });
 
   it('keeps the impact story backdrop source-contained with an overflow fallback for mobile browsers that do not honor clip reliably', () => {

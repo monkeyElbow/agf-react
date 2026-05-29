@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { isExternalLinkHref } from '../lib/dynamicPageBlocks';
 
@@ -8,6 +8,7 @@ const HOME_IMPACT_STORY_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)
 const HOME_IMPACT_STORY_DESKTOP_RUNWAY_VH = 400;
 const HOME_IMPACT_STORY_RELEASE_START = 0.96;
 const HOME_IMPACT_STORY_METRIC_ENTRY_DELAYS = [0, 0.08, 0.14];
+const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -369,13 +370,16 @@ export default function HomeImpactStoryFeature({
     && viewportWidth >= HOME_IMPACT_STORY_MIN_WIDTH_PX;
   const supportsFallbackReveal = !prefersReducedMotion && !supportsPinnedStory;
 
-  useEffect(() => {
+  useClientLayoutEffect(() => {
     if (!supportsPinnedStory || typeof window === 'undefined') {
       setProgress(0);
       return undefined;
     }
 
     let frameId = 0;
+    let settleFrameId = 0;
+    let lateSettleFrameId = 0;
+    let fontsCancelled = false;
     const updateProgress = () => {
       frameId = 0;
       const shell = shellRef.current;
@@ -396,12 +400,42 @@ export default function HomeImpactStoryFeature({
       frameId = window.requestAnimationFrame(updateProgress);
     };
 
+    updateProgress();
     requestUpdate();
+    settleFrameId = window.requestAnimationFrame(() => {
+      settleFrameId = 0;
+      requestUpdate();
+      lateSettleFrameId = window.requestAnimationFrame(() => {
+        lateSettleFrameId = 0;
+        requestUpdate();
+      });
+    });
+
+    const handleLoad = () => {
+      updateProgress();
+      requestUpdate();
+    };
+
+    window.addEventListener('load', handleLoad);
     window.addEventListener('scroll', requestUpdate, { passive: true });
     window.addEventListener('resize', requestUpdate);
 
+    if (document.fonts?.ready && typeof document.fonts.ready.then === 'function') {
+      document.fonts.ready.then(() => {
+        if (fontsCancelled) {
+          return;
+        }
+        updateProgress();
+        requestUpdate();
+      });
+    }
+
     return () => {
+      fontsCancelled = true;
       window.cancelAnimationFrame(frameId);
+      window.cancelAnimationFrame(settleFrameId);
+      window.cancelAnimationFrame(lateSettleFrameId);
+      window.removeEventListener('load', handleLoad);
       window.removeEventListener('scroll', requestUpdate);
       window.removeEventListener('resize', requestUpdate);
     };
@@ -466,6 +500,9 @@ export default function HomeImpactStoryFeature({
                   className="home-impact-story-heading"
                 />
                 {body ? <p className="home-impact-story-body">{body}</p> : null}
+                <div className="home-impact-story-scroll-cue" aria-hidden="true">
+                  <span className="home-impact-story-scroll-cue-mark" />
+                </div>
               </div>
             </div>
 
