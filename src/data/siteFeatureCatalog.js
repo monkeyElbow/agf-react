@@ -73,7 +73,8 @@ const SITE_FEATURE_CATALOG = Object.freeze([
     experimental: false,
     internalOnly: false,
     buildRuntime: () => ({
-      title: 'Bold, smart steps. Together.',
+      title: 'Bold, smart steps.',
+      subhead: "Let's connect your faith & finances.",
       panels: Object.freeze([
         Object.freeze({
           title: 'Loans',
@@ -86,22 +87,22 @@ const SITE_FEATURE_CATALOG = Object.freeze([
           }),
         }),
         Object.freeze({
-          title: 'Retirement',
-          body: 'Time is your ally. Plan, contribute, and build for tomorrow. Starting today.',
+          title: 'Investments',
+          body: 'Your returns grow while supporting ministries.\nToday’s investment. Tomorrow’s church.',
           tone: 'atlantean-dark',
           action: Object.freeze({
-            label: 'Get started',
-            to: '/services/retirement',
+            label: 'See rates',
+            to: '/services/investments',
             openInNewWindow: false,
           }),
         }),
         Object.freeze({
-          title: 'Investments',
-          body: 'Your returns grow while supporting ministries.\nToday’s investment. Tomorrow’s church.',
+          title: 'Retirement',
+          body: 'Time is your ally. Plan, contribute, and build for tomorrow. Starting today.',
           tone: 'investments-blue',
           action: Object.freeze({
-            label: 'See rates',
-            to: '/services/investments',
+            label: 'Get started',
+            to: '/services/retirement',
             openInNewWindow: false,
           }),
         }),
@@ -143,14 +144,14 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       title: 'What you do here matters.',
       body: 'As an AGFinancial client, you are also our ministry ally. Together, we improve financial health while fueling Kingdom growth and support.',
       action: {
-        label: 'Tell me more',
+        label: 'Make an impact',
         to: '/about-us/impact',
         openInNewWindow: false,
       },
       metrics: Object.freeze([
-        Object.freeze({ value: '$11 billion', label: 'assets under management', tone: 'mango' }),
-        Object.freeze({ value: '1,583', label: 'ministries supported', tone: 'atlantean' }),
-        Object.freeze({ value: '38,654', label: 'clients served', tone: 'sandstone' }),
+        Object.freeze({ value: '$12 billion', label: 'assets under management', tone: 'mango' }),
+        Object.freeze({ value: '38,654', label: '(and growing) clients', tone: 'atlantean' }),
+        Object.freeze({ value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone' }),
       ]),
       imageUrl: '',
       imageAlt: '',
