@@ -531,7 +531,7 @@ describe('BlockHudPanelHost', () => {
         kind: 'services_grid',
         mode: 'dynamic',
         settings: {
-          heading: 'Bold, smart steps. Together.',
+          heading: 'Bold, smart steps.',
           browseLabel: 'Browse all services',
           browsePath: '/services',
           browsePageRef: '/services',

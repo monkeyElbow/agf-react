@@ -93,8 +93,8 @@ describe('site feature catalog', () => {
     expect(homeServicesRuntime?.panels).toHaveLength(5);
     expect(homeServicesRuntime?.panels?.map((panel) => panel.title)).toEqual([
       'Loans',
-      'Retirement',
       'Investments',
+      'Retirement',
       'Legacy Giving',
       'Insurance',
     ]);

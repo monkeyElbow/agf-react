@@ -1014,6 +1014,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
         <SharedBlockHudAnchor hudAnchor={hudAnchor} />
         <HomeServicesFeatureAnimation
           headline={runtime.title}
+          subhead={runtime.subhead}
           panels={runtime.panels}
           resolveTo={resolveTo}
         />

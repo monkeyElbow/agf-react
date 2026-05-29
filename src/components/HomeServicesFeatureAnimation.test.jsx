@@ -23,7 +23,7 @@ function createBlock() {
     mode: 'dynamic',
     settings: {
       featureId: 'home_services_feature_animation',
-      headline: 'Bold, smart steps. Together.',
+      headline: 'Bold, smart steps.',
     },
   };
 }
@@ -81,19 +81,35 @@ describe('HomeServicesFeatureAnimation', () => {
       vi.advanceTimersByTime(80);
     });
 
-    expect(screen.getByRole('heading', { name: 'Bold, smart steps. Together.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Bold, smart steps.' })).toBeTruthy();
+    expect(screen.getByText("Let's connect your faith & finances.")).toBeTruthy();
     expect(panels).toHaveLength(5);
+    expect(panels.map((panel) => panel.querySelector('.home-services-feature-panel-title')?.textContent)).toEqual([
+      'Loans',
+      'Investments',
+      'Retirement',
+      'Legacy Giving',
+      'Insurance',
+    ]);
     expect(screen.getByRole('heading', { name: 'Loans' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Retirement' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Investments' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Legacy Giving' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Insurance' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Explore options' }).getAttribute('href')).toBe('/services/loans');
-    expect(screen.getByRole('link', { name: 'Get started' }).getAttribute('href')).toBe('/services/retirement');
-    expect(screen.getByRole('link', { name: 'See rates' }).getAttribute('href')).toBe('/services/investments');
     expect(screen.getByRole('link', { name: 'Learn & strategize' }).getAttribute('href')).toBe('/services/legacy-giving');
     expect(screen.getByRole('link', { name: 'Start here' }).getAttribute('href')).toBe('/services/insurance');
     expect(container.querySelector('.home-services-feature-panel-eyebrow')).toBeNull();
+
+    expect(panels[1]?.querySelector('.home-services-feature-panel-title')?.textContent).toBe('Investments');
+    expect(panels[1]?.querySelector('.home-services-feature-panel-body')?.textContent).toContain('Your returns grow while supporting ministries.');
+    expect(panels[1]?.querySelector('.home-services-feature-panel-action a')?.getAttribute('href')).toBe('/services/investments');
+    expect(panels[1]?.querySelector('.home-services-feature-panel-action a')?.textContent).toBe('See rates');
+
+    expect(panels[2]?.querySelector('.home-services-feature-panel-title')?.textContent).toBe('Retirement');
+    expect(panels[2]?.querySelector('.home-services-feature-panel-body')?.textContent).toContain('Time is your ally.');
+    expect(panels[2]?.querySelector('.home-services-feature-panel-action a')?.getAttribute('href')).toBe('/services/retirement');
+    expect(panels[2]?.querySelector('.home-services-feature-panel-action a')?.textContent).toBe('Get started');
 
     expect(panels[0]?.style.getPropertyValue('--home-services-light-strength')).not.toBe('');
     expect(panels[0]?.style.getPropertyValue('--home-services-panel-opacity')).not.toBe('');
@@ -101,6 +117,14 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(panels[0]?.style.getPropertyValue('--home-services-content-scale')).not.toBe('');
     expect(panels[0]?.style.getPropertyValue('--home-services-action-opacity')).not.toBe('');
     expect(panels[0]?.style.getPropertyValue('--home-services-action-scale')).not.toBe('');
+    expect(panels[0]?.style.getPropertyValue('--home-services-base-rgb')).toBe('0, 30, 48');
+    expect(panels[0]?.style.getPropertyValue('--home-services-secondary-rgb')).toBe('0, 138, 171');
+    expect(panels[0]?.style.getPropertyValue('--home-services-light-rgb')).toBe('0, 173, 187');
+    expect(panels[0]?.style.getPropertyValue('--home-services-accent-rgb')).toBe('216, 251, 255');
+    expect(panels[0]?.style.getPropertyValue('--home-services-next-base-rgb')).toBe('0, 57, 70');
+    expect(panels[0]?.style.getPropertyValue('--home-services-next-secondary-rgb')).toBe('0, 173, 187');
+    expect(panels[0]?.style.getPropertyValue('--home-services-next-light-rgb')).toBe('75, 199, 212');
+    expect(panels[0]?.style.getPropertyValue('--home-services-palette-handoff')).not.toBe('');
     expect(panels[0]?.style.getPropertyValue('--home-services-dark-angle')).toContain('deg');
   });
 
@@ -124,6 +148,17 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(firstPanel?.style.getPropertyValue('--home-services-content-scale')).toBe('');
     expect(firstPanel?.style.getPropertyValue('--home-services-action-opacity')).toBe('');
     expect(firstPanel?.style.getPropertyValue('--home-services-action-scale')).toBe('');
+    expect(firstPanel?.style.getPropertyValue('--home-services-base-rgb')).toBe('0, 30, 48');
+    expect(firstPanel?.style.getPropertyValue('--home-services-secondary-rgb')).toBe('0, 138, 171');
+    expect(firstPanel?.style.getPropertyValue('--home-services-light-rgb')).toBe('0, 173, 187');
+    expect(firstPanel?.style.getPropertyValue('--home-services-dark-rgb')).toBe('0, 20, 30');
+    expect(firstPanel?.style.getPropertyValue('--home-services-accent-rgb')).toBe('216, 251, 255');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-base-rgb')).toBe('0, 57, 70');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-secondary-rgb')).toBe('0, 173, 187');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-light-rgb')).toBe('75, 199, 212');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-dark-rgb')).toBe('7, 19, 27');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-accent-rgb')).toBe('216, 251, 255');
+    expect(firstPanel?.style.getPropertyValue('--home-services-palette-handoff')).toBe('0');
   });
 
   it('drives panel and content opacity from entrance to peak and back down on exit', () => {
@@ -165,7 +200,7 @@ describe('HomeServicesFeatureAnimation', () => {
       vi.advanceTimersByTime(80);
     });
 
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('0.960');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('1.000');
     expect(firstPanel?.style.getPropertyValue('--home-services-content-opacity')).toBe('1.000');
     expect(firstPanel?.style.getPropertyValue('--home-services-action-opacity')).toBe('1.000');
 

@@ -38,7 +38,7 @@ describe('home services grid renderer guardrail', () => {
             kind: 'services_grid',
             mode: 'dynamic',
             settings: {
-              heading: 'Bold, smart steps. Together.',
+              heading: 'Bold, smart steps.',
               browseLabel: 'Browse all services',
               browsePath: '/services',
               browsePageRef: '/services',
@@ -63,7 +63,7 @@ describe('home services grid renderer guardrail', () => {
 
     const section = document.querySelector('[data-block-id="services_grid"]');
     expect(section).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Bold, smart steps. Together.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Bold, smart steps.' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Loans' }).getAttribute('href')).toBe('/services/loans');
     expect(screen.getByRole('link', { name: 'Browse all services' }).getAttribute('href')).toBe('/services');
   });

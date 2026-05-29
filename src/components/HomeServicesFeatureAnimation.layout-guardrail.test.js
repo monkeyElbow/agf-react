@@ -18,7 +18,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('justify-items: end;');
     expect(cssSource).toContain('text-align: right;');
     expect(cssSource).toContain('p.home-services-feature-panel-body {');
-    expect(cssSource).toContain('width: min(100%, 62rem);');
+    expect(cssSource).toContain('width: min(100%, 72rem);');
     expect(cssSource).toContain('max-width: 100%;');
     expect(cssSource).toContain('.home-services-feature-panel.is-left .home-services-feature-panel-copy {');
     expect(cssSource).toContain('justify-items: start;');
@@ -47,32 +47,56 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('-webkit-font-smoothing: antialiased;');
   });
 
-  it('pins the legacy panel to the warmer brand gradient while retirement uses the shared white body copy', () => {
+  it('uses a shared bokeh engine with current/next palette layers instead of one dominant angled poster gradient', () => {
     const cssSource = readSource('../styles/home-native.css');
-    const catalogSource = readSource('../data/siteFeatureCatalog.js');
+    const componentSource = readSource('./HomeServicesFeatureAnimation.jsx');
 
-    expect(catalogSource).toContain("tone: 'legacy-warm'");
-    expect(cssSource).toContain('.home-services-feature-panel.is-tone-legacy-warm {');
-    expect(cssSource).toContain('--home-services-motion-dark-rgb: 111, 68, 16;');
-    expect(cssSource).toContain('linear-gradient(115.58deg, #fff5da 0%, #8f5716 100.22%),');
-    expect(cssSource).toContain('radial-gradient(92.72% 100% at 50% 0%, #fff8df 0%, #6f4410 100%),');
-    expect(cssSource).toContain('radial-gradient(92.72% 100% at 50% 0%, #f6b146 0%, #8f5716 100%),');
-    expect(cssSource).toContain('radial-gradient(109.21% 213.32% at 100% 0%, #e8991f 0%, #fff0c8 100%),');
-    expect(cssSource).toContain('linear-gradient(127.43deg, #9f5411 0%, #f6b146 100%);');
-    expect(cssSource).toContain('background-blend-mode: normal, overlay, multiply, soft-light, normal;');
-    expect(cssSource).not.toContain('.home-services-feature-panel.is-tone-atlantean-dark p.home-services-feature-panel-body {');
+    expect(cssSource).toContain('--home-services-base-rgb: 0, 30, 48;');
+    expect(cssSource).toContain('--home-services-next-base-rgb: 0, 57, 70;');
+    expect(cssSource).toContain('--home-services-secondary-rgb: 0, 138, 171;');
+    expect(cssSource).toContain('--home-services-light-rgb: 0, 173, 187;');
+    expect(cssSource).toContain('--home-services-dark-rgb: 0, 20, 30;');
+    expect(cssSource).toContain('--home-services-accent-rgb: 216, 251, 255;');
+    expect(cssSource).toContain('--home-services-palette-handoff: 0;');
+    expect(cssSource).toContain('.home-services-feature-panel-gradient-layer.is-current {');
+    expect(cssSource).toContain('.home-services-feature-panel-gradient-layer.is-next {');
+    expect(cssSource).toContain('ellipse 140% 120% at 50% 48%');
+    expect(cssSource).toContain('rgba(var(--home-services-layer-secondary-rgb), 0.24)');
+    expect(cssSource).toContain('rgba(var(--home-services-layer-accent-rgb), 0.14)');
+    expect(cssSource).toContain('rgba(var(--home-services-layer-dark-rgb), calc(var(--home-services-dark-strength) * 0.18))');
+    expect(cssSource).not.toContain('--home-services-panel-bg:');
+    expect(componentSource).toContain('const HOME_SERVICES_PANEL_PALETTES = Object.freeze([');
+    expect(componentSource).toContain('const HOME_SERVICES_PALETTE_HANDOFF_CURVES = Object.freeze({');
+    expect(componentSource).toContain('applyPaletteVars(panel, currentPalette);');
+    expect(componentSource).toContain("applyPaletteVars(panel, nextPalette, 'next');");
   });
 
-  it('pins the investments panel to its dedicated two-layer blue gradient without changing the insurance grey tone', () => {
-    const cssSource = readSource('../styles/home-native.css');
+  it('keeps the current runtime order and palette handoff aligned to rendered panel order', () => {
+    const componentSource = readSource('./HomeServicesFeatureAnimation.jsx');
     const catalogSource = readSource('../data/siteFeatureCatalog.js');
 
-    expect(catalogSource).toContain("title: 'Investments'");
-    expect(catalogSource).toContain("tone: 'investments-blue'");
-    expect(cssSource).toContain('.home-services-feature-panel.is-tone-investments-blue {');
-    expect(cssSource).toContain('--home-services-motion-light-rgb: var(--ag-color-atlantean-rgb);');
-    expect(cssSource).toContain('linear-gradient(90deg, rgba(7, 19, 27, 0.56) 0%, rgba(0, 96, 126, 0.52) 30.21%, rgba(0, 122, 149, 0.52) 44.79%, rgba(0, 148, 170, 0.5) 60.42%, rgba(0, 173, 187, 0.5) 100%),');
-    expect(cssSource).toContain('linear-gradient(180deg, #003946 0%, #00546b 13.54%, #007785 32.57%, #008fa0 45.51%, #00a3b2 55.22%, #4bc7d4 67.75%, #86eff6 83.12%, #50c9d5 92.83%, #00adbb 100%);');
-    expect(cssSource).toContain('background-blend-mode: overlay, normal;');
+    expect(catalogSource.indexOf("title: 'Loans'")).toBeLessThan(catalogSource.indexOf("title: 'Investments'"));
+    expect(catalogSource.indexOf("title: 'Investments'")).toBeLessThan(catalogSource.indexOf("title: 'Retirement'"));
+    expect(catalogSource.indexOf("title: 'Retirement'")).toBeLessThan(catalogSource.indexOf("title: 'Legacy Giving'"));
+    expect(catalogSource.indexOf("title: 'Legacy Giving'")).toBeLessThan(catalogSource.indexOf("title: 'Insurance'"));
+    expect(componentSource).toContain('const currentPalette = resolveHomeServicesPalette(index);');
+    expect(componentSource).toContain('const nextPalette = resolveHomeServicesPalette(Math.min(panelNodes.length - 1, index + 1));');
+    expect(componentSource).toContain('const paletteHandoff = index < panelNodes.length - 1');
+  });
+
+  it('keeps the hero visually suppressed on home while the feature intro gets the requested desktop runway', () => {
+    const cssSource = readSource('../styles/home-native.css');
+    const pageSource = readSource('../pages/HomePage.jsx');
+
+    expect(pageSource).toContain("const HOME_HERO_TEMPORARILY_HIDDEN = true;");
+    expect(pageSource).toContain('return reorderHomeTopBlocks(resolvedBlocks.concat(extraRenderableManagedBlocks));');
+    expect(cssSource).toContain('.home-native-page.is-home-hero-temporarily-hidden [data-block-id="hero"] {');
+    expect(cssSource).toContain('display: none;');
+    expect(cssSource).toContain('.home-native-page.is-home-hero-temporarily-hidden .home-impact-story-stage {');
+    expect(cssSource).toContain('min-height: calc(100vh - clamp(10rem, 17vh, 12rem));');
+    expect(cssSource).toContain('.home-native-page.is-home-hero-temporarily-hidden .home-services-feature-intro {');
+    expect(cssSource).toContain('min-height: 75vh;');
+    expect(cssSource).toContain('justify-items: center;');
+    expect(cssSource).toContain('padding: clamp(2.5rem, 6vh, 4.5rem) 0;');
   });
 });

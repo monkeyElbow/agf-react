@@ -142,6 +142,54 @@ const HOME_SERVICES_MOTION_CURVES = Object.freeze({
   actionFadeEnd: 0.96,
 });
 
+const HOME_SERVICES_PALETTE_HANDOFF_CURVES = Object.freeze({
+  start: 0.78,
+  end: 0.92,
+});
+
+const HOME_SERVICES_PANEL_PALETTES = Object.freeze([
+  Object.freeze({
+    title: 'Loans',
+    base: Object.freeze([0, 30, 48]),
+    secondary: Object.freeze([0, 138, 171]),
+    light: Object.freeze([0, 173, 187]),
+    dark: Object.freeze([0, 20, 30]),
+    accent: Object.freeze([216, 251, 255]),
+  }),
+  Object.freeze({
+    title: 'Investments',
+    base: Object.freeze([0, 57, 70]),
+    secondary: Object.freeze([0, 173, 187]),
+    light: Object.freeze([75, 199, 212]),
+    dark: Object.freeze([7, 19, 27]),
+    accent: Object.freeze([216, 251, 255]),
+  }),
+  Object.freeze({
+    title: 'Retirement',
+    base: Object.freeze([35, 35, 37]),
+    secondary: Object.freeze([196, 190, 182]),
+    light: Object.freeze([250, 163, 26]),
+    dark: Object.freeze([17, 17, 19]),
+    accent: Object.freeze([242, 238, 235]),
+  }),
+  Object.freeze({
+    title: 'Legacy Giving',
+    base: Object.freeze([111, 68, 16]),
+    secondary: Object.freeze([242, 238, 235]),
+    light: Object.freeze([250, 163, 26]),
+    dark: Object.freeze([63, 39, 12]),
+    accent: Object.freeze([255, 248, 223]),
+  }),
+  Object.freeze({
+    title: 'Insurance',
+    base: Object.freeze([18, 49, 59]),
+    secondary: Object.freeze([0, 138, 171]),
+    light: Object.freeze([0, 173, 187]),
+    dark: Object.freeze([11, 30, 41]),
+    accent: Object.freeze([216, 251, 255]),
+  }),
+]);
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
@@ -163,6 +211,10 @@ function formatNumber(value) {
   return value.toFixed(3);
 }
 
+function formatRgbTriplet(rgb = []) {
+  return rgb.map((value) => Math.round(value || 0)).join(', ');
+}
+
 function resolvePanelMotionPreset(panel) {
   if (!panel) {
     return HOME_SERVICES_PANEL_MOTION_PRESETS.default;
@@ -178,6 +230,24 @@ function applyRangeProperty(panel, property, values, formatter, amount) {
   }
 
   panel.style.setProperty(property, formatter(lerp(values[0], values[1], amount)));
+}
+
+function resolveHomeServicesPalette(index) {
+  return HOME_SERVICES_PANEL_PALETTES[index] || HOME_SERVICES_PANEL_PALETTES[0];
+}
+
+function applyPaletteVars(panel, palette, prefix = '') {
+  if (!panel?.style || !palette) {
+    return;
+  }
+
+  const prefixToken = prefix ? `${prefix}-` : '';
+
+  panel.style.setProperty(`--home-services-${prefixToken}base-rgb`, formatRgbTriplet(palette.base));
+  panel.style.setProperty(`--home-services-${prefixToken}secondary-rgb`, formatRgbTriplet(palette.secondary));
+  panel.style.setProperty(`--home-services-${prefixToken}light-rgb`, formatRgbTriplet(palette.light));
+  panel.style.setProperty(`--home-services-${prefixToken}dark-rgb`, formatRgbTriplet(palette.dark));
+  panel.style.setProperty(`--home-services-${prefixToken}accent-rgb`, formatRgbTriplet(palette.accent));
 }
 
 function clearHomeServicesMotionVars(panel) {
@@ -202,6 +272,17 @@ function clearHomeServicesMotionVars(panel) {
     '--home-services-action-opacity',
     '--home-services-action-scale',
     '--home-services-action-shift-y',
+    '--home-services-base-rgb',
+    '--home-services-secondary-rgb',
+    '--home-services-light-rgb',
+    '--home-services-dark-rgb',
+    '--home-services-accent-rgb',
+    '--home-services-next-base-rgb',
+    '--home-services-next-secondary-rgb',
+    '--home-services-next-light-rgb',
+    '--home-services-next-dark-rgb',
+    '--home-services-next-accent-rgb',
+    '--home-services-palette-handoff',
     '--home-services-dark-strength',
     '--home-services-dark-x',
     '--home-services-dark-y',
@@ -214,6 +295,10 @@ function clearHomeServicesMotionVars(panel) {
   ].forEach((property) => {
     panel.style.removeProperty(property);
   });
+}
+
+function renderHeadlineLines(headline) {
+  return <span className="home-services-feature-heading-text">{String(headline || '')}</span>;
 }
 
 function normalizePanelAction(action) {
@@ -292,6 +377,7 @@ function ActionLink({ action, resolveTo }) {
 
 export default function HomeServicesFeatureAnimation({
   headline = '',
+  subhead = '',
   panels = [],
   resolveTo = (value) => value,
 }) {
@@ -319,9 +405,14 @@ export default function HomeServicesFeatureAnimation({
       const reduceMotion = Boolean(mediaQuery?.matches);
       if (reduceMotion) {
         shellRef.current.setAttribute('data-scroll-gradient-motion', 'reduced');
-        panelNodes.forEach((panel) => {
+        panelNodes.forEach((panel, index) => {
+          const currentPalette = resolveHomeServicesPalette(index);
+          const nextPalette = resolveHomeServicesPalette(Math.min(panelNodes.length - 1, index + 1));
           panel.setAttribute('data-scroll-gradient-motion', 'reduced');
           clearHomeServicesMotionVars(panel);
+          applyPaletteVars(panel, currentPalette);
+          applyPaletteVars(panel, nextPalette, 'next');
+          panel.style.setProperty('--home-services-palette-handoff', '0');
         });
         return;
       }
@@ -329,10 +420,12 @@ export default function HomeServicesFeatureAnimation({
       shellRef.current.setAttribute('data-scroll-gradient-motion', 'active');
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
 
-      panelNodes.forEach((panel) => {
+      panelNodes.forEach((panel, index) => {
         const rect = panel.getBoundingClientRect();
         const viewportTravel = clamp((viewportHeight - rect.top) / (viewportHeight + rect.height || 1), 0, 1);
         const panelPreset = resolvePanelMotionPreset(panel);
+        const currentPalette = resolveHomeServicesPalette(index);
+        const nextPalette = resolveHomeServicesPalette(Math.min(panelNodes.length - 1, index + 1));
         const lightTravel = smoothstep(
           HOME_SERVICES_MOTION_CURVES.lightTravelStart,
           HOME_SERVICES_MOTION_CURVES.lightTravelEnd,
@@ -354,7 +447,7 @@ export default function HomeServicesFeatureAnimation({
           viewportTravel,
         );
         const visibilityCurve = clamp(fadeIn - (1.08 * fadeOut), 0, 1);
-        const panelOpacity = lerp(0.18, 0.96, visibilityCurve);
+        const panelOpacity = lerp(0.18, 1, visibilityCurve);
         const contentOpacity = lerp(0.16, 1, visibilityCurve);
         const contentScale = clamp(1 - ((1 - fadeIn) * 0.08) - (fadeOut * 0.06), 0.9, 1);
         const contentShiftY = lerp(36, 0, fadeIn) + lerp(0, -32, fadeOut);
@@ -372,8 +465,14 @@ export default function HomeServicesFeatureAnimation({
         const actionOpacity = lerp(0.42, 1, actionVisibility);
         const actionScale = clamp(1 - ((1 - actionReveal) * 0.04) - (actionFade * 0.035), 0.94, 1);
         const actionShiftY = lerp(22, 0, actionReveal) + lerp(0, -14, actionFade);
+        const paletteHandoff = index < panelNodes.length - 1
+          ? smoothstep(HOME_SERVICES_PALETTE_HANDOFF_CURVES.start, HOME_SERVICES_PALETTE_HANDOFF_CURVES.end, viewportTravel)
+          : 0;
 
         panel.setAttribute('data-scroll-gradient-motion', 'active');
+        applyPaletteVars(panel, currentPalette);
+        applyPaletteVars(panel, nextPalette, 'next');
+        panel.style.setProperty('--home-services-palette-handoff', formatNumber(paletteHandoff));
         applyRangeProperty(panel, '--home-services-light-strength', panelPreset.lightStrength, formatNumber, lightTravel);
         applyRangeProperty(panel, '--home-services-light-x', panelPreset.lightX, formatPercent, lightTravel);
         applyRangeProperty(panel, '--home-services-light-y', panelPreset.lightY, formatPercent, lightTravel);
@@ -440,7 +539,19 @@ export default function HomeServicesFeatureAnimation({
 
   return (
     <div ref={shellRef} className="home-services-feature-shell">
-      {headline ? <h2 className="home-services-feature-heading">{headline}</h2> : null}
+      {headline || subhead ? (
+        <div className="home-services-feature-intro">
+          {headline ? (
+            <h2 className="home-services-feature-heading" aria-label={headline}>
+              {renderHeadlineLines(headline)}
+            </h2>
+          ) : null}
+          {subhead ? <p className="home-services-feature-subhead">{subhead}</p> : null}
+          <div className="home-services-feature-scroll-cue" aria-hidden="true">
+            <span className="home-services-feature-scroll-cue-mark" />
+          </div>
+        </div>
+      ) : null}
       <div className="home-services-feature-list">
         {normalizedPanels.map((panel, index) => (
           <article
@@ -448,6 +559,8 @@ export default function HomeServicesFeatureAnimation({
             className={`home-services-feature-panel is-tone-${panel.tone} ${index % 2 === 0 ? 'is-left' : 'is-right'}`}
             data-proof-index={index}
           >
+            <span className="home-services-feature-panel-gradient-layer is-current" aria-hidden="true" />
+            <span className="home-services-feature-panel-gradient-layer is-next" aria-hidden="true" />
             <div className="home-services-feature-panel-content">
               <div className="home-services-feature-panel-copy">
                 <h3 className="home-services-feature-panel-title">{panel.title}</h3>

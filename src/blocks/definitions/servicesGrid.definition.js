@@ -82,7 +82,7 @@ export const servicesGridBlockDefinition = createBlockDefinition({
   allowedVariants: ['default'],
   supportedModes: ['dynamic'],
   defaults: {
-    heading: 'Bold, smart steps. Together.',
+    heading: 'Bold, smart steps.',
     headingSizeRem: 4.5625,
     cardTitleSizeRem: 2.1875,
     cardPaddingRem: 1.85,
