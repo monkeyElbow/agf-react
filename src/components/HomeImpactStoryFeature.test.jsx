@@ -200,6 +200,20 @@ describe('HomeImpactStoryFeature', () => {
     expect(copy?.querySelector('a')).toBeNull();
   });
 
+  it('starts moving the intro copy as soon as the pinned section begins consuming scroll', () => {
+    const { container } = renderFeatureBlock();
+    setEnhancedShellProgress(container, 0.04);
+
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(100);
+    });
+
+    const copy = container.querySelector('.home-impact-story-copy');
+    expect(copy?.getAttribute('style')).not.toContain('translate3d(0, -34px, 0)');
+    expect(copy?.getAttribute('style')).not.toContain('opacity: 1;');
+  });
+
   it('lets the intro begin yielding sooner than before the first stat enters', () => {
     const { container } = renderFeatureBlock();
     setEnhancedShellProgress(container, 0.16);

@@ -8,6 +8,10 @@ const HOME_IMPACT_STORY_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)
 const HOME_IMPACT_STORY_DESKTOP_RUNWAY_VH = 400;
 const HOME_IMPACT_STORY_RELEASE_START = 0.96;
 const HOME_IMPACT_STORY_METRIC_ENTRY_DELAYS = [0, 0.08, 0.14];
+const HOME_IMPACT_STORY_COPY_SHIFT_START = 0;
+const HOME_IMPACT_STORY_COPY_SHIFT_DURATION = 0.24;
+const HOME_IMPACT_STORY_COPY_OPACITY_START = 0.04;
+const HOME_IMPACT_STORY_COPY_OPACITY_DURATION = 0.2;
 const HOME_IMPACT_STORY_SEQUENCE_START = 0.27;
 const HOME_IMPACT_STORY_SEQUENCE_END = 0.94;
 const HOME_IMPACT_STORY_PROOF_FADE_START = 0.22;
@@ -465,8 +469,18 @@ export default function HomeImpactStoryFeature({
 
   const heldProgress = clamp(progress / HOME_IMPACT_STORY_RELEASE_START, 0, 1);
   const copyBaseShift = -34;
-  const copyOpacity = 1 - clamp((heldProgress - 0.1) / 0.22, 0, 1);
-  const copyShift = copyBaseShift + (clamp((heldProgress - 0.08) / 0.26, 0, 1) * -148);
+  const copyOpacity = 1 - clamp(
+    (heldProgress - HOME_IMPACT_STORY_COPY_OPACITY_START) / HOME_IMPACT_STORY_COPY_OPACITY_DURATION,
+    0,
+    1,
+  );
+  const copyShift = copyBaseShift + (
+    clamp(
+      (heldProgress - HOME_IMPACT_STORY_COPY_SHIFT_START) / HOME_IMPACT_STORY_COPY_SHIFT_DURATION,
+      0,
+      1,
+    ) * -148
+  );
   const metricsOpacity = clamp(
     (heldProgress - HOME_IMPACT_STORY_PROOF_FADE_START) / HOME_IMPACT_STORY_PROOF_FADE_DURATION,
     0,
