@@ -8,36 +8,40 @@ const DEFAULT_PROPS = {
   body: '',
   metrics: [
     {
-      value: '1400',
+      value: '1,400',
       eyebrow: 'Loans',
+      valueTone: 'atlantean',
       label: 'ministries supported by loans.',
       body: 'Over the last 10 years, those ministries represent more than 945,000 people.',
       tone: 'atlantean',
-      action: { label: 'Explore Loans', to: '/services/loans' },
+      action: { label: 'Explore loans', to: '/services/loans' },
     },
     {
-      value: '$450 Million',
+      value: '$450 million',
       eyebrow: 'Legacy Giving',
-      label: 'under trusted care for future ministry.',
-      body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
+      label: 'distributed to ministries through AG Foundation.',
+      body: 'That’s the power of generous donors using smart strategies.',
       tone: 'mango',
       action: { label: 'Plan with us', to: '/services/legacy-giving' },
     },
     {
       value: '5,117',
       eyebrow: 'Insurance',
-      label: 'mission trips covered with protection in place.',
-      body: 'Teams can travel, serve, and respond quickly because practical coverage is already handled before the wheels ever leave the runway.',
+      valueTone: 'atlantean',
+      label: 'mission trips covered and protected.',
+      body: 'Peace of mind allows you to focus on what matters at home and abroad: serving others, and sharing the Gospel with confidence.',
       tone: 'super-grey',
-      action: { label: 'Cover your trip', to: '/services/insurance' },
+      action: { label: 'Cover your ministry', to: '/services/insurance' },
     },
     {
       value: '29,000+',
       eyebrow: 'Retirement',
-      label: 'ministers retiring with AGFinancial.',
-      body: 'Retirement planning that respects decades of calling and helps leaders step into the next season with structure, confidence, and care.',
+      valueTone: 'mango',
+      labelBreak: 'block',
+      label: 'retirements planned.',
+      body: 'Your participation helps individuals, churches, ministries—and you—step confidently into the next season.',
       tone: 'atlantean-dark',
-      action: { label: 'Start your plan', to: '/services/retirement' },
+      action: { label: 'Start your tomorrow', to: '/services/retirement' },
     },
   ],
   action: null,
@@ -94,11 +98,11 @@ describe('ImpactProofStoryFeature', () => {
     expect(container.querySelectorAll('.impact-proof-story-proof-eyebrow')).toHaveLength(0);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-left')).toHaveLength(2);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-right')).toHaveLength(2);
-    expect(screen.getByRole('heading', { name: '1400 ministries supported by loans.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '1,400 ministries supported by loans.' })).toBeTruthy();
     expect(screen.getByText('Over the last 10 years, those ministries represent more than 945,000 people.')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: '$450 Million under trusted care for future ministry.' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: '5,117 mission trips covered with protection in place.' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: '29,000+ ministers retiring with AGFinancial.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '$450 million distributed to ministries through AG Foundation.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '5,117 mission trips covered and protected.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '29,000+ retirements planned.' })).toBeTruthy();
   });
 
   it('can render the Impact intro header shell above the proof stack without changing the proof layout', () => {
@@ -121,14 +125,13 @@ describe('ImpactProofStoryFeature', () => {
   it('keeps every metric CTA readable in the same static layout across viewports', () => {
     const { container } = renderFeature();
 
-    expect(screen.getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
+    expect(screen.getByRole('link', { name: 'Explore loans' }).getAttribute('href')).toBe('/services/loans');
     expect(screen.getByRole('link', { name: 'Plan with us' }).getAttribute('href')).toBe('/services/legacy-giving');
-    expect(screen.getByRole('link', { name: 'Cover your trip' }).getAttribute('href')).toBe('/services/insurance');
-    expect(screen.getByRole('link', { name: 'Start your plan' }).getAttribute('href')).toBe('/services/retirement');
-    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-atlantean')).toBeTruthy();
-    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-mango')).toBeTruthy();
-    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-super-grey')).toBeTruthy();
-    expect(container.querySelector('.impact-proof-story-proof-value.is-tone-atlantean-dark')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Cover your ministry' }).getAttribute('href')).toBe('/services/insurance');
+    expect(screen.getByRole('link', { name: 'Start your tomorrow' }).getAttribute('href')).toBe('/services/retirement');
+    expect(container.querySelectorAll('.impact-proof-story-proof-value.is-value-atlantean')).toHaveLength(2);
+    expect(container.querySelector('.impact-proof-story-proof-value.is-value-mango')).toBeTruthy();
+    expect(container.querySelector('.impact-proof-story-proof-label.is-break-block')?.textContent).toBe('retirements planned.');
   });
 
   it('enables scroll-reactive gradient motion variables when reduced motion is off', async () => {

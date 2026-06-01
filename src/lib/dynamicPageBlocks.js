@@ -972,6 +972,8 @@ export function buildDynamicSiteFeatureFromBlock(block) {
           value: String(metric.value || '').trim(),
           label: String(metric.label || '').trim(),
           tone: String(metric.tone || '').trim() || 'mango',
+          valueTone: String(metric.valueTone || '').trim(),
+          labelBreak: String(metric.labelBreak || '').trim(),
           body: String(metric.body || '').trim(),
           eyebrow: String(metric.eyebrow || '').trim(),
           action: hasMetricAction ? metricAction : null,

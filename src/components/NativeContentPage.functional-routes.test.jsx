@@ -387,6 +387,59 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByRole('heading', { name: 'Most wealth isn’t cash.' })).toBeTruthy();
   });
 
+  it('renders the about us route with the updated intro, full-width image section, strategy links, and allies CTA', () => {
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/about-us',
+            title: 'About Us',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.service-native-hero')).toBeNull();
+    expect(document.querySelector('.service-native-intro.about-native-top-intro')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Where faith & finance grow together.' })).toBeTruthy();
+    expect(screen.getByText('Our culture is delivering the best financial products and experiences that align with biblical values.')).toBeTruthy();
+    expect(screen.getByText('Our mission is your financial health and ministry growth.')).toBeTruthy();
+    expect(screen.queryByText('Connect your faith & finances.')).toBeNull();
+
+    const buildingShotSection = document.querySelector('.about-native-building-shot');
+    expect(buildingShotSection).toBeTruthy();
+    expect(within(buildingShotSection).getByAltText('AGFinancial office building')).toBeTruthy();
+
+    const strategySection = document.querySelector('.about-native-strategy');
+    expect(strategySection).toBeTruthy();
+    expect(within(strategySection).getByText(/Create a complete, robust financial strategy for/i)).toBeTruthy();
+    expect(within(strategySection).getByRole('link', { name: 'loans' }).getAttribute('href')).toBe('/services/loans');
+    expect(within(strategySection).getByRole('link', { name: 'investments' }).getAttribute('href')).toBe('/services/investments');
+    expect(within(strategySection).getByRole('link', { name: 'retirement' }).getAttribute('href')).toBe('/services/retirement');
+    expect(within(strategySection).getByRole('link', { name: 'planned giving' }).getAttribute('href')).toBe('/services/legacy-giving');
+    expect(within(strategySection).getByRole('link', { name: 'insurance' }).getAttribute('href')).toBe('/services/insurance');
+    expect(within(strategySection).getByRole('link', { name: 'Explore all services' }).getAttribute('href')).toBe('/services');
+    expect(within(strategySection).getByText(/\$12 billion\+/)).toBeTruthy();
+    expect(strategySection?.querySelectorAll('.service-native-card')).toHaveLength(3);
+    expect(strategySection?.querySelector('.about-native-strategy-card--focus')).toBeTruthy();
+    expect(strategySection?.querySelector('.about-native-strategy-card--responsibility')).toBeTruthy();
+    expect(strategySection?.querySelector('.about-native-strategy-card--experience')).toBeTruthy();
+
+    const alliesSection = document.querySelector('.about-native-allies');
+    expect(alliesSection).toBeTruthy();
+    expect(within(alliesSection).getByRole('heading', { name: 'Ministry allies.' })).toBeTruthy();
+    expect(alliesSection?.textContent).toContain("We're serving you, alongside you.");
+    expect(within(alliesSection).getByRole('link', { name: "See what we're doing together" }).getAttribute('href')).toBe('/about-us/impact');
+
+    const historySection = document.querySelector('.about-native-history');
+    expect(historySection).toBeTruthy();
+    expect(within(historySection).getByText('AGFinancial grew out of something already alive and working. That’s a stupid sentence. This is all temporary, by the way.')).toBeTruthy();
+    expect(within(historySection).getByText(/AG Financial Services Group \(AGFSG\), which officially launched operations on October 1, 1998\./)).toBeTruthy();
+    expect(within(historySection).getByRole('link', { name: 'This is why we matter' }).getAttribute('href')).toBe('/about-us/impact');
+
+    expect(document.querySelector('.about-native-cta-form')).toBeTruthy();
+  });
+
   it('replaces the impact native stats grid in place with the managed proof story feature while keeping the native fallback when blocks are absent', () => {
     mockBlocksByPath = {
       '/about-us/impact': (
@@ -420,10 +473,9 @@ describe('NativeContentPage functional routes', () => {
     expect(managedProofSection?.querySelector('.impact-proof-story-summary')).toBeNull();
     expect(within(managedProofSection).getByText('ministries supported by loans.')).toBeTruthy();
     expect(within(managedProofSection).getByText('Over the last 10 years, those ministries represent more than 945,000 people.')).toBeTruthy();
-    expect(within(managedProofSection).getByText('ministers retiring with AGFinancial.')).toBeTruthy();
-    expect(within(managedProofSection).getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
-    expect(screen.getByRole('heading', { name: 'We’re making' })).toBeTruthy();
-    expect(screen.getByText('a difference… thanks to you.')).toBeTruthy();
+    expect(within(managedProofSection).getByText('retirements planned.')).toBeTruthy();
+    expect(within(managedProofSection).getByRole('link', { name: 'Explore loans' }).getAttribute('href')).toBe('/services/loans');
+    expect(screen.getByRole('heading', { name: "We're making a difference together." })).toBeTruthy();
     expect(screen.queryByText('Bold, smart moves.')).toBeNull();
     expect(screen.queryByText('Let’s make them together.')).toBeNull();
 

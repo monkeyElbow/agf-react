@@ -1047,19 +1047,20 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       title: '',
       metrics: [
         {
-          value: '4,000',
+          value: '1,400',
           eyebrow: 'Loans',
-          label: 'churches and ministries fueled each year.',
+          label: 'ministries supported by loans.',
           tone: 'atlantean',
+          valueTone: 'atlantean',
           action: {
-            label: 'Explore Loans',
+            label: 'Explore loans',
             to: '/services/loans',
           },
         },
         {
-          value: '$450 Million',
+          value: '$450 million',
           eyebrow: 'Legacy Giving',
-          label: 'under trusted care for future ministry.',
+          label: 'distributed to ministries through AG Foundation.',
           tone: 'mango',
           action: {
             label: 'Plan with us',
@@ -1069,27 +1070,30 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         {
           value: '5,117',
           eyebrow: 'Insurance',
-          label: 'mission trips covered with protection in place.',
+          label: 'mission trips covered and protected.',
           tone: 'super-grey',
+          valueTone: 'atlantean',
           action: {
-            label: 'Cover your trip',
+            label: 'Cover your ministry',
             to: '/services/insurance',
           },
         },
         {
           value: '29,000+',
           eyebrow: 'Retirement',
-          label: 'ministers retired with AGFinancial.',
+          label: 'retirements planned.',
           tone: 'atlantean-dark',
+          valueTone: 'mango',
+          labelBreak: 'block',
           action: {
-            label: 'Start your plan',
+            label: 'Start your tomorrow',
             to: '/services/retirement',
           },
         },
       ],
     });
     expect(runtime?.metrics).toHaveLength(4);
-    expect(runtime?.metrics?.[2]?.body).toContain('practical coverage');
+    expect(runtime?.metrics?.[2]?.body).toContain('Peace of mind');
     expect(runtime?.metrics?.[3]?.action?.to).toBe('/services/retirement');
   });
 });

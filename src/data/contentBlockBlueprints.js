@@ -3430,10 +3430,10 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       kind: 'billboard',
       mode: 'dynamic',
       settings: {
-        title: 'We’re making',
+        title: "We're making a difference together.",
         titleClassName: '',
         titleHighlightsJson: '',
-        subtitle: 'a difference… thanks to you.',
+        subtitle: '',
         bodyHtml: '',
         body: '',
         bgTone: 'white',

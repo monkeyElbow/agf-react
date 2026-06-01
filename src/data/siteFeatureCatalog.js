@@ -200,22 +200,23 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       action: null,
       metrics: Object.freeze([
         Object.freeze({
-          value: '1400',
+          value: '1,400',
           eyebrow: 'Loans',
+          valueTone: 'atlantean',
           label: 'ministries supported by loans.',
           body: 'Over the last 10 years, those ministries represent more than 945,000 people.',
           tone: 'atlantean',
           action: Object.freeze({
-            label: 'Explore Loans',
+            label: 'Explore loans',
             to: '/services/loans',
             openInNewWindow: false,
           }),
         }),
         Object.freeze({
-          value: '$450 Million',
+          value: '$450 million',
           eyebrow: 'Legacy Giving',
-          label: 'under trusted care for future ministry.',
-          body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
+          label: 'distributed to ministries through AG Foundation.',
+          body: 'That’s the power of generous donors using smart strategies.',
           tone: 'mango',
           action: Object.freeze({
             label: 'Plan with us',
@@ -226,11 +227,12 @@ const SITE_FEATURE_CATALOG = Object.freeze([
         Object.freeze({
           value: '5,117',
           eyebrow: 'Insurance',
-          label: 'mission trips covered with protection in place.',
-          body: 'Teams can travel, serve, and respond quickly because practical coverage is already handled before the wheels ever leave the runway.',
+          valueTone: 'atlantean',
+          label: 'mission trips covered and protected.',
+          body: 'Peace of mind allows you to focus on what matters at home and abroad: serving others, and sharing the Gospel with confidence.',
           tone: 'super-grey',
           action: Object.freeze({
-            label: 'Cover your trip',
+            label: 'Cover your ministry',
             to: '/services/insurance',
             openInNewWindow: false,
           }),
@@ -238,11 +240,13 @@ const SITE_FEATURE_CATALOG = Object.freeze([
         Object.freeze({
           value: '29,000+',
           eyebrow: 'Retirement',
-          label: 'ministers retiring with AGFinancial.',
-          body: 'Retirement planning that respects decades of calling and helps leaders step into the next season with structure, confidence, and care.',
+          valueTone: 'mango',
+          labelBreak: 'block',
+          label: 'retirements planned.',
+          body: 'Your participation helps individuals, churches, ministries—and you—step confidently into the next season.',
           tone: 'atlantean-dark',
           action: Object.freeze({
-            label: 'Start your plan',
+            label: 'Start your tomorrow',
             to: '/services/retirement',
             openInNewWindow: false,
           }),

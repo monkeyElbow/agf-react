@@ -235,6 +235,8 @@ function normalizeMetrics(metrics = []) {
         body: String(metric.body || '').trim(),
         eyebrow: String(metric.eyebrow || '').trim(),
         tone: String(metric.tone || '').trim() || 'atlantean',
+        valueTone: String(metric.valueTone || '').trim(),
+        labelBreak: String(metric.labelBreak || '').trim(),
         action: normalizeMetricAction(metric.action),
       };
     })
@@ -491,10 +493,24 @@ export function ImpactProofStoryEditorialContent({
             >
               <div className="impact-proof-story-proof-content">
                 <div className="impact-proof-story-proof-copy">
-                  <h2 className="impact-proof-story-proof-stat">
-                    <span className={`impact-proof-story-proof-value is-tone-${metric.tone}`}>{metric.value}</span>
-                    {' '}
-                    <span className="impact-proof-story-proof-label">{metric.label}</span>
+                  <h2 className="impact-proof-story-proof-stat" aria-label={`${metric.value} ${metric.label}`}>
+                    <span
+                      className={[
+                        'impact-proof-story-proof-value',
+                        `is-tone-${metric.tone}`,
+                        metric.valueTone ? `is-value-${metric.valueTone}` : null,
+                      ].filter(Boolean).join(' ')}
+                    >
+                      {metric.value}
+                    </span>
+                    {metric.labelBreak === 'block'
+                      ? <span className="impact-proof-story-proof-label is-break-block">{metric.label}</span>
+                      : (
+                        <>
+                          {' '}
+                          <span className="impact-proof-story-proof-label">{metric.label}</span>
+                        </>
+                      )}
                   </h2>
                   {metric.body ? <p className="impact-proof-story-proof-body">{metric.body}</p> : null}
                 </div>
