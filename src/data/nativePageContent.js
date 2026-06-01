@@ -617,6 +617,7 @@ const directContent = {
   '/about-us': {
     pageClass: 'native-info-page--about',
     compact: true,
+    hideHero: true,
     hero: {
       lines: [
         {
@@ -630,57 +631,78 @@ const directContent = {
       ],
     },
     intro: {
-      heading: 'Connect your faith & finances.',
-      headingHighlights: [{ text: 'faith & finances', className: 'is-white' }],
+      className: 'about-native-top-intro',
+      copyClassName: 'about-native-top-intro-copy',
+      justify: 'center',
+      heading: 'Where faith & finance grow together.',
       body: [
-        'Our goal is to deliver the best financial products, services, and experiences that align with biblical values. Our mission is your financial health and ministry growth.',
+        'Our culture is delivering the best financial products and experiences that align with biblical values.',
       ],
-      emphasis: 'AGFinancial is a culture where business and faith grow **together**.',
-      image: aboutIntroImage,
-      imageAlt: 'AGFinancial team collaborating',
-      layout: 'split',
+      emphasis: 'Our mission is your financial health and ministry growth.',
     },
     sections: [
       {
-        className: 'about-native-strategy',
-        title: 'Create a complete, robust financial strategy for your ministry and your family.',
-        body: [
-          'It is our honor to serve more than 38,000 clients, and more than 4,000 churches and ministries worldwide. With $10.5 billion+ in assets under management, we are driven to God-honoring stewardship. Through loans, investments, retirement, planned giving, and insurance services, we’re dedicated to providing the best financial experience for both ministries and individuals.',
+        className: 'about-native-building-shot',
+        hideCopy: true,
+        fullBleed: true,
+        columns: 'two',
+        columnsItems: [
+          {
+            slot: 1,
+            type: 'photo',
+            image: aboutIntroImage,
+            imageAlt: 'AGFinancial office building',
+          },
         ],
+      },
+      {
+        className: 'about-native-strategy',
+        copyWrap: true,
+        actionsBeforeCards: true,
+        title: 'Create a complete, robust financial strategy for your ministry and your family.',
+        titleHighlights: [
+          { text: 'your ministry', className: 'is-atlantean' },
+          { text: 'your family', className: 'is-mango' },
+        ],
+        html: '<p>It is our honor to serve more than 38,000 clients, and more than 4,000 churches and ministries worldwide. With $12 billion+ in assets under management, we are driven to God-honoring stewardship. Through <a href="/services/loans">loans</a>, <a href="/services/investments">investments</a>, <a href="/services/retirement">retirement</a>, <a href="/services/legacy-giving">planned giving</a>, and <a href="/services/insurance">insurance</a>, we’re dedicated to providing the best financial experience for both ministries and individuals.</p>',
         cards: [
           {
             title: 'Focus',
             body: 'Our faith and our clients’ financial health come first. Everything else flows from our unwavering commitment to both.',
-            cardClass: 'card3',
+            cardClass: 'card3 about-native-strategy-card about-native-strategy-card--focus',
           },
           {
             title: 'Responsibility',
             body: 'The highest standards of biblical stewardship and professional integrity guide every decision.',
-            cardClass: 'card3',
+            cardClass: 'card3 about-native-strategy-card about-native-strategy-card--responsibility',
           },
           {
             title: 'Experience',
             body: 'Decades of trusted financial expertise help us successfully navigate challenges for both individuals and ministries.',
-            cardClass: 'card3',
+            cardClass: 'card3 about-native-strategy-card about-native-strategy-card--experience',
           },
         ],
         actions: [{ label: 'Explore all services', to: '/services' }],
       },
       {
         className: 'about-native-allies',
+        copyWrap: true,
         title: 'Ministry allies.',
-        body: [
-          'We’re **serving** you, **alongside** you.',
-        ],
+        html: '<p>We\'re <mark class="is-atlantean">serving</mark> you, <mark class="is-mango">alongside</mark> you.</p>',
         actions: [
-          { label: 'See what we’re doing together', to: '/about-us/impact' },
+          { label: "See what we're doing together", to: '/about-us/impact' },
         ],
       },
       {
         className: 'about-native-history',
+        copyWrap: true,
         title: 'Some history things.',
         body: [
-          'This will be a little more info about AGF; some brief historical tidbits, maybe some roots/AG mentions. Not a lot of things, easy to view and read.',
+          'AGFinancial grew out of something already alive and working. That’s a stupid sentence. This is all temporary, by the way.',
+          'For decades, the Assemblies of God General Council headquarters operated several independent financial departments: a ministers benefit association, a loan fund, and a foundation, among others. Each had its own leadership, its own church loan portfolio, its own operations, and its own strengths. However, operating separately naturally created consistency and efficiency challenges.',
+          'In the mid-1990s, AG General Superintendent Thomas Trask recognized and championed an opportunity for these growing entities to transform into a unified, professional management group that could serve the church better, and with the same rigor expected in any financial arena. That vision gave rise to AG Financial Services Group (AGFSG), which officially launched operations on October 1, 1998.',
+          'From the beginning, the goal was simple: support the General Council and the local church through sound financial services. Not only because it made good business sense, but because it was the right stewardship of what had been entrusted to the ministry.',
+          'In the years since, AGFinancial has grown steadily — adding investment management, real estate, and other capabilities — while staying anchored to that original purpose. The tools have evolved. The mission hasn’t.',
           'Maybe after that, we send to the “impact” page to show why our work matters, and what sort of difference we’re making…via the button, of course.',
         ],
         actions: [
@@ -3722,18 +3744,18 @@ function companyChildContent(path, title) {
               subtitle: 'churches and ministries fueled each year.',
               body: 'From first conversation to final funding, we help ministries move from idea to opening day with financing that understands church realities.',
               to: '/services/loans',
-              cta: 'Explore Loans',
+              cta: 'Explore loans',
               stretchedLink: {
-                label: 'Explore Loans',
+                label: 'Explore loans',
                 to: '/services/loans',
               },
               cardClass: 'impact-native-card impact-native-card--loans',
             },
             {
-              title: '$450 Million',
+              title: '$450 million',
               titleClassName: 'countup',
-              subtitle: 'under trusted care for future ministry.',
-              body: 'Legacy plans, charitable tools, and long-horizon stewardship are organized with the kind of discipline that lets generosity keep working for the Kingdom.',
+              subtitle: 'distributed to ministries through AG Foundation.',
+              body: 'That’s the power of generous donors using smart strategies.',
               to: '/services/legacy-giving',
               cta: 'Plan with us',
               stretchedLink: {
@@ -3745,12 +3767,12 @@ function companyChildContent(path, title) {
             {
               title: '5,117',
               titleClassName: 'countup',
-              subtitle: 'mission trips covered with protection in place.',
-              body: 'Teams can travel, serve, and respond quickly because practical coverage is already handled before the wheels ever leave the runway.',
+              subtitle: 'mission trips covered and protected.',
+              body: 'Peace of mind allows you to focus on what matters at home and abroad: serving others, and sharing the Gospel with confidence.',
               to: '/services/insurance',
-              cta: 'Cover your trip',
+              cta: 'Cover your ministry',
               stretchedLink: {
-                label: 'Cover your trip',
+                label: 'Cover your ministry',
                 to: '/services/insurance',
               },
               cardClass: 'impact-native-card impact-native-card--insurance',
@@ -3758,12 +3780,12 @@ function companyChildContent(path, title) {
             {
               title: '29,000+',
               titleClassName: 'countup',
-              subtitle: 'ministers retired with AGFinancial.',
-              body: 'Retirement planning that respects decades of calling and helps leaders step into the next season with structure, confidence, and care.',
+              subtitle: 'retirements planned.',
+              body: 'Your participation helps individuals, churches, ministries—and you—step confidently into the next season.',
               to: '/services/retirement',
-              cta: 'Start your plan',
+              cta: 'Start your tomorrow',
               stretchedLink: {
-                label: 'Start your plan',
+                label: 'Start your tomorrow',
                 to: '/services/retirement',
               },
               cardClass: 'impact-native-card impact-native-card--retirement',
