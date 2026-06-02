@@ -4,12 +4,53 @@ import { isExternalLinkHref } from '../lib/dynamicPageBlocks';
 
 const LEGACY_STORY_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const LEGACY_STORY_MIN_WIDTH_PX = 1100;
-const LEGACY_STORY_DESKTOP_RUNWAY_VH = 360;
+const LEGACY_STORY_DESKTOP_RUNWAY_VH = 280;
 const LEGACY_STORY_RELEASE_START = 0.9;
+const LEGACY_STORY_SEQUENCE_START = 0;
+const LEGACY_STORY_SEQUENCE_SPAN = 0.9;
+const LEGACY_STORY_ENTER_DELAY = 0.03;
+const LEGACY_STORY_ENTER_SPAN = 0.28;
+const LEGACY_STORY_FIRST_ENTER_DELAY = 0;
+const LEGACY_STORY_FIRST_ENTER_SPAN = 0.12;
+const LEGACY_STORY_BASE_OPACITY = 0.18;
+const LEGACY_STORY_FIRST_BASE_OPACITY = 0.64;
+const LEGACY_STORY_TRANSLATE_Y = 92;
+const LEGACY_STORY_FIRST_TRANSLATE_Y = 10;
+const LEGACY_STORY_ENTER_START_SCALE = 0.9;
+const LEGACY_STORY_ENTER_END_SCALE = 1.035;
+const LEGACY_STORY_FIRST_ENTER_START_SCALE = 0.965;
+const LEGACY_STORY_FIRST_ENTER_END_SCALE = 1.04;
+const LEGACY_STORY_EXIT_END_SCALE = 0.94;
+const LEGACY_STORY_EXIT_WINDOW = 0.32;
+const LEGACY_STORY_EXIT_INITIAL_TRANSLATE_Y = 18;
+const LEGACY_STORY_EXIT_TRANSLATE_Y = 104;
+const LEGACY_STORY_LIGHT_LEAK_ENTER_START = 0;
+const LEGACY_STORY_LIGHT_LEAK_ENTER_END = 0.12;
+const LEGACY_STORY_LIGHT_LEAK_PEAK_START = 0.18;
+const LEGACY_STORY_LIGHT_LEAK_PEAK_END = 0.62;
+const LEGACY_STORY_LIGHT_LEAK_FADE_START = 0.76;
+const LEGACY_STORY_LIGHT_LEAK_FADE_END = 0.96;
 const LEGACY_STORY_TONE_SEQUENCE = Object.freeze(['atlantean', 'super-grey', 'atlantean-dark']);
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function lerp(start, end, amount) {
+  return start + ((end - start) * amount);
+}
+
+function smoothstep(edge0, edge1, value) {
+  const t = clamp((value - edge0) / (edge1 - edge0 || 1), 0, 1);
+  return t * t * (3 - (2 * t));
+}
+
+function formatPercent(value) {
+  return `${value.toFixed(2)}%`;
+}
+
+function formatNumber(value) {
+  return value.toFixed(3);
 }
 
 function normalizeBeats(beats = [], headline = '') {
@@ -38,6 +79,46 @@ function getStoryTone(index, beatCount) {
     return 'atlantean';
   }
   return LEGACY_STORY_TONE_SEQUENCE[index % LEGACY_STORY_TONE_SEQUENCE.length];
+}
+
+function splitFinalHeadline(text) {
+  const normalized = String(text || '').trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const parts = normalized.split('—');
+  if (parts.length < 2) {
+    return null;
+  }
+
+  const primary = String(parts.shift() || '').trim();
+  const secondary = String(parts.join('—') || '').trim();
+  if (!primary || !secondary) {
+    return null;
+  }
+
+  return { primary, secondary };
+}
+
+function renderLegacyBeatHeading(text, { final = false } = {}) {
+  const normalized = String(text || '').trim();
+  if (!final) {
+    return normalized;
+  }
+
+  const parts = splitFinalHeadline(normalized);
+  if (!parts) {
+    return normalized;
+  }
+
+  return (
+    <>
+      <span className="legacy-stewardship-story-final-primary">{parts.primary}</span>
+      <span className="legacy-stewardship-story-final-divider" aria-hidden="true">—</span>
+      <span className="legacy-stewardship-story-final-secondary">{parts.secondary}</span>
+    </>
+  );
 }
 
 function StoryAction({ action, resolveTo, className = 'service-native-btn is-outline is-tone-atlantean' }) {
@@ -85,7 +166,7 @@ function getStoryActors(beats, progress) {
     return [];
   }
 
-  const normalizedProgress = clamp((progress - 0.06) / 0.88, 0, 1);
+  const normalizedProgress = clamp((progress - LEGACY_STORY_SEQUENCE_START) / LEGACY_STORY_SEQUENCE_SPAN, 0, 1);
   const beatCount = beats.length;
   const sequencePosition = normalizedProgress * beatCount;
   const activeIndex = Math.min(beatCount - 1, Math.floor(sequencePosition));
@@ -94,7 +175,15 @@ function getStoryActors(beats, progress) {
 
   const incomingBeat = beats[activeIndex];
   if (incomingBeat) {
-    const enterProgress = clamp((localProgress - 0.12) / 0.4, 0, 1);
+    const isFirstBeat = activeIndex === 0;
+    const enterDelay = isFirstBeat ? LEGACY_STORY_FIRST_ENTER_DELAY : LEGACY_STORY_ENTER_DELAY;
+    const enterSpan = isFirstBeat ? LEGACY_STORY_FIRST_ENTER_SPAN : LEGACY_STORY_ENTER_SPAN;
+    const baseOpacity = isFirstBeat ? LEGACY_STORY_FIRST_BASE_OPACITY : LEGACY_STORY_BASE_OPACITY;
+    const initialTranslateY = isFirstBeat ? LEGACY_STORY_FIRST_TRANSLATE_Y : LEGACY_STORY_TRANSLATE_Y;
+    const startScale = isFirstBeat ? LEGACY_STORY_FIRST_ENTER_START_SCALE : LEGACY_STORY_ENTER_START_SCALE;
+    const endScale = isFirstBeat ? LEGACY_STORY_FIRST_ENTER_END_SCALE : LEGACY_STORY_ENTER_END_SCALE;
+    const enterProgress = clamp((localProgress - enterDelay) / enterSpan, 0, 1);
+    const scaleProgress = smoothstep(0, 0.92, localProgress);
     const isFinalBeat = activeIndex === beatCount - 1;
     actors.push({
       key: `incoming-${activeIndex}`,
@@ -102,15 +191,15 @@ function getStoryActors(beats, progress) {
       tone: getStoryTone(activeIndex, beatCount),
       role: isFinalBeat && enterProgress >= 1 ? 'holding' : 'incoming',
       motionState: isFinalBeat && enterProgress >= 1 ? 'holding' : (enterProgress < 1 ? 'entering' : 'holding'),
-      opacity: 0.04 + (enterProgress * 0.96),
-      translateY: (1 - enterProgress) * 64,
-      scale: 0.988 + (enterProgress * 0.012),
+      opacity: baseOpacity + (enterProgress * (1 - baseOpacity)),
+      translateY: (1 - enterProgress) * initialTranslateY,
+      scale: lerp(startScale, endScale, scaleProgress),
     });
   }
 
   const outgoingBeat = activeIndex > 0 ? beats[activeIndex - 1] : '';
-  if (outgoingBeat && localProgress < 0.44) {
-    const exitProgress = clamp(localProgress / 0.44, 0, 1);
+  if (outgoingBeat && localProgress < LEGACY_STORY_EXIT_WINDOW) {
+    const exitProgress = clamp(localProgress / LEGACY_STORY_EXIT_WINDOW, 0, 1);
     actors.unshift({
       key: `outgoing-${activeIndex - 1}`,
       text: outgoingBeat,
@@ -118,8 +207,8 @@ function getStoryActors(beats, progress) {
       role: 'outgoing',
       motionState: 'exiting',
       opacity: 1 - (exitProgress * 0.94),
-      translateY: -(exitProgress * 72),
-      scale: 1 - (exitProgress * 0.02),
+      translateY: -lerp(LEGACY_STORY_EXIT_INITIAL_TRANSLATE_Y, LEGACY_STORY_EXIT_TRANSLATE_Y, exitProgress),
+      scale: 1 - (exitProgress * (1 - LEGACY_STORY_EXIT_END_SCALE)),
     });
   }
 
@@ -158,7 +247,7 @@ export function LegacyGivingStewardshipStoryStaticContent({
             className={`legacy-stewardship-story-static-final${reveal ? ' fade-up' : ''}`}
             data-tone={getStoryTone(normalizedBeats.length - 1, normalizedBeats.length)}
           >
-            <h2>{finalBeat}</h2>
+            <h2 aria-label={finalBeat}>{renderLegacyBeatHeading(finalBeat, { final: true })}</h2>
             <div className="legacy-stewardship-story-cta-wrap">
               <StoryAction action={action} resolveTo={resolveTo} className="service-native-btn is-outline is-tone-atlantean legacy-stewardship-story-cta" />
             </div>
@@ -266,22 +355,49 @@ export default function LegacyGivingStewardshipStoryFeature({
 
   const heldProgress = clamp(progress / LEGACY_STORY_RELEASE_START, 0, 1);
   const actors = getStoryActors(normalizedBeats, heldProgress);
-  const finalBeatProgress = clamp((heldProgress - 0.74) / 0.18, 0, 1);
-  const ctaOpacity = clamp((heldProgress - 0.84) / 0.08, 0, 1);
-  const ctaShift = (1 - ctaOpacity) * 20;
-  const accentOpacity = 0.18 + (finalBeatProgress * 0.2);
+  const ctaOpacity = clamp((heldProgress - 0.68) / 0.09, 0, 1);
+  const ctaShift = (1 - ctaOpacity) * 8;
+  const firstCueOpacity = 1 - smoothstep(0.04, 0.16, heldProgress);
+  const firstCueShift = (1 - firstCueOpacity) * 8;
+  const leakAppear = smoothstep(LEGACY_STORY_LIGHT_LEAK_ENTER_START, LEGACY_STORY_LIGHT_LEAK_ENTER_END, heldProgress);
+  const leakBloom = smoothstep(LEGACY_STORY_LIGHT_LEAK_PEAK_START, LEGACY_STORY_LIGHT_LEAK_PEAK_END, heldProgress);
+  const leakFade = 1 - smoothstep(LEGACY_STORY_LIGHT_LEAK_FADE_START, LEGACY_STORY_LIGHT_LEAK_FADE_END, heldProgress);
+  const leakStrength = leakAppear * leakFade;
+  const accentOpacity = 0.24 + (0.46 * leakStrength);
+  const shellStyle = {
+    '--legacy-stewardship-runway-vh': `${LEGACY_STORY_DESKTOP_RUNWAY_VH}vh`,
+    '--legacy-light-leak-a-x': formatPercent(lerp(10, 24, leakBloom)),
+    '--legacy-light-leak-a-y': formatPercent(lerp(22, 10, leakBloom)),
+    '--legacy-light-leak-a-scale': formatNumber(lerp(1, 1.38, leakBloom)),
+    '--legacy-light-leak-a-opacity': formatNumber(lerp(0.22, 0.46, leakStrength)),
+    '--legacy-light-leak-b-x': formatPercent(lerp(92, 74, leakBloom)),
+    '--legacy-light-leak-b-y': formatPercent(lerp(74, 56, leakBloom)),
+    '--legacy-light-leak-b-scale': formatNumber(lerp(1.02, 1.46, leakBloom)),
+    '--legacy-light-leak-b-opacity': formatNumber(lerp(0.18, 0.38, leakStrength)),
+    '--legacy-light-leak-c-x': formatPercent(lerp(50, 84, leakBloom)),
+    '--legacy-light-leak-c-y': formatPercent(lerp(12, 34, leakBloom)),
+    '--legacy-light-leak-c-scale': formatNumber(lerp(0.92, 1.32, leakBloom)),
+    '--legacy-light-leak-c-opacity': formatNumber(lerp(0.14, 0.3, leakStrength)),
+    '--legacy-light-leak-fade': formatNumber(leakFade),
+  };
 
   return (
     <div
       ref={shellRef}
       className="ag-panel-rail legacy-stewardship-story-shell"
       data-enhanced="true"
+      data-scroll-gradient-motion="enabled"
       data-hold-contract="desktop-pinned-sequence"
       data-release-after="final-message-hold"
-      style={{ '--legacy-stewardship-runway-vh': `${LEGACY_STORY_DESKTOP_RUNWAY_VH}vh` }}
+      style={shellStyle}
     >
       <div className="legacy-stewardship-story-pin">
         <div className="legacy-stewardship-story-frame">
+          <div className="legacy-stewardship-story-light-leaks" aria-hidden="true">
+            <div className="legacy-stewardship-story-light-leak is-a" />
+            <div className="legacy-stewardship-story-light-leak is-b" />
+            <div className="legacy-stewardship-story-light-leak is-c" />
+          </div>
           <div
             className="legacy-stewardship-story-backdrop"
             aria-hidden="true"
@@ -291,21 +407,38 @@ export default function LegacyGivingStewardshipStoryFeature({
             <div className="legacy-stewardship-story-stage-copy">
               <div className="legacy-stewardship-story-beat-stage" data-actor-system="single-message-sequence">
                 {actors.map((actor) => (
-                  <div
-                    key={actor.key}
-                    className="legacy-stewardship-story-beat-actor"
-                    data-actor-role={actor.role}
-                    data-motion-state={actor.motionState}
-                    data-tone={actor.tone}
-                    style={{
-                      opacity: actor.opacity,
-                      transform: `translate3d(0, ${actor.translateY}px, 0) scale(${actor.scale})`,
-                      zIndex: actor.role === 'outgoing' ? 1 : 2,
-                    }}
-                  >
-                    <h2>{actor.text}</h2>
-                  </div>
+                  (() => {
+                    const isFinalBeat = actor.tone === 'atlantean' && actor.text === headline;
+                    return (
+                      <div
+                        key={actor.key}
+                        className="legacy-stewardship-story-beat-actor"
+                        data-actor-role={actor.role}
+                        data-motion-state={actor.motionState}
+                        data-tone={actor.tone}
+                        style={{
+                          opacity: actor.opacity,
+                          transform: `translate3d(0, ${actor.translateY}px, 0) scale(${actor.scale})`,
+                          zIndex: actor.role === 'outgoing' ? 1 : 2,
+                        }}
+                      >
+                        <h2 aria-label={isFinalBeat ? actor.text : undefined}>
+                          {renderLegacyBeatHeading(actor.text, { final: isFinalBeat })}
+                        </h2>
+                      </div>
+                    );
+                  })()
                 ))}
+              </div>
+              <div
+                className="legacy-stewardship-story-first-cue"
+                aria-hidden="true"
+                style={{
+                  opacity: firstCueOpacity,
+                  transform: `translate3d(0, ${firstCueShift}px, 0)`,
+                }}
+              >
+                <span className="legacy-stewardship-story-first-cue-mark" />
               </div>
             </div>
             <div

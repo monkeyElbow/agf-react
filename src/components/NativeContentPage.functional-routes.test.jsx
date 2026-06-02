@@ -609,6 +609,7 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Receive payments for life.')).toBeTruthy();
     expect(stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]')?.textContent).toBe('Learn more');
     expect(stewardshipSection?.className).toContain('legacy-giving-stewardship');
+    expect(stewardshipSection?.className).toContain('legacy-stewardship-story');
     expect(willsSection && stewardshipSection
       ? Boolean(willsSection.compareDocumentPosition(stewardshipSection) & Node.DOCUMENT_POSITION_FOLLOWING)
       : false).toBe(true);
@@ -744,6 +745,8 @@ describe('NativeContentPage functional routes', () => {
     expect(givingOptionsSection?.textContent).toContain('This is legacy planning and charitable giving made easy.');
     expect(givingOptionsSection?.querySelector('mark.is-atlantean')?.textContent).toBe('made easy');
     expect(givingOptionsSection?.querySelectorAll('.service-native-card')).toHaveLength(6);
+    expect(firstCard?.className).toContain('fade-up');
+    expect(firstCard?.className).toContain('fade-up-force-observe');
     expect(watchVideoLink.className).toContain('is-ghost');
     expect(learnMoreLink.className).toContain('is-tone-atlantean');
     expect(learnMoreLink.className).not.toContain('is-outline');

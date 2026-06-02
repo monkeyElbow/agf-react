@@ -5739,7 +5739,7 @@ export default function NativeContentPage({ page }) {
                   dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;
                 }
               }}
-              className={`service-native-section${section.sand ? ' is-sand' : ''}${section.className ? ` ${section.className}` : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${sectionHudFocusClass}${sectionOwnership.className || ''}`}
+              className={`service-native-section${section.sand ? ' is-sand' : ''}${section.className ? ` ${section.className}` : ''} legacy-stewardship-story${showSectionHud ? ' has-admin-front-hud' : ''}${sectionHudFocusClass}${sectionOwnership.className || ''}`}
               data-block-id={dynamicSectionBlockId || undefined}
               data-mobile-front-hud-selectable={showSectionHud && isMobileFrontHud ? 'true' : undefined}
               data-mobile-front-hud-selected={isMobileHudPanelSelected(dynamicSectionHudPanelId) ? 'true' : undefined}
@@ -6121,9 +6121,11 @@ export default function NativeContentPage({ page }) {
                   const stretchedLink = !card.messagePanel && card.stretchedLink && typeof card.stretchedLink === 'object'
                     ? card.stretchedLink
                     : null;
+                  const shouldAnimateCard = !focusMessageCard;
+                  const forceScrollRevealCard = shouldAnimateCard && sectionClassName.includes('legacy-giving-types');
 
                   return (
-                  <article key={card.title} className={`service-native-card ${focusMessageCard ? '' : 'fade-up'} ${card.cardClass || 'card2'}${card.dividerTone ? ` is-divider-tone-${card.dividerTone}` : ''}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}${stretchedLink ? ' has-stretched-link' : ''}`.trim()}>
+                  <article key={card.title} className={`service-native-card ${shouldAnimateCard ? 'fade-up' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.dividerTone ? ` is-divider-tone-${card.dividerTone}` : ''}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}${stretchedLink ? ' has-stretched-link' : ''}`.trim()}>
                     <div className={card.messagePanel && resolvedMessageLayout === 'inline' ? 'consultant-card-details' : undefined}>
                       <h3 className={card.titleClassName || undefined}>
                         {Array.isArray(card.titleHighlights) && card.titleHighlights.length
