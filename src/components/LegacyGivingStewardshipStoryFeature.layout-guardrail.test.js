@@ -43,7 +43,13 @@ describe('legacy giving stewardship story layout guardrail', () => {
     expect(cssSource).toContain('min-height: clamp(10.75rem, 18vw, 12.75rem);');
     expect(cssSource).toContain('margin-top: clamp(2.4rem, 5.1vw, 3.9rem);');
     expect(cssSource).toContain('@media (max-width: 1099px) {');
+    expect(cssSource).toContain('gap: clamp(2.15rem, 4.8vw, 3rem);');
+    expect(cssSource).toContain('gap: clamp(1.55rem, 3.4vw, 2.2rem);');
+    expect(cssSource).toContain('padding: clamp(0.6rem, 1.4vw, 0.95rem) 0;');
     expect(cssSource).toContain('font-size: clamp(1.85rem, 4.6vw, 2.65rem);');
+    expect(cssSource).toContain('gap: clamp(1.85rem, 7vw, 2.55rem);');
+    expect(cssSource).toContain('gap: clamp(1.35rem, 6vw, 1.95rem);');
+    expect(cssSource).toContain('padding: clamp(0.7rem, 2.6vw, 1rem) 0;');
     expect(cssSource).toContain('font-size: clamp(2.3rem, 11vw, 3.1rem);');
     expect(cssSource).toContain('.legacy-stewardship-story .legacy-stewardship-story-cta.service-native-btn.is-outline {');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-wills {');
