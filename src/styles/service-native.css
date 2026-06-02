@@ -12533,7 +12533,7 @@
 }
 
 .native-info-page--legacy-giving .legacy-giving-cta {
-  padding-top: clamp(1rem, 2.6vw, 1.6rem);
+  padding-top: clamp(2.2rem, 5vw, 3.4rem);
   padding-bottom: clamp(3.2rem, 6vw, 4.9rem);
   background: linear-gradient(135deg, rgba(196, 190, 182, 0.18) 0%, rgba(242, 239, 235, 0.78) 100%);
 }
@@ -12545,17 +12545,24 @@
 }
 
 .native-info-page--legacy-giving .legacy-giving-cta .native-info-inline-form {
-  width: min(620px, 100%);
+  width: min(680px, 100%);
   margin-top: 0;
+  margin-inline: auto;
   border: 1px solid rgba(17, 53, 75, 0.14);
   border-radius: 12px;
   background: #ffffff;
-  padding: clamp(1.15rem, 2vw, 1.6rem);
+  padding: clamp(2.2rem, 4vw, 3rem) clamp(1.3rem, 2.4vw, 1.85rem) clamp(1.65rem, 2.9vw, 2.3rem);
   box-shadow: 0 16px 32px rgba(12, 42, 61, 0.05);
 }
 
+.native-info-page--legacy-giving .legacy-giving-cta .dynamic-cta-form-heading {
+  max-width: 30rem;
+  margin: 0 auto clamp(1.95rem, 4vw, 2.6rem);
+  text-align: center;
+}
+
 .native-info-page--legacy-giving .legacy-giving-cta .native-info-inline-form h5 {
-  margin: 0 0 0.8rem;
+  margin: 0;
   color: var(--ag-color-atlantean);
   font-family: var(--ag-font-heading);
   font-size: clamp(1.75rem, 4vw, 2.5rem);
@@ -12563,6 +12570,12 @@
   line-height: 1.04;
   letter-spacing: clamp(-1px, -0.08vw, -0.35px);
   text-wrap: balance;
+}
+
+.native-info-page--legacy-giving .legacy-giving-cta .dynamic-cta-form-subtitle {
+  max-width: 24rem;
+  margin: 0.7rem auto 0;
+  text-align: center;
 }
 
 .native-info-page--legacy-giving .legacy-giving-cta .native-info-inline-form label {
