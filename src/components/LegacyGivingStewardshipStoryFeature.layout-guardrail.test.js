@@ -55,6 +55,6 @@ describe('legacy giving stewardship story layout guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-wills {');
     expect(cssSource).toContain('padding-bottom: clamp(3.1rem, 6.2vw, 5.4rem);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-joy > .ag-panel-rail > h2,');
-    expect(cssSource).toContain('letter-spacing: clamp(-0.045em, -0.03vw, -0.02em);');
+    expect(cssSource).toContain('letter-spacing: clamp(-0.032em, -0.02vw, -0.015em);');
   });
 });

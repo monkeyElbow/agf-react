@@ -12472,7 +12472,7 @@
 }
 
 .native-info-page--legacy-giving .legacy-giving-joy {
-  padding-top: clamp(3.4rem, 7vw, 5.8rem);
+  padding-top: clamp(3.1rem, 6.2vw, 5.2rem);
   padding-bottom: clamp(3.1rem, 6.2vw, 5.2rem);
   background: #ffffff;
 }
@@ -12493,7 +12493,7 @@
   font-weight: 700;
   font-size: clamp(2.95rem, 5.9vw, 4.59375rem);
   line-height: 0.94;
-  letter-spacing: clamp(-0.045em, -0.03vw, -0.02em);
+  letter-spacing: clamp(-0.032em, -0.02vw, -0.015em);
   text-wrap: balance;
   font-kerning: normal;
   font-feature-settings: "kern" 1;
