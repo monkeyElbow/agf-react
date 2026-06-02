@@ -16,7 +16,17 @@ describe('legacy giving review polish guardrail', () => {
 
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-wills {');
     expect(cssSource).toContain('padding-top: clamp(3.1rem, 6.2vw, 5.4rem);');
+    expect(cssSource).toContain('padding-bottom: clamp(3.1rem, 6.2vw, 5.4rem);');
     expect(cssSource).toContain('padding-top: clamp(2.8rem, 7.8vw, 3.5rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card.fade-up[data-fade-state="pending"] {');
+    expect(cssSource).toContain('opacity: 0.24;');
+    expect(cssSource).toContain('translate: 0 16px;');
+    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card > div:first-child {');
+    expect(cssSource).toContain('flex: 1 1 auto;');
+    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card h3 {');
+    expect(cssSource).toContain('min-height: 0;');
+    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-action-row {');
+    expect(cssSource).toContain('margin-top: auto;');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-opportunity .service-native-dark-feature-inner {');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-opportunity .service-native-dark-feature-copy {');
