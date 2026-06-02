@@ -387,4 +387,27 @@ describe('HomeImpactStoryFeature', () => {
     expect(cssSource).toContain('overflow: clip;');
     expect(cssSource).toContain('inset: -14% -12% auto;');
   });
+
+  it('keeps the proof CTA spacing and button centering contract explicit so cue tweaks do not drift into another loop', () => {
+    const cssSource = readSource('../styles/home-native.css');
+
+    expect(cssSource).toContain('.home-impact-story-cta-wrap {');
+    expect(cssSource).toContain('--home-impact-story-button-expand-inline: 0.125rem;');
+    expect(cssSource).toContain('grid-template-rows: 52px auto;');
+    expect(cssSource).toContain('--home-impact-story-cta-top-gap: clamp(1.8rem, 3vw, 2.6rem);');
+    expect(cssSource).toContain('--home-impact-story-cta-cue-gap: var(--home-impact-story-cta-top-gap);');
+    expect(cssSource).toContain('row-gap: var(--home-impact-story-cta-cue-gap);');
+    expect(cssSource).toContain('margin-top: var(--home-impact-story-cta-top-gap);');
+    expect(cssSource).toContain('.home-impact-story-proof-cta-wrap {');
+    expect(cssSource).toContain('--home-impact-story-cta-top-gap: clamp(0.7rem, 1.4vw, 0.95rem);');
+    expect(cssSource).toContain('--home-impact-story-cta-cue-gap: clamp(3.75rem, 6vw, 5.5rem);');
+    expect(cssSource).toContain('.home-impact-story-cta {');
+    expect(cssSource).toContain('--home-impact-cta-expand-inline: var(--home-impact-story-button-expand-inline);');
+    expect(cssSource).toContain('display: inline-flex;');
+    expect(cssSource).toContain('align-items: center;');
+    expect(cssSource).toContain('align-self: center;');
+    expect(cssSource).toContain('justify-content: center;');
+    expect(cssSource).toContain('line-height: 1;');
+    expect(cssSource).toContain('margin: 0 calc(-1 * var(--home-impact-cta-expand-inline));');
+  });
 });

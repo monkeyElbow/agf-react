@@ -165,7 +165,7 @@ button.action-btn {
 .site-brand-animated.is-intro-playing .site-brand-wordmark-shell {
   opacity: 0;
   transform: translateX(-10px) translateY(2px);
-  animation: brand-wordmark-reveal 520ms cubic-bezier(0.16, 1, 0.3, 1) 320ms both;
+  animation: brand-wordmark-reveal 440ms cubic-bezier(0.16, 1, 0.3, 1) 220ms both;
 }
 
 @keyframes brand-square-reveal {

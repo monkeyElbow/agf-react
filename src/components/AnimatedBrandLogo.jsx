@@ -53,7 +53,7 @@ export default function AnimatedBrandLogo() {
       </span>
 
       <span className="site-brand-wordmark-shell" aria-hidden="true">
-        <img src={agfLogo} alt="" className="site-brand-wordmark-image" />
+        <img src={agfLogo} alt="" className="site-brand-wordmark-image" fetchPriority="high" />
       </span>
     </span>
   );

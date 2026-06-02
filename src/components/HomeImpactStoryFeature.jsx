@@ -337,6 +337,9 @@ export function HomeImpactStoryStaticContent({
         <ImpactStoryMetrics metrics={metrics} countUp={countUp} />
         <div className="home-native-impact-cta-wrap home-impact-story-cta-wrap home-impact-story-proof-cta-wrap">
           <ImpactStoryAction action={action} resolveTo={resolveTo} className="home-native-cta home-impact-story-cta" />
+          <div className="home-impact-story-cta-cue" aria-hidden="true">
+            <span className="home-impact-story-scroll-cue-mark" />
+          </div>
         </div>
       </div>
     </div>
@@ -565,6 +568,9 @@ export default function HomeImpactStoryFeature({
                     resolveTo={resolveTo}
                     className="home-native-cta home-impact-story-cta"
                   />
+                  <div className="home-impact-story-cta-cue" aria-hidden="true">
+                    <span className="home-impact-story-scroll-cue-mark" />
+                  </div>
                 </div>
               </div>
             </div>
