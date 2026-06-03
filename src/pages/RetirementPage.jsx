@@ -185,6 +185,7 @@ const DEFAULT_RETIREMENT_BILLBOARD_SETTINGS = {
   bgTone: 'white',
   textTone: 'dark',
   justify: 'center',
+  scrollReveal: 'scale-up',
   lineSpacing: 0.95,
   titleFontFamily: 'helv',
   titleFontWeight: 700,
@@ -211,6 +212,9 @@ const DEFAULT_RETIREMENT_BILLBOARD = {
   bgTone: 'white',
   textTone: 'dark',
   justify: 'center',
+  scrollReveal: 'scale-up',
+  copyClassName: 'fade-up fade-up-force-observe billboard-scroll-reveal-scale-up',
+  copyFadeRootMargin: '0px 0px -40% 0px',
   action: {
     label: 'Reach my consultant',
     href: '/services/retirement/retirement-consultants',
@@ -1854,7 +1858,10 @@ export default function RetirementPage() {
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('billboard')} />
         {renderHudAnchor('billboard')}
         <div className="ag-panel-rail" style={billboardRailStyle || undefined}>
-          <div className={`native-info-section-copy is-justify-${renderedBillboard.justify || 'center'}`}>
+          <div
+            className={`native-info-section-copy${renderedBillboard.copyClassName ? ` ${renderedBillboard.copyClassName}` : ''} is-justify-${renderedBillboard.justify || 'center'}`}
+            data-fade-root-margin={renderedBillboard.copyFadeRootMargin || undefined}
+          >
             <h2
               className={`${renderedBillboard.titleClassName || ''}${showFrontHud && billboardBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
               style={renderedBillboardTitleStyle}

@@ -1691,6 +1691,26 @@
   text-align: center;
 }
 
+.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up {
+  translate: 0 0;
+  transform-origin: 50% 50%;
+  transition:
+    opacity 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.82s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up[data-fade-state="pending"] {
+  opacity: 0.18;
+  translate: 0 0;
+  transform: translate3d(0, 58px, 0) scale(0.92);
+}
+
+.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up.is-visible {
+  opacity: 1;
+  translate: 0 0;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
 .retirement-everyday .native-info-section-copy.is-justify-left,
 .retirement-everyday .native-info-section-copy.is-justify-left > h2,
 .retirement-everyday .native-info-section-copy.is-justify-left .native-info-rich-html,
@@ -1805,6 +1825,17 @@
 .retirement-everyday .native-info-section-copy > h2.is-white,
 .retirement-everyday .native-info-section-copy > h2 mark.is-white {
   color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up,
+  .retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up[data-fade-state="pending"],
+  .retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up.is-visible {
+    opacity: 1;
+    translate: 0 0;
+    transform: none;
+    transition: none;
+  }
 }
 
 .retirement-feature {

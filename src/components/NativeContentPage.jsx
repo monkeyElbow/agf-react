@@ -941,6 +941,8 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
     html: normalizeHtmlContent(runtime.bodyHtml),
     body: runtime.body ? [runtime.body] : [],
     justify: normalizeHeroJustify(runtime.justify),
+    copyClassName: runtime.copyClassName || '',
+    copyFadeRootMargin: runtime.copyFadeRootMargin || undefined,
     sectionStyle,
     railStyle,
     actions,
@@ -5938,7 +5940,10 @@ export default function NativeContentPage({ page }) {
             ) : null}
             {showSectionCopy ? (
               section.copyWrap ? (
-                <div className={`native-info-section-copy${section.copyClassName ? ` ${section.copyClassName}` : ''}${sectionJustifyToken ? ` is-justify-${sectionJustifyToken}` : ''}`}>
+                <div
+                  className={`native-info-section-copy${section.copyClassName ? ` ${section.copyClassName}` : ''}${sectionJustifyToken ? ` is-justify-${sectionJustifyToken}` : ''}`}
+                  data-fade-root-margin={section.copyFadeRootMargin || undefined}
+                >
                   {!section.hideTitle ? (
                     <h2 className={section.titleClassName || undefined} style={section.titleStyle || undefined}>
                       {renderHighlightedText(section.title, section.titleHighlights)}

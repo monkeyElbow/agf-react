@@ -69,6 +69,7 @@ void CssHeroAnimationHookHarness;
 
 describe('useNativeEnhancements fade-up reveal', () => {
   let observerCallback = null;
+  let observerRootMargins = [];
   let observedTargets = [];
   let originalRequestAnimationFrame;
   let originalCancelAnimationFrame;
@@ -78,6 +79,7 @@ describe('useNativeEnhancements fade-up reveal', () => {
     vi.useFakeTimers();
     observedTargets = [];
     observerCallback = null;
+    observerRootMargins = [];
     originalRequestAnimationFrame = window.requestAnimationFrame;
     originalCancelAnimationFrame = window.cancelAnimationFrame;
     originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
@@ -99,8 +101,9 @@ describe('useNativeEnhancements fade-up reveal', () => {
     };
 
     class MockIntersectionObserver {
-      constructor(callback) {
+      constructor(callback, options = {}) {
         observerCallback = callback;
+        observerRootMargins.push(options.rootMargin || '0px');
       }
 
       observe(target) {
@@ -221,6 +224,31 @@ describe('useNativeEnhancements fade-up reveal', () => {
     expect(first.getAttribute('data-fade-state')).toBe('pending');
     expect(second.getAttribute('data-fade-state')).toBe('pending');
     expect(observedTargets).toHaveLength(2);
+  });
+
+  it('uses a custom observer root margin when a fade-up node opts into mid-screen billboard reveal timing', () => {
+    function CustomRootMarginHookHarness() {
+      const ref = useRef(null);
+      useNativeEnhancements(ref, 'fade-custom-root-margin-test');
+
+      return (
+        <div ref={ref} className="service-native-page">
+          <div
+            data-testid="custom-fade-0"
+            className="fade-up fade-up-force-observe billboard-scroll-reveal-scale-up"
+            data-fade-root-margin="0px 0px -40% 0px"
+          >
+            First
+          </div>
+        </div>
+      );
+    }
+
+    const { getByTestId } = render(<CustomRootMarginHookHarness />);
+
+    expect(getByTestId('custom-fade-0').getAttribute('data-fade-state')).toBe('pending');
+    expect(observedTargets).toHaveLength(1);
+    expect(observerRootMargins).toContain('0px 0px -40% 0px');
   });
 });
 

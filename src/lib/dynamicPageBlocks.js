@@ -745,6 +745,7 @@ export function buildDynamicBillboardFromBlock(block) {
   const textTone = String(settings.textTone || 'white').trim().toLowerCase() || 'white';
   const justify = String(settings.justify || 'center').trim().toLowerCase() || 'center';
   const lineSpacing = Number.isFinite(Number(settings.lineSpacing)) ? Number(settings.lineSpacing) : 1;
+  const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);
   const titleFontFamily = normalizeBillboardTitleFontFamily(settings.titleFontFamily);
   const titleFontWeight = normalizeBillboardTitleFontWeight(settings.titleFontWeight, titleFontFamily);
   const titleSizeRem = normalizeBillboardTitleSizeRem(settings.titleSizeRem);
@@ -804,6 +805,9 @@ export function buildDynamicBillboardFromBlock(block) {
     textTone,
     justify,
     lineSpacing,
+    scrollReveal,
+    copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe billboard-scroll-reveal-scale-up' : '',
+    copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -40% 0px' : '',
     contentMaxWidthPx: hasContentWidthOverride
       ? normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 920)
       : null,
@@ -1335,6 +1339,11 @@ export const DEFAULT_RATES_LEGAL_COPY_SETTINGS = Object.freeze({
 function normalizeHtmlContent(value) {
   const html = String(value || '').trim();
   return (!html || html === '<p></p>' || html === '<p><br></p>') ? '' : html;
+}
+
+function normalizeBillboardScrollReveal(value) {
+  const token = String(value || '').trim().toLowerCase();
+  return token === 'scale-up' ? 'scale-up' : 'none';
 }
 
 function resolveCtaFormSource(block) {

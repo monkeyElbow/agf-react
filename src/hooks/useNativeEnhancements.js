@@ -230,26 +230,39 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
 
         timers.set(target, timer);
       };
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) {
-              return;
-            }
+      const observerByRootMargin = new Map();
 
-            const index = Number(entry.target.getAttribute('data-fade-order'));
-            if (!Number.isFinite(index)) {
-              entry.target.classList.add('is-visible');
-              observer.unobserve(entry.target);
-              return;
-            }
+      const getFadeObserver = (rootMargin = '0px 0px -12% 0px') => {
+        const normalizedRootMargin = String(rootMargin || '0px 0px -12% 0px').trim() || '0px 0px -12% 0px';
+        if (observerByRootMargin.has(normalizedRootMargin)) {
+          return observerByRootMargin.get(normalizedRootMargin);
+        }
 
-            queueReveal(entry.target, index);
-            observer.unobserve(entry.target);
-          });
-        },
-        { rootMargin: '0px 0px -12% 0px' },
-      );
+        let observer = null;
+        observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) {
+                return;
+              }
+
+              const index = Number(entry.target.getAttribute('data-fade-order'));
+              if (!Number.isFinite(index)) {
+                entry.target.classList.add('is-visible');
+                observer?.unobserve(entry.target);
+                return;
+              }
+
+              queueReveal(entry.target, index);
+              observer?.unobserve(entry.target);
+            });
+          },
+          { rootMargin: normalizedRootMargin },
+        );
+
+        observerByRootMargin.set(normalizedRootMargin, observer);
+        return observer;
+      };
 
       nodes.forEach((el, index) => {
         el.classList.remove('is-visible');
@@ -259,10 +272,11 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
           return;
         }
         el.setAttribute('data-fade-state', 'pending');
-        observer.observe(el);
+        getFadeObserver(el.getAttribute('data-fade-root-margin')).observe(el);
       });
       cleanups.push(() => {
-        observer.disconnect();
+        observerByRootMargin.forEach((observer) => observer.disconnect());
+        observerByRootMargin.clear();
         timers.forEach((timer) => window.clearTimeout(timer));
         timers.clear();
         nodes.forEach((el) => {
