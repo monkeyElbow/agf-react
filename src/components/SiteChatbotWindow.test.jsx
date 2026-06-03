@@ -219,16 +219,48 @@ describe('SiteChatbotWindow', () => {
     expect(screen.queryByRole('dialog', { name: 'Ask AGFinancial' })).toBeNull();
   });
 
-  it('keeps the mobile chatbot shell layout-viewport safe instead of spanning both viewport edges', () => {
+  it('closes from the mobile bottom-sheet backdrop', () => {
+    mockMatchMedia(false);
+
+    const { container } = renderChatbot();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Ask AGFinancial' }));
+    expect(screen.getByRole('dialog', { name: 'Ask AGFinancial' })).toBeTruthy();
+
+    fireEvent.click(container.querySelector('.site-chatbot-panel-shell'));
+
+    expect(screen.queryByRole('dialog', { name: 'Ask AGFinancial' })).toBeNull();
+  });
+
+  it('reserves mobile page space and docks the launcher to the bottom edge', () => {
     const cssSource = readSource('../styles/site-chatbot.css');
 
     expect(cssSource).toContain('@media (max-width: 767px) {');
     expect(cssSource).toContain('left: 0.75rem;');
     expect(cssSource).toContain('right: 0.75rem;');
+    expect(cssSource).toContain('bottom: 0;');
     expect(cssSource).toContain('width: auto;');
     expect(cssSource).toContain('max-width: none;');
+    expect(cssSource).toContain('pointer-events: none;');
     expect(cssSource).toContain('.site-chatbot-panel-shell {');
-    expect(cssSource).toContain('max-width: 100%;');
-    expect(cssSource).toContain('min-width: 0;');
+    expect(cssSource).toContain('position: fixed;');
+    expect(cssSource).toContain('inset: 0;');
+    expect(cssSource).toContain('.site-chatbot-launcher {');
+    expect(cssSource).toContain('border-radius: 18px 18px 0 0;');
+    expect(cssSource).toContain('padding: 0.72rem 1rem calc(0.72rem + env(safe-area-inset-bottom, 0px));');
+  });
+
+  it('sets a root spacing token so the mobile dock does not sit on top of page content', () => {
+    mockMatchMedia(false);
+
+    const { unmount } = renderChatbot();
+
+    expect(document.documentElement.style.getPropertyValue('--site-chatbot-mobile-reserved-space')).toBe(
+      'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
+    );
+
+    unmount();
+
+    expect(document.documentElement.style.getPropertyValue('--site-chatbot-mobile-reserved-space')).toBe('');
   });
 });

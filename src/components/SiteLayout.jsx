@@ -33,6 +33,14 @@ function navLinkClass({ isActive }) {
   return isActive ? 'is-active' : '';
 }
 
+function getNavSectionId(title) {
+  return String(title || 'section')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'section';
+}
+
 function isTypingTarget(target) {
   if (!(target instanceof Element)) {
     return false;
@@ -477,7 +485,11 @@ export default function SiteLayout({ children }) {
           <div id="site-nav-menu" className={`site-nav-menu${menuOpen ? ' is-open' : ''}`}>
             <div ref={navLinksRef} className="site-nav-links" onMouseLeave={handleNavLinksMouseLeave}>
               <div className="site-nav-links-primary">
-                {navSections.map((section) => (
+                {navSections.map((section) => {
+                  const sectionId = getNavSectionId(section.title);
+                  const dropdownId = `site-nav-dropdown-${sectionId}`;
+                  const isSectionOpen = openDropdown === section.title;
+                  return (
                   <div
                     key={section.title}
                     className={`site-nav-group${openDropdown === section.title ? ' is-open' : ''}`}
@@ -502,7 +514,9 @@ export default function SiteLayout({ children }) {
                       <button
                         type="button"
                         className="site-nav-group-toggle"
-                        aria-expanded={openDropdown === section.title}
+                        aria-expanded={isSectionOpen}
+                        aria-controls={dropdownId}
+                        aria-label={`${isSectionOpen ? 'Collapse' : 'Expand'} ${section.title} menu`}
                         onClick={() => toggleDropdown(section.title)}
                       >
                         <svg className="site-nav-group-toggle-icon" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
@@ -517,7 +531,7 @@ export default function SiteLayout({ children }) {
                         </svg>
                       </button>
                     </div>
-                    <div className="site-nav-dropdown">
+                    <div id={dropdownId} className="site-nav-dropdown">
                       {section.items.map((item) => {
                         const itemPath = resolveManagedNavPath(item.path, '/');
                         return (
@@ -528,7 +542,8 @@ export default function SiteLayout({ children }) {
                       })}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="site-nav-links-utility">
@@ -583,6 +598,8 @@ export default function SiteLayout({ children }) {
                       type="button"
                       className="site-nav-group-toggle"
                       aria-expanded={openDropdown === 'Admin'}
+                      aria-controls="site-nav-dropdown-admin"
+                      aria-label={`${openDropdown === 'Admin' ? 'Collapse' : 'Expand'} Admin menu`}
                       onClick={() => toggleDropdown('Admin')}
                     >
                       <svg className="site-nav-group-toggle-icon" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
@@ -597,7 +614,7 @@ export default function SiteLayout({ children }) {
                       </svg>
                     </button>
                   </div>
-                  <div className="site-nav-dropdown">
+                  <div id="site-nav-dropdown-admin" className="site-nav-dropdown">
                     <NavLink to="/admin/rates" className={navLinkClass} onClick={handleNavItemSelect}>
                       Rates
                     </NavLink>

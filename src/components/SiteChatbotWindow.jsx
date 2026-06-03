@@ -7,6 +7,7 @@ import { OPEN_SITE_CHATBOT_EVENT } from '../lib/siteChatbotEvents';
 
 const DESKTOP_QUERY = '(min-width: 768px)';
 const FALLBACK_RESPONSE_DELAY_MS = 360;
+const MOBILE_RESERVED_SPACE = 'calc(4.75rem + env(safe-area-inset-bottom, 0px))';
 
 const SUGGESTED_PROMPTS = [
   'What retirement options do you offer?',
@@ -202,6 +203,19 @@ export default function SiteChatbotWindow({
   }, []);
 
   useEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const root = document.documentElement;
+    root.style.setProperty('--site-chatbot-mobile-reserved-space', isDesktop ? '0px' : MOBILE_RESERVED_SPACE);
+
+    return () => {
+      root.style.removeProperty('--site-chatbot-mobile-reserved-space');
+    };
+  }, [isDesktop]);
+
+  useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) {
       return;
@@ -390,6 +404,15 @@ export default function SiteChatbotWindow({
     submitPrompt(draft);
   }
 
+  function handlePanelShellClick(event) {
+    if (isDesktop) {
+      return;
+    }
+    if (event.target === event.currentTarget) {
+      closeChat();
+    }
+  }
+
   useEffect(() => {
     if (typeof document === 'undefined') {
       return undefined;
@@ -408,7 +431,7 @@ export default function SiteChatbotWindow({
   return (
     <div className={`site-chatbot${isOpen ? ' is-open' : ''}${isDesktop ? ' is-desktop' : ' is-mobile'}`}>
       {isOpen ? (
-        <div className="site-chatbot-panel-shell">
+        <div className="site-chatbot-panel-shell" onClick={handlePanelShellClick}>
           <section
             id={panelId}
             ref={panelRef}

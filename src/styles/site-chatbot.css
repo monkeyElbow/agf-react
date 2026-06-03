@@ -559,26 +559,36 @@
 
 @media (max-width: 767px) {
   .site-chatbot {
-    /* Constrain the mobile shell to the layout viewport so fixed positioning never widens the page. */
     left: 0.75rem;
     right: 0.75rem;
+    bottom: 0;
     width: auto;
     max-width: none;
     align-items: stretch;
+    gap: 0;
     box-sizing: border-box;
+    pointer-events: none;
   }
 
   .site-chatbot-panel-shell {
-    width: 100%;
-    max-width: 100%;
+    position: fixed;
+    inset: 0;
+    width: auto;
+    max-width: none;
     min-width: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0.9rem 0.75rem 0;
+    background: rgba(12, 24, 33, 0.2);
+    pointer-events: auto;
   }
 
   .site-chatbot-panel {
-    width: 100%;
+    width: min(100%, 32rem);
     min-height: min(72vh, 40rem);
-    max-height: min(80vh, 44rem);
-    border-radius: 24px;
+    max-height: min(84vh, 46rem);
+    border-radius: 24px 24px 0 0;
     transform-origin: bottom center;
   }
 
@@ -592,14 +602,52 @@
   }
 
   .site-chatbot-launcher {
-    align-self: flex-end;
+    align-self: stretch;
+    width: 100%;
+    min-height: 3.4rem;
+    padding: 0.72rem 1rem calc(0.72rem + env(safe-area-inset-bottom, 0px));
+    border: 1px solid rgba(193, 205, 211, 0.96);
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    background: #ffffff;
+    box-shadow: 0 -8px 24px rgba(16, 32, 40, 0.12);
+    justify-content: flex-start;
+    pointer-events: auto;
+  }
+
+  .site-chatbot-launcher:hover,
+  .site-chatbot-launcher:focus-visible {
+    transform: none;
+    box-shadow: 0 -8px 24px rgba(16, 32, 40, 0.12);
+  }
+
+  .site-chatbot-launcher-icon {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.05rem;
+  }
+
+  .site-chatbot-launcher-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .site-chatbot-launcher-label {
+    font-size: 0.95rem;
+  }
+
+  .site-chatbot.is-mobile.is-open .site-chatbot-launcher {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(100%);
   }
 }
 
 @media (max-width: 560px) {
   .site-chatbot-launcher {
-    width: fit-content;
-    max-width: min(100%, 19rem);
+    width: 100%;
+    max-width: none;
   }
 
   .site-chatbot-composer {
