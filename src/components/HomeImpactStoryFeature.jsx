@@ -8,6 +8,8 @@ const HOME_IMPACT_STORY_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)
 const HOME_IMPACT_STORY_DESKTOP_RUNWAY_VH = 400;
 const HOME_IMPACT_STORY_RELEASE_START = 0.96;
 const HOME_IMPACT_STORY_METRIC_ENTRY_DELAYS = [0, 0.08, 0.14];
+const HOME_IMPACT_STORY_METRIC_SETTLE_POINTS = [0.78, 0.78, 0.88];
+const HOME_IMPACT_STORY_OUTGOING_WINDOW = 0.5;
 const HOME_IMPACT_STORY_COPY_SHIFT_START = 0;
 const HOME_IMPACT_STORY_COPY_SHIFT_DURATION = 0.24;
 const HOME_IMPACT_STORY_COPY_OPACITY_START = 0.04;
@@ -16,8 +18,9 @@ const HOME_IMPACT_STORY_SEQUENCE_START = 0.22;
 const HOME_IMPACT_STORY_SEQUENCE_END = 0.94;
 const HOME_IMPACT_STORY_PROOF_FADE_START = 0.2;
 const HOME_IMPACT_STORY_PROOF_FADE_DURATION = 0.1;
-const HOME_IMPACT_STORY_FIRST_METRIC_ENTER_DURATION = 0.46;
 const HOME_IMPACT_STORY_FIRST_METRIC_OPACITY_EXPONENT = 1.35;
+const HOME_IMPACT_STORY_FINAL_CTA_START = 0.88;
+const HOME_IMPACT_STORY_FINAL_CTA_DURATION = 0.1;
 const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 function clamp(value, min, max) {
@@ -83,6 +86,12 @@ function formatMetricValue(value, decimals) {
 
 function getMetricEntryDelay(index) {
   return HOME_IMPACT_STORY_METRIC_ENTRY_DELAYS[index] || 0;
+}
+
+function getMetricSettlePoint(index) {
+  return HOME_IMPACT_STORY_METRIC_SETTLE_POINTS[index]
+    ?? HOME_IMPACT_STORY_METRIC_SETTLE_POINTS[HOME_IMPACT_STORY_METRIC_SETTLE_POINTS.length - 1]
+    ?? 0.78;
 }
 
 function ImpactStoryHeadline({ headline, highlightedWord = '', className = '' }) {
@@ -184,9 +193,8 @@ function ImpactStoryMetrics({
   const buildActorState = (metric, index, kind) => {
     const isFinalMetric = index === metrics.length - 1;
     const incomingDelay = getMetricEntryDelay(index);
-    const enterDuration = index === 0
-      ? HOME_IMPACT_STORY_FIRST_METRIC_ENTER_DURATION
-      : Math.max(0.24, 0.54 - incomingDelay);
+    const settlePoint = getMetricSettlePoint(index);
+    const enterDuration = Math.max(0.26, settlePoint - incomingDelay);
     const enterOpacityExponent = index === 0
       ? HOME_IMPACT_STORY_FIRST_METRIC_OPACITY_EXPONENT
       : 1.75;
@@ -222,7 +230,7 @@ function ImpactStoryMetrics({
         countProgress = 1;
       }
     } else if (kind === 'outgoing') {
-      const exitProgress = clamp(activeLocalProgress / 0.54, 0, 1);
+      const exitProgress = clamp(activeLocalProgress / HOME_IMPACT_STORY_OUTGOING_WINDOW, 0, 1);
       motionState = 'exiting';
       translateY = -(exitProgress * 186);
       metricOpacity = 1 - (exitProgress * 0.92);
@@ -247,8 +255,8 @@ function ImpactStoryMetrics({
   if (animated && metrics.length) {
     const currentMetric = metrics[activeIndex];
     const previousMetric = activeIndex > 0 ? metrics[activeIndex - 1] : null;
-    const shouldShowOutgoing = Boolean(previousMetric) && activeLocalProgress < 0.54;
-    const shouldShowIncoming = activeLocalProgress < 0.54;
+    const shouldShowOutgoing = Boolean(previousMetric) && activeLocalProgress < HOME_IMPACT_STORY_OUTGOING_WINDOW;
+    const shouldShowIncoming = true;
 
     if (shouldShowOutgoing && previousMetric) {
       animatedActors.push(buildActorState(previousMetric, activeIndex - 1, 'outgoing'));
@@ -496,7 +504,11 @@ export default function HomeImpactStoryFeature({
     0,
     1,
   );
-  const finalCtaOpacity = clamp((heldProgress - 0.86) / 0.08, 0, 1);
+  const finalCtaOpacity = clamp(
+    (heldProgress - HOME_IMPACT_STORY_FINAL_CTA_START) / HOME_IMPACT_STORY_FINAL_CTA_DURATION,
+    0,
+    1,
+  );
   const finalCtaShift = (1 - finalCtaOpacity) * 26;
   const backgroundOffset = 8 - (heldProgress * 16);
   const stageGlowOpacity = 0.26 + (metricsOpacity * 0.18);

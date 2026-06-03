@@ -261,12 +261,12 @@ describe('HomeImpactStoryFeature', () => {
 
     expect(proof?.getAttribute('style')).not.toContain('opacity: 0;');
     expect(firstActor?.getAttribute('data-motion-state')).toBe('entering');
-    expect(Number.parseFloat(firstActor?.style.opacity || '0')).toBeGreaterThan(0.1);
+    expect(Number.parseFloat(firstActor?.style.opacity || '0')).toBeGreaterThan(0.08);
   });
 
   it('uses a staged actor sequence instead of mounting a permanent three-metric centered row', () => {
     const { container } = renderFeatureBlock();
-    setEnhancedShellProgress(container, 0.79);
+    setEnhancedShellProgress(container, 0.78);
 
     act(() => {
       window.dispatchEvent(new Event('scroll'));
@@ -326,6 +326,19 @@ describe('HomeImpactStoryFeature', () => {
     expect(copy?.getAttribute('style')).toContain('opacity: 0');
   });
 
+  it('keeps the middle metric visibly settling deeper into its slot instead of plateauing early', () => {
+    const { container } = renderFeatureBlock();
+    setEnhancedShellProgress(container, 0.6);
+
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(100);
+    });
+
+    const secondMetric = screen.getByText('(and growing) clients').closest('.home-impact-story-metric');
+    expect(secondMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
+  });
+
   it('counts metric values with scroll progress inside each center window', () => {
     const { container } = renderFeatureBlock();
     setEnhancedShellProgress(container, 0.31);
@@ -358,6 +371,22 @@ describe('HomeImpactStoryFeature', () => {
     const secondValue = getMetricValueNode('(and growing) clients');
     expect(secondValue?.textContent).not.toBe('0');
     expect(secondValue?.textContent).not.toBe('38,654');
+  });
+
+  it('keeps the final metric from completing too early before the section release begins', () => {
+    const { container } = renderFeatureBlock();
+    setEnhancedShellProgress(container, 0.85);
+
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(100);
+    });
+
+    const finalMetric = screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric');
+    const proofCtaWrap = container.querySelector('.home-impact-story-proof-cta-wrap');
+
+    expect(finalMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
+    expect(Number.parseFloat(proofCtaWrap?.style.opacity || '0')).toBeLessThan(0.2);
   });
 
   it('renders the CTA with the final held metric instead of in the intro copy phase', () => {
@@ -409,5 +438,15 @@ describe('HomeImpactStoryFeature', () => {
     expect(cssSource).toContain('justify-content: center;');
     expect(cssSource).toContain('line-height: 1;');
     expect(cssSource).toContain('margin: 0 calc(-1 * var(--home-impact-cta-expand-inline));');
+  });
+
+  it('keeps the home impact story timing contract biased toward continuous motion instead of early plateau holds', () => {
+    const source = readSource('./HomeImpactStoryFeature.jsx');
+
+    expect(source).toContain('const HOME_IMPACT_STORY_METRIC_SETTLE_POINTS = [0.78, 0.78, 0.88];');
+    expect(source).toContain('const HOME_IMPACT_STORY_OUTGOING_WINDOW = 0.5;');
+    expect(source).toContain('const HOME_IMPACT_STORY_FINAL_CTA_START = 0.88;');
+    expect(source).toContain('const HOME_IMPACT_STORY_FINAL_CTA_DURATION = 0.1;');
+    expect(source).toContain('const shouldShowIncoming = true;');
   });
 });
