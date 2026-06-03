@@ -440,6 +440,14 @@ describe('HomeImpactStoryFeature', () => {
     expect(cssSource).toContain('margin: 0 calc(-1 * var(--home-impact-cta-expand-inline));');
   });
 
+  it('keeps the mobile proof stack gap explicit so the first metric stays separated from the copy block', () => {
+    const cssSource = readSource('../styles/home-native.css');
+
+    expect(cssSource).toContain('@media (max-width: 640px) {');
+    expect(cssSource).toContain('.home-impact-story-static-grid {');
+    expect(cssSource).toContain('gap: 5rem;');
+  });
+
   it('keeps the home impact story timing contract biased toward continuous motion instead of early plateau holds', () => {
     const source = readSource('./HomeImpactStoryFeature.jsx');
 

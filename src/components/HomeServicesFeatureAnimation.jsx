@@ -3,6 +3,34 @@ import { Link } from 'react-router-dom';
 import { isExternalLinkHref } from '../lib/dynamicPageBlocks';
 
 const HOME_SERVICES_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+const HOME_SERVICES_MOBILE_MOTION_BREAKPOINT = 640;
+const HOME_SERVICES_PANEL_MOTION_PROFILES = Object.freeze({
+  desktop: Object.freeze({
+    scale: Object.freeze([0.972, 1.016]),
+    opacity: Object.freeze([1, 1]),
+    shadow: Object.freeze([0.18, 0.42]),
+    focusLift: -12,
+    recedeLift: 52,
+    radiusViewport: 0.34,
+    radiusPanel: 0.12,
+  }),
+  mobile: Object.freeze({
+    scale: Object.freeze([0.976, 1.084]),
+    opacity: Object.freeze([1, 1]),
+    shadow: Object.freeze([0.16, 0.26]),
+    focusLift: -5,
+    recedeLift: 24,
+    radiusViewport: 0.42,
+    radiusPanel: 0.16,
+  }),
+});
+const HOME_SERVICES_INTRO_REVEAL_CURVES = Object.freeze({
+  focusPoint: 0.38,
+  startViewport: 0.82,
+  endViewport: 0.56,
+  scale: Object.freeze([0.92, 1]),
+  shiftY: Object.freeze([58, 0]),
+});
 
 const HOME_SERVICES_PANEL_MOTION_PRESETS = Object.freeze({
   default: Object.freeze({
@@ -166,19 +194,19 @@ const HOME_SERVICES_PANEL_PALETTES = Object.freeze([
   }),
   Object.freeze({
     title: 'Retirement',
-    base: Object.freeze([35, 35, 37]),
-    secondary: Object.freeze([196, 190, 182]),
-    light: Object.freeze([250, 163, 26]),
-    dark: Object.freeze([17, 17, 19]),
-    accent: Object.freeze([242, 238, 235]),
+    base: Object.freeze([44, 36, 25]),
+    secondary: Object.freeze([228, 190, 120]),
+    light: Object.freeze([255, 182, 54]),
+    dark: Object.freeze([24, 18, 11]),
+    accent: Object.freeze([255, 244, 224]),
   }),
   Object.freeze({
     title: 'Legacy Giving',
-    base: Object.freeze([111, 68, 16]),
-    secondary: Object.freeze([242, 238, 235]),
-    light: Object.freeze([250, 163, 26]),
-    dark: Object.freeze([63, 39, 12]),
-    accent: Object.freeze([255, 248, 223]),
+    base: Object.freeze([124, 75, 13]),
+    secondary: Object.freeze([255, 218, 146]),
+    light: Object.freeze([255, 186, 52]),
+    dark: Object.freeze([72, 41, 8]),
+    accent: Object.freeze([255, 245, 216]),
   }),
   Object.freeze({
     title: 'Insurance',
@@ -236,6 +264,12 @@ function resolveHomeServicesPalette(index) {
   return HOME_SERVICES_PANEL_PALETTES[index] || HOME_SERVICES_PANEL_PALETTES[0];
 }
 
+function resolvePanelMotionProfile(viewportWidth) {
+  return viewportWidth <= HOME_SERVICES_MOBILE_MOTION_BREAKPOINT
+    ? HOME_SERVICES_PANEL_MOTION_PROFILES.mobile
+    : HOME_SERVICES_PANEL_MOTION_PROFILES.desktop;
+}
+
 function applyPaletteVars(panel, palette, prefix = '') {
   if (!panel?.style || !palette) {
     return;
@@ -266,12 +300,10 @@ function clearHomeServicesMotionVars(panel) {
     '--home-services-light-secondary-width',
     '--home-services-light-secondary-height',
     '--home-services-panel-opacity',
-    '--home-services-content-opacity',
-    '--home-services-content-scale',
-    '--home-services-content-shift-y',
-    '--home-services-action-opacity',
-    '--home-services-action-scale',
-    '--home-services-action-shift-y',
+    '--home-services-panel-scale',
+    '--home-services-panel-lift-y',
+    '--home-services-panel-shadow-opacity',
+    '--home-services-panel-z',
     '--home-services-base-rgb',
     '--home-services-secondary-rgb',
     '--home-services-light-rgb',
@@ -386,6 +418,7 @@ export default function HomeServicesFeatureAnimation({
 
   useEffect(() => {
     const shell = shellRef.current;
+    const introNode = shell?.querySelector('.home-services-feature-intro');
     const panelNodes = shell ? Array.from(shell.querySelectorAll('.home-services-feature-panel')) : [];
     if (!shell || !panelNodes.length) {
       return undefined;
@@ -405,6 +438,12 @@ export default function HomeServicesFeatureAnimation({
       const reduceMotion = Boolean(mediaQuery?.matches);
       if (reduceMotion) {
         shellRef.current.setAttribute('data-scroll-gradient-motion', 'reduced');
+        if (introNode) {
+          introNode.style.setProperty('--home-services-intro-opacity', '1');
+          introNode.style.setProperty('--home-services-intro-scale', '1');
+          introNode.style.setProperty('--home-services-intro-shift-y', '0px');
+          introNode.setAttribute('data-scroll-reveal', 'reduced');
+        }
         panelNodes.forEach((panel, index) => {
           const currentPalette = resolveHomeServicesPalette(index);
           const nextPalette = resolveHomeServicesPalette(Math.min(panelNodes.length - 1, index + 1));
@@ -419,10 +458,44 @@ export default function HomeServicesFeatureAnimation({
 
       shellRef.current.setAttribute('data-scroll-gradient-motion', 'active');
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1;
+      const viewportCenter = viewportHeight / 2;
+      const motionProfile = resolvePanelMotionProfile(viewportWidth);
+
+      if (introNode) {
+        const introRect = introNode.getBoundingClientRect();
+        const introFocusPoint = introRect.top + (introRect.height * HOME_SERVICES_INTRO_REVEAL_CURVES.focusPoint);
+        const introReveal = clamp(
+          ((viewportHeight * HOME_SERVICES_INTRO_REVEAL_CURVES.startViewport) - introFocusPoint)
+            / ((viewportHeight
+              * (HOME_SERVICES_INTRO_REVEAL_CURVES.startViewport - HOME_SERVICES_INTRO_REVEAL_CURVES.endViewport)) || 1),
+          0,
+          1,
+        );
+        const introRevealCurve = smoothstep(0, 1, introReveal);
+        introNode.setAttribute('data-scroll-reveal', 'active');
+        introNode.style.setProperty('--home-services-intro-opacity', formatNumber(lerp(0, 1, introRevealCurve)));
+        introNode.style.setProperty(
+          '--home-services-intro-scale',
+          formatNumber(lerp(HOME_SERVICES_INTRO_REVEAL_CURVES.scale[0], HOME_SERVICES_INTRO_REVEAL_CURVES.scale[1], introRevealCurve)),
+        );
+        introNode.style.setProperty(
+          '--home-services-intro-shift-y',
+          `${lerp(HOME_SERVICES_INTRO_REVEAL_CURVES.shiftY[0], HOME_SERVICES_INTRO_REVEAL_CURVES.shiftY[1], introRevealCurve).toFixed(2)}px`,
+        );
+      }
 
       panelNodes.forEach((panel, index) => {
         const rect = panel.getBoundingClientRect();
         const viewportTravel = clamp((viewportHeight - rect.top) / (viewportHeight + rect.height || 1), 0, 1);
+        const panelCenter = rect.top + (rect.height / 2);
+        const centerDistance = Math.abs(panelCenter - viewportCenter);
+        const centerRadius = Math.max(
+          (viewportHeight * motionProfile.radiusViewport) + (rect.height * motionProfile.radiusPanel),
+          1,
+        );
+        const centerCurve = smoothstep(0, 1, 1 - clamp(centerDistance / centerRadius, 0, 1));
+        const signedCenterOffset = clamp((panelCenter - viewportCenter) / centerRadius, -1, 1);
         const panelPreset = resolvePanelMotionPreset(panel);
         const currentPalette = resolveHomeServicesPalette(index);
         const nextPalette = resolveHomeServicesPalette(Math.min(panelNodes.length - 1, index + 1));
@@ -436,38 +509,17 @@ export default function HomeServicesFeatureAnimation({
           HOME_SERVICES_MOTION_CURVES.darkTravelEnd,
           viewportTravel,
         );
-        const fadeIn = smoothstep(
-          HOME_SERVICES_MOTION_CURVES.fadeInStart,
-          HOME_SERVICES_MOTION_CURVES.fadeInEnd,
-          viewportTravel,
-        );
-        const fadeOut = smoothstep(
-          HOME_SERVICES_MOTION_CURVES.fadeOutStart,
-          HOME_SERVICES_MOTION_CURVES.fadeOutEnd,
-          viewportTravel,
-        );
-        const visibilityCurve = clamp(fadeIn - (1.08 * fadeOut), 0, 1);
-        const panelOpacity = lerp(0.18, 1, visibilityCurve);
-        const contentOpacity = lerp(0.16, 1, visibilityCurve);
-        const contentScale = clamp(1 - ((1 - fadeIn) * 0.08) - (fadeOut * 0.06), 0.9, 1);
-        const contentShiftY = lerp(36, 0, fadeIn) + lerp(0, -32, fadeOut);
-        const actionReveal = smoothstep(
-          HOME_SERVICES_MOTION_CURVES.actionRevealStart,
-          HOME_SERVICES_MOTION_CURVES.actionRevealEnd,
-          viewportTravel,
-        );
-        const actionFade = smoothstep(
-          HOME_SERVICES_MOTION_CURVES.actionFadeStart,
-          HOME_SERVICES_MOTION_CURVES.actionFadeEnd,
-          viewportTravel,
-        );
-        const actionVisibility = clamp(actionReveal - (0.78 * actionFade), 0, 1);
-        const actionOpacity = lerp(0.42, 1, actionVisibility);
-        const actionScale = clamp(1 - ((1 - actionReveal) * 0.04) - (actionFade * 0.035), 0.94, 1);
-        const actionShiftY = lerp(22, 0, actionReveal) + lerp(0, -14, actionFade);
         const paletteHandoff = index < panelNodes.length - 1
           ? smoothstep(HOME_SERVICES_PALETTE_HANDOFF_CURVES.start, HOME_SERVICES_PALETTE_HANDOFF_CURVES.end, viewportTravel)
           : 0;
+        const panelScale = lerp(motionProfile.scale[0], motionProfile.scale[1], centerCurve);
+        const panelLiftY = (
+          (signedCenterOffset * motionProfile.recedeLift * (1 - (centerCurve * 0.68)))
+          + (motionProfile.focusLift * centerCurve)
+        );
+        const panelOpacity = lerp(motionProfile.opacity[0], motionProfile.opacity[1], centerCurve);
+        const panelShadowOpacity = lerp(motionProfile.shadow[0], motionProfile.shadow[1], centerCurve);
+        const panelZ = Math.round(30 + (centerCurve * 140));
 
         panel.setAttribute('data-scroll-gradient-motion', 'active');
         applyPaletteVars(panel, currentPalette);
@@ -483,12 +535,10 @@ export default function HomeServicesFeatureAnimation({
         applyRangeProperty(panel, '--home-services-light-secondary-width', panelPreset.lightSecondaryWidth, formatPercent, lightTravel);
         applyRangeProperty(panel, '--home-services-light-secondary-height', panelPreset.lightSecondaryHeight, formatPercent, lightTravel);
         panel.style.setProperty('--home-services-panel-opacity', panelOpacity.toFixed(3));
-        panel.style.setProperty('--home-services-content-opacity', contentOpacity.toFixed(3));
-        panel.style.setProperty('--home-services-content-scale', contentScale.toFixed(3));
-        panel.style.setProperty('--home-services-content-shift-y', `${contentShiftY.toFixed(2)}px`);
-        panel.style.setProperty('--home-services-action-opacity', actionOpacity.toFixed(3));
-        panel.style.setProperty('--home-services-action-scale', actionScale.toFixed(3));
-        panel.style.setProperty('--home-services-action-shift-y', `${actionShiftY.toFixed(2)}px`);
+        panel.style.setProperty('--home-services-panel-scale', panelScale.toFixed(3));
+        panel.style.setProperty('--home-services-panel-lift-y', `${panelLiftY.toFixed(2)}px`);
+        panel.style.setProperty('--home-services-panel-shadow-opacity', panelShadowOpacity.toFixed(3));
+        panel.style.setProperty('--home-services-panel-z', String(panelZ));
         applyRangeProperty(panel, '--home-services-dark-strength', panelPreset.darkStrength, formatNumber, darkTravel);
         applyRangeProperty(panel, '--home-services-dark-x', panelPreset.darkX, formatPercent, darkTravel);
         applyRangeProperty(panel, '--home-services-dark-y', panelPreset.darkY, formatPercent, darkTravel);
@@ -518,7 +568,11 @@ export default function HomeServicesFeatureAnimation({
       requestMotionFrame();
     };
 
-    applyPanelMotion();
+    if (mediaQuery?.matches) {
+      applyPanelMotion();
+    } else {
+      requestMotionFrame();
+    }
     window.addEventListener('scroll', requestMotionFrame, { passive: true });
     window.addEventListener('resize', requestMotionFrame);
     mediaQuery?.addEventListener?.('change', handleMotionPreferenceChange);
@@ -559,18 +613,20 @@ export default function HomeServicesFeatureAnimation({
             className={`home-services-feature-panel is-tone-${panel.tone} ${index % 2 === 0 ? 'is-left' : 'is-right'}`}
             data-proof-index={index}
           >
-            <span className="home-services-feature-panel-gradient-layer is-current" aria-hidden="true" />
-            <span className="home-services-feature-panel-gradient-layer is-next" aria-hidden="true" />
-            <div className="home-services-feature-panel-content">
-              <div className="home-services-feature-panel-copy">
-                <h3 className="home-services-feature-panel-title">{panel.title}</h3>
-                <p className="home-services-feature-panel-body">{panel.body}</p>
-              </div>
-              {panel.action ? (
-                <div className="home-services-feature-panel-action">
-                  <ActionLink action={panel.action} resolveTo={resolveTo} />
+            <div className="home-services-feature-panel-frame">
+              <span className="home-services-feature-panel-gradient-layer is-current" aria-hidden="true" />
+              <span className="home-services-feature-panel-gradient-layer is-next" aria-hidden="true" />
+              <div className="home-services-feature-panel-content">
+                <div className="home-services-feature-panel-copy">
+                  <h3 className="home-services-feature-panel-title">{panel.title}</h3>
+                  <p className="home-services-feature-panel-body">{panel.body}</p>
                 </div>
-              ) : null}
+                {panel.action ? (
+                  <div className="home-services-feature-panel-action">
+                    <ActionLink action={panel.action} resolveTo={resolveTo} />
+                  </div>
+                ) : null}
+              </div>
             </div>
           </article>
         ))}

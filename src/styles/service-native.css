@@ -10588,6 +10588,10 @@
   .service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math .native-columns-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math .native-columns-item:not(.is-photo) .native-columns-copy {
+    padding-bottom: clamp(1.6rem, 7vw, 2.7rem);
+  }
 }
 
 .service-native-section.native-dynamic-columns.is-columns-style-legacy-highlight.is-bg-blue,

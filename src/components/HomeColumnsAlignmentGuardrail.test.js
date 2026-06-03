@@ -21,4 +21,12 @@ describe('home columns alignment guardrail', () => {
     expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math .native-columns-grid {');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr) clamp(22.5rem, 34vw, 26rem);');
   });
+
+  it('keeps extra mobile runway under the do-the-math button when the photo stacks beneath the copy', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('@media (max-width: 760px) {');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math .native-columns-item:not(.is-photo) .native-columns-copy {');
+    expect(cssSource).toContain('padding-bottom: clamp(1.6rem, 7vw, 2.7rem);');
+  });
 });
