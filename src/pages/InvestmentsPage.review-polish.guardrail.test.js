@@ -21,15 +21,24 @@ describe('investments page review polish guardrails', () => {
     expect(cssSource).toContain('letter-spacing: -0.055em;');
     expect(cssSource).toContain('text-wrap: balance;');
     expect(cssSource).toContain('@media (max-width: 980px) {');
-    expect(cssSource).toContain('font-size: clamp(4.95rem, 14vw, 5.65rem);');
+    expect(cssSource).toContain('font-size: clamp(4.2rem, 12.8vw, 4.95rem);');
   });
 
   it('keeps the already investor dashboard band on lead-copy sizing with tightened title tracking', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.investments-native-dashboard-title {');
-    expect(cssSource).toContain('letter-spacing: -0.05em;');
-    expect(cssSource).toContain('.service-native-cta-band.is-cta-band-preset-dashboard-login .investments-native-dashboard-title + p {');
+    expect(cssSource).toContain('margin: 0;');
+    expect(cssSource).toContain('.investments-native-dashboard-billboard .native-info-rich-html p {');
     expect(cssSource).toContain('font-size: clamp(1.4rem, 2.8vw, 1.85rem);');
+  });
+
+  it('keeps the investments intro body and followup line on the shared intro type scale', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.investments-native-intro p {');
+    expect(cssSource).toContain('font-size: var(--service-native-intro-body-size);');
+    expect(cssSource).toContain('.investments-native-intro-tagline {');
+    expect(cssSource).toContain('font-size: var(--service-native-intro-emphasis-size);');
   });
 });

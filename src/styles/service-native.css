@@ -1243,8 +1243,13 @@
 }
 
 .service-native-intro {
+  --service-native-intro-padding-top: clamp(3.55rem, 8vw, 5.95rem);
+  --service-native-intro-padding-bottom: clamp(4.1rem, 9.2vw, 6.95rem);
+  --service-native-intro-heading-size: clamp(1.955rem, 4.37vw, 2.99rem);
+  --service-native-intro-body-size: clamp(1.218rem, 2.1vw, 1.659rem);
+  --service-native-intro-emphasis-size: clamp(1.265rem, 2.2vw, 1.705rem);
   margin: 0;
-  padding: clamp(3.1rem, 7vw, 5.3rem) 0 clamp(3.65rem, 8.2vw, 6.2rem);
+  padding: var(--service-native-intro-padding-top) 0 var(--service-native-intro-padding-bottom);
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
   color: var(--ag-color-super-grey);
 }
@@ -1252,7 +1257,7 @@
 .service-native-intro h2 {
   margin: 0;
   text-align: center;
-  font-size: clamp(1.7rem, 3.8vw, 2.6rem);
+  font-size: var(--service-native-intro-heading-size);
   line-height: 1.05;
   text-wrap: balance;
   font-family: var(--ag-font-body);
@@ -1308,16 +1313,46 @@
   letter-spacing: inherit;
 }
 
+.service-native-intro .service-native-intro-copy {
+  display: grid;
+  justify-items: center;
+  row-gap: clamp(1rem, 2.2vw, 1.55rem);
+}
+
+.service-native-intro .service-native-intro-copy.is-justify-left {
+  justify-items: start;
+}
+
+.service-native-intro .service-native-intro-copy.is-justify-right {
+  justify-items: end;
+}
+
 .service-native-intro p {
-  margin: 1.2rem auto 0;
+  margin: 0 auto;
   max-width: 72ch;
   text-align: center;
-  font-size: clamp(1.16rem, 2vw, 1.58rem);
+  font-size: var(--service-native-intro-body-size);
   line-height: 1.5;
 }
 
+.service-native-intro .native-info-rich-html {
+  margin: 0;
+}
+
+.service-native-intro .native-info-rich-html > :first-child {
+  margin-top: 0;
+}
+
+.service-native-intro .native-info-rich-html > :last-child {
+  margin-bottom: 0;
+}
+
+.service-native-intro .native-info-intro-emphasis {
+  margin-top: 0;
+}
+
 .service-native-intro .service-native-action-row {
-  margin-top: clamp(1.35rem, 2.8vw, 2rem);
+  margin-top: 0;
 }
 
 .retirement-native-page .service-native-intro.retirement-native-intro {
@@ -2460,13 +2495,13 @@
 }
 
 .investments-native-intro p {
-  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-size: var(--service-native-intro-body-size);
 }
 
 .investments-native-intro-tagline {
-  margin-top: clamp(0.9rem, 2vw, 1.4rem);
-  font-size: clamp(1.45rem, 2.8vw, 1.8rem);
-  line-height: 1.1;
+  margin-top: 0;
+  font-size: var(--service-native-intro-emphasis-size);
+  line-height: 1.2;
 }
 
 .investments-native-panel {
@@ -2491,6 +2526,7 @@
 
 .investments-native-cert-card {
   display: flex;
+  position: relative;
   height: 100%;
   flex-direction: column;
   overflow: visible;
@@ -2498,14 +2534,17 @@
   padding: 0;
   border: none;
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.18);
-  background: linear-gradient(142deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
+  background: transparent;
   backdrop-filter: blur(10px) saturate(120%);
   -webkit-backdrop-filter: blur(10px) saturate(120%);
 }
 
 .investments-native-cert-card__cap {
   border-radius: 16px 16px 0 0;
-  padding: clamp(0.95rem, 2vw, 1.15rem) clamp(1.2rem, 2.6vw, 1.55rem);
+  padding:
+    clamp(0.74rem, 1.55vw, 0.9rem)
+    clamp(1.2rem, 2.6vw, 1.55rem)
+    clamp(0.6rem, 1.28vw, 0.76rem);
   color: #ffffff;
 }
 
@@ -2514,6 +2553,7 @@
   flex: 1 1 auto;
   flex-direction: column;
   border-radius: 0 0 16px 16px;
+  background: linear-gradient(142deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
   padding: clamp(1.35rem, 2.8vw, 1.75rem) clamp(1.2rem, 2.6vw, 1.55rem) clamp(1.2rem, 2.5vw, 1.55rem);
 }
 
@@ -2537,7 +2577,7 @@
 .investments-native-cert-card p {
   margin: 0;
   color: #000000;
-  font-size: 1.02rem;
+  font-size: clamp(1.1rem, 1.6vw, 1.22rem);
   line-height: 1.6;
 }
 
@@ -4456,14 +4496,13 @@
 
 .service-native-intro.dynamic-intro,
 .service-native-intro.test-dynamic-intro {
-  padding-top: clamp(2.7rem, 5.8vw, 4.2rem);
-  padding-bottom: clamp(2.7rem, 5.8vw, 4.2rem);
+  padding-top: var(--service-native-intro-padding-top);
+  padding-bottom: var(--service-native-intro-padding-bottom);
 }
 
 .service-native-intro.dynamic-intro .service-native-intro-copy > h2,
 .service-native-intro.test-dynamic-intro .service-native-intro-copy > h2 {
   font-family: var(--ag-font-helv);
-  font-size: clamp(1.9rem, 4vw, 2.9rem);
   line-height: var(--intro-heading-line-height, 1.04);
   letter-spacing: var(--ag-letter-spacing-helv-intro);
   font-weight: 700;
@@ -4471,20 +4510,18 @@
 
 .service-native-intro.dynamic-intro .service-native-intro-copy > p,
 .service-native-intro.test-dynamic-intro .service-native-intro-copy > p {
-  font-size: clamp(1.1rem, 1.7vw, 1.28rem);
   line-height: 1.55;
   max-width: 74ch;
 }
 
 .service-native-intro.dynamic-intro .native-info-rich-html,
 .service-native-intro.test-dynamic-intro .native-info-rich-html {
-  margin-top: 0.9rem;
+  margin-top: 0;
   text-align: center;
 }
 
 .service-native-intro.dynamic-intro .native-info-rich-html p,
 .service-native-intro.test-dynamic-intro .native-info-rich-html p {
-  font-size: clamp(1.1rem, 1.7vw, 1.28rem);
   line-height: 1.55;
   max-width: 74ch;
   margin-left: auto;
@@ -4494,16 +4531,15 @@
 
 .service-native-intro.dynamic-intro .native-info-intro-emphasis,
 .service-native-intro.test-dynamic-intro .native-info-intro-emphasis {
-  margin-top: 0.8rem;
+  margin-top: 0;
   font-family: var(--ag-font-helv);
-  font-size: clamp(1rem, 1.35vw, 1.1rem);
   font-weight: 700;
   line-height: 1.35;
 }
 
 .service-native-intro.dynamic-intro .service-native-action-row,
 .service-native-intro.test-dynamic-intro .service-native-action-row {
-  margin-top: 0.9rem;
+  margin-top: 0;
 }
 
 .service-native-intro.dynamic-intro .service-native-intro-copy.is-justify-left > h2,
@@ -10943,7 +10979,6 @@
 
 .native-info-page .service-native-intro p {
   max-width: 80ch;
-  font-size: clamp(1.16rem, 2vw, 1.58rem);
 }
 
 .native-info-page--contact-us .service-native-hero .ag-panel-rail {
@@ -11185,7 +11220,7 @@
 .native-info-intro-emphasis {
   margin-top: 1rem;
   text-align: center;
-  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  font-size: var(--service-native-intro-emphasis-size);
 }
 
 .native-info-section-subtitle {
@@ -12189,17 +12224,11 @@
 }
 
 .native-info-page--legacy-giving .service-native-intro {
-  padding-top: clamp(3.8rem, 8vw, 6.3rem);
-  padding-bottom: clamp(3.8rem, 8vw, 6.3rem);
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
 }
 
 .native-info-page--legacy-giving .service-native-intro h2 {
   letter-spacing: var(--ag-letter-spacing-helv-intro);
-}
-
-.native-info-page--legacy-giving .service-native-intro p {
-  font-size: clamp(1.2rem, 2.1vw, 1.65rem);
 }
 
 .native-info-page--legacy-giving .service-native-hero .ag-panel-rail {
@@ -12974,8 +13003,6 @@
 .native-info-page--life-quote .service-native-intro {
   background: linear-gradient(145deg, #414042 0%, #6a6d72 100%);
   color: #ffffff;
-  padding-top: clamp(3rem, 7vw, 5rem);
-  padding-bottom: clamp(3rem, 7vw, 5rem);
 }
 
 .native-info-page--life-quote .service-native-intro h2,
@@ -12985,14 +13012,12 @@
 }
 
 .native-info-page--life-quote .service-native-intro h2 {
-  font-size: clamp(2rem, 4.8vw, 3.25rem);
   line-height: 1;
   letter-spacing: var(--ag-letter-spacing-helv-intro);
 }
 
 .native-info-page--life-quote .service-native-intro p {
   max-width: 68ch;
-  font-size: clamp(1.12rem, 1.95vw, 1.5rem);
   line-height: 1.5;
 }
 
@@ -13109,8 +13134,6 @@
 .native-info-page--group-life-quote .service-native-intro {
   background: linear-gradient(145deg, #414042 0%, #6a6d72 100%);
   color: #ffffff;
-  padding-top: clamp(3.2rem, 7.2vw, 5.4rem);
-  padding-bottom: clamp(3.2rem, 7.2vw, 5.4rem);
 }
 
 .native-info-page--group-life-quote .service-native-intro h2,
@@ -13690,29 +13713,61 @@
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card {
-  padding: clamp(1.8rem, 3vw, 2.5rem);
-  border-right-color: rgba(255, 255, 255, 0.5);
-  border-bottom-color: rgba(255, 255, 255, 0.5);
-  border-left-color: rgba(0, 125, 152, 0.5);
-  border-top-color: rgba(0, 125, 152, 0.5);
+  --insurance-coverage-card-cap-height: clamp(4.35rem, 7.4vw, 5.2rem);
+  --insurance-coverage-card-cap-bg: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 16px;
+  padding: 0;
+  border: none;
+  background: var(--insurance-coverage-card-cap-bg);
+  box-shadow: 0 18px 36px rgba(0, 125, 152, 0.18);
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card::after {
+  content: '';
+  position: absolute;
+  inset: calc(var(--insurance-coverage-card-cap-height) - 1px) 0 0;
+  z-index: 0;
+  border-radius: 0 0 16px 16px;
   background: linear-gradient(142deg, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0.85) 100%);
-  box-shadow: 0 4px 10px rgba(0, 125, 152, 0.25);
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:hover {
-  box-shadow: 0 14px 30px rgba(0, 125, 152, 0.35);
+  box-shadow: 0 24px 44px rgba(0, 125, 152, 0.24);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card h3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--insurance-coverage-card-cap-height);
+  margin: 0;
+  padding:
+    clamp(0.74rem, 1.55vw, 0.9rem)
+    clamp(1.2rem, 2.6vw, 1.55rem)
+    clamp(0.6rem, 1.28vw, 0.76rem);
+  color: #ffffff;
   font-family: var(--ag-font-heading);
-  font-size: clamp(1.56rem, 2.55vw, 2.04rem);
-  line-height: 1.06;
+  font-size: clamp(1.45rem, 2.55vw, 1.88rem);
+  line-height: 1.02;
   text-align: center;
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
+  text-wrap: balance;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card p {
+  margin: 0;
+  padding: clamp(1.35rem, 2.8vw, 1.75rem) clamp(1.2rem, 2.6vw, 1.55rem) 0;
   color: var(--ag-color-super-grey);
+  font-size: clamp(1.08rem, 1.55vw, 1.2rem);
+  line-height: 1.6;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card a:not(.service-native-btn) {
@@ -13727,14 +13782,24 @@
   justify-content: center;
 }
 
+.native-info-page--insurance .insurance-native-coverage .service-native-card .service-native-action-row:last-child {
+  width: 100%;
+  padding:
+    clamp(1.3rem, 2.7vw, 1.75rem)
+    clamp(1.2rem, 2.6vw, 1.55rem)
+    clamp(1.2rem, 2.5vw, 1.55rem);
+}
+
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {
   margin-top: clamp(2.4rem, 4vw, 3.2rem);
-  width: fit-content;
+  width: 100%;
   margin-inline: auto;
-  padding: 0;
+  justify-content: center;
+  padding: 0.125rem 0.1875rem;
   border-radius: 0;
   background: none;
   box-shadow: none;
+  overflow: visible;
 }
 
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn {
@@ -13742,23 +13807,51 @@
   --btn-hover-color: #ffffff;
   --btn-bg: transparent;
   --btn-text: #ffffff;
-  --btn-hover-text: var(--ag-color-atlantean-dark);
+  --btn-hover-text: #ffffff;
+}
+
+.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline,
+.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline:visited {
+  --btn-hover-bg: transparent;
+  background: transparent;
+}
+
+.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline:hover,
+.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline:focus-visible,
+.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline:active {
+  background: transparent;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(1) h3 {
-  color: var(--ag-color-atlantean);
+  background: transparent;
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(1) {
+  --insurance-coverage-card-cap-bg: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(2) h3 {
-  color: var(--ag-color-atlantean-dark);
+  background: transparent;
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(2) {
+  --insurance-coverage-card-cap-bg: linear-gradient(135deg, #0b6b86 0%, var(--ag-color-atlantean-dark) 100%);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(3) h3 {
-  color: var(--ag-color-melon);
+  background: transparent;
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(3) {
+  --insurance-coverage-card-cap-bg: linear-gradient(135deg, #ef816a 0%, var(--ag-color-melon) 100%);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(4) h3 {
-  color: var(--ag-color-super-grey);
+  background: transparent;
+}
+
+.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(4) {
+  --insurance-coverage-card-cap-bg: linear-gradient(135deg, #4f5053 0%, var(--ag-color-super-grey) 100%);
 }
 
 .native-info-page--insurance .insurance-native-quote h2,
@@ -14366,8 +14459,8 @@
   }
 
   .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {
-    width: fit-content;
-    padding: 0;
+    width: 100%;
+    padding: 0.125rem 0.1875rem;
   }
 
   .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn {
@@ -14474,8 +14567,8 @@
 .native-info-page--mission-assure .mission-assure-native-intro p:first-of-type {
   margin-top: 1.7rem;
   margin-bottom: 1.6rem;
-  font-size: clamp(1.45rem, 3vw, 2rem);
-  line-height: 1.05;
+  font-size: var(--service-native-intro-emphasis-size);
+  line-height: 1.2;
 }
 
 .native-info-page--mission-assure .mission-assure-native-intro p:first-of-type strong {
@@ -14484,7 +14577,7 @@
 
 .native-info-page--mission-assure .mission-assure-native-intro p:not(:first-of-type) {
   margin-top: 0;
-  font-size: clamp(1rem, 1.38vw, 1.12rem);
+  font-size: var(--service-native-intro-body-size);
   line-height: 1.55;
   text-align: left;
   max-width: 68ch;
@@ -14896,8 +14989,6 @@
 .native-info-page--insurance-pc .service-native-intro {
   background: linear-gradient(145deg, #5a5d62 0%, #3f4246 100%);
   color: #ffffff;
-  padding-top: clamp(3.2rem, 7.2vw, 5.3rem);
-  padding-bottom: clamp(3.2rem, 7.2vw, 5.3rem);
 }
 
 .native-info-page--insurance-pc .service-native-intro p {
@@ -15699,7 +15790,6 @@
 .native-info-page--impact .service-native-intro h2 {
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-body);
-  font-size: clamp(1.95rem, 3.8vw, 2.9rem);
 }
 
 .native-info-page--impact .service-native-intro p {
@@ -15710,7 +15800,6 @@
   margin-top: 1rem;
   max-width: 80ch;
   text-align: center;
-  font-size: clamp(1.22rem, 2.3vw, 1.75rem);
   line-height: 1.2;
   color: var(--ag-color-super-grey);
 }
@@ -16653,7 +16742,7 @@ p.impact-proof-story-proof-body {
   margin: 0;
   max-width: 45rem;
   color: rgba(65, 64, 66, 0.9);
-  font-size: clamp(1.24rem, 2vw, 1.7rem);
+  font-size: var(--service-native-intro-body-size);
   line-height: 1.62;
   text-wrap: pretty;
 }
@@ -16663,7 +16752,7 @@ p.impact-proof-story-proof-body {
   max-width: 42rem;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-body);
-  font-size: clamp(1.24rem, 2vw, 1.7rem);
+  font-size: var(--service-native-intro-emphasis-size);
   font-weight: 700;
   line-height: 1.2;
 }
@@ -16962,7 +17051,6 @@ p.impact-proof-story-proof-body {
   .native-info-page--about .service-native-intro.about-native-top-intro p,
   .native-info-page--about .service-native-intro.about-native-top-intro .native-info-intro-emphasis {
     width: min(calc(100% - 2rem), 40rem);
-    font-size: clamp(1.05rem, 4.35vw, 1.28rem);
   }
 
   .native-info-page--about .about-native-building-shot .native-columns-media-wrap {
@@ -17178,8 +17266,6 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-child .service-native-intro {
-  padding-top: clamp(3rem, 6vw, 4.6rem);
-  padding-bottom: clamp(3rem, 6vw, 4.8rem);
   background: linear-gradient(135deg, #0a5d7a 0%, #008aab 100%);
 }
 
@@ -17193,11 +17279,9 @@ p.impact-proof-story-proof-body {
   font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 700;
   letter-spacing: var(--ag-letter-spacing-helv-intro);
-  font-size: clamp(2rem, 4.5vw, 3rem);
 }
 
 .native-info-page--retirement-child .service-native-intro p {
-  font-size: clamp(1.12rem, 2vw, 1.45rem);
   line-height: 1.5;
 }
 
@@ -17342,8 +17426,6 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--retirement-iras .service-native-intro {
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
-  padding-top: clamp(2.4rem, 5vw, 4rem);
-  padding-bottom: clamp(2.4rem, 5vw, 4rem);
 }
 
 .native-info-page--retirement-iras .service-native-intro h2,
@@ -17356,15 +17438,10 @@ p.impact-proof-story-proof-body {
   font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 700;
   letter-spacing: 0;
-  font-size: clamp(1.8rem, 3.8vw, 2.55rem);
 }
 
 .native-info-page--retirement-iras .service-native-intro h2 mark.is-mango {
   color: var(--ag-color-mango);
-}
-
-.native-info-page--retirement-iras .service-native-intro p {
-  font-size: clamp(1.12rem, 1.9vw, 1.5rem);
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types {
@@ -18984,8 +19061,6 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--online-contributions .service-native-intro {
   background: linear-gradient(135deg, rgba(65, 64, 66, 0.95) 0%, rgba(118, 120, 123, 0.92) 100%);
-  padding-top: clamp(2.4rem, 5vw, 3.6rem);
-  padding-bottom: clamp(2.4rem, 5vw, 3.6rem);
 }
 
 .native-info-page--online-contributions .service-native-intro h2,
@@ -19043,8 +19118,6 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child .service-native-intro {
-  padding-top: clamp(3rem, 6vw, 4.8rem);
-  padding-bottom: clamp(3rem, 6vw, 4.8rem);
   background: linear-gradient(135deg, rgba(0, 138, 171, 0.96) 0%, rgba(27, 46, 108, 0.95) 100%);
 }
 
@@ -19058,11 +19131,9 @@ p.impact-proof-story-proof-body {
   font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 700;
   letter-spacing: var(--ag-letter-spacing-helv-intro);
-  font-size: clamp(1.9rem, 4vw, 3rem);
 }
 
 .native-info-page--legacy-child .service-native-intro p {
-  font-size: clamp(1.1rem, 1.9vw, 1.4rem);
   line-height: 1.55;
 }
 
@@ -19167,11 +19238,6 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .service-native-intro h2 {
   letter-spacing: var(--ag-letter-spacing-helv-intro);
-  font-size: clamp(2.2rem, 4.5vw, 3.2rem);
-}
-
-.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .service-native-intro p {
-  font-size: clamp(1.1rem, 2vw, 1.45rem);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .service-native-intro p:last-of-type {
@@ -20742,8 +20808,6 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--retirement-rollovers .service-native-intro {
   background: linear-gradient(145deg, rgb(242, 239, 235) 58%, rgb(224, 220, 214) 100%);
-  padding-top: clamp(3.3rem, 6.4vw, 4.8rem);
-  padding-bottom: clamp(3.3rem, 6.4vw, 4.9rem);
 }
 
 .native-info-page--retirement-rollovers .service-native-intro h2,
@@ -20761,7 +20825,6 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-rollovers .service-native-intro p {
-  font-size: clamp(1.1rem, 1.85vw, 1.42rem);
   line-height: 1.48;
 }
 
@@ -21383,11 +21446,6 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--online-contributions .online-contrib-native-help .service-native-action-row {
   justify-content: center;
-}
-
-.native-info-page--legacy-child .service-native-intro {
-  padding-top: clamp(3.2rem, 6vw, 5rem);
-  padding-bottom: clamp(3.2rem, 6vw, 5rem);
 }
 
 .native-info-page--legacy-child .legacy-child-native-steps > .native-info-full-bleed > h2,
