@@ -412,7 +412,7 @@ export default function LegacyGivingStewardshipStoryFeature({
                     return (
                       <div
                         key={actor.key}
-                        className="legacy-stewardship-story-beat-actor"
+                        className={`legacy-stewardship-story-beat-actor${isFinalBeat ? ' is-final-beat' : ''}`}
                         data-actor-role={actor.role}
                         data-motion-state={actor.motionState}
                         data-tone={actor.tone}

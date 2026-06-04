@@ -27,6 +27,23 @@ function ForceObserveHookHarness() {
   );
 }
 
+function RepeatObserveHookHarness() {
+  const ref = useRef(null);
+  useNativeEnhancements(ref, 'fade-repeat-test');
+
+  return (
+    <div ref={ref} className="service-native-page">
+      <div
+        data-testid="repeat-fade-0"
+        className="fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up"
+        data-fade-root-margin="0px 0px -40% 0px"
+      >
+        Replay
+      </div>
+    </div>
+  );
+}
+
 function FadeOutHookHarness() {
   const ref = useRef(null);
   useNativeEnhancements(ref, 'fade-out-test');
@@ -64,6 +81,7 @@ function CssHeroAnimationHookHarness() {
 
 void HookHarness;
 void ForceObserveHookHarness;
+void RepeatObserveHookHarness;
 void FadeOutHookHarness;
 void CssHeroAnimationHookHarness;
 
@@ -235,7 +253,7 @@ describe('useNativeEnhancements fade-up reveal', () => {
         <div ref={ref} className="service-native-page">
           <div
             data-testid="custom-fade-0"
-            className="fade-up fade-up-force-observe billboard-scroll-reveal-scale-up"
+            className="fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up"
             data-fade-root-margin="0px 0px -40% 0px"
           >
             First
@@ -249,6 +267,48 @@ describe('useNativeEnhancements fade-up reveal', () => {
     expect(getByTestId('custom-fade-0').getAttribute('data-fade-state')).toBe('pending');
     expect(observedTargets).toHaveLength(1);
     expect(observerRootMargins).toContain('0px 0px -40% 0px');
+  });
+
+  it('re-arms repeat-observe fade-up nodes after they leave the viewport', () => {
+    const { getByTestId } = render(<RepeatObserveHookHarness />);
+    const repeatFade = getByTestId('repeat-fade-0');
+
+    expect(repeatFade.classList.contains('is-visible')).toBe(false);
+    expect(repeatFade.getAttribute('data-fade-state')).toBe('pending');
+
+    observerCallback([
+      {
+        target: repeatFade,
+        isIntersecting: true,
+      },
+    ]);
+
+    vi.advanceTimersByTime(300);
+
+    expect(repeatFade.classList.contains('is-visible')).toBe(true);
+    expect(repeatFade.hasAttribute('data-fade-state')).toBe(false);
+
+    observerCallback([
+      {
+        target: repeatFade,
+        isIntersecting: false,
+      },
+    ]);
+
+    expect(repeatFade.classList.contains('is-visible')).toBe(false);
+    expect(repeatFade.getAttribute('data-fade-state')).toBe('pending');
+
+    observerCallback([
+      {
+        target: repeatFade,
+        isIntersecting: true,
+      },
+    ]);
+
+    vi.advanceTimersByTime(300);
+
+    expect(repeatFade.classList.contains('is-visible')).toBe(true);
+    expect(repeatFade.hasAttribute('data-fade-state')).toBe(false);
   });
 });
 

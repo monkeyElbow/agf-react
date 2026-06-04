@@ -94,12 +94,16 @@ const certificateCards = [
   {
     titleTop: 'Demand',
     titleBottom: 'Certificates',
+    tone: 'atlantean',
+    buttonTone: 'atlantean',
     description: 'Demand Certificates are variable rate investments that provide access to funds on demand (within 30 days).',
     minimum: 'Minimum investment $250.',
   },
   {
     titleTop: 'Term',
     titleBottom: 'Certificates',
+    tone: 'mango',
+    buttonTone: 'mango',
     description: 'Term Certificates have fixed or variable interest rates over a predetermined amount of time, ranging from three months to ten years.',
     minimum: 'Minimum investment $500.',
   },
@@ -1825,17 +1829,29 @@ export default function InvestmentsPage() {
         <div className="ag-panel-rail">
           <div className="service-native-grid is-two investments-native-cert-grid fade-out">
             {certificateCards.map((card) => (
-              <article key={`${card.titleTop}-${card.titleBottom}`} className="service-native-card card1 investments-native-cert-card fade-up">
-                <h3>{card.titleTop}<br />{card.titleBottom}</h3>
-                <p>
-                  {card.description}
-                  {' '}
-                  <strong>{card.minimum}</strong>
-                </p>
-                <div className="service-native-action-row">
-                  <a href="https://secure.agfinancial.org/invest" target="_blank" rel="noreferrer noopener" className="service-native-btn">
-                    Start investing
-                  </a>
+              <article
+                key={`${card.titleTop}-${card.titleBottom}`}
+                className={`service-native-card investments-native-cert-card investments-native-cert-card--${card.tone} fade-up fade-up-force-observe`}
+              >
+                <div className="investments-native-cert-card__cap">
+                  <h3>{card.titleTop}<br />{card.titleBottom}</h3>
+                </div>
+                <div className="investments-native-cert-card__body">
+                  <p>
+                    {card.description}
+                    {' '}
+                    <strong>{card.minimum}</strong>
+                  </p>
+                  <div className="service-native-action-row">
+                    <a
+                      href="https://secure.agfinancial.org/invest"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className={`service-native-btn is-outline is-tone-${card.buttonTone}`}
+                    >
+                      Start investing
+                    </a>
+                  </div>
                 </div>
               </article>
             ))}

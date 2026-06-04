@@ -35,6 +35,8 @@ describe('legacy giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-joy {');
     expect(cssSource).toContain('padding-top: clamp(3.1rem, 6.2vw, 5.2rem);');
     expect(cssSource).toContain('padding-bottom: clamp(3.1rem, 6.2vw, 5.2rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-joy > .ag-panel-rail > h2,');
+    expect(cssSource).toContain('letter-spacing: -0.048em;');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-cta {');
     expect(cssSource).toContain('padding-top: clamp(2.2rem, 5vw, 3.4rem);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-cta .native-info-inline-form {');

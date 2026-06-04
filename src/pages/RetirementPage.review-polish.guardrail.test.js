@@ -52,10 +52,10 @@ describe('retirement 403(b) review polish guardrail', () => {
     const nativePageSource = readSource('../components/NativeContentPage.jsx');
 
     expect(retirementSource).toContain("scrollReveal: 'scale-up'");
-    expect(retirementSource).toContain("copyClassName: 'fade-up fade-up-force-observe billboard-scroll-reveal-scale-up'");
+    expect(retirementSource).toContain("copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up'");
     expect(retirementSource).toContain("data-fade-root-margin={renderedBillboard.copyFadeRootMargin || undefined}");
     expect(runtimeSource).toContain('const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);');
-    expect(runtimeSource).toContain("copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe billboard-scroll-reveal-scale-up' : ''");
+    expect(runtimeSource).toContain("copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : ''");
     expect(runtimeSource).toContain("copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -40% 0px' : ''");
     expect(nativePageSource).toContain("data-fade-root-margin={section.copyFadeRootMargin || undefined}");
   });
@@ -63,12 +63,12 @@ describe('retirement 403(b) review polish guardrail', () => {
   it('keeps the retirement everyday billboard reveal route-scoped with reduced-motion fallback', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up {');
+    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up,');
     expect(cssSource).toContain('transform-origin: 50% 50%;');
-    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up[data-fade-state="pending"] {');
+    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up[data-fade-state="pending"],');
     expect(cssSource).toContain('opacity: 0.18;');
     expect(cssSource).toContain('transform: translate3d(0, 58px, 0) scale(0.92);');
-    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up.is-visible {');
+    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up.is-visible,');
     expect(cssSource).toContain('transform: translate3d(0, 0, 0) scale(1);');
     expect(cssSource).toContain('@media (prefers-reduced-motion: reduce) {');
     expect(cssSource).toContain('transition: none;');

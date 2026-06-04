@@ -180,12 +180,26 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
         return;
       }
 
+      const isRepeatableTarget = (target) => target?.classList.contains('fade-up-repeat-observe');
+
       const clearPendingState = (target) => {
         if (!target) {
           return;
         }
         target.removeAttribute('data-fade-state');
         target.classList.add('is-visible');
+        if (!isRepeatableTarget(target)) {
+          target.setAttribute('data-fade-complete', 'true');
+        }
+      };
+
+      const resetPendingState = (target) => {
+        if (!target) {
+          return;
+        }
+        target.classList.remove('is-visible');
+        target.removeAttribute('data-fade-complete');
+        target.setAttribute('data-fade-state', 'pending');
       };
 
       if (prefersReducedMotion) {
@@ -199,7 +213,6 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
       }
 
       const timers = new Map();
-      const queuedTargets = new WeakSet();
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
 
       const isInitiallyVisible = (target) => {
@@ -215,11 +228,10 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
       };
 
       const queueReveal = (target, index) => {
-        if (!target || queuedTargets.has(target)) {
+        if (!target || timers.has(target) || target.getAttribute('data-fade-complete') === 'true') {
           return;
         }
 
-        queuedTargets.add(target);
         const delayMs = 90 + ((index % 8) * 90);
         const timer = window.setTimeout(() => {
           requestAnimationFrame(() => {
@@ -243,18 +255,30 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
           (entries) => {
             entries.forEach((entry) => {
               if (!entry.isIntersecting) {
+                if (isRepeatableTarget(entry.target)) {
+                  const timer = timers.get(entry.target);
+                  if (timer) {
+                    window.clearTimeout(timer);
+                    timers.delete(entry.target);
+                  }
+                  resetPendingState(entry.target);
+                }
                 return;
               }
 
               const index = Number(entry.target.getAttribute('data-fade-order'));
               if (!Number.isFinite(index)) {
                 entry.target.classList.add('is-visible');
-                observer?.unobserve(entry.target);
+                if (!isRepeatableTarget(entry.target)) {
+                  observer?.unobserve(entry.target);
+                }
                 return;
               }
 
               queueReveal(entry.target, index);
-              observer?.unobserve(entry.target);
+              if (!isRepeatableTarget(entry.target)) {
+                observer?.unobserve(entry.target);
+              }
             });
           },
           { rootMargin: normalizedRootMargin },
@@ -266,12 +290,13 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
 
       nodes.forEach((el, index) => {
         el.classList.remove('is-visible');
+        el.removeAttribute('data-fade-complete');
         el.setAttribute('data-fade-order', String(index));
         if (isInitiallyVisible(el)) {
           clearPendingState(el);
           return;
         }
-        el.setAttribute('data-fade-state', 'pending');
+        resetPendingState(el);
         getFadeObserver(el.getAttribute('data-fade-root-margin')).observe(el);
       });
       cleanups.push(() => {
@@ -281,6 +306,7 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
         timers.clear();
         nodes.forEach((el) => {
           el.removeAttribute('data-fade-state');
+          el.removeAttribute('data-fade-complete');
         });
       });
     };

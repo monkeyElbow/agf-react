@@ -213,7 +213,7 @@ const DEFAULT_RETIREMENT_BILLBOARD = {
   textTone: 'dark',
   justify: 'center',
   scrollReveal: 'scale-up',
-  copyClassName: 'fade-up fade-up-force-observe billboard-scroll-reveal-scale-up',
+  copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up',
   copyFadeRootMargin: '0px 0px -40% 0px',
   action: {
     label: 'Reach my consultant',

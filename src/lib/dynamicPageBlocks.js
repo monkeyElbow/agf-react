@@ -806,7 +806,7 @@ export function buildDynamicBillboardFromBlock(block) {
     justify,
     lineSpacing,
     scrollReveal,
-    copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe billboard-scroll-reveal-scale-up' : '',
+    copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : '',
     copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -40% 0px' : '',
     contentMaxWidthPx: hasContentWidthOverride
       ? normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 920)

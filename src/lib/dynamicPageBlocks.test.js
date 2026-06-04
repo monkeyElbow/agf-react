@@ -481,6 +481,8 @@ describe('buildDynamicBillboardFromBlock', () => {
       bgTone: 'blue',
       textTone: 'white',
       justify: 'right',
+      copyClassName: '',
+      copyFadeRootMargin: '',
       contentMaxWidthPx: 1100,
       action: expect.objectContaining({
         label: 'Take the next step',
@@ -507,6 +509,24 @@ describe('buildDynamicBillboardFromBlock', () => {
       lineHeight: 1.05,
       fontFamily: 'var(--ag-font-helv)',
     }));
+  });
+
+  it('marks scale-up billboards as repeat-observe fade reveals', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      id: 'repeat_billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Already an investor?',
+        bodyHtml: '<p>Replay this reveal.</p>',
+        scrollReveal: 'scale-up',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up',
+      copyFadeRootMargin: '0px 0px -40% 0px',
+    });
   });
 
   it('preserves normalized target-section wiring for native targeted billboards', () => {
