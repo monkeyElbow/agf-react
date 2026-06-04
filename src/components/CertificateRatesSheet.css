@@ -1,0 +1,345 @@
+.certificate-rates-sheet {
+  width: 100%;
+  max-width: 64rem;
+  margin-inline: auto;
+}
+
+.certificate-rates-sheet__desktop {
+  display: grid;
+  grid-template-columns: minmax(0, 1.46fr) minmax(15rem, 0.84fr);
+  gap: clamp(0.7rem, 1.25vw, 0.9rem);
+  align-items: start;
+}
+
+.certificate-rates-sheet__mobile {
+  display: none;
+}
+
+.certificate-rates-sheet__band {
+  border: 1px solid rgba(196, 190, 182, 0.58);
+  border-radius: 17px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(13, 61, 78, 0.05);
+  overflow: hidden;
+}
+
+.certificate-rates-sheet__band--standard {
+  --certificate-rates-band-accent: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
+  --certificate-rates-band-accent-soft: rgba(var(--ag-color-atlantean-rgb), 0.08);
+  --certificate-rates-band-heading: var(--ag-color-atlantean-dark);
+  --certificate-rates-band-subtle: rgba(var(--ag-color-atlantean-rgb), 0.075);
+}
+
+.certificate-rates-sheet__band--premium {
+  --certificate-rates-band-accent: linear-gradient(135deg, #f7b229 0%, var(--ag-color-mango) 100%);
+  --certificate-rates-band-accent-soft: rgba(250, 163, 26, 0.1);
+  --certificate-rates-band-heading: #9b5800;
+  --certificate-rates-band-subtle: rgba(250, 163, 26, 0.085);
+}
+
+.certificate-rates-sheet__band-chrome {
+  display: flex;
+  align-items: center;
+  min-height: 3.1rem;
+  padding: 0.46rem 0.8rem;
+  background: var(--certificate-rates-band-accent);
+}
+
+.certificate-rates-sheet .certificate-rates-sheet__band-title {
+  margin: 0;
+  color: #ffffff;
+  font-family: var(--ag-font-body);
+  font-size: clamp(1.18rem, 1.22vw, 1.28rem);
+  font-weight: 780;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+.certificate-rates-sheet__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.certificate-rates-sheet__table thead th {
+  padding: 0.56rem 0.78rem;
+  border-bottom: 1px solid rgba(214, 220, 224, 0.88);
+  background: rgba(255, 255, 255, 0.98);
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.038em;
+  line-height: 1.16;
+  text-transform: uppercase;
+}
+
+.certificate-rates-sheet__table--standard thead th:nth-child(1) {
+  width: 42%;
+  text-align: left;
+}
+
+.certificate-rates-sheet__table--standard thead th:nth-child(2),
+.certificate-rates-sheet__table--premium thead th:nth-child(1) {
+  color: var(--certificate-rates-band-heading);
+}
+
+.certificate-rates-sheet__table thead th:not(:first-child),
+.certificate-rates-sheet__table tbody td {
+  text-align: right;
+}
+
+.certificate-rates-sheet__table thead th + th,
+.certificate-rates-sheet__table tbody th + td,
+.certificate-rates-sheet__table tbody td + td {
+  border-left: 1px solid rgba(218, 223, 227, 0.92);
+}
+
+.certificate-rates-sheet__table tbody th,
+.certificate-rates-sheet__table tbody td {
+  padding: 0.64rem 0.84rem;
+  border-bottom: 1px solid rgba(222, 225, 229, 0.9);
+  vertical-align: middle;
+}
+
+.certificate-rates-sheet__table tbody tr:last-child th,
+.certificate-rates-sheet__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.certificate-rates-sheet__table tbody th {
+  text-align: left;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-body);
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.06;
+}
+
+.certificate-rates-sheet__table--standard thead th:nth-child(2),
+.certificate-rates-sheet__table--standard tbody td:nth-child(2) {
+  background: rgba(var(--ag-color-atlantean-rgb), 0.075);
+}
+
+.certificate-rates-sheet__table--premium thead th,
+.certificate-rates-sheet__table--premium tbody td {
+  background: rgba(255, 251, 245, 0.98);
+}
+
+.certificate-rates-sheet__table--premium thead th:first-child,
+.certificate-rates-sheet__table--premium tbody td:first-child {
+  background: rgba(250, 163, 26, 0.09);
+}
+
+.certificate-rates-sheet__value {
+  display: inline-block;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-body);
+  font-weight: 650;
+  line-height: 1;
+}
+
+.certificate-rates-sheet__value.is-apy {
+  font-size: clamp(1.33rem, 1.42vw, 1.48rem);
+  font-weight: 780;
+  letter-spacing: 0.012em;
+  color: var(--certificate-rates-band-heading);
+}
+
+.certificate-rates-sheet__band--premium .certificate-rates-sheet__value.is-apy {
+  color: var(--certificate-rates-band-heading);
+}
+
+.certificate-rates-sheet__value.is-rate {
+  font-size: clamp(0.92rem, 0.96vw, 0.98rem);
+  letter-spacing: -0.002em;
+}
+
+.certificate-rates-sheet__value.is-unavailable {
+  color: rgba(65, 64, 66, 0.52);
+  letter-spacing: 0;
+}
+
+.certificate-rates-sheet__mobile-toolbar {
+  width: min(100%, 22rem);
+  margin: 0 auto 0.72rem;
+}
+
+.certificate-rates-sheet__mobile-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.16rem;
+  padding: 0.18rem;
+  border: 1px solid rgba(196, 190, 182, 0.62);
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 6px 14px rgba(13, 61, 78, 0.045);
+}
+
+.certificate-rates-sheet__mobile-toggle-button {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(65, 64, 66, 0.8);
+  font-family: var(--ag-font-helv);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  line-height: 1.1;
+  padding: 0.54rem 0.72rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.certificate-rates-sheet__mobile-toggle-button.is-active {
+  background: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.certificate-rates-sheet__mobile-toggle-button:focus-visible {
+  outline: 2px solid rgba(var(--ag-color-atlantean-rgb), 0.35);
+  outline-offset: 2px;
+}
+
+.certificate-rates-sheet__term-card {
+  width: min(100%, 22rem);
+  margin-inline: auto;
+  border: 1px solid rgba(196, 190, 182, 0.6);
+  border-radius: 17px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(13, 61, 78, 0.05);
+  overflow: hidden;
+}
+
+.certificate-rates-sheet__term-card + .certificate-rates-sheet__term-card {
+  margin-top: 0.68rem;
+}
+
+.certificate-rates-sheet__term-header {
+  padding: 0.62rem 0.86rem;
+  border-bottom: 1px solid rgba(219, 223, 227, 0.88);
+  background: linear-gradient(180deg, rgba(250, 249, 247, 0.86) 0%, #ffffff 100%);
+}
+
+.certificate-rates-sheet .certificate-rates-sheet__term-header h3 {
+  margin: 0;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-body);
+  font-size: clamp(1rem, 3.8vw, 1.08rem);
+  font-weight: 780;
+  line-height: 1.12;
+  letter-spacing: -0.024em;
+}
+
+.certificate-rates-sheet__term-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  border-radius: 0 0 13px 13px;
+  background: rgba(236, 240, 243, 0.82);
+}
+
+.certificate-rates-sheet__term-side {
+  --certificate-rates-band-heading: var(--ag-color-atlantean-dark);
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.58rem 0.72rem 0.64rem;
+  background: #ffffff;
+}
+
+.certificate-rates-sheet__term-side--standard {
+  --certificate-rates-band-heading: var(--ag-color-atlantean-dark);
+  background: rgba(var(--ag-color-atlantean-rgb), 0.072);
+}
+
+.certificate-rates-sheet__term-side--premium {
+  --certificate-rates-band-heading: #9b5800;
+  border-left: 1px solid rgba(218, 223, 227, 0.92);
+  background: rgba(250, 163, 26, 0.09);
+}
+
+.certificate-rates-sheet .certificate-rates-sheet__term-side-label,
+.certificate-rates-sheet .certificate-rates-sheet__term-metric-label {
+  margin: 0;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.14;
+  text-transform: uppercase;
+}
+
+.certificate-rates-sheet__term-side--premium .certificate-rates-sheet__term-side-label {
+  color: #9b5800;
+}
+
+.certificate-rates-sheet__term-metric {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.certificate-rates-sheet__term-metric .certificate-rates-sheet__value.is-apy,
+.certificate-rates-sheet__term-metric .certificate-rates-sheet__value.is-mobile-rate {
+  font-size: clamp(1.3rem, 5vw, 1.46rem);
+  font-weight: 780;
+  letter-spacing: 0.012em;
+}
+
+.certificate-rates-sheet__term-side--premium .certificate-rates-sheet__value.is-apy,
+.certificate-rates-sheet__term-side--premium .certificate-rates-sheet__value.is-mobile-rate {
+  color: #9b5800;
+}
+
+.certificate-rates-sheet__term-side .certificate-rates-sheet__value.is-unavailable {
+  color: rgba(65, 64, 66, 0.42);
+}
+
+@media (max-width: 900px) {
+  .certificate-rates-sheet__desktop {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .certificate-rates-sheet__desktop {
+    display: none;
+  }
+
+  .certificate-rates-sheet__mobile {
+    display: block;
+  }
+}
+
+@media (max-width: 420px) {
+  .certificate-rates-sheet__mobile-toolbar,
+  .certificate-rates-sheet__term-card {
+    width: min(100%, 21.5rem);
+  }
+
+  .certificate-rates-sheet__term-card {
+    border-radius: 16px;
+  }
+
+  .certificate-rates-sheet__term-side {
+    padding-left: 0.68rem;
+    padding-right: 0.68rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .certificate-rates-sheet__term-compare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .certificate-rates-sheet__term-side--premium {
+    border-left: 0;
+    border-top: 1px solid rgba(218, 223, 227, 0.92);
+  }
+}

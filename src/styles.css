@@ -2869,7 +2869,8 @@ button.action-btn {
 }
 
 .rates-page-intro {
-  margin: 0 0 1rem;
+  width: min(100%, 64rem);
+  margin: 0 auto 1rem;
   font-size: 1.02rem;
 }
 
@@ -2877,6 +2878,47 @@ button.action-btn {
   border: 0;
   box-shadow: none;
   background: transparent;
+}
+
+.rates-page .page-shell-body {
+  --rates-page-certificates-max-width: 64rem;
+  padding: 0;
+}
+
+.rates-page .page-shell-header {
+  margin-bottom: 0.55rem;
+  padding-top: clamp(1.2rem, 2.8vw, 2.3rem);
+}
+
+.rates-page .page-shell-header h1 {
+  width: min(100%, var(--rates-page-certificates-max-width));
+  margin-inline: auto;
+  font-size: clamp(1.82rem, 3.25vw, 2.63rem);
+  line-height: 1.08;
+  text-align: center;
+}
+
+.rates-page .page-shell-source {
+  width: min(100%, var(--rates-page-certificates-max-width));
+  margin: 0 auto 1rem;
+}
+
+.rates-page-managed-block {
+  width: min(100%, var(--rates-page-certificates-max-width, 64rem));
+  margin-inline: auto;
+  padding-bottom: max(1.5rem, var(--site-chatbot-mobile-reserved-space, 0px));
+}
+
+.rates-page-certificate-block,
+.rates-page-ira-block,
+.rates-page .rates-disclaimer {
+  width: min(100%, var(--rates-page-certificates-max-width, 64rem));
+  margin-inline: auto;
+}
+
+.rates-page-subheading {
+  width: min(100%, 50rem);
+  margin: 2rem auto 0;
 }
 
 .rates-disclaimer {
@@ -2888,6 +2930,30 @@ button.action-btn {
 
 .rates-disclaimer p {
   margin: 0.4rem 0;
+}
+
+.rates-page .rates-disclaimer p {
+  margin: 0 0 1.05rem;
+}
+
+.rates-page .rates-disclaimer p:first-child {
+  font-weight: 700;
+  font-size: 0.97rem;
+  line-height: 1.45;
+}
+
+.rates-page .rates-disclaimer p:last-child {
+  margin-bottom: 0;
+}
+
+.rates-page .rates-disclaimer a {
+  color: var(--ag-color-atlantean-dark);
+  text-decoration: none;
+}
+
+.rates-page .rates-disclaimer a:hover {
+  color: var(--ag-color-atlantean-dark);
+  text-decoration: underline;
 }
 
 .ag-table-inputs input {

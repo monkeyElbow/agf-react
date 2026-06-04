@@ -5,6 +5,8 @@ import PageShell from '../components/PageShell';
 import FrontHudPanelShell from '../components/FrontHudPanelShell';
 import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import SafeRichText from '../components/SafeRichText';
+import CertificateRatesSheet from '../components/CertificateRatesSheet';
+import IraRatesSheet from '../components/IraRatesSheet';
 import { pageByPath } from '../data/siteMap';
 import { useRates } from '../context/RatesContext';
 import { useContentAdmin } from '../context/ContentAdminContext';
@@ -231,32 +233,8 @@ export default function RatesPage() {
           style={showFrontHud ? { position: 'relative' } : undefined}
         >
           {renderHudAnchor('rates-table')}
-          <div
-            ref={certificatesSectionRef}
-            className="table-scroll fade-up"
-          >
-            <table className="ag-table has-fixed-layout">
-              <thead>
-                <tr>
-                  <th>Investment Type</th>
-                  <th>Standard Rate</th>
-                  <th>Standard APY*</th>
-                  <th>Premium Rate**</th>
-                  <th>Premium APY*</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rates.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.product}</td>
-                    <td>{row.standardRate}</td>
-                    <td>{row.standardApy}</td>
-                    <td>{row.premiumRate}</td>
-                    <td>{row.premiumApy}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div ref={certificatesSectionRef} className="rates-page-certificate-block fade-up">
+            <CertificateRatesSheet rates={rates} />
           </div>
 
           <SafeRichText
@@ -265,26 +243,9 @@ export default function RatesPage() {
             className="rates-disclaimer fade-up"
           />
 
-          <h2 ref={iraSectionRef} style={{ marginTop: '2rem' }}>IRA Investment Rates</h2>
-          <div className="table-scroll fade-up">
-            <table className="ag-table has-fixed-layout">
-              <thead>
-                <tr>
-                  <th>Investment Type</th>
-                  <th>Rate</th>
-                  <th>APY*</th>
-                </tr>
-              </thead>
-              <tbody>
-                {iraRates.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.product}</td>
-                    <td>{row.rate}</td>
-                    <td>{row.apy}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <h2 ref={iraSectionRef} className="rates-page-subheading">IRA Investment Rates</h2>
+          <div className="rates-page-ira-block fade-up">
+            <IraRatesSheet rates={iraRates} />
           </div>
 
           <SafeRichText

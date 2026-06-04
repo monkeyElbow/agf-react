@@ -11,6 +11,7 @@ import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import SafeRichText from '../components/SafeRichText';
+import CertificateRatesSheet from '../components/CertificateRatesSheet';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import {
@@ -1895,31 +1896,8 @@ export default function InvestmentsPage() {
       <section className="service-native-section investments-native-rates-section">
         <div className="ag-panel-rail" id="rates">
           <h2 className="investments-native-rates-title">AGFinancial Investment Certificates Rates</h2>
-          <div className="service-native-rates investments-native-rates-wrap fade-up">
-            <div className="table-scroll">
-              <table className="ag-table has-fixed-layout">
-                <thead>
-                  <tr>
-                    <th>Investment Type</th>
-                    <th>Standard Rate</th>
-                    <th>Standard APY*</th>
-                    <th>Premium Rate**</th>
-                    <th>Premium APY*</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rates.map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.product}</td>
-                      <td>{row.standardRate}</td>
-                      <td>{row.standardApy}</td>
-                      <td>{row.premiumRate}</td>
-                      <td>{row.premiumApy}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="investments-native-rates-wrap fade-up">
+            <CertificateRatesSheet rates={rates} className="investments-native-certificate-rates-sheet" />
           </div>
           <div className="rates-disclaimer investments-native-rates-disclaimer">
             <p className="investments-native-rates-disclaimer-lead">

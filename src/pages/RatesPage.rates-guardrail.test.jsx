@@ -11,10 +11,13 @@ function readSource(relativePath) {
 }
 
 describe('rates page renderer guardrail', () => {
-  it('keeps the shared dynamic rates/legal copy builders, safe rich text boundary, and HUD host in the rates page path', () => {
+  it('keeps the shared dynamic rates/legal copy builders, safe rich text boundary, HUD host, and investments-matching certificate wrapper classes in the rates page path', () => {
     const source = readSource('./RatesPage.jsx');
+    const cssSource = readSource('../styles.css');
 
     expect(source).toContain("import BlockHudPanelHost from '../components/BlockHudPanelHost';");
+    expect(source).toContain("import CertificateRatesSheet from '../components/CertificateRatesSheet';");
+    expect(source).toContain("import IraRatesSheet from '../components/IraRatesSheet';");
     expect(source).toContain("import SafeRichText from '../components/SafeRichText';");
     expect(source).toContain("import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';");
     expect(source).toContain("buildDynamicLegalCopyFromBlock, buildDynamicRatesFromBlock } from '../lib/dynamicPageBlocks';");
@@ -28,11 +31,21 @@ describe('rates page renderer guardrail', () => {
     expect(source).toContain('const managedBlockRef = useRef(null);');
     expect(source).toContain('scrollToElement(managedBlockRef.current);');
     expect(source).toContain('className="rates-page-managed-block"');
+    expect(source).toContain('className="rates-page-certificate-block fade-up"');
+    expect(source).toContain('className="rates-page-subheading"');
+    expect(source).toContain('className="rates-page-ira-block fade-up"');
     expect(source).toContain('<BlockHudPanelHost');
+    expect(source).toContain('<CertificateRatesSheet rates={rates} />');
+    expect(source).toContain('<IraRatesSheet rates={iraRates} />');
     expect(source).toContain('<SafeRichText');
     expect(source).toContain("html={legalCopyRuntime?.certificatesHtml || ''}");
     expect(source).toContain("html={legalCopyRuntime?.iraHtml || ''}");
     expect(source).toContain('pathname="/rates"');
     expect(source).not.toContain('This is not an offer to sell securities.');
+    expect(source).not.toContain('<table className="ag-table has-fixed-layout">');
+    expect(cssSource).toContain('.rates-page .page-shell-header h1 {');
+    expect(cssSource).toContain('.rates-page-managed-block {');
+    expect(cssSource).toContain('padding-bottom: max(1.5rem, var(--site-chatbot-mobile-reserved-space, 0px));');
+    expect(cssSource).toContain('.rates-page .rates-disclaimer p:first-child {');
   });
 });
