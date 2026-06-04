@@ -143,7 +143,21 @@ export const givingComparisonMobileRows = [
   { key: 'cta', label: 'CTA' },
 ];
 
-const DEFAULT_MOBILE_SELECTED_IDS = ['cga', 'daf', 'endowment'];
+export const defaultGivingComparisonSelectedIds = ['daf', 'endowment', 'cga'];
+
+const MOBILE_PRIMARY_FIELDS = [
+  { key: 'minimumRequired', label: 'Minimum to Start' },
+  { key: 'donorIncome', label: 'Provides Donor Income?' },
+  { key: 'propertyAllowed', label: 'Property Allowed?' },
+  { key: 'donorBenefits', label: 'What the Donor Receives' },
+];
+
+const MOBILE_SECONDARY_FIELDS = [
+  { key: 'fundedBy', label: 'How it’s Funded' },
+  { key: 'ministryBenefits', label: 'How the Ministry Benefits' },
+  { key: 'taxBenefits', label: 'Possible Tax Considerations' },
+  { key: 'timing', label: 'Timing' },
+];
 
 function parseMinimumNumber(text) {
   if (!text) return Number.MAX_SAFE_INTEGER;
@@ -158,10 +172,10 @@ export default function GivingComparisonMatrix() {
   const [incomeOnly, setIncomeOnly] = useState(false);
   const [propertyOnly, setPropertyOnly] = useState(false);
   const [maxMinimum, setMaxMinimum] = useState('all');
-  const [desktopSelectedIds, setDesktopSelectedIds] = useState(
-    () => givingComparisonPrograms.map((program) => program.id),
-  );
-  const [mobileSelectedIds, setMobileSelectedIds] = useState(DEFAULT_MOBILE_SELECTED_IDS);
+  const [desktopSelectedIds, setDesktopSelectedIds] = useState(defaultGivingComparisonSelectedIds);
+  const [mobileSelectedIds, setMobileSelectedIds] = useState(defaultGivingComparisonSelectedIds);
+  const [desktopShowAll, setDesktopShowAll] = useState(false);
+  const [mobileShowFullComparison, setMobileShowFullComparison] = useState(false);
 
   const filteredPrograms = useMemo(() => (
     givingComparisonPrograms.filter((p) => {
@@ -177,20 +191,25 @@ export default function GivingComparisonMatrix() {
     })
   ), [incomeOnly, propertyOnly, maxMinimum]);
 
-  const visibleProgramsDesktop = useMemo(() => (
+  const selectedProgramsDesktop = useMemo(() => (
     filteredPrograms.filter((program) => desktopSelectedIds.includes(program.id))
   ), [desktopSelectedIds, filteredPrograms]);
 
-  const visibleProgramsMobile = useMemo(() => {
-    const selected = filteredPrograms.filter((p) => mobileSelectedIds.includes(p.id));
-    if (selected.length > 0) return selected.slice(0, 3);
-    return filteredPrograms.slice(0, 3);
-  }, [filteredPrograms, mobileSelectedIds]);
+  const selectedProgramsMobile = useMemo(() => (
+    filteredPrograms.filter((program) => mobileSelectedIds.includes(program.id))
+  ), [filteredPrograms, mobileSelectedIds]);
+
+  const visibleProgramsDesktop = desktopShowAll ? filteredPrograms : selectedProgramsDesktop;
+  const visibleProgramsMobile = selectedProgramsMobile;
+  const availableProgramsDesktop = filteredPrograms.filter((program) => !desktopSelectedIds.includes(program.id));
+  const availableProgramsMobile = filteredPrograms.filter((program) => !mobileSelectedIds.includes(program.id));
+  const compareAllLabel = filteredPrograms.length === givingComparisonPrograms.length
+    ? `Compare all ${givingComparisonPrograms.length}`
+    : `View all ${filteredPrograms.length} matching`;
 
   const toggleMobileProgram = (id) => {
     setMobileSelectedIds((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 3) return [...prev.slice(1), id];
       return [...prev, id];
     });
   };
@@ -261,46 +280,106 @@ export default function GivingComparisonMatrix() {
       </div>
 
       <div style={styles.resultCount}>
-        Showing {filteredPrograms.length} of {givingComparisonPrograms.length} programs
+        <div style={styles.resultCountTitle}>
+          {desktopShowAll
+            ? `Viewing all ${visibleProgramsDesktop.length} matching programs`
+            : `Comparing ${visibleProgramsDesktop.length} of ${givingComparisonPrograms.length} programs`}
+        </div>
+        <div style={styles.resultCountMeta}>
+          {filteredPrograms.length} programs match the current filters.
+        </div>
       </div>
 
       <div className="agf-hide-mobile">
         <div style={styles.desktopSelectorCard}>
-          <div style={styles.desktopSelectorIntro}>
-            <div style={styles.desktopSelectorTitle}>Desktop compare</div>
-            <p style={styles.desktopSelectorHint}>
-              Choose the programs you want to review side by side.
-            </p>
+          <div style={styles.selectorCardHeader}>
+            <div style={styles.desktopSelectorIntro}>
+              <div style={styles.desktopSelectorEyebrow}>Compare selected plans</div>
+              <div style={styles.desktopSelectorTitle}>Choose the programs you want to compare first.</div>
+              <p style={styles.desktopSelectorHint}>
+                Start with a smaller set to review side by side. You can add more programs anytime or switch to a full comparison.
+              </p>
+            </div>
+            <button
+              type="button"
+              style={styles.desktopToggleBtn}
+              onClick={() => setDesktopShowAll((current) => !current)}
+            >
+              {desktopShowAll ? 'Return to selected' : compareAllLabel}
+            </button>
           </div>
-          <div
-            style={styles.desktopSelectorGrid}
-            role="group"
-            aria-label="Desktop programs to compare"
-          >
-            {filteredPrograms.map((program) => {
-              const selected = desktopSelectedIds.includes(program.id);
-              return (
+
+          <div style={styles.selectorSection}>
+            <div style={styles.selectorSectionTitle}>Selected plans</div>
+            <p style={styles.desktopSelectorHint}>
+              {selectedProgramsDesktop.length > 0
+                ? `${selectedProgramsDesktop.length} selected`
+                : 'Select one or more programs to compare.'}
+            </p>
+            <div
+              style={styles.desktopSelectorGrid}
+              role="group"
+              aria-label="Selected programs to compare"
+            >
+              {selectedProgramsDesktop.map((program) => (
                 <button
                   key={program.id}
                   type="button"
-                  aria-pressed={selected}
+                  aria-pressed="true"
                   onClick={() => toggleDesktopProgram(program.id)}
                   style={{
                     ...styles.desktopSelectBtn,
-                    ...(selected ? styles.desktopSelectBtnActive : {}),
+                    ...styles.desktopSelectBtnActive,
                   }}
+                >
+                  <span>{program.name}</span>
+                  <span style={styles.desktopChipDismiss} aria-hidden="true">×</span>
+                </button>
+              ))}
+              {selectedProgramsDesktop.length === 0 ? (
+                <div style={styles.selectorEmptyText}>No selected plans match the current filters.</div>
+              ) : null}
+            </div>
+          </div>
+
+          <div style={styles.selectorSection}>
+            <div style={styles.selectorSectionTitle}>Add a plan</div>
+            <div
+              style={styles.desktopSelectorGrid}
+              role="group"
+              aria-label="Available programs to add to comparison"
+            >
+              {availableProgramsDesktop.map((program) => (
+                <button
+                  key={program.id}
+                  type="button"
+                  onClick={() => toggleDesktopProgram(program.id)}
+                  aria-pressed="false"
+                  style={styles.desktopSelectBtn}
                 >
                   {program.name}
                 </button>
-              );
-            })}
+              ))}
+              {availableProgramsDesktop.length === 0 ? (
+                <div style={styles.selectorEmptyText}>All matching programs are already in view.</div>
+              ) : null}
+            </div>
           </div>
         </div>
 
         {visibleProgramsDesktop.length > 0 ? (
           <div style={styles.matrixOuter}>
             <div style={styles.matrixScroll}>
-              <table style={styles.table} role="table" aria-label="Charitable giving plan comparison">
+              <table
+                style={{
+                  ...styles.table,
+                  minWidth: desktopShowAll
+                    ? 1760
+                    : Math.max(900, 220 + (visibleProgramsDesktop.length * 228)),
+                }}
+                role="table"
+                aria-label="Charitable giving plan comparison"
+              >
                 <thead>
                   <tr>
                     <th style={{ ...styles.th, ...styles.stickyCol, ...styles.featureHeaderCell }}>
@@ -390,7 +469,7 @@ export default function GivingComparisonMatrix() {
           </div>
         ) : (
           <div style={styles.desktopEmptyState}>
-            {filteredPrograms.length > 0
+            {filteredPrograms.length > 0 && !desktopShowAll
               ? 'Select at least one program to compare.'
               : 'No programs match the current filters.'}
           </div>
@@ -399,81 +478,156 @@ export default function GivingComparisonMatrix() {
 
       <div className="agf-hide-desktop">
         <div style={styles.mobileCard}>
-          <div style={{ marginBottom: 10, fontWeight: 700, color: AGF_COLORS.slate }}>
-            Mobile compare (select 2 or 3)
+          <div style={styles.mobileSelectorTitle}>Compare selected plans</div>
+          <p style={styles.mobileSelectorHint}>
+            Review a smaller set of programs first, then open the full feature comparison only if you need it.
+          </p>
+          <div style={styles.mobileSelectorMeta}>
+            Showing {visibleProgramsMobile.length} selected of {filteredPrograms.length} matching programs
           </div>
 
-          <div style={styles.mobileSelectorGrid}>
-            {filteredPrograms.map((p) => {
-              const selected = mobileSelectedIds.includes(p.id);
-              return (
+          <div style={styles.selectorSection}>
+            <div style={styles.selectorSectionTitle}>Selected plans</div>
+            <div style={styles.mobileSelectorGrid} role="group" aria-label="Selected mobile plans">
+              {selectedProgramsMobile.map((program) => (
                 <button
-                  key={p.id}
+                  key={program.id}
                   type="button"
-                  onClick={() => toggleMobileProgram(p.id)}
+                  onClick={() => toggleMobileProgram(program.id)}
+                  aria-pressed="true"
                   style={{
                     ...styles.mobileSelectBtn,
-                    ...(selected ? styles.mobileSelectBtnActive : {}),
+                    ...styles.mobileSelectBtnActive,
                   }}
                 >
-                  {p.shortLabel || p.name}
+                  <span>{program.shortLabel || program.name}</span>
+                  <span style={styles.desktopChipDismiss} aria-hidden="true">×</span>
                 </button>
-              );
-            })}
+              ))}
+              {selectedProgramsMobile.length === 0 ? (
+                <div style={styles.selectorEmptyText}>No selected plans match the current filters.</div>
+              ) : null}
+            </div>
           </div>
+
+          <div style={styles.selectorSection}>
+            <div style={styles.selectorSectionTitle}>Add a plan</div>
+            <div style={styles.mobileSelectorGrid} role="group" aria-label="Available mobile plans">
+              {availableProgramsMobile.map((program) => (
+                <button
+                  key={program.id}
+                  type="button"
+                  onClick={() => toggleMobileProgram(program.id)}
+                  aria-pressed="false"
+                  style={styles.mobileSelectBtn}
+                >
+                  {program.shortLabel || program.name}
+                </button>
+              ))}
+              {availableProgramsMobile.length === 0 ? (
+                <div style={styles.selectorEmptyText}>All matching programs are already selected.</div>
+              ) : null}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            style={styles.mobileToggleBtn}
+            onClick={() => setMobileShowFullComparison((current) => !current)}
+          >
+            {mobileShowFullComparison ? 'Hide full comparison' : 'View full comparison'}
+          </button>
         </div>
 
-        {visibleProgramsMobile.length > 0 ? (
-          <nav style={styles.mobileJumpNav} aria-label="Mobile comparison sections">
-            {givingComparisonMobileRows.map((row) => (
-              <a
-                key={`mobile-jump-${row.key}`}
-                href={`#mobile-comparison-${row.key}`}
-                style={styles.mobileJumpChip}
-              >
-                {row.label}
-              </a>
-            ))}
-          </nav>
-        ) : null}
-
-        <div style={styles.mobileSections} aria-label="Mobile charitable giving comparison">
-          {givingComparisonMobileRows.map((row) => (
-            visibleProgramsMobile.length > 0 ? (
-              <section
-                key={`mobile-section-${row.key}`}
-                id={`mobile-comparison-${row.key}`}
-                style={styles.mobileSectionCard}
-                aria-labelledby={`mobile-comparison-heading-${row.key}`}
-              >
-                <div style={styles.mobileSectionHeader}>
-                  <h3 id={`mobile-comparison-heading-${row.key}`} style={styles.mobileSectionTitle}>
-                    {row.label}
-                  </h3>
+        <div style={styles.mobileProgramGrid} aria-label="Mobile charitable giving program cards">
+          {visibleProgramsMobile.map((program) => (
+            <article key={`${program.id}-mobile-card`} style={styles.mobileProgramCard}>
+              <div style={styles.mobileProgramHeader}>
+                <div>
+                  <h3 style={styles.mobileProgramTitle}>{program.name}</h3>
+                  <div style={styles.mobileProgramTag}>{program.shortLabel}</div>
                 </div>
-                <div style={styles.mobileAnswerList}>
-                  {visibleProgramsMobile.map((program, idx) => (
-                    <div
-                      key={`${row.key}-${program.id}-mobile-answer`}
-                      style={{
-                        ...styles.mobileAnswerRow,
-                        ...(idx === visibleProgramsMobile.length - 1 ? styles.mobileAnswerRowLast : {}),
-                      }}
-                    >
-                      <div style={styles.mobileAnswerProgram}>{program.name}</div>
-                      <div style={styles.mobileAnswerValue}>{renderMobileFieldValue(program, row)}</div>
+              </div>
+
+              <dl style={styles.mobileProgramFacts}>
+                {MOBILE_PRIMARY_FIELDS.map((field) => (
+                  <div key={`${program.id}-${field.key}`} style={styles.mobileProgramFactRow}>
+                    <dt style={styles.mobileProgramFactLabel}>{field.label}</dt>
+                    <dd style={styles.mobileProgramFactValue}>{program[field.key]}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <details style={styles.mobileProgramDetails}>
+                <summary style={styles.mobileProgramSummary}>More details</summary>
+                <dl style={styles.mobileProgramFacts}>
+                  {MOBILE_SECONDARY_FIELDS.map((field) => (
+                    <div key={`${program.id}-${field.key}-details`} style={styles.mobileProgramFactRow}>
+                      <dt style={styles.mobileProgramFactLabel}>{field.label}</dt>
+                      <dd style={styles.mobileProgramFactValue}>{program[field.key]}</dd>
                     </div>
                   ))}
-                </div>
-              </section>
-            ) : null
+                </dl>
+              </details>
+
+              <a href={program.ctaHref} style={styles.mobileProgramCta}>
+                {program.ctaLabel}
+              </a>
+            </article>
           ))}
           {visibleProgramsMobile.length === 0 ? (
             <div style={styles.mobileEmptyState}>
-              No programs match the current filters.
+              No programs match the current filters. Adjust your filters or add a different plan to compare.
             </div>
           ) : null}
         </div>
+
+        {mobileShowFullComparison && visibleProgramsMobile.length > 0 ? (
+          <>
+            <nav style={styles.mobileJumpNav} aria-label="Mobile comparison sections">
+              {givingComparisonMobileRows.map((row) => (
+                <a
+                  key={`mobile-jump-${row.key}`}
+                  href={`#mobile-comparison-${row.key}`}
+                  style={styles.mobileJumpChip}
+                >
+                  {row.label}
+                </a>
+              ))}
+            </nav>
+
+            <div style={styles.mobileSections} aria-label="Mobile charitable giving comparison">
+              {givingComparisonMobileRows.map((row) => (
+                <section
+                  key={`mobile-section-${row.key}`}
+                  id={`mobile-comparison-${row.key}`}
+                  style={styles.mobileSectionCard}
+                  aria-labelledby={`mobile-comparison-heading-${row.key}`}
+                >
+                  <div style={styles.mobileSectionHeader}>
+                    <h3 id={`mobile-comparison-heading-${row.key}`} style={styles.mobileSectionTitle}>
+                      {row.label}
+                    </h3>
+                  </div>
+                  <div style={styles.mobileAnswerList}>
+                    {visibleProgramsMobile.map((program, idx) => (
+                      <div
+                        key={`${row.key}-${program.id}-mobile-answer`}
+                        style={{
+                          ...styles.mobileAnswerRow,
+                          ...(idx === visibleProgramsMobile.length - 1 ? styles.mobileAnswerRowLast : {}),
+                        }}
+                      >
+                        <div style={styles.mobileAnswerProgram}>{program.name}</div>
+                        <div style={styles.mobileAnswerValue}>{renderMobileFieldValue(program, row)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </>
+        ) : null}
       </div>
 
       <p style={styles.disclaimer}>
@@ -553,33 +707,80 @@ const styles = {
     background: '#fff',
   },
   resultCount: {
-    fontSize: 14,
+    display: 'grid',
+    gap: 4,
+    marginBottom: 12,
+  },
+  resultCountTitle: {
+    fontSize: 15,
+    fontWeight: 800,
+    color: AGF_COLORS.slate,
+  },
+  resultCountMeta: {
+    fontSize: 13,
     color: AGF_COLORS.muted,
-    marginBottom: 10,
   },
   desktopSelectorCard: {
     display: 'grid',
-    gap: 10,
+    gap: 14,
     marginBottom: 14,
-    padding: 12,
+    padding: 16,
     border: `1px solid ${AGF_COLORS.border}`,
-    borderRadius: 12,
+    borderRadius: 16,
     background: '#fff',
+    boxShadow: '0 14px 32px rgba(17, 53, 75, 0.05)',
+  },
+  selectorCardHeader: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+    alignItems: 'flex-start',
   },
   desktopSelectorIntro: {
     display: 'grid',
     gap: 4,
+    maxWidth: 720,
+  },
+  desktopSelectorEyebrow: {
+    fontSize: 12,
+    fontWeight: 800,
+    color: AGF_COLORS.teal,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
   },
   desktopSelectorTitle: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: 800,
     color: AGF_COLORS.slate,
   },
   desktopSelectorHint: {
     margin: 0,
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 1.4,
     color: AGF_COLORS.muted,
+  },
+  desktopToggleBtn: {
+    border: `1px solid rgba(0, 173, 187, 0.24)`,
+    borderRadius: 999,
+    background: '#fff',
+    color: AGF_COLORS.teal,
+    fontSize: 13,
+    fontWeight: 800,
+    padding: '10px 14px',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  selectorSection: {
+    display: 'grid',
+    gap: 8,
+  },
+  selectorSectionTitle: {
+    fontSize: 13,
+    fontWeight: 800,
+    color: AGF_COLORS.slate,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
   },
   desktopSelectorGrid: {
     display: 'flex',
@@ -591,22 +792,35 @@ const styles = {
     background: '#fff',
     color: AGF_COLORS.slate,
     borderRadius: 999,
-    padding: '8px 12px',
+    padding: '9px 12px',
     fontSize: 13,
     fontWeight: 700,
     lineHeight: 1.3,
     cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
   },
   desktopSelectBtnActive: {
     border: `1px solid ${AGF_COLORS.teal}`,
     background: 'rgba(0,173,187,.08)',
     color: AGF_COLORS.teal,
   },
+  desktopChipDismiss: {
+    fontSize: 15,
+    lineHeight: 1,
+  },
+  selectorEmptyText: {
+    fontSize: 13,
+    color: AGF_COLORS.muted,
+    padding: '8px 2px',
+  },
   matrixOuter: {
     border: `1px solid ${AGF_COLORS.border}`,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
     background: '#fff',
+    boxShadow: '0 14px 32px rgba(17, 53, 75, 0.05)',
   },
   matrixScroll: {
     overflowX: 'auto',
@@ -669,8 +883,8 @@ const styles = {
   },
   programHeaderCard: {
     border: `1px solid ${AGF_COLORS.border}`,
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 14,
+    padding: 12,
     background: 'linear-gradient(180deg, #ffffff 0%, #f8fcfd 100%)',
   },
   programTitle: {
@@ -734,10 +948,30 @@ const styles = {
   },
   mobileCard: {
     border: `1px solid ${AGF_COLORS.border}`,
-    borderRadius: 12,
+    borderRadius: 16,
     background: '#fff',
-    padding: 12,
-    marginBottom: 10,
+    padding: 14,
+    marginBottom: 12,
+    boxShadow: '0 14px 32px rgba(17, 53, 75, 0.05)',
+  },
+  mobileSelectorTitle: {
+    marginBottom: 4,
+    fontSize: 19,
+    fontWeight: 800,
+    color: AGF_COLORS.slate,
+  },
+  mobileSelectorHint: {
+    margin: 0,
+    fontSize: 14,
+    lineHeight: 1.45,
+    color: AGF_COLORS.muted,
+  },
+  mobileSelectorMeta: {
+    marginTop: 10,
+    marginBottom: 12,
+    fontSize: 13,
+    color: AGF_COLORS.slate,
+    fontWeight: 700,
   },
   mobileSelectorGrid: {
     display: 'flex',
@@ -749,15 +983,114 @@ const styles = {
     background: '#fff',
     color: AGF_COLORS.slate,
     borderRadius: 999,
-    padding: '8px 10px',
+    padding: '9px 11px',
     fontSize: 13,
     cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
   },
   mobileSelectBtnActive: {
     border: `1px solid ${AGF_COLORS.teal}`,
     background: 'rgba(0,173,187,.08)',
     color: AGF_COLORS.teal,
     fontWeight: 700,
+  },
+  mobileToggleBtn: {
+    marginTop: 6,
+    border: `1px solid rgba(0, 173, 187, 0.24)`,
+    borderRadius: 999,
+    background: '#fff',
+    color: AGF_COLORS.teal,
+    fontSize: 13,
+    fontWeight: 800,
+    padding: '10px 14px',
+    cursor: 'pointer',
+    justifySelf: 'start',
+  },
+  mobileProgramGrid: {
+    display: 'grid',
+    gap: 12,
+    marginBottom: 12,
+  },
+  mobileProgramCard: {
+    border: `1px solid ${AGF_COLORS.border}`,
+    borderRadius: 18,
+    background: '#fff',
+    padding: 14,
+    boxShadow: '0 16px 34px rgba(17, 53, 75, 0.06)',
+  },
+  mobileProgramHeader: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 12,
+  },
+  mobileProgramTitle: {
+    margin: 0,
+    fontSize: 20,
+    lineHeight: 1.05,
+    fontWeight: 800,
+    color: AGF_COLORS.slate,
+  },
+  mobileProgramTag: {
+    display: 'inline-flex',
+    marginTop: 6,
+    padding: '5px 9px',
+    borderRadius: 999,
+    background: 'rgba(0,173,187,.08)',
+    color: AGF_COLORS.teal,
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+  },
+  mobileProgramFacts: {
+    display: 'grid',
+    gap: 10,
+    margin: 0,
+  },
+  mobileProgramFactRow: {
+    display: 'grid',
+    gap: 4,
+    paddingBottom: 10,
+    borderBottom: `1px solid ${AGF_COLORS.border}`,
+  },
+  mobileProgramFactLabel: {
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+    color: AGF_COLORS.muted,
+  },
+  mobileProgramFactValue: {
+    margin: 0,
+    fontSize: 14,
+    lineHeight: 1.45,
+    color: '#1f2937',
+  },
+  mobileProgramDetails: {
+    marginTop: 12,
+  },
+  mobileProgramSummary: {
+    cursor: 'pointer',
+    fontSize: 13,
+    fontWeight: 800,
+    color: AGF_COLORS.teal,
+  },
+  mobileProgramCta: {
+    display: 'inline-flex',
+    marginTop: 14,
+    textDecoration: 'none',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '10px 14px',
+    borderRadius: 10,
+    background: AGF_COLORS.teal,
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: 13,
   },
   mobileJumpNav: {
     display: 'flex',
