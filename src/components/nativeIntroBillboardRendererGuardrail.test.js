@@ -42,7 +42,9 @@ describe('native intro and billboard renderer guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.service-native-intro {');
-    expect(cssSource).toContain('padding: clamp(3.1rem, 7vw, 5.3rem) 0 clamp(3.65rem, 8.2vw, 6.2rem);');
+    expect(cssSource).toContain('--service-native-intro-padding-top: clamp(3.55rem, 8vw, 5.95rem);');
+    expect(cssSource).toContain('--service-native-intro-padding-bottom: clamp(4.1rem, 9.2vw, 6.95rem);');
+    expect(cssSource).toContain('padding: var(--service-native-intro-padding-top) 0 var(--service-native-intro-padding-bottom);');
     expect(cssSource).toContain('.native-info-page--impact .service-native-intro {');
     expect(cssSource).not.toContain('.native-info-page--impact .service-native-intro {\n  background: linear-gradient(145deg, #f3f0eb 0%, #e6e1d7 100%);\n  padding-bottom: clamp(2.2rem, 5vw, 3.8rem);\n}');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro .service-native-intro-copy > h2.is-super-grey,');
