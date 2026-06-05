@@ -16,6 +16,7 @@ describe('certificate rates sheet layout guardrail', () => {
     const cssSource = readSource('./CertificateRatesSheet.css');
     const serviceNativeCssSource = readSource('../styles/service-native.css');
     const appCssSource = readSource('../styles.css');
+    const tokenCssSource = readSource('../styles/tokens.css');
 
     expect(componentSource).toContain('data-rates-layout="bands-and-cards"');
     expect(componentSource).toContain('data-rates-desktop="bands"');
@@ -61,6 +62,8 @@ describe('certificate rates sheet layout guardrail', () => {
     expect(cssSource).toContain('.certificate-rates-sheet__mobile {');
     expect(cssSource).toContain('.certificate-rates-sheet__term-compare {');
     expect(cssSource).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(cssSource).toContain('.certificate-rates-sheet__term-card {');
+    expect(cssSource).toContain('width: 100%;');
     expect(cssSource).toContain('.certificate-rates-sheet__term-metric .certificate-rates-sheet__value.is-mobile-rate {');
     expect(cssSource).toContain('@media (max-width: 720px) {');
     expect(cssSource).toContain('.certificate-rates-sheet__desktop {');
@@ -70,6 +73,8 @@ describe('certificate rates sheet layout guardrail', () => {
     expect(cssSource).toContain('@media (max-width: 340px) {');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
     expect(componentSource).not.toContain('Not FDIC');
+    expect(tokenCssSource).toContain('--ag-panel-mobile-gutter: clamp(1rem, 4.4vw, 1.125rem);');
+    expect(appCssSource).toContain('--ag-panel-effective-gutter: var(--ag-panel-mobile-gutter);');
     expect(serviceNativeCssSource).not.toContain('certificate-rates-sheet__band-title');
     expect(appCssSource).not.toContain('certificate-rates-sheet__band-title');
   });

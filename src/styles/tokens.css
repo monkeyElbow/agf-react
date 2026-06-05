@@ -11,6 +11,8 @@
   --ag-content-max: var(--ag-panel-content-max);
   --ag-panel-wide-max: 1480px;
   --ag-panel-gutter: clamp(2.5rem, 9vw, 8rem);
+  --ag-panel-mobile-gutter: clamp(1rem, 4.4vw, 1.125rem);
+  --ag-panel-effective-gutter: var(--ag-panel-gutter);
   --ag-section-content-max: var(--ag-panel-content-max);
   --ag-section-wide-max: var(--ag-panel-wide-max);
   --ag-form-content-max: 760px;

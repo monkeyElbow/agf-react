@@ -2350,12 +2350,12 @@ button.action-btn {
 }
 
 .ag-panel-rail {
-  width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-gutter) * 2)));
+  width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-effective-gutter, var(--ag-panel-gutter)) * 2)));
   margin-inline: auto;
 }
 
 .ag-panel-rail-wide {
-  width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-gutter) * 2)));
+  width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-effective-gutter, var(--ag-panel-gutter)) * 2)));
   margin-inline: auto;
 }
 
@@ -2375,9 +2375,15 @@ button.action-btn {
 }
 
 .admin-content-width-overlay-center {
-  flex: 0 0 min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-gutter) * 2)));
-  width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-gutter) * 2)));
+  flex: 0 0 min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-effective-gutter, var(--ag-panel-gutter)) * 2)));
+  width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-effective-gutter, var(--ag-panel-gutter)) * 2)));
   border-inline: 1px dashed rgba(16, 90, 174, 0.65);
+}
+
+@media (max-width: 860px) {
+  :is(.service-native-page, .rates-page, .native-info-page) {
+    --ag-panel-effective-gutter: var(--ag-panel-mobile-gutter);
+  }
 }
 
 

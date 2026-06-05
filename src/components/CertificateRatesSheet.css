@@ -162,7 +162,7 @@
 }
 
 .certificate-rates-sheet__mobile-toolbar {
-  width: min(100%, 22rem);
+  width: 100%;
   margin: 0 auto 0.72rem;
 }
 
@@ -208,7 +208,7 @@
 }
 
 .certificate-rates-sheet__term-card {
-  width: min(100%, 22rem);
+  width: 100%;
   margin-inline: auto;
   border: 1px solid rgba(196, 190, 182, 0.6);
   border-radius: 17px;
@@ -320,7 +320,7 @@
 @media (max-width: 420px) {
   .certificate-rates-sheet__mobile-toolbar,
   .certificate-rates-sheet__term-card {
-    width: min(100%, 21.5rem);
+    width: 100%;
   }
 
   .certificate-rates-sheet__term-card {

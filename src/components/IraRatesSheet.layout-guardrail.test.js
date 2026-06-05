@@ -30,7 +30,7 @@ describe('ira rates sheet layout guardrail', () => {
     expect(cssSource).toContain('.ira-rates-sheet__card-grid {');
     expect(cssSource).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
     expect(cssSource).toContain('.ira-rates-sheet__card {');
-    expect(cssSource).toContain('width: min(100%, 22rem);');
+    expect(cssSource).toContain('width: 100%;');
     expect(cssSource).toContain('@media (max-width: 720px) {');
     expect(cssSource).toContain('.ira-rates-sheet__mobile {');
     expect(cssSource).toContain('display: block;');
