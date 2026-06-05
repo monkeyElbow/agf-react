@@ -681,6 +681,7 @@ describe('dynamic block control wiring', () => {
       contentBlockBlueprintsByPath['/'].find((entry) => entry?.id === 'hero' && entry?.mode === 'dynamic'),
     );
     const onSettingChange = vi.fn();
+    const expectedSelectedText = String(block?.settings?.line1Text || '').slice(0, 5);
 
     render(<HeroBlockEditor block={block} onSettingChange={onSettingChange} />);
 
@@ -692,7 +693,7 @@ describe('dynamic block control wiring', () => {
 
     expect(onSettingChange).toHaveBeenCalledWith(
       'line1HighlightsJson',
-      expect.stringContaining('"start":0,"end":5,"className":"is-melon","text":"Today"'),
+      expect.stringContaining(`"start":0,"end":5,"className":"is-melon","text":"${expectedSelectedText}"`),
     );
   });
 
@@ -701,6 +702,7 @@ describe('dynamic block control wiring', () => {
       contentBlockBlueprintsByPath['/'].find((entry) => entry?.id === 'hero' && entry?.mode === 'dynamic'),
     );
     const onSettingChange = vi.fn();
+    const expectedSelectedText = String(block?.settings?.line1Text || '').slice(0, 5);
 
     render(<HeroBlockEditor block={block} onSettingChange={onSettingChange} />);
 
@@ -716,7 +718,7 @@ describe('dynamic block control wiring', () => {
 
     expect(onSettingChange).toHaveBeenCalledWith(
       'line1HighlightsJson',
-      expect.stringContaining('"start":0,"end":5,"className":"is-mango","text":"Today"'),
+      expect.stringContaining(`"start":0,"end":5,"className":"is-mango","text":"${expectedSelectedText}"`),
     );
     expect(onSettingChange).not.toHaveBeenCalledWith('line1ClassName', 'home-native-eyebrow is-mango');
   });

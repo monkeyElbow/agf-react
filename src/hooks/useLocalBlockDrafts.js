@@ -72,7 +72,6 @@ export default function useLocalBlockDrafts({
   const commitTimersRef = useRef(new Map());
   const claimedBlockIdsRef = useRef(new Set());
   const flushHandlerIdRef = useRef(`local-draft:${Math.random().toString(36).slice(2, 10)}`);
-  const frameSyncIdRef = useRef(0);
 
   useEffect(() => {
     draftsByBlockIdRef.current = draftsByBlockId;
@@ -94,23 +93,6 @@ export default function useLocalBlockDrafts({
     setDraftsByBlockId(draftsByBlockIdRef.current);
   }, []);
 
-  const cancelFrameSync = useCallback(() => {
-    if (frameSyncIdRef.current && typeof window !== 'undefined') {
-      window.cancelAnimationFrame(frameSyncIdRef.current);
-    }
-    frameSyncIdRef.current = 0;
-  }, []);
-
-  const scheduleFrameSync = useCallback(() => {
-    if (frameSyncIdRef.current || typeof window === 'undefined') {
-      return;
-    }
-    frameSyncIdRef.current = window.requestAnimationFrame(() => {
-      frameSyncIdRef.current = 0;
-      syncDraftStateFromRef();
-    });
-  }, [syncDraftStateFromRef]);
-
   const commitDraftPatch = useCallback((blockId) => {
     const normalizedBlockId = String(blockId || '').trim();
     if (!normalizedPath || !normalizedBlockId) {
@@ -126,7 +108,6 @@ export default function useLocalBlockDrafts({
   }, [clearCommitTimer, commitBlockSettingsPatch, normalizedPath]);
 
   const flushAllDrafts = useCallback(() => {
-    cancelFrameSync();
     syncDraftStateFromRef();
     const draftEntries = draftsByBlockIdRef.current;
     if (!draftEntries || typeof draftEntries !== 'object') {
@@ -139,7 +120,7 @@ export default function useLocalBlockDrafts({
       }
     });
     return didFlushAny;
-  }, [cancelFrameSync, commitDraftPatch, syncDraftStateFromRef]);
+  }, [commitDraftPatch, syncDraftStateFromRef]);
 
   const stageLocalBlockSettings = useCallback((blockId, settingsPatch) => {
     const normalizedBlockId = String(blockId || '').trim();
@@ -170,7 +151,7 @@ export default function useLocalBlockDrafts({
       ...previousDrafts,
       [normalizedBlockId]: nextDraft,
     };
-    scheduleFrameSync();
+    syncDraftStateFromRef();
 
     clearCommitTimer(normalizedBlockId);
     if (typeof window !== 'undefined') {
@@ -179,7 +160,7 @@ export default function useLocalBlockDrafts({
       }, LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
       commitTimersRef.current.set(normalizedBlockId, timerId);
     }
-  }, [claimBufferedBlockEdit, clearCommitTimer, commitDraftPatch, normalizedPath, scheduleFrameSync]);
+  }, [claimBufferedBlockEdit, clearCommitTimer, commitDraftPatch, normalizedPath, syncDraftStateFromRef]);
 
   const stageLocalBlockSetting = useCallback((blockId, settingKey, settingValue) => {
     const normalizedSettingKey = String(settingKey || '').trim();
@@ -247,14 +228,13 @@ export default function useLocalBlockDrafts({
 
   useEffect(() => () => {
     flushAllDrafts();
-    cancelFrameSync();
     commitTimersRef.current.forEach((timerId) => {
       if (typeof window !== 'undefined' && timerId) {
         window.clearTimeout(timerId);
       }
     });
     commitTimersRef.current.clear();
-  }, [cancelFrameSync, flushAllDrafts]);
+  }, [flushAllDrafts]);
 
   useEffect(() => {
     claimedBlockIdsRef.current.clear();

@@ -4113,33 +4113,47 @@ function toComparableAuthoringState(rawState) {
   };
 }
 
+function buildComparableAuthoringPageSnapshot(state, pathname) {
+  const normalizedPath = String(pathname || '').trim();
+  if (!normalizedPath) {
+    return null;
+  }
+  const comparableState = state && typeof state === 'object'
+    ? state
+    : toComparableAuthoringState(state);
+  return {
+    page: comparableState.pageHierarchy?.[normalizedPath] || null,
+    blocks: comparableState.blocksByPath?.[normalizedPath] || [],
+    aliases: Object.fromEntries(
+      Object.entries(comparableState.pathAliases || {}).filter(([fromPath, toPath]) => (
+        String(fromPath || '').trim() === normalizedPath || String(toPath || '').trim() === normalizedPath
+      )),
+    ),
+  };
+}
+
+function compareComparableAuthoringPageSnapshot(leftComparableState, rightComparableState, pathname) {
+  const leftSnapshot = buildComparableAuthoringPageSnapshot(leftComparableState, pathname);
+  const rightSnapshot = buildComparableAuthoringPageSnapshot(rightComparableState, pathname);
+  if (!leftSnapshot && !rightSnapshot) {
+    return true;
+  }
+  return JSON.stringify(leftSnapshot) === JSON.stringify(rightSnapshot);
+}
+
 function compareAuthoringPageSnapshot(leftState, rightState, pathname) {
   const normalizedPath = String(pathname || '').trim();
   if (!normalizedPath) {
     return true;
   }
-  const left = toComparableAuthoringState(leftState);
-  const right = toComparableAuthoringState(rightState);
-  return JSON.stringify({
-    page: left.pageHierarchy?.[normalizedPath] || null,
-    blocks: left.blocksByPath?.[normalizedPath] || [],
-    aliases: Object.fromEntries(
-      Object.entries(left.pathAliases || {}).filter(([fromPath, toPath]) => (
-        String(fromPath || '').trim() === normalizedPath || String(toPath || '').trim() === normalizedPath
-      )),
-    ),
-  }) === JSON.stringify({
-    page: right.pageHierarchy?.[normalizedPath] || null,
-    blocks: right.blocksByPath?.[normalizedPath] || [],
-    aliases: Object.fromEntries(
-      Object.entries(right.pathAliases || {}).filter(([fromPath, toPath]) => (
-        String(fromPath || '').trim() === normalizedPath || String(toPath || '').trim() === normalizedPath
-      )),
-    ),
-  });
+  return compareComparableAuthoringPageSnapshot(
+    toComparableAuthoringState(leftState),
+    toComparableAuthoringState(rightState),
+    normalizedPath,
+  );
 }
 
-function summarizeAuthoringPageChanges(currentState, persistedState, pathname) {
+function summarizeComparableAuthoringPageChanges(current, persisted, pathname) {
   const normalizedPath = String(pathname || '').trim();
   if (!normalizedPath) {
     return {
@@ -4151,8 +4165,6 @@ function summarizeAuthoringPageChanges(currentState, persistedState, pathname) {
     };
   }
 
-  const current = toComparableAuthoringState(currentState);
-  const persisted = toComparableAuthoringState(persistedState);
   const currentBlocks = Array.isArray(current.blocksByPath?.[normalizedPath])
     ? normalizePageBlocksState(current.blocksByPath[normalizedPath])
     : [];
@@ -4199,16 +4211,39 @@ function summarizeAuthoringPageChanges(currentState, persistedState, pathname) {
   };
 }
 
-function collectDirtyAuthoringPaths(currentState, persistedState) {
-  const current = toComparableAuthoringState(currentState);
-  const persisted = toComparableAuthoringState(persistedState);
+function summarizeAuthoringPageChanges(currentState, persistedState, pathname) {
+  const normalizedPath = String(pathname || '').trim();
+  if (!normalizedPath) {
+    return {
+      changedBlockIds: [],
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+  }
+
+  return summarizeComparableAuthoringPageChanges(
+    toComparableAuthoringState(currentState),
+    toComparableAuthoringState(persistedState),
+    normalizedPath,
+  );
+}
+
+function collectDirtyComparableAuthoringPaths(current, persisted) {
   const allPaths = new Set([
     ...Object.keys(current.pageHierarchy || {}),
     ...Object.keys(current.blocksByPath || {}),
     ...Object.keys(persisted.pageHierarchy || {}),
     ...Object.keys(persisted.blocksByPath || {}),
   ]);
-  return [...allPaths].filter((pathname) => !compareAuthoringPageSnapshot(current, persisted, pathname));
+  return [...allPaths].filter((pathname) => !compareComparableAuthoringPageSnapshot(current, persisted, pathname));
+}
+
+function collectDirtyAuthoringPaths(currentState, persistedState) {
+  const current = toComparableAuthoringState(currentState);
+  const persisted = toComparableAuthoringState(persistedState);
+  return collectDirtyComparableAuthoringPaths(current, persisted);
 }
 
 function summarizePageWorkflowActivity(collaborationByPath, pathname, actor) {
@@ -4315,9 +4350,11 @@ export function ContentAdminProvider({ children, initialState = null }) {
       refreshSharedSyncState({ lastAppliedAt: nextUpdatedAt });
     }
     const normalizedSnapshotState = normalizeStoredConfig(nextState);
-    const hasDirtyAuthoringState = collectDirtyAuthoringPaths(
-      stateRef.current,
-      persistedSharedAuthoringStateRef.current,
+    const currentComparableAuthoringState = toComparableAuthoringState(stateRef.current);
+    const persistedComparableAuthoringState = persistedSharedAuthoringStateRef.current;
+    const hasDirtyAuthoringState = collectDirtyComparableAuthoringPaths(
+      currentComparableAuthoringState,
+      persistedComparableAuthoringState,
     ).length > 0;
     if (mergeCollaborationOnlyWhenDirty && hasDirtyAuthoringState) {
       const mergedState = mergeSharedCollaborationSnapshot(stateRef.current, normalizedSnapshotState);
@@ -4328,9 +4365,13 @@ export function ContentAdminProvider({ children, initialState = null }) {
       setState(mergedState);
       return true;
     }
-    const changedAuthoringPaths = collectDirtyAuthoringPaths(stateRef.current, normalizedSnapshotState);
+    const normalizedSnapshotComparableAuthoringState = toComparableAuthoringState(normalizedSnapshotState);
+    const changedAuthoringPaths = collectDirtyComparableAuthoringPaths(
+      currentComparableAuthoringState,
+      normalizedSnapshotComparableAuthoringState,
+    );
     const changedCollaborationPaths = collectChangedCollaborationPaths(stateRef.current, normalizedSnapshotState);
-    persistedSharedAuthoringStateRef.current = toComparableAuthoringState(normalizedSnapshotState);
+    persistedSharedAuthoringStateRef.current = normalizedSnapshotComparableAuthoringState;
     if (!changedAuthoringPaths.length && !changedCollaborationPaths.length) {
       return false;
     }
@@ -4427,23 +4468,26 @@ export function ContentAdminProvider({ children, initialState = null }) {
     }
 
     const normalizedSnapshotState = normalizeStoredConfig(nextState);
+    const currentComparableAuthoringState = toComparableAuthoringState(stateRef.current);
+    const normalizedSnapshotComparableAuthoringState = toComparableAuthoringState(normalizedSnapshotState);
     persistedSharedAuthoringStateRef.current = {
       ...persistedSharedAuthoringStateRef.current,
       pageHierarchy: {
         ...persistedSharedAuthoringStateRef.current.pageHierarchy,
-        [normalizedPath]: normalizedSnapshotState.pageHierarchy?.[normalizedPath] || null,
+        [normalizedPath]: normalizedSnapshotComparableAuthoringState.pageHierarchy?.[normalizedPath] || null,
       },
       blocksByPath: {
         ...persistedSharedAuthoringStateRef.current.blocksByPath,
-        [normalizedPath]: normalizedSnapshotState.blocksByPath?.[normalizedPath] || [],
+        [normalizedPath]: normalizedSnapshotComparableAuthoringState.blocksByPath?.[normalizedPath] || [],
       },
       pathAliases: {
         ...persistedSharedAuthoringStateRef.current.pathAliases,
+        ...normalizedSnapshotComparableAuthoringState.pathAliases,
       },
     };
-    const shouldApplyAuthoringPath = !compareAuthoringPageSnapshot(
-      stateRef.current,
-      normalizedSnapshotState,
+    const shouldApplyAuthoringPath = !compareComparableAuthoringPageSnapshot(
+      currentComparableAuthoringState,
+      normalizedSnapshotComparableAuthoringState,
       normalizedPath,
     );
     const shouldApplyCollaborationPath = collectChangedCollaborationPaths(stateRef.current, normalizedSnapshotState)
@@ -4624,8 +4668,11 @@ export function ContentAdminProvider({ children, initialState = null }) {
     const authoringStateForDirtyChecks = sharedAuthorityEnabled
       ? applyBufferedBlockSettingEditsToState(stateRef.current, bufferedBlockSettingEditsRef.current)
       : stateRef.current;
+    const currentComparableAuthoringState = toComparableAuthoringState(authoringStateForDirtyChecks);
+    const persistedComparableAuthoringState = persistedSharedAuthoringStateRef.current;
+    const publishedComparableAuthoringState = publishedSharedAuthoringStateRef.current;
     const dirtyPaths = sharedAuthorityEnabled
-      ? collectDirtyAuthoringPaths(authoringStateForDirtyChecks, persistedSharedAuthoringStateRef.current)
+      ? collectDirtyComparableAuthoringPaths(currentComparableAuthoringState, persistedComparableAuthoringState)
       : [];
     const dirtyPathSet = new Set(dirtyPaths);
 
@@ -6035,18 +6082,14 @@ export function ContentAdminProvider({ children, initialState = null }) {
       },
       dirtyPaths,
       isPageDirty: (pathname) => dirtyPathSet.has(String(pathname || '').trim()),
-      getPageChangeSummary: (pathname) => summarizeAuthoringPageChanges(
-        sharedAuthorityEnabled
-          ? applyBufferedBlockSettingEditsToState(stateRef.current, bufferedBlockSettingEditsRef.current)
-          : stateRef.current,
-        persistedSharedAuthoringStateRef.current,
+      getPageChangeSummary: (pathname) => summarizeComparableAuthoringPageChanges(
+        currentComparableAuthoringState,
+        persistedComparableAuthoringState,
         pathname,
       ),
-      getPagePublishSummary: (pathname) => summarizeAuthoringPageChanges(
-        sharedAuthorityEnabled
-          ? applyBufferedBlockSettingEditsToState(stateRef.current, bufferedBlockSettingEditsRef.current)
-          : stateRef.current,
-        publishedSharedAuthoringStateRef.current,
+      getPagePublishSummary: (pathname) => summarizeComparableAuthoringPageChanges(
+        currentComparableAuthoringState,
+        publishedComparableAuthoringState,
         pathname,
       ),
       getPageWorkflowActivity: (pathname) => summarizePageWorkflowActivity(
