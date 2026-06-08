@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SiteLayout from './SiteLayout';
 
@@ -59,6 +59,26 @@ function renderLayout() {
   );
 }
 
+function RouteChangeButton({ to = '/rates' }) {
+  const navigate = useNavigate();
+  return (
+    <button type="button" onClick={() => navigate(to)}>
+      Route change
+    </button>
+  );
+}
+
+function renderLayoutWithRouteChangeButton() {
+  return render(
+    <MemoryRouter initialEntries={[mockPathname]}>
+      <SiteLayout>
+        <RouteChangeButton />
+        <div>Page content</div>
+      </SiteLayout>
+    </MemoryRouter>,
+  );
+}
+
 describe('SiteLayout mobile nav drawer', () => {
   beforeEach(() => {
     mockMatchMedia(false);
@@ -81,6 +101,62 @@ describe('SiteLayout mobile nav drawer', () => {
 
     expect(screen.getByRole('button', { name: 'Collapse Services menu' }).getAttribute('aria-expanded')).toBe('true');
     expect(document.getElementById('site-nav-dropdown-services')).toBeTruthy();
+  });
+
+  it('closes a desktop dropdown after clicking a submenu link', () => {
+    mockMatchMedia(true);
+    mockPathname = '/services';
+
+    renderLayout();
+
+    const servicesToggle = screen.getByRole('button', { name: 'Expand Services menu' });
+    fireEvent.click(servicesToggle);
+    expect(screen.getByRole('button', { name: 'Collapse Services menu' }).getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.click(screen.getByRole('link', { name: 'Investments' }));
+
+    expect(screen.getByRole('button', { name: 'Expand Services menu' }).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('closes an open desktop dropdown when the route changes', () => {
+    mockMatchMedia(true);
+    mockPathname = '/services';
+
+    renderLayoutWithRouteChangeButton();
+
+    const servicesToggle = screen.getByRole('button', { name: 'Expand Services menu' });
+    fireEvent.click(servicesToggle);
+    expect(screen.getByRole('button', { name: 'Collapse Services menu' }).getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Route change' }));
+
+    expect(screen.getByRole('button', { name: 'Expand Services menu' }).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('resets the mobile drawer and submenu state when the route changes', () => {
+    renderLayoutWithRouteChangeButton();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Expand Services menu' }));
+
+    expect(screen.getByRole('button', { name: 'Collapse Services menu' }).getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Route change' }));
+
+    expect(screen.getByRole('button', { name: 'Open menu' }).getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('button', { name: 'Collapse Services menu' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(screen.getByRole('button', { name: 'Expand Services menu' }).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('keeps the nav labels and routes unchanged in the shared site map', () => {
+    const siteMapSource = readSource('../data/siteMap.js');
+
+    expect(siteMapSource).toContain("title: 'Services'");
+    expect(siteMapSource).toContain("{ path: '/services/investments', label: 'Investments' }");
+    expect(siteMapSource).toContain("{ path: '/rates', label: 'Rates' }");
+    expect(siteMapSource).toContain("title: 'Resources'");
   });
 
   it('keeps the mobile drawer on a flat integrated row system instead of beveled chevron pills and glass submenu cards', () => {

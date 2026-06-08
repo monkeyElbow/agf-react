@@ -127,6 +127,11 @@ export default function SiteLayout({ children }) {
   const brandRef = useRef(null);
   const navLinksRef = useRef(null);
 
+  const closeNavMenus = () => {
+    setMenuOpen(false);
+    setOpenDropdown(null);
+  };
+
   const resolveManagedNavPath = (pathRef, fallback = '/') => {
     const resolved = resolveManagedPathFromRef(pathRef, pathRef);
     return resolved || fallback;
@@ -220,8 +225,7 @@ export default function SiteLayout({ children }) {
   }, [location.pathname]);
 
   useEffect(() => {
-    setMenuOpen(false);
-    setOpenDropdown(null);
+    closeNavMenus();
   }, [location.pathname]);
 
   useEffect(() => {
@@ -416,7 +420,25 @@ export default function SiteLayout({ children }) {
   }
 
   const handleNavItemSelect = () => {
-    setMenuOpen(false);
+    closeNavMenus();
+  };
+
+  const handleGroupFocus = (title) => {
+    if (!isDesktop) {
+      return;
+    }
+    setOpenDropdown(title);
+  };
+
+  const handleGroupBlur = (event) => {
+    if (!isDesktop) {
+      return;
+    }
+    const current = event.currentTarget;
+    const related = event.relatedTarget;
+    if (related instanceof Node && current.contains(related)) {
+      return;
+    }
     setOpenDropdown(null);
   };
 
@@ -460,7 +482,20 @@ export default function SiteLayout({ children }) {
       }}
     >
       <>
-      <nav ref={navRef} className={`site-nav${forceCompactNav ? ' is-force-mobile' : ''}${isFrontHudRevealing ? ' is-front-hud-revealing' : ''}`} aria-label="Main navigation">
+      <nav
+        ref={navRef}
+        className={`site-nav${forceCompactNav ? ' is-force-mobile' : ''}${isFrontHudRevealing ? ' is-front-hud-revealing' : ''}`}
+        aria-label="Main navigation"
+        onKeyDown={(event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          if (!menuOpen && !openDropdown) {
+            return;
+          }
+          closeNavMenus();
+        }}
+      >
         <div ref={navInnerRef} className="site-nav-inner">
           <Link ref={brandRef} to={homePath} className="site-brand" aria-label="AGFinancial Home">
             <AnimatedBrandLogo />
@@ -499,6 +534,8 @@ export default function SiteLayout({ children }) {
                       }
                     }}
                     onMouseLeave={handleGroupMouseLeave}
+                    onFocusCapture={() => handleGroupFocus(section.title)}
+                    onBlurCapture={handleGroupBlur}
                   >
                     <div className="site-nav-group-head">
                       <button
@@ -582,6 +619,8 @@ export default function SiteLayout({ children }) {
                     }
                   }}
                   onMouseLeave={handleGroupMouseLeave}
+                  onFocusCapture={() => handleGroupFocus('Admin')}
+                  onBlurCapture={handleGroupBlur}
                 >
                   <div className="site-nav-group-head">
                     <button

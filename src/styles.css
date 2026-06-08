@@ -815,8 +815,6 @@ button.action-btn {
     margin-right: 0;
   }
 
-  .site-nav-group:hover .site-nav-dropdown,
-  .site-nav-group:focus-within .site-nav-dropdown,
   .site-nav-group.is-open .site-nav-dropdown {
     opacity: 1;
     transform: translateY(0);
