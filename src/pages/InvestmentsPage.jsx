@@ -2397,12 +2397,11 @@ export default function InvestmentsPage() {
                   <div>
                     <h3 id="ladder-preview-title">Your ladder at a glance</h3>
                     <p>
-                      Preview how {ladderPreview.initialRows.length} staggered certificate{ladderPreview.initialRows.length === 1 ? '' : 's'}
-                      {' '}
-                      can create a steady maturity rhythm.
+                      All {ladderPreview.initialRows.length} certificate{ladderPreview.initialRows.length === 1 ? '' : 's'} start today,
+                      with staggered maturity years.
                     </p>
                   </div>
-                  <span className="investments-native-ladder-badge">Strategy preview</span>
+                  <span className="investments-native-ladder-badge">Initial setup</span>
                 </div>
 
                 <div className="investments-native-ladder-summary-strip">
@@ -2416,19 +2415,22 @@ export default function InvestmentsPage() {
 
                 <p className="investments-native-ladder-preview-copy">
                   {ladderInput.reinvestMode === 'reinvest_longest'
-                    ? `Start with ${ladderPreview.initialRows.length} staggered certificates, then roll each maturity into a new ${ladderYears}-year term.`
-                    : `Start with ${ladderPreview.initialRows.length} staggered certificates, then keep each maturity available as cash.`}
+                    ? `Start with equal investments across 1-year through ${ladderYears}-year certificates. As each matures, it can roll into a new ${ladderYears}-year certificate.`
+                    : `Start with equal investments across 1-year through ${ladderYears}-year certificates. As each matures, keep that cash available instead of rolling into a new ${ladderYears}-year certificate.`}
+                </p>
+                <p className="investments-native-ladder-preview-note">
+                  This view shows the starting ladder. Open the timeline to see how maturities roll forward.
                 </p>
 
-                <div className="investments-native-ladder-mini-visual" aria-label="Compact ladder preview">
+                <div className="investments-native-ladder-mini-visual" aria-label="Initial ladder setup">
+                  <p className="investments-native-ladder-mini-heading">Initial ladder setup</p>
                   <div
                     className="investments-native-ladder-mini-scale"
                     style={{ gridTemplateColumns: `58px repeat(${ladderYears}, minmax(0, 1fr))` }}
-                    aria-hidden="true"
                   >
-                    <span />
+                    <span data-ladder-mini-axis-label>Start</span>
                     {Array.from({ length: ladderYears }, (_, index) => index + 1).map((year) => (
-                      <span key={`mini-year-${year}`}>Year {year}</span>
+                      <span key={`mini-year-${year}`} data-ladder-mini-axis-year={year}>Year {year}</span>
                     ))}
                   </div>
 
@@ -2439,7 +2441,7 @@ export default function InvestmentsPage() {
                       const initialMarker = row.markers.find((marker) => marker.year <= safeHorizon);
 
                       return (
-                        <article key={`mini-row-${row.laneId}`} className="investments-native-ladder-rung-row is-mini">
+                        <article key={`mini-row-${row.laneId}`} className="investments-native-ladder-rung-row is-mini" data-ladder-mini-row={row.originTermYears}>
                           <div className="investments-native-ladder-rung-meta is-mini">
                             <strong>{row.originTermYears}-Year</strong>
                           </div>
@@ -2455,6 +2457,7 @@ export default function InvestmentsPage() {
                                 <div
                                   key={`mini-bar-${bar.id}`}
                                   className="investments-native-ladder-rung-bar"
+                                  data-ladder-mini-bar={row.originTermYears}
                                   style={{
                                     left: `${leftPct}%`,
                                     width: `${widthPct}%`,
@@ -2466,6 +2469,8 @@ export default function InvestmentsPage() {
                               <span
                                 className="investments-native-ladder-rung-marker"
                                 style={{ left: `${(initialMarker.year / safeHorizon) * 100}%` }}
+                                data-ladder-mini-maturity-marker={initialMarker.year}
+                                aria-label={`Matures in Year ${initialMarker.year}`}
                               >
                                 <span className="investments-native-ladder-rung-dot" />
                               </span>
@@ -2478,7 +2483,7 @@ export default function InvestmentsPage() {
                 </div>
 
                 <details className="investments-native-ladder-timeline-details">
-                  <summary className="investments-native-ladder-advanced-summary">View ladder timeline</summary>
+                  <summary className="investments-native-ladder-advanced-summary">View ongoing rollover timeline</summary>
                   <p className="investments-native-ladder-detail-intro">{ladderBuildSteadyCopy}</p>
                   <div className="investments-native-ladder-legend" aria-label="Ladder legend">
                     <span><i className="is-bar" aria-hidden="true" />Active certificate term</span>

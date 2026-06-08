@@ -50,6 +50,13 @@ describe('investments page review polish guardrails', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(pageSource).toContain('data-ladder-intro');
+    expect(pageSource).toContain('Initial setup');
+    expect(pageSource).toContain('Initial ladder setup');
+    expect(pageSource).toContain('data-ladder-mini-axis-label');
+    expect(pageSource).toContain('data-ladder-mini-maturity-marker');
+    expect(pageSource).toContain('Start with equal investments across 1-year through');
+    expect(pageSource).toContain('This view shows the starting ladder. Open the timeline to see how maturities roll forward.');
+    expect(pageSource).toContain('View ongoing rollover timeline');
     expect(pageSource).toContain('className="investments-native-ladder-table-shell"');
     expect(pageSource).toContain('className="investments-native-ladder-mobile-sheet"');
     expect(pageSource).not.toContain('investments-native-ladder-process-line');
@@ -58,6 +65,8 @@ describe('investments page review polish guardrails', () => {
     expect(cssSource).toContain('.investments-native-ladder-result-sheet::before {');
     expect(cssSource).toContain('.investments-native-ladder-table-shell {');
     expect(cssSource).toContain('.investments-native-ladder-mobile-sheet {');
+    expect(cssSource).toContain('.investments-native-ladder-mini-heading {');
+    expect(cssSource).toContain('.investments-native-ladder-preview-note {');
     expect(cssSource).toContain('.investments-native-ladder-status.is-cash {');
   });
 });
