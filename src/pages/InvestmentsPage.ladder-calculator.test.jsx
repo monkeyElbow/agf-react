@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import InvestmentsPage, { simulateLadderSchedule } from './InvestmentsPage';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -100,6 +100,10 @@ vi.mock('../context/ContentAdminContext', async () => {
 });
 
 describe('investments ladder calculator', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeEach(() => {
     window.scrollTo = vi.fn();
     window.requestAnimationFrame = vi.fn((callback) => {
@@ -117,6 +121,9 @@ describe('investments ladder calculator', () => {
       removeListener: vi.fn(),
       dispatchEvent: vi.fn(),
     }));
+    global.URL.createObjectURL = vi.fn(() => 'blob:ladder-preview');
+    global.URL.revokeObjectURL = vi.fn();
+    HTMLAnchorElement.prototype.click = vi.fn();
   });
 
   it('renders the redesigned strategy builder controls and ladder preview', () => {
@@ -136,6 +143,8 @@ describe('investments ladder calculator', () => {
     expect(screen.getByLabelText('1-Year APY (%)')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Calculate' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Your ladder at a glance' })).toBeTruthy();
+    expect(screen.getByText('Strategy preview')).toBeTruthy();
+    expect(container.querySelector('[data-ladder-intro]')).toBeTruthy();
 
     expect(container.querySelectorAll('[data-ladder-summary-tile]')).toHaveLength(4);
     fireEvent.click(screen.getByText('View ladder timeline'));
@@ -177,6 +186,47 @@ describe('investments ladder calculator', () => {
     expect(screen.getAllByText('$20,800.00').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('$21,632.00').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Ladder Breakdown')).toBeTruthy();
+    expect(screen.queryByText(/^Calculated$/)).toBeNull();
+    expect(document.querySelector('.ag-table.investments-native-ladder-table')).toBeNull();
+    expect(document.querySelectorAll('.investments-native-ladder-table-shell')).toHaveLength(3);
+    expect(document.querySelectorAll('.investments-native-ladder-mobile-row').length).toBeGreaterThan(0);
+  });
+
+  it('allows PDF download without mandatory contact fields and keeps follow-up optional', () => {
+    const anchors = [];
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
+      const element = originalCreateElement(tagName, options);
+      if (String(tagName).toLowerCase() === 'a') {
+        anchors.push(element);
+      }
+      return element;
+    });
+
+    render(
+      <MemoryRouter>
+        <InvestmentsPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    const checkbox = screen.getByRole('checkbox', { name: /follow-up from the investments team/i });
+    const downloadButton = screen.getByRole('button', { name: 'Download PDF' });
+
+    expect(checkbox.checked).toBe(true);
+    expect(downloadButton.disabled).toBe(false);
+
+    fireEvent.click(checkbox);
+
+    expect(checkbox.checked).toBe(false);
+    expect(screen.queryByPlaceholderText('Your name')).toBeNull();
+    expect(downloadButton.disabled).toBe(false);
+
+    fireEvent.click(downloadButton);
+
+    expect(global.URL.createObjectURL).toHaveBeenCalledTimes(1);
+    expect(anchors.at(-1)?.download).toContain('.pdf');
   });
 
   it('keeps the laddering responsive shell hooks in page and CSS source', () => {
@@ -184,11 +234,22 @@ describe('investments ladder calculator', () => {
     const cssSource = readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8');
 
     expect(pageSource).toContain('data-ladder-preview-card');
+    expect(pageSource).toContain('data-ladder-intro');
     expect(pageSource).toContain('data-ladder-rung-row');
     expect(pageSource).toContain('data-ladder-maturity-marker');
+    expect(pageSource).toContain('Strategy preview');
+    expect(pageSource).toContain('Download PDF');
+    expect(pageSource).toContain('data-ladder-results-sheet');
+    expect(pageSource).not.toContain('investments-native-ladder-process-line');
+    expect(pageSource).not.toContain('ag-table has-fixed-layout investments-native-ladder-table');
     expect(cssSource).toContain('.investments-native-ladder-shell {');
     expect(cssSource).toContain('.investments-native-ladder-visual-scroll {');
     expect(cssSource).toContain('.investments-native-ladder-summary-strip.is-results {');
+    expect(cssSource).toContain('.investments-native-ladder-result-sheet {');
+    expect(cssSource).toContain('.investments-native-ladder-opt-in {');
+    expect(cssSource).toContain('.investments-native-ladder-table {');
+    expect(cssSource).toContain('.investments-native-ladder-table-shell {');
+    expect(cssSource).toContain('.investments-native-ladder-mobile-sheet {');
     expect(cssSource).toContain('.service-native-section.investments-native-ladder-section > .ag-panel-rail {');
     expect(cssSource).toContain('padding-left: 0;');
     expect(cssSource).toContain('@media (max-width: 860px) {');

@@ -326,6 +326,224 @@ function formatCurrency(value) {
   return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function pdfEscape(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
+function buildPdfDocument(pageContents) {
+  const encoder = new TextEncoder();
+  const safePages = Array.isArray(pageContents) && pageContents.length ? pageContents : [''];
+  const pageIds = safePages.map((_, index) => 4 + (index * 2));
+  const contentIds = safePages.map((_, index) => 5 + (index * 2));
+
+  const header = '%PDF-1.4\n';
+  const objects = [
+    '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n',
+    `2 0 obj << /Type /Pages /Count ${safePages.length} /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] >> endobj\n`,
+    '3 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n',
+  ];
+
+  safePages.forEach((content, index) => {
+    const contentBytes = encoder.encode(content);
+    objects.push(
+      `${pageIds[index]} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentIds[index]} 0 R >> endobj\n`,
+    );
+    objects.push(
+      `${contentIds[index]} 0 obj << /Length ${contentBytes.length} >> stream\n${content}endstream\nendobj\n`,
+    );
+  });
+
+  const offsets = [0];
+  let cursor = encoder.encode(header).length;
+  for (let index = 0; index < objects.length; index += 1) {
+    offsets.push(cursor);
+    cursor += encoder.encode(objects[index]).length;
+  }
+
+  const xrefStart = cursor;
+  let xref = 'xref\n';
+  xref += `0 ${offsets.length}\n`;
+  xref += '0000000000 65535 f \n';
+  for (let index = 1; index < offsets.length; index += 1) {
+    xref += `${String(offsets[index]).padStart(10, '0')} 00000 n \n`;
+  }
+  xref += '\n';
+
+  const trailer = `trailer << /Size ${offsets.length} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+  return new Blob([encoder.encode(`${header}${objects.join('')}${xref}${trailer}`)], { type: 'application/pdf' });
+}
+
+function buildLadderPdf({
+  result,
+  summaryCards,
+  preparedFor,
+  email,
+}) {
+  const teal = '0 0.64 0.70';
+  const darkTeal = '0.03 0.31 0.37';
+  const paleBlue = '0.93 0.97 0.98';
+  const lightLine = '0.82 0.87 0.90';
+  const pageCommands = [];
+  const safeSummaryCards = Array.isArray(summaryCards) ? summaryCards.slice(0, 4) : [];
+  const detailLines = [
+    preparedFor ? `Prepared for: ${preparedFor}` : null,
+    email ? `Email: ${email}` : null,
+    `Total Investment Amount: $${formatCurrency(result.totalInvestment)}`,
+    `Ladder span (years / longest term): ${result.ladderYears}`,
+    `Timeline years to visualize: ${result.horizonYears}`,
+    `Maturity behavior: ${result.reinvestMode === 'reinvest_longest' ? 'Reinvest matured principal into longest term' : 'Keep matured principal as cash'}`,
+    `APY assumptions: ${Array.from({ length: result.ladderYears }, (_, index) => (
+      `${index + 1}-Year ${Number(result.apyByYear[index + 1] || 0).toFixed(2)}%`
+    )).join('  |  ')}`,
+  ].filter(Boolean);
+
+  const scheduleRows = Array.isArray(result.scheduleRows) ? result.scheduleRows : [];
+  const initialRows = Array.isArray(result.initialRows) ? result.initialRows : [];
+  const scheduleChunks = [];
+  const firstScheduleCapacity = 14;
+  const laterScheduleCapacity = 32;
+
+  scheduleChunks.push(scheduleRows.slice(0, firstScheduleCapacity));
+  for (let index = firstScheduleCapacity; index < scheduleRows.length; index += laterScheduleCapacity) {
+    scheduleChunks.push(scheduleRows.slice(index, index + laterScheduleCapacity));
+  }
+
+  const makeHeader = (title, subtitle, pageNumber) => {
+    let content = '';
+    content += 'q\n';
+    content += `${teal} rg\n`;
+    content += '36 724 540 48 re f\n';
+    content += `${paleBlue} rg\n`;
+    content += '36 706 540 18 re f\n';
+    content += 'Q\n';
+    content += 'BT\n';
+    content += '1 1 1 rg\n';
+    content += '/F1 20 Tf\n';
+    content += `1 0 0 1 54 751 Tm (${pdfEscape(title)}) Tj\n`;
+    content += `${darkTeal} rg\n`;
+    content += '/F1 9 Tf\n';
+    content += `1 0 0 1 54 712 Tm (${pdfEscape(subtitle)}) Tj\n`;
+    content += `1 0 0 1 520 712 Tm (Page ${pageNumber}) Tj\n`;
+    content += 'ET\n';
+    return content;
+  };
+
+  let firstPage = makeHeader('AGFinancial Investment Laddering Strategy', 'Strategy summary and yearly breakdown', 1);
+  firstPage += 'q\n';
+  safeSummaryCards.forEach((card, index) => {
+    const column = index % 2;
+    const row = Math.floor(index / 2);
+    const x = 54 + (column * 252);
+    const y = 632 - (row * 72);
+    firstPage += `${paleBlue} rg\n`;
+    firstPage += `${x} ${y} 234 58 re f\n`;
+    firstPage += `${lightLine} RG 1 w\n`;
+    firstPage += `${x} ${y} 234 58 re S\n`;
+  });
+  firstPage += 'Q\n';
+  firstPage += 'BT\n';
+  safeSummaryCards.forEach((card, index) => {
+    const column = index % 2;
+    const row = Math.floor(index / 2);
+    const x = 68 + (column * 252);
+    const y = 674 - (row * 72);
+    firstPage += `${darkTeal} rg\n`;
+    firstPage += '/F1 8 Tf\n';
+    firstPage += `1 0 0 1 ${x} ${y} Tm (${pdfEscape(card.label)}) Tj\n`;
+    firstPage += `${teal} rg\n`;
+    firstPage += '/F1 13 Tf\n';
+    firstPage += `1 0 0 1 ${x} ${y - 20} Tm (${pdfEscape(card.value)}) Tj\n`;
+  });
+  firstPage += `${darkTeal} rg\n`;
+  firstPage += '/F1 9 Tf\n';
+  detailLines.forEach((line, index) => {
+    firstPage += `1 0 0 1 54 ${520 - (index * 14)} Tm (${pdfEscape(line)}) Tj\n`;
+  });
+  firstPage += 'ET\n';
+
+  firstPage += 'q\n';
+  firstPage += `${paleBlue} rg\n54 406 540 22 re f\n`;
+  firstPage += '150 266 92 140 re f\n';
+  firstPage += '430 266 108 140 re f\n';
+  firstPage += '396 76 142 168 re f\n';
+  firstPage += `${lightLine} RG 1 w\n`;
+  firstPage += '54 406 540 22 re S\n';
+  firstPage += '54 244 540 22 re S\n';
+  firstPage += 'Q\n';
+  firstPage += 'BT\n';
+  firstPage += `${darkTeal} rg\n/F1 10 Tf\n`;
+  firstPage += '1 0 0 1 68 413 Tm (Ladder breakdown) Tj\n';
+  firstPage += '1 0 0 1 68 251 Tm (Year-by-year schedule) Tj\n';
+  firstPage += '/F1 8 Tf\n';
+  firstPage += '1 0 0 1 68 391 Tm (Term) Tj\n';
+  firstPage += '1 0 0 1 160 391 Tm (Principal) Tj\n';
+  firstPage += '1 0 0 1 258 391 Tm (APY) Tj\n';
+  firstPage += '1 0 0 1 334 391 Tm (Interest) Tj\n';
+  firstPage += '1 0 0 1 442 391 Tm (Ending Value) Tj\n';
+  firstPage += '1 0 0 1 68 236 Tm (Year) Tj\n';
+  firstPage += '1 0 0 1 124 236 Tm (Principal) Tj\n';
+  firstPage += '1 0 0 1 220 236 Tm (Interest) Tj\n';
+  firstPage += '1 0 0 1 308 236 Tm (Reinvested) Tj\n';
+  firstPage += '1 0 0 1 408 236 Tm (Cash Available) Tj\n';
+  firstPage += `${darkTeal} rg\n/F1 8 Tf\n`;
+
+  initialRows.forEach((row, index) => {
+    const y = 374 - (index * 15);
+    firstPage += `1 0 0 1 68 ${y} Tm (${pdfEscape(`${row.termYears}-Year`)}) Tj\n`;
+    firstPage += `1 0 0 1 160 ${y} Tm ($${pdfEscape(formatCurrency(row.principal))}) Tj\n`;
+    firstPage += `1 0 0 1 258 ${y} Tm (${pdfEscape(`${row.apyPercent.toFixed(2)}%`)}) Tj\n`;
+    firstPage += `1 0 0 1 334 ${y} Tm ($${pdfEscape(formatCurrency(row.interest))}) Tj\n`;
+    firstPage += `1 0 0 1 442 ${y} Tm ($${pdfEscape(formatCurrency(row.endingValue))}) Tj\n`;
+  });
+
+  (scheduleChunks[0] || []).forEach((row, index) => {
+    const y = 220 - (index * 12);
+    firstPage += `1 0 0 1 68 ${y} Tm (${pdfEscape(`Year ${row.year}`)}) Tj\n`;
+    firstPage += `1 0 0 1 124 ${y} Tm ($${pdfEscape(formatCurrency(row.principalMaturing))}) Tj\n`;
+    firstPage += `1 0 0 1 220 ${y} Tm ($${pdfEscape(formatCurrency(row.interestMaturing))}) Tj\n`;
+    firstPage += `1 0 0 1 320 ${y} Tm (${pdfEscape(row.reinvested ? 'Yes' : 'No')}) Tj\n`;
+    firstPage += `1 0 0 1 408 ${y} Tm ($${pdfEscape(formatCurrency(row.totalCashAvailable))}) Tj\n`;
+  });
+
+  firstPage += `${darkTeal} rg\n/F1 8 Tf\n`;
+  firstPage += `1 0 0 1 54 42 Tm (${pdfEscape('This tool illustrates ladder mechanics. APY values can change. Results are estimates.')}) Tj\n`;
+  firstPage += 'ET\n';
+  pageCommands.push(firstPage);
+
+  for (let pageIndex = 1; pageIndex < scheduleChunks.length; pageIndex += 1) {
+    const pageRows = scheduleChunks[pageIndex];
+    let page = makeHeader('AGFinancial Investment Laddering Strategy', 'Year-by-year schedule continued', pageIndex + 1);
+    page += 'q\n';
+    page += `${paleBlue} rg\n54 666 540 22 re f\n`;
+    page += '396 118 142 548 re f\n';
+    page += 'Q\n';
+    page += 'BT\n';
+    page += `${darkTeal} rg\n/F1 10 Tf\n`;
+    page += '1 0 0 1 68 673 Tm (Year-by-year schedule) Tj\n';
+    page += '/F1 8 Tf\n';
+    page += '1 0 0 1 68 649 Tm (Year) Tj\n';
+    page += '1 0 0 1 124 649 Tm (Principal) Tj\n';
+    page += '1 0 0 1 220 649 Tm (Interest) Tj\n';
+    page += '1 0 0 1 308 649 Tm (Reinvested) Tj\n';
+    page += '1 0 0 1 408 649 Tm (Cash Available) Tj\n';
+    page += `${darkTeal} rg\n`;
+    pageRows.forEach((row, index) => {
+      const y = 632 - (index * 16);
+      page += `1 0 0 1 68 ${y} Tm (${pdfEscape(`Year ${row.year}`)}) Tj\n`;
+      page += `1 0 0 1 124 ${y} Tm ($${pdfEscape(formatCurrency(row.principalMaturing))}) Tj\n`;
+      page += `1 0 0 1 220 ${y} Tm ($${pdfEscape(formatCurrency(row.interestMaturing))}) Tj\n`;
+      page += `1 0 0 1 320 ${y} Tm (${pdfEscape(row.reinvested ? 'Yes' : 'No')}) Tj\n`;
+      page += `1 0 0 1 408 ${y} Tm ($${pdfEscape(formatCurrency(row.totalCashAvailable))}) Tj\n`;
+    });
+    page += `${darkTeal} rg\n/F1 8 Tf\n`;
+    page += `1 0 0 1 54 42 Tm (${pdfEscape('This tool illustrates ladder mechanics. APY values can change. Results are estimates.')}) Tj\n`;
+    page += 'ET\n';
+    pageCommands.push(page);
+  }
+
+  return buildPdfDocument(pageCommands);
+}
+
 function formatPhoneInput(value) {
   const digits = String(value || '').replace(/\D/g, '').slice(0, 10);
   if (!digits) {
@@ -408,7 +626,7 @@ function computeApyInterest(principal, apyPercent, years) {
 }
 
 // Year-by-year ladder simulation with rollover support.
-function simulateLadderSchedule({
+export function simulateLadderSchedule({
   totalInvestment,
   ladderYears,
   horizonYears,
@@ -424,7 +642,14 @@ function simulateLadderSchedule({
   let rungId = 0;
   let totalInterestEarnedToDate = 0;
 
-  const createRung = ({ principal, termYears, startYear, isRollover }) => {
+  const createRung = ({
+    principal,
+    termYears,
+    startYear,
+    isRollover,
+    laneId,
+    originTermYears,
+  }) => {
     const apyPercent = apyByYear[termYears];
     const interest = computeApyInterest(principal, apyPercent, termYears);
     return {
@@ -437,6 +662,8 @@ function simulateLadderSchedule({
       interest,
       endingValue: principal + interest,
       isRollover,
+      laneId,
+      originTermYears,
     };
   };
 
@@ -446,6 +673,8 @@ function simulateLadderSchedule({
       termYears,
       startYear: 0,
       isRollover: false,
+      laneId: termYears,
+      originTermYears: termYears,
     });
     activeRungs.push(rung);
     initialRows.push(rung);
@@ -473,6 +702,8 @@ function simulateLadderSchedule({
           termYears: ladderYears,
           startYear: year,
           isRollover: true,
+          laneId: matured.laneId,
+          originTermYears: matured.originTermYears,
         });
         activeRungs.push(rolledRung);
         timelineBars.push(rolledRung);
@@ -522,6 +753,115 @@ function defaultLadderInput() {
   };
 }
 
+function renderLadderTitle(title) {
+  const source = String(title || '').trim();
+  if (!source) {
+    return null;
+  }
+  const match = source.match(/laddering/i);
+  if (!match || typeof match.index !== 'number') {
+    return source;
+  }
+  const start = match.index;
+  const end = start + match[0].length;
+  return (
+    <>
+      {source.slice(0, start)}
+      <mark className="is-atlantean">{source.slice(start, end)}</mark>
+      {source.slice(end)}
+    </>
+  );
+}
+
+function buildLadderVisualRows(result) {
+  if (!result) {
+    return [];
+  }
+  const rowsByLane = new Map();
+
+  result.timelineBars
+    .filter((bar) => bar.startYear < result.horizonYears)
+    .slice()
+    .sort((a, b) => (
+      a.startYear - b.startYear
+      || a.maturityYear - b.maturityYear
+      || (a.laneId || 0) - (b.laneId || 0)
+      || a.id - b.id
+    ))
+    .forEach((bar) => {
+      const laneId = bar.laneId || bar.originTermYears || bar.termYears || bar.id;
+      if (!rowsByLane.has(laneId)) {
+        rowsByLane.set(laneId, {
+          laneId,
+          originTermYears: bar.originTermYears || bar.termYears || laneId,
+          principal: bar.principal,
+          bars: [],
+        });
+      }
+      rowsByLane.get(laneId).bars.push(bar);
+    });
+
+  return Array.from(rowsByLane.values())
+    .sort((a, b) => a.originTermYears - b.originTermYears)
+    .map((row) => {
+      const sortedBars = row.bars.slice().sort((a, b) => (
+        a.startYear - b.startYear
+        || a.maturityYear - b.maturityYear
+        || a.id - b.id
+      ));
+      const markers = sortedBars
+        .filter((bar) => bar.maturityYear <= result.horizonYears)
+        .map((bar) => ({
+          id: `marker-${bar.id}`,
+          year: bar.maturityYear,
+          rollsForward: sortedBars.some((candidate) => candidate.startYear === bar.maturityYear),
+        }));
+
+      return {
+        ...row,
+        bars: sortedBars,
+        markers,
+      };
+    });
+}
+
+function getLadderStrategyLabel(reinvestMode, ladderYears) {
+  return reinvestMode === 'reinvest_longest'
+    ? `Reinvest into ${ladderYears}-year terms`
+    : 'Keep maturities available as cash';
+}
+
+function buildLadderSummaryCards(result, reinvestMode, helperText) {
+  if (!result) {
+    return [];
+  }
+  const firstMaturity = result.scheduleRows.find((row) => row.principalMaturing > 0)?.year || 1;
+  return [
+    {
+      label: 'Starting amount',
+      value: `$${formatCurrency(result.totalInvestment)}`,
+      detail: 'Allocated across the initial ladder.',
+    },
+    {
+      label: 'Certificates',
+      value: `${result.initialRows.length} total`,
+      detail: `Built from 1-year through ${result.ladderYears}-year terms.`,
+    },
+    {
+      label: 'Maturity rhythm',
+      value: `Year ${firstMaturity} onward`,
+      detail: reinvestMode === 'reinvest_longest'
+        ? 'Maturities stay in motion with annual rollover opportunities.'
+        : 'Maturities stay available as cash as the ladder winds down.',
+    },
+    {
+      label: 'Strategy',
+      value: getLadderStrategyLabel(reinvestMode, result.ladderYears),
+      detail: helperText,
+    },
+  ];
+}
+
 export default function InvestmentsPage() {
   const pageRef = useRef(null);
   const heroSectionRef = useRef(null);
@@ -561,6 +901,7 @@ export default function InvestmentsPage() {
     name: '',
     email: '',
   });
+  const [ladderDownloadOptIn, setLadderDownloadOptIn] = useState(true);
   const [ladderDiscuss, setLadderDiscuss] = useState({
     organization: '',
     state: '',
@@ -1411,48 +1752,62 @@ export default function InvestmentsPage() {
   const ladderToggleHelper = ladderInput.reinvestMode === 'reinvest_longest'
     ? 'Keep the ladder going: roll each maturity into a new longest-term certificate.'
     : 'Take maturities as cash: the ladder will gradually wind down.';
+  const ladderVisualizeYears = clamp(
+    parseInteger(ladderInput.visualizeYears) || suggestedHorizon(ladderYears),
+    ladderYears + 1,
+    MAX_VISUALIZE_YEARS,
+  );
 
   const hasCustomRateInputs = Array.from({ length: ladderYears }, (_, index) => index + 1).some((year) => (
     Math.abs(parseNumber(ladderRates[year]) - parseNumber(ladderRateSeeds[year])) > 0.0001
   ));
 
-  const canDownloadLadder = Boolean(ladderResult)
-    && ladderDownload.name.trim().length > 0
-    && isValidEmail(ladderDownload.email);
+  const canDownloadLadder = Boolean(ladderResult);
   const ladderDiscussTone = ladderDiscussMessage.startsWith('Thanks') ? 'is-success' : 'is-alert';
 
-  const timelineYears = useMemo(() => (
-    ladderResult ? Array.from({ length: ladderResult.horizonYears + 1 }, (_, year) => year) : []
+  const ladderPreview = useMemo(() => {
+    const apyByYear = {};
+    for (let year = 1; year <= ladderYears; year += 1) {
+      apyByYear[year] = Math.max(0, parseNumber(ladderRates[year] || ladderRateSeeds[year]));
+    }
+    return simulateLadderSchedule({
+      totalInvestment: Math.max(0, parseNumber(ladderInput.totalInvestment)),
+      ladderYears,
+      horizonYears: ladderVisualizeYears,
+      reinvestMode: ladderInput.reinvestMode,
+      apyByYear,
+    });
+  }, [
+    ladderInput.reinvestMode,
+    ladderInput.totalInvestment,
+    ladderRateSeeds,
+    ladderRates,
+    ladderVisualizeYears,
+    ladderYears,
+  ]);
+
+  const ladderPreviewYears = useMemo(() => (
+    Array.from({ length: ladderPreview.horizonYears + 1 }, (_, year) => year)
+  ), [ladderPreview]);
+
+  const ladderPreviewRows = useMemo(
+    () => buildLadderVisualRows(ladderPreview),
+    [ladderPreview],
+  );
+
+  const ladderPreviewSummaryCards = useMemo(
+    () => buildLadderSummaryCards(ladderPreview, ladderInput.reinvestMode, ladderToggleHelper),
+    [ladderInput.reinvestMode, ladderPreview, ladderToggleHelper],
+  );
+
+  const ladderResultSummaryCards = useMemo(
+    () => (ladderResult ? buildLadderSummaryCards(ladderResult, ladderResult.reinvestMode, ladderToggleHelper) : []),
+    [ladderResult, ladderToggleHelper],
+  );
+
+  const ladderResultsRhythm = useMemo(() => (
+    ladderResult ? ladderResult.scheduleRows.filter((row) => row.principalMaturing > 0 || row.interestMaturing > 0) : []
   ), [ladderResult]);
-
-  const timelineBars = useMemo(() => {
-    if (!ladderResult) {
-      return [];
-    }
-    const horizon = ladderResult.horizonYears;
-    return ladderResult.timelineBars
-      .filter((bar) => bar.startYear < horizon)
-      .slice()
-      .sort((a, b) => (
-        a.startYear - b.startYear
-        || a.maturityYear - b.maturityYear
-        || a.id - b.id
-      ));
-  }, [ladderResult]);
-
-  const ladderSummary = useMemo(() => {
-    if (!ladderResult) {
-      return null;
-    }
-    const totalPrincipalMaturing = ladderResult.scheduleRows.reduce((sum, row) => sum + row.principalMaturing, 0);
-    const totalInterestMaturing = ladderResult.scheduleRows.reduce((sum, row) => sum + row.interestMaturing, 0);
-    const totalCashAvailable = ladderResult.scheduleRows.reduce((sum, row) => sum + row.totalCashAvailable, 0);
-    return {
-      totalPrincipalMaturing,
-      totalInterestMaturing,
-      totalCashAvailable,
-    };
-  }, [ladderResult]);
 
   const onLadderTotalChange = (value) => {
     setLadderInput((prev) => ({ ...prev, totalInvestment: formatNumberInput(value) }));
@@ -1464,7 +1819,11 @@ export default function InvestmentsPage() {
       ...prev,
       ladderYears: String(normalizedYears),
       visualizeYears: ladderVisualizeTouched
-        ? prev.visualizeYears
+        ? String(clamp(
+          parseInteger(prev.visualizeYears) || suggestedHorizon(normalizedYears),
+          normalizedYears + 1,
+          MAX_VISUALIZE_YEARS,
+        ))
         : String(suggestedHorizon(normalizedYears)),
     }));
     setLadderRates((prev) => {
@@ -1481,7 +1840,7 @@ export default function InvestmentsPage() {
   };
 
   const onLadderVisualizeYearsChange = (value) => {
-    const parsed = clamp(parseInteger(value) || 1, 1, MAX_VISUALIZE_YEARS);
+    const parsed = clamp(parseInteger(value) || (ladderYears + 1), ladderYears + 1, MAX_VISUALIZE_YEARS);
     setLadderVisualizeTouched(true);
     setLadderInput((prev) => ({ ...prev, visualizeYears: String(parsed) }));
   };
@@ -1492,6 +1851,18 @@ export default function InvestmentsPage() {
 
   const onLadderRateChange = (year, value) => {
     setLadderRates((prev) => ({ ...prev, [year]: formatNumberInput(value) }));
+  };
+
+  const stepLadderYears = (delta) => {
+    onLadderYearsChange(String(clamp(ladderYears + delta, 1, MAX_LADDER_YEARS)));
+  };
+
+  const stepLadderVisualizeYears = (delta) => {
+    onLadderVisualizeYearsChange(String(clamp(
+      ladderVisualizeYears + delta,
+      ladderYears + 1,
+      MAX_VISUALIZE_YEARS,
+    )));
   };
 
   const calculateLadder = () => {
@@ -1539,34 +1910,20 @@ export default function InvestmentsPage() {
   };
 
   const downloadLadderSample = () => {
-    if (!canDownloadLadder || !ladderResult) {
+    if (!ladderResult) {
       return;
     }
-    const summary = [
-      'AGFinancial Laddering Sample',
-      '',
-      `Prepared for: ${ladderDownload.name.trim()}`,
-      `Email: ${ladderDownload.email.trim()}`,
-      '',
-      `Total Investment Amount: $${formatCurrency(ladderResult.totalInvestment)}`,
-      `Ladder span (years / longest term): ${ladderResult.ladderYears}`,
-      `Years to visualize: ${ladderResult.horizonYears}`,
-      `Maturity behavior: ${ladderResult.reinvestMode === 'reinvest_longest' ? 'Reinvest into longest term' : 'Keep matured principal as cash'}`,
-      'Return model: APY-based effective annual yield, principal-only reinvestment',
-      '',
-      'Year | Principal Maturing | Interest Maturing | Reinvested | Locked Principal | Cash Available',
-      ...ladderResult.scheduleRows.map((row) => (
-        `Year ${row.year} | ${formatCurrency(row.principalMaturing)} | ${formatCurrency(row.interestMaturing)} | ${row.reinvested ? 'Yes' : 'No'} | ${formatCurrency(row.lockedPrincipal)} | ${formatCurrency(row.totalCashAvailable)}`
-      )),
-      '',
-      'This tool illustrates ladder mechanics. APY values can change. Results are estimates.',
-    ].join('\n');
-    const blob = new Blob([summary], { type: 'text/plain;charset=utf-8' });
+    const blob = buildLadderPdf({
+      result: ladderResult,
+      summaryCards: ladderResultSummaryCards,
+      preparedFor: ladderDownload.name.trim(),
+      email: ladderDownload.email.trim(),
+    });
     const url = URL.createObjectURL(blob);
     const safeName = ladderDownload.name.trim().replace(/[^\w-]+/g, '-');
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `${safeName || 'investor'}-laddering-sample.txt`;
+    anchor.download = `${safeName || 'investor'}-laddering-strategy.pdf`;
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
@@ -2026,294 +2383,557 @@ export default function InvestmentsPage() {
         {renderHudAnchor('laddering')}
         <div className="ag-panel-rail">
           <div className="investments-native-ladder-box fade-up">
-            <h2>{calculatorCtaRuntime?.title}</h2>
-            <h3>{calculatorCtaRuntime?.subtitle}</h3>
-            <p className="investments-native-ladder-copy">
-              {calculatorCtaRuntime?.body}
-            </p>
-            <h4 className="investments-native-ladder-subtitle">{calculatorCtaRuntime?.howItWorksTitle}</h4>
-            <ul className="investments-native-ladder-list">
-              <li>{calculatorCtaRuntime?.step1}</li>
-              <li>{calculatorCtaRuntime?.step2}</li>
-              <li>{calculatorCtaRuntime?.step3}</li>
-            </ul>
-
-            <p className="investments-native-ladder-phase-note">{ladderBuildSteadyCopy}</p>
-
-            <div className="investments-native-ladder-grid is-meta">
-              <label htmlFor="ladder-total">
-                {calculatorCtaRuntime?.totalInvestmentLabel}
-                <div className="investments-native-ladder-currency">
-                  <input
-                    id="ladder-total"
-                    type="text"
-                    inputMode="decimal"
-                    value={ladderInput.totalInvestment}
-                    onChange={(event) => onLadderTotalChange(event.target.value)}
-                  />
-                </div>
-              </label>
-
-              <label htmlFor="ladder-years">
-                {calculatorCtaRuntime?.ladderYearsLabel}
-                <input
-                  id="ladder-years"
-                  type="text"
-                  inputMode="numeric"
-                  value={ladderInput.ladderYears}
-                  onChange={(event) => onLadderYearsChange(event.target.value)}
-                />
-                <span className="investments-native-ladder-field-helper">
-                  {calculatorCtaRuntime?.ladderYearsHelper}
-                </span>
-              </label>
-            </div>
-
-            <div className="investments-native-ladder-maturity">
-              <p className="investments-native-ladder-field-label">{calculatorCtaRuntime?.maturityLabel}</p>
-              <div className="investments-native-ladder-reinvest-toggle">
-                <label htmlFor="ladder-reinvest">
-                  <input
-                    id="ladder-reinvest"
-                    type="radio"
-                    name="ladder-reinvest-mode"
-                    value="reinvest_longest"
-                    checked={ladderInput.reinvestMode === 'reinvest_longest'}
-                    onChange={(event) => onLadderReinvestModeChange(event.target.value)}
-                  />
-                  {calculatorCtaRuntime?.reinvestOptionLabel}
-                </label>
-                <label htmlFor="ladder-cashout">
-                  <input
-                    id="ladder-cashout"
-                    type="radio"
-                    name="ladder-reinvest-mode"
-                    value="cash_out"
-                    checked={ladderInput.reinvestMode === 'cash_out'}
-                    onChange={(event) => onLadderReinvestModeChange(event.target.value)}
-                  />
-                  {calculatorCtaRuntime?.cashOutOptionLabel}
-                </label>
+            <div className="investments-native-ladder-intro" data-ladder-intro>
+              <div className="investments-native-ladder-intro-copy">
+                <h2>{renderLadderTitle(calculatorCtaRuntime?.title)}</h2>
+                <p className="investments-native-ladder-lead">{calculatorCtaRuntime?.subtitle}</p>
+                <p className="investments-native-ladder-copy">{calculatorCtaRuntime?.body}</p>
               </div>
-              <p className="investments-native-ladder-helper">{ladderToggleHelper}</p>
             </div>
 
-            <div className="investments-native-ladder-visualize">
-              <label htmlFor="ladder-visualize-years">
-                {calculatorCtaRuntime?.visualizeYearsLabel}
-                <input
-                  id="ladder-visualize-years"
-                  type="text"
-                  inputMode="numeric"
-                  value={ladderInput.visualizeYears}
-                  onChange={(event) => onLadderVisualizeYearsChange(event.target.value)}
-                />
-              </label>
-              <p className="investments-native-ladder-helper">
-                {calculatorCtaRuntime?.visualizeYearsHelper}
-              </p>
-            </div>
-
-            <div className="investments-native-ladder-rate-grid">
-              {Array.from({ length: ladderYears }, (_, index) => index + 1).map((year) => (
-                <label key={year} htmlFor={`ladder-rate-${year}`}>
-                  {year}
-                  -Year APY (%)
-                  <input
-                    id={`ladder-rate-${year}`}
-                    type="text"
-                    inputMode="decimal"
-                    value={ladderRates[year] || ''}
-                    onChange={(event) => onLadderRateChange(year, event.target.value)}
-                  />
-                </label>
-              ))}
-            </div>
-            <div className="service-native-action-row investments-native-ladder-action">
-              <button type="button" className="service-native-btn" onClick={calculateLadder}>
-                {calculatorCtaRuntime?.calculateLabel}
-              </button>
-            </div>
-            <p className="investments-native-ladder-note">
-              {calculatorCtaRuntime?.note}
-            </p>
-            <p className="investments-native-ladder-disclaimer">
-              {calculatorCtaRuntime?.disclaimer}
-            </p>
-            {hasCustomRateInputs ? (
-              <p className="investments-native-ladder-custom-note">
-                {calculatorCtaRuntime?.customRatesNote}
-              </p>
-            ) : null}
-            {ladderError ? <p className="investments-native-ladder-error">{ladderError}</p> : null}
-
-            {ladderResult ? (
-              <div className="investments-native-ladder-results">
-                <h3>{calculatorCtaRuntime?.resultsTitle}</h3>
-                <div className="table-scroll">
-                  <table className="ag-table has-fixed-layout">
-                    <thead>
-                      <tr>
-                        <th>Year</th>
-                        <th>Principal</th>
-                        <th>APY</th>
-                        <th>Interest Earned</th>
-                        <th>Ending Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ladderResult.initialRows.map((row) => (
-                        <tr key={row.id}>
-                          <td>{row.termYears}-Year</td>
-                          <td>${formatCurrency(row.principal)}</td>
-                          <td>{row.apyPercent.toFixed(2)}%</td>
-                          <td>${formatCurrency(row.interest)}</td>
-                          <td>${formatCurrency(row.endingValue)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            <div className="investments-native-ladder-shell">
+              <section className="investments-native-ladder-panel investments-native-ladder-preview" aria-labelledby="ladder-preview-title" data-ladder-preview-card>
+                <div className="investments-native-ladder-panel-head">
+                  <div>
+                    <h3 id="ladder-preview-title">Your ladder at a glance</h3>
+                    <p>
+                      Preview how {ladderPreview.initialRows.length} staggered certificate{ladderPreview.initialRows.length === 1 ? '' : 's'}
+                      {' '}
+                      can create a steady maturity rhythm.
+                    </p>
+                  </div>
+                  <span className="investments-native-ladder-badge">Strategy preview</span>
                 </div>
 
-                {ladderSummary ? (
-                  <div className="investments-native-ladder-summary-grid">
-                    <article className="investments-native-ladder-summary-card">
-                      <strong>Total principal maturing (timeline)</strong>
-                      <span>${formatCurrency(ladderSummary.totalPrincipalMaturing)}</span>
-                    </article>
-                    <article className="investments-native-ladder-summary-card">
-                      <strong>Total interest maturing (timeline)</strong>
-                      <span>${formatCurrency(ladderSummary.totalInterestMaturing)}</span>
-                    </article>
-                    <article className="investments-native-ladder-summary-card">
-                      <strong>Cumulative cash available (timeline)</strong>
-                      <span>${formatCurrency(ladderSummary.totalCashAvailable)}</span>
-                    </article>
-                  </div>
-                ) : null}
+                <div className="investments-native-ladder-summary-strip">
+                  {ladderPreviewSummaryCards.map((item) => (
+                    <div key={item.label} className="investments-native-ladder-summary-chip" data-ladder-summary-tile>
+                      <strong>{item.label}</strong>
+                      <span>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
 
-                <div className="investments-native-ladder-accordion">
-                  <details className="investments-native-ladder-accordion-item">
-                    <summary className="investments-native-ladder-accordion-summary">Timeline</summary>
-                    <div className="investments-native-ladder-accordion-body">
-                      <div className="investments-native-ladder-timeline-scroll">
-                        <div className="investments-native-ladder-timeline-shell">
-                          <div
-                            className="investments-native-ladder-timeline-grid"
-                            style={{ gridTemplateColumns: `repeat(${timelineYears.length}, minmax(92px, 1fr))` }}
-                          >
-                            {timelineYears.map((year) => (
-                              <div key={`label-${year}`} className="investments-native-ladder-year-label">Year {year}</div>
-                            ))}
+                <p className="investments-native-ladder-preview-copy">
+                  {ladderInput.reinvestMode === 'reinvest_longest'
+                    ? `Start with ${ladderPreview.initialRows.length} staggered certificates, then roll each maturity into a new ${ladderYears}-year term.`
+                    : `Start with ${ladderPreview.initialRows.length} staggered certificates, then keep each maturity available as cash.`}
+                </p>
+
+                <div className="investments-native-ladder-mini-visual" aria-label="Compact ladder preview">
+                  <div
+                    className="investments-native-ladder-mini-scale"
+                    style={{ gridTemplateColumns: `58px repeat(${ladderYears}, minmax(0, 1fr))` }}
+                    aria-hidden="true"
+                  >
+                    <span />
+                    {Array.from({ length: ladderYears }, (_, index) => index + 1).map((year) => (
+                      <span key={`mini-year-${year}`}>Year {year}</span>
+                    ))}
+                  </div>
+
+                  <div className="investments-native-ladder-visual-rows is-mini">
+                    {ladderPreviewRows.map((row) => {
+                      const safeHorizon = Math.max(ladderYears, 1);
+                      const initialBars = row.bars.filter((bar) => bar.startYear === 0);
+                      const initialMarker = row.markers.find((marker) => marker.year <= safeHorizon);
+
+                      return (
+                        <article key={`mini-row-${row.laneId}`} className="investments-native-ladder-rung-row is-mini">
+                          <div className="investments-native-ladder-rung-meta is-mini">
+                            <strong>{row.originTermYears}-Year</strong>
                           </div>
-                          <div
-                            className="investments-native-ladder-timeline-grid is-badge-row"
-                            style={{ gridTemplateColumns: `repeat(${timelineYears.length}, minmax(92px, 1fr))` }}
-                          >
-                            <div className="investments-native-ladder-year-badge">
-                              <strong>Start</strong>
-                              Initial purchase
-                            </div>
-                            {ladderResult.scheduleRows.map((row) => (
-                              <div key={`badge-${row.year}`} className="investments-native-ladder-year-badge">
-                                <strong>Matures</strong>
-                                ${formatCurrency(row.principalMaturing)}
-                                <br />
-                                Interest: ${formatCurrency(row.interestMaturing)}
-                              </div>
-                            ))}
-                          </div>
-                          <div className="investments-native-ladder-timeline-rungs">
-                            {timelineBars.map((bar, index) => {
-                              const safeHorizon = Math.max(ladderResult.horizonYears, 1);
+                          <div className="investments-native-ladder-rung-track is-mini" style={{ '--ladder-tick-step': `${100 / safeHorizon}%` }}>
+                            {initialBars.map((bar) => {
                               const visibleStart = Math.max(0, Math.min(bar.startYear, safeHorizon));
                               const visibleEnd = Math.max(visibleStart, Math.min(bar.maturityYear, safeHorizon));
                               const spanYears = Math.max(0.01, visibleEnd - visibleStart);
                               const leftPct = (visibleStart / safeHorizon) * 100;
                               const widthPct = (spanYears / safeHorizon) * 100;
-                              const maturityPct = (Math.min(bar.maturityYear, safeHorizon) / safeHorizon) * 100;
 
                               return (
-                                <div key={bar.id} className="investments-native-ladder-rung-row">
-                                  <div className="investments-native-ladder-rung-label">Rung {index + 1}</div>
-                                  <div className="investments-native-ladder-rung-track" style={{ '--ladder-tick-step': `${100 / safeHorizon}%` }}>
+                                <div
+                                  key={`mini-bar-${bar.id}`}
+                                  className="investments-native-ladder-rung-bar"
+                                  style={{
+                                    left: `${leftPct}%`,
+                                    width: `${widthPct}%`,
+                                  }}
+                                />
+                              );
+                            })}
+                            {initialMarker ? (
+                              <span
+                                className="investments-native-ladder-rung-marker"
+                                style={{ left: `${(initialMarker.year / safeHorizon) * 100}%` }}
+                              >
+                                <span className="investments-native-ladder-rung-dot" />
+                              </span>
+                            ) : null}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <details className="investments-native-ladder-timeline-details">
+                  <summary className="investments-native-ladder-advanced-summary">View ladder timeline</summary>
+                  <p className="investments-native-ladder-detail-intro">{ladderBuildSteadyCopy}</p>
+                  <div className="investments-native-ladder-legend" aria-label="Ladder legend">
+                    <span><i className="is-bar" aria-hidden="true" />Active certificate term</span>
+                    <span><i className="is-dot" aria-hidden="true" />Maturity / cash access</span>
+                    <span><i className="is-rollover" aria-hidden="true" />Rollover</span>
+                  </div>
+                  <div className="investments-native-ladder-preview-scale" aria-hidden="true">
+                    <span>Start</span>
+                    <span>Year {Math.max(1, Math.round(ladderPreview.horizonYears / 2))}</span>
+                    <span>Year {ladderPreview.horizonYears}</span>
+                  </div>
+                  <div className="investments-native-ladder-scroll-hint">Scroll horizontally to see the full timeline.</div>
+                  <div className="investments-native-ladder-visual-scroll has-fade">
+                    <div className="investments-native-ladder-visual-shell">
+                      <div
+                        className="investments-native-ladder-visual-years"
+                        style={{ gridTemplateColumns: `repeat(${ladderPreviewYears.length}, minmax(70px, 1fr))` }}
+                      >
+                        {ladderPreviewYears.map((year) => (
+                          <div key={`preview-year-${year}`} className="investments-native-ladder-year-label">
+                            Year {year}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="investments-native-ladder-visual-rows is-detailed">
+                        {ladderPreviewRows.map((row) => {
+                          const safeHorizon = Math.max(ladderPreview.horizonYears, 1);
+                          return (
+                            <article key={`timeline-row-${row.laneId}`} className="investments-native-ladder-rung-row" data-ladder-rung-row>
+                              <div className="investments-native-ladder-rung-meta">
+                                <strong>Rung {row.originTermYears}</strong>
+                                <span>{row.originTermYears}-year start</span>
+                                <small>${formatCurrency(row.principal)} principal</small>
+                              </div>
+                              <div className="investments-native-ladder-rung-track" style={{ '--ladder-tick-step': `${100 / safeHorizon}%` }}>
+                                {row.bars.map((bar) => {
+                                  const visibleStart = Math.max(0, Math.min(bar.startYear, safeHorizon));
+                                  const visibleEnd = Math.max(visibleStart, Math.min(bar.maturityYear, safeHorizon));
+                                  const spanYears = Math.max(0.01, visibleEnd - visibleStart);
+                                  const leftPct = (visibleStart / safeHorizon) * 100;
+                                  const widthPct = (spanYears / safeHorizon) * 100;
+
+                                  return (
                                     <div
+                                      key={`timeline-bar-${bar.id}`}
                                       className={`investments-native-ladder-rung-bar${bar.isRollover ? ' is-rollover' : ''}`}
                                       style={{
                                         left: `${leftPct}%`,
                                         width: `${widthPct}%`,
                                       }}
                                     >
-                                      ${formatCurrency(bar.principal)} @ {bar.termYears}-year
+                                      {bar.termYears}-year
                                     </div>
-                                    <span className="investments-native-ladder-rung-dot" style={{ left: `${maturityPct}%` }} />
-                                    {bar.isRollover ? (
-                                      <span className="investments-native-ladder-rung-rollover" style={{ left: `${maturityPct}%` }}>-&gt;</span>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                                  );
+                                })}
+                                {row.markers.map((marker) => {
+                                  const maturityPct = (Math.min(marker.year, safeHorizon) / safeHorizon) * 100;
+                                  return (
+                                    <span
+                                      key={`timeline-marker-${marker.id}`}
+                                      className="investments-native-ladder-rung-marker"
+                                      style={{ left: `${maturityPct}%` }}
+                                      data-ladder-maturity-marker
+                                    >
+                                      <span className="investments-native-ladder-rung-dot" />
+                                      {marker.rollsForward ? (
+                                        <span className="investments-native-ladder-rung-rollover" aria-hidden="true">↻</span>
+                                      ) : null}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </section>
+
+              <section className="investments-native-ladder-panel investments-native-ladder-builder" aria-labelledby="ladder-builder-title">
+                <div className="investments-native-ladder-panel-head">
+                  <div>
+                    <h3 id="ladder-builder-title">Adjust my ladder</h3>
+                    <p>Update the amount, span, and maturity strategy.</p>
+                  </div>
+                </div>
+
+                <div className="investments-native-ladder-builder-grid">
+                  <label htmlFor="ladder-total" className="investments-native-ladder-field is-amount">
+                    <span className="investments-native-ladder-field-label">{calculatorCtaRuntime?.totalInvestmentLabel}</span>
+                    <div className="investments-native-ladder-currency">
+                      <input
+                        id="ladder-total"
+                        type="text"
+                        inputMode="decimal"
+                        value={ladderInput.totalInvestment}
+                        onChange={(event) => onLadderTotalChange(event.target.value)}
+                      />
+                    </div>
+                  </label>
+
+                  <div className="investments-native-ladder-field">
+                    <div className="investments-native-ladder-field-head">
+                      <label htmlFor="ladder-years" className="investments-native-ladder-field-label">{calculatorCtaRuntime?.ladderYearsLabel}</label>
+                      <span className="investments-native-ladder-chip-note">Popular spans</span>
+                    </div>
+                    <div className="investments-native-ladder-chip-row" role="group" aria-label="Popular ladder span options">
+                      {[3, 4, 5].map((year) => {
+                        const isSelected = ladderYears === year;
+                        return (
+                          <button
+                            key={year}
+                            type="button"
+                            className={`investments-native-ladder-chip${isSelected ? ' is-selected' : ''}`}
+                            aria-pressed={isSelected}
+                            onClick={() => onLadderYearsChange(String(year))}
+                          >
+                            <span>{year}-Year</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <details className="investments-native-ladder-span-details">
+                      <summary className="investments-native-ladder-advanced-summary">Custom span</summary>
+                      <div className="investments-native-ladder-span-stepper-shell">
+                        <div className="investments-native-ladder-stepper">
+                          <button type="button" className="investments-native-ladder-stepper-btn" aria-label="Decrease ladder span" onClick={() => stepLadderYears(-1)}>−</button>
+                          <input
+                            id="ladder-years"
+                            type="text"
+                            inputMode="numeric"
+                            value={ladderInput.ladderYears}
+                            onChange={(event) => onLadderYearsChange(event.target.value)}
+                          />
+                          <button type="button" className="investments-native-ladder-stepper-btn" aria-label="Increase ladder span" onClick={() => stepLadderYears(1)}>+</button>
+                        </div>
+                      </div>
+                    </details>
+                    <span className="investments-native-ladder-field-helper">
+                      {calculatorCtaRuntime?.ladderYearsHelper}
+                    </span>
+                  </div>
+
+                  <fieldset className="investments-native-ladder-field investments-native-ladder-choice-group">
+                    <legend className="investments-native-ladder-field-label">{calculatorCtaRuntime?.maturityLabel}</legend>
+                    <div className="investments-native-ladder-choice-grid is-compact">
+                      <label htmlFor="ladder-reinvest" className={`investments-native-ladder-choice${ladderInput.reinvestMode === 'reinvest_longest' ? ' is-selected' : ''}`}>
+                        <input
+                          id="ladder-reinvest"
+                          type="radio"
+                          name="ladder-reinvest-mode"
+                          value="reinvest_longest"
+                          checked={ladderInput.reinvestMode === 'reinvest_longest'}
+                          onChange={(event) => onLadderReinvestModeChange(event.target.value)}
+                        />
+                        <span className="investments-native-ladder-choice-copy">
+                          <strong>{calculatorCtaRuntime?.reinvestOptionLabel}</strong>
+                        </span>
+                      </label>
+                      <label htmlFor="ladder-cashout" className={`investments-native-ladder-choice${ladderInput.reinvestMode === 'cash_out' ? ' is-selected' : ''}`}>
+                        <input
+                          id="ladder-cashout"
+                          type="radio"
+                          name="ladder-reinvest-mode"
+                          value="cash_out"
+                          checked={ladderInput.reinvestMode === 'cash_out'}
+                          onChange={(event) => onLadderReinvestModeChange(event.target.value)}
+                        />
+                        <span className="investments-native-ladder-choice-copy">
+                          <strong>{calculatorCtaRuntime?.cashOutOptionLabel}</strong>
+                        </span>
+                      </label>
+                    </div>
+                    <p className="investments-native-ladder-helper">{ladderToggleHelper}</p>
+                  </fieldset>
+
+                  <details className="investments-native-ladder-advanced">
+                    <summary className="investments-native-ladder-advanced-summary">Advanced assumptions</summary>
+                    <div className="investments-native-ladder-advanced-body">
+                      <div className="investments-native-ladder-field">
+                        <div className="investments-native-ladder-field-head">
+                          <label htmlFor="ladder-visualize-years" className="investments-native-ladder-field-label">{calculatorCtaRuntime?.visualizeYearsLabel}</label>
+                          <span className="investments-native-ladder-chip-note">Preview horizon</span>
+                        </div>
+                        <div className="investments-native-ladder-stepper">
+                          <button type="button" className="investments-native-ladder-stepper-btn" aria-label="Decrease timeline years" onClick={() => stepLadderVisualizeYears(-1)}>−</button>
+                          <input
+                            id="ladder-visualize-years"
+                            type="text"
+                            inputMode="numeric"
+                            value={ladderInput.visualizeYears}
+                            onChange={(event) => onLadderVisualizeYearsChange(event.target.value)}
+                          />
+                          <button type="button" className="investments-native-ladder-stepper-btn" aria-label="Increase timeline years" onClick={() => stepLadderVisualizeYears(1)}>+</button>
+                        </div>
+                        <div className="investments-native-ladder-meter" aria-hidden="true">
+                          <span style={{ width: `${(ladderVisualizeYears / MAX_VISUALIZE_YEARS) * 100}%` }} />
+                        </div>
+                        <p className="investments-native-ladder-helper">
+                          {calculatorCtaRuntime?.visualizeYearsHelper}
+                        </p>
+                      </div>
+
+                      <div className="investments-native-ladder-field investments-native-ladder-rates-field">
+                        <div className="investments-native-ladder-field-head">
+                          <span className="investments-native-ladder-field-label">APY assumptions</span>
+                          <span className="investments-native-ladder-chip-note">Editable by term</span>
+                        </div>
+                        <div className="investments-native-ladder-rate-grid is-compact">
+                          {Array.from({ length: ladderYears }, (_, index) => index + 1).map((year) => (
+                            <label key={year} htmlFor={`ladder-rate-${year}`}>
+                              <span>{year}-Year APY (%)</span>
+                              <input
+                                id={`ladder-rate-${year}`}
+                                type="text"
+                                inputMode="decimal"
+                                value={ladderRates[year] || ''}
+                                onChange={(event) => onLadderRateChange(year, event.target.value)}
+                              />
+                            </label>
+                          ))}
                         </div>
                       </div>
                     </div>
                   </details>
+                </div>
 
-                  <details className="investments-native-ladder-accordion-item">
-                    <summary className="investments-native-ladder-accordion-summary">Year-by-year schedule</summary>
+                <div className="investments-native-ladder-builder-footer">
+                  <div className="service-native-action-row investments-native-ladder-action">
+                    <button type="button" className="service-native-btn" onClick={calculateLadder}>
+                      {calculatorCtaRuntime?.calculateLabel}
+                    </button>
+                  </div>
+                  <div className="investments-native-ladder-footnotes">
+                    <p className="investments-native-ladder-note">
+                      {calculatorCtaRuntime?.note}
+                    </p>
+                    <p className="investments-native-ladder-disclaimer">
+                      {calculatorCtaRuntime?.disclaimer}
+                    </p>
+                    {hasCustomRateInputs ? (
+                      <p className="investments-native-ladder-custom-note">
+                        {calculatorCtaRuntime?.customRatesNote}
+                      </p>
+                    ) : null}
+                    {ladderError ? <p className="investments-native-ladder-error">{ladderError}</p> : null}
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            {ladderResult ? (
+              <div className="investments-native-ladder-results">
+                <div className="investments-native-ladder-rhythm investments-native-ladder-result-sheet" data-ladder-results-sheet>
+                  <div className="investments-native-ladder-panel-head investments-native-ladder-panel-head--results">
+                    <div>
+                      <h3>Your maturity rhythm</h3>
+                      <p>Calculated results from your latest ladder setup.</p>
+                    </div>
+                  </div>
+                  <div className="investments-native-ladder-summary-strip is-results">
+                    {ladderResultSummaryCards.map((item) => (
+                      <div key={`result-summary-${item.label}`} className="investments-native-ladder-summary-chip">
+                        <strong>{item.label}</strong>
+                        <span>{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="investments-native-ladder-rhythm-strip">
+                    {ladderResultsRhythm.map((row) => (
+                      <article key={`rhythm-${row.year}`} className="investments-native-ladder-rhythm-card">
+                        <strong>Year {row.year}</strong>
+                        <span>${formatCurrency(row.totalCashAvailable)}</span>
+                        <small>
+                          Principal ${formatCurrency(row.principalMaturing)}
+                          {' '}
+                          + interest ${formatCurrency(row.interestMaturing)}
+                        </small>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="investments-native-ladder-accordion">
+                  <details className="investments-native-ladder-accordion-item investments-native-ladder-result-sheet" data-ladder-results-sheet>
+                    <summary className="investments-native-ladder-accordion-summary">{calculatorCtaRuntime?.resultsTitle}</summary>
                     <div className="investments-native-ladder-accordion-body">
-                      <div className="table-scroll">
-                        <table className="ag-table has-fixed-layout">
+                      <div className="investments-native-ladder-table-shell">
+                        <table className="investments-native-ladder-table investments-native-ladder-table--breakdown">
                           <thead>
                             <tr>
-                              <th>Year</th>
-                              <th>Principal Maturing</th>
-                              <th>Interest Maturing</th>
+                              <th scope="col">Year</th>
+                              <th scope="col" className="is-highlight">Principal</th>
+                              <th scope="col">APY</th>
+                              <th scope="col">Interest Earned</th>
+                              <th scope="col" className="is-highlight">Ending Value</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ladderResult.initialRows.map((row) => (
+                              <tr key={row.id}>
+                                <th scope="row">{row.termYears}-Year</th>
+                                <td className="investments-native-ladder-table-cell--value">${formatCurrency(row.principal)}</td>
+                                <td className="investments-native-ladder-table-cell--secondary">{row.apyPercent.toFixed(2)}%</td>
+                                <td>${formatCurrency(row.interest)}</td>
+                                <td className="investments-native-ladder-table-cell--value">${formatCurrency(row.endingValue)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="investments-native-ladder-mobile-sheet">
+                        {ladderResult.initialRows.map((row) => (
+                          <article key={`breakdown-mobile-${row.id}`} className="investments-native-ladder-mobile-row">
+                            <div className="investments-native-ladder-mobile-row-head">
+                              <h4>{row.termYears}-Year</h4>
+                            </div>
+                            <div className="investments-native-ladder-mobile-row-grid">
+                              <div className="investments-native-ladder-mobile-cell is-value">
+                                <span>Principal</span>
+                                <strong>${formatCurrency(row.principal)}</strong>
+                              </div>
+                              <div className="investments-native-ladder-mobile-cell is-secondary">
+                                <span>APY</span>
+                                <strong>{row.apyPercent.toFixed(2)}%</strong>
+                              </div>
+                              <div className="investments-native-ladder-mobile-cell">
+                                <span>Interest Earned</span>
+                                <strong>${formatCurrency(row.interest)}</strong>
+                              </div>
+                              <div className="investments-native-ladder-mobile-cell is-value">
+                                <span>Ending Value</span>
+                                <strong>${formatCurrency(row.endingValue)}</strong>
+                              </div>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  </details>
+
+                  <details className="investments-native-ladder-accordion-item investments-native-ladder-result-sheet" data-ladder-results-sheet>
+                    <summary className="investments-native-ladder-accordion-summary">Year-by-year schedule</summary>
+                    <div className="investments-native-ladder-accordion-body">
+                      <div className="investments-native-ladder-table-shell">
+                        <table className="investments-native-ladder-table investments-native-ladder-table--schedule">
+                          <thead>
+                            <tr>
+                              <th scope="col">Year</th>
+                              <th scope="col" className="is-highlight">Principal Maturing</th>
+                              <th scope="col">Interest Maturing</th>
                               <th>Reinvested</th>
-                              <th>Principal Still Locked</th>
+                              <th scope="col" className="is-highlight">Principal Still Locked</th>
                             </tr>
                           </thead>
                           <tbody>
                             {ladderResult.scheduleRows.map((row) => (
                               <tr key={`schedule-${row.year}`}>
-                                <td>Year {row.year}</td>
-                                <td>${formatCurrency(row.principalMaturing)}</td>
+                                <th scope="row">Year {row.year}</th>
+                                <td className="investments-native-ladder-table-cell--value">${formatCurrency(row.principalMaturing)}</td>
                                 <td>${formatCurrency(row.interestMaturing)}</td>
-                                <td>{row.reinvested ? 'Yes' : 'No'}</td>
-                                <td>${formatCurrency(row.lockedPrincipal)}</td>
+                                <td>
+                                  <span className={`investments-native-ladder-status${row.reinvested ? ' is-reinvested' : ' is-cash'}`}>
+                                    {row.reinvested ? 'Yes' : 'No'}
+                                  </span>
+                                </td>
+                                <td className="investments-native-ladder-table-cell--value">${formatCurrency(row.lockedPrincipal)}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
+                      <div className="investments-native-ladder-mobile-sheet">
+                        {ladderResult.scheduleRows.map((row) => (
+                          <article key={`schedule-mobile-${row.year}`} className="investments-native-ladder-mobile-row">
+                            <div className="investments-native-ladder-mobile-row-head">
+                              <h4>Year {row.year}</h4>
+                              <span className={`investments-native-ladder-status${row.reinvested ? ' is-reinvested' : ' is-cash'}`}>
+                                {row.reinvested ? 'Yes' : 'No'}
+                              </span>
+                            </div>
+                            <div className="investments-native-ladder-mobile-row-grid">
+                              <div className="investments-native-ladder-mobile-cell is-value">
+                                <span>Principal Maturing</span>
+                                <strong>${formatCurrency(row.principalMaturing)}</strong>
+                              </div>
+                              <div className="investments-native-ladder-mobile-cell">
+                                <span>Interest Maturing</span>
+                                <strong>${formatCurrency(row.interestMaturing)}</strong>
+                              </div>
+                              <div className="investments-native-ladder-mobile-cell">
+                                <span>Reinvested</span>
+                                <strong>{row.reinvested ? 'Yes' : 'No'}</strong>
+                              </div>
+                              <div className="investments-native-ladder-mobile-cell is-value">
+                                <span>Principal Still Locked</span>
+                                <strong>${formatCurrency(row.lockedPrincipal)}</strong>
+                              </div>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
                     </div>
                   </details>
 
-                  <details className="investments-native-ladder-accordion-item">
+                  <details className="investments-native-ladder-accordion-item investments-native-ladder-result-sheet" data-ladder-results-sheet>
                     <summary className="investments-native-ladder-accordion-summary">Cash available by year</summary>
                     <div className="investments-native-ladder-accordion-body">
-                      <div className="table-scroll">
-                        <table className="ag-table has-fixed-layout">
+                      <div className="investments-native-ladder-table-shell">
+                        <table className="investments-native-ladder-table investments-native-ladder-table--cash">
                           <thead>
                             <tr>
-                              <th>Year</th>
-                              <th>Principal Available</th>
+                              <th scope="col">Year</th>
+                              <th scope="col">Principal Available</th>
                               <th>Interest Available</th>
-                              <th>Total Cash Available</th>
+                              <th scope="col" className="is-highlight">Total Cash Available</th>
                             </tr>
                           </thead>
                           <tbody>
                             {ladderResult.scheduleRows.map((row) => (
                               <tr key={`cash-${row.year}`}>
-                                <td>Year {row.year}</td>
+                                <th scope="row">Year {row.year}</th>
                                 <td>${formatCurrency(row.principalAvailable)}</td>
                                 <td>${formatCurrency(row.interestAvailable)}</td>
-                                <td>${formatCurrency(row.totalCashAvailable)}</td>
+                                <td className="investments-native-ladder-table-cell--value is-cash">${formatCurrency(row.totalCashAvailable)}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
+                      </div>
+                      <div className="investments-native-ladder-mobile-sheet">
+                        {ladderResult.scheduleRows.map((row) => (
+                          <article key={`cash-mobile-${row.year}`} className="investments-native-ladder-mobile-row">
+                            <div className="investments-native-ladder-mobile-row-head">
+                              <h4>Year {row.year}</h4>
+                            </div>
+                            <div className="investments-native-ladder-mobile-row-grid">
+                              <div className="investments-native-ladder-mobile-cell">
+                                <span>Principal Available</span>
+                                <strong>${formatCurrency(row.principalAvailable)}</strong>
+                              </div>
+                              <div className="investments-native-ladder-mobile-cell">
+                                <span>Interest Available</span>
+                                <strong>${formatCurrency(row.interestAvailable)}</strong>
+                              </div>
+                              <div className="investments-native-ladder-mobile-cell is-value is-cash">
+                                <span>Total Cash Available</span>
+                                <strong>${formatCurrency(row.totalCashAvailable)}</strong>
+                              </div>
+                            </div>
+                          </article>
+                        ))}
                       </div>
                     </div>
                   </details>
@@ -2325,74 +2945,88 @@ export default function InvestmentsPage() {
                     <p className="investments-native-ladder-cta-note">
                       {calculatorCtaRuntime?.downloadBody}
                     </p>
-                    <div className="investments-native-ladder-gated-row">
-                      <input
-                        id="ladder-download-name"
-                        type="text"
-                        placeholder="Your name"
-                        value={ladderDownload.name}
-                        onChange={(event) => setLadderDownload((prev) => ({ ...prev, name: event.target.value }))}
-                      />
-                      <input
-                        id="ladder-download-email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={ladderDownload.email}
-                        onChange={(event) => setLadderDownload((prev) => ({ ...prev, email: event.target.value }))}
-                      />
-                    </div>
                     <div className="investments-native-ladder-gated-actions">
                       <button type="button" className="service-native-btn" disabled={!canDownloadLadder} onClick={downloadLadderSample}>
-                        {calculatorCtaRuntime?.downloadButtonLabel}
+                        Download PDF
                       </button>
                     </div>
+                    <label className="investments-native-ladder-opt-in">
+                      <input
+                        type="checkbox"
+                        checked={ladderDownloadOptIn}
+                        onChange={(event) => {
+                          setLadderDownloadOptIn(event.target.checked);
+                          setLadderDiscussMessage('');
+                        }}
+                      />
+                      <span>I&apos;d like follow-up from the investments team.</span>
+                    </label>
+                    <p className="investments-native-ladder-opt-in-note">{calculatorCtaRuntime?.discussBody}</p>
                   </div>
 
-                  <div className="investments-native-ladder-contact">
-                    <h4 className="investments-native-ladder-contact-heading">{calculatorCtaRuntime?.discussTitle}</h4>
-                    <p className="investments-native-ladder-contact-message">
-                      {calculatorCtaRuntime?.discussBody}
-                    </p>
-                    <div className="investments-native-ladder-contact-info-row">
-                      <input
-                        id="ladder-discuss-org"
-                        type="text"
-                        placeholder="Organization"
-                        value={ladderDiscuss.organization}
-                        onChange={(event) => setLadderDiscuss((prev) => ({ ...prev, organization: event.target.value }))}
-                      />
-                      <select
-                        id="ladder-discuss-state"
-                        value={ladderDiscuss.state}
-                        onChange={(event) => setLadderDiscuss((prev) => ({ ...prev, state: event.target.value }))}
-                      >
-                        <option value="">State</option>
-                        {ladderStateOptions.map(([code, name]) => (
-                          <option key={code} value={code}>{name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="investments-native-ladder-contact-phone-row">
-                      <input
-                        id="ladder-discuss-phone"
-                        className="investments-native-ladder-contact-phone"
-                        type="tel"
-                        placeholder="(555) 555-5555"
-                        value={ladderDiscuss.phone}
-                        onChange={(event) => setLadderDiscuss((prev) => ({ ...prev, phone: formatPhoneInput(event.target.value) }))}
-                      />
-                      <div className="investments-native-ladder-contact-submit">
-                        <button type="button" className="service-native-btn" onClick={sendLadderDiscuss}>
-                          {calculatorCtaRuntime?.discussButtonLabel}
-                        </button>
-                        {ladderDiscussMessage ? (
-                          <span className={`investments-native-ladder-discuss-message ${ladderDiscussTone}`}>
-                            {ladderDiscussMessage}
-                          </span>
-                        ) : null}
+                  {ladderDownloadOptIn ? (
+                    <div className="investments-native-ladder-contact">
+                      <h4 className="investments-native-ladder-contact-heading">{calculatorCtaRuntime?.discussTitle}</h4>
+                      <p className="investments-native-ladder-contact-message">
+                        {calculatorCtaRuntime?.discussBody}
+                      </p>
+                      <div className="investments-native-ladder-gated-row">
+                        <input
+                          id="ladder-download-name"
+                          type="text"
+                          placeholder="Your name"
+                          value={ladderDownload.name}
+                          onChange={(event) => setLadderDownload((prev) => ({ ...prev, name: event.target.value }))}
+                        />
+                        <input
+                          id="ladder-download-email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={ladderDownload.email}
+                          onChange={(event) => setLadderDownload((prev) => ({ ...prev, email: event.target.value }))}
+                        />
+                      </div>
+                      <div className="investments-native-ladder-contact-info-row">
+                        <input
+                          id="ladder-discuss-org"
+                          type="text"
+                          placeholder="Organization"
+                          value={ladderDiscuss.organization}
+                          onChange={(event) => setLadderDiscuss((prev) => ({ ...prev, organization: event.target.value }))}
+                        />
+                        <select
+                          id="ladder-discuss-state"
+                          value={ladderDiscuss.state}
+                          onChange={(event) => setLadderDiscuss((prev) => ({ ...prev, state: event.target.value }))}
+                        >
+                          <option value="">State</option>
+                          {ladderStateOptions.map(([code, name]) => (
+                            <option key={code} value={code}>{name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="investments-native-ladder-contact-phone-row">
+                        <input
+                          id="ladder-discuss-phone"
+                          className="investments-native-ladder-contact-phone"
+                          type="tel"
+                          placeholder="(555) 555-5555"
+                          value={ladderDiscuss.phone}
+                          onChange={(event) => setLadderDiscuss((prev) => ({ ...prev, phone: formatPhoneInput(event.target.value) }))}
+                        />
+                        <div className="investments-native-ladder-contact-submit">
+                          <button type="button" className="service-native-btn" onClick={sendLadderDiscuss}>
+                            {calculatorCtaRuntime?.discussButtonLabel}
+                          </button>
+                          {ladderDiscussMessage ? (
+                            <span className={`investments-native-ladder-discuss-message ${ladderDiscussTone}`}>
+                              {ladderDiscussMessage}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : null}
                 </div>
               </div>
             ) : null}

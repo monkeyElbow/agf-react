@@ -34,11 +34,30 @@ describe('investments page review polish guardrails', () => {
   });
 
   it('keeps the investments intro body and followup line on the shared intro type scale', () => {
+    const pageSource = readSource('./InvestmentsPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
+    expect(pageSource).toContain('service-native-intro investments-native-intro');
+    expect(cssSource).not.toContain('.investments-native-intro h2 {');
     expect(cssSource).toContain('.investments-native-intro p {');
     expect(cssSource).toContain('font-size: var(--service-native-intro-body-size);');
     expect(cssSource).toContain('.investments-native-intro-tagline {');
     expect(cssSource).toContain('font-size: var(--service-native-intro-emphasis-size);');
+  });
+
+  it('keeps the ladder calculator as one cohesive calculator zone with ladder-owned result sheets', () => {
+    const pageSource = readSource('./InvestmentsPage.jsx');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(pageSource).toContain('data-ladder-intro');
+    expect(pageSource).toContain('className="investments-native-ladder-table-shell"');
+    expect(pageSource).toContain('className="investments-native-ladder-mobile-sheet"');
+    expect(pageSource).not.toContain('investments-native-ladder-process-line');
+    expect(pageSource).not.toContain('ag-table has-fixed-layout investments-native-ladder-table');
+    expect(cssSource).toContain('--investments-ladder-zone-surface');
+    expect(cssSource).toContain('.investments-native-ladder-result-sheet::before {');
+    expect(cssSource).toContain('.investments-native-ladder-table-shell {');
+    expect(cssSource).toContain('.investments-native-ladder-mobile-sheet {');
+    expect(cssSource).toContain('.investments-native-ladder-status.is-cash {');
   });
 });
