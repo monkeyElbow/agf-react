@@ -59,4 +59,22 @@ describe('legacy giving review polish guardrail', () => {
     expect(contentSource).toContain("widget: 'giving-comparison-matrix'");
     expect(contentSource).toContain("className: 'legacy-giving-opportunity'");
   });
+
+  it('keeps the charitable trusts process trigger on the non-filling outline hover pattern', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const contentSource = readSource('../data/nativePageContent.js');
+
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline,');
+    expect(cssSource).toContain('--btn-hover-bg: transparent;');
+    expect(cssSource).toContain('--btn-hover-text: var(--btn-hover-color);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:hover,');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:focus-visible,');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:active {');
+    expect(cssSource).toContain('background: transparent;');
+    expect(contentSource).toContain("pageClass: 'native-info-page--legacy-child native-info-page--legacy-trusts'");
+    expect(contentSource).toContain("className: 'legacy-child-native-trusts-crt-trigger'");
+    expect(contentSource).toContain("label: 'Start the process'");
+    expect(contentSource).toContain("targetAnchorId: 'charitable-trusts-inline-form'");
+    expect(contentSource).toContain("className: 'is-outline is-tone-atlantean'");
+  });
 });

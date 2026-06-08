@@ -21112,6 +21112,19 @@ p.impact-proof-story-proof-body {
   justify-content: center;
 }
 
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline,
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:visited {
+  --btn-hover-bg: transparent;
+  --btn-hover-text: var(--btn-hover-color);
+  background: transparent;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:hover,
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:focus-visible,
+.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:active {
+  background: transparent;
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-trusts .trusts-type-card {
   border-radius: 9px;
   border: none;
