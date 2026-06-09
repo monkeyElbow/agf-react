@@ -3,12 +3,20 @@ function isHeroBlock(block) {
   return kind === 'hero';
 }
 
+function isReturnAssistAnchorBlock(block) {
+  const blockId = String(block?.id || '').trim();
+  if (blockId === 'home_impact_story' || blockId === 'home_services_feature_animation') {
+    return true;
+  }
+  return isHeroBlock(block);
+}
+
 export function planHomeRenderItems(blocks = [], { showReturnAssist = false } = {}) {
   const sourceBlocks = Array.isArray(blocks) ? blocks : [];
-  const heroBlockIndex = sourceBlocks.findIndex((block) => isHeroBlock(block));
+  const returnAssistAnchorIndex = sourceBlocks.findIndex((block) => isReturnAssistAnchorBlock(block));
   const items = [];
 
-  if (heroBlockIndex < 0) {
+  if (returnAssistAnchorIndex < 0) {
     if (showReturnAssist) {
       items.push({ type: 'slot', slot: 'return_assist' });
     }
@@ -20,7 +28,7 @@ export function planHomeRenderItems(blocks = [], { showReturnAssist = false } = 
 
   sourceBlocks.forEach((block, index) => {
     items.push({ type: 'block', block });
-    if (showReturnAssist && index === heroBlockIndex) {
+    if (showReturnAssist && index === returnAssistAnchorIndex) {
       items.push({ type: 'slot', slot: 'return_assist' });
     }
   });

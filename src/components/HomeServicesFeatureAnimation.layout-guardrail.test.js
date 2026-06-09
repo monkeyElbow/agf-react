@@ -20,17 +20,20 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('.home-services-feature-shell {');
     expect(cssSource).toContain('--home-services-intro-top-space: clamp(5.75rem, 13vw, 13rem);');
     expect(cssSource).toContain('--home-services-intro-shell-gap: clamp(1.4rem, 3.2vw, 3rem);');
+    expect(cssSource).toContain('--home-services-intro-cue-offset: clamp(0.82rem, 2.05vw, 1.8rem);');
     expect(cssSource).toContain('--home-services-panel-gap: clamp(0.675rem, 1.1vw, 1.125rem);');
     expect(cssSource).toContain('gap: var(--home-services-intro-shell-gap);');
     expect(cssSource).toContain('.home-services-feature-list {');
     expect(cssSource).toContain('gap: var(--home-services-panel-gap);');
     expect(cssSource).toContain('width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-gutter) * 2)));');
-    expect(cssSource).toContain('padding: 0 clamp(0.7rem, 1.5vw, 1.1rem) clamp(7rem, 11vw, 9rem);');
+    expect(cssSource).toContain('padding: 0 clamp(0.7rem, 1.5vw, 1.1rem) clamp(3.45rem, 5.8vw, 4.7rem);');
     expect(cssSource).toContain('perspective: 1800px;');
     expect(cssSource).toContain('.home-services-feature-panel {');
     expect(cssSource).toContain('width: min(100%, 84rem);');
     expect(cssSource).toContain('border-radius: 32px;');
     expect(cssSource).toContain('transform: translate3d(0, var(--home-services-panel-lift-y), 0) scale(var(--home-services-panel-scale));');
+    expect(cssSource).toContain('.home-native-services {');
+    expect(cssSource).toContain('padding: clamp(3.6rem, 7.8vw, 5.7rem) 0 clamp(2.6rem, 5.6vw, 4rem);');
     expect(cssSource).toContain('.home-services-feature-panel-frame {');
     expect(cssSource).toContain('overflow: clip;');
     expect(cssSource).toContain('.home-services-feature-panel.is-right .home-services-feature-panel-copy {');
@@ -57,6 +60,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('0 24px 46px rgba(7, 19, 27, var(--home-services-panel-shadow-opacity))');
     expect(cssSource).toContain('padding: 0 clamp(0.45rem, 2.4vw, 0.65rem) clamp(3.25rem, 7vw, 4.25rem);');
     expect(cssSource).toContain('.home-native-cta-form-wrap {');
+    expect(cssSource).toContain('padding: clamp(1.25rem, 2.8vw, 2rem) 0 clamp(2.4rem, 5vw, 3.8rem);');
     expect(cssSource).toContain('padding: clamp(1.35rem, 5vw, 1.9rem) 0 clamp(2rem, 6vw, 2.6rem);');
   });
 
@@ -135,7 +139,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('min-height: 50vh;');
     expect(cssSource).toContain('justify-items: center;');
     expect(cssSource).toContain('clamp(1.85rem, 4.5vh, 3rem)');
-    expect(cssSource).toContain('clamp(0.9rem, 2.2vh, 1.45rem)');
+    expect(cssSource).toContain('clamp(0.58rem, 1.55vh, 0.95rem)');
   });
 
   it('keeps intro reveal and panel motion on shell-level vars instead of per-content translation', () => {

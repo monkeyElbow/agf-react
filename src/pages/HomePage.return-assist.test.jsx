@@ -136,7 +136,7 @@ describe('HomePage return assist', () => {
     expect(document.querySelector('.home-native-page')?.className).toContain('is-home-hero-temporarily-hidden');
   });
 
-  it('renders the return assist after hero and before the remaining home blocks', async () => {
+  it('renders the return assist after the first top discovery feature and before the next home section', async () => {
     const now = Date.now();
     recordHomeReturnAssistNavigation('/services/investments', now);
     recordHomeReturnAssistNavigation('/', now + 200);
@@ -145,15 +145,15 @@ describe('HomePage return assist', () => {
 
     expect(await screen.findByRole('searchbox', { name: "What can we help you find?" })).toBeTruthy();
 
-    const heroBlock = container.querySelector('[data-block-id="hero"]');
+    const impactStoryBlock = container.querySelector('[data-block-id="home_impact_story"]');
+    const servicesFeatureBlock = container.querySelector('[data-block-id="home_services_feature_animation"]');
     const returnAssist = container.querySelector('.home-return-assist');
-    const ctaBlock = screen.getByText('It starts with a conversation. We’re happy to reach out.').closest('section');
 
-    expect(heroBlock).toBeTruthy();
+    expect(impactStoryBlock).toBeTruthy();
+    expect(servicesFeatureBlock).toBeTruthy();
     expect(returnAssist).toBeTruthy();
-    expect(ctaBlock).toBeTruthy();
-    expect(heroBlock?.compareDocumentPosition(returnAssist) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(returnAssist?.compareDocumentPosition(ctaBlock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(impactStoryBlock?.compareDocumentPosition(returnAssist) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(returnAssist?.compareDocumentPosition(servicesFeatureBlock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('keeps the home CTA lead copy in the section heading area instead of inside the form', () => {
