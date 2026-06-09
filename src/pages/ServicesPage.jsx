@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BlockHudPanelHost from '../components/BlockHudPanelHost';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
@@ -30,6 +30,8 @@ import {
   isExternalLinkHref,
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
+
+const SERVICES_HERO_PIE_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 const testimonials = [
   {
@@ -124,10 +126,44 @@ function mapServicesBillboardToIntroRuntime(runtime) {
   };
 }
 
+function normalizeHexChannel(value) {
+  const clamped = Math.max(0, Math.min(255, Number(value) || 0));
+  return Math.round(clamped);
+}
+
+function hexToRgbTriplet(value, fallback = '0, 173, 187') {
+  const source = String(value || '').trim().replace('#', '');
+  const normalized = source.length === 3
+    ? source.split('').map((token) => `${token}${token}`).join('')
+    : source;
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return fallback;
+  }
+  const red = normalizeHexChannel(Number.parseInt(normalized.slice(0, 2), 16));
+  const green = normalizeHexChannel(Number.parseInt(normalized.slice(2, 4), 16));
+  const blue = normalizeHexChannel(Number.parseInt(normalized.slice(4, 6), 16));
+  return `${red}, ${green}, ${blue}`;
+}
+
+function textColorForHex(value, fallback = '#ffffff') {
+  const source = String(value || '').trim().replace('#', '');
+  const normalized = source.length === 3
+    ? source.split('').map((token) => `${token}${token}`).join('')
+    : source;
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return fallback;
+  }
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+  const luminance = ((red * 299) + (green * 587) + (blue * 114)) / 1000;
+  return luminance > 150 ? '#1f2122' : '#ffffff';
+}
 
 export default function ServicesPage() {
   const pageRef = useRef(null);
   const heroPieSectionRef = useRef(null);
+  const heroPieCardSizerRef = useRef(null);
   const ctaSectionRef = useRef(null);
   const testimonialsSectionRef = useRef(null);
   const {
@@ -145,6 +181,9 @@ export default function ServicesPage() {
   useNativeEnhancements(pageRef);
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [heroPieUserInteracted, setHeroPieUserInteracted] = useState(false);
+  const [heroPieReducedMotion, setHeroPieReducedMotion] = useState(false);
+  const [heroPieCardMinHeight, setHeroPieCardMinHeight] = useState(0);
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
   const managedBlocksSource = useMemo(
@@ -362,16 +401,118 @@ export default function ServicesPage() {
   }, [heroPieSlices.length]);
 
   useEffect(() => {
-    if (hoveredIndex !== null || !heroPieAutoplayEnabled || heroPieSlices.length <= 1) {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return undefined;
+    }
+
+    const media = window.matchMedia(SERVICES_HERO_PIE_REDUCED_MOTION_QUERY);
+    const syncReducedMotion = () => {
+      setHeroPieReducedMotion(Boolean(media.matches));
+    };
+
+    syncReducedMotion();
+    media.addEventListener?.('change', syncReducedMotion);
+    media.addListener?.(syncReducedMotion);
+
+    return () => {
+      media.removeEventListener?.('change', syncReducedMotion);
+      media.removeListener?.(syncReducedMotion);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (
+      hoveredIndex !== null
+      || heroPieUserInteracted
+      || heroPieReducedMotion
+      || !heroPieAutoplayEnabled
+      || heroPieSlices.length <= 1
+    ) {
       return undefined;
     }
     const timer = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % heroPieSlices.length);
     }, heroPieAutoplayMs);
     return () => window.clearInterval(timer);
-  }, [heroPieAutoplayEnabled, heroPieAutoplayMs, heroPieSlices.length, hoveredIndex]);
+  }, [
+    heroPieAutoplayEnabled,
+    heroPieAutoplayMs,
+    heroPieReducedMotion,
+    heroPieSlices.length,
+    heroPieUserInteracted,
+    hoveredIndex,
+  ]);
+
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const measureCardHeight = () => {
+      const sizer = heroPieCardSizerRef.current;
+      if (!sizer) {
+        return;
+      }
+      const cards = Array.from(sizer.querySelectorAll('.services-pie-card'));
+      const nextHeight = cards.reduce((tallest, card) => (
+        Math.max(tallest, Math.ceil(card.getBoundingClientRect().height))
+      ), 0);
+      setHeroPieCardMinHeight((current) => (current === nextHeight ? current : nextHeight));
+    };
+
+    const frame = window.requestAnimationFrame(measureCardHeight);
+    window.addEventListener('resize', measureCardHeight);
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== 'undefined' && heroPieCardSizerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        measureCardHeight();
+      });
+      resizeObserver.observe(heroPieCardSizerRef.current);
+    }
+
+    let fontLoadCanceled = false;
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!fontLoadCanceled) {
+          measureCardHeight();
+        }
+      });
+    }
+
+    return () => {
+      fontLoadCanceled = true;
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', measureCardHeight);
+      resizeObserver?.disconnect();
+    };
+  }, [heroPieSlices]);
 
   const activeSlice = heroPieSlices[hoveredIndex ?? activeIndex] || DEFAULT_SERVICE_HERO_PIE_SLICES[0];
+  const activeSliceAccentStyle = {
+    '--services-pie-active-color': activeSlice.color,
+    '--services-pie-active-rgb': hexToRgbTriplet(activeSlice.color),
+  };
+  const activeSliceCardStyle = heroPieCardMinHeight > 0
+    ? { '--services-pie-card-min-height': `${heroPieCardMinHeight}px` }
+    : undefined;
+  const activeSliceButtonStyle = {
+    '--btn-color': activeSlice.color,
+    '--btn-hover-color': activeSlice.color,
+    '--btn-text': textColorForHex(activeSlice.color),
+    '--btn-hover-text': textColorForHex(activeSlice.color),
+  };
+  const wheelButtonClassName = actionButtonClassName('blue');
+  const selectHeroSlice = (index) => {
+    setActiveIndex(index);
+    setHeroPieUserInteracted(true);
+  };
+  const previewHeroSlice = (index) => {
+    setHoveredIndex(index);
+  };
+  const clearHeroSlicePreview = () => {
+    setHoveredIndex(null);
+  };
   const scrollElementWithNavOffset = (target, extraOffset = 8) => {
     if (!target || typeof window === 'undefined' || typeof document === 'undefined') {
       return;
@@ -541,32 +682,99 @@ export default function ServicesPage() {
           />
         </FrontHudPanelShell>
       ) : null}
-      <section ref={heroPieSectionRef} className={`services-pie-hero${getOwnershipVisualForBlockId('hero_pie').className || ''}`} data-block-id="hero_pie">
+      <section
+        ref={heroPieSectionRef}
+        className={`services-pie-hero${getOwnershipVisualForBlockId('hero_pie').className || ''}`}
+        data-block-id="hero_pie"
+        style={activeSliceAccentStyle}
+      >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero_pie')} />
         {renderHudAnchor('hero_pie')}
-        <div className="ag-panel-rail services-pie-hero-grid">
-          <div className="services-pie-wrap fade-up">
-            <svg viewBox="0 0 1080 1080" preserveAspectRatio="xMidYMid meet" className="services-pie-chart" aria-label="Services">
-              <circle cx="540" cy="540" r="180" fill="#ffffff" />
-              {heroPieSlices.map((slice, index) => {
-                const isActive = (hoveredIndex ?? activeIndex) === index;
-                return (
-                  <a
-                    key={slice.path}
-                    href={slice.path}
-                    onMouseEnter={() => setHoveredIndex(index)}
-                    onMouseLeave={() => setHoveredIndex(null)}
-                  >
-                    <path className={`services-pie-wedge${isActive ? ' is-active' : ''}`} d={slice.d} fill={slice.color} />
-                  </a>
-                );
-              })}
-              <circle cx="540" cy="540" r="120" fill="#ffffff" />
-            </svg>
+        <div className="ag-panel-rail">
+          <div className="services-pie-header fade-up">
+            <h1>The AGFinancial complete strategy</h1>
           </div>
 
-          <div className="services-pie-title fade-up">
-            <h1 className="line1 line2" style={{ color: activeSlice.color }}>{activeSlice.title}</h1>
+          <div className="services-pie-interactive-shell fade-up">
+            <div className="services-pie-hero-grid">
+              <div className="services-pie-wrap">
+                <svg viewBox="0 0 1080 1080" preserveAspectRatio="xMidYMid meet" className="services-pie-chart" aria-label="Services">
+                  <circle cx="540" cy="540" r="472" fill="rgba(255, 255, 255, 0.72)" />
+                  <circle cx="540" cy="540" r="432" fill="rgba(255, 255, 255, 0.3)" />
+                  {heroPieSlices.map((slice, index) => {
+                    const isActive = (hoveredIndex ?? activeIndex) === index;
+                    return (
+                      <a
+                        key={slice.path}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={slice.title}
+                        aria-pressed={isActive}
+                        className={`services-pie-slice-control${isActive ? ' is-active' : ''}`}
+                        data-service-wheel-slice={slice.title}
+                        onMouseEnter={() => previewHeroSlice(index)}
+                        onMouseLeave={clearHeroSlicePreview}
+                        onFocus={() => previewHeroSlice(index)}
+                        onBlur={clearHeroSlicePreview}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          selectHeroSlice(index);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            selectHeroSlice(index);
+                          }
+                        }}
+                      >
+                        <path className={`services-pie-wedge${isActive ? ' is-active' : ''}`} d={slice.d} fill={slice.color} />
+                      </a>
+                    );
+                  })}
+                  <circle cx="540" cy="540" r="178" fill="rgba(255, 255, 255, 0.985)" />
+                  <circle cx="540" cy="540" r="162" fill="rgba(247, 250, 250, 0.985)" />
+                </svg>
+              </div>
+
+              <article className="services-pie-card" data-service-wheel-card={activeSlice.title} style={activeSliceCardStyle}>
+                <h2>{activeSlice.title}</h2>
+                <p>{activeSlice.description}</p>
+                <Link to={activeSlice.path} className={wheelButtonClassName} style={activeSliceButtonStyle}>
+                  Explore {activeSlice.title}
+                </Link>
+              </article>
+            </div>
+
+            <div className="services-pie-selector" role="tablist" aria-label="Service options">
+              {heroPieSlices.map((slice, index) => {
+                const isActive = activeSlice.path === slice.path;
+                return (
+                  <button
+                    key={`service-pill-${slice.path}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    className={`services-pie-pill${isActive ? ' is-active' : ''}`}
+                    data-service-wheel-pill={slice.title}
+                    onClick={() => selectHeroSlice(index)}
+                  >
+                    {slice.title}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="services-pie-card-sizer" ref={heroPieCardSizerRef} aria-hidden="true">
+              {heroPieSlices.map((slice) => (
+                <article key={`service-card-sizer-${slice.path}`} className="services-pie-card">
+                  <h2>{slice.title}</h2>
+                  <p>{slice.description}</p>
+                  <span className={wheelButtonClassName}>
+                    Explore {slice.title}
+                  </span>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>

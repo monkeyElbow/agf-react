@@ -11,16 +11,21 @@ function readSource(relativePath) {
 }
 
 describe('services page spacing and typography guardrail', () => {
-  it('keeps the services overview intro title oversized with extra bottom breathing room', () => {
+  it('keeps the services wheel as a branded two-column shell with a compact payoff band below it', () => {
     const cssSource = readSource('../styles/home-native.css');
 
+    expect(cssSource).toContain('.services-pie-header {');
+    expect(cssSource).toContain('.services-pie-interactive-shell {');
+    expect(cssSource).toContain('.services-pie-hero-grid {');
+    expect(cssSource).toContain('grid-template-columns: minmax(0, 1.24fr) minmax(300px, 0.82fr);');
+    expect(cssSource).toContain('.services-pie-card {');
+    expect(cssSource).toContain('border-radius: 26px;');
+    expect(cssSource).toContain('.services-pie-selector {');
+    expect(cssSource).toContain('.services-pie-pill {');
     expect(cssSource).toContain('.services-native-intro {');
-    expect(cssSource).toContain('padding: clamp(4rem, 8.2vw, 6.4rem) 0 clamp(7.2rem, 14vw, 12.4rem);');
+    expect(cssSource).toContain('padding: clamp(2.45rem, 5.2vw, 3.85rem) 0 clamp(3rem, 6.2vw, 4.9rem);');
     expect(cssSource).toContain('.services-native-intro h2 {');
-    expect(cssSource).toContain('font-size: clamp(3.7rem, 8.8vw, 6.85rem);');
-    expect(cssSource).toContain('@media (max-width: 767px) {');
-    expect(cssSource).toContain('padding: clamp(3.5rem, 11vw, 4.4rem) 0 clamp(5.2rem, 14vw, 6.8rem);');
-    expect(cssSource).toContain('font-size: clamp(3.35rem, 11.8vw, 4.5rem);');
+    expect(cssSource).toContain('font-size: clamp(2.65rem, 6vw, 4.55rem);');
   });
 
   it('keeps the services card sub-lists slightly larger without crowding the single-column mobile stack', () => {
@@ -42,5 +47,14 @@ describe('services page spacing and typography guardrail', () => {
     expect(cssSource).toContain('.services-native-matters {');
     expect(cssSource).toContain('padding: clamp(3rem, 6vw, 4.8rem) 0 clamp(3.2rem, 6.3vw, 5rem);');
     expect(cssSource).toContain('.services-native-matters h2 {');
+  });
+
+  it('keeps the services wheel motion respectful when visitors prefer reduced motion', () => {
+    const cssSource = readSource('../styles/home-native.css');
+
+    expect(cssSource).toContain('@media (prefers-reduced-motion: reduce) {');
+    expect(cssSource).toContain('.services-pie-wedge,');
+    expect(cssSource).toContain('.services-pie-pill {');
+    expect(cssSource).toContain('transition: none;');
   });
 });
