@@ -8,8 +8,21 @@ describe('insurance native page content', () => {
     const coverageSection = sections.find((section) => section?.className === 'insurance-native-coverage');
     const ctaSection = sections.find((section) => section?.className === 'insurance-native-cta');
     const missionAssureFeatureSection = sections.find((section) => section?.className === 'insurance-native-mission-assure');
+    const propertyCard = coverageSection?.cards?.find((card) => card?.title === 'Property & Casualty');
+    const missionAssureCard = coverageSection?.cards?.find((card) => card?.title === 'Mission Assure');
 
     expect(content?.pageClass).toBe('native-info-page--insurance');
+    expect(content?.hero?.lines).toEqual([
+      expect.objectContaining({ title: 'Impressive coverage.', className: 'is-super-grey' }),
+      expect.objectContaining({
+        title: 'Built for ministry.',
+        className: 'is-super-grey',
+        highlights: [expect.objectContaining({ text: 'ministry.', className: 'is-atlantean' })],
+      }),
+    ]);
+    expect(content?.intro?.body).toEqual([
+      'We’re committed to helping you get the coverage you need, at highly competitive rates, to protect your people and property. It’s more than insurance.',
+    ]);
     expect(Array.isArray(coverageSection?.cards) ? coverageSection.cards : []).toHaveLength(4);
     expect(coverageSection?.cards?.every((card) => card?.cardClass === 'card1')).toBe(true);
     expect(coverageSection?.cards?.map((card) => card?.title)).toEqual([
@@ -18,6 +31,8 @@ describe('insurance native page content', () => {
       'Mission Assure',
       'Bonds',
     ]);
+    expect(propertyCard?.body).toBe('Our specialty is helping protect churches, schools, ministries, and other nonprofits, as well as businesses.');
+    expect(missionAssureCard?.body).toContain('**Mission Assure** offers superior protection at minimum cost.');
     expect(coverageSection?.actions).toEqual([
       expect.objectContaining({
         label: 'Certificate request',

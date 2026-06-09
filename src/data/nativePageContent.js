@@ -236,13 +236,22 @@ const directContent = {
   '/services/insurance': {
     pageClass: 'native-info-page--insurance',
     hero: {
-      title: 'Low premiums, impressive coverage.',
-      highlights: [{ text: 'impressive coverage', className: 'is-atlantean' }],
+      lines: [
+        {
+          title: 'Impressive coverage.',
+          className: 'is-super-grey',
+        },
+        {
+          title: 'Built for ministry.',
+          className: 'is-super-grey',
+          highlights: [{ text: 'ministry.', className: 'is-atlantean' }],
+        },
+      ],
     },
     intro: {
       heading: 'Protect what matters most.',
       body: [
-        "We're committed to helping you get the coverage you need, at highly competitive rates, to protect your people and property.",
+        'We’re committed to helping you get the coverage you need, at highly competitive rates, to protect your people and property. It’s more than insurance.',
       ],
       emphasis: "It's protection, security, and confidence.",
       actions: [{ label: 'Request a quote', to: '/services/insurance/life-insurance-quote' }],
@@ -256,7 +265,7 @@ const directContent = {
         cards: [
           {
             title: 'Property & Casualty',
-            body: "Our specialty is protecting churches, schools, ministries, and other nonprofits, as well as businesses. It's the best coverage at the best possible rates for your organization.",
+            body: 'Our specialty is helping protect churches, schools, ministries, and other nonprofits, as well as businesses.',
             to: '/services/insurance/property-casualty-insurance',
             cta: 'Learn more',
             cardClass: 'card1',
@@ -272,7 +281,7 @@ const directContent = {
           },
           {
             title: 'Mission Assure',
-            body: 'Full coverage for mission trips, camps, retreats, events, and everything in between, with low per-person, per-day premiums. Mission Assure offers superior protection at minimum cost.',
+            body: 'Full coverage for mission trips, camps, retreats, events, and everything in between, with low per-person, per-day premiums. **Mission Assure** offers superior protection at minimum cost.',
             to: '/services/insurance/mission-assure',
             cta: 'Learn more',
             cardClass: 'card1',

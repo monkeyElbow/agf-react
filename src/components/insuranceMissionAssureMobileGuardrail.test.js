@@ -21,8 +21,10 @@ describe('insurance Mission Assure mobile layout guardrail', () => {
     expect(cssSource).toContain('width: 100%;');
     expect(cssSource).toContain('min-width: 0;');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-media {');
-    expect(cssSource).toContain('width: min(240px, 100%);');
-    expect(cssSource).toContain('min-height: clamp(250px, 68vw, 320px);');
+    expect(cssSource).toContain('width: min(220px, 100%);');
+    expect(cssSource).toContain('min-height: clamp(220px, 62vw, 280px);');
     expect(cssSource).toContain('justify-self: center;');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .native-info-feature-logo {');
+    expect(cssSource).toContain('width: min(250px, 84%);');
   });
 });

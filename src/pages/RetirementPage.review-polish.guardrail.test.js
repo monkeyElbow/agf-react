@@ -73,4 +73,32 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('@media (prefers-reduced-motion: reduce) {');
     expect(cssSource).toContain('transition: none;');
   });
+
+  it('keeps the retirement calculator on a branded sheet while preserving the svg chart structure', () => {
+    const source = readSource('./RetirementPage.jsx');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(source).toContain('Retirement Savings Calculator');
+    expect(source).toContain('aria-label="Retirement projection chart"');
+    expect(source).toContain('Current Age');
+    expect(source).toContain('Expected Annual Return (%): <strong>{calcResults.growthPercent}</strong>');
+    expect(source).toContain('Projected balance');
+    expect(source).toContain('Target at retirement');
+    expect(cssSource).toContain('.retirement-calc-section {');
+    expect(cssSource).toContain('background: linear-gradient(180deg, #ffffff 0%, rgba(0, 138, 171, 0.055) 100%);');
+    expect(cssSource).toContain('.retirement-calc-box {');
+    expect(cssSource).toContain('border: 1px solid rgba(0, 138, 171, 0.16);');
+    expect(cssSource).toContain('border-radius: 24px;');
+    expect(cssSource).toContain('.retirement-calc-grid label {');
+    expect(cssSource).toContain('text-transform: uppercase;');
+    expect(cssSource).toContain('.retirement-calc-grid label strong {');
+    expect(cssSource).toContain('.retirement-calc-grid :is(input, select) {');
+    expect(cssSource).toContain('min-height: 52px;');
+    expect(cssSource).toContain('.retirement-calc-result-row {');
+    expect(cssSource).toContain('border-radius: 16px;');
+    expect(cssSource).toContain('.retirement-calc-chart {');
+    expect(cssSource).toContain('border-radius: 20px;');
+    expect(cssSource).toContain('.retirement-lead-form form {');
+    expect(cssSource).toContain('border-radius: 20px;');
+  });
 });
