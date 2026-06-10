@@ -95,6 +95,65 @@ const SERVICES_HUD_SECTION_KEY_BY_BLOCK_ID = {
   cta_form: 'cta',
   testimonials: 'testimonials',
 };
+const SERVICES_BREAKDOWN_ROWS = Object.freeze([
+  Object.freeze({
+    slug: 'loans',
+    title: 'Loans',
+    path: '/services/loans',
+    description: 'The right loan can change everything for your ministry. 100% customized. Every loan, from construction to lines of credit.',
+    links: Object.freeze([
+      Object.freeze({ label: 'Loan options', path: '/services/loans' }),
+    ]),
+  }),
+  Object.freeze({
+    slug: 'investments',
+    title: 'Investments',
+    path: '/services/investments',
+    description: "It's much more than money. Your funds help churches reach their communities. Growth for you, growth for Kingdom.",
+    links: Object.freeze([
+      Object.freeze({ label: 'Rates', path: '/services/investments#rates' }),
+      Object.freeze({ label: 'Demand Certificates', path: '/services/investments#certificates' }),
+      Object.freeze({ label: 'Term Certificates', path: '/services/investments#certificates' }),
+    ]),
+  }),
+  Object.freeze({
+    slug: 'retirement',
+    title: 'Retirement',
+    path: '/services/retirement',
+    description: 'Plan, contribute, and build for tomorrow. Options include screened investments, IRAs, and our very own MBA Income Fund.',
+    links: Object.freeze([
+      Object.freeze({ label: 'AGFinancial 403(b)', path: '/services/retirement/403b' }),
+      Object.freeze({ label: 'IRAs', path: '/services/retirement/iras' }),
+      Object.freeze({ label: '409A', path: '/services/retirement/409a' }),
+    ]),
+  }),
+  Object.freeze({
+    slug: 'legacy-giving',
+    title: 'Legacy Giving',
+    path: '/services/legacy-giving',
+    description: 'Legacy planning and charitable giving made easy. Tax savings and income generation options that benefit ministries, donors, and loved ones.',
+    links: Object.freeze([
+      Object.freeze({ label: 'Charitable Gift Annuities', path: '/services/legacy-giving/charitable-gift-annuities' }),
+      Object.freeze({ label: 'Charitable Trusts', path: '/services/legacy-giving/charitable-trusts' }),
+      Object.freeze({ label: 'Donor Advised Funds / Generosity Fund', path: '/services/legacy-giving/generosity-fund' }),
+      Object.freeze({ label: 'Endowments', path: '/services/legacy-giving/endowments' }),
+      Object.freeze({ label: 'Wills & Estate Services', path: '/services/legacy-giving' }),
+    ]),
+  }),
+  Object.freeze({
+    slug: 'insurance',
+    title: 'Insurance',
+    path: '/services/insurance',
+    description: 'Protect your people and property, and manage risk. Impressive coverage, built for churches and ministries.',
+    links: Object.freeze([
+      Object.freeze({ label: 'Property & Casualty', path: '/services/insurance/property-casualty-insurance' }),
+      Object.freeze({ label: 'Group Life', path: '/services/insurance/group-term-life-insurance' }),
+      Object.freeze({ label: 'Individual Life', path: '/services/insurance/life-insurance-quote' }),
+      Object.freeze({ label: 'Mission Assure', path: '/services/insurance/mission-assure' }),
+      Object.freeze({ label: 'Risk Management', path: '/services/insurance' }),
+    ]),
+  }),
+]);
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -272,18 +331,6 @@ export default function ServicesPage() {
     })
   ), [heroPieBlock]);
   const heroPieSlices = heroPieRuntime?.slices || [];
-  const servicesOverviewCards = useMemo(() => ([
-    ...heroPieSlices,
-    {
-      title: "Let's find what you need.",
-      path: '/search',
-      color: '#00adbb',
-      description: 'Search entire website.',
-      links: [],
-      variant: 'search',
-      ctaLabel: 'Search',
-    },
-  ]), [heroPieSlices]);
   const heroPieAutoplayEnabled = heroPieRuntime?.autoplay ?? true;
   const heroPieAutoplayMs = heroPieRuntime?.autoplayMs ?? 2400;
   const testimonialsHudSettings = dynamicTestimonialsBlock?.settings || {};
@@ -852,43 +899,42 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <section className="services-native-grid-wrap">
+      <section className="services-native-grid-wrap services-breakdown-section">
         <div className="services-native-grid-bleed">
-          <div className="services-native-grid">
-            {servicesOverviewCards.map((service) => (
+          <div className="services-breakdown-shell">
+            <header className="services-breakdown-header fade-up">
+              <h2>Explore each area of our complete strategy.</h2>
+            </header>
+
+            <div className="services-breakdown-list">
+              {SERVICES_BREAKDOWN_ROWS.map((service) => (
               <article
                 key={`${service.path}-${service.title}`}
-                className={`services-native-card card2 fade-up fade-up-force-observe${service.variant === 'search' ? ' services-native-card--search' : ''}`}
+                className="services-breakdown-panel fade-up fade-up-force-observe"
+                data-service-breakdown-row={service.title}
               >
                 <h3>
-                  {service.variant === 'search' ? (
-                    service.title
-                  ) : isExternalLinkHref(service.path) ? (
+                  {isExternalLinkHref(service.path) ? (
                     <a href={service.path} target="_blank" rel="noreferrer noopener">{service.title}</a>
                   ) : (
                     <Link to={service.path}>{service.title}</Link>
                   )}
                 </h3>
-                <p>{service.description}</p>
-                {service.variant === 'search' ? (
-                  <div className="service-native-action-row is-centered">
-                    <Link to="/search" className="service-native-btn is-dark">Search</Link>
-                  </div>
-                ) : (
-                  <ul>
-                    {service.links.map((item) => (
-                      <li key={item.label}>
-                        {isExternalLinkHref(item.path) ? (
-                          <a href={item.path} target="_blank" rel="noreferrer noopener">{item.label}</a>
-                        ) : (
-                          <Link to={item.path}>{item.label}</Link>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+
+                <p className="services-breakdown-description">{service.description}</p>
+
+                <nav className="services-breakdown-links" aria-label={`${service.title} links`}>
+                  {service.links.map((item) => (
+                    isExternalLinkHref(item.path) ? (
+                      <a key={item.label} href={item.path} target="_blank" rel="noreferrer noopener">{item.label}</a>
+                    ) : (
+                      <Link key={item.label} to={item.path}>{item.label}</Link>
+                    )
+                  ))}
+                </nav>
               </article>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>

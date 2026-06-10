@@ -13,6 +13,7 @@ function readSource(relativePath) {
 describe('services page spacing and typography guardrail', () => {
   it('keeps the services wheel as a branded two-column shell with a compact payoff band below it', () => {
     const cssSource = readSource('../styles/home-native.css');
+    const serviceCssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.services-pie-header {');
     expect(cssSource).toContain('.services-pie-interactive-shell {');
@@ -25,20 +26,65 @@ describe('services page spacing and typography guardrail', () => {
     expect(cssSource).toContain('.services-native-intro {');
     expect(cssSource).toContain('padding: clamp(2.45rem, 5.2vw, 3.85rem) 0 clamp(3rem, 6.2vw, 4.9rem);');
     expect(cssSource).toContain('.services-native-intro h2 {');
-    expect(cssSource).toContain('font-size: clamp(2.65rem, 6vw, 4.55rem);');
+    expect(cssSource).toContain('font-size: clamp(3.38rem, 7.65vw, 5.8rem);');
+    expect(cssSource).toContain('letter-spacing: -0.04em;');
+    expect(cssSource).toContain('line-height: 0.89;');
+    expect(serviceCssSource).toContain('.services-native-page .services-native-intro.service-native-intro.dynamic-intro .service-native-intro-copy > h2 {');
+    expect(serviceCssSource).toContain('font-size: clamp(3.38rem, 7.65vw, 5.8rem);');
+    expect(serviceCssSource).toContain('letter-spacing: -0.04em;');
+    expect(serviceCssSource).toContain('line-height: 0.89;');
+    expect(serviceCssSource).toContain('@media (max-width: 767px) {');
+    expect(serviceCssSource).toContain('font-size: clamp(3.19rem, 13.26vw, 4.4rem);');
+    expect(serviceCssSource).toContain('line-height: 0.91;');
   });
 
-  it('keeps the services card sub-lists slightly larger without crowding the single-column mobile stack', () => {
+  it('keeps the services breakdown as a stacked editorial directory with wrapped links and mobile-safe rows', () => {
     const cssSource = readSource('../styles/home-native.css');
 
-    expect(cssSource).toContain('.services-native-card ul {');
-    expect(cssSource).toContain('gap: 0.28rem;');
-    expect(cssSource).toContain('.services-native-card li a,');
-    expect(cssSource).toContain('font-size: clamp(1.03rem, 1.15vw, 1.1rem);');
-    expect(cssSource).toContain('line-height: 1.42;');
-    expect(cssSource).toContain('.services-native-card li a:visited {');
-    expect(cssSource).toContain('font-size: 1rem;');
-    expect(cssSource).toContain('line-height: 1.38;');
+    expect(cssSource).toContain('.services-breakdown-shell {');
+    expect(cssSource).toContain('display: grid;');
+    expect(cssSource).toContain('.services-breakdown-header {');
+    expect(cssSource).toContain('.services-breakdown-list {');
+    expect(cssSource).toContain('.services-breakdown-panel {');
+    expect(cssSource).toContain('grid-template-columns: minmax(150px, 0.42fr) minmax(0, 1fr);');
+    expect(cssSource).toContain('justify-items: start;');
+    expect(cssSource).toContain('text-align: left;');
+    expect(cssSource).toContain('.services-breakdown-panel h3 {');
+    expect(cssSource).toContain('grid-row: 1 / span 2;');
+    expect(cssSource).toContain('.services-breakdown-description {');
+    expect(cssSource).toContain('grid-column: 2;');
+    expect(cssSource).toContain('max-width: 38ch;');
+    expect(cssSource).toContain('.services-breakdown-links {');
+    expect(cssSource).toContain('display: flex;');
+    expect(cssSource).toContain('flex-wrap: wrap;');
+    expect(cssSource).toContain('justify-content: flex-start;');
+    expect(cssSource).toContain('.services-breakdown-links a,');
+    expect(cssSource).toContain("content: '→';");
+    expect(cssSource).toContain('border-bottom: 1px solid transparent;');
+    expect(cssSource).toContain('@media (max-width: 767px) {');
+    expect(cssSource).toContain('.services-breakdown-panel {\n    grid-template-columns: 1fr;');
+    expect(cssSource).toContain('justify-items: center;');
+    expect(cssSource).toContain('.services-breakdown-links {\n    grid-column: auto;');
+    expect(cssSource).toContain('justify-content: center;');
+  });
+
+  it('removes the visible services breakdown eyebrow and relies on a stronger heading', () => {
+    const cssSource = readSource('../styles/home-native.css');
+
+    expect(cssSource).not.toContain('.services-breakdown-eyebrow {');
+    expect(cssSource).toContain('.services-breakdown-header h2 {');
+    expect(cssSource).toContain('font-size: clamp(1.95rem, 3.15vw, 2.55rem);');
+  });
+
+  it('keeps titles graphite and links on one consistent Atlantean brand treatment', () => {
+    const cssSource = readSource('../styles/home-native.css');
+
+    expect(cssSource).toContain('.services-breakdown-panel h3 {');
+    expect(cssSource).toContain('color: var(--ag-color-super-grey);');
+    expect(cssSource).toContain('.services-breakdown-links a,');
+    expect(cssSource).toContain('color: var(--ag-color-atlantean);');
+    expect(cssSource).toContain('.services-breakdown-links a:hover,');
+    expect(cssSource).toContain('color: var(--ag-color-atlantean-dark);');
   });
 
   it('keeps the What you do matters band roomier without changing its route-specific shell', () => {
