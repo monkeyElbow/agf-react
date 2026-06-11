@@ -21,6 +21,8 @@ describe('services page spacing and typography guardrail', () => {
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1.24fr) minmax(300px, 0.82fr);');
     expect(cssSource).toContain('.services-pie-card {');
     expect(cssSource).toContain('border-radius: 26px;');
+    expect(cssSource).toContain('.services-pie-card .service-native-btn {');
+    expect(cssSource).toContain('margin-top: 0.75rem;');
     expect(cssSource).toContain('.services-pie-selector {');
     expect(cssSource).toContain('.services-pie-pill {');
     expect(cssSource).toContain('.services-native-intro {');
