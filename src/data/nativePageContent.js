@@ -69,6 +69,25 @@ const RETIREMENT_403B_PLAN_FEATURE_CARDS = [
     body: 'Onsite education for your participants is available, and includes retirement trends, IRS regulations, and customized action plans.',
   },
 ];
+
+function buildCalculatorTeamFormSection(body) {
+  return {
+    className: 'calculator-tool-shell calculator-tool-contact',
+    copyWrap: true,
+    title: 'Talk with our team.',
+    body: [body],
+    form: {
+      fields: [
+        { id: 'name', label: 'Name*', type: 'text', required: true },
+        { id: 'email', label: 'Email*', type: 'email', required: true },
+        { id: 'phone', label: 'Phone', type: 'tel', required: false, placeholder: '(555) 555-5555' },
+        { id: 'message', label: 'Message', type: 'textarea', required: false, rows: 4 },
+      ],
+      submitLabel: 'Submit',
+    },
+  };
+}
+
 export function getNativePageContent(path, title) {
   const direct = directContent[path];
   if (direct) {
@@ -787,28 +806,23 @@ const directContent = {
   '/calculators': {
     pageClass: 'native-info-page--calculators',
     compact: true,
-    hero: { title: 'Calculators', highlight: null },
+    hero: {
+      title: 'Calculators',
+      highlight: null,
+      titleSizeRem: 4.5,
+      lineHeight: 0.9,
+      titleLetterSpacingEm: -0.04,
+    },
     hideIntro: true,
     sections: [
       {
-        className: 'calculators-native-directory',
-        hideTitle: true,
-        fullBleed: true,
-        columns: 'four',
+        className: 'calculators-native-collection calculators-native-collection--future',
+        columns: 'three',
+        title: 'Plan for the future',
         cards: [
           {
             title: 'Retirement Savings',
-            body: 'Sneak a peek at the future and discover what you need to do now to make retirement a reality.',
-            stretchedLink: {
-              label: 'Launch',
-              to: '/services/retirement#retirement-savings-calculator',
-            },
-            cta: 'Launch',
-            cardClass: 'card2',
-          },
-          {
-            title: 'Compound Interest',
-            body: 'Watch your money grow over time by earning interest on a deposit and monthly contributions.',
+            body: 'See whether your current savings pace is moving you toward retirement.',
             stretchedLink: {
               label: 'Launch',
               to: '/services/retirement#retirement-savings-calculator',
@@ -818,7 +832,7 @@ const directContent = {
           },
           {
             title: 'Increased Contribution',
-            body: 'Explore how much your retirement balance could grow if you increased your contribution now.',
+            body: 'Measure how a higher contribution rate could change your long-term balance.',
             stretchedLink: {
               label: 'Launch',
               to: '/calculators/increased-contribution',
@@ -827,8 +841,25 @@ const directContent = {
             cardClass: 'card2',
           },
           {
+            title: 'Compound Interest',
+            body: 'Project how steady deposits and time can help your money grow.',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/services/retirement#retirement-savings-calculator',
+            },
+            cta: 'Launch',
+            cardClass: 'card2',
+          },
+        ],
+      },
+      {
+        className: 'calculators-native-collection calculators-native-collection--cashflow',
+        columns: 'two',
+        title: 'Manage cash flow',
+        cards: [
+          {
             title: 'Loan Payment',
-            body: 'Run some numbers to see if the loan you need is in the ballpark.',
+            body: 'Estimate a payment schedule and review the cost of borrowing over time.',
             stretchedLink: {
               label: 'Launch',
               to: '/services/loans#run-some-numbers',
@@ -838,7 +869,7 @@ const directContent = {
           },
           {
             title: 'Emergency Fund',
-            body: 'Find out how much you need to save in order to cover six months of your expenses.',
+            body: 'Set a savings target based on expenses and build a more resilient cash reserve.',
             stretchedLink: {
               label: 'Launch',
               to: '/calculators/emergency-fund',
@@ -846,9 +877,33 @@ const directContent = {
             cta: 'Launch',
             cardClass: 'card2',
           },
+        ],
+      },
+      {
+        className: 'calculators-native-collection calculators-native-collection--picture',
+        columns: 'three',
+        title: 'Understand your full picture',
+        cards: [
+          {
+            title: 'Net Worth',
+            body: 'Organize your assets and liabilities for a clearer view of your financial position.',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/calculators/net-worth',
+            },
+            cta: 'Launch',
+            cardClass: 'card2',
+          },
+        ],
+      },
+      {
+        className: 'calculators-native-collection calculators-native-collection--ministry',
+        columns: 'two',
+        title: 'Grow ministry resources',
+        cards: [
           {
             title: 'Laddering',
-            body: 'See how much more you could earn by laddering your investments instead of focusing only on short-term accounts.',
+            body: 'Compare a laddered certificate approach with shorter-term cash strategies.',
             stretchedLink: {
               label: 'Launch',
               to: '/services/investments#laddering-calculator',
@@ -857,18 +912,8 @@ const directContent = {
             cardClass: 'card2',
           },
           {
-            title: 'Net Worth',
-            body: 'Get a view of your financial position, and make adjustments to see how things could change.',
-            stretchedLink: {
-              label: 'Launch',
-              to: '/calculators/net-worth',
-            },
-            cta: 'Launch',
-            cardClass: 'card2',
-          },
-          {
             title: 'Endowment Investment Earnings',
-            body: 'See how your endowment can keep giving.',
+            body: 'Estimate how invested endowment assets may support ministry year after year.',
             stretchedLink: {
               label: 'Launch',
               to: '/services/legacy-giving/endowments#endowment-investment-earnings-calculator',
@@ -878,38 +923,19 @@ const directContent = {
           },
         ],
       },
-      {
-        className: 'calculators-native-contact',
-        anchorId: 'calculator-contact',
-        copyWrap: true,
-        hideCopy: true,
-        form: {
-          variant: 'dynamic-request',
-          title: 'Numbers are great.',
-          subtitle: 'People are better.',
-          body: 'Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.',
-          steps: [
-            {
-              id: 'calculator-request',
-              fields: [
-                { id: 'firstName', label: 'First Name*', type: 'text', required: true },
-                { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
-                { id: 'email', label: 'Email*', type: 'email', required: true },
-                { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
-                { id: 'message', label: 'What would you like help calculating?', type: 'textarea', rows: 5, required: true },
-              ],
-            },
-          ],
-          submitLabel: 'Let’s discuss',
-        },
-      },
     ],
   },
 
   '/calculators/emergency-fund': {
     pageClass: 'native-info-page--calculator-tool',
     compact: true,
-    hero: { title: 'Emergency Fund Calculator', highlight: null },
+    hero: {
+      title: 'Emergency Fund Calculator',
+      highlight: null,
+      titleSizeRem: 4.5,
+      lineHeight: 0.94,
+      titleLetterSpacingEm: -0.03,
+    },
     hideIntro: true,
     sections: [
       {
@@ -925,17 +951,23 @@ const directContent = {
         hideTitle: true,
         widget: 'emergency-fund-calculator',
       },
+      buildCalculatorTeamFormSection(
+        'Share a few details if you would like help talking through your reserve target and next step.',
+      ),
     ],
-    actions: [
-      { label: 'Back to calculators', to: '/calculators' },
-      { label: 'Talk with our team', to: '/calculators#calculator-contact', ghost: true },
-    ],
+    actions: [],
   },
 
   '/calculators/increased-contribution': {
     pageClass: 'native-info-page--calculator-tool native-info-page--calculator-increased-contribution',
     compact: true,
-    hero: { title: 'Increased Contribution Calculator', highlight: null },
+    hero: {
+      title: 'Increased Contribution Calculator',
+      highlight: null,
+      titleSizeRem: 4.5,
+      lineHeight: 0.94,
+      titleLetterSpacingEm: -0.03,
+    },
     hideIntro: true,
     sections: [
       {
@@ -951,17 +983,23 @@ const directContent = {
         hideTitle: true,
         widget: 'increased-contribution-calculator',
       },
+      buildCalculatorTeamFormSection(
+        'Share a few details if you would like to talk through contribution options and retirement next steps.',
+      ),
     ],
-    actions: [
-      { label: 'Back to calculators', to: '/calculators' },
-      { label: 'Talk with our team', to: '/calculators#calculator-contact', ghost: true },
-    ],
+    actions: [],
   },
 
   '/calculators/net-worth': {
     pageClass: 'native-info-page--calculator-tool',
     compact: true,
-    hero: { title: 'Net Worth Calculator', highlight: null },
+    hero: {
+      title: 'Net Worth Calculator',
+      highlight: null,
+      titleSizeRem: 4.5,
+      lineHeight: 0.94,
+      titleLetterSpacingEm: -0.03,
+    },
     hideIntro: true,
     sections: [
       {
@@ -978,11 +1016,11 @@ const directContent = {
         hideTitle: true,
         widget: 'net-worth-calculator',
       },
+      buildCalculatorTeamFormSection(
+        'Share a few details if you would like help reviewing your balance sheet and planning next steps.',
+      ),
     ],
-    actions: [
-      { label: 'Back to calculators', to: '/calculators' },
-      { label: 'Talk with our team', to: '/calculators#calculator-contact', ghost: true },
-    ],
+    actions: [],
   },
 
   '/contact-us': {

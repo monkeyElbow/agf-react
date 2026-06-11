@@ -231,12 +231,12 @@
   background:
     radial-gradient(circle at top right, rgba(0, 173, 187, 0.08), transparent 28%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 244, 239, 0.94) 100%);
-  padding: clamp(1.9rem, 5vw, 3.5rem) 0 clamp(1.35rem, 3vw, 2.2rem);
+  padding: clamp(1.3rem, 3.6vw, 2.4rem) 0 clamp(0.85rem, 2vw, 1.35rem);
   border-bottom: 1px solid rgba(196, 190, 182, 0.52);
 }
 
 .native-info-page--calculators .service-native-hero .ag-panel-rail {
-  min-height: clamp(160px, 24vw, 230px);
+  min-height: clamp(120px, 17vw, 170px);
   display: block;
 }
 
@@ -245,8 +245,8 @@
   max-width: 10ch;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-heading);
-  font-size: clamp(3rem, 8vw, 6rem);
-  line-height: 0.94;
+  font-size: clamp(2.45rem, 6vw, 4.35rem);
+  line-height: 0.92;
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
   text-align: left;
 }
@@ -258,8 +258,8 @@
 .native-info-page.native-info-page--calculators.is-compact .service-native-hero h1 {
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-heading);
-  font-size: clamp(3rem, 8vw, 6rem);
-  line-height: 0.94;
+  font-size: clamp(2.45rem, 6vw, 4.35rem);
+  line-height: 0.92;
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
 }
 
@@ -284,7 +284,7 @@
   margin: 0;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-body);
-  font-size: clamp(2rem, 3.2vw, 2.8rem);
+  font-size: clamp(1.7rem, 2.6vw, 2.2rem);
   line-height: 1.02;
   letter-spacing: -0.035em;
 }
@@ -299,12 +299,12 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: clamp(224px, 22vw, 276px);
+  min-height: clamp(212px, 20vw, 252px);
   padding: clamp(1.4rem, 2vw, 1.75rem);
   border: 1px solid rgba(202, 207, 212, 0.9);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 10px 22px rgba(13, 61, 78, 0.05);
+  box-shadow: none;
   transition:
     transform 160ms ease,
     border-color 160ms ease,
@@ -312,12 +312,7 @@
 }
 
 .native-info-page--calculators .calculators-native-collection .service-native-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 4px;
-  border-radius: 22px 22px 0 0;
-  background: linear-gradient(90deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
+  display: none;
 }
 
 .native-info-page--calculators .calculators-native-collection .service-native-card:is(:hover, :focus-within) {
@@ -334,7 +329,6 @@
 
 .native-info-page--calculators .calculators-native-collection .service-native-card h3 {
   margin: 0;
-  padding-top: 0.2rem;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-helv);
   font-size: clamp(1.28rem, 2vw, 1.55rem);
@@ -389,11 +383,11 @@
   .native-info-page--calculators .service-native-hero h1,
   .native-info-page.native-info-page--calculators.is-compact .service-native-hero h1 {
     max-width: none;
-    font-size: clamp(2.5rem, 9vw, 4.2rem);
+    font-size: clamp(2.2rem, 8vw, 3.4rem);
   }
 
   .native-info-page--calculators .calculators-native-collection h2 {
-    font-size: clamp(1.75rem, 5.2vw, 2.2rem);
+    font-size: clamp(1.6rem, 4.8vw, 2rem);
   }
 }
 
@@ -409,7 +403,7 @@
 
   .native-info-page--calculators .service-native-hero h1,
   .native-info-page.native-info-page--calculators.is-compact .service-native-hero h1 {
-    font-size: clamp(2.15rem, 12vw, 3rem);
+    font-size: clamp(1.95rem, 10.6vw, 2.6rem);
     line-height: 0.96;
   }
 
@@ -424,7 +418,7 @@
 
 .native-info-page--calculator-tool .service-native-hero {
   background: #ffffff;
-  padding: clamp(0.9rem, 1.8vw, 1.2rem) 0 clamp(0.45rem, 1vw, 0.7rem);
+  padding: clamp(0.72rem, 1.3vw, 0.95rem) 0 clamp(0.28rem, 0.7vw, 0.45rem);
   border-bottom: 1px solid rgba(65, 64, 66, 0.1);
 }
 
@@ -436,14 +430,14 @@
 .native-info-page--calculator-tool .service-native-hero h1,
 .native-info-page.native-info-page--calculator-tool.is-compact .service-native-hero h1 {
   font-family: var(--ag-font-helv);
-  font-size: clamp(1.75rem, 2.8vw, 2.25rem);
-  line-height: 1.05;
+  font-size: clamp(1.55rem, 2.3vw, 1.95rem);
+  line-height: 1.04;
   letter-spacing: -0.03em;
   text-align: left;
 }
 
 .native-info-page--calculator-tool .calculator-tool-shell {
-  padding-block: clamp(0.85rem, 1.5vw, 1.2rem);
+  padding-block: clamp(0.7rem, 1.2vw, 1rem);
 }
 
 .native-info-page--calculator-tool .calculator-tool-shell + .calculator-tool-shell {
@@ -453,25 +447,29 @@
 .native-info-page--calculator-tool .calculator-tool-shell .native-info-section-copy > h2 {
   font-family: var(--ag-font-helv);
   letter-spacing: -0.03em;
-  font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+  font-size: clamp(1.26rem, 2vw, 1.55rem);
+  line-height: 1.08;
+  max-width: 22ch;
 }
 
 .native-info-page--calculator-tool .calculator-tool-shell .native-info-section-copy > p {
-  font-size: clamp(1rem, 1.4vw, 1.12rem);
+  max-width: min(70ch, 100%);
+  font-size: clamp(0.98rem, 1.2vw, 1.05rem);
+  line-height: 1.55;
 }
 
 .native-info-page--calculator-increased-contribution .service-native-hero {
-  padding: clamp(0.75rem, 1.5vw, 1rem) 0 clamp(0.35rem, 0.9vw, 0.55rem);
+  padding: clamp(0.68rem, 1.15vw, 0.88rem) 0 clamp(0.24rem, 0.65vw, 0.4rem);
 }
 
 .native-info-page--calculator-increased-contribution .service-native-hero h1,
 .native-info-page.native-info-page--calculator-increased-contribution.is-compact .service-native-hero h1 {
-  font-size: clamp(1.6rem, 2.35vw, 2rem);
+  font-size: clamp(1.48rem, 2vw, 1.82rem);
   line-height: 1.03;
 }
 
 .native-info-page--calculator-increased-contribution .calculator-tool-shell {
-  padding-block: clamp(0.6rem, 1.1vw, 0.9rem);
+  padding-block: clamp(0.52rem, 0.9vw, 0.78rem);
 }
 
 .native-info-page--calculator-increased-contribution .calculator-tool-shell .native-info-section-copy > h2 {
@@ -1409,9 +1407,12 @@
 }
 
 .retirement-calc-title {
+  margin: 0;
   color: var(--ag-color-super-grey);
   text-align: left;
   font-family: var(--ag-font-helv);
+  font-size: clamp(1.65rem, 2.5vw, 2rem);
+  line-height: 1.05;
   letter-spacing: -0.03em;
 }
 
@@ -2696,10 +2697,10 @@
   margin: 0;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-helv);
-  font-size: clamp(2rem, 3.6vw, 3rem);
-  line-height: 1;
+  font-size: clamp(1.2rem, 3vw, 2.35rem);
+  line-height: 1.04;
   letter-spacing: -0.04em;
-  text-wrap: balance;
+  white-space: nowrap;
   text-align: left;
 }
 
@@ -2725,7 +2726,7 @@
 }
 
 .investments-native-ladder-intro-copy h2 {
-  max-width: 14ch;
+  max-width: none;
   margin-left: 0;
   margin-right: 0;
 }
@@ -4443,7 +4444,7 @@
   margin: 0;
   text-align: left;
   font-family: var(--ag-font-helv);
-  font-size: clamp(1.75rem, 3.2vw, 34px);
+  font-size: clamp(1.65rem, 2.5vw, 2rem);
   line-height: 1.05;
   letter-spacing: -0.03em;
   color: var(--ag-color-super-grey);
@@ -20668,6 +20669,7 @@ p.impact-proof-story-proof-body {
 .endowment-calculator-sub {
   margin: 0;
   max-width: 60ch;
+  padding-inline: clamp(1rem, 1.9vw, 1.2rem);
   text-align: left;
   color: rgba(65, 64, 66, 0.84);
   font-size: clamp(0.98rem, 1.3vw, 1.08rem);
@@ -20815,6 +20817,7 @@ p.impact-proof-story-proof-body {
 
 .endowment-calculator-form {
   padding-top: 0.2rem;
+  padding-inline: clamp(1rem, 1.9vw, 1.2rem);
 }
 
 .endowment-calculator-contact {
@@ -20847,6 +20850,7 @@ p.impact-proof-story-proof-body {
 .endowment-calculator-fineprint {
   margin-top: 0;
   max-width: 76ch;
+  padding-inline: clamp(1rem, 1.9vw, 1.2rem);
   font-size: 0.8rem;
   color: #666666;
   line-height: 1.6;
@@ -20857,19 +20861,6 @@ p.impact-proof-story-proof-body {
 .service-native-section.investments-native-ladder-section .service-native-btn,
 .endowment-calculator .service-native-btn {
   min-height: 44px;
-  border-color: rgba(var(--ag-color-atlantean-rgb), 0.42);
-  background: #ffffff;
-  color: var(--ag-color-atlantean-dark);
-  box-shadow: none;
-}
-
-.native-info-page--calculator-tool .service-native-btn:hover,
-.loans-native-calculator .service-native-btn:hover,
-.service-native-section.investments-native-ladder-section .service-native-btn:hover,
-.endowment-calculator .service-native-btn:hover {
-  border-color: var(--ag-color-atlantean);
-  background: rgba(var(--ag-color-atlantean-rgb), 0.06);
-  color: var(--ag-color-atlantean-dark);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .service-native-hero h1 + h1 {
@@ -23392,6 +23383,10 @@ p.impact-proof-story-proof-body {
   .investments-native-ladder-lead,
   .investments-native-ladder-copy {
     max-width: none;
+  }
+
+  .investments-native-ladder-box h2 {
+    font-size: clamp(1.15rem, 4.8vw, 1.42rem);
   }
 
   .investments-native-ladder-copy {

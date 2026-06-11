@@ -472,32 +472,72 @@ function buildLoanVisionFuelConfigFromBlock(block) {
   };
 }
 
-function calculateLoanSchedule({
-  loanAmount, annualRatePercent, termYears, displayOption,
+function formatLoanPayoffLabel(totalMonths) {
+  const safeMonths = Math.max(0, Math.round(totalMonths));
+  if (!safeMonths) {
+    return '0 months';
+  }
+
+  const years = Math.floor(safeMonths / 12);
+  const months = safeMonths % 12;
+
+  if (!years) {
+    return `${months} month${months === 1 ? '' : 's'}`;
+  }
+  if (!months) {
+    return `${years} year${years === 1 ? '' : 's'}`;
+  }
+  return `${years} year${years === 1 ? '' : 's'} ${months} month${months === 1 ? '' : 's'}`;
+}
+
+export function calculateLoanSchedule({
+  loanAmount, annualRatePercent, termYears, displayOption, additionalPrincipalPayment = 0,
 }) {
   const principal = parseNumber(loanAmount);
   const annualRate = Number.parseFloat(annualRatePercent) || 0;
   const years = Number.parseFloat(termYears) || 0;
   if (!principal || !annualRate || !years) {
-    return { rows: [], payment: 0, totalPaid: 0, totalInterest: 0 };
+    return {
+      rows: [],
+      payment: 0,
+      recurringPayment: 0,
+      totalPaid: 0,
+      totalInterest: 0,
+      totalExtraPrincipal: 0,
+      payoffMonths: 0,
+    };
   }
 
   const months = Math.round(years * 12);
   const monthlyRate = annualRate / 100 / 12;
   const payment = (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
+  const extraPrincipal = Math.max(parseNumber(additionalPrincipalPayment), 0);
 
   let balance = principal;
   const monthlyRows = [];
-  for (let month = 1; month <= months; month += 1) {
+  let totalPaid = 0;
+  let totalInterest = 0;
+  let totalExtraPrincipal = 0;
+
+  for (let month = 1; month <= months && balance > 0.005; month += 1) {
     const interest = balance * monthlyRate;
-    const principalPaid = payment - interest;
+    const scheduledPrincipalPaid = payment - interest;
+    const remainingAfterScheduledPrincipal = Math.max(balance - scheduledPrincipalPaid, 0);
+    const extraPrincipalPaid = Math.min(extraPrincipal, remainingAfterScheduledPrincipal);
+    const principalPaid = Math.min(balance, scheduledPrincipalPaid + extraPrincipalPaid);
+    const actualPayment = interest + principalPaid;
     balance -= principalPaid;
+    totalPaid += actualPayment;
+    totalInterest += interest;
+    totalExtraPrincipal += extraPrincipalPaid;
+
     monthlyRows.push({
       term: month,
-      payment,
+      payment: actualPayment,
       principal: principalPaid,
       interest,
       balance: balance > 0 ? balance : 0,
+      extraPrincipal: extraPrincipalPaid,
     });
   }
 
@@ -513,14 +553,21 @@ function calculateLoanSchedule({
         principal: yearSlice.reduce((sum, row) => sum + row.principal, 0),
         interest: yearSlice.reduce((sum, row) => sum + row.interest, 0),
         balance: yearSlice[yearSlice.length - 1]?.balance || 0,
+        extraPrincipal: yearSlice.reduce((sum, row) => sum + row.extraPrincipal, 0),
       });
       return acc;
     }, [])
     : monthlyRows;
 
-  const totalPaid = payment * months;
-  const totalInterest = totalPaid - principal;
-  return { rows, payment, totalPaid, totalInterest };
+  return {
+    rows,
+    payment,
+    recurringPayment: payment + extraPrincipal,
+    totalPaid,
+    totalInterest,
+    totalExtraPrincipal,
+    payoffMonths: monthlyRows.length,
+  };
 }
 
 function pdfEscape(value) {
@@ -634,10 +681,15 @@ export default function LoansPage({ sectionsOnly = false }) {
   const [interestRate, setInterestRate] = useState('');
   const [loanTerm, setLoanTerm] = useState('');
   const [displayOption, setDisplayOption] = useState('yearly');
+  const [additionalPrincipalPayment, setAdditionalPrincipalPayment] = useState('');
   const [loanRows, setLoanRows] = useState([]);
   const [estimatedPayment, setEstimatedPayment] = useState(0);
+  const [estimatedRecurringPayment, setEstimatedRecurringPayment] = useState(0);
   const [estimatedTotalPaid, setEstimatedTotalPaid] = useState(0);
   const [estimatedTotalInterest, setEstimatedTotalInterest] = useState(0);
+  const [estimatedPayoffMonths, setEstimatedPayoffMonths] = useState(0);
+  const [estimatedInterestSaved, setEstimatedInterestSaved] = useState(0);
+  const [estimatedTimeSavedMonths, setEstimatedTimeSavedMonths] = useState(0);
   const [downloadName, setDownloadName] = useState('');
   const [downloadEmail, setDownloadEmail] = useState('');
   const [loanChurch, setLoanChurch] = useState('');
@@ -807,6 +859,63 @@ export default function LoansPage({ sectionsOnly = false }) {
     () => loanRows.length > 0 && downloadName.trim() && validEmail(downloadEmail),
     [loanRows.length, downloadEmail, downloadName],
   );
+  const hasAdditionalPrincipal = parseNumber(additionalPrincipalPayment) > 0;
+  const loanSummaryCards = useMemo(() => {
+    if (!loanRows.length) {
+      return [];
+    }
+
+    const cards = [
+      {
+        label: 'Scheduled payment',
+        value: `$${formatCurrency(estimatedPayment)}`,
+      },
+      {
+        label: 'Estimated payoff',
+        value: formatLoanPayoffLabel(estimatedPayoffMonths),
+      },
+      {
+        label: 'Total paid',
+        value: `$${formatCurrency(estimatedTotalPaid)}`,
+      },
+      {
+        label: 'Total interest',
+        value: `$${formatCurrency(estimatedTotalInterest)}`,
+      },
+    ];
+
+    if (hasAdditionalPrincipal) {
+      cards.push(
+        {
+          label: 'Monthly extra principal',
+          value: `$${formatCurrency(parseNumber(additionalPrincipalPayment))}`,
+          tone: 'is-emphasis',
+        },
+        {
+          label: 'Interest saved',
+          value: `$${formatCurrency(estimatedInterestSaved)}`,
+          tone: 'is-emphasis',
+        },
+        {
+          label: 'Time saved',
+          value: formatLoanPayoffLabel(estimatedTimeSavedMonths),
+          tone: 'is-emphasis',
+        },
+      );
+    }
+
+    return cards;
+  }, [
+    additionalPrincipalPayment,
+    estimatedInterestSaved,
+    estimatedPayoffMonths,
+    estimatedPayment,
+    estimatedTimeSavedMonths,
+    estimatedTotalInterest,
+    estimatedTotalPaid,
+    hasAdditionalPrincipal,
+    loanRows.length,
+  ]);
 
   function runLoanCalculation() {
     const result = calculateLoanSchedule({
@@ -814,11 +923,23 @@ export default function LoansPage({ sectionsOnly = false }) {
       annualRatePercent: interestRate,
       termYears: loanTerm,
       displayOption,
+      additionalPrincipalPayment,
+    });
+    const baseline = calculateLoanSchedule({
+      loanAmount,
+      annualRatePercent: interestRate,
+      termYears: loanTerm,
+      displayOption,
+      additionalPrincipalPayment: 0,
     });
     setLoanRows(result.rows);
     setEstimatedPayment(result.payment);
+    setEstimatedRecurringPayment(result.recurringPayment);
     setEstimatedTotalPaid(result.totalPaid);
     setEstimatedTotalInterest(result.totalInterest);
+    setEstimatedPayoffMonths(result.payoffMonths);
+    setEstimatedInterestSaved(Math.max(baseline.totalInterest - result.totalInterest, 0));
+    setEstimatedTimeSavedMonths(Math.max(baseline.payoffMonths - result.payoffMonths, 0));
   }
 
   function onLoanDownload(event) {
@@ -835,12 +956,17 @@ export default function LoansPage({ sectionsOnly = false }) {
       `Annual Interest Rate: ${(Number.parseFloat(interestRate) || 0).toFixed(2)}%`,
       `Term: ${loanTerm || '-'} years`,
       `Display: ${displayOption === 'yearly' ? 'Yearly' : 'Monthly'}`,
-      `Payment: $${formatCurrency(estimatedPayment)}`,
+      `Scheduled Payment: $${formatCurrency(estimatedPayment)}`,
+      `Typical Monthly Outflow: $${formatCurrency(estimatedRecurringPayment || estimatedPayment)}`,
+      `Additional Principal: $${formatCurrency(parseNumber(additionalPrincipalPayment))} / month`,
+      `Estimated Payoff: ${formatLoanPayoffLabel(estimatedPayoffMonths)}`,
       `Estimated Total Paid: $${formatCurrency(estimatedTotalPaid)}`,
       `Estimated Total Interest: $${formatCurrency(estimatedTotalInterest)}`,
+      hasAdditionalPrincipal ? `Estimated Interest Saved: $${formatCurrency(estimatedInterestSaved)}` : null,
+      hasAdditionalPrincipal ? `Estimated Time Saved: ${formatLoanPayoffLabel(estimatedTimeSavedMonths)}` : null,
       '',
       'Disclosure: This calculator uses example data and is not an AGFinancial official quote or recommendation.',
-    ].join('\n');
+    ].filter(Boolean).join('\n');
 
     const blob = buildLoanPdf(summary, loanRows);
     const url = URL.createObjectURL(blob);
@@ -1172,12 +1298,15 @@ export default function LoansPage({ sectionsOnly = false }) {
 
       <section className="service-native-section loans-native-calculator-wrap" id="run-some-numbers">
         <div className="ag-panel-rail">
-          <h2 className="loans-native-calculator-title">
+          <h2
+            className="loans-native-calculator-title"
+            style={{ fontSize: 'clamp(1.65rem, 2.5vw, 2rem)', lineHeight: 1.05 }}
+          >
             Run some numbers.
             {' '}
             <mark>Impress your pastor.</mark>
           </h2>
-          <div className="loans-native-calculator">
+          <div className="loans-native-calculator native-financial-tool">
             <h3>Loan Payment Calculator</h3>
             <div className="loans-native-calculator-grid">
               <div>
@@ -1216,9 +1345,30 @@ export default function LoansPage({ sectionsOnly = false }) {
                 <select id="loan-calc-display" value={displayOption} onChange={(event) => setDisplayOption(event.target.value)}>
                   <option value="monthly">Monthly</option>
                   <option value="yearly">Yearly</option>
-                </select>
+                  </select>
+                </div>
               </div>
-            </div>
+
+            <details className="loans-native-calc-advanced">
+              <summary>Optional payoff accelerator</summary>
+              <div className="loans-native-calc-advanced-body">
+                <div className="loans-native-calc-advanced-grid">
+                  <div>
+                    <label htmlFor="loan-calc-additional-principal">Additional principal payment ($)</label>
+                    <input
+                      id="loan-calc-additional-principal"
+                      value={additionalPrincipalPayment}
+                      inputMode="numeric"
+                      onChange={(event) => setAdditionalPrincipalPayment(formatAmountInput(event.target.value))}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                <p className="loans-native-calc-helper">
+                  Applied monthly on top of the scheduled payment. Leave blank to keep the standard amortization schedule unchanged.
+                </p>
+              </div>
+            </details>
 
             <div className="loans-native-calc-actions">
               <button type="button" className="service-native-btn" onClick={runLoanCalculation}>Calculate</button>
@@ -1231,9 +1381,36 @@ export default function LoansPage({ sectionsOnly = false }) {
 
             {loanRows.length ? (
               <div className="loans-native-calc-results">
-                <h4>Amortization Schedule</h4>
-                <div className="table-scroll loans-native-table-scroll">
-                  <table className="ag-table has-fixed-layout">
+                <div className="loans-native-results-sheet">
+                  <div className="loans-native-results-head">
+                    <div>
+                      <h4>Amortization Schedule</h4>
+                      <p>
+                        {hasAdditionalPrincipal
+                          ? `Includes an added $${formatCurrency(parseNumber(additionalPrincipalPayment))} principal payment each month.`
+                          : 'Standard amortization based on the scheduled payment only.'}
+                      </p>
+                    </div>
+                    {hasAdditionalPrincipal ? (
+                      <span className="loans-native-results-badge">Accelerated payoff</span>
+                    ) : null}
+                  </div>
+
+                  <div className="loans-native-calc-summary">
+                    {loanSummaryCards.map((card) => (
+                      <article
+                        key={card.label}
+                        className={`loans-native-summary-card${card.tone ? ` ${card.tone}` : ''}`}
+                      >
+                        <strong>{card.label}</strong>
+                        <span>{card.value}</span>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="table-scroll loans-native-table-scroll financial-tool-table-wrap">
+                  <table className="loans-native-results-table financial-tool-table">
                     <thead>
                       <tr>
                         <th>Term</th>
@@ -1255,6 +1432,30 @@ export default function LoansPage({ sectionsOnly = false }) {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <div className="loans-native-mobile-sheet">
+                  {loanRows.map((row) => (
+                    <article key={`mobile-${row.term}`} className="loans-native-mobile-row" data-loans-results-row>
+                      <div className="loans-native-mobile-row-head">
+                        <h5>{row.term}</h5>
+                        <strong>${formatCurrency(row.payment)}</strong>
+                      </div>
+                      <div className="loans-native-mobile-row-grid">
+                        <div>
+                          <span>Principal Paid</span>
+                          <strong>${formatCurrency(row.principal)}</strong>
+                        </div>
+                        <div>
+                          <span>Interest Paid</span>
+                          <strong>${formatCurrency(row.interest)}</strong>
+                        </div>
+                        <div>
+                          <span>Balance</span>
+                          <strong>${formatCurrency(row.balance)}</strong>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
                 </div>
 
                 <div className="loans-native-gated">

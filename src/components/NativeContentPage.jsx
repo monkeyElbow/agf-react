@@ -3338,7 +3338,7 @@ function EndowmentCalculatorWidget() {
           </button>
           <button
             type="button"
-            className="service-native-btn is-ghost endowment-calculator-btn"
+            className="service-native-btn is-outline endowment-calculator-btn"
             onClick={handleDownload}
             disabled={!canSubmit}
           >

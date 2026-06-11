@@ -1735,7 +1735,12 @@ export default function RetirementPage() {
       <section className="service-native-section retirement-calc-section" id="retirement-savings-calculator">
         <div className="ag-panel-rail">
           <div className="retirement-calc-intro">
-            <h2 className="retirement-calc-title">Retirement Savings Calculator</h2>
+            <h2
+              className="retirement-calc-title"
+              style={{ fontSize: 'clamp(1.65rem, 2.5vw, 2rem)', lineHeight: 1.05 }}
+            >
+              Retirement Savings Calculator
+            </h2>
             <p className="retirement-calc-lead">Plug in some numbers. Take a sneak peek at your financial future.</p>
           </div>
 
