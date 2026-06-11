@@ -39,9 +39,9 @@ describe('legacy giving stewardship story layout guardrail', () => {
     expect(cssSource).toContain('align-items: stretch;');
     expect(cssSource).toContain('min-height: 100vh;');
     expect(cssSource).toContain('justify-content: center;');
-    expect(cssSource).toContain('gap: clamp(0.45rem, 0.9vw, 0.7rem);');
-    expect(cssSource).toContain('min-height: clamp(10.75rem, 18vw, 12.75rem);');
-    expect(cssSource).toContain('margin-top: clamp(2.4rem, 5.1vw, 3.9rem);');
+    expect(cssSource).toContain('gap: clamp(0.7rem, 1.3vw, 1rem);');
+    expect(cssSource).toContain('min-height: clamp(14.5rem, 24vw, 18rem);');
+    expect(cssSource).toContain('margin-top: clamp(2.8rem, 5.8vw, 4.35rem);');
     expect(cssSource).toContain('@media (max-width: 1099px) {');
     expect(cssSource).toContain('gap: clamp(2.15rem, 4.8vw, 3rem);');
     expect(cssSource).toContain('gap: clamp(1.55rem, 3.4vw, 2.2rem);');
@@ -50,11 +50,12 @@ describe('legacy giving stewardship story layout guardrail', () => {
     expect(cssSource).toContain('gap: clamp(1.85rem, 7vw, 2.55rem);');
     expect(cssSource).toContain('gap: clamp(1.35rem, 6vw, 1.95rem);');
     expect(cssSource).toContain('padding: clamp(0.7rem, 2.6vw, 1rem) 0;');
+    expect(cssSource).toContain('font-size: clamp(1.75rem, 8.4vw, 2.35rem);');
     expect(cssSource).toContain('font-size: clamp(2.3rem, 11vw, 3.1rem);');
     expect(cssSource).toContain('.legacy-stewardship-story .legacy-stewardship-story-cta.service-native-btn.is-outline {');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-wills {');
     expect(cssSource).toContain('padding-bottom: clamp(3.1rem, 6.2vw, 5.4rem);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-joy > .ag-panel-rail > h2,');
-    expect(cssSource).toContain('letter-spacing: clamp(-0.032em, -0.02vw, -0.015em);');
+    expect(cssSource).toContain('letter-spacing: -0.048em;');
   });
 });

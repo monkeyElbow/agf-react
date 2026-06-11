@@ -134,6 +134,13 @@ describe('investments ladder calculator', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Investment Laddering Strategy' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Already an investor?' })).toBeTruthy();
+    expect(container.querySelector('.investments-native-growth-card--investor')).toBeTruthy();
+    expect(container.querySelector('.service-native-section.dynamic-billboard.investments-native-dashboard-billboard')).toBeNull();
+    const dashboardLink = screen.getByRole('link', { name: 'Go to my dashboard' });
+    expect(dashboardLink.className).toContain('service-native-btn');
+    expect(dashboardLink.className).toContain('is-outline');
+    expect(dashboardLink.className).toContain('is-tone-atlantean');
     expect(screen.getByLabelText('Total Investment Amount')).toBeTruthy();
     fireEvent.click(screen.getByText('Custom span'));
     expect(screen.getByLabelText('Ladder span (years / longest term)', { selector: 'input' })).toBeTruthy();

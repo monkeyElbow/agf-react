@@ -10,18 +10,19 @@ function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
 }
 
-describe('investments cta band renderer guardrail', () => {
-  it('keeps the shared dynamic cta band builder in the investments page path', () => {
+describe('investments investor cta compatibility guardrail', () => {
+  it('keeps the legacy investor cta block bridged into the billboard runtime and final growth slide without duplicating a standalone section', () => {
     const source = readSource('./InvestmentsPage.jsx');
 
-    expect(source).toContain('buildDynamicCtaBandFromBlock,');
-    expect(source).toContain("id: 'investor_cta',");
-    expect(source).toContain("kind: 'cta_band',");
-    expect(source).toContain('const investorCtaRuntime = useMemo(');
-    expect(source).toContain("buildPresetFamilyRuntimeClassName('cta_band', investorCtaRuntime.presetId)");
-    expect(source).not.toContain('is-cta-band-preset-${investorCtaRuntime.presetId}');
-    expect(source).toContain("panel.blockId === 'investor_cta'");
-    expect(source).toContain('data-block-id="investor_cta"');
-    expect(source).toContain("const INVESTMENTS_CTA_BAND_HUD_PANEL_ID = 'investments-cta-band';");
+    expect(source).toContain('buildDynamicBillboardFromBlock,');
+    expect(source).toContain('function toLegacyInvestorBillboardBlock(block) {');
+    expect(source).toContain("block?.id === 'investor_cta'");
+    expect(source).toContain("block?.kind === 'cta_band'");
+    expect(source).toContain('const legacyInvestorCtaBlock = useMemo(');
+    expect(source).toContain('const investorBillboardSourceBlock = billboardBlock || legacyInvestorCtaBlock || null;');
+    expect(source).toContain('const investorBillboardRuntime = useMemo(');
+    expect(source).toContain("data-investments-growth-background-panel=\"white\"");
+    expect(source).toContain("actionButtonClassName('outline', action.tone || 'atlantean')");
+    expect(source).not.toContain('className={`service-native-section dynamic-billboard investments-native-dashboard-billboard');
   });
 });
