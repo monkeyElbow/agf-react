@@ -53,7 +53,9 @@ describe('retirement 403(b) review polish guardrail', () => {
 
     expect(retirementSource).toContain("scrollReveal: 'scale-up'");
     expect(retirementSource).toContain("copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up'");
-    expect(retirementSource).toContain("data-fade-root-margin={renderedBillboard.copyFadeRootMargin || undefined}");
+    expect(retirementSource).toContain("const billboardCopyUsesScrollProgress = renderedBillboard?.scrollReveal === 'scale-up';");
+    expect(retirementSource).toContain("'billboard-scroll-progress-copy'");
+    expect(retirementSource).toContain('data-fade-root-margin={billboardCopyUsesScrollProgress ? undefined : (renderedBillboard.copyFadeRootMargin || undefined)}');
     expect(runtimeSource).toContain('const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);');
     expect(runtimeSource).toContain("copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : ''");
     expect(runtimeSource).toContain("copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -40% 0px' : ''");
@@ -61,20 +63,22 @@ describe('retirement 403(b) review polish guardrail', () => {
   });
 
   it('keeps the retirement everyday billboard reveal route-scoped with reduced-motion fallback', () => {
+    const source = readSource('./RetirementPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up,');
+    expect(source).toContain("const RETIREMENT_BILLBOARD_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';");
+    expect(source).toContain('const entryProgress = clampUnitInterval((viewportHeight * 0.94 - rect.top) / (viewportHeight * 0.46));');
+    expect(source).toContain('const exitProgress = clampUnitInterval((rect.bottom - viewportHeight * 0.06) / (viewportHeight * 0.46));');
+    expect(source).toContain("copy.style.opacity = opacity.toFixed(3);");
+    expect(source).toContain("copy.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;");
+    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.billboard-scroll-progress-copy,');
     expect(cssSource).toContain('transform-origin: 50% 50%;');
-    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up[data-fade-state="pending"],');
-    expect(cssSource).toContain('opacity: 0.18;');
-    expect(cssSource).toContain('transform: translate3d(0, 58px, 0) scale(0.92);');
-    expect(cssSource).toContain('.retirement-everyday .native-info-section-copy.fade-up.billboard-scroll-reveal-scale-up.is-visible,');
-    expect(cssSource).toContain('transform: translate3d(0, 0, 0) scale(1);');
+    expect(cssSource).toContain('will-change: opacity, transform;');
     expect(cssSource).toContain('@media (prefers-reduced-motion: reduce) {');
     expect(cssSource).toContain('transition: none;');
   });
 
-  it('keeps the retirement calculator on a branded sheet while preserving the svg chart structure', () => {
+  it('keeps the retirement calculator on the shared calculator system while preserving the svg chart structure', () => {
     const source = readSource('./RetirementPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
@@ -84,25 +88,25 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).toContain('Expected Annual Return (%): <strong>{calcResults.growthPercent}</strong>');
     expect(source).toContain('Projected balance');
     expect(source).toContain('Target at retirement');
+    expect(source).toContain('className="financial-tool-metrics retirement-calc-metrics"');
+    expect(source).toContain('className="retirement-calc-chart financial-tool-chart-surface"');
     expect(cssSource).toContain('.retirement-calc-section {');
     expect(cssSource).toContain('background: linear-gradient(180deg, #fbf9f6 0%, #ffffff 100%);');
     expect(cssSource).toContain('.retirement-calc-box {');
-    expect(cssSource).toContain('border: 1px solid rgba(17, 53, 75, 0.12);');
+    expect(cssSource).toContain('padding: clamp(1.1rem, 2.35vw, 1.75rem);');
+    expect(cssSource).toContain('.native-financial-tool {');
     expect(cssSource).toContain('border-radius: 24px;');
-    expect(cssSource).toContain('background: linear-gradient(180deg, rgba(250, 249, 247, 0.96) 0%, rgba(255, 255, 255, 0.985) 100%);');
+    expect(cssSource).toContain('background: #ffffff;');
     expect(cssSource).toContain('.retirement-calc-grid label {');
-    expect(cssSource).toContain('text-transform: uppercase;');
+    expect(cssSource).toContain('text-transform: none;');
     expect(cssSource).toContain('.retirement-calc-grid label strong {');
     expect(cssSource).toContain('.retirement-calc-grid :is(input, select) {');
-    expect(cssSource).toContain('min-height: 52px;');
+    expect(cssSource).toContain('min-height: 48px;');
     expect(cssSource).toContain('.retirement-calc-grid :is(input, select):focus-visible {');
-    expect(cssSource).toContain('.retirement-calc-result-row {');
-    expect(cssSource).toContain('border-radius: 16px;');
-    expect(cssSource).toContain('background: rgba(255, 255, 255, 0.97);');
-    expect(cssSource).toContain('.retirement-calc-result-row:first-of-type {');
+    expect(cssSource).not.toContain('.retirement-calc-result-row {');
+    expect(cssSource).toContain('.financial-tool-metric {');
     expect(cssSource).toContain('.retirement-calc-chart {');
-    expect(cssSource).toContain('border-radius: 20px;');
-    expect(cssSource).toContain('background: rgba(255, 255, 255, 0.98);');
+    expect(cssSource).toContain('.financial-tool-chart-surface');
     expect(cssSource).toContain('.retirement-lead-form form {');
     expect(cssSource).toContain('border-radius: 20px;');
     expect(cssSource).toContain('background: rgba(255, 255, 255, 0.94);');

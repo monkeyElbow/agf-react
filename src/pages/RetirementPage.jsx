@@ -304,6 +304,7 @@ const RETIREMENT_HUD_BUTTON_TONE_OPTIONS = [
 ];
 const RETIREMENT_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
 const RETIREMENT_BUTTON_TONE_SET = new Set(['atlantean', 'super-grey', 'mango', 'melon', 'white']);
+const RETIREMENT_BILLBOARD_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -311,6 +312,22 @@ function clampFrontHudOpacity(value) {
     return 15;
   }
   return Math.max(0, Math.min(100, Math.round(numeric)));
+}
+
+function clampUnitInterval(value) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(1, value));
+}
+
+function easeScrollProgress(value) {
+  const clamped = clampUnitInterval(value);
+  return clamped * clamped * (3 - (2 * clamped));
+}
+
+function interpolateValue(start, end, progress) {
+  return start + ((end - start) * progress);
 }
 
 function formatPhoneInput(value) {
@@ -411,6 +428,7 @@ export default function RetirementPage() {
   const heroSectionRef = useRef(null);
   const introSectionRef = useRef(null);
   const billboardSectionRef = useRef(null);
+  const billboardCopyRef = useRef(null);
   const ctaSectionRef = useRef(null);
   const testimonialsSectionRef = useRef(null);
   const billboardTitleInputRef = useRef(null);
@@ -637,10 +655,105 @@ export default function RetirementPage() {
     return withText.length ? withText : candidateLines.slice(0, 1);
   }, [heroHudSettings]);
   const heroActiveLineData = heroHudEditableLines.find((line) => line.key === heroActiveLine) || heroHudEditableLines[0] || null;
+  const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;
+  const billboardCopyUsesScrollProgress = renderedBillboard?.scrollReveal === 'scale-up';
+  const billboardCopyClassName = useMemo(() => {
+    const classNames = String(renderedBillboard?.copyClassName || '')
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (!billboardCopyUsesScrollProgress) {
+      return classNames.join(' ');
+    }
+
+    return [
+      ...classNames.filter((className) => ![
+        'fade-up',
+        'fade-up-force-observe',
+        'fade-up-repeat-observe',
+      ].includes(className)),
+      'billboard-scroll-progress-copy',
+    ].join(' ');
+  }, [billboardCopyUsesScrollProgress, renderedBillboard]);
+  const renderedBillboardTitleStyle = {
+    ...(renderedBillboard?.titleStyle || {}),
+    letterSpacing: '-0.03em',
+  };
 
   useEffect(() => {
     logHeroDriftWarningOnce(heroInspection, 'Retirement hero');
   }, [heroInspection]);
+
+  useEffect(() => {
+    const section = billboardSectionRef.current;
+    const copy = billboardCopyRef.current;
+    if (!section || !copy || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    let frameId = 0;
+    const reducedMotionMediaQuery = window.matchMedia?.(RETIREMENT_BILLBOARD_REDUCED_MOTION_QUERY) || null;
+
+    const applyBillboardScrollProgress = () => {
+      frameId = 0;
+
+      if (!billboardCopyUsesScrollProgress || reducedMotionMediaQuery?.matches) {
+        copy.style.opacity = '1';
+        copy.style.transform = 'translate3d(0, 0, 0) scale(1)';
+        return;
+      }
+
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      if (!viewportHeight) {
+        return;
+      }
+
+      const rect = section.getBoundingClientRect();
+      const entryProgress = clampUnitInterval((viewportHeight * 0.94 - rect.top) / (viewportHeight * 0.46));
+      const exitProgress = clampUnitInterval((rect.bottom - viewportHeight * 0.06) / (viewportHeight * 0.46));
+      const progress = easeScrollProgress(Math.min(entryProgress, exitProgress));
+      const opacity = interpolateValue(0.22, 1, progress);
+      const scale = interpolateValue(0.92, 1, progress);
+      const translateY = interpolateValue(58, 0, progress);
+
+      copy.style.opacity = opacity.toFixed(3);
+      copy.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+    };
+
+    const queueBillboardScrollProgressUpdate = () => {
+      if (frameId) {
+        return;
+      }
+      frameId = window.requestAnimationFrame(applyBillboardScrollProgress);
+    };
+
+    const handleReducedMotionChange = () => {
+      queueBillboardScrollProgressUpdate();
+    };
+
+    queueBillboardScrollProgressUpdate();
+    window.addEventListener('scroll', queueBillboardScrollProgressUpdate, { passive: true });
+    window.addEventListener('resize', queueBillboardScrollProgressUpdate);
+    if (typeof reducedMotionMediaQuery?.addEventListener === 'function') {
+      reducedMotionMediaQuery.addEventListener('change', handleReducedMotionChange);
+    } else if (typeof reducedMotionMediaQuery?.addListener === 'function') {
+      reducedMotionMediaQuery.addListener(handleReducedMotionChange);
+    }
+
+    return () => {
+      if (frameId) {
+        window.cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener('scroll', queueBillboardScrollProgressUpdate);
+      window.removeEventListener('resize', queueBillboardScrollProgressUpdate);
+      if (typeof reducedMotionMediaQuery?.removeEventListener === 'function') {
+        reducedMotionMediaQuery.removeEventListener('change', handleReducedMotionChange);
+      } else if (typeof reducedMotionMediaQuery?.removeListener === 'function') {
+        reducedMotionMediaQuery.removeListener(handleReducedMotionChange);
+      }
+    };
+  }, [billboardCopyUsesScrollProgress, renderedBillboard]);
+
   const introHudJustify = String(introHudSettings.justify || 'center').trim().toLowerCase() || 'center';
   const introHudLineSpacing = Number.isFinite(Number(introHudSettings.lineSpacing)) ? Number(introHudSettings.lineSpacing) : 1.04;
   const introHudBgTone = String(introHudSettings.bgTone || 'blue').trim().toLowerCase() || 'blue';
@@ -730,11 +843,6 @@ export default function RetirementPage() {
   const isIntroHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_INTRO_HUD_PANEL_ID;
   const isBillboardHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_BILLBOARD_HUD_PANEL_ID;
   const isCtaHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_CTA_HUD_PANEL_ID;
-  const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;
-  const renderedBillboardTitleStyle = {
-    ...(renderedBillboard?.titleStyle || {}),
-    letterSpacing: '-0.03em',
-  };
   const activeHudPanel = useMemo(
     () => hudPanels.find((panel) => panel.id === activeHudPanelId) || null,
     [activeHudPanelId, hudPanels],
@@ -1631,7 +1739,7 @@ export default function RetirementPage() {
             <p className="retirement-calc-lead">Plug in some numbers. Take a sneak peek at your financial future.</p>
           </div>
 
-          <div className="retirement-calc-box fade-up">
+          <div className="retirement-calc-box fade-up native-financial-tool">
             <div className="retirement-calc-grid">
                   <label>
                     Current Age
@@ -1681,7 +1789,7 @@ export default function RetirementPage() {
                       onChange={(e) => onCalcAmountChange('socialSecurity', e.target.value)}
                     />
                   </label>
-                  <label>
+                  <label className="retirement-calc-grid-span">
                     Expected Annual Return (%): <strong>{calcResults.growthPercent}</strong>
                     <input
                       type="range"
@@ -1696,20 +1804,22 @@ export default function RetirementPage() {
 
             <div className="retirement-calc-results">
               <h3>Results</h3>
-              <p className="retirement-calc-result-row">
-                <span>Total Needed at Retirement:</span>
-                <strong>${dollars(calcResults.neededNestEgg)}</strong>
-              </p>
-              <p className="retirement-calc-result-row">
-                <span>Projected Savings at Retirement:</span>
-                <strong>${dollars(calcResults.projectedSavings)}</strong>
-              </p>
-              <p className="retirement-calc-result-row">
-                <span>Additional Monthly Savings Needed:</span>
-                <strong>${dollars(calcResults.extraNeeded)}</strong>
-              </p>
+              <div className="financial-tool-metrics retirement-calc-metrics">
+                <article className="financial-tool-metric">
+                  <div className="financial-tool-metric-label">Total Needed at Retirement</div>
+                  <div className="financial-tool-metric-value">${dollars(calcResults.neededNestEgg)}</div>
+                </article>
+                <article className="financial-tool-metric is-good">
+                  <div className="financial-tool-metric-label">Projected Savings at Retirement</div>
+                  <div className="financial-tool-metric-value">${dollars(calcResults.projectedSavings)}</div>
+                </article>
+                <article className="financial-tool-metric is-warn">
+                  <div className="financial-tool-metric-label">Additional Monthly Savings Needed</div>
+                  <div className="financial-tool-metric-value">${dollars(calcResults.extraNeeded)}</div>
+                </article>
+              </div>
 
-              <div className="retirement-calc-chart" aria-hidden="true">
+              <div className="retirement-calc-chart financial-tool-chart-surface" aria-hidden="true">
                 <svg viewBox={`0 0 ${calcResults.chartWidth} ${calcResults.chartHeight}`} role="img" aria-label="Retirement projection chart">
                   <line
                     x1={calcResults.padLeft}
@@ -1859,8 +1969,9 @@ export default function RetirementPage() {
         {renderHudAnchor('billboard')}
         <div className="ag-panel-rail" style={billboardRailStyle || undefined}>
           <div
-            className={`native-info-section-copy${renderedBillboard.copyClassName ? ` ${renderedBillboard.copyClassName}` : ''} is-justify-${renderedBillboard.justify || 'center'}`}
-            data-fade-root-margin={renderedBillboard.copyFadeRootMargin || undefined}
+            ref={billboardCopyRef}
+            className={`native-info-section-copy${billboardCopyClassName ? ` ${billboardCopyClassName}` : ''} is-justify-${renderedBillboard.justify || 'center'}`}
+            data-fade-root-margin={billboardCopyUsesScrollProgress ? undefined : (renderedBillboard.copyFadeRootMargin || undefined)}
           >
             <h2
               className={`${renderedBillboard.titleClassName || ''}${showFrontHud && billboardBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
