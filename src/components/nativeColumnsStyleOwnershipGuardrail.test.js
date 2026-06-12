@@ -13,6 +13,7 @@ function readSource(relativePath) {
 describe('native columns style ownership guardrail', () => {
   it('keeps canonical home-retirement columns internals on family-owned preset hooks instead of route selectors', () => {
     const source = readSource('../styles/service-native.css');
+    const rendererSource = readSource('./blocks/PageBlocksRenderer.jsx');
 
     expect(source).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance,');
     expect(source).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math {');
@@ -23,6 +24,8 @@ describe('native columns style ownership guardrail', () => {
     expect(source).not.toContain('.is-columns-preset-do-the-math .native-columns-photo-label.is-atlantean,');
     expect(source).not.toContain('.home-native-page .service-native-section.native-dynamic-columns.is-columns-style-retirement .native-columns-copy h3 {');
     expect(source).not.toContain('.home-native-page .service-native-section.native-dynamic-columns.is-columns-style-retirement[data-block-id="columns_math"] .native-columns-copy h3 mark {');
+    expect(rendererSource).toContain("presetClassToken === 'housing-allowance' || presetClassToken === 'do-the-math'");
+    expect(rendererSource).not.toContain("dynamicBlock?.id === 'columns_mha' || dynamicBlock?.id === 'columns_math'");
   });
 
   it('keeps loans value-cards internals on the family-owned columns preset instead of route-local selectors', () => {

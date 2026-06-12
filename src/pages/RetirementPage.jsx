@@ -10,6 +10,7 @@ import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../components/HeroHudEditorShared';
 import SafeRichText from '../components/SafeRichText';
 import { ColumnsBlock } from '../components/blocks/PageBlocksRenderer';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
 import { useFrontHud } from '../context/FrontHudContext';
@@ -156,6 +157,7 @@ const RETIREMENT_HERO_HUD_PANEL_ID = 'retirement-hero';
 const RETIREMENT_INTRO_HUD_PANEL_ID = 'retirement-intro';
 const RETIREMENT_BILLBOARD_HUD_PANEL_ID = 'retirement-billboard';
 const RETIREMENT_COLUMNS_MHA_HUD_PANEL_ID = 'retirement-columns-mha';
+const RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID = 'retirement-columns-math';
 const RETIREMENT_CTA_HUD_PANEL_ID = 'retirement-cta';
 const RETIREMENT_TESTIMONIALS_HUD_PANEL_ID = 'retirement-testimonials';
 const RETIREMENT_SPLIT_PANEL_HUD_PANEL_ID = 'retirement-split-panel';
@@ -164,6 +166,7 @@ const RETIREMENT_HUD_PANEL_ID_BY_BLOCK_ID = {
   intro: RETIREMENT_INTRO_HUD_PANEL_ID,
   billboard: RETIREMENT_BILLBOARD_HUD_PANEL_ID,
   columns_mha: RETIREMENT_COLUMNS_MHA_HUD_PANEL_ID,
+  columns_math: RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID,
   cta_form: RETIREMENT_CTA_HUD_PANEL_ID,
   testimonials: RETIREMENT_TESTIMONIALS_HUD_PANEL_ID,
   split_options: RETIREMENT_SPLIT_PANEL_HUD_PANEL_ID,
@@ -173,10 +176,51 @@ const RETIREMENT_HUD_ANCHOR_SELECTOR_BY_BLOCK_ID = {
   intro: '.service-native-intro',
   billboard: '.retirement-everyday',
   columns_mha: '.native-dynamic-columns[data-block-id="columns_mha"]',
+  columns_math: '.native-dynamic-columns[data-block-id="columns_math"]',
   cta_form: '.native-dynamic-cta',
   testimonials: '.native-dynamic-testimonials, .test-dynamic-testimonials',
   split_options: '.retirement-accounts-section',
 };
+const RETIREMENT_BLUEPRINT_BLOCKS = Object.freeze(
+  Array.isArray(contentBlockBlueprintsByPath['/services/retirement'])
+    ? contentBlockBlueprintsByPath['/services/retirement']
+    : [],
+);
+
+function buildRetirementCanonicalBlocks(blocks) {
+  const sourceBlocks = Array.isArray(blocks) ? blocks.filter((block) => block && typeof block === 'object') : [];
+  if (!RETIREMENT_BLUEPRINT_BLOCKS.length) {
+    return sourceBlocks;
+  }
+
+  const sourceById = new Map(
+    sourceBlocks
+      .map((block) => [String(block?.id || '').trim(), block])
+      .filter(([blockId]) => Boolean(blockId)),
+  );
+  const ordered = [];
+  const seen = new Set();
+
+  RETIREMENT_BLUEPRINT_BLOCKS.forEach((blueprintBlock) => {
+    const blockId = String(blueprintBlock?.id || '').trim();
+    if (!blockId) {
+      return;
+    }
+    ordered.push(sourceById.get(blockId) || blueprintBlock);
+    seen.add(blockId);
+  });
+
+  sourceBlocks.forEach((block) => {
+    const blockId = String(block?.id || '').trim();
+    if (!blockId || seen.has(blockId)) {
+      return;
+    }
+    ordered.push(block);
+  });
+
+  return ordered;
+}
+
 const DEFAULT_RETIREMENT_BILLBOARD_SETTINGS = {
   title: 'Retire a little every day.',
   titleClassName: '',
@@ -491,7 +535,7 @@ export default function RetirementPage() {
   const [introHeadingSelection, setIntroHeadingSelection] = useState({ start: 0, end: 0, text: '' });
   const [introBodyMiniEditorEnabled, setIntroBodyMiniEditorEnabled] = useState(false);
   const managedBlocksSource = useMemo(
-    () => (Array.isArray(blocksByPath?.['/services/retirement']) ? blocksByPath['/services/retirement'] : []),
+    () => buildRetirementCanonicalBlocks(blocksByPath?.['/services/retirement']),
     [blocksByPath],
   );
   const { blocks: managedBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({
@@ -531,6 +575,15 @@ export default function RetirementPage() {
   const columnsMhaBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'columns_mha'
+      && block?.kind === 'columns'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
+  const columnsMathBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'columns_math'
       && block?.kind === 'columns'
       && block?.mode === 'dynamic'
       && block?.hidden !== true
@@ -2042,6 +2095,16 @@ export default function RetirementPage() {
           ownership={getOwnershipVisualForBlockId('columns_mha')}
           hudAnchor={renderHudAnchor('columns_mha')}
           extraSectionClassName={getHudBlockStateClassName('columns_mha')}
+        />
+      ) : null}
+
+      {columnsMathBlock ? (
+        <ColumnsBlock
+          block={columnsMathBlock}
+          resolveTo={(value) => value}
+          ownership={getOwnershipVisualForBlockId('columns_math')}
+          hudAnchor={renderHudAnchor('columns_math')}
+          extraSectionClassName={getHudBlockStateClassName('columns_math')}
         />
       ) : null}
 

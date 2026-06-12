@@ -618,7 +618,7 @@ function toActionButtonClassName(style, tone) {
   ].filter(Boolean).join(' ');
 }
 
-function buildColumnsAction(label, url, style, tone, pageRef, resolveTo, useHomeCtaStyle = false) {
+function buildColumnsAction(label, url, style, tone, pageRef, resolveTo, useFamilyPresetCtaStyle = false) {
   const nextLabel = String(label || '').trim();
   const nextUrl = String(url || '').trim();
   if (!nextLabel || !nextUrl) {
@@ -626,7 +626,7 @@ function buildColumnsAction(label, url, style, tone, pageRef, resolveTo, useHome
   }
 
   const isExternal = /^(https?:|mailto:|tel:)/i.test(nextUrl);
-  const className = useHomeCtaStyle
+  const className = useFamilyPresetCtaStyle
     ? 'home-native-cta'
     : `service-native-btn ${toActionButtonClassName(style, tone)}`.trim();
 
@@ -1163,10 +1163,6 @@ export function ColumnsBlock({
     ? { ...block, ...(block.settings || {}) }
     : block;
   if (isDynamicColumnsBlock) {
-    const isHomeRetirementColumns = (
-      (dynamicBlock?.id === 'columns_mha' || dynamicBlock?.id === 'columns_math')
-      && normalizeDynamicColumnsStyle(dynamicBlock.columnsStyle) === 'retirement'
-    );
     const title = String(dynamicBlock.title || '').trim();
     const titleClassName = normalizeToneClass(dynamicBlock.titleClassName || '');
     const titleHighlights = parseHighlightsJson(dynamicBlock.titleHighlightsJson, title);
@@ -1189,6 +1185,10 @@ export function ColumnsBlock({
     const columns = toDynamicColumnsCountToken(visibleColumnSlots.length);
     const presetClassToken = resolvePresetFamilyClassToken(dynamicBlock);
     const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('columns', presetClassToken);
+    const useFamilyPresetCtaStyle = (
+      columnsStyle === 'retirement'
+      && (presetClassToken === 'housing-allowance' || presetClassToken === 'do-the-math')
+    );
     const shouldAnimateColumnsItems = presetClassToken === 'value-cards';
     const columnTitleSizeRem = Number(dynamicBlock.columnTitleSizeRem);
     const photoMaxWidthPx = Number(dynamicBlock.photoMaxWidthPx);
@@ -1228,7 +1228,7 @@ export function ColumnsBlock({
           dynamicBlock[`col${slot}ButtonTone`],
           dynamicBlock[`col${slot}ButtonPageRef`],
           resolveTo,
-          isHomeRetirementColumns,
+          useFamilyPresetCtaStyle,
         );
 
         if (isLegacyHighlight && !columnTitle) {

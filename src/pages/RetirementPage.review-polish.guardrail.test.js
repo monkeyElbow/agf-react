@@ -46,6 +46,24 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('.retirement-plan-footer mark {');
   });
 
+  it('keeps housing and do the math on the shared columns-family path with retirement HUD coverage', () => {
+    const source = readSource('./RetirementPage.jsx');
+
+    expect(source).toContain("contentBlockBlueprintsByPath['/services/retirement']");
+    expect(source).toContain('function buildRetirementCanonicalBlocks(blocks) {');
+    expect(source).toContain("columns_mha: RETIREMENT_COLUMNS_MHA_HUD_PANEL_ID");
+    expect(source).toContain("columns_math: RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID");
+    expect(source).toContain("columns_math: '.native-dynamic-columns[data-block-id=\"columns_math\"]'");
+    expect(source).toContain("block?.id === 'columns_mha'");
+    expect(source).toContain("block?.id === 'columns_math'");
+    expect(source).toContain("ownership={getOwnershipVisualForBlockId('columns_mha')}");
+    expect(source).toContain("ownership={getOwnershipVisualForBlockId('columns_math')}");
+    expect(source).toContain("hudAnchor={renderHudAnchor('columns_mha')}");
+    expect(source).toContain("hudAnchor={renderHudAnchor('columns_math')}");
+    expect(source).not.toContain('HousingBlock');
+    expect(source).not.toContain('DoTheMathBlock');
+  });
+
   it('keeps the retirement everyday billboard reveal as an opt-in shared billboard feature', () => {
     const retirementSource = readSource('./RetirementPage.jsx');
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
