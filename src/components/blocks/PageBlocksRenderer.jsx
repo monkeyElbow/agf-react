@@ -38,6 +38,7 @@ import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../HeroHudEditorS
 import HomeImpactStoryFeature, { HomeImpactStoryStaticContent } from '../HomeImpactStoryFeature';
 import HomeServicesFeatureAnimation from '../HomeServicesFeatureAnimation';
 import ImpactProofStoryFeature from '../ImpactProofStoryFeature';
+import InvestmentsGrowthFeature from '../InvestmentsGrowthFeature';
 import LegacyGivingStewardshipStoryFeature from '../LegacyGivingStewardshipStoryFeature';
 import NewsletterSignupForm from '../NewsletterSignupForm';
 import { extractHeroLineColorToken } from '../../lib/heroHudRanges';
@@ -1053,6 +1054,18 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
     );
   }
 
+  if (runtime.runtimeKey === 'investments_growth_feature') {
+    return (
+      <InvestmentsGrowthFeature
+        blockId={block?.id || 'growth_feature'}
+        runtime={runtime}
+        resolveTo={resolveTo}
+        ownership={ownership}
+        hudAnchor={hudAnchor}
+      />
+    );
+  }
+
   return (
     <section className={`service-native-section native-dynamic-site-feature${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
       <BlockOwnershipOverlay ownership={ownership} />
@@ -1472,6 +1485,7 @@ export default function PageBlocksRenderer({
   blocks,
   heroHud = null,
   ownershipEnabled = true,
+  ownershipPathname = '/',
   hudAnchorsByBlockId = null,
   activeHudPanelId = '',
   hudDockCollapsed = true,
@@ -1522,7 +1536,7 @@ export default function PageBlocksRenderer({
             hudAnchor={hudAnchor}
             ownership={ownershipEnabled
               ? getBlockOwnershipVisual(
-                getBlockCollaboration('/', block?.id),
+                getBlockCollaboration(ownershipPathname, block?.id),
                 devIdentity?.userId,
               )
               : EMPTY_OWNERSHIP}
