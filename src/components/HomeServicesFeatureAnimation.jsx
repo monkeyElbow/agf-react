@@ -186,35 +186,35 @@ const HOME_SERVICES_PANEL_PALETTES = Object.freeze([
   }),
   Object.freeze({
     title: 'Investments',
-    base: Object.freeze([0, 57, 70]),
-    secondary: Object.freeze([0, 173, 187]),
-    light: Object.freeze([75, 199, 212]),
-    dark: Object.freeze([7, 19, 27]),
-    accent: Object.freeze([216, 251, 255]),
+    base: Object.freeze([0, 138, 171]),
+    secondary: Object.freeze([94, 218, 227]),
+    light: Object.freeze([216, 251, 255]),
+    dark: Object.freeze([0, 95, 118]),
+    accent: Object.freeze([239, 254, 255]),
   }),
   Object.freeze({
     title: 'Retirement',
-    base: Object.freeze([44, 36, 25]),
-    secondary: Object.freeze([228, 190, 120]),
-    light: Object.freeze([255, 182, 54]),
-    dark: Object.freeze([24, 18, 11]),
-    accent: Object.freeze([255, 244, 224]),
+    base: Object.freeze([242, 102, 96]),
+    secondary: Object.freeze([248, 145, 122]),
+    light: Object.freeze([255, 214, 206]),
+    dark: Object.freeze([229, 111, 88]),
+    accent: Object.freeze([255, 236, 232]),
   }),
   Object.freeze({
     title: 'Legacy Giving',
-    base: Object.freeze([124, 75, 13]),
-    secondary: Object.freeze([255, 218, 146]),
-    light: Object.freeze([255, 186, 52]),
-    dark: Object.freeze([72, 41, 8]),
-    accent: Object.freeze([255, 245, 216]),
+    base: Object.freeze([246, 177, 70]),
+    secondary: Object.freeze([255, 205, 118]),
+    light: Object.freeze([255, 233, 188]),
+    dark: Object.freeze([176, 114, 24]),
+    accent: Object.freeze([255, 246, 224]),
   }),
   Object.freeze({
     title: 'Insurance',
-    base: Object.freeze([18, 49, 59]),
-    secondary: Object.freeze([0, 138, 171]),
-    light: Object.freeze([0, 173, 187]),
-    dark: Object.freeze([11, 30, 41]),
-    accent: Object.freeze([216, 251, 255]),
+    base: Object.freeze([0, 173, 187]),
+    secondary: Object.freeze([94, 218, 227]),
+    light: Object.freeze([212, 248, 251]),
+    dark: Object.freeze([0, 108, 131]),
+    accent: Object.freeze([239, 254, 255]),
   }),
 ]);
 
@@ -387,7 +387,7 @@ function ActionLink({ action, resolveTo }) {
     : action.href;
   const isExternal = isExternalLinkHref(target);
   const sharedProps = {
-    className: 'service-native-btn is-outline is-tone-white',
+    className: 'service-native-btn is-outline is-tone-white home-services-feature-btn',
     target: action.openInNewWindow ? '_blank' : undefined,
     rel: action.openInNewWindow ? 'noreferrer noopener' : undefined,
   };
@@ -592,7 +592,7 @@ export default function HomeServicesFeatureAnimation({
   }
 
   return (
-    <div ref={shellRef} className="home-services-feature-shell">
+    <div ref={shellRef} className="home-services-feature-shell is-preview-white-cards">
       {headline || subhead ? (
         <div className="home-services-feature-intro">
           {headline ? (

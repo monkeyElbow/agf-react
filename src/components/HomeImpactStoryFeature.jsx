@@ -114,6 +114,24 @@ function ImpactStoryHeadline({ headline, highlightedWord = '', className = '' })
   );
 }
 
+function ImpactStoryBrandMark() {
+  return (
+    <div className="home-impact-story-brand-mark-wrap" aria-hidden="true">
+      <svg
+        className="home-impact-story-brand-mark"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 145.87 144.22"
+      >
+        <path
+          d="M145.87 0H0v144.22h145.87z M121.19 111.98c-4.5-.12-5.75-.24-9.54-.24s-2.83.13-9.35.24v-1.03c2.79 0-1.29-6.54-1.86-7.85L74.4 56.29h-.75S49 100.7 48.04 102.34c-1.99 3.57-4.77 8.69-2.3 8.69v.95c-4.86-.12-4.87-.24-9.61-.24s-5.39.12-9.42.24v-.95c1.95 0 3.38-4.11 6.62-9.36 1.64-2.9 40.33-71.75 40.33-71.75h.76l41.29 73.69c2.41 4.16 3.85 7.42 5.48 7.42z"
+          fill="currentColor"
+          fillRule="evenodd"
+        />
+      </svg>
+    </div>
+  );
+}
+
 function ImpactStoryAction({ action, resolveTo, className = 'home-native-cta' }) {
   if (!action?.label) {
     return null;
@@ -334,6 +352,7 @@ export function HomeImpactStoryStaticContent({
   return (
     <div className="ag-panel-rail home-impact-story-static-grid">
       <div className={`home-impact-story-static-copy${reveal ? ' fade-up' : ''}`}>
+        <ImpactStoryBrandMark />
         <ImpactStoryHeadline
           headline={headline}
           highlightedWord={highlightedWord}
@@ -541,6 +560,7 @@ export default function HomeImpactStoryFeature({
                   transform: `translate3d(0, ${copyShift}px, 0)`,
                 }}
               >
+                <ImpactStoryBrandMark />
                 <ImpactStoryHeadline
                   headline={headline}
                   highlightedWord={highlightedWord}

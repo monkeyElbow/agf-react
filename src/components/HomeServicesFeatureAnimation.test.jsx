@@ -86,6 +86,7 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(screen.getByRole('heading', { name: 'Bold, smart steps.' })).toBeTruthy();
     expect(screen.getByText("Let's connect your faith & finances.")).toBeTruthy();
     expect(intro?.getAttribute('data-scroll-reveal')).toBe('active');
+    expect(container.querySelector('.home-services-feature-shell')?.classList.contains('is-preview-white-cards')).toBe(true);
     expect(panels).toHaveLength(5);
     expect(panels.map((panel) => panel.querySelector('.home-services-feature-panel-title')?.textContent)).toEqual([
       'Loans',
@@ -102,6 +103,7 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(screen.getByRole('link', { name: 'Explore options' }).getAttribute('href')).toBe('/services/loans');
     expect(screen.getByRole('link', { name: 'Learn & strategize' }).getAttribute('href')).toBe('/services/legacy-giving');
     expect(screen.getByRole('link', { name: 'Start here' }).getAttribute('href')).toBe('/services/insurance');
+    expect(screen.getByRole('link', { name: 'Explore options' }).classList.contains('home-services-feature-btn')).toBe(true);
     expect(container.querySelector('.home-services-feature-panel-eyebrow')).toBeNull();
 
     expect(panels[1]?.querySelector('.home-services-feature-panel-title')?.textContent).toBe('Investments');
@@ -125,17 +127,17 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(panels[0]?.style.getPropertyValue('--home-services-secondary-rgb')).toBe('0, 138, 171');
     expect(panels[0]?.style.getPropertyValue('--home-services-light-rgb')).toBe('0, 173, 187');
     expect(panels[0]?.style.getPropertyValue('--home-services-accent-rgb')).toBe('216, 251, 255');
-    expect(panels[0]?.style.getPropertyValue('--home-services-next-base-rgb')).toBe('0, 57, 70');
-    expect(panels[0]?.style.getPropertyValue('--home-services-next-secondary-rgb')).toBe('0, 173, 187');
-    expect(panels[0]?.style.getPropertyValue('--home-services-next-light-rgb')).toBe('75, 199, 212');
+    expect(panels[0]?.style.getPropertyValue('--home-services-next-base-rgb')).toBe('0, 138, 171');
+    expect(panels[0]?.style.getPropertyValue('--home-services-next-secondary-rgb')).toBe('94, 218, 227');
+    expect(panels[0]?.style.getPropertyValue('--home-services-next-light-rgb')).toBe('216, 251, 255');
     expect(panels[0]?.style.getPropertyValue('--home-services-palette-handoff')).not.toBe('');
     expect(panels[0]?.style.getPropertyValue('--home-services-dark-angle')).toContain('deg');
-    expect(panels[2]?.style.getPropertyValue('--home-services-base-rgb')).toBe('44, 36, 25');
-    expect(panels[2]?.style.getPropertyValue('--home-services-secondary-rgb')).toBe('228, 190, 120');
-    expect(panels[2]?.style.getPropertyValue('--home-services-light-rgb')).toBe('255, 182, 54');
-    expect(panels[3]?.style.getPropertyValue('--home-services-base-rgb')).toBe('124, 75, 13');
-    expect(panels[3]?.style.getPropertyValue('--home-services-secondary-rgb')).toBe('255, 218, 146');
-    expect(panels[3]?.style.getPropertyValue('--home-services-light-rgb')).toBe('255, 186, 52');
+    expect(panels[2]?.style.getPropertyValue('--home-services-base-rgb')).toBe('242, 102, 96');
+    expect(panels[2]?.style.getPropertyValue('--home-services-secondary-rgb')).toBe('248, 145, 122');
+    expect(panels[2]?.style.getPropertyValue('--home-services-light-rgb')).toBe('255, 214, 206');
+    expect(panels[3]?.style.getPropertyValue('--home-services-base-rgb')).toBe('246, 177, 70');
+    expect(panels[3]?.style.getPropertyValue('--home-services-secondary-rgb')).toBe('255, 205, 118');
+    expect(panels[3]?.style.getPropertyValue('--home-services-light-rgb')).toBe('255, 233, 188');
   });
 
   it('clears scroll-driven vars when reduced motion is preferred', () => {
@@ -165,11 +167,11 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(firstPanel?.style.getPropertyValue('--home-services-light-rgb')).toBe('0, 173, 187');
     expect(firstPanel?.style.getPropertyValue('--home-services-dark-rgb')).toBe('0, 20, 30');
     expect(firstPanel?.style.getPropertyValue('--home-services-accent-rgb')).toBe('216, 251, 255');
-    expect(firstPanel?.style.getPropertyValue('--home-services-next-base-rgb')).toBe('0, 57, 70');
-    expect(firstPanel?.style.getPropertyValue('--home-services-next-secondary-rgb')).toBe('0, 173, 187');
-    expect(firstPanel?.style.getPropertyValue('--home-services-next-light-rgb')).toBe('75, 199, 212');
-    expect(firstPanel?.style.getPropertyValue('--home-services-next-dark-rgb')).toBe('7, 19, 27');
-    expect(firstPanel?.style.getPropertyValue('--home-services-next-accent-rgb')).toBe('216, 251, 255');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-base-rgb')).toBe('0, 138, 171');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-secondary-rgb')).toBe('94, 218, 227');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-light-rgb')).toBe('216, 251, 255');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-dark-rgb')).toBe('0, 95, 118');
+    expect(firstPanel?.style.getPropertyValue('--home-services-next-accent-rgb')).toBe('239, 254, 255');
     expect(firstPanel?.style.getPropertyValue('--home-services-palette-handoff')).toBe('0');
   });
 

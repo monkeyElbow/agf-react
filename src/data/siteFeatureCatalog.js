@@ -37,6 +37,14 @@ export const SITE_FEATURE_HEADLINE_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'buttonUrl',
   'buttonPageRef',
 ]);
+export const SITE_FEATURE_BODY_ONLY_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
+  'featureId',
+  'body',
+  'buttonLabel',
+  'buttonUrl',
+  'buttonPageRef',
+  'buttonOpenInNewWindow',
+]);
 export const SITE_FEATURE_FEATURE_ONLY_EDITABLE_FIELD_IDS = Object.freeze([
   'featureId',
 ]);
@@ -250,6 +258,61 @@ const SITE_FEATURE_CATALOG = Object.freeze([
             to: '/services/retirement',
             openInNewWindow: false,
           }),
+        }),
+      ]),
+    }),
+  }),
+  Object.freeze({
+    featureId: 'investments_growth_feature',
+    label: 'Investments growth feature',
+    description: 'Investments-only scroll feature with the final investor dashboard panel embedded as the last card.',
+    runtimeKey: 'investments_growth_feature',
+    allowedEditableFieldIds: SITE_FEATURE_BODY_ONLY_ACTION_EDITABLE_FIELD_IDS,
+    routeAllowlist: Object.freeze(['/services/investments']),
+    previewLabel: 'Investments growth feature',
+    previewThumbnail: '',
+    experimental: false,
+    internalOnly: false,
+    buildRuntime: () => ({
+      title: 'Build financial health.',
+      body: 'Log in to manage.',
+      billboardBodyHtml: '',
+      action: {
+        label: 'Go to my dashboard',
+        href: 'https://secure.agfinancial.org/',
+        openInNewWindow: true,
+      },
+      headlineLines: Object.freeze([
+        Object.freeze([
+          Object.freeze({ text: 'Build', className: 'is-atlantean' }),
+        ]),
+        Object.freeze([
+          Object.freeze({ text: 'financial health.', className: 'is-super-grey' }),
+        ]),
+      ]),
+      panels: Object.freeze([
+        Object.freeze({
+          title: 'Grow your return.',
+          tone: 'atlantean',
+          surfaceTone: 'blue',
+          body: 'Why choose between financial growth and spiritual impact? Deliver both at the same time.',
+        }),
+        Object.freeze({
+          title: 'Grow your backup plan.',
+          tone: 'mango',
+          surfaceTone: 'mango',
+          body: "Your church's emergency funds should build the Kingdom while preparing for the unexpected.",
+        }),
+        Object.freeze({
+          title: 'Grow the Kingdom.',
+          tone: 'sandstone',
+          surfaceTone: 'blue',
+          body: "Every dollar helps provide loans to churches and ministries. Today's investment is tomorrow's church.",
+        }),
+        Object.freeze({
+          kind: 'investor',
+          title: 'Already an investor?',
+          surfaceTone: 'white',
         }),
       ]),
     }),

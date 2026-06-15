@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
+import PageBlocksRenderer from '../components/blocks/PageBlocksRenderer';
 import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
 import { useFrontHud } from '../context/FrontHudContext';
 import { useRates } from '../context/RatesContext';
@@ -13,6 +14,7 @@ import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import SafeRichText from '../components/SafeRichText';
 import CertificateRatesSheet from '../components/CertificateRatesSheet';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import {
   formatTestimonialAttribution,
@@ -32,7 +34,6 @@ import {
 import { logHeroDriftWarningOnce } from '../lib/heroDriftWarnings';
 import {
   actionButtonClassName,
-  buildDynamicBillboardFromBlock,
   buildDynamicCalculatorCtaFromBlock,
   buildDynamicFeaturePanelFromBlock,
   buildDynamicHeroFromBlock,
@@ -89,6 +90,42 @@ const defaultInvestmentsIntroSettings = {
   button2Tone: 'super-grey',
   button2OpenInNewWindow: false,
 };
+const defaultInvestmentsCtaSettings = {
+  title: 'Talk with an investments consultant.',
+  titleClassName: '',
+  titleHighlightsJson: '',
+  bodyHtml: '<p>Share a few details and we’ll follow up with options that fit your goals.</p>',
+  bgTone: 'white',
+  submitStyle: 'outline',
+  submitTone: 'atlantean',
+  submitLabel: 'Follow-up with me',
+  successMessage: 'Thanks. We’ll reach out soon.',
+  salesforceUrl: '',
+  field1Enabled: true,
+  field1Type: 'text',
+  field1Label: 'Name',
+  field1Placeholder: '',
+  field1Options: '',
+  field1Required: true,
+  field2Enabled: true,
+  field2Type: 'email',
+  field2Label: 'Email',
+  field2Placeholder: '',
+  field2Options: '',
+  field2Required: true,
+  field3Enabled: true,
+  field3Type: 'tel',
+  field3Label: 'Phone',
+  field3Placeholder: '(555) 555-5555',
+  field3Options: '',
+  field3Required: false,
+  field4Enabled: true,
+  field4Type: 'textarea',
+  field4Label: 'Message',
+  field4Placeholder: 'What would you like to discuss?',
+  field4Options: '',
+  field4Required: false,
+};
 
 const certificateCards = [
   {
@@ -109,31 +146,14 @@ const certificateCards = [
   },
 ];
 
-const growthCards = [
-  {
-    title: 'Grow your return.',
-    tone: 'atlantean',
-    surfaceTone: 'blue',
-    body: 'Why choose between financial growth and spiritual impact? Deliver both at the same time.',
-  },
-  {
-    title: 'Grow your backup plan.',
-    tone: 'mango',
-    surfaceTone: 'mango',
-    body: "Your church's emergency funds should build the Kingdom while preparing for the unexpected.",
-  },
-  {
-    title: 'Grow the Kingdom.',
-    tone: 'sandstone',
-    surfaceTone: 'blue',
-    body: "Every dollar helps provide loans to churches and ministries. Today's investment is tomorrow's church.",
-  },
-];
-
-const INVESTMENTS_GROWTH_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
-const INVESTMENTS_GROWTH_REVEAL_SELECTOR = '[data-investments-growth-reveal]';
-const INVESTMENTS_GROWTH_BACKGROUND_PANEL_SELECTOR = '[data-investments-growth-background-panel]';
-const INVESTMENTS_GROWTH_BACKGROUND_TONES = Object.freeze(['blue', 'mango', 'white']);
+const defaultInvestmentsGrowthFeatureSettings = {
+  featureId: 'investments_growth_feature',
+  body: 'Log in to manage.',
+  buttonLabel: 'Go to my dashboard',
+  buttonUrl: 'https://secure.agfinancial.org/',
+  buttonPageRef: '',
+  buttonOpenInNewWindow: true,
+};
 
 const testimonials = [
   {
@@ -162,15 +182,16 @@ const INVESTMENTS_HERO_HUD_PANEL_ID = 'investments-hero';
 const INVESTMENTS_INTRO_HUD_PANEL_ID = 'investments-intro';
 const INVESTMENTS_TESTIMONIALS_HUD_PANEL_ID = 'investments-testimonials';
 const INVESTMENTS_FEATURE_PANEL_HUD_PANEL_ID = 'investments-feature-panel';
-const INVESTMENTS_BILLBOARD_HUD_PANEL_ID = 'investments-billboard';
+const INVESTMENTS_GROWTH_FEATURE_HUD_PANEL_ID = 'investments-growth-feature';
 const INVESTMENTS_CALCULATOR_CTA_HUD_PANEL_ID = 'investments-calculator-cta';
+const INVESTMENTS_CTA_HUD_PANEL_ID = 'investments-cta';
 const INVESTMENTS_HUD_PANEL_ID_BY_BLOCK_ID = {
   hero: INVESTMENTS_HERO_HUD_PANEL_ID,
   intro: INVESTMENTS_INTRO_HUD_PANEL_ID,
   testimonials: INVESTMENTS_TESTIMONIALS_HUD_PANEL_ID,
   cash_reserves: INVESTMENTS_FEATURE_PANEL_HUD_PANEL_ID,
-  billboard: INVESTMENTS_BILLBOARD_HUD_PANEL_ID,
-  investor_cta: INVESTMENTS_BILLBOARD_HUD_PANEL_ID,
+  growth_feature: INVESTMENTS_GROWTH_FEATURE_HUD_PANEL_ID,
+  cta_form: INVESTMENTS_CTA_HUD_PANEL_ID,
   laddering: INVESTMENTS_CALCULATOR_CTA_HUD_PANEL_ID,
 };
 const CHURCH_CASH_RESERVES_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
@@ -179,6 +200,29 @@ const CHURCH_CASH_RESERVES_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   fallbackImageAlt: 'Church Cash Reserves',
 });
 const INVESTMENTS_HERO_ANIMATION_PRESET = getHeroSeedContract('/services/investments')?.animationPreset || 'default';
+const INVESTMENTS_BLUEPRINT_BLOCKS = Object.freeze(
+  Array.isArray(contentBlockBlueprintsByPath['/services/investments'])
+    ? contentBlockBlueprintsByPath['/services/investments']
+    : [],
+);
+const INVESTMENTS_GROWTH_FEATURE_BLUEPRINT = Object.freeze(
+  INVESTMENTS_BLUEPRINT_BLOCKS.find((block) => block?.id === 'growth_feature' && block?.kind === 'site_feature')
+    || {
+      id: 'growth_feature',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: defaultInvestmentsGrowthFeatureSettings,
+    },
+);
+const INVESTMENTS_CTA_FORM_BLUEPRINT = Object.freeze(
+  INVESTMENTS_BLUEPRINT_BLOCKS.find((block) => block?.id === 'cta_form' && block?.kind === 'cta_form')
+    || {
+      id: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: defaultInvestmentsCtaSettings,
+    },
+);
 
 function resolveInvestmentsHeroAnimationPreset(value) {
   const normalized = String(value || '').trim();
@@ -196,35 +240,80 @@ function clampFrontHudOpacity(value) {
   return Math.max(0, Math.min(100, Math.round(numeric)));
 }
 
-function toLegacyInvestorBillboardBlock(block) {
-  const settings = block?.settings && typeof block.settings === 'object'
-    ? block.settings
+function buildInvestmentsCanonicalBlocks(blocks) {
+  const sourceBlocks = Array.isArray(blocks) ? blocks : [];
+  const visibleBlocks = sourceBlocks.filter((block) => block && typeof block === 'object');
+  const hasGrowthFeature = visibleBlocks.some((block) => block?.id === 'growth_feature' && block?.kind === 'site_feature');
+  const hasCtaForm = visibleBlocks.some((block) => block?.id === 'cta_form' && block?.kind === 'cta_form');
+  const legacyInvestorCta = visibleBlocks.find((block) => block?.id === 'investor_cta' && block?.kind === 'cta_band');
+  const legacyInvestorSettings = legacyInvestorCta?.settings && typeof legacyInvestorCta.settings === 'object'
+    ? legacyInvestorCta.settings
     : {};
-  return {
-    id: 'billboard',
-    kind: 'billboard',
-    mode: 'dynamic',
+  const reconciledGrowthFeatureBlock = {
+    ...INVESTMENTS_GROWTH_FEATURE_BLUEPRINT,
     settings: {
-      title: String(settings.title || '').trim() || 'Already an investor?',
-      titleClassName: String(settings.titleClassName || '').trim() || 'is-mango',
-      bodyHtml: String(settings.bodyHtml || '').trim(),
-      body: String(settings.body || '').trim() || 'Log in to manage.',
-      bgTone: String(settings.bgTone || '').trim() || 'white',
-      textTone: String(settings.textTone || '').trim() || 'dark',
-      justify: String(settings.justify || '').trim() || 'center',
-      scrollReveal: 'scale-up',
-      titleFontFamily: String(settings.titleFontFamily || '').trim() || 'helv',
-      titleFontWeight: Number.isFinite(Number(settings.titleFontWeight)) ? Number(settings.titleFontWeight) : 700,
-      titleSizeRem: Number.isFinite(Number(settings.titleSizeRem)) ? Number(settings.titleSizeRem) : 6,
-      titleLetterSpacingEm: Number.isFinite(Number(settings.titleLetterSpacingEm)) ? Number(settings.titleLetterSpacingEm) : -0.05,
-      buttonLabel: String(settings.buttonLabel || '').trim() || 'Go to my dashboard',
-      buttonUrl: String(settings.buttonUrl || '').trim() || 'https://secure.agfinancial.org/',
-      buttonPageRef: String(settings.buttonPageRef || '').trim(),
-      buttonStyle: String(settings.buttonStyle || '').trim() || 'blue',
-      buttonTone: String(settings.buttonTone || '').trim() || 'atlantean',
-      buttonOpenInNewWindow: settings.buttonOpenInNewWindow !== false,
+      ...(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings || {}),
+      body: String(legacyInvestorSettings.body || legacyInvestorSettings.subtitle || '').trim()
+        || String(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.body || '').trim()
+        || defaultInvestmentsGrowthFeatureSettings.body,
+      buttonLabel: String(legacyInvestorSettings.buttonLabel || '').trim()
+        || String(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.buttonLabel || '').trim()
+        || defaultInvestmentsGrowthFeatureSettings.buttonLabel,
+      buttonUrl: String(legacyInvestorSettings.buttonUrl || '').trim()
+        || String(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.buttonUrl || '').trim()
+        || defaultInvestmentsGrowthFeatureSettings.buttonUrl,
+      buttonPageRef: String(legacyInvestorSettings.buttonPageRef || '').trim()
+        || String(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.buttonPageRef || '').trim()
+        || defaultInvestmentsGrowthFeatureSettings.buttonPageRef,
+      buttonOpenInNewWindow: legacyInvestorSettings.buttonOpenInNewWindow !== undefined
+        ? legacyInvestorSettings.buttonOpenInNewWindow !== false
+        : (INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.buttonOpenInNewWindow !== false),
     },
   };
+
+  const nextBlocks = [];
+  let insertedGrowthFeature = false;
+  let insertedCtaForm = false;
+
+  const insertGrowthFeature = () => {
+    if (insertedGrowthFeature || hasGrowthFeature) {
+      return;
+    }
+    nextBlocks.push(reconciledGrowthFeatureBlock);
+    insertedGrowthFeature = true;
+  };
+
+  const insertCtaForm = () => {
+    if (insertedCtaForm || hasCtaForm) {
+      return;
+    }
+    nextBlocks.push(INVESTMENTS_CTA_FORM_BLUEPRINT);
+    insertedCtaForm = true;
+  };
+
+  visibleBlocks.forEach((block) => {
+    if (block?.id === 'investor_cta' && block?.kind === 'cta_band') {
+      insertGrowthFeature();
+      insertCtaForm();
+      return;
+    }
+
+    nextBlocks.push(block);
+
+    if (block?.id === 'certificates' && !hasGrowthFeature) {
+      insertGrowthFeature();
+    }
+
+    if (block?.id === 'growth_feature') {
+      insertedGrowthFeature = true;
+      insertCtaForm();
+    }
+  });
+
+  insertGrowthFeature();
+  insertCtaForm();
+
+  return nextBlocks;
 }
 
 const ladderStateOptions = [
@@ -261,132 +350,6 @@ function parseInteger(value) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
-}
-
-function smoothstep(edge0, edge1, value) {
-  if (edge0 === edge1) {
-    return value >= edge1 ? 1 : 0;
-  }
-  const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
-  return t * t * (3 - (2 * t));
-}
-
-function clampUnitInterval(value) {
-  return clamp(value, 0, 1);
-}
-
-function easeInvestmentsScrollProgress(value) {
-  return smoothstep(0, 1, clampUnitInterval(value));
-}
-
-function interpolateInvestmentsValue(start, end, progress) {
-  return start + ((end - start) * progress);
-}
-
-function readGrowthRevealNumber(target, attributeName, fallback) {
-  const value = target?.getAttribute(attributeName);
-  if (value === null || value === undefined || value === '') {
-    return fallback;
-  }
-  const parsed = Number.parseFloat(String(value).trim());
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function getInvestmentsGrowthRevealProgress(target, viewportHeight) {
-  if (!target || !viewportHeight) {
-    return 1;
-  }
-  const rect = target.getBoundingClientRect();
-  const startVh = readGrowthRevealNumber(target, 'data-investments-growth-start-vh', 1.02);
-  const endVh = readGrowthRevealNumber(target, 'data-investments-growth-end-vh', 0.56);
-  const anchorOffset = Math.min(
-    rect.height * readGrowthRevealNumber(target, 'data-investments-growth-anchor-ratio', 0.32),
-    readGrowthRevealNumber(target, 'data-investments-growth-anchor-max-px', 168),
-  );
-  const anchorY = rect.top + anchorOffset;
-  const startY = viewportHeight * startVh;
-  const endY = viewportHeight * endVh;
-  return smoothstep(0, 1, (startY - anchorY) / Math.max(1, startY - endY));
-}
-
-function applyInvestmentsGrowthRevealMotion(target, viewportHeight) {
-  if (!target) {
-    return;
-  }
-  const progress = getInvestmentsGrowthRevealProgress(target, viewportHeight);
-  const minOpacity = readGrowthRevealNumber(target, 'data-investments-growth-min-opacity', 0.18);
-  const baseScale = readGrowthRevealNumber(target, 'data-investments-growth-base-scale', 0.92);
-  const shiftY = readGrowthRevealNumber(target, 'data-investments-growth-shift-y', 56);
-  const opacity = minOpacity + ((1 - minOpacity) * progress);
-  const scale = baseScale + ((1 - baseScale) * progress);
-  const translateY = (1 - progress) * shiftY;
-
-  target.style.setProperty('--investments-growth-reveal-opacity', opacity.toFixed(3));
-  target.style.setProperty('--investments-growth-reveal-scale', scale.toFixed(3));
-  target.style.setProperty('--investments-growth-reveal-shift-y', `${translateY.toFixed(2)}px`);
-}
-
-function clearInvestmentsGrowthRevealMotion(target) {
-  if (!target) {
-    return;
-  }
-  target.style.setProperty('--investments-growth-reveal-opacity', '1');
-  target.style.setProperty('--investments-growth-reveal-scale', '1');
-  target.style.setProperty('--investments-growth-reveal-shift-y', '0px');
-}
-
-function applyInvestmentsGrowthBackgroundMotion(root, panelNodes, viewportHeight) {
-  if (!root || !Array.isArray(panelNodes) || !panelNodes.length || typeof window === 'undefined') {
-    return;
-  }
-
-  const scrollY = window.scrollY || window.pageYOffset || 0;
-  const viewportCenter = scrollY + ((viewportHeight || window.innerHeight || document.documentElement.clientHeight || 1) * 0.5);
-  const centers = panelNodes.map((node) => {
-    const rect = node.getBoundingClientRect();
-    return scrollY + rect.top + (rect.height * 0.5);
-  });
-  const weights = {
-    blue: 0,
-    mango: 0,
-    sand: 0,
-    white: 0,
-  };
-
-  if (viewportCenter <= centers[0]) {
-    weights[panelNodes[0].getAttribute('data-investments-growth-background-panel') || 'blue'] = 1;
-  } else if (viewportCenter >= centers[centers.length - 1]) {
-    weights[panelNodes[panelNodes.length - 1].getAttribute('data-investments-growth-background-panel') || 'white'] = 1;
-  } else {
-    let activeIndex = 0;
-    for (let index = 0; index < centers.length - 1; index += 1) {
-      if (viewportCenter >= centers[index] && viewportCenter < centers[index + 1]) {
-        activeIndex = index;
-        break;
-      }
-    }
-
-    const currentTone = panelNodes[activeIndex].getAttribute('data-investments-growth-background-panel') || 'blue';
-    const nextTone = panelNodes[activeIndex + 1].getAttribute('data-investments-growth-background-panel') || 'white';
-    const span = Math.max(1, centers[activeIndex + 1] - centers[activeIndex]);
-    const ratio = smoothstep(0, 1, (viewportCenter - centers[activeIndex]) / span);
-    weights[currentTone] = 1 - ratio;
-    weights[nextTone] = ratio;
-  }
-
-  INVESTMENTS_GROWTH_BACKGROUND_TONES.forEach((tone) => {
-    root.style.setProperty(`--investments-growth-${tone}-opacity`, (weights[tone] || 0).toFixed(3));
-  });
-}
-
-function clearInvestmentsGrowthBackgroundMotion(root) {
-  if (!root) {
-    return;
-  }
-  root.style.setProperty('--investments-growth-blue-opacity', '1');
-  root.style.setProperty('--investments-growth-mango-opacity', '0');
-  root.style.setProperty('--investments-growth-sand-opacity', '0');
-  root.style.setProperty('--investments-growth-white-opacity', '0');
 }
 
 function suggestedHorizon(ladderYears) {
@@ -939,9 +902,8 @@ export default function InvestmentsPage() {
   const introSectionRef = useRef(null);
   const testimonialsSectionRef = useRef(null);
   const featurePanelSectionRef = useRef(null);
-  const growthFeatureRef = useRef(null);
-  const billboardSectionRef = useRef(null);
-  const billboardCopyRef = useRef(null);
+  const growthFeatureSectionRef = useRef(null);
+  const ctaSectionRef = useRef(null);
   const calculatorCtaSectionRef = useRef(null);
   const introHeadingInputRef = useRef(null);
   const introExtraLineInputRef = useRef(null);
@@ -993,66 +955,10 @@ export default function InvestmentsPage() {
   const [introBodyMiniEditorEnabled, setIntroBodyMiniEditorEnabled] = useState(false);
   useNativeEnhancements(pageRef);
 
-  useEffect(() => {
-    const growthRoot = growthFeatureRef.current;
-    if (!growthRoot || typeof window === 'undefined') {
-      return undefined;
-    }
-
-    const revealNodes = Array.from(growthRoot.querySelectorAll(INVESTMENTS_GROWTH_REVEAL_SELECTOR));
-    const backgroundPanelNodes = Array.from(growthRoot.querySelectorAll(INVESTMENTS_GROWTH_BACKGROUND_PANEL_SELECTOR));
-    if (!revealNodes.length && !backgroundPanelNodes.length) {
-      return undefined;
-    }
-
-    const mediaQuery = window.matchMedia?.(INVESTMENTS_GROWTH_REDUCED_MOTION_QUERY) || null;
-    let frameId = 0;
-
-    const updateInvestmentsGrowthMotion = () => {
-      frameId = 0;
-      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
-      if (backgroundPanelNodes.length) {
-        applyInvestmentsGrowthBackgroundMotion(growthRoot, backgroundPanelNodes, viewportHeight);
-      }
-      if (mediaQuery?.matches) {
-        revealNodes.forEach(clearInvestmentsGrowthRevealMotion);
-        return;
-      }
-      revealNodes.forEach((node) => applyInvestmentsGrowthRevealMotion(node, viewportHeight));
-    };
-
-    const requestInvestmentsGrowthMotion = () => {
-      if (frameId) {
-        return;
-      }
-      frameId = window.requestAnimationFrame(updateInvestmentsGrowthMotion);
-    };
-
-    const handleMotionPreferenceChange = () => {
-      revealNodes.forEach(clearInvestmentsGrowthRevealMotion);
-      clearInvestmentsGrowthBackgroundMotion(growthRoot);
-      requestInvestmentsGrowthMotion();
-    };
-
-    requestInvestmentsGrowthMotion();
-    window.addEventListener('scroll', requestInvestmentsGrowthMotion, { passive: true });
-    window.addEventListener('resize', requestInvestmentsGrowthMotion);
-    mediaQuery?.addEventListener?.('change', handleMotionPreferenceChange);
-
-    return () => {
-      window.removeEventListener('scroll', requestInvestmentsGrowthMotion);
-      window.removeEventListener('resize', requestInvestmentsGrowthMotion);
-      mediaQuery?.removeEventListener?.('change', handleMotionPreferenceChange);
-      if (frameId) {
-        window.cancelAnimationFrame(frameId);
-      }
-      revealNodes.forEach(clearInvestmentsGrowthRevealMotion);
-      clearInvestmentsGrowthBackgroundMotion(growthRoot);
-    };
-  }, []);
-
   const managedBlocksSource = useMemo(
-    () => (Array.isArray(blocksByPath?.['/services/investments']) ? blocksByPath['/services/investments'] : []),
+    () => buildInvestmentsCanonicalBlocks(
+      Array.isArray(blocksByPath?.['/services/investments']) ? blocksByPath['/services/investments'] : [],
+    ),
     [blocksByPath],
   );
   const { blocks: managedBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({
@@ -1098,19 +1004,19 @@ export default function InvestmentsPage() {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const billboardBlock = useMemo(() => (
+  const growthFeatureBlock = useMemo(() => (
     managedBlocks.find((block) => (
-      block?.id === 'billboard'
-      && block?.kind === 'billboard'
+      block?.id === 'growth_feature'
+      && block?.kind === 'site_feature'
       && block?.mode === 'dynamic'
       && block?.hidden !== true
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const legacyInvestorCtaBlock = useMemo(() => (
+  const ctaFormBlock = useMemo(() => (
     managedBlocks.find((block) => (
-      block?.id === 'investor_cta'
-      && block?.kind === 'cta_band'
+      block?.id === 'cta_form'
+      && block?.kind === 'cta_form'
       && block?.mode === 'dynamic'
       && block?.hidden !== true
       && block?.hidden !== 'true'
@@ -1211,126 +1117,22 @@ export default function InvestmentsPage() {
       settings: normalizedSettings,
     });
   }, [featurePanelBlock]);
-  const investorBillboardSourceBlock = billboardBlock || legacyInvestorCtaBlock || null;
-  const investorBillboardRuntime = useMemo(
-    () => buildDynamicBillboardFromBlock(
-      billboardBlock
-        || (legacyInvestorCtaBlock ? toLegacyInvestorBillboardBlock(legacyInvestorCtaBlock) : null)
-        || {
-          id: 'billboard',
-          kind: 'billboard',
-          mode: 'dynamic',
-          settings: {
-            title: 'Already an investor?',
-            titleClassName: 'is-mango',
-            body: 'Log in to manage.',
-            bgTone: 'white',
-            textTone: 'dark',
-            justify: 'center',
-            scrollReveal: 'scale-up',
-            titleFontFamily: 'helv',
-            titleFontWeight: 700,
-            titleSizeRem: 6,
-            titleLetterSpacingEm: -0.05,
-            buttonLabel: 'Go to my dashboard',
-            buttonUrl: 'https://secure.agfinancial.org/',
-            buttonPageRef: '',
-            buttonStyle: 'blue',
-            buttonTone: 'atlantean',
-            buttonOpenInNewWindow: true,
-          },
-        },
-    ),
-    [billboardBlock, legacyInvestorCtaBlock],
-  );
-  const investorBillboardCopyUsesScrollProgress = investorBillboardRuntime?.scrollReveal === 'scale-up';
-  const investorBillboardCopyClassName = useMemo(() => {
-    const classNames = String(investorBillboardRuntime?.copyClassName || '')
-      .split(/\s+/)
-      .filter(Boolean);
-
-    if (!investorBillboardCopyUsesScrollProgress) {
-      return classNames.join(' ');
+  const renderedGrowthFeatureBlock = useMemo(() => (
+    growthFeatureBlock || {
+      id: 'growth_feature',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: defaultInvestmentsGrowthFeatureSettings,
     }
-
-    return [
-      ...classNames.filter((className) => ![
-        'fade-up',
-        'fade-up-force-observe',
-        'fade-up-repeat-observe',
-      ].includes(className)),
-      'billboard-scroll-progress-copy',
-    ].join(' ');
-  }, [investorBillboardCopyUsesScrollProgress, investorBillboardRuntime]);
-  useEffect(() => {
-    const section = billboardSectionRef.current;
-    const copy = billboardCopyRef.current;
-    if (!section || !copy || typeof window === 'undefined') {
-      return undefined;
+  ), [growthFeatureBlock]);
+  const renderedCtaFormBlock = useMemo(() => (
+    ctaFormBlock || {
+      id: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: defaultInvestmentsCtaSettings,
     }
-
-    let frameId = 0;
-    const reducedMotionMediaQuery = window.matchMedia?.(INVESTMENTS_GROWTH_REDUCED_MOTION_QUERY) || null;
-
-    const applyInvestorBillboardScrollProgress = () => {
-      frameId = 0;
-
-      if (!investorBillboardCopyUsesScrollProgress || reducedMotionMediaQuery?.matches) {
-        copy.style.opacity = '1';
-        copy.style.transform = 'translate3d(0, 0, 0) scale(1)';
-        return;
-      }
-
-      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-      if (!viewportHeight) {
-        return;
-      }
-
-      const rect = section.getBoundingClientRect();
-      const entryProgress = clampUnitInterval((viewportHeight * 1.02 - rect.top) / (viewportHeight * 0.62));
-      const exitProgress = clampUnitInterval((rect.bottom - viewportHeight * 0.04) / (viewportHeight * 0.48));
-      const progress = easeInvestmentsScrollProgress(Math.min(entryProgress, exitProgress));
-      const opacity = interpolateInvestmentsValue(0.34, 1, progress);
-      const scale = interpolateInvestmentsValue(0.955, 1, progress);
-      const translateY = interpolateInvestmentsValue(42, 0, progress);
-
-      copy.style.opacity = opacity.toFixed(3);
-      copy.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
-    };
-
-    const queueInvestorBillboardScrollProgressUpdate = () => {
-      if (frameId) {
-        return;
-      }
-      frameId = window.requestAnimationFrame(applyInvestorBillboardScrollProgress);
-    };
-
-    const handleReducedMotionChange = () => {
-      queueInvestorBillboardScrollProgressUpdate();
-    };
-
-    queueInvestorBillboardScrollProgressUpdate();
-    window.addEventListener('scroll', queueInvestorBillboardScrollProgressUpdate, { passive: true });
-    window.addEventListener('resize', queueInvestorBillboardScrollProgressUpdate);
-    if (typeof reducedMotionMediaQuery?.addEventListener === 'function') {
-      reducedMotionMediaQuery.addEventListener('change', handleReducedMotionChange);
-    } else if (typeof reducedMotionMediaQuery?.addListener === 'function') {
-      reducedMotionMediaQuery.addListener(handleReducedMotionChange);
-    }
-
-    return () => {
-      if (frameId) {
-        window.cancelAnimationFrame(frameId);
-      }
-      window.removeEventListener('scroll', queueInvestorBillboardScrollProgressUpdate);
-      window.removeEventListener('resize', queueInvestorBillboardScrollProgressUpdate);
-      if (typeof reducedMotionMediaQuery?.removeEventListener === 'function') {
-        reducedMotionMediaQuery.removeEventListener('change', handleReducedMotionChange);
-      } else if (typeof reducedMotionMediaQuery?.removeListener === 'function') {
-        reducedMotionMediaQuery.removeListener(handleReducedMotionChange);
-      }
-    };
-  }, [investorBillboardCopyUsesScrollProgress]);
+  ), [ctaFormBlock]);
   const calculatorCtaRuntime = useMemo(
     () => buildDynamicCalculatorCtaFromBlock(calculatorCtaBlock || {
       id: 'laddering',
@@ -1456,11 +1258,13 @@ export default function InvestmentsPage() {
             ? testimonialsSectionRef
             : panel.blockId === 'cash_reserves'
               ? featurePanelSectionRef
-              : (panel.blockId === 'billboard' || panel.blockId === 'investor_cta')
-                ? billboardSectionRef
-                : panel.blockId === 'laddering'
-                  ? calculatorCtaSectionRef
-                  : null,
+              : panel.blockId === 'growth_feature'
+                ? growthFeatureSectionRef
+                : panel.blockId === 'cta_form'
+                    ? ctaSectionRef
+                    : panel.blockId === 'laddering'
+                      ? calculatorCtaSectionRef
+                      : null,
     })),
     [managedBlocks],
   );
@@ -1484,6 +1288,20 @@ export default function InvestmentsPage() {
       if (blockId) {
         next[blockId] = panel;
       }
+      return next;
+    }, {})
+  ), [hudPanels]);
+  const hudAnchorPanelsByBlockId = useMemo(() => (
+    hudPanels.reduce((next, panel) => {
+      const blockId = String(panel?.blockId || '').trim();
+      if (!blockId) {
+        return next;
+      }
+      next[blockId] = {
+        panelId: panel.id,
+        label: panel.label,
+        anchorSelector: `[data-block-id="${blockId}"]`,
+      };
       return next;
     }, {})
   ), [hudPanels]);
@@ -1532,6 +1350,12 @@ export default function InvestmentsPage() {
       behavior: 'smooth',
     });
   };
+  const scrollToSelector = (selector) => {
+    if (!selector || typeof document === 'undefined') {
+      return;
+    }
+    scrollElementWithNavOffset(document.querySelector(selector));
+  };
 
   const setHudPanelOpen = (panelId, sectionRef, options = {}) => {
     const shouldScroll = options.scrollToTarget !== false;
@@ -1540,6 +1364,11 @@ export default function InvestmentsPage() {
     if (shouldScroll) {
       scrollElementWithNavOffset(sectionRef?.current);
     }
+  };
+  const openHudPanelBySelector = (panelId, anchorSelector) => {
+    setHudDockCollapsed(false);
+    setActiveHudPanelId(panelId);
+    scrollToSelector(anchorSelector);
   };
 
   const toggleHudPanel = (panelId, sectionRef) => {
@@ -2382,135 +2211,31 @@ export default function InvestmentsPage() {
         </div>
       </section>
 
-      <section ref={growthFeatureRef} className="service-native-section investments-native-growth-feature">
-        <div className="investments-native-growth-surface" aria-hidden="true">
-          <div className="investments-native-growth-surface-layer is-blue" />
-          <div className="investments-native-growth-surface-layer is-mango" />
-          <div className="investments-native-growth-surface-layer is-sand" />
-          <div className="investments-native-growth-surface-layer is-white" />
-        </div>
-        <div className="ag-panel-rail">
-          <h2 className="investments-native-build-title">
-            <span
-              className="investments-growth-scroll-reveal investments-growth-scroll-reveal-title"
-              data-investments-growth-reveal="title"
-              data-investments-growth-start-vh="0.98"
-              data-investments-growth-end-vh="0.48"
-              data-investments-growth-anchor-ratio="0.22"
-              data-investments-growth-anchor-max-px="120"
-              data-investments-growth-min-opacity="0.24"
-              data-investments-growth-base-scale="0.945"
-              data-investments-growth-shift-y="34"
-            >
-              <span className="investments-native-build-title-line">
-                <mark className="is-atlantean">Build</mark>
-              </span>
-              <span className="investments-native-build-title-line">
-                <mark className="is-super-grey">financial health.</mark>
-              </span>
-              <span className="investments-native-build-title-line">
-                <mark className="is-mango">Grow</mark>
-                <mark className="is-super-grey">.</mark>
-                {' '}
-                <mark className="is-sandstone">Minister</mark>
-                <mark className="is-super-grey">.</mark>
-              </span>
-            </span>
-          </h2>
+      <div ref={growthFeatureSectionRef}>
+        <PageBlocksRenderer
+          blocks={[renderedGrowthFeatureBlock]}
+          ownershipEnabled={showFrontHud}
+          ownershipPathname="/services/investments"
+          hudAnchorsByBlockId={showFrontHud ? hudAnchorPanelsByBlockId : null}
+          activeHudPanelId={activeHudPanelId}
+          hudDockCollapsed={hudDockCollapsed}
+          hudOpacityRatio={frontHudOpacityRatio}
+          onHudAnchorClick={showFrontHud ? openHudPanelBySelector : null}
+        />
+      </div>
 
-          <div
-            className="service-native-grid investments-native-growth-grid"
-          >
-            {growthCards.map((card) => (
-              <article
-                key={card.title}
-                className="investments-native-growth-card investments-growth-scroll-reveal"
-                data-investments-growth-background-panel={card.surfaceTone}
-                data-investments-growth-reveal="card"
-                data-investments-growth-start-vh="1.08"
-                data-investments-growth-end-vh="0.54"
-                data-investments-growth-anchor-ratio="0.28"
-                data-investments-growth-anchor-max-px="154"
-                data-investments-growth-min-opacity="0.18"
-                data-investments-growth-base-scale="0.92"
-                data-investments-growth-shift-y="52"
-              >
-                <h3 className={`is-${card.tone}`}>{card.title}</h3>
-                <p>{card.body}</p>
-              </article>
-            ))}
-            {investorBillboardRuntime ? (
-              <article
-                ref={billboardSectionRef}
-                className={`investments-native-growth-card investments-native-growth-card--investor investments-native-dashboard-billboard${getHudBlockStateClassName(investorBillboardSourceBlock?.id || 'billboard')}${getOwnershipVisualForBlockId(investorBillboardSourceBlock?.id || 'billboard').className || ''}`}
-                data-block-id={investorBillboardSourceBlock?.id || 'billboard'}
-                data-investments-growth-background-panel="white"
-                style={investorBillboardRuntime.contentMaxWidthPx
-                  ? { '--dynamic-billboard-max-width': `${investorBillboardRuntime.contentMaxWidthPx}px` }
-                  : undefined}
-              >
-                <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId(investorBillboardSourceBlock?.id || 'billboard')} />
-                {renderHudAnchor(investorBillboardSourceBlock?.id || 'billboard')}
-                <div
-                  ref={billboardCopyRef}
-                  className={`investments-native-growth-card-copy native-info-section-copy${investorBillboardCopyClassName ? ` ${investorBillboardCopyClassName}` : ''} is-justify-${investorBillboardRuntime.justify || 'center'}`}
-                  data-fade-root-margin={investorBillboardCopyUsesScrollProgress ? undefined : (investorBillboardRuntime.copyFadeRootMargin || undefined)}
-                >
-                  {investorBillboardRuntime.title ? (
-                    <h3
-                      className={`${investorBillboardRuntime.titleClassName ? `${investorBillboardRuntime.titleClassName} ` : ''}investments-native-dashboard-title`.trim()}
-                      style={investorBillboardRuntime.titleStyle || undefined}
-                    >
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: renderTextWithHighlights(investorBillboardRuntime.title, investorBillboardRuntime.titleHighlights),
-                        }}
-                      />
-                    </h3>
-                  ) : null}
-                  {investorBillboardRuntime.bodyHtml ? (
-                    <SafeRichText
-                      as="div"
-                      className="native-info-rich-html"
-                      html={investorBillboardRuntime.bodyHtml}
-                    />
-                  ) : null}
-                  {investorBillboardRuntime.body ? <p>{investorBillboardRuntime.body}</p> : null}
-                  {investorBillboardRuntime.action ? (
-                    <div className="service-native-action-row is-centered">
-                      {(() => {
-                        const action = investorBillboardRuntime.action;
-                        const buttonClassName = actionButtonClassName('outline', action.tone || 'atlantean');
-                        const actionTarget = action.to || action.href || '';
-                        const isInternal = Boolean(action.to || (action.href && !isExternalLinkHref(action.href) && action.href.startsWith('/')));
-                        return isInternal ? (
-                          <Link
-                            to={actionTarget}
-                            className={buttonClassName}
-                            target={action.openInNewWindow ? '_blank' : undefined}
-                            rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
-                          >
-                            {action.label}
-                          </Link>
-                        ) : (
-                          <a
-                            href={actionTarget || '#'}
-                            className={buttonClassName}
-                            target={action.openInNewWindow ? '_blank' : undefined}
-                            rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
-                          >
-                            {action.label}
-                          </a>
-                        );
-                      })()}
-                    </div>
-                  ) : null}
-                </div>
-              </article>
-            ) : null}
-          </div>
-        </div>
-      </section>
+      <div ref={ctaSectionRef}>
+        <PageBlocksRenderer
+          blocks={[renderedCtaFormBlock]}
+          ownershipEnabled={showFrontHud}
+          ownershipPathname="/services/investments"
+          hudAnchorsByBlockId={showFrontHud ? hudAnchorPanelsByBlockId : null}
+          activeHudPanelId={activeHudPanelId}
+          hudDockCollapsed={hudDockCollapsed}
+          hudOpacityRatio={frontHudOpacityRatio}
+          onHudAnchorClick={showFrontHud ? openHudPanelBySelector : null}
+        />
+      </div>
 
       <section className="service-native-section investments-native-rates-section">
         <div className="ag-panel-rail" id="rates">

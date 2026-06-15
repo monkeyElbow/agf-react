@@ -560,6 +560,7 @@ describe('content block blueprint coverage', () => {
   it('keeps canonical columns-family seeds explicit about their preset identity', () => {
     const homeBlocks = contentBlockBlueprintsByPath['/'] || [];
     const loansBlocks = contentBlockBlueprintsByPath['/services/loans'] || [];
+    const retirementBlocks = contentBlockBlueprintsByPath['/services/retirement'] || [];
     const testBlocks = contentBlockBlueprintsByPath['/test'] || [];
 
     expect(homeBlocks.find((block) => block?.id === 'columns_mha' && block?.mode === 'dynamic')).toMatchObject({
@@ -568,6 +569,16 @@ describe('content block blueprint coverage', () => {
       presetId: 'housing-allowance',
     });
     expect(homeBlocks.find((block) => block?.id === 'columns_math' && block?.mode === 'dynamic')).toMatchObject({
+      kind: 'columns',
+      templateId: 'columns_math',
+      presetId: 'do-the-math',
+    });
+    expect(retirementBlocks.find((block) => block?.id === 'columns_mha' && block?.mode === 'dynamic')).toMatchObject({
+      kind: 'columns',
+      templateId: 'columns_mha',
+      presetId: 'housing-allowance',
+    });
+    expect(retirementBlocks.find((block) => block?.id === 'columns_math' && block?.mode === 'dynamic')).toMatchObject({
       kind: 'columns',
       templateId: 'columns_math',
       presetId: 'do-the-math',
@@ -706,15 +717,17 @@ describe('content block blueprint coverage', () => {
     });
   });
 
-  it('keeps investments CTA-like seeds explicit about what belongs to the cta-band family', () => {
+  it('keeps investments growth follow-up seeded on the site feature plus reusable CTA form path', () => {
     const investmentBlocks = contentBlockBlueprintsByPath['/services/investments'] || [];
-    const investorCtaBlock = investmentBlocks.find((block) => block?.id === 'investor_cta');
+    const growthFeatureBlock = investmentBlocks.find((block) => block?.id === 'growth_feature');
+    const ctaFormBlock = investmentBlocks.find((block) => block?.id === 'cta_form');
     const featurePanelBlock = investmentBlocks.find((block) => block?.id === 'cash_reserves');
     const calculatorCtaBlock = investmentBlocks.find((block) => block?.id === 'laddering');
 
-    expect(investorCtaBlock?.kind).toBe('cta_band');
-    expect(investorCtaBlock?.templateId).toBe('investor_cta');
-    expect(investorCtaBlock?.presetId).toBe('dashboard-login');
+    expect(growthFeatureBlock?.kind).toBe('site_feature');
+    expect(growthFeatureBlock?.settings?.featureId).toBe('investments_growth_feature');
+    expect(ctaFormBlock?.kind).toBe('cta_form');
+    expect(ctaFormBlock?.settings?.submitStyle).toBe('outline');
     expect(featurePanelBlock?.kind).toBe('feature_panel');
     expect(featurePanelBlock?.presetId).toBeUndefined();
     expect(calculatorCtaBlock?.kind).toBe('calculator_cta');
