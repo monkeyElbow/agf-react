@@ -27,7 +27,7 @@ describe('services hero pie renderer guardrail', () => {
     expect(source).toContain('const [heroPieUserInteracted, setHeroPieUserInteracted] = useState(false);');
     expect(source).toContain("const wheelButtonClassName = actionButtonClassName('blue');");
     expect(source).toContain("'--services-pie-active-color': activeSlice.color,");
-    expect(source).toContain('<h1>The AGFinancial complete strategy</h1>');
+    expect(source).toContain('<h1>The AGFinancial robust strategy</h1>');
     expect(source).toContain('data-service-wheel-slice={slice.title}');
     expect(source).toContain('data-service-wheel-pill={slice.title}');
     expect(source).toContain('data-service-wheel-card={activeSlice.title}');

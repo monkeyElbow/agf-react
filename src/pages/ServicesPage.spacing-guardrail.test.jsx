@@ -15,7 +15,14 @@ describe('services page spacing and typography guardrail', () => {
     const cssSource = readSource('../styles/home-native.css');
     const serviceCssSource = readSource('../styles/service-native.css');
 
+    expect(cssSource).toContain("@property --services-pie-active-color {");
+    expect(cssSource).toContain("syntax: '<color>';");
     expect(cssSource).toContain('.services-pie-header {');
+    expect(cssSource).toContain('.services-pie-hero {');
+    expect(cssSource).toContain('color-mix(in srgb, var(--services-pie-active-color) 18%, transparent)');
+    expect(cssSource).toContain('transition: --services-pie-active-color 0.64s ease;');
+    expect(cssSource).toContain('.services-pie-hero::before {');
+    expect(cssSource).toContain('color-mix(in srgb, var(--services-pie-active-color) 11%, transparent)');
     expect(cssSource).toContain('.services-pie-interactive-shell {');
     expect(cssSource).toContain('.services-pie-hero-grid {');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1.24fr) minmax(300px, 0.82fr);');
@@ -46,6 +53,7 @@ describe('services page spacing and typography guardrail', () => {
     expect(cssSource).toContain('.services-breakdown-shell {');
     expect(cssSource).toContain('display: grid;');
     expect(cssSource).toContain('.services-breakdown-header {');
+    expect(cssSource).toContain('padding: clamp(0.85rem, 1.8vw, 1.2rem) 0 clamp(1.15rem, 2.4vw, 1.65rem);');
     expect(cssSource).toContain('.services-breakdown-list {');
     expect(cssSource).toContain('.services-breakdown-panel {');
     expect(cssSource).toContain('grid-template-columns: minmax(150px, 0.42fr) minmax(0, 1fr);');

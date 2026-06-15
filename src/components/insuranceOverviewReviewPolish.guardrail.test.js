@@ -21,6 +21,7 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card::after {');
     expect(cssSource).toContain('background: linear-gradient(142deg, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0.85) 100%);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card p {');
+    expect(cssSource).toContain('padding: clamp(1.35rem, 2.8vw, 1.75rem) clamp(2rem, 4vw, 2.65rem) 0;');
     expect(cssSource).toContain('color: var(--ag-color-super-grey);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card h3 {');
     expect(cssSource).toContain('color: #ffffff;');
@@ -33,6 +34,8 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('--btn-bg: transparent;');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline,');
     expect(cssSource).toContain('--btn-hover-bg: transparent;');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card .service-native-action-row:last-child {');
+    expect(cssSource).toContain('clamp(2rem, 4vw, 2.65rem)');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(1) {');
     expect(cssSource).toContain('--insurance-coverage-card-cap-bg: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(2) {');

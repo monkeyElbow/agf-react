@@ -43,7 +43,7 @@ describe('home top strip renderer guardrail', () => {
             showPhone: true,
             phone: '866.621.1787',
             showRates: true,
-            ratesLabel: 'Ask about our rates!',
+            ratesLabel: 'See rates',
             ratesPath: '/rates',
             bgTone: 'grey',
             textTone: 'white',
@@ -59,7 +59,7 @@ describe('home top strip renderer guardrail', () => {
     const strip = document.querySelector('.home-native-strip.is-bg-grey.is-text-white');
     expect(strip).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Secure Login' }).getAttribute('href')).toBe('https://secure.agfinancial.org/');
-    expect(screen.getByRole('link', { name: 'Ask about our rates!' }).getAttribute('href')).toBe('/rates');
+    expect(screen.getByRole('link', { name: 'See rates' }).getAttribute('href')).toBe('/rates');
   });
 
   it('keeps the shared dynamic top strip builder in the home page block renderer', () => {

@@ -2874,8 +2874,9 @@ button.action-btn {
 
 .rates-page-intro {
   width: min(100%, 64rem);
-  margin: 0 auto 1rem;
+  margin: 0 auto 1.23rem;
   font-size: 1.02rem;
+  text-align: center;
 }
 
 .rates-page .page-shell {
@@ -2921,8 +2922,11 @@ button.action-btn {
 }
 
 .rates-page-subheading {
-  width: min(100%, 50rem);
+  width: min(100%, var(--rates-page-certificates-max-width, 64rem));
   margin: 2rem auto 0;
+  font-size: clamp(1.82rem, 3.25vw, 2.63rem);
+  line-height: 1.08;
+  text-align: center;
 }
 
 .rates-disclaimer {

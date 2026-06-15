@@ -223,7 +223,7 @@ export default function RatesPage() {
           />
         </FrontHudPanelShell>
       ) : null}
-      <PageShell title="AGFinancial Investment Certificates Rates" source={pageByPath['/rates'].source} showBadge={false}>
+      <PageShell title="AGFinancial Investment Certificate Rates" source={pageByPath['/rates'].source} showBadge={false}>
         <p className="rates-page-intro">
           Competitive rates plus commitment to our core faith values.
         </p>

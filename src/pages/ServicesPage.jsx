@@ -739,7 +739,7 @@ export default function ServicesPage() {
         {renderHudAnchor('hero_pie')}
         <div className="ag-panel-rail">
           <div className="services-pie-header fade-up">
-            <h1>The AGFinancial complete strategy</h1>
+            <h1>The AGFinancial robust strategy</h1>
           </div>
 
           <div className="services-pie-interactive-shell fade-up">
@@ -903,7 +903,7 @@ export default function ServicesPage() {
         <div className="services-native-grid-bleed">
           <div className="services-breakdown-shell">
             <header className="services-breakdown-header fade-up">
-              <h2>Explore each area of our complete strategy.</h2>
+              <h2>What would you like to explore.</h2>
             </header>
 
             <div className="services-breakdown-list">
