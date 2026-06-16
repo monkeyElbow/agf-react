@@ -4825,6 +4825,52 @@ export default function NativeContentPage({ page }) {
     });
     return firstIndexByBlock;
   }, [sectionList]);
+
+  useEffect(() => {
+    if (resolvedPagePath !== '/about-us' || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const section = pageRef.current?.querySelector('.about-native-building-shot');
+    const media = section?.querySelector('.native-columns-media');
+    if (!(section instanceof HTMLElement) || !(media instanceof HTMLElement)) {
+      return undefined;
+    }
+
+    let rafId = 0;
+    const maxOffset = 26;
+
+    const updateParallax = () => {
+      rafId = 0;
+      const rect = section.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || 1;
+      const sectionCenter = rect.top + (rect.height / 2);
+      const viewportCenter = viewportHeight / 2;
+      const normalized = Math.max(-1, Math.min(1, (viewportCenter - sectionCenter) / (viewportHeight * 0.9)));
+      media.style.setProperty('--about-building-parallax-y', `${(normalized * maxOffset).toFixed(2)}px`);
+    };
+
+    const queueParallax = () => {
+      if (rafId) {
+        return;
+      }
+      rafId = window.requestAnimationFrame(updateParallax);
+    };
+
+    queueParallax();
+    window.addEventListener('scroll', queueParallax, { passive: true });
+    window.addEventListener('resize', queueParallax);
+
+    return () => {
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+      media.style.removeProperty('--about-building-parallax-y');
+      window.removeEventListener('scroll', queueParallax);
+      window.removeEventListener('resize', queueParallax);
+    };
+  }, [resolvedPagePath]);
+
   const {
     orderedPanels: orderedHudDockPanels,
     getDockTabDragProps,

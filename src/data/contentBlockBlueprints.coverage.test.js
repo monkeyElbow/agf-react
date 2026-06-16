@@ -608,7 +608,7 @@ describe('content block blueprint coverage', () => {
     expect(homeServicesFeature?.kind).toBe('site_feature');
     expect(homeServicesFeature?.mode).toBe('dynamic');
     expect(homeServicesFeature?.settings?.featureId).toBe('home_services_feature_animation');
-    expect(homeServicesFeature?.settings?.headline).toBe('Bold, smart steps.');
+    expect(homeServicesFeature?.settings?.headline).toBe('Bold, smart steps.\nTogether.');
     expect(servicesGrid?.settings?.browsePath).toBe('/services');
     expect(servicesGrid?.settings?.browsePageRef).toBe('/services');
     expect(servicesGrid?.settings?.card1Path).toBe('/services/loans');

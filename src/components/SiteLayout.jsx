@@ -12,6 +12,19 @@ const CONTENT_WIDTH_OVERLAY_STORAGE_KEY = 'agf-admin-content-width-overlay-v1';
 const FRONT_HUD_ENABLED_STORAGE_KEY = 'agf-admin-front-hud-enabled-v1';
 const FRONT_HUD_OPACITY_STORAGE_KEY = 'agf-admin-front-hud-opacity-v1';
 const FRONT_HUD_DIM_STRENGTH_STORAGE_KEY = 'agf-admin-front-hud-dim-strength-v1';
+const ADMIN_NAV_ITEMS = [
+  { to: '/admin/rates', label: 'Rates' },
+  { to: '/admin/content', label: 'Core Content' },
+  { to: '/admin/resources', label: 'Resources' },
+  { to: '/admin/consultants', label: 'Consultants' },
+  { to: '/admin/testimonials', label: 'Testimonials' },
+  { to: '/admin/documents', label: 'Documents' },
+  { to: '/admin/jobs', label: 'Jobs' },
+  { to: '/admin/message', label: 'Message' },
+  { to: '/admin/redirects', label: 'Redirects' },
+  { to: '/admin/media-audit', label: 'Media Audit' },
+  { to: '/admin/blocks', label: 'Blocks Audit' },
+];
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -30,7 +43,7 @@ function clampFrontHudDimStrength(value) {
 }
 
 function navLinkClass({ isActive }) {
-  return isActive ? 'is-active' : '';
+  return `site-nav-dropdown-link${isActive ? ' is-active' : ''}`;
 }
 
 function getNavSectionId(title) {
@@ -122,14 +135,39 @@ export default function SiteLayout({ children }) {
   const frontHudEnabledRef = useRef(frontHudEnabled);
   const previousFrontHudEnabledRef = useRef(frontHudEnabled);
   const frontHudOpacityRef = useRef(frontHudOpacity);
+  const navHoverCloseTimeoutRef = useRef(null);
   const navRef = useRef(null);
   const navInnerRef = useRef(null);
   const brandRef = useRef(null);
   const navLinksRef = useRef(null);
 
   const closeNavMenus = () => {
+    if (typeof window !== 'undefined' && navHoverCloseTimeoutRef.current !== null) {
+      window.clearTimeout(navHoverCloseTimeoutRef.current);
+      navHoverCloseTimeoutRef.current = null;
+    }
     setMenuOpen(false);
     setOpenDropdown(null);
+  };
+
+  const cancelScheduledDropdownClose = () => {
+    if (typeof window === 'undefined' || navHoverCloseTimeoutRef.current === null) {
+      return;
+    }
+    window.clearTimeout(navHoverCloseTimeoutRef.current);
+    navHoverCloseTimeoutRef.current = null;
+  };
+
+  const scheduleDropdownClose = () => {
+    if (typeof window === 'undefined') {
+      setOpenDropdown(null);
+      return;
+    }
+    cancelScheduledDropdownClose();
+    navHoverCloseTimeoutRef.current = window.setTimeout(() => {
+      navHoverCloseTimeoutRef.current = null;
+      setOpenDropdown(null);
+    }, 85);
   };
 
   const resolveManagedNavPath = (pathRef, fallback = '/') => {
@@ -223,6 +261,12 @@ export default function SiteLayout({ children }) {
       observer?.disconnect();
     };
   }, [location.pathname]);
+
+  useEffect(() => () => {
+    if (typeof window !== 'undefined' && navHoverCloseTimeoutRef.current !== null) {
+      window.clearTimeout(navHoverCloseTimeoutRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     closeNavMenus();
@@ -427,6 +471,7 @@ export default function SiteLayout({ children }) {
     if (!isDesktop) {
       return;
     }
+    cancelScheduledDropdownClose();
     setOpenDropdown(title);
   };
 
@@ -439,7 +484,7 @@ export default function SiteLayout({ children }) {
     if (related instanceof Node && current.contains(related)) {
       return;
     }
-    setOpenDropdown(null);
+    scheduleDropdownClose();
   };
 
   const handleGroupMouseLeave = (event) => {
@@ -451,12 +496,6 @@ export default function SiteLayout({ children }) {
     if (related instanceof Node && current.contains(related)) {
       return;
     }
-    window.requestAnimationFrame(() => {
-      if (current.matches(':hover') || current.querySelector(':hover')) {
-        return;
-      }
-      setOpenDropdown(null);
-    });
   };
 
   const handleNavLinksMouseLeave = (event) => {
@@ -468,7 +507,7 @@ export default function SiteLayout({ children }) {
     if (related instanceof Node && current.contains(related)) {
       return;
     }
-    setOpenDropdown(null);
+    scheduleDropdownClose();
   };
 
   return (
@@ -530,6 +569,7 @@ export default function SiteLayout({ children }) {
                     className={`site-nav-group${openDropdown === section.title ? ' is-open' : ''}`}
                     onMouseEnter={() => {
                       if (isDesktop) {
+                        cancelScheduledDropdownClose();
                         setOpenDropdown(section.title);
                       }
                     }}
@@ -569,10 +609,16 @@ export default function SiteLayout({ children }) {
                       </button>
                     </div>
                     <div id={dropdownId} className="site-nav-dropdown">
-                      {section.items.map((item) => {
+                      {section.items.map((item, index) => {
                         const itemPath = resolveManagedNavPath(item.path, '/');
                         return (
-                          <NavLink to={itemPath} key={item.path} className={navLinkClass} onClick={handleNavItemSelect}>
+                          <NavLink
+                            to={itemPath}
+                            key={item.path}
+                            className={navLinkClass}
+                            style={{ '--site-nav-item-index': index }}
+                            onClick={handleNavItemSelect}
+                          >
                             {item.label}
                           </NavLink>
                         );
@@ -615,6 +661,7 @@ export default function SiteLayout({ children }) {
                   className={`site-nav-group is-admin${openDropdown === 'Admin' ? ' is-open' : ''}`}
                   onMouseEnter={() => {
                     if (isDesktop) {
+                      cancelScheduledDropdownClose();
                       setOpenDropdown('Admin');
                     }
                   }}
@@ -654,39 +701,17 @@ export default function SiteLayout({ children }) {
                     </button>
                   </div>
                   <div id="site-nav-dropdown-admin" className="site-nav-dropdown">
-                    <NavLink to="/admin/rates" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Rates
-                    </NavLink>
-                    <NavLink to="/admin/content" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Core Content
-                    </NavLink>
-                    <NavLink to="/admin/resources" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Resources
-                    </NavLink>
-                    <NavLink to="/admin/consultants" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Consultants
-                    </NavLink>
-                    <NavLink to="/admin/testimonials" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Testimonials
-                    </NavLink>
-                    <NavLink to="/admin/documents" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Documents
-                    </NavLink>
-                    <NavLink to="/admin/jobs" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Jobs
-                    </NavLink>
-                    <NavLink to="/admin/message" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Message
-                    </NavLink>
-                    <NavLink to="/admin/redirects" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Redirects
-                    </NavLink>
-                    <NavLink to="/admin/media-audit" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Media Audit
-                    </NavLink>
-                    <NavLink to="/admin/blocks" className={navLinkClass} onClick={handleNavItemSelect}>
-                      Blocks Audit
-                    </NavLink>
+                    {ADMIN_NAV_ITEMS.map((item, index) => (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        className={navLinkClass}
+                        style={{ '--site-nav-item-index': index }}
+                        onClick={handleNavItemSelect}
+                      >
+                        {item.label}
+                      </NavLink>
+                    ))}
                     <div className="site-nav-admin-overlay-grid is-switches">
                       <div
                         className="site-nav-admin-overlay-row is-content-width is-switch-card"

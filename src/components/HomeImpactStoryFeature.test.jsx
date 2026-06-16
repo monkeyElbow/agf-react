@@ -36,8 +36,8 @@ function createSiteFeatureBlock() {
     settings: {
       featureId: 'home_impact_story',
       headline: 'What you do here matters.',
-      body: 'As an AGFinancial client, you are also our ministry ally. Together, we improve financial health while fueling Kingdom growth and support.',
-      buttonLabel: 'Make an impact',
+      body: 'Your financial decisions can strengthen more than your future.',
+      buttonLabel: "See what we're doing",
       buttonPageRef: '/about-us/impact',
     },
   };
@@ -112,8 +112,8 @@ describe('HomeImpactStoryFeature', () => {
     expect(screen.getByRole('heading', { name: /What you do here matters/i })).toBeTruthy();
     expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
     expect(staticCopy?.querySelector('a')).toBeNull();
-    expect(staticProof?.querySelector('a')?.textContent).toBe('Make an impact');
-    expect(screen.getByRole('link', { name: 'Make an impact' }).getAttribute('href')).toBe('/about-us/impact');
+    expect(staticProof?.querySelector('a')?.textContent).toBe("See what we're doing");
+    expect(screen.getByRole('link', { name: "See what we're doing" }).getAttribute('href')).toBe('/about-us/impact');
   });
 
   it('renders the enhanced pinned desktop story and lands on the expected metric content', () => {
@@ -400,7 +400,7 @@ describe('HomeImpactStoryFeature', () => {
 
     const copy = container.querySelector('.home-impact-story-copy');
     const proof = container.querySelector('.home-impact-story-proof');
-    const ctaLink = screen.getByRole('link', { name: 'Make an impact' });
+    const ctaLink = screen.getByRole('link', { name: "See what we're doing" });
 
     expect(copy?.querySelector('a')).toBeNull();
     expect(proof?.querySelector('a')).toBe(ctaLink);

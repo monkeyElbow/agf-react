@@ -82,7 +82,7 @@ export const impactStatBlockDefinition = createBlockDefinition({
   defaults: {
     titlePrefix: 'What you do here',
     highlight: 'matters',
-    body: 'As an AGFinancial client, you are also our ministry ally. Together, we improve financial health while fueling Kingdom growth and support.',
+    body: 'Your financial decisions can strengthen more than your future.',
     countUp: true,
     ctaLabel: 'Tell me more',
     ctaPath: '/about-us/impact',

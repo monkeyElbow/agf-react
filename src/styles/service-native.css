@@ -17875,6 +17875,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--about .about-native-building-shot .native-columns-media-wrap {
   max-width: none;
   aspect-ratio: 16 / 6.6;
+  --about-building-parallax-y: 0px;
 }
 
 .native-info-page--about .about-native-building-shot .native-columns-media {
@@ -17882,6 +17883,10 @@ p.impact-proof-story-proof-body {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  transform: translate3d(0, var(--about-building-parallax-y), 0) scale(1.08);
+  transform-origin: center;
+  transition: transform 120ms linear;
+  will-change: transform;
 }
 
 .native-info-page--about .about-native-strategy {
@@ -18144,6 +18149,14 @@ p.impact-proof-story-proof-body {
 
   .native-info-page--about .about-native-building-shot .native-columns-media-wrap {
     aspect-ratio: 16 / 9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .native-info-page--about .about-native-building-shot .native-columns-media {
+    transform: none;
+    transition: none;
+    will-change: auto;
   }
 }
 

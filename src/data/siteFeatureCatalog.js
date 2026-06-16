@@ -81,8 +81,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
     experimental: false,
     internalOnly: false,
     buildRuntime: () => ({
-      title: 'Bold, smart steps.',
-      subhead: "Let's connect your faith & finances.",
+      title: 'Bold, smart steps.\nTogether.',
       panels: Object.freeze([
         Object.freeze({
           title: 'Loans',
@@ -150,9 +149,9 @@ const SITE_FEATURE_CATALOG = Object.freeze([
     internalOnly: false,
     buildRuntime: () => ({
       title: 'What you do here matters.',
-      body: 'As an AGFinancial client, you are also our ministry ally. Together, we improve financial health while fueling Kingdom growth and support.',
+      body: 'Your financial decisions can strengthen more than your future.',
       action: {
-        label: 'Make an impact',
+        label: "See what we're doing",
         to: '/about-us/impact',
         openInNewWindow: false,
       },

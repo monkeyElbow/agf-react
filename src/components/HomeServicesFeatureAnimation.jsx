@@ -6,22 +6,26 @@ const HOME_SERVICES_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const HOME_SERVICES_MOBILE_MOTION_BREAKPOINT = 640;
 const HOME_SERVICES_PANEL_MOTION_PROFILES = Object.freeze({
   desktop: Object.freeze({
-    scale: Object.freeze([0.972, 1.016]),
-    opacity: Object.freeze([1, 1]),
-    shadow: Object.freeze([0.18, 0.42]),
-    focusLift: -12,
-    recedeLift: 52,
+    scale: Object.freeze([0.892, 1.024]),
+    opacity: Object.freeze([0.52, 1]),
+    shadow: Object.freeze([0.14, 0.42]),
+    focusViewport: 0.54,
+    focusLift: 34,
+    recedeLift: 60,
     radiusViewport: 0.34,
     radiusPanel: 0.12,
+    holdZone: 0.32,
   }),
   mobile: Object.freeze({
-    scale: Object.freeze([0.976, 1.084]),
-    opacity: Object.freeze([1, 1]),
-    shadow: Object.freeze([0.16, 0.26]),
-    focusLift: -5,
-    recedeLift: 24,
+    scale: Object.freeze([0.91, 1.072]),
+    opacity: Object.freeze([0.6, 1]),
+    shadow: Object.freeze([0.1, 0.26]),
+    focusViewport: 0.56,
+    focusLift: 20,
+    recedeLift: 28,
     radiusViewport: 0.42,
     radiusPanel: 0.16,
+    holdZone: 0.34,
   }),
 });
 const HOME_SERVICES_INTRO_REVEAL_CURVES = Object.freeze({
@@ -231,6 +235,22 @@ function smoothstep(edge0, edge1, value) {
   return t * t * (3 - (2 * t));
 }
 
+function resolveHoldCurve(distanceRatio, holdZone = 0) {
+  const hold = clamp(holdZone, 0, 0.95);
+  const taperedRatio = clamp((distanceRatio - hold) / (1 - hold || 1), 0, 1);
+  return 1 - smoothstep(0, 1, taperedRatio);
+}
+
+function resolveHeldOffset(offsetRatio, holdZone = 0) {
+  const hold = clamp(holdZone, 0, 0.95);
+  const sign = Math.sign(offsetRatio || 0);
+  const distance = Math.abs(offsetRatio || 0);
+  if (distance <= hold) {
+    return 0;
+  }
+  return sign * clamp((distance - hold) / (1 - hold || 1), 0, 1);
+}
+
 function formatPercent(value) {
   return `${value.toFixed(2)}%`;
 }
@@ -330,7 +350,15 @@ function clearHomeServicesMotionVars(panel) {
 }
 
 function renderHeadlineLines(headline) {
-  return <span className="home-services-feature-heading-text">{String(headline || '')}</span>;
+  return String(headline || '')
+    .split(/\r?\n/)
+    .map((line) => String(line || '').trim())
+    .filter(Boolean)
+    .map((line, index) => (
+      <span key={`${line}-${index}`} className="home-services-feature-heading-line">
+        <span className={`home-services-feature-heading-text${index === 1 ? ' is-impact-mango-gradient' : ''}`}>{line}</span>
+      </span>
+    ));
 }
 
 function normalizePanelAction(action) {
@@ -459,8 +487,8 @@ export default function HomeServicesFeatureAnimation({
       shellRef.current.setAttribute('data-scroll-gradient-motion', 'active');
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
       const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1;
-      const viewportCenter = viewportHeight / 2;
       const motionProfile = resolvePanelMotionProfile(viewportWidth);
+      const viewportFocus = viewportHeight * (motionProfile.focusViewport || 0.5);
 
       if (introNode) {
         const introRect = introNode.getBoundingClientRect();
@@ -489,13 +517,17 @@ export default function HomeServicesFeatureAnimation({
         const rect = panel.getBoundingClientRect();
         const viewportTravel = clamp((viewportHeight - rect.top) / (viewportHeight + rect.height || 1), 0, 1);
         const panelCenter = rect.top + (rect.height / 2);
-        const centerDistance = Math.abs(panelCenter - viewportCenter);
+        const centerDistance = Math.abs(panelCenter - viewportFocus);
         const centerRadius = Math.max(
           (viewportHeight * motionProfile.radiusViewport) + (rect.height * motionProfile.radiusPanel),
           1,
         );
-        const centerCurve = smoothstep(0, 1, 1 - clamp(centerDistance / centerRadius, 0, 1));
-        const signedCenterOffset = clamp((panelCenter - viewportCenter) / centerRadius, -1, 1);
+        const centerDistanceRatio = clamp(centerDistance / centerRadius, 0, 1);
+        const centerCurve = resolveHoldCurve(centerDistanceRatio, motionProfile.holdZone);
+        const signedCenterOffset = resolveHeldOffset(
+          clamp((panelCenter - viewportFocus) / centerRadius, -1, 1),
+          motionProfile.holdZone,
+        );
         const panelPreset = resolvePanelMotionPreset(panel);
         const currentPalette = resolveHomeServicesPalette(index);
         const nextPalette = resolveHomeServicesPalette(Math.min(panelNodes.length - 1, index + 1));
@@ -596,7 +628,7 @@ export default function HomeServicesFeatureAnimation({
       {headline || subhead ? (
         <div className="home-services-feature-intro">
           {headline ? (
-            <h2 className="home-services-feature-heading" aria-label={headline}>
+            <h2 className="home-services-feature-heading" aria-label={String(headline).replace(/\s*\n\s*/g, ' ').trim()}>
               {renderHeadlineLines(headline)}
             </h2>
           ) : null}
@@ -606,30 +638,33 @@ export default function HomeServicesFeatureAnimation({
           </div>
         </div>
       ) : null}
-      <div className="home-services-feature-list">
-        {normalizedPanels.map((panel, index) => (
-          <article
-            key={`${panel.title}-${index}`}
-            className={`home-services-feature-panel is-tone-${panel.tone} ${index % 2 === 0 ? 'is-left' : 'is-right'}`}
-            data-proof-index={index}
-          >
-            <div className="home-services-feature-panel-frame">
-              <span className="home-services-feature-panel-gradient-layer is-current" aria-hidden="true" />
-              <span className="home-services-feature-panel-gradient-layer is-next" aria-hidden="true" />
-              <div className="home-services-feature-panel-content">
-                <div className="home-services-feature-panel-copy">
-                  <h3 className="home-services-feature-panel-title">{panel.title}</h3>
-                  <p className="home-services-feature-panel-body">{panel.body}</p>
-                </div>
-                {panel.action ? (
-                  <div className="home-services-feature-panel-action">
-                    <ActionLink action={panel.action} resolveTo={resolveTo} />
+      <div className="home-services-feature-stage">
+        <div className="home-services-feature-stage-bg" aria-hidden="true" />
+        <div className="home-services-feature-list">
+          {normalizedPanels.map((panel, index) => (
+            <article
+              key={`${panel.title}-${index}`}
+              className={`home-services-feature-panel is-tone-${panel.tone} ${index % 2 === 0 ? 'is-left' : 'is-right'}`}
+              data-proof-index={index}
+            >
+              <div className="home-services-feature-panel-frame">
+                <span className="home-services-feature-panel-gradient-layer is-current" aria-hidden="true" />
+                <span className="home-services-feature-panel-gradient-layer is-next" aria-hidden="true" />
+                <div className="home-services-feature-panel-content">
+                  <div className="home-services-feature-panel-copy">
+                    <h3 className="home-services-feature-panel-title">{panel.title}</h3>
+                    <p className="home-services-feature-panel-body">{panel.body}</p>
                   </div>
-                ) : null}
+                  {panel.action ? (
+                    <div className="home-services-feature-panel-action">
+                      <ActionLink action={panel.action} resolveTo={resolveTo} />
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))}
+        </div>
       </div>
     </div>
   );

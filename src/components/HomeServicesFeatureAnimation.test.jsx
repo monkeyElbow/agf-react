@@ -23,7 +23,7 @@ function createBlock() {
     mode: 'dynamic',
     settings: {
       featureId: 'home_services_feature_animation',
-      headline: 'Bold, smart steps.',
+      headline: 'Bold, smart steps.\nTogether.',
     },
   };
 }
@@ -83,10 +83,14 @@ describe('HomeServicesFeatureAnimation', () => {
       vi.advanceTimersByTime(80);
     });
 
-    expect(screen.getByRole('heading', { name: 'Bold, smart steps.' })).toBeTruthy();
-    expect(screen.getByText("Let's connect your faith & finances.")).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Bold, smart steps. Together.' })).toBeTruthy();
+    expect(screen.getByText('Bold, smart steps.')).toBeTruthy();
+    expect(container.querySelector('.home-services-feature-heading-text.is-impact-mango-gradient')?.textContent).toBe('Together.');
+    expect(screen.queryByText("Let's connect your faith & finances.")).toBeNull();
     expect(intro?.getAttribute('data-scroll-reveal')).toBe('active');
     expect(container.querySelector('.home-services-feature-shell')?.classList.contains('is-preview-white-cards')).toBe(true);
+    expect(container.querySelector('.home-services-feature-stage')).toBeTruthy();
+    expect(container.querySelector('.home-services-feature-stage-bg')).toBeTruthy();
     expect(panels).toHaveLength(5);
     expect(panels.map((panel) => panel.querySelector('.home-services-feature-panel-title')?.textContent)).toEqual([
       'Loans',
@@ -275,23 +279,23 @@ describe('HomeServicesFeatureAnimation', () => {
       vi.advanceTimersByTime(80);
     });
 
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('1.000');
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-scale')).toBe('0.972');
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-lift-y')).toBe('52.00px');
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-shadow-opacity')).toBe('0.180');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('0.520');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-scale')).toBe('0.892');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-lift-y')).toBe('60.00px');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-shadow-opacity')).toBe('0.140');
     expect(firstPanel?.style.getPropertyValue('--home-services-panel-z')).toBe('30');
 
-    rectState.top = 320;
+    rectState.top = 386;
     act(() => {
       window.dispatchEvent(new Event('scroll'));
       vi.advanceTimersByTime(80);
     });
 
     expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('1.000');
-    expect(Number.parseFloat(firstPanel?.style.getPropertyValue('--home-services-panel-scale') || '0')).toBeCloseTo(1.016, 3);
-    expect(Number.parseFloat(firstPanel?.style.getPropertyValue('--home-services-panel-lift-y') || '0')).toBeCloseTo(-10.81, 2);
-    expect(Number.parseFloat(firstPanel?.style.getPropertyValue('--home-services-panel-shadow-opacity') || '0')).toBeCloseTo(0.417, 3);
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-z')).toBe('168');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-scale')).toBe('1.024');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-lift-y')).toBe('34.00px');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-shadow-opacity')).toBe('0.420');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-z')).toBe('170');
 
     rectState.top = -rectState.height;
     act(() => {
@@ -299,16 +303,16 @@ describe('HomeServicesFeatureAnimation', () => {
       vi.advanceTimersByTime(80);
     });
 
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('1.000');
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-scale')).toBe('0.972');
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-lift-y')).toBe('-52.00px');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('0.520');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-scale')).toBe('0.892');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-lift-y')).toBe('-60.00px');
     expect(firstPanel?.style.getPropertyValue('--home-services-panel-z')).toBe('30');
   });
 
   it('keeps a subtler but active panel depth motion profile on narrow mobile viewports', () => {
     window.innerWidth = 390;
 
-    const rectState = { top: 320, height: 620 };
+    const rectState = { top: 410, height: 620 };
 
     const { container } = render(
       <MemoryRouter>
@@ -336,9 +340,10 @@ describe('HomeServicesFeatureAnimation', () => {
       vi.advanceTimersByTime(80);
     });
 
-    expect(Number.parseFloat(firstPanel?.style.getPropertyValue('--home-services-panel-scale') || '0')).toBeCloseTo(1.083, 3);
-    expect(Number.parseFloat(firstPanel?.style.getPropertyValue('--home-services-panel-lift-y') || '0')).toBeCloseTo(-4.58, 2);
-    expect(Number.parseFloat(firstPanel?.style.getPropertyValue('--home-services-panel-shadow-opacity') || '0')).toBeCloseTo(0.259, 3);
-    expect(firstPanel?.style.getPropertyValue('--home-services-panel-z')).toBe('169');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('1.000');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-scale')).toBe('1.072');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-lift-y')).toBe('20.00px');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-shadow-opacity')).toBe('0.260');
+    expect(firstPanel?.style.getPropertyValue('--home-services-panel-z')).toBe('170');
   });
 });

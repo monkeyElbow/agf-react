@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SiteLayout from './SiteLayout';
 
 let mockPathname = '/services';
@@ -88,6 +88,10 @@ describe('SiteLayout mobile nav drawer', () => {
     });
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('keeps labeled mobile submenu toggles wired to their drawer sections', () => {
     renderLayout();
 
@@ -133,6 +137,27 @@ describe('SiteLayout mobile nav drawer', () => {
     expect(screen.getByRole('button', { name: 'Expand Services menu' }).getAttribute('aria-expanded')).toBe('false');
   });
 
+  it('keeps a desktop submenu open through a noisy top-level group leave while the shared nav stays active', () => {
+    vi.useFakeTimers();
+    mockMatchMedia(true);
+    mockPathname = '/services';
+
+    const { container } = renderLayout();
+
+    const servicesToggle = screen.getByRole('button', { name: 'Expand Services menu' });
+    const servicesGroup = servicesToggle.closest('.site-nav-group');
+    expect(servicesGroup).toBeTruthy();
+
+    fireEvent.mouseEnter(servicesGroup);
+    expect(screen.getByRole('button', { name: 'Collapse Services menu' }).getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.mouseLeave(servicesGroup, { relatedTarget: document.body });
+    vi.advanceTimersByTime(120);
+
+    expect(container.querySelector('.site-nav-group.is-open .site-nav-group-link')?.textContent).toBe('Services');
+    expect(screen.getByRole('button', { name: 'Collapse Services menu' }).getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('resets the mobile drawer and submenu state when the route changes', () => {
     renderLayoutWithRouteChangeButton();
 
@@ -159,18 +184,17 @@ describe('SiteLayout mobile nav drawer', () => {
     expect(siteMapSource).toContain("title: 'Resources'");
   });
 
-  it('keeps the mobile drawer on a flat integrated row system instead of beveled chevron pills and glass submenu cards', () => {
+  it('keeps the mobile drawer on the shared premium dropdown surface and fast reveal contract', () => {
     const cssSource = readSource('../styles.css');
 
     expect(cssSource).toContain('@media (max-width: 1099px) {');
-    expect(cssSource).toContain('.site-nav-group-head {');
-    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr) 56px;');
-    expect(cssSource).toContain('background: #ffffff;');
-    expect(cssSource).toContain('.site-nav-group-head::before {');
-    expect(cssSource).toContain('background: var(--ag-color-atlantean);');
+    expect(cssSource).toContain('@keyframes site-nav-dropdown-reveal {');
+    expect(cssSource).toContain('.site-nav-dropdown-link {');
+    expect(cssSource).toContain('--site-nav-menu-soft-hover: rgba(220, 243, 245, 0.92);');
     expect(cssSource).toContain('.site-nav-group:not(.is-admin).is-open .site-nav-dropdown,');
-    expect(cssSource).toContain('padding: 0.28rem 0 0.18rem 1rem;');
-    expect(cssSource).toContain('border-left: 2px solid transparent;');
-    expect(cssSource).toContain('box-shadow: none;');
+    expect(cssSource).toContain('background: var(--site-nav-menu-surface);');
+    expect(cssSource).toContain('border: 1px solid var(--site-nav-menu-border);');
+    expect(cssSource).toContain('box-shadow: var(--site-nav-menu-shadow-soft);');
+    expect(cssSource).toContain('border: 1px solid var(--site-nav-menu-border);');
   });
 });

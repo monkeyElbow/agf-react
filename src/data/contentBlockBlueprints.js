@@ -1884,7 +1884,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       mode: 'dynamic',
       settings: {
         featureId: 'home_services_feature_animation',
-        headline: 'Bold, smart steps.',
+        headline: 'Bold, smart steps.\nTogether.',
       },
       editableFields: getAllowedSiteFeatureEditableFieldIds('home_services_feature_animation'),
     },
@@ -1953,7 +1953,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         countUp: true,
         titlePrefix: 'What you do here',
         highlight: 'matters',
-        body: 'As an AGFinancial client, you are also our ministry ally. Together, we improve financial health while fueling Kingdom growth and support.',
+        body: 'Your financial decisions can strengthen more than your future.',
         ...seedBlueprintActionFields({
           labelField: 'ctaLabel',
           hrefField: 'ctaPath',
