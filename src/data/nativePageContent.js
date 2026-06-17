@@ -205,7 +205,7 @@ const directContent = {
   '/services': {
     pageClass: 'services-native-page',
     intro: {
-      heading: 'A complete financial strategy for your ministry and your family.',
+      heading: 'A robust financial strategy for your ministry and your family.',
       headingHighlights: [
         { text: 'your ministry', className: 'is-atlantean' },
         { text: 'your family', className: 'is-gold' },

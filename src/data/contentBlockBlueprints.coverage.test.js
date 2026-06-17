@@ -65,7 +65,7 @@ describe('content block blueprint coverage', () => {
 
     expect(servicesIntroBand?.kind).toBe('billboard');
     expect(servicesIntroBand?.mode).toBe('dynamic');
-    expect(servicesIntroBand?.settings?.title).toBe('A complete financial strategy for your ministry and your family.');
+    expect(servicesIntroBand?.settings?.title).toBe('A robust financial strategy for your ministry and your family.');
     expect(servicesIntroBand?.settings?.bgTone).toBe('grey');
     expect(servicesIntroBand?.settings?.textTone).toBe('white');
   });
@@ -84,8 +84,8 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'static')).toBe(true);
     expect(dynamicHero?.hidden).toBe(true);
     expect(dynamicIntro?.hidden).toBe(true);
-    expect(dynamicBillboard?.settings?.title).toBe('We’re making');
-    expect(dynamicBillboard?.settings?.subtitle).toBe('a difference… thanks to you.');
+    expect(dynamicBillboard?.settings?.title).toBe("We're making a difference together.");
+    expect(dynamicBillboard?.settings?.subtitle).toBe('');
     expect(dynamicBillboard?.settings?.body).toBe('');
     expect(blocks.find((block) => (
       block?.id === 'impact_proof_story'
@@ -647,7 +647,7 @@ describe('content block blueprint coverage', () => {
     expect(homeBlocks.some((block) => block?.id === 'hero' && block?.mode === 'static' && block?.kind === 'hero')).toBe(true);
 
     expect(servicesBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')?.kind).toBe('billboard');
-    expect(servicesBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')?.settings?.title).toBe('A complete financial strategy for your ministry and your family.');
+    expect(servicesBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')?.settings?.title).toBe('A robust financial strategy for your ministry and your family.');
     expect(servicesBlocks.find((block) => block?.id === 'services_cards' && block?.mode === 'static')?.settings?.cardStyle).toBe('card2');
     expect(servicesBlocks.find((block) => block?.id === 'services_cards' && block?.mode === 'static')?.templateId).toBe('card_grid');
     expect(servicesBlocks.find((block) => block?.id === 'services_cards' && block?.mode === 'static')?.presetId).toBe('default');

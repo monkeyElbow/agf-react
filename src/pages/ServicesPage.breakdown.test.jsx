@@ -75,7 +75,7 @@ describe('ServicesPage breakdown directory', () => {
   it('renders the requested breakdown intro, rows, and revised service copy', () => {
     renderServicesPage();
 
-    expect(screen.getByRole('heading', { level: 2, name: 'What would you like to explore.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: 'What to explore?' })).toBeTruthy();
     expect(screen.queryByText('Services breakdown')).toBeNull();
 
     const expectations = [

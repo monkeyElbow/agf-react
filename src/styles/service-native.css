@@ -5582,13 +5582,13 @@
 .services-native-page .services-native-intro.service-native-intro.dynamic-intro .service-native-intro-copy > h2 {
   font-size: clamp(3.38rem, 7.65vw, 5.8rem);
   letter-spacing: -0.04em;
-  line-height: 0.89;
+  line-height: 0.98;
 }
 
 @media (max-width: 767px) {
   .services-native-page .services-native-intro.service-native-intro.dynamic-intro .service-native-intro-copy > h2 {
     font-size: clamp(3.19rem, 13.26vw, 4.4rem);
-    line-height: 0.91;
+    line-height: 0.98;
   }
 }
 

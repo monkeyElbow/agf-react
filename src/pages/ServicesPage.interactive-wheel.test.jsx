@@ -101,12 +101,10 @@ describe('ServicesPage interactive service wheel', () => {
   it('keeps all service labels and routes intact while driving the selected card from wheel data', () => {
     renderServicesPage();
 
-    const tabs = screen.getAllByRole('tab');
-    expect(tabs.map((tab) => tab.textContent)).toEqual(DEFAULT_SERVICE_HERO_PIE_SLICES.map((slice) => slice.title));
     expect(document.querySelectorAll('[data-service-wheel-slice]')).toHaveLength(DEFAULT_SERVICE_HERO_PIE_SLICES.length);
 
     DEFAULT_SERVICE_HERO_PIE_SLICES.forEach((slice) => {
-      fireEvent.click(screen.getByRole('tab', { name: slice.title }));
+      fireEvent.click(screen.getByRole('button', { name: slice.title }));
       const selectedCard = getSelectedCard();
       expect(selectedCard).toBeTruthy();
       expect(within(selectedCard).getByRole('heading', { name: slice.title })).toBeTruthy();
@@ -123,7 +121,7 @@ describe('ServicesPage interactive service wheel', () => {
     expect(within(selectedCard).getByRole('heading', { name: 'Loans' })).toBeTruthy();
     expect(within(selectedCard).getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Insurance' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Insurance' }));
 
     expect(within(selectedCard).getByRole('heading', { name: 'Insurance' })).toBeTruthy();
     expect(within(selectedCard).getByText('Protect your people and property, and manage risk.')).toBeTruthy();

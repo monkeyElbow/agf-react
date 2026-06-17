@@ -738,10 +738,6 @@ export default function ServicesPage() {
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero_pie')} />
         {renderHudAnchor('hero_pie')}
         <div className="ag-panel-rail">
-          <div className="services-pie-header fade-up">
-            <h1>The AGFinancial robust strategy</h1>
-          </div>
-
           <div className="services-pie-interactive-shell fade-up">
             <div className="services-pie-hero-grid">
               <div className="services-pie-wrap">
@@ -792,25 +788,6 @@ export default function ServicesPage() {
               </article>
             </div>
 
-            <div className="services-pie-selector" role="tablist" aria-label="Service options">
-              {heroPieSlices.map((slice, index) => {
-                const isActive = activeSlice.path === slice.path;
-                return (
-                  <button
-                    key={`service-pill-${slice.path}`}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    className={`services-pie-pill${isActive ? ' is-active' : ''}`}
-                    data-service-wheel-pill={slice.title}
-                    onClick={() => selectHeroSlice(index)}
-                  >
-                    {slice.title}
-                  </button>
-                );
-              })}
-            </div>
-
             <div className="services-pie-card-sizer" ref={heroPieCardSizerRef} aria-hidden="true">
               {heroPieSlices.map((slice) => (
                 <article key={`service-card-sizer-${slice.path}`} className="services-pie-card">
@@ -843,7 +820,7 @@ export default function ServicesPage() {
                 />
               ) : (
                 <>
-                  A complete financial strategy for
+                  A robust financial strategy for
                   {' '}
                   <mark>your ministry</mark>
                   {' '}
@@ -903,7 +880,7 @@ export default function ServicesPage() {
         <div className="services-native-grid-bleed">
           <div className="services-breakdown-shell">
             <header className="services-breakdown-header fade-up">
-              <h2>What would you like to explore.</h2>
+              <h2>What to explore?</h2>
             </header>
 
             <div className="services-breakdown-list">

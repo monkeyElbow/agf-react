@@ -2228,7 +2228,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       kind: 'billboard',
       mode: 'dynamic',
       settings: {
-        title: 'A complete financial strategy for your ministry and your family.',
+        title: 'A robust financial strategy for your ministry and your family.',
         titleClassName: '',
         titleHighlightsJson: JSON.stringify([
           { text: 'your ministry', className: 'is-atlantean' },
