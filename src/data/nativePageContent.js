@@ -3862,26 +3862,38 @@ const companyLinks = [
 function legalContent(title) {
   if (title === 'Accessibility') {
     return {
+      pageClass: 'native-info-page--accessibility',
       compact: true,
+      hideHero: true,
       hero: { title, highlight: null },
-      intro: 'We’re committed to accessibility and continually improving the user experience for everyone.',
+      intro: {
+        heading: "We're committed to accessibility.",
+        body: [
+          'AGFinancial is committed to ensuring visitors with disabilities have the same quality of access to all the information on our website as non-disabled visitors. We are continually improving the user experience for everyone and applying updates to meet or exceed accessibility standards.',
+        ],
+        justify: 'left',
+      },
       sections: [
         {
           title: 'Conformance Status',
-          body: [
-            'The AGFinancial website is fully conformant with WCAG Level A and partially conformant with WCAG Level AA.',
-          ],
+          html: '<p>The <a href="https://www.w3.org/WAI/standards-guidelines/wcag/" target="_blank" rel="noreferrer noopener">Web Content Accessibility Guidelines (WCAG)</a> define requirements for designers and developers to improve accessibility for people with disabilities. It defines three levels of conformance: Level A, Level AA, and Level AAA. The AGFinancial website is fully conformant with WCAG Level A and partially conformant with WCAG Level AA.</p>',
         },
         {
           title: 'Limitations',
           body: [
-            'Limitations to WCAG Level AA conformance may include color contrast.',
-            'We welcome your feedback if you encounter accessibility barriers.',
+            'Limitations to WCAG Level AA conformance on the AGFinancial website may include color contrast. To increase the color contrast, follow these instructions according to your operating system:',
+          ],
+          html: '<ul><li><a href="https://osxdaily.com/2014/10/22/increase-contrast-mac-os-x-yosemite/" target="_blank" rel="noreferrer noopener">Increase Contrast for Mac OS</a></li><li><a href="https://support.microsoft.com/en-us/help/13862/windows-10-use-high-contrast-mode" target="_blank" rel="noreferrer noopener">Increase Contrast for Windows</a></li></ul>',
+        },
+        {
+          title: 'Give Feedback',
+          body: [
+            'We welcome your feedback on the accessibility of our website. Please let us know if you encounter accessibility barriers by contacting us.',
           ],
           actions: [{ label: 'Contact Us', to: '/contact-us' }],
         },
       ],
-      actions: [{ label: 'Contact us', to: '/contact-us' }],
+      actions: [],
     };
   }
 
