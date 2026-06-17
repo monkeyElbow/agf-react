@@ -1,6 +1,4 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { isExternalLinkHref } from '../lib/dynamicPageBlocks';
 
 const HOME_IMPACT_STORY_PINNED_ENABLED = true;
 const HOME_IMPACT_STORY_MIN_WIDTH_PX = 1040;
@@ -9,11 +7,13 @@ const HOME_IMPACT_STORY_DESKTOP_RUNWAY_VH = 400;
 const HOME_IMPACT_STORY_RELEASE_START = 0.96;
 const HOME_IMPACT_STORY_METRIC_ENTRY_DELAYS = [0, 0.08, 0.14];
 const HOME_IMPACT_STORY_METRIC_SETTLE_POINTS = [0.78, 0.78, 0.88];
-const HOME_IMPACT_STORY_OUTGOING_WINDOW = 0.5;
+const HOME_IMPACT_STORY_OUTGOING_WINDOW = 0.44;
 const HOME_IMPACT_STORY_COPY_SHIFT_START = 0;
 const HOME_IMPACT_STORY_COPY_SHIFT_DURATION = 0.24;
 const HOME_IMPACT_STORY_COPY_OPACITY_START = 0.04;
 const HOME_IMPACT_STORY_COPY_OPACITY_DURATION = 0.24;
+const HOME_IMPACT_STORY_HEADING_LOCK_DURATION = 0.28;
+const HOME_IMPACT_STORY_HEADING_TRAVEL_PX = 132;
 const HOME_IMPACT_STORY_SEQUENCE_START = 0.18;
 const HOME_IMPACT_STORY_SEQUENCE_END = 0.94;
 const HOME_IMPACT_STORY_PROOF_FADE_START = 0.14;
@@ -21,11 +21,13 @@ const HOME_IMPACT_STORY_PROOF_FADE_DURATION = 0.12;
 const HOME_IMPACT_STORY_FIRST_METRIC_OPACITY_EXPONENT = 1.35;
 const HOME_IMPACT_STORY_METRIC_COUNT_START = 0.24;
 const HOME_IMPACT_STORY_METRIC_COUNT_DURATION = 0.5;
-const HOME_IMPACT_STORY_METRIC_BASE_OFFSET_PX = 72;
-const HOME_IMPACT_STORY_METRIC_ENTRY_TRAVEL_PX = 344;
-const HOME_IMPACT_STORY_METRIC_EXIT_TRAVEL_PX = 356;
+const HOME_IMPACT_STORY_METRIC_BASE_OFFSET_PX = 104;
+const HOME_IMPACT_STORY_METRIC_ENTRY_TRAVEL_PX = 324;
+const HOME_IMPACT_STORY_METRIC_EXIT_TRAVEL_PX = 228;
+const HOME_IMPACT_STORY_METRIC_EXIT_OPACITY_EXPONENT = 0.52;
 const HOME_IMPACT_STORY_FINAL_CTA_START = 0.88;
 const HOME_IMPACT_STORY_FINAL_CTA_DURATION = 0.1;
+const HOME_IMPACT_STORY_ALLY_LINE = 'Our clients are ministry allies.';
 const HOME_IMPACT_STORY_PALETTE_HANDOFF_CURVES = Object.freeze({
   start: 0.16,
   end: 0.78,
@@ -355,42 +357,9 @@ function ImpactStoryBrandMark() {
   );
 }
 
-function ImpactStoryAction({ action, resolveTo, className = 'home-native-cta' }) {
-  if (!action?.label) {
-    return null;
-  }
-
-  const actionTarget = String(action.to || '').trim();
-  const actionHref = String(action.href || actionTarget || '').trim();
-  const isExternal = isExternalLinkHref(actionHref);
-  const resolvedHref = isExternal ? actionHref : resolveTo(actionTarget, '/about-us/impact');
-
-  if (!resolvedHref) {
-    return null;
-  }
-
-  if (isExternal) {
-    return (
-      <a
-        href={resolvedHref}
-        className={className}
-        target={action.openInNewWindow ? '_blank' : undefined}
-        rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
-      >
-        {action.label}
-      </a>
-    );
-  }
-
+function ImpactStoryAllyLine({ children = HOME_IMPACT_STORY_ALLY_LINE }) {
   return (
-    <Link
-      to={resolvedHref}
-      className={className}
-      target={action.openInNewWindow ? '_blank' : undefined}
-      rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
-    >
-      {action.label}
-    </Link>
+    <p className="home-impact-story-proof-intro">{children}</p>
   );
 }
 
@@ -481,7 +450,7 @@ function ImpactStoryMetrics({
       motionState = 'exiting';
       translateY = HOME_IMPACT_STORY_METRIC_BASE_OFFSET_PX
         - (exitProgress * HOME_IMPACT_STORY_METRIC_EXIT_TRAVEL_PX);
-      metricOpacity = 1 - Math.pow(exitProgress, 1.45);
+      metricOpacity = 1 - Math.pow(exitProgress, HOME_IMPACT_STORY_METRIC_EXIT_OPACITY_EXPONENT);
       scale = 1 - (exitProgress * 0.016);
       countProgress = 1;
     }
@@ -573,9 +542,7 @@ export function HomeImpactStoryStaticContent({
   headline,
   highlightedWord = '',
   body,
-  action,
   metrics = [],
-  resolveTo,
   countUp = false,
   reveal = false,
 }) {
@@ -598,11 +565,8 @@ export function HomeImpactStoryStaticContent({
         </div>
         <div className={`home-impact-story-static-proof${reveal ? ' fade-up' : ''}`}>
           <ImpactStoryMetrics metrics={metrics} countUp={countUp} />
-          <div className="home-native-impact-cta-wrap home-impact-story-cta-wrap home-impact-story-proof-cta-wrap">
-            <ImpactStoryAction action={action} resolveTo={resolveTo} className="home-native-cta home-impact-story-cta" />
-            <div className="home-impact-story-cta-cue" aria-hidden="true">
-              <span className="home-impact-story-scroll-cue-mark" />
-            </div>
+          <div className="home-impact-story-proof-cta-block">
+            <ImpactStoryAllyLine />
           </div>
         </div>
       </div>
@@ -614,9 +578,7 @@ export default function HomeImpactStoryFeature({
   headline,
   highlightedWord = '',
   body,
-  action,
   metrics = [],
-  resolveTo,
 }) {
   const shellRef = useRef(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -732,9 +694,7 @@ export default function HomeImpactStoryFeature({
         headline={headline}
         highlightedWord={highlightedWord}
         body={body}
-        action={action}
         metrics={metrics}
-        resolveTo={resolveTo}
         countUp={supportsFallbackReveal}
         reveal={supportsFallbackReveal}
       />
@@ -745,18 +705,21 @@ export default function HomeImpactStoryFeature({
   const paletteVars = buildImpactStoryPaletteVars(
     resolveImpactStoryPaletteState(metrics, heldProgress, true),
   );
-  const copyBaseShift = -34;
-  const copyOpacity = 1 - clamp(
+  const supportOpacity = 1 - clamp(
     (heldProgress - HOME_IMPACT_STORY_COPY_OPACITY_START) / HOME_IMPACT_STORY_COPY_OPACITY_DURATION,
     0,
     1,
   );
-  const copyShift = copyBaseShift + (
+  const supportShift = -12 + (
     clamp(
       (heldProgress - HOME_IMPACT_STORY_COPY_SHIFT_START) / HOME_IMPACT_STORY_COPY_SHIFT_DURATION,
       0,
       1,
     ) * -148
+  );
+  const headingShift = -34 + (
+    clamp(heldProgress / HOME_IMPACT_STORY_HEADING_LOCK_DURATION, 0, 1)
+      * -HOME_IMPACT_STORY_HEADING_TRAVEL_PX
   );
   const metricsOpacity = clamp(
     (heldProgress - HOME_IMPACT_STORY_PROOF_FADE_START) / HOME_IMPACT_STORY_PROOF_FADE_DURATION,
@@ -794,19 +757,36 @@ export default function HomeImpactStoryFeature({
             />
             <div className="home-impact-story-stage">
               <div className="home-impact-story-copy-layer" data-stage-layer="copy">
+                <div className="home-impact-story-heading-lock">
+                  <div
+                    className="home-impact-story-heading-shell"
+                    style={{
+                      transform: `translate3d(0, ${headingShift}px, 0)`,
+                    }}
+                  >
+                    <div
+                      className="home-impact-story-heading-brand"
+                      style={{
+                        opacity: supportOpacity,
+                        transform: `translate3d(0, ${supportShift}px, 0)`,
+                      }}
+                    >
+                      <ImpactStoryBrandMark />
+                    </div>
+                    <ImpactStoryHeadline
+                      headline={headline}
+                      highlightedWord={highlightedWord}
+                      className="home-impact-story-heading"
+                    />
+                  </div>
+                </div>
                 <div
                   className="home-impact-story-copy"
                   style={{
-                    opacity: copyOpacity,
-                    transform: `translate3d(0, ${copyShift}px, 0)`,
+                    opacity: supportOpacity,
+                    transform: `translate3d(0, ${supportShift}px, 0)`,
                   }}
                 >
-                  <ImpactStoryBrandMark />
-                  <ImpactStoryHeadline
-                    headline={headline}
-                    highlightedWord={highlightedWord}
-                    className="home-impact-story-heading"
-                  />
                   {body ? <p className="home-impact-story-body">{body}</p> : null}
                   <div className="home-impact-story-scroll-cue" aria-hidden="true">
                     <span className="home-impact-story-scroll-cue-mark" />
@@ -830,20 +810,13 @@ export default function HomeImpactStoryFeature({
                     progress={heldProgress}
                   />
                   <div
-                    className="home-native-impact-cta-wrap home-impact-story-cta-wrap home-impact-story-proof-cta-wrap"
+                    className="home-impact-story-proof-cta-block"
                     style={{
                       opacity: finalCtaOpacity,
                       transform: `translate3d(0, ${finalCtaShift}px, 0)`,
                     }}
                   >
-                    <ImpactStoryAction
-                      action={action}
-                      resolveTo={resolveTo}
-                      className="home-native-cta home-impact-story-cta"
-                    />
-                    <div className="home-impact-story-cta-cue" aria-hidden="true">
-                      <span className="home-impact-story-scroll-cue-mark" />
-                    </div>
+                    <ImpactStoryAllyLine />
                   </div>
                 </div>
               </div>
