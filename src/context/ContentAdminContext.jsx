@@ -130,6 +130,37 @@ const LEGACY_GIVING_MINISTRY_IMPACT_FUND_REQUEST_TARGETS = new Set([
   'class:legacy-child-native-request',
   'legacy-child-native-request',
 ]);
+const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
+  '/services/loans/loan-consultants',
+  '/services/retirement/403b/403b-terms-definitions',
+  '/services/retirement/403b/403b-group-enrollment',
+  '/services/retirement/409a',
+  '/services/retirement/iras/fund-an-ira',
+  '/services/retirement/rollovers',
+  '/services/insurance/life-insurance-quote',
+  '/services/insurance/ministers-group-life-plan',
+  '/services/insurance/mission-assure',
+  '/services/insurance/mission-assure/report-a-claim',
+  '/services/insurance/property-casualty-insurance',
+  '/about-us',
+  '/about-us/careers',
+  '/resources',
+  '/forms',
+  '/calculators/emergency-fund',
+  '/calculators/increased-contribution',
+  '/calculators/net-worth',
+  '/contact-us',
+  '/online-contributions',
+  '/prospectus',
+  '/subscribe',
+  '/search',
+  '/sitemap',
+  '/terms-of-service',
+  '/privacy-policy',
+  '/accessibility',
+  '/vineyard',
+  '/yourplan',
+]);
 
 function isBlankSettingsObject(settings) {
   if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
@@ -3158,6 +3189,16 @@ function buildDefaultBlocks() {
     }
     if (dynamicTestimonialsBlocks.length) {
       nextBlocks = [...nextBlocks, ...dynamicTestimonialsBlocks];
+    }
+
+    if (EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS.has(page.path)) {
+      nextBlocks = nextBlocks.filter((block) => {
+        if (!isPageContentBlock(block)) {
+          return true;
+        }
+        const html = String(block?.settings?.html || '').trim();
+        return Boolean(html && html !== '<p></p>' && html !== '<p><br></p>');
+      });
     }
 
     const introSettingsRaw = (

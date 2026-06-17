@@ -514,6 +514,7 @@ describe('ContentAdminContext state normalization', () => {
     const aboutBlocks = normalized.blocksByPath['/about-us'] || [];
     const requestBlock = aboutBlocks.find((block) => block?.kind === 'request_form');
     const ctaBlock = aboutBlocks.find((block) => block?.kind === 'cta_form');
+    const pageContentBlock = aboutBlocks.find((block) => block?.id === 'page_content' && block?.kind === 'content');
 
     expect(requestBlock).toBeUndefined();
     expect(ctaBlock).toBeTruthy();
@@ -522,6 +523,27 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.title).toBe('What can we do for you?');
     expect(ctaBlock?.settings?.titleClassName).toBe('is-atlantean');
     expect(ctaBlock?.settings?.field4Label).toBe('What would you like to discuss?');
+    expect(pageContentBlock).toBeUndefined();
+  });
+
+  it('does not reseed blank fallback page-content blocks on audited native-content routes', () => {
+    const normalized = normalizeStoredConfig({});
+    const auditedPaths = [
+      '/about-us',
+      '/about-us/careers',
+      '/accessibility',
+      '/calculators/emergency-fund',
+      '/calculators/increased-contribution',
+      '/contact-us',
+    ];
+
+    auditedPaths.forEach((pathname) => {
+      const blocks = normalized.blocksByPath[pathname] || [];
+      expect(
+        blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content'),
+        pathname,
+      ).toBe(false);
+    });
   });
 
   it('drops stale about-us request-form blocks from stored config and keeps the CTA block', () => {
