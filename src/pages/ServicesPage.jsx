@@ -880,7 +880,7 @@ export default function ServicesPage() {
         <div className="services-native-grid-bleed">
           <div className="services-breakdown-shell">
             <header className="services-breakdown-header fade-up">
-              <h2>What to explore?</h2>
+              <h2>What would you like to explore?</h2>
             </header>
 
             <div className="services-breakdown-list">
