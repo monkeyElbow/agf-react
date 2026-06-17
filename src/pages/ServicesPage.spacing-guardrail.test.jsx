@@ -54,13 +54,13 @@ describe('services page spacing and typography guardrail', () => {
     expect(cssSource).toContain('padding: clamp(0.85rem, 1.8vw, 1.2rem) 0 clamp(1.15rem, 2.4vw, 1.65rem);');
     expect(cssSource).toContain('.services-breakdown-list {');
     expect(cssSource).toContain('.services-breakdown-panel {');
-    expect(cssSource).toContain('grid-template-columns: minmax(170px, 0.42fr) minmax(270px, 0.86fr) minmax(220px, 0.78fr);');
+    expect(cssSource).toContain('grid-template-columns: minmax(182px, 0.48fr) minmax(220px, 0.68fr) minmax(240px, 0.84fr);');
     expect(cssSource).toContain('justify-items: start;');
     expect(cssSource).toContain('text-align: left;');
     expect(cssSource).toContain('.services-breakdown-panel h3 {');
     expect(cssSource).toContain('.services-breakdown-description {');
     expect(cssSource).toContain('grid-column: 2;');
-    expect(cssSource).toContain('max-width: 40ch;');
+    expect(cssSource).toContain('max-width: 34ch;');
     expect(cssSource).toContain('.services-breakdown-links {');
     expect(cssSource).toContain('display: flex;');
     expect(cssSource).toContain('flex-wrap: wrap;');

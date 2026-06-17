@@ -928,7 +928,7 @@ export default function ServicesPage() {
             As an AGFinancial customer, your financial decisions fund real ministry work, transforming lives, including yours.
           </p>
           <div className="service-native-action-row is-centered">
-            <Link to="/about-us/impact" className="service-native-btn is-dark">See faith & finances connected</Link>
+            <Link to="/about-us/impact" className="service-native-btn is-dark">See what you're part of</Link>
           </div>
         </div>
       </section>
