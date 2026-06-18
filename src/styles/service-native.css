@@ -20548,6 +20548,15 @@ p.impact-proof-story-proof-body {
   background: linear-gradient(332deg, #00adbb 0%, #008aab 100%);
 }
 
+.native-info-page--legacy-child.native-info-page--legacy-endowments .service-native-hero {
+  padding-top: clamp(3.7rem, 7vw, 5.8rem);
+  padding-bottom: clamp(3.7rem, 7vw, 5.8rem);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-endowments .service-native-hero h1 + h1 {
+  margin-top: 0.2rem;
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo {
   padding: 0;
   background: #fff;

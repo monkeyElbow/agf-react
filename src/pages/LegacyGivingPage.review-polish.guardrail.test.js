@@ -52,6 +52,16 @@ describe('legacy giving review polish guardrail', () => {
     expect(cssSource).toContain('margin: 0.7rem auto 0;');
   });
 
+  it('keeps the endowments hero breathing room scoped to that compact legacy child route', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .service-native-hero {');
+    expect(cssSource).toContain('padding-top: clamp(3.7rem, 7vw, 5.8rem);');
+    expect(cssSource).toContain('padding-bottom: clamp(3.7rem, 7vw, 5.8rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .service-native-hero h1 + h1 {');
+    expect(cssSource).toContain('margin-top: 0.2rem;');
+  });
+
   it('keeps the legacy giving route wired to the comparison widget and the opportunity feature block', () => {
     const contentSource = readSource('../data/nativePageContent.js');
 
