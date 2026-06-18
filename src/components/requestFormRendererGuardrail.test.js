@@ -84,6 +84,15 @@ describe('request form renderer guardrail', () => {
     expect(source).not.toContain('.native-info-page--group-life-quote .group-life-native-quote > .ag-panel-rail {');
   });
 
+  it('does not keep the retired life-quote request shell once the explicit request_form block owns that route', () => {
+    const nativeSource = readSource('../data/nativePageContent.js');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(nativeSource).not.toContain("className: 'insurance-native-life-quote'");
+    expect(cssSource).not.toContain('.native-info-page--life-quote .insurance-native-life-quote > .ag-panel-rail {');
+    expect(cssSource).not.toContain('.native-info-page--life-quote .insurance-native-life-quote .native-info-inline-form {');
+  });
+
   it('scopes stabilized request shell hooks to the shared request-form shell', () => {
     const componentSource = readSource('./DynamicRequestFormSection.jsx');
     const cssSource = readSource('../styles/service-native.css');

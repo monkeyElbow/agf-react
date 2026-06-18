@@ -1516,59 +1516,6 @@ const insuranceChildPages = {
         body: ['Use the quote form below to get started.'],
         anchorId: 'quote',
       },
-      {
-        className: 'insurance-native-life-quote',
-        copyWrap: true,
-        anchorId: 'form',
-        title: 'Request a Life Insurance Quote',
-        titleHighlights: [{ text: 'Life Insurance', className: 'is-white' }],
-        subtitle: 'Take care of those you love.',
-        body: ['Share a few details and we’ll follow up with coverage options tailored to your situation.'],
-        form: {
-          steps: [
-            {
-              id: 'contact',
-              fields: [
-                { id: 'firstName', label: 'First Name*', type: 'text', required: true },
-                { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
-                { id: 'email', label: 'Email*', type: 'email', required: true },
-                { id: 'phone', label: 'Phone*', type: 'tel', placeholder: '(555) 555-5555', required: true },
-              ],
-              nextLabel: 'Next',
-            },
-            {
-              id: 'organization',
-              fields: [
-                { id: 'organizationName', label: 'Organization Name', type: 'text' },
-                { id: 'organizationAddress', label: 'Organization Address', type: 'text' },
-                { id: 'city', label: 'City*', type: 'text', required: true },
-                { id: 'state', label: 'State*', type: 'text', required: true },
-                { id: 'zip', label: 'Zip*', type: 'text', required: true },
-              ],
-              backLabel: 'Back',
-              nextLabel: 'Next',
-            },
-            {
-              id: 'policy',
-              fields: [
-                { id: 'currentInsuranceCompany', label: 'Current Insurance Company*', type: 'text', required: true },
-                {
-                  id: 'policyExpirationDate',
-                  label: 'Expiration Date of Current Policy*',
-                  type: 'text',
-                  placeholder: 'mm/dd/yyyy',
-                  inputMode: 'numeric',
-                  pattern: '^(0[1-9]|1[0-2])/(0[1-9]|[12][0-9]|3[01])/\\d{4}$',
-                  title: 'Use mm/dd/yyyy',
-                  required: true,
-                },
-              ],
-              backLabel: 'Back',
-              submitLabel: 'Submit',
-            },
-          ],
-        },
-      },
     ],
   },
   '/services/insurance/ministers-group-life-plan': {

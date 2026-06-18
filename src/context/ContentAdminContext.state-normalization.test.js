@@ -792,6 +792,25 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.settings?.bgTone).toBe('sand');
   });
 
+  it('seeds the remaining request-form routes from explicit canonical blocks', () => {
+    const normalized = normalizeStoredConfig({});
+    const expectations = [
+      ['/contact-us', 'contact-us-request', 'How can we help?'],
+      ['/services/insurance/property-casualty-insurance', 'insurance-pc-native-quote', 'Request a Property & Casualty Insurance Quote'],
+      ['/services/loans/loan-consultants', 'loans-consultant-native-contact', 'Talk with a consultant.'],
+    ];
+
+    expectations.forEach(([pathname, targetSectionClassName, title]) => {
+      const blocks = normalized.blocksByPath[pathname] || [];
+      const requestBlock = blocks.find((block) => block?.kind === 'request_form');
+
+      expect(requestBlock, pathname).toBeTruthy();
+      expect(requestBlock?.mode, pathname).toBe('dynamic');
+      expect(requestBlock?.settings?.targetSectionClassName, pathname).toBe(targetSectionClassName);
+      expect(requestBlock?.settings?.title, pathname).toBe(title);
+    });
+  });
+
   it('repairs the legacy targeted 403(b) CTA seed into the standalone white CTA block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
@@ -1338,6 +1357,42 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.settings?.spaceBeforeRem).toBe(1.6);
     expect(requestBlock?.settings?.spaceAfterRem).toBe(1.6);
     expect(requestBlock?.settings?.targetSectionClassName).toBe('loans-consultant-native-contact');
+  });
+
+  it('replaces the life insurance quote request form with the canonical standalone seeded block', () => {
+    const defaultRequestBlock = (normalizeStoredConfig({}).blocksByPath['/services/insurance/life-insurance-quote'] || [])
+      .find((block) => block?.id === 'request_form');
+
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/insurance/life-insurance-quote': [
+          {
+            id: 'request_form',
+            kind: 'request_form',
+            mode: 'dynamic',
+            hidden: true,
+            settings: {
+              title: 'Request a Life Insurance Quote',
+              targetSectionKey: 'class:insurance-native-life-quote',
+              targetSectionClassName: 'insurance-native-life-quote',
+              targetSectionIndex: 3,
+              step1FieldsJson: '[{"id":"firstName","label":"First Name*","type":"text","required":true}]',
+            },
+          },
+        ],
+      },
+    });
+
+    const requestBlock = (normalized.blocksByPath['/services/insurance/life-insurance-quote'] || [])
+      .find((block) => block?.id === 'request_form');
+
+    expect(requestBlock?.mode).toBe('dynamic');
+    expect(requestBlock?.hidden).toBe(false);
+    expect(requestBlock?.settings).toEqual(defaultRequestBlock?.settings);
+    expect(String(requestBlock?.settings?.targetSectionKey || '')).toBe('');
+    expect(String(requestBlock?.settings?.targetSectionClassName || '')).toBe('');
+    expect(requestBlock?.settings?.bgTone).toBe('blue');
+    expect(requestBlock?.settings?.textTone).toBe('white');
   });
 
   it('drops stale rates legal-copy blocks because disclosures are owned by Rates admin', () => {

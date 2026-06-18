@@ -14708,83 +14708,6 @@
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
 }
 
-.native-info-page--life-quote .insurance-native-life-quote {
-  background: var(--ag-surface-blue-gradient);
-}
-
-.native-info-page--life-quote .insurance-native-life-quote > .ag-panel-rail {
-  display: grid;
-  width: min(980px, calc(100% - (var(--ag-panel-gutter) * 2)));
-  grid-template-columns: minmax(320px, 440px) minmax(0, 1fr);
-  gap: clamp(1.2rem, 2.8vw, 3rem);
-  align-items: center;
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-section-copy {
-  grid-column: 2;
-  align-self: center;
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-section-copy > h2 {
-  margin: 0;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-heading);
-  font-weight: 700;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-section-subtitle,
-.native-info-page--life-quote .insurance-native-life-quote .dynamic-request-copy .dynamic-request-subtitle {
-  margin-top: 0.45rem;
-  color: #ffffff;
-  font-family: var(--ag-font-body);
-  font-size: clamp(1.32rem, 2.4vw, 1.8rem);
-  line-height: 1.06;
-  letter-spacing: var(--ag-letter-spacing-helv-intro);
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-section-copy > p,
-.native-info-page--life-quote .insurance-native-life-quote .dynamic-request-copy .dynamic-request-body {
-  margin-top: 0.72rem;
-  color: #ffffff;
-  font-size: clamp(1.02rem, 1.7vw, 1.22rem);
-  line-height: 1.5;
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-section-copy > h2 mark {
-  color: inherit;
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-section-copy > h2 mark.is-white {
-  color: #ffffff;
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-inline-form {
-  grid-column: 1;
-  grid-row: 1;
-  margin-top: 0;
-  width: min(430px, 100%);
-  border-radius: 12px;
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-inline-form form {
-  margin-top: 0;
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-inline-form label {
-  font-size: 0.9rem;
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-inline-form input,
-.native-info-page--life-quote .insurance-native-life-quote .native-info-inline-form select,
-.native-info-page--life-quote .insurance-native-life-quote .native-info-inline-form textarea {
-  border-radius: 8px;
-}
-
-.native-info-page--life-quote .insurance-native-life-quote .native-info-inline-form .service-native-btn {
-  min-width: 120px;
-}
-
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail {
   width: min(980px, calc(100% - (var(--ag-panel-gutter) * 2)));
 }
@@ -23499,20 +23422,6 @@ p.impact-proof-story-proof-body {
 
   .loans-native-results-head {
     padding-bottom: 0.95rem;
-  }
-
-  .native-info-page--life-quote .insurance-native-life-quote > .ag-panel-rail {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .native-info-page--life-quote .insurance-native-life-quote .native-info-section-copy,
-  .native-info-page--life-quote .insurance-native-life-quote > .ag-panel-rail > .native-info-inline-form {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
-  .native-info-page--life-quote .insurance-native-life-quote .native-info-section-copy > h2 {
-    margin-top: 1rem;
   }
 
   .loans-native-vision-fuel h3 {

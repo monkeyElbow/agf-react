@@ -130,6 +130,10 @@ const LEGACY_GIVING_MINISTRY_IMPACT_FUND_REQUEST_TARGETS = new Set([
   'class:legacy-child-native-request',
   'legacy-child-native-request',
 ]);
+const LIFE_INSURANCE_QUOTE_REQUEST_TARGETS = new Set([
+  'class:insurance-native-life-quote',
+  'insurance-native-life-quote',
+]);
 const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
   '/services/loans/loan-consultants',
   '/services/retirement/403b/403b-terms-definitions',
@@ -210,6 +214,13 @@ function isStaleLegacyMinistryImpactFundRequestTarget(settings) {
     LEGACY_GIVING_MINISTRY_IMPACT_FUND_REQUEST_TARGETS,
     'legacy-child-native-request',
   );
+}
+
+function isStaleLifeInsuranceQuoteRequestTarget(settings) {
+  const targetKey = String(settings?.targetSectionKey || '').trim();
+  const targetClassName = String(settings?.targetSectionClassName || '').trim();
+  return LIFE_INSURANCE_QUOTE_REQUEST_TARGETS.has(targetKey)
+    || LIFE_INSURANCE_QUOTE_REQUEST_TARGETS.has(targetClassName);
 }
 
 function normalizeRetirementLandingCtaSettings(settings, defaultSettings = {}) {
@@ -3547,6 +3558,16 @@ export function normalizeStoredConfig(payload) {
         && storedKind === 'request_form'
         && defaultBlock
         && isStaleLegacyMinistryImpactFundRequestTarget(storedSettings)
+      ) {
+        storedMode = 'dynamic';
+        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
+      }
+      if (
+        path === '/services/insurance/life-insurance-quote'
+        && storedBlock.id === 'request_form'
+        && storedKind === 'request_form'
+        && defaultBlock
+        && isStaleLifeInsuranceQuoteRequestTarget(storedSettings)
       ) {
         storedMode = 'dynamic';
         nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);

@@ -7,21 +7,23 @@ import {
 import { contentBlockBlueprintsByPath, genericPageBlockBlueprint } from '../data/contentBlockBlueprints';
 import { getNativePageContent } from '../data/nativePageContent';
 
-const AUTO_REQUEST_FORM_ROUTES = [
-  '/contact-us',
-  '/services/insurance/life-insurance-quote',
-  '/services/insurance/property-casualty-insurance',
-  '/services/legacy-giving/charitable-gift-annuities',
-  '/services/legacy-giving/ministry-impact-fund',
-  '/services/loans/loan-consultants',
-];
+const AUTO_REQUEST_FORM_ROUTES = [];
 
 const EXPLICIT_REQUEST_FORM_ROUTES = [
+  '/contact-us',
+  '/services/legacy-giving/charitable-gift-annuities',
   '/services/legacy-giving/endowments',
   '/services/legacy-giving/generosity-fund',
+  '/services/legacy-giving/ministry-impact-fund',
   '/services/insurance/group-term-life-insurance',
+  '/services/insurance/property-casualty-insurance',
   '/services/insurance/certificate-request',
+  '/services/loans/loan-consultants',
   '/services/retirement/retirement-consultants',
+];
+
+const STANDALONE_EXPLICIT_REQUEST_FORM_ROUTES = [
+  '/services/insurance/life-insurance-quote',
 ];
 
 const CTA_OWNED_FORM_ROUTES = [
@@ -252,7 +254,7 @@ describe('request form seed guardrails', () => {
   it('does not auto-generate request-form seeds for routes with explicit request-form blueprints', () => {
     const requestTemplate = getRequestTemplate();
 
-    EXPLICIT_REQUEST_FORM_ROUTES.forEach((pathname) => {
+    [...EXPLICIT_REQUEST_FORM_ROUTES, ...STANDALONE_EXPLICIT_REQUEST_FORM_ROUTES].forEach((pathname) => {
       const blocks = buildDynamicRequestDefaultBlocksForPath(
         pathname,
         '',
@@ -333,7 +335,6 @@ describe('request form seed guardrails', () => {
     const templateSettings = requestTemplate?.settings || {};
 
     [
-      '/services/insurance/life-insurance-quote',
       '/services/insurance/property-casualty-insurance',
     ].forEach((pathname) => {
       const staticSection = getStaticRequestSections(pathname)[0];
@@ -351,6 +352,24 @@ describe('request form seed guardrails', () => {
       });
 
       expectRequestSettingsToMatchStatic(pathname, normalized);
+    });
+  });
+
+  it('keeps standalone explicit request-form seeds authoritative after removing the native request section', () => {
+    STANDALONE_EXPLICIT_REQUEST_FORM_ROUTES.forEach((pathname) => {
+      const block = (contentBlockBlueprintsByPath[pathname] || []).find((entry) => (
+        entry?.kind === 'request_form' && entry?.mode === 'dynamic'
+      ));
+
+      if (!block) {
+        throw new Error(`Missing standalone explicit request form seed for ${pathname}`);
+      }
+
+      expect(getStaticRequestSections(pathname)).toHaveLength(0);
+      expect(String(block?.settings?.targetSectionKey || '')).toBe('');
+      expect(String(block?.settings?.targetSectionClassName || '')).toBe('');
+      expect(block?.settings?.step1FieldsJson).toContain('"firstName"');
+      expect(block?.settings?.step3FieldsJson).toContain('"policyExpirationDate"');
     });
   });
 
