@@ -1981,11 +1981,11 @@ p.home-services-feature-panel-body {
 
 .home-impact-story-proof-intro {
   margin: 0;
-  color: var(--ag-color-super-grey);
+  color: var(--ag-color-atlantean);
   font-family: var(--ag-font-helv);
-  font-size: clamp(1.5rem, 2.1vw, 1.95rem);
+  font-size: clamp(3rem, 4.2vw, 3.9rem);
   font-weight: 700;
-  line-height: 1.32;
+  line-height: 1.08;
   letter-spacing: var(--ag-letter-spacing-helv-heading);
   text-align: center;
   text-wrap: balance;

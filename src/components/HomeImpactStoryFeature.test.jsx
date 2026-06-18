@@ -85,6 +85,11 @@ function getMetricValueNode(metricLabel) {
   return screen.getByText(metricLabel).closest('.home-impact-story-metric')?.querySelector('.home-impact-story-metric-value');
 }
 
+function getTranslateY(node) {
+  const match = String(node?.style.transform || '').match(/translate3d\(0,\s*(-?\d+(?:\.\d+)?)px,\s*0\)/);
+  return match ? Number.parseFloat(match[1]) : null;
+}
+
 describe('HomeImpactStoryFeature', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -231,6 +236,36 @@ describe('HomeImpactStoryFeature', () => {
     expect(copy?.getAttribute('style')).not.toContain('opacity: 1;');
   });
 
+  it('keeps the intro body drifting upward while it is still fading so the exit does not lock in place', () => {
+    const { container } = renderFeatureBlock();
+    setEnhancedShellProgress(container, 0.2);
+
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(100);
+    });
+
+    const copy = container.querySelector('.home-impact-story-copy');
+    const earlyShift = getTranslateY(copy);
+    const earlyOpacity = Number.parseFloat(copy?.style.opacity || '0');
+
+    setEnhancedShellProgress(container, 0.26);
+
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(100);
+    });
+
+    const lateShift = getTranslateY(copy);
+    const lateOpacity = Number.parseFloat(copy?.style.opacity || '0');
+
+    expect(earlyShift).not.toBeNull();
+    expect(lateShift).not.toBeNull();
+    expect(earlyOpacity).toBeGreaterThan(0);
+    expect(lateOpacity).toBeGreaterThan(0);
+    expect(lateShift).toBeLessThan(earlyShift);
+  });
+
   it('lets stat 1 enter only after the copy has meaningfully started exiting', () => {
     const { container } = renderFeatureBlock();
     setEnhancedShellProgress(container, 0.31);
@@ -314,6 +349,26 @@ describe('HomeImpactStoryFeature', () => {
     expect(secondActor?.getAttribute('data-motion-state')).toBe('entering');
     expect(Number.parseFloat(secondActor?.style.opacity || '0')).toBeLessThanOrEqual(0.05);
     expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
+  });
+
+  it('fades the outgoing metric before it reaches the heading zone', () => {
+    const { container } = renderFeatureBlock();
+    setEnhancedShellProgress(container, 0.46);
+
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(100);
+    });
+
+    const firstMetric = screen.getByText('assets under management').closest('.home-impact-story-metric');
+    const firstActor = firstMetric?.closest('.home-impact-story-metric-actor');
+    const firstActorOpacity = Number.parseFloat(firstActor?.style.opacity || '0');
+    const firstActorShift = getTranslateY(firstActor);
+
+    expect(firstActor?.getAttribute('data-motion-state')).toBe('exiting');
+    expect(firstActorOpacity).toBeLessThan(0.12);
+    expect(firstActorShift).not.toBeNull();
+    expect(firstActorShift).toBeLessThan(36);
   });
 
   it('fully clears the copy by the time later metric phases are active', () => {
@@ -425,8 +480,9 @@ describe('HomeImpactStoryFeature', () => {
     const cssSource = readSource('../styles/home-native.css');
 
     expect(cssSource).toContain('.home-impact-story-proof-intro {');
+    expect(cssSource).toContain('color: var(--ag-color-atlantean);');
     expect(cssSource).toContain('font-family: var(--ag-font-helv);');
-    expect(cssSource).toContain('font-size: clamp(1.5rem, 2.1vw, 1.95rem);');
+    expect(cssSource).toContain('font-size: clamp(3rem, 4.2vw, 3.9rem);');
     expect(cssSource).toContain('.home-impact-story-proof-cta-block {');
     expect(cssSource).toContain('.home-impact-story-proof-layer .home-impact-story-proof-cta-block {');
     expect(cssSource).not.toContain('.home-impact-story-cta {');
@@ -445,10 +501,13 @@ describe('HomeImpactStoryFeature', () => {
 
     expect(source).toContain('const HOME_IMPACT_STORY_METRIC_SETTLE_POINTS = [0.78, 0.78, 0.88];');
     expect(source).toContain('const HOME_IMPACT_STORY_OUTGOING_WINDOW = 0.44;');
+    expect(source).toContain('const HOME_IMPACT_STORY_COPY_SHIFT_START = 0.04;');
+    expect(source).toContain('const HOME_IMPACT_STORY_COPY_SHIFT_DURATION = 0.3;');
     expect(source).toContain('const HOME_IMPACT_STORY_FINAL_CTA_START = 0.88;');
     expect(source).toContain('const HOME_IMPACT_STORY_FINAL_CTA_DURATION = 0.1;');
-    expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_TRAVEL_PX = 228;');
-    expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_OPACITY_EXPONENT = 0.52;');
+    expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_TRAVEL_PX = 192;');
+    expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_FADE_CUTOFF = 0.48;');
+    expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_OPACITY_EXPONENT = 0.82;');
     expect(source).toContain('const shouldShowIncoming = true;');
   });
 });
