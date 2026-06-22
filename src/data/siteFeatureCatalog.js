@@ -149,7 +149,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
     internalOnly: false,
     buildRuntime: () => ({
       title: 'What you do here matters.',
-      body: 'Your financial decisions can strengthen more than your future.',
+      body: 'Your financial decisions can strengthen more than just your future.',
       action: {
         label: "See what we're doing",
         to: '/about-us/impact',

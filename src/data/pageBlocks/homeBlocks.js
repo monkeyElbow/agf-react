@@ -73,7 +73,7 @@ export const homePageBlocks = [
     type: 'site_feature',
     featureId: 'home_impact_story',
     headline: 'What you do here matters.',
-    body: 'Your financial decisions can strengthen more than your future.',
+    body: 'Your financial decisions can strengthen more than just your future.',
     buttonLabel: "See what we're doing",
     buttonUrl: '/about-us/impact',
     buttonPageRef: '/about-us/impact',

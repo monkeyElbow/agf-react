@@ -82,7 +82,7 @@ export const impactStatBlockDefinition = createBlockDefinition({
   defaults: {
     titlePrefix: 'What you do here',
     highlight: 'matters',
-    body: 'Your financial decisions can strengthen more than your future.',
+    body: 'Your financial decisions can strengthen more than just your future.',
     countUp: true,
     ctaLabel: 'Tell me more',
     ctaPath: '/about-us/impact',

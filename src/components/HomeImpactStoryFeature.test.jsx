@@ -36,7 +36,7 @@ function createSiteFeatureBlock() {
     settings: {
       featureId: 'home_impact_story',
       headline: 'What you do here matters.',
-      body: 'Your financial decisions can strengthen more than your future.',
+      body: 'Your financial decisions can strengthen more than just your future.',
       buttonLabel: "See what we're doing",
       buttonPageRef: '/about-us/impact',
     },
