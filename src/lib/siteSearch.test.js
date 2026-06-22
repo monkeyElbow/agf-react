@@ -5,6 +5,7 @@ import {
   normalizeSiteSearchText,
   searchSiteIndex,
 } from './siteSearch';
+import { pageByPath } from '../data/siteMap';
 
 describe('site search helpers', () => {
   it('normalizes search text consistently', () => {
@@ -34,6 +35,16 @@ describe('site search helpers', () => {
 
     expect(items.some((item) => item.path === '/resources/article/church-cash-reserves')).toBe(true);
     expect(items.some((item) => item.href === 'https://example.com/rates.pdf')).toBe(true);
+    expect(items.some((item) => item.path === '/services')).toBe(true);
+  });
+
+  it('respects explicit and fallback page search visibility flags', () => {
+    const items = buildSiteSearchIndex();
+
+    expect(pageByPath['/brand']?.hideFromSitemap).toBe(true);
+    expect(pageByPath['/brand']?.hideFromSearch).toBe(true);
+    expect(items.some((item) => item.path === '/brand')).toBe(false);
+    expect(items.some((item) => item.path === '/vineyard')).toBe(false);
     expect(items.some((item) => item.path === '/services')).toBe(true);
   });
 

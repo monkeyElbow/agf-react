@@ -12,6 +12,7 @@ import {
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import { getNativePageContent } from '../data/nativePageContent';
+import { isPageHiddenFromSitemap } from '../data/siteMap';
 import { useConsultants } from '../context/ConsultantsContext';
 import { useCareersJobs } from '../context/CareersJobsContext';
 import { useRates } from '../context/RatesContext';
@@ -671,8 +672,11 @@ function normalizeHeroHeightSvh(value) {
 }
 
 function normalizeHeroLineGapEm(value) {
-  void value;
-  return 0;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(0.4, Number(numeric.toFixed(2))));
 }
 
 function normalizeHeroLineHeightEm(value) {
@@ -3666,6 +3670,7 @@ function MinisterHousingQuickCheckWidget() {
 
 function HeroTitle({ hero }) {
   const heroLineHeight = normalizeHeroLineHeightEm(hero?.lineHeight);
+  const heroLineGap = normalizeHeroLineGapEm(hero?.lineGap);
   const heroTitleSize = heroTitleSizeRemToRuntimeCss(hero?.titleSizeRem);
   const heroLetterSpacing = `${normalizeHeroTitleLetterSpacingEm(hero?.titleLetterSpacingEm)}em`;
   const heroBgTone = normalizeHeroBgTone(hero?.bgTone);
@@ -3687,7 +3692,12 @@ function HeroTitle({ hero }) {
             heroBgTone,
           );
 
-          const lineStyle = { lineHeight: heroLineHeight, fontSize: heroTitleSize, letterSpacing: heroLetterSpacing };
+          const lineStyle = {
+            lineHeight: heroLineHeight,
+            fontSize: heroTitleSize,
+            letterSpacing: heroLetterSpacing,
+            marginTop: index > 0 && heroLineGap > 0 ? `${heroLineGap}em` : undefined,
+          };
           return (
             <h1
               key={`${lineClass}-${source}`}
@@ -4634,7 +4644,7 @@ export default function NativeContentPage({ page }) {
   const heroLinkOptions = useMemo(() => {
     const pages = Object.values(pageHierarchy || {});
     return pages
-      .filter((page) => !page.path.startsWith('/admin/') && page.path !== '/search' && !page.hideFromSitemap)
+      .filter((page) => !page.path.startsWith('/admin/') && page.path !== '/search' && !isPageHiddenFromSitemap(page))
       .map((page) => ({
         label: page.title || page.path,
         value: page.path,
@@ -4763,6 +4773,7 @@ export default function NativeContentPage({ page }) {
     ? testimonialsHudResolved.items.slice(0, 4)
     : [];
   const heroHudLineHeight = normalizeHeroLineHeightEm(heroHudSettings?.lineHeight);
+  const heroHudLineGap = normalizeHeroLineGapEm(heroHudSettings?.lineGap);
   const heroHudTitleSize = heroTitleSizeRemToRuntimeCss(heroHudSettings?.titleSizeRem);
   const heroHudLetterSpacingEm = normalizeHeroTitleLetterSpacingEm(heroHudSettings?.titleLetterSpacingEm);
   const heroHudHasLine3Content = heroHudSettings ? hasDisplayableHeroLineText(heroHudSettings, 'line3') : false;
@@ -5472,6 +5483,7 @@ export default function NativeContentPage({ page }) {
                 activeLineKey={heroActiveLine}
                 fontSize={heroHudTitleSize}
                 lineHeight={heroHudLineHeight}
+                lineGap={heroHudLineGap}
                 letterSpacing={heroHudLetterSpacingEm}
                 onLineTextChange={handleHeroHudLineTextChange}
                 commitOnBlurOnly

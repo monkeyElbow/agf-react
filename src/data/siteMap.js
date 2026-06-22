@@ -1,3 +1,4 @@
+// Visibility flags on route metadata are the future target for admin page settings controls.
 export const sitePages = [
   { path: '/', title: 'Home', section: 'Core', source: null },
   { path: '/services', title: 'Services', section: 'Services', source: null },
@@ -40,7 +41,7 @@ export const sitePages = [
   { path: '/about-us', title: 'About Us', section: 'Company', source: null },
   { path: '/about-us/careers', title: 'Careers', section: 'Company', source: null },
   { path: '/about-us/impact', title: 'Impact', section: 'Company', source: null },
-  { path: '/brand', title: 'Brand', section: 'Company', source: null },
+  { path: '/brand', title: 'Brand', section: 'Company', source: null, hideFromSitemap: true, hideFromSearch: true },
   { path: '/resources', title: 'Resources', section: 'Resources', source: null },
   { path: '/calculators', title: 'Calculators', section: 'Resources', source: null },
   { path: '/forms', title: 'Forms', section: 'Resources', source: null },
@@ -95,6 +96,14 @@ sitePages.forEach((page) => {
 });
 
 export const pageByLinkRef = Object.fromEntries(pageRefPairs);
+
+export function isPageHiddenFromSitemap(page) {
+  return Boolean(page?.hideFromSitemap);
+}
+
+export function isPageHiddenFromSearch(page) {
+  return Boolean(page?.hideFromSearch || page?.hideFromSitemap);
+}
 
 export function toPageLinkRef(pageLike) {
   if (!pageLike || typeof pageLike !== 'object') {

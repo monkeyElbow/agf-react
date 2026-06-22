@@ -1,4 +1,4 @@
-import { sitePages } from '../data/siteMap';
+import { isPageHiddenFromSearch, sitePages } from '../data/siteMap';
 
 export function normalizeSiteSearchText(text) {
   return String(text || '').toLowerCase().trim();
@@ -42,7 +42,7 @@ export function scoreSiteSearchMatch(item, needle) {
 
 export function buildSearchableSitePages() {
   return sitePages
-    .filter((page) => !page.path.startsWith('/admin/') && page.path !== '/search')
+    .filter((page) => !page.path.startsWith('/admin/') && page.path !== '/search' && !isPageHiddenFromSearch(page))
     .map((page) => ({
       title: page.title,
       path: page.path,

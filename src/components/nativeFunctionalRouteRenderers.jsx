@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useContentAdmin } from '../context/ContentAdminContext';
 import { useDocuments } from '../context/DocumentsContext';
+import { isPageHiddenFromSitemap } from '../data/siteMap';
 
 function SitemapRouteSection() {
   const { pageHierarchy } = useContentAdmin();
@@ -17,7 +18,7 @@ function SitemapRouteSection() {
     const pages = Object.values(pageHierarchy || {}).filter((page) => (
       !page.path.startsWith('/admin/')
       && page.path !== '/search'
-      && !page.hideFromSitemap
+      && !isPageHiddenFromSitemap(page)
     ));
     const grouped = pages.reduce((acc, page) => {
       if (!acc[page.section]) {
