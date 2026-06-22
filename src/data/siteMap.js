@@ -40,6 +40,7 @@ export const sitePages = [
   { path: '/about-us', title: 'About Us', section: 'Company', source: null },
   { path: '/about-us/careers', title: 'Careers', section: 'Company', source: null },
   { path: '/about-us/impact', title: 'Impact', section: 'Company', source: null },
+  { path: '/brand', title: 'Brand', section: 'Company', source: null },
   { path: '/resources', title: 'Resources', section: 'Resources', source: null },
   { path: '/calculators', title: 'Calculators', section: 'Resources', source: null },
   { path: '/forms', title: 'Forms', section: 'Resources', source: null },

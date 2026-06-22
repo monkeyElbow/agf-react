@@ -3342,6 +3342,257 @@ button.action-btn {
   color: #5f6e76;
 }
 
+.brand-page {
+  background:
+    radial-gradient(circle at top right, rgba(var(--ag-color-atlantean-rgb), 0.08), transparent 26%),
+    linear-gradient(180deg, #f8f5ef 0%, #fcfaf6 24%, #f6f1e9 100%);
+  padding-bottom: clamp(3.2rem, 7vw, 5.8rem);
+}
+
+.brand-page-hero {
+  padding: clamp(2.3rem, 5vw, 4.2rem) 0 clamp(1.2rem, 3vw, 2rem);
+}
+
+.brand-page-hero-shell {
+  width: min(100%, 52rem);
+  display: grid;
+  gap: 0.8rem;
+}
+
+.brand-page-kicker,
+.brand-page-eyebrow {
+  margin: 0;
+  color: var(--ag-color-atlantean-dark);
+  font-family: var(--ag-font-helv);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.brand-page-hero-shell h1,
+.brand-page-section-head h2 {
+  margin: 0;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-heading);
+  font-weight: 800;
+  letter-spacing: clamp(-0.045em, -0.1vw, -0.022em);
+  line-height: 0.95;
+}
+
+.brand-page-hero-shell h1 {
+  max-width: 11ch;
+  font-size: clamp(3rem, 7.4vw, 5.9rem);
+}
+
+.brand-page-lead,
+.brand-page-section-head p {
+  margin: 0;
+  max-width: 42rem;
+  color: rgba(65, 64, 66, 0.82);
+  font-size: clamp(1rem, 1.4vw, 1.12rem);
+  line-height: 1.66;
+}
+
+.brand-page-section {
+  padding-top: clamp(1.5rem, 3vw, 2.3rem);
+}
+
+.brand-page-section-head {
+  width: min(100%, 42rem);
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: clamp(1.3rem, 2.8vw, 2rem);
+}
+
+.brand-page-section-head h2 {
+  font-size: clamp(2.1rem, 4.4vw, 3.55rem);
+}
+
+.brand-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2.4vw, 1.5rem);
+}
+
+.brand-logo-card,
+.brand-swatch-card {
+  border: 1px solid rgba(113, 108, 101, 0.16);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 16px 36px rgba(38, 53, 61, 0.06);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+.brand-logo-surface {
+  min-height: clamp(13rem, 22vw, 16rem);
+  display: grid;
+  place-items: center;
+  padding: clamp(1.5rem, 4vw, 2.6rem);
+}
+
+.brand-logo-surface.is-light {
+  background:
+    linear-gradient(180deg, #fdfcf9 0%, #f3efe8 100%);
+}
+
+.brand-logo-surface.is-dark {
+  background:
+    linear-gradient(145deg, var(--ag-color-super-grey) 0%, #545457 100%);
+}
+
+.brand-logo-preview {
+  width: min(100%, 23rem);
+  height: auto;
+  display: block;
+}
+
+.brand-logo-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 1rem 1.15rem 1.15rem;
+}
+
+.brand-logo-label,
+.brand-logo-note,
+.brand-swatch-name,
+.brand-swatch-hex {
+  margin: 0;
+}
+
+.brand-logo-label,
+.brand-swatch-name {
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brand-logo-note,
+.brand-swatch-hex {
+  color: rgba(65, 64, 66, 0.66);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.brand-page-section.is-palette {
+  padding-top: clamp(2rem, 4.2vw, 3.2rem);
+}
+
+.brand-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(228px, 1fr));
+  gap: clamp(0.95rem, 2vw, 1.3rem);
+}
+
+.brand-swatch-color {
+  min-height: 13rem;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.brand-swatch-color span {
+  font-family: var(--ag-font-heading);
+  font-size: clamp(1.55rem, 2.7vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.94;
+  max-width: 8ch;
+}
+
+.brand-swatch-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.95rem 1rem 1rem;
+}
+
+.brand-swatch-copy {
+  min-width: 0;
+}
+
+.brand-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(65, 64, 66, 0.18);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ag-color-super-grey);
+  padding: 0.55rem 0.88rem;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.brand-copy-btn:hover,
+.brand-copy-btn:focus-visible {
+  border-color: rgba(var(--ag-color-atlantean-rgb), 0.42);
+  background: rgba(var(--ag-color-atlantean-rgb), 0.07);
+  color: var(--ag-color-atlantean-dark);
+}
+
+.brand-copy-btn.is-copied {
+  border-color: rgba(var(--ag-color-atlantean-rgb), 0.42);
+  background: rgba(var(--ag-color-atlantean-rgb), 0.11);
+  color: var(--ag-color-atlantean-dark);
+}
+
+.brand-copy-btn svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
+@media (max-width: 980px) {
+  .brand-logo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .brand-page-hero {
+    padding-top: 1.9rem;
+  }
+
+  .brand-page-hero-shell h1 {
+    max-width: 10ch;
+    font-size: clamp(2.55rem, 12vw, 3.7rem);
+  }
+
+  .brand-swatch-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .brand-swatch-color {
+    min-height: 10.5rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .brand-logo-meta,
+  .brand-swatch-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .brand-logo-meta > .action-btn,
+  .brand-copy-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .admin-content-page-wrap .page-shell-body h3 {
   margin: 0.2rem 0 0.65rem;
   font-size: 1.2rem;

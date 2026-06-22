@@ -5,6 +5,7 @@ import SiteLayout from './components/SiteLayout';
 import NativeContentPage from './components/NativeContentPage';
 import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
+import BrandPage from './pages/BrandPage';
 import AdminContentPage from './pages/AdminContentPage';
 import AdminRedirectsPage from './pages/AdminRedirectsPage';
 import AdminDocumentsPage from './pages/AdminDocumentsPage';
@@ -63,6 +64,10 @@ function PageRoute({ page }) {
 
   if (routeKey === '/services') {
     return withTopBands(<ServicesPage />);
+  }
+
+  if (routeKey === '/brand') {
+    return withTopBands(<BrandPage />);
   }
 
   if (routeKey === '/services/investments') {
