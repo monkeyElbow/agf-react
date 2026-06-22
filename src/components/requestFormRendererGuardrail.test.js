@@ -195,4 +195,16 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.legacy-child-native-request:not(.native-dynamic-request) .native-info-inline-form h5 {');
     expect(cssSource).toContain('.legacy-child-native-request.native-dynamic-request .dynamic-request-copy > h2 {');
   });
+
+  it('forces contact-us back onto the shared dynamic request rail instead of a rogue outer two-column grid', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--contact-us .contact-us-request > .ag-panel-rail {');
+    expect(cssSource).toContain('display: block;');
+    expect(cssSource).toContain('.native-info-page--contact-us .native-dynamic-request.contact-us-request .dynamic-request-layout {');
+    expect(cssSource).toContain('width: min(100%, 980px);');
+    expect(cssSource).toContain('grid-template-columns: minmax(360px, 460px) minmax(0, 1fr);');
+    expect(cssSource).toContain('.native-info-page--contact-us .native-dynamic-request.contact-us-request .dynamic-request-copy {');
+    expect(cssSource).toContain('justify-self: stretch;');
+  });
 });
