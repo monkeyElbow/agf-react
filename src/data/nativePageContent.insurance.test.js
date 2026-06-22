@@ -15,9 +15,9 @@ describe('insurance native page content', () => {
     expect(content?.hero?.lines).toEqual([
       expect.objectContaining({ title: 'Impressive coverage.', className: 'is-super-grey' }),
       expect.objectContaining({
-        title: 'Built for ministry.',
+        title: 'Built for churches & ministries.',
         className: 'is-super-grey',
-        highlights: [expect.objectContaining({ text: 'ministry.', className: 'is-atlantean' })],
+        highlights: [expect.objectContaining({ text: 'churches & ministries', className: 'is-atlantean' })],
       }),
     ]);
     expect(content?.intro?.body).toEqual([

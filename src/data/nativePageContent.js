@@ -261,9 +261,9 @@ const directContent = {
           className: 'is-super-grey',
         },
         {
-          title: 'Built for ministry.',
+          title: 'Built for churches & ministries.',
           className: 'is-super-grey',
-          highlights: [{ text: 'ministry.', className: 'is-atlantean' }],
+          highlights: [{ text: 'churches & ministries', className: 'is-atlantean' }],
         },
       ],
     },
