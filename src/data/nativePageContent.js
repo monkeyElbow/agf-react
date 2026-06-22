@@ -2349,28 +2349,37 @@ const legacyChildPages = {
     sections: [
       {
         className: 'legacy-child-native-endowments-duo',
-        hideTitle: true,
+        title: 'How it works',
         fullBleed: true,
-        columns: 'two',
-        cards: [
+        columns: 'three',
+        columnsItems: [
           {
-            title: 'How it works',
-            body: 'Designated assets are invested to ensure their protection and growth. Payments are made from ongoing interest earned from the gifted asset(s). An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.',
-            cardClass: 'endowments-duo-card endowments-duo-card--light',
+            slot: 1,
+            type: 'flow-step',
+            body: [
+              'Designated assets are invested to ensure their protection and growth.',
+            ],
           },
           {
-            title: 'Assets you may give',
-            body: 'Minimum funding requirements are **$10,000** for cash or securities, and **$100,000** for real estate. Endowments may be funded with:',
-            list: [
-              'Cash',
-              'Real estate',
-              'Securities (restricted and marketable)',
-              'Art',
-              'Antiques',
-              'Business interests',
-              'Other assets',
+            slot: 2,
+            type: 'flow-step',
+            body: [
+              'Payments are made from ongoing interest earned from the gifted asset(s).',
             ],
-            cardClass: 'endowments-duo-card endowments-duo-card--dark',
+          },
+          {
+            slot: 3,
+            type: 'flow-step',
+            body: [
+              'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.',
+            ],
+          },
+          {
+            slot: 4,
+            type: 'support',
+            title: 'Assets you may give',
+            titleClassName: 'endowments-assets-title',
+            html: '<p>Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p><p>Endowments may be funded with:</p><ul><li>Cash</li><li>Real estate</li><li>Securities (restricted and marketable)</li><li>Art</li><li>Antiques</li><li>Business interests</li><li>Other assets</li></ul>',
           },
         ],
       },

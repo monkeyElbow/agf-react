@@ -62,6 +62,39 @@ describe('legacy giving review polish guardrail', () => {
     expect(cssSource).toContain('margin-top: 0.2rem;');
   });
 
+  it('keeps the endowments explainer on the native columns system with a three-step flow and supporting asset list', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const contentSource = readSource('../data/nativePageContent.js');
+
+    expect(contentSource).toContain("className: 'legacy-child-native-endowments-duo'");
+    expect(contentSource).toContain("title: 'How it works'");
+    expect(contentSource).toContain("columns: 'three'");
+    expect(contentSource).toContain("type: 'flow-step'");
+    expect(contentSource).not.toContain("title: 'You give assets'");
+    expect(contentSource).not.toContain("title: 'Principal stays invested'");
+    expect(contentSource).not.toContain("title: 'Earnings support ministry'");
+    expect(contentSource).toContain("'Designated assets are invested to ensure their protection and growth.'");
+    expect(contentSource).toContain("'Payments are made from ongoing interest earned from the gifted asset(s).'");
+    expect(contentSource).toContain("'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.'");
+    expect(contentSource).toContain("type: 'support'");
+    expect(contentSource).toContain("title: 'Assets you may give'");
+    expect(contentSource).toContain("Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.");
+    expect(contentSource).toContain("Endowments may be funded with:");
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo {');
+    expect(cssSource).toContain('background: #faf7f1;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-grid {');
+    expect(cssSource).toContain('counter-reset: endowments-flow;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step::before {');
+    expect(cssSource).toContain('font-size: clamp(3rem, 5.2vw, 4.55rem);');
+    expect(cssSource).toContain('font-family: var(--ag-font-heading);');
+    expect(cssSource).toContain(".native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support {");
+    expect(cssSource).toContain('grid-column: 1 / -1;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul {');
+    expect(cssSource).toContain('width: min(100%, 25rem);');
+    expect(cssSource).toContain('text-align: left;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul li + li {');
+  });
+
   it('keeps the legacy giving route wired to the comparison widget and the opportunity feature block', () => {
     const contentSource = readSource('../data/nativePageContent.js');
 
