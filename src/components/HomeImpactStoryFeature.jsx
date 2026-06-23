@@ -26,9 +26,16 @@ const HOME_IMPACT_STORY_METRIC_ENTRY_TRAVEL_PX = 324;
 const HOME_IMPACT_STORY_METRIC_EXIT_TRAVEL_PX = 192;
 const HOME_IMPACT_STORY_METRIC_EXIT_FADE_CUTOFF = 0.48;
 const HOME_IMPACT_STORY_METRIC_EXIT_OPACITY_EXPONENT = 0.82;
-const HOME_IMPACT_STORY_FINAL_CTA_START = 0.88;
-const HOME_IMPACT_STORY_FINAL_CTA_DURATION = 0.1;
-const HOME_IMPACT_STORY_ALLY_LINE = 'Our clients are ministry allies.';
+const HOME_IMPACT_STORY_FINAL_METRIC_SETTLE_POINT = 0.8;
+const HOME_IMPACT_STORY_FINAL_METRIC_COUNT_START = 0.2;
+const HOME_IMPACT_STORY_FINAL_METRIC_COUNT_DURATION = 0.5;
+const HOME_IMPACT_STORY_END_PANEL_START = 0.95;
+const HOME_IMPACT_STORY_END_PANEL_DURATION = 0.035;
+const HOME_IMPACT_STORY_END_PANEL_METRIC_CLEAR_LEAD = 0.012;
+const HOME_IMPACT_STORY_END_PANEL_LOCK_START = 0.985;
+const HOME_IMPACT_STORY_HEADING_EXIT_TRAVEL_PX = 118;
+const HOME_IMPACT_STORY_END_PANEL_SHIFT_PX = 28;
+const HOME_IMPACT_STORY_ENDING_LINE = 'Because your mission is ours too.';
 const HOME_IMPACT_STORY_PALETTE_HANDOFF_CURVES = Object.freeze({
   start: 0.16,
   end: 0.78,
@@ -358,9 +365,17 @@ function ImpactStoryBrandMark() {
   );
 }
 
-function ImpactStoryAllyLine({ children = HOME_IMPACT_STORY_ALLY_LINE }) {
+function ImpactStoryEndingLine({ children = HOME_IMPACT_STORY_ENDING_LINE }) {
   return (
-    <p className="home-impact-story-proof-intro">{children}</p>
+    <h2
+      className="home-impact-story-proof-intro"
+      style={{
+        color: '#ffffff',
+        WebkitTextFillColor: '#ffffff',
+      }}
+    >
+      {children}
+    </h2>
   );
 }
 
@@ -404,7 +419,9 @@ function ImpactStoryMetrics({
   const buildActorState = (metric, index, kind) => {
     const isFinalMetric = index === metrics.length - 1;
     const incomingDelay = getMetricEntryDelay(index);
-    const settlePoint = getMetricSettlePoint(index);
+    const settlePoint = isFinalMetric
+      ? Math.min(getMetricSettlePoint(index), HOME_IMPACT_STORY_FINAL_METRIC_SETTLE_POINT)
+      : getMetricSettlePoint(index);
     const enterDuration = Math.max(0.26, settlePoint - incomingDelay);
     const enterOpacityExponent = index === 0
       ? HOME_IMPACT_STORY_FIRST_METRIC_OPACITY_EXPONENT
@@ -422,9 +439,14 @@ function ImpactStoryMetrics({
         + ((1 - enterProgress) * HOME_IMPACT_STORY_METRIC_ENTRY_TRAVEL_PX);
       metricOpacity = Math.pow(enterProgress, enterOpacityExponent);
       scale = 0.992 + (enterProgress * 0.008);
+      const countStart = isFinalMetric
+        ? HOME_IMPACT_STORY_FINAL_METRIC_COUNT_START
+        : HOME_IMPACT_STORY_METRIC_COUNT_START + incomingDelay;
+      const countDuration = isFinalMetric
+        ? HOME_IMPACT_STORY_FINAL_METRIC_COUNT_DURATION
+        : HOME_IMPACT_STORY_METRIC_COUNT_DURATION;
       countProgress = clamp(
-        (activeLocalProgress - (HOME_IMPACT_STORY_METRIC_COUNT_START + incomingDelay))
-          / HOME_IMPACT_STORY_METRIC_COUNT_DURATION,
+        (activeLocalProgress - countStart) / countDuration,
         0,
         1,
       );
@@ -432,6 +454,9 @@ function ImpactStoryMetrics({
         translateY = HOME_IMPACT_STORY_METRIC_BASE_OFFSET_PX;
         metricOpacity = 1;
         scale = 1;
+        if (isFinalMetric) {
+          countProgress = 1;
+        }
       }
     } else if (kind === 'active') {
       if (isFinalMetric) {
@@ -522,10 +547,12 @@ function ImpactStoryMetrics({
                 }}
               >
                 <div className="home-impact-story-metric">
-                  <p className={`home-native-stat-value home-impact-story-metric-value${countUp ? ' countup' : ''} is-${actor.metric.tone || 'mango'}`}>
-                    <AnimatedMetricValue value={actor.metric.value} progress={actor.countProgress} />
-                  </p>
-                  <p className="home-native-stat-label home-impact-story-metric-label"><strong>{actor.metric.label}</strong></p>
+                  <div className="home-impact-story-metric-frame">
+                    <p className={`home-native-stat-value home-impact-story-metric-value${countUp ? ' countup' : ''} is-${actor.metric.tone || 'mango'}${actor.index === metrics.length - 1 ? ' is-final-metric' : ''}`}>
+                      <AnimatedMetricValue value={actor.metric.value} progress={actor.countProgress} />
+                    </p>
+                    <p className="home-native-stat-label home-impact-story-metric-label"><strong>{actor.metric.label}</strong></p>
+                  </div>
                 </div>
               </div>
             );
@@ -537,10 +564,12 @@ function ImpactStoryMetrics({
           className="home-impact-story-metric"
           data-motion-state="static"
         >
-          <p className={`home-native-stat-value home-impact-story-metric-value${countUp ? ' countup' : ''} is-${metric.tone || 'mango'}`}>
-            {metric.value}
-          </p>
-          <p className="home-native-stat-label home-impact-story-metric-label"><strong>{metric.label}</strong></p>
+          <div className="home-impact-story-metric-frame">
+            <p className={`home-native-stat-value home-impact-story-metric-value${countUp ? ' countup' : ''} is-${metric.tone || 'mango'}${index === metrics.length - 1 ? ' is-final-metric' : ''}`}>
+              {metric.value}
+            </p>
+            <p className="home-native-stat-label home-impact-story-metric-label"><strong>{metric.label}</strong></p>
+          </div>
         </div>
       ))}
     </div>
@@ -561,21 +590,23 @@ export function HomeImpactStoryStaticContent({
   );
 
   return (
-    <div className="home-impact-story-surface" style={paletteVars}>
-      <div className="ag-panel-rail home-impact-story-static-grid">
-        <div className={`home-impact-story-static-copy${reveal ? ' fade-up' : ''}`}>
-          <ImpactStoryBrandMark />
-          <ImpactStoryHeadline
-            headline={headline}
-            highlightedWord={highlightedWord}
-            className="home-impact-story-heading"
-          />
-          {body ? <p className="home-impact-story-body">{body}</p> : null}
-        </div>
-        <div className={`home-impact-story-static-proof${reveal ? ' fade-up' : ''}`}>
-          <ImpactStoryMetrics metrics={metrics} countUp={countUp} />
-          <div className="home-impact-story-proof-cta-block">
-            <ImpactStoryAllyLine />
+    <div className="home-impact-story">
+      <div className="home-impact-story-surface" style={paletteVars}>
+        <div className="ag-panel-rail home-impact-story-static-grid">
+          <div className={`home-impact-story-static-copy${reveal ? ' fade-up' : ''}`}>
+            <ImpactStoryBrandMark />
+            <ImpactStoryHeadline
+              headline={headline}
+              highlightedWord={highlightedWord}
+              className="home-impact-story-heading"
+            />
+            {body ? <p className="home-impact-story-body">{body}</p> : null}
+          </div>
+          <div className={`home-impact-story-static-proof${reveal ? ' fade-up' : ''}`}>
+            <ImpactStoryMetrics metrics={metrics} countUp={countUp} />
+            <div className="home-impact-story-proof-cta-block">
+              <ImpactStoryEndingLine />
+            </div>
           </div>
         </div>
       </div>
@@ -735,97 +766,113 @@ export default function HomeImpactStoryFeature({
     0,
     1,
   );
-  const finalCtaOpacity = clamp(
-    (heldProgress - HOME_IMPACT_STORY_FINAL_CTA_START) / HOME_IMPACT_STORY_FINAL_CTA_DURATION,
+  const endPanelProgress = clamp(
+    (heldProgress - HOME_IMPACT_STORY_END_PANEL_START) / HOME_IMPACT_STORY_END_PANEL_DURATION,
     0,
     1,
   );
-  const finalCtaShift = (1 - finalCtaOpacity) * 26;
+  const endPanelMetricClearProgress = clamp(
+    (heldProgress - (HOME_IMPACT_STORY_END_PANEL_START - HOME_IMPACT_STORY_END_PANEL_METRIC_CLEAR_LEAD))
+      / HOME_IMPACT_STORY_END_PANEL_METRIC_CLEAR_LEAD,
+    0,
+    1,
+  );
+  const isEndPanelLocked = heldProgress >= HOME_IMPACT_STORY_END_PANEL_LOCK_START;
+  const finalSupportOpacity = isEndPanelLocked ? 0 : supportOpacity;
+  const headingOpacity = isEndPanelLocked ? 0 : (1 - endPanelProgress);
+  const headingExitShift = headingShift - (endPanelProgress * HOME_IMPACT_STORY_HEADING_EXIT_TRAVEL_PX);
   const backgroundOffset = 8 - (heldProgress * 16);
   const stageGlowOpacity = 0.26 + (metricsOpacity * 0.18);
+  const endPanelOpacity = isEndPanelLocked ? 1 : endPanelProgress;
+  const endPanelShift = (1 - endPanelOpacity) * HOME_IMPACT_STORY_END_PANEL_SHIFT_PX;
 
   return (
-    <div className="home-impact-story-surface" style={paletteVars}>
-      <div
-        ref={shellRef}
-        className="ag-panel-rail home-impact-story-shell"
-        data-enhanced="true"
-        data-hold-contract="desktop-pinned-sequence"
-        data-release-after="final-metric-hold"
-        style={{ '--home-impact-story-runway-vh': `${HOME_IMPACT_STORY_DESKTOP_RUNWAY_VH}vh` }}
-      >
-        <div className="home-impact-story-pin">
-          <div className="home-impact-story-frame">
-            <div
-              className="home-impact-story-backdrop"
-              aria-hidden="true"
-              style={{
-                transform: `translate3d(0, ${backgroundOffset}px, 0)`,
-                opacity: stageGlowOpacity,
-              }}
-            />
-            <div className="home-impact-story-stage">
-              <div className="home-impact-story-copy-layer" data-stage-layer="copy">
-                <div className="home-impact-story-heading-lock">
-                  <div
-                    className="home-impact-story-heading-shell"
-                    style={{
-                      transform: `translate3d(0, ${headingShift}px, 0)`,
-                    }}
-                  >
+    <div className="home-impact-story">
+      <div className="home-impact-story-surface" style={paletteVars}>
+        <div
+          ref={shellRef}
+          className="ag-panel-rail home-impact-story-shell"
+          data-enhanced="true"
+          data-hold-contract="desktop-pinned-sequence"
+          data-release-after="final-metric-hold"
+          style={{ '--home-impact-story-runway-vh': `${HOME_IMPACT_STORY_DESKTOP_RUNWAY_VH}vh` }}
+        >
+          <div className="home-impact-story-pin">
+            <div className="home-impact-story-frame">
+              <div
+                className="home-impact-story-backdrop"
+                aria-hidden="true"
+                style={{
+                  transform: `translate3d(0, ${backgroundOffset}px, 0)`,
+                  opacity: stageGlowOpacity,
+                }}
+              />
+              <div className="home-impact-story-stage">
+                <div className="home-impact-story-copy-layer" data-stage-layer="copy">
+                  <div className="home-impact-story-heading-lock">
                     <div
-                      className="home-impact-story-heading-brand"
+                      className="home-impact-story-heading-shell"
                       style={{
-                        opacity: supportOpacity,
-                        transform: `translate3d(0, ${supportShift}px, 0)`,
+                        opacity: headingOpacity,
+                        transform: `translate3d(0, ${headingExitShift}px, 0)`,
                       }}
                     >
-                      <ImpactStoryBrandMark />
+                      <div
+                        className="home-impact-story-heading-brand"
+                        style={{
+                          opacity: finalSupportOpacity,
+                          transform: `translate3d(0, ${supportShift}px, 0)`,
+                        }}
+                      >
+                        <ImpactStoryBrandMark />
+                      </div>
+                      <ImpactStoryHeadline
+                        headline={headline}
+                        highlightedWord={highlightedWord}
+                        className="home-impact-story-heading"
+                      />
                     </div>
-                    <ImpactStoryHeadline
-                      headline={headline}
-                      highlightedWord={highlightedWord}
-                      className="home-impact-story-heading"
-                    />
+                  </div>
+                  <div
+                    className="home-impact-story-copy"
+                    style={{
+                      opacity: finalSupportOpacity,
+                      transform: `translate3d(0, ${supportShift}px, 0)`,
+                    }}
+                  >
+                    {body ? <p className="home-impact-story-body">{body}</p> : null}
+                    <div className="home-impact-story-scroll-cue" aria-hidden="true">
+                      <span className="home-impact-story-scroll-cue-mark" />
+                    </div>
                   </div>
                 </div>
-                <div
-                  className="home-impact-story-copy"
-                  style={{
-                    opacity: supportOpacity,
-                    transform: `translate3d(0, ${supportShift}px, 0)`,
-                  }}
-                >
-                  {body ? <p className="home-impact-story-body">{body}</p> : null}
-                  <div className="home-impact-story-scroll-cue" aria-hidden="true">
-                    <span className="home-impact-story-scroll-cue-mark" />
-                  </div>
-                </div>
-              </div>
 
-              <div
-                className="home-impact-story-proof-layer"
-                data-stage-layer="proof"
-              >
                 <div
-                  className="home-impact-story-proof"
-                  style={{
-                    opacity: metricsOpacity,
-                  }}
+                  className="home-impact-story-proof-layer"
+                  data-stage-layer="proof"
                 >
-                  <ImpactStoryMetrics
-                    metrics={metrics}
-                    animated
-                    progress={heldProgress}
-                  />
+                  <div
+                    className="home-impact-story-proof"
+                    style={{
+                      opacity: isEndPanelLocked ? 0 : (metricsOpacity * (1 - endPanelMetricClearProgress)),
+                    }}
+                  >
+                    {isEndPanelLocked ? null : (
+                      <ImpactStoryMetrics
+                        metrics={metrics}
+                        animated
+                        progress={heldProgress}
+                      />
+                    )}
+                  </div>
                   <div
                     className="home-impact-story-proof-cta-block"
                     style={{
-                      opacity: finalCtaOpacity,
-                      transform: `translate3d(0, ${finalCtaShift}px, 0)`,
+                      opacity: endPanelOpacity,
+                      transform: `translate3d(0, ${endPanelShift}px, 0)`,
                     }}
                   >
-                    <ImpactStoryAllyLine />
+                    <ImpactStoryEndingLine />
                   </div>
                 </div>
               </div>

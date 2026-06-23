@@ -116,7 +116,7 @@ describe('HomeImpactStoryFeature', () => {
     expect(container.querySelector('.home-impact-story-shell')).toBeNull();
     expect(screen.getByRole('heading', { name: /What you do here matters/i })).toBeTruthy();
     expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
-    expect(screen.getByText('Our clients are ministry allies.')).toBeTruthy();
+    expect(screen.getByText('Because your mission is ours too.')).toBeTruthy();
     expect(staticCopy?.querySelector('a')).toBeNull();
     expect(staticProof?.querySelector('a')).toBeNull();
     expect(screen.queryByRole('link', { name: "See what we're doing" })).toBeNull();
@@ -140,9 +140,14 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(1200);
     });
 
-    expect(screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
-    expect(screen.getByLabelText('$450 million')).toBeTruthy();
-    expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
+    const proof = container.querySelector('.home-impact-story-proof');
+    const proofCtaBlock = container.querySelector('.home-impact-story-proof-cta-block');
+
+    expect(screen.getByText('Because your mission is ours too.')).toBeTruthy();
+    expect(screen.queryByLabelText('$450 million')).toBeNull();
+    expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
+    expect(proof?.getAttribute('style')).toContain('opacity: 0;');
+    expect(proofCtaBlock?.getAttribute('style')).toContain('opacity: 1;');
     expect(screen.queryByText('assets under management')).toBeNull();
     expect(screen.queryByText('(and growing) clients')).toBeNull();
   });
@@ -188,7 +193,8 @@ describe('HomeImpactStoryFeature', () => {
 
     const shell = container.querySelector('.home-impact-story-shell');
     expect(shell).toBeTruthy();
-    expect(screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
+    expect(screen.getByText('Because your mission is ours too.')).toBeTruthy();
+    expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
     expect(screen.queryByText('assets under management')).toBeNull();
   });
 
@@ -433,7 +439,7 @@ describe('HomeImpactStoryFeature', () => {
 
   it('keeps the final metric from completing too early before the section release begins', () => {
     const { container } = renderFeatureBlock();
-    setEnhancedShellProgress(container, 0.85);
+    setEnhancedShellProgress(container, 0.9);
 
     act(() => {
       window.dispatchEvent(new Event('scroll'));
@@ -443,7 +449,7 @@ describe('HomeImpactStoryFeature', () => {
     const finalMetric = screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric');
     const proofCtaBlock = container.querySelector('.home-impact-story-proof-cta-block');
 
-    expect(finalMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
+    expect(finalMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
     expect(Number.parseFloat(proofCtaBlock?.style.opacity || '0')).toBeLessThan(0.2);
   });
 
@@ -458,12 +464,16 @@ describe('HomeImpactStoryFeature', () => {
 
     const copy = container.querySelector('.home-impact-story-copy');
     const proof = container.querySelector('.home-impact-story-proof');
+    const proofCtaBlock = container.querySelector('.home-impact-story-proof-cta-block');
 
     expect(copy?.querySelector('a')).toBeNull();
     expect(proof?.querySelector('a')).toBeNull();
     expect(screen.queryByRole('link', { name: "See what we're doing" })).toBeNull();
-    expect(screen.getByText('Our clients are ministry allies.')).toBeTruthy();
-    expect(screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
+
+    expect(screen.getByText('Because your mission is ours too.')).toBeTruthy();
+    expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
+    expect(proof?.getAttribute('style')).toContain('opacity: 0;');
+    expect(proofCtaBlock?.getAttribute('style')).toContain('opacity: 1;');
   });
 
   it('keeps the impact story backdrop source-contained with an overflow fallback for mobile browsers that do not honor clip reliably', () => {
@@ -480,12 +490,44 @@ describe('HomeImpactStoryFeature', () => {
     const cssSource = readSource('../styles/home-native.css');
 
     expect(cssSource).toContain('.home-impact-story-proof-intro {');
-    expect(cssSource).toContain('color: var(--ag-color-atlantean);');
-    expect(cssSource).toContain('font-family: var(--ag-font-helv);');
-    expect(cssSource).toContain('font-size: clamp(3rem, 4.2vw, 3.9rem);');
+    expect(cssSource).toContain('color: #ffffff;');
+    expect(cssSource).toContain('font-family: var(--ag-font-heading);');
+    expect(cssSource).toContain('max-width: 16ch;');
+    expect(cssSource).toContain('font-size: clamp(4.6rem, 9.8vw, 8.8rem);');
     expect(cssSource).toContain('.home-impact-story-proof-cta-block {');
     expect(cssSource).toContain('.home-impact-story-proof-layer .home-impact-story-proof-cta-block {');
     expect(cssSource).not.toContain('.home-impact-story-cta {');
+  });
+
+  it('keeps the metric presentation framed and bounded after reducing the number scale', () => {
+    const cssSource = readSource('../styles/home-native.css');
+
+    expect(cssSource).toContain('.home-impact-story-metric-frame {');
+    expect(cssSource).toContain('width: min(100%, 43rem);');
+    expect(cssSource).toContain('border-radius: clamp(1.35rem, 2.4vw, 1.85rem);');
+    expect(cssSource).toContain('border: 1.5px solid rgba(255, 255, 255, 0.22);');
+    expect(cssSource).toContain('background: transparent;');
+    expect(cssSource).toContain('box-shadow: none;');
+    expect(cssSource).toContain('.home-native-impact .home-impact-story-metric-value {');
+    expect(cssSource).toContain('font-size: clamp(4.8rem, 8.9vw, 7.7rem);');
+  });
+
+  it('keeps the impact feature frame square and settles the ending line into the lower proof area', () => {
+    const cssSource = readSource('../styles/home-native.css');
+
+    expect(cssSource).toContain('.home-impact-story {');
+    expect(cssSource).toContain('padding: 0;');
+    expect(cssSource).toContain('.home-impact-story-pin {');
+    expect(cssSource).toContain('align-items: stretch;');
+    expect(cssSource).toContain('.home-impact-story-frame {');
+    expect(cssSource).toContain('min-height: 100vh;');
+    expect(cssSource).toContain('border-radius: 0;');
+    expect(cssSource).toContain('border: 0;');
+    expect(cssSource).toContain('.home-impact-story-stage {');
+    expect(cssSource).toContain('min-height: 100vh;');
+    expect(cssSource).toContain('.home-impact-story-proof-layer .home-impact-story-proof-cta-block {');
+    expect(cssSource).toContain('inset: 0;');
+    expect(cssSource).toContain('z-index: 2;');
   });
 
   it('keeps the mobile proof stack gap explicit so the first metric stays separated from the copy block', () => {
@@ -503,8 +545,15 @@ describe('HomeImpactStoryFeature', () => {
     expect(source).toContain('const HOME_IMPACT_STORY_OUTGOING_WINDOW = 0.44;');
     expect(source).toContain('const HOME_IMPACT_STORY_COPY_SHIFT_START = 0.04;');
     expect(source).toContain('const HOME_IMPACT_STORY_COPY_SHIFT_DURATION = 0.3;');
-    expect(source).toContain('const HOME_IMPACT_STORY_FINAL_CTA_START = 0.88;');
-    expect(source).toContain('const HOME_IMPACT_STORY_FINAL_CTA_DURATION = 0.1;');
+    expect(source).toContain('const HOME_IMPACT_STORY_FINAL_METRIC_SETTLE_POINT = 0.8;');
+    expect(source).toContain('const HOME_IMPACT_STORY_FINAL_METRIC_COUNT_START = 0.2;');
+    expect(source).toContain('const HOME_IMPACT_STORY_FINAL_METRIC_COUNT_DURATION = 0.5;');
+    expect(source).toContain('const HOME_IMPACT_STORY_END_PANEL_START = 0.95;');
+    expect(source).toContain('const HOME_IMPACT_STORY_END_PANEL_DURATION = 0.035;');
+    expect(source).toContain('const HOME_IMPACT_STORY_END_PANEL_METRIC_CLEAR_LEAD = 0.012;');
+    expect(source).toContain('const HOME_IMPACT_STORY_END_PANEL_LOCK_START = 0.985;');
+    expect(source).toContain('const HOME_IMPACT_STORY_HEADING_EXIT_TRAVEL_PX = 118;');
+    expect(source).toContain("const HOME_IMPACT_STORY_ENDING_LINE = 'Because your mission is ours too.';");
     expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_TRAVEL_PX = 192;');
     expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_FADE_CUTOFF = 0.48;');
     expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_OPACITY_EXPONENT = 0.82;');

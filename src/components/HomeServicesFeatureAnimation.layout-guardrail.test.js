@@ -48,7 +48,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('p.home-services-feature-panel-body {');
     expect(cssSource).toContain('width: min(100%, 72rem);');
     expect(cssSource).toContain('max-width: 100%;');
-    expect(cssSource).toContain('--home-services-panel-body-color: #ffffff;');
+    expect(cssSource).toContain('--home-services-panel-body-color: var(--ag-color-super-grey);');
     expect(cssSource).toContain('gap: clamp(1.45rem, 2.15vw, 2.15rem);');
     expect(cssSource).toContain('gap: clamp(0.85rem, 1.35vw, 1.3rem);');
     expect(cssSource).toContain('.home-services-feature-panel.is-left .home-services-feature-panel-copy {');
@@ -98,7 +98,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('-webkit-font-smoothing: antialiased;');
   });
 
-  it('uses a shared bokeh engine with current/next palette layers instead of one dominant angled poster gradient', () => {
+  it('keeps the shared panel bokeh engine while letting the preview-white-cards stage sit on a neutral white field', () => {
     const cssSource = readSource('../styles/home-native.css');
     const componentSource = readSource('./HomeServicesFeatureAnimation.jsx');
 
@@ -112,17 +112,15 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('--home-services-panel-title-color: #ffffff;');
     expect(cssSource).toContain('--home-services-card-accent: var(--ag-color-atlantean);');
     expect(cssSource).toContain('--home-services-preview-bg-lift: calc((var(--home-services-intro-bottom-padding) + var(--home-services-intro-shell-gap)) * 0.32);');
-    expect(cssSource).toContain('circle at 16% 18%');
-    expect(cssSource).toContain('linear-gradient(');
-    expect(cssSource).toContain('145deg');
-    expect(cssSource).toContain('color-mix(in srgb, var(--ag-color-atlantean) 76%, #8ce3eb 24%) 0%');
-    expect(cssSource).toContain('color-mix(in srgb, var(--ag-color-atlantean-dark) 86%, #07131b 14%) 100%');
+    expect(cssSource).toContain('--home-services-preview-surface: #ffffff;');
+    expect(cssSource).toContain('--home-services-preview-sheen: none;');
     expect(cssSource).toContain('.home-services-feature-shell.is-preview-white-cards .home-services-feature-stage {');
     expect(cssSource).toContain('overflow-x: clip;');
     expect(cssSource).toContain('.home-services-feature-shell.is-preview-white-cards .home-services-feature-stage-bg {');
     expect(cssSource).toContain('position: sticky;');
     expect(cssSource).toContain('height: 100vh;');
     expect(cssSource).toContain('margin: 0 calc(50% - 50vw) -100vh;');
+    expect(cssSource).toContain('background: #ffffff;');
     expect(cssSource).toContain('.home-services-feature-panel-gradient-layer.is-current {');
     expect(cssSource).toContain('.home-services-feature-panel-gradient-layer.is-next {');
     expect(cssSource).toContain('background-color: rgb(var(--home-services-base-rgb));');
@@ -131,11 +129,11 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('rgba(var(--home-services-layer-accent-rgb), 0.08)');
     expect(cssSource).toContain('rgba(var(--home-services-layer-dark-rgb), calc(var(--home-services-dark-strength) * 0.18))');
     expect(cssSource).toContain(".home-services-feature-shell.is-preview-white-cards .home-services-feature-panel[data-proof-index='3'] {");
-    expect(cssSource).toContain('var(--home-services-preview-sheen),');
+    expect(cssSource).not.toContain('var(--home-services-preview-sheen),');
     expect(cssSource).toContain('box-shadow: none;');
     expect(cssSource).toContain('border-color: transparent;');
     expect(cssSource).toContain('background: transparent;');
-    expect(cssSource).toContain('filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.143));');
+    expect(cssSource).toContain('filter: none;');
     expect(cssSource).toContain('.home-services-feature-shell.is-preview-white-cards .home-services-feature-panel-gradient-layer,');
     expect(cssSource).toContain('opacity: var(--home-services-panel-opacity);');
     expect(cssSource).not.toContain('--home-services-panel-bg:');
@@ -154,7 +152,7 @@ describe('home services feature alignment guardrail', () => {
     expect(componentSource).toContain('holdZone: 0.34');
     expect(componentSource).toContain('secondary: Object.freeze([248, 145, 122])');
     expect(componentSource).toContain('secondary: Object.freeze([255, 205, 118])');
-    expect(componentSource).toContain("className: 'service-native-btn is-outline is-tone-white home-services-feature-btn'");
+    expect(componentSource).toContain("className: 'service-native-btn is-tone-atlantean home-services-feature-btn'");
     expect(componentSource).toContain('className="home-services-feature-shell is-preview-white-cards"');
     expect(componentSource).toContain('className="home-services-feature-stage"');
     expect(componentSource).toContain('className="home-services-feature-stage-bg"');

@@ -415,7 +415,7 @@ function ActionLink({ action, resolveTo }) {
     : action.href;
   const isExternal = isExternalLinkHref(target);
   const sharedProps = {
-    className: 'service-native-btn is-outline is-tone-white home-services-feature-btn',
+    className: 'service-native-btn is-tone-atlantean home-services-feature-btn',
     target: action.openInNewWindow ? '_blank' : undefined,
     rel: action.openInNewWindow ? 'noreferrer noopener' : undefined,
   };
