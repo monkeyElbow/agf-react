@@ -65,7 +65,7 @@ describe('HomePage columns visibility', () => {
     const homePage = container.querySelector('.home-native-page');
 
     expect(screen.getByRole('heading', { name: /What you do here matters/i })).toBeTruthy();
-    expect(screen.getByText('assets under management')).toBeTruthy();
+    expect(screen.getByText('ministries served by loans')).toBeTruthy();
     expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
     expect(heroBlock).toBeTruthy();
     expect(homePage?.className).toContain('is-home-hero-temporarily-hidden');

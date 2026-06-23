@@ -896,9 +896,8 @@
 .home-services-feature-shell {
   --home-services-intro-top-space: clamp(6rem, 13vw, 12.5rem);
   --home-services-intro-block-gap: clamp(0.7rem, 1.25vw, 1.125rem);
-  --home-services-intro-cue-offset: clamp(0.82rem, 2.05vw, 1.8rem);
-  --home-services-intro-bottom-padding: clamp(2.05rem, 3.7vw, 3.05rem);
-  --home-services-intro-shell-gap: clamp(2.2rem, 4.2vw, 3.9rem);
+  --home-services-intro-bottom-padding: clamp(0.8rem, 1.9vw, 1.35rem);
+  --home-services-intro-shell-gap: clamp(1rem, 1.9vw, 1.55rem);
   --home-services-panel-gap: clamp(0.675rem, 1.1vw, 1.125rem);
   width: 100%;
   display: grid;
@@ -908,7 +907,7 @@
 
 .home-services-feature-shell.is-preview-white-cards {
   --home-services-preview-bg-lift: calc((var(--home-services-intro-bottom-padding) + var(--home-services-intro-shell-gap)) * 0.32);
-  --home-services-panel-gap: clamp(0.34rem, 0.72vw, 0.58rem);
+  --home-services-panel-gap: clamp(0.16rem, 0.4vw, 0.34rem);
   --home-services-preview-surface: #ffffff;
   --home-services-preview-sheen: none;
 }
@@ -942,21 +941,21 @@
 .home-services-feature-heading {
   color: var(--ag-color-atlantean-dark);
   font-family: var(--ag-font-heading);
-  font-size: clamp(3.2rem, 8vw, 6.6rem);
+  font-size: clamp(2.2rem, 6.1vw, 5.9rem);
   font-weight: 800;
   line-height: 0.92;
   letter-spacing: -0.05em;
   text-align: center;
-  white-space: normal;
+  white-space: nowrap;
   margin: 0;
 }
 
 .home-services-feature-heading-line {
-  display: block;
+  display: inline-block;
 }
 
 .home-services-feature-heading-line + .home-services-feature-heading-line {
-  margin-top: 0.06em;
+  margin-left: 0.18em;
 }
 
 .home-services-feature-heading-text {
@@ -987,42 +986,6 @@
   white-space: nowrap;
 }
 
-.home-services-feature-scroll-cue {
-  color: rgba(65, 64, 66, 0.68);
-  pointer-events: none;
-  margin-top: var(--home-services-intro-cue-offset);
-}
-
-.home-services-feature-scroll-cue-mark {
-  display: block;
-  position: relative;
-  width: clamp(1.6rem, 2.2vw, 2.2rem);
-  height: clamp(1rem, 1.6vw, 1.45rem);
-}
-
-.home-services-feature-scroll-cue-mark::before,
-.home-services-feature-scroll-cue-mark::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  width: 50%;
-  height: 1.5px;
-  border-radius: 999px;
-  background: currentColor;
-}
-
-.home-services-feature-scroll-cue-mark::before {
-  right: 50%;
-  transform-origin: right center;
-  transform: rotate(36deg);
-}
-
-.home-services-feature-scroll-cue-mark::after {
-  left: 50%;
-  transform-origin: left center;
-  transform: rotate(-36deg);
-}
-
 .home-native-page.is-home-hero-temporarily-hidden .home-services-feature-intro {
   min-height: 44vh;
   display: grid;
@@ -1046,7 +1009,7 @@
   width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-gutter) * 2)));
   margin: 0 auto;
   gap: var(--home-services-panel-gap);
-  padding: 0 clamp(0.7rem, 1.5vw, 1.1rem) clamp(3.45rem, 5.8vw, 4.7rem);
+  padding: 0 clamp(0.55rem, 1.2vw, 0.9rem) clamp(3rem, 5vw, 4rem);
   box-sizing: border-box;
   overflow: visible;
   perspective: 1800px;
@@ -1595,16 +1558,16 @@ p.home-services-feature-panel-body {
 
 .home-impact-story {
   --home-impact-story-surface:
-    radial-gradient(circle at 84% 14%, rgba(4, 70, 90, 0.96) 0%, rgba(5, 89, 113, 0.84) 22%, rgba(8, 116, 143, 0.4) 48%, rgba(8, 116, 143, 0) 76%),
-    linear-gradient(146deg, #028ea8 0%, #08a7bc 54%, #14b7c6 100%);
+    radial-gradient(circle at 12% 8%, rgba(0, 56, 81, 0.98) 0%, rgba(0, 56, 81, 0.92) 24%, rgba(0, 92, 123, 0.54) 56%, rgba(0, 92, 123, 0) 82%),
+    linear-gradient(146deg, #036c93 0%, #0899b5 52%, #17b3c7 100%);
   --home-impact-story-sheen:
-    radial-gradient(circle at 80% 78%, rgba(255, 255, 255, 0.05), transparent 28%),
-    radial-gradient(circle at 82% 18%, rgba(4, 70, 90, 0.24), transparent 42%);
-  --home-impact-story-base-rgb: 0, 138, 171;
-  --home-impact-story-secondary-rgb: 94, 218, 227;
-  --home-impact-story-light-rgb: 216, 251, 255;
-  --home-impact-story-dark-rgb: 0, 95, 118;
-  --home-impact-story-accent-rgb: 239, 254, 255;
+    radial-gradient(circle at 74% 80%, rgba(255, 255, 255, 0.05), transparent 28%),
+    radial-gradient(circle at 14% 10%, rgba(0, 56, 81, 0.26), transparent 46%);
+  --home-impact-story-base-rgb: 6, 169, 194;
+  --home-impact-story-secondary-rgb: 36, 201, 217;
+  --home-impact-story-light-rgb: 190, 243, 247;
+  --home-impact-story-dark-rgb: 0, 56, 81;
+  --home-impact-story-accent-rgb: 232, 251, 255;
   --home-impact-story-next-base-rgb: var(--home-impact-story-base-rgb);
   --home-impact-story-next-secondary-rgb: var(--home-impact-story-secondary-rgb);
   --home-impact-story-next-light-rgb: var(--home-impact-story-light-rgb);
@@ -1649,12 +1612,12 @@ p.home-services-feature-panel-body {
   overflow: hidden;
   overflow: clip;
   background:
-    radial-gradient(circle at 84% 14%, rgba(4, 70, 90, 0.96) 0%, rgba(5, 89, 113, 0.84) 22%, rgba(8, 116, 143, 0.4) 48%, rgba(8, 116, 143, 0.14) 60%, rgba(8, 116, 143, 0) 76%),
+    radial-gradient(circle at 12% 8%, rgba(0, 56, 81, 0.98) 0%, rgba(0, 56, 81, 0.92) 24%, rgba(0, 92, 123, 0.56) 56%, rgba(0, 92, 123, 0.12) 70%, rgba(0, 92, 123, 0) 82%),
     linear-gradient(
       146deg,
-      rgba(2, 142, 168, 0.996) 0%,
-      rgba(8, 167, 188, 0.994) 54%,
-      rgba(20, 183, 198, 0.996) 100%
+      rgba(3, 108, 147, 0.996) 0%,
+      rgba(8, 153, 181, 0.994) 52%,
+      rgba(23, 179, 199, 0.996) 100%
     );
 }
 
@@ -1670,59 +1633,55 @@ p.home-services-feature-panel-body {
 .home-impact-story-surface::before {
   background:
     radial-gradient(
-      ellipse var(--home-impact-story-light-width) var(--home-impact-story-light-height) at var(--home-impact-story-light-x) var(--home-impact-story-light-y),
-      rgba(var(--home-impact-story-light-rgb), 0.18) 0%,
-      rgba(var(--home-impact-story-light-rgb), 0.08) 26%,
-      rgba(var(--home-impact-story-light-rgb), 0) 66%
+      ellipse 96% 88% at 12% 8%,
+      rgba(var(--home-impact-story-dark-rgb), 0.98) 0%,
+      rgba(var(--home-impact-story-dark-rgb), 0.84) 24%,
+      rgba(var(--home-impact-story-dark-rgb), 0.34) 56%,
+      rgba(var(--home-impact-story-dark-rgb), 0) 82%
     ),
     radial-gradient(
-      ellipse var(--home-impact-story-secondary-width) var(--home-impact-story-secondary-height) at var(--home-impact-story-secondary-x) var(--home-impact-story-secondary-y),
-      rgba(var(--home-impact-story-secondary-rgb), 0.12) 0%,
-      rgba(var(--home-impact-story-secondary-rgb), 0.05) 32%,
-      rgba(var(--home-impact-story-secondary-rgb), 0) 74%
+      ellipse 72% 64% at 84% 86%,
+      rgba(var(--home-impact-story-secondary-rgb), 0.22) 0%,
+      rgba(var(--home-impact-story-secondary-rgb), 0.1) 34%,
+      rgba(var(--home-impact-story-secondary-rgb), 0) 76%
     ),
     radial-gradient(
-      ellipse var(--home-impact-story-base-width) var(--home-impact-story-base-height) at var(--home-impact-story-base-x) var(--home-impact-story-base-y),
-      rgba(var(--home-impact-story-base-rgb), 0.12) 0%,
-      rgba(var(--home-impact-story-dark-rgb), 0.14) 48%,
-      rgba(var(--home-impact-story-dark-rgb), 0) 100%
+      ellipse 126% 118% at 62% 108%,
+      rgba(var(--home-impact-story-base-rgb), 0.28) 0%,
+      rgba(var(--home-impact-story-base-rgb), 0.18) 38%,
+      rgba(var(--home-impact-story-base-rgb), 0.04) 72%,
+      rgba(var(--home-impact-story-base-rgb), 0) 100%
     ),
     linear-gradient(
-      var(--home-impact-story-angle),
-      rgba(var(--home-impact-story-accent-rgb), 0.1) 0%,
-      rgba(255, 255, 255, 0) 38%,
-      rgba(var(--home-impact-story-base-rgb), 0.08) 100%
+      146deg,
+      rgba(var(--home-impact-story-dark-rgb), 0.9) 0%,
+      rgba(var(--home-impact-story-base-rgb), 0.72) 42%,
+      rgba(var(--home-impact-story-secondary-rgb), 0.86) 100%
     );
-  opacity: calc(1 - (var(--home-impact-story-palette-handoff) * 0.88));
+  opacity: 1;
 }
 
 .home-impact-story-surface::after {
   background:
     radial-gradient(
-      ellipse var(--home-impact-story-next-light-width) var(--home-impact-story-next-light-height) at var(--home-impact-story-next-light-x) var(--home-impact-story-next-light-y),
+      ellipse 56% 48% at 74% 26%,
       rgba(var(--home-impact-story-next-light-rgb), 0.18) 0%,
-      rgba(var(--home-impact-story-next-light-rgb), 0.08) 24%,
-      rgba(var(--home-impact-story-next-light-rgb), 0) 64%
+      rgba(var(--home-impact-story-next-light-rgb), 0.08) 28%,
+      rgba(var(--home-impact-story-next-light-rgb), 0) 72%
     ),
     radial-gradient(
-      ellipse var(--home-impact-story-next-secondary-width) var(--home-impact-story-next-secondary-height) at var(--home-impact-story-next-secondary-x) var(--home-impact-story-next-secondary-y),
-      rgba(var(--home-impact-story-next-secondary-rgb), 0.1) 0%,
-      rgba(var(--home-impact-story-next-secondary-rgb), 0.04) 28%,
-      rgba(var(--home-impact-story-next-secondary-rgb), 0) 70%
+      ellipse 48% 42% at 26% 70%,
+      rgba(var(--home-impact-story-next-secondary-rgb), 0.08) 0%,
+      rgba(var(--home-impact-story-next-secondary-rgb), 0.03) 34%,
+      rgba(var(--home-impact-story-next-secondary-rgb), 0) 78%
     ),
     radial-gradient(
-      ellipse var(--home-impact-story-next-base-width) var(--home-impact-story-next-base-height) at var(--home-impact-story-next-base-x) var(--home-impact-story-next-base-y),
-      rgba(var(--home-impact-story-next-base-rgb), 0.1) 0%,
-      rgba(var(--home-impact-story-next-dark-rgb), 0.12) 48%,
-      rgba(var(--home-impact-story-next-dark-rgb), 0) 100%
-    ),
-    linear-gradient(
-      var(--home-impact-story-next-angle),
+      ellipse 92% 84% at 50% 52%,
       rgba(var(--home-impact-story-next-accent-rgb), 0.08) 0%,
-      rgba(255, 255, 255, 0) 34%,
-      rgba(var(--home-impact-story-next-base-rgb), 0.1) 100%
+      rgba(var(--home-impact-story-next-accent-rgb), 0.02) 42%,
+      rgba(var(--home-impact-story-next-accent-rgb), 0) 82%
     );
-  opacity: calc(var(--home-impact-story-palette-handoff) * 0.84);
+  opacity: 1;
 }
 
 .home-impact-story .ag-panel-rail {
@@ -1852,7 +1811,7 @@ p.home-services-feature-panel-body {
   display: grid;
   justify-items: center;
   align-content: start;
-  padding-top: clamp(12rem, 19vh, 14.5rem);
+  padding-top: clamp(16rem, 28vh, 20rem);
   pointer-events: none;
 }
 
@@ -1915,7 +1874,7 @@ p.home-services-feature-panel-body {
 .home-impact-story-body {
   position: relative;
   z-index: 1;
-  margin: clamp(1.35rem, 2.9vh, 1.95rem) auto 0;
+  margin: clamp(2.8rem, 5.2vh, 3.5rem) auto 0;
   max-width: 45rem;
   color: rgba(255, 255, 255, 0.84);
   font-size: clamp(1.4rem, 2.26vw, 1.92rem);
@@ -1927,6 +1886,10 @@ p.home-services-feature-panel-body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   font-synthesis: none;
+}
+
+.home-impact-story-body-break-desktop {
+  display: none;
 }
 
 .home-impact-story-scroll-cue {
@@ -1977,11 +1940,11 @@ p.home-services-feature-panel-body {
 
 .home-impact-story-proof-intro {
   margin: 0;
-  max-width: 16ch;
+  max-width: 18ch;
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
   font-family: var(--ag-font-heading);
-  font-size: clamp(4.6rem, 9.8vw, 8.8rem);
+  font-size: clamp(5.8rem, 12.4vw, 11.1rem);
   font-weight: 700;
   line-height: 0.92;
   letter-spacing: clamp(-2.8px, -0.26vw, -0.9px);
@@ -1991,6 +1954,20 @@ p.home-services-feature-panel-body {
 
 .home-impact-story-static-proof .home-impact-story-proof-cta-block {
   margin-top: clamp(0.75rem, 1.8vh, 1.35rem);
+}
+
+@media (min-width: 1040px) {
+  .home-impact-story-proof-intro {
+    max-width: 14ch;
+    font-size: 72px;
+    display: inline-block;
+    transform: scale(1.26);
+    transform-origin: center center;
+  }
+
+  .home-impact-story-body-break-desktop {
+    display: block;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2057,13 +2034,13 @@ p.home-services-feature-panel-body {
 }
 
 .home-impact-story-metric-frame {
-  width: min(100%, 43rem);
+  width: min(100%, 52rem);
   margin-inline: auto;
   padding:
-    clamp(1.45rem, 2.6vh, 2.05rem)
-    clamp(1.1rem, 3vw, 2rem)
-    clamp(1.3rem, 2.4vh, 1.7rem);
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
+    clamp(2.7rem, 4.9vh, 3.65rem)
+    clamp(2.2rem, 5.6vw, 4.2rem)
+    clamp(2.45rem, 4.5vh, 3.1rem);
+  border: 2px solid var(--ag-color-sandstone);
   border-radius: clamp(1.35rem, 2.4vw, 1.85rem);
   background: transparent;
   box-shadow: none;
@@ -2125,7 +2102,7 @@ p.home-services-feature-panel-body {
 }
 
 .home-impact-story-copy {
-  margin-top: clamp(7.4rem, 12vh, 9rem);
+  margin-top: clamp(10.2rem, 16vh, 12.2rem);
   min-height: auto;
   padding-top: 0;
 }

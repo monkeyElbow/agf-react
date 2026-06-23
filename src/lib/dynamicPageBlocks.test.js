@@ -1010,8 +1010,8 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         to: '/about-us/impact',
       },
       metrics: [
-        { value: '$12 billion', label: 'assets under management', tone: 'mango' },
-        { value: '38,654', label: '(and growing) clients', tone: 'atlantean' },
+        { value: '1,400+', label: 'ministries served by loans', tone: 'sandstone' },
+        { value: '29,000+', label: 'of minister retirements planned', tone: 'sandstone' },
         { value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone' },
       ],
     });

@@ -84,6 +84,7 @@ describe('HomeServicesFeatureAnimation', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'Bold, smart steps. Together.' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Bold, smart steps. Together.' })).toBeTruthy();
     expect(screen.getByText('Bold, smart steps.')).toBeTruthy();
     expect(container.querySelector('.home-services-feature-heading-text.is-impact-mango-gradient')?.textContent).toBe('Together.');
     expect(screen.queryByText("Let's connect your faith & finances.")).toBeNull();
@@ -104,6 +105,8 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(screen.getByRole('heading', { name: 'Investments' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Legacy Giving' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Insurance' })).toBeTruthy();
+    expect(panels[0]?.getAttribute('aria-labelledby')).toContain('-panel-title-0');
+    expect(panels[0]?.getAttribute('aria-describedby')).toContain('-panel-body-0');
     expect(screen.getByRole('link', { name: 'Explore options' }).getAttribute('href')).toBe('/services/loans');
     expect(screen.getByRole('link', { name: 'Learn & strategize' }).getAttribute('href')).toBe('/services/legacy-giving');
     expect(screen.getByRole('link', { name: 'Start here' }).getAttribute('href')).toBe('/services/insurance');

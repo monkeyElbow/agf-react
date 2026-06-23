@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useId, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { isExternalLinkHref } from '../lib/dynamicPageBlocks';
 
@@ -441,6 +441,8 @@ export default function HomeServicesFeatureAnimation({
   panels = [],
   resolveTo = (value) => value,
 }) {
+  const headingId = useId();
+  const subheadId = useId();
   const shellRef = useRef(null);
   const normalizedPanels = useMemo(() => normalizePanels(panels), [panels]);
 
@@ -624,18 +626,24 @@ export default function HomeServicesFeatureAnimation({
   }
 
   return (
-    <div ref={shellRef} className="home-services-feature-shell is-preview-white-cards">
+    <section
+      ref={shellRef}
+      className="home-services-feature-shell is-preview-white-cards"
+      aria-labelledby={headline ? headingId : undefined}
+      aria-describedby={subhead ? subheadId : undefined}
+    >
       {headline || subhead ? (
         <div className="home-services-feature-intro">
           {headline ? (
-            <h2 className="home-services-feature-heading" aria-label={String(headline).replace(/\s*\n\s*/g, ' ').trim()}>
+            <h2
+              id={headingId}
+              className="home-services-feature-heading"
+              aria-label={String(headline).replace(/\s*\n\s*/g, ' ').trim()}
+            >
               {renderHeadlineLines(headline)}
             </h2>
           ) : null}
-          {subhead ? <p className="home-services-feature-subhead">{subhead}</p> : null}
-          <div className="home-services-feature-scroll-cue" aria-hidden="true">
-            <span className="home-services-feature-scroll-cue-mark" />
-          </div>
+          {subhead ? <p id={subheadId} className="home-services-feature-subhead">{subhead}</p> : null}
         </div>
       ) : null}
       <div className="home-services-feature-stage">
@@ -646,14 +654,16 @@ export default function HomeServicesFeatureAnimation({
               key={`${panel.title}-${index}`}
               className={`home-services-feature-panel is-tone-${panel.tone} ${index % 2 === 0 ? 'is-left' : 'is-right'}`}
               data-proof-index={index}
+              aria-labelledby={`${headingId}-panel-title-${index}`}
+              aria-describedby={`${headingId}-panel-body-${index}`}
             >
               <div className="home-services-feature-panel-frame">
                 <span className="home-services-feature-panel-gradient-layer is-current" aria-hidden="true" />
                 <span className="home-services-feature-panel-gradient-layer is-next" aria-hidden="true" />
                 <div className="home-services-feature-panel-content">
                   <div className="home-services-feature-panel-copy">
-                    <h3 className="home-services-feature-panel-title">{panel.title}</h3>
-                    <p className="home-services-feature-panel-body">{panel.body}</p>
+                    <h3 id={`${headingId}-panel-title-${index}`} className="home-services-feature-panel-title">{panel.title}</h3>
+                    <p id={`${headingId}-panel-body-${index}`} className="home-services-feature-panel-body">{panel.body}</p>
                   </div>
                   {panel.action ? (
                     <div className="home-services-feature-panel-action">
@@ -666,6 +676,6 @@ export default function HomeServicesFeatureAnimation({
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -81,8 +81,14 @@ function setEnhancedShellProgress(container, progress) {
   return shell;
 }
 
-function getMetricValueNode(metricLabel) {
-  return screen.getByText(metricLabel).closest('.home-impact-story-metric')?.querySelector('.home-impact-story-metric-value');
+function getVisualStage(container) {
+  const stage = container.querySelector('.home-impact-story-stage');
+  expect(stage).toBeTruthy();
+  return stage;
+}
+
+function getMetricValueNode(root, metricLabel) {
+  return within(root).getByText(metricLabel).closest('.home-impact-story-metric')?.querySelector('.home-impact-story-metric-value');
 }
 
 function getTranslateY(node) {
@@ -116,7 +122,7 @@ describe('HomeImpactStoryFeature', () => {
     expect(container.querySelector('.home-impact-story-shell')).toBeNull();
     expect(screen.getByRole('heading', { name: /What you do here matters/i })).toBeTruthy();
     expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
-    expect(screen.getByText('Because your mission is ours too.')).toBeTruthy();
+    expect(screen.getByText('Because your mission is ours, too.')).toBeTruthy();
     expect(staticCopy?.querySelector('a')).toBeNull();
     expect(staticProof?.querySelector('a')).toBeNull();
     expect(screen.queryByRole('link', { name: "See what we're doing" })).toBeNull();
@@ -140,16 +146,28 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(1200);
     });
 
+    const readerSummary = container.querySelector('.home-impact-story-reader-summary');
     const proof = container.querySelector('.home-impact-story-proof');
     const proofCtaBlock = container.querySelector('.home-impact-story-proof-cta-block');
+    const stage = container.querySelector('.home-impact-story-stage');
+    const stageQueries = within(getVisualStage(container));
 
-    expect(screen.getByText('Because your mission is ours too.')).toBeTruthy();
-    expect(screen.queryByLabelText('$450 million')).toBeNull();
-    expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
+    expect(readerSummary).toBeTruthy();
+    expect(readerSummary?.textContent).toContain('What you do here matters.');
+    expect(readerSummary?.textContent).toContain('Your financial decisions can strengthen more than just your future.');
+    expect(readerSummary?.textContent).toContain('1,400+');
+    expect(readerSummary?.textContent).toContain('29,000+');
+    expect(readerSummary?.textContent).toContain('$450 million');
+    expect(readerSummary?.textContent).toContain('Because your mission is ours, too.');
+    expect(stage?.getAttribute('aria-hidden')).toBe('true');
+    expect(stageQueries.getByText('Because your mission is ours, too.')).toBeTruthy();
+    expect(stageQueries.queryByLabelText('$450 million')).toBeNull();
+    expect(stageQueries.queryByText('distributed to ministries through AG Foundation')).toBeNull();
     expect(proof?.getAttribute('style')).toContain('opacity: 0;');
     expect(proofCtaBlock?.getAttribute('style')).toContain('opacity: 1;');
-    expect(screen.queryByText('assets under management')).toBeNull();
-    expect(screen.queryByText('(and growing) clients')).toBeNull();
+    expect(stageQueries.queryByText('ministries served by loans')).toBeNull();
+    expect(stageQueries.queryByText('of minister retirements planned')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Because your mission is ours, too.' })).toBeNull();
   });
 
   it('measures the pinned story on mount before the first scroll event so the correct metric is ready immediately', () => {
@@ -192,10 +210,11 @@ describe('HomeImpactStoryFeature', () => {
     });
 
     const shell = container.querySelector('.home-impact-story-shell');
+    const stageQueries = within(getVisualStage(container));
     expect(shell).toBeTruthy();
-    expect(screen.getByText('Because your mission is ours too.')).toBeTruthy();
-    expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
-    expect(screen.queryByText('assets under management')).toBeNull();
+    expect(stageQueries.getByText('Because your mission is ours, too.')).toBeTruthy();
+    expect(stageQueries.queryByText('distributed to ministries through AG Foundation')).toBeNull();
+    expect(stageQueries.queryByText('ministries served by loans')).toBeNull();
   });
 
   it('starts the opening copy slightly above neutral center in the desktop animated path', () => {
@@ -282,7 +301,7 @@ describe('HomeImpactStoryFeature', () => {
     });
 
     const copy = container.querySelector('.home-impact-story-copy');
-    const firstMetric = screen.getByText('assets under management').closest('.home-impact-story-metric');
+    const firstMetric = within(getVisualStage(container)).getByText('ministries served by loans').closest('.home-impact-story-metric');
     const actorStage = container.querySelector('.home-impact-story-metric-stage');
 
     expect(copy?.getAttribute('style')).toContain('opacity:');
@@ -300,7 +319,7 @@ describe('HomeImpactStoryFeature', () => {
     });
 
     const proof = container.querySelector('.home-impact-story-proof');
-    const firstMetric = screen.getByText('assets under management').closest('.home-impact-story-metric');
+    const firstMetric = within(getVisualStage(container)).getByText('ministries served by loans').closest('.home-impact-story-metric');
     const firstActor = firstMetric?.closest('.home-impact-story-metric-actor');
 
     expect(proof?.getAttribute('style')).not.toContain('opacity: 0;');
@@ -322,7 +341,8 @@ describe('HomeImpactStoryFeature', () => {
     const copyLayer = container.querySelector('.home-impact-story-copy-layer');
     const proofLayer = container.querySelector('.home-impact-story-proof-layer');
     const headingLock = container.querySelector('.home-impact-story-heading-lock');
-    const thirdMetric = screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric');
+    const stageQueries = within(getVisualStage(container));
+    const thirdMetric = stageQueries.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric');
 
     expect(metricsRoot?.getAttribute('data-animated-layout')).toBe('actor-sequence');
     expect(metricsRoot?.getAttribute('data-stage-center')).toBe('stable');
@@ -330,8 +350,8 @@ describe('HomeImpactStoryFeature', () => {
     expect(proofLayer?.getAttribute('data-stage-layer')).toBe('proof');
     expect(headingLock).toBeTruthy();
     expect(proof?.getAttribute('style')).not.toContain('transform');
-    expect(screen.queryByText('assets under management')).toBeNull();
-    expect(screen.queryByText('(and growing) clients')).toBeNull();
+    expect(stageQueries.queryByText('ministries served by loans')).toBeNull();
+    expect(stageQueries.queryByText('of minister retirements planned')).toBeNull();
     expect(thirdMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-actor-role')).toBe('incoming');
     expect(thirdMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
     expect(metricsRoot?.querySelectorAll('.home-impact-story-metric-actor')).toHaveLength(1);
@@ -347,14 +367,15 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(100);
     });
 
-    const firstMetric = screen.getByText('assets under management').closest('.home-impact-story-metric');
-    const secondMetric = screen.getByText('(and growing) clients').closest('.home-impact-story-metric');
+    const stageQueries = within(getVisualStage(container));
+    const firstMetric = stageQueries.getByText('ministries served by loans').closest('.home-impact-story-metric');
+    const secondMetric = stageQueries.getByText('of minister retirements planned').closest('.home-impact-story-metric');
     const secondActor = secondMetric?.closest('.home-impact-story-metric-actor');
 
     expect(firstMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('exiting');
     expect(secondActor?.getAttribute('data-motion-state')).toBe('entering');
     expect(Number.parseFloat(secondActor?.style.opacity || '0')).toBeLessThanOrEqual(0.05);
-    expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
+    expect(stageQueries.queryByText('distributed to ministries through AG Foundation')).toBeNull();
   });
 
   it('fades the outgoing metric before it reaches the heading zone', () => {
@@ -366,7 +387,7 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(100);
     });
 
-    const firstMetric = screen.getByText('assets under management').closest('.home-impact-story-metric');
+    const firstMetric = within(getVisualStage(container)).getByText('ministries served by loans').closest('.home-impact-story-metric');
     const firstActor = firstMetric?.closest('.home-impact-story-metric-actor');
     const firstActorOpacity = Number.parseFloat(firstActor?.style.opacity || '0');
     const firstActorShift = getTranslateY(firstActor);
@@ -399,12 +420,13 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(100);
     });
 
-    const secondMetric = screen.getByText('(and growing) clients').closest('.home-impact-story-metric');
+    const secondMetric = within(getVisualStage(container)).getByText('of minister retirements planned').closest('.home-impact-story-metric');
     expect(secondMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
   });
 
   it('counts metric values with scroll progress inside each center window', () => {
     const { container } = renderFeatureBlock();
+    const stage = getVisualStage(container);
     setEnhancedShellProgress(container, 0.31);
 
     act(() => {
@@ -412,10 +434,10 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(50);
     });
 
-    const firstValue = getMetricValueNode('assets under management');
-    expect(firstValue?.textContent).not.toBe('$0 billion');
-    expect(firstValue?.textContent).not.toBe('$12 billion');
-    expect(screen.queryByText('(and growing) clients')).toBeNull();
+    const firstValue = getMetricValueNode(stage, 'ministries served by loans');
+    expect(firstValue?.textContent).not.toBe('0+');
+    expect(firstValue?.textContent).not.toBe('1,400+');
+    expect(within(stage).queryByText('of minister retirements planned')).toBeNull();
 
     setEnhancedShellProgress(container, 0.42);
     act(() => {
@@ -423,8 +445,8 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(50);
     });
 
-    const firstValueLater = getMetricValueNode('assets under management');
-    expect(firstValueLater?.textContent).toBe('$12 billion');
+    const firstValueLater = getMetricValueNode(stage, 'ministries served by loans');
+    expect(firstValueLater?.textContent).toBe('1,400+');
 
     setEnhancedShellProgress(container, 0.52);
     act(() => {
@@ -432,9 +454,9 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(50);
     });
 
-    const secondValue = getMetricValueNode('(and growing) clients');
-    expect(secondValue?.textContent).not.toBe('0');
-    expect(secondValue?.textContent).not.toBe('38,654');
+    const secondValue = getMetricValueNode(stage, 'of minister retirements planned');
+    expect(secondValue?.textContent).not.toBe('0+');
+    expect(secondValue?.textContent).not.toBe('29,000+');
   });
 
   it('keeps the final metric from completing too early before the section release begins', () => {
@@ -446,7 +468,7 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(100);
     });
 
-    const finalMetric = screen.getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric');
+    const finalMetric = within(getVisualStage(container)).getByText('distributed to ministries through AG Foundation').closest('.home-impact-story-metric');
     const proofCtaBlock = container.querySelector('.home-impact-story-proof-cta-block');
 
     expect(finalMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('holding');
@@ -465,13 +487,14 @@ describe('HomeImpactStoryFeature', () => {
     const copy = container.querySelector('.home-impact-story-copy');
     const proof = container.querySelector('.home-impact-story-proof');
     const proofCtaBlock = container.querySelector('.home-impact-story-proof-cta-block');
+    const stageQueries = within(getVisualStage(container));
 
     expect(copy?.querySelector('a')).toBeNull();
     expect(proof?.querySelector('a')).toBeNull();
     expect(screen.queryByRole('link', { name: "See what we're doing" })).toBeNull();
 
-    expect(screen.getByText('Because your mission is ours too.')).toBeTruthy();
-    expect(screen.queryByText('distributed to ministries through AG Foundation')).toBeNull();
+    expect(stageQueries.getByText('Because your mission is ours, too.')).toBeTruthy();
+    expect(stageQueries.queryByText('distributed to ministries through AG Foundation')).toBeNull();
     expect(proof?.getAttribute('style')).toContain('opacity: 0;');
     expect(proofCtaBlock?.getAttribute('style')).toContain('opacity: 1;');
   });
@@ -492,10 +515,12 @@ describe('HomeImpactStoryFeature', () => {
     expect(cssSource).toContain('.home-impact-story-proof-intro {');
     expect(cssSource).toContain('color: #ffffff;');
     expect(cssSource).toContain('font-family: var(--ag-font-heading);');
-    expect(cssSource).toContain('max-width: 16ch;');
-    expect(cssSource).toContain('font-size: clamp(4.6rem, 9.8vw, 8.8rem);');
+    expect(cssSource).toContain('max-width: 18ch;');
+    expect(cssSource).toContain('font-size: clamp(5.8rem, 12.4vw, 11.1rem);');
     expect(cssSource).toContain('.home-impact-story-proof-cta-block {');
     expect(cssSource).toContain('.home-impact-story-proof-layer .home-impact-story-proof-cta-block {');
+    expect(cssSource).toContain('@media (min-width: 1040px) {');
+    expect(cssSource).toContain('transform: scale(1.26);');
     expect(cssSource).not.toContain('.home-impact-story-cta {');
   });
 
@@ -503,9 +528,9 @@ describe('HomeImpactStoryFeature', () => {
     const cssSource = readSource('../styles/home-native.css');
 
     expect(cssSource).toContain('.home-impact-story-metric-frame {');
-    expect(cssSource).toContain('width: min(100%, 43rem);');
+    expect(cssSource).toContain('width: min(100%, 52rem);');
     expect(cssSource).toContain('border-radius: clamp(1.35rem, 2.4vw, 1.85rem);');
-    expect(cssSource).toContain('border: 1.5px solid rgba(255, 255, 255, 0.22);');
+    expect(cssSource).toContain('border: 2px solid var(--ag-color-sandstone);');
     expect(cssSource).toContain('background: transparent;');
     expect(cssSource).toContain('box-shadow: none;');
     expect(cssSource).toContain('.home-native-impact .home-impact-story-metric-value {');
@@ -553,7 +578,7 @@ describe('HomeImpactStoryFeature', () => {
     expect(source).toContain('const HOME_IMPACT_STORY_END_PANEL_METRIC_CLEAR_LEAD = 0.012;');
     expect(source).toContain('const HOME_IMPACT_STORY_END_PANEL_LOCK_START = 0.985;');
     expect(source).toContain('const HOME_IMPACT_STORY_HEADING_EXIT_TRAVEL_PX = 118;');
-    expect(source).toContain("const HOME_IMPACT_STORY_ENDING_LINE = 'Because your mission is ours too.';");
+    expect(source).toContain("const HOME_IMPACT_STORY_ENDING_LINE = 'Because your mission is ours, too.';");
     expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_TRAVEL_PX = 192;');
     expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_FADE_CUTOFF = 0.48;');
     expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_OPACITY_EXPONENT = 0.82;');

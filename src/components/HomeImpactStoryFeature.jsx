@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 const HOME_IMPACT_STORY_PINNED_ENABLED = true;
 const HOME_IMPACT_STORY_MIN_WIDTH_PX = 1040;
@@ -35,7 +35,8 @@ const HOME_IMPACT_STORY_END_PANEL_METRIC_CLEAR_LEAD = 0.012;
 const HOME_IMPACT_STORY_END_PANEL_LOCK_START = 0.985;
 const HOME_IMPACT_STORY_HEADING_EXIT_TRAVEL_PX = 118;
 const HOME_IMPACT_STORY_END_PANEL_SHIFT_PX = 28;
-const HOME_IMPACT_STORY_ENDING_LINE = 'Because your mission is ours too.';
+const HOME_IMPACT_STORY_ENDING_LINE = 'Because your mission is ours, too.';
+const HOME_IMPACT_STORY_BODY_WITH_DESKTOP_BREAK = 'Your financial decisions can strengthen more than just your future.';
 const HOME_IMPACT_STORY_PALETTE_HANDOFF_CURVES = Object.freeze({
   start: 0.16,
   end: 0.78,
@@ -208,6 +209,19 @@ function resolveImpactStoryGradientProfile(key = '') {
     || HOME_IMPACT_STORY_GRADIENT_PROFILES.intro;
 }
 
+function resolveFixedImpactStoryPaletteState() {
+  const fixedPalette = resolveImpactStoryPalette('atlantean');
+  const fixedProfile = resolveImpactStoryGradientProfile('atlanteanMetric');
+
+  return {
+    current: fixedPalette,
+    next: fixedPalette,
+    currentProfile: fixedProfile,
+    nextProfile: fixedProfile,
+    handoff: 0,
+  };
+}
+
 function buildImpactStoryPaletteVars({ current, next, currentProfile, nextProfile, handoff }) {
   return {
     '--home-impact-story-base-rgb': current.base.join(', '),
@@ -376,6 +390,52 @@ function ImpactStoryEndingLine({ children = HOME_IMPACT_STORY_ENDING_LINE }) {
     >
       {children}
     </h2>
+  );
+}
+
+function ImpactStoryBody({ body }) {
+  if (!body) {
+    return null;
+  }
+
+  if (body === HOME_IMPACT_STORY_BODY_WITH_DESKTOP_BREAK) {
+    return (
+      <p className="home-impact-story-body">
+        Your financial decisions can strengthen
+        <br className="home-impact-story-body-break-desktop" />
+        {' '}
+        more than just your future.
+      </p>
+    );
+  }
+
+  return <p className="home-impact-story-body">{body}</p>;
+}
+
+function ImpactStoryAccessibleSummary({
+  headingId,
+  headline,
+  body,
+  metrics = [],
+  endingLine = HOME_IMPACT_STORY_ENDING_LINE,
+}) {
+  return (
+    <div className="sr-only home-impact-story-reader-summary">
+      {headline ? <h2 id={headingId}>{headline}</h2> : null}
+      {body ? <p>{body}</p> : null}
+      {metrics.length ? (
+        <ul>
+          {metrics.map((metric, index) => (
+            <li key={`impact-story-reader-${metric.value}-${metric.label}-${index}`}>
+              <span>{metric.value}</span>
+              {' '}
+              <span>{metric.label}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {endingLine ? <p>{endingLine}</p> : null}
+    </div>
   );
 }
 
@@ -585,8 +645,8 @@ export function HomeImpactStoryStaticContent({
   reveal = false,
 }) {
   const paletteVars = useMemo(
-    () => buildImpactStoryPaletteVars(resolveImpactStoryPaletteState(metrics, 0, false)),
-    [metrics],
+    () => buildImpactStoryPaletteVars(resolveFixedImpactStoryPaletteState()),
+    [],
   );
 
   return (
@@ -600,7 +660,7 @@ export function HomeImpactStoryStaticContent({
               highlightedWord={highlightedWord}
               className="home-impact-story-heading"
             />
-            {body ? <p className="home-impact-story-body">{body}</p> : null}
+            <ImpactStoryBody body={body} />
           </div>
           <div className={`home-impact-story-static-proof${reveal ? ' fade-up' : ''}`}>
             <ImpactStoryMetrics metrics={metrics} countUp={countUp} />
@@ -620,6 +680,7 @@ export default function HomeImpactStoryFeature({
   body,
   metrics = [],
 }) {
+  const headingId = useId();
   const shellRef = useRef(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(() => (
@@ -742,9 +803,7 @@ export default function HomeImpactStoryFeature({
   }
 
   const heldProgress = clamp(progress / HOME_IMPACT_STORY_RELEASE_START, 0, 1);
-  const paletteVars = buildImpactStoryPaletteVars(
-    resolveImpactStoryPaletteState(metrics, heldProgress, true),
-  );
+  const paletteVars = buildImpactStoryPaletteVars(resolveFixedImpactStoryPaletteState());
   const supportOpacity = 1 - clamp(
     (heldProgress - HOME_IMPACT_STORY_COPY_OPACITY_START) / HOME_IMPACT_STORY_COPY_OPACITY_DURATION,
     0,
@@ -787,7 +846,13 @@ export default function HomeImpactStoryFeature({
   const endPanelShift = (1 - endPanelOpacity) * HOME_IMPACT_STORY_END_PANEL_SHIFT_PX;
 
   return (
-    <div className="home-impact-story">
+    <section className="home-impact-story" aria-labelledby={headingId}>
+      <ImpactStoryAccessibleSummary
+        headingId={headingId}
+        headline={headline}
+        body={body}
+        metrics={metrics}
+      />
       <div className="home-impact-story-surface" style={paletteVars}>
         <div
           ref={shellRef}
@@ -807,7 +872,7 @@ export default function HomeImpactStoryFeature({
                   opacity: stageGlowOpacity,
                 }}
               />
-              <div className="home-impact-story-stage">
+              <div className="home-impact-story-stage" aria-hidden="true">
                 <div className="home-impact-story-copy-layer" data-stage-layer="copy">
                   <div className="home-impact-story-heading-lock">
                     <div
@@ -840,7 +905,7 @@ export default function HomeImpactStoryFeature({
                       transform: `translate3d(0, ${supportShift}px, 0)`,
                     }}
                   >
-                    {body ? <p className="home-impact-story-body">{body}</p> : null}
+                    <ImpactStoryBody body={body} />
                     <div className="home-impact-story-scroll-cue" aria-hidden="true">
                       <span className="home-impact-story-scroll-cue-mark" />
                     </div>
@@ -880,6 +945,6 @@ export default function HomeImpactStoryFeature({
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
