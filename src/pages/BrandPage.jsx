@@ -31,9 +31,9 @@ const BRAND_COLORS = [
   { id: 'sand', name: 'Sand', hex: '#F2EEEB', textOnSwatch: '#414042' },
   { id: 'sand-dark', name: 'Sand Dark', hex: '#DAD7D0', textOnSwatch: '#414042' },
   { id: 'melon', name: 'Melon', hex: '#F26660', textOnSwatch: '#FFFFFF' },
-  { id: 'melon-dark', name: 'Melon Dark', hex: '#E56F58', textOnSwatch: '#FFFFFF' },
+  { id: 'melon-dark', name: 'Melon Dark', hex: '#D8423C', textOnSwatch: '#FFFFFF' },
   { id: 'super-grey', name: 'Super Grey', hex: '#414042', textOnSwatch: '#FFFFFF' },
-  { id: 'super-grey-dark', name: 'Super Grey Dark', hex: '#636265', textOnSwatch: '#FFFFFF' },
+  { id: 'super-grey-dark', name: 'Super Grey Mid', hex: '#636265', textOnSwatch: '#FFFFFF' },
 ];
 
 function CopyIcon() {
