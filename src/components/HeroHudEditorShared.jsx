@@ -250,6 +250,7 @@ export function HeroInlineLiveEditor({
   activeLineKey = '',
   fontSize,
   lineHeight,
+  lineGap = 0,
   letterSpacing,
   placeholder = 'Type hero line text...',
   showPlaceholders = false,
@@ -264,6 +265,7 @@ export function HeroInlineLiveEditor({
   readOnly = false,
 }) {
   const normalizedLetterSpacing = normalizeHeroTitleLetterSpacingEm(letterSpacing);
+  const normalizedLineGap = Math.max(0, Math.min(0.4, Number(Number(lineGap || 0).toFixed(2)) || 0));
   const safeLines = Array.isArray(lines) ? lines : [];
   const {
     draftTexts,
@@ -345,6 +347,7 @@ export function HeroInlineLiveEditor({
         <div
           key={`hero-inline-${line.key || index + 1}`}
           className={`admin-front-hud-hero-live-line${index > 0 ? ' is-offset' : ''}`}
+          style={{ marginTop: index > 0 && normalizedLineGap > 0 ? `${normalizedLineGap}em` : undefined }}
         >
           {(() => {
             const LineTag = typeof resolveLineTagName === 'function'

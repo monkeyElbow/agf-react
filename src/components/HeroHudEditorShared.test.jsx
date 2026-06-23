@@ -140,6 +140,34 @@ describe('HeroInlineLiveEditor', () => {
     expect(input.style.letterSpacing).toBe('-0.08em');
   });
 
+  it('applies line gap to stacked hero preview lines', () => {
+    const { container } = render(createElement(HeroInlineLiveEditor, {
+      lines: [
+        {
+          key: 'line1',
+          label: 'Line 1',
+          text: 'Impressive coverage',
+          className: 'line1',
+          highlights: [],
+        },
+        {
+          key: 'line2',
+          label: 'Line 2',
+          text: 'Built for churches & ministries.',
+          className: 'line2',
+          highlights: [],
+        },
+      ],
+      activeLineKey: 'line2',
+      lineHeight: 0.9,
+      lineGap: 0.08,
+    }));
+
+    const stackedLines = container.querySelectorAll('.admin-front-hud-hero-live-line');
+    expect(stackedLines).toHaveLength(2);
+    expect(stackedLines[1].style.marginTop).toBe('0.08em');
+  });
+
   it('lets a line-specific font size override the shared hero font size for preview and input sync', () => {
     render(createElement(HeroInlineLiveEditor, {
       lines: [{

@@ -702,14 +702,15 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    const heroHeading = screen.getByRole('heading', { name: 'Low premiums,' });
-    const heroHighlightHeading = screen.getByRole('heading', { name: 'impressive coverage.' });
+    const heroHeading = screen.getByRole('heading', { name: 'Impressive coverage' });
+    const heroHighlightHeading = screen.getByText('churches & ministries').closest('h1');
     const introHeading = screen.getByRole('heading', { name: 'Protect what matters most.' });
     const missionAssureHeading = screen.getByRole('heading', { name: 'Full coverage for mission trips, retreats, and everything in between.' });
     const quoteFormHeading = screen.getByRole('heading', { name: 'What coverage is best for your ministry?' });
 
     expect(heroHeading.closest('section')?.getAttribute('data-block-id')).toBe('hero');
-    expect(heroHighlightHeading.closest('section')?.getAttribute('data-block-id')).toBe('hero');
+    expect(heroHighlightHeading?.textContent).toBe('Built for churches & ministries.');
+    expect(heroHighlightHeading?.closest('section')?.getAttribute('data-block-id')).toBe('hero');
     expect(introHeading.closest('section')?.getAttribute('data-block-id')).toBe('intro');
     expect(missionAssureHeading.closest('section')?.getAttribute('data-block-id')).toBe('mission_assure');
     expect(quoteFormHeading.closest('section')?.className).toContain('insurance-native-cta');

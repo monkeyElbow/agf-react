@@ -52,7 +52,7 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(4) {');
     expect(cssSource).toContain('--insurance-coverage-card-cap-bg: linear-gradient(135deg, #4f5053 0%, var(--ag-color-super-grey) 100%);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure {');
-    expect(cssSource).toContain('background: linear-gradient(145deg, #f5f0e7 0%, #e8dfd1 58%, #f7f3ed 100%);');
+    expect(cssSource).toContain('background: linear-gradient(145deg, var(--ag-color-sand) 0%, var(--ag-color-sandstone) 100%);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-inner {');
     expect(cssSource).toContain('grid-template-columns: minmax(220px, 34%) minmax(0, 1fr);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-media {');

@@ -14927,7 +14927,7 @@
 }
 
 .native-info-page--insurance .insurance-native-mission-assure {
-  background: linear-gradient(145deg, #f5f0e7 0%, #e8dfd1 58%, #f7f3ed 100%);
+  background: linear-gradient(145deg, var(--ag-color-sand) 0%, var(--ag-color-sandstone) 100%);
 }
 
 .native-info-page--insurance .insurance-native-mission-assure > .ag-panel-rail {
