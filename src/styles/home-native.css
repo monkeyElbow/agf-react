@@ -896,8 +896,8 @@
 .home-services-feature-shell {
   --home-services-intro-top-space: clamp(6rem, 13vw, 12.5rem);
   --home-services-intro-block-gap: clamp(0.7rem, 1.25vw, 1.125rem);
-  --home-services-intro-bottom-padding: clamp(0.8rem, 1.9vw, 1.35rem);
-  --home-services-intro-shell-gap: clamp(1rem, 1.9vw, 1.55rem);
+  --home-services-intro-bottom-padding: clamp(0.55rem, 1.35vw, 0.95rem);
+  --home-services-intro-shell-gap: clamp(0.72rem, 1.45vw, 1.12rem);
   --home-services-panel-gap: clamp(0.675rem, 1.1vw, 1.125rem);
   width: 100%;
   display: grid;
@@ -943,19 +943,20 @@
   font-family: var(--ag-font-heading);
   font-size: clamp(2.2rem, 6.1vw, 5.9rem);
   font-weight: 800;
+  display: grid;
+  justify-items: center;
   line-height: 0.92;
   letter-spacing: -0.05em;
   text-align: center;
-  white-space: nowrap;
   margin: 0;
 }
 
 .home-services-feature-heading-line {
-  display: inline-block;
+  display: block;
 }
 
 .home-services-feature-heading-line + .home-services-feature-heading-line {
-  margin-left: 0.18em;
+  margin-left: 0;
 }
 
 .home-services-feature-heading-text {
@@ -1557,6 +1558,8 @@ p.home-services-feature-panel-body {
 }
 
 .home-impact-story {
+  --home-impact-story-copy-gap: clamp(2rem, 4.2vh, 2.85rem);
+  --home-impact-story-copy-max: 38rem;
   --home-impact-story-surface:
     radial-gradient(circle at 12% 8%, rgba(0, 56, 81, 0.98) 0%, rgba(0, 56, 81, 0.92) 24%, rgba(0, 92, 123, 0.54) 56%, rgba(0, 92, 123, 0) 82%),
     linear-gradient(146deg, #036c93 0%, #0899b5 52%, #17b3c7 100%);
@@ -1801,8 +1804,21 @@ p.home-services-feature-panel-body {
 }
 
 .home-impact-story-static-copy,
+.home-impact-story-heading-shell,
+.home-impact-story-copy-stack,
+.home-impact-story-copy {
+  display: grid;
+  justify-items: center;
+}
+
+.home-impact-story-static-copy,
+.home-impact-story-heading-shell,
 .home-impact-story-copy {
   position: relative;
+}
+
+.home-impact-story-copy-stack {
+  row-gap: var(--home-impact-story-copy-gap);
 }
 
 .home-impact-story-heading-lock {
@@ -1874,8 +1890,9 @@ p.home-services-feature-panel-body {
 .home-impact-story-body {
   position: relative;
   z-index: 1;
-  margin: clamp(2.8rem, 5.2vh, 3.5rem) auto 0;
-  max-width: 45rem;
+  width: min(100%, var(--home-impact-story-copy-max));
+  margin: 0;
+  max-width: var(--home-impact-story-copy-max);
   color: rgba(255, 255, 255, 0.84);
   font-size: clamp(1.4rem, 2.26vw, 1.92rem);
   font-weight: 400;
@@ -2034,11 +2051,11 @@ p.home-services-feature-panel-body {
 }
 
 .home-impact-story-metric-frame {
-  width: min(100%, 52rem);
+  width: min(100%, 60rem);
   margin-inline: auto;
   padding:
     clamp(2.7rem, 4.9vh, 3.65rem)
-    clamp(2.2rem, 5.6vw, 4.2rem)
+    clamp(2.45rem, 6vw, 4.9rem)
     clamp(2.45rem, 4.5vh, 3.1rem);
   border: 2px solid var(--ag-color-sandstone);
   border-radius: clamp(1.35rem, 2.4vw, 1.85rem);
@@ -2047,17 +2064,24 @@ p.home-services-feature-panel-body {
 }
 
 .home-native-impact .home-impact-story-metric-value {
-  color: var(--ag-color-mango);
+  --home-impact-metric-top: #fffdfa;
+  --home-impact-metric-bottom: #ded3c3;
+  color: transparent;
   margin: 0;
   text-align: center;
-  font-size: clamp(4.8rem, 8.9vw, 7.7rem);
+  font-size: clamp(4rem, 7.5vw, 7rem);
   letter-spacing: clamp(-5.4px, -0.48vw, -1.8px);
   line-height: 0.92;
+  white-space: nowrap;
+  background-image: linear-gradient(180deg, var(--home-impact-metric-top) 0%, var(--home-impact-metric-bottom) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .home-impact-story-metric-value.is-atlantean {
   color: transparent;
-  background-image: linear-gradient(180deg, #ffffff 0%, #d8f6fa 100%);
+  background-image: linear-gradient(180deg, var(--home-impact-metric-top) 0%, var(--home-impact-metric-bottom) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -2065,14 +2089,15 @@ p.home-services-feature-panel-body {
 
 .home-impact-story-metric-value.is-sandstone {
   color: transparent;
-  background-image: linear-gradient(180deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%);
+  background-image: linear-gradient(180deg, var(--home-impact-metric-top) 0%, var(--home-impact-metric-bottom) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .home-impact-story-metric-value.is-atlantean > span,
-.home-impact-story-metric-value.is-sandstone > span {
+.home-impact-story-metric-value.is-sandstone > span,
+.home-impact-story-metric-value.is-final-metric > span {
   background-image: inherit;
   -webkit-background-clip: text;
   background-clip: text;
@@ -2085,12 +2110,11 @@ p.home-services-feature-panel-body {
 
 .home-impact-story-metric-value.is-final-metric,
 .home-impact-story-metric-value.is-final-metric > span {
-  color: #ffffff;
-  background: none;
-  background-image: none;
-  -webkit-background-clip: border-box;
-  background-clip: border-box;
-  -webkit-text-fill-color: #ffffff;
+  color: transparent;
+  background-image: linear-gradient(180deg, var(--home-impact-metric-top) 0%, var(--home-impact-metric-bottom) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .home-native-impact .home-impact-story-metric-label {
@@ -2102,7 +2126,8 @@ p.home-services-feature-panel-body {
 }
 
 .home-impact-story-copy {
-  margin-top: clamp(10.2rem, 16vh, 12.2rem);
+  width: min(100%, var(--home-impact-story-copy-max));
+  margin-top: 0;
   min-height: auto;
   padding-top: 0;
 }
@@ -2663,7 +2688,7 @@ p.home-services-feature-panel-body {
   }
 
   .home-impact-story-metric-frame {
-    width: min(100%, 34rem);
+    width: min(100%, 36rem);
   }
 
   .home-impact-story-metric + .home-impact-story-metric::before {
@@ -2675,6 +2700,8 @@ p.home-services-feature-panel-body {
   }
 
   .home-impact-story-body {
+    width: min(100%, 32rem);
+    max-width: 32rem;
     font-size: clamp(1.29rem, 3.96vw, 1.6rem);
   }
 
@@ -2866,7 +2893,7 @@ p.home-services-feature-panel-body {
   }
 
   .home-native-impact .home-impact-story-metric-value {
-    font-size: clamp(3.8rem, 13.4vw, 5.3rem);
+    font-size: clamp(2.65rem, 11.4vw, 4.7rem);
   }
 
   .home-native-impact .home-impact-story-metric-label {

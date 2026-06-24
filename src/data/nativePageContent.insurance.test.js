@@ -21,7 +21,7 @@ describe('insurance native page content', () => {
       }),
     ]);
     expect(content?.intro?.body).toEqual([
-      'We’re committed to helping you get the coverage you need, at highly competitive rates, to protect your people and property. It’s more than insurance.',
+      'We’re committed to helping you get the coverage you need, at competitive rates, to protect your people and property. It’s more than insurance.',
     ]);
     expect(Array.isArray(coverageSection?.cards) ? coverageSection.cards : []).toHaveLength(4);
     expect(coverageSection?.cards?.every((card) => card?.cardClass === 'card1')).toBe(true);
@@ -32,7 +32,15 @@ describe('insurance native page content', () => {
       'Bonds',
     ]);
     expect(propertyCard?.body).toBe('Our specialty is helping protect churches, schools, ministries, and other nonprofits, as well as businesses.');
-    expect(missionAssureCard?.body).toContain('**Mission Assure** offers superior protection at minimum cost.');
+    expect(missionAssureCard?.body).toContain('**Mission Assure®** offers superior protection at minimum cost.');
+    expect(coverageSection?.cards?.find((card) => card?.title === 'Bonds')?.body).toContain('We partner with Old Republic Surety');
+    expect(coverageSection?.cards?.find((card) => card?.title === 'Bonds')?.actions).toEqual([
+      expect.objectContaining({
+        label: 'Old Republic Surety',
+        href: 'https://www.orsurety.com/commercial-bonds',
+        className: 'is-outline',
+      }),
+    ]);
     expect(coverageSection?.actions).toEqual([
       expect.objectContaining({
         label: 'Certificate request',
@@ -51,6 +59,7 @@ describe('insurance native page content', () => {
       'coverageFocus',
     ]);
     expect(typeof missionAssureFeatureSection?.feature?.logoComponent).toBe('function');
+    expect(missionAssureFeatureSection?.feature?.logoAlt).toBe('Mission Assure®');
     expect(missionAssureFeatureSection?.feature?.logoImage).toBeUndefined();
   });
 });

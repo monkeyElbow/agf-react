@@ -11,7 +11,7 @@ function readSource(relativePath) {
 }
 
 describe('home services feature alignment guardrail', () => {
-  it('keeps the services panels as rounded content-width cards while mobile stays left-aligned', () => {
+  it('keeps the services panels as rounded content-width cards while mobile panel copy stays left-aligned', () => {
     const cssSource = readSource('../styles/home-native.css');
 
     expect(cssSource).toContain('.home-services-feature {');
@@ -20,7 +20,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('overflow-x: clip;');
     expect(cssSource).toContain('.home-services-feature-shell {');
     expect(cssSource).toContain('--home-services-intro-top-space: clamp(6rem, 13vw, 12.5rem);');
-    expect(cssSource).toContain('--home-services-intro-shell-gap: clamp(1rem, 1.9vw, 1.55rem);');
+    expect(cssSource).toContain('--home-services-intro-shell-gap: clamp(0.72rem, 1.45vw, 1.12rem);');
     expect(cssSource).toContain('--home-services-panel-gap: clamp(0.675rem, 1.1vw, 1.125rem);');
     expect(cssSource).toContain('--home-services-panel-gap: clamp(0.16rem, 0.4vw, 0.34rem);');
     expect(cssSource).toContain('gap: var(--home-services-intro-shell-gap);');
@@ -53,6 +53,8 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('.home-services-feature-panel.is-left .home-services-feature-panel-copy {');
     expect(cssSource).toContain('justify-items: start;');
     expect(cssSource).toContain('.home-services-feature-heading-line {');
+    expect(cssSource).toContain('display: block;');
+    expect(cssSource).toContain('justify-items: center;');
     expect(cssSource).toContain('.home-services-feature-heading-text.is-impact-mango-gradient {');
     expect(cssSource).toContain('--home-impact-metric-top: #ffd27a;');
     expect(cssSource).toContain('@media (prefers-reduced-motion: reduce) {');
@@ -200,7 +202,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('opacity: var(--home-services-intro-opacity, 0);');
     expect(cssSource).toContain('transform: translate3d(0, var(--home-services-intro-shift-y, 58px), 0) scale(var(--home-services-intro-scale, 0.92));');
     expect(cssSource).toContain('--home-services-intro-top-space: clamp(6rem, 13vw, 12.5rem);');
-    expect(cssSource).toContain('--home-services-intro-bottom-padding: clamp(0.8rem, 1.9vw, 1.35rem);');
+    expect(cssSource).toContain('--home-services-intro-bottom-padding: clamp(0.55rem, 1.35vw, 0.95rem);');
     expect(componentSource).toContain('introNode.style.setProperty(\'--home-services-intro-opacity\'');
     expect(componentSource).toContain('panel.style.setProperty(\'--home-services-panel-scale\'');
     expect(componentSource).toContain('const motionProfile = resolvePanelMotionProfile(viewportWidth);');

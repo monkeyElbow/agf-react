@@ -2625,6 +2625,28 @@ function RetirementIraRateTableWidget({ iraRates, ratesMeta }) {
   );
 }
 
+function MissionAssurePricingWidget({ pricing }) {
+  const entries = Array.isArray(pricing?.entries) ? pricing.entries.filter(Boolean) : [];
+  if (!entries.length) {
+    return null;
+  }
+
+  return (
+    <div className="mission-assure-pricing" aria-label="Mission Assure pricing">
+      {entries.map((entry) => (
+        <article
+          key={`${entry.trip}-${entry.rate}`}
+          className="mission-assure-pricing-card service-native-rates"
+        >
+          <p className="mission-assure-pricing-trip">{entry.trip}</p>
+          <p className="mission-assure-pricing-rate">{entry.rate}</p>
+          {entry.note ? <p className="mission-assure-pricing-note">{entry.note}</p> : null}
+        </article>
+      ))}
+    </div>
+  );
+}
+
 const FUND_IRA_EXCLUDED_STATES = {
   OH: 'This offering is not available to residents of Ohio.',
   WA: 'AGFinancial investments are not available to new investors in Washington.',
@@ -6316,6 +6338,10 @@ export default function NativeContentPage({ page }) {
 
             {section.widget === 'retirement-ira-rate-table' ? (
               <RetirementIraRateTableWidget iraRates={iraRates} ratesMeta={ratesMeta} />
+            ) : null}
+
+            {section.widget === 'mission-assure-pricing' ? (
+              <MissionAssurePricingWidget pricing={section.pricing} />
             ) : null}
 
             {section.widget === 'retirement-fund-ira' ? (

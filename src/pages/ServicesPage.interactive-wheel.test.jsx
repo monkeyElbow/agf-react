@@ -124,7 +124,7 @@ describe('ServicesPage interactive service wheel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Insurance' }));
 
     expect(within(selectedCard).getByRole('heading', { name: 'Insurance' })).toBeTruthy();
-    expect(within(selectedCard).getByText('Protect your people and property, and manage risk.')).toBeTruthy();
+    expect(within(selectedCard).getByText('Coverage built for churches, ministries and individuals to protect what’s most important.')).toBeTruthy();
     expect(within(selectedCard).getByRole('link', { name: 'Explore Insurance' }).getAttribute('href')).toBe('/services/insurance');
   });
 

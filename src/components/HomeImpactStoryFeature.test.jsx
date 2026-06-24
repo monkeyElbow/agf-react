@@ -528,13 +528,15 @@ describe('HomeImpactStoryFeature', () => {
     const cssSource = readSource('../styles/home-native.css');
 
     expect(cssSource).toContain('.home-impact-story-metric-frame {');
-    expect(cssSource).toContain('width: min(100%, 52rem);');
+    expect(cssSource).toContain('width: min(100%, 60rem);');
     expect(cssSource).toContain('border-radius: clamp(1.35rem, 2.4vw, 1.85rem);');
     expect(cssSource).toContain('border: 2px solid var(--ag-color-sandstone);');
     expect(cssSource).toContain('background: transparent;');
     expect(cssSource).toContain('box-shadow: none;');
     expect(cssSource).toContain('.home-native-impact .home-impact-story-metric-value {');
-    expect(cssSource).toContain('font-size: clamp(4.8rem, 8.9vw, 7.7rem);');
+    expect(cssSource).toContain('font-size: clamp(4rem, 7.5vw, 7rem);');
+    expect(cssSource).toContain('white-space: nowrap;');
+    expect(cssSource).toContain('--home-impact-metric-bottom: #ded3c3;');
   });
 
   it('keeps the impact feature frame square and settles the ending line into the lower proof area', () => {

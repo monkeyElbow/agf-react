@@ -97,7 +97,7 @@ describe('ServicesPage breakdown directory', () => {
       },
       {
         title: 'Insurance',
-        description: 'Protect your people and property, and manage risk. Impressive coverage, built for churches and ministries.',
+        description: 'Coverage built for churches, ministries and individuals to protect what’s most important.',
       },
     ];
 

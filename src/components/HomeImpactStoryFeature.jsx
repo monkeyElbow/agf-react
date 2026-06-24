@@ -654,13 +654,19 @@ export function HomeImpactStoryStaticContent({
       <div className="home-impact-story-surface" style={paletteVars}>
         <div className="ag-panel-rail home-impact-story-static-grid">
           <div className={`home-impact-story-static-copy${reveal ? ' fade-up' : ''}`}>
-            <ImpactStoryBrandMark />
-            <ImpactStoryHeadline
-              headline={headline}
-              highlightedWord={highlightedWord}
-              className="home-impact-story-heading"
-            />
-            <ImpactStoryBody body={body} />
+            <div className="home-impact-story-heading-shell">
+              <ImpactStoryBrandMark />
+              <div className="home-impact-story-copy-stack">
+                <ImpactStoryHeadline
+                  headline={headline}
+                  highlightedWord={highlightedWord}
+                  className="home-impact-story-heading"
+                />
+                <div className="home-impact-story-copy">
+                  <ImpactStoryBody body={body} />
+                </div>
+              </div>
+            </div>
           </div>
           <div className={`home-impact-story-static-proof${reveal ? ' fade-up' : ''}`}>
             <ImpactStoryMetrics metrics={metrics} countUp={countUp} />
@@ -891,23 +897,25 @@ export default function HomeImpactStoryFeature({
                       >
                         <ImpactStoryBrandMark />
                       </div>
-                      <ImpactStoryHeadline
-                        headline={headline}
-                        highlightedWord={highlightedWord}
-                        className="home-impact-story-heading"
-                      />
-                    </div>
-                  </div>
-                  <div
-                    className="home-impact-story-copy"
-                    style={{
-                      opacity: finalSupportOpacity,
-                      transform: `translate3d(0, ${supportShift}px, 0)`,
-                    }}
-                  >
-                    <ImpactStoryBody body={body} />
-                    <div className="home-impact-story-scroll-cue" aria-hidden="true">
-                      <span className="home-impact-story-scroll-cue-mark" />
+                      <div className="home-impact-story-copy-stack">
+                        <ImpactStoryHeadline
+                          headline={headline}
+                          highlightedWord={highlightedWord}
+                          className="home-impact-story-heading"
+                        />
+                        <div
+                          className="home-impact-story-copy"
+                          style={{
+                            opacity: finalSupportOpacity,
+                            transform: `translate3d(0, ${supportShift}px, 0)`,
+                          }}
+                        >
+                          <ImpactStoryBody body={body} />
+                          <div className="home-impact-story-scroll-cue" aria-hidden="true">
+                            <span className="home-impact-story-scroll-cue-mark" />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -3453,7 +3453,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         heading: 'Protect what matters most.',
         headingClassName: '',
         headingHighlightsJson: '',
-        bodyHtml: '<p>We\'re committed to helping you get the coverage you need, at highly competitive rates, to protect your people and property.</p>',
+        bodyHtml: '<p>We\'re committed to helping you get the coverage you need, at competitive rates, to protect your people and property.</p>',
         body: '',
         justify: 'center',
         lineSpacing: 1.04,
@@ -3489,7 +3489,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       mode: 'dynamic',
       settings: {
         title: 'Full coverage for mission trips, retreats, and everything in between.',
-        body: 'With low per-person, per-day premiums, Mission Assure offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.',
+        body: 'With low per-person, per-day premiums, Mission Assure® offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.',
         bodyHtml: '',
         imageUrl: insuranceMissionAssureImage,
         imageAlt: 'Mission Assure coverage',

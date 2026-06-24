@@ -270,7 +270,7 @@ const directContent = {
     intro: {
       heading: 'Protect what matters most.',
       body: [
-        'We’re committed to helping you get the coverage you need, at highly competitive rates, to protect your people and property. It’s more than insurance.',
+        'We’re committed to helping you get the coverage you need, at competitive rates, to protect your people and property. It’s more than insurance.',
       ],
       emphasis: "It's protection, security, and confidence.",
       actions: [{ label: 'Request a quote', to: '/services/insurance/life-insurance-quote' }],
@@ -291,7 +291,7 @@ const directContent = {
           },
           {
             title: 'Life Insurance',
-            body: 'Your life insurance policy is customized specifically for you. We partner with only A- or higher rated carriers, so the coverage you receive equals the peace of mind you deserve.',
+            body: 'Your life insurance policy is made specifically for you. We partner with only A- or higher rated carriers, so the coverage you receive equals the peace of mind you deserve.',
             actions: [
               { label: 'Individual', to: '/services/insurance/life-insurance-quote' },
               { label: 'Group', to: '/services/insurance/group-term-life-insurance' },
@@ -300,16 +300,16 @@ const directContent = {
           },
           {
             title: 'Mission Assure',
-            body: 'Full coverage for mission trips, camps, retreats, events, and everything in between, with low per-person, per-day premiums. **Mission Assure** offers superior protection at minimum cost.',
+            body: 'Full coverage for mission trips, camps, retreats, events, and everything in between, with low per-person, per-day premiums. **Mission Assure®** offers superior protection at minimum cost.',
             to: '/services/insurance/mission-assure',
             cta: 'Learn more',
             cardClass: 'card1',
           },
           {
             title: 'Bonds',
-            body: 'Contracting, license, permit, and more. Apply for your certificate below.',
+            body: 'We partner with Old Republic Surety to offer notary bonds upon request. For contracting, license, permit, and more, use the form below.',
             actions: [
-              { label: 'Notary bonds', href: 'https://www.orsurety.com/commercial-bonds' },
+              { label: 'Old Republic Surety', href: 'https://www.orsurety.com/commercial-bonds', className: 'is-outline' },
             ],
             cardClass: 'card1',
           },
@@ -375,10 +375,10 @@ const directContent = {
           image: insuranceMissionAssureImage,
           imageAlt: 'Mission Assure coverage',
           logoComponent: MissionAssureLogo,
-          logoAlt: 'Mission Assure',
+          logoAlt: 'Mission Assure®',
           title: 'Full coverage for mission trips, retreats, and everything in between.',
           body: [
-            "With low per-person, per-day premiums, Mission Assure offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.",
+            "With low per-person, per-day premiums, Mission Assure® offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.",
           ],
           actions: [{ label: 'Let’s go', to: '/services/insurance/mission-assure' }],
         },
@@ -1746,18 +1746,26 @@ const insuranceChildPages = {
       {
         className: 'mission-assure-native-intro',
         logoComponent: MissionAssureLogo,
-        logoAlt: 'Mission Assure',
-        title: 'Every trip is a step of faith, but you don’t have to take it uninsured.',
+        logoAlt: 'Mission Assure®',
+        title: 'Every trip is a step of faith,\nbut you don’t have to take it uninsured.',
         titleHighlights: [{ text: 'faith', className: 'is-atlantean' }],
         body: [
-          'As low as **$1.25**/day',
-          'Mission Assure helps take the “what if” out of church trips and events. At only $4.95 per person per day for **international** trips, and $1.25 per person per day for **domestic** trips or outings, Mission Assure offers superior short-term insurance at an affordable price. Use the buttons below to apply for coverage, manage your trips, or report a claim.',
+          'As low as **$1.25/day**',
+          'Mission Assure® helps take the “what if” out of church trips and events. At only $4.95 per person per day for **international** trips, and $1.25 per person per day for **domestic** trips or outings, Mission Assure® offers superior short-term insurance at an affordable price. Use the buttons below to apply for coverage, manage your trips, or report a claim.',
         ],
-        table: {
-          headers: ['Trip', 'Per person'],
-          rows: [
-            ['Domestic', '$1.25 per day'],
-            ['International', '$4.95 per day'],
+        widget: 'mission-assure-pricing',
+        pricing: {
+          entries: [
+            {
+              trip: 'Domestic',
+              rate: '$1.25/day',
+              note: 'Limited medical coverage included',
+            },
+            {
+              trip: 'International',
+              rate: '$4.95/day',
+              note: 'Medical coverage included',
+            },
           ],
         },
       },
