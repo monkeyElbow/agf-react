@@ -314,13 +314,7 @@ const directContent = {
             cardClass: 'card1',
           },
         ],
-        actions: [
-          {
-            label: 'Certificate request',
-            to: '/services/insurance/certificate-request',
-            className: 'is-outline is-tone-white',
-          },
-        ],
+        actions: [],
       },
       {
         title: 'Get a quote.',
@@ -332,6 +326,19 @@ const directContent = {
         actions: [
           { label: 'Life Insurance', to: '/services/insurance/life-insurance-quote' },
           { label: 'Property & Casualty', to: '/services/insurance/property-casualty-insurance' },
+        ],
+      },
+      {
+        title: 'Need proof of insurance?',
+        className: 'insurance-native-certificate-proof',
+        titleClassName: 'is-mango',
+        body: [],
+        actions: [
+          {
+            label: 'Certificate request',
+            to: '/services/insurance/certificate-request',
+            className: 'is-outline',
+          },
         ],
       },
       {

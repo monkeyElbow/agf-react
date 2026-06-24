@@ -6,6 +6,7 @@ describe('insurance native page content', () => {
     const content = getNativePageContent('/services/insurance', '');
     const sections = Array.isArray(content?.sections) ? content.sections : [];
     const coverageSection = sections.find((section) => section?.className === 'insurance-native-coverage');
+    const certificateProofSection = sections.find((section) => section?.className === 'insurance-native-certificate-proof');
     const ctaSection = sections.find((section) => section?.className === 'insurance-native-cta');
     const missionAssureFeatureSection = sections.find((section) => section?.className === 'insurance-native-mission-assure');
     const propertyCard = coverageSection?.cards?.find((card) => card?.title === 'Property & Casualty');
@@ -41,11 +42,14 @@ describe('insurance native page content', () => {
         className: 'is-outline',
       }),
     ]);
-    expect(coverageSection?.actions).toEqual([
+    expect(coverageSection?.actions).toEqual([]);
+    expect(certificateProofSection?.title).toBe('Need proof of insurance?');
+    expect(certificateProofSection?.titleClassName).toBe('is-mango');
+    expect(certificateProofSection?.actions).toEqual([
       expect.objectContaining({
         label: 'Certificate request',
         to: '/services/insurance/certificate-request',
-        className: 'is-outline is-tone-white',
+        className: 'is-outline',
       }),
     ]);
     expect(ctaSection?.title).toBe('Ready to protect your ministry?');

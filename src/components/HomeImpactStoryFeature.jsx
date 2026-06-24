@@ -11,13 +11,14 @@ const HOME_IMPACT_STORY_OUTGOING_WINDOW = 0.44;
 const HOME_IMPACT_STORY_COPY_SHIFT_START = 0.04;
 const HOME_IMPACT_STORY_COPY_SHIFT_DURATION = 0.3;
 const HOME_IMPACT_STORY_COPY_OPACITY_START = 0.04;
-const HOME_IMPACT_STORY_COPY_OPACITY_DURATION = 0.24;
+const HOME_IMPACT_STORY_COPY_OPACITY_DURATION = 0.16;
 const HOME_IMPACT_STORY_HEADING_LOCK_DURATION = 0.28;
 const HOME_IMPACT_STORY_HEADING_TRAVEL_PX = 132;
 const HOME_IMPACT_STORY_SEQUENCE_START = 0.18;
 const HOME_IMPACT_STORY_SEQUENCE_END = 0.94;
 const HOME_IMPACT_STORY_PROOF_FADE_START = 0.14;
 const HOME_IMPACT_STORY_PROOF_FADE_DURATION = 0.12;
+const HOME_IMPACT_STORY_FIRST_METRIC_ENTRY_LEAD = 0.04;
 const HOME_IMPACT_STORY_FIRST_METRIC_OPACITY_EXPONENT = 1.35;
 const HOME_IMPACT_STORY_METRIC_COUNT_START = 0.24;
 const HOME_IMPACT_STORY_METRIC_COUNT_DURATION = 0.5;
@@ -35,6 +36,7 @@ const HOME_IMPACT_STORY_END_PANEL_METRIC_CLEAR_LEAD = 0.012;
 const HOME_IMPACT_STORY_END_PANEL_LOCK_START = 0.985;
 const HOME_IMPACT_STORY_HEADING_EXIT_TRAVEL_PX = 118;
 const HOME_IMPACT_STORY_END_PANEL_SHIFT_PX = 28;
+const HOME_IMPACT_STORY_END_PANEL_EXIT_SCALE_DELTA = 0.18;
 const HOME_IMPACT_STORY_ENDING_LINE = 'Because your mission is ours, too.';
 const HOME_IMPACT_STORY_BODY_WITH_DESKTOP_BREAK = 'Your financial decisions can strengthen more than just your future.';
 const HOME_IMPACT_STORY_PALETTE_HANDOFF_CURVES = Object.freeze({
@@ -493,7 +495,10 @@ function ImpactStoryMetrics({
     let countProgress = 1;
 
     if (kind === 'incoming') {
-      const enterProgress = clamp((activeLocalProgress - incomingDelay) / enterDuration, 0, 1);
+      const entryLocalProgress = index === 0
+        ? Math.min(1, activeLocalProgress + HOME_IMPACT_STORY_FIRST_METRIC_ENTRY_LEAD)
+        : activeLocalProgress;
+      const enterProgress = clamp((entryLocalProgress - incomingDelay) / enterDuration, 0, 1);
       motionState = enterProgress < 1 ? 'entering' : (isFinalMetric ? 'holding' : 'centered');
       translateY = HOME_IMPACT_STORY_METRIC_BASE_OFFSET_PX
         + ((1 - enterProgress) * HOME_IMPACT_STORY_METRIC_ENTRY_TRAVEL_PX);
@@ -506,7 +511,7 @@ function ImpactStoryMetrics({
         ? HOME_IMPACT_STORY_FINAL_METRIC_COUNT_DURATION
         : HOME_IMPACT_STORY_METRIC_COUNT_DURATION;
       countProgress = clamp(
-        (activeLocalProgress - countStart) / countDuration,
+        (entryLocalProgress - countStart) / countDuration,
         0,
         1,
       );
@@ -850,6 +855,12 @@ export default function HomeImpactStoryFeature({
   const stageGlowOpacity = 0.26 + (metricsOpacity * 0.18);
   const endPanelOpacity = isEndPanelLocked ? 1 : endPanelProgress;
   const endPanelShift = (1 - endPanelOpacity) * HOME_IMPACT_STORY_END_PANEL_SHIFT_PX;
+  const endPanelReleaseProgress = clamp(
+    (progress - HOME_IMPACT_STORY_RELEASE_START) / (1 - HOME_IMPACT_STORY_RELEASE_START || 1),
+    0,
+    1,
+  );
+  const endPanelScale = 1 + (endPanelReleaseProgress * HOME_IMPACT_STORY_END_PANEL_EXIT_SCALE_DELTA);
 
   return (
     <section className="home-impact-story" aria-labelledby={headingId}>
@@ -942,7 +953,7 @@ export default function HomeImpactStoryFeature({
                     className="home-impact-story-proof-cta-block"
                     style={{
                       opacity: endPanelOpacity,
-                      transform: `translate3d(0, ${endPanelShift}px, 0)`,
+                      transform: `translate3d(0, ${endPanelShift}px, 0) scale(${endPanelScale})`,
                     }}
                   >
                     <ImpactStoryEndingLine />

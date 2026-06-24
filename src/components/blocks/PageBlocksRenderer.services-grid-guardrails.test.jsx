@@ -80,4 +80,12 @@ describe('home services grid renderer guardrail', () => {
     expect(source).toContain('<BlockOwnershipOverlay ownership={ownership} />');
     expect(source).toContain("const Renderer = blockRenderers[blockKind];");
   });
+
+  it('keeps the home services grid heading locked to a single line in shared styles', () => {
+    const cssSource = readSource('../../styles/home-native.css');
+
+    expect(cssSource).toContain('.home-native-services h2 {');
+    expect(cssSource).toContain('white-space: nowrap;');
+    expect(cssSource).toContain('text-wrap: nowrap;');
+  });
 });

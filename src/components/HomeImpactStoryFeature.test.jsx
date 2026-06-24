@@ -263,7 +263,7 @@ describe('HomeImpactStoryFeature', () => {
 
   it('keeps the intro body drifting upward while it is still fading so the exit does not lock in place', () => {
     const { container } = renderFeatureBlock();
-    setEnhancedShellProgress(container, 0.2);
+    setEnhancedShellProgress(container, 0.12);
 
     act(() => {
       window.dispatchEvent(new Event('scroll'));
@@ -274,7 +274,7 @@ describe('HomeImpactStoryFeature', () => {
     const earlyShift = getTranslateY(copy);
     const earlyOpacity = Number.parseFloat(copy?.style.opacity || '0');
 
-    setEnhancedShellProgress(container, 0.26);
+    setEnhancedShellProgress(container, 0.16);
 
     act(() => {
       window.dispatchEvent(new Event('scroll'));
@@ -311,7 +311,7 @@ describe('HomeImpactStoryFeature', () => {
 
   it('brings the first stat in sooner so the section does not sit blank after the intro', () => {
     const { container } = renderFeatureBlock();
-    setEnhancedShellProgress(container, 0.24);
+    setEnhancedShellProgress(container, 0.22);
 
     act(() => {
       window.dispatchEvent(new Event('scroll'));
@@ -497,6 +497,22 @@ describe('HomeImpactStoryFeature', () => {
     expect(stageQueries.queryByText('distributed to ministries through AG Foundation')).toBeNull();
     expect(proof?.getAttribute('style')).toContain('opacity: 0;');
     expect(proofCtaBlock?.getAttribute('style')).toContain('opacity: 1;');
+    expect(proofCtaBlock?.getAttribute('style')).toContain('scale(1)');
+  });
+
+  it('keeps scaling the final proof panel up after it centers as the section releases offscreen', () => {
+    const { container } = renderFeatureBlock();
+    setEnhancedShellProgress(container, 1);
+
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(1200);
+    });
+
+    const proofCtaBlock = container.querySelector('.home-impact-story-proof-cta-block');
+
+    expect(proofCtaBlock?.getAttribute('style')).toContain('opacity: 1;');
+    expect(proofCtaBlock?.getAttribute('style')).toContain('scale(1.18)');
   });
 
   it('keeps the impact story backdrop source-contained with an overflow fallback for mobile browsers that do not honor clip reliably', () => {
@@ -572,6 +588,9 @@ describe('HomeImpactStoryFeature', () => {
     expect(source).toContain('const HOME_IMPACT_STORY_OUTGOING_WINDOW = 0.44;');
     expect(source).toContain('const HOME_IMPACT_STORY_COPY_SHIFT_START = 0.04;');
     expect(source).toContain('const HOME_IMPACT_STORY_COPY_SHIFT_DURATION = 0.3;');
+    expect(source).toContain('const HOME_IMPACT_STORY_COPY_OPACITY_DURATION = 0.16;');
+    expect(source).toContain('const HOME_IMPACT_STORY_SEQUENCE_START = 0.18;');
+    expect(source).toContain('const HOME_IMPACT_STORY_FIRST_METRIC_ENTRY_LEAD = 0.04;');
     expect(source).toContain('const HOME_IMPACT_STORY_FINAL_METRIC_SETTLE_POINT = 0.8;');
     expect(source).toContain('const HOME_IMPACT_STORY_FINAL_METRIC_COUNT_START = 0.2;');
     expect(source).toContain('const HOME_IMPACT_STORY_FINAL_METRIC_COUNT_DURATION = 0.5;');
@@ -580,6 +599,7 @@ describe('HomeImpactStoryFeature', () => {
     expect(source).toContain('const HOME_IMPACT_STORY_END_PANEL_METRIC_CLEAR_LEAD = 0.012;');
     expect(source).toContain('const HOME_IMPACT_STORY_END_PANEL_LOCK_START = 0.985;');
     expect(source).toContain('const HOME_IMPACT_STORY_HEADING_EXIT_TRAVEL_PX = 118;');
+    expect(source).toContain('const HOME_IMPACT_STORY_END_PANEL_EXIT_SCALE_DELTA = 0.18;');
     expect(source).toContain("const HOME_IMPACT_STORY_ENDING_LINE = 'Because your mission is ours, too.';");
     expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_TRAVEL_PX = 192;');
     expect(source).toContain('const HOME_IMPACT_STORY_METRIC_EXIT_FADE_CUTOFF = 0.48;');

@@ -264,7 +264,8 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getAllByText('Certificate Request').length).toBeGreaterThan(1);
+    expect(screen.getByText('Certificate Request')).toBeTruthy();
+    expect(screen.getByText('Need proof of insurance?')).toBeTruthy();
     expect(document.querySelector('.certificate-request-native-section')).toBeTruthy();
     expect(document.querySelector('.certificate-request-native-section .certificate-request-form')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();

@@ -689,7 +689,8 @@
   line-height: 1;
   font-family: var(--ag-font-body);
   letter-spacing: var(--home-services-heading-tracking);
-  text-wrap: balance;
+  white-space: nowrap;
+  text-wrap: nowrap;
 }
 
 .home-native-services-grid {
@@ -923,7 +924,6 @@
 
 .home-services-feature-intro {
   width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-gutter) * 2)));
-  max-width: 60rem;
   margin: 0 auto;
   padding: var(--home-services-intro-top-space) 0 var(--home-services-intro-bottom-padding);
   display: grid;
@@ -943,16 +943,24 @@
   font-family: var(--ag-font-heading);
   font-size: clamp(2.2rem, 6.1vw, 5.9rem);
   font-weight: 800;
-  display: grid;
-  justify-items: center;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.12em;
+  width: max-content;
+  max-width: none;
   line-height: 0.92;
   letter-spacing: -0.05em;
   text-align: center;
   margin: 0;
+  justify-self: center;
+  white-space: nowrap;
 }
 
 .home-services-feature-heading-line {
-  display: block;
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .home-services-feature-heading-line + .home-services-feature-heading-line {
@@ -2794,10 +2802,19 @@ p.home-services-feature-panel-body {
   }
 
   .home-services-feature-heading {
+    display: grid;
+    justify-items: center;
+    width: auto;
+    max-width: 100%;
     font-size: clamp(2.7rem, 11vw, 4.6rem);
     line-height: 0.98;
     white-space: normal;
     text-wrap: balance;
+    gap: 0;
+  }
+
+  .home-services-feature-heading-line {
+    display: block;
   }
 
   .home-services-feature-subhead {

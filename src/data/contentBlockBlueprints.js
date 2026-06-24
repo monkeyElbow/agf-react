@@ -4395,7 +4395,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           ...block.settings,
           bgTone: 'white',
           textTone: 'dark',
-          title: 'Certificate Request',
+          title: 'Need proof of insurance?',
           titleClassName: '',
           titleHighlightsJson: '',
           subtitle: 'Please complete this form in full, including location details. Incomplete submissions may delay your insurance certificate request.',

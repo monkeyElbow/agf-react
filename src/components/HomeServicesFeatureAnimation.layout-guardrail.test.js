@@ -54,6 +54,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('justify-items: start;');
     expect(cssSource).toContain('.home-services-feature-heading-line {');
     expect(cssSource).toContain('display: block;');
+    expect(cssSource).toContain('white-space: nowrap;');
     expect(cssSource).toContain('justify-items: center;');
     expect(cssSource).toContain('.home-services-feature-heading-text.is-impact-mango-gradient {');
     expect(cssSource).toContain('--home-impact-metric-top: #ffd27a;');

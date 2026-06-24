@@ -356,7 +356,7 @@ function renderHeadlineLines(headline) {
     .filter(Boolean)
     .map((line, index) => (
       <span key={`${line}-${index}`} className="home-services-feature-heading-line">
-        <span className={`home-services-feature-heading-text${index === 1 ? ' is-impact-mango-gradient' : ''}`}>{line}</span>
+        <span className={`home-services-feature-heading-text${index === 1 ? ' is-impact-mango-gradient' : ''}`}>{line.replace(/\s+/g, '\u00A0')}</span>
       </span>
     ));
 }
