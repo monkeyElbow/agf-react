@@ -14683,12 +14683,12 @@
 }
 
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail {
-  width: min(980px, calc(100% - (var(--ag-panel-gutter) * 2)));
+  width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-gutter) * 2)));
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-grid {
   margin-top: 0;
-  width: min(860px, 100%);
+  width: 100%;
   margin-inline: auto;
   gap: clamp(1rem, 2.2vw, 1.6rem);
 }
