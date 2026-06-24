@@ -13406,14 +13406,19 @@
 }
 
 .legacy-stewardship-story {
-  --legacy-stewardship-surface: linear-gradient(180deg, #f4fbfc 0%, #e7f5f7 22%, #ffffff 100%);
-  --legacy-stewardship-ink: #0f2430;
+  --legacy-stewardship-surface:
+    radial-gradient(circle at 12% 8%, rgba(0, 56, 81, 0.98) 0%, rgba(0, 56, 81, 0.92) 24%, rgba(0, 92, 123, 0.54) 56%, rgba(0, 92, 123, 0) 82%),
+    linear-gradient(146deg, #036c93 0%, #0899b5 52%, #17b3c7 100%);
+  --legacy-stewardship-sheen:
+    radial-gradient(circle at 74% 80%, rgba(255, 255, 255, 0.05), transparent 28%),
+    radial-gradient(circle at 14% 10%, rgba(0, 56, 81, 0.26), transparent 46%);
+  --legacy-stewardship-ink: rgba(255, 255, 255, 0.96);
   --legacy-stewardship-accent: #008aa6;
   --legacy-stewardship-edge-gap: clamp(0.85rem, 2vw, 1.75rem);
   --legacy-stewardship-final-cta-gap: clamp(1rem, 2vw, 1.45rem);
   padding-top: 0;
   padding-bottom: clamp(2.3rem, 4.6vw, 3.8rem);
-  background: #ffffff;
+  background: var(--legacy-stewardship-surface);
 }
 
 .legacy-stewardship-story .ag-panel-rail {
@@ -13482,33 +13487,34 @@
 }
 
 .legacy-stewardship-story-final-divider {
-  color: rgba(65, 64, 66, 0.62);
+  color: rgba(244, 251, 252, 0.88);
 }
 
 .legacy-stewardship-story-final-secondary {
-  color: var(--ag-color-super-grey);
+  color: rgba(255, 255, 255, 0.94);
 }
 
 .legacy-stewardship-story-static-beats li[data-tone="atlantean"],
 .legacy-stewardship-story-static-final[data-tone="atlantean"] h2,
 .legacy-stewardship-story-beat-actor[data-tone="atlantean"] h2 {
-  color: var(--ag-color-atlantean);
+  color: rgba(255, 255, 255, 0.98);
 }
 
 .legacy-stewardship-story-static-beats li[data-tone="super-grey"],
 .legacy-stewardship-story-static-final[data-tone="super-grey"] h2,
 .legacy-stewardship-story-beat-actor[data-tone="super-grey"] h2 {
-  color: var(--ag-color-super-grey);
+  color: rgba(232, 251, 255, 0.92);
 }
 
 .legacy-stewardship-story-static-beats li[data-tone="atlantean-dark"],
 .legacy-stewardship-story-static-final[data-tone="atlantean-dark"] h2,
 .legacy-stewardship-story-beat-actor[data-tone="atlantean-dark"] h2 {
-  color: var(--ag-color-atlantean-dark);
+  color: rgba(255, 255, 255, 0.96);
 }
 
 .legacy-stewardship-story-shell {
   min-height: var(--legacy-stewardship-runway-vh, 240vh);
+  margin-bottom: calc(clamp(2.3rem, 4.6vw, 3.8rem) * -1);
 }
 
 .legacy-stewardship-story-pin {
@@ -13528,26 +13534,47 @@
   display: grid;
   align-items: stretch;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.18) 30%, rgba(255, 255, 255, 0) 56%),
-    radial-gradient(circle at 18% 12%, rgba(0, 173, 187, 0.16), rgba(0, 173, 187, 0) 40%),
-    radial-gradient(circle at 82% 70%, rgba(246, 177, 70, 0.14), rgba(246, 177, 70, 0) 44%),
-    var(--legacy-stewardship-surface);
+  background: var(--legacy-stewardship-sheen);
   box-shadow: none;
   isolation: isolate;
+}
+
+.legacy-stewardship-story-frame::before,
+.legacy-stewardship-story-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.legacy-stewardship-story-frame::before {
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 112% 98% at 12% 8%, rgba(0, 56, 81, 0.98) 0%, rgba(0, 56, 81, 0.86) 24%, rgba(0, 56, 81, 0.3) 60%, rgba(0, 56, 81, 0) 86%),
+    radial-gradient(ellipse 92% 82% at 84% 86%, rgba(36, 201, 217, 0.14) 0%, rgba(36, 201, 217, 0.06) 38%, rgba(36, 201, 217, 0) 82%),
+    radial-gradient(ellipse 144% 126% at 62% 108%, rgba(6, 169, 194, 0.2) 0%, rgba(6, 169, 194, 0.12) 42%, rgba(6, 169, 194, 0.02) 76%, rgba(6, 169, 194, 0) 100%),
+    linear-gradient(146deg, rgba(0, 56, 81, 0.9) 0%, rgba(6, 169, 194, 0.72) 42%, rgba(36, 201, 217, 0.86) 100%);
+}
+
+.legacy-stewardship-story-frame::after {
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 72% 62% at 74% 26%, rgba(190, 243, 247, 0.12) 0%, rgba(190, 243, 247, 0.05) 34%, rgba(190, 243, 247, 0) 80%),
+    radial-gradient(ellipse 64% 56% at 26% 70%, rgba(36, 201, 217, 0.05) 0%, rgba(36, 201, 217, 0.02) 38%, rgba(36, 201, 217, 0) 82%),
+    radial-gradient(ellipse 112% 96% at 50% 52%, rgba(232, 251, 255, 0.06) 0%, rgba(232, 251, 255, 0.015) 46%, rgba(232, 251, 255, 0) 86%);
 }
 
 .legacy-stewardship-story-light-leaks {
   position: absolute;
   inset: -8% -8% -4%;
   pointer-events: none;
-  z-index: 0;
+  z-index: 2;
 }
 
 .legacy-stewardship-story-light-leak {
   position: absolute;
   border-radius: 50%;
-  filter: blur(34px);
+  filter: blur(48px);
   transform:
     translate(-50%, -50%)
     scale(var(--legacy-light-leak-scale, 1));
@@ -13557,45 +13584,45 @@
 
 .legacy-stewardship-story-light-leak.is-a {
   --legacy-light-leak-scale: var(--legacy-light-leak-a-scale, 1);
-  --legacy-light-leak-opacity: var(--legacy-light-leak-a-opacity, 0.12);
+  --legacy-light-leak-opacity: var(--legacy-light-leak-a-opacity, 0.09);
   left: var(--legacy-light-leak-a-x, 18%);
   top: var(--legacy-light-leak-a-y, 24%);
-  width: clamp(32rem, 54vw, 64rem);
+  width: clamp(40rem, 62vw, 78rem);
   aspect-ratio: 1 / 1;
   background:
-    radial-gradient(circle at 42% 42%, rgba(255, 255, 255, 0.99) 0%, rgba(205, 245, 250, 0.98) 18%, rgba(0, 173, 187, 0.52) 42%, rgba(0, 173, 187, 0) 78%);
+    radial-gradient(circle at 42% 42%, rgba(255, 255, 255, 0.8) 0%, rgba(205, 245, 250, 0.74) 18%, rgba(0, 173, 187, 0.24) 44%, rgba(0, 173, 187, 0) 82%);
 }
 
 .legacy-stewardship-story-light-leak.is-b {
   --legacy-light-leak-scale: var(--legacy-light-leak-b-scale, 1);
-  --legacy-light-leak-opacity: var(--legacy-light-leak-b-opacity, 0.1);
+  --legacy-light-leak-opacity: var(--legacy-light-leak-b-opacity, 0.075);
   left: var(--legacy-light-leak-b-x, 84%);
   top: var(--legacy-light-leak-b-y, 76%);
-  width: clamp(30rem, 50vw, 58rem);
+  width: clamp(38rem, 60vw, 72rem);
   aspect-ratio: 1 / 1;
   background:
-    radial-gradient(circle at 52% 48%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 230, 184, 0.92) 22%, rgba(246, 177, 70, 0.46) 46%, rgba(246, 177, 70, 0) 80%);
+    radial-gradient(circle at 52% 48%, rgba(255, 255, 255, 0.74) 0%, rgba(214, 246, 249, 0.62) 22%, rgba(23, 179, 199, 0.2) 46%, rgba(23, 179, 199, 0) 82%);
 }
 
 .legacy-stewardship-story-light-leak.is-c {
   --legacy-light-leak-scale: var(--legacy-light-leak-c-scale, 1);
-  --legacy-light-leak-opacity: var(--legacy-light-leak-c-opacity, 0.08);
+  --legacy-light-leak-opacity: var(--legacy-light-leak-c-opacity, 0.06);
   left: var(--legacy-light-leak-c-x, 54%);
   top: var(--legacy-light-leak-c-y, 18%);
-  width: clamp(26rem, 44vw, 50rem);
+  width: clamp(34rem, 52vw, 64rem);
   aspect-ratio: 1 / 1;
   background:
-    radial-gradient(circle at 54% 46%, rgba(255, 255, 255, 0.97) 0%, rgba(211, 238, 244, 0.9) 20%, rgba(0, 138, 166, 0.34) 42%, rgba(118, 120, 123, 0) 78%);
+    radial-gradient(circle at 54% 46%, rgba(255, 255, 255, 0.72) 0%, rgba(211, 238, 244, 0.62) 20%, rgba(0, 138, 166, 0.18) 42%, rgba(118, 120, 123, 0) 80%);
 }
 
 .legacy-stewardship-story-backdrop {
   position: absolute;
   inset: -4% -4% 14%;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 18%, rgba(0, 173, 187, 0.28) 0%, rgba(0, 173, 187, 0) 72%);
-  filter: blur(36px);
+  background: radial-gradient(circle at 50% 18%, rgba(36, 201, 217, 0.18) 0%, rgba(36, 201, 217, 0.04) 42%, rgba(36, 201, 217, 0) 78%);
+  filter: blur(48px);
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
 .legacy-stewardship-story-stage {
@@ -13609,7 +13636,7 @@
     clamp(6rem, 14vh, 9.5rem)
     clamp(1.5rem, 6vw, 5.4rem)
     clamp(4rem, 8vh, 6rem);
-  z-index: 2;
+  z-index: 3;
 }
 
 .legacy-stewardship-story-stage-copy,
@@ -13651,7 +13678,7 @@
 .legacy-stewardship-story-first-cue {
   display: grid;
   justify-items: center;
-  color: rgba(15, 36, 48, 0.62);
+  color: rgba(244, 251, 252, 0.88);
   pointer-events: none;
   will-change: transform, opacity;
 }
@@ -13869,10 +13896,9 @@
     padding-top: clamp(1.25rem, 3.2vw, 1.9rem);
     padding-bottom: clamp(3rem, 7vw, 4.75rem);
     background:
-      radial-gradient(circle at 16% 14%, rgba(0, 173, 187, 0.28), transparent 34%),
-      radial-gradient(circle at 84% 78%, rgba(246, 177, 70, 0.22), transparent 36%),
-      radial-gradient(circle at 52% 32%, rgba(214, 229, 234, 0.34), transparent 44%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 38%),
+      radial-gradient(circle at 16% 14%, rgba(36, 201, 217, 0.22), transparent 34%),
+      radial-gradient(circle at 84% 78%, rgba(190, 243, 247, 0.14), transparent 36%),
+      radial-gradient(circle at 52% 32%, rgba(0, 56, 81, 0.22), transparent 44%),
       var(--legacy-stewardship-surface);
   }
 
