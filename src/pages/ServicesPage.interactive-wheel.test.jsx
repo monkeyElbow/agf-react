@@ -133,10 +133,10 @@ describe('ServicesPage interactive service wheel', () => {
     const selectedCard = getSelectedCard();
 
     expect(selectedCard).toBeTruthy();
-    fireEvent.click(document.querySelector('[data-service-wheel-slice="Legacy Giving"]'));
+    fireEvent.click(document.querySelector('[data-service-wheel-slice="Planned Giving"]'));
 
-    expect(within(selectedCard).getByRole('heading', { name: 'Legacy Giving' })).toBeTruthy();
-    expect(within(selectedCard).getByRole('link', { name: 'Explore Legacy Giving' }).getAttribute('href')).toBe('/services/legacy-giving');
+    expect(within(selectedCard).getByRole('heading', { name: 'Planned Giving' })).toBeTruthy();
+    expect(within(selectedCard).getByRole('link', { name: 'Explore Planned Giving' }).getAttribute('href')).toBe('/services/planned-giving');
   });
 
   it('auto-advances only when motion is allowed and pauses when reduced motion is preferred', () => {

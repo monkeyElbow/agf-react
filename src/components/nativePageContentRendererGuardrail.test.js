@@ -100,7 +100,7 @@ describe('native page content renderer guardrail', () => {
 
     expect(source).toContain("const resolvedPagePath = String(activePath || templatePath || '/').trim() || '/';");
     expect(source).toContain("const isTestPage = templatePath === '/test';");
-    expect(source).toContain("const isLegacyGivingPage = resolvedPagePath === '/services/legacy-giving';");
+    expect(source).toContain("const isLegacyGivingPage = resolvedPagePath === '/services/planned-giving';");
     expect(source).toContain("const testimonialsHudDefaultTag = isLegacyGivingPage ? 'legacy-giving' : '';");
     expect(source).toContain("const retirement403bComposition = composeRetirement403bSections({");
     expect(source).toContain('let nextSections = composeConsultantSections({');

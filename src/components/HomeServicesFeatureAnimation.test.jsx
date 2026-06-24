@@ -97,18 +97,18 @@ describe('HomeServicesFeatureAnimation', () => {
       'Loans',
       'Investments',
       'Retirement',
-      'Legacy Giving',
+      'Planned Giving',
       'Insurance',
     ]);
     expect(screen.getByRole('heading', { name: 'Loans' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Retirement' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Investments' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Legacy Giving' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Planned Giving' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Insurance' })).toBeTruthy();
     expect(panels[0]?.getAttribute('aria-labelledby')).toContain('-panel-title-0');
     expect(panels[0]?.getAttribute('aria-describedby')).toContain('-panel-body-0');
     expect(screen.getByRole('link', { name: 'Explore options' }).getAttribute('href')).toBe('/services/loans');
-    expect(screen.getByRole('link', { name: 'Learn & strategize' }).getAttribute('href')).toBe('/services/legacy-giving');
+    expect(screen.getByRole('link', { name: 'Learn & strategize' }).getAttribute('href')).toBe('/services/planned-giving');
     expect(screen.getByRole('link', { name: 'Start here' }).getAttribute('href')).toBe('/services/insurance');
     expect(screen.getByRole('link', { name: 'Explore options' }).classList.contains('home-services-feature-btn')).toBe(true);
     expect(container.querySelector('.home-services-feature-panel-eyebrow')).toBeNull();

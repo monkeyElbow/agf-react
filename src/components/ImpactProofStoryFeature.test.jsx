@@ -18,11 +18,11 @@ const DEFAULT_PROPS = {
     },
     {
       value: '$450 million',
-      eyebrow: 'Legacy Giving',
+      eyebrow: 'Planned Giving',
       label: 'distributed to ministries through AG Foundation.',
       body: 'That’s the power of generous donors using smart strategies.',
       tone: 'mango',
-      action: { label: 'Plan with us', to: '/services/legacy-giving' },
+      action: { label: 'Plan with us', to: '/services/planned-giving' },
     },
     {
       value: '5,117',
@@ -126,7 +126,7 @@ describe('ImpactProofStoryFeature', () => {
     const { container } = renderFeature();
 
     expect(screen.getByRole('link', { name: 'Explore loans' }).getAttribute('href')).toBe('/services/loans');
-    expect(screen.getByRole('link', { name: 'Plan with us' }).getAttribute('href')).toBe('/services/legacy-giving');
+    expect(screen.getByRole('link', { name: 'Plan with us' }).getAttribute('href')).toBe('/services/planned-giving');
     expect(screen.getByRole('link', { name: 'Cover your ministry' }).getAttribute('href')).toBe('/services/insurance');
     expect(screen.getByRole('link', { name: 'Start your tomorrow' }).getAttribute('href')).toBe('/services/retirement');
     expect(container.querySelectorAll('.impact-proof-story-proof-value.is-value-atlantean')).toHaveLength(2);

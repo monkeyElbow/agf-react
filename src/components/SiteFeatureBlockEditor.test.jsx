@@ -116,7 +116,7 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
   });
 
-  it('keeps the legacy giving stewardship story editor surface limited to headline and CTA overrides', () => {
+  it('keeps the planned giving stewardship story editor surface limited to headline and CTA overrides', () => {
     render(
       createElement(SiteFeatureBlockEditor, {
         block: createBlock({

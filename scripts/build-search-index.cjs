@@ -59,13 +59,13 @@ const nativeEntries = [
     path: '/',
     title: 'Home',
     section: 'Core',
-    text: 'Today investment tomorrow church. Browse loans, retirement, investments, legacy giving, insurance, rates, and contact options. Includes stay in the loop and contact form.',
+    text: 'Today investment tomorrow church. Browse loans, retirement, investments, planned giving, insurance, rates, and contact options. Includes stay in the loop and contact form.',
   },
   {
     path: '/services',
     title: 'Services',
     section: 'Services',
-    text: 'Overview of loans, investments, retirement, legacy giving, and insurance. Includes complete financial strategy, what you do matters, service links, and testimonials.',
+    text: 'Overview of loans, investments, retirement, planned giving, and insurance. Includes complete financial strategy, what you do matters, service links, and testimonials.',
   },
   {
     path: '/services/loans',

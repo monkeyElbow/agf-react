@@ -3995,7 +3995,7 @@ export default function NativeContentPage({ page }) {
   const templatePath = String(page?.routeKey || page?.path || '').trim();
   const resolvedPagePath = String(activePath || templatePath || '/').trim() || '/';
   const isTestPage = templatePath === '/test';
-  const isLegacyGivingPage = resolvedPagePath === '/services/legacy-giving';
+  const isLegacyGivingPage = resolvedPagePath === '/services/planned-giving';
   useNativeEnhancements(pageRef, templatePath);
   const { getConsultants } = useConsultants();
   const { getVisibleJobs } = useCareersJobs();

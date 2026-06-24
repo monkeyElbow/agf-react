@@ -10,8 +10,8 @@ function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
 }
 
-describe('legacy giving review polish guardrail', () => {
-  it('keeps the route-specific wills spacing and mobile opportunity collapse scoped to legacy giving', () => {
+describe('planned giving review polish guardrail', () => {
+  it('keeps the route-specific wills spacing and mobile opportunity collapse scoped to planned giving', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-wills {');
@@ -95,7 +95,7 @@ describe('legacy giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul li + li {');
   });
 
-  it('keeps the legacy giving route wired to the comparison widget and the opportunity feature block', () => {
+  it('keeps the planned giving route wired to the comparison widget and the opportunity feature block', () => {
     const contentSource = readSource('../data/nativePageContent.js');
 
     expect(contentSource).toContain("className: 'legacy-giving-comparison-matrix'");

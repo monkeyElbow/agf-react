@@ -64,8 +64,8 @@
   },
   {
     "file": "legacy-giving.md",
-    "topic": "Legacy Giving overview and charitable planning options",
-    "publicRoutes": ["/services/legacy-giving"],
+    "topic": "Planned Giving overview and charitable planning options",
+    "publicRoutes": ["/services/planned-giving"],
     "sourceFiles": ["src/data/nativePageContent.js"],
     "contentType": "service-detail",
     "notes": ["Keeps factual giving-option copy and scope of the comparison section; does not reproduce every testimonial or table cell."],

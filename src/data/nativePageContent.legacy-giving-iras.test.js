@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { getNativePageContent } from './nativePageContent';
 
-describe('legacy giving and IRA native page content', () => {
-  it('keeps the legacy giving copy and endowments/generosity cleanup in the native seed', () => {
-    const legacyContent = getNativePageContent('/services/legacy-giving', '');
-    const endowmentsContent = getNativePageContent('/services/legacy-giving/endowments', '');
-    const generosityContent = getNativePageContent('/services/legacy-giving/generosity-fund', '');
-    const ministryImpactContent = getNativePageContent('/services/legacy-giving/ministry-impact-fund', '');
-    const charitableTrustsContent = getNativePageContent('/services/legacy-giving/charitable-trusts', '');
+describe('planned giving and IRA native page content', () => {
+  it('keeps the planned giving copy and endowments/generosity cleanup in the native seed', () => {
+    const legacyContent = getNativePageContent('/services/planned-giving', '');
+    const endowmentsContent = getNativePageContent('/services/planned-giving/endowments', '');
+    const generosityContent = getNativePageContent('/services/planned-giving/generosity-fund', '');
+    const ministryImpactContent = getNativePageContent('/services/planned-giving/ministry-impact-fund', '');
+    const charitableTrustsContent = getNativePageContent('/services/planned-giving/charitable-trusts', '');
 
     const legacyCards = legacyContent?.sections?.find((section) => section?.className === 'legacy-giving-types')?.cards || [];
     const stewardshipSection = legacyContent?.sections?.find((section) => section?.className === 'legacy-giving-stewardship');
@@ -102,10 +102,10 @@ describe('legacy giving and IRA native page content', () => {
     ]);
     expect(charitableTrustsChoiceCards?.cards).toHaveLength(2);
     expect(charitableTrustsChoiceCards?.cards?.[0]?.actions).toEqual([
-      expect.objectContaining({ label: 'Explore CRT options', to: '/services/legacy-giving/charitable-trusts#crt' }),
+      expect.objectContaining({ label: 'Explore CRT options', to: '/services/planned-giving/charitable-trusts#crt' }),
     ]);
     expect(charitableTrustsChoiceCards?.cards?.[1]?.actions).toEqual([
-      expect.objectContaining({ label: 'Explore CLT options', to: '/services/legacy-giving/charitable-trusts#clt' }),
+      expect.objectContaining({ label: 'Explore CLT options', to: '/services/planned-giving/charitable-trusts#clt' }),
     ]);
     expect(charitableTrustsDifferences?.title).toBe('The differences. At a glance.');
     expect(charitableTrustsDifferences?.cards).toHaveLength(3);

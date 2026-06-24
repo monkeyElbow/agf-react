@@ -10,7 +10,7 @@ const footerCols = [
       ['/services/loans', 'Loans'],
       ['/services/investments', 'Investments'],
       ['/services/retirement', 'Retirement'],
-      ['/services/legacy-giving', 'Legacy Giving'],
+      ['/services/planned-giving', 'Planned Giving'],
       ['/services/insurance', 'Insurance'],
     ],
   },

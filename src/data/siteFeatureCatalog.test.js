@@ -37,7 +37,7 @@ describe('site feature catalog', () => {
       { value: 'editorial_spotlight', label: 'Editorial spotlight' },
       { value: 'home_services_feature_animation', label: 'Home services feature animation' },
       { value: 'home_impact_story', label: 'Home impact story' },
-      { value: 'legacy_giving_stewardship_story', label: 'Legacy Giving stewardship story' },
+      { value: 'legacy_giving_stewardship_story', label: 'Planned Giving stewardship story' },
       { value: 'impact_proof_story', label: 'Impact proof story' },
     ]);
     expect(getAllowedSiteFeatureEditableFieldIds('editorial_spotlight')).toEqual(entry?.allowedEditableFieldIds);
@@ -77,7 +77,7 @@ describe('site feature catalog', () => {
     expect(legacyGivingEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
     expect(homeServicesEntry?.routeAllowlist).toEqual(['/']);
     expect(homeImpactEntry?.routeAllowlist).toEqual(['/']);
-    expect(legacyGivingEntry?.routeAllowlist).toEqual(['/services/legacy-giving']);
+    expect(legacyGivingEntry?.routeAllowlist).toEqual(['/services/planned-giving']);
     expect(getAllowedSiteFeatureEditableFieldIds('impact_proof_story')).toEqual(impactProofEntry?.allowedEditableFieldIds);
     expect(impactProofEntry?.allowedEditableFieldIds).toEqual([
       'featureId',
@@ -95,7 +95,7 @@ describe('site feature catalog', () => {
       'Loans',
       'Investments',
       'Retirement',
-      'Legacy Giving',
+      'Planned Giving',
       'Insurance',
     ]);
   });

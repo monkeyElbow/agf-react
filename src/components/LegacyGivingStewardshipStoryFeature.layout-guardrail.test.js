@@ -10,7 +10,7 @@ function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
 }
 
-describe('legacy giving stewardship story layout guardrail', () => {
+describe('planned giving stewardship story layout guardrail', () => {
   it('keeps the premium light-leak background and the centered responsive stewardship layout scoped to the legacy feature', () => {
     const cssSource = readSource('../styles/service-native.css');
 

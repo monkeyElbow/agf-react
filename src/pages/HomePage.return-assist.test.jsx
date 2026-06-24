@@ -72,7 +72,7 @@ describe('HomePage return assist', () => {
     '/services/retirement',
     '/services/retirement/403b',
     '/services/insurance/mission-assure',
-    '/services/legacy-giving/endowments',
+    '/services/planned-giving/endowments',
   ];
 
   beforeEach(() => {
@@ -170,7 +170,7 @@ describe('HomePage return assist', () => {
 
   it('uses the shared site search results inside the compact return assist shell', async () => {
     const now = Date.now();
-    recordHomeReturnAssistNavigation('/services/legacy-giving', now);
+    recordHomeReturnAssistNavigation('/services/planned-giving', now);
     recordHomeReturnAssistNavigation('/', now + 200);
 
     renderHomePage(['/']);

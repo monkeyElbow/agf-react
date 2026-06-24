@@ -110,11 +110,11 @@ export function getNativePageContent(path, title) {
     ]);
   }
 
-  if (path.startsWith('/services/legacy-giving/')) {
-    return legacyChildPages[path] || serviceChildContent(title, '/services/legacy-giving', [
-      { label: 'Legacy Giving overview', to: '/services/legacy-giving' },
-      { label: 'Charitable Gift Annuities', to: '/services/legacy-giving/charitable-gift-annuities' },
-      { label: 'Charitable Trusts', to: '/services/legacy-giving/charitable-trusts' },
+  if (path.startsWith('/services/planned-giving/')) {
+    return legacyChildPages[path] || serviceChildContent(title, '/services/planned-giving', [
+      { label: 'Planned Giving overview', to: '/services/planned-giving' },
+      { label: 'Charitable Gift Annuities', to: '/services/planned-giving/charitable-gift-annuities' },
+      { label: 'Charitable Trusts', to: '/services/planned-giving/charitable-trusts' },
       { label: 'Talk with a specialist', to: '/contact-us' },
     ]);
   }
@@ -134,7 +134,7 @@ export function getNativePageContent(path, title) {
       { label: 'Investments', to: '/services/investments' },
       { label: 'Retirement', to: '/services/retirement' },
       { label: 'Insurance', to: '/services/insurance' },
-      { label: 'Legacy Giving', to: '/services/legacy-giving' },
+      { label: 'Planned Giving', to: '/services/planned-giving' },
     ]);
   }
 
@@ -417,7 +417,7 @@ const directContent = {
     actions: [],
   },
 
-  '/services/legacy-giving': {
+  '/services/planned-giving': {
     pageClass: 'native-info-page--legacy-giving',
     hero: {
       justify: 'right',
@@ -448,19 +448,19 @@ const directContent = {
             body: 'Our Generosity Fund® is a Donor Advised Fund that can be used to simplify your giving and increase your joy doing so. A Generosity Fund® is a giving tool available to anyone, regardless of income level.',
             actions: [
               { label: 'Watch video', href: 'https://media.agfinancial.org/2021_Generosity-Fund.mp4', ghost: true },
-              { label: 'Learn more', to: '/services/legacy-giving/generosity-fund' },
+              { label: 'Learn more', to: '/services/planned-giving/generosity-fund' },
             ],
           },
           {
             title: 'Endowments',
             body: 'This long-term, stable source of funding is designed to keep your gifted principal intact so it can grow over time. The annual investment income may be used for scholarships, ministries, or other purposes you specify.',
-            to: '/services/legacy-giving/endowments',
+            to: '/services/planned-giving/endowments',
             cta: 'Learn more',
           },
           {
             title: 'Charitable Gift Annuities',
             body: 'A popular planned gift that provides payments for you, a Charitable Gift Annuity (CGA) allows you to receive dependable lifetime fixed payments and leave a gift to the ministry of your choice.',
-            to: '/services/legacy-giving/charitable-gift-annuities',
+            to: '/services/planned-giving/charitable-gift-annuities',
             cta: 'Learn more',
           },
           {
@@ -474,13 +474,13 @@ const directContent = {
           {
             title: 'Charitable Trusts',
             body: 'Similar to a CGA, a Charitable Trust provides generous support for ministry while the donor receives potential tax benefits. You choose when to support the ministry: at the completion of the trust, or at its onset.',
-            to: '/services/legacy-giving/charitable-trusts',
+            to: '/services/planned-giving/charitable-trusts',
             cta: 'Learn more',
           },
           {
             title: 'Ministry Impact Fund',
             body: 'Designed for churches to receive gifts of any type: cash, stock, real estate, and more, a Ministry Impact Fund removes giving barriers and delivers cash directly to your ministry.',
-            to: '/services/legacy-giving/ministry-impact-fund',
+            to: '/services/planned-giving/ministry-impact-fund',
             cta: 'Learn more',
           },
         ],
@@ -541,7 +541,7 @@ const directContent = {
             { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
             {
               id: 'legacyProduct',
-              label: 'Legacy giving product of interest*',
+              label: 'Planned giving product of interest*',
               type: 'select',
               required: true,
               placeholder: 'Select one',
@@ -699,7 +699,7 @@ const directContent = {
           { text: 'your ministry', className: 'is-atlantean' },
           { text: 'your family', className: 'is-mango' },
         ],
-        html: '<p>It is our honor to serve more than 38,000 clients, and more than 4,000 churches and ministries worldwide. With $12 billion+ in assets under management, we are driven to God-honoring stewardship. Through <a href="/services/loans">loans</a>, <a href="/services/investments">investments</a>, <a href="/services/retirement">retirement</a>, <a href="/services/legacy-giving">planned giving</a>, and <a href="/services/insurance">insurance</a>, we’re dedicated to providing the best financial experience for both ministries and individuals.</p>',
+        html: '<p>It is our honor to serve more than 38,000 clients, and more than 4,000 churches and ministries worldwide. With $12 billion+ in assets under management, we are driven to God-honoring stewardship. Through <a href="/services/loans">loans</a>, <a href="/services/investments">investments</a>, <a href="/services/retirement">retirement</a>, <a href="/services/planned-giving">planned giving</a>, and <a href="/services/insurance">insurance</a>, we’re dedicated to providing the best financial experience for both ministries and individuals.</p>',
         cards: [
           {
             title: 'Focus',
@@ -923,7 +923,7 @@ const directContent = {
             body: 'Estimate how invested endowment assets may support ministry year after year.',
             stretchedLink: {
               label: 'Launch',
-              to: '/services/legacy-giving/endowments#endowment-investment-earnings-calculator',
+              to: '/services/planned-giving/endowments#endowment-investment-earnings-calculator',
             },
             cta: 'Launch',
             cardClass: 'card2',
@@ -1288,7 +1288,7 @@ const directContent = {
           {
             title: 'Resourcing Ministry',
             body: 'More than $500 million has been distributed to ministry over the past decade through AG Foundation and the stewardship of donors.',
-            to: '/services/legacy-giving',
+            to: '/services/planned-giving',
             cta: 'Planned Giving',
           },
           {
@@ -1312,7 +1312,7 @@ const directContent = {
           { label: 'Loans', to: '/services/loans' },
           { label: 'Investments', to: '/services/investments' },
           { label: 'Retirement', to: '/services/retirement' },
-          { label: 'Legacy Giving', to: '/services/legacy-giving' },
+          { label: 'Planned Giving', to: '/services/planned-giving' },
           { label: 'Insurance', to: '/services/insurance' },
         ],
       },
@@ -1987,7 +1987,7 @@ const insuranceChildPages = {
 };
 
 const legacyChildPages = {
-  '/services/legacy-giving/charitable-gift-annuities': {
+  '/services/planned-giving/charitable-gift-annuities': {
     pageClass: 'native-info-page--legacy-child native-info-page--legacy-cga',
     compact: true,
     hero: {
@@ -2046,15 +2046,15 @@ const legacyChildPages = {
             ],
           },
         ],
-        actions: [{ label: 'Learn more about this', to: '/services/legacy-giving/charitable-gift-annuities#demo' }],
+        actions: [{ label: 'Learn more about this', to: '/services/planned-giving/charitable-gift-annuities#demo' }],
       },
       {
         className: 'legacy-child-native-cga-qcd-fineprint',
         hideTitle: true,
         body: ['**Also available for Charitable Remainder Unitrust (CRUT) or Charitable Remainder Annuity Trust (CRAT)**'],
         links: [
-          { label: 'Charitable Remainder Unitrust (CRUT)', to: '/services/legacy-giving/charitable-trusts#crt' },
-          { label: 'Charitable Remainder Annuity Trust (CRAT)', to: '/services/legacy-giving/charitable-trusts#crt' },
+          { label: 'Charitable Remainder Unitrust (CRUT)', to: '/services/planned-giving/charitable-trusts#crt' },
+          { label: 'Charitable Remainder Annuity Trust (CRAT)', to: '/services/planned-giving/charitable-trusts#crt' },
         ],
         fineprint: [
           '*Indexed annually for inflation',
@@ -2079,7 +2079,7 @@ const legacyChildPages = {
             cardClass: 'card2',
           },
         ],
-        actions: [{ label: 'Try the CGA estimator', to: '/services/legacy-giving/charitable-gift-annuities#demo' }],
+        actions: [{ label: 'Try the CGA estimator', to: '/services/planned-giving/charitable-gift-annuities#demo' }],
       },
       {
         className: 'legacy-child-native-cga-comparison',
@@ -2109,9 +2109,9 @@ const legacyChildPages = {
         className: 'legacy-child-native-cga-outro',
         copyWrap: true,
         title: 'Plenty of options.',
-        subtitle: 'Explore other charitable and legacy giving strategies.',
+        subtitle: 'Explore other charitable and planned giving strategies.',
         actionsBeforeCards: true,
-        actions: [{ label: 'Discover more', to: '/services/legacy-giving' }],
+        actions: [{ label: 'Discover more', to: '/services/planned-giving' }],
         fineprint: [
           'Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.',
           'Additional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.',
@@ -2121,7 +2121,7 @@ const legacyChildPages = {
       },
     ],
   },
-  '/services/legacy-giving/charitable-trusts': {
+  '/services/planned-giving/charitable-trusts': {
     pageClass: 'native-info-page--legacy-child native-info-page--legacy-trusts',
     compact: true,
     hero: {
@@ -2150,14 +2150,14 @@ const legacyChildPages = {
             title: 'Charitable Remainder Trust (CRT)',
             titleHighlights: [{ text: 'Remainder', className: 'is-melon' }],
             body: 'This option allows you to receive income payments for you and your family while potentially receiving immediate tax benefits. At the completion of the trust, you’ll have the joy of giving to the ministry of your choice. **Minimum requirements:** $50,000 cash or securities; $100,000 real estate.',
-            actions: [{ label: 'Explore CRT options', to: '/services/legacy-giving/charitable-trusts#crt' }],
+            actions: [{ label: 'Explore CRT options', to: '/services/planned-giving/charitable-trusts#crt' }],
             cardClass: 'card2',
           },
           {
             title: 'Charitable Lead Trust (CLT)',
             titleHighlights: [{ text: 'Lead', className: 'is-mango' }],
             body: 'This option allows ministry to receive income payments for a set term while you potentially receive immediate tax benefits. At the completion of the trust, assets return to you or transfer to your family—often with significant growth. **Minimum requirements:** $50,000 cash or securities; $100,000 real estate.',
-            actions: [{ label: 'Explore CLT options', to: '/services/legacy-giving/charitable-trusts#clt' }],
+            actions: [{ label: 'Explore CLT options', to: '/services/planned-giving/charitable-trusts#clt' }],
             cardClass: 'card2',
           },
         ],
@@ -2345,7 +2345,7 @@ const legacyChildPages = {
       },
     ],
   },
-  '/services/legacy-giving/endowments': {
+  '/services/planned-giving/endowments': {
     pageClass: 'native-info-page--legacy-child native-info-page--legacy-endowments',
     compact: true,
     hero: {
@@ -2429,7 +2429,7 @@ const legacyChildPages = {
       },
     ],
   },
-  '/services/legacy-giving/generosity-fund': {
+  '/services/planned-giving/generosity-fund': {
     pageClass: 'native-info-page--legacy-child native-info-page--legacy-generosity-fund',
     compact: true,
     hero: {
@@ -2548,7 +2548,7 @@ const legacyChildPages = {
       },
     ],
   },
-  '/services/legacy-giving/ministry-impact-fund': {
+  '/services/planned-giving/ministry-impact-fund': {
     pageClass: 'native-info-page--legacy-child native-info-page--legacy-ministry-impact',
     compact: true,
     hero: {
@@ -3774,11 +3774,11 @@ function companyChildContent(path, title) {
               titleClassName: 'countup',
               subtitle: 'distributed to ministries through AG Foundation.',
               body: 'That’s the power of generous donors using smart strategies.',
-              to: '/services/legacy-giving',
+              to: '/services/planned-giving',
               cta: 'Plan with us',
               stretchedLink: {
                 label: 'Plan with us',
-                to: '/services/legacy-giving',
+                to: '/services/planned-giving',
               },
               cardClass: 'impact-native-card impact-native-card--legacy',
             },

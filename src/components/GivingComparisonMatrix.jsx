@@ -63,7 +63,7 @@ export const givingComparisonPrograms = [
     propertyAllowed: 'No',
     timing: 'Income now; ministry later',
     ctaLabel: 'Learn More',
-    ctaHref: '/services/legacy-giving/charitable-gift-annuities',
+    ctaHref: '/services/planned-giving/charitable-gift-annuities',
   },
   {
     id: 'crt',
@@ -78,7 +78,7 @@ export const givingComparisonPrograms = [
     propertyAllowed: 'Yes',
     timing: 'Income now; ministry later',
     ctaLabel: 'Talk to a Consultant',
-    ctaHref: '/services/legacy-giving/charitable-trusts#crt',
+    ctaHref: '/services/planned-giving/charitable-trusts#crt',
   },
   {
     id: 'dcga',
@@ -93,7 +93,7 @@ export const givingComparisonPrograms = [
     propertyAllowed: 'No',
     timing: 'Income later; ministry later',
     ctaLabel: 'Learn More',
-    ctaHref: '/services/legacy-giving/charitable-gift-annuities',
+    ctaHref: '/services/planned-giving/charitable-gift-annuities',
   },
   {
     id: 'crat',
@@ -108,7 +108,7 @@ export const givingComparisonPrograms = [
     propertyAllowed: 'Limited',
     timing: 'Income now; ministry later',
     ctaLabel: 'Talk to a Consultant',
-    ctaHref: '/services/legacy-giving/charitable-trusts#crt',
+    ctaHref: '/services/planned-giving/charitable-trusts#crt',
   },
   {
     id: 'clt',
@@ -123,7 +123,7 @@ export const givingComparisonPrograms = [
     propertyAllowed: 'Yes',
     timing: 'Ministry now; principal later',
     ctaLabel: 'Talk to a Consultant',
-    ctaHref: '/services/legacy-giving/charitable-trusts#clt',
+    ctaHref: '/services/planned-giving/charitable-trusts#clt',
   },
 ];
 

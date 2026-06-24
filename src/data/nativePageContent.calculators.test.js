@@ -25,7 +25,7 @@ describe('calculators native page content', () => {
       '/calculators/emergency-fund',
       '/calculators/net-worth',
       '/services/investments#laddering-calculator',
-      '/services/legacy-giving/endowments#endowment-investment-earnings-calculator',
+      '/services/planned-giving/endowments#endowment-investment-earnings-calculator',
     ]);
     expect(sections.some((section) => String(section?.className || '').includes('calculators-native-contact'))).toBe(false);
   });

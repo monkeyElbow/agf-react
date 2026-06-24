@@ -2,7 +2,7 @@ export const chatbotContent = {
   servicesOverview: {
     title: 'Services',
     url: '/services',
-    content: 'AGFinancial presents a complete financial strategy for your ministry and your family. The public site centers on loans, investments, retirement, legacy giving, insurance, rates, calculators, and next-step contact options.',
+    content: 'AGFinancial presents a complete financial strategy for your ministry and your family. The public site centers on loans, investments, retirement, planned giving, insurance, rates, calculators, and next-step contact options.',
     keywords: ['services', 'service overview', 'options', 'where to start', 'financial services'],
     audience: 'general',
     notes: 'Derived from the staged services overview export.',

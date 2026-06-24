@@ -374,7 +374,7 @@ const pageContentFallbackOnlyBlueprintPaths = [
   '/services/insurance/life-insurance-quote',
   '/services/insurance/mission-assure',
   '/services/insurance/mission-assure/report-a-claim',
-  '/services/legacy-giving/charitable-trusts',
+  '/services/planned-giving/charitable-trusts',
   '/services/retirement/403b',
   '/services/retirement/403b/403b-group-enrollment',
   '/services/retirement/403b/403b-individual-enrollment',
@@ -464,7 +464,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: requestFormEditableFields,
     },
   ],
-  '/services/legacy-giving/charitable-gift-annuities': [
+  '/services/planned-giving/charitable-gift-annuities': [
     {
       id: 'hero',
       name: 'Hero',
@@ -551,7 +551,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         title: 'Plenty of options.',
         titleClassName: '',
         titleHighlightsJson: '',
-        subtitle: 'Explore other charitable and legacy giving strategies.',
+        subtitle: 'Explore other charitable and planned giving strategies.',
         bodyHtml: '',
         body: '',
         bgTone: 'white',
@@ -563,7 +563,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           hrefField: 'buttonUrl',
           pageRefField: 'buttonPageRef',
           label: 'Discover more',
-          href: '/services/legacy-giving',
+          href: '/services/planned-giving',
           styleField: 'buttonStyle',
           toneField: 'buttonTone',
         }),
@@ -631,7 +631,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: requestFormEditableFields,
     },
   ],
-  '/services/legacy-giving/ministry-impact-fund': [
+  '/services/planned-giving/ministry-impact-fund': [
     {
       id: 'hero',
       name: 'Hero',
@@ -1001,7 +1001,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     },
     ...genericPageFallbackBlueprint(),
   ],
-  '/services/legacy-giving/charitable-trusts': [
+  '/services/planned-giving/charitable-trusts': [
     {
       id: 'hero',
       name: 'Hero',
@@ -1078,14 +1078,14 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           titleHighlightsJson: '[{"text":"Remainder","className":"is-melon"}]',
           body: 'This option allows you to receive income payments for you and your family while potentially receiving immediate tax benefits. At the completion of the trust, you’ll have the joy of giving to the ministry of your choice. **Minimum requirements:** $50,000 cash or securities; $100,000 real estate.',
           buttonLabel: 'Explore CRT options',
-          buttonPageRef: '/services/legacy-giving/charitable-trusts#crt',
+          buttonPageRef: '/services/planned-giving/charitable-trusts#crt',
         }),
         ...seedBlueprintCardGridCardFields(2, {
           title: 'Charitable Lead Trust (CLT)',
           titleHighlightsJson: '[{"text":"Lead","className":"is-mango"}]',
           body: 'This option allows ministry to receive income payments for a set term while you potentially receive immediate tax benefits. At the completion of the trust, assets return to you or transfer to your family—often with significant growth. **Minimum requirements:** $50,000 cash or securities; $100,000 real estate.',
           buttonLabel: 'Explore CLT options',
-          buttonPageRef: '/services/legacy-giving/charitable-trusts#clt',
+          buttonPageRef: '/services/planned-giving/charitable-trusts#clt',
         }),
       },
       editableFields: sharedDynamicGridEditableFields,
@@ -1991,8 +1991,8 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           action: 'Grow',
         }),
         ...seedBlueprintServicesGridCardFields(4, {
-          title: 'Legacy Giving',
-          href: '/services/legacy-giving',
+          title: 'Planned Giving',
+          href: '/services/planned-giving',
           imageUrl: charitableIcon,
           action: 'Plan',
         }),
@@ -2713,7 +2713,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: requestFormEditableFields,
     },
   ],
-  '/services/legacy-giving': [
+  '/services/planned-giving': [
     {
       id: 'hero',
       name: 'Hero',
@@ -2792,7 +2792,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           buttonLabel: 'Watch video',
           buttonHref: 'https://media.agfinancial.org/2021_Generosity-Fund.mp4',
           button2Label: 'Learn more',
-          button2Href: '/services/legacy-giving/generosity-fund',
+          button2Href: '/services/planned-giving/generosity-fund',
         }),
         card1ButtonStyle: 'ghost',
         card1ButtonTone: 'super-grey',
@@ -2802,13 +2802,13 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           title: 'Endowments',
           body: 'This long-term, stable source of funding is designed to keep your gifted principal intact so it can grow over time. The annual investment income may be used for scholarships, ministries, or other purposes you specify.',
           buttonLabel: 'Learn more',
-          buttonHref: '/services/legacy-giving/endowments',
+          buttonHref: '/services/planned-giving/endowments',
         }),
         ...seedBlueprintCardGridCardFields(3, {
           title: 'Charitable Gift Annuities',
           body: 'A popular planned gift that provides payments for you, a Charitable Gift Annuity (CGA) allows you to receive dependable lifetime fixed payments and leave a gift to the ministry of your choice.',
           buttonLabel: 'Learn more',
-          buttonHref: '/services/legacy-giving/charitable-gift-annuities',
+          buttonHref: '/services/planned-giving/charitable-gift-annuities',
         }),
         ...seedBlueprintCardGridCardFields(4, {
           title: 'Customized Giving Plans',
@@ -2824,13 +2824,13 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           title: 'Charitable Trusts',
           body: 'Similar to a CGA, a Charitable Trust provides generous support for ministry while the donor receives potential tax benefits. You choose when to support the ministry: at the completion of the trust, or at its onset.',
           buttonLabel: 'Learn more',
-          buttonHref: '/services/legacy-giving/charitable-trusts',
+          buttonHref: '/services/planned-giving/charitable-trusts',
         }),
         ...seedBlueprintCardGridCardFields(6, {
           title: 'Ministry Impact Fund',
           body: 'Designed for churches to receive gifts of any type: cash, stock, real estate, and more, a Ministry Impact Fund removes giving barriers and delivers cash directly to your ministry.',
           buttonLabel: 'Learn more',
-          buttonHref: '/services/legacy-giving/ministry-impact-fund',
+          buttonHref: '/services/planned-giving/ministry-impact-fund',
         }),
         ...seedBlueprintCardGridCardFields(7),
         ...seedBlueprintCardGridCardFields(8),
@@ -2892,7 +2892,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     },
     {
       id: 'stewardship_story',
-      name: 'Site Feature · Legacy Giving stewardship story',
+      name: 'Site Feature · Planned Giving stewardship story',
       kind: 'site_feature',
       mode: 'dynamic',
       settings: {
@@ -2955,7 +2955,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     createStaticBlueprintStub({ id: 'wills_estate_billboard', name: 'Wills & Estate Services Billboard', kind: 'billboard' }),
     createStaticBlueprintStub({ id: 'joy_billboard', name: 'More Joy Billboard', kind: 'billboard' }),
   ],
-  '/services/legacy-giving/endowments': [
+  '/services/planned-giving/endowments': [
     {
       id: 'hero',
       name: 'Hero',
@@ -3088,7 +3088,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: requestFormEditableFields,
     },
   ],
-  '/services/legacy-giving/generosity-fund': [
+  '/services/planned-giving/generosity-fund': [
     {
       id: 'hero',
       name: 'Hero',

@@ -61,7 +61,7 @@ export const homePageBlocks = [
       { title: 'Loans', path: '/services/loans', image: loansIcon, action: 'Options' },
       { title: 'Retirement', path: '/services/retirement', image: retireIcon, action: 'Explore' },
       { title: 'Investments', path: '/services/investments', image: investIcon, action: 'Grow' },
-      { title: 'Legacy Giving', path: '/services/legacy-giving', image: charitableIcon, action: 'Plan' },
+      { title: 'Planned Giving', path: '/services/planned-giving', image: charitableIcon, action: 'Plan' },
       { title: 'Insurance', path: '/services/insurance', image: insureIcon, action: 'Protect' },
       { title: 'View Rates', path: '/rates', image: ratesIcon, action: 'View Rates', featured: true },
     ],

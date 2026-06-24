@@ -172,8 +172,8 @@ describe('home services feature alignment guardrail', () => {
 
     expect(catalogSource.indexOf("title: 'Loans'")).toBeLessThan(catalogSource.indexOf("title: 'Investments'"));
     expect(catalogSource.indexOf("title: 'Investments'")).toBeLessThan(catalogSource.indexOf("title: 'Retirement'"));
-    expect(catalogSource.indexOf("title: 'Retirement'")).toBeLessThan(catalogSource.indexOf("title: 'Legacy Giving'"));
-    expect(catalogSource.indexOf("title: 'Legacy Giving'")).toBeLessThan(catalogSource.indexOf("title: 'Insurance'"));
+    expect(catalogSource.indexOf("title: 'Retirement'")).toBeLessThan(catalogSource.indexOf("title: 'Planned Giving'"));
+    expect(catalogSource.indexOf("title: 'Planned Giving'")).toBeLessThan(catalogSource.indexOf("title: 'Insurance'"));
     expect(componentSource).toContain('const currentPalette = resolveHomeServicesPalette(index);');
     expect(componentSource).toContain('const nextPalette = resolveHomeServicesPalette(Math.min(panelNodes.length - 1, index + 1));');
     expect(componentSource).toContain('const paletteHandoff = index < panelNodes.length - 1');

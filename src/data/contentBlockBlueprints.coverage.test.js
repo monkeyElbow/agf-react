@@ -113,7 +113,7 @@ describe('content block blueprint coverage', () => {
   });
 
   it('seeds charitable gift annuities with explicit managed blocks instead of fallback page content', () => {
-    const blocks = contentBlockBlueprintsByPath['/services/legacy-giving/charitable-gift-annuities'] || [];
+    const blocks = contentBlockBlueprintsByPath['/services/planned-giving/charitable-gift-annuities'] || [];
     const requestBlock = blocks.find((block) => block?.id === 'request_form');
     const outroBlock = blocks.find((block) => block?.id === 'outro' && block?.mode === 'dynamic');
 
@@ -144,7 +144,7 @@ describe('content block blueprint coverage', () => {
   });
 
   it('seeds ministry impact fund with explicit managed blocks instead of fallback page content', () => {
-    const blocks = contentBlockBlueprintsByPath['/services/legacy-giving/ministry-impact-fund'] || [];
+    const blocks = contentBlockBlueprintsByPath['/services/planned-giving/ministry-impact-fund'] || [];
     const requestBlock = blocks.find((block) => block?.id === 'request_form');
     const outroBlock = blocks.find((block) => block?.id === 'outro' && block?.mode === 'dynamic');
 
@@ -235,10 +235,10 @@ describe('content block blueprint coverage', () => {
   });
 
   it('seeds explicit managed blocks for endowments, generosity fund, and IRAs without fallback page content', () => {
-    const legacyGivingBlocks = contentBlockBlueprintsByPath['/services/legacy-giving'] || [];
-    const charitableTrustsBlocks = contentBlockBlueprintsByPath['/services/legacy-giving/charitable-trusts'] || [];
-    const endowmentBlocks = contentBlockBlueprintsByPath['/services/legacy-giving/endowments'] || [];
-    const generosityBlocks = contentBlockBlueprintsByPath['/services/legacy-giving/generosity-fund'] || [];
+    const legacyGivingBlocks = contentBlockBlueprintsByPath['/services/planned-giving'] || [];
+    const charitableTrustsBlocks = contentBlockBlueprintsByPath['/services/planned-giving/charitable-trusts'] || [];
+    const endowmentBlocks = contentBlockBlueprintsByPath['/services/planned-giving/endowments'] || [];
+    const generosityBlocks = contentBlockBlueprintsByPath['/services/planned-giving/generosity-fund'] || [];
     const iraBlocks = contentBlockBlueprintsByPath['/services/retirement/iras'] || [];
 
     expect(legacyGivingBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);

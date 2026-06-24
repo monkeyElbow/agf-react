@@ -1,7 +1,7 @@
-# Legacy Giving
+# Planned Giving
 
-Topic: Legacy Giving overview and charitable planning options  
-Public routes: `/services/legacy-giving`  
+Topic: Planned Giving overview and charitable planning options  
+Public routes: `/services/planned-giving`  
 Source files: `src/data/nativePageContent.js`
 
 ## Page headline
@@ -67,7 +67,7 @@ Your charitable giving plan makes it easy to manage both your cash and non-cash 
 
 ## Comparison-page summary
 
-Which Legacy Giving plan is right for you?
+Which Planned Giving plan is right for you?
 
 The public page compares Donor Advised Funds, Endowments, Charitable Gift Annuities, Charitable Remainder Trusts, Deferred Charitable Gift Annuities, Charitable Remainder Annuity Trusts, and Charitable Lead Trusts by funding source, minimum required amount, donor benefits, ministry benefits, and potential tax benefits.
 

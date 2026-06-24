@@ -18,7 +18,7 @@ AGFinancial presents these core service areas on the public site:
 - Loans
 - Retirement
 - Investments
-- Legacy Giving
+- Planned Giving
 - Insurance
 - View Rates
 

@@ -5882,7 +5882,7 @@ function useTestimonialsEditorModel(block, pathname = '', testimonialsLibrary = 
     });
     return Array.from(tags).sort((a, b) => a.localeCompare(b));
   }, [libraryItems]);
-  const defaultTag = pathname === '/services/legacy-giving' ? 'legacy-giving' : '';
+  const defaultTag = pathname === '/services/planned-giving' ? 'legacy-giving' : '';
   const resolved = useMemo(
     () => resolveTestimonialsBlockData({
       block,

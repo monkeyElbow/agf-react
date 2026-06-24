@@ -218,18 +218,18 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.queryByLabelText('Open in admin content editor (new window)')).toBeNull();
   });
 
-  it('does not emit native hero drift warnings for legacy giving when no dynamic hero block exists', () => {
+  it('does not emit native hero drift warnings for planned giving when no dynamic hero block exists', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mockBlocksByPath = {
-      '/services/legacy-giving': [],
+      '/services/planned-giving': [],
     };
 
     const { container } = render(
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving',
-            title: 'Legacy Giving',
+            path: '/services/planned-giving',
+            title: 'Planned Giving',
           }}
         />
       </MemoryRouter>,
@@ -266,17 +266,17 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
   });
 
-  it('shows hero and intro HUD controls on the managed legacy giving overview page', () => {
+  it('shows hero and intro HUD controls on the managed planned giving overview page', () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
-      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+      '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
     };
     mockPageHierarchy = {
-      '/services/legacy-giving': {
-        path: '/services/legacy-giving',
-        title: 'Legacy Giving',
-        breadcrumbLabel: 'Legacy Giving',
+      '/services/planned-giving': {
+        path: '/services/planned-giving',
+        title: 'Planned Giving',
+        breadcrumbLabel: 'Planned Giving',
         parentPath: '/services',
       },
     };
@@ -285,8 +285,8 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving',
-            title: 'Legacy Giving',
+            path: '/services/planned-giving',
+            title: 'Planned Giving',
           }}
         />
       </MemoryRouter>,
@@ -591,7 +591,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
   it('shows the request-form HUD control on the managed endowments request section', () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
-      '/services/legacy-giving/endowments': [
+      '/services/planned-giving/endowments': [
         {
           id: 'request_form',
           name: 'Endowment Request Form',
@@ -646,11 +646,11 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       ],
     };
     mockPageHierarchy = {
-      '/services/legacy-giving/endowments': {
-        path: '/services/legacy-giving/endowments',
+      '/services/planned-giving/endowments': {
+        path: '/services/planned-giving/endowments',
         title: 'Endowments',
         breadcrumbLabel: 'Endowments',
-        parentPath: '/services/legacy-giving',
+        parentPath: '/services/planned-giving',
       },
     };
 
@@ -658,7 +658,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/endowments',
+            path: '/services/planned-giving/endowments',
             title: 'Endowments',
           }}
         />
@@ -682,7 +682,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
   it('shows the request-form HUD control on the managed generosity-fund request section', () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
-      '/services/legacy-giving/generosity-fund': [
+      '/services/planned-giving/generosity-fund': [
         {
           id: 'request_form',
           name: 'Generosity Request Form',
@@ -737,11 +737,11 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       ],
     };
     mockPageHierarchy = {
-      '/services/legacy-giving/generosity-fund': {
-        path: '/services/legacy-giving/generosity-fund',
+      '/services/planned-giving/generosity-fund': {
+        path: '/services/planned-giving/generosity-fund',
         title: 'Generosity Fund',
         breadcrumbLabel: 'Generosity Fund',
-        parentPath: '/services/legacy-giving',
+        parentPath: '/services/planned-giving',
       },
     };
 
@@ -749,7 +749,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/generosity-fund',
+            path: '/services/planned-giving/generosity-fund',
             title: 'Generosity Fund',
           }}
         />
@@ -774,7 +774,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
   it('shows the request-form HUD control on the managed charitable-gift-annuities request section', () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
-      '/services/legacy-giving/charitable-gift-annuities': [
+      '/services/planned-giving/charitable-gift-annuities': [
         {
           id: 'request_form',
           name: 'Charitable Gift Annuities Request Form',
@@ -829,11 +829,11 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       ],
     };
     mockPageHierarchy = {
-      '/services/legacy-giving/charitable-gift-annuities': {
-        path: '/services/legacy-giving/charitable-gift-annuities',
+      '/services/planned-giving/charitable-gift-annuities': {
+        path: '/services/planned-giving/charitable-gift-annuities',
         title: 'Charitable Gift Annuities',
         breadcrumbLabel: 'Charitable Gift Annuities',
-        parentPath: '/services/legacy-giving',
+        parentPath: '/services/planned-giving',
       },
     };
 
@@ -841,7 +841,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/charitable-gift-annuities',
+            path: '/services/planned-giving/charitable-gift-annuities',
             title: 'Charitable Gift Annuities',
           }}
         />
@@ -864,7 +864,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
   it('shows the request-form HUD control on the managed ministry-impact-fund request section', () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
-      '/services/legacy-giving/ministry-impact-fund': [
+      '/services/planned-giving/ministry-impact-fund': [
         {
           id: 'request_form',
           name: 'Ministry Impact Fund Request Form',
@@ -919,11 +919,11 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       ],
     };
     mockPageHierarchy = {
-      '/services/legacy-giving/ministry-impact-fund': {
-        path: '/services/legacy-giving/ministry-impact-fund',
+      '/services/planned-giving/ministry-impact-fund': {
+        path: '/services/planned-giving/ministry-impact-fund',
         title: 'Ministry Impact Fund',
         breadcrumbLabel: 'Ministry Impact Fund',
-        parentPath: '/services/legacy-giving',
+        parentPath: '/services/planned-giving',
       },
     };
 
@@ -931,7 +931,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/ministry-impact-fund',
+            path: '/services/planned-giving/ministry-impact-fund',
             title: 'Ministry Impact Fund',
           }}
         />
@@ -1011,7 +1011,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
         : null
     );
     mockBlocksByPath = {
-      '/services/legacy-giving/generosity-fund': [
+      '/services/planned-giving/generosity-fund': [
         {
           id: 'joyful_giving_billboard',
           name: 'Joyful Giving Billboard',
@@ -1046,11 +1046,11 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       ],
     };
     mockPageHierarchy = {
-      '/services/legacy-giving/generosity-fund': {
-        path: '/services/legacy-giving/generosity-fund',
+      '/services/planned-giving/generosity-fund': {
+        path: '/services/planned-giving/generosity-fund',
         title: 'Generosity Fund',
         breadcrumbLabel: 'Generosity Fund',
-        parentPath: '/services/legacy-giving',
+        parentPath: '/services/planned-giving',
       },
     };
 
@@ -1058,7 +1058,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/generosity-fund',
+            path: '/services/planned-giving/generosity-fund',
             title: 'Generosity Fund',
           }}
         />

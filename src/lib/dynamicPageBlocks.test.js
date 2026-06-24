@@ -1017,7 +1017,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
     });
   });
 
-  it('maps the legacy giving stewardship story to its reviewed runtime and preserves the targeted native section key', () => {
+  it('maps the planned giving stewardship story to its reviewed runtime and preserves the targeted native section key', () => {
     const runtime = buildDynamicSiteFeatureFromBlock({
       id: 'stewardship_story',
       kind: 'site_feature',
@@ -1079,12 +1079,12 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         },
         {
           value: '$450 million',
-          eyebrow: 'Legacy Giving',
+          eyebrow: 'Planned Giving',
           label: 'distributed to ministries through AG Foundation.',
           tone: 'mango',
           action: {
             label: 'Plan with us',
-            to: '/services/legacy-giving',
+            to: '/services/planned-giving',
           },
         },
         {
@@ -1684,7 +1684,7 @@ describe('buildDynamicTestimonialsFromBlock', () => {
         },
       },
       {
-        pathname: '/services/legacy-giving',
+        pathname: '/services/planned-giving',
         library: [
           {
             id: 'mike-daf-corporate-client',

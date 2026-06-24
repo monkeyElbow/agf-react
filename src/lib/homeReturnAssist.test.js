@@ -15,7 +15,7 @@ describe('homeReturnAssist', () => {
     '/services/retirement',
     '/services/retirement/403b',
     '/services/insurance/mission-assure',
-    '/services/legacy-giving/endowments',
+    '/services/planned-giving/endowments',
   ];
 
   beforeEach(() => {

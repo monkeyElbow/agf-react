@@ -99,23 +99,23 @@ describe('NativeContentPage functional routes', () => {
         title: 'Test CTA',
         section: 'Services',
       },
-      '/services/legacy-giving/charitable-trusts': {
-        path: '/services/legacy-giving/charitable-trusts',
+      '/services/planned-giving/charitable-trusts': {
+        path: '/services/planned-giving/charitable-trusts',
         title: 'Charitable Trusts',
         section: 'Services',
       },
-      '/services/legacy-giving': {
-        path: '/services/legacy-giving',
-        title: 'Legacy Giving',
+      '/services/planned-giving': {
+        path: '/services/planned-giving',
+        title: 'Planned Giving',
         section: 'Services',
       },
-      '/services/legacy-giving/generosity-fund': {
-        path: '/services/legacy-giving/generosity-fund',
+      '/services/planned-giving/generosity-fund': {
+        path: '/services/planned-giving/generosity-fund',
         title: 'Generosity Fund',
         section: 'Services',
       },
-      '/services/legacy-giving/ministry-impact-fund': {
-        path: '/services/legacy-giving/ministry-impact-fund',
+      '/services/planned-giving/ministry-impact-fund': {
+        path: '/services/planned-giving/ministry-impact-fund',
         title: 'Ministry Impact Fund',
         section: 'Services',
       },
@@ -156,7 +156,7 @@ describe('NativeContentPage functional routes', () => {
         title: 'Will Planning Document',
         url: 'https://files.example.com/will-planning-document.pdf',
         category: 'form',
-        topic: 'Legacy Giving',
+        topic: 'Planned Giving',
         active: true,
       },
     ];
@@ -332,8 +332,8 @@ describe('NativeContentPage functional routes', () => {
 
   it('renders charitable gift annuities from explicit managed blocks without a fallback page-content section', () => {
     mockBlocksByPath = {
-      '/services/legacy-giving/charitable-gift-annuities': (
-        contentBlockBlueprintsByPath['/services/legacy-giving/charitable-gift-annuities'] || []
+      '/services/planned-giving/charitable-gift-annuities': (
+        contentBlockBlueprintsByPath['/services/planned-giving/charitable-gift-annuities'] || []
       ).map((block) => ({
         ...block,
         settings: { ...(block?.settings || {}) },
@@ -345,7 +345,7 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/charitable-gift-annuities',
+            path: '/services/planned-giving/charitable-gift-annuities',
             title: 'Charitable Gift Annuities',
           }}
         />
@@ -361,8 +361,8 @@ describe('NativeContentPage functional routes', () => {
 
   it('renders ministry impact fund from explicit managed blocks without a fallback page-content section', () => {
     mockBlocksByPath = {
-      '/services/legacy-giving/ministry-impact-fund': (
-        contentBlockBlueprintsByPath['/services/legacy-giving/ministry-impact-fund'] || []
+      '/services/planned-giving/ministry-impact-fund': (
+        contentBlockBlueprintsByPath['/services/planned-giving/ministry-impact-fund'] || []
       ).map((block) => ({
         ...block,
         settings: { ...(block?.settings || {}) },
@@ -374,7 +374,7 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/ministry-impact-fund',
+            path: '/services/planned-giving/ministry-impact-fund',
             title: 'Ministry Impact Fund',
           }}
         />
@@ -417,7 +417,7 @@ describe('NativeContentPage functional routes', () => {
     expect(within(strategySection).getByRole('link', { name: 'loans' }).getAttribute('href')).toBe('/services/loans');
     expect(within(strategySection).getByRole('link', { name: 'investments' }).getAttribute('href')).toBe('/services/investments');
     expect(within(strategySection).getByRole('link', { name: 'retirement' }).getAttribute('href')).toBe('/services/retirement');
-    expect(within(strategySection).getByRole('link', { name: 'planned giving' }).getAttribute('href')).toBe('/services/legacy-giving');
+    expect(within(strategySection).getByRole('link', { name: 'planned giving' }).getAttribute('href')).toBe('/services/planned-giving');
     expect(within(strategySection).getByRole('link', { name: 'insurance' }).getAttribute('href')).toBe('/services/insurance');
     expect(within(strategySection).getByRole('link', { name: 'Explore all services' }).getAttribute('href')).toBe('/services');
     expect(within(strategySection).getByText(/\$12 billion\+/)).toBeTruthy();
@@ -571,9 +571,9 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Thanks. We will reach out soon.')).toBeTruthy();
   });
 
-  it('renders the legacy giving stewardship site feature in place of the static stewardship section and wires its CTA to the comparison anchor', () => {
+  it('renders the planned giving stewardship site feature in place of the static stewardship section and wires its CTA to the comparison anchor', () => {
     mockBlocksByPath = {
-      '/services/legacy-giving': [
+      '/services/planned-giving': [
         {
           id: 'stewardship_story',
           kind: 'site_feature',
@@ -590,8 +590,8 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving',
-            title: 'Legacy Giving',
+            path: '/services/planned-giving',
+            title: 'Planned Giving',
           }}
         />
       </MemoryRouter>,
@@ -623,9 +623,9 @@ describe('NativeContentPage functional routes', () => {
     expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
   });
 
-  it('renders the legacy giving joy section through the billboard block target while preserving the native motion classes', () => {
+  it('renders the planned giving joy section through the billboard block target while preserving the native motion classes', () => {
     mockBlocksByPath = {
-      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+      '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
     };
 
@@ -633,8 +633,8 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving',
-            title: 'Legacy Giving',
+            path: '/services/planned-giving',
+            title: 'Planned Giving',
           }}
         />
       </MemoryRouter>,
@@ -654,9 +654,9 @@ describe('NativeContentPage functional routes', () => {
     expect(joySection?.textContent).toContain('Your charitable giving plan makes it easy to manage both your cash and non-cash assets.');
   });
 
-  it('renders the legacy giving hero and intro through explicit managed blocks without changing the current copy', () => {
+  it('renders the planned giving hero and intro through explicit managed blocks without changing the current copy', () => {
     mockBlocksByPath = {
-      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+      '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
     };
 
@@ -664,8 +664,8 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving',
-            title: 'Legacy Giving',
+            path: '/services/planned-giving',
+            title: 'Planned Giving',
           }}
         />
       </MemoryRouter>,
@@ -718,9 +718,9 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
   });
 
-  it('renders the legacy giving types section through the managed card grid target without changing its current design shell', () => {
+  it('renders the planned giving types section through the managed card grid target without changing its current design shell', () => {
     mockBlocksByPath = {
-      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+      '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
     };
 
@@ -728,8 +728,8 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving',
-            title: 'Legacy Giving',
+            path: '/services/planned-giving',
+            title: 'Planned Giving',
           }}
         />
       </MemoryRouter>,
@@ -757,9 +757,9 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelectorAll('section[data-block-id="giving_options"]')).toHaveLength(1);
   });
 
-  it('renders the legacy giving wills section through the targeted billboard block while preserving the current action styles', () => {
+  it('renders the planned giving wills section through the targeted billboard block while preserving the current action styles', () => {
     mockBlocksByPath = {
-      '/services/legacy-giving': (contentBlockBlueprintsByPath['/services/legacy-giving'] || [])
+      '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
     };
 
@@ -767,8 +767,8 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving',
-            title: 'Legacy Giving',
+            path: '/services/planned-giving',
+            title: 'Planned Giving',
           }}
         />
       </MemoryRouter>,
@@ -803,7 +803,7 @@ describe('NativeContentPage functional routes', () => {
       },
     ];
     mockBlocksByPath = {
-      '/services/legacy-giving/generosity-fund': (contentBlockBlueprintsByPath['/services/legacy-giving/generosity-fund'] || [])
+      '/services/planned-giving/generosity-fund': (contentBlockBlueprintsByPath['/services/planned-giving/generosity-fund'] || [])
         .filter((block) => block?.mode === 'dynamic'),
     };
 
@@ -811,7 +811,7 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/generosity-fund',
+            path: '/services/planned-giving/generosity-fund',
             title: 'Generosity Fund',
           }}
         />
@@ -891,8 +891,8 @@ describe('NativeContentPage functional routes', () => {
 
   it('reveals an external inline CTA shell from a single centered charitable trusts trigger while keeping the later form visible', async () => {
     mockBlocksByPath = {
-      '/services/legacy-giving/charitable-trusts': (
-        contentBlockBlueprintsByPath['/services/legacy-giving/charitable-trusts'] || []
+      '/services/planned-giving/charitable-trusts': (
+        contentBlockBlueprintsByPath['/services/planned-giving/charitable-trusts'] || []
       ).map((block) => ({
         ...block,
         hidden: false,
@@ -903,7 +903,7 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/charitable-trusts',
+            path: '/services/planned-giving/charitable-trusts',
             title: 'Charitable Trusts',
           }}
         />
@@ -928,8 +928,8 @@ describe('NativeContentPage functional routes', () => {
     expect(trustChoiceHeadings[1]?.textContent).toBe('Charitable Lead Trust (CLT)');
     expect(trustChoiceHeadings[1]?.querySelector('mark.is-mango')?.textContent).toBe('Lead');
     expect(within(trustChoices).queryByText(/\*\*/)).toBeNull();
-    expect(within(trustChoices).getByRole('link', { name: 'Explore CRT options' }).getAttribute('href')).toBe('/services/legacy-giving/charitable-trusts#crt');
-    expect(within(trustChoices).getByRole('link', { name: 'Explore CLT options' }).getAttribute('href')).toBe('/services/legacy-giving/charitable-trusts#clt');
+    expect(within(trustChoices).getByRole('link', { name: 'Explore CRT options' }).getAttribute('href')).toBe('/services/planned-giving/charitable-trusts#crt');
+    expect(within(trustChoices).getByRole('link', { name: 'Explore CLT options' }).getAttribute('href')).toBe('/services/planned-giving/charitable-trusts#clt');
     expect(trustDifferences).toBeTruthy();
     expect(within(trustDifferences).getByRole('heading', { name: 'The differences. At a glance.' })).toBeTruthy();
     expect(trustDifferences?.querySelectorAll('.service-native-card')).toHaveLength(3);
@@ -979,7 +979,7 @@ describe('NativeContentPage functional routes', () => {
 
   it('reveals the generosity fund traditional DAF form inline from the hero when the admin-backed hero uses explicit CTA action fields', async () => {
     mockBlocksByPath = {
-      '/services/legacy-giving/generosity-fund': [
+      '/services/planned-giving/generosity-fund': [
         {
           id: 'hero',
           kind: 'hero',
@@ -1005,7 +1005,7 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/legacy-giving/generosity-fund',
+            path: '/services/planned-giving/generosity-fund',
             title: 'Generosity Fund',
           }}
         />

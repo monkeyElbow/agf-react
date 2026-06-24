@@ -205,7 +205,7 @@ const HOME_SERVICES_PANEL_PALETTES = Object.freeze([
     accent: Object.freeze([255, 236, 232]),
   }),
   Object.freeze({
-    title: 'Legacy Giving',
+    title: 'Planned Giving',
     base: Object.freeze([246, 177, 70]),
     secondary: Object.freeze([255, 205, 118]),
     light: Object.freeze([255, 233, 188]),

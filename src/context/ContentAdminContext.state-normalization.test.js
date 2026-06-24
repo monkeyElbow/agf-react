@@ -103,9 +103,9 @@ describe('ContentAdminContext state normalization', () => {
     expect(modeById.get('testimonials')).toBe('dynamic');
   });
 
-  it('seeds legacy giving with a CTA block instead of a request-form block', () => {
+  it('seeds planned giving with a CTA block instead of a request-form block', () => {
     const normalized = normalizeStoredConfig({});
-    const legacyGivingBlocks = normalized.blocksByPath['/services/legacy-giving'] || [];
+    const legacyGivingBlocks = normalized.blocksByPath['/services/planned-giving'] || [];
     const requestBlock = legacyGivingBlocks.find((block) => block?.kind === 'request_form');
     const ctaBlock = legacyGivingBlocks.find((block) => block?.kind === 'cta_form');
 
@@ -113,7 +113,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock.mode).toBe('dynamic');
     expect(ctaBlock.settings.targetSectionClassName).toBe('legacy-giving-cta');
-    expect(ctaBlock.settings.field4Label).toBe('Legacy giving product of interest*');
+    expect(ctaBlock.settings.field4Label).toBe('Planned giving product of interest*');
     expect(ctaBlock.settings.field4Type).toBe('select');
     expect(ctaBlock.settings.field4Required).toBe(true);
     expect(ctaBlock.settings.field5Label).toBe('Message');
@@ -160,7 +160,7 @@ describe('ContentAdminContext state normalization', () => {
   it('drops stale legacy-giving request-form blocks from stored config and keeps the CTA block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving': [
+        '/services/planned-giving': [
           {
             id: 'request_form',
             kind: 'request_form',
@@ -173,7 +173,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const legacyGivingBlocks = normalized.blocksByPath['/services/legacy-giving'] || [];
+    const legacyGivingBlocks = normalized.blocksByPath['/services/planned-giving'] || [];
     expect(legacyGivingBlocks.some((block) => block?.kind === 'request_form')).toBe(false);
     expect(legacyGivingBlocks.some((block) => block?.kind === 'cta_form')).toBe(true);
   });
@@ -181,7 +181,7 @@ describe('ContentAdminContext state normalization', () => {
   it('drops duplicate endowments request-form blocks and keeps the canonical legacy-form target', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving/endowments': [
+        '/services/planned-giving/endowments': [
           {
             id: 'request_form',
             kind: 'request_form',
@@ -206,7 +206,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const requestBlocks = (normalized.blocksByPath['/services/legacy-giving/endowments'] || [])
+    const requestBlocks = (normalized.blocksByPath['/services/planned-giving/endowments'] || [])
       .filter((block) => String(block?.kind || '').trim().toLowerCase() === 'request_form');
 
     expect(requestBlocks).toHaveLength(1);
@@ -220,7 +220,7 @@ describe('ContentAdminContext state normalization', () => {
   it('drops duplicate generosity fund request-form blocks and keeps the canonical request target', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving/generosity-fund': [
+        '/services/planned-giving/generosity-fund': [
           {
             id: 'request_form',
             kind: 'request_form',
@@ -245,7 +245,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const requestBlocks = (normalized.blocksByPath['/services/legacy-giving/generosity-fund'] || [])
+    const requestBlocks = (normalized.blocksByPath['/services/planned-giving/generosity-fund'] || [])
       .filter((block) => String(block?.kind || '').trim().toLowerCase() === 'request_form');
 
     expect(requestBlocks).toHaveLength(1);
@@ -263,7 +263,7 @@ describe('ContentAdminContext state normalization', () => {
 
   it('seeds the generosity fund request-form block from the later fallback form instead of the inline CTA reveal shell', () => {
     const normalized = normalizeStoredConfig({});
-    const requestBlock = (normalized.blocksByPath['/services/legacy-giving/generosity-fund'] || [])
+    const requestBlock = (normalized.blocksByPath['/services/planned-giving/generosity-fund'] || [])
       .find((block) => String(block?.kind || '').trim().toLowerCase() === 'request_form');
 
     expect(requestBlock?.id).toBe('request_form');
@@ -280,7 +280,7 @@ describe('ContentAdminContext state normalization', () => {
   it('drops duplicate charitable-gift-annuities request-form blocks and restores the canonical dynamic request target', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving/charitable-gift-annuities': [
+        '/services/planned-giving/charitable-gift-annuities': [
           {
             id: 'request_form',
             kind: 'request_form',
@@ -305,7 +305,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const requestBlocks = (normalized.blocksByPath['/services/legacy-giving/charitable-gift-annuities'] || [])
+    const requestBlocks = (normalized.blocksByPath['/services/planned-giving/charitable-gift-annuities'] || [])
       .filter((block) => String(block?.kind || '').trim().toLowerCase() === 'request_form');
 
     expect(requestBlocks).toHaveLength(1);
@@ -319,7 +319,7 @@ describe('ContentAdminContext state normalization', () => {
   it('drops duplicate ministry-impact-fund request-form blocks and restores the canonical dynamic request target', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving/ministry-impact-fund': [
+        '/services/planned-giving/ministry-impact-fund': [
           {
             id: 'request_form',
             kind: 'request_form',
@@ -344,7 +344,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const requestBlocks = (normalized.blocksByPath['/services/legacy-giving/ministry-impact-fund'] || [])
+    const requestBlocks = (normalized.blocksByPath['/services/planned-giving/ministry-impact-fund'] || [])
       .filter((block) => String(block?.kind || '').trim().toLowerCase() === 'request_form');
 
     expect(requestBlocks).toHaveLength(1);
@@ -403,7 +403,7 @@ describe('ContentAdminContext state normalization', () => {
 
   it('seeds charitable gift annuities with explicit managed blocks and no fallback page content', () => {
     const normalized = normalizeStoredConfig({});
-    const annuitiesBlocks = normalized.blocksByPath['/services/legacy-giving/charitable-gift-annuities'] || [];
+    const annuitiesBlocks = normalized.blocksByPath['/services/planned-giving/charitable-gift-annuities'] || [];
 
     expect(annuitiesBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(annuitiesBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
@@ -415,7 +415,7 @@ describe('ContentAdminContext state normalization', () => {
   it('drops stale charitable gift annuities page-content blocks from stored config', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving/charitable-gift-annuities': [
+        '/services/planned-giving/charitable-gift-annuities': [
           {
             id: 'page_content',
             kind: 'content',
@@ -428,7 +428,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const annuitiesBlocks = normalized.blocksByPath['/services/legacy-giving/charitable-gift-annuities'] || [];
+    const annuitiesBlocks = normalized.blocksByPath['/services/planned-giving/charitable-gift-annuities'] || [];
 
     expect(annuitiesBlocks.some((block) => block?.id === 'page_content')).toBe(false);
     expect(annuitiesBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
@@ -436,7 +436,7 @@ describe('ContentAdminContext state normalization', () => {
 
   it('seeds ministry impact fund with explicit managed blocks and no fallback page content', () => {
     const normalized = normalizeStoredConfig({});
-    const ministryImpactBlocks = normalized.blocksByPath['/services/legacy-giving/ministry-impact-fund'] || [];
+    const ministryImpactBlocks = normalized.blocksByPath['/services/planned-giving/ministry-impact-fund'] || [];
 
     expect(ministryImpactBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(ministryImpactBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
@@ -448,7 +448,7 @@ describe('ContentAdminContext state normalization', () => {
   it('drops stale ministry impact fund page-content blocks from stored config', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving/ministry-impact-fund': [
+        '/services/planned-giving/ministry-impact-fund': [
           {
             id: 'page_content',
             kind: 'content',
@@ -461,7 +461,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const ministryImpactBlocks = normalized.blocksByPath['/services/legacy-giving/ministry-impact-fund'] || [];
+    const ministryImpactBlocks = normalized.blocksByPath['/services/planned-giving/ministry-impact-fund'] || [];
 
     expect(ministryImpactBlocks.some((block) => block?.id === 'page_content')).toBe(false);
     expect(ministryImpactBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
@@ -592,7 +592,7 @@ describe('ContentAdminContext state normalization', () => {
 
   it('keeps the charitable-trusts CTA seed fields and presentation settings aligned through the shared CTA max-field cap', () => {
     const normalized = normalizeStoredConfig({});
-    const charitableTrustsBlocks = (normalized.blocksByPath['/services/legacy-giving/charitable-trusts'] || [])
+    const charitableTrustsBlocks = (normalized.blocksByPath['/services/planned-giving/charitable-trusts'] || [])
       .filter((block) => block?.kind === 'cta_form');
     const inlineCtaBlock = charitableTrustsBlocks.find((block) => (
       block?.settings?.targetSectionClassName === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline'
@@ -620,7 +620,7 @@ describe('ContentAdminContext state normalization', () => {
   it('repairs stored charitable-trusts CTA blocks by restoring inline reveal presentation settings from the native seed', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving/charitable-trusts': [
+        '/services/planned-giving/charitable-trusts': [
           {
             id: 'cta_form',
             kind: 'cta_form',
@@ -645,7 +645,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const charitableTrustsBlocks = (normalized.blocksByPath['/services/legacy-giving/charitable-trusts'] || [])
+    const charitableTrustsBlocks = (normalized.blocksByPath['/services/planned-giving/charitable-trusts'] || [])
       .filter((block) => block?.kind === 'cta_form');
     const inlineCtaBlock = charitableTrustsBlocks.find((block) => block?.id === 'cta_form');
     const fallbackCtaBlock = charitableTrustsBlocks.find((block) => (
@@ -693,7 +693,7 @@ describe('ContentAdminContext state normalization', () => {
   it('repairs stale generosity fund hero hash actions into the inline CTA reveal trigger', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving/generosity-fund': [
+        '/services/planned-giving/generosity-fund': [
           {
             id: 'hero',
             kind: 'hero',
@@ -717,7 +717,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const heroBlock = (normalized.blocksByPath['/services/legacy-giving/generosity-fund'] || [])
+    const heroBlock = (normalized.blocksByPath['/services/planned-giving/generosity-fund'] || [])
       .find((block) => block?.id === 'hero');
 
     expect(heroBlock?.settings?.button2Action).toBe('open_cta_form');
@@ -736,7 +736,7 @@ describe('ContentAdminContext state normalization', () => {
   it('repairs stale generosity fund joyful giving billboard secondary action styling back to the ghost treatment', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/legacy-giving/generosity-fund': [
+        '/services/planned-giving/generosity-fund': [
           {
             id: 'joyful_giving_billboard',
             kind: 'billboard',
@@ -758,7 +758,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const billboardBlock = (normalized.blocksByPath['/services/legacy-giving/generosity-fund'] || [])
+    const billboardBlock = (normalized.blocksByPath['/services/planned-giving/generosity-fund'] || [])
       .find((block) => block?.id === 'joyful_giving_billboard');
 
     expect(billboardBlock?.settings?.button2Style).toBe('ghost');

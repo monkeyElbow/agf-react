@@ -63,10 +63,10 @@ const SHARED_BLOCK_DRAFT_SYNC_TEXT_DELAY_MS = 140;
 const SHARED_BLOCK_DRAFT_SYNC_DISCRETE_DELAY_MS = 90;
 const SHARED_ACTIVE_CONTENT_POLL_DELAY_MS = 650;
 const SHARED_VISIBLE_CONTENT_POLL_DELAY_MS = 1800;
-const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/legacy-giving/charitable-gift-annuities';
-const LEGACY_GIVING_ENDOWMENTS_PATH = '/services/legacy-giving/endowments';
-const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/legacy-giving/generosity-fund';
-const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/legacy-giving/ministry-impact-fund';
+const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
+const LEGACY_GIVING_ENDOWMENTS_PATH = '/services/planned-giving/endowments';
+const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
+const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
 const REQUEST_FORM_DYNAMIC_PATHS = new Set([
   '/calculators',
   '/contact-us',
@@ -90,9 +90,21 @@ const RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH = '/services/retirement/403b/40
 const RETIREMENT_403B_GROUP_ENROLLMENT_PATH = '/services/retirement/403b/403b-group-enrollment';
 const RETIREMENT_403B_GROUP_ENROLLMENT_LEGACY_PATH = '/services/retirement/403b-for-groups/403b-group-enrollment';
 const RETIREMENT_403B_GROUP_OVERVIEW_LEGACY_PATH = '/services/retirement/403b-for-groups';
+const PLANNED_GIVING_OVERVIEW_LEGACY_PATH = '/services/legacy-giving';
+const PLANNED_GIVING_CHARITABLE_GIFT_ANNUITIES_LEGACY_PATH = '/services/legacy-giving/charitable-gift-annuities';
+const PLANNED_GIVING_CHARITABLE_TRUSTS_LEGACY_PATH = '/services/legacy-giving/charitable-trusts';
+const PLANNED_GIVING_ENDOWMENTS_LEGACY_PATH = '/services/legacy-giving/endowments';
+const PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH = '/services/legacy-giving/generosity-fund';
+const PLANNED_GIVING_MINISTRY_IMPACT_FUND_LEGACY_PATH = '/services/legacy-giving/ministry-impact-fund';
 const DEFAULT_MANAGED_PATH_ALIASES = {
   [RETIREMENT_403B_GROUP_ENROLLMENT_LEGACY_PATH]: RETIREMENT_403B_GROUP_ENROLLMENT_PATH,
   [RETIREMENT_403B_GROUP_OVERVIEW_LEGACY_PATH]: RETIREMENT_403B_GROUP_ENROLLMENT_PATH,
+  [PLANNED_GIVING_OVERVIEW_LEGACY_PATH]: '/services/planned-giving',
+  [PLANNED_GIVING_CHARITABLE_GIFT_ANNUITIES_LEGACY_PATH]: LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH,
+  [PLANNED_GIVING_CHARITABLE_TRUSTS_LEGACY_PATH]: '/services/planned-giving/charitable-trusts',
+  [PLANNED_GIVING_ENDOWMENTS_LEGACY_PATH]: LEGACY_GIVING_ENDOWMENTS_PATH,
+  [PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH]: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+  [PLANNED_GIVING_MINISTRY_IMPACT_FUND_LEGACY_PATH]: LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH,
 };
 const REQUEST_FORM_MODE_LOCKED_PATHS = new Set([
   '/services/insurance/group-term-life-insurance',
@@ -1786,7 +1798,7 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
 
   next = withDefaultHeroActions(next, staticHeroDefaults);
 
-  if (pathname === '/services/legacy-giving/generosity-fund') {
+  if (pathname === '/services/planned-giving/generosity-fund') {
     next = normalizeGenerosityFundHeroSettings(next);
   }
 

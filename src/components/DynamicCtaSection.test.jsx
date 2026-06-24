@@ -152,7 +152,7 @@ describe('DynamicCtaSection', () => {
               field2Required: true,
               field3Label: 'Phone',
               field3Type: 'tel',
-              field4Label: 'Legacy giving product of interest*',
+              field4Label: 'Planned giving product of interest*',
               field4Type: 'select',
               field4Options: 'donor-advised-fund|Donor Advised Fund',
               field4Required: true,
@@ -166,7 +166,7 @@ describe('DynamicCtaSection', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Legacy giving product of interest*')).toBeTruthy();
+    expect(screen.getByLabelText('Planned giving product of interest*')).toBeTruthy();
     expect(screen.getByLabelText('Message')).toBeTruthy();
   });
 

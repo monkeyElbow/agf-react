@@ -14,8 +14,8 @@ describe('native page content article feature links', () => {
     expect(action?.to).toBe('/resources/article/defend-yourself-against-fraud');
   });
 
-  it('wires the legacy giving opportunity feature to the seeded article route and media', () => {
-    const content = getNativePageContent('/services/legacy-giving', '');
+  it('wires the planned giving opportunity feature to the seeded article route and media', () => {
+    const content = getNativePageContent('/services/planned-giving', '');
     const sections = Array.isArray(content?.sections) ? content.sections : [];
     const featureSection = sections.find((section) => section?.className === 'legacy-giving-opportunity');
     const action = featureSection?.feature?.actions?.[0];

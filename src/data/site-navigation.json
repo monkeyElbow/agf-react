@@ -11,7 +11,7 @@
   {
     "title": "Services",
     "url": "/services",
-    "summary": "High-level entry point for loans, investments, retirement, legacy giving, insurance, and rates.",
+    "summary": "High-level entry point for loans, investments, retirement, planned giving, insurance, and rates.",
     "keywords": ["services", "service overview", "options", "products", "financial services", "where to start"],
     "audience": "general",
     "contentFile": "services-overview.md",
@@ -99,10 +99,10 @@
     "priority": 8
   },
   {
-    "title": "Legacy Giving",
-    "url": "/services/legacy-giving",
+    "title": "Planned Giving",
+    "url": "/services/planned-giving",
     "summary": "Overview of charitable planning options including donor advised funds, endowments, and charitable gift strategies.",
-    "keywords": ["legacy giving", "planned giving", "charitable giving", "donor advised fund", "endowment", "gift annuity"],
+    "keywords": ["planned giving", "charitable planning", "charitable giving", "donor advised fund", "endowment", "gift annuity"],
     "audience": "general",
     "contentFile": "legacy-giving.md",
     "priority": 7

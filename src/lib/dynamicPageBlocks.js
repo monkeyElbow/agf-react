@@ -390,21 +390,21 @@ export const DEFAULT_SERVICE_HERO_PIE_SLICES = Object.freeze([
     ]),
   }),
   Object.freeze({
-    title: 'Legacy Giving',
-    path: '/services/legacy-giving',
+    title: 'Planned Giving',
+    path: '/services/planned-giving',
     color: '#c4beb6',
     description: 'Manage your giving with tax benefits and income generation.',
     links: Object.freeze([
-      Object.freeze({ label: 'Charitable Gift Annuities', path: '/services/legacy-giving/charitable-gift-annuities' }),
-      Object.freeze({ label: 'Charitable Trusts', path: '/services/legacy-giving/charitable-trusts' }),
-      Object.freeze({ label: 'Generosity Fund', path: '/services/legacy-giving/generosity-fund' }),
+      Object.freeze({ label: 'Charitable Gift Annuities', path: '/services/planned-giving/charitable-gift-annuities' }),
+      Object.freeze({ label: 'Charitable Trusts', path: '/services/planned-giving/charitable-trusts' }),
+      Object.freeze({ label: 'Generosity Fund', path: '/services/planned-giving/generosity-fund' }),
     ]),
   }),
   Object.freeze({
     title: 'Insurance',
     path: '/services/insurance',
     color: '#ffa400',
-    description: 'Protect your people and property, and manage risk.',
+    description: 'Coverage built for churches, ministries and individuals to protect what’s most important.',
     links: Object.freeze([
       Object.freeze({ label: 'Property & Casualty', path: '/services/insurance/property-casualty-insurance' }),
       Object.freeze({ label: 'Group Life', path: '/services/insurance/group-term-life-insurance' }),
@@ -1945,7 +1945,7 @@ export function buildDynamicTestimonialsFromBlock(block, { library = [], pathnam
     return null;
   }
 
-  const defaultTag = pathname === '/services/legacy-giving' ? 'legacy-giving' : '';
+  const defaultTag = pathname === '/services/planned-giving' ? 'legacy-giving' : '';
   const resolved = resolveTestimonialsBlockData({
     block,
     library,

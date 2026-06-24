@@ -6,7 +6,7 @@ const ResourcesContext = createContext(null);
 
 function normalizeArticle(article) {
   const rawCategory = String(article?.category || 'Article').trim();
-  const category = rawCategory === 'Planned Giving' ? 'Legacy Giving' : rawCategory;
+  const category = /^Legacy\s+Giving$/i.test(rawCategory) ? 'Planned Giving' : rawCategory;
   const slug = String(article?.slug || '')
     .trim()
     .toLowerCase();
