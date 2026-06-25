@@ -3631,9 +3631,16 @@ function companyChildContent(path, title) {
       compact: true,
       hero: {
         lines: [
-          { title: 'Be part of something' },
-          { title: 'BIGGER.', highlights: [{ text: 'BIGGER', className: 'is-white' }] },
+          { title: 'Be part of', className: 'careers-hero-line' },
+          { title: 'something', className: 'careers-hero-line' },
+          {
+            title: 'BIGGER.',
+            className: 'careers-hero-line careers-hero-line--major',
+            highlights: [{ text: 'BIGGER', className: 'is-white' }],
+          },
         ],
+        titleSizeRem: 7.6,
+        lineGap: 0.08,
       },
       intro: {
         className: 'careers-native-top-intro',

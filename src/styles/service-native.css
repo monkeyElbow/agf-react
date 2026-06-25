@@ -18185,11 +18185,29 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--careers .service-native-hero {
+  --service-native-hero-rail-min-height: clamp(360px, 42vw, 500px);
   background: var(--ag-color-mango);
+  padding-top: clamp(3.35rem, 7vw, 5.5rem);
+  padding-bottom: clamp(3.35rem, 7vw, 5.5rem);
+}
+
+.native-info-page.native-info-page--careers.is-compact .service-native-hero .ag-panel-rail,
+.native-info-page--careers .service-native-hero .ag-panel-rail {
+  min-height: var(--service-native-hero-rail-min-height);
 }
 
 .native-info-page--careers .service-native-hero h1 {
   color: var(--ag-color-super-grey);
+}
+
+.native-info-page--careers .service-native-hero h1.careers-hero-line {
+  text-wrap: nowrap;
+}
+
+.native-info-page--careers .service-native-hero h1.careers-hero-line--major {
+  transform: scale(1.2);
+  transform-origin: center center;
+  margin-top: clamp(0.5rem, 1.5vw, 0.9rem) !important;
 }
 
 .native-info-page--careers .service-native-hero h1 mark.is-white {

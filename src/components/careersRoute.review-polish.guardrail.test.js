@@ -19,6 +19,17 @@ describe('careers route review polish guardrail', () => {
     expect(cssSource).toContain('letter-spacing: -0.03em;');
   });
 
+  it('keeps the careers hero emphasis scoped to the shared native hero path with a larger final line', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const contentSource = readSource('../data/nativePageContent.js');
+
+    expect(contentSource).toContain("{ title: 'Be part of', className: 'careers-hero-line' }");
+    expect(contentSource).toContain("{ title: 'something', className: 'careers-hero-line' }");
+    expect(contentSource).toContain("className: 'careers-hero-line careers-hero-line--major'");
+    expect(cssSource).toContain('.native-info-page--careers .service-native-hero h1.careers-hero-line--major {');
+    expect(cssSource).toContain('transform: scale(1.2);');
+  });
+
   it('keeps the ADP apply link scoped to the careers jobs list action row rather than turning the whole card into a stretched link', () => {
     const rendererSource = readSource('./nativeFunctionalRouteRenderers.jsx');
 
