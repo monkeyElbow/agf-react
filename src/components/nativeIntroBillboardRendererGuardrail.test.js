@@ -46,6 +46,8 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain('--service-native-intro-padding-bottom: clamp(4.1rem, 9.2vw, 6.95rem);');
     expect(cssSource).toContain('padding: var(--service-native-intro-padding-top) 0 var(--service-native-intro-padding-bottom);');
     expect(cssSource).toContain('.native-info-page--impact .service-native-intro {');
+    expect(cssSource).toContain('.native-info-page--careers .service-native-intro.careers-native-top-intro {');
+    expect(cssSource).toContain('.native-info-page--careers .service-native-intro.careers-native-top-intro h2 {');
     expect(cssSource).not.toContain('.native-info-page--impact .service-native-intro {\n  background: linear-gradient(145deg, #f3f0eb 0%, #e6e1d7 100%);\n  padding-bottom: clamp(2.2rem, 5vw, 3.8rem);\n}');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro .service-native-intro-copy > h2.is-super-grey,');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro .service-native-intro-copy > h2 mark.is-super-grey,');

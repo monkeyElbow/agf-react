@@ -402,6 +402,7 @@ describe('NativeContentPage functional routes', () => {
 
     expect(document.querySelector('.service-native-hero')).toBeNull();
     expect(document.querySelector('.service-native-intro.about-native-top-intro')).toBeTruthy();
+    expect(document.querySelector('.service-native-intro.about-native-top-intro')?.className).not.toContain('careers-native-top-intro');
     expect(screen.getByRole('heading', { name: 'Where faith & finance grow together.' })).toBeTruthy();
     expect(screen.getByText('Our culture is delivering the best financial products and experiences that align with biblical values.')).toBeTruthy();
     expect(screen.getByText('Our mission is your financial health and ministry growth.')).toBeTruthy();
@@ -525,10 +526,33 @@ describe('NativeContentPage functional routes', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Be part of something' })).toBeTruthy();
+    const careersIntro = document.querySelector('.service-native-intro.careers-native-top-intro');
+    expect(careersIntro).toBeTruthy();
+    expect(careersIntro?.querySelector('.service-native-intro-copy.careers-native-top-intro-copy')).toBeTruthy();
+    expect(careersIntro?.className).not.toContain('about-native-top-intro');
+    expect(screen.getByRole('heading', { name: 'Faith + career.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Marketing Manager' })).toBeTruthy();
     expect(screen.getByText('Springfield, MO')).toBeTruthy();
     expect(screen.getByText('Posted March 20, 2026')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Apply Online' })).toBeTruthy();
+  });
+
+  it('does not apply the careers intro variant to unrelated native pages like insurance', () => {
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance',
+            title: 'Insurance',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const insuranceIntro = document.querySelector('.service-native-intro');
+    expect(insuranceIntro).toBeTruthy();
+    expect(insuranceIntro?.className).not.toContain('careers-native-top-intro');
+    expect(insuranceIntro?.querySelector('.careers-native-top-intro-copy')).toBeNull();
   });
 
   it('renders and submits a dynamic CTA block with checkbox fields', () => {

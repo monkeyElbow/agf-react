@@ -3636,6 +3636,8 @@ function companyChildContent(path, title) {
         ],
       },
       intro: {
+        className: 'careers-native-top-intro',
+        copyClassName: 'careers-native-top-intro-copy',
         heading: 'Faith + career.',
         body: [
           'You can make a difference in your work. We mean that, and our customers experience it. Our office ecosystem is at the intersection of ministry and expertise. At AGFinancial, it’s our desire to honor Jesus by doing great work, and by treating others well.',
