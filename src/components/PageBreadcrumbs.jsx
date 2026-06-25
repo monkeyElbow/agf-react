@@ -17,7 +17,7 @@ export default function PageBreadcrumbs({ path }) {
             const isLast = index === trail.length - 1;
             return (
               <li key={item.path} className={isLast ? 'is-current' : 'is-parent'}>
-                {isLast ? <span>{item.label}</span> : <Link to={item.path}>{item.label}</Link>}
+                {isLast ? <span aria-current="page">{item.label}</span> : <Link to={item.path}>{item.label}</Link>}
               </li>
             );
           })}
