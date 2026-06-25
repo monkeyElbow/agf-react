@@ -153,13 +153,13 @@ function buildPresetSeedState() {
 function buildGenerosityFundSeedState() {
   return {
     pageHierarchy: {
-      '/services/legacy-giving/generosity-fund': {
-        path: '/services/legacy-giving/generosity-fund',
+      '/services/planned-giving/generosity-fund': {
+        path: '/services/planned-giving/generosity-fund',
         title: 'Generosity Fund',
       },
     },
     blocksByPath: {
-      '/services/legacy-giving/generosity-fund': [
+      '/services/planned-giving/generosity-fund': [
         {
           id: 'hero',
           kind: 'hero',
@@ -183,7 +183,7 @@ function buildGenerosityFundSeedState() {
     },
     pathAliases: {},
     collaborationByPath: {
-      '/services/legacy-giving/generosity-fund': {
+      '/services/planned-giving/generosity-fund': {
         blocks: {},
         history: [],
       },
@@ -357,7 +357,7 @@ describe('createDevContentAuthorityStore', () => {
 
     store.resetFromSeed(buildGenerosityFundSeedState(), { actor: createActor() });
 
-    const heroBlock = store.getSnapshot().state.blocksByPath['/services/legacy-giving/generosity-fund'][0];
+    const heroBlock = store.getSnapshot().state.blocksByPath['/services/planned-giving/generosity-fund'][0];
     expect(heroBlock.settings.button1Url).toBe('https://secure.agfinancial.org/generosityfund/signup');
     expect(heroBlock.settings.button2Url).toBe('');
     expect(heroBlock.settings.button2PageRef).toBe('');
@@ -366,7 +366,7 @@ describe('createDevContentAuthorityStore', () => {
     expect(heroBlock.settings.button2TargetBlockId).toBe('');
 
     const reloaded = createStore(persistenceFile);
-    const reloadedHero = reloaded.getSnapshot().state.blocksByPath['/services/legacy-giving/generosity-fund'][0];
+    const reloadedHero = reloaded.getSnapshot().state.blocksByPath['/services/planned-giving/generosity-fund'][0];
     expect(reloadedHero.settings.button2Url).toBe('');
     expect(reloadedHero.settings.button2Action).toBe('open_cta_form');
     expect(reloadedHero.settings.button2TargetAnchorId).toBe('traditional-daf-inline-form');

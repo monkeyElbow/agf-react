@@ -3,7 +3,7 @@ import path from 'node:path';
 import { normalizePresetBearingBlocks } from '../src/lib/blockPresetIdentity.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
-const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/legacy-giving/generosity-fund';
+const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
