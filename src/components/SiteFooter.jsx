@@ -90,9 +90,9 @@ export default function SiteFooter() {
           <div className="site-footer-grid">
             {footerCols.map((col) => (
               <div key={col.heading} className="site-footer-col">
-                <h4>
+                <div className="site-footer-heading">
                   <Link to={resolveFooterPath(col.headingPath, '/')}>{col.heading}</Link>
-                </h4>
+                </div>
                 <ul>
                   {col.links.map(([to, label]) => (
                     <li key={to}>
@@ -105,7 +105,7 @@ export default function SiteFooter() {
 
             <div className="site-footer-col site-footer-brand">
               <Link to={resolveFooterPath('/', '/')} className="site-footer-logo-link" aria-label="AGFinancial Home">
-                <img src={agfLogo} alt="AGFinancial" className="site-footer-logo-white" />
+                <img src={agfLogo} alt="AGFinancial" className="site-footer-logo-white" width="510" height="116" />
               </Link>
               <div className="site-footer-social" aria-label="AGFinancial social links">
                 {socialLinks.map((item) => (

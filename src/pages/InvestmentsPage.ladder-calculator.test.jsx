@@ -173,6 +173,42 @@ describe('investments ladder calculator', () => {
     expect(container.querySelectorAll('[data-ladder-maturity-marker]').length).toBeGreaterThanOrEqual(5);
   });
 
+  it('keeps ladder mini maturity markers decorative and exposes maturity timing in hidden row text', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <InvestmentsPage />
+      </MemoryRouter>,
+    );
+
+    const firstMiniMarker = container.querySelector('[data-ladder-mini-maturity-marker="1"]');
+    const firstTimelineMarker = container.querySelector('[data-ladder-maturity-marker]');
+    const firstHiddenSummary = screen.getByText('1-year certificate matures in Year 1.');
+
+    expect(firstMiniMarker?.getAttribute('aria-hidden')).toBe('true');
+    expect(firstMiniMarker?.getAttribute('aria-label')).toBeNull();
+    expect(firstHiddenSummary.className).toContain('sr-only');
+    expect(firstTimelineMarker?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('uses descriptive prospectus link text and underlined disclaimer links in the rates section', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <InvestmentsPage />
+      </MemoryRouter>,
+    );
+    const cssSource = readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8');
+
+    const prospectusLink = screen.getByRole('link', { name: 'read the prospectus' });
+
+    expect(prospectusLink.getAttribute('href')).toBe('/prospectus');
+    expect(prospectusLink.getAttribute('target')).toBe('_blank');
+    expect(container.querySelector('.investments-native-rates-disclaimer')?.textContent).toContain('The Offering Circular may be obtained by writing or calling AGFinancial or by clicking to read the prospectus.');
+    expect(cssSource).toContain('.investments-native-rates-disclaimer a {');
+    expect(cssSource).toContain('text-decoration: underline;');
+    expect(cssSource).toContain('text-underline-offset: 0.12em;');
+    expect(cssSource).toContain('.investments-native-rates-disclaimer a:focus-visible {');
+  });
+
   it('preserves ladder schedule math and surfaces the same result values after calculate', () => {
     const result = simulateLadderSchedule({
       totalInvestment: 100000,
@@ -262,6 +298,9 @@ describe('investments ladder calculator', () => {
     expect(pageSource).toContain('Initial ladder setup');
     expect(pageSource).toContain('data-ladder-mini-axis-label');
     expect(pageSource).toContain('data-ladder-mini-maturity-marker');
+    expect(pageSource).toContain('aria-hidden="true"');
+    expect(pageSource).toContain('certificate matures in Year');
+    expect(pageSource).toContain('read the prospectus');
     expect(pageSource).toContain('Start with equal investments across 1-year through');
     expect(pageSource).toContain('This view shows the starting ladder. Open the timeline to see how maturities roll forward.');
     expect(pageSource).toContain('View ongoing rollover timeline');

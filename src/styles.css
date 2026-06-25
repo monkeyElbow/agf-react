@@ -2261,7 +2261,7 @@ button.action-btn {
   min-width: 0;
 }
 
-.site-footer-col h4 {
+.site-footer-heading {
   margin: 0 0 0.7rem;
   font-family: var(--ag-font-heading);
   font-size: 1.28rem;
@@ -2270,7 +2270,7 @@ button.action-btn {
   text-transform: none;
 }
 
-.site-footer-col h4 a {
+.site-footer-heading a {
   color: #ffffff;
   text-decoration: none;
 }

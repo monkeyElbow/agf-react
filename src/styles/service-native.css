@@ -2829,10 +2829,13 @@
 
 .investments-native-rates-disclaimer a {
   color: var(--ag-color-atlantean-dark);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  text-decoration-thickness: 0.08em;
 }
 
-.investments-native-rates-disclaimer a:hover {
+.investments-native-rates-disclaimer a:hover,
+.investments-native-rates-disclaimer a:focus-visible {
   color: var(--ag-color-atlantean-dark);
   text-decoration: underline;
 }

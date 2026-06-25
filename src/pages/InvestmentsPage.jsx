@@ -2258,9 +2258,9 @@ export default function InvestmentsPage() {
             <p>
               This is not an offer to sell securities referred to herein and we are not soliciting you to purchase
               these securities. The offering is made only by the Offering Circular which includes risk factors. The
-              Offering Circular may be obtained by writing or calling AGFinancial or by clicking
+              Offering Circular may be obtained by writing or calling AGFinancial or by clicking to
               {' '}
-              <a href={offeringCircularDoc?.url || '/prospectus'} target="_blank" rel="noreferrer noopener">here</a>
+              <a href={offeringCircularDoc?.url || '/prospectus'} target="_blank" rel="noreferrer noopener">read the prospectus</a>
               . AGFinancial investments are offered and sold only in states where authorized or exempt from
               authorization. A limited offering is available in Washington. Not available in Ohio.
             </p>
@@ -2343,6 +2343,11 @@ export default function InvestmentsPage() {
                         <article key={`mini-row-${row.laneId}`} className="investments-native-ladder-rung-row is-mini" data-ladder-mini-row={row.originTermYears}>
                           <div className="investments-native-ladder-rung-meta is-mini">
                             <strong>{row.originTermYears}-Year</strong>
+                            {initialMarker ? (
+                              <span className="sr-only">
+                                {`${row.originTermYears}-year certificate matures in Year ${initialMarker.year}.`}
+                              </span>
+                            ) : null}
                           </div>
                           <div className="investments-native-ladder-rung-track is-mini" style={{ '--ladder-tick-step': `${100 / safeHorizon}%` }}>
                             {initialBars.map((bar) => {
@@ -2369,7 +2374,7 @@ export default function InvestmentsPage() {
                                 className="investments-native-ladder-rung-marker"
                                 style={{ left: `${(initialMarker.year / safeHorizon) * 100}%` }}
                                 data-ladder-mini-maturity-marker={initialMarker.year}
-                                aria-label={`Matures in Year ${initialMarker.year}`}
+                                aria-hidden="true"
                               >
                                 <span className="investments-native-ladder-rung-dot" />
                               </span>
@@ -2447,6 +2452,7 @@ export default function InvestmentsPage() {
                                       className="investments-native-ladder-rung-marker"
                                       style={{ left: `${maturityPct}%` }}
                                       data-ladder-maturity-marker
+                                      aria-hidden="true"
                                     >
                                       <span className="investments-native-ladder-rung-dot" />
                                       {marker.rollsForward ? (
