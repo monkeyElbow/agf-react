@@ -2484,9 +2484,9 @@
 .investments-native-cert-card__cap {
   border-radius: 16px 16px 0 0;
   padding:
-    clamp(0.74rem, 1.55vw, 0.9rem)
+    clamp(1.18rem, 2.45vw, 1.42rem)
     clamp(2.4rem, 5.2vw, 3.1rem)
-    clamp(0.6rem, 1.28vw, 0.76rem);
+    clamp(0.62rem, 1.32vw, 0.78rem);
   background: linear-gradient(142deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
 }
 
@@ -2508,9 +2508,9 @@
 }
 
 .investments-native-cert-card h3 {
-  margin: 0;
+  margin: 0 0 clamp(0.8rem, 1.75vw, 1.1rem);
   font-family: var(--ag-font-heading);
-  font-size: clamp(1.45rem, 2.55vw, 1.88rem);
+  font-size: clamp(1.9rem, 3.35vw, 2.45rem);
   line-height: 1.02;
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
 }
@@ -23619,20 +23619,31 @@ p.impact-proof-story-proof-body {
   }
 
   .investments-native-growth-feature {
-    --investments-growth-display-size: clamp(3.55rem, 15.2vw, 4.9rem);
+    --investments-growth-display-size: clamp(3rem, 13vw, 4.25rem);
     --investments-growth-display-letter-spacing: clamp(-0.044em, -0.024vw, -0.028em);
   }
 
   .service-native-section h2.investments-native-build-title {
-    max-width: min(13.2ch, 100%);
+    max-width: min(11.2ch, 100%);
     margin-bottom: clamp(1.45rem, 5vw, 2rem);
     padding-top: clamp(0.45rem, 2vw, 0.8rem);
     padding-bottom: clamp(0.55rem, 2.4vw, 0.95rem);
     line-height: 0.97;
   }
 
+  .service-native-section h2.investments-native-build-title .investments-native-build-title-line {
+    white-space: normal;
+    text-wrap: balance;
+  }
+
   .investments-native-cert-card h3 {
-    font-size: clamp(1.55rem, 7vw, 1.9rem);
+    margin-bottom: clamp(1rem, 4.2vw, 1.3rem);
+    font-size: clamp(2rem, 9.1vw, 2.45rem);
+  }
+
+  .investments-native-cert-card__cap {
+    padding-top: clamp(1.45rem, 6.2vw, 1.9rem);
+    padding-bottom: clamp(0.68rem, 2.9vw, 0.86rem);
   }
 
   .investments-native-cert-card p {

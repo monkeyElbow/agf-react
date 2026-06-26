@@ -2179,7 +2179,7 @@ export default function InvestmentsPage() {
 
       <section className="service-native-section investments-native-panel" id="certificates">
         <div className="ag-panel-rail">
-          <div className="service-native-grid is-two investments-native-cert-grid fade-out">
+          <div className="service-native-grid is-two investments-native-cert-grid">
             {certificateCards.map((card) => (
               <article
                 key={`${card.titleTop}-${card.titleBottom}`}

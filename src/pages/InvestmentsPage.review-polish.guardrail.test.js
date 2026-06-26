@@ -36,8 +36,9 @@ describe('investments page review polish guardrails', () => {
     expect(cssSource).toContain('letter-spacing: var(--investments-growth-display-letter-spacing);');
     expect(cssSource).toContain('text-wrap: balance;');
     expect(cssSource).toContain('@media (max-width: 980px) {');
-    expect(cssSource).toContain('--investments-growth-display-size: clamp(3.55rem, 15.2vw, 4.9rem);');
-    expect(cssSource).toContain('max-width: min(13.2ch, 100%);');
+    expect(cssSource).toContain('--investments-growth-display-size: clamp(3rem, 13vw, 4.25rem);');
+    expect(cssSource).toContain('max-width: min(11.2ch, 100%);');
+    expect(cssSource).toContain('white-space: normal;');
   });
 
   it('keeps the already investor dashboard copy styling when the content is reused as the final growth slide', () => {
@@ -78,6 +79,23 @@ describe('investments page review polish guardrails', () => {
     expect(cssSource).toContain('font-size: var(--service-native-intro-body-size);');
     expect(cssSource).toContain('.investments-native-intro-tagline {');
     expect(cssSource).toContain('font-size: var(--service-native-intro-emphasis-size);');
+  });
+
+  it('reveals investment certificate cards individually instead of fading the whole grid as one block', () => {
+    const pageSource = readSource('./InvestmentsPage.jsx');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(pageSource).toContain('className="service-native-grid is-two investments-native-cert-grid"');
+    expect(pageSource).not.toContain('className="service-native-grid is-two investments-native-cert-grid fade-out"');
+    expect(pageSource).toContain('fade-up fade-up-force-observe');
+    expect(cssSource).toContain('clamp(1.18rem, 2.45vw, 1.42rem)');
+    expect(cssSource).toContain('margin: 0 0 clamp(0.8rem, 1.75vw, 1.1rem);');
+    expect(cssSource).toContain('font-size: clamp(1.9rem, 3.35vw, 2.45rem);');
+    expect(cssSource).toContain('clamp(0.62rem, 1.32vw, 0.78rem)');
+    expect(cssSource).toContain('padding-top: clamp(1.45rem, 6.2vw, 1.9rem);');
+    expect(cssSource).toContain('padding-bottom: clamp(0.68rem, 2.9vw, 0.86rem);');
+    expect(cssSource).toContain('margin-bottom: clamp(1rem, 4.2vw, 1.3rem);');
+    expect(cssSource).toContain('font-size: clamp(2rem, 9.1vw, 2.45rem);');
   });
 
   it('keeps the ladder calculator as one cohesive calculator zone with ladder-owned result sheets', () => {
