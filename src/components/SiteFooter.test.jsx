@@ -22,10 +22,20 @@ describe('site chrome accessibility guardrails', () => {
     );
 
     const headerWordmark = container.querySelector('.site-brand-wordmark-image');
+    const headerWordmarkShell = container.querySelector('.site-brand-wordmark-shell');
+    const headerBrandMark = container.querySelector('.site-brand-icon-a');
+    const headerBrandSquare = container.querySelector('.site-brand-icon-square');
     const footerWordmark = container.querySelector('.site-footer-logo-white');
 
     expect(headerWordmark?.getAttribute('width')).toBe('510');
     expect(headerWordmark?.getAttribute('height')).toBe('116');
+    expect(headerWordmarkShell?.getAttribute('style') || '').toContain('width: 98.19px;');
+    expect(headerWordmark?.getAttribute('style') || '').toContain('height: 30px;');
+    expect(headerWordmark?.getAttribute('style') || '').toContain('transform: translateX(-33.84px);');
+    expect(headerBrandMark?.getAttribute('width')).toBe('30');
+    expect(headerBrandMark?.getAttribute('height')).toBe('30');
+    expect(headerBrandMark?.getAttribute('style') || '').toContain('fill: rgb(255, 255, 255);');
+    expect(headerBrandSquare?.getAttribute('style') || '').toContain('background: rgb(0, 173, 187);');
     expect(footerWordmark?.getAttribute('width')).toBe('510');
     expect(footerWordmark?.getAttribute('height')).toBe('116');
     expect(screen.getByRole('link', { name: 'Services' })).toBeTruthy();
