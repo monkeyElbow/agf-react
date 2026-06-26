@@ -311,4 +311,13 @@ describe('SiteLayout mobile nav drawer', () => {
     expect(cssSource).toContain('box-shadow: var(--site-nav-menu-shadow-soft);');
     expect(cssSource).toContain('border: 1px solid var(--site-nav-menu-border);');
   });
+
+  it('keeps the login icon available on narrow desktop widths until compact mode takes over', () => {
+    const cssSource = readSource('../styles.css');
+
+    expect(cssSource).not.toContain(`@media (min-width: 1100px) and (max-width: 1280px) {
+  .nav-login-link .nav-icon {
+    display: none;
+  }`);
+  });
 });

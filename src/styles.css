@@ -1183,10 +1183,6 @@ button.action-btn {
 }
 
 @media (min-width: 1100px) and (max-width: 1280px) {
-  .nav-login-link .nav-icon {
-    display: none;
-  }
-
   .site-nav-group-link,
   .site-nav-group-toggle,
   .site-nav-link {
