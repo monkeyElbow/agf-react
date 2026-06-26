@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -55,5 +57,16 @@ describe('site chrome accessibility guardrails', () => {
     expect(screen.getByRole('link', { name: 'Services' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'About' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Tools' })).toBeTruthy();
+  });
+
+  it('keeps footer section labels visually larger than footer links', () => {
+    const cssSource = readFileSync(resolve(__dirname, '../styles.css'), 'utf8');
+
+    expect(cssSource).toContain('.site-footer-heading {');
+    expect(cssSource).toContain('font-size: clamp(1.5rem, 1.2vw, 1.76rem);');
+    expect(cssSource).toContain('.site-footer-heading a {');
+    expect(cssSource).toContain('font-size: inherit;');
+    expect(cssSource).toContain('.site-footer-col ul a {');
+    expect(cssSource).toContain('font-size: 1.05rem;');
   });
 });
