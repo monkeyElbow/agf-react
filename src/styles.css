@@ -21,6 +21,16 @@ body {
   overflow-x: clip;
 }
 
+#root {
+  min-height: 100dvh;
+}
+
+.site-layout {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Typography baseline: normalize heading spacing to prevent inherited tracking drift. */
 :where(.service-native-page, .home-native-page, .native-info-page, .resources-native-article-content) :is(h1, h2, h3, h4, h5, h6) {
   letter-spacing: normal;
@@ -2401,9 +2411,7 @@ button.action-btn {
 }
 
 .app-main {
-  min-height: calc(100vh - 72px);
-  padding-bottom: var(--site-chatbot-mobile-reserved-space, 0px);
-  transition: padding-bottom 220ms ease;
+  flex: 1 0 auto;
 }
 
 

@@ -520,61 +520,153 @@ export default function SiteLayout({ children }) {
         setOpacity: setFrontHudOpacity,
       }}
     >
-      <>
-      <nav
-        ref={navRef}
-        className={`site-nav${forceCompactNav ? ' is-force-mobile' : ''}${isFrontHudRevealing ? ' is-front-hud-revealing' : ''}`}
-        aria-label="Main navigation"
-        onKeyDown={(event) => {
-          if (event.key !== 'Escape') {
-            return;
-          }
-          if (!menuOpen && !openDropdown) {
-            return;
-          }
-          closeNavMenus();
-        }}
-      >
-        <div ref={navInnerRef} className="site-nav-inner">
-          <Link ref={brandRef} to={homePath} className="site-brand" aria-label="AGFinancial Home">
-            <AnimatedBrandLogo />
-          </Link>
+      <div className="site-layout">
+        <nav
+          ref={navRef}
+          className={`site-nav${forceCompactNav ? ' is-force-mobile' : ''}${isFrontHudRevealing ? ' is-front-hud-revealing' : ''}`}
+          aria-label="Main navigation"
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape') {
+              return;
+            }
+            if (!menuOpen && !openDropdown) {
+              return;
+            }
+            closeNavMenus();
+          }}
+        >
+          <div ref={navInnerRef} className="site-nav-inner">
+            <Link ref={brandRef} to={homePath} className="site-brand" aria-label="AGFinancial Home">
+              <AnimatedBrandLogo />
+            </Link>
 
-          <button
-            type="button"
-            className="site-nav-toggle"
-            aria-controls="site-nav-menu"
-            aria-expanded={menuOpen}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            <span className="sr-only">{menuOpen ? 'Close menu' : 'Open menu'}</span>
-            <span className={`site-nav-toggle-icon${menuOpen ? ' is-open' : ''}`} aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </span>
-          </button>
+            <button
+              type="button"
+              className="site-nav-toggle"
+              aria-controls="site-nav-menu"
+              aria-expanded={menuOpen}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <span className="sr-only">{menuOpen ? 'Close menu' : 'Open menu'}</span>
+              <span className={`site-nav-toggle-icon${menuOpen ? ' is-open' : ''}`} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            </button>
 
-          <div id="site-nav-menu" className={`site-nav-menu${menuOpen ? ' is-open' : ''}`}>
-            <div ref={navLinksRef} className="site-nav-links" onMouseLeave={handleNavLinksMouseLeave}>
-              <div className="site-nav-links-primary">
-                {navSections.map((section) => {
-                  const sectionId = getNavSectionId(section.title);
-                  const dropdownId = `site-nav-dropdown-${sectionId}`;
-                  const isSectionOpen = openDropdown === section.title;
-                  return (
+            <div id="site-nav-menu" className={`site-nav-menu${menuOpen ? ' is-open' : ''}`}>
+              <div ref={navLinksRef} className="site-nav-links" onMouseLeave={handleNavLinksMouseLeave}>
+                <div className="site-nav-links-primary">
+                  {navSections.map((section) => {
+                    const sectionId = getNavSectionId(section.title);
+                    const dropdownId = `site-nav-dropdown-${sectionId}`;
+                    const isSectionOpen = openDropdown === section.title;
+                    return (
+                    <div
+                      key={section.title}
+                      className={`site-nav-group${openDropdown === section.title ? ' is-open' : ''}`}
+                      onMouseEnter={() => {
+                        if (isDesktop) {
+                          cancelScheduledDropdownClose();
+                          setOpenDropdown(section.title);
+                        }
+                      }}
+                      onMouseLeave={handleGroupMouseLeave}
+                      onFocusCapture={() => handleGroupFocus(section.title)}
+                      onBlurCapture={handleGroupBlur}
+                    >
+                      <div className="site-nav-group-head">
+                        <button
+                          type="button"
+                          className="site-nav-group-link"
+                          onClick={() => {
+                            navigate(resolveManagedNavPath(section.rootPath || section.items[0]?.path, '/'));
+                            handleNavItemSelect();
+                          }}
+                        >
+                          {section.title}
+                        </button>
+                        <button
+                          type="button"
+                          className="site-nav-group-toggle"
+                          aria-expanded={isSectionOpen}
+                          aria-controls={dropdownId}
+                          aria-label={`${isSectionOpen ? 'Collapse' : 'Expand'} ${section.title} menu`}
+                          onClick={() => toggleDropdown(section.title)}
+                        >
+                          <svg className="site-nav-group-toggle-icon" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
+                            <path
+                              d="M1 1l4 4 4-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <div id={dropdownId} className="site-nav-dropdown">
+                        {section.items.map((item, index) => {
+                          const itemPath = resolveManagedNavPath(item.path, '/');
+                          return (
+                            <NavLink
+                              to={itemPath}
+                              key={item.path}
+                              className={navLinkClass}
+                              style={{ '--site-nav-item-index': index }}
+                              onClick={handleNavItemSelect}
+                            >
+                              {item.label}
+                            </NavLink>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    );
+                  })}
+                </div>
+
+                <div className="site-nav-links-utility">
+                  <a
+                    href="https://secure.agfinancial.org/"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="site-nav-link nav-login-link"
+                  >
+                    <span className="nav-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"
+                        />
+                      </svg>
+                    </span>
+                    <span>Log In</span>
+                  </a>
+                  <NavLink to={searchPath} className="site-nav-link nav-search-link" aria-label="Search">
+                    <span className="nav-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M10 2a8 8 0 1 0 5.29 14l4.35 4.35 1.41-1.41-4.35-4.35A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
+                        />
+                      </svg>
+                    </span>
+                    <span className="nav-search-text">Search</span>
+                  </NavLink>
                   <div
-                    key={section.title}
-                    className={`site-nav-group${openDropdown === section.title ? ' is-open' : ''}`}
+                    className={`site-nav-group is-admin${openDropdown === 'Admin' ? ' is-open' : ''}`}
                     onMouseEnter={() => {
                       if (isDesktop) {
                         cancelScheduledDropdownClose();
-                        setOpenDropdown(section.title);
+                        setOpenDropdown('Admin');
                       }
                     }}
                     onMouseLeave={handleGroupMouseLeave}
-                    onFocusCapture={() => handleGroupFocus(section.title)}
+                    onFocusCapture={() => handleGroupFocus('Admin')}
                     onBlurCapture={handleGroupBlur}
                   >
                     <div className="site-nav-group-head">
@@ -582,19 +674,19 @@ export default function SiteLayout({ children }) {
                         type="button"
                         className="site-nav-group-link"
                         onClick={() => {
-                          navigate(resolveManagedNavPath(section.rootPath || section.items[0]?.path, '/'));
+                          navigate('/admin/content');
                           handleNavItemSelect();
                         }}
                       >
-                        {section.title}
+                        Admin
                       </button>
                       <button
                         type="button"
                         className="site-nav-group-toggle"
-                        aria-expanded={isSectionOpen}
-                        aria-controls={dropdownId}
-                        aria-label={`${isSectionOpen ? 'Collapse' : 'Expand'} ${section.title} menu`}
-                        onClick={() => toggleDropdown(section.title)}
+                        aria-expanded={openDropdown === 'Admin'}
+                        aria-controls="site-nav-dropdown-admin"
+                        aria-label={`${openDropdown === 'Admin' ? 'Collapse' : 'Expand'} Admin menu`}
+                        onClick={() => toggleDropdown('Admin')}
                       >
                         <svg className="site-nav-group-toggle-icon" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
                           <path
@@ -608,229 +700,137 @@ export default function SiteLayout({ children }) {
                         </svg>
                       </button>
                     </div>
-                    <div id={dropdownId} className="site-nav-dropdown">
-                      {section.items.map((item, index) => {
-                        const itemPath = resolveManagedNavPath(item.path, '/');
-                        return (
-                          <NavLink
-                            to={itemPath}
-                            key={item.path}
-                            className={navLinkClass}
-                            style={{ '--site-nav-item-index': index }}
-                            onClick={handleNavItemSelect}
-                          >
-                            {item.label}
-                          </NavLink>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  );
-                })}
-              </div>
-
-              <div className="site-nav-links-utility">
-                <a
-                  href="https://secure.agfinancial.org/"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="site-nav-link nav-login-link"
-                >
-                  <span className="nav-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
-                      <path
-                        fill="currentColor"
-                        d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"
-                      />
-                    </svg>
-                  </span>
-                  <span>Log In</span>
-                </a>
-                <NavLink to={searchPath} className="site-nav-link nav-search-link" aria-label="Search">
-                  <span className="nav-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
-                      <path
-                        fill="currentColor"
-                        d="M10 2a8 8 0 1 0 5.29 14l4.35 4.35 1.41-1.41-4.35-4.35A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
-                      />
-                    </svg>
-                  </span>
-                  <span className="nav-search-text">Search</span>
-                </NavLink>
-                <div
-                  className={`site-nav-group is-admin${openDropdown === 'Admin' ? ' is-open' : ''}`}
-                  onMouseEnter={() => {
-                    if (isDesktop) {
-                      cancelScheduledDropdownClose();
-                      setOpenDropdown('Admin');
-                    }
-                  }}
-                  onMouseLeave={handleGroupMouseLeave}
-                  onFocusCapture={() => handleGroupFocus('Admin')}
-                  onBlurCapture={handleGroupBlur}
-                >
-                  <div className="site-nav-group-head">
-                    <button
-                      type="button"
-                      className="site-nav-group-link"
-                      onClick={() => {
-                        navigate('/admin/content');
-                        handleNavItemSelect();
-                      }}
-                    >
-                      Admin
-                    </button>
-                    <button
-                      type="button"
-                      className="site-nav-group-toggle"
-                      aria-expanded={openDropdown === 'Admin'}
-                      aria-controls="site-nav-dropdown-admin"
-                      aria-label={`${openDropdown === 'Admin' ? 'Collapse' : 'Expand'} Admin menu`}
-                      onClick={() => toggleDropdown('Admin')}
-                    >
-                      <svg className="site-nav-group-toggle-icon" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
-                        <path
-                          d="M1 1l4 4 4-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <div id="site-nav-dropdown-admin" className="site-nav-dropdown">
-                    {ADMIN_NAV_ITEMS.map((item, index) => (
-                      <NavLink
-                        key={item.to}
-                        to={item.to}
-                        className={navLinkClass}
-                        style={{ '--site-nav-item-index': index }}
-                        onClick={handleNavItemSelect}
-                      >
-                        {item.label}
-                      </NavLink>
-                    ))}
-                    <div className="site-nav-admin-overlay-grid is-switches">
-                      <div
-                        className="site-nav-admin-overlay-row is-content-width is-switch-card"
-                        role="group"
-                        aria-label="Content width overlay"
-                      >
-                        <span className="site-nav-admin-overlay-label">Content Width Overlay</span>
-                        <div className="site-nav-admin-overlay-selector" role="radiogroup" aria-label="Content width overlay toggle">
-                          <button
-                            type="button"
-                            role="radio"
-                            aria-checked={!contentWidthOverlayEnabled}
-                            className={`site-nav-admin-overlay-option${!contentWidthOverlayEnabled ? ' is-active' : ''}`}
-                            onClick={() => setContentWidthOverlayEnabled(false)}
-                          >
-                            Off
-                          </button>
-                          <button
-                            type="button"
-                            role="radio"
-                            aria-checked={contentWidthOverlayEnabled}
-                            className={`site-nav-admin-overlay-option${contentWidthOverlayEnabled ? ' is-active' : ''}`}
-                            onClick={() => setContentWidthOverlayEnabled(true)}
-                          >
-                            On
-                          </button>
+                    <div id="site-nav-dropdown-admin" className="site-nav-dropdown">
+                      {ADMIN_NAV_ITEMS.map((item, index) => (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          className={navLinkClass}
+                          style={{ '--site-nav-item-index': index }}
+                          onClick={handleNavItemSelect}
+                        >
+                          {item.label}
+                        </NavLink>
+                      ))}
+                      <div className="site-nav-admin-overlay-grid is-switches">
+                        <div
+                          className="site-nav-admin-overlay-row is-content-width is-switch-card"
+                          role="group"
+                          aria-label="Content width overlay"
+                        >
+                          <span className="site-nav-admin-overlay-label">Content Width Overlay</span>
+                          <div className="site-nav-admin-overlay-selector" role="radiogroup" aria-label="Content width overlay toggle">
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={!contentWidthOverlayEnabled}
+                              className={`site-nav-admin-overlay-option${!contentWidthOverlayEnabled ? ' is-active' : ''}`}
+                              onClick={() => setContentWidthOverlayEnabled(false)}
+                            >
+                              Off
+                            </button>
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={contentWidthOverlayEnabled}
+                              className={`site-nav-admin-overlay-option${contentWidthOverlayEnabled ? ' is-active' : ''}`}
+                              onClick={() => setContentWidthOverlayEnabled(true)}
+                            >
+                              On
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          className="site-nav-admin-overlay-row is-front-hud is-switch-card"
+                          role="group"
+                          aria-label="Front-end HUD overlay"
+                        >
+                          <span className="site-nav-admin-overlay-label">
+                            Front-end HUD
+                            <kbd className="site-nav-admin-overlay-hotkey">{isApplePlatform ? 'Cmd+\\' : 'Ctrl+\\'}</kbd>
+                          </span>
+                          <div className="site-nav-admin-overlay-selector" role="radiogroup" aria-label="Front-end HUD toggle">
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={!frontHudEnabled}
+                              className={`site-nav-admin-overlay-option${!frontHudEnabled ? ' is-active' : ''}`}
+                              onClick={() => setFrontHudEnabled(false)}
+                            >
+                              Off
+                            </button>
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={frontHudEnabled}
+                              className={`site-nav-admin-overlay-option${frontHudEnabled ? ' is-active' : ''}`}
+                              onClick={() => setFrontHudEnabled(true)}
+                            >
+                              On
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <div
-                        className="site-nav-admin-overlay-row is-front-hud is-switch-card"
-                        role="group"
-                        aria-label="Front-end HUD overlay"
-                      >
-                        <span className="site-nav-admin-overlay-label">
-                          Front-end HUD
-                          <kbd className="site-nav-admin-overlay-hotkey">{isApplePlatform ? 'Cmd+\\' : 'Ctrl+\\'}</kbd>
-                        </span>
-                        <div className="site-nav-admin-overlay-selector" role="radiogroup" aria-label="Front-end HUD toggle">
-                          <button
-                            type="button"
-                            role="radio"
-                            aria-checked={!frontHudEnabled}
-                            className={`site-nav-admin-overlay-option${!frontHudEnabled ? ' is-active' : ''}`}
-                            onClick={() => setFrontHudEnabled(false)}
-                          >
-                            Off
-                          </button>
-                          <button
-                            type="button"
-                            role="radio"
-                            aria-checked={frontHudEnabled}
-                            className={`site-nav-admin-overlay-option${frontHudEnabled ? ' is-active' : ''}`}
-                            onClick={() => setFrontHudEnabled(true)}
-                          >
-                            On
-                          </button>
-                        </div>
+                      <div className="site-nav-admin-overlay-grid is-sliders">
+                        <label className="site-nav-admin-overlay-row site-nav-admin-overlay-slider is-front-hud-slider" htmlFor="frontHudOpacitySlider">
+                          <div className="site-nav-admin-overlay-slider-head">
+                            <span>Tool Opacity {clampFrontHudOpacity(frontHudOpacity)}%</span>
+                            <kbd className="site-nav-admin-overlay-hotkey">
+                              {isApplePlatform ? 'Cmd+[ / ]' : 'Ctrl+[ / ]'} or Alt+Shift+↑/↓
+                            </kbd>
+                          </div>
+                          <input
+                            id="frontHudOpacitySlider"
+                            type="range"
+                            min="5"
+                            max="90"
+                            step="1"
+                            value={clampFrontHudOpacity(frontHudOpacity)}
+                            onChange={(event) => {
+                              setFrontHudOpacity(clampFrontHudOpacity(event.target.value));
+                            }}
+                          />
+                        </label>
+                        <label className="site-nav-admin-overlay-row site-nav-admin-overlay-slider is-front-hud-slider" htmlFor="frontHudDimStrengthSlider">
+                          <div className="site-nav-admin-overlay-slider-head">
+                            <span>Block Dim {clampFrontHudDimStrength(frontHudDimStrength)}%</span>
+                          </div>
+                          <input
+                            id="frontHudDimStrengthSlider"
+                            type="range"
+                            min="0"
+                            max="85"
+                            step="1"
+                            value={clampFrontHudDimStrength(frontHudDimStrength)}
+                            onChange={(event) => {
+                              setFrontHudDimStrength(clampFrontHudDimStrength(event.target.value));
+                            }}
+                          />
+                        </label>
                       </div>
-                    </div>
-                    <div className="site-nav-admin-overlay-grid is-sliders">
-                      <label className="site-nav-admin-overlay-row site-nav-admin-overlay-slider is-front-hud-slider" htmlFor="frontHudOpacitySlider">
-                        <div className="site-nav-admin-overlay-slider-head">
-                          <span>Tool Opacity {clampFrontHudOpacity(frontHudOpacity)}%</span>
-                          <kbd className="site-nav-admin-overlay-hotkey">
-                            {isApplePlatform ? 'Cmd+[ / ]' : 'Ctrl+[ / ]'} or Alt+Shift+↑/↓
-                          </kbd>
-                        </div>
-                        <input
-                          id="frontHudOpacitySlider"
-                          type="range"
-                          min="5"
-                          max="90"
-                          step="1"
-                          value={clampFrontHudOpacity(frontHudOpacity)}
-                          onChange={(event) => {
-                            setFrontHudOpacity(clampFrontHudOpacity(event.target.value));
-                          }}
-                        />
-                      </label>
-                      <label className="site-nav-admin-overlay-row site-nav-admin-overlay-slider is-front-hud-slider" htmlFor="frontHudDimStrengthSlider">
-                        <div className="site-nav-admin-overlay-slider-head">
-                          <span>Block Dim {clampFrontHudDimStrength(frontHudDimStrength)}%</span>
-                        </div>
-                        <input
-                          id="frontHudDimStrengthSlider"
-                          type="range"
-                          min="0"
-                          max="85"
-                          step="1"
-                          value={clampFrontHudDimStrength(frontHudDimStrength)}
-                          onChange={(event) => {
-                            setFrontHudDimStrength(clampFrontHudDimStrength(event.target.value));
-                          }}
-                        />
-                      </label>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      {contentWidthOverlayEnabled && !isAdminRoute ? (
-        <div className="admin-content-width-overlay" aria-hidden="true">
-          <div className="admin-content-width-overlay-center" />
-        </div>
-      ) : null}
+        {contentWidthOverlayEnabled && !isAdminRoute ? (
+          <div className="admin-content-width-overlay" aria-hidden="true">
+            <div className="admin-content-width-overlay-center" />
+          </div>
+        ) : null}
 
-          <main className="app-main">
-            <div className="app-main-shell">
-              {children}
-            </div>
-          </main>
-          {/* Mounted at layout scope so the utility can later share global site context without page-by-page wiring. */}
-          {!isAdminRoute && !frontHudEnabled ? <SiteChatbotWindow /> : null}
-            <SiteFooter />
-        </>
-      </FrontHudContext.Provider>
-    );
+        <main className="app-main">
+          <div className="app-main-shell">
+            {children}
+          </div>
+        </main>
+        {/* Mounted at layout scope so the utility can later share global site context without page-by-page wiring. */}
+        {!isAdminRoute && !frontHudEnabled ? <SiteChatbotWindow /> : null}
+        <SiteFooter />
+      </div>
+    </FrontHudContext.Provider>
+  );
 }

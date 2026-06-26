@@ -5161,6 +5161,7 @@
 
 .loans-native-tariffs .service-native-dark-feature {
   border-radius: 0;
+  padding-bottom: var(--site-chatbot-mobile-reserved-space, 0px);
 }
 
 .loans-native-tariffs .service-native-dark-feature-copy h3 {
