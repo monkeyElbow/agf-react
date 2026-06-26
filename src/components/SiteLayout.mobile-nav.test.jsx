@@ -79,6 +79,20 @@ function renderLayoutWithRouteChangeButton() {
   );
 }
 
+function createRect(width = 0, height = 0) {
+  return {
+    width,
+    height,
+    top: 0,
+    right: width,
+    bottom: height,
+    left: 0,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  };
+}
+
 describe('SiteLayout mobile nav drawer', () => {
   beforeEach(() => {
     mockMatchMedia(false);
@@ -182,6 +196,106 @@ describe('SiteLayout mobile nav drawer', () => {
     expect(siteMapSource).toContain("{ path: '/services/investments', label: 'Investments' }");
     expect(siteMapSource).toContain("{ path: '/rates', label: 'Rates' }");
     expect(siteMapSource).toContain("title: 'Resources'");
+  });
+
+  it('keeps force-compact nav stable when the rendered compact menu is narrower than the desktop link set', async () => {
+    vi.useFakeTimers();
+    mockMatchMedia(true);
+
+    const resizeObserverCallbacks = [];
+    const originalResizeObserver = global.ResizeObserver;
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const originalCancelAnimationFrame = window.cancelAnimationFrame;
+    const clientWidthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+    const offsetWidthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+    const scrollWidthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollWidth');
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+
+    global.ResizeObserver = class MockResizeObserver {
+      constructor(callback) {
+        resizeObserverCallbacks.push(callback);
+      }
+
+      observe() {}
+
+      disconnect() {}
+    };
+
+    window.requestAnimationFrame = (callback) => window.setTimeout(() => callback(performance.now()), 0);
+    window.cancelAnimationFrame = (handle) => window.clearTimeout(handle);
+
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      get() {
+        if (this.classList?.contains('site-nav-inner')) {
+          return 1080;
+        }
+        return clientWidthDescriptor?.get ? clientWidthDescriptor.get.call(this) : 0;
+      },
+    });
+
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+      configurable: true,
+      get() {
+        if (this.classList?.contains('site-brand')) {
+          return 180;
+        }
+        return offsetWidthDescriptor?.get ? offsetWidthDescriptor.get.call(this) : 0;
+      },
+    });
+
+    Object.defineProperty(HTMLElement.prototype, 'scrollWidth', {
+      configurable: true,
+      get() {
+        if (this.classList?.contains('site-nav-links')) {
+          const nav = this.closest('.site-nav');
+          return nav?.classList.contains('is-force-mobile') ? 260 : 980;
+        }
+        return scrollWidthDescriptor?.get ? scrollWidthDescriptor.get.call(this) : 0;
+      },
+    });
+
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
+      if (this.classList?.contains('site-nav-inner')) {
+        return createRect(1080, 56);
+      }
+      if (this.classList?.contains('site-brand')) {
+        return createRect(180, 30);
+      }
+      if (this.classList?.contains('site-nav-links')) {
+        const nav = this.closest('.site-nav');
+        return createRect(nav?.classList.contains('is-force-mobile') ? 260 : 980, 56);
+      }
+      return originalGetBoundingClientRect.call(this);
+    };
+
+    try {
+      const { container } = renderLayout();
+      await vi.runAllTimersAsync();
+
+      const nav = container.querySelector('.site-nav');
+      expect(nav?.className.includes('is-force-mobile')).toBe(true);
+
+      resizeObserverCallbacks.forEach((callback) => callback([], {}));
+      await vi.runAllTimersAsync();
+
+      expect(nav?.className.includes('is-force-mobile')).toBe(true);
+    } finally {
+      global.ResizeObserver = originalResizeObserver;
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+      window.cancelAnimationFrame = originalCancelAnimationFrame;
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+
+      if (clientWidthDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, 'clientWidth', clientWidthDescriptor);
+      }
+      if (offsetWidthDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidthDescriptor);
+      }
+      if (scrollWidthDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, 'scrollWidth', scrollWidthDescriptor);
+      }
+    }
   });
 
   it('keeps the mobile drawer on the shared premium dropdown surface and fast reveal contract', () => {

@@ -211,6 +211,45 @@ export default function SiteLayout({ children }) {
 
     const media = window.matchMedia(DESKTOP_NAV_QUERY);
     let rafId = 0;
+    const measureDesktopLinksWidth = (links) => {
+      if (!(links instanceof HTMLElement) || typeof document === 'undefined') {
+        return 0;
+      }
+
+      const measurementShell = document.createElement('div');
+      measurementShell.setAttribute('aria-hidden', 'true');
+      measurementShell.style.position = 'absolute';
+      measurementShell.style.left = '-99999px';
+      measurementShell.style.top = '0';
+      measurementShell.style.visibility = 'hidden';
+      measurementShell.style.pointerEvents = 'none';
+      measurementShell.style.width = 'max-content';
+      measurementShell.style.maxWidth = 'none';
+      measurementShell.style.overflow = 'visible';
+      measurementShell.style.contain = 'layout style';
+
+      const linksClone = links.cloneNode(true);
+      if (!(linksClone instanceof HTMLElement)) {
+        return 0;
+      }
+
+      linksClone.style.width = 'max-content';
+      linksClone.style.maxWidth = 'none';
+      linksClone.style.flex = '0 0 auto';
+      linksClone.style.justifyContent = 'flex-start';
+
+      measurementShell.appendChild(linksClone);
+      document.body.appendChild(measurementShell);
+
+      const measuredWidth = Math.ceil(
+        linksClone.getBoundingClientRect().width
+        || linksClone.scrollWidth
+        || 0,
+      );
+
+      measurementShell.remove();
+      return measuredWidth;
+    };
 
     const measure = () => {
       const inner = navInnerRef.current;
@@ -227,7 +266,7 @@ export default function SiteLayout({ children }) {
 
       const innerWidth = inner.clientWidth;
       const brandWidth = brand.offsetWidth;
-      const linksWidth = links.scrollWidth;
+      const linksWidth = measureDesktopLinksWidth(links);
       const reserved = 40;
       const available = Math.max(0, innerWidth - brandWidth - reserved);
       setForceCompactNav(linksWidth > available);
