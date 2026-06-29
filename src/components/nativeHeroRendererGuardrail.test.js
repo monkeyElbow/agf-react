@@ -41,6 +41,8 @@ describe('native hero renderer guardrail', () => {
     expect(source).not.toContain('function buildTestDynamicHero(block, resolvePathFromRef) {');
     expect(runtimeSource).toContain('function resolveDynamicHeroLineHighlights(settings, lineNumber) {');
     expect(runtimeSource).toContain('highlights: resolveDynamicHeroLineHighlights(settings, lineNumber),');
+    expect(stylesSource).toContain('.service-native-hero h1 {');
+    expect(stylesSource).toContain('font-weight: 800;');
     expect(stylesSource).toContain('.service-native-page.native-info-page .service-native-hero h1.is-mango');
     expect(stylesSource).toContain('.service-native-page.native-info-page .service-native-hero h1.is-sandstone');
     expect(stylesSource).toContain('.service-native-page.native-info-page .service-native-hero h1.is-white');
