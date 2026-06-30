@@ -2710,6 +2710,12 @@ button.action-btn {
   }
 }
 
+@media (max-width: 768px) {
+  .site-layout:has(.native-info-page--retirement-rollovers) {
+    --ag-panel-effective-gutter: calc(var(--ag-panel-gutter) * 0.275);
+  }
+}
+
 
 .page-shell {
   border-radius: 6px;

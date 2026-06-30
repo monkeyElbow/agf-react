@@ -330,6 +330,36 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByLabelText('Select your state')).toBeTruthy();
   });
 
+  it('renders retirement rollovers from the targeted request-form block instead of the legacy inline cta shell', () => {
+    mockBlocksByPath = {
+      '/services/retirement/rollovers': (
+        contentBlockBlueprintsByPath['/services/retirement/rollovers'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/rollovers',
+            title: 'Rollovers',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.retirement-rollovers-native-request.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('.retirement-rollovers-native-request .dynamic-request-layout')).toBeTruthy();
+    expect(document.querySelector('.retirement-rollovers-native-request .native-info-inline-form.dynamic-request-form')).toBeTruthy();
+    expect(document.querySelector('.retirement-rollovers-native-cta')).toBeNull();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getAllByText('Our rollover specialists are happy to help focus your retirement.')).toHaveLength(1);
+  });
+
   it('renders charitable gift annuities from explicit managed blocks without a fallback page-content section', () => {
     mockBlocksByPath = {
       '/services/planned-giving/charitable-gift-annuities': (

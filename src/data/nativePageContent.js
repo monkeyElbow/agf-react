@@ -3569,9 +3569,9 @@ const retirementChildPages = {
         anchorId: 'start-the-process',
         title: 'Start the process',
         body: [
-          '1) Download and complete the Rollover/Transfer form below.',
-          '2) Return the completed form, along with the most recent statement(s) from the other account(s) to the address below.',
-          '3) A confirmation letter will be sent to you when your rollover or transfer is complete.',
+          'Download and complete the Rollover/Transfer form below.',
+          'Return the completed form, along with the most recent statement(s) from the other account(s) to the address below.',
+          'A confirmation letter will be sent to you when your rollover or transfer is complete.',
         ],
         addressBlock: {
           className: 'rollovers-copy-address',
@@ -3586,24 +3586,7 @@ const retirementChildPages = {
         ],
       },
       {
-        className: 'retirement-rollovers-native-cta retirement-child-native-cta',
-        copyWrap: true,
-        title: 'Simple is better.',
-        titleHighlights: [{ text: 'Simple', className: 'is-white' }],
-        body: [
-          'Our rollover specialists are happy to help focus your retirement.',
-        ],
-        form: {
-          title: '',
-          subtitle: '',
-          fields: [
-            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
-            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
-            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
-            { id: 'email', label: 'Email*', type: 'email', required: true },
-          ],
-          submitLabel: 'Follow-up with me',
-        },
+        className: 'retirement-rollovers-native-request',
       },
     ],
   },

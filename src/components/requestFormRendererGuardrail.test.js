@@ -207,4 +207,21 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.native-info-page--contact-us .native-dynamic-request.contact-us-request .dynamic-request-copy {');
     expect(cssSource).toContain('justify-self: stretch;');
   });
+
+  it('keeps a late shared mobile stack override so request blocks always place copy above form on small screens', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const mobileSafetySlice = cssSource.slice(
+      cssSource.indexOf('/* Request blocks must stack copy above form on mobile, even when desktop route styles reorder the shell. */'),
+      cssSource.length,
+    );
+
+    expect(mobileSafetySlice).toContain('@media (max-width: 1024px) {');
+    expect(mobileSafetySlice).toContain('.native-info-page .service-native-section.native-dynamic-request .dynamic-request-layout {');
+    expect(mobileSafetySlice).toContain('grid-template-columns: minmax(0, 1fr);');
+    expect(mobileSafetySlice).toContain('gap: clamp(1.6rem, 5vw, 2.35rem);');
+    expect(mobileSafetySlice).toContain('.native-info-page .service-native-section.native-dynamic-request .dynamic-request-copy {');
+    expect(mobileSafetySlice).toContain('order: -1;');
+    expect(mobileSafetySlice).toContain('.native-info-page .service-native-section.native-dynamic-request .dynamic-request-form {');
+    expect(mobileSafetySlice).toContain('order: 0;');
+  });
 });
