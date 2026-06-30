@@ -53,9 +53,16 @@ describe('investments page review polish guardrails', () => {
     expect(cssSource).toContain('.investments-native-dashboard-title {');
     expect(cssSource).toContain('margin: 0;');
     expect(cssSource).toContain('.investments-native-growth-card--investor .investments-native-dashboard-title {');
+    expect(cssSource).toContain('margin-bottom: clamp(1.55rem, 2.8vw, 2.15rem);');
+    expect(cssSource).toContain('max-width: none;');
+    expect(cssSource).toContain('white-space: nowrap;');
+    expect(cssSource).toContain('text-wrap: nowrap;');
     expect(cssSource).toContain('.investments-native-growth-card--investor .native-info-section-copy.billboard-scroll-progress-copy {');
     expect(cssSource).toContain('.investments-native-dashboard-billboard .native-info-rich-html p {');
     expect(cssSource).toContain('font-size: clamp(1.4rem, 2.8vw, 1.85rem);');
+    expect(cssSource).toContain('max-width: 100%;');
+    expect(cssSource).toContain('white-space: normal;');
+    expect(cssSource).toContain('text-wrap: balance;');
   });
 
   it('keeps the CTA form below the Grow feature on the canonical cta_form renderer path', () => {

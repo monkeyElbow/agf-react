@@ -2686,10 +2686,13 @@
 }
 
 .investments-native-growth-card--investor .investments-native-dashboard-title {
+  margin-bottom: clamp(1.55rem, 2.8vw, 2.15rem);
   font-size: var(--investments-growth-display-size);
   line-height: 0.95;
   letter-spacing: var(--investments-growth-display-letter-spacing);
-  max-width: min(100%, 10.5ch);
+  max-width: none;
+  white-space: nowrap;
+  text-wrap: nowrap;
 }
 
 .investments-native-growth-card--investor .service-native-action-row {
@@ -23639,6 +23642,12 @@ p.impact-proof-story-proof-body {
   }
 
   .service-native-section h2.investments-native-build-title .investments-native-build-title-line {
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  .investments-native-growth-card--investor .investments-native-dashboard-title {
+    max-width: 100%;
     white-space: normal;
     text-wrap: balance;
   }
