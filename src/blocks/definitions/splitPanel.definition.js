@@ -1,8 +1,21 @@
 import columnsHudIcon from '../../assets/admin-block-icons/columns.svg';
 import { buildDynamicSplitPanelFromBlock } from '../../lib/dynamicPageBlocks';
+import { getTokenSwatch } from '../../lib/colorSystem';
 import { validateLegacyActionFieldGroups } from '../../lib/linkValue';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
+
+const SPLIT_PANEL_PRESENTATION_OPTIONS = [
+  { value: 'default', label: 'Default' },
+  { value: 'certificate_cards', label: 'Certificate Cards' },
+];
+
+const SPLIT_PANEL_TONE_OPTIONS = [
+  { value: 'atlantean', label: 'Blue', swatch: getTokenSwatch('atlantean') },
+  { value: 'mango', label: 'Mango', swatch: '#f6b146' },
+  { value: 'super-grey', label: 'Super Grey', swatch: '#414042' },
+  { value: 'sandstone', label: 'Sandstone', swatch: '#c4beb6' },
+];
 
 function validateSplitPanelActions(block) {
   const settings = block?.settings || {};
@@ -23,6 +36,31 @@ function validateSplitPanelActions(block) {
 }
 
 const sections = [
+  {
+    id: 'presentation',
+    title: 'Presentation',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({
+        id: 'presentation',
+        label: 'Card presentation',
+        type: 'select',
+        options: SPLIT_PANEL_PRESENTATION_OPTIONS,
+      }),
+      defineEditorField({
+        id: 'leftTone',
+        label: 'Left card color',
+        type: 'swatch',
+        options: SPLIT_PANEL_TONE_OPTIONS,
+      }),
+      defineEditorField({
+        id: 'rightTone',
+        label: 'Right card color',
+        type: 'swatch',
+        options: SPLIT_PANEL_TONE_OPTIONS,
+      }),
+    ],
+  },
   {
     id: 'left',
     title: 'Left Panel',
@@ -73,6 +111,9 @@ export const splitPanelBlockDefinition = createBlockDefinition({
   allowedVariants: ['default', 'split'],
   supportedModes: ['dynamic'],
   defaults: {
+    presentation: 'default',
+    leftTone: 'atlantean',
+    rightTone: 'mango',
     leftTitle: 'Individual Retirement Accounts (IRAs)',
     leftBodyHtml: '<p>An IRA (Individual Retirement Account) provides beneficial options, both now and in the future. We offer <strong>Traditional</strong> and <strong>Roth</strong> IRAs. Learn more about each below.</p>',
     leftBody: '',
@@ -83,7 +124,7 @@ export const splitPanelBlockDefinition = createBlockDefinition({
     rightTitle: 'Deferred Compensation Plan (409A)',
     rightBodyHtml: '<p>Available exclusively to ministers, ministry employees, and Qualified Church-Controlled Organizations (QCCO), this 409A plan allows participants to defer compensation above and beyond standard retirement contribution limits.</p>',
     rightBody: '',
-    rightButtonLabel: 'Learn more',
+    rightButtonLabel: 'Explore 409A',
     rightButtonUrl: '/services/retirement/409a',
     rightButtonPageRef: '/services/retirement/409a',
     rightButtonOpenInNewWindow: false,
@@ -96,8 +137,8 @@ export const splitPanelBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['left', 'right'],
-    adminSectionIds: ['left', 'right'],
+    hudSectionIds: ['presentation', 'left', 'right'],
+    adminSectionIds: ['presentation', 'left', 'right'],
   },
   validators: [
     (block) => Boolean(buildDynamicSplitPanelFromBlock(block)),

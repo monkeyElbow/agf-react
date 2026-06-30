@@ -17,8 +17,15 @@ describe('retirement split panel renderer guardrail', () => {
     expect(source).toContain('buildDynamicSplitPanelFromBlock,');
     expect(source).toContain("kind: 'split_panel',");
     expect(source).toContain("id: 'split_options',");
+    expect(source).toContain("presentation: 'certificate_cards'");
+    expect(source).toContain("leftTone: 'atlantean'");
+    expect(source).toContain("rightTone: 'mango'");
     expect(source).toContain('const splitPanelRuntime = useMemo(');
     expect(source).toContain("split_options: RETIREMENT_SPLIT_PANEL_HUD_PANEL_ID");
     expect(source).toContain('data-block-id="split_options"');
+    expect(source).toContain("splitPanelRuntime.presentation === 'certificate_cards'");
+    expect(source).toContain('retirement-account-card__cap');
+    expect(source).toContain('retirement-account-card__body');
+    expect(source).toContain('service-native-btn is-outline is-tone-${tone}');
   });
 });

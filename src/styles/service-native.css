@@ -1402,6 +1402,98 @@
   padding-top: clamp(0.8rem, 1.8vw, 1.3rem);
 }
 
+.retirement-account-card--certificate {
+  padding: 0;
+  overflow: visible;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: 0 8px 18px rgba(16, 43, 64, 0.06);
+  transition: box-shadow 220ms ease;
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
+
+.retirement-account-card--certificate:hover {
+  transform: none;
+  box-shadow: 0 14px 28px rgba(16, 43, 64, 0.12);
+}
+
+.retirement-account-card--certificate .retirement-account-card__cap {
+  border-radius: 16px 16px 0 0;
+  padding:
+    clamp(1.18rem, 2.45vw, 1.42rem)
+    clamp(2.4rem, 5.2vw, 3.1rem)
+    clamp(0.62rem, 1.32vw, 0.78rem);
+  background: linear-gradient(142deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
+}
+
+.retirement-account-card--certificate .retirement-account-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(142deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
+  padding: clamp(1.35rem, 2.8vw, 1.75rem) clamp(2.4rem, 5.2vw, 3.1rem) clamp(1.2rem, 2.5vw, 1.55rem);
+}
+
+.retirement-account-card--certificate h3 {
+  margin: 0 0 clamp(0.8rem, 1.75vw, 1.1rem);
+  font-family: var(--ag-font-heading);
+  font-size: clamp(1.9rem, 3.35vw, 2.45rem);
+  line-height: 1.02;
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
+}
+
+.retirement-account-card--certificate.retirement-account-card--atlantean h3 {
+  color: var(--ag-color-atlantean-dark);
+}
+
+.retirement-account-card--certificate.retirement-account-card--mango h3 {
+  color: var(--ag-color-mango);
+}
+
+.retirement-account-card--certificate.retirement-account-card--super-grey h3 {
+  color: var(--ag-color-super-grey);
+}
+
+.retirement-account-card--certificate.retirement-account-card--sandstone h3 {
+  color: #a8a29b;
+}
+
+.retirement-account-card--certificate p {
+  margin: 0;
+  max-width: none;
+  color: #000000;
+  font-size: clamp(1.1rem, 1.6vw, 1.22rem);
+  line-height: 1.6;
+}
+
+.retirement-account-card--certificate .service-native-action-row {
+  margin-top: auto;
+  justify-content: center;
+  width: 100%;
+  padding-top: clamp(1.3rem, 2.7vw, 1.75rem);
+}
+
+.retirement-account-card--certificate .service-native-action-row .service-native-btn {
+  width: auto;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-outline,
+.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-outline:visited {
+  --btn-hover-bg: transparent;
+  --btn-hover-text: var(--btn-hover-color);
+  background: transparent;
+}
+
+.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-outline:hover,
+.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-outline:focus-visible,
+.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-outline:active {
+  background: transparent;
+}
+
 .retirement-calc-section {
   background: linear-gradient(180deg, #fbf9f6 0%, #ffffff 100%);
 }

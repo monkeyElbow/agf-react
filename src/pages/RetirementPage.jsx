@@ -338,6 +338,9 @@ const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD = {
   },
 };
 const DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS = {
+  presentation: 'certificate_cards',
+  leftTone: 'atlantean',
+  rightTone: 'mango',
   leftTitle: 'Individual Retirement Accounts (IRAs)',
   leftBodyHtml: '<p>An IRA (Individual Retirement Account) provides beneficial options, both now and in the future. We offer <strong>Traditional</strong> and <strong>Roth</strong> IRAs. Learn more about each below.</p>',
   leftBody: '',
@@ -348,7 +351,7 @@ const DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS = {
   rightTitle: 'Deferred Compensation Plan (409A)',
   rightBodyHtml: '<p>Available exclusively to ministers, ministry employees, and Qualified Church-Controlled Organizations (QCCO), this 409A plan allows participants to defer compensation above and beyond standard retirement contribution limits.</p>',
   rightBody: '',
-  rightButtonLabel: 'Learn more',
+  rightButtonLabel: 'Explore 409A',
   rightButtonUrl: '/services/retirement/409a',
   rightButtonPageRef: '/services/retirement/409a',
   rightButtonOpenInNewWindow: false,
@@ -1894,38 +1897,68 @@ export default function RetirementPage() {
                 const action = item.action || null;
                 const actionTarget = action?.to || action?.href || '';
                 const isInternal = Boolean(action?.to || (action?.href && !isExternalLinkHref(action.href) && action.href.startsWith('/')));
+                const isCertificateCard = splitPanelRuntime.presentation === 'certificate_cards';
+                const tone = item.tone || 'atlantean';
+                const articleClassName = [
+                  'retirement-account-card',
+                  isCertificateCard ? `retirement-account-card--certificate retirement-account-card--${tone}` : '',
+                  'fade-up',
+                ].filter(Boolean).join(' ');
+                const buttonClassName = isCertificateCard
+                  ? `service-native-btn is-outline is-tone-${tone}`
+                  : 'service-native-btn';
+                const bodyContent = item.bodyHtml ? (
+                  <SafeRichText as="div" className="retirement-account-body" html={item.bodyHtml} />
+                ) : item.body ? (
+                  <p>{item.body}</p>
+                ) : null;
+                const actionContent = action ? (
+                  <div className="service-native-action-row">
+                    {isInternal ? (
+                      <Link
+                        to={actionTarget}
+                        className={buttonClassName}
+                        target={action.openInNewWindow ? '_blank' : undefined}
+                        rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                      >
+                        {action.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={actionTarget}
+                        className={buttonClassName}
+                        target={action.openInNewWindow ? '_blank' : undefined}
+                        rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                      >
+                        {action.label}
+                      </a>
+                    )}
+                  </div>
+                ) : null;
 
                 return (
-                  <article key={`split-panel-${item.side || item.slot}`} className="retirement-account-card fade-up">
-                    {item.title ? <h3>{item.title}</h3> : null}
-                    {item.bodyHtml ? (
-                      <SafeRichText as="div" className="retirement-account-body" html={item.bodyHtml} />
-                    ) : item.body ? (
-                      <p>{item.body}</p>
-                    ) : null}
-                    {action ? (
-                      <div className="service-native-action-row">
-                        {isInternal ? (
-                          <Link
-                            to={actionTarget}
-                            className="service-native-btn"
-                            target={action.openInNewWindow ? '_blank' : undefined}
-                            rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
-                          >
-                            {action.label}
-                          </Link>
-                        ) : (
-                          <a
-                            href={actionTarget}
-                            className="service-native-btn"
-                            target={action.openInNewWindow ? '_blank' : undefined}
-                            rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
-                          >
-                            {action.label}
-                          </a>
-                        )}
-                      </div>
-                    ) : null}
+                  <article key={`split-panel-${item.side || item.slot}`} className={articleClassName}>
+                    {isCertificateCard ? (
+                      <>
+                        {item.title ? (
+                          <div className="retirement-account-card__cap">
+                            <h3>{item.title}</h3>
+                          </div>
+                        ) : null}
+                        {(bodyContent || actionContent) ? (
+                          <div className="retirement-account-card__body">
+                            {bodyContent}
+                            {actionContent}
+                          </div>
+                        ) : null}
+                      </>
+                    ) : (
+                      <>
+                        {item.title ? <h3>{item.title}</h3> : null}
+                        {bodyContent}
+                        {actionContent}
+                      </>
+                    )}
                   </article>
                 );
               })}

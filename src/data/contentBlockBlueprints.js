@@ -3911,6 +3911,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       kind: 'split_panel',
       mode: 'dynamic',
       settings: {
+        presentation: 'certificate_cards',
+        leftTone: 'atlantean',
+        rightTone: 'mango',
         leftTitle: 'Individual Retirement Accounts (IRAs)',
         leftBodyHtml: '<p>An IRA (Individual Retirement Account) provides beneficial options, both now and in the future. We offer <strong>Traditional</strong> and <strong>Roth</strong> IRAs. Learn more about each below.</p>',
         leftBody: '',
@@ -3929,7 +3932,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           labelField: 'rightButtonLabel',
           hrefField: 'rightButtonUrl',
           pageRefField: 'rightButtonPageRef',
-          label: 'Learn more',
+          label: 'Explore 409A',
           href: '/services/retirement/409a',
           openInNewWindowField: 'rightButtonOpenInNewWindow',
         }),

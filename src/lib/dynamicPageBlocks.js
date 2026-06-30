@@ -1072,13 +1072,18 @@ export function buildDynamicSplitPanelFromBlock(block) {
   const settings = block?.settings && typeof block.settings === 'object'
     ? block.settings
     : block;
+  const presentation = String(settings?.presentation || '').trim().toLowerCase() === 'certificate_cards'
+    ? 'certificate_cards'
+    : 'default';
   const items = ['left', 'right']
     .map((side, index) => {
       const bodyHtml = String(settings?.[`${side}BodyHtml`] || '').trim();
       const normalizedBodyHtml = (!bodyHtml || bodyHtml === '<p></p>' || bodyHtml === '<p><br></p>') ? '' : bodyHtml;
+      const tone = String(settings?.[`${side}Tone`] || '').trim().toLowerCase();
       const item = {
         slot: index + 1,
         side,
+        tone: tone || (side === 'right' ? 'mango' : 'atlantean'),
         title: String(settings?.[`${side}Title`] || '').trim(),
         bodyHtml: normalizedBodyHtml,
         body: String(settings?.[`${side}Body`] || '').trim(),
@@ -1094,7 +1099,7 @@ export function buildDynamicSplitPanelFromBlock(block) {
     })
     .filter(Boolean);
 
-  return items.length ? { items } : null;
+  return items.length ? { presentation, items } : null;
 }
 
 function resolveLegacyLinkTarget(hrefValue, pageRefValue) {

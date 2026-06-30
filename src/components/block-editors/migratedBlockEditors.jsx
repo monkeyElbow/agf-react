@@ -4885,6 +4885,9 @@ export function SplitPanelBlockEditor({ block, onSettingChange, routeOptions = [
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const splitPanelDraftFieldIds = [
+    'presentation',
+    'leftTone',
+    'rightTone',
     'leftTitle',
     'leftBody',
     'leftButtonLabel',
@@ -4911,6 +4914,21 @@ export function SplitPanelBlockEditor({ block, onSettingChange, routeOptions = [
 
   return (
     <div className="admin-cta-field-slots">
+      <section className="admin-cta-field-slot-card">
+        <h4>Presentation</h4>
+        <DraftBackedFieldControlGrid
+          fields={[
+            fieldById.get('presentation'),
+            fieldById.get('leftTone'),
+            fieldById.get('rightTone'),
+          ].filter(Boolean)}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          className="admin-content-field-list--inline"
+          routeOptions={routeOptions}
+          draftFieldIds={splitPanelDraftFieldIds}
+        />
+      </section>
       {['left', 'right'].map((side) => (
         <section key={`split-panel-${side}`} className="admin-cta-field-slot-card">
           <h4>{side === 'left' ? 'Left panel' : 'Right panel'}</h4>

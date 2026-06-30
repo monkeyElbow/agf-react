@@ -1125,20 +1125,25 @@ describe('buildDynamicSplitPanelFromBlock', () => {
       kind: 'split_panel',
       mode: 'dynamic',
       settings: {
+        presentation: 'certificate_cards',
+        leftTone: 'atlantean',
         leftTitle: 'Individual Retirement Accounts (IRAs)',
         leftBodyHtml: '<p>Traditional and Roth IRAs.</p>',
         leftButtonLabel: 'Explore IRAs',
         leftButtonPageRef: '/services/retirement/iras',
+        rightTone: 'mango',
         rightTitle: 'Deferred Compensation Plan (409A)',
         rightBodyHtml: '<p>Contribution limits beyond standard retirement options.</p>',
-        rightButtonLabel: 'Learn more',
+        rightButtonLabel: 'Explore 409A',
         rightButtonPageRef: '/services/retirement/409a',
       },
     });
 
+    expect(runtime?.presentation).toBe('certificate_cards');
     expect(runtime?.items).toEqual([
       expect.objectContaining({
         side: 'left',
+        tone: 'atlantean',
         title: 'Individual Retirement Accounts (IRAs)',
         bodyHtml: '<p>Traditional and Roth IRAs.</p>',
         action: expect.objectContaining({
@@ -1148,10 +1153,11 @@ describe('buildDynamicSplitPanelFromBlock', () => {
       }),
       expect.objectContaining({
         side: 'right',
+        tone: 'mango',
         title: 'Deferred Compensation Plan (409A)',
         bodyHtml: '<p>Contribution limits beyond standard retirement options.</p>',
         action: expect.objectContaining({
-          label: 'Learn more',
+          label: 'Explore 409A',
           to: '/services/retirement/409a',
         }),
       }),
