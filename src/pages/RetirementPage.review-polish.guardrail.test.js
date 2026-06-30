@@ -96,6 +96,46 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('transition: none;');
   });
 
+  it('keeps the daily billboard restored above the managed rollover billboard and CTA form', () => {
+    const pageSource = readSource('./RetirementPage.jsx');
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(pageSource).toContain("title: 'Retire a little every day.'");
+    expect(pageSource).toContain("bodyHtml: '<h3>Starting now.</h3>'");
+    expect(pageSource).toContain("buttonUrl: '/services/retirement/retirement-consultants'");
+    expect(pageSource).toContain("buttonLabel: 'Reach my consultant'");
+    expect(pageSource).toContain("title: 'A rollover is easy. Smart, too.'");
+    expect(pageSource).toContain('Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple...and undeniably smart. One account. One login.');
+    expect(pageSource).toContain("buttonUrl: '/services/retirement/rollovers'");
+    expect(pageSource).toContain("buttonLabel: 'Start a rollover'");
+    expect(pageSource).toContain("rollover_billboard: RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID");
+    expect(pageSource).toContain("rollover_billboard: '.retirement-rollover-billboard'");
+    expect(pageSource).toContain("block?.id === 'rollover_billboard'");
+    expect(blueprintSource).toContain("title: 'Retire a little every day.'");
+    expect(blueprintSource).toContain("titleHighlightsJson: '[{\"text\":\"every day\",\"className\":\"is-mango\"}]'");
+    expect(blueprintSource).toContain("href: '/services/retirement/retirement-consultants'");
+    expect(blueprintSource).toContain("id: 'rollover_billboard'");
+    expect(blueprintSource).toContain("title: 'A rollover is easy. Smart, too.'");
+    expect(blueprintSource).toContain("titleHighlightsJson: '[{\"text\":\"Smart, too.\",\"className\":\"is-melon\"}]'");
+    expect(blueprintSource).toContain("contentMaxWidthPx: 1080");
+    expect(blueprintSource).toContain("label: 'Start a rollover'");
+    expect(blueprintSource).toContain("href: '/services/retirement/rollovers'");
+    expect(cssSource).toContain('.retirement-everyday .native-info-rich-html {');
+    expect(cssSource).toContain('width: min(860px, 100%);');
+    expect(cssSource).toContain('.retirement-everyday .native-info-rich-html p {');
+    expect(cssSource).toContain('font-size: clamp(1.18rem, 1.85vw, 1.42rem);');
+
+    const billboardIndex = pageSource.indexOf('data-block-id="billboard"');
+    const rolloverBillboardIndex = pageSource.indexOf('data-block-id="rollover_billboard"');
+    const ctaIndex = pageSource.indexOf('<DynamicCtaSection');
+    expect(billboardIndex).toBeGreaterThan(-1);
+    expect(rolloverBillboardIndex).toBeGreaterThan(-1);
+    expect(ctaIndex).toBeGreaterThan(-1);
+    expect(billboardIndex).toBeLessThan(rolloverBillboardIndex);
+    expect(rolloverBillboardIndex).toBeLessThan(ctaIndex);
+  });
+
   it('keeps the retirement calculator on the shared calculator system while preserving the svg chart structure', () => {
     const source = readSource('./RetirementPage.jsx');
     const cssSource = readSource('../styles/service-native.css');

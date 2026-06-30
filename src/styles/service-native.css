@@ -1676,11 +1676,18 @@
 }
 
 .retirement-everyday .native-info-rich-html {
-  width: min(560px, 100%);
+  width: min(860px, 100%);
 }
 
 .retirement-everyday .native-info-rich-html :is(h1, h2, h3, h4, p, li, a) {
   color: inherit;
+}
+
+.retirement-everyday .native-info-rich-html p {
+  margin-top: clamp(0.7rem, 1.8vw, 1rem);
+  margin-bottom: 0;
+  font-size: clamp(1.18rem, 1.85vw, 1.42rem);
+  line-height: 1.5;
 }
 
 .retirement-everyday .native-info-rich-html h3 {

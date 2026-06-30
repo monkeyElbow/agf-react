@@ -153,9 +153,29 @@ function normalizeRetirementCtaSettings(settings = {}) {
   return nextSettings;
 }
 
+function getRetirementBillboardCopyClassName(runtime, usesScrollProgress) {
+  const classNames = String(runtime?.copyClassName || '')
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!usesScrollProgress) {
+    return classNames.join(' ');
+  }
+
+  return [
+    ...classNames.filter((className) => ![
+      'fade-up',
+      'fade-up-force-observe',
+      'fade-up-repeat-observe',
+    ].includes(className)),
+    'billboard-scroll-progress-copy',
+  ].join(' ');
+}
+
 const RETIREMENT_HERO_HUD_PANEL_ID = 'retirement-hero';
 const RETIREMENT_INTRO_HUD_PANEL_ID = 'retirement-intro';
 const RETIREMENT_BILLBOARD_HUD_PANEL_ID = 'retirement-billboard';
+const RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID = 'retirement-rollover-billboard';
 const RETIREMENT_COLUMNS_MHA_HUD_PANEL_ID = 'retirement-columns-mha';
 const RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID = 'retirement-columns-math';
 const RETIREMENT_CTA_HUD_PANEL_ID = 'retirement-cta';
@@ -165,6 +185,7 @@ const RETIREMENT_HUD_PANEL_ID_BY_BLOCK_ID = {
   hero: RETIREMENT_HERO_HUD_PANEL_ID,
   intro: RETIREMENT_INTRO_HUD_PANEL_ID,
   billboard: RETIREMENT_BILLBOARD_HUD_PANEL_ID,
+  rollover_billboard: RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID,
   columns_mha: RETIREMENT_COLUMNS_MHA_HUD_PANEL_ID,
   columns_math: RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID,
   cta_form: RETIREMENT_CTA_HUD_PANEL_ID,
@@ -175,6 +196,7 @@ const RETIREMENT_HUD_ANCHOR_SELECTOR_BY_BLOCK_ID = {
   hero: '.service-native-hero',
   intro: '.service-native-intro',
   billboard: '.retirement-everyday',
+  rollover_billboard: '.retirement-rollover-billboard',
   columns_mha: '.native-dynamic-columns[data-block-id="columns_mha"]',
   columns_math: '.native-dynamic-columns[data-block-id="columns_math"]',
   cta_form: '.native-dynamic-cta',
@@ -262,6 +284,54 @@ const DEFAULT_RETIREMENT_BILLBOARD = {
   action: {
     label: 'Reach my consultant',
     href: '/services/retirement/retirement-consultants',
+    style: 'blue',
+    tone: 'atlantean',
+    openInNewWindow: false,
+  },
+};
+const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD_SETTINGS = {
+  title: 'A rollover is easy. Smart, too.',
+  titleClassName: '',
+  titleHighlightsJson: '[{"text":"Smart, too.","className":"is-melon"}]',
+  bodyHtml: '<p>Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple...and undeniably smart. One account. One login.</p>',
+  bgTone: 'grey',
+  textTone: 'white',
+  justify: 'center',
+  scrollReveal: 'scale-up',
+  lineSpacing: 0.94,
+  titleFontFamily: 'helv',
+  titleFontWeight: 800,
+  titleSizeRem: 4.4,
+  titleLetterSpacingEm: -0.024,
+  contentMaxWidthPx: 1080,
+  buttonLabel: 'Start a rollover',
+  buttonUrl: '/services/retirement/rollovers',
+  buttonPageRef: '/services/retirement/rollovers',
+  buttonStyle: 'blue',
+  buttonTone: 'atlantean',
+};
+const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD = {
+  title: 'A rollover is easy. Smart, too.',
+  titleClassName: '',
+  titleHighlights: [{ text: 'Smart, too.', className: 'is-melon' }],
+  titleStyle: {
+    lineHeight: 0.94,
+    fontFamily: 'var(--ag-font-helv)',
+    fontWeight: 800,
+    fontSize: 'clamp(calc(4.4rem * 0.58), 8vw, 4.4rem)',
+    letterSpacing: '-0.024em',
+  },
+  bodyHtml: '<p>Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple...and undeniably smart. One account. One login.</p>',
+  bgTone: 'grey',
+  textTone: 'white',
+  justify: 'center',
+  scrollReveal: 'scale-up',
+  copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up',
+  copyFadeRootMargin: '0px 0px -40% 0px',
+  contentMaxWidthPx: 1080,
+  action: {
+    label: 'Start a rollover',
+    href: '/services/retirement/rollovers',
     style: 'blue',
     tone: 'atlantean',
     openInNewWindow: false,
@@ -473,6 +543,8 @@ export default function RetirementPage() {
   const introSectionRef = useRef(null);
   const billboardSectionRef = useRef(null);
   const billboardCopyRef = useRef(null);
+  const rolloverBillboardSectionRef = useRef(null);
+  const rolloverBillboardCopyRef = useRef(null);
   const ctaSectionRef = useRef(null);
   const testimonialsSectionRef = useRef(null);
   const billboardTitleInputRef = useRef(null);
@@ -572,6 +644,15 @@ export default function RetirementPage() {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
+  const rolloverBillboardBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'rollover_billboard'
+      && block?.kind === 'billboard'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
   const columnsMhaBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'columns_mha'
@@ -655,11 +736,33 @@ export default function RetirementPage() {
       settings: billboardHudSettings,
     });
   }, [billboardBlock, billboardHudSettings]);
+  const rolloverBillboardHudSettings = useMemo(
+    () => ({
+      ...DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD_SETTINGS,
+      ...(rolloverBillboardBlock?.settings && typeof rolloverBillboardBlock.settings === 'object' ? rolloverBillboardBlock.settings : {}),
+    }),
+    [rolloverBillboardBlock],
+  );
+  const dynamicRolloverBillboard = useMemo(() => {
+    if (!rolloverBillboardBlock) {
+      return null;
+    }
+    return buildDynamicBillboardFromBlock({
+      ...rolloverBillboardBlock,
+      settings: rolloverBillboardHudSettings,
+    });
+  }, [rolloverBillboardBlock, rolloverBillboardHudSettings]);
   const billboardSectionStyle = dynamicBillboard?.action
     ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
     : undefined;
   const billboardRailStyle = dynamicBillboard?.contentMaxWidthPx
     ? { '--dynamic-billboard-max-width': `${dynamicBillboard.contentMaxWidthPx}px` }
+    : undefined;
+  const rolloverBillboardSectionStyle = dynamicRolloverBillboard?.action
+    ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
+    : undefined;
+  const rolloverBillboardRailStyle = dynamicRolloverBillboard?.contentMaxWidthPx
+    ? { '--dynamic-billboard-max-width': `${dynamicRolloverBillboard.contentMaxWidthPx}px` }
     : undefined;
   const heroInspection = useMemo(
     () => inspectDynamicHeroSettings('/services/retirement', heroBlock?.settings),
@@ -710,37 +813,42 @@ export default function RetirementPage() {
   const heroActiveLineData = heroHudEditableLines.find((line) => line.key === heroActiveLine) || heroHudEditableLines[0] || null;
   const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;
   const billboardCopyUsesScrollProgress = renderedBillboard?.scrollReveal === 'scale-up';
-  const billboardCopyClassName = useMemo(() => {
-    const classNames = String(renderedBillboard?.copyClassName || '')
-      .split(/\s+/)
-      .filter(Boolean);
-
-    if (!billboardCopyUsesScrollProgress) {
-      return classNames.join(' ');
-    }
-
-    return [
-      ...classNames.filter((className) => ![
-        'fade-up',
-        'fade-up-force-observe',
-        'fade-up-repeat-observe',
-      ].includes(className)),
-      'billboard-scroll-progress-copy',
-    ].join(' ');
-  }, [billboardCopyUsesScrollProgress, renderedBillboard]);
-  const renderedBillboardTitleStyle = {
-    ...(renderedBillboard?.titleStyle || {}),
-    letterSpacing: '-0.03em',
-  };
+  const billboardCopyClassName = useMemo(
+    () => getRetirementBillboardCopyClassName(renderedBillboard, billboardCopyUsesScrollProgress),
+    [billboardCopyUsesScrollProgress, renderedBillboard],
+  );
+  const renderedBillboardTitleStyle = renderedBillboard?.titleStyle || {};
+  const renderedRolloverBillboard = dynamicRolloverBillboard || DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD;
+  const rolloverBillboardCopyUsesScrollProgress = renderedRolloverBillboard?.scrollReveal === 'scale-up';
+  const rolloverBillboardCopyClassName = useMemo(
+    () => getRetirementBillboardCopyClassName(renderedRolloverBillboard, rolloverBillboardCopyUsesScrollProgress),
+    [rolloverBillboardCopyUsesScrollProgress, renderedRolloverBillboard],
+  );
+  const renderedRolloverBillboardTitleStyle = renderedRolloverBillboard?.titleStyle || {};
 
   useEffect(() => {
     logHeroDriftWarningOnce(heroInspection, 'Retirement hero');
   }, [heroInspection]);
 
   useEffect(() => {
-    const section = billboardSectionRef.current;
-    const copy = billboardCopyRef.current;
-    if (!section || !copy || typeof window === 'undefined') {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const billboardPairs = [
+      {
+        section: billboardSectionRef.current,
+        copy: billboardCopyRef.current,
+        usesScrollProgress: billboardCopyUsesScrollProgress,
+      },
+      {
+        section: rolloverBillboardSectionRef.current,
+        copy: rolloverBillboardCopyRef.current,
+        usesScrollProgress: rolloverBillboardCopyUsesScrollProgress,
+      },
+    ].filter((pair) => pair.section && pair.copy);
+
+    if (!billboardPairs.length) {
       return undefined;
     }
 
@@ -750,27 +858,29 @@ export default function RetirementPage() {
     const applyBillboardScrollProgress = () => {
       frameId = 0;
 
-      if (!billboardCopyUsesScrollProgress || reducedMotionMediaQuery?.matches) {
-        copy.style.opacity = '1';
-        copy.style.transform = 'translate3d(0, 0, 0) scale(1)';
-        return;
-      }
-
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
       if (!viewportHeight) {
         return;
       }
 
-      const rect = section.getBoundingClientRect();
-      const entryProgress = clampUnitInterval((viewportHeight * 0.94 - rect.top) / (viewportHeight * 0.46));
-      const exitProgress = clampUnitInterval((rect.bottom - viewportHeight * 0.06) / (viewportHeight * 0.46));
-      const progress = easeScrollProgress(Math.min(entryProgress, exitProgress));
-      const opacity = interpolateValue(0.22, 1, progress);
-      const scale = interpolateValue(0.92, 1, progress);
-      const translateY = interpolateValue(58, 0, progress);
+      billboardPairs.forEach(({ section, copy, usesScrollProgress }) => {
+        if (!usesScrollProgress || reducedMotionMediaQuery?.matches) {
+          copy.style.opacity = '1';
+          copy.style.transform = 'translate3d(0, 0, 0) scale(1)';
+          return;
+        }
 
-      copy.style.opacity = opacity.toFixed(3);
-      copy.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+        const rect = section.getBoundingClientRect();
+        const entryProgress = clampUnitInterval((viewportHeight * 0.94 - rect.top) / (viewportHeight * 0.46));
+        const exitProgress = clampUnitInterval((rect.bottom - viewportHeight * 0.06) / (viewportHeight * 0.46));
+        const progress = easeScrollProgress(Math.min(entryProgress, exitProgress));
+        const opacity = interpolateValue(0.22, 1, progress);
+        const scale = interpolateValue(0.92, 1, progress);
+        const translateY = interpolateValue(58, 0, progress);
+
+        copy.style.opacity = opacity.toFixed(3);
+        copy.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+      });
     };
 
     const queueBillboardScrollProgressUpdate = () => {
@@ -805,7 +915,12 @@ export default function RetirementPage() {
         reducedMotionMediaQuery.removeListener(handleReducedMotionChange);
       }
     };
-  }, [billboardCopyUsesScrollProgress, renderedBillboard]);
+  }, [
+    billboardCopyUsesScrollProgress,
+    renderedBillboard,
+    rolloverBillboardCopyUsesScrollProgress,
+    renderedRolloverBillboard,
+  ]);
 
   const introHudJustify = String(introHudSettings.justify || 'center').trim().toLowerCase() || 'center';
   const introHudLineSpacing = Number.isFinite(Number(introHudSettings.lineSpacing)) ? Number(introHudSettings.lineSpacing) : 1.04;
@@ -895,6 +1010,7 @@ export default function RetirementPage() {
   const isHeroHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_HERO_HUD_PANEL_ID;
   const isIntroHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_INTRO_HUD_PANEL_ID;
   const isBillboardHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_BILLBOARD_HUD_PANEL_ID;
+  const isRolloverBillboardHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID;
   const isCtaHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_CTA_HUD_PANEL_ID;
   const activeHudPanel = useMemo(
     () => hudPanels.find((panel) => panel.id === activeHudPanelId) || null,
@@ -1143,16 +1259,27 @@ export default function RetirementPage() {
     const text = String(input.value || '').slice(start, end);
     setBillboardTitleSelection({ start, end, text });
   };
-  const handleBillboardBodyEditIntent = (event) => {
-    if (!showFrontHud || !billboardBlock) {
-      return;
-    }
+  const openBillboardHudPanel = (panelId, anchorSelector, fieldRef, focusOptions, event) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
-    setHudPanelOpen(RETIREMENT_BILLBOARD_HUD_PANEL_ID, '.retirement-everyday', { scrollToTarget: false });
-    focusHudField(billboardBodyInputRef, { caret: 'paragraph-end' });
+    setHudPanelOpen(panelId, anchorSelector, { scrollToTarget: false });
+    if (fieldRef) {
+      focusHudField(fieldRef, focusOptions);
+    }
+  };
+  const handleBillboardBodyEditIntent = (event) => {
+    if (!showFrontHud || !billboardBlock) {
+      return;
+    }
+    openBillboardHudPanel(
+      RETIREMENT_BILLBOARD_HUD_PANEL_ID,
+      '.retirement-everyday',
+      billboardBodyInputRef,
+      { caret: 'paragraph-end' },
+      event,
+    );
   };
   const handleBillboardTitleEditIntent = (event) => {
     if (!showFrontHud || !billboardBlock) {
@@ -1161,16 +1288,38 @@ export default function RetirementPage() {
     const requestedSelection = event?.currentTarget
       ? getSelectionOffsetsWithinElement(event.currentTarget)
       : null;
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    setHudPanelOpen(RETIREMENT_BILLBOARD_HUD_PANEL_ID, '.retirement-everyday', { scrollToTarget: false });
-    focusHudField(
+    openBillboardHudPanel(
+      RETIREMENT_BILLBOARD_HUD_PANEL_ID,
+      '.retirement-everyday',
       billboardTitleInputRef,
       requestedSelection
         ? { selectionStart: requestedSelection.start, selectionEnd: requestedSelection.end }
         : undefined,
+      event,
+    );
+  };
+  const handleRolloverBillboardBodyEditIntent = (event) => {
+    if (!showFrontHud || !rolloverBillboardBlock) {
+      return;
+    }
+    openBillboardHudPanel(
+      RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID,
+      '.retirement-rollover-billboard',
+      null,
+      undefined,
+      event,
+    );
+  };
+  const handleRolloverBillboardTitleEditIntent = (event) => {
+    if (!showFrontHud || !rolloverBillboardBlock) {
+      return;
+    }
+    openBillboardHudPanel(
+      RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID,
+      '.retirement-rollover-billboard',
+      null,
+      undefined,
+      event,
     );
   };
   const handleIntroBodyEditIntent = (event) => {
@@ -2017,6 +2166,26 @@ export default function RetirementPage() {
         </div>
       </section>
 
+      {columnsMhaBlock ? (
+        <ColumnsBlock
+          block={columnsMhaBlock}
+          resolveTo={(value) => value}
+          ownership={getOwnershipVisualForBlockId('columns_mha')}
+          hudAnchor={renderHudAnchor('columns_mha')}
+          extraSectionClassName={getHudBlockStateClassName('columns_mha')}
+        />
+      ) : null}
+
+      {columnsMathBlock ? (
+        <ColumnsBlock
+          block={columnsMathBlock}
+          resolveTo={(value) => value}
+          ownership={getOwnershipVisualForBlockId('columns_math')}
+          hudAnchor={renderHudAnchor('columns_math')}
+          extraSectionClassName={getHudBlockStateClassName('columns_math')}
+        />
+      ) : null}
+
       <section
         ref={billboardSectionRef}
         className={`service-native-section retirement-everyday is-bg-${renderedBillboard.bgTone || 'white'} is-text-${renderedBillboard.textTone || 'dark'}${showFrontHud && billboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('billboard').className || ''}`}
@@ -2088,25 +2257,76 @@ export default function RetirementPage() {
         </div>
       </section>
 
-      {columnsMhaBlock ? (
-        <ColumnsBlock
-          block={columnsMhaBlock}
-          resolveTo={(value) => value}
-          ownership={getOwnershipVisualForBlockId('columns_mha')}
-          hudAnchor={renderHudAnchor('columns_mha')}
-          extraSectionClassName={getHudBlockStateClassName('columns_mha')}
-        />
-      ) : null}
-
-      {columnsMathBlock ? (
-        <ColumnsBlock
-          block={columnsMathBlock}
-          resolveTo={(value) => value}
-          ownership={getOwnershipVisualForBlockId('columns_math')}
-          hudAnchor={renderHudAnchor('columns_math')}
-          extraSectionClassName={getHudBlockStateClassName('columns_math')}
-        />
-      ) : null}
+      <section
+        ref={rolloverBillboardSectionRef}
+        className={`service-native-section retirement-everyday retirement-rollover-billboard is-bg-${renderedRolloverBillboard.bgTone || 'white'} is-text-${renderedRolloverBillboard.textTone || 'dark'}${showFrontHud && rolloverBillboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isRolloverBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('rollover_billboard').className || ''}`}
+        data-block-id="rollover_billboard"
+        style={rolloverBillboardSectionStyle || undefined}
+      >
+        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('rollover_billboard')} />
+        {renderHudAnchor('rollover_billboard')}
+        <div className="ag-panel-rail" style={rolloverBillboardRailStyle || undefined}>
+          <div
+            ref={rolloverBillboardCopyRef}
+            className={`native-info-section-copy${rolloverBillboardCopyClassName ? ` ${rolloverBillboardCopyClassName}` : ''} is-justify-${renderedRolloverBillboard.justify || 'center'}`}
+            data-fade-root-margin={rolloverBillboardCopyUsesScrollProgress ? undefined : (renderedRolloverBillboard.copyFadeRootMargin || undefined)}
+          >
+            <h2
+              className={`${renderedRolloverBillboard.titleClassName || ''}${showFrontHud && rolloverBillboardBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+              style={renderedRolloverBillboardTitleStyle}
+              onClick={showFrontHud && rolloverBillboardBlock ? handleRolloverBillboardTitleEditIntent : undefined}
+              onKeyDown={showFrontHud && rolloverBillboardBlock ? (event) => handleBodyEditKeyDown(event, handleRolloverBillboardTitleEditIntent) : undefined}
+              role={showFrontHud && rolloverBillboardBlock ? 'button' : undefined}
+              tabIndex={showFrontHud && rolloverBillboardBlock ? 0 : undefined}
+              aria-label={showFrontHud && rolloverBillboardBlock ? 'Edit retirement rollover billboard title' : undefined}
+            >
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: renderTextWithHighlights(renderedRolloverBillboard.title, renderedRolloverBillboard.titleHighlights),
+                }}
+              />
+            </h2>
+            {renderedRolloverBillboard.bodyHtml ? (
+              <SafeRichText
+                as="div"
+                className={`native-info-rich-html${showFrontHud && rolloverBillboardBlock ? ' admin-front-hud-click-edit-target' : ''}`}
+                html={renderedRolloverBillboard.bodyHtml}
+                onClick={showFrontHud && rolloverBillboardBlock ? handleRolloverBillboardBodyEditIntent : undefined}
+                onKeyDown={showFrontHud && rolloverBillboardBlock ? (event) => handleBodyEditKeyDown(event, handleRolloverBillboardBodyEditIntent) : undefined}
+                role={showFrontHud && rolloverBillboardBlock ? 'button' : undefined}
+                tabIndex={showFrontHud && rolloverBillboardBlock ? 0 : undefined}
+                aria-label={showFrontHud && rolloverBillboardBlock ? 'Edit retirement rollover billboard body HTML' : undefined}
+              />
+            ) : null}
+            {renderedRolloverBillboard.action ? (
+              <div className={`service-native-action-row${(renderedRolloverBillboard.justify || 'center') === 'center' ? ' is-centered' : ''}${(renderedRolloverBillboard.justify || 'center') === 'right' ? ' is-right' : ''}`}>
+                {(renderedRolloverBillboard.action.to
+                || (renderedRolloverBillboard.action.href
+                && !isExternalLinkHref(renderedRolloverBillboard.action.href)
+                && renderedRolloverBillboard.action.href.startsWith('/'))) ? (
+                  <Link
+                    to={renderedRolloverBillboard.action.to || renderedRolloverBillboard.action.href}
+                    className={actionButtonClassName(renderedRolloverBillboard.action.style, renderedRolloverBillboard.action.tone)}
+                    target={renderedRolloverBillboard.action.openInNewWindow ? '_blank' : undefined}
+                    rel={renderedRolloverBillboard.action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                  >
+                    {renderedRolloverBillboard.action.label}
+                  </Link>
+                  ) : (
+                    <a
+                      href={renderedRolloverBillboard.action.href || renderedRolloverBillboard.action.to}
+                      className={actionButtonClassName(renderedRolloverBillboard.action.style, renderedRolloverBillboard.action.tone)}
+                      target={renderedRolloverBillboard.action.openInNewWindow ? '_blank' : undefined}
+                      rel={renderedRolloverBillboard.action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                    >
+                      {renderedRolloverBillboard.action.label}
+                    </a>
+                  )}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </section>
 
       <div ref={ctaSectionRef}>
         <DynamicCtaSection
