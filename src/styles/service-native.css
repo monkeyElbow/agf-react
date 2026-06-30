@@ -2672,24 +2672,33 @@
 }
 
 .investments-native-growth-card--investor {
+  display: grid;
+  justify-items: center;
+  justify-self: center;
+  width: min(1120px, calc(100vw - (var(--ag-panel-gutter) * 2)));
   padding-top: clamp(2rem, 3.6vw, 2.85rem);
   padding-bottom: clamp(2rem, 3.8vw, 2.9rem);
 }
 
 .investments-native-growth-card--investor .investments-native-growth-card-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: min(var(--dynamic-billboard-max-width, 960px), 100%);
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
 
 .investments-native-growth-card--investor .investments-native-dashboard-title {
+  display: block;
+  width: max-content;
   margin-bottom: clamp(1.55rem, 2.8vw, 2.15rem);
   font-size: var(--investments-growth-display-size);
   line-height: 0.95;
   letter-spacing: var(--investments-growth-display-letter-spacing);
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
   max-width: none;
   white-space: nowrap;
   text-wrap: nowrap;
@@ -23647,6 +23656,7 @@ p.impact-proof-story-proof-body {
   }
 
   .investments-native-growth-card--investor .investments-native-dashboard-title {
+    width: 100%;
     max-width: 100%;
     white-space: normal;
     text-wrap: balance;

@@ -52,8 +52,14 @@ describe('investments page review polish guardrails', () => {
     expect(featureSource).toContain('investments-native-dashboard-billboard--final');
     expect(cssSource).toContain('.investments-native-dashboard-title {');
     expect(cssSource).toContain('margin: 0;');
+    expect(cssSource).toContain('.investments-native-growth-card--investor {');
+    expect(cssSource).toContain('justify-self: center;');
+    expect(cssSource).toContain('width: min(1120px, calc(100vw - (var(--ag-panel-gutter) * 2)));');
     expect(cssSource).toContain('.investments-native-growth-card--investor .investments-native-dashboard-title {');
+    expect(cssSource).toContain('width: 100%;');
+    expect(cssSource).toContain('width: max-content;');
     expect(cssSource).toContain('margin-bottom: clamp(1.55rem, 2.8vw, 2.15rem);');
+    expect(cssSource).toContain('text-align: center;');
     expect(cssSource).toContain('max-width: none;');
     expect(cssSource).toContain('white-space: nowrap;');
     expect(cssSource).toContain('text-wrap: nowrap;');
