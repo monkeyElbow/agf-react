@@ -1869,17 +1869,18 @@ const insuranceChildPages = {
       body: [
         "You focus on people. We'll handle the protection-powered confidence to keep your ministry safe and sound. Additionally, our **AG Insurance Program** with Church Mutual Insurance offers some nice extras for Assemblies of God churches.",
       ],
-      actions: [{ label: 'Jump to the AG program', to: '/services/insurance/property-casualty-insurance#ag-program' }],
+      actions: [{ label: 'More about AG Insurance', to: '/services/insurance/property-casualty-insurance#ag-program' }],
     },
     sections: [
       {
-        title: 'Request a Property & Casualty Insurance Quote',
-        titleHighlights: [{ text: 'Property & Casualty', className: 'is-white' }],
+        title: 'Request a P&C quote.',
+        titleClassName: 'is-super-grey',
+        titleHighlights: [{ text: 'P&C', className: 'is-white' }],
         className: 'insurance-pc-native-quote',
         anchorId: 'quote',
-        subtitle: 'We’re passionate about protecting your ministry.',
+        subtitle: '',
         body: [
-          'Share a few details and we’ll help you explore broader coverage and value-added risk management tailored to your church or organization.',
+          'Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.',
         ],
         form: {
           steps: [

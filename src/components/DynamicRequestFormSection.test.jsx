@@ -48,6 +48,7 @@ describe('DynamicRequestFormSection', () => {
         {
           id: 'step1',
           title: 'Contact info',
+          nextLabel: 'Next',
           fields: [
             { id: 'firstName', label: 'First Name', type: 'text', required: true },
           ],
@@ -55,6 +56,7 @@ describe('DynamicRequestFormSection', () => {
         {
           id: 'step2',
           title: 'Details',
+          backLabel: 'Previous',
           fields: [
             { id: 'message', label: 'Message', type: 'textarea' },
           ],
@@ -65,9 +67,10 @@ describe('DynamicRequestFormSection', () => {
     expect(screen.getByRole('heading', { name: 'Contact info' })).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText('First Name'), { target: { value: 'Jane' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Go to next step' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(screen.getByRole('heading', { name: 'Details' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeTruthy();
   });
 
   it('keeps the stabilized request shell structure, alert group, and progress dots', () => {
@@ -95,6 +98,7 @@ describe('DynamicRequestFormSection', () => {
     expect(container.querySelector('.dynamic-request-shell')).toBeTruthy();
     expect(container.querySelector('.dynamic-request-panel')).toBeTruthy();
     expect(container.querySelector('.dynamic-request-copy-shell')).toBeTruthy();
+    expect(container.querySelectorAll('.fade-up')).toHaveLength(2);
     expect(container.querySelector('.dynamic-request-step-meta')).toBeTruthy();
     expect(screen.getByText('Have your policy number ready.')).toBeTruthy();
     expect(container.querySelectorAll('.dynamic-request-progress-dot')).toHaveLength(2);

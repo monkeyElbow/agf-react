@@ -35,6 +35,16 @@ function renderTextWithStrong(source) {
   });
 }
 
+function getStepNextLabel(step) {
+  const label = String(step?.nextLabel || '').trim();
+  return label || 'Go to next step';
+}
+
+function getStepBackLabel(step) {
+  const label = String(step?.backLabel || '').trim();
+  return label || 'Back';
+}
+
 function isGenericStepLabel(value) {
   return /^step\s*\d+\b/i.test(String(value || '').trim());
 }
@@ -135,7 +145,7 @@ export default function DynamicRequestFormSection({ config }) {
   if (submitted) {
     return (
       <div
-        className={`native-info-inline-form dynamic-request-form dynamic-request-panel is-success${config?.formClassName ? ` ${config.formClassName}` : ''}`}
+        className={`native-info-inline-form dynamic-request-form dynamic-request-panel fade-up is-success${config?.formClassName ? ` ${config.formClassName}` : ''}`}
         role="status"
       >
         <h5>Thank you.</h5>
@@ -152,7 +162,7 @@ export default function DynamicRequestFormSection({ config }) {
 
   return (
     <div className="dynamic-request-layout dynamic-request-shell">
-      <div className={`native-info-inline-form dynamic-request-form dynamic-request-panel${config?.formClassName ? ` ${config.formClassName}` : ''}`}>
+      <div className={`native-info-inline-form dynamic-request-form dynamic-request-panel fade-up${config?.formClassName ? ` ${config.formClassName}` : ''}`}>
         {showStepHeading || currentStep?.note || currentStep?.alert ? (
           <div className="dynamic-request-step-meta">
             {showStepHeading ? <h5>{stepHeading}</h5> : null}
@@ -317,13 +327,13 @@ export default function DynamicRequestFormSection({ config }) {
                 className="service-native-btn is-ghost"
                 onClick={() => setActiveStep((prev) => Math.max(prev - 1, 0))}
               >
-                Back
+                {getStepBackLabel(currentStep)}
               </button>
             ) : (
               <span className="native-info-inline-form-step-spacer" aria-hidden="true" />
             )}
             <button type="submit" className="service-native-btn">
-              {activeStep === steps.length - 1 ? submitLabel : 'Go to next step'}
+              {activeStep === steps.length - 1 ? submitLabel : getStepNextLabel(currentStep)}
             </button>
           </div>
           {steps.length > 1 ? (
@@ -338,7 +348,7 @@ export default function DynamicRequestFormSection({ config }) {
           ) : null}
         </form>
       </div>
-      <div className="native-info-section-copy dynamic-request-copy dynamic-request-copy-shell">
+      <div className="native-info-section-copy dynamic-request-copy dynamic-request-copy-shell fade-up">
         {config?.title ? (
           <h2
             className={String(config.titleClassName || '').trim() || undefined}

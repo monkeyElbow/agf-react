@@ -40,6 +40,7 @@ const CTA_OWNED_FORM_ROUTES = [
 
 const EXPLICIT_REQUEST_OVERRIDES = {
   '/services/insurance/certificate-request': {
+    title: 'Need proof of insurance?',
     subtitle: 'Please complete this form in full, including location details. Incomplete submissions may delay your insurance certificate request.',
     bgTone: 'white',
     textTone: 'dark',
@@ -173,6 +174,8 @@ function toExpectedRequestSteps(section) {
       .map((step, index) => ({
         title: String(step?.title || `Step ${index + 1}`).trim(),
         note: String(step?.note || '').trim(),
+        nextLabel: String(step?.nextLabel || '').trim(),
+        backLabel: String(step?.backLabel || '').trim(),
         fields: (Array.isArray(step?.fields) ? step.fields : []).map(normalizeField),
       }))
       .filter((step) => step.fields.length)
@@ -187,6 +190,8 @@ function toExpectedRequestSteps(section) {
   return [{
     title: String(form.title || 'Contact details').trim(),
     note: String(form.subtitle || '').trim(),
+    nextLabel: String(form.nextLabel || '').trim(),
+    backLabel: String(form.backLabel || '').trim(),
     fields: fields.map(normalizeField),
   }];
 }
@@ -214,7 +219,7 @@ function expectRequestSettingsToMatchStatic(pathname, settings, options = {}) {
   const expectedTextTone = explicitOverride?.textTone || inferExpectedTextTone(section, expectedBgTone);
   const expectedBody = toExpectedBody(section);
 
-  expect(String(settings.title || '')).toBe(String(section?.title || section?.form?.title || '').trim());
+  expect(String(settings.title || '')).toBe(String(explicitOverride?.title || section?.title || section?.form?.title || '').trim());
   expect(String(settings.titleClassName || '')).toBe(String(section?.titleClassName || '').trim());
   expect(String(settings.titleHighlightsJson || '')).toBe(toExpectedTitleHighlightsJson(section));
   expect(String(settings.subtitle || '')).toBe(expectedSubtitle);
@@ -232,6 +237,8 @@ function expectRequestSettingsToMatchStatic(pathname, settings, options = {}) {
       expect(String(settings[`step${slot}Title`] || '')).toBe(step.title);
       expect(String(settings[`step${slot}Note`] || '')).toBe(step.note);
       expect(String(settings[`step${slot}FieldsJson`] || '')).toBe(JSON.stringify(step.fields));
+      expect(String(settings[`step${slot}NextLabel`] || '')).toBe(step.nextLabel);
+      expect(String(settings[`step${slot}BackLabel`] || '')).toBe(step.backLabel);
     });
   }
 }
@@ -353,6 +360,39 @@ describe('request form seed guardrails', () => {
 
       expectRequestSettingsToMatchStatic(pathname, normalized);
     });
+  });
+
+  it('repairs stale property and casualty request-form browser state back to the canonical block', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/insurance/property-casualty-insurance': [
+          {
+            id: 'request_form',
+            kind: 'request_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'Request a Property & Casualty Insurance Quote',
+              subtitle: 'We’re passionate about protecting your ministry.',
+              body: 'Share a few details and we’ll help you explore broader coverage and value-added risk management tailored to your church or organization.',
+              bgTone: 'blue',
+              textTone: 'white',
+              targetSectionKey: 'class:insurance-pc-native-quote',
+              targetSectionClassName: 'insurance-pc-native-quote',
+              step1NextLabel: 'Go to next step',
+            },
+          },
+        ],
+      },
+    });
+
+    const block = (normalized.blocksByPath['/services/insurance/property-casualty-insurance'] || [])
+      .find((entry) => entry?.id === 'request_form');
+
+    expect(block).toBeTruthy();
+    expectRequestSettingsToMatchStatic('/services/insurance/property-casualty-insurance', block?.settings || {});
+    expect(String(block?.settings?.step1NextLabel || '')).toBe('Next');
+    expect(String(block?.settings?.step2BackLabel || '')).toBe('Back');
+    expect(String(block?.settings?.step2NextLabel || '')).toBe('Next');
   });
 
   it('keeps standalone explicit request-form seeds authoritative after removing the native request section', () => {

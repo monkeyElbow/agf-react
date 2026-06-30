@@ -14502,17 +14502,29 @@
   color: #ffffff;
 }
 
-.native-dynamic-request.is-text-dark .dynamic-request-copy :is(h2, p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
+.native-dynamic-request.is-text-dark .dynamic-request-copy h2 {
+  color: var(--ag-color-super-grey);
+}
+
+.native-dynamic-request.is-text-dark .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
 .native-dynamic-request.is-text-dark .dynamic-request-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li, a) {
   color: var(--ag-color-super-grey);
 }
 
-.native-dynamic-request.is-text-white .dynamic-request-copy :is(h2, p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
+.native-dynamic-request.is-text-white .dynamic-request-copy h2 {
+  color: #ffffff;
+}
+
+.native-dynamic-request.is-text-white .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
 .native-dynamic-request.is-text-white .dynamic-request-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li, a) {
   color: #ffffff;
 }
 
-.native-dynamic-request.is-text-blue .dynamic-request-copy :is(h2, p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
+.native-dynamic-request.is-text-blue .dynamic-request-copy h2 {
+  color: var(--ag-color-atlantean-dark);
+}
+
+.native-dynamic-request.is-text-blue .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
 .native-dynamic-request.is-text-blue .dynamic-request-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li, a) {
   color: var(--ag-color-atlantean-dark);
 }
@@ -16225,121 +16237,8 @@
   margin-top: clamp(1.2rem, 2.5vw, 2rem);
 }
 
-.native-info-page--insurance-pc .insurance-pc-native-quote {
-  background: var(--ag-surface-blue-gradient);
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail {
-  display: grid;
-  width: min(980px, calc(100% - (var(--ag-panel-gutter) * 2)));
-  grid-template-columns: minmax(320px, 440px) minmax(0, 1fr);
-  gap: clamp(1.2rem, 2.8vw, 3rem);
-  align-items: center;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > h2,
-.native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > p,
-.native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > h3 {
-  grid-column: 2;
-  color: #ffffff;
-  text-align: left;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy {
-  grid-column: 2;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy > h2,
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy > p,
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy > h3,
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy .dynamic-request-subtitle,
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy .dynamic-request-body {
-  text-align: left;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > h2 {
-  margin: 0;
-  align-self: end;
-  font-size: clamp(2.1rem, 4.9vw, 3.9rem);
-  color: var(--ag-color-super-grey);
-  letter-spacing: 0;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > h2 mark.is-white {
-  color: #ffffff;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy > h2 {
-  margin: 0;
-  align-self: end;
-  font-size: clamp(2.1rem, 4.9vw, 3.9rem);
-  color: var(--ag-color-super-grey);
-  letter-spacing: 0;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy > h2 mark.is-white {
-  color: #ffffff;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > .native-info-section-copy > h3,
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy .dynamic-request-subtitle {
-  margin: 0.45rem 0 0;
-  color: #ffffff;
-  font-family: var(--ag-font-body);
-  font-size: clamp(1.32rem, 2.4vw, 1.8rem);
-  line-height: 1.06;
-  letter-spacing: var(--ag-letter-spacing-helv-intro);
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > p {
-  margin: 0.72rem 0 0;
-  max-width: 42ch;
-  align-self: start;
-  font-size: clamp(1.12rem, 1.95vw, 1.34rem);
-  line-height: 1.52;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy .dynamic-request-body {
-  margin: 0.72rem 0 0;
-  max-width: 42ch;
-  align-self: start;
-  font-size: clamp(1.12rem, 1.95vw, 1.34rem);
-  line-height: 1.52;
-  color: #ffffff;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form {
-  width: min(420px, 100%);
-  margin: 0;
-  grid-column: 1;
-  grid-row: 1 / 3;
-  border-radius: 12px;
-  border: 1px solid #e6e6e6;
-  background: #ffffff;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form h5,
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form h6,
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form label,
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form legend,
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form .native-info-inline-form-radio-row span {
-  color: var(--ag-color-super-grey);
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form label {
-  font-size: 0.9rem;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form form {
-  margin-top: 0;
-}
-
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form input,
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form select,
-.native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form textarea {
-  background: #f4f5f6;
-  color: var(--ag-color-super-grey);
-  border-radius: 8px;
+.native-info-page--insurance-pc .insurance-pc-native-quote.has-admin-front-hud .admin-front-hud-layer.is-section::before {
+  content: none;
 }
 
 .native-info-page--insurance-pc .insurance-pc-native-ag-program {
@@ -16465,7 +16364,7 @@
 }
 
 .native-info-page--insurance-pc .insurance-pc-native-resources > .ag-panel-rail {
-  width: min(1120px, calc(100% - (var(--ag-panel-gutter) * 2)));
+  width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-gutter) * 2)));
 }
 
 .native-info-page--insurance-pc .insurance-pc-native-resources .service-native-grid {
@@ -16578,35 +16477,6 @@
 }
 
 @media (max-width: 980px) {
-  .native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > h2,
-  .native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > p,
-  .native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > h3,
-  .native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy,
-  .native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form {
-    grid-column: auto;
-    grid-row: auto;
-  }
-
-  .native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > h2,
-  .native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > p,
-  .native-info-page--insurance-pc .insurance-pc-native-quote > .ag-panel-rail > h3,
-  .native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy > h2,
-  .native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy > p,
-  .native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy .dynamic-request-subtitle,
-  .native-info-page--insurance-pc .insurance-pc-native-quote .dynamic-request-copy .dynamic-request-body {
-    text-align: center;
-    margin-inline: auto;
-  }
-
-  .native-info-page--insurance-pc .insurance-pc-native-quote .native-info-inline-form {
-    width: min(500px, 100%);
-    margin-inline: auto;
-  }
-
   .native-info-page--insurance-pc .insurance-pc-native-partner > .ag-panel-rail > p,
   .native-info-page--insurance-pc .insurance-pc-native-partner > .ag-panel-rail > p:first-of-type {
     max-width: min(52ch, 100%);

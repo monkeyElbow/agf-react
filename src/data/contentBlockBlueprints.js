@@ -13,7 +13,12 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { buildCardGridPresetSettings } from '../lib/cardGridPresets';
 import { buildColumnsPresetSettings } from '../lib/columnsPresets';
-import { PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS } from '../lib/compatibilityBridgeInventory';
+import {
+  COMPATIBILITY_BRIDGE_SURFACES,
+  getCompatibilityBridgeEntry,
+  getCentralRetiredInsertCompatibilityTemplateIds,
+  PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS,
+} from '../lib/compatibilityBridgeInventory';
 import { buildCtaBandPresetSettings } from '../lib/ctaBandPresets';
 import { getTokenSwatch } from '../lib/colorSystem';
 import { PAGE_CONTENT_IDENTITY } from '../lib/pageContentIdentity';
@@ -362,6 +367,7 @@ const pageContentFallbackOnlyBlueprintPaths = [
   '/about-us',
   '/about-us/careers',
   '/accessibility',
+  '/brand',
   '/calculators/emergency-fund',
   '/calculators/increased-contribution',
   '/calculators/net-worth',
@@ -1823,18 +1829,25 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         step1Title: 'Step 1',
         step1Note: '',
         step1Alert: '',
+        step1NextLabel: 'Next',
         step2Title: 'Step 2',
         step2Note: '',
         step2Alert: '',
+        step2BackLabel: 'Back',
         step3Title: '',
         step3Note: '',
         step3Alert: '',
+        step3BackLabel: '',
         step4Title: '',
         step4Note: '',
         step4Alert: '',
+        step4BackLabel: '',
+        step4NextLabel: '',
         step5Title: '',
         step5Note: '',
         step5Alert: '',
+        step5BackLabel: '',
+        step5NextLabel: '',
         step1FieldsJson: JSON.stringify([
           { id: 'firstName', label: 'First name*', type: 'text', required: true },
           { id: 'lastName', label: 'Last name*', type: 'text', required: true },
@@ -3351,6 +3364,17 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: getAllowedSiteFeatureEditableFieldIds('investments_growth_feature'),
     },
     {
+      id: 'investor_cta',
+      templateId: 'investor_cta',
+      presetId: 'dashboard-login',
+      name: 'CTA Band · Dashboard login',
+      kind: 'cta_band',
+      mode: 'dynamic',
+      hidden: true,
+      settings: buildCtaBandPresetSettings('dashboard-login'),
+      editableFields: ctaBandEditableFields,
+    },
+    {
       id: 'cta_form',
       name: 'CTA Form',
       kind: 'cta_form',
@@ -3626,6 +3650,71 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     },
   ],
   '/services/insurance/property-casualty-insurance': [
+    {
+      id: 'hero',
+      name: 'Hero',
+      kind: 'hero',
+      mode: 'dynamic',
+      settings: {
+        animationPreset: 'default',
+        bgTone: 'white',
+        justify: 'center',
+        actionJustify: 'center',
+        heightMode: 'default',
+        lineGap: 0,
+        lineHeight: 0.9,
+        line1Text: 'Property',
+        line1ClassName: 'line1',
+        line1HighlightsJson: '[{"text":"Property","className":"is-atlantean"}]',
+        line2Text: '& Casualty',
+        line2ClassName: 'line2',
+        line2HighlightsJson: '[{"text":"Casualty","className":"is-mango"}]',
+        line3Text: '',
+        line3ClassName: 'line3',
+        line3HighlightsJson: '',
+      },
+      editableFields: sharedDynamicHeroEditableFields,
+    },
+    createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
+    {
+      id: 'intro',
+      name: 'Intro',
+      kind: 'intro',
+      mode: 'dynamic',
+      settings: {
+        heading: '',
+        headingClassName: '',
+        headingHighlightsJson: '',
+        bodyHtml: '<p>You focus on people. We\'ll handle the protection-powered confidence to keep your ministry safe and sound. Additionally, our <strong>AG Insurance Program</strong> with Church Mutual Insurance offers some nice extras for Assemblies of God churches.</p>',
+        body: '',
+        justify: 'center',
+        lineSpacing: 1.04,
+        extraLine: '',
+        extraLineTone: '',
+        bgTone: 'grey',
+        textTone: 'white',
+        ...seedBlueprintActionFields({
+          labelField: 'button1Label',
+          hrefField: 'button1Url',
+          pageRefField: 'button1PageRef',
+          label: 'More about AG Insurance',
+          pageRef: '/services/insurance/property-casualty-insurance#ag-program',
+          styleField: 'button1Style',
+          toneField: 'button1Tone',
+        }),
+        ...seedBlueprintActionFields({
+          labelField: 'button2Label',
+          hrefField: 'button2Url',
+          pageRefField: 'button2PageRef',
+          styleField: 'button2Style',
+          style: 'dark',
+          toneField: 'button2Tone',
+          tone: 'super-grey',
+        }),
+      },
+      editableFields: sharedDynamicIntroEditableFields,
+    },
+    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     ...genericPageFallbackBlueprint(),
     {
       id: 'request_form',
@@ -3634,12 +3723,12 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       mode: 'dynamic',
       hidden: false,
       settings: {
-        title: 'Request a Property & Casualty Insurance Quote',
-        titleClassName: '',
-        titleHighlightsJson: '[{"text":"Property & Casualty","className":"is-white"}]',
-        subtitle: 'We’re passionate about protecting your ministry.',
+        title: 'Request a P&C quote.',
+        titleClassName: 'is-super-grey',
+        titleHighlightsJson: '[{"text":"P&C","className":"is-white"}]',
+        subtitle: '',
         bodyHtml: '',
-        body: 'Share a few details and we’ll help you explore broader coverage and value-added risk management tailored to your church or organization.',
+        body: 'Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.',
         bgTone: 'blue',
         textTone: 'white',
         spaceBeforeRem: 1.6,
@@ -3653,18 +3742,24 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         step1Title: 'Step 1',
         step1Note: '',
         step1Alert: '',
+        step1NextLabel: 'Next',
         step2Title: 'Step 2',
         step2Note: '',
         step2Alert: '',
+        step2BackLabel: 'Back',
+        step2NextLabel: 'Next',
         step3Title: 'Step 3',
         step3Note: '',
         step3Alert: '',
+        step3BackLabel: 'Back',
         step4Title: '',
         step4Note: '',
         step4Alert: '',
+        step4BackLabel: 'Back',
         step5Title: '',
         step5Note: '',
         step5Alert: '',
+        step5BackLabel: 'Back',
         step1FieldsJson: JSON.stringify([
           { id: 'contactFirstName', label: 'Contact First Name', type: 'text', required: true },
           { id: 'contactLastName', label: 'Contact Last Name', type: 'text', required: true },
@@ -4821,6 +4916,31 @@ export function getAllBlockTemplateBlueprints() {
       if (!existing || templateScore(candidate) > templateScore(existing)) {
         byTemplateLookupId.set(templateLookupId, candidate);
       }
+    });
+  });
+
+  getCentralRetiredInsertCompatibilityTemplateIds('static').forEach((templateId) => {
+    const existing = Array.from(byTemplateLookupId.values()).some((template) => (
+      String(template?.templateId || '').trim() === templateId
+    ));
+    if (existing) {
+      return;
+    }
+
+    const bridgeEntry = getCompatibilityBridgeEntry(templateId, COMPATIBILITY_BRIDGE_SURFACES.templateId);
+    const ownerKind = String(bridgeEntry?.owner || '').trim();
+    if (!ownerKind) {
+      return;
+    }
+
+    byTemplateLookupId.set(templateId, {
+      ...cloneBlueprintBlock(createStaticBlueprintStub({
+        id: templateId,
+        name: templateId,
+        kind: ownerKind,
+      })),
+      templateLookupId: templateId,
+      templateId,
     });
   });
 

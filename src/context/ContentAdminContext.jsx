@@ -235,6 +235,25 @@ function isStaleLifeInsuranceQuoteRequestTarget(settings) {
     || LIFE_INSURANCE_QUOTE_REQUEST_TARGETS.has(targetClassName);
 }
 
+function isStalePropertyCasualtyRequestContent(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return false;
+  }
+
+  const title = String(settings.title || '').trim();
+  const subtitle = String(settings.subtitle || '').trim();
+  const body = String(settings.body || '').trim();
+  const step1NextLabel = String(settings.step1NextLabel || '').trim();
+
+  return (
+    title.includes('Property & Casualty Insurance Quote')
+    || subtitle.includes('We’re passionate about protecting your ministry.')
+    || body.includes('We’re passionate about protecting your ministry.')
+    || body.includes('Share a few details and we’ll help you explore broader coverage')
+    || step1NextLabel === 'Go to next step'
+  );
+}
+
 function normalizeRetirementLandingCtaSettings(settings, defaultSettings = {}) {
   const nextSettings = {
     ...(defaultSettings && typeof defaultSettings === 'object' ? defaultSettings : {}),
@@ -2097,6 +2116,7 @@ function shouldRefreshStoredIntroFromNative(pathname, settings) {
     path !== RETIREMENT_403B_PATH
     && path !== RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH
     && path !== RETIREMENT_403B_GROUP_ENROLLMENT_PATH
+    && path !== '/services/insurance/property-casualty-insurance'
   ) {
     return false;
   }
@@ -2108,6 +2128,21 @@ function shouldRefreshStoredIntroFromNative(pathname, settings) {
   const body = String(settings.body || '').trim();
   const bodyHtml = String(settings.bodyHtml || '').trim();
   const button1Label = String(settings.button1Label || '').trim();
+  const bgTone = String(settings.bgTone || '').trim();
+  const textTone = String(settings.textTone || '').trim();
+
+  if (path === '/services/insurance/property-casualty-insurance') {
+    const matchesCanonicalPropertyCasualtyIntro = (
+      body.includes('You focus on people. We\'ll handle the protection-powered confidence')
+      || bodyHtml.includes('You focus on people. We\'ll handle the protection-powered confidence')
+    );
+    return matchesCanonicalPropertyCasualtyIntro
+      && (
+        bgTone !== 'grey'
+        || textTone !== 'white'
+        || button1Label === 'Jump to the AG program'
+      );
+  }
 
   if (path === RETIREMENT_403B_PATH) {
     const looksLikeLegacy403bIntro = heading === 'Ministry-powered retirement.'
@@ -2118,8 +2153,7 @@ function shouldRefreshStoredIntroFromNative(pathname, settings) {
     if (!looksLikeLegacy403bIntro) {
       return false;
     }
-    return String(settings.bgTone || '').trim() !== 'sand'
-      || String(settings.textTone || '').trim() !== 'dark';
+    return bgTone !== 'sand' || textTone !== 'dark';
   }
 
   if (heading === 'The right loan can change everything.') {
@@ -2326,6 +2360,8 @@ function toRequestStepConfigs(form) {
         title: String(step?.title || `Step ${index + 1}`).trim(),
         note: String(step?.note || '').trim(),
         alert: String(step?.alert || '').trim(),
+        nextLabel: String(step?.nextLabel || '').trim(),
+        backLabel: String(step?.backLabel || '').trim(),
         fields: (Array.isArray(step?.fields) ? step.fields : [])
           .map(toRequestFieldConfig)
           .filter(Boolean),
@@ -2345,6 +2381,8 @@ function toRequestStepConfigs(form) {
     title: String(form.title || 'Contact details').trim(),
     note: String(form.subtitle || '').trim(),
     alert: '',
+    nextLabel: String(form.nextLabel || '').trim(),
+    backLabel: String(form.backLabel || '').trim(),
     fields: singleFields,
   }];
 }
@@ -2652,11 +2690,15 @@ export function normalizeDynamicRequestFormSettings(pathname, rawSettings) {
     const noteKey = `step${slot}Note`;
     const alertKey = `step${slot}Alert`;
     const fieldsKey = `step${slot}FieldsJson`;
+    const nextLabelKey = `step${slot}NextLabel`;
+    const backLabelKey = `step${slot}BackLabel`;
     const expectedStepTitle = suppressGenericSingleStepHeading && slot === 1
       ? ''
       : String(expectedStep?.title || '').trim();
     const expectedStepNote = String(expectedStep?.note || '').trim();
     const expectedStepFieldsJson = expectedStep?.fields?.length ? JSON.stringify(expectedStep.fields) : '[]';
+    const expectedStepNextLabel = String(expectedStep?.nextLabel || '').trim();
+    const expectedStepBackLabel = String(expectedStep?.backLabel || '').trim();
 
     if (
       expectedStepTitle
@@ -2682,11 +2724,31 @@ export function normalizeDynamicRequestFormSettings(pathname, rawSettings) {
     ) {
       next[fieldsKey] = expectedStepFieldsJson;
     }
+    if (
+      expectedStep
+      && (
+        (!hasValidTarget && String(next[nextLabelKey] || '').trim() !== expectedStepNextLabel)
+        || shouldRestoreRequestSetting(next[nextLabelKey], templateDefaults[nextLabelKey], expectedStepNextLabel)
+      )
+    ) {
+      next[nextLabelKey] = expectedStepNextLabel;
+    }
+    if (
+      expectedStep
+      && (
+        (!hasValidTarget && String(next[backLabelKey] || '').trim() !== expectedStepBackLabel)
+        || shouldRestoreRequestSetting(next[backLabelKey], templateDefaults[backLabelKey], expectedStepBackLabel)
+      )
+    ) {
+      next[backLabelKey] = expectedStepBackLabel;
+    }
     if (!expectedStep && String(next[fieldsKey] || '').trim() === String(templateDefaults[fieldsKey] || '').trim()) {
       next[titleKey] = '';
       next[noteKey] = '';
       next[alertKey] = '';
       next[fieldsKey] = '[]';
+      next[nextLabelKey] = '';
+      next[backLabelKey] = '';
     }
   }
 
@@ -3580,6 +3642,16 @@ export function normalizeStoredConfig(payload) {
         && storedKind === 'request_form'
         && defaultBlock
         && isStaleLifeInsuranceQuoteRequestTarget(storedSettings)
+      ) {
+        storedMode = 'dynamic';
+        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
+      }
+      if (
+        path === '/services/insurance/property-casualty-insurance'
+        && storedBlock.id === 'request_form'
+        && storedKind === 'request_form'
+        && defaultBlock
+        && isStalePropertyCasualtyRequestContent(storedSettings)
       ) {
         storedMode = 'dynamic';
         nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);

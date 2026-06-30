@@ -1607,6 +1607,8 @@ export function buildDynamicRequestFormFromBlock(block, { pathname = '' } = {}) 
       title: String(settings[`step${slot}Title`] || '').trim(),
       note: String(settings[`step${slot}Note`] || '').trim(),
       alert: String(settings[`step${slot}Alert`] || '').trim(),
+      nextLabel: String(settings[`step${slot}NextLabel`] || '').trim(),
+      backLabel: String(settings[`step${slot}BackLabel`] || '').trim(),
       fields: parseRequestFormStepFieldsJson(settings[`step${slot}FieldsJson`]),
     }))
     .filter((step) => Array.isArray(step.fields) && step.fields.length);

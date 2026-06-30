@@ -141,9 +141,12 @@ describe('request form renderer guardrail', () => {
   it('keeps request text-tone swatches wired to shared runtime copy color classes', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.native-dynamic-request.is-text-dark .dynamic-request-copy :is(h2, p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),');
-    expect(cssSource).toContain('.native-dynamic-request.is-text-white .dynamic-request-copy :is(h2, p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),');
-    expect(cssSource).toContain('.native-dynamic-request.is-text-blue .dynamic-request-copy :is(h2, p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),');
+    expect(cssSource).toContain('.native-dynamic-request.is-text-dark .dynamic-request-copy h2 {');
+    expect(cssSource).toContain('.native-dynamic-request.is-text-dark .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),');
+    expect(cssSource).toContain('.native-dynamic-request.is-text-white .dynamic-request-copy h2 {');
+    expect(cssSource).toContain('.native-dynamic-request.is-text-white .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),');
+    expect(cssSource).toContain('.native-dynamic-request.is-text-blue .dynamic-request-copy h2 {');
+    expect(cssSource).toContain('.native-dynamic-request.is-text-blue .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),');
   });
 
   it('forces the endowments dynamic request section back onto the shared layout contract instead of the retired static outer grid', () => {

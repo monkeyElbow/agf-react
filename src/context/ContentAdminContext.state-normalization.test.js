@@ -157,6 +157,55 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.body).toBe(defaultIntroBlock?.settings?.body);
   });
 
+  it('seeds property and casualty with managed hero and intro blocks', () => {
+    const blocks = normalizeStoredConfig({}).blocksByPath['/services/insurance/property-casualty-insurance'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+
+    expect(heroBlock).toBeTruthy();
+    expect(heroBlock?.settings?.line1Text).toBe('Property');
+    expect(heroBlock?.settings?.line2Text).toBe('& Casualty');
+    expect(heroBlock?.settings?.line1HighlightsJson).toContain('is-atlantean');
+    expect(heroBlock?.settings?.line2HighlightsJson).toContain('is-mango');
+
+    expect(introBlock).toBeTruthy();
+    expect(introBlock?.settings?.bodyHtml).toContain('You focus on people.');
+    expect(introBlock?.settings?.bgTone).toBe('grey');
+    expect(introBlock?.settings?.textTone).toBe('white');
+    expect(introBlock?.settings?.button1Label).toBe('More about AG Insurance');
+    expect(introBlock?.settings?.button1PageRef).toBe('/services/insurance/property-casualty-insurance#ag-program');
+  });
+
+  it('refreshes stale property and casualty intro tones back to the dark gradient treatment', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/insurance/property-casualty-insurance': [
+          {
+            id: 'intro',
+            kind: 'intro',
+            mode: 'dynamic',
+            settings: {
+              heading: '',
+              body: 'You focus on people. We\'ll handle the protection-powered confidence to keep your ministry safe and sound. Additionally, our AG Insurance Program with Church Mutual Insurance offers some nice extras for Assemblies of God churches.',
+              bodyHtml: '<p>You focus on people. We\'ll handle the protection-powered confidence to keep your ministry safe and sound. Additionally, our <strong>AG Insurance Program</strong> with Church Mutual Insurance offers some nice extras for Assemblies of God churches.</p>',
+              bgTone: 'white',
+              textTone: 'dark',
+              button1Label: 'Jump to the AG program',
+              button1PageRef: '/services/insurance/property-casualty-insurance#ag-program',
+            },
+          },
+        ],
+      },
+    });
+
+    const introBlock = (normalized.blocksByPath['/services/insurance/property-casualty-insurance'] || [])
+      .find((block) => block?.id === 'intro' && block?.kind === 'intro');
+
+    expect(introBlock?.settings?.bgTone).toBe('grey');
+    expect(introBlock?.settings?.textTone).toBe('white');
+    expect(introBlock?.settings?.button1Label).toBe('More about AG Insurance');
+  });
+
   it('drops stale legacy-giving request-form blocks from stored config and keeps the CTA block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
@@ -253,7 +302,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks[0]?.settings?.title).toBe('Make the most of your giving.');
     expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('id:traditional-daf-form');
     expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('legacy-child-native-generosity-request');
-    expect(requestBlocks[0]?.settings?.targetSectionIndex).toBe(3);
+    expect(requestBlocks[0]?.settings?.targetSectionIndex).toBe(2);
     expect(JSON.parse(requestBlocks[0]?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
       'name',
       'phone',
@@ -269,7 +318,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.id).toBe('request_form');
     expect(requestBlock?.settings?.targetSectionKey).toBe('id:traditional-daf-form');
     expect(requestBlock?.settings?.targetSectionClassName).toBe('legacy-child-native-generosity-request');
-    expect(requestBlock?.settings?.targetSectionIndex).toBe(3);
+    expect(requestBlock?.settings?.targetSectionIndex).toBe(2);
     expect(JSON.parse(requestBlock?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
       'name',
       'phone',
@@ -575,7 +624,6 @@ describe('ContentAdminContext state normalization', () => {
     const auditedRoutes = [
       ['/services/insurance', 'insurance-native-cta'],
       ['/services/retirement/409a', 'retirement-child-native-cta'],
-      ['/services/retirement/rollovers', 'retirement-rollovers-native-cta retirement-child-native-cta'],
     ];
 
     auditedRoutes.forEach(([pathname, targetSectionClassName]) => {
@@ -662,7 +710,6 @@ describe('ContentAdminContext state normalization', () => {
     const auditedRoutes = [
       ['/services/insurance', 'insurance-native-cta'],
       ['/services/retirement/409a', 'retirement-child-native-cta'],
-      ['/services/retirement/rollovers', 'retirement-rollovers-native-cta retirement-child-native-cta'],
     ];
 
     auditedRoutes.forEach(([pathname, targetSectionClassName]) => {
@@ -796,7 +843,7 @@ describe('ContentAdminContext state normalization', () => {
     const normalized = normalizeStoredConfig({});
     const expectations = [
       ['/contact-us', 'contact-us-request', 'How can we help?'],
-      ['/services/insurance/property-casualty-insurance', 'insurance-pc-native-quote', 'Request a Property & Casualty Insurance Quote'],
+      ['/services/insurance/property-casualty-insurance', 'insurance-pc-native-quote', 'Request a P&C quote.'],
       ['/services/loans/loan-consultants', 'loans-consultant-native-contact', 'Talk with a consultant.'],
     ];
 

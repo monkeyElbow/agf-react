@@ -301,6 +301,36 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getAllByText('Provide a few specifics, and we’ll contact you about a policy customized specifically for your team.')).toHaveLength(1);
   });
 
+  it('renders property and casualty from the targeted request-form block with the shortened quote copy', () => {
+    mockBlocksByPath = {
+      '/services/insurance/property-casualty-insurance': (
+        contentBlockBlueprintsByPath['/services/insurance/property-casualty-insurance'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/property-casualty-insurance',
+            title: 'Property & Casualty Insurance',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.insurance-pc-native-quote.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Request a P&C quote.' })).toBeTruthy();
+    expect(screen.getByText('Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
+  });
+
   it('renders retirement consultants from the targeted request-form block without a fallback page-content section', () => {
     mockBlocksByPath = {
       '/services/retirement/retirement-consultants': (
