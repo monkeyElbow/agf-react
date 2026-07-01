@@ -44,6 +44,19 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
   });
 
+  it('seeds real hero and intro blocks for life insurance quote instead of relying on fallback-only native content', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/insurance/life-insurance-quote'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Get a life quote.');
+    expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"Get a","className":"is-mango"}]');
+    expect(introBlock?.settings?.heading).toBe('Take care of your family.');
+    expect(introBlock?.settings?.headingHighlightsJson).toBe('[{"text":"family","className":"is-mango"}]');
+    expect(introBlock?.settings?.bgTone).toBe('grey');
+    expect(introBlock?.settings?.textTone).toBe('white');
+  });
+
   it('seeds real hero and intro blocks for the insurance overview page', () => {
     const blocks = contentBlockBlueprintsByPath['/services/insurance'] || [];
     const missionAssureBlock = blocks.find((block) => block?.id === 'mission_assure');
@@ -68,6 +81,26 @@ describe('content block blueprint coverage', () => {
     expect(servicesIntroBand?.settings?.title).toBe('A robust financial strategy for your ministry and your family.');
     expect(servicesIntroBand?.settings?.bgTone).toBe('grey');
     expect(servicesIntroBand?.settings?.textTone).toBe('white');
+  });
+
+  it('seeds Mission Assure with a real hero and targeted billboard blocks instead of a fallback page-content block', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/insurance/mission-assure'] || [];
+    const getCovered = blocks.find((block) => block?.id === 'get_covered_billboard');
+    const reportClaim = blocks.find((block) => block?.id === 'report_claim_billboard');
+
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(getCovered).toMatchObject({
+      kind: 'billboard',
+      mode: 'dynamic',
+    });
+    expect(reportClaim).toMatchObject({
+      kind: 'billboard',
+      mode: 'dynamic',
+    });
+    expect(getCovered?.settings?.targetSectionKey).toBe('class:mission-assure-native-get-covered');
+    expect(reportClaim?.settings?.targetSectionKey).toBe('class:mission-assure-native-report-claim');
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
   it('seeds real hero, intro, and billboard blocks for the impact page without a fallback page-content block', () => {
@@ -110,6 +143,40 @@ describe('content block blueprint coverage', () => {
 
     expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds property and casualty with managed hero, intro, and the shorter quote request copy', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/insurance/property-casualty-insurance'] || [];
+    const requestBlock = blocks.find((block) => block?.id === 'request_form');
+
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(requestBlock).toMatchObject({
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'Request a P&C quote.',
+        titleClassName: 'is-super-grey',
+        titleHighlightsJson: '[{"text":"P&C","className":"is-white"}]',
+        body: 'Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.',
+        targetSectionClassName: 'insurance-pc-native-quote',
+      },
+    });
+  });
+
+  it('seeds 409A with managed hero and intro blocks on the approved blue intro treatment', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/retirement/409a'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Beyond the');
+    expect(heroBlock?.settings?.line2Text).toBe('limits.');
+    expect(heroBlock?.settings?.line2HighlightsJson).toBe('[{"text":"limits.","className":"is-mango"}]');
+    expect(introBlock?.settings?.heading).toBe('Boundary-free future.');
+    expect(introBlock?.settings?.bgTone).toBe('blue');
+    expect(introBlock?.settings?.textTone).toBe('white');
+    expect(introBlock?.settings?.button1Label).toBe('Find my consultant');
+    expect(introBlock?.settings?.button1PageRef).toBe('/services/retirement/retirement-consultants');
   });
 
   it('seeds charitable gift annuities with explicit managed blocks instead of fallback page content', () => {
