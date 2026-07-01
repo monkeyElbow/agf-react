@@ -276,7 +276,7 @@ export default function AdminRatesPage() {
 </div>
         <h3>AGFinancial Investment Certificates Rates</h3>
         <div className="table-scroll">
-          <table className="ag-table ag-table-inputs has-fixed-layout">
+          <table className="data-table data-table--inputs data-table--fixed">
           <thead>
             <tr>
               <th>Investment Type</th>
@@ -312,7 +312,7 @@ export default function AdminRatesPage() {
 
         <h3 style={{ marginTop: '1.2rem' }}>IRA Investment Rates</h3>
         <div className="table-scroll">
-          <table className="ag-table ag-table-inputs has-fixed-layout">
+          <table className="data-table data-table--inputs data-table--fixed">
           <thead>
             <tr>
               <th>Investment Type</th>

@@ -31,7 +31,7 @@ describe('buildNativeHudPanels', () => {
     expect(panels).toEqual([
       expect.objectContaining({
         id: 'block:columns',
-        label: 'Columns',
+        label: 'Columns · Flexible columns',
         block: testColumnsBlock,
       }),
     ]);

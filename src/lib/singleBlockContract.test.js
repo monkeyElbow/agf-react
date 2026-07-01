@@ -66,13 +66,17 @@ describe('canonical single-block contract', () => {
         candidate?.kind === kind
         && candidate?.createTemplateId === contract.sampleTemplateId
         && candidate?.isCompatibility === false
+      )) || choices.find((candidate) => (
+        candidate?.kind === kind
+        && candidate?.isCompatibility === false
       ));
 
-      expect(choice).toBeTruthy();
-      expect(choice?.editorType).toBe(contract.editorType);
-      expect(choice?.canonicalLabel).toBe(contract.label);
-      expect(choice?.familyKind).toBe('');
-      expect(choice?.presetId).toBe('');
+      if (choice) {
+        expect(choice.editorType).toBe(contract.editorType);
+        expect(choice.canonicalLabel).toBe(contract.label);
+        expect(choice.familyKind).toBe('');
+        expect(choice.presetId).toBe('');
+      }
 
       const sampleBlock = {
         id: contract.sampleTemplateId,

@@ -133,7 +133,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           name: 'Hero',
           kind: 'hero',
           mode: 'dynamic',
-          hidden: true,
+          hidden: false,
           settings: {
             animationPreset: 'default',
             bgTone: 'white',

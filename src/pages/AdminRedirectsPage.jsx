@@ -185,7 +185,7 @@ export default function AdminRedirectsPage() {
           <h3>Redirect Rules ({sortedRedirects.length})</h3>
           {sortedRedirects.length ? (
             <div className="table-scroll">
-              <table className="ag-table ag-table-inputs">
+              <table className="data-table data-table--inputs">
                 <thead>
                   <tr>
                     <th>Enabled</th>
@@ -289,4 +289,3 @@ export default function AdminRedirectsPage() {
     </div>
   );
 }
-

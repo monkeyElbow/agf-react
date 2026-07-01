@@ -21,7 +21,7 @@ describe('content block blueprint seed convergence guardrail', () => {
     expect(source).toContain('function seedBlueprintCardGridCardFields(cardNumber, {');
     expect(source).toContain('export const CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID = Object.freeze({');
     expect(source).toContain("services_cards: 'card_grid',");
-    expect(source).toContain("import { PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS } from '../lib/compatibilityBridgeInventory';");
+    expect(source).toMatch(/import \{[\s\S]*?PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS,[\s\S]*?\} from '\.\.\/lib\/compatibilityBridgeInventory';/);
     expect(source).toContain('export const PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS = PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS;');
     expect(source).toContain('export function resolveBlueprintSeedTemplateId(lookupId, explicitTemplateId = \'\') {');
     expect(source).toContain('export function isPersistedBlueprintBridgeTemplateId(templateId) {');
@@ -44,6 +44,7 @@ describe('content block blueprint seed convergence guardrail', () => {
     expect(source).toMatch(/createDynamicColumnsBlueprint\(\{[\s\S]*?id: 'value_cards'[\s\S]*?presetId: 'value-cards'[\s\S]*?\}\)/);
     expect(source).toMatch(/createDynamicColumnsBlueprint\(\{[\s\S]*?id: 'columns'[\s\S]*?presetId: 'default'[\s\S]*?\}\)/);
     expect(source).toMatch(/id: 'growth_feature'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'investments_growth_feature'/);
+    expect(source).toMatch(/id: 'investor_cta'[\s\S]*?templateId: 'investor_cta'[\s\S]*?kind: 'cta_band'[\s\S]*?hidden: true[\s\S]*?buildCtaBandPresetSettings\('dashboard-login'\)/);
     expect(source).toMatch(/id: 'cta_form'[\s\S]*?kind: 'cta_form'[\s\S]*?title: 'Talk with an investments consultant\.'/);
     expect(source).toMatch(/createStaticBlueprintStub\(\{ id: 'hero', name: 'Hero', kind: 'hero' \}\)/);
     expect(source).toMatch(/createStaticCardGridBlueprintStub\(\{ id: 'loan_options', name: 'Loan Options Grid' \}\)/);

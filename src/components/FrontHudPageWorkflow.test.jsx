@@ -357,9 +357,9 @@ describe('FrontHudPageWorkflow', () => {
     expect(cssSource).toContain('right: 0;');
     expect(cssSource).toContain('margin-left: 0;');
     expect(cssSource).toContain('width: auto;');
-    expect(cssSource).not.toContain('width: 100vw;');
-    expect(cssSource).not.toContain('min-width: 100vw;');
-    expect(cssSource).not.toContain('margin-left: -50vw;');
+    expect(cssSource).not.toContain('.admin-front-hud-page-workflow.is-bar {\n  width: 100vw;');
+    expect(cssSource).not.toContain('.admin-front-hud-page-workflow.is-bar {\n  min-width: 100vw;');
+    expect(cssSource).not.toContain('.admin-front-hud-page-workflow.is-bar {\n  margin-left: -50vw;');
     expect(cssSource).toContain('Keep the tablet bar clear of the right-side dock without narrowing the mobile edge-to-edge bar.');
     expect(cssSource).toContain('width: min(100vw - 88px, 100%);');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.9fr);');

@@ -36,13 +36,12 @@ describe('outline button hover contract', () => {
     const cssSource = readSource('../styles/home-native.css');
 
     expect(cssSource).toContain('.home-services-feature .service-native-btn.is-outline.is-tone-white {');
-    expect(cssSource).toContain('.home-impact-story-cta {');
-    expect(cssSource).toContain('--home-impact-cta-expand-inline: var(--home-impact-story-button-expand-inline);');
-    expect(cssSource).toContain('--home-impact-cta-padding-block-base: 0.72rem;');
-    expect(cssSource).toContain('--home-impact-cta-padding-inline-base: 1.9rem;');
-    expect(cssSource).toContain('.home-impact-story-cta:hover {');
-    expect(cssSource).not.toContain('calc(var(--home-impact-cta-padding-block-base) + var(--home-impact-cta-expand-inline))');
-    expect(cssSource).toContain('calc(var(--home-impact-cta-padding-inline-base) + var(--home-impact-cta-expand-inline));');
+    expect(cssSource).toContain('.home-services-feature .service-native-btn.is-outline.is-tone-white:hover,');
+    expect(cssSource).toContain('.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:hover,');
+    expect(cssSource).toContain('.home-impact-story-proof-cta-block {');
+    expect(cssSource).toContain('.home-impact-story-proof-intro {');
+    expect(cssSource).not.toContain('.home-impact-story-cta {');
+    expect(cssSource).not.toContain('--home-impact-cta-expand-inline');
     expect(cssSource).not.toContain('scale(1.032)');
     expect(cssSource).not.toContain('scale(1.014)');
     expect(cssSource).not.toContain('--home-impact-cta-hover-shadow');

@@ -573,7 +573,7 @@ describe('BlockHudPanelHost', () => {
           leftButtonPageRef: '/services/retirement/iras',
           rightTitle: 'Deferred Compensation Plan (409A)',
           rightBodyHtml: '<p>Contribution limits beyond standard retirement options.</p>',
-          rightButtonLabel: 'Learn more',
+          rightButtonLabel: 'Explore 409A',
           rightButtonUrl: '/services/retirement/409a',
           rightButtonPageRef: '/services/retirement/409a',
         },

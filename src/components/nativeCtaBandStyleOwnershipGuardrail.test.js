@@ -11,13 +11,13 @@ function readSource(relativePath) {
 }
 
 describe('native cta-band style ownership guardrail', () => {
-  it('keeps dashboard-login styling on the canonical cta-band preset hook instead of route-local class selectors', () => {
+  it('keeps the investments dashboard styling on its current shared billboard hook instead of generic cta-band selectors', () => {
     const source = readSource('../styles/service-native.css');
 
-    expect(source).toContain('.service-native-cta-band.is-cta-band-preset-dashboard-login .investments-native-dashboard-title + p {');
-    expect(source).toContain('.service-native-cta-band.is-cta-band-preset-dashboard-login .ag-panel-rail {');
+    expect(source).toContain('.investments-native-dashboard-billboard .native-info-section-copy > p,');
+    expect(source).toContain('.investments-native-dashboard-billboard > .ag-panel-rail {');
+    expect(source).not.toContain('.service-native-cta-band.is-cta-band-preset-dashboard-login .investments-native-dashboard-title + p {');
+    expect(source).not.toContain('.service-native-cta-band.is-cta-band-preset-dashboard-login .ag-panel-rail {');
     expect(source).not.toContain('.service-native-cta-band .investments-native-dashboard-title + p {');
-    expect(source).not.toContain('.service-native-cta-band.investments-native-dashboard-band .ag-panel-rail {');
-    expect(source).not.toContain('.service-native-cta-band.investments-native-dashboard-band .investments-native-dashboard-title + p {');
   });
 });

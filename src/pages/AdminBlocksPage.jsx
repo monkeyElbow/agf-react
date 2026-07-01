@@ -344,7 +344,7 @@ export default function AdminBlocksPage() {
           <h3>Block List</h3>
           {filteredRows.length ? (
             <div className="admin-block-audit-table-scroll">
-              <table className="ag-table admin-block-audit-table">
+              <table className="data-table admin-block-audit-table">
                 <thead>
                   <tr>
                     <th>#</th>

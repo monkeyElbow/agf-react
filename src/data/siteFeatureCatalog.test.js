@@ -14,7 +14,7 @@ describe('site feature catalog', () => {
     const catalog = getSiteFeatureCatalog();
     const defaultEntry = getDefaultSiteFeatureCatalogEntry();
 
-    expect(catalog).toHaveLength(5);
+    expect(catalog).toHaveLength(6);
     expect(defaultEntry).toMatchObject({
       featureId: 'editorial_spotlight',
       label: 'Editorial spotlight',
@@ -32,6 +32,7 @@ describe('site feature catalog', () => {
     const homeImpactEntry = getSiteFeatureCatalogEntry('home_impact_story');
     const legacyGivingEntry = getSiteFeatureCatalogEntry('legacy_giving_stewardship_story');
     const impactProofEntry = getSiteFeatureCatalogEntry('impact_proof_story');
+    const investmentsGrowthEntry = getSiteFeatureCatalogEntry('investments_growth_feature');
 
     expect(getSiteFeatureOptions()).toEqual([
       { value: 'editorial_spotlight', label: 'Editorial spotlight' },
@@ -39,6 +40,7 @@ describe('site feature catalog', () => {
       { value: 'home_impact_story', label: 'Home impact story' },
       { value: 'legacy_giving_stewardship_story', label: 'Planned Giving stewardship story' },
       { value: 'impact_proof_story', label: 'Impact proof story' },
+      { value: 'investments_growth_feature', label: 'Investments growth feature' },
     ]);
     expect(getAllowedSiteFeatureEditableFieldIds('editorial_spotlight')).toEqual(entry?.allowedEditableFieldIds);
     expect(entry?.allowedEditableFieldIds).toEqual([
@@ -88,6 +90,16 @@ describe('site feature catalog', () => {
     ]);
     expect(impactProofEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
     expect(impactProofEntry?.routeAllowlist).toEqual(['/about-us/impact']);
+    expect(getAllowedSiteFeatureEditableFieldIds('investments_growth_feature')).toEqual(investmentsGrowthEntry?.allowedEditableFieldIds);
+    expect(investmentsGrowthEntry?.allowedEditableFieldIds).toEqual([
+      'featureId',
+      'body',
+      'buttonLabel',
+      'buttonUrl',
+      'buttonPageRef',
+      'buttonOpenInNewWindow',
+    ]);
+    expect(investmentsGrowthEntry?.routeAllowlist).toEqual(['/services/investments']);
 
     const homeServicesRuntime = homeServicesEntry?.buildRuntime?.({ settings: {} });
     expect(homeServicesRuntime?.panels).toHaveLength(5);

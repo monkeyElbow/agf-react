@@ -211,7 +211,7 @@ export default function AdminConsultantsPage() {
           </p>
           {responses.length ? (
             <div className="table-scroll">
-              <table className="ag-table ag-table-inputs">
+              <table className="data-table data-table--inputs">
                 <thead>
                   <tr>
                     <th>Submitted</th>

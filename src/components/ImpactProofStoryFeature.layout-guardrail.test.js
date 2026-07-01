@@ -49,7 +49,7 @@ describe('impact proof story layout guardrail', () => {
     expect(cssSource).toContain('var(--impact-proof-dark-stop-2)');
     expect(cssSource).toContain('h2.impact-proof-story-proof-stat {');
     expect(cssSource).toContain('max-width: 100%;');
-    expect(cssSource).toContain('font-size: clamp(99px, 7.9vw, 122px);');
+    expect(cssSource).toContain('font-size: clamp(89px, 7.11vw, 110px);');
     expect(cssSource).toContain('font-weight: 800;');
     expect(cssSource).toContain('font-synthesis: none;');
     expect(cssSource).toContain('line-height: 0.96;');

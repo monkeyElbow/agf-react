@@ -32,7 +32,7 @@ describe('admin block insert choices', () => {
       createTemplateId: 'value_cards',
       isCompatibility: false,
     });
-    expect(choices.find((choice) => choice.kind === 'site_feature')).toMatchObject({
+    expect(choices.find((choice) => choice.kind === 'site_feature' && choice.createTemplateId === 'site_feature')).toMatchObject({
       name: 'Site Feature · Editorial spotlight',
       createTemplateId: 'site_feature',
       description: 'Code-managed editorial placeholder for future art-directed storytelling moments.',

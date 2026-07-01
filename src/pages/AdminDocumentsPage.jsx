@@ -190,7 +190,7 @@ export default function AdminDocumentsPage() {
           <h3>Documents ({documents.length})</h3>
           {documents.length ? (
             <div className="table-scroll admin-documents-table-scroll">
-              <table className="ag-table ag-table-inputs admin-documents-table">
+              <table className="data-table data-table--inputs admin-documents-table">
                 <thead>
                   <tr>
                     <th>Active</th>

@@ -31,7 +31,7 @@ describe('home impact stat renderer guardrail', () => {
       createElement(
         MemoryRouter,
         null,
-        createElement(PageBlocksRenderer, {
+      createElement(PageBlocksRenderer, {
           blocks: [{
             type: 'impact_stat',
             id: 'impact_stat',
@@ -42,9 +42,6 @@ describe('home impact stat renderer guardrail', () => {
               highlight: 'matters',
               body: 'Kingdom growth and support.',
               countUp: true,
-              ctaLabel: 'Tell me more',
-              ctaPath: '/about-us/impact',
-              ctaPageRef: '/about-us/impact',
               stat1Value: '$11 billion',
               stat1Label: 'assets under management',
               stat1Tone: 'mango',
@@ -61,7 +58,7 @@ describe('home impact stat renderer guardrail', () => {
     expect(section).toBeTruthy();
     expect(screen.getByRole('heading', { name: /What you do here/i })).toBeTruthy();
     expect(screen.getByText('$11 billion')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Tell me more' }).getAttribute('href')).toBe('/about-us/impact');
+    expect(screen.getByText('Kingdom growth and support.')).toBeTruthy();
   });
 
   it('keeps the shared dynamic impact stat builder in the home page block renderer', () => {

@@ -29,7 +29,7 @@ describe('link model convergence guardrail', () => {
     expect(runtimeSource).toContain('function buildCanonicalActionLinkFromFields(source, {');
     expect(runtimeSource).not.toContain('coerceLegacyLinkValue({');
 
-    expect(heroDefinitionSource).toContain('validateLegacyLinkFieldGroups');
+    expect(heroDefinitionSource).toContain('validateLegacyActionFieldGroup');
     expect(introDefinitionSource).toContain('validateLegacyLinkFieldGroups');
     expect(columnsDefinitionSource).toContain('validateLegacyLinkFieldGroups');
     expect(photoColumnDefinitionSource).toContain('validateLegacyLinkFieldGroup');

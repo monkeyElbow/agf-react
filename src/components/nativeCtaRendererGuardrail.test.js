@@ -39,7 +39,7 @@ describe('native CTA renderer guardrail', () => {
   it('keeps CTA sections out of the request shell and resolves the CTA form heading from CTA content', () => {
     const source = readSource('./NativeContentPage.jsx');
 
-    expect(source).toContain('const isInlineCtaSection = Boolean(');
+    expect(source).toContain('const isInlineCtaSection = isInlineCtaSectionShape(section);');
     expect(source).toContain('title: String(section.form.title || section.title || \'\').trim()');
     expect(source).toContain('subtitle: String(section.form.subtitle || section.subtitle || \'\').trim()');
     expect(source).toContain('const showSectionCopy = !section.hideCopy && !isInlineCtaSection;');
