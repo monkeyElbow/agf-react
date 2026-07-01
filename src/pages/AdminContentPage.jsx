@@ -2414,7 +2414,7 @@ export default function AdminContentPage() {
         <section className="admin-content-section">
           <h3>Blocks</h3>
           <div className="table-scroll">
-            <table className="ag-table ag-table-inputs">
+            <table className="data-table data-table--inputs">
               <thead>
                 <tr>
                   <th>Block</th>
