@@ -1472,21 +1472,6 @@ const insuranceChildPages = {
   '/services/insurance/life-insurance-quote': {
     pageClass: 'native-info-page--life-quote',
     compact: true,
-    hero: {
-      lines: [
-        {
-          title: 'Get a life quote.',
-          highlights: [{ text: 'Get a', className: 'is-mango' }],
-        },
-      ],
-    },
-    intro: {
-      heading: 'Take care of your family.',
-      headingHighlights: [{ text: 'family', className: 'is-mango' }],
-      body: [
-        "Your financial safety net for the unexpected, individual life can replace income, cover the mortgage, and keep your loved ones secure—and it's made specifically for you with quality coverage and competitive pricing.",
-      ],
-    },
     sections: [
       {
         className: 'life-quote-native-types',
@@ -3254,19 +3239,6 @@ const retirementChildPages = {
   '/services/retirement/409a': {
     pageClass: 'native-info-page--retirement-child native-info-page--retirement-409a',
     compact: true,
-    hero: {
-      lines: [
-        { title: 'Beyond the' },
-        { title: 'limits.', highlights: [{ text: 'limits.', className: 'is-mango' }] },
-      ],
-    },
-    intro: {
-      heading: 'Boundary-free future.',
-      body: [
-        'Where standard retirement plan contributions max out, a 409A Deferred Compensation Plan steps in. Exclusively for ministers and qualified church organizations, it allows participants to defer additional income and reduce current taxes.',
-      ],
-      actions: [{ label: 'Find my consultant', to: '/services/retirement/retirement-consultants' }],
-    },
     sections: [
       {
         className: 'retirement-child-native-scenarios',
@@ -3373,37 +3345,19 @@ const retirementChildPages = {
         fullBleed: true,
         title: 'The differences. At a glance.',
         titleHighlights: [{ text: 'At a glance', className: 'is-mango' }],
-        columns: 'two',
-        cards: [
-          {
-            title: 'Traditional',
-            list: [
-              'Must have earned income',
-              'No income limits to establish',
-              'Contributions may be tax-deductible',
-              'Earnings are tax-deferred until distributed',
-              'Distributions may begin at age 59½',
-              'Early distributions may be subject to penalty',
-              'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
-            ],
-            cardClass: 'card2',
-          },
-          {
-            title: 'Roth',
-            list: [
-              'Income limits must be met for Roth IRA eligibility',
-              'Contributions are not tax-deductible',
-              'No age limit to contribute as long as you have earned income',
-              'Earnings may be tax-free at distribution if qualified',
-              'Principal contributions may be distributed without penalty',
-              'Qualified distributions on earnings may begin at 59½',
-              'Early distributions on earnings are subject to penalty',
-              'No required distribution age',
-              'Traditional IRAs may be converted to Roth IRAs',
-            ],
-            cardClass: 'card2',
-          },
-        ],
+        table: {
+          headers: ['Key difference', 'Traditional IRA', 'Roth IRA'],
+          rows: [
+            ['Eligibility', 'Must have earned income. No income limits to establish.', 'Must have earned income and meet Roth IRA income eligibility limits.'],
+            ['Tax treatment of contributions', 'Contributions may be tax-deductible.', 'Contributions are not tax-deductible.'],
+            ['Age and contribution rules', 'Traditional IRA contribution rules apply.', 'No age limit to contribute as long as you have earned income.'],
+            ['How earnings are taxed', 'Earnings are tax-deferred until distributed.', 'Earnings may be tax-free at distribution if qualified.'],
+            ['Distribution timing', 'Distributions may begin at age 59½.', 'Qualified distributions on earnings may begin at age 59½.'],
+            ['Early-withdrawal rules', 'Early distributions may be subject to penalty.', 'Principal contributions may be distributed without penalty, but early distributions on earnings are subject to penalty.'],
+            ['Required minimum distributions', 'Required minimum distributions begin after age 72, or age 70½ if reached prior to January 1, 2020.', 'No required distribution age.'],
+            ['Conversion option', 'May be converted to a Roth IRA, subject to applicable tax rules.', 'Traditional IRAs may be converted to Roth IRAs.'],
+          ],
+        },
         fineprint: [
           'Contact your tax advisor. Additional AGFinancial early redemption penalties and IRA custodial fees may apply.',
         ],
