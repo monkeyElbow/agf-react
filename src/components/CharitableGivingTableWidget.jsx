@@ -70,7 +70,7 @@ export default function CharitableGivingTableWidget() {
   return (
     <div className="cga-charitable-giving-table-widget">
       <div className="native-info-table-wrap">
-        <table className="ag-table has-fixed-layout">
+        <table className="data-table data-table--fixed">
           <thead>
             <tr>
               {CG_HEADERS.map((header) => (

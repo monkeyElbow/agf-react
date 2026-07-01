@@ -74,6 +74,7 @@ import LegacyGivingStewardshipStoryFeature from './LegacyGivingStewardshipStoryF
 import ImpactProofStoryFeature from './ImpactProofStoryFeature';
 import DynamicRequestFormSection from './DynamicRequestFormSection';
 import FrontHudAnchorTag from './FrontHudAnchorTag';
+import IraRatesSheet from './IraRatesSheet';
 import NewsletterSignupForm from './NewsletterSignupForm';
 import SafeRichText from './SafeRichText';
 import {
@@ -2571,7 +2572,7 @@ function Retirement403bRateTableWidget({ rates, ratesMeta }) {
   return (
     <div className="retirement-403b-rate-widget">
       <div className="native-info-table-wrap">
-        <table className="ag-table has-fixed-layout">
+        <table className="data-table data-table--fixed">
           <thead>
             <tr>
               <th>Investment Type</th>
@@ -2595,33 +2596,14 @@ function Retirement403bRateTableWidget({ rates, ratesMeta }) {
 }
 
 function RetirementIraRateTableWidget({ iraRates, ratesMeta }) {
-  const rows = Array.isArray(iraRates) ? iraRates : [];
   const effectiveDate = ratesMeta?.iraEffectiveDate || 'January 1, 2025';
 
   return (
-    <div className="retirement-ira-rate-widget">
-      <div className="native-info-table-wrap">
-        <table className="ag-table has-fixed-layout">
-          <thead>
-            <tr>
-              <th>Investment Type</th>
-              <th>Rate</th>
-              <th>APY*</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id || row.product}>
-                <td>{row.product}</td>
-                <td>{row.rate}</td>
-                <td>{row.apy}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="service-native-note"><strong>*Annual Percentage Yield</strong><strong><br />Effective {effectiveDate}.</strong></p>
-    </div>
+    <>
+      <IraRatesSheet rates={iraRates} />
+      <p className="service-native-note">*Annual Percentage Yield</p>
+      <p className="service-native-note">Effective {effectiveDate}.</p>
+    </>
   );
 }
 
@@ -6382,7 +6364,7 @@ export default function NativeContentPage({ page }) {
 
             {section.table ? (
               <div className="native-info-table-wrap">
-                <table className="ag-table has-fixed-layout">
+                <table className="data-table data-table--fixed">
                   <thead>
                     <tr>
                       {section.table.headers.map((header) => (

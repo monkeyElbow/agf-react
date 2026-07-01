@@ -244,7 +244,7 @@ describe('investments ladder calculator', () => {
     expect(screen.getAllByText('$21,632.00').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Ladder Breakdown')).toBeTruthy();
     expect(screen.queryByText(/^Calculated$/)).toBeNull();
-    expect(document.querySelector('.ag-table.investments-native-ladder-table')).toBeNull();
+    expect(document.querySelector('.data-table.investments-native-ladder-table')).toBeNull();
     expect(document.querySelectorAll('.investments-native-ladder-table-shell')).toHaveLength(3);
     expect(document.querySelectorAll('.investments-native-ladder-mobile-row').length).toBeGreaterThan(0);
   });
@@ -307,7 +307,7 @@ describe('investments ladder calculator', () => {
     expect(pageSource).toContain('Download PDF');
     expect(pageSource).toContain('data-ladder-results-sheet');
     expect(pageSource).not.toContain('investments-native-ladder-process-line');
-    expect(pageSource).not.toContain('ag-table has-fixed-layout investments-native-ladder-table');
+    expect(pageSource).not.toContain('data-table data-table--fixed investments-native-ladder-table');
     expect(cssSource).toContain('.investments-native-ladder-shell {');
     expect(cssSource).toContain('.investments-native-ladder-visual-scroll {');
     expect(cssSource).toContain('.investments-native-ladder-summary-strip.is-results {');

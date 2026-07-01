@@ -42,7 +42,7 @@ describe('rates page renderer guardrail', () => {
     expect(source).toContain("html={legalCopyRuntime?.iraHtml || ''}");
     expect(source).toContain('pathname="/rates"');
     expect(source).not.toContain('This is not an offer to sell securities.');
-    expect(source).not.toContain('<table className="ag-table has-fixed-layout">');
+    expect(source).not.toContain('<table className="data-table data-table--fixed">');
     expect(cssSource).toContain('.rates-page .page-shell-header h1 {');
     expect(cssSource).toContain('.rates-page-managed-block {');
     expect(cssSource).toContain('padding-bottom: max(1.5rem, var(--site-chatbot-mobile-reserved-space, 0px));');

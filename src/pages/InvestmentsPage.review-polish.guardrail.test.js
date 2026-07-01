@@ -126,7 +126,7 @@ describe('investments page review polish guardrails', () => {
     expect(pageSource).toContain('className="investments-native-ladder-table-shell"');
     expect(pageSource).toContain('className="investments-native-ladder-mobile-sheet"');
     expect(pageSource).not.toContain('investments-native-ladder-process-line');
-    expect(pageSource).not.toContain('ag-table has-fixed-layout investments-native-ladder-table');
+    expect(pageSource).not.toContain('data-table data-table--fixed investments-native-ladder-table');
     expect(cssSource).toContain('.investments-native-ladder-result-sheet {');
     expect(cssSource).toContain('.investments-native-ladder-result-sheet::before {');
     expect(cssSource).toContain('.investments-native-ladder-table-shell {');
