@@ -32,12 +32,16 @@ describe('investments page review polish guardrails', () => {
     expect(cssSource).toContain('overflow-wrap: normal;');
     expect(cssSource).toContain('.investments-native-build-title .investments-native-build-title-line {');
     expect(cssSource).toContain('.investments-native-growth-card h3 {');
+    expect(cssSource).toContain('display: grid;');
+    expect(cssSource).toContain('justify-items: center;');
+    expect(cssSource).toContain('width: max-content;');
     expect(cssSource).toContain('font-size: var(--investments-growth-display-size);');
     expect(cssSource).toContain('letter-spacing: var(--investments-growth-display-letter-spacing);');
-    expect(cssSource).toContain('text-wrap: balance;');
+    expect(cssSource).toContain('text-wrap: nowrap;');
     expect(cssSource).toContain('@media (max-width: 980px) {');
     expect(cssSource).toContain('--investments-growth-display-size: clamp(3rem, 13vw, 4.25rem);');
     expect(cssSource).toContain('max-width: min(11.2ch, 100%);');
+    expect(cssSource).toContain('width: 100%;');
     expect(cssSource).toContain('white-space: normal;');
   });
 
