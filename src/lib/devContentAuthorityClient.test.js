@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   acquireSharedBlockLock,
+  fetchSharedAnnouncement,
   initializeSharedContentFromSeed,
   releaseSharedBlockLock,
   resetSharedContentFromSeed,
   restoreSharedBlockRevision,
   restoreSharedPageRevision,
+  saveSharedAnnouncement,
   saveSharedPageDraft,
   syncSharedBlockDraft,
 } from './devContentAuthorityClient';
@@ -99,5 +101,27 @@ describe('devContentAuthorityClient', () => {
     expect(payload.blockId).toBe('hero');
     expect(payload.block.settings.line1Text).toBe('HUD synced title');
     expect(payload.actor.displayName).toBe('Taylor QA');
+  });
+
+  it('uses the dedicated shared announcement endpoints', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchSharedAnnouncement();
+    await saveSharedAnnouncement({
+      enabled: true,
+      message: 'Shared network banner',
+    });
+
+    const [readUrl] = fetchMock.mock.calls[0];
+    const [saveUrl, saveRequest] = fetchMock.mock.calls[1];
+    const payload = JSON.parse(saveRequest.body);
+
+    expect(readUrl).toContain('/announcement');
+    expect(saveUrl).toContain('/announcement/save');
+    expect(payload.announcement.message).toBe('Shared network banner');
   });
 });

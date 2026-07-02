@@ -63,7 +63,7 @@ function findSearchTargetPage(needle, pages) {
   )) || null;
 }
 
-function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, routeOptions = [] }) {
+function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, routeOptions = [], disabled = false }) {
   const [routeSearch, setRouteSearch] = useState('');
   const allRouteOptions = useMemo(
     () => sortPages(Array.isArray(routeOptions) ? routeOptions : []),
@@ -117,6 +117,7 @@ function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, rout
         type="text"
         value={value ?? ''}
         placeholder="/about-us/impact"
+        disabled={disabled}
         onChange={(event) => {
           const nextValue = event.target.value;
           onChange(nextValue);
@@ -132,6 +133,7 @@ function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, rout
           type="search"
           value={routeSearch}
           placeholder="Search pages"
+          disabled={disabled}
           onChange={(event) => setRouteSearch(event.target.value)}
           onKeyDown={(event) => {
             if (event.key !== 'Enter') {
@@ -149,6 +151,7 @@ function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, rout
         <select
           className="admin-route-link-select"
           value=""
+          disabled={disabled}
           onChange={(event) => {
             if (!event.target.value) {
               return;
@@ -176,6 +179,15 @@ function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, rout
 export default function AdminMessagePage() {
   const {
     announcement,
+    draftAnnouncement,
+    hasUnsavedChanges,
+    isSaving,
+    isHydrating,
+    saveError,
+    loadError,
+    lastSavedAt,
+    hasRecoveredLocalDraft,
+    usesSharedAnnouncementPersistence,
     setAnnouncementEnabled,
     setAnnouncementMessage,
     setAnnouncementBackground,
@@ -185,6 +197,8 @@ export default function AdminMessagePage() {
     setAnnouncementLinkEnabled,
     setAnnouncementLinkPath,
     setAnnouncementLinkPageRef,
+    saveAnnouncement,
+    discardAnnouncementChanges,
     resetAnnouncement,
   } = useAnnouncement();
   const routeLinkOptions = useMemo(
@@ -194,9 +208,9 @@ export default function AdminMessagePage() {
     [],
   );
 
-  const announcementMode = !announcement.enabled
+  const announcementMode = !draftAnnouncement.enabled
     ? 'off'
-    : (!announcement.startDate && !announcement.endDate ? 'always' : 'scheduled');
+    : (!draftAnnouncement.startDate && !draftAnnouncement.endDate ? 'always' : 'scheduled');
 
   const applyAnnouncementMode = (mode) => {
     if (mode === 'off') {
@@ -213,9 +227,9 @@ export default function AdminMessagePage() {
     setAnnouncementEnabled(true);
   };
 
-  const previewBackground = announcementBackgroundSwatches.find((item) => item.id === announcement.backgroundId)
+  const previewBackground = announcementBackgroundSwatches.find((item) => item.id === draftAnnouncement.backgroundId)
     || announcementBackgroundSwatches[0];
-  const previewTextColor = announcementTextColors.find((item) => item.id === announcement.textColorId)
+  const previewTextColor = announcementTextColors.find((item) => item.id === draftAnnouncement.textColorId)
     || announcementTextColors[0];
   const today = new Date();
   const todayIso = [
@@ -223,21 +237,21 @@ export default function AdminMessagePage() {
     String(today.getMonth() + 1).padStart(2, '0'),
     String(today.getDate()).padStart(2, '0'),
   ].join('-');
-  const isAfterStart = !announcement.startDate || todayIso >= announcement.startDate;
-  const isBeforeEnd = !announcement.endDate || todayIso <= announcement.endDate;
+  const isAfterStart = !draftAnnouncement.startDate || todayIso >= draftAnnouncement.startDate;
+  const isBeforeEnd = !draftAnnouncement.endDate || todayIso <= draftAnnouncement.endDate;
   const isWindowActive = isAfterStart && isBeforeEnd;
   let scheduleSummary = 'Currently off — preview only.';
   if (announcementMode === 'always') {
     scheduleSummary = 'Always active.';
   } else if (announcementMode === 'scheduled') {
-    const startLabel = announcement.startDate || 'starts immediately';
-    const endLabel = announcement.endDate || 'no end date';
+    const startLabel = draftAnnouncement.startDate || 'starts immediately';
+    const endLabel = draftAnnouncement.endDate || 'no end date';
     scheduleSummary = `Active window: ${startLabel} to ${endLabel}`;
     if (!isWindowActive) {
       scheduleSummary = `Scheduled window: ${startLabel} to ${endLabel}`;
     }
   }
-  const hasLinkTarget = Boolean(String(announcement.linkPath || '').trim());
+  const hasLinkTarget = Boolean(String(draftAnnouncement.linkPath || '').trim());
   const backgroundPaletteOptions = announcementBackgroundSwatches.map((swatch) => ({
     value: swatch.id,
     label: swatch.label,
@@ -248,6 +262,7 @@ export default function AdminMessagePage() {
     label: swatch.label,
     swatch: swatch.color,
   }));
+  const lastSavedLabel = lastSavedAt ? new Date(lastSavedAt).toLocaleString() : '';
 
   return (
     <div className="page-wrap admin-content-page-wrap">
@@ -255,18 +270,35 @@ export default function AdminMessagePage() {
         <p className="admin-message-intro">
           This slim message bar appears above breadcrumbs across site and admin pages.
         </p>
+        {usesSharedAnnouncementPersistence ? (
+          <p className="admin-message-status">
+            Saved message settings are shared across browsers on this dev server.
+          </p>
+        ) : (
+          <p className="admin-message-status">
+            Message settings are local to this browser in this environment.
+          </p>
+        )}
+        {hasRecoveredLocalDraft ? (
+          <p className="admin-message-status is-active">
+            A local browser draft was recovered. Save it to publish this message for everyone.
+          </p>
+        ) : null}
+        {loadError ? (
+          <p className="admin-message-status is-inactive">{loadError}</p>
+        ) : null}
 
         <section className="admin-message-preview-section">
           <h3>Preview</h3>
           <p className="admin-message-status">{scheduleSummary}</p>
           <div
-            className={`admin-message-preview${announcement.linkEnabled && hasLinkTarget ? ' is-link' : ''}${announcementMode === 'off' ? ' is-inactive' : ''}`}
+            className={`admin-message-preview${draftAnnouncement.linkEnabled && hasLinkTarget ? ' is-link' : ''}${announcementMode === 'off' ? ' is-inactive' : ''}`}
             style={{ backgroundColor: previewBackground.color, color: previewTextColor.color }}
           >
-            {announcement.message?.trim() || 'Your message preview appears here.'}
+            {draftAnnouncement.message?.trim() || 'Your message preview appears here.'}
           </div>
-          {announcement.linkEnabled && hasLinkTarget ? (
-            <p className="admin-message-status">Linked to: {announcement.linkPath}</p>
+          {draftAnnouncement.linkEnabled && hasLinkTarget ? (
+            <p className="admin-message-status">Linked to: {draftAnnouncement.linkPath}</p>
           ) : null}
         </section>
 
@@ -278,9 +310,10 @@ export default function AdminMessagePage() {
                 <span>Message</span>
                 <textarea
                   rows={3}
-                  value={announcement.message}
+                  value={draftAnnouncement.message}
                   onChange={(event) => setAnnouncementMessage(event.target.value)}
                   placeholder="Enter message shown above breadcrumbs"
+                  disabled={isHydrating || isSaving}
                 />
               </label>
             </div>
@@ -294,6 +327,7 @@ export default function AdminMessagePage() {
                   type="button"
                   className={`admin-boolean-pill-option${announcementMode === 'off' ? ' is-active' : ''}`}
                   onClick={() => applyAnnouncementMode('off')}
+                  disabled={isHydrating || isSaving}
                 >
                   Off
                 </button>
@@ -301,6 +335,7 @@ export default function AdminMessagePage() {
                   type="button"
                   className={`admin-boolean-pill-option${announcementMode === 'always' ? ' is-active' : ''}`}
                   onClick={() => applyAnnouncementMode('always')}
+                  disabled={isHydrating || isSaving}
                 >
                   Always On
                 </button>
@@ -308,6 +343,7 @@ export default function AdminMessagePage() {
                   type="button"
                   className={`admin-boolean-pill-option${announcementMode === 'scheduled' ? ' is-active' : ''}`}
                   onClick={() => applyAnnouncementMode('scheduled')}
+                  disabled={isHydrating || isSaving}
                 >
                   Scheduled
                 </button>
@@ -319,16 +355,18 @@ export default function AdminMessagePage() {
                   <span>Start Date (optional)</span>
                   <input
                     type="date"
-                    value={announcement.startDate || ''}
+                    value={draftAnnouncement.startDate || ''}
                     onChange={(event) => setAnnouncementStartDate(event.target.value)}
+                    disabled={isHydrating || isSaving}
                   />
                 </label>
                 <label>
                   <span>End Date (optional)</span>
                   <input
                     type="date"
-                    value={announcement.endDate || ''}
+                    value={draftAnnouncement.endDate || ''}
                     onChange={(event) => setAnnouncementEndDate(event.target.value)}
+                    disabled={isHydrating || isSaving}
                   />
                 </label>
               </div>
@@ -347,30 +385,33 @@ export default function AdminMessagePage() {
               <div className="admin-boolean-pill" role="group" aria-label="Message link">
                 <button
                   type="button"
-                  className={`admin-boolean-pill-option${announcement.linkEnabled ? ' is-active' : ''}`}
+                  className={`admin-boolean-pill-option${draftAnnouncement.linkEnabled ? ' is-active' : ''}`}
                   onClick={() => setAnnouncementLinkEnabled(true)}
+                  disabled={isHydrating || isSaving}
                 >
                   On
                 </button>
                 <button
                   type="button"
-                  className={`admin-boolean-pill-option${!announcement.linkEnabled ? ' is-active' : ''}`}
+                  className={`admin-boolean-pill-option${!draftAnnouncement.linkEnabled ? ' is-active' : ''}`}
                   onClick={() => setAnnouncementLinkEnabled(false)}
+                  disabled={isHydrating || isSaving}
                 >
                   Off
                 </button>
               </div>
             </div>
             <div className="admin-content-field-list admin-message-field-list">
-              {announcement.linkEnabled ? (
+              {draftAnnouncement.linkEnabled ? (
                 <label className="admin-message-link-destination">
                   <span>Link Destination</span>
                   <RouteLinkField
-                    value={announcement.linkPath}
-                    routeRefValue={announcement.linkPageRef}
+                    value={draftAnnouncement.linkPath}
+                    routeRefValue={draftAnnouncement.linkPageRef}
                     onChange={setAnnouncementLinkPath}
                     onRouteRefChange={setAnnouncementLinkPageRef}
                     routeOptions={routeLinkOptions}
+                    disabled={isHydrating || isSaving}
                   />
                 </label>
               ) : null}
@@ -386,8 +427,9 @@ export default function AdminMessagePage() {
               className="is-compact is-icon-only admin-swatch-row"
               ariaLabel="Message background color"
               options={backgroundPaletteOptions}
-              value={announcement.backgroundId}
+              value={draftAnnouncement.backgroundId}
               onChange={(nextValue) => setAnnouncementBackground(nextValue)}
+              isOptionDisabled={() => isHydrating || isSaving}
               getOptionClassName={(option, state) => `admin-swatch-btn${state.active ? ' is-active' : ''}`}
               getOptionLabel={(option) => option.label}
               getOptionShortLabel={(option) => option.shortLabel || option.label}
@@ -401,8 +443,9 @@ export default function AdminMessagePage() {
               className="is-compact is-icon-only admin-swatch-row"
               ariaLabel="Message text color"
               options={textPaletteOptions}
-              value={announcement.textColorId}
+              value={draftAnnouncement.textColorId}
               onChange={(nextValue) => setAnnouncementTextColor(nextValue)}
+              isOptionDisabled={() => isHydrating || isSaving}
               getOptionClassName={(option, state) => `admin-text-tone-btn${state.active ? ' is-active' : ''}`}
               getOptionLabel={(option) => option.label}
               getOptionShortLabel={(option) => option.shortLabel || option.label}
@@ -411,10 +454,41 @@ export default function AdminMessagePage() {
         </div>
 
         <div className="admin-actions">
-          <button type="button" className="action-btn action-btn-danger" onClick={resetAnnouncement}>
+          <button
+            type="button"
+            className="action-btn action-btn-primary"
+            onClick={() => {
+              void saveAnnouncement();
+            }}
+            disabled={isHydrating || isSaving || !hasUnsavedChanges}
+          >
+            {isSaving ? 'Saving…' : 'Save Message'}
+          </button>
+          <button
+            type="button"
+            className="action-btn action-btn-outline"
+            onClick={discardAnnouncementChanges}
+            disabled={isHydrating || isSaving || !hasUnsavedChanges}
+          >
+            Discard Changes
+          </button>
+          <button
+            type="button"
+            className="action-btn action-btn-danger"
+            onClick={resetAnnouncement}
+            disabled={isHydrating || isSaving}
+          >
             Reset Message Settings
           </button>
         </div>
+        <p className={`admin-message-status${hasUnsavedChanges ? ' is-inactive' : ' is-active'}`}>
+          {saveError
+            || (hasUnsavedChanges
+              ? 'Unsaved changes are only in this editor until you save.'
+              : (lastSavedLabel
+                ? `Last saved ${lastSavedLabel}.`
+                : `Live message matches the saved settings${announcement.message?.trim() ? '.' : ' and is ready for a first save.'}`))}
+        </p>
       </PageShell>
     </div>
   );

@@ -1,121 +1,184 @@
-import { createContext, useContext, useMemo, useState } from 'react';
-import { resolvePagePathFromRef } from '../data/siteMap';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  ANNOUNCEMENT_STORAGE_KEY,
+  announcementBackgroundSwatches,
+  announcementTextColors,
+  areAnnouncementsEqual,
+  defaultAnnouncement,
+  hasMeaningfulAnnouncementContent,
+  normalizeAnnouncement,
+  readAnnouncementFromStorage,
+  writeAnnouncementToStorage,
+} from '../lib/announcementConfig';
+import {
+  fetchSharedAnnouncement,
+  isDevContentAuthorityEnabled,
+  saveSharedAnnouncement,
+} from '../lib/devContentAuthorityClient';
 
-const STORAGE_KEY = 'agf-site-announcement-v1';
 const AnnouncementContext = createContext(null);
 
-export const announcementBackgroundSwatches = [
-  { id: 'brand-blue', label: 'Brand Blue', color: '#00adbb' },
-  { id: 'atlantean-dark', label: 'Atlantean Dark', color: '#008aab' },
-  { id: 'super-grey', label: 'Super Grey', color: '#414042' },
-  { id: 'sandstone', label: 'Sandstone', color: '#d7d3cc' },
-  { id: 'melon', label: 'Melon', color: '#f68c1f' },
-];
-
-export const announcementTextColors = [
-  { id: 'super-grey', label: 'Super Grey', color: '#414042' },
-  { id: 'white', label: 'White', color: '#ffffff' },
-];
-
-const defaultAnnouncement = {
-  enabled: false,
-  message: '',
-  backgroundId: 'brand-blue',
-  textColorId: 'white',
-  startDate: '',
-  endDate: '',
-  linkEnabled: false,
-  linkPath: '',
-  linkPageRef: '',
-};
-
-function normalizeDateValue(value) {
-  const text = String(value || '').trim();
-  if (!text) {
-    return '';
+function getBrowserStorage() {
+  if (typeof window === 'undefined') {
+    return null;
   }
-  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : '';
-}
-
-function normalizeLinkPathValue(value) {
-  const text = String(value || '').trim();
-  if (!text) {
-    return '';
-  }
-  return text.startsWith('/') ? text : '';
-}
-
-function normalizeAnnouncement(payload) {
-  const safe = payload && typeof payload === 'object' ? payload : {};
-  const backgroundId = announcementBackgroundSwatches.some((item) => item.id === safe.backgroundId)
-    ? safe.backgroundId
-    : defaultAnnouncement.backgroundId;
-  const textColorId = announcementTextColors.some((item) => item.id === safe.textColorId)
-    ? safe.textColorId
-    : defaultAnnouncement.textColorId;
-  const linkPageRef = typeof safe.linkPageRef === 'string' ? safe.linkPageRef.trim() : '';
-  const linkPath = resolvePagePathFromRef(linkPageRef, normalizeLinkPathValue(safe.linkPath));
-
-  return {
-    enabled: typeof safe.enabled === 'boolean' ? safe.enabled : defaultAnnouncement.enabled,
-    message: typeof safe.message === 'string' ? safe.message : defaultAnnouncement.message,
-    backgroundId,
-    textColorId,
-    startDate: normalizeDateValue(safe.startDate),
-    endDate: normalizeDateValue(safe.endDate),
-    linkEnabled: typeof safe.linkEnabled === 'boolean' ? safe.linkEnabled : defaultAnnouncement.linkEnabled,
-    linkPath,
-    linkPageRef,
-  };
+  return window.localStorage;
 }
 
 function readInitialAnnouncement() {
-  if (typeof window === 'undefined') {
-    return defaultAnnouncement;
-  }
-
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return defaultAnnouncement;
-    }
-    return normalizeAnnouncement(JSON.parse(raw));
-  } catch {
-    return defaultAnnouncement;
-  }
+  return readAnnouncementFromStorage(getBrowserStorage());
 }
 
+function persistLocalAnnouncement(announcement) {
+  return writeAnnouncementToStorage(getBrowserStorage(), announcement);
+}
+
+export { ANNOUNCEMENT_STORAGE_KEY, announcementBackgroundSwatches, announcementTextColors };
+
 export function AnnouncementProvider({ children }) {
+  const sharedPersistenceEnabled = isDevContentAuthorityEnabled();
   const [announcement, setAnnouncement] = useState(readInitialAnnouncement);
+  const [draftAnnouncement, setDraftAnnouncement] = useState(readInitialAnnouncement);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isHydrating, setIsHydrating] = useState(sharedPersistenceEnabled);
+  const [saveError, setSaveError] = useState('');
+  const [loadError, setLoadError] = useState('');
+  const [lastSavedAt, setLastSavedAt] = useState(0);
+  const [hasRecoveredLocalDraft, setHasRecoveredLocalDraft] = useState(false);
+
+  useEffect(() => {
+    if (!sharedPersistenceEnabled) {
+      setIsHydrating(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const localAnnouncement = readInitialAnnouncement();
+
+    const hydrateSharedAnnouncement = async () => {
+      try {
+        const snapshot = await fetchSharedAnnouncement();
+        if (cancelled) {
+          return;
+        }
+        const sharedAnnouncement = normalizeAnnouncement(snapshot?.announcement);
+        const shouldRecoverLocalDraft = (
+          !hasMeaningfulAnnouncementContent(sharedAnnouncement)
+          && hasMeaningfulAnnouncementContent(localAnnouncement)
+        );
+
+        setAnnouncement(sharedAnnouncement);
+        setDraftAnnouncement(shouldRecoverLocalDraft ? localAnnouncement : sharedAnnouncement);
+        setHasRecoveredLocalDraft(shouldRecoverLocalDraft);
+        setLastSavedAt(Number(snapshot?.updatedAt) || 0);
+        persistLocalAnnouncement(sharedAnnouncement);
+        setLoadError('');
+      } catch {
+        if (cancelled) {
+          return;
+        }
+        setLoadError('Shared message settings could not be loaded. Local browser values are shown instead.');
+      } finally {
+        if (!cancelled) {
+          setIsHydrating(false);
+        }
+      }
+    };
+
+    hydrateSharedAnnouncement();
+    return () => {
+      cancelled = true;
+    };
+  }, [sharedPersistenceEnabled]);
+
+  const hasUnsavedChanges = useMemo(
+    () => !areAnnouncementsEqual(draftAnnouncement, announcement),
+    [draftAnnouncement, announcement],
+  );
 
   const value = useMemo(() => {
-    const persist = (updater) => {
-      setAnnouncement((prev) => {
+    const updateDraft = (updater) => {
+      setDraftAnnouncement((prev) => {
         const next = typeof updater === 'function' ? updater(prev) : updater;
-        const normalized = normalizeAnnouncement(next);
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-        } catch {
-          // ignore storage failures
-        }
-        return normalized;
+        return normalizeAnnouncement(next);
       });
+      setSaveError('');
+    };
+
+    const saveAnnouncementDraft = async () => {
+      const normalizedDraft = normalizeAnnouncement(draftAnnouncement);
+      setIsSaving(true);
+      setSaveError('');
+      try {
+        if (sharedPersistenceEnabled) {
+          const snapshot = await saveSharedAnnouncement(normalizedDraft);
+          const savedAnnouncement = normalizeAnnouncement(snapshot?.announcement);
+          setAnnouncement(savedAnnouncement);
+          setDraftAnnouncement(savedAnnouncement);
+          setLastSavedAt(Number(snapshot?.updatedAt) || Date.now());
+          setHasRecoveredLocalDraft(false);
+          persistLocalAnnouncement(savedAnnouncement);
+          return { ok: true, announcement: savedAnnouncement };
+        }
+
+        const savedAnnouncement = persistLocalAnnouncement(normalizedDraft);
+        setAnnouncement(savedAnnouncement);
+        setDraftAnnouncement(savedAnnouncement);
+        setLastSavedAt(Date.now());
+        setHasRecoveredLocalDraft(false);
+        return { ok: true, announcement: savedAnnouncement };
+      } catch {
+        setSaveError('Message settings could not be saved. Try again.');
+        return { ok: false };
+      } finally {
+        setIsSaving(false);
+      }
     };
 
     return {
       announcement,
-      setAnnouncementEnabled: (enabled) => persist((prev) => ({ ...prev, enabled: Boolean(enabled) })),
-      setAnnouncementMessage: (message) => persist((prev) => ({ ...prev, message: String(message || '') })),
-      setAnnouncementBackground: (backgroundId) => persist((prev) => ({ ...prev, backgroundId })),
-      setAnnouncementTextColor: (textColorId) => persist((prev) => ({ ...prev, textColorId })),
-      setAnnouncementStartDate: (startDate) => persist((prev) => ({ ...prev, startDate })),
-      setAnnouncementEndDate: (endDate) => persist((prev) => ({ ...prev, endDate })),
-      setAnnouncementLinkEnabled: (linkEnabled) => persist((prev) => ({ ...prev, linkEnabled: Boolean(linkEnabled) })),
-      setAnnouncementLinkPath: (linkPath) => persist((prev) => ({ ...prev, linkPath })),
-      setAnnouncementLinkPageRef: (linkPageRef) => persist((prev) => ({ ...prev, linkPageRef })),
-      resetAnnouncement: () => persist(defaultAnnouncement),
+      draftAnnouncement,
+      hasUnsavedChanges,
+      isSaving,
+      isHydrating,
+      saveError,
+      loadError,
+      lastSavedAt,
+      hasRecoveredLocalDraft,
+      usesSharedAnnouncementPersistence: sharedPersistenceEnabled,
+      setAnnouncementEnabled: (enabled) => updateDraft((prev) => ({ ...prev, enabled: Boolean(enabled) })),
+      setAnnouncementMessage: (message) => updateDraft((prev) => ({ ...prev, message: String(message || '') })),
+      setAnnouncementBackground: (backgroundId) => updateDraft((prev) => ({ ...prev, backgroundId })),
+      setAnnouncementTextColor: (textColorId) => updateDraft((prev) => ({ ...prev, textColorId })),
+      setAnnouncementStartDate: (startDate) => updateDraft((prev) => ({ ...prev, startDate })),
+      setAnnouncementEndDate: (endDate) => updateDraft((prev) => ({ ...prev, endDate })),
+      setAnnouncementLinkEnabled: (linkEnabled) => updateDraft((prev) => ({ ...prev, linkEnabled: Boolean(linkEnabled) })),
+      setAnnouncementLinkPath: (linkPath) => updateDraft((prev) => ({ ...prev, linkPath })),
+      setAnnouncementLinkPageRef: (linkPageRef) => updateDraft((prev) => ({ ...prev, linkPageRef })),
+      saveAnnouncement: saveAnnouncementDraft,
+      discardAnnouncementChanges: () => {
+        setDraftAnnouncement(announcement);
+        setHasRecoveredLocalDraft(false);
+        setSaveError('');
+      },
+      resetAnnouncement: () => {
+        setDraftAnnouncement(defaultAnnouncement);
+        setHasRecoveredLocalDraft(false);
+        setSaveError('');
+      },
     };
-  }, [announcement]);
+  }, [
+    announcement,
+    draftAnnouncement,
+    hasUnsavedChanges,
+    isSaving,
+    isHydrating,
+    lastSavedAt,
+    loadError,
+    saveError,
+    hasRecoveredLocalDraft,
+    sharedPersistenceEnabled,
+  ]);
 
   return <AnnouncementContext.Provider value={value}>{children}</AnnouncementContext.Provider>;
 }
@@ -127,4 +190,3 @@ export function useAnnouncement() {
   }
   return context;
 }
-

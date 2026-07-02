@@ -46,6 +46,11 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (req.method === 'GET' && url.pathname === '/announcement') {
+            sendJson(res, 200, store.getAnnouncementSnapshot());
+            return;
+          }
+
           if (req.method === 'GET' && url.pathname === '/revisions') {
             const pathname = url.searchParams.get('path') || '';
             sendJson(res, 200, {
@@ -78,6 +83,13 @@ function contentAdminDevPlugin() {
             sendJson(res, 200, store.saveDraft(body.state, {
               actor: body.actor,
               summary: body.summary,
+            }));
+            return;
+          }
+
+          if (url.pathname === '/announcement/save') {
+            sendJson(res, 200, store.saveAnnouncement(body.announcement, {
+              actor: body.actor,
             }));
             return;
           }

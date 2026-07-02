@@ -245,6 +245,25 @@ describe('createDevContentAuthorityStore', () => {
     expect(storeB.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Shared draft title');
   });
 
+  it('persists the shared site announcement for other clients', () => {
+    const persistenceFile = makeTempFile();
+    const storeA = createStore(persistenceFile);
+
+    storeA.saveAnnouncement({
+      enabled: true,
+      message: 'Network-visible banner',
+      backgroundId: 'super-grey',
+      textColorId: 'white',
+      linkEnabled: true,
+      linkPath: '/services/loans',
+    }, { actor: createActor() });
+
+    const storeB = createStore(persistenceFile);
+    expect(storeB.getAnnouncementSnapshot().announcement.message).toBe('Network-visible banner');
+    expect(storeB.getAnnouncementSnapshot().announcement.backgroundId).toBe('super-grey');
+    expect(storeB.getAnnouncementSnapshot().announcement.linkPath).toBe('/services/loans');
+  });
+
   it('persists revision history and reloads it from disk', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);

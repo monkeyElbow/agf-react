@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizePresetBearingBlocks } from '../src/lib/blockPresetIdentity.js';
+import { defaultAnnouncement, normalizeAnnouncement } from '../src/lib/announcementConfig.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
@@ -683,6 +684,8 @@ function defaultRecord() {
     initialized: false,
     version: 1,
     updatedAt: 0,
+    announcementUpdatedAt: 0,
+    announcement: normalizeAnnouncement(defaultAnnouncement),
     state: normalizeSharedState(null),
     baseSnapshot: normalizeSharedState(null),
     revisionsByPath: {},
@@ -718,6 +721,10 @@ export function createDevContentAuthorityStore({
         initialized: Boolean(parsed?.initialized),
         version: 1,
         updatedAt: Number.isFinite(Number(parsed?.updatedAt)) ? Number(parsed.updatedAt) : 0,
+        announcementUpdatedAt: Number.isFinite(Number(parsed?.announcementUpdatedAt))
+          ? Number(parsed.announcementUpdatedAt)
+          : 0,
+        announcement: normalizeAnnouncement(parsed?.announcement),
         state: normalizeSharedState(parsed?.state),
         baseSnapshot: normalizeSharedState(parsed?.baseSnapshot),
         revisionsByPath: Object.fromEntries(
@@ -738,8 +745,15 @@ export function createDevContentAuthorityStore({
   const publishSnapshot = () => ({
     initialized: record.initialized,
     updatedAt: record.updatedAt,
+    announcementUpdatedAt: record.announcementUpdatedAt,
+    announcement: cloneJson(record.announcement),
     state: cloneJson(record.state),
     baseSnapshot: cloneJson(record.baseSnapshot),
+  });
+
+  const publishAnnouncementSnapshot = () => ({
+    announcement: cloneJson(record.announcement),
+    updatedAt: record.announcementUpdatedAt,
   });
 
   const addRevisionsForChangedPaths = (prevState, nextState, { actor, reason, summary = '' } = {}) => {
@@ -802,12 +816,34 @@ export function createDevContentAuthorityStore({
       return publishSnapshot();
     },
 
+    getAnnouncementSnapshot() {
+      return publishAnnouncementSnapshot();
+    },
+
+    saveAnnouncement(nextAnnouncement, { actor } = {}) {
+      const normalizedAnnouncement = normalizeAnnouncement(nextAnnouncement);
+      const timestamp = now();
+      record = {
+        ...record,
+        announcement: normalizedAnnouncement,
+        announcementUpdatedAt: timestamp,
+      };
+      persist();
+      return {
+        ok: true,
+        actor: normalizeActor(actor),
+        ...publishAnnouncementSnapshot(),
+      };
+    },
+
     resetFromSeed(seedState, { actor, reason = 'seed-reset' } = {}) {
       const normalizedSeedState = normalizeSharedState(seedState);
       record = {
         initialized: true,
         version: 1,
         updatedAt: now(),
+        announcementUpdatedAt: record.announcementUpdatedAt,
+        announcement: cloneJson(record.announcement),
         state: normalizedSeedState,
         baseSnapshot: cloneJson(normalizedSeedState),
         revisionsByPath: {},
