@@ -106,6 +106,7 @@ import {
   buildPresetFamilyRuntimeClassName,
   resolvePresetFamilyClassToken,
 } from '../lib/presetFamilyContract';
+import { setupInvestmentsGrowthRevealMotion } from '../lib/investmentsGrowthReveal';
 
 const US_STATE_LABELS = {
   AL: 'Alabama',
@@ -4886,6 +4887,29 @@ export default function NativeContentPage({ page }) {
     };
   }, [resolvedPagePath]);
 
+  useEffect(() => {
+    const root = pageRef.current;
+    if (!(root instanceof HTMLElement)) {
+      return undefined;
+    }
+
+    const featurePanelRoots = Array.from(
+      root.querySelectorAll('.service-native-section.is-cards-preset-value-cards'),
+    );
+    if (!featurePanelRoots.length) {
+      return undefined;
+    }
+
+    const cleanups = featurePanelRoots.map((node) => setupInvestmentsGrowthRevealMotion(node, { includeBackgroundMotion: false }));
+    return () => {
+      cleanups.forEach((cleanup) => {
+        if (typeof cleanup === 'function') {
+          cleanup();
+        }
+      });
+    };
+  }, [activePath, sectionList.length]);
+
   const {
     orderedPanels: orderedHudDockPanels,
     getDockTabDragProps,
@@ -5712,6 +5736,7 @@ export default function NativeContentPage({ page }) {
           ? filteredCards.filter((card) => card.title === activeMessageCard)
           : filteredCards;
         const sectionClassName = String(section.className || '');
+        const cardsPresetToken = String(section.cardsPreset || '').trim().toLowerCase();
         const formVariant = String(section?.form?.variant || '').trim().toLowerCase();
         const SectionLogoComponent = typeof section.logoComponent === 'function' ? section.logoComponent : null;
         const isInlineCtaSection = isInlineCtaSectionShape(section);
@@ -5728,6 +5753,9 @@ export default function NativeContentPage({ page }) {
         });
         const isLegacyHighlightColumns = section.columnsStyle === 'legacy-highlight';
         const showSectionCopy = !section.hideCopy && !isInlineCtaSection;
+        const isValueCardsFeatureSection = cardsPresetToken === 'value-cards';
+        const shouldShowValueCardsSurface = isValueCardsFeatureSection && section.cardsPresetSurface !== false;
+        const shouldAnimateValueCardsTitle = isValueCardsFeatureSection && section.cardsPresetAnimateTitle !== false;
         const hasSectionCopyContent = showSectionCopy && Boolean(
           section.copyWrap
           || section.title
@@ -5969,7 +5997,7 @@ export default function NativeContentPage({ page }) {
                 }
               }
             }}
-            className={`service-native-section${section.sand ? ' is-sand' : ''}${section.className ? ` ${section.className}` : ''}${ctaPresentation.className ? ` ${ctaPresentation.className}` : ''}${hasInlineRequestShell ? ' has-inline-request-shell' : ''}${hasManagedRequestShell ? ' has-managed-request-shell' : ''}${hasInlineCtaShell ? ' has-inline-cta-shell' : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${sectionHudFocusClass}${sectionOwnership.className || ''}`}
+            className={`service-native-section${section.sand ? ' is-sand' : ''}${section.className ? ` ${section.className}` : ''}${cardsPresetToken ? ` is-cards-preset-${cardsPresetToken}` : ''}${ctaPresentation.className ? ` ${ctaPresentation.className}` : ''}${hasInlineRequestShell ? ' has-inline-request-shell' : ''}${hasManagedRequestShell ? ' has-managed-request-shell' : ''}${hasInlineCtaShell ? ' has-inline-cta-shell' : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${sectionHudFocusClass}${sectionOwnership.className || ''}`}
             data-block-id={dynamicSectionBlockId || undefined}
             data-cta-display-mode={hasInlineCtaShell ? ctaPresentation.displayMode : undefined}
             data-cta-trigger-mode={hasInlineCtaShell ? ctaPresentation.triggerMode : undefined}
@@ -5979,6 +6007,14 @@ export default function NativeContentPage({ page }) {
             style={section.sectionStyle || undefined}
           >
             <BlockOwnershipOverlay ownership={sectionOwnership} />
+            {shouldShowValueCardsSurface ? (
+              <div className="investments-native-growth-surface native-columns-growth-surface" aria-hidden="true">
+                <div className="investments-native-growth-surface-layer is-blue" />
+                <div className="investments-native-growth-surface-layer is-mango" />
+                <div className="investments-native-growth-surface-layer is-sand" />
+                <div className="investments-native-growth-surface-layer is-white" />
+              </div>
+            ) : null}
             <div
               className={section.fullBleed ? 'ag-panel-rail-wide native-info-full-bleed' : (section.wide ? 'ag-panel-rail-wide' : 'ag-panel-rail')}
               style={section.railStyle || undefined}
@@ -6007,7 +6043,21 @@ export default function NativeContentPage({ page }) {
                   data-fade-root-margin={section.copyFadeRootMargin || undefined}
                 >
                   {!section.hideTitle ? (
-                    <h2 className={section.titleClassName || undefined} style={section.titleStyle || undefined}>
+                    <h2
+                      className={[
+                        section.titleClassName || '',
+                        shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
+                      ].filter(Boolean).join(' ') || undefined}
+                      style={section.titleStyle || undefined}
+                      data-investments-growth-reveal={shouldAnimateValueCardsTitle ? 'title' : undefined}
+                      data-investments-growth-start-vh={shouldAnimateValueCardsTitle ? '0.98' : undefined}
+                      data-investments-growth-end-vh={shouldAnimateValueCardsTitle ? '0.48' : undefined}
+                      data-investments-growth-anchor-ratio={shouldAnimateValueCardsTitle ? '0.22' : undefined}
+                      data-investments-growth-anchor-max-px={shouldAnimateValueCardsTitle ? '120' : undefined}
+                      data-investments-growth-min-opacity={shouldAnimateValueCardsTitle ? '0.24' : undefined}
+                      data-investments-growth-base-scale={shouldAnimateValueCardsTitle ? '0.945' : undefined}
+                      data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
+                    >
                       {renderHighlightedText(section.title, section.titleHighlights)}
                     </h2>
                   ) : null}
@@ -6059,7 +6109,21 @@ export default function NativeContentPage({ page }) {
               ) : (
                 <>
                   {!section.hideTitle ? (
-                    <h2 className={section.titleClassName || undefined} style={section.titleStyle || undefined}>
+                    <h2
+                      className={[
+                        section.titleClassName || '',
+                        shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
+                      ].filter(Boolean).join(' ') || undefined}
+                      style={section.titleStyle || undefined}
+                      data-investments-growth-reveal={shouldAnimateValueCardsTitle ? 'title' : undefined}
+                      data-investments-growth-start-vh={shouldAnimateValueCardsTitle ? '0.98' : undefined}
+                      data-investments-growth-end-vh={shouldAnimateValueCardsTitle ? '0.48' : undefined}
+                      data-investments-growth-anchor-ratio={shouldAnimateValueCardsTitle ? '0.22' : undefined}
+                      data-investments-growth-anchor-max-px={shouldAnimateValueCardsTitle ? '120' : undefined}
+                      data-investments-growth-min-opacity={shouldAnimateValueCardsTitle ? '0.24' : undefined}
+                      data-investments-growth-base-scale={shouldAnimateValueCardsTitle ? '0.945' : undefined}
+                      data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
+                    >
                       {renderHighlightedText(section.title, section.titleHighlights)}
                     </h2>
                   ) : null}
@@ -6180,7 +6244,55 @@ export default function NativeContentPage({ page }) {
               </div>
             ) : null}
 
-            {cards.length && visibleCards.length ? (
+            {cards.length && visibleCards.length && isValueCardsFeatureSection ? (
+              <div className="investments-native-growth-grid native-value-cards-grid">
+                {visibleCards.map((card, cardIndex) => (
+                  <article
+                    key={card.title}
+                    className={[
+                      'investments-native-growth-card',
+                      'investments-growth-scroll-reveal',
+                      String(card.cardClass || '').trim(),
+                    ].filter(Boolean).join(' ')}
+                    data-investments-growth-reveal="card"
+                    data-investments-growth-background-panel={String(card.panelTone || '').trim() || ['blue', 'mango', 'sand'][cardIndex % 3]}
+                    data-investments-growth-start-vh="1.08"
+                    data-investments-growth-end-vh="0.54"
+                    data-investments-growth-anchor-ratio="0.28"
+                    data-investments-growth-anchor-max-px="154"
+                    data-investments-growth-min-opacity="0.18"
+                    data-investments-growth-base-scale="0.92"
+                    data-investments-growth-shift-y="52"
+                  >
+                    <div className="native-columns-copy">
+                      <h3 className={card.titleClassName || undefined}>
+                        {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                          ? renderHighlightedText(card.title, card.titleHighlights)
+                          : card.title}
+                      </h3>
+                      {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
+                      {card.body ? <p>{renderTextWithStrong(card.body)}</p> : null}
+                      {Array.isArray(card.list) && card.list.length ? (
+                        <ul className="service-native-card-bullet-list">
+                          {card.list.map((item) => (
+                            <li key={`${card.title}-${item}`}>{renderTextWithStrong(item)}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      {Array.isArray(card.actions) && card.actions.length ? (
+                        <div className="service-native-action-row">
+                          {card.actions.map((item) => (
+                            <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+
+            {cards.length && visibleCards.length && !isValueCardsFeatureSection ? (
               <div className={`service-native-grid${section.columns ? ` is-${section.columns}` : ''}${focusMessageCard && activeMessageCard ? ' is-focus-open' : ''}`}>
                 {visibleCards.map((card) => {
                   const isActiveMessageCard = focusMessageCard && activeMessageCard === card.title;

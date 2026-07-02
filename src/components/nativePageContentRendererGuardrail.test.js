@@ -44,6 +44,17 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'feature_panel') {");
   });
 
+  it('routes static value-card sections through the shared feature-panel shell instead of page-specific card grids', () => {
+    const source = readSource('./NativeContentPage.jsx');
+
+    expect(source).toContain("const cardsPresetToken = String(section.cardsPreset || '').trim().toLowerCase();");
+    expect(source).toContain("const isValueCardsFeatureSection = cardsPresetToken === 'value-cards';");
+    expect(source).toContain("root.querySelectorAll('.service-native-section.is-cards-preset-value-cards')");
+    expect(source).toContain("setupInvestmentsGrowthRevealMotion(node, { includeBackgroundMotion: false })");
+    expect(source).toContain("is-cards-preset-${cardsPresetToken}");
+    expect(source).not.toContain("sectionClassName.includes('about-native-strategy')");
+  });
+
   it('does not keep a dormant loans legacy bridge in the native page renderer once the custom loans route owns that page', () => {
     const source = readSource('./NativeContentPage.jsx');
 

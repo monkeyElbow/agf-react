@@ -181,7 +181,7 @@ describe('NativeContentPage functional routes', () => {
   });
 
   it('renders the prospectus functional route through NativeContentPage', () => {
-    const { container } = render(
+    render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -483,10 +483,18 @@ describe('NativeContentPage functional routes', () => {
     expect(within(strategySection).getByRole('link', { name: 'insurance' }).getAttribute('href')).toBe('/services/insurance');
     expect(within(strategySection).getByRole('link', { name: 'Explore all services' }).getAttribute('href')).toBe('/services');
     expect(within(strategySection).getByText(/\$12 billion\+/)).toBeTruthy();
-    expect(strategySection?.querySelectorAll('.service-native-card')).toHaveLength(3);
-    expect(strategySection?.querySelector('.about-native-strategy-card--focus')).toBeTruthy();
-    expect(strategySection?.querySelector('.about-native-strategy-card--responsibility')).toBeTruthy();
-    expect(strategySection?.querySelector('.about-native-strategy-card--experience')).toBeTruthy();
+    expect(strategySection?.querySelector('.investments-native-growth-surface')).toBeNull();
+    expect(strategySection?.querySelector('.investments-native-growth-grid')).toBeNull();
+    expect(strategySection?.querySelector('.native-info-section-copy > h2')?.className || '').not.toContain('investments-native-build-title');
+
+    const valuesSection = document.querySelector('.about-native-values');
+    expect(valuesSection).toBeTruthy();
+    expect(valuesSection?.querySelector('.investments-native-growth-surface')).toBeTruthy();
+    expect(valuesSection?.querySelector('.investments-native-growth-grid')).toBeTruthy();
+    expect(valuesSection?.querySelectorAll('.investments-native-growth-card')).toHaveLength(3);
+    expect(valuesSection?.querySelector('.about-native-values-card--focus')).toBeTruthy();
+    expect(valuesSection?.querySelector('.about-native-values-card--responsibility')).toBeTruthy();
+    expect(valuesSection?.querySelector('.about-native-values-card--experience')).toBeTruthy();
 
     const alliesSection = document.querySelector('.about-native-allies');
     expect(alliesSection).toBeTruthy();
@@ -496,6 +504,9 @@ describe('NativeContentPage functional routes', () => {
 
     const historySection = document.querySelector('.about-native-history');
     expect(historySection).toBeTruthy();
+    expect(historySection?.querySelector('.investments-native-growth-surface')).toBeTruthy();
+    expect(historySection?.querySelector('.investments-native-growth-grid')).toBeTruthy();
+    expect(historySection?.querySelectorAll('.investments-native-growth-card')).toHaveLength(6);
     expect(within(historySection).getByText('AGFinancial grew out of something already alive and working. That’s a stupid sentence. This is all temporary, by the way.')).toBeTruthy();
     expect(within(historySection).getByText(/AG Financial Services Group \(AGFSG\), which officially launched operations on October 1, 1998\./)).toBeTruthy();
     expect(within(historySection).getByRole('link', { name: 'This is why we matter' }).getAttribute('href')).toBe('/about-us/impact');
