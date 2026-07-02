@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../BlockOwnershipOverlay';
 import FrontHudAnchorTag from '../FrontHudAnchorTag';
@@ -47,6 +47,7 @@ import {
   heroTitleSizeRemToRuntimeCss,
   normalizeHeroTitleSizeRem,
 } from '../../lib/heroTitleSize';
+import { setupInvestmentsGrowthRevealMotion } from '../../lib/investmentsGrowthReveal';
 
 const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
 const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo']);
@@ -1158,10 +1159,22 @@ export function ColumnsBlock({
   sectionId = '',
   extraSectionClassName = '',
 }) {
+  const sectionRef = useRef(null);
+  const valueCardsPanelTones = ['blue', 'mango', 'sand'];
   const isDynamicColumnsBlock = String(block?.mode || '').trim().toLowerCase() === 'dynamic';
   const dynamicBlock = isDynamicColumnsBlock && block?.settings
     ? { ...block, ...(block.settings || {}) }
     : block;
+  const dynamicPresetClassToken = isDynamicColumnsBlock ? resolvePresetFamilyClassToken(dynamicBlock) : '';
+  const shouldAnimateColumnsItems = dynamicPresetClassToken === 'value-cards';
+
+  useEffect(() => {
+    if (!shouldAnimateColumnsItems) {
+      return undefined;
+    }
+    return setupInvestmentsGrowthRevealMotion(sectionRef.current, { includeBackgroundMotion: false });
+  }, [shouldAnimateColumnsItems, dynamicBlock?.id]);
+
   if (isDynamicColumnsBlock) {
     const title = String(dynamicBlock.title || '').trim();
     const titleClassName = normalizeToneClass(dynamicBlock.titleClassName || '');
@@ -1183,13 +1196,12 @@ export function ColumnsBlock({
       : 'content';
     const visibleColumnSlots = getVisibleDynamicColumnSlots(dynamicBlock);
     const columns = toDynamicColumnsCountToken(visibleColumnSlots.length);
-    const presetClassToken = resolvePresetFamilyClassToken(dynamicBlock);
+    const presetClassToken = dynamicPresetClassToken;
     const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('columns', presetClassToken);
     const useFamilyPresetCtaStyle = (
       columnsStyle === 'retirement'
       && (presetClassToken === 'housing-allowance' || presetClassToken === 'do-the-math')
     );
-    const shouldAnimateColumnsItems = presetClassToken === 'value-cards';
     const columnTitleSizeRem = Number(dynamicBlock.columnTitleSizeRem);
     const photoMaxWidthPx = Number(dynamicBlock.photoMaxWidthPx);
     const photoCornerRadiusPx = Number(dynamicBlock.photoCornerRadiusPx);
@@ -1262,6 +1274,7 @@ export function ColumnsBlock({
 
     return (
       <section
+        ref={sectionRef}
         id={sectionId || undefined}
         className={[
           'service-native-section',
@@ -1278,11 +1291,33 @@ export function ColumnsBlock({
       >
         <BlockOwnershipOverlay ownership={ownership} />
         <SharedBlockHudAnchor hudAnchor={hudAnchor} />
+        {shouldAnimateColumnsItems ? (
+          <div className="investments-native-growth-surface native-columns-growth-surface" aria-hidden="true">
+            <div className="investments-native-growth-surface-layer is-blue" />
+            <div className="investments-native-growth-surface-layer is-mango" />
+            <div className="investments-native-growth-surface-layer is-sand" />
+            <div className="investments-native-growth-surface-layer is-white" />
+          </div>
+        ) : null}
         <div className={contentWidth === 'browser' ? 'ag-panel-rail-wide' : 'ag-panel-rail'}>
           {hasIntroCopy ? (
             <div className={`native-info-section-copy is-justify-${justify}`}>
               {title ? (
-                <h2 className={titleClassName || undefined} data-columns-selection-key="title">
+                <h2
+                  className={[
+                    titleClassName || '',
+                    shouldAnimateColumnsItems ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
+                  ].filter(Boolean).join(' ') || undefined}
+                  data-columns-selection-key="title"
+                  data-investments-growth-reveal={shouldAnimateColumnsItems ? 'title' : undefined}
+                  data-investments-growth-start-vh={shouldAnimateColumnsItems ? '0.98' : undefined}
+                  data-investments-growth-end-vh={shouldAnimateColumnsItems ? '0.48' : undefined}
+                  data-investments-growth-anchor-ratio={shouldAnimateColumnsItems ? '0.22' : undefined}
+                  data-investments-growth-anchor-max-px={shouldAnimateColumnsItems ? '120' : undefined}
+                  data-investments-growth-min-opacity={shouldAnimateColumnsItems ? '0.24' : undefined}
+                  data-investments-growth-base-scale={shouldAnimateColumnsItems ? '0.945' : undefined}
+                  data-investments-growth-shift-y={shouldAnimateColumnsItems ? '34' : undefined}
+                >
                   {titleHighlights.length ? renderHighlightedText(title, titleHighlights) : renderTextWithStrong(title)}
                 </h2>
               ) : null}
@@ -1305,15 +1340,27 @@ export function ColumnsBlock({
           ) : null}
 
           {columnsItems.length ? (
-            <div className={`native-columns-grid is-${columns}`} style={gridStyle}>
+            <div
+              className={`native-columns-grid is-${columns}${shouldAnimateColumnsItems ? ' investments-native-growth-grid' : ''}`}
+              style={gridStyle}
+            >
               {columnsItems.map((column, columnIndex) => (
                 <article
                   key={`${dynamicBlock?.id || 'columns'}-${column.slot || columnIndex + 1}`}
                   className={[
                     'native-columns-item',
                     `is-${column.type || 'text'}`,
-                    shouldAnimateColumnsItems ? 'fade-up' : '',
+                    shouldAnimateColumnsItems ? 'investments-native-growth-card investments-growth-scroll-reveal' : '',
                   ].filter(Boolean).join(' ')}
+                  data-investments-growth-reveal={shouldAnimateColumnsItems ? 'card' : undefined}
+                  data-investments-growth-background-panel={shouldAnimateColumnsItems ? valueCardsPanelTones[columnIndex % valueCardsPanelTones.length] : undefined}
+                  data-investments-growth-start-vh={shouldAnimateColumnsItems ? '1.08' : undefined}
+                  data-investments-growth-end-vh={shouldAnimateColumnsItems ? '0.54' : undefined}
+                  data-investments-growth-anchor-ratio={shouldAnimateColumnsItems ? '0.28' : undefined}
+                  data-investments-growth-anchor-max-px={shouldAnimateColumnsItems ? '154' : undefined}
+                  data-investments-growth-min-opacity={shouldAnimateColumnsItems ? '0.18' : undefined}
+                  data-investments-growth-base-scale={shouldAnimateColumnsItems ? '0.92' : undefined}
+                  data-investments-growth-shift-y={shouldAnimateColumnsItems ? '52' : undefined}
                 >
                   {column.image ? (
                     <div className="native-columns-media-wrap">
