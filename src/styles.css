@@ -2705,7 +2705,7 @@ button.action-btn {
 }
 
 @media (max-width: 860px) {
-  :is(.service-native-page, .rates-page, .native-info-page) {
+  .ag-page-shell {
     --ag-panel-effective-gutter: var(--ag-panel-mobile-gutter);
   }
 }

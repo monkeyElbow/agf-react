@@ -5411,7 +5411,7 @@ export default function NativeContentPage({ page }) {
   if (legalDoc) {
     return (
       <InlineCtaRevealContext.Provider value={inlineCtaRevealContextValue}>
-        <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
+        <div ref={pageRef} className={`ag-page-shell service-native-page native-info-page${compactClass}${pageClass}`}>
           <LegalDocumentSection content={content} page={page} />
         </div>
       </InlineCtaRevealContext.Provider>
@@ -5422,7 +5422,7 @@ export default function NativeContentPage({ page }) {
     <InlineCtaRevealContext.Provider value={inlineCtaRevealContextValue}>
       <div
         ref={pageRef}
-        className={`service-native-page native-info-page${compactClass}${pageClass}${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
+        className={`ag-page-shell service-native-page native-info-page${compactClass}${pageClass}${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
         onClickCapture={isMobileFrontHud ? handleMobilePageHudClickCapture : undefined}
       >
       {showFrontHud && hudDockPanels.length && !isMobileFrontHud ? (

@@ -68,6 +68,7 @@ describe('HomePage columns visibility', () => {
     expect(screen.getByText('ministries served by loans')).toBeTruthy();
     expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
     expect(heroBlock).toBeTruthy();
+    expect(homePage?.className).toContain('ag-page-shell');
     expect(homePage?.className).toContain('is-home-hero-temporarily-hidden');
     expect(impactBlock?.compareDocumentPosition(featureBlock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });

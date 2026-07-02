@@ -174,6 +174,7 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
+    expect(container.querySelector('.service-native-page')?.className).toContain('ag-page-shell');
     expect(screen.getByRole('heading', { name: 'Sitemap' })).toBeTruthy();
     expect(screen.getByLabelText('Find page')).toBeTruthy();
     expect(screen.getByLabelText('Section')).toBeTruthy();

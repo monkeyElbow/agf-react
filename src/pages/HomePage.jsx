@@ -1529,7 +1529,7 @@ export default function HomePage() {
   return (
     <div
       ref={pageRef}
-      className={`home-native-page${HOME_HERO_TEMPORARILY_HIDDEN ? ' is-home-hero-temporarily-hidden' : ''}${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${homeHudFocusClass}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
+      className={`ag-page-shell home-native-page${HOME_HERO_TEMPORARILY_HIDDEN ? ' is-home-hero-temporarily-hidden' : ''}${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${homeHudFocusClass}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
       onClickCapture={isMobileFrontHud ? handleMobilePageHudClickCapture : undefined}
     >
       {showHomeColumnsDebug ? (

@@ -351,7 +351,7 @@ export function NativeCareersJobsSection({ jobs }) {
 
 export function NativeSitemapRouteRenderer({ pageRef, compactClass, pageClass }) {
   return (
-    <div ref={pageRef} className={`service-native-page native-info-page native-info-page--sitemap${compactClass}${pageClass}`}>
+    <div ref={pageRef} className={`ag-page-shell service-native-page native-info-page native-info-page--sitemap${compactClass}${pageClass}`}>
       <section className="native-functional-page-head native-functional-page-head--sitemap">
         <div className="ag-panel-rail">
           <h1>Sitemap</h1>
@@ -374,7 +374,7 @@ export function NativeProspectusRouteRenderer({
   NativeLinkRenderer,
 }) {
   return (
-    <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}>
+    <div ref={pageRef} className={`ag-page-shell service-native-page native-info-page${compactClass}${pageClass}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}>
       <section className="native-functional-page-head native-functional-page-head--prospectus">
         <div className="ag-panel-rail">
           <h1 className="native-prospectus-hero-title">
@@ -405,7 +405,7 @@ export function NativeFormsRouteRenderer({
   NativeLinkRenderer,
 }) {
   return (
-    <div ref={pageRef} className={`service-native-page native-info-page${compactClass}${pageClass}`}>
+    <div ref={pageRef} className={`ag-page-shell service-native-page native-info-page${compactClass}${pageClass}`}>
       <section className="native-functional-page-head native-functional-page-head--forms">
         <div className="ag-panel-rail">
           <h1>Forms</h1>
