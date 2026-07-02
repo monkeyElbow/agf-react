@@ -44,7 +44,7 @@ function ExternalRedirect({ to }) {
 
 function PageRoute({ page }) {
   const routeKey = String(page.routeKey || page.path || '').trim();
-  const showAnnouncement = routeKey !== '/';
+  const showAnnouncement = true;
   const showNativeBreadcrumbs = page.source === null
     && routeKey !== '/'
     && routeKey !== '/search'
@@ -59,7 +59,7 @@ function PageRoute({ page }) {
   );
 
   if (routeKey === '/') {
-    return <HomePage />;
+    return withTopBands(<HomePage />);
   }
 
   if (routeKey === '/services') {

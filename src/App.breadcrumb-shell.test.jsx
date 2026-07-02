@@ -53,6 +53,12 @@ vi.mock('./pages/AdminDocumentsPage', () => ({
 vi.mock('./context/ContentAdminContext', () => ({
   useContentAdmin: () => ({
     pageHierarchy: {
+      '/': {
+        path: '/',
+        title: 'Home',
+        routeKey: '/',
+        source: null,
+      },
       '/services/insurance': {
         path: '/services/insurance',
         title: 'Insurance',
@@ -88,5 +94,20 @@ describe('App breadcrumb shell placement', () => {
     expect(layout.children[0]).toBe(announcement);
     expect(layout.children[1]).toBe(breadcrumbs);
     expect(layout.children[2]).toBe(pageContent);
+  });
+
+  it('shows the shared announcement on the home route without adding breadcrumbs', async () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    const layout = screen.getByTestId('site-layout');
+    const announcement = await screen.findByTestId('announcement');
+
+    expect(layout.children[0]).toBe(announcement);
+    expect(screen.queryByTestId('breadcrumbs')).toBeNull();
+    expect(screen.getByText('Home')).toBeTruthy();
   });
 });
