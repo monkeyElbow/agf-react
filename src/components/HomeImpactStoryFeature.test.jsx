@@ -546,13 +546,15 @@ describe('HomeImpactStoryFeature', () => {
     expect(cssSource).toContain('.home-impact-story-metric-frame {');
     expect(cssSource).toContain('width: min(100%, 60rem);');
     expect(cssSource).toContain('border-radius: clamp(1.35rem, 2.4vw, 1.85rem);');
-    expect(cssSource).toContain('border: 2px solid var(--ag-color-sandstone);');
+    expect(cssSource).toContain('border: 2px solid rgba(255, 255, 255, 0.9);');
     expect(cssSource).toContain('background: transparent;');
     expect(cssSource).toContain('box-shadow: none;');
     expect(cssSource).toContain('.home-native-impact .home-impact-story-metric-value {');
     expect(cssSource).toContain('font-size: clamp(4rem, 7.5vw, 7rem);');
     expect(cssSource).toContain('white-space: nowrap;');
     expect(cssSource).toContain('--home-impact-metric-bottom: #ded3c3;');
+    expect(cssSource).toContain('.home-impact-story-metric-value.is-white {');
+    expect(cssSource).toContain('.home-impact-story-metric-value.is-super-grey {');
   });
 
   it('keeps the impact feature frame square and settles the ending line into the lower proof area', () => {
@@ -562,6 +564,9 @@ describe('HomeImpactStoryFeature', () => {
     expect(cssSource).toContain('padding: 0;');
     expect(cssSource).toContain('.home-impact-story-pin {');
     expect(cssSource).toContain('align-items: stretch;');
+    expect(cssSource).toContain('.home-impact-story-shell {');
+    expect(cssSource).toContain('width: 100%;');
+    expect(cssSource).toContain('max-width: none;');
     expect(cssSource).toContain('.home-impact-story-frame {');
     expect(cssSource).toContain('min-height: 100vh;');
     expect(cssSource).toContain('border-radius: 0;');
@@ -578,6 +583,7 @@ describe('HomeImpactStoryFeature', () => {
 
     expect(cssSource).toContain('@media (max-width: 640px) {');
     expect(cssSource).toContain('.home-impact-story-static-grid {');
+    expect(cssSource).toContain('width: min(100%, 110rem);');
     expect(cssSource).toContain('gap: 5rem;');
   });
 

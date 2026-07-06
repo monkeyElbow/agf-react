@@ -455,6 +455,15 @@ function AnimatedMetricValue({ value, progress = 0 }) {
   return <span aria-label={String(value || '')}>{displayValue}</span>;
 }
 
+function resolveMetricValueTone(metric) {
+  const explicitTone = String(metric?.valueTone || '').trim();
+  if (explicitTone) {
+    return explicitTone;
+  }
+  const fallbackTone = String(metric?.tone || '').trim();
+  return fallbackTone || 'mango';
+}
+
 function ImpactStoryMetrics({
   metrics = [],
   animated = false,
@@ -613,7 +622,7 @@ function ImpactStoryMetrics({
               >
                 <div className="home-impact-story-metric">
                   <div className="home-impact-story-metric-frame">
-                    <p className={`home-native-stat-value home-impact-story-metric-value${countUp ? ' countup' : ''} is-${actor.metric.tone || 'mango'}${actor.index === metrics.length - 1 ? ' is-final-metric' : ''}`}>
+                    <p className={`home-native-stat-value home-impact-story-metric-value${countUp ? ' countup' : ''} is-${resolveMetricValueTone(actor.metric)}${actor.index === metrics.length - 1 ? ' is-final-metric' : ''}`}>
                       <AnimatedMetricValue value={actor.metric.value} progress={actor.countProgress} />
                     </p>
                     <p className="home-native-stat-label home-impact-story-metric-label"><strong>{actor.metric.label}</strong></p>
@@ -630,7 +639,7 @@ function ImpactStoryMetrics({
           data-motion-state="static"
         >
           <div className="home-impact-story-metric-frame">
-            <p className={`home-native-stat-value home-impact-story-metric-value${countUp ? ' countup' : ''} is-${metric.tone || 'mango'}${index === metrics.length - 1 ? ' is-final-metric' : ''}`}>
+            <p className={`home-native-stat-value home-impact-story-metric-value${countUp ? ' countup' : ''} is-${resolveMetricValueTone(metric)}${index === metrics.length - 1 ? ' is-final-metric' : ''}`}>
               {metric.value}
             </p>
             <p className="home-native-stat-label home-impact-story-metric-label"><strong>{metric.label}</strong></p>

@@ -89,13 +89,13 @@ describe('home services feature alignment guardrail', () => {
     expect(tokenSource).toContain("--ag-font-heading: 'avenir-next-world', 'Avenir Next', 'Helvetica Neue', Helvetica, Arial, sans-serif;");
     expect(appStylesSource).toContain("@import url('https://use.typekit.net/nmy3epc.css');");
     expect(cssSource).toContain('h3.home-services-feature-panel-title {');
-    expect(cssSource).toContain('font-size: clamp(4.55rem, 10.3vw, 9.95rem);');
+    expect(cssSource).toContain('font-size: clamp(4.1rem, 9.45vw, 8.9rem);');
     expect(cssSource).toContain('font-family: var(--ag-font-heading);');
     expect(cssSource).toContain('font-weight: 800;');
     expect(cssSource).toContain('font-synthesis: none;');
     expect(cssSource).toContain('text-rendering: geometricPrecision;');
     expect(cssSource).toContain('p.home-services-feature-panel-body {');
-    expect(cssSource).toContain('font-family: var(--ag-font-heading);');
+    expect(cssSource).toContain('font-family: var(--ag-font-helv);');
     expect(cssSource).toContain('font-weight: 800;');
     expect(cssSource).toContain('-webkit-font-smoothing: antialiased;');
   });
