@@ -2708,6 +2708,11 @@
   color: var(--ag-color-super-grey);
 }
 
+.investments-native-growth-feature h2.investments-native-build-title {
+  width: max-content;
+  max-width: 100%;
+}
+
 .investments-native-growth-grid {
   margin-top: clamp(2.9rem, 5vw, 3.9rem);
   width: min(1120px, 100%);
@@ -2721,6 +2726,7 @@
 
 .investments-native-growth-card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   position: relative;
   padding: clamp(1.35rem, 2.8vw, 2.1rem);
@@ -2734,8 +2740,7 @@
   margin: 0;
   width: max-content;
   max-width: none;
-  margin-left: auto;
-  margin-right: auto;
+  justify-self: center;
   font-family: var(--ag-font-body);
   font-size: var(--investments-growth-display-size);
   font-weight: 800;
@@ -4107,6 +4112,18 @@
   color: #b91c1c;
 }
 
+.investments-native-ladder-fineprint {
+  margin-top: 0.9rem;
+}
+
+.investments-native-ladder-fineprint .service-native-note {
+  margin-top: 0.55rem;
+}
+
+.investments-native-ladder-fineprint .service-native-note:first-child {
+  margin-top: 0;
+}
+
 .service-native-section.investments-native-ladder-section {
   background: #ffffff;
   padding-bottom: clamp(2.7rem, 6vw, 3.9rem);
@@ -4463,6 +4480,12 @@
 .loans-native-options {
   padding-top: clamp(2.4rem, 6vw, 4.8rem);
   padding-bottom: clamp(4rem, 8vw, 7rem);
+}
+
+.loans-native-more h2.investments-native-build-title {
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
 }
 
 .loans-native-options .ag-panel-rail-wide {
@@ -17831,8 +17854,8 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--impact .service-native-section.dynamic-billboard {
   background: #ffffff;
-  padding-top: clamp(2.6rem, 5.8vw, 4.9rem);
-  padding-bottom: clamp(2.7rem, 5.9vw, 5rem);
+  padding-top: clamp(5rem, 10.8vw, 9rem);
+  padding-bottom: clamp(5.1rem, 11vw, 9.2rem);
 }
 
 .native-info-page--impact .service-native-section.dynamic-billboard > .ag-panel-rail {
@@ -17990,6 +18013,8 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--about .about-native-strategy .native-info-section-copy {
   width: 100%;
+  display: grid;
+  justify-items: center;
   margin: 0 auto;
   text-align: center;
 }
@@ -18013,12 +18038,15 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--about .about-native-strategy .native-info-rich-html {
-  width: 100%;
+  width: min(100%, 54rem);
+  max-width: 54rem;
+  justify-self: center;
   margin: 0 auto;
   text-align: left;
 }
 
 .native-info-page--about .about-native-strategy .native-info-rich-html p {
+  width: 100%;
   margin: 0;
   text-align: left;
   color: var(--ag-color-super-grey);
@@ -23997,6 +24025,10 @@ p.impact-proof-story-proof-body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps .service-native-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .investments-native-growth-grid {
     grid-template-columns: minmax(0, 1fr);
     width: min(760px, 100%);
@@ -24018,6 +24050,24 @@ p.impact-proof-story-proof-body {
   .service-native-section h2.investments-native-build-title .investments-native-build-title-line {
     white-space: normal;
     text-wrap: balance;
+  }
+
+  .investments-native-growth-feature {
+    --investments-growth-display-size: clamp(2rem, 9.6vw, 4.25rem);
+  }
+
+  .investments-native-growth-feature h2.investments-native-build-title {
+    max-width: 100%;
+  }
+
+  .investments-native-growth-feature h2.investments-native-build-title .investments-native-build-title-line {
+    white-space: nowrap;
+    text-wrap: nowrap;
+  }
+
+  .loans-native-more h2.investments-native-build-title {
+    width: auto;
+    white-space: normal;
   }
 
   .investments-native-growth-card--investor .investments-native-dashboard-title {
@@ -24416,6 +24466,12 @@ p.impact-proof-story-proof-body {
 :where(.native-info-page .service-native-section.has-inline-request-shell > .ag-panel-rail-wide > .native-info-section-copy > p),
 :where(.native-info-page .service-native-section.has-inline-request-shell > .ag-panel-rail-wide > .native-info-section-copy > .native-info-rich-html) {
   max-width: min(72ch, 100%);
+}
+
+.native-info-page--about .about-native-strategy > .ag-panel-rail > .native-info-section-copy > .native-info-rich-html {
+  width: min(100%, 54rem);
+  max-width: 54rem;
+  margin-inline: auto;
 }
 
 :where(.native-info-page .service-native-section.has-inline-request-shell > .ag-panel-rail > .native-info-inline-form),

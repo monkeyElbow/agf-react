@@ -226,7 +226,7 @@ export default function InvestmentsGrowthFeature({
               data-investments-growth-anchor-ratio="0.28"
               data-investments-growth-anchor-max-px="154"
               data-investments-growth-min-opacity="0.18"
-              data-investments-growth-base-scale="0.92"
+              data-investments-growth-base-scale="1"
               data-investments-growth-shift-y="52"
             >
               <h3 className={`is-${panel.tone}`}>{panel.title}</h3>
@@ -244,14 +244,14 @@ export default function InvestmentsGrowthFeature({
               data-investments-growth-anchor-ratio="0.28"
               data-investments-growth-anchor-max-px="154"
               data-investments-growth-min-opacity="0.18"
-              data-investments-growth-base-scale="0.92"
+              data-investments-growth-base-scale="1"
               data-investments-growth-shift-y="52"
             >
               <div
                 ref={investorCopyRef}
                 className="investments-native-growth-card-copy native-info-section-copy billboard-scroll-progress-copy is-justify-center"
               >
-                <h3 className="is-mango investments-native-dashboard-title">{investorPanel.title}</h3>
+                <h3 className="is-super-grey investments-native-dashboard-title">{investorPanel.title}</h3>
                 {String(runtime?.billboardBodyHtml || '').trim() ? (
                   <SafeRichText
                     as="div"

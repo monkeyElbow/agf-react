@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import InvestmentsPage, { simulateLadderSchedule } from './InvestmentsPage';
@@ -168,6 +168,12 @@ describe('investments ladder calculator', () => {
     expect(container.querySelector('[data-ladder-mini-maturity-marker="3"]')).toBeTruthy();
     expect(container.querySelector('[data-ladder-mini-maturity-marker="4"]')).toBeTruthy();
     expect(container.querySelector('[data-ladder-mini-maturity-marker="5"]')).toBeTruthy();
+    const ladderSection = container.querySelector('.investments-native-ladder-section');
+    expect(within(ladderSection).getByText(/\*Premium rates may be available for individual investments of \$250,000 or greater\./)).toBeTruthy();
+    expect(within(ladderSection).getByRole('link', { name: 'here' }).getAttribute('href')).toBe('https://files.agfinancial.org/Investments/AGLF-Offering%20Circular.pdf');
+    expect(within(ladderSection).getByText('Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee.')).toBeTruthy();
+    expect(within(ladderSection).getByText(/Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group/)).toBeTruthy();
+    expect(within(ladderSection).getByText(/Information is from sources determined reliable\. Information is subject to error, omission, withdrawal, or change\./)).toBeTruthy();
     fireEvent.click(screen.getByText('View ongoing rollover timeline'));
     expect(container.querySelectorAll('[data-ladder-rung-row]')).toHaveLength(5);
     expect(container.querySelectorAll('[data-ladder-maturity-marker]').length).toBeGreaterThanOrEqual(5);
