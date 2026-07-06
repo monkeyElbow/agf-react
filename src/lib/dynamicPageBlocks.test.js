@@ -1011,7 +1011,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       },
       metrics: [
         { value: '1,400+', label: 'ministries served by loans', tone: 'sandstone' },
-        { value: '29,000+', label: 'of minister retirements planned', tone: 'sandstone' },
+        { value: '29,000+', label: '29,000+ Retirements planned', tone: 'sandstone' },
         { value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone' },
       ],
     });

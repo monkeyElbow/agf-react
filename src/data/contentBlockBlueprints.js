@@ -3291,6 +3291,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       kind: 'site_feature',
       mode: 'dynamic',
       settings: {
+        featureId: 'investments_growth_feature',
         ...defaultInvestmentsGrowthFeatureSettings,
       },
       editableFields: getAllowedSiteFeatureEditableFieldIds('investments_growth_feature'),
@@ -3312,6 +3313,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       kind: 'cta_form',
       mode: 'dynamic',
       settings: {
+        title: 'Talk with an investments consultant.',
         ...defaultInvestmentsCtaSettings,
         targetSectionKey: '',
         targetSectionClassName: '',

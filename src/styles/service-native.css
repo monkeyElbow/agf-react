@@ -12096,7 +12096,20 @@
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
 }
 
-.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards,
+.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards {
+  position: relative;
+  overflow: clip;
+  background: #ffffff;
+  --investments-growth-blue-opacity: 1;
+  --investments-growth-mango-opacity: 0;
+  --investments-growth-sand-opacity: 0;
+  --investments-growth-white-opacity: 0;
+  --investments-growth-display-size: clamp(3.2rem, 7vw, 4.95rem);
+  --investments-growth-display-letter-spacing: clamp(-0.048em, -0.03vw, -0.03em);
+  padding-top: clamp(4rem, 7vw, 6rem);
+  padding-bottom: clamp(3rem, 5vw, 4.2rem);
+}
+
 .service-native-section.is-cards-preset-value-cards {
   position: relative;
   overflow: clip;
@@ -12140,7 +12153,15 @@
   text-wrap: balance;
 }
 
-.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards .native-columns-grid,
+.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-value-cards .native-columns-grid {
+  margin-top: clamp(2.6rem, 4.8vw, 3.7rem);
+  width: min(1120px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.1rem, 2vw, 1.6rem);
+}
+
 .service-native-section.is-cards-preset-value-cards .investments-native-growth-grid {
   margin-top: clamp(2.6rem, 4.8vw, 3.7rem);
   width: min(1120px, 100%);
