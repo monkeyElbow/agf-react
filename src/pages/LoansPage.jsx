@@ -1162,8 +1162,9 @@ export default function LoansPage({ sectionsOnly = false }) {
             </h2>
             {resolvedIntro.bodyHtml ? (
               <SafeRichText as="div" className="native-info-rich-html" html={resolvedIntro.bodyHtml} />
+            ) : resolvedIntro.body ? (
+              <p>{resolvedIntro.body}</p>
             ) : null}
-            {resolvedIntro.body ? <p>{resolvedIntro.body}</p> : null}
             {resolvedIntro.extraLine ? (
               <p
                 className={`native-info-intro-emphasis${resolvedIntro.extraLineClassName ? ` ${resolvedIntro.extraLineClassName}` : ''}`}
@@ -1209,14 +1210,17 @@ export default function LoansPage({ sectionsOnly = false }) {
 
       <section className="service-native-section loans-native-options" id="loan-options">
         <div className="ag-panel-rail-wide">
-          <h2 className="loans-native-display-heading loans-native-options-title">Every loan, 100% customized.</h2>
+          <h2
+            className="loans-native-display-heading loans-native-options-title"
+          >
+            Every loan, 100% customized.
+          </h2>
           <h3
             className="loans-native-display-heading loans-native-options-subtitle"
-            style={{ marginBottom: 'clamp(2.1rem, 4.5vw, 3.3rem)' }}
           >
             You won&apos;t find this at a bank.
           </h3>
-          <p className="loans-native-options-lead" style={{ textAlign: 'center', marginInline: 'auto' }}>
+          <p className="loans-native-options-lead">
             We&apos;re more than a financial partner. We&apos;re part of your ministry. It&apos;s our pleasure to design
             a loan with rates and flexible terms <strong>specifically for you</strong>. The loans lineup below might
             give you a great place to start.

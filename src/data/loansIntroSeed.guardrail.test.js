@@ -39,6 +39,8 @@ describe('loans intro seed guardrail', () => {
 
     expect(pageSource).toContain("from '../data/loansIntroSeed'");
     expect(blueprintSource).toContain("from './loansIntroSeed'");
+    expect(pageSource).toContain(') : resolvedIntro.body ? (');
+    expect(pageSource).not.toContain('{resolvedIntro.body ? <p>{resolvedIntro.body}</p> : null}');
     expect(pageSource).not.toContain(DEFAULT_LOANS_INTRO_HEADING);
     expect(pageSource).not.toContain(DEFAULT_LOANS_INTRO_BODY_TEXT);
     expect(blueprintSource).not.toContain(DEFAULT_LOANS_INTRO_HEADING);
