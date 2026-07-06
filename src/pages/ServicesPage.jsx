@@ -791,8 +791,9 @@ export default function ServicesPage() {
             </h2>
             {resolvedIntro.bodyHtml ? (
               <SafeRichText as="div" className="native-info-rich-html" html={resolvedIntro.bodyHtml} />
+            ) : resolvedIntro.body ? (
+              <p>{resolvedIntro.body}</p>
             ) : null}
-            {resolvedIntro.body ? <p>{resolvedIntro.body}</p> : null}
             {resolvedIntro.extraLine ? (
               <p
                 className={resolvedIntro.extraLineClassName || undefined}
