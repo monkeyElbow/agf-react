@@ -15,8 +15,9 @@ vi.mock('../context/ContentAdminContext', async () => {
 });
 
 import PageBlocksRenderer from './blocks/PageBlocksRenderer';
+import HomeServicesFeatureAnimation from './HomeServicesFeatureAnimation';
 
-function createBlock() {
+function createBlock(overrides = {}) {
   return {
     id: 'home_services_feature_animation',
     kind: 'site_feature',
@@ -24,6 +25,7 @@ function createBlock() {
     settings: {
       featureId: 'home_services_feature_animation',
       headline: 'Bold, smart steps.\nTogether.',
+      ...overrides,
     },
   };
 }
@@ -88,7 +90,8 @@ describe('HomeServicesFeatureAnimation', () => {
     expect(screen.getByText('Bold, smart steps.')).toBeTruthy();
     expect(container.querySelector('.home-services-feature-heading-text.is-impact-mango-gradient')?.textContent).toBe('Together.');
     expect(screen.queryByText("Let's connect your faith & finances.")).toBeNull();
-    expect(intro?.getAttribute('data-scroll-reveal')).toBe('active');
+    expect(intro).toBeNull();
+    expect(container.querySelector('.home-services-feature-heading-shell')).toBeTruthy();
     expect(container.querySelector('.home-services-feature-shell')?.classList.contains('is-preview-white-cards')).toBe(true);
     expect(container.querySelector('.home-services-feature-stage')).toBeTruthy();
     expect(container.querySelector('.home-services-feature-stage-bg')).toBeTruthy();
@@ -161,7 +164,7 @@ describe('HomeServicesFeatureAnimation', () => {
     const firstPanel = container.querySelector('.home-services-feature-panel');
 
     expect(shell?.getAttribute('data-scroll-gradient-motion')).toBe('reduced');
-    expect(intro?.getAttribute('data-scroll-reveal')).toBe('reduced');
+    expect(intro).toBeNull();
     expect(firstPanel?.getAttribute('data-scroll-gradient-motion')).toBe('reduced');
     expect(firstPanel?.style.getPropertyValue('--home-services-light-strength')).toBe('');
     expect(firstPanel?.style.getPropertyValue('--home-services-panel-opacity')).toBe('');
@@ -187,7 +190,17 @@ describe('HomeServicesFeatureAnimation', () => {
 
     const { container } = render(
       <MemoryRouter>
-        <PageBlocksRenderer blocks={[createBlock()]} />
+        <HomeServicesFeatureAnimation
+          headline={'Bold, smart steps.\nTogether.'}
+          subhead="Animated supporting copy."
+          panels={[
+            { title: 'Loans', body: 'The right loan for your ministry can change everything.', tone: 'atlantean', action: { label: 'Explore options', to: '/services/loans' } },
+            { title: 'Investments', body: 'Your returns grow while supporting ministries.', tone: 'atlantean', action: { label: 'See rates', to: '/services/investments' } },
+            { title: 'Retirement', body: 'Time is your ally.', tone: 'melon', action: { label: 'Get started', to: '/services/retirement' } },
+            { title: 'Planned Giving', body: 'Plan generosity with purpose.', tone: 'mango', action: { label: 'Learn & strategize', to: '/services/planned-giving' } },
+            { title: 'Insurance', body: 'Protection built for ministry life.', tone: 'atlantean', action: { label: 'Start here', to: '/services/insurance' } },
+          ]}
+        />
       </MemoryRouter>,
     );
 

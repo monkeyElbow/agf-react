@@ -632,18 +632,20 @@ export default function HomeServicesFeatureAnimation({
       aria-labelledby={headline ? headingId : undefined}
       aria-describedby={subhead ? subheadId : undefined}
     >
-      {headline || subhead ? (
+      {headline ? (
+        <div className={`home-services-feature-heading-shell${subhead ? ' has-subhead' : ' is-standalone'}`}>
+          <h2
+            id={headingId}
+            className="home-services-feature-heading"
+            aria-label={String(headline).replace(/\s*\n\s*/g, ' ').trim()}
+          >
+            {renderHeadlineLines(headline)}
+          </h2>
+        </div>
+      ) : null}
+      {subhead ? (
         <div className="home-services-feature-intro">
-          {headline ? (
-            <h2
-              id={headingId}
-              className="home-services-feature-heading"
-              aria-label={String(headline).replace(/\s*\n\s*/g, ' ').trim()}
-            >
-              {renderHeadlineLines(headline)}
-            </h2>
-          ) : null}
-          {subhead ? <p id={subheadId} className="home-services-feature-subhead">{subhead}</p> : null}
+          <p id={subheadId} className="home-services-feature-subhead">{subhead}</p>
         </div>
       ) : null}
       <div className="home-services-feature-stage">

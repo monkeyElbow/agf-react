@@ -939,10 +939,25 @@
   display: none;
 }
 
+.home-services-feature-heading-shell {
+  width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-gutter) * 2)));
+  margin: 0 auto;
+  display: grid;
+  justify-items: center;
+}
+
+.home-services-feature-heading-shell.is-standalone {
+  padding: var(--home-services-intro-top-space) 0 var(--home-services-intro-bottom-padding);
+}
+
+.home-services-feature-heading-shell.has-subhead {
+  padding: var(--home-services-intro-top-space) 0 0;
+}
+
 .home-services-feature-intro {
   width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-gutter) * 2)));
   margin: 0 auto;
-  padding: var(--home-services-intro-top-space) 0 var(--home-services-intro-bottom-padding);
+  padding: 0 0 var(--home-services-intro-bottom-padding);
   display: grid;
   justify-items: center;
   gap: var(--home-services-intro-block-gap);
@@ -2817,6 +2832,20 @@ p.home-services-feature-panel-body {
     --home-services-intro-top-space: clamp(5.1rem, 16vw, 6.8rem);
   }
 
+  .home-services-feature-heading-shell.is-standalone {
+    padding:
+      var(--home-services-intro-top-space)
+      0
+      var(--home-services-intro-bottom-padding);
+  }
+
+  .home-services-feature-heading-shell.has-subhead {
+    padding:
+      var(--home-services-intro-top-space)
+      0
+      0;
+  }
+
   .home-services-feature {
     padding-bottom: clamp(0.75rem, 2.6vw, 1.1rem);
   }
@@ -2845,10 +2874,24 @@ p.home-services-feature-panel-body {
     text-wrap: pretty;
   }
 
-  .home-native-page.is-home-hero-temporarily-hidden .home-services-feature-intro {
+  .home-native-page.is-home-hero-temporarily-hidden .home-services-feature-heading-shell.is-standalone {
     min-height: 42vh;
     padding:
       clamp(3rem, 9vh, 4.5rem)
+      0
+      clamp(0.9rem, 2.3vh, 1.35rem);
+  }
+
+  .home-native-page.is-home-hero-temporarily-hidden .home-services-feature-heading-shell.has-subhead {
+    padding:
+      clamp(3rem, 9vh, 4.5rem)
+      0
+      0;
+  }
+
+  .home-native-page.is-home-hero-temporarily-hidden .home-services-feature-intro {
+    min-height: 42vh;
+    padding:
       0
       clamp(0.9rem, 2.3vh, 1.35rem);
   }

@@ -133,10 +133,14 @@ describe('LoansPage front HUD', () => {
 
     const grid = section?.querySelector('.native-columns-grid');
     expect(grid).toBeTruthy();
+    expect(grid?.className.includes('investments-native-growth-grid')).toBe(true);
 
     const items = Array.from(section?.querySelectorAll('.native-columns-item') || []);
     expect(items.length).toBe(3);
-    expect(items.every((item) => item.className.includes('fade-up'))).toBe(true);
+    expect(section?.querySelector('h2')?.className.includes('investments-growth-scroll-reveal-title')).toBe(true);
+    expect(items.every((item) => item.className.includes('investments-native-growth-card'))).toBe(true);
+    expect(items.every((item) => item.className.includes('investments-growth-scroll-reveal'))).toBe(true);
+    expect(items.map((item) => item.getAttribute('data-investments-growth-background-panel'))).toEqual(['blue', 'mango', 'sand']);
   });
 
   it('adds and removes HUD tabs when a block switches between dynamic and static', () => {

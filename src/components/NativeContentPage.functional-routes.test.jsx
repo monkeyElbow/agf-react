@@ -475,7 +475,7 @@ describe('NativeContentPage functional routes', () => {
 
     const strategySection = document.querySelector('.about-native-strategy');
     expect(strategySection).toBeTruthy();
-    expect(within(strategySection).getByText(/Create a complete, robust financial strategy for/i)).toBeTruthy();
+    expect(within(strategySection).getByText(/Create a robust financial strategy for/i)).toBeTruthy();
     expect(within(strategySection).getByRole('link', { name: 'loans' }).getAttribute('href')).toBe('/services/loans');
     expect(within(strategySection).getByRole('link', { name: 'investments' }).getAttribute('href')).toBe('/services/investments');
     expect(within(strategySection).getByRole('link', { name: 'retirement' }).getAttribute('href')).toBe('/services/retirement');

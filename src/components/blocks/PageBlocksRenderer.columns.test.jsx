@@ -226,9 +226,21 @@ describe('PageBlocksRenderer columns', () => {
     expect(section?.className).toContain('loans-native-more');
     expect(section?.className).toContain('is-hud-dimmed');
     expect(section?.className).toContain('is-owned-by-me');
+    expect(screen.getByRole('heading', { name: /there's more to every loan/i }).className).toContain('investments-growth-scroll-reveal-title');
+    expect(screen.getByRole('heading', { name: /there's more to every loan/i }).getAttribute('data-investments-growth-reveal')).toBe('title');
+    expect(section?.querySelector('.investments-native-growth-surface')).toBeTruthy();
+    expect(section?.querySelector('.investments-native-growth-surface-layer.is-sand')).toBeTruthy();
+    expect(section?.querySelector('.native-columns-grid')?.className).toContain('investments-native-growth-grid');
 
     const firstItem = screen.getByText('Smart consulting.').closest('.native-columns-item');
-    expect(firstItem?.className).toContain('fade-up');
+    const secondItem = screen.getByText('Teamwork.').closest('.native-columns-item');
+    const thirdItem = screen.getByText('Roots with values.').closest('.native-columns-item');
+    expect(firstItem?.className).toContain('investments-native-growth-card');
+    expect(firstItem?.className).toContain('investments-growth-scroll-reveal');
+    expect(firstItem?.getAttribute('data-investments-growth-reveal')).toBe('card');
+    expect(firstItem?.getAttribute('data-investments-growth-background-panel')).toBe('blue');
+    expect(secondItem?.getAttribute('data-investments-growth-background-panel')).toBe('mango');
+    expect(thirdItem?.getAttribute('data-investments-growth-background-panel')).toBe('sand');
     expect(screen.getByText('Reduce expensive surprises before they hit the project.')).toBeTruthy();
   });
 
