@@ -3,6 +3,7 @@ import { formsLibraryLinks } from '../data/formsLibraryLinks';
 import { documentLibrarySeedExtras } from '../data/documentLibrarySeedExtras';
 
 const STORAGE_KEY = 'agf-documents-admin-v1';
+const LAST_DELETED_STORAGE_KEY = 'agf-documents-admin-last-deleted-v1';
 export const DocumentsContext = createContext(null);
 
 function toSlug(value) {
@@ -174,6 +175,22 @@ function readInitialDocuments() {
   }
 }
 
+function readInitialLastDeletedDocument() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = localStorage.getItem(LAST_DELETED_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    return normalizeDocument(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
 function normalizePatch(patch) {
   if (!patch || typeof patch !== 'object') return {};
   const hasUrl = Object.prototype.hasOwnProperty.call(patch, 'url');
@@ -187,13 +204,35 @@ function normalizePatch(patch) {
 
 export function DocumentsProvider({ children }) {
   const [documentsState, setDocumentsState] = useState(readInitialDocuments);
+  const [lastDeletedDocumentState, setLastDeletedDocumentState] = useState(readInitialLastDeletedDocument);
   const documentsStateRef = useRef(documentsState);
+  const lastDeletedDocumentRef = useRef(lastDeletedDocumentState);
 
   useEffect(() => {
     documentsStateRef.current = documentsState;
   }, [documentsState]);
 
+  useEffect(() => {
+    lastDeletedDocumentRef.current = lastDeletedDocumentState;
+  }, [lastDeletedDocumentState]);
+
   const value = useMemo(() => {
+    const saveLastDeleted = (doc) => {
+      const normalized = doc ? normalizeDocument(doc) : null;
+      lastDeletedDocumentRef.current = normalized;
+      setLastDeletedDocumentState(normalized);
+      try {
+        if (normalized) {
+          localStorage.setItem(LAST_DELETED_STORAGE_KEY, JSON.stringify(normalized));
+        } else {
+          localStorage.removeItem(LAST_DELETED_STORAGE_KEY);
+        }
+      } catch {
+        // ignore storage failures
+      }
+      return normalized;
+    };
+
     const save = (nextOrUpdater) => {
       const next = typeof nextOrUpdater === 'function'
         ? nextOrUpdater(documentsStateRef.current)
@@ -255,13 +294,42 @@ export function DocumentsProvider({ children }) {
 
     const deleteDocument = (id) => {
       if (!id) return;
+      const deleted = documentsStateRef.current.find((doc) => doc.id === id) || null;
+      if (!deleted) return;
+      saveLastDeleted(deleted);
       save((current) => current.filter((doc) => doc.id !== id));
+    };
+
+    const restoreLastDeletedDocument = () => {
+      const deleted = lastDeletedDocumentRef.current;
+      if (!deleted) return null;
+      save((current) => {
+        if (current.some((doc) => doc.id === deleted.id)) {
+          return current;
+        }
+        return [...current, deleted];
+      });
+      saveLastDeleted(null);
+      return deleted.id;
+    };
+
+    const restoreMissingSeedDocuments = () => {
+      const restored = mergeSeedDocuments(documentsStateRef.current);
+      documentsStateRef.current = restored;
+      setDocumentsState(restored);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(restored));
+      } catch {
+        // ignore storage failures
+      }
+      return restored.length;
     };
 
     const resetDocuments = () => {
       const defaults = buildSeedDocuments();
       documentsStateRef.current = defaults;
       setDocumentsState(defaults);
+      saveLastDeleted(null);
       try {
         localStorage.removeItem(STORAGE_KEY);
       } catch {
@@ -280,16 +348,22 @@ export function DocumentsProvider({ children }) {
       };
     };
 
+    const restoredSeedDocuments = mergeSeedDocuments(documentsState).length - documentsState.length;
+
     return {
       documents: documentsState,
+      lastDeletedDocument: lastDeletedDocumentState,
+      missingSeedDocumentsCount: Math.max(0, restoredSeedDocuments),
       createDocument,
       updateDocument,
       deleteDocument,
+      restoreLastDeletedDocument,
+      restoreMissingSeedDocuments,
       resetDocuments,
       getDocumentById,
       resolveDocumentLink,
     };
-  }, [documentsState]);
+  }, [documentsState, lastDeletedDocumentState]);
 
   return (
     <DocumentsContext.Provider value={value}>

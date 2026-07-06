@@ -29,9 +29,13 @@ function formatDocumentKind(kind) {
 export default function AdminDocumentsPage() {
   const {
     documents,
+    lastDeletedDocument,
+    missingSeedDocumentsCount,
     createDocument,
     updateDocument,
     deleteDocument,
+    restoreLastDeletedDocument,
+    restoreMissingSeedDocuments,
     resetDocuments,
   } = useDocuments();
 
@@ -39,6 +43,7 @@ export default function AdminDocumentsPage() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [topicFilter, setTopicFilter] = useState('all');
+  const [deleteArmedId, setDeleteArmedId] = useState(null);
 
   useEffect(() => {
     if (!documents.length) {
@@ -49,6 +54,12 @@ export default function AdminDocumentsPage() {
       setSelectedId(documents[0].id);
     }
   }, [documents, selectedId]);
+
+  useEffect(() => {
+    if (deleteArmedId && deleteArmedId !== selectedId) {
+      setDeleteArmedId(null);
+    }
+  }, [deleteArmedId, selectedId]);
 
   const categories = useMemo(
     () => Array.from(new Set(documents.map((doc) => doc.category).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
@@ -111,19 +122,76 @@ export default function AdminDocumentsPage() {
           >
             Add document
           </button>
+          {lastDeletedDocument ? (
+            <button
+              type="button"
+              className="action-btn action-btn-outline"
+              onClick={() => {
+                const restoredId = restoreLastDeletedDocument();
+                if (restoredId) {
+                  setSelectedId(restoredId);
+                  setDeleteArmedId(null);
+                }
+              }}
+            >
+              Restore last deleted
+            </button>
+          ) : null}
+          {missingSeedDocumentsCount > 0 ? (
+            <button
+              type="button"
+              className="action-btn action-btn-outline"
+              onClick={() => {
+                restoreMissingSeedDocuments();
+                if (!selectedId && documents[0]?.id) {
+                  setSelectedId(documents[0].id);
+                }
+                setDeleteArmedId(null);
+              }}
+            >
+              Restore missing seed docs ({missingSeedDocumentsCount})
+            </button>
+          ) : null}
           <button type="button" className="action-btn action-btn-outline" onClick={resetDocuments}>
             Reset from seed
           </button>
           {selected ? (
-            <button
-              type="button"
-              className="action-btn action-btn-danger"
-              onClick={() => deleteDocument(selected.id)}
-            >
-              Delete selected
-            </button>
+            deleteArmedId === selected.id ? (
+              <>
+                <button
+                  type="button"
+                  className="action-btn action-btn-danger"
+                  onClick={() => {
+                    deleteDocument(selected.id);
+                    setDeleteArmedId(null);
+                  }}
+                >
+                  Confirm delete selected
+                </button>
+                <button
+                  type="button"
+                  className="action-btn action-btn-outline"
+                  onClick={() => setDeleteArmedId(null)}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="action-btn action-btn-danger"
+                onClick={() => setDeleteArmedId(selected.id)}
+              >
+                Delete selected
+              </button>
+            )
           ) : null}
         </div>
+        {selected && deleteArmedId === selected.id ? (
+          <p className="blank-state-note" style={{ color: '#a23d00', marginTop: '0.75rem' }}>
+            Confirm delete to remove <strong>{selected.title || selected.id}</strong>. Use restore if this was accidental.
+          </p>
+        ) : null}
 
         <section className="admin-content-section">
           <div className="admin-content-grid-two">
