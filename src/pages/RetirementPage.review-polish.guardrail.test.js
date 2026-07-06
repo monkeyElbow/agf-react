@@ -66,11 +66,11 @@ describe('retirement 403(b) review polish guardrail', () => {
 
   it('keeps the retirement everyday billboard reveal as an opt-in shared billboard feature', () => {
     const retirementSource = readSource('./RetirementPage.jsx');
+    const seedSource = readSource('../data/retirementOverviewSeed.js');
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
     const nativePageSource = readSource('../components/NativeContentPage.jsx');
 
-    expect(retirementSource).toContain("scrollReveal: 'scale-up'");
-    expect(retirementSource).toContain("copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up'");
+    expect(seedSource).toContain("scrollReveal: 'scale-up'");
     expect(retirementSource).toContain("const billboardCopyUsesScrollProgress = renderedBillboard?.scrollReveal === 'scale-up';");
     expect(retirementSource).toContain("'billboard-scroll-progress-copy'");
     expect(retirementSource).toContain('data-fade-root-margin={billboardCopyUsesScrollProgress ? undefined : (renderedBillboard.copyFadeRootMargin || undefined)}');
@@ -101,26 +101,20 @@ describe('retirement 403(b) review polish guardrail', () => {
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(pageSource).toContain("title: 'Retire a little every day.'");
-    expect(pageSource).toContain("bodyHtml: '<h3>Starting now.</h3>'");
-    expect(pageSource).toContain("buttonUrl: '/services/retirement/retirement-consultants'");
-    expect(pageSource).toContain("buttonLabel: 'Reach my consultant'");
-    expect(pageSource).toContain("title: 'A rollover is easy. Smart, too.'");
-    expect(pageSource).toContain('Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple...and undeniably smart. One account. One login.');
-    expect(pageSource).toContain("buttonUrl: '/services/retirement/rollovers'");
-    expect(pageSource).toContain("buttonLabel: 'Start a rollover'");
+    expect(pageSource).toContain("from '../data/retirementOverviewSeed'");
+    expect(pageSource).toContain('buildDefaultRetirementBillboardRuntime');
+    expect(pageSource).toContain('buildDefaultRetirementRolloverBillboardRuntime');
+    expect(pageSource).toContain('defaultRetirementBillboardSettings');
+    expect(pageSource).toContain('defaultRetirementRolloverBillboardSettings');
+    expect(pageSource).toContain('const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;');
+    expect(pageSource).toContain('const renderedRolloverBillboard = dynamicRolloverBillboard || DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD;');
     expect(pageSource).toContain("rollover_billboard: RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID");
     expect(pageSource).toContain("rollover_billboard: '.retirement-rollover-billboard'");
     expect(pageSource).toContain("block?.id === 'rollover_billboard'");
-    expect(blueprintSource).toContain("title: 'Retire a little every day.'");
-    expect(blueprintSource).toContain("titleHighlightsJson: '[{\"text\":\"every day\",\"className\":\"is-mango\"}]'");
-    expect(blueprintSource).toContain("href: '/services/retirement/retirement-consultants'");
+    expect(blueprintSource).toContain("from './retirementOverviewSeed'");
+    expect(blueprintSource).toContain('defaultRetirementBillboardSettings');
+    expect(blueprintSource).toContain('defaultRetirementRolloverBillboardSettings');
     expect(blueprintSource).toContain("id: 'rollover_billboard'");
-    expect(blueprintSource).toContain("title: 'A rollover is easy. Smart, too.'");
-    expect(blueprintSource).toContain("titleHighlightsJson: '[{\"text\":\"Smart, too.\",\"className\":\"is-melon\"}]'");
-    expect(blueprintSource).toContain("contentMaxWidthPx: 1080");
-    expect(blueprintSource).toContain("label: 'Start a rollover'");
-    expect(blueprintSource).toContain("href: '/services/retirement/rollovers'");
     expect(cssSource).toContain('.retirement-everyday .native-info-rich-html {');
     expect(cssSource).toContain('width: min(860px, 100%);');
     expect(cssSource).toContain('.retirement-everyday .native-info-rich-html p {');

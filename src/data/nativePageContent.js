@@ -8,7 +8,17 @@ import MissionAssureLogo from '../components/MissionAssureLogo';
 import aboutIntroImage from '../assets/about-intro.jpg';
 import ministersHousingImage from '../assets/ministers-housing.jpg';
 import { formsLibraryLinks } from './formsLibraryLinks';
+import {
+  DEFAULT_FOLLOW_UP_SUBMIT_LABEL,
+  DEFAULT_MESSAGE_PLACEHOLDER,
+  DEFAULT_PHONE_PLACEHOLDER,
+} from './ctaFormSeeds';
+import { buildDefaultInvestmentsNativeIntro } from './investmentsIntroSeed';
+import { buildImpactProofNativeCards } from './impactProofStorySeed';
+import { buildDefaultLoansNativeIntro } from './loansIntroSeed';
 import { getResourceArticleFeatureConfig } from './resourceArticles';
+import { buildDefaultRetirementNativeIntro } from './retirementOverviewSeed';
+import { buildDefaultServicesNativeIntro } from './servicesOverviewSeed';
 
 const TAX_GUIDE_ACCESS_EMAIL = 'info@agfinancial.org';
 const findFormHref = (topic, label) => (
@@ -80,7 +90,7 @@ function buildCalculatorTeamFormSection(body) {
       fields: [
         { id: 'name', label: 'Name*', type: 'text', required: true },
         { id: 'email', label: 'Email*', type: 'email', required: true },
-        { id: 'phone', label: 'Phone', type: 'tel', required: false, placeholder: '(555) 555-5555' },
+        { id: 'phone', label: 'Phone', type: 'tel', required: false, placeholder: DEFAULT_PHONE_PLACEHOLDER },
         { id: 'message', label: 'Message', type: 'textarea', required: false, rows: 4 },
       ],
       submitLabel: 'Submit',
@@ -189,65 +199,27 @@ const directContent = {
       bgTone: 'white',
       justify: 'center',
     },
-    intro: {
-      heading: 'The right loan can change everything.',
-      body: [
-        "Your vision of reaching communities and changing lives drives us. As one of the nation's largest, most experienced church loan providers, we want to be part of your ministry. Let's take bold steps together for the Kingdom.",
-      ],
-      actions: [{ label: 'Get started', to: '/services/loans#form' }],
-      justify: 'center',
-      bgTone: 'blue',
-      textTone: 'white',
-    },
+    intro: buildDefaultLoansNativeIntro(),
     sections: [],
   },
 
   '/services': {
     pageClass: 'services-native-page',
-    intro: {
-      heading: 'A robust financial strategy for your ministry and your family.',
-      headingHighlights: [
-        { text: 'your ministry', className: 'is-atlantean' },
-        { text: 'your family', className: 'is-gold' },
-      ],
-      justify: 'center',
-      bgTone: 'grey',
-      textTone: 'white',
-    },
+    intro: buildDefaultServicesNativeIntro(),
     sections: [],
     actions: [],
   },
 
   '/services/investments': {
     pageClass: 'investments-native-page',
-    intro: {
-      heading: 'Invest like it matters. Because it does.',
-      headingHighlights: [{ text: 'Because it does.', className: 'is-atlantean' }],
-      body: [
-        "Your investment dollars don't just multiply; they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.",
-      ],
-      emphasis: "That's the power of faith-driven investing.",
-      justify: 'center',
-      bgTone: 'sand',
-      textTone: 'dark',
-    },
+    intro: buildDefaultInvestmentsNativeIntro(),
     sections: [],
     actions: [],
   },
 
   '/services/retirement': {
     pageClass: 'retirement-native-page',
-    intro: {
-      heading: 'Invest in tomorrow. Start today.',
-      body: [
-        "For decades, we've helped build retirement strategies for ministers, ministry employees, churches, and organizations. Let's create yours.",
-      ],
-      emphasis: "It's your ministry, your future, your plan.",
-      justify: 'center',
-      bgTone: 'blue',
-      textTone: 'white',
-      actions: [],
-    },
+    intro: buildDefaultRetirementNativeIntro(),
     sections: [],
     actions: [],
   },
@@ -368,11 +340,11 @@ const directContent = {
           fields: [
             { id: 'name', label: 'Name', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true },
-            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555', required: true },
+            { id: 'phone', label: 'Phone', type: 'tel', placeholder: DEFAULT_PHONE_PLACEHOLDER, required: true },
             { id: 'organization', label: 'Organization', type: 'text' },
             { id: 'coverageFocus', label: 'Coverage focus', type: 'text', placeholder: 'Property, life, mission, or all' },
           ],
-          submitLabel: 'Follow-up with me',
+          submitLabel: DEFAULT_FOLLOW_UP_SUBMIT_LABEL,
         },
       },
       {
@@ -534,11 +506,11 @@ const directContent = {
         form: {
           title: 'We help every step of the way. Always.',
           subtitle: 'Let’s map out the best strategy together.',
-          submitLabel: 'Follow-up with me',
+          submitLabel: DEFAULT_FOLLOW_UP_SUBMIT_LABEL,
           fields: [
             { id: 'name', label: 'Name', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true },
-            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
+            { id: 'phone', label: 'Phone', type: 'tel', placeholder: DEFAULT_PHONE_PLACEHOLDER },
             {
               id: 'legacyProduct',
               label: 'Planned giving product of interest*',
@@ -693,7 +665,7 @@ const directContent = {
       {
         className: 'about-native-strategy',
         copyWrap: true,
-        title: 'Create a complete, robust financial strategy for your ministry and your family.',
+        title: 'Create a robust financial strategy for your ministry and your family.',
         titleHighlights: [
           { text: 'your ministry', className: 'is-atlantean' },
           { text: 'your family', className: 'is-mango' },
@@ -799,10 +771,10 @@ const directContent = {
           fields: [
             { id: 'name', label: 'Name', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true },
-            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
-            { id: 'notes', label: 'What would you like to discuss?', type: 'textarea', rows: 4 },
+            { id: 'phone', label: 'Phone', type: 'tel', placeholder: DEFAULT_PHONE_PLACEHOLDER },
+            { id: 'notes', label: DEFAULT_MESSAGE_PLACEHOLDER, type: 'textarea', rows: 4 },
           ],
-          submitLabel: 'Follow-up with me',
+          submitLabel: DEFAULT_FOLLOW_UP_SUBMIT_LABEL,
           successMessage: 'Got it. We’ll reach out soon.',
         },
       },
@@ -1759,10 +1731,10 @@ const insuranceChildPages = {
           fields: [
             { id: 'name', label: 'Name', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true },
-            { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
+            { id: 'phone', label: 'Phone', type: 'tel', placeholder: DEFAULT_PHONE_PLACEHOLDER },
             { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
           ],
-          submitLabel: 'Follow-up with me',
+          submitLabel: DEFAULT_FOLLOW_UP_SUBMIT_LABEL,
         },
       },
     ],
@@ -3335,7 +3307,7 @@ const retirementChildPages = {
             { id: 'state', label: 'State*', type: 'text', required: true },
             { id: 'message', label: 'How can we help?', type: 'textarea', rows: 4 },
           ],
-          submitLabel: 'Follow-up with me',
+          submitLabel: DEFAULT_FOLLOW_UP_SUBMIT_LABEL,
         },
       },
       {
@@ -3748,60 +3720,7 @@ function companyChildContent(path, title) {
             emphasis: 'We’re ministry allies.',
           },
           columns: 'two',
-          cards: [
-            {
-              title: '4,000',
-              titleClassName: 'countup',
-              subtitle: 'churches and ministries fueled each year.',
-              body: 'From first conversation to final funding, we help ministries move from idea to opening day with financing that understands church realities.',
-              to: '/services/loans',
-              cta: 'Explore loans',
-              stretchedLink: {
-                label: 'Explore loans',
-                to: '/services/loans',
-              },
-              cardClass: 'impact-native-card impact-native-card--loans',
-            },
-            {
-              title: '$450 million',
-              titleClassName: 'countup',
-              subtitle: 'distributed to ministries through AG Foundation.',
-              body: 'That’s the power of generous donors using smart strategies.',
-              to: '/services/planned-giving',
-              cta: 'Plan with us',
-              stretchedLink: {
-                label: 'Plan with us',
-                to: '/services/planned-giving',
-              },
-              cardClass: 'impact-native-card impact-native-card--legacy',
-            },
-            {
-              title: '5,117',
-              titleClassName: 'countup',
-              subtitle: 'mission trips covered and protected.',
-              body: 'Peace of mind allows you to focus on what matters at home and abroad: serving others, and sharing the Gospel with confidence.',
-              to: '/services/insurance',
-              cta: 'Cover your ministry',
-              stretchedLink: {
-                label: 'Cover your ministry',
-                to: '/services/insurance',
-              },
-              cardClass: 'impact-native-card impact-native-card--insurance',
-            },
-            {
-              title: '29,000+',
-              titleClassName: 'countup',
-              subtitle: 'retirements planned.',
-              body: 'Your participation helps individuals, churches, ministries—and you—step confidently into the next season.',
-              to: '/services/retirement',
-              cta: 'Start your tomorrow',
-              stretchedLink: {
-                label: 'Start your tomorrow',
-                to: '/services/retirement',
-              },
-              cardClass: 'impact-native-card impact-native-card--retirement',
-            },
-          ],
+          cards: buildImpactProofNativeCards(),
         },
       ],
       actions: [],

@@ -30,8 +30,11 @@ import {
   isExternalLinkHref,
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
+import { defaultServicesCtaSettings } from '../data/ctaFormSeeds';
+import { buildDefaultServicesIntroRuntime } from '../data/servicesOverviewSeed';
 
 const SERVICES_HERO_PIE_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+const DEFAULT_SERVICES_INTRO = buildDefaultServicesIntroRuntime();
 
 const testimonials = [
   {
@@ -48,40 +51,6 @@ const testimonials = [
   },
 ];
 const defaultServicesTestimonialsFineprint = 'Testimonials are examples only. Results differ by situation and are not guaranteed.';
-const defaultServicesCtaSettings = {
-  title: 'Connect your faith & finances. Start here.',
-  titleClassName: '',
-  titleHighlightsJson: '[{"text":"faith & finances","className":"is-atlantean"}]',
-  bodyHtml: '',
-  bgTone: 'white',
-  submitLabel: 'Follow-up with me',
-  successMessage: 'Thanks. We’ll reach out soon.',
-  salesforceUrl: '',
-  field1Enabled: true,
-  field1Type: 'text',
-  field1Label: 'Name',
-  field1Placeholder: '',
-  field1Options: '',
-  field1Required: true,
-  field2Enabled: true,
-  field2Type: 'email',
-  field2Label: 'Email',
-  field2Placeholder: '',
-  field2Options: '',
-  field2Required: true,
-  field3Enabled: true,
-  field3Type: 'tel',
-  field3Label: 'Phone',
-  field3Placeholder: '(555) 555-5555',
-  field3Options: '',
-  field3Required: false,
-  field4Enabled: true,
-  field4Type: 'textarea',
-  field4Label: 'Message',
-  field4Placeholder: 'What would you like to discuss?',
-  field4Options: '',
-  field4Required: false,
-};
 const SERVICES_HERO_PIE_HUD_PANEL_ID = 'services-hero-pie';
 const SERVICES_CTA_HUD_PANEL_ID = 'services-cta';
 const SERVICES_TESTIMONIALS_HUD_PANEL_ID = 'services-testimonials';
@@ -122,7 +91,7 @@ const SERVICES_BREAKDOWN_ROWS = Object.freeze([
     path: '/services/retirement',
     description: 'Plan, contribute, and build for tomorrow. Options include screened investments, IRAs, and our very own MBA Income Fund.',
     links: Object.freeze([
-      Object.freeze({ label: 'AGFinancial 403(b)', path: '/services/retirement/403b' }),
+      Object.freeze({ label: '403(b)', path: '/services/retirement/403b' }),
       Object.freeze({ label: 'IRAs', path: '/services/retirement/iras' }),
       Object.freeze({ label: '409A', path: '/services/retirement/409a' }),
     ]),
@@ -137,6 +106,7 @@ const SERVICES_BREAKDOWN_ROWS = Object.freeze([
       Object.freeze({ label: 'Charitable Trusts', path: '/services/planned-giving/charitable-trusts' }),
       Object.freeze({ label: 'Donor Advised Funds / Generosity Fund', path: '/services/planned-giving/generosity-fund' }),
       Object.freeze({ label: 'Endowments', path: '/services/planned-giving/endowments' }),
+      Object.freeze({ label: 'Ministry Impact Fund®', path: '/services/planned-giving/ministry-impact-fund' }),
       Object.freeze({ label: 'Wills & Estate Services', path: '/services/planned-giving' }),
     ]),
   }),
@@ -318,6 +288,7 @@ export default function ServicesPage() {
     }
     return buildDynamicIntroFromBlock(introBlock);
   }, [billboardIntroBlock, introBlock]);
+  const resolvedIntro = dynamicIntro || DEFAULT_SERVICES_INTRO;
   const heroPieRuntime = useMemo(() => (
     buildDynamicHeroPieFromBlock(heroPieBlock || {
       id: 'hero_pie',
@@ -803,48 +774,36 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <section className={`services-native-intro${dynamicIntro ? ` service-native-intro dynamic-intro is-bg-${dynamicIntro.bgTone || 'white'} is-text-${dynamicIntro.textTone || 'dark'}` : ''}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`} data-block-id="intro">
+      <section className={`services-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'white'} is-text-${resolvedIntro.textTone || 'dark'}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`} data-block-id="intro">
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
         {renderHudAnchor('intro')}
         <div className="ag-panel-rail">
           <div
-            className={`service-native-intro-copy is-justify-${dynamicIntro?.justify || 'center'}`}
-            style={{ '--intro-heading-line-height': dynamicIntro?.lineSpacing || 1.04 }}
+            className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
+            style={{ '--intro-heading-line-height': resolvedIntro.lineSpacing || 1.04 }}
           >
-            <h2 className={dynamicIntro?.headingClassName || undefined}>
-              {dynamicIntro ? (
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: renderTextWithHighlights(dynamicIntro.heading, dynamicIntro.headingHighlights),
-                  }}
-                />
-              ) : (
-                <>
-                  A robust financial strategy for
-                  {' '}
-                  <mark>your ministry</mark>
-                  {' '}
-                  and
-                  {' '}
-                  <mark className="is-gold">your family</mark>.
-                </>
-              )}
+            <h2 className={resolvedIntro.headingClassName || undefined}>
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: renderTextWithHighlights(resolvedIntro.heading, resolvedIntro.headingHighlights),
+                }}
+              />
             </h2>
-            {dynamicIntro?.bodyHtml ? (
-              <SafeRichText as="div" className="native-info-rich-html" html={dynamicIntro.bodyHtml} />
+            {resolvedIntro.bodyHtml ? (
+              <SafeRichText as="div" className="native-info-rich-html" html={resolvedIntro.bodyHtml} />
             ) : null}
-            {dynamicIntro?.body ? <p>{dynamicIntro.body}</p> : null}
-            {dynamicIntro?.extraLine ? (
+            {resolvedIntro.body ? <p>{resolvedIntro.body}</p> : null}
+            {resolvedIntro.extraLine ? (
               <p
-                className={dynamicIntro?.extraLineClassName || undefined}
-                style={dynamicIntro?.extraLineStyle}
+                className={resolvedIntro.extraLineClassName || undefined}
+                style={resolvedIntro.extraLineStyle}
               >
-                <strong>{dynamicIntro.extraLine}</strong>
+                <strong>{resolvedIntro.extraLine}</strong>
               </p>
             ) : null}
-            {(dynamicIntro?.actions || []).length ? (
-              <div className={`service-native-action-row${(dynamicIntro.justify || 'center') === 'center' ? ' is-centered' : ''}`}>
-                {dynamicIntro.actions.map((action) => {
+            {(resolvedIntro.actions || []).length ? (
+              <div className={`service-native-action-row${(resolvedIntro.justify || 'center') === 'center' ? ' is-centered' : ''}`}>
+                {resolvedIntro.actions.map((action) => {
                   const buttonClassName = actionButtonClassName(action.style);
                   const actionTarget = action.to || action.href || '';
                   const isInternal = Boolean(action.to || (action.href && !isExternalLinkHref(action.href) && action.href.startsWith('/')));

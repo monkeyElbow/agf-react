@@ -12,6 +12,18 @@ import SafeRichText from '../components/SafeRichText';
 import { ColumnsBlock } from '../components/blocks/PageBlocksRenderer';
 import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
+import {
+  defaultRetirementCtaSettings,
+  RETIREMENT_CTA_STATE_OPTIONS_TEXT,
+} from '../data/ctaFormSeeds';
+import {
+  buildDefaultRetirementBillboardRuntime,
+  buildDefaultRetirementIntroRuntime,
+  buildDefaultRetirementRolloverBillboardRuntime,
+  defaultRetirementBillboardSettings,
+  defaultRetirementIntroSettings,
+  defaultRetirementRolloverBillboardSettings,
+} from '../data/retirementOverviewSeed';
 import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
 import { useFrontHud } from '../context/FrontHudContext';
 import { useTestimonials } from '../context/TestimonialsContext';
@@ -81,47 +93,9 @@ const states = [
   ['SD', 'South Dakota'], ['TN', 'Tennessee'], ['TX', 'Texas'], ['UT', 'Utah'], ['VT', 'Vermont'],
   ['VA', 'Virginia'], ['WA', 'Washington'], ['WV', 'West Virginia'], ['WI', 'Wisconsin'], ['WY', 'Wyoming'],
 ];
-const retirementCtaStateOptions = states.map(([value, label]) => `${value}|${label}`).join('\n');
-const defaultRetirementCtaSettings = {
-  title: 'Imagine the possibilities.',
-  titleClassName: '',
-  titleHighlightsJson: '',
-  bodyHtml: '',
-  bgTone: 'white',
-  submitLabel: 'Follow-up with me',
-  successMessage: 'Thanks. We\'ll reach out soon.',
-  salesforceUrl: '',
-  field1Enabled: true,
-  field1Type: 'text',
-  field1Label: 'Name',
-  field1Placeholder: '',
-  field1Options: '',
-  field1Required: true,
-  field2Enabled: true,
-  field2Type: 'email',
-  field2Label: 'Email',
-  field2Placeholder: '',
-  field2Options: '',
-  field2Required: true,
-  field3Enabled: true,
-  field3Type: 'tel',
-  field3Label: 'Phone',
-  field3Placeholder: '(555) 555-5555',
-  field3Options: '',
-  field3Required: false,
-  field4Enabled: true,
-  field4Type: 'select',
-  field4Label: 'State',
-  field4Placeholder: 'Select a State',
-  field4Options: retirementCtaStateOptions,
-  field4Required: true,
-  field5Enabled: true,
-  field5Type: 'textarea',
-  field5Label: 'Message',
-  field5Placeholder: 'What would you like to discuss?',
-  field5Options: '',
-  field5Required: false,
-};
+const DEFAULT_RETIREMENT_INTRO = buildDefaultRetirementIntroRuntime();
+const DEFAULT_RETIREMENT_BILLBOARD = buildDefaultRetirementBillboardRuntime();
+const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD = buildDefaultRetirementRolloverBillboardRuntime();
 
 function normalizeRetirementCtaSettings(settings = {}) {
   const nextSettings = {
@@ -140,7 +114,7 @@ function normalizeRetirementCtaSettings(settings = {}) {
     nextSettings.field4Type = 'select';
     nextSettings.field4Label = 'State';
     nextSettings.field4Placeholder = 'Select a State';
-    nextSettings.field4Options = retirementCtaStateOptions;
+    nextSettings.field4Options = RETIREMENT_CTA_STATE_OPTIONS_TEXT;
     nextSettings.field4Required = true;
     nextSettings.field5Enabled = true;
     nextSettings.field5Type = 'textarea';
@@ -243,100 +217,6 @@ function buildRetirementCanonicalBlocks(blocks) {
   return ordered;
 }
 
-const DEFAULT_RETIREMENT_BILLBOARD_SETTINGS = {
-  title: 'Retire a little every day.',
-  titleClassName: '',
-  titleHighlightsJson: '[{"text":"every day","className":"is-mango"}]',
-  bodyHtml: '<h3>Starting now.</h3>',
-  bgTone: 'white',
-  textTone: 'dark',
-  justify: 'center',
-  scrollReveal: 'scale-up',
-  lineSpacing: 0.95,
-  titleFontFamily: 'helv',
-  titleFontWeight: 700,
-  titleSizeRem: 5.25,
-  titleLetterSpacingEm: -0.03,
-  buttonLabel: 'Reach my consultant',
-  buttonUrl: '/services/retirement/retirement-consultants',
-  buttonPageRef: '/services/retirement/retirement-consultants',
-  buttonStyle: 'blue',
-  buttonTone: 'atlantean',
-};
-const DEFAULT_RETIREMENT_BILLBOARD = {
-  title: 'Retire a little every day.',
-  titleClassName: '',
-  titleHighlights: [{ text: 'every day', className: 'is-mango' }],
-  titleStyle: {
-    lineHeight: 0.95,
-    fontFamily: 'var(--ag-font-helv)',
-    fontWeight: 700,
-    fontSize: 'clamp(calc(5.25rem * 0.58), 8vw, 5.25rem)',
-    letterSpacing: '-0.03em',
-  },
-  bodyHtml: '<h3>Starting now.</h3>',
-  bgTone: 'white',
-  textTone: 'dark',
-  justify: 'center',
-  scrollReveal: 'scale-up',
-  copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up',
-  copyFadeRootMargin: '0px 0px -40% 0px',
-  action: {
-    label: 'Reach my consultant',
-    href: '/services/retirement/retirement-consultants',
-    style: 'blue',
-    tone: 'atlantean',
-    openInNewWindow: false,
-  },
-};
-const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD_SETTINGS = {
-  title: 'A rollover is easy. Smart, too.',
-  titleClassName: '',
-  titleHighlightsJson: '[{"text":"Smart, too.","className":"is-melon"}]',
-  bodyHtml: '<p>Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple...and undeniably smart. One account. One login.</p>',
-  bgTone: 'grey',
-  textTone: 'white',
-  justify: 'center',
-  scrollReveal: 'scale-up',
-  lineSpacing: 0.94,
-  titleFontFamily: 'helv',
-  titleFontWeight: 800,
-  titleSizeRem: 4.4,
-  titleLetterSpacingEm: -0.024,
-  contentMaxWidthPx: 1080,
-  buttonLabel: 'Start a rollover',
-  buttonUrl: '/services/retirement/rollovers',
-  buttonPageRef: '/services/retirement/rollovers',
-  buttonStyle: 'blue',
-  buttonTone: 'atlantean',
-};
-const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD = {
-  title: 'A rollover is easy. Smart, too.',
-  titleClassName: '',
-  titleHighlights: [{ text: 'Smart, too.', className: 'is-melon' }],
-  titleStyle: {
-    lineHeight: 0.94,
-    fontFamily: 'var(--ag-font-helv)',
-    fontWeight: 800,
-    fontSize: 'clamp(calc(4.4rem * 0.58), 8vw, 4.4rem)',
-    letterSpacing: '-0.024em',
-  },
-  bodyHtml: '<p>Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple...and undeniably smart. One account. One login.</p>',
-  bgTone: 'grey',
-  textTone: 'white',
-  justify: 'center',
-  scrollReveal: 'scale-up',
-  copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up',
-  copyFadeRootMargin: '0px 0px -40% 0px',
-  contentMaxWidthPx: 1080,
-  action: {
-    label: 'Start a rollover',
-    href: '/services/retirement/rollovers',
-    style: 'blue',
-    tone: 'atlantean',
-    openInNewWindow: false,
-  },
-};
 const DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS = {
   presentation: 'certificate_cards',
   leftTone: 'atlantean',
@@ -355,29 +235,6 @@ const DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS = {
   rightButtonUrl: '/services/retirement/409a',
   rightButtonPageRef: '/services/retirement/409a',
   rightButtonOpenInNewWindow: false,
-};
-const DEFAULT_RETIREMENT_INTRO_SETTINGS = {
-  heading: 'Invest in tomorrow. Start today.',
-  headingClassName: '',
-  headingHighlightsJson: '',
-  bodyHtml: '<p>For decades, we\'ve helped build retirement strategies for ministers, ministry employees, churches, and organizations. Let\'s create yours.</p>',
-  body: '',
-  justify: 'center',
-  lineSpacing: 1.04,
-  extraLine: 'It\'s your ministry, your future, your plan.',
-  extraLineTone: '',
-  bgTone: 'blue',
-  textTone: 'white',
-  button1Label: '',
-  button1Url: '',
-  button1PageRef: '',
-  button1Style: 'dark',
-  button1Tone: 'super-grey',
-  button2Label: '',
-  button2Url: '',
-  button2PageRef: '',
-  button2Style: 'dark',
-  button2Tone: 'super-grey',
 };
 const RETIREMENT_HUD_BG_SWATCH_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #efefef 100%)' },
@@ -711,7 +568,7 @@ export default function RetirementPage() {
     [dynamicTestimonialsBlock, testimonialsLibrary],
   );
   const introHudSettings = useMemo(
-    () => ({ ...DEFAULT_RETIREMENT_INTRO_SETTINGS, ...(introBlock?.settings && typeof introBlock.settings === 'object' ? introBlock.settings : {}) }),
+    () => ({ ...defaultRetirementIntroSettings, ...(introBlock?.settings && typeof introBlock.settings === 'object' ? introBlock.settings : {}) }),
     [introBlock],
   );
   const dynamicIntro = useMemo(() => {
@@ -723,9 +580,10 @@ export default function RetirementPage() {
       settings: introHudSettings,
     });
   }, [introBlock, introHudSettings]);
+  const resolvedIntro = dynamicIntro || DEFAULT_RETIREMENT_INTRO;
   const billboardHudSettings = useMemo(
     () => ({
-      ...DEFAULT_RETIREMENT_BILLBOARD_SETTINGS,
+      ...defaultRetirementBillboardSettings,
       ...(billboardBlock?.settings && typeof billboardBlock.settings === 'object' ? billboardBlock.settings : {}),
     }),
     [billboardBlock],
@@ -741,7 +599,7 @@ export default function RetirementPage() {
   }, [billboardBlock, billboardHudSettings]);
   const rolloverBillboardHudSettings = useMemo(
     () => ({
-      ...DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD_SETTINGS,
+      ...defaultRetirementRolloverBillboardSettings,
       ...(rolloverBillboardBlock?.settings && typeof rolloverBillboardBlock.settings === 'object' ? rolloverBillboardBlock.settings : {}),
     }),
     [rolloverBillboardBlock],
@@ -755,17 +613,19 @@ export default function RetirementPage() {
       settings: rolloverBillboardHudSettings,
     });
   }, [rolloverBillboardBlock, rolloverBillboardHudSettings]);
-  const billboardSectionStyle = dynamicBillboard?.action
+  const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;
+  const renderedRolloverBillboard = dynamicRolloverBillboard || DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD;
+  const billboardSectionStyle = renderedBillboard?.action
     ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
     : undefined;
-  const billboardRailStyle = dynamicBillboard?.contentMaxWidthPx
-    ? { '--dynamic-billboard-max-width': `${dynamicBillboard.contentMaxWidthPx}px` }
+  const billboardRailStyle = renderedBillboard?.contentMaxWidthPx
+    ? { '--dynamic-billboard-max-width': `${renderedBillboard.contentMaxWidthPx}px` }
     : undefined;
-  const rolloverBillboardSectionStyle = dynamicRolloverBillboard?.action
+  const rolloverBillboardSectionStyle = renderedRolloverBillboard?.action
     ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
     : undefined;
-  const rolloverBillboardRailStyle = dynamicRolloverBillboard?.contentMaxWidthPx
-    ? { '--dynamic-billboard-max-width': `${dynamicRolloverBillboard.contentMaxWidthPx}px` }
+  const rolloverBillboardRailStyle = renderedRolloverBillboard?.contentMaxWidthPx
+    ? { '--dynamic-billboard-max-width': `${renderedRolloverBillboard.contentMaxWidthPx}px` }
     : undefined;
   const heroInspection = useMemo(
     () => inspectDynamicHeroSettings('/services/retirement', heroBlock?.settings),
@@ -814,14 +674,12 @@ export default function RetirementPage() {
     return withText.length ? withText : candidateLines.slice(0, 1);
   }, [heroHudSettings]);
   const heroActiveLineData = heroHudEditableLines.find((line) => line.key === heroActiveLine) || heroHudEditableLines[0] || null;
-  const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;
   const billboardCopyUsesScrollProgress = renderedBillboard?.scrollReveal === 'scale-up';
   const billboardCopyClassName = useMemo(
     () => getRetirementBillboardCopyClassName(renderedBillboard, billboardCopyUsesScrollProgress),
     [billboardCopyUsesScrollProgress, renderedBillboard],
   );
   const renderedBillboardTitleStyle = renderedBillboard?.titleStyle || {};
-  const renderedRolloverBillboard = dynamicRolloverBillboard || DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD;
   const rolloverBillboardCopyUsesScrollProgress = renderedRolloverBillboard?.scrollReveal === 'scale-up';
   const rolloverBillboardCopyClassName = useMemo(
     () => getRetirementBillboardCopyClassName(renderedRolloverBillboard, rolloverBillboardCopyUsesScrollProgress),
@@ -1789,44 +1647,42 @@ export default function RetirementPage() {
 
       <section
         ref={introSectionRef}
-        className={`service-native-intro retirement-native-intro${dynamicIntro ? ` dynamic-intro is-bg-${dynamicIntro.bgTone || 'white'} is-text-${dynamicIntro.textTone || 'dark'}` : ''}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
+        className={`service-native-intro retirement-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'white'} is-text-${resolvedIntro.textTone || 'dark'}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
         data-block-id="intro"
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
         {renderHudAnchor('intro')}
         <div className="ag-panel-rail">
           <div
-            className={`service-native-intro-copy is-justify-${dynamicIntro?.justify || 'center'}`}
-            style={{ '--intro-heading-line-height': dynamicIntro?.lineSpacing || 1.04 }}
+            className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
+            style={{ '--intro-heading-line-height': resolvedIntro.lineSpacing || 1.04 }}
           >
             <h2
-              className={`${dynamicIntro?.headingClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+              className={`${resolvedIntro.headingClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
               onClick={showFrontHud && introBlock ? handleIntroHeadingEditIntent : undefined}
               onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroHeadingEditIntent) : undefined}
               role={showFrontHud && introBlock ? 'button' : undefined}
               tabIndex={showFrontHud && introBlock ? 0 : undefined}
               aria-label={showFrontHud && introBlock ? 'Edit intro heading' : undefined}
             >
-              {dynamicIntro ? (
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: renderTextWithHighlights(dynamicIntro.heading, dynamicIntro.headingHighlights),
-                  }}
-                />
-              ) : 'Invest in tomorrow. Start today.'}
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: renderTextWithHighlights(resolvedIntro.heading, resolvedIntro.headingHighlights),
+                }}
+              />
             </h2>
-            {dynamicIntro?.bodyHtml ? (
+            {resolvedIntro.bodyHtml ? (
               <SafeRichText
                 as="div"
                 className={`native-info-rich-html${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`}
-                html={dynamicIntro.bodyHtml}
+                html={resolvedIntro.bodyHtml}
                 onClick={showFrontHud && introBlock ? handleIntroBodyEditIntent : undefined}
                 onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroBodyEditIntent) : undefined}
                 role={showFrontHud && introBlock ? 'button' : undefined}
                 tabIndex={showFrontHud && introBlock ? 0 : undefined}
                 aria-label={showFrontHud && introBlock ? 'Edit intro body HTML' : undefined}
               />
-            ) : (
+            ) : resolvedIntro.body ? (
               <p
                 className={showFrontHud && introBlock ? 'admin-front-hud-click-edit-target' : undefined}
                 onClick={showFrontHud && introBlock ? handleIntroBodyEditIntent : undefined}
@@ -1835,33 +1691,22 @@ export default function RetirementPage() {
                 tabIndex={showFrontHud && introBlock ? 0 : undefined}
                 aria-label={showFrontHud && introBlock ? 'Edit intro body HTML' : undefined}
               >
-                Retirement is your future. It’s where your career journey leads. For decades, we’ve helped build thoughtful retirement plans for individuals, churches, and other ministries.
+                {resolvedIntro.body}
               </p>
-            )}
-            {dynamicIntro?.extraLine ? (
+            ) : null}
+            {resolvedIntro.extraLine ? (
               <p
-                className={`${dynamicIntro?.extraLineClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
-                style={dynamicIntro?.extraLineStyle}
+                className={`${resolvedIntro.extraLineClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+                style={resolvedIntro.extraLineStyle}
                 onClick={showFrontHud && introBlock ? handleIntroExtraLineEditIntent : undefined}
                 onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroExtraLineEditIntent) : undefined}
                 role={showFrontHud && introBlock ? 'button' : undefined}
                 tabIndex={showFrontHud && introBlock ? 0 : undefined}
                 aria-label={showFrontHud && introBlock ? 'Edit intro extra line' : undefined}
               >
-                <strong>{dynamicIntro.extraLine}</strong>
+                <strong>{resolvedIntro.extraLine}</strong>
               </p>
-            ) : (
-              <p
-                className={showFrontHud && introBlock ? 'admin-front-hud-click-edit-target' : undefined}
-                onClick={showFrontHud && introBlock ? handleIntroExtraLineEditIntent : undefined}
-                onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroExtraLineEditIntent) : undefined}
-                role={showFrontHud && introBlock ? 'button' : undefined}
-                tabIndex={showFrontHud && introBlock ? 0 : undefined}
-                aria-label={showFrontHud && introBlock ? 'Edit intro extra line' : undefined}
-              >
-                <strong>It's your ministry, your future, your plan.</strong>
-              </p>
-            )}
+            ) : null}
           </div>
         </div>
       </section>

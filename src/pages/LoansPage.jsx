@@ -28,6 +28,8 @@ import {
   parseTextHighlights,
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
+import { defaultLoansCtaSettings } from '../data/ctaFormSeeds';
+import { buildDefaultLoansIntroRuntime } from '../data/loansIntroSeed';
 
 const loanOptions = [
   {
@@ -120,40 +122,7 @@ const states = [
 ];
 
 const defaultLoanInquiryBodyHtml = 'First things first, whether you\'re simply curious or ready to greenlight your project: <mark>complete the inquiry form</mark>. It\'s short, sweet, and vital. The information you provide will help share your vision with your consultant.';
-const defaultLoansCtaSettings = {
-  title: 'Explore your options. Zero pressure.',
-  titleClassName: '',
-  titleHighlightsJson: '',
-  bodyHtml: '<p>Let\'s talk about making it happen.</p>',
-  bgTone: 'white',
-  submitLabel: 'Follow-up with me',
-  successMessage: 'Thanks. We\'ll reach out soon.',
-  salesforceUrl: '',
-  field1Enabled: true,
-  field1Type: 'text',
-  field1Label: 'Name',
-  field1Placeholder: '',
-  field1Options: '',
-  field1Required: true,
-  field2Enabled: true,
-  field2Type: 'email',
-  field2Label: 'Email',
-  field2Placeholder: '',
-  field2Options: '',
-  field2Required: true,
-  field3Enabled: true,
-  field3Type: 'tel',
-  field3Label: 'Phone',
-  field3Placeholder: '(555) 555-5555',
-  field3Options: '',
-  field3Required: false,
-  field4Enabled: true,
-  field4Type: 'textarea',
-  field4Label: 'Message',
-  field4Placeholder: 'What would you like to discuss?',
-  field4Options: '',
-  field4Required: false,
-};
+const DEFAULT_LOANS_INTRO = buildDefaultLoansIntroRuntime();
 const LOANS_HUD_ANCHOR_SELECTOR_BY_ID = {
   hero: '.service-native-hero',
   intro: '.service-native-intro',
@@ -854,6 +823,7 @@ export default function LoansPage({ sectionsOnly = false }) {
 
   const dynamicHero = useMemo(() => buildDynamicHeroFromBlock(heroBlock), [heroBlock]);
   const dynamicIntro = useMemo(() => buildDynamicIntroFromBlock(introBlock), [introBlock]);
+  const resolvedIntro = dynamicIntro || DEFAULT_LOANS_INTRO;
 
   const canDownload = useMemo(
     () => loanRows.length > 0 && downloadName.trim() && validEmail(downloadEmail),
@@ -1173,44 +1143,38 @@ export default function LoansPage({ sectionsOnly = false }) {
 
       {!sectionsOnly ? (
       <section
-        className={`service-native-intro loans-native-intro${dynamicIntro ? ' dynamic-intro' : ''}${dynamicIntro ? ` is-bg-${dynamicIntro.bgTone || 'sand'} is-text-${dynamicIntro.textTone || 'dark'}` : ''}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`}
+        className={`service-native-intro loans-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'sand'} is-text-${resolvedIntro.textTone || 'dark'}${getHudBlockStateClassName('intro')}${getOwnershipVisualForBlockId('intro').className || ''}`}
         data-block-id="intro"
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
         {renderHudAnchor('intro')}
         <div className="ag-panel-rail">
           <div
-            className={`service-native-intro-copy is-justify-${dynamicIntro?.justify || 'center'}`}
-            style={{ '--intro-heading-line-height': dynamicIntro?.lineSpacing || 1.05 }}
+            className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
+            style={{ '--intro-heading-line-height': resolvedIntro.lineSpacing || 1.05 }}
           >
-            <h2 className={dynamicIntro?.headingClassName || undefined}>
-              {dynamicIntro ? (
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: renderTextWithHighlights(dynamicIntro.heading, dynamicIntro.headingHighlights),
-                  }}
-                />
-              ) : 'The right loan can change everything.'}
+            <h2 className={resolvedIntro.headingClassName || undefined}>
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: renderTextWithHighlights(resolvedIntro.heading, resolvedIntro.headingHighlights),
+                }}
+              />
             </h2>
-            {dynamicIntro?.bodyHtml ? (
-              <SafeRichText as="div" className="native-info-rich-html" html={dynamicIntro.bodyHtml} />
-            ) : (
-              <p>
-                {dynamicIntro?.body
-                  || "Your vision of reaching communities and changing lives drives us. As one of the nation's largest, most experienced church loan providers, we want to be part of your ministry. Let's take bold steps together for the Kingdom."}
-              </p>
-            )}
-            {dynamicIntro?.extraLine ? (
+            {resolvedIntro.bodyHtml ? (
+              <SafeRichText as="div" className="native-info-rich-html" html={resolvedIntro.bodyHtml} />
+            ) : null}
+            {resolvedIntro.body ? <p>{resolvedIntro.body}</p> : null}
+            {resolvedIntro.extraLine ? (
               <p
-                className={`native-info-intro-emphasis${dynamicIntro?.extraLineClassName ? ` ${dynamicIntro.extraLineClassName}` : ''}`}
-                style={dynamicIntro?.extraLineStyle}
+                className={`native-info-intro-emphasis${resolvedIntro.extraLineClassName ? ` ${resolvedIntro.extraLineClassName}` : ''}`}
+                style={resolvedIntro.extraLineStyle}
               >
-                {dynamicIntro.extraLine}
+                {resolvedIntro.extraLine}
               </p>
             ) : null}
-            {(dynamicIntro?.actions || []).length ? (
-              <div className={`service-native-action-row${(dynamicIntro?.justify || 'center') === 'center' ? ' is-centered' : ''}`}>
-                {dynamicIntro.actions.map((action) => {
+            {(resolvedIntro.actions || []).length ? (
+              <div className={`service-native-action-row${(resolvedIntro.justify || 'center') === 'center' ? ' is-centered' : ''}`}>
+                {resolvedIntro.actions.map((action) => {
                   const actionTarget = action.to || action.href || '';
                   const isInternal = Boolean(action.to || (action.href && !isExternalLinkHref(action.href) && action.href.startsWith('/')));
                   const buttonClassName = actionButtonClassName(action.style);
@@ -1237,11 +1201,7 @@ export default function LoansPage({ sectionsOnly = false }) {
                   );
                 })}
               </div>
-            ) : (
-              <div className="service-native-action-row is-centered">
-                <Link to="/services/loans#form" className="service-native-btn">Get started</Link>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </section>

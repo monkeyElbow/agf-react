@@ -1,49 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { buildImpactProofStoryMetrics } from '../data/impactProofStorySeed';
 import ImpactProofStoryFeature from './ImpactProofStoryFeature';
 
 const DEFAULT_PROPS = {
   headline: 'Impact highlights',
   body: '',
-  metrics: [
-    {
-      value: '1,400',
-      eyebrow: 'Loans',
-      valueTone: 'atlantean',
-      label: 'ministries supported by loans.',
-      body: 'Over the last 10 years, those ministries represent more than 945,000 people.',
-      tone: 'atlantean',
-      action: { label: 'Explore loans', to: '/services/loans' },
-    },
-    {
-      value: '$450 million',
-      eyebrow: 'Planned Giving',
-      label: 'distributed to ministries through AG Foundation.',
-      body: 'That’s the power of generous donors using smart strategies.',
-      tone: 'mango',
-      action: { label: 'Plan with us', to: '/services/planned-giving' },
-    },
-    {
-      value: '5,117',
-      eyebrow: 'Insurance',
-      valueTone: 'atlantean',
-      label: 'mission trips covered and protected.',
-      body: 'Peace of mind allows you to focus on what matters at home and abroad: serving others, and sharing the Gospel with confidence.',
-      tone: 'super-grey',
-      action: { label: 'Cover your ministry', to: '/services/insurance' },
-    },
-    {
-      value: '29,000+',
-      eyebrow: 'Retirement',
-      valueTone: 'mango',
-      labelBreak: 'block',
-      label: 'retirements planned.',
-      body: 'Your participation helps individuals, churches, ministries—and you—step confidently into the next season.',
-      tone: 'atlantean-dark',
-      action: { label: 'Start your tomorrow', to: '/services/retirement' },
-    },
-  ],
+  metrics: buildImpactProofStoryMetrics(),
   action: null,
   resolveTo: (value, fallback = '/') => value || fallback,
 };

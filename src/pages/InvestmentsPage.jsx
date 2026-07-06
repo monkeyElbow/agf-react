@@ -15,6 +15,14 @@ import SafeRichText from '../components/SafeRichText';
 import CertificateRatesSheet from '../components/CertificateRatesSheet';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
 import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
+import {
+  buildDefaultInvestmentsIntroRuntime,
+  defaultInvestmentsIntroSettings,
+} from '../data/investmentsIntroSeed';
+import {
+  defaultInvestmentsCtaSettings,
+  defaultInvestmentsGrowthFeatureSettings,
+} from '../data/investmentsPageSeed';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import {
   formatTestimonialAttribution,
@@ -65,68 +73,6 @@ const HeroInlineLiveEditor = lazy(async () => {
   };
 });
 
-const defaultInvestmentsIntroSettings = {
-  heading: 'Invest like it matters. Because it does.',
-  headingClassName: '',
-  headingHighlightsJson: '[{"text":"Because it does.","className":"is-atlantean"}]',
-  bodyHtml: '<p>Your investment dollars don\'t just multiply; they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.</p>',
-  body: '',
-  justify: 'center',
-  lineSpacing: 1.04,
-  extraLine: 'That\'s the power of faith-driven investing.',
-  extraLineTone: '',
-  bgTone: 'sand',
-  textTone: 'dark',
-  button1Label: '',
-  button1Url: '',
-  button1PageRef: '',
-  button1Style: 'primary',
-  button1Tone: 'atlantean',
-  button1OpenInNewWindow: false,
-  button2Label: '',
-  button2Url: '',
-  button2PageRef: '',
-  button2Style: 'dark',
-  button2Tone: 'super-grey',
-  button2OpenInNewWindow: false,
-};
-const defaultInvestmentsCtaSettings = {
-  title: 'Talk with an investments consultant.',
-  titleClassName: '',
-  titleHighlightsJson: '',
-  bodyHtml: '<p>Share a few details and we’ll follow up with options that fit your goals.</p>',
-  bgTone: 'white',
-  submitStyle: 'outline',
-  submitTone: 'atlantean',
-  submitLabel: 'Follow-up with me',
-  successMessage: 'Thanks. We’ll reach out soon.',
-  salesforceUrl: '',
-  field1Enabled: true,
-  field1Type: 'text',
-  field1Label: 'Name',
-  field1Placeholder: '',
-  field1Options: '',
-  field1Required: true,
-  field2Enabled: true,
-  field2Type: 'email',
-  field2Label: 'Email',
-  field2Placeholder: '',
-  field2Options: '',
-  field2Required: true,
-  field3Enabled: true,
-  field3Type: 'tel',
-  field3Label: 'Phone',
-  field3Placeholder: '(555) 555-5555',
-  field3Options: '',
-  field3Required: false,
-  field4Enabled: true,
-  field4Type: 'textarea',
-  field4Label: 'Message',
-  field4Placeholder: 'What would you like to discuss?',
-  field4Options: '',
-  field4Required: false,
-};
-
 const certificateCards = [
   {
     titleTop: 'Demand',
@@ -145,15 +91,6 @@ const certificateCards = [
     minimum: 'Minimum investment $500.',
   },
 ];
-
-const defaultInvestmentsGrowthFeatureSettings = {
-  featureId: 'investments_growth_feature',
-  body: 'Log in to manage.',
-  buttonLabel: 'Go to my dashboard',
-  buttonUrl: 'https://secure.agfinancial.org/',
-  buttonPageRef: '',
-  buttonOpenInNewWindow: true,
-};
 
 const testimonials = [
   {
@@ -1054,6 +991,10 @@ export default function InvestmentsPage() {
       settings: introHudSettings,
     });
   }, [introBlock, introHudSettings]);
+  const resolvedIntro = useMemo(
+    () => dynamicIntro || buildDefaultInvestmentsIntroRuntime(),
+    [dynamicIntro],
+  );
   const heroInspection = useMemo(
     () => inspectDynamicHeroSettings('/services/investments', heroBlock?.settings),
     [heroBlock],
@@ -2064,43 +2005,35 @@ export default function InvestmentsPage() {
 
       <section
         ref={introSectionRef}
-        className={`service-native-intro investments-native-intro fade-out${dynamicIntro ? ` dynamic-intro is-bg-${dynamicIntro.bgTone || defaultInvestmentsIntroSettings.bgTone} is-text-${dynamicIntro.textTone || defaultInvestmentsIntroSettings.textTone}` : ''}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
+        className={`service-native-intro investments-native-intro fade-out dynamic-intro is-bg-${resolvedIntro.bgTone || defaultInvestmentsIntroSettings.bgTone} is-text-${resolvedIntro.textTone || defaultInvestmentsIntroSettings.textTone}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
         data-block-id="intro"
       >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
         {renderHudAnchor('intro')}
         <div className="ag-panel-rail">
           <div
-            className={`service-native-intro-copy is-justify-${dynamicIntro?.justify || 'center'}`}
-            style={{ '--intro-heading-line-height': dynamicIntro?.lineSpacing || defaultInvestmentsIntroSettings.lineSpacing }}
+            className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
+            style={{ '--intro-heading-line-height': resolvedIntro.lineSpacing || defaultInvestmentsIntroSettings.lineSpacing }}
           >
             <h2
-              className={`${dynamicIntro?.headingClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+              className={`${resolvedIntro.headingClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
               onClick={showFrontHud && introBlock ? handleIntroHeadingEditIntent : undefined}
               onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroHeadingEditIntent) : undefined}
               role={showFrontHud && introBlock ? 'button' : undefined}
               tabIndex={showFrontHud && introBlock ? 0 : undefined}
               aria-label={showFrontHud && introBlock ? 'Edit intro heading' : undefined}
             >
-              {dynamicIntro ? (
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: renderTextWithHighlights(dynamicIntro.heading, dynamicIntro.headingHighlights),
-                  }}
-                />
-              ) : (
-                <>
-                  Invest like it matters.
-                  {' '}
-                  <mark>Because it does.</mark>
-                </>
-              )}
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: renderTextWithHighlights(resolvedIntro.heading, resolvedIntro.headingHighlights),
+                }}
+              />
             </h2>
-            {dynamicIntro?.bodyHtml ? (
+            {resolvedIntro.bodyHtml ? (
               <SafeRichText
                 as="div"
                 className={`native-info-rich-html${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`}
-                html={dynamicIntro.bodyHtml}
+                html={resolvedIntro.bodyHtml}
                 onClick={showFrontHud && introBlock ? handleIntroBodyEditIntent : undefined}
                 onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroBodyEditIntent) : undefined}
                 role={showFrontHud && introBlock ? 'button' : undefined}
@@ -2116,20 +2049,20 @@ export default function InvestmentsPage() {
                 tabIndex={showFrontHud && introBlock ? 0 : undefined}
                 aria-label={showFrontHud && introBlock ? 'Edit intro body HTML' : undefined}
               >
-                Your investment dollars don't just multiply; they multiply ministry impact. Every dollar you invest generates a competitive return while funding church construction and ministry growth. When you invest like it matters, everything matters more.
+                {resolvedIntro.body}
               </p>
             )}
-            {dynamicIntro?.extraLine ? (
+            {resolvedIntro.extraLine ? (
               <p
-                className={`investments-native-intro-tagline${dynamicIntro?.extraLineClassName ? ` ${dynamicIntro.extraLineClassName}` : ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`}
-                style={dynamicIntro?.extraLineStyle}
+                className={`investments-native-intro-tagline${resolvedIntro.extraLineClassName ? ` ${resolvedIntro.extraLineClassName}` : ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`}
+                style={resolvedIntro.extraLineStyle}
                 onClick={showFrontHud && introBlock ? handleIntroExtraLineEditIntent : undefined}
                 onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroExtraLineEditIntent) : undefined}
                 role={showFrontHud && introBlock ? 'button' : undefined}
                 tabIndex={showFrontHud && introBlock ? 0 : undefined}
                 aria-label={showFrontHud && introBlock ? 'Edit intro extra line' : undefined}
               >
-                <strong>{dynamicIntro.extraLine}</strong>
+                <strong>{resolvedIntro.extraLine}</strong>
               </p>
             ) : (
               <p
@@ -2140,12 +2073,12 @@ export default function InvestmentsPage() {
                 tabIndex={showFrontHud && introBlock ? 0 : undefined}
                 aria-label={showFrontHud && introBlock ? 'Edit intro extra line' : undefined}
               >
-                <strong>That's the power of faith-driven investing.</strong>
+                <strong>{defaultInvestmentsIntroSettings.extraLine}</strong>
               </p>
             )}
-            {(dynamicIntro?.actions || []).length ? (
-              <div className={`service-native-action-row${(dynamicIntro.justify || 'center') === 'center' ? ' is-centered' : ''}`}>
-                {dynamicIntro.actions.map((action) => {
+            {(resolvedIntro.actions || []).length ? (
+              <div className={`service-native-action-row${(resolvedIntro.justify || 'center') === 'center' ? ' is-centered' : ''}`}>
+                {resolvedIntro.actions.map((action) => {
                   const buttonClassName = actionButtonClassName(action.style);
                   const actionTarget = action.to || action.href || '';
                   const isInternal = Boolean(action.to || (action.href && !isExternalLinkHref(action.href) && action.href.startsWith('/')));
@@ -2638,6 +2571,14 @@ export default function InvestmentsPage() {
                       </p>
                     ) : null}
                     {ladderError ? <p className="investments-native-ladder-error">{ladderError}</p> : null}
+                    <div className="investments-native-ladder-fineprint">
+                      <p className="service-native-note">
+                        *Premium rates may be available for individual investments of $250,000 or greater. **Annual Percentage Yield. ***Monthly interest will vary due to differences in compounded cycles. ****Approximate future value assumes that any funds reinvested at maturity will be reinvested at the same rate. 8-Month, 7-Year, and 10-Year terms available for new investments only; funds may not be transferred from an existing or renewing investment. Rates effective January 1, 2026, and subject to change. Penalties may apply to redemptions prior to maturity. This is not an offering to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The offering circular may be obtained <a href="https://files.agfinancial.org/Investments/AGLF-Offering%20Circular.pdf" target="_blank" rel="noreferrer noopener">here</a> or by calling AGFinancial. AGFinancial investments are offered and sold only in states where authorized or exempt from authorization. A limited offering is available in Washington. Not available in Ohio.
+                      </p>
+                      <p className="service-native-note">Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee.</p>
+                      <p className="service-native-note">AGFinancial is a DBA of Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group</p>
+                      <p className="service-native-note">Note: Information is from sources determined reliable. Information is subject to error, omission, withdrawal, or change.</p>
+                    </div>
                   </div>
                 </div>
               </section>

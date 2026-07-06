@@ -1,4 +1,5 @@
 import aboutIntroImage from '../assets/about-intro.jpg';
+import { buildImpactProofStoryMetrics } from './impactProofStorySeed';
 
 export const SITE_FEATURE_ACTION_FIELD_IDS = Object.freeze([
   'buttonLabel',
@@ -157,7 +158,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       },
       metrics: Object.freeze([
         Object.freeze({ value: '1,400+', label: 'ministries served by loans', tone: 'sandstone' }),
-        Object.freeze({ value: '29,000+', label: 'of minister retirements planned', tone: 'sandstone' }),
+        Object.freeze({ value: '29,000+', label: '29,000+ Retirements planned', tone: 'sandstone' }),
         Object.freeze({ value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone' }),
       ]),
       imageUrl: '',
@@ -205,60 +206,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       title: '',
       body: '',
       action: null,
-      metrics: Object.freeze([
-        Object.freeze({
-          value: '1,400',
-          eyebrow: 'Loans',
-          valueTone: 'atlantean',
-          label: 'ministries supported by loans.',
-          body: 'Over the last 10 years, those ministries represent more than 945,000 people.',
-          tone: 'atlantean',
-          action: Object.freeze({
-            label: 'Explore loans',
-            to: '/services/loans',
-            openInNewWindow: false,
-          }),
-        }),
-        Object.freeze({
-          value: '$450 million',
-          eyebrow: 'Planned Giving',
-          label: 'distributed to ministries through AG Foundation.',
-          body: 'That’s the power of generous donors using smart strategies.',
-          tone: 'mango',
-          action: Object.freeze({
-            label: 'Plan with us',
-            to: '/services/planned-giving',
-            openInNewWindow: false,
-          }),
-        }),
-        Object.freeze({
-          value: '5,117',
-          eyebrow: 'Insurance',
-          valueTone: 'atlantean',
-          label: 'mission trips covered and protected.',
-          body: 'Peace of mind allows you to focus on what matters at home and abroad: serving others, and sharing the Gospel with confidence.',
-          tone: 'super-grey',
-          action: Object.freeze({
-            label: 'Cover your ministry',
-            to: '/services/insurance',
-            openInNewWindow: false,
-          }),
-        }),
-        Object.freeze({
-          value: '29,000+',
-          eyebrow: 'Retirement',
-          valueTone: 'mango',
-          labelBreak: 'block',
-          label: 'retirements planned.',
-          body: 'Your participation helps individuals, churches, ministries—and you—step confidently into the next season.',
-          tone: 'atlantean-dark',
-          action: Object.freeze({
-            label: 'Start your tomorrow',
-            to: '/services/retirement',
-            openInNewWindow: false,
-          }),
-        }),
-      ]),
+      metrics: buildImpactProofStoryMetrics(),
     }),
   }),
   Object.freeze({
@@ -283,9 +231,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       },
       headlineLines: Object.freeze([
         Object.freeze([
-          Object.freeze({ text: 'Build', className: 'is-atlantean' }),
-        ]),
-        Object.freeze([
+          Object.freeze({ text: 'Build ', className: 'is-atlantean' }),
           Object.freeze({ text: 'financial health.', className: 'is-super-grey' }),
         ]),
       ]),
@@ -294,7 +240,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
           title: 'Grow your return.',
           tone: 'atlantean',
           surfaceTone: 'blue',
-          body: 'Why choose between financial growth and spiritual impact? Deliver both at the same time.',
+          body: 'Financial growth. Lasting impact. Your money works hard for both your future and the church.',
         }),
         Object.freeze({
           title: 'Grow your backup plan.',
