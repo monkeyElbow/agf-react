@@ -2405,7 +2405,8 @@
 }
 
 .service-native-card a.service-native-btn.is-outline:hover {
-  color: var(--btn-hover-text);
+  color: var(--btn-color);
+  text-decoration: none;
 }
 
 .service-native-card a.service-native-btn.is-ghost,
@@ -5450,14 +5451,15 @@
 .service-native-btn.is-outline,
 .service-native-btn.is-outline:visited {
   --btn-bg: transparent;
-  --btn-hover-bg: var(--btn-color);
+  --btn-hover-bg: transparent;
   --btn-text: var(--btn-color);
-  --btn-hover-text: #ffffff;
+  --btn-hover-text: var(--btn-color);
   --btn-outline-expand-block: 0.125rem;
   --btn-outline-expand-inline: 0.1875rem;
   --btn-outline-padding-block-base: 0.76rem;
   --btn-outline-padding-inline-base: 1.5rem;
   position: relative;
+  overflow: visible;
   margin: 0;
   padding:
     var(--btn-outline-padding-block-base)
@@ -5475,8 +5477,8 @@
 .service-native-btn.is-outline.is-tone-white,
 .service-native-btn.is-outline.is-tone-white:visited {
   --btn-text: #ffffff;
-  --btn-hover-bg: #ffffff;
-  --btn-hover-text: var(--ag-color-super-grey);
+  --btn-hover-bg: transparent;
+  --btn-hover-text: #ffffff;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -5487,6 +5489,9 @@
     padding:
       calc(var(--btn-outline-padding-block-base) + var(--btn-outline-expand-block))
       calc(var(--btn-outline-padding-inline-base) + var(--btn-outline-expand-inline));
+    border-color: var(--btn-color);
+    background: transparent;
+    color: var(--btn-color);
     box-shadow: none;
   }
 }
@@ -5498,9 +5503,10 @@
   padding:
     calc(var(--btn-outline-padding-block-base) + var(--btn-outline-expand-block))
     calc(var(--btn-outline-padding-inline-base) + var(--btn-outline-expand-inline));
-  box-shadow:
-    0 0 0 2px rgba(255, 255, 255, 0.9),
-    0 0 0 5px rgba(0, 138, 171, 0.34);
+  border-color: var(--btn-color);
+  background: transparent;
+  color: var(--btn-color);
+  box-shadow: 0 0 0 3px rgba(0, 138, 171, 0.28);
 }
 
 .service-native-btn.is-outline:active {
@@ -5508,6 +5514,9 @@
   padding:
     var(--btn-outline-padding-block-base)
     var(--btn-outline-padding-inline-base);
+  border-color: var(--btn-color);
+  background: transparent;
+  color: var(--btn-color);
   box-shadow: none;
 }
 
@@ -5530,6 +5539,9 @@
     padding:
       var(--btn-outline-padding-block-base)
       var(--btn-outline-padding-inline-base);
+    border-color: var(--btn-color);
+    background: transparent;
+    color: var(--btn-color);
   }
 }
 
@@ -12571,17 +12583,28 @@
   padding-left: 1.2rem;
 }
 
+.native-info-link-list:has(.service-native-btn) {
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
 .native-info-link-list li {
   margin: 0.4rem 0;
 }
 
-.native-info-link-list a {
+.native-info-link-list li:has(> .service-native-btn) {
+  margin: 0;
+}
+
+.native-info-link-list a:not(.service-native-btn) {
   color: var(--ag-color-atlantean-dark);
   text-decoration: none;
   font-weight: 600;
 }
 
-.native-info-link-list a:hover {
+.native-info-link-list a:not(.service-native-btn):hover {
   color: var(--ag-color-atlantean);
   text-decoration: underline;
 }
@@ -13019,17 +13042,22 @@
   letter-spacing: -0.02em;
 }
 
-.native-prospectus-card a {
+.native-prospectus-card a:not(.service-native-btn) {
   margin-top: auto;
   color: var(--ag-color-atlantean-dark);
   font-weight: 700;
   text-decoration: none;
 }
 
-.native-prospectus-card a:hover,
-.native-prospectus-card a:focus-visible {
+.native-prospectus-card a:not(.service-native-btn):hover,
+.native-prospectus-card a:not(.service-native-btn):focus-visible {
   color: var(--ag-color-atlantean);
   text-decoration: underline;
+}
+
+.native-prospectus-card .service-native-btn {
+  margin-top: auto;
+  width: fit-content;
 }
 
 .native-prospectus-empty {
@@ -13105,17 +13133,21 @@
   padding: 0;
 }
 
-.native-forms-list a {
+.native-forms-list a:not(.service-native-btn) {
   color: rgba(65, 64, 66, 0.95);
   text-decoration: none;
   line-height: 1.28;
   font-weight: 500;
 }
 
-.native-forms-list a:hover,
-.native-forms-list a:focus-visible {
+.native-forms-list a:not(.service-native-btn):hover,
+.native-forms-list a:not(.service-native-btn):focus-visible {
   color: var(--ag-color-atlantean-dark);
   text-decoration: underline;
+}
+
+.native-forms-list .service-native-btn {
+  width: fit-content;
 }
 
 .native-forms-empty {
@@ -13460,6 +13492,7 @@
 
 .native-info-copy-address {
   margin-top: 1rem;
+  position: relative;
   text-align: center;
 }
 
@@ -13489,15 +13522,35 @@
 }
 
 .native-info-copy-address-tip {
-  margin: 0.35rem 0 0;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  margin: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.native-info-copy-address-tip-text {
+  display: inline-block;
+  width: max-content;
+  max-width: calc(100% - 1rem);
+  margin-top: 0.35rem;
   font-size: 0.86rem;
   color: rgba(65, 64, 66, 0.7);
   opacity: 0;
-  transition: opacity 180ms ease;
+  visibility: hidden;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  text-align: center;
+  transition: opacity 180ms ease, visibility 180ms ease;
 }
 
-.native-info-copy-address-tip.is-visible {
+.native-info-copy-address-tip.is-visible .native-info-copy-address-tip-text {
   opacity: 1;
+  visibility: visible;
 }
 
 .service-native-card-bullet-list {
@@ -13598,13 +13651,10 @@
 
 .native-info-page--legacy-giving .legacy-giving-types .service-native-card:first-child .service-native-btn.is-outline,
 .native-info-page--legacy-giving .legacy-giving-types .service-native-card:first-child .service-native-btn.is-ghost {
-  border-color: rgba(65, 64, 66, 0.58);
-  color: var(--ag-color-super-grey);
-}
-
-.native-info-page--legacy-giving .legacy-giving-types .service-native-card:first-child .service-native-btn.is-outline:hover,
-.native-info-page--legacy-giving .legacy-giving-types .service-native-card:first-child .service-native-btn.is-ghost:hover {
-  border-color: var(--ag-color-super-grey);
+  --btn-color: var(--ag-color-super-grey);
+  --btn-hover-color: var(--ag-color-super-grey);
+  border-color: var(--btn-color);
+  color: var(--btn-color);
 }
 
 .native-info-page--legacy-giving .legacy-giving-wills {
@@ -13978,15 +14028,18 @@
 }
 
 .legacy-stewardship-story .legacy-stewardship-story-cta.service-native-btn.is-outline {
-  color: var(--legacy-stewardship-accent);
-  border-color: rgba(0, 138, 166, 0.44);
-  background: rgba(255, 255, 255, 0.86);
+  --btn-color: var(--legacy-stewardship-accent);
+  --btn-hover-color: var(--legacy-stewardship-accent);
+  color: var(--btn-color);
+  border-color: var(--btn-color);
+  background: transparent;
 }
 
 .legacy-stewardship-story .legacy-stewardship-story-cta.service-native-btn.is-outline:hover,
 .legacy-stewardship-story .legacy-stewardship-story-cta.service-native-btn.is-outline:focus-visible {
-  border-color: rgba(0, 138, 166, 0.6);
-  background: #ffffff;
+  color: var(--btn-color);
+  border-color: var(--btn-color);
+  background: transparent;
 }
 
 .native-info-page--legacy-giving .legacy-giving-joy {
@@ -15350,6 +15403,10 @@
   letter-spacing: 0;
 }
 
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .native-info-section-subtitle {
+  margin-bottom: clamp(2.4rem, 4.4vw, 3.5rem);
+}
+
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-details .native-info-section-subtitle {
   color: #ffffff;
   font-size: clamp(1.18rem, 2vw, 1.5rem);
@@ -15427,34 +15484,119 @@
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll {
-  background: linear-gradient(180deg, rgba(240, 238, 232, 0.78) 0%, rgba(255, 255, 255, 0.98) 100%);
+  background: #fff;
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll > .native-info-full-bleed {
-  width: calc(100% - (var(--ag-panel-gutter) * 0.8));
+  width: min(var(--ag-content-max), calc(100% - (var(--ag-panel-gutter) * 2)));
+  margin-inline: auto;
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-grid {
-  gap: clamp(1rem, 2vw, 1.35rem);
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  gap: clamp(1.2rem, 2.4vw, 1.7rem);
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card {
-  padding: clamp(1.3rem, 2.8vw, 1.8rem);
-  background: rgba(255, 255, 255, 0.96);
+  --ministers-group-life-step-accent: var(--ag-color-atlantean);
+  display: grid;
+  grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);
+  column-gap: clamp(1.25rem, 2.6vw, 2rem);
+  row-gap: clamp(0.85rem, 1.9vw, 1.2rem);
+  align-items: center;
+  padding: clamp(1.2rem, 2.3vw, 1.6rem) clamp(1.35rem, 2.7vw, 2rem);
+  border: 2px solid var(--ministers-group-life-step-accent);
+  border-radius: 1.75rem;
+  background: #fff;
+  box-shadow: none;
+  transform: none;
+  transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(1) {
+  --ministers-group-life-step-accent: var(--ag-color-atlantean);
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(2) {
+  --ministers-group-life-step-accent: var(--ag-color-mango);
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(3) {
+  --ministers-group-life-step-accent: var(--ag-color-sandstone-dark);
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card > div:first-child {
+  display: contents;
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3 {
-  color: var(--ag-color-atlantean-dark);
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+  color: var(--ministers-group-life-step-accent);
+  font-family: var(--ag-font-helv);
+  font-size: clamp(2.55rem, 4.35vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card p {
-  font-size: clamp(1rem, 1.45vw, 1.08rem);
-  line-height: 1.6;
+  grid-column: 2;
+  margin: 0;
+  color: var(--ag-color-super-grey);
+  font-size: clamp(1.18rem, 1.95vw, 1.42rem);
+  line-height: 1.42;
 }
 
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-action-row,
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-action-row {
+  grid-column: 2;
+  margin-top: 0.1rem;
+  padding-top: 0;
+  justify-content: flex-start;
+}
+
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-support .service-native-action-row {
   justify-content: center;
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-btn.ministers-group-life-step-btn,
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-btn.ministers-group-life-step-btn:visited {
+  --btn-outline-padding-block-base: 0.82rem;
+  --btn-outline-padding-inline-base: 1.42rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-btn.ministers-group-life-step-btn.is-step-atlantean,
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-btn.ministers-group-life-step-btn.is-step-atlantean:visited {
+  --btn-color: var(--ag-color-atlantean);
+  --btn-hover-color: var(--ag-color-atlantean-dark);
+  --btn-hover-bg: var(--ag-color-atlantean-dark);
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-btn.ministers-group-life-step-btn.is-step-mango,
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-btn.ministers-group-life-step-btn.is-step-mango:visited {
+  --btn-color: var(--ag-color-mango);
+  --btn-hover-color: #e8991f;
+  --btn-text: var(--ag-color-mango);
+  --btn-hover-text: #e8991f;
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-btn.ministers-group-life-step-btn.is-step-sandstone,
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-btn.ministers-group-life-step-btn.is-step-sandstone:visited {
+  --btn-color: var(--ag-color-sandstone-dark);
+  --btn-hover-color: var(--ag-color-super-grey);
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .ministers-group-life-copy-address {
@@ -15469,6 +15611,8 @@
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .ministers-group-life-copy-address .native-info-copy-address-title {
+  display: block;
+  margin-bottom: clamp(0.55rem, 1vw, 0.8rem);
   font-size: clamp(1.2rem, 2vw, 1.55rem);
   font-weight: 700;
   letter-spacing: 0;
@@ -15491,12 +15635,16 @@
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-note {
-  margin-top: 1.15rem;
+  margin-top: 0.6rem;
   text-align: center;
   color: var(--ag-color-atlantean);
   font-size: clamp(1.25rem, 2.1vw, 1.6rem);
   font-weight: 700;
   line-height: 1.15;
+}
+
+.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .ministers-group-life-copy-address + .service-native-note {
+  margin-top: 0;
 }
 
 .native-info-page--retirement-403b .retirement-child-native-strategies .ministers-group-life-copy-address {
@@ -15676,14 +15824,18 @@
   margin-top: 0;
 }
 
-.native-support-library-links a {
+.native-support-library-links a:not(.service-native-btn) {
   color: var(--ag-color-atlantean-dark);
   font-weight: 700;
   text-decoration: none;
 }
 
-.native-support-library-links a:hover {
+.native-support-library-links a:not(.service-native-btn):hover {
   text-decoration: underline;
+}
+
+.native-support-library-links .service-native-btn {
+  width: fit-content;
 }
 
 .native-support-library-empty {
@@ -15722,6 +15874,21 @@
   .native-info-page--ministers-group-life-plan .ministers-group-life-native-details .service-native-grid,
   .native-info-page--ministers-group-life-plan .ministers-group-life-native-support .service-native-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.95rem;
+  }
+
+  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3 {
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card p,
+  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-action-row {
+    grid-column: 1;
   }
 
   .native-support-library-tools,
@@ -19680,16 +19847,27 @@ p.impact-proof-story-proof-body {
   padding-left: 1.1rem;
 }
 
+.service-native-card-link-list:has(.service-native-btn) {
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
 .service-native-card-link-list li + li {
   margin-top: 0.2rem;
 }
 
-.service-native-card-link-list a {
+.service-native-card-link-list li:has(> .service-native-btn) + li {
+  margin-top: 0;
+}
+
+.service-native-card-link-list a:not(.service-native-btn) {
   color: var(--ag-color-atlantean-dark);
   text-decoration: none;
 }
 
-.service-native-card-link-list a:hover {
+.service-native-card-link-list a:not(.service-native-btn):hover {
   text-decoration: underline;
 }
 
@@ -20827,11 +21005,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps .service-native-card h3::after {
-  content: '';
-  display: block;
-  height: 1px;
-  margin-top: 0.75rem;
-  background: rgba(65, 64, 66, 0.2);
+  content: none;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps .service-native-card:nth-child(1) h3 {
@@ -20844,6 +21018,12 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps .service-native-card:nth-child(3) h3 {
   color: #a9a29a;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps .service-native-card > div > p {
+  color: rgba(65, 64, 66, 0.9);
+  font-size: clamp(1.16rem, 1.75vw, 1.32rem);
+  line-height: 1.68;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-assets,
@@ -21129,13 +21309,15 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step {
   position: relative;
+  justify-self: center;
+  width: min(100%, 21rem);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step::before {
   counter-increment: endowments-flow;
   content: '0' counter(endowments-flow);
   display: inline-block;
-  margin-bottom: clamp(0.85rem, 1.6vw, 1.1rem);
+  margin-bottom: clamp(0.4rem, 0.9vw, 0.65rem);
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-heading);
   font-size: clamp(3rem, 5.2vw, 4.55rem);
@@ -21157,8 +21339,8 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step .native-columns-copy {
-  padding-top: clamp(1rem, 1.9vw, 1.2rem);
-  border-top: 1px solid rgba(65, 64, 66, 0.16);
+  padding-top: clamp(0.4rem, 0.9vw, 0.65rem);
+  border-top: 0;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-copy h3 {
@@ -21186,7 +21368,7 @@ p.impact-proof-story-proof-body {
   grid-column: 1 / -1;
   margin-top: clamp(0.5rem, 1.6vw, 1rem);
   padding-top: clamp(1.4rem, 2.7vw, 2rem);
-  border-top: 1px solid rgba(65, 64, 66, 0.14);
+  border-top: 0;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-columns-copy {
@@ -21200,7 +21382,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-columns-copy h3 {
   margin-top: clamp(0.35rem, 0.9vw, 0.6rem);
-  color: var(--ag-color-super-grey);
+  color: var(--ag-color-atlantean);
   font-size: clamp(2rem, 3.4vw, 2.8rem);
   font-weight: 700;
   line-height: 1.02;
@@ -21210,7 +21392,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > p {
   margin: 0;
-  max-width: 40rem;
+  max-width: min(100%, 56rem);
   color: rgba(65, 64, 66, 0.84);
   font-size: clamp(1rem, 1.28vw, 1.08rem);
   line-height: 1.65;
@@ -21258,9 +21440,10 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-calculator > .ag-panel-rail > h2 {
+  margin-bottom: 0.1rem;
   text-align: center;
   font-size: clamp(2.1rem, 4.4vw, 3rem);
-  letter-spacing: 0;
+  letter-spacing: -0.03em;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-inquiry,
@@ -21399,18 +21582,19 @@ p.impact-proof-story-proof-body {
 }
 
 .endowment-calculator {
-  margin-top: 1.6rem;
+  margin-top: 0;
   font-family: var(--ag-font-body);
   color: var(--ag-color-super-grey);
   display: grid;
-  gap: 1rem;
+  gap: 1.35rem;
 }
 
 .endowment-calculator-sub {
   margin: 0;
-  max-width: 60ch;
-  padding-inline: clamp(1rem, 1.9vw, 1.2rem);
-  text-align: left;
+  max-width: min(100%, 72rem);
+  margin-inline: auto;
+  padding-inline: 0;
+  text-align: center;
   color: rgba(65, 64, 66, 0.84);
   font-size: clamp(0.98rem, 1.3vw, 1.08rem);
   line-height: 1.55;
@@ -22177,7 +22361,21 @@ p.impact-proof-story-proof-body {
   }
 
   .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-grid {
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(1.4rem, 4vw, 2rem);
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step {
+    text-align: center;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step .native-columns-copy {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step .native-columns-copy p {
+    margin-inline: auto;
   }
 
   .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-columns-copy {
@@ -22273,11 +22471,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-generosity-fund .legacy-child-native-steps .service-native-card h3::after {
-  content: '';
-  display: block;
-  height: 2px;
-  margin-top: 0.7rem;
-  background: rgba(65, 64, 66, 0.22);
+  content: none;
 }
 
 .native-info-page--legacy-generosity-fund .legacy-child-native-steps .service-native-card:nth-child(1) h3 {
@@ -22292,9 +22486,48 @@ p.impact-proof-story-proof-body {
   color: var(--ag-color-sandstone);
 }
 
+.native-info-page--legacy-generosity-fund .legacy-child-native-steps .service-native-card > div > p {
+  color: rgba(65, 64, 66, 0.9);
+  font-size: clamp(1.16rem, 1.75vw, 1.32rem);
+  line-height: 1.68;
+}
+
 @media (max-width: 1280px) {
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps > .native-info-full-bleed,
+  .native-info-page--legacy-generosity-fund .legacy-child-native-steps > .native-info-full-bleed {
+    width: min(calc(100% - (var(--ag-panel-gutter) * 2)), 46rem);
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps .service-native-grid,
   .native-info-page--legacy-generosity-fund .legacy-child-native-steps .service-native-grid {
     grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps .service-native-card,
+  .native-info-page--legacy-generosity-fund .legacy-child-native-steps .service-native-card {
+    width: min(100%, 38rem);
+    margin-inline: auto;
+    text-align: center;
+    align-items: center;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps .service-native-card > div > p,
+  .native-info-page--legacy-generosity-fund .legacy-child-native-steps .service-native-card > div > p {
+    margin-inline: auto;
+    max-width: 30rem;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps .service-native-action-row,
+  .native-info-page--legacy-generosity-fund .legacy-child-native-steps .service-native-action-row {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 760px) {
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-steps > .native-info-full-bleed,
+  .native-info-page--legacy-generosity-fund .legacy-child-native-steps > .native-info-full-bleed {
+    width: calc(100% - (var(--ag-panel-gutter) * 2.35));
   }
 }
 
@@ -22575,7 +22808,11 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card:nth-child(1) {
-  background: linear-gradient(145deg, rgba(0, 138, 171, 0.98) 0%, rgba(8, 94, 122, 0.98) 100%);
+  background: linear-gradient(
+    145deg,
+    rgba(var(--ag-color-atlantean-rgb), 0.98) 0%,
+    rgba(var(--ag-color-atlantean-dark-rgb), 0.98) 100%
+  );
 }
 
 .native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card:nth-child(2) {
@@ -22599,22 +22836,6 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card > div > p {
   font-size: clamp(1.1rem, 1.6vw, 1.22rem);
   line-height: 1.52;
-}
-
-.native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-action-row {
-  margin-top: auto;
-  padding-top: 1rem;
-  justify-content: center;
-}
-
-.native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card:nth-child(1) .service-native-btn {
-  background: #12354b;
-  border-color: #12354b;
-}
-
-.native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card:nth-child(1) .service-native-btn:hover {
-  background: #0d2838;
-  border-color: #0d2838;
 }
 
 .native-info-page--retirement-rollovers .retirement-rollovers-native-process {
@@ -23293,8 +23514,16 @@ p.impact-proof-story-proof-body {
   box-shadow: none;
 }
 
+.native-info-page.native-info-page--legacy-cga.is-compact .service-native-hero .ag-panel-rail {
+  min-height: var(--service-native-hero-rail-min-height);
+}
+
 .native-info-page.native-info-page--legacy-cga.is-compact .service-native-hero h1 {
   font-size: clamp(3rem, 9.2vw, 112px);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-cga .service-native-hero h1 + h1 {
+  margin-top: 0.2rem;
 }
 
 .native-info-page--legacy-cga .service-native-intro {
@@ -23312,11 +23541,19 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-cga .legacy-child-native-steps > .native-info-full-bleed > h2 {
+  font-family: var(--ag-font-helv);
+  font-weight: 700;
+  letter-spacing: -0.03em;
   font-size: clamp(2.5rem, 5.2vw, 4.1rem);
+  margin-bottom: clamp(1.8rem, 3.3vw, 2.6rem);
+}
+
+.native-info-page--legacy-cga .legacy-child-native-steps .service-native-grid {
+  gap: clamp(1.8rem, 3vw, 2.6rem);
 }
 
 .native-info-page--legacy-cga .legacy-child-native-steps .service-native-card {
-  padding: 0;
+  padding: clamp(0.35rem, 0.9vw, 0.7rem) clamp(0.4rem, 1vw, 0.8rem);
   border: none;
   border-radius: 0;
   background: transparent;
@@ -23332,17 +23569,22 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-cga .legacy-child-native-steps .service-native-card h3 {
   font-family: var(--ag-font-helv);
-  letter-spacing: var(--ag-letter-spacing-helv-heading);
-  font-size: clamp(1.45rem, 2.8vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  font-size: clamp(2rem, 4.2vw, 2.85rem);
+  margin-bottom: clamp(0.7rem, 1.5vw, 1rem);
   color: var(--ag-color-super-grey);
 }
 
+.native-info-page--legacy-cga .legacy-child-native-steps .service-native-card p {
+  color: rgba(65, 64, 66, 0.9);
+  font-size: clamp(1.16rem, 1.75vw, 1.32rem);
+  line-height: 1.68;
+}
+
 .native-info-page--legacy-cga .legacy-child-native-steps .service-native-card h3::after {
-  content: '';
-  display: block;
-  height: 2px;
-  margin-top: 0.7rem;
-  background: rgba(65, 64, 66, 0.2);
+  content: none;
 }
 
 .native-info-page--legacy-cga .legacy-child-native-steps .service-native-card:nth-child(1) h3 {
@@ -23358,8 +23600,31 @@ p.impact-proof-story-proof-body {
 }
 
 @media (max-width: 1280px) {
+  .native-info-page--legacy-cga .legacy-child-native-steps > .native-info-full-bleed {
+    width: min(calc(100% - (var(--ag-panel-gutter) * 2)), 42rem);
+  }
+
   .native-info-page--legacy-cga .legacy-child-native-steps .service-native-grid {
     grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  .native-info-page--legacy-cga .legacy-child-native-steps .service-native-card {
+    width: min(100%, 38rem);
+    margin-inline: auto;
+    text-align: center;
+    align-items: center;
+  }
+
+  .native-info-page--legacy-cga .legacy-child-native-steps .service-native-card p {
+    margin-inline: auto;
+    max-width: 30rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .native-info-page--legacy-cga .legacy-child-native-steps > .native-info-full-bleed {
+    width: calc(100% - (var(--ag-panel-gutter) * 2.35));
   }
 }
 
