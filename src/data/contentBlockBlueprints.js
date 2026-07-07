@@ -555,7 +555,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       name: 'Hero',
       kind: 'hero',
       mode: 'dynamic',
-      hidden: true,
       settings: {
         animationPreset: 'default',
         bgTone: 'white',
@@ -722,7 +721,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       name: 'Hero',
       kind: 'hero',
       mode: 'dynamic',
-      hidden: true,
       settings: {
         animationPreset: 'default',
         bgTone: 'white',

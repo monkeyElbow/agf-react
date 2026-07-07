@@ -61,8 +61,8 @@
   );
   --ag-font-size-body: 16px;
   --ag-line-height-body: 1.75;
-  /* Helv heading baseline: lightly tightened for display headings. */
-  --ag-letter-spacing-helv-heading: -0.01em;
+  /* Helv heading baseline: tightened globally so display heads do not read spaced out. */
+  --ag-letter-spacing-helv-heading: -0.03em;
   --ag-letter-spacing-helv-intro: -0.02em;
   --ag-letter-spacing-avenir-heading: -0.02em;
   --ag-letter-spacing-avenir-hero: -0.03em;

@@ -3598,6 +3598,38 @@ export function normalizeStoredConfig(payload) {
       }
       if (
         path === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
+        && storedBlock.id === 'hero'
+        && storedKind === 'hero'
+        && defaultBlock
+        && Boolean(storedBlock?.hidden)
+      ) {
+        nextStoredBlock = {
+          ...storedBlock,
+          hidden: false,
+        };
+      }
+      if (
+        path === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
+        && storedBlock.id === 'hero'
+        && storedKind === 'hero'
+        && defaultBlock
+      ) {
+        nextStoredBlock = {
+          ...storedBlock,
+          hidden: false,
+          settings: {
+            ...(nextStoredBlock?.settings || storedBlock?.settings || {}),
+            button1Label: '',
+            button1Url: '',
+            button1PageRef: '',
+            button2Label: '',
+            button2Url: '',
+            button2PageRef: '',
+          },
+        };
+      }
+      if (
+        path === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
         && storedBlock.id === 'request_form'
         && storedKind === 'request_form'
         && defaultBlock

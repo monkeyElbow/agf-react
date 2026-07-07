@@ -87,12 +87,27 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step::before {');
     expect(cssSource).toContain('font-size: clamp(3rem, 5.2vw, 4.55rem);');
     expect(cssSource).toContain('font-family: var(--ag-font-heading);');
+    expect(cssSource).toContain('margin-bottom: clamp(0.4rem, 0.9vw, 0.65rem);');
     expect(cssSource).toContain(".native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support {");
     expect(cssSource).toContain('grid-column: 1 / -1;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step .native-columns-copy {');
+    expect(cssSource).toContain('padding-top: clamp(0.4rem, 0.9vw, 0.65rem);');
+    expect(cssSource).toContain('border-top: 0;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-columns-copy h3 {');
+    expect(cssSource).toContain('color: var(--ag-color-atlantean);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > p {');
+    expect(cssSource).toContain('max-width: min(100%, 56rem);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul {');
     expect(cssSource).toContain('width: min(100%, 25rem);');
     expect(cssSource).toContain('text-align: left;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul li + li {');
+    expect(cssSource).toContain('@media (max-width: 960px) {');
+    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step {');
+    expect(cssSource).toContain('text-align: center;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step .native-columns-copy {');
+    expect(cssSource).toContain('justify-items: center;');
+    expect(cssSource).toContain('margin-inline: auto;');
   });
 
   it('keeps the planned giving route wired to the comparison widget and the opportunity feature block', () => {
@@ -101,6 +116,28 @@ describe('planned giving review polish guardrail', () => {
     expect(contentSource).toContain("className: 'legacy-giving-comparison-matrix'");
     expect(contentSource).toContain("widget: 'giving-comparison-matrix'");
     expect(contentSource).toContain("className: 'legacy-giving-opportunity'");
+  });
+
+  it('keeps the endowments calculator heading and intro copy on the tighter centered rhythm', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const contentSource = readSource('../data/nativePageContent.js');
+    const componentSource = readSource('../components/NativeContentPage.jsx');
+
+    expect(contentSource).toContain("className: 'legacy-child-native-endowments-calculator'");
+    expect(contentSource).toContain("title: 'See how your endowment can keep giving.'");
+    expect(contentSource).toContain("widget: 'endowment-calculator'");
+    expect(componentSource).toContain('Enter assets you may gift. We’ll show your <em>annual ministry impact</em> from investment earnings (your principal remains invested).');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-calculator > .ag-panel-rail > h2 {');
+    expect(cssSource).toContain('margin-bottom: 0.1rem;');
+    expect(cssSource).toContain('letter-spacing: -0.03em;');
+    expect(cssSource).toContain('.endowment-calculator {');
+    expect(cssSource).toContain('margin-top: 0;');
+    expect(cssSource).toContain('gap: 1.35rem;');
+    expect(cssSource).toContain('.endowment-calculator-sub {');
+    expect(cssSource).toContain('max-width: min(100%, 72rem);');
+    expect(cssSource).toContain('margin-inline: auto;');
+    expect(cssSource).toContain('padding-inline: 0;');
+    expect(cssSource).toContain('text-align: center;');
   });
 
   it('keeps the charitable trusts process trigger on the non-filling outline hover pattern', () => {

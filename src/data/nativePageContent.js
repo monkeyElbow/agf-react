@@ -1578,38 +1578,42 @@ const insuranceChildPages = {
         columns: 'three',
         cards: [
           {
-            title: '1. Start with the enrollment form',
-            body: 'Download and complete the enrollment packet that matches your situation.',
+            title: '01',
+            body: 'Start with the enrollment form. Download and complete the enrollment packet that matches your situation.',
             actions: [
               {
                 label: 'Minister enrollment form',
                 href: GROUP_LIFE_MINISTER_ENROLLMENT_FORM_URL,
+                className: 'is-outline ministers-group-life-step-btn is-step-atlantean',
               },
               {
                 label: 'Missionary enrollment form',
                 href: GROUP_LIFE_STANDARD_PACKET_URL,
+                className: 'is-outline ministers-group-life-step-btn is-step-atlantean',
               },
             ],
             cardClass: 'card2 ministers-group-life-step-card',
           },
           {
-            title: '2. Add medical history if required',
-            body: 'If applicable, complete the state-specific medical history form as part of your enrollment packet.',
+            title: '02',
+            body: 'Add medical history if required. If applicable, complete the state-specific medical history form as part of your enrollment packet.',
             actions: [
               {
                 label: 'Medical history form',
                 href: GROUP_LIFE_STANDARD_PACKET_URL,
+                className: 'is-outline ministers-group-life-step-btn is-step-mango',
               },
             ],
             cardClass: 'card2 ministers-group-life-step-card',
           },
           {
-            title: '3. Complete Electronic Funds Transfer',
-            body: 'Use the EFT form so billing details are set up correctly with your enrollment.',
+            title: '03',
+            body: 'Complete Electronic Funds Transfer. Use the EFT form so billing details are set up correctly with your enrollment.',
             actions: [
               {
                 label: 'Electronic Funds Transfer form',
                 href: GROUP_LIFE_EFT_FORM_URL,
+                className: 'is-outline ministers-group-life-step-btn is-step-sandstone',
               },
             ],
             cardClass: 'card2 ministers-group-life-step-card',
@@ -2017,17 +2021,17 @@ const legacyChildPages = {
         columns: 'three',
         cards: [
           {
-            title: '1. Fund the gift',
+            title: 'Fund',
             body: 'You fund the gift with cash or securities, and should receive an immediate charitable deduction.',
             cardClass: 'card2',
           },
           {
-            title: '2. Invest & pay',
+            title: 'Receive',
             body: 'AG Foundation invests those assets and pays you a fixed amount (according to your age) every year for the rest of your life.',
             cardClass: 'card2',
           },
           {
-            title: '3. Support',
+            title: 'Sustain',
             body: 'When you pass away, the remainder goes to support ministry.',
             cardClass: 'card2',
           },
@@ -2577,7 +2581,7 @@ const legacyChildPages = {
         columns: 'three',
         cards: [
           {
-            title: 'Make the transfer',
+            title: 'Transfer',
             body: 'Your donor transfers cash or asset(s) to your Ministry Impact Fund®, potentially receiving a charitable deduction and minimized or eliminated capital gains.',
             cardClass: 'card2',
             actions: [
@@ -2585,7 +2589,7 @@ const legacyChildPages = {
             ],
           },
           {
-            title: 'Give us the keys',
+            title: 'Convert',
             body: 'AG Foundation liquidates the asset(s) for you, handling all administrative details.',
             cardClass: 'card2',
             actions: [
@@ -2593,7 +2597,7 @@ const legacyChildPages = {
             ],
           },
           {
-            title: 'Put it to work',
+            title: 'Unlock',
             body: 'Your ministry gains immediate access to the cash.',
             cardClass: 'card2',
             actions: [
@@ -3526,13 +3530,11 @@ const retirementChildPages = {
           {
             title: 'Rollover',
             body: 'Traditional IRAs can be rolled-over any time. Otherwise, you may roll over because of a qualifying event, such as a separation from service, disability, or turning age 59½. If you meet one of these qualifiers, you may roll over your 401(k), 457, or 403(b).',
-            actions: [{ label: 'Initiate a rollover', to: '/services/retirement/rollovers#start-the-process' }],
             cardClass: 'card2',
           },
           {
             title: 'Transfer',
             body: 'A transfer occurs between accounts of the same kind, so you must already have a 403(b) through a current employer and not meet any of the rollover conditions. AGFinancial must be an approved vendor of your employer in order to transfer a 403(b).',
-            actions: [{ label: 'Start a transfer', to: '/services/retirement/rollovers#start-the-process' }],
             cardClass: 'card2',
           },
         ],
