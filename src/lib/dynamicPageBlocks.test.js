@@ -548,7 +548,7 @@ describe('buildDynamicBillboardFromBlock', () => {
 
     expect(runtime).toMatchObject({
       copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up',
-      copyFadeRootMargin: '0px 0px -40% 0px',
+      copyFadeRootMargin: '0px 0px -20% 0px',
     });
   });
 
@@ -774,9 +774,11 @@ describe('buildDynamicLegalCopyFromBlock', () => {
 describe('buildDynamicCtaBandFromBlock', () => {
   it('normalizes CTA band blocks into the shared runtime shape', () => {
     const runtime = buildDynamicCtaBandFromBlock({
-      id: 'investor_cta',
+      id: 'dashboard_login_cta',
       kind: 'cta_band',
       mode: 'dynamic',
+      templateId: 'cta_band',
+      presetId: 'dashboard-login',
       settings: {
         title: 'Already an investor?',
         body: 'Log in to manage.',
@@ -1034,7 +1036,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       },
       metrics: [
         { value: '1,400+', label: 'ministries served by loans', tone: 'sandstone' },
-        { value: '29,000+', label: '29,000+ Retirements planned', tone: 'sandstone' },
+        { value: '29,000+', label: 'retirements planned', tone: 'sandstone' },
         { value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone' },
       ],
     });
@@ -1374,10 +1376,10 @@ describe('buildDynamicRatesFromBlock', () => {
     });
   });
 
-  it('rejects legacy rates_table blocks after /rates normalization', () => {
+  it('rejects non-rates blocks for the shared rates runtime builder', () => {
     const runtime = buildDynamicRatesFromBlock({
       id: 'certificates_table',
-      kind: 'rates_table',
+      kind: 'card_grid',
       mode: 'dynamic',
       settings: {},
     });
@@ -1491,11 +1493,13 @@ describe('buildDynamicGridFromBlock', () => {
     });
   });
 
-  it('keeps legacy block-id preset fallback narrow for existing card-grid seeds', () => {
+  it('keeps canonical preset identity on card-grid runtime blocks', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'who_qualifies',
       kind: 'card_grid',
       mode: 'dynamic',
+      templateId: 'card_grid',
+      presetId: 'eligibility-cards',
       settings: {
         card1Title: 'Eligible ministers',
       },

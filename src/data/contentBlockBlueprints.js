@@ -12,6 +12,7 @@ import {
   DEFAULT_SERVICE_HERO_PIE_SLICES,
 } from '../lib/dynamicPageBlocks';
 import { buildCardGridPresetSettings } from '../lib/cardGridPresets';
+import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { buildColumnsPresetSettings } from '../lib/columnsPresets';
 import {
   COMPATIBILITY_BRIDGE_SURFACES,
@@ -110,9 +111,7 @@ const splitPanelEditableFields = getLegacyEditableFieldsForKind('split_panel');
 const servicesGridEditableFields = getLegacyEditableFieldsForKind('services_grid');
 const siteFeatureEditableFields = getLegacyEditableFieldsForKind('site_feature');
 
-export const CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID = Object.freeze({
-  services_cards: 'card_grid',
-});
+export const CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID = Object.freeze({});
 
 export const PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS = PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS;
 
@@ -249,7 +248,7 @@ function createStaticBlueprintStub({ id, name, kind, settings = {} }) {
 function createDynamicCardGridBlueprint({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     id,
-    templateId: resolveBlueprintSeedTemplateId(id, templateId),
+    templateId: String(templateId || '').trim() || 'card_grid',
     presetId,
     name,
     kind: 'card_grid',
@@ -262,7 +261,7 @@ function createDynamicCardGridBlueprint({ id, name, presetId = 'default', templa
 function createStaticCardGridBlueprintStub({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     ...createStaticBlueprintStub({ id, name, kind: 'card_grid', settings }),
-    templateId: resolveBlueprintSeedTemplateId(id, templateId),
+    templateId: String(templateId || '').trim() || 'card_grid',
     presetId,
   };
 }
@@ -270,7 +269,7 @@ function createStaticCardGridBlueprintStub({ id, name, presetId = 'default', tem
 function createDynamicColumnsBlueprint({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     id,
-    templateId: resolveBlueprintSeedTemplateId(id, templateId),
+    templateId: String(templateId || '').trim() || 'columns',
     presetId,
     name,
     kind: 'columns',
@@ -283,7 +282,7 @@ function createDynamicColumnsBlueprint({ id, name, presetId = 'default', templat
 function createStaticColumnsBlueprintStub({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     ...createStaticBlueprintStub({ id, name, kind: 'columns', settings }),
-    templateId: resolveBlueprintSeedTemplateId(id, templateId),
+    templateId: String(templateId || '').trim() || 'columns',
     presetId,
   };
 }
@@ -291,7 +290,7 @@ function createStaticColumnsBlueprintStub({ id, name, presetId = 'default', temp
 function createDynamicCtaBandBlueprint({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     id,
-    templateId: resolveBlueprintSeedTemplateId(id, templateId),
+    templateId: String(templateId || '').trim() || 'cta_band',
     presetId,
     name,
     kind: 'cta_band',
@@ -304,7 +303,7 @@ function createDynamicCtaBandBlueprint({ id, name, presetId = 'default', templat
 function createStaticCtaBandBlueprintStub({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     ...createStaticBlueprintStub({ id, name, kind: 'cta_band', settings }),
-    templateId: resolveBlueprintSeedTemplateId(id, templateId),
+    templateId: String(templateId || '').trim() || 'cta_band',
     presetId,
   };
 }
@@ -2124,7 +2123,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         stat1Label: 'ministries served by loans',
         stat1Tone: 'sandstone',
         stat2Value: '29,000+',
-        stat2Label: 'of minister retirements planned',
+        stat2Label: 'retirements planned',
         stat2Tone: 'sandstone',
         stat3Value: '$450 million',
         stat3Label: 'distributed to ministries through AG Foundation',
@@ -2174,180 +2173,82 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: ctaFormEditableFields,
     },
-    createStaticColumnsBlueprintStub({
-      id: 'columns_mha',
-      name: 'Ministers Housing Allowance',
-      presetId: 'housing-allowance',
+    {
+      id: 'home_ministry_allies',
+      name: 'Ministry Allies Billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
       settings: {
-        title: '',
-        leadLine: '',
-        followupLine: '',
+        title: 'Ministry allies.',
         titleClassName: '',
         titleHighlightsJson: '',
-        bodyHtml: '',
-        columnsStyle: 'retirement',
-        bgTone: 'sand',
-        contentWidth: 'content',
-        columns: 'two',
-        col1Type: 'photo',
-        col1ImageUrl: ministersHousingImage,
-        col1ImageAlt: 'Retired couple reviewing financial paperwork',
-        col1Enabled: true,
-        col1Title: '',
-        col1Body: '',
-        ...seedBlueprintColumnButtonFields(1),
-        col1WidthShare: 1,
-        col2Enabled: true,
-        col2Type: 'text',
-        col2Title: 'Ministers Housing Allowance',
-        col2Body: 'This significant tax-saving benefit is available to retired ministers through the AGFinancial 403(b) plan.',
-        ...seedBlueprintColumnButtonFields(2, {
-          label: 'See the details',
-          href: '/services/retirement/403b#housing',
+        subtitle: '',
+        bodyHtml: '<p>We\'re serving you, alongside you.</p>',
+        body: '',
+        bgTone: 'blue',
+        textTone: 'white',
+        justify: 'center',
+        lineSpacing: 0.97,
+        titleFontFamily: 'helv',
+        titleFontWeight: 700,
+        titleSizeRem: 5.25,
+        titleLetterSpacingEm: -0.04,
+        contentMaxWidthPx: 1216,
+        ...seedBlueprintActionFields({
+          labelField: 'buttonLabel',
+          hrefField: 'buttonUrl',
+          pageRefField: 'buttonPageRef',
+          label: "See what we're doing together",
+          href: '/about-us/impact',
+          pageRef: '/about-us/impact',
+          styleField: 'buttonStyle',
+          style: 'dark',
+          toneField: 'buttonTone',
+          tone: 'super-grey',
+          openInNewWindowField: 'buttonOpenInNewWindow',
         }),
-        col2WidthShare: 1,
       },
-    }),
-    createDynamicColumnsBlueprint({
-      id: 'columns_mha',
-      name: 'Ministers Housing Allowance',
-      presetId: 'housing-allowance',
-      settings: {
-        title: '',
-        leadLine: '',
-        followupLine: '',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        bodyHtml: '',
-        columnsStyle: 'retirement',
-        bgTone: 'sand',
-        contentWidth: 'content',
-        columns: 'two',
-        col1Enabled: true,
-        col1Type: 'photo',
-        col1Title: '',
-        col1Body: '',
-        col1ImageUrl: ministersHousingImage,
-        col1ImageAlt: 'Retired couple reviewing financial paperwork',
-        ...seedBlueprintColumnButtonFields(1),
-        col1WidthShare: 1,
-        col2Enabled: true,
-        col2Type: 'text',
-        col2Title: 'Ministers Housing Allowance',
-        col2Body: 'This significant tax-saving benefit is available to retired ministers through the AGFinancial 403(b) plan.',
-        col2ImageUrl: '',
-        col2ImageAlt: '',
-        ...seedBlueprintColumnButtonFields(2, {
-          label: 'See the details',
-          href: '/services/retirement/403b#housing',
-        }),
-        col2WidthShare: 1,
-        col3Enabled: false,
-        col3Type: 'text',
-        col3Title: '',
-        col3Body: '',
-        col3ImageUrl: '',
-        col3ImageAlt: '',
-        ...seedBlueprintColumnButtonFields(3),
-        col3WidthShare: 1,
-        col4Enabled: false,
-        col4Type: 'text',
-        col4Title: '',
-        col4Body: '',
-        col4ImageUrl: '',
-        col4ImageAlt: '',
-        ...seedBlueprintColumnButtonFields(4),
-        col4WidthShare: 1,
-      },
-    }),
-    createStaticColumnsBlueprintStub({
-      id: 'columns_math',
+      editableFields: sharedDynamicBillboardEditableFields,
+    },
+    createStaticBlueprintStub({ id: 'home_ministry_allies', name: 'Ministry Allies Billboard', kind: 'billboard' }),
+    {
+      id: 'home_do_the_math',
       name: 'Do the Math',
-      presetId: 'do-the-math',
+      kind: 'billboard',
+      mode: 'dynamic',
       settings: {
-        title: '',
-        leadLine: '',
-        followupLine: '',
+        title: '(let us) Do the math.',
         titleClassName: '',
-        titleHighlightsJson: '',
+        titleHighlightsJson: '[{"text":"(let us)","className":"is-atlantean"}]',
+        subtitle: '',
         bodyHtml: '',
-        columnsStyle: 'retirement',
+        body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
         bgTone: 'white',
-        contentWidth: 'content',
-        columns: 'two',
-        col1Enabled: true,
-        col1Type: 'text',
-        col1Title: '(let us) Do the math.',
-        col1TitleHighlightsJson: '[{"text":"(let us)","className":"is-atlantean"}]',
-        col1Body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
-        ...seedBlueprintColumnButtonFields(1, {
+        textTone: 'dark',
+        justify: 'center',
+        lineSpacing: 0.94,
+        titleFontFamily: 'helv',
+        titleFontWeight: 700,
+        titleSizeRem: 6.15,
+        titleLetterSpacingEm: -0.03,
+        contentMaxWidthPx: 1216,
+        scrollReveal: 'scale-up',
+        ...seedBlueprintActionFields({
+          labelField: 'buttonLabel',
+          hrefField: 'buttonUrl',
+          pageRefField: 'buttonPageRef',
           label: 'Use the calculators',
           href: '/calculators',
+          styleField: 'buttonStyle',
+          style: 'blue',
+          toneField: 'buttonTone',
+          tone: 'atlantean',
+          openInNewWindowField: 'buttonOpenInNewWindow',
         }),
-        col1WidthShare: 1,
-        col2Enabled: true,
-        col2Type: 'photo',
-        col2Title: '',
-        col2Body: '',
-        col2ImageUrl: doTheMathImage,
-        col2ImageAlt: 'Calculator and notebook',
-        ...seedBlueprintColumnButtonFields(2),
-        col2WidthShare: 1,
       },
-    }),
-    createDynamicColumnsBlueprint({
-      id: 'columns_math',
-      name: 'Do the Math',
-      presetId: 'do-the-math',
-      settings: {
-        title: '',
-        leadLine: '',
-        followupLine: '',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        bodyHtml: '',
-        columnsStyle: 'retirement',
-        bgTone: 'white',
-        contentWidth: 'content',
-        columns: 'two',
-        col1Enabled: true,
-        col1Type: 'text',
-        col1Title: '(let us) Do the math.',
-        col1TitleHighlightsJson: '[{"text":"(let us)","className":"is-atlantean"}]',
-        col1Body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
-        col1ImageUrl: '',
-        col1ImageAlt: '',
-        ...seedBlueprintColumnButtonFields(1, {
-          label: 'Use the calculators',
-          href: '/calculators',
-        }),
-        col1WidthShare: 1,
-        col2Enabled: true,
-        col2Type: 'photo',
-        col2Title: '',
-        col2Body: '',
-        col2ImageUrl: doTheMathImage,
-        col2ImageAlt: 'Calculator and notebook',
-        ...seedBlueprintColumnButtonFields(2),
-        col2WidthShare: 1,
-        col3Enabled: false,
-        col3Type: 'text',
-        col3Title: '',
-        col3Body: '',
-        col3ImageUrl: '',
-        col3ImageAlt: '',
-        ...seedBlueprintColumnButtonFields(3),
-        col3WidthShare: 1,
-        col4Enabled: false,
-        col4Type: 'text',
-        col4Title: '',
-        col4Body: '',
-        col4ImageUrl: '',
-        col4ImageAlt: '',
-        ...seedBlueprintColumnButtonFields(4),
-        col4WidthShare: 1,
-      },
-    }),
+      editableFields: sharedDynamicBillboardEditableFields,
+    },
+    createStaticBlueprintStub({ id: 'home_do_the_math', name: 'Do the Math', kind: 'billboard' }),
     {
       id: 'newsletter',
       name: 'Newsletter',
@@ -2398,10 +2299,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         showIcons: false,
       },
     }),
-    createStaticBlueprintStub({
+    createStaticCtaBandBlueprintStub({
       id: 'matters_band',
       name: 'What You Do Matters',
-      kind: 'cta_band',
       settings: {
         background: 'blue',
       },
@@ -3293,17 +3193,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         ...defaultInvestmentsGrowthFeatureSettings,
       },
       editableFields: getAllowedSiteFeatureEditableFieldIds('investments_growth_feature'),
-    },
-    {
-      id: 'investor_cta',
-      templateId: 'investor_cta',
-      presetId: 'dashboard-login',
-      name: 'CTA Band · Dashboard login',
-      kind: 'cta_band',
-      mode: 'dynamic',
-      hidden: true,
-      settings: buildCtaBandPresetSettings('dashboard-login'),
-      editableFields: ctaBandEditableFields,
     },
     {
       id: 'cta_form',
@@ -4699,6 +4588,20 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
 
 export const contentBlockBlueprintsByPath = applyCanonicalDefinitionsToBlueprintMap(RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH);
 
+const TEMPLATE_ONLY_BLOCK_BLUEPRINTS = Object.freeze([
+  applyCanonicalDefinitionToBlock({
+    id: 'dashboard_login_cta',
+    templateId: 'cta_band',
+    presetId: 'dashboard-login',
+    name: 'CTA Band · Dashboard login',
+    kind: 'cta_band',
+    mode: 'dynamic',
+    hidden: true,
+    settings: buildCtaBandPresetSettings('dashboard-login'),
+    editableFields: ctaBandEditableFields,
+  }),
+]);
+
 function genericPageContentBlueprintBlock() {
   return {
     id: PAGE_CONTENT_IDENTITY.blockId,
@@ -4885,6 +4788,7 @@ export function getAllBlockTemplateBlueprints() {
   const sources = [
     ...Object.values(contentBlockBlueprintsByPath || {}),
     genericPageBlockBlueprint(),
+    TEMPLATE_ONLY_BLOCK_BLUEPRINTS,
   ];
 
   sources.forEach((blocks) => {
@@ -4898,6 +4802,11 @@ export function getAllBlockTemplateBlueprints() {
         ...cloneBlueprintBlock(block),
         templateLookupId,
         templateId,
+        createTemplateId: buildBlockTemplateCreateId({
+          ...block,
+          templateLookupId,
+          templateId,
+        }),
       };
       const existing = byTemplateLookupId.get(templateLookupId);
       if (!existing || templateScore(candidate) > templateScore(existing)) {
@@ -4928,6 +4837,13 @@ export function getAllBlockTemplateBlueprints() {
       })),
       templateLookupId: templateId,
       templateId,
+      createTemplateId: buildBlockTemplateCreateId({
+        id: templateId,
+        kind: ownerKind,
+        mode: 'static',
+        templateLookupId: templateId,
+        templateId,
+      }),
     });
   });
 

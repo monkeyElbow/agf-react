@@ -562,7 +562,7 @@ describe('content block blueprint coverage', () => {
     expect(investmentStrategyHeadingBlock?.settings?.buttonUrl).toBe('https://files.agfinancial.org/retirement/Performance-Update/Performance-Update.pdf');
     expect(investmentStrategyHeadingBlock?.settings?.buttonPageRef).toBe('');
     expect(investmentStrategyOptionsBlock?.presetId).toBe('investment-options');
-    expect(investmentStrategyOptionsBlock?.templateId).toBe('investment_strategy_options');
+    expect(investmentStrategyOptionsBlock?.templateId).toBe('card_grid');
     expect(investmentStrategyOptionsBlock?.mode).toBe('dynamic');
     expect(investmentStrategyOptionsBlock?.settings?.columns).toBe('two');
     expect(investmentStrategyOptionsBlock?.settings?.card1LinksJson).toContain('Download the MBA Fact sheet PDF');
@@ -578,7 +578,7 @@ describe('content block blueprint coverage', () => {
     expect(investmentStrategyOptionsBlock?.settings?.card4ButtonPageRef).toBe('');
     expect(investmentStrategyOptionsBlock?.settings?.card4Button2PageRef).toBe('/prospectus');
     expect(whoQualifiesBlock?.presetId).toBe('eligibility-cards');
-    expect(whoQualifiesBlock?.templateId).toBe('who_qualifies');
+    expect(whoQualifiesBlock?.templateId).toBe('card_grid');
     expect(whoQualifiesBlock?.mode).toBe('dynamic');
     expect(whoQualifiesBlock?.settings?.cardStyle).toBe('none');
     expect(whoQualifiesBlock?.settings?.card1Title).toBe('Employees of eligible employers');
@@ -588,7 +588,7 @@ describe('content block blueprint coverage', () => {
     expect(String(pageContentBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
     expect(String(pageContentBlock?.settings?.html || '')).toContain('The requested 403(b) loan amount cannot be less than $1,500');
     expect(loanApplyBlock?.presetId).toBe('step-cards');
-    expect(loanApplyBlock?.templateId).toBe('loan_apply');
+    expect(loanApplyBlock?.templateId).toBe('card_grid');
     expect(loanApplyBlock?.mode).toBe('dynamic');
     expect(loanApplyBlock?.settings?.columns).toBe('two');
     expect(loanApplyBlock?.settings?.card1ButtonUrl).toBe('https://files.agfinancial.org/retirement/403(b)-Loan-Rules.pdf');
@@ -630,29 +630,25 @@ describe('content block blueprint coverage', () => {
     const retirementBlocks = contentBlockBlueprintsByPath['/services/retirement'] || [];
     const testBlocks = contentBlockBlueprintsByPath['/test'] || [];
 
-    expect(homeBlocks.find((block) => block?.id === 'columns_mha' && block?.mode === 'dynamic')).toMatchObject({
-      kind: 'columns',
-      templateId: 'columns_mha',
-      presetId: 'housing-allowance',
+    expect(homeBlocks.find((block) => block?.id === 'home_ministry_allies' && block?.mode === 'dynamic')).toMatchObject({
+      kind: 'billboard',
     });
-    expect(homeBlocks.find((block) => block?.id === 'columns_math' && block?.mode === 'dynamic')).toMatchObject({
-      kind: 'columns',
-      templateId: 'columns_math',
-      presetId: 'do-the-math',
+    expect(homeBlocks.find((block) => block?.id === 'home_do_the_math' && block?.mode === 'dynamic')).toMatchObject({
+      kind: 'billboard',
     });
     expect(retirementBlocks.find((block) => block?.id === 'columns_mha' && block?.mode === 'dynamic')).toMatchObject({
       kind: 'columns',
-      templateId: 'columns_mha',
+      templateId: 'columns',
       presetId: 'housing-allowance',
     });
     expect(retirementBlocks.find((block) => block?.id === 'columns_math' && block?.mode === 'dynamic')).toMatchObject({
       kind: 'columns',
-      templateId: 'columns_math',
+      templateId: 'columns',
       presetId: 'do-the-math',
     });
     expect(loansBlocks.find((block) => block?.id === 'value_cards' && block?.mode === 'dynamic')).toMatchObject({
       kind: 'columns',
-      templateId: 'value_cards',
+      templateId: 'columns',
       presetId: 'value-cards',
     });
     expect(testBlocks.find((block) => block?.id === 'columns' && block?.mode === 'dynamic')).toMatchObject({
@@ -689,7 +685,7 @@ describe('content block blueprint coverage', () => {
     expect(loansValueCards?.settings?.col4ButtonLabel).toBe('');
     expect(loansValueCards?.settings?.col4ButtonUrl).toBe('');
     expect(loansValueCards?.settings?.col4ButtonPageRef).toBe('');
-    expect(loansValueCards?.templateId).toBe('value_cards');
+    expect(loansValueCards?.templateId).toBe('columns');
     expect(loansValueCards?.presetId).toBe('value-cards');
 
     expect(testGrid?.templateId).toBe('card_grid');
@@ -721,29 +717,25 @@ describe('content block blueprint coverage', () => {
     expect(servicesBlocks.find((block) => block?.id === 'matters_band' && block?.mode === 'static')?.settings?.background).toBe('blue');
 
     expect(loansBlocks.some((block) => block?.id === 'loan_options' && block?.mode === 'static' && block?.kind === 'card_grid')).toBe(true);
-    expect(loansBlocks.find((block) => block?.id === 'loan_options' && block?.mode === 'static')?.templateId).toBe('loan_options');
+    expect(loansBlocks.find((block) => block?.id === 'loan_options' && block?.mode === 'static')?.templateId).toBe('card_grid');
     expect(loansBlocks.find((block) => block?.id === 'loan_options' && block?.mode === 'static')?.presetId).toBe('default');
     expect(loansBlocks.some((block) => block?.id === 'cta_band' && block?.mode === 'static' && block?.kind === 'cta_band')).toBe(true);
     expect(loansBlocks.find((block) => block?.id === 'cta_band' && block?.mode === 'static')?.templateId).toBe('cta_band');
     expect(loansBlocks.find((block) => block?.id === 'cta_band' && block?.mode === 'static')?.presetId).toBe('default');
     expect(investmentBlocks.some((block) => block?.id === 'certificates' && block?.mode === 'static' && block?.kind === 'card_grid')).toBe(true);
-    expect(investmentBlocks.find((block) => block?.id === 'certificates' && block?.mode === 'static')?.templateId).toBe('certificates');
+    expect(investmentBlocks.find((block) => block?.id === 'certificates' && block?.mode === 'static')?.templateId).toBe('card_grid');
     expect(investmentBlocks.find((block) => block?.id === 'certificates' && block?.mode === 'static')?.presetId).toBe('default');
     expect(investmentBlocks.some((block) => block?.id === 'rates_table')).toBe(false);
     expect(retirementBlocks.some((block) => block?.id === 'plan_features' && block?.mode === 'static' && block?.kind === 'card_grid')).toBe(true);
-    expect(retirementBlocks.find((block) => block?.id === 'plan_features' && block?.mode === 'static')?.templateId).toBe('plan_features');
+    expect(retirementBlocks.find((block) => block?.id === 'plan_features' && block?.mode === 'static')?.templateId).toBe('card_grid');
     expect(retirementBlocks.find((block) => block?.id === 'plan_features' && block?.mode === 'static')?.presetId).toBe('default');
     expect(retirementBlocks.some((block) => block?.id === 'housing_allowance')).toBe(false);
     expect(testBlocks.some((block) => block?.id === 'hero' && block?.mode === 'static' && block?.kind === 'hero')).toBe(true);
-    expect(homeBlocks.find((block) => block?.id === 'columns_mha' && block?.mode === 'static')).toMatchObject({
-      kind: 'columns',
-      templateId: 'columns_mha',
-      presetId: 'housing-allowance',
+    expect(homeBlocks.find((block) => block?.id === 'home_ministry_allies' && block?.mode === 'static')).toMatchObject({
+      kind: 'billboard',
     });
-    expect(homeBlocks.find((block) => block?.id === 'columns_math' && block?.mode === 'static')).toMatchObject({
-      kind: 'columns',
-      templateId: 'columns_math',
-      presetId: 'do-the-math',
+    expect(homeBlocks.find((block) => block?.id === 'home_do_the_math' && block?.mode === 'static')).toMatchObject({
+      kind: 'billboard',
     });
   });
 
@@ -753,7 +745,7 @@ describe('content block blueprint coverage', () => {
     const mattersBandTemplate = templates.find((template) => template?.templateLookupId === 'matters_band');
     const loanOptionsTemplate = templates.find((template) => template?.templateLookupId === 'loan_options');
 
-    expect(CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID.services_cards).toBe('card_grid');
+    expect(CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID).toEqual({});
     expect(servicesCardsTemplate).toMatchObject({
       templateLookupId: 'services_cards',
       templateId: 'card_grid',
@@ -764,21 +756,23 @@ describe('content block blueprint coverage', () => {
 
     expect(mattersBandTemplate).toMatchObject({
       templateLookupId: 'matters_band',
-      templateId: 'matters_band',
+      templateId: 'cta_band',
       mode: 'static',
       kind: 'cta_band',
     });
     expect(loanOptionsTemplate).toMatchObject({
       templateLookupId: 'loan_options',
-      templateId: 'loan_options',
+      templateId: 'card_grid',
       mode: 'static',
       kind: 'card_grid',
     });
 
+    expect(PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS).toEqual([]);
     PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS.forEach((templateId) => {
       expect(isPersistedBlueprintBridgeTemplateId(templateId)).toBe(true);
     });
 
+    expect(getRetiredInsertCompatibilityTemplateIds('static')).toEqual([]);
     getRetiredInsertCompatibilityTemplateIds('static').forEach((templateId) => {
       expect(PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS.includes(templateId)).toBe(true);
     });

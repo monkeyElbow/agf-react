@@ -11,7 +11,21 @@ import {
   resolveColumnsPresetDefinition,
 } from './columnsPresets';
 
-function findPresetDefinitionByTemplateOrLegacyId(block, definitions) {
+const CANONICAL_TEMPLATE_ID_BY_KIND = Object.freeze({
+  card_grid: 'card_grid',
+  cta_band: 'cta_band',
+  columns: 'columns',
+});
+
+function findPresetDefinition(block, definitions) {
+  const explicitPresetId = String(block?.presetId || '').trim().toLowerCase();
+  if (explicitPresetId) {
+    const byExplicitPresetId = definitions.find((preset) => String(preset?.id || '').trim().toLowerCase() === explicitPresetId) || null;
+    if (byExplicitPresetId) {
+      return byExplicitPresetId;
+    }
+  }
+
   const templateId = String(block?.templateId || '').trim().toLowerCase();
   if (templateId) {
     const byTemplateId = definitions.find((preset) => (
@@ -23,29 +37,25 @@ function findPresetDefinitionByTemplateOrLegacyId(block, definitions) {
     }
   }
 
-  const blockId = String(block?.id || '').trim().toLowerCase();
-  if (!blockId) {
-    return null;
+  if (explicitPresetId === 'default') {
+    return definitions.find((preset) => String(preset?.id || '').trim().toLowerCase() === 'default') || null;
   }
 
-  return definitions.find((preset) => (
-    Array.isArray(preset?.legacyBlockIds)
-    && preset.legacyBlockIds.some((candidate) => String(candidate || '').trim().toLowerCase() === blockId)
-  )) || null;
+  return null;
 }
 
 function resolvePresetDefinition(block) {
   const kind = String(block?.kind || '').trim().toLowerCase();
   if (kind === 'card_grid') {
-    return findPresetDefinitionByTemplateOrLegacyId(block, getCardGridPresetDefinitions())
+    return findPresetDefinition(block, getCardGridPresetDefinitions())
       || resolveCardGridPresetDefinition(block);
   }
   if (kind === 'cta_band') {
-    return findPresetDefinitionByTemplateOrLegacyId(block, getCtaBandPresetDefinitions())
+    return findPresetDefinition(block, getCtaBandPresetDefinitions())
       || resolveCtaBandPresetDefinition(block);
   }
   if (kind === 'columns') {
-    return findPresetDefinitionByTemplateOrLegacyId(block, getColumnsPresetDefinitions())
+    return findPresetDefinition(block, getColumnsPresetDefinitions())
       || resolveColumnsPresetDefinition(block);
   }
   return null;
@@ -62,11 +72,18 @@ export function normalizePresetBearingBlockIdentity(block) {
     return block;
   }
 
+  const kind = String(block?.kind || '').trim().toLowerCase();
+  const canonicalTemplateId = CANONICAL_TEMPLATE_ID_BY_KIND[kind] || '';
+  const currentTemplateId = String(block?.templateId || '').trim();
+  const nextTemplateId = canonicalTemplateId || currentTemplateId;
+
   return String(block.presetId || '').trim() === canonicalPresetId
+    && currentTemplateId === nextTemplateId
     ? block
     : {
         ...block,
         presetId: canonicalPresetId,
+        ...(nextTemplateId ? { templateId: nextTemplateId } : {}),
       };
 }
 

@@ -2,31 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { normalizeStoredConfig } from './ContentAdminContext';
 
 describe('ContentAdminContext state normalization', () => {
-  it('keeps the latest duplicate home columns block by id', () => {
+  it('keeps the canonical home do-the-math billboard on the dynamic managed path', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/': [
           {
-            id: 'columns_math',
-            kind: 'columns',
-            mode: 'static',
-            settings: {
-              col1Type: 'photo',
-              col1ImageUrl: 'bad-photo.jpg',
-              col2Type: 'photo',
-              col2ImageUrl: 'bad-photo-2.jpg',
-            },
-          },
-          {
-            id: 'columns_math',
-            kind: 'columns',
+            id: 'home_do_the_math',
+            kind: 'billboard',
             mode: 'dynamic',
             settings: {
-              col1Type: 'text',
-              col1Title: '(let us) Do the math.',
-              col1Body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
-              col2Type: 'photo',
-              col2ImageUrl: 'math-photo.jpg',
+              title: '(let us) Do the math.',
+              body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
+              buttonLabel: 'Use the calculators',
+              buttonUrl: '/calculators',
             },
           },
         ],
@@ -34,28 +22,29 @@ describe('ContentAdminContext state normalization', () => {
     });
 
     const homeBlocks = normalized.blocksByPath['/'] || [];
-    const mathBlocks = homeBlocks.filter((block) => block?.id === 'columns_math');
+    const mathBlocks = homeBlocks.filter((block) => block?.id === 'home_do_the_math');
 
     expect(mathBlocks).toHaveLength(1);
     expect(mathBlocks[0]?.mode).toBe('dynamic');
-    expect(mathBlocks[0]?.settings?.col1Type).toBe('text');
-    expect(mathBlocks[0]?.settings?.col1Title).toBe('(let us) Do the math.');
+    expect(mathBlocks[0]?.kind).toBe('billboard');
+    expect(mathBlocks[0]?.settings?.title).toBe('(let us) Do the math.');
+    expect(mathBlocks[0]?.settings?.buttonLabel).toBe('Use the calculators');
   });
 
-  it('seeds the home columns blocks on the dynamic canonical path by default', () => {
+  it('seeds the home managed billboard blocks on the dynamic canonical path by default', () => {
     const normalized = normalizeStoredConfig({});
     const homeBlocks = normalized.blocksByPath['/'] || [];
-    const columnsMhaBlock = homeBlocks.find((block) => block?.id === 'columns_mha');
-    const columnsMathBlock = homeBlocks.find((block) => block?.id === 'columns_math');
+    const columnsMhaBlock = homeBlocks.find((block) => block?.id === 'home_ministry_allies');
+    const columnsMathBlock = homeBlocks.find((block) => block?.id === 'home_do_the_math');
 
     expect(columnsMhaBlock).toBeTruthy();
     expect(columnsMhaBlock?.mode).toBe('dynamic');
-    expect(columnsMhaBlock?.kind).toBe('columns');
+    expect(columnsMhaBlock?.kind).toBe('billboard');
     expect(Array.isArray(columnsMhaBlock?.editableFields) ? columnsMhaBlock.editableFields.length : 0).toBeGreaterThan(0);
 
     expect(columnsMathBlock).toBeTruthy();
     expect(columnsMathBlock?.mode).toBe('dynamic');
-    expect(columnsMathBlock?.kind).toBe('columns');
+    expect(columnsMathBlock?.kind).toBe('billboard');
     expect(Array.isArray(columnsMathBlock?.editableFields) ? columnsMathBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
@@ -423,7 +412,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock.settings.bodyHtml).toBe('');
     expect(ctaBlock.settings.subtitle).toBe('And we’re eager to help.');
     expect(ctaBlock.settings.bgTone).toBe('white');
-    expect(ctaBlock.settings.submitLabel).toBe('Follow-up with me');
+    expect(ctaBlock.settings.submitLabel).toBe('Follow up with me');
     expect(ctaBlock.settings.field1Label).toBe('Name*');
     expect(ctaBlock.settings.field2Label).toBe('Email*');
     expect(ctaBlock.settings.field3Label).toBe('Phone*');
@@ -483,6 +472,31 @@ describe('ContentAdminContext state normalization', () => {
     expect(annuitiesBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
   });
 
+  it('restores the charitable gift annuities hero when a stored draft hides it', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/planned-giving/charitable-gift-annuities': [
+          {
+            id: 'hero',
+            kind: 'hero',
+            mode: 'dynamic',
+            hidden: true,
+            settings: {
+              line1Text: 'Generous.',
+              line2Text: 'Rewarding, too.',
+            },
+          },
+        ],
+      },
+    });
+
+    const annuitiesBlocks = normalized.blocksByPath['/services/planned-giving/charitable-gift-annuities'] || [];
+    const heroBlock = annuitiesBlocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+
+    expect(heroBlock).toBeTruthy();
+    expect(heroBlock?.hidden).toBe(false);
+  });
+
   it('seeds ministry impact fund with explicit managed blocks and no fallback page content', () => {
     const normalized = normalizeStoredConfig({});
     const ministryImpactBlocks = normalized.blocksByPath['/services/planned-giving/ministry-impact-fund'] || [];
@@ -514,6 +528,36 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(ministryImpactBlocks.some((block) => block?.id === 'page_content')).toBe(false);
     expect(ministryImpactBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+  });
+
+  it('restores the ministry impact fund hero and clears stored hero buttons', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/planned-giving/ministry-impact-fund': [
+          {
+            id: 'hero',
+            kind: 'hero',
+            mode: 'dynamic',
+            hidden: true,
+            settings: {
+              line1Text: 'Any gift.',
+              line2Text: 'Any asset.',
+              line3Text: 'Unlocked.',
+              button1Label: 'Open a Ministry Impact Fund®',
+              button1Url: 'https://secure.agfinancial.org/ministryimpactfund/signup',
+            },
+          },
+        ],
+      },
+    });
+
+    const ministryImpactBlocks = normalized.blocksByPath['/services/planned-giving/ministry-impact-fund'] || [];
+    const heroBlock = ministryImpactBlocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+
+    expect(heroBlock).toBeTruthy();
+    expect(heroBlock?.hidden).toBe(false);
+    expect(heroBlock?.settings?.button1Label).toBe('');
+    expect(heroBlock?.settings?.button1Url).toBe('');
   });
 
   it('seeds calculators with a request-form block instead of a CTA block', () => {
@@ -1464,17 +1508,19 @@ describe('ContentAdminContext state normalization', () => {
     expect(legalCopyBlock).toBeUndefined();
   });
 
-  it('upgrades stale investments cta-band blocks back onto the dynamic canonical path', () => {
+  it('keeps the canonical investments growth feature block on the managed dynamic path', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/investments': [
           {
-            id: 'investor_cta',
-            kind: 'cta_band',
-            mode: 'static',
+            id: 'growth_feature',
+            kind: 'site_feature',
+            mode: 'dynamic',
             settings: {
-              title: 'Already connected?',
+              featureId: 'investments_growth_feature',
+              body: 'Already connected?',
               buttonLabel: 'Open dashboard',
+              buttonUrl: 'https://secure.agfinancial.org/',
             },
           },
         ],
@@ -1482,20 +1528,20 @@ describe('ContentAdminContext state normalization', () => {
     });
 
     const investmentsBlocks = normalized.blocksByPath['/services/investments'] || [];
-    const ctaBandBlock = investmentsBlocks.find((block) => block?.id === 'investor_cta');
+    const growthFeatureBlock = investmentsBlocks.find((block) => block?.id === 'growth_feature');
 
-    expect(ctaBandBlock).toBeTruthy();
-    expect(ctaBandBlock?.mode).toBe('dynamic');
-    expect(ctaBandBlock?.kind).toBe('cta_band');
-    expect(ctaBandBlock?.templateId).toBe('investor_cta');
-    expect(ctaBandBlock?.presetId).toBe('dashboard-login');
-    expect(ctaBandBlock?.settings?.title).toBe('Already connected?');
-    expect(ctaBandBlock?.settings?.buttonLabel).toBe('Open dashboard');
-    expect(ctaBandBlock?.settings?.buttonUrl).toBe('https://secure.agfinancial.org/');
-    expect(Array.isArray(ctaBandBlock?.editableFields) ? ctaBandBlock.editableFields.length : 0).toBeGreaterThan(0);
+    expect(growthFeatureBlock).toBeTruthy();
+    expect(growthFeatureBlock?.mode).toBe('dynamic');
+    expect(growthFeatureBlock?.kind).toBe('site_feature');
+    expect(growthFeatureBlock?.templateId).toBeUndefined();
+    expect(growthFeatureBlock?.presetId).toBeUndefined();
+    expect(growthFeatureBlock?.settings?.body).toBe('Already connected?');
+    expect(growthFeatureBlock?.settings?.buttonLabel).toBe('Open dashboard');
+    expect(growthFeatureBlock?.settings?.buttonUrl).toBe('https://secure.agfinancial.org/');
+    expect(Array.isArray(growthFeatureBlock?.editableFields) ? growthFeatureBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
-  it('normalizes stale card-grid preset identity onto the canonical preset id', () => {
+  it('keeps explicit card-grid preset identity on the canonical family template id', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -1503,7 +1549,7 @@ describe('ContentAdminContext state normalization', () => {
             id: 'loan_apply',
             kind: 'card_grid',
             mode: 'dynamic',
-            presetId: 'default',
+            presetId: 'step-cards',
             settings: {
               card1Title: 'Check your eligibility',
             },
@@ -1517,13 +1563,13 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(loanApplyBlock).toBeTruthy();
     expect(loanApplyBlock?.kind).toBe('card_grid');
-    expect(loanApplyBlock?.templateId).toBe('loan_apply');
+    expect(loanApplyBlock?.templateId).toBe('card_grid');
     expect(loanApplyBlock?.presetId).toBe('step-cards');
     expect(loanApplyBlock?.settings?.card1Title).toBe('Check your eligibility');
     expect(loanApplyBlock?.settings?.columns).toBe('two');
   });
 
-  it('normalizes stale columns preset identity onto the canonical value-cards preset id', () => {
+  it('keeps explicit columns preset identity on the canonical family template id', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/loans': [
@@ -1531,7 +1577,7 @@ describe('ContentAdminContext state normalization', () => {
             id: 'value_cards',
             kind: 'columns',
             mode: 'dynamic',
-            presetId: 'default',
+            presetId: 'value-cards',
             settings: {
               title: "There's more to every loan.",
               col1Title: 'Smart consulting.',
@@ -1546,7 +1592,7 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(valueCardsBlock).toBeTruthy();
     expect(valueCardsBlock?.kind).toBe('columns');
-    expect(valueCardsBlock?.templateId).toBe('value_cards');
+    expect(valueCardsBlock?.templateId).toBe('columns');
     expect(valueCardsBlock?.presetId).toBe('value-cards');
     expect(valueCardsBlock?.settings?.title).toBe("There's more to every loan.");
     expect(valueCardsBlock?.settings?.columnsStyle).toBe('loans-value');
@@ -1579,27 +1625,6 @@ describe('ContentAdminContext state normalization', () => {
     expect(calculatorCtaBlock?.settings?.calculateLabel).toBe('Run calculation');
     expect(calculatorCtaBlock?.settings?.discussButtonLabel).toBe('Send');
     expect(Array.isArray(calculatorCtaBlock?.editableFields) ? calculatorCtaBlock.editableFields.length : 0).toBeGreaterThan(0);
-  });
-
-  it('drops the retired investments rates_table placeholder from stored admin state', () => {
-    const normalized = normalizeStoredConfig({
-      blocksByPath: {
-        '/services/investments': [
-          {
-            id: 'rates_table',
-            kind: 'rates_table',
-            mode: 'static',
-            settings: {
-              note: 'Legacy rates placeholder',
-            },
-          },
-        ],
-      },
-    });
-
-    const investmentsBlocks = normalized.blocksByPath['/services/investments'] || [];
-
-    expect(investmentsBlocks.some((block) => block?.id === 'rates_table')).toBe(false);
   });
 
   it('upgrades stale retirement split-panel blocks back onto the dynamic canonical path', () => {
@@ -1727,30 +1752,26 @@ describe('ContentAdminContext state normalization', () => {
     expect(Array.isArray(impactStatBlock?.editableFields) ? impactStatBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
-  it('upgrades stale home columns blocks back onto the dynamic canonical path', () => {
+  it('keeps home managed billboard blocks on the canonical dynamic path', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/': [
           {
-            id: 'columns_mha',
-            kind: 'columns',
-            mode: 'static',
+            id: 'home_ministry_allies',
+            kind: 'billboard',
+            mode: 'dynamic',
             settings: {
-              col1Type: 'photo',
-              col1ImageUrl: 'mha-photo.jpg',
-              col2Type: 'text',
-              col2Title: 'Updated housing title',
+              title: 'Updated housing title',
+              body: 'Updated housing body',
             },
           },
           {
-            id: 'columns_math',
-            kind: 'columns',
+            id: 'home_do_the_math',
+            kind: 'billboard',
             mode: 'static',
             settings: {
-              col1Type: 'text',
-              col1Title: 'Updated math title',
-              col2Type: 'photo',
-              col2ImageUrl: 'math-photo.jpg',
+              title: 'Updated math title',
+              body: 'Updated math body',
             },
           },
         ],
@@ -1758,19 +1779,21 @@ describe('ContentAdminContext state normalization', () => {
     });
 
     const homeBlocks = normalized.blocksByPath['/'] || [];
-    const columnsMhaBlock = homeBlocks.find((block) => block?.id === 'columns_mha');
-    const columnsMathBlock = homeBlocks.find((block) => block?.id === 'columns_math');
+    const columnsMhaBlock = homeBlocks.find((block) => block?.id === 'home_ministry_allies');
+    const columnsMathBlock = homeBlocks.find((block) => block?.id === 'home_do_the_math');
 
     expect(columnsMhaBlock).toBeTruthy();
     expect(columnsMhaBlock?.mode).toBe('dynamic');
-    expect(columnsMhaBlock?.settings?.col1ImageUrl).toBe('mha-photo.jpg');
-    expect(columnsMhaBlock?.settings?.col2Title).toBe('Updated housing title');
+    expect(columnsMhaBlock?.kind).toBe('billboard');
+    expect(columnsMhaBlock?.settings?.title).toBe('Updated housing title');
+    expect(columnsMhaBlock?.settings?.body).toBe('Updated housing body');
     expect(Array.isArray(columnsMhaBlock?.editableFields) ? columnsMhaBlock.editableFields.length : 0).toBeGreaterThan(0);
 
     expect(columnsMathBlock).toBeTruthy();
     expect(columnsMathBlock?.mode).toBe('dynamic');
-    expect(columnsMathBlock?.settings?.col1Title).toBe('Updated math title');
-    expect(columnsMathBlock?.settings?.col2ImageUrl).toBe('math-photo.jpg');
+    expect(columnsMathBlock?.kind).toBe('billboard');
+    expect(columnsMathBlock?.settings?.title).toBe('Updated math title');
+    expect(columnsMathBlock?.settings?.body).toBe('Updated math body');
     expect(Array.isArray(columnsMathBlock?.editableFields) ? columnsMathBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
@@ -1798,32 +1821,4 @@ describe('ContentAdminContext state normalization', () => {
     expect(impactBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
-  it('migrates stale /rates legacy rates_table blocks onto canonical rates kind before runtime consumption', () => {
-    const normalized = normalizeStoredConfig({
-      blocksByPath: {
-        '/rates': [
-          {
-            id: 'certificates_table',
-            kind: 'rates_table',
-            mode: 'dynamic',
-            settings: {},
-          },
-          {
-            id: 'ira_table',
-            kind: 'rates_table',
-            mode: 'dynamic',
-            settings: {},
-          },
-        ],
-      },
-    });
-
-    const ratesBlocks = normalized.blocksByPath['/rates'] || [];
-
-    expect(ratesBlocks).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: 'certificates_table', kind: 'rates', mode: 'dynamic' }),
-      expect.objectContaining({ id: 'ira_table', kind: 'rates', mode: 'dynamic' }),
-    ]));
-    expect(ratesBlocks.some((block) => block?.kind === 'rates_table')).toBe(false);
-  });
 });

@@ -101,7 +101,8 @@ function buildPresetSeedState() {
           id: 'value_cards',
           kind: 'columns',
           mode: 'dynamic',
-          presetId: 'default',
+          presetId: 'value-cards',
+          templateId: 'columns',
           settings: {
             title: "There's more to every loan.",
             col1Title: 'Smart consulting.',
@@ -110,10 +111,11 @@ function buildPresetSeedState() {
       ],
       '/services/investments': [
         {
-          id: 'investor_cta',
+          id: 'dashboard_login_cta',
           kind: 'cta_band',
           mode: 'dynamic',
-          presetId: 'default',
+          presetId: 'dashboard-login',
+          templateId: 'cta_band',
           settings: {
             title: 'Already connected?',
             buttonLabel: 'Open dashboard',
@@ -125,7 +127,8 @@ function buildPresetSeedState() {
           id: 'loan_apply',
           kind: 'card_grid',
           mode: 'dynamic',
-          presetId: 'default',
+          presetId: 'step-cards',
+          templateId: 'card_grid',
           settings: {
             card1Title: 'Check your eligibility',
           },
@@ -366,6 +369,8 @@ describe('createDevContentAuthorityStore', () => {
     const loanApply = reloaded.getSnapshot().state.blocksByPath['/services/retirement/403b'][0];
 
     expect(valueCards.presetId).toBe('value-cards');
+    expect(investorCta.id).toBe('dashboard_login_cta');
+    expect(investorCta.templateId).toBe('cta_band');
     expect(investorCta.presetId).toBe('dashboard-login');
     expect(loanApply.presetId).toBe('step-cards');
   });
@@ -630,23 +635,25 @@ describe('createDevContentAuthorityStore', () => {
     expect(published.state.collaborationByPath['/services/loans'].history[0].action).toBe('page-published');
   });
 
-  it('re-normalizes malformed preset ids during shared draft saves', () => {
+  it('re-normalizes malformed preset-family template ids during shared draft saves', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);
 
     store.resetFromSeed(buildPresetSeedState(), { actor: createActor() });
 
     const nextState = cloneJson(store.getSnapshot().state);
-    nextState.blocksByPath['/services/loans'][0].presetId = 'default';
+    nextState.blocksByPath['/services/loans'][0].templateId = 'value_cards';
     nextState.blocksByPath['/services/loans'][0].settings.col2Title = 'Teamwork.';
-    nextState.blocksByPath['/services/retirement/403b'][0].presetId = 'default';
+    nextState.blocksByPath['/services/retirement/403b'][0].templateId = 'loan_apply';
     nextState.blocksByPath['/services/retirement/403b'][0].settings.card2Title = 'Submit your request';
 
     const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'update loan apply grid' });
 
     expect(saved.ok).toBe(true);
+    expect(saved.state.blocksByPath['/services/loans'][0].templateId).toBe('columns');
     expect(saved.state.blocksByPath['/services/loans'][0].presetId).toBe('value-cards');
     expect(saved.state.blocksByPath['/services/loans'][0].settings.col2Title).toBe('Teamwork.');
+    expect(saved.state.blocksByPath['/services/retirement/403b'][0].templateId).toBe('card_grid');
     expect(saved.state.blocksByPath['/services/retirement/403b'][0].presetId).toBe('step-cards');
     expect(saved.state.blocksByPath['/services/retirement/403b'][0].settings.card2Title).toBe('Submit your request');
   });

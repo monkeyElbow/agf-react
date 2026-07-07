@@ -37,6 +37,7 @@ import {
   normalizeHeroTitleSizeRem,
 } from '../lib/heroTitleSize';
 import { normalizePresetBearingBlocks } from '../lib/blockPresetIdentity';
+import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
 import {
@@ -1074,7 +1075,9 @@ function dedupeBlocksByIdPreferLatest(blocks) {
   return deduped;
 }
 
-const HOME_LOCKED_DYNAMIC_COLUMNS_BLOCK_IDS = new Set(['columns_mha', 'columns_math']);
+const HOME_MINISTRY_ALLIES_BLOCK_ID = 'home_ministry_allies';
+const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
+const HOME_LOCKED_DYNAMIC_BLOCK_IDS = new Set([HOME_MINISTRY_ALLIES_BLOCK_ID, HOME_DO_THE_MATH_BLOCK_ID]);
 
 const SINGLETON_BLOCK_KINDS = getSingletonBlockKinds();
 
@@ -3213,7 +3216,7 @@ function buildDefaultBlocks() {
       const blockId = String(block?.id || '').trim();
       if (
         page.path === '/'
-        && HOME_LOCKED_DYNAMIC_COLUMNS_BLOCK_IDS.has(blockId)
+        && HOME_LOCKED_DYNAMIC_BLOCK_IDS.has(blockId)
         && String(block?.mode || '').trim().toLowerCase() !== 'dynamic'
       ) {
         const dynamicVariant = getModeTemplateVariant({
@@ -3481,18 +3484,21 @@ export function normalizeStoredConfig(payload) {
       return;
     }
 
-    const normalizedStoredBlocks = dedupeBlocksByIdPreferLatest(storedBlocks);
     const defaultForPath = Array.isArray(defaultBlocks[path]) ? defaultBlocks[path] : [];
     const defaultById = new Map(defaultForPath.map((block) => [block.id, block]));
+    const normalizedStoredBlocks = dedupeBlocksByIdPreferLatest(storedBlocks);
     const canonicalFormOwner = inferCanonicalFormOwner(defaultForPath);
     const seenIds = new Set();
     const mergedInStoredOrder = [];
 
     normalizedStoredBlocks.forEach((storedBlock) => {
-      if (!storedBlock || typeof storedBlock !== 'object' || !storedBlock.id || seenIds.has(storedBlock.id)) {
+      const storedBlockId = String(storedBlock?.id || '').trim();
+      const storedKind = String(storedBlock?.kind || '').trim().toLowerCase();
+      const effectiveStoredBlockId = storedBlockId;
+
+      if (!storedBlock || typeof storedBlock !== 'object' || !effectiveStoredBlockId || seenIds.has(effectiveStoredBlockId)) {
         return;
       }
-      const storedKind = String(storedBlock?.kind || '').trim().toLowerCase();
       const storedSettings = storedBlock?.settings && typeof storedBlock.settings === 'object'
         ? storedBlock.settings
         : {};
@@ -3560,12 +3566,8 @@ export function normalizeStoredConfig(payload) {
       if (path === '/rates' && storedBlock.id === 'disclaimer' && storedKind === 'legal_copy') {
         return;
       }
-      if (path === '/services/investments' && storedBlock.id === 'rates_table' && storedKind === 'rates_table') {
-        return;
-      }
-
-      seenIds.add(storedBlock.id);
-      const defaultBlock = defaultById.get(storedBlock.id);
+      seenIds.add(effectiveStoredBlockId);
+      const defaultBlock = defaultById.get(effectiveStoredBlockId);
       if (!defaultBlock) {
         mergedInStoredOrder.push(storedBlock);
         return;
@@ -3870,42 +3872,10 @@ export function normalizeStoredConfig(payload) {
           settings: normalizeTopStripSettings(nextStoredBlock?.settings),
         };
       }
-      if (path === '/rates' && storedKind === 'rates_table' && storedMode === 'dynamic') {
-        // Retained only to migrate stale local /rates state onto the canonical rates kind.
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          kind: 'rates',
-        };
-      }
       if (
         path === '/services/investments'
         && storedBlock.id === 'laddering'
         && storedKind === 'calculator_cta'
-        && storedMode !== 'dynamic'
-      ) {
-        storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...storedBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
-            ? defaultBlock.hidden
-            : storedBlock.hidden,
-          settings: isBlankSettingsObject(storedBlock?.settings)
-            ? { ...(defaultBlock?.settings || {}) }
-            : {
-                ...(defaultBlock?.settings || {}),
-                ...(storedBlock?.settings || {}),
-              },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? defaultBlock.editableFields
-            : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
-        };
-      }
-      if (
-        path === '/services/investments'
-        && storedBlock.id === 'investor_cta'
-        && storedKind === 'cta_band'
         && storedMode !== 'dynamic'
       ) {
         storedMode = 'dynamic';
@@ -4031,9 +4001,9 @@ export function normalizeStoredConfig(payload) {
       }
       if (
         path === '/'
-        && HOME_LOCKED_DYNAMIC_COLUMNS_BLOCK_IDS.has(storedBlock.id)
-        && storedKind === 'columns'
+        && HOME_LOCKED_DYNAMIC_BLOCK_IDS.has(storedBlock.id)
         && storedMode !== 'dynamic'
+        && defaultBlock?.mode === 'dynamic'
       ) {
         storedMode = 'dynamic';
         nextStoredBlock = {
@@ -4482,6 +4452,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
     lastAppliedAt: 0,
   });
   const stateRef = useRef(state);
+  const hasPersistedNormalizedInitialStateRef = useRef(false);
   const bufferedBlockSettingEditsRef = useRef(bufferedBlockSettingEdits);
   const persistedSharedAuthoringStateRef = useRef(toComparableAuthoringState(state));
   const publishedSharedAuthoringStateRef = useRef(toComparableAuthoringState(state));
@@ -4491,6 +4462,18 @@ export function ContentAdminProvider({ children, initialState = null }) {
   const externalDraftFlushHandlersRef = useRef(new Map());
   const latestSharedMutationIdRef = useRef(0);
   const latestSharedUpdatedAtRef = useRef(0);
+
+  useEffect(() => {
+    if (sharedAuthorityEnabled || hasPersistedNormalizedInitialStateRef.current) {
+      return;
+    }
+    hasPersistedNormalizedInitialStateRef.current = true;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateRef.current));
+    } catch {
+      // ignore storage failures
+    }
+  }, [sharedAuthorityEnabled]);
 
   const refreshSharedSyncState = (patch = {}) => {
     setSharedSyncState((previous) => ({
@@ -4840,7 +4823,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
     } = displayState;
     const availableBlockTemplates = getAllBlockTemplateBlueprints();
     const blockTemplateById = new Map(
-      availableBlockTemplates.map((template) => [template.templateLookupId || template.templateId, template]),
+      availableBlockTemplates.map((template) => [buildBlockTemplateCreateId(template), template]),
     );
     const currentActor = toDevIdentitySummary(devIdentity);
     const authoringStateForDirtyChecks = sharedAuthorityEnabled

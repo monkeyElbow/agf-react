@@ -9,27 +9,27 @@ describe('admin block insert choices', () => {
 
     expect(choices.find((choice) => choice.kind === 'card_grid' && choice.presetId === 'default')).toMatchObject({
       name: 'Card Grid · Flexible cards',
-      createTemplateId: 'card_grid',
+      createTemplateId: 'dynamic:card_grid:default',
       isCompatibility: false,
     });
     expect(choices.find((choice) => choice.kind === 'card_grid' && choice.presetId === 'investment-options')).toMatchObject({
       name: 'Card Grid · Investment options',
-      createTemplateId: 'investment_strategy_options',
+      createTemplateId: 'dynamic:card_grid:investment-options',
       isCompatibility: false,
     });
     expect(choices.find((choice) => choice.kind === 'cta_band' && choice.presetId === 'dashboard-login')).toMatchObject({
       name: 'CTA Band · Dashboard login',
-      createTemplateId: 'investor_cta',
+      createTemplateId: 'dynamic:cta_band:dashboard-login',
       isCompatibility: false,
     });
     expect(choices.find((choice) => choice.kind === 'columns' && choice.presetId === 'default')).toMatchObject({
       name: 'Columns · Flexible columns',
-      createTemplateId: 'columns',
+      createTemplateId: 'dynamic:columns:default',
       isCompatibility: false,
     });
     expect(choices.find((choice) => choice.kind === 'columns' && choice.presetId === 'value-cards')).toMatchObject({
       name: 'Columns · Value cards',
-      createTemplateId: 'value_cards',
+      createTemplateId: 'dynamic:columns:value-cards',
       isCompatibility: false,
     });
     expect(choices.find((choice) => choice.kind === 'site_feature' && choice.createTemplateId === 'site_feature')).toMatchObject({
@@ -46,11 +46,11 @@ describe('admin block insert choices', () => {
 
     expect(choices.find((choice) => choice.kind === 'card_grid' && choice.presetId === 'default' && !choice.isCompatibility)).toMatchObject({
       name: 'Card Grid · Flexible cards',
-      createTemplateId: 'services_cards',
+      createTemplateId: 'static:card_grid:default',
     });
     expect(choices.find((choice) => choice.kind === 'cta_band' && choice.presetId === 'default' && !choice.isCompatibility)).toMatchObject({
       name: 'CTA Band · General CTA',
-      createTemplateId: 'cta_band',
+      createTemplateId: 'static:cta_band:default',
     });
 
     getRetiredInsertCompatibilityTemplateIds('static').forEach((templateId) => {

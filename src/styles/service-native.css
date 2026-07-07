@@ -2495,7 +2495,7 @@
 
 .investments-native-growth-feature {
   --investments-growth-display-size: clamp(3.7rem, 9vw, 6.2rem);
-  --investments-growth-display-letter-spacing: clamp(-0.051em, -0.036vw, -0.032em);
+  --investments-growth-display-letter-spacing: clamp(-0.062em, -0.048vw, -0.04em);
   --investments-growth-blue-opacity: 1;
   --investments-growth-mango-opacity: 0;
   --investments-growth-sand-opacity: 0;
@@ -5367,13 +5367,16 @@
   background: var(--btn-bg);
   color: var(--btn-text);
   text-decoration: none;
+  font-family: var(--ag-font-helv);
   font-size: 1rem;
-  font-weight: 100;
+  font-weight: 700;
   letter-spacing: 0.45px;
   min-height: 44px;
   padding: 0.76rem 1.5rem;
   line-height: 1.1;
   text-align: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .service-native-btn:hover {
@@ -6190,8 +6193,8 @@
 .home-native-page.has-active-front-hud-panel.hud-focus-home-services-feature-animation [data-block-id="home_services_feature_animation"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-cta-form [data-block-id="cta_form"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-newsletter [data-block-id="newsletter"],
-.home-native-page.has-active-front-hud-panel.hud-focus-home-columns-mha [data-block-id="columns_mha"],
-.home-native-page.has-active-front-hud-panel.hud-focus-home-columns-math [data-block-id="columns_math"],
+.home-native-page.has-active-front-hud-panel.hud-focus-home-columns-mha [data-block-id="home_ministry_allies"],
+.home-native-page.has-active-front-hud-panel.hud-focus-home-columns-math [data-block-id="home_do_the_math"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-services-grid [data-block-id="services_grid"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-impact-stat [data-block-id="impact_stat"] {
   z-index: 4;
@@ -6204,8 +6207,8 @@
 .home-native-page.has-active-front-hud-panel.hud-focus-home-services-feature-animation [data-block-id="home_services_feature_animation"]::after,
 .home-native-page.has-active-front-hud-panel.hud-focus-home-cta-form [data-block-id="cta_form"]::after,
 .home-native-page.has-active-front-hud-panel.hud-focus-home-newsletter [data-block-id="newsletter"]::after,
-.home-native-page.has-active-front-hud-panel.hud-focus-home-columns-mha [data-block-id="columns_mha"]::after,
-.home-native-page.has-active-front-hud-panel.hud-focus-home-columns-math [data-block-id="columns_math"]::after,
+.home-native-page.has-active-front-hud-panel.hud-focus-home-columns-mha [data-block-id="home_ministry_allies"]::after,
+.home-native-page.has-active-front-hud-panel.hud-focus-home-columns-math [data-block-id="home_do_the_math"]::after,
 .home-native-page.has-active-front-hud-panel.hud-focus-home-services-grid [data-block-id="services_grid"]::after,
 .home-native-page.has-active-front-hud-panel.hud-focus-home-impact-stat [data-block-id="impact_stat"]::after {
   opacity: 0;
@@ -21175,6 +21178,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card::before {
   content: counter(ministry-impact-stock-step, decimal-leading-zero);
   counter-increment: ministry-impact-stock-step;
+  grid-row: 1 / span 2;
   color: var(--stock-step-accent);
   font-family: var(--ag-font-helv);
   font-weight: 800;
@@ -21245,6 +21249,10 @@ p.impact-proof-story-proof-body {
   .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card > div,
   .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card > .service-native-action-row {
     grid-column: 1;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card::before {
+    grid-row: auto;
   }
 
   .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-action-row:last-child {
@@ -24442,7 +24450,7 @@ p.impact-proof-story-proof-body {
 
   .investments-native-growth-feature {
     --investments-growth-display-size: clamp(3rem, 13vw, 4.25rem);
-    --investments-growth-display-letter-spacing: clamp(-0.044em, -0.024vw, -0.028em);
+    --investments-growth-display-letter-spacing: clamp(-0.054em, -0.034vw, -0.034em);
   }
 
   .service-native-section h2.investments-native-build-title {

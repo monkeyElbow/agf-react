@@ -17,19 +17,13 @@ describe('card grid preset definitions', () => {
     ]);
     expect(getCardGridPresetDefinition('default')?.templateIds).toEqual([
       'card_grid',
-      'services_cards',
-      'loan_options',
-      'certificates',
-      'plan_features',
     ]);
-    expect(getCardGridPresetDefinition('step-cards')?.legacyBlockIds).toEqual(['loan_apply']);
   });
 
-  it('resolves preset identity from explicit preset ids, template ids, and narrow legacy block ids', () => {
+  it('resolves preset identity from explicit preset ids and template ids', () => {
     expect(resolveCardGridPresetId({ kind: 'card_grid', presetId: 'investment-options' })).toBe('investment-options');
-    expect(resolveCardGridPresetId({ kind: 'card_grid', templateId: 'investment_strategy_options' })).toBe('investment-options');
-    expect(resolveCardGridPresetId({ kind: 'card_grid', id: 'who_qualifies' })).toBe('eligibility-cards');
-    expect(resolveCardGridPresetDefinition({ kind: 'card_grid', templateId: 'loan_apply' })?.label).toBe('Step-by-step cards');
+    expect(resolveCardGridPresetId({ kind: 'card_grid', templateId: 'card_grid' })).toBe('default');
+    expect(resolveCardGridPresetDefinition({ kind: 'card_grid', presetId: 'step-cards' })?.label).toBe('Step-by-step cards');
   });
 
   it('keeps preset defaults and editor guardrails intentionally bounded', () => {

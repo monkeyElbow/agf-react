@@ -434,55 +434,44 @@ describe('request form seed guardrails', () => {
     expect(block.mode).toBe('static');
   });
 
-  it('keeps home columns blocks dynamic when the user switches them on', () => {
+  it('keeps home managed billboard blocks on the canonical dynamic path when the user switches them on', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/': [
           {
-            id: 'columns_mha',
-            kind: 'columns',
+            id: 'home_ministry_allies',
+            kind: 'billboard',
             mode: 'dynamic',
             settings: {
-              bgTone: 'sand',
-              columns: 'two',
-              contentWidth: 'content',
-              col1Type: 'photo',
-              col1ImageUrl: 'mha-photo.jpg',
-              col2Type: 'text',
-              col2Title: 'Ministers Housing Allowance',
+              title: 'Ministry allies.',
+              bodyHtml: '<p>We are serving you.</p>',
             },
           },
           {
-            id: 'columns_math',
-            kind: 'columns',
+            id: 'home_do_the_math',
+            kind: 'billboard',
             mode: 'dynamic',
             settings: {
-              bgTone: 'white',
-              columns: 'two',
-              contentWidth: 'content',
-              col1Type: 'text',
-              col1Title: '(let us) Do the math.',
-              col2Type: 'photo',
-              col2ImageUrl: 'math-photo.jpg',
+              title: '(let us) Do the math.',
+              body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
             },
           },
         ],
       },
     });
 
-    const columnsMha = (normalized.blocksByPath['/'] || []).find((entry) => entry?.id === 'columns_mha');
-    const columnsMath = (normalized.blocksByPath['/'] || []).find((entry) => entry?.id === 'columns_math');
+    const columnsMha = (normalized.blocksByPath['/'] || []).find((entry) => entry?.id === 'home_ministry_allies');
+    const columnsMath = (normalized.blocksByPath['/'] || []).find((entry) => entry?.id === 'home_do_the_math');
 
     expect(columnsMha).toBeTruthy();
     expect(columnsMha.mode).toBe('dynamic');
-    expect(columnsMha.settings.col1Type).toBe('photo');
-    expect(columnsMha.settings.col1ImageUrl).toBe('mha-photo.jpg');
-    expect(columnsMha.settings.col2Title).toBe('Ministers Housing Allowance');
+    expect(columnsMha.kind).toBe('billboard');
+    expect(columnsMha.settings.title).toBe('Ministry allies.');
+    expect(columnsMha.settings.bodyHtml).toContain('We are serving you');
     expect(columnsMath).toBeTruthy();
     expect(columnsMath.mode).toBe('dynamic');
-    expect(columnsMath.settings.col1Type).toBe('text');
-    expect(columnsMath.settings.col1Title).toBe('(let us) Do the math.');
-    expect(columnsMath.settings.col2Type).toBe('photo');
-    expect(columnsMath.settings.col2ImageUrl).toBe('math-photo.jpg');
+    expect(columnsMath.kind).toBe('billboard');
+    expect(columnsMath.settings.title).toBe('(let us) Do the math.');
+    expect(columnsMath.settings.body).toBe('Retirement savings, compound interest, loan payments, net worth, and more.');
   });
 });
