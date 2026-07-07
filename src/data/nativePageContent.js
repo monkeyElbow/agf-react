@@ -2248,7 +2248,7 @@ const legacyChildPages = {
           label: 'Start the process',
           action: 'open_cta_form',
           targetAnchorId: 'charitable-trusts-inline-form',
-          className: 'is-outline is-tone-atlantean',
+                className: 'is-outline is-tone-white',
         }],
       },
       {
@@ -2637,13 +2637,37 @@ const legacyChildPages = {
         titleHighlights: [{ text: 'Start here', className: 'is-atlantean' }],
         body: [
           'Follow the two steps below. If you have questions or would like help, email **plannedgiving@AGFinancial.org** or call 417.447.2440.',
-          '**1. Intent to Gift of Securities** — Complete this form (ignore section 3) and submit it via this secure message link. Indicate “Attn: Jason Idell” in the secure message.',
-          '**2. Brokerage Letter of Authorization (LOA)** — Complete this form and submit it to your broker/dealer; however, notify the brokerage firm before sending the completed LOA form. Some broker/dealers may require additional paperwork.',
         ],
-        actions: [
-          { label: 'Intent to Gift form', documentId: 'document-planned-giving-intent-to-gift-form' },
-          { label: 'Secure message upload', href: 'https://uploads.agfinancial.org/', ghost: true },
-          { label: 'Brokerage LOA form', documentId: 'document-planned-giving-brokerage-loa-form', ghost: true },
+        cards: [
+          {
+            title: 'Intent to Gift of Securities',
+            body: 'Complete this form, ignore section 3, then submit it through the secure message link. Indicate “Attn: Jason Idell” in the secure message.',
+            cardClass: 'card2',
+            actions: [
+              {
+                label: 'Intent to Gift form',
+                documentId: 'document-planned-giving-intent-to-gift-form',
+                className: 'is-outline is-tone-atlantean',
+              },
+              {
+                label: 'Secure message upload',
+                href: 'https://uploads.agfinancial.org/',
+                className: 'is-outline is-tone-atlantean',
+              },
+            ],
+          },
+          {
+            title: 'Brokerage Letter of Authorization (LOA)',
+            body: 'Complete this form and submit it to your broker or dealer. Notify the brokerage firm before sending the completed LOA form, since some firms may require additional paperwork.',
+            cardClass: 'card2',
+            actions: [
+              {
+                label: 'Brokerage LOA form',
+                documentId: 'document-planned-giving-brokerage-loa-form',
+                className: 'is-outline is-tone-mango',
+              },
+            ],
+          },
         ],
       },
       {

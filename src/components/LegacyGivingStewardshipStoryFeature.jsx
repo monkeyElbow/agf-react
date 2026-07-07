@@ -121,7 +121,7 @@ function renderLegacyBeatHeading(text, { final = false } = {}) {
   );
 }
 
-function StoryAction({ action, resolveTo, className = 'service-native-btn is-outline is-tone-atlantean' }) {
+function StoryAction({ action, resolveTo, className = 'service-native-btn is-outline is-tone-white' }) {
   if (!action?.label) {
     return null;
   }
@@ -249,7 +249,7 @@ export function LegacyGivingStewardshipStoryStaticContent({
           >
             <h2 aria-label={finalBeat}>{renderLegacyBeatHeading(finalBeat, { final: true })}</h2>
             <div className="legacy-stewardship-story-cta-wrap">
-              <StoryAction action={action} resolveTo={resolveTo} className="service-native-btn is-outline is-tone-atlantean legacy-stewardship-story-cta" />
+              <StoryAction action={action} resolveTo={resolveTo} className="service-native-btn is-outline is-tone-white legacy-stewardship-story-cta" />
             </div>
           </div>
         ) : null}
@@ -448,7 +448,7 @@ export default function LegacyGivingStewardshipStoryFeature({
                 transform: `translate3d(0, ${ctaShift}px, 0)`,
               }}
             >
-              <StoryAction action={action} resolveTo={resolveTo} className="service-native-btn is-outline is-tone-atlantean legacy-stewardship-story-cta" />
+              <StoryAction action={action} resolveTo={resolveTo} className="service-native-btn is-outline is-tone-white legacy-stewardship-story-cta" />
             </div>
           </div>
         </div>

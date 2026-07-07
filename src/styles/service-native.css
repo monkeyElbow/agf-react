@@ -14028,8 +14028,8 @@
 }
 
 .legacy-stewardship-story .legacy-stewardship-story-cta.service-native-btn.is-outline {
-  --btn-color: var(--legacy-stewardship-accent);
-  --btn-hover-color: var(--legacy-stewardship-accent);
+  --btn-color: rgba(255, 255, 255, 0.96);
+  --btn-hover-color: rgba(255, 255, 255, 0.96);
   color: var(--btn-color);
   border-color: var(--btn-color);
   background: transparent;
@@ -21110,11 +21110,15 @@ p.impact-proof-story-proof-body {
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock > .ag-panel-rail > h2 {
   font-size: clamp(2.1rem, 4.6vw, 3.2rem);
   letter-spacing: var(--ag-letter-spacing-helv-heading);
+  text-align: center;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock > .ag-panel-rail > p {
   font-size: clamp(1.1rem, 1.9vw, 1.4rem);
   line-height: 1.6;
+  max-width: 52rem;
+  margin-inline: auto;
+  text-align: center;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock > .ag-panel-rail > p:nth-of-type(n + 2) {
@@ -21125,14 +21129,127 @@ p.impact-proof-story-proof-body {
   color: var(--ag-color-atlantean);
 }
 
-.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock a {
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock a:not(.service-native-btn) {
   color: var(--ag-color-atlantean);
   font-weight: 700;
   text-decoration: none;
 }
 
-.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock a:hover {
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock a:not(.service-native-btn):hover {
   text-decoration: underline;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock {
+  background: #fff;
+  counter-reset: ministry-impact-stock-step;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.5rem, 2.8vw, 2.1rem);
+  width: min(100%, 82ch);
+  margin: clamp(1.3rem, 2.6vw, 1.9rem) auto 0;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card {
+  --stock-step-accent: var(--ag-color-atlantean);
+  position: relative;
+  display: grid;
+  grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);
+  column-gap: clamp(1.25rem, 2.6vw, 2rem);
+  row-gap: 0;
+  align-items: start;
+  padding: clamp(1.2rem, 2.3vw, 1.6rem) clamp(1.35rem, 2.7vw, 2rem);
+  border: 2px solid var(--stock-step-accent);
+  border-radius: 1.75rem;
+  background: #fff;
+  box-shadow: none;
+  transform: none;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card::before {
+  content: counter(ministry-impact-stock-step, decimal-leading-zero);
+  counter-increment: ministry-impact-stock-step;
+  color: var(--stock-step-accent);
+  font-family: var(--ag-font-helv);
+  font-weight: 800;
+  font-size: clamp(2.55rem, 4.35vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  justify-self: center;
+  align-self: center;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card:nth-child(2) {
+  --stock-step-accent: var(--ag-color-mango);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card > div,
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card > .service-native-action-row {
+  grid-column: 2;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card > div {
+  min-width: 0;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card h3 {
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-weight: 800;
+  font-size: clamp(1.3rem, 2.1vw, 1.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card h3::after {
+  content: none;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card > div > p {
+  color: var(--ag-color-super-grey);
+  font-size: clamp(1.08rem, 1.75vw, 1.24rem);
+  line-height: 1.58;
+  margin: 0;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-action-row:last-child {
+  margin-top: 1rem;
+  padding-top: 0;
+  justify-content: flex-start;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-btn,
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-btn:visited,
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-btn:hover,
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-btn:focus-visible {
+  text-decoration: none;
+}
+
+@media (max-width: 1024px) {
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.85rem;
+    text-align: center;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card::before,
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card > div,
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card > .service-native-action-row {
+    grid-column: 1;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-action-row:last-child {
+    justify-content: center;
+  }
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-billboard {
