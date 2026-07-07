@@ -23,6 +23,9 @@ import {
   buildDynamicTopStripFromBlock,
   buildDynamicTestimonialsFromBlock,
   heroAnimationClassForLine,
+  isPdfLinkHref,
+  normalizeUniversalOutlineButtonClassName,
+  shouldUseUniversalOutlineButtonLink,
 } from './dynamicPageBlocks';
 
 describe('heroAnimationClassForLine', () => {
@@ -35,6 +38,26 @@ describe('heroAnimationClassForLine', () => {
   it('still resolves none to a non-animated class', () => {
     expect(heroAnimationClassForLine('none', 1)).toBe('hero-anim-none');
     expect(heroAnimationClassForLine('none', 3)).toBe('hero-anim-none');
+  });
+});
+
+describe('shared external button link helpers', () => {
+  it('detects pdf targets and external-or-pdf button links', () => {
+    expect(isPdfLinkHref('https://files.example.com/offering-circular.pdf')).toBe(true);
+    expect(isPdfLinkHref('/docs/reference-packet.pdf?download=1')).toBe(true);
+    expect(isPdfLinkHref('/services/loans')).toBe(false);
+    expect(shouldUseUniversalOutlineButtonLink({ href: 'https://www.example.com' })).toBe(true);
+    expect(shouldUseUniversalOutlineButtonLink({ to: '/docs/reference-packet.pdf' })).toBe(true);
+    expect(shouldUseUniversalOutlineButtonLink({ to: '/services/loans' })).toBe(false);
+  });
+
+  it('normalizes forced external button links onto the shared outline classes without losing tone', () => {
+    expect(normalizeUniversalOutlineButtonClassName('service-native-btn is-ghost is-tone-mango extra-class', 'mango')).toBe(
+      'service-native-btn extra-class is-outline is-tone-mango',
+    );
+    expect(normalizeUniversalOutlineButtonClassName('', 'super-grey')).toBe(
+      'service-native-btn is-outline is-tone-super-grey',
+    );
   });
 });
 

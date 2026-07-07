@@ -1457,13 +1457,13 @@ p.home-services-feature-panel-body {
 
 .home-services-feature .service-native-btn.is-outline.is-tone-white:hover,
 .home-services-feature .service-native-btn.is-outline.is-tone-white:focus-visible {
-  border-color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.72);
   color: #ffffff;
   background: transparent;
 }
 
 .home-services-feature .service-native-btn.is-outline.is-tone-white:active {
-  border-color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.72);
   color: #ffffff;
   background: transparent;
 }
@@ -1478,9 +1478,9 @@ p.home-services-feature-panel-body {
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:hover,
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:focus-visible,
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:active {
-  border-color: #ffffff;
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--home-services-card-button-hover-text);
+  border-color: rgba(255, 255, 255, 0.88);
+  background: transparent;
+  color: var(--home-services-card-button-text);
 }
 
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline:focus-visible {
@@ -1655,7 +1655,6 @@ p.home-services-feature-panel-body {
   overflow: hidden;
   overflow: clip;
   background:
-    linear-gradient(90deg, rgba(10, 124, 148, 0.26) 0%, rgba(10, 124, 148, 0.14) 3%, rgba(10, 124, 148, 0) 7%),
     radial-gradient(circle at 12% 8%, rgba(0, 56, 81, 0.98) 0%, rgba(0, 56, 81, 0.92) 24%, rgba(0, 92, 123, 0.56) 56%, rgba(0, 92, 123, 0.12) 70%, rgba(0, 92, 123, 0) 82%),
     linear-gradient(
       146deg,
@@ -1676,12 +1675,6 @@ p.home-services-feature-panel-body {
 
 .home-impact-story-surface::before {
   background:
-    linear-gradient(
-      90deg,
-      rgba(var(--home-impact-story-base-rgb), 0.16) 0%,
-      rgba(var(--home-impact-story-base-rgb), 0.08) 3%,
-      rgba(var(--home-impact-story-base-rgb), 0) 7%
-    ),
     radial-gradient(
       ellipse 96% 88% at 12% 8%,
       rgba(var(--home-impact-story-dark-rgb), 0.98) 0%,
@@ -1735,6 +1728,8 @@ p.home-services-feature-panel-body {
 }
 
 .home-impact-story .ag-panel-rail {
+  width: 100%;
+  max-width: none;
   margin-inline: auto;
 }
 
@@ -2040,17 +2035,18 @@ p.home-services-feature-panel-body {
 @media (prefers-reduced-motion: reduce) {
   .home-services-feature .service-native-btn.is-outline.is-tone-white {
     transition:
-      margin 140ms ease,
-      padding 140ms ease,
       border-color 140ms ease,
       background-color 140ms ease,
-      color 140ms ease;
+      color 140ms ease,
+      box-shadow 140ms ease;
   }
 
   .home-services-feature .service-native-btn.is-outline.is-tone-white:hover,
   .home-services-feature .service-native-btn.is-outline.is-tone-white:focus-visible,
   .home-services-feature .service-native-btn.is-outline.is-tone-white:active {
-    margin: 0;
+    border-color: rgba(255, 255, 255, 0.72);
+    background: transparent;
+    color: #ffffff;
   }
 }
 
