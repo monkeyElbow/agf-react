@@ -89,6 +89,33 @@ describe('PageBlocksRenderer columns', () => {
     expect(action.className).toContain('is-tone-melon');
   });
 
+  it('forces external document column actions onto the shared outline contract even when authored as solid buttons', () => {
+    renderColumnsBlock({
+      id: 'columns_docs',
+      type: 'columns',
+      kind: 'columns',
+      mode: 'dynamic',
+      title: 'Reference documents',
+      columnsStyle: 'loans-value',
+      columns: 'one',
+      col1Enabled: true,
+      col1Type: 'text',
+      col1Title: 'Read the packet',
+      col1Body: 'Open the PDF in a new tab.',
+      col1ButtonLabel: 'Open PDF',
+      col1ButtonUrl: 'https://files.example.com/reference-packet.pdf',
+      col1ButtonStyle: 'blue',
+      col1ButtonTone: 'mango',
+    });
+
+    const action = screen.getByRole('link', { name: 'Open PDF' });
+    expect(action.className).toContain('service-native-btn');
+    expect(action.className).toContain('is-outline');
+    expect(action.className).toContain('is-tone-mango');
+    expect(action.className).not.toContain('is-ghost');
+    expect(action.className).not.toContain('is-dark');
+  });
+
   it('renders column title core and span colors', () => {
     renderColumnsBlock({
       id: 'columns_math',

@@ -57,8 +57,10 @@ import {
   buildDynamicTestimonialsFromBlock,
   normalizeDynamicCtaDisplayMode,
   normalizeDynamicCtaTriggerMode,
+  normalizeUniversalOutlineButtonClassName,
   parseTextHighlights,
   renderTextWithHighlights,
+  shouldUseUniversalOutlineButtonLink,
 } from '../lib/dynamicPageBlocks';
 import { buildNativeHudPanels } from '../lib/nativeHudPanels';
 import useHudDockOrder from '../hooks/useHudDockOrder';
@@ -343,8 +345,16 @@ function Action({ item }) {
   const { resolveManagedPathFromRef } = useContentAdmin();
   const inlineCtaReveal = useContext(InlineCtaRevealContext);
   const extraClass = item.className ? ` ${item.className}` : '';
-  const buttonClass = `service-native-btn${item.ghost ? ' is-ghost' : ''}${extraClass}`;
   const resolved = resolveNativeLinkItem(item, resolveDocumentLink, resolveManagedPathFromRef);
+  const baseButtonClass = `service-native-btn${item.ghost ? ' is-ghost' : ''}${extraClass}`;
+  const buttonClass = shouldUseUniversalOutlineButtonLink({
+    href: resolved?.href,
+    to: resolved?.to,
+    external: resolved?.external,
+    documentUrl: resolved?.document?.url,
+  })
+    ? normalizeUniversalOutlineButtonClassName(baseButtonClass, item?.tone || 'atlantean')
+    : baseButtonClass;
   const revealAction = resolveInlineCtaRevealAction(item, inlineCtaReveal?.lookup);
   const targetBlank = Boolean(resolved && (resolved.external || resolved.openInNewWindow));
   const relAttr = targetBlank ? 'noreferrer noopener' : undefined;
@@ -479,6 +489,15 @@ function NativeLink({ item, className, children }) {
   const { resolveManagedPathFromRef } = useContentAdmin();
   const inlineCtaReveal = useContext(InlineCtaRevealContext);
   const resolved = resolveNativeLinkItem(item, resolveDocumentLink, resolveManagedPathFromRef);
+  const baseClassName = String(className || item?.className || '').trim();
+  const resolvedClassName = shouldUseUniversalOutlineButtonLink({
+    href: resolved?.href,
+    to: resolved?.to,
+    external: resolved?.external,
+    documentUrl: resolved?.document?.url,
+  })
+    ? normalizeUniversalOutlineButtonClassName(baseClassName, item?.tone || 'atlantean')
+    : (baseClassName || undefined);
   const revealAction = resolveInlineCtaRevealAction(item, inlineCtaReveal?.lookup);
   const label = children ?? resolved.label ?? item?.label;
   const targetBlank = Boolean(resolved && (resolved.external || resolved.openInNewWindow));
@@ -491,7 +510,7 @@ function NativeLink({ item, className, children }) {
     : undefined;
 
   if (revealAction && !resolved?.href && !resolved?.to && !item?.to) {
-    return <button type="button" className={className} onClick={onClick}>{label}</button>;
+    return <button type="button" className={resolvedClassName} onClick={onClick}>{label}</button>;
   }
 
   if (resolved.href) {
@@ -500,7 +519,7 @@ function NativeLink({ item, className, children }) {
         href={resolved.href}
         target={targetBlank ? '_blank' : undefined}
         rel={relAttr}
-        className={className}
+        className={resolvedClassName}
         onClick={onClick}
       >
         {label}
@@ -508,13 +527,13 @@ function NativeLink({ item, className, children }) {
     );
   }
   if (!resolved.to && !item?.to) {
-    return <span className={className}>{label}</span>;
+    return <span className={resolvedClassName}>{label}</span>;
   }
 
   return (
     <Link
       to={resolved.to || item?.to || '#'}
-      className={className}
+      className={resolvedClassName}
       target={targetBlank ? '_blank' : undefined}
       rel={relAttr}
       onClick={onClick}
@@ -2300,7 +2319,9 @@ function CopyAddressBlock({ config, className = '' }) {
         </span>
       </button>
       <p className={`native-info-copy-address-tip${copyTip ? ' is-visible' : ''}`} aria-live="polite">
-        {copyTip || 'Click address to copy'}
+        <span className="native-info-copy-address-tip-text">
+          {copyTip || 'Click address to copy'}
+        </span>
       </p>
     </div>
   );
@@ -2926,7 +2947,7 @@ function FundAnIraWidget() {
               href={offeringCircularDoc?.url || '/prospectus'}
               target="_blank"
               rel="noreferrer noopener"
-              className="service-native-btn"
+              className="service-native-btn is-outline is-tone-atlantean"
               onClick={() => setHasOpenedCircular(true)}
             >
               View Offering Circular

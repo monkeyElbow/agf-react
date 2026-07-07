@@ -194,7 +194,10 @@ describe('NativeContentPage functional routes', () => {
 
     expect(screen.getByText('Search documents')).toBeTruthy();
     expect(screen.getByText('Reference prospectus and investment documents.')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Download offering circular' })).toBeTruthy();
+    const offeringCircularLink = screen.getByRole('link', { name: 'Download offering circular' });
+    expect(offeringCircularLink).toBeTruthy();
+    expect(offeringCircularLink.className).toContain('service-native-btn');
+    expect(offeringCircularLink.className).toContain('is-outline');
   });
 
   it('renders the forms functional route through NativeContentPage', () => {
@@ -211,7 +214,10 @@ describe('NativeContentPage functional routes', () => {
 
     expect(screen.getByRole('heading', { name: 'Forms' })).toBeTruthy();
     expect(screen.getByLabelText('Search forms')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Life Enrollment and Change Form' })).toBeTruthy();
+    const formLink = screen.getByRole('link', { name: 'Life Enrollment and Change Form' });
+    expect(formLink).toBeTruthy();
+    expect(formLink.className).toContain('service-native-btn');
+    expect(formLink.className).toContain('is-outline');
   });
 
   it('renders calculators with the shared request-form shell and a single calculator intro copy', () => {
@@ -848,11 +854,13 @@ describe('NativeContentPage functional routes', () => {
     expect(givingOptionsSection?.querySelectorAll('.service-native-card')).toHaveLength(6);
     expect(firstCard?.className).toContain('fade-up');
     expect(firstCard?.className).toContain('fade-up-force-observe');
-    expect(watchVideoLink.className).toContain('is-ghost');
+    expect(watchVideoLink.className).toContain('is-outline');
+    expect(watchVideoLink.className).not.toContain('is-ghost');
     expect(learnMoreLink.className).toContain('is-tone-atlantean');
     expect(learnMoreLink.className).not.toContain('is-outline');
     expect(learnMoreLink.className).not.toContain('is-ghost');
-    expect(createPlanLink.className).toContain('is-ghost');
+    expect(createPlanLink.className).toContain('is-outline');
+    expect(createPlanLink.className).not.toContain('is-ghost');
     expect(document.querySelectorAll('section[data-block-id="giving_options"]')).toHaveLength(1);
   });
 
@@ -885,7 +893,7 @@ describe('NativeContentPage functional routes', () => {
     expect(downloadPacketLink.className).toContain('is-outline');
     expect(downloadPacketLink.className).toContain('is-tone-atlantean');
     expect(onlineFormLink.className).toContain('is-tone-atlantean');
-    expect(onlineFormLink.className).not.toContain('is-outline');
+    expect(onlineFormLink.className).toContain('is-outline');
     expect(onlineFormLink.className).not.toContain('is-ghost');
     expect(willsSection?.textContent).toContain('This service is provided free of charge');
     expect(willsSection?.textContent).toContain('requires review by your attorney');
@@ -929,8 +937,9 @@ describe('NativeContentPage functional routes', () => {
     expect(joyfulSection?.className).toContain('is-text-dark');
     expect(openFundLink.className).toContain('is-tone-atlantean');
     expect(openFundLink.className).not.toContain('is-ghost');
-    expect(termsLink.className).toContain('is-ghost');
+    expect(termsLink.className).toContain('is-outline');
     expect(termsLink.className).toContain('is-tone-super-grey');
+    expect(termsLink.className).not.toContain('is-ghost');
     expect(joyfulSection?.textContent).toContain('Powered by your generosity.');
   });
 

@@ -35,7 +35,7 @@ describe('careers route review polish guardrail', () => {
 
     expect(rendererSource).toContain('<article key={job.id || job.title} className="careers-native-job">');
     expect(rendererSource).toContain('<div className="service-native-action-row is-centered">');
-    expect(rendererSource).toContain('<a href={job.applyUrl} target="_blank" rel="noreferrer noopener" className="service-native-btn">');
+    expect(rendererSource).toContain('className="service-native-btn is-outline is-tone-atlantean"');
     expect(rendererSource).not.toContain('careers-native-job service-native-card has-stretched-link');
   });
 });

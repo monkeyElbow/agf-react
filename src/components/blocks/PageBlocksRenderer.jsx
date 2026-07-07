@@ -22,6 +22,8 @@ import {
   buildDynamicSiteFeatureFromBlock,
   buildDynamicTopStripFromBlock,
   isExternalLinkHref,
+  normalizeUniversalOutlineButtonClassName,
+  shouldUseUniversalOutlineButtonLink,
 } from '../../lib/dynamicPageBlocks';
 import {
   normalizeButtonTone,
@@ -627,9 +629,15 @@ function buildColumnsAction(label, url, style, tone, pageRef, resolveTo, useFami
   }
 
   const isExternal = /^(https?:|mailto:|tel:)/i.test(nextUrl);
-  const className = useFamilyPresetCtaStyle
+  const baseClassName = useFamilyPresetCtaStyle
     ? 'home-native-cta'
     : `service-native-btn ${toActionButtonClassName(style, tone)}`.trim();
+  const className = !useFamilyPresetCtaStyle && shouldUseUniversalOutlineButtonLink({
+    href: nextUrl,
+    external: isExternal,
+  })
+    ? normalizeUniversalOutlineButtonClassName(baseClassName, tone || 'atlantean')
+    : baseClassName;
 
   if (isExternal) {
     return {

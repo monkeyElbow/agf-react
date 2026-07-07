@@ -338,7 +338,12 @@ export function NativeCareersJobsSection({ jobs }) {
           {job.note ? <p className="careers-native-job-note"><em>{job.note}</em></p> : null}
           {job.applyUrl ? (
             <div className="service-native-action-row is-centered">
-              <a href={job.applyUrl} target="_blank" rel="noreferrer noopener" className="service-native-btn">
+              <a
+                href={job.applyUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="service-native-btn is-outline is-tone-atlantean"
+              >
                 {job.buttonLabel || 'Apply Online'}
               </a>
             </div>

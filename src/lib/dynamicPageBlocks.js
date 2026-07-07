@@ -176,6 +176,49 @@ export function isExternalLinkHref(href) {
   return /^(https?:|mailto:|tel:)/i.test(String(href || '').trim());
 }
 
+export function isPdfLinkHref(href) {
+  return /\.pdf(?:[?#].*)?$/i.test(String(href || '').trim());
+}
+
+export function shouldUseUniversalOutlineButtonLink({ href, to, external, documentUrl } = {}) {
+  const target = String(href || documentUrl || to || '').trim();
+  if (!target) {
+    return false;
+  }
+  return Boolean(external) || isExternalLinkHref(target) || isPdfLinkHref(target);
+}
+
+export function normalizeUniversalOutlineButtonClassName(className, fallbackTone = 'atlantean') {
+  const source = String(className || '').trim();
+  if (!source) {
+    return `service-native-btn is-outline is-tone-${normalizeButtonTone(fallbackTone)}`;
+  }
+
+  const rawTokens = source.split(/\s+/).filter(Boolean);
+  if (rawTokens.includes('service-native-card-stretched-link')) {
+    return source;
+  }
+
+  const hasExplicitOutline = rawTokens.includes('is-outline');
+  const explicitToneToken = rawTokens.find((token) => token.startsWith('is-tone-'));
+  const toneToken = hasExplicitOutline && explicitToneToken
+    ? explicitToneToken
+    : `is-tone-${normalizeButtonTone(fallbackTone)}`;
+  const normalizedTokens = rawTokens.filter((token) => (
+    token !== 'is-dark'
+    && token !== 'is-ghost'
+    && token !== 'is-outline'
+    && !token.startsWith('is-tone-')
+  ));
+
+  if (!normalizedTokens.includes('service-native-btn')) {
+    normalizedTokens.unshift('service-native-btn');
+  }
+
+  normalizedTokens.push('is-outline', toneToken);
+  return Array.from(new Set(normalizedTokens)).join(' ');
+}
+
 function readFirstStringValue(source, keys = []) {
   const fieldKeys = Array.isArray(keys) ? keys : [keys];
   const record = source && typeof source === 'object' ? source : {};

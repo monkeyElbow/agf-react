@@ -11,10 +11,12 @@ function readSource(relativePath) {
 }
 
 describe('outline button hover contract', () => {
-  it('keeps shared service outline buttons on outward padding expansion instead of transform scale and hover glow', () => {
+  it('keeps shared service outline buttons on an outward border-ring expansion instead of transform scale and hover glow', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.service-native-btn.is-outline,');
+    expect(cssSource).toContain('--btn-hover-bg: transparent;');
+    expect(cssSource).toContain('--btn-hover-text: var(--btn-color);');
     expect(cssSource).toContain('--btn-outline-expand-block: 0.125rem;');
     expect(cssSource).toContain('--btn-outline-expand-inline: 0.1875rem;');
     expect(cssSource).toContain('--btn-outline-padding-block-base: 0.76rem;');
@@ -23,10 +25,12 @@ describe('outline button hover contract', () => {
     expect(cssSource).toContain('padding:\n    var(--btn-outline-padding-block-base)\n    var(--btn-outline-padding-inline-base);');
     expect(cssSource).toContain('.service-native-btn.is-outline:hover {');
     expect(cssSource).toContain('margin:\n      calc(-1 * var(--btn-outline-expand-block))\n      calc(-1 * var(--btn-outline-expand-inline));');
-    expect(cssSource).toContain('calc(var(--btn-outline-padding-block-base) + var(--btn-outline-expand-block))');
-    expect(cssSource).toContain('calc(var(--btn-outline-padding-inline-base) + var(--btn-outline-expand-inline));');
+    expect(cssSource).toContain('padding:\n      calc(var(--btn-outline-padding-block-base) + var(--btn-outline-expand-block))\n      calc(var(--btn-outline-padding-inline-base) + var(--btn-outline-expand-inline));');
+    expect(cssSource).toContain('background: transparent;');
+    expect(cssSource).toContain('color: var(--btn-color);');
+    expect(cssSource).toContain('box-shadow: none;');
     expect(cssSource).toContain('.service-native-btn.is-outline:focus-visible {');
-    expect(cssSource).toContain('0 0 0 5px rgba(0, 138, 171, 0.34);');
+    expect(cssSource).toContain('box-shadow: 0 0 0 3px rgba(0, 138, 171, 0.28);');
     expect(cssSource).not.toContain('scale(1.032)');
     expect(cssSource).not.toContain('scale(1.014)');
     expect(cssSource).not.toContain('--btn-outline-hover-shadow');
