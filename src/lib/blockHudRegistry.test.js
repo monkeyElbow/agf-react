@@ -15,29 +15,29 @@ describe('buildHudPanelsFromBlocks', () => {
   it('keeps distinct same-kind blocks on distinct HUD panels by default', () => {
     const panels = buildHudPanelsFromBlocks(
       [
-        { id: 'columns_mha', kind: 'columns', mode: 'dynamic' },
-        { id: 'columns_math', kind: 'columns', mode: 'dynamic' },
+        { id: 'home_ministry_allies', kind: 'billboard', mode: 'dynamic' },
+        { id: 'home_do_the_math', kind: 'billboard', mode: 'dynamic' },
       ],
     );
 
-    expect(panels.map((panel) => panel.blockId)).toEqual(['columns_mha', 'columns_math']);
-    expect(panels.map((panel) => panel.id)).toEqual(['block:columns_mha', 'block:columns_math']);
+    expect(panels.map((panel) => panel.blockId)).toEqual(['home_ministry_allies', 'home_do_the_math']);
+    expect(panels.map((panel) => panel.id)).toEqual(['block:home_ministry_allies', 'block:home_do_the_math']);
   });
 
   it('ignores kind-wide panel-id overrides for non-singleton kinds', () => {
     const panels = buildHudPanelsFromBlocks(
       [
-        { id: 'columns_mha', kind: 'columns', mode: 'dynamic' },
-        { id: 'columns_math', kind: 'columns', mode: 'dynamic' },
+        { id: 'home_ministry_allies', kind: 'billboard', mode: 'dynamic' },
+        { id: 'home_do_the_math', kind: 'billboard', mode: 'dynamic' },
       ],
       {
         panelIdByKind: {
-          columns: 'shared-columns-panel',
+          billboard: 'shared-billboard-panel',
         },
       },
     );
 
-    expect(panels.map((panel) => panel.id)).toEqual(['block:columns_mha', 'block:columns_math']);
+    expect(panels.map((panel) => panel.id)).toEqual(['block:home_ministry_allies', 'block:home_do_the_math']);
   });
 
   it('still allows singleton kinds to share an explicit kind-level panel id', () => {
@@ -64,17 +64,17 @@ describe('buildHudPanelsFromBlocks', () => {
       kind: 'card_grid',
       mode: 'dynamic',
       presetId: 'investment-options',
-      templateId: 'investment_strategy_options',
+      templateId: 'card_grid',
     }).label).toBe('Card Grid · Investment options');
   });
 
   it('keeps cta-band preset labels explicit in the HUD without creating pseudo-kinds', () => {
     expect(getBlockHudDefinition({
-      id: 'investor_cta',
+      id: 'dashboard_login_cta',
       kind: 'cta_band',
       mode: 'dynamic',
       presetId: 'dashboard-login',
-      templateId: 'investor_cta',
+      templateId: 'cta_band',
     }).label).toBe('CTA Band · Dashboard login');
   });
 
@@ -86,6 +86,28 @@ describe('buildHudPanelsFromBlocks', () => {
       presetId: 'default',
       templateId: 'columns',
     }).label).toBe('Columns · Flexible columns');
+  });
+
+  it('keeps the canonical home do-the-math billboard labeled explicitly in the HUD', () => {
+    expect(getBlockHudDefinition({
+      id: 'home_do_the_math',
+      kind: 'billboard',
+      mode: 'dynamic',
+    })).toMatchObject({
+      label: 'Do the Math',
+      editorType: 'billboard',
+    });
+  });
+
+  it('uses the billboard editor contract for home ministry allies while keeping the explicit label', () => {
+    expect(getBlockHudDefinition({
+      id: 'home_ministry_allies',
+      kind: 'billboard',
+      mode: 'dynamic',
+    })).toMatchObject({
+      label: 'Housing',
+      editorType: 'billboard',
+    });
   });
 
   it('keeps site-feature HUD labels sourced from the reviewed catalog entry', () => {

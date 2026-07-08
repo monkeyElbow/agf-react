@@ -38,7 +38,7 @@ function HomeAdminColumnsModeSwitchHarness() {
   return (
     <button
       type="button"
-      onClick={() => updateBlock('/', 'columns_math', { mode: 'dynamic' })}
+      onClick={() => updateBlock('/', 'home_do_the_math', { mode: 'dynamic' })}
     >
       Switch math dynamic
     </button>
@@ -61,6 +61,23 @@ function expectHomeMathBlockTitle(container) {
   expect(within(container).getByText((_, node) => String(node?.textContent || '').trim() === '(let us) Do the math.')).toBeTruthy();
 }
 
+function expectHomeMathBillboardWithoutPhoto(container) {
+  const block = container.querySelector('.home-native-billboard[data-block-id="home_do_the_math"]');
+  expect(block).toBeTruthy();
+  expect(within(container).queryByAltText('Calculator and notebook')).toBeNull();
+  expect(block.querySelector('.ag-panel-rail')).toBeTruthy();
+  expect(block.querySelector('h2 mark.is-atlantean')).toBeTruthy();
+  const action = block.querySelector('.service-native-action-row .service-native-btn');
+  expect(action).toBeTruthy();
+  expect(action.textContent).toContain('Use the calculators');
+  expect(action.getAttribute('href')).toBe('/calculators');
+}
+
+function expectHomeMhaBillboard(container) {
+  expect(within(container).getByText('Ministry allies.')).toBeTruthy();
+  expect(container.querySelector('.home-native-billboard[data-block-id="home_ministry_allies"]')).toBeTruthy();
+}
+
 describe('HomePage admin-driven columns mode switch', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -74,8 +91,9 @@ describe('HomePage admin-driven columns mode switch', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset from seed' }));
 
-    expect(within(homePage).getByText('Ministers Housing Allowance')).toBeTruthy();
+    expectHomeMhaBillboard(homePage);
     expectHomeMathBlockTitle(homePage);
+    expectHomeMathBillboardWithoutPhoto(homePage);
   });
 
   it('keeps both home columns visible when the admin switches do the math to dynamic', () => {
@@ -84,12 +102,14 @@ describe('HomePage admin-driven columns mode switch', () => {
     const homePage = document.querySelector('.home-native-page');
     expect(homePage).toBeTruthy();
 
-    expect(within(homePage).getByText('Ministers Housing Allowance')).toBeTruthy();
+    expectHomeMhaBillboard(homePage);
     expectHomeMathBlockTitle(homePage);
+    expectHomeMathBillboardWithoutPhoto(homePage);
 
     fireEvent.click(screen.getByRole('button', { name: 'Switch math dynamic' }));
 
-    expect(within(homePage).getByText('Ministers Housing Allowance')).toBeTruthy();
+    expectHomeMhaBillboard(homePage);
     expectHomeMathBlockTitle(homePage);
+    expectHomeMathBillboardWithoutPhoto(homePage);
   });
 });

@@ -36,6 +36,11 @@ import {
   dismissHomeReturnAssist,
   shouldShowHomeReturnAssist,
 } from '../lib/homeReturnAssist';
+import {
+  buildResolvedHomeBlocks,
+  isManagedBlockVisible,
+  summarizeHomeColumnsBlock,
+} from '../lib/homeBlockResolver';
 import { groupHomeRenderItems, planHomeRenderItems } from './homePageRenderPlan';
 
 const HOME_NEWSLETTER_FORM_ID = '34a993b6-d0fb-48fd-b3c4-faad7332770c';
@@ -49,6 +54,8 @@ const HOME_IMPACT_STAT_HUD_PANEL_ID = 'home-impact-stat';
 const HOME_SITE_FEATURE_HUD_PANEL_ID = 'home-site-feature';
 const HOME_COLUMNS_MHA_HUD_PANEL_ID = 'home-columns-mha';
 const HOME_COLUMNS_MATH_HUD_PANEL_ID = 'home-columns-math';
+const HOME_MINISTRY_ALLIES_BLOCK_ID = 'home_ministry_allies';
+const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
 const HOME_HERO_TEMPORARILY_HIDDEN = true;
 const HOME_HUD_PANEL_ID_BY_BLOCK_ID = {
   top_strip: HOME_TOP_STRIP_HUD_PANEL_ID,
@@ -59,8 +66,8 @@ const HOME_HUD_PANEL_ID_BY_BLOCK_ID = {
   home_impact_story: HOME_SITE_FEATURE_HUD_PANEL_ID,
   cta_form: HOME_CTA_HUD_PANEL_ID,
   newsletter: HOME_NEWSLETTER_HUD_PANEL_ID,
-  columns_mha: HOME_COLUMNS_MHA_HUD_PANEL_ID,
-  columns_math: HOME_COLUMNS_MATH_HUD_PANEL_ID,
+  [HOME_MINISTRY_ALLIES_BLOCK_ID]: HOME_COLUMNS_MHA_HUD_PANEL_ID,
+  [HOME_DO_THE_MATH_BLOCK_ID]: HOME_COLUMNS_MATH_HUD_PANEL_ID,
 };
 const HOME_HUD_ANCHOR_SELECTOR_BY_BLOCK_ID = {
   top_strip: '[data-block-id="top_strip"]',
@@ -71,8 +78,8 @@ const HOME_HUD_ANCHOR_SELECTOR_BY_BLOCK_ID = {
   home_impact_story: '[data-block-id="home_impact_story"]',
   cta_form: '[data-block-id="cta_form"]',
   newsletter: '[data-block-id="newsletter"]',
-  columns_mha: '[data-block-id="columns_mha"]',
-  columns_math: '[data-block-id="columns_math"]',
+  [HOME_MINISTRY_ALLIES_BLOCK_ID]: `[data-block-id="${HOME_MINISTRY_ALLIES_BLOCK_ID}"]`,
+  [HOME_DO_THE_MATH_BLOCK_ID]: `[data-block-id="${HOME_DO_THE_MATH_BLOCK_ID}"]`,
 };
 const HOME_HERO_LINE_KEYS = ['line1', 'line2', 'line3'];
 const MOBILE_FRONT_HUD_MEDIA_QUERY = '(max-width: 760px)';
@@ -108,61 +115,6 @@ const HOME_TOP_STRIP_RATES_BUTTON_SWATCH_OPTIONS = [
   { value: 'super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
 ];
-// Home now owns its ministry-impact storytelling through the canonical
-// `home_impact_story` site feature block in `homePageBlocks`, so stale
-// extra impact-stat blocks should not render a duplicate section later on the page.
-const HOME_EXTRA_RENDERABLE_DYNAMIC_KINDS = new Set(['site_feature']);
-
-function toBooleanSetting(value, fallback = true) {
-  if (typeof value === 'boolean') {
-    return value;
-  }
-  if (typeof value === 'string') {
-    const token = value.trim().toLowerCase();
-    if (token === 'true') {
-      return true;
-    }
-    if (token === 'false') {
-      return false;
-    }
-  }
-  if (value == null) {
-    return fallback;
-  }
-  return Boolean(value);
-}
-
-function isManagedBlockVisible(block) {
-  return block?.hidden !== true && block?.hidden !== 'true';
-}
-
-function getHomeBlockRenderKey(block) {
-  return String(block?.id || block?.type || block?.kind || '').trim();
-}
-
-function reorderHomeTopBlocks(blocks = []) {
-  if (!Array.isArray(blocks) || !blocks.length) {
-    return [];
-  }
-
-  const priorityOrder = ['top_strip', 'home_impact_story', 'home_services_feature_animation', 'hero'];
-  const priorityIndexByKey = new Map(priorityOrder.map((key, index) => [key, index]));
-  const prioritized = new Array(priorityOrder.length).fill(null);
-  const remainder = [];
-
-  blocks.forEach((block) => {
-    const blockKey = getHomeBlockRenderKey(block);
-    const priorityIndex = priorityIndexByKey.get(blockKey);
-    if (priorityIndex === undefined) {
-      remainder.push(block);
-      return;
-    }
-    prioritized[priorityIndex] = block;
-  });
-
-  return prioritized.filter(Boolean).concat(remainder);
-}
-
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
@@ -190,153 +142,6 @@ function HomeReturnAssistSearchPanel() {
       autoFocus
     />
   );
-}
-
-function hasReadableHtmlContent(value) {
-  const html = String(value || '').trim();
-  if (!html) {
-    return false;
-  }
-  const text = html
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;|&#160;/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return Boolean(text);
-}
-
-function hasRenderableHomeColumnsLayout(block) {
-  const columnsStyle = String(block?.columnsStyle || '').trim().toLowerCase() || 'retirement';
-  const columns = Array.isArray(block?.columnsData) && block.columnsData.length
-    ? block.columnsData
-    : Array.from({ length: 4 }, (_, index) => {
-        const slot = index + 1;
-        const enabledValue = block?.[`col${slot}Enabled`];
-        const isEnabled = enabledValue === undefined ? slot <= 2 : toBooleanSetting(enabledValue);
-        if (!isEnabled) {
-          return null;
-        }
-        return {
-          type: block?.[`col${slot}Type`] || (slot === 1 ? 'photo' : 'text'),
-          imageUrl: block?.[`col${slot}ImageUrl`],
-          title: block?.[`col${slot}Title`],
-          body: block?.[`col${slot}Body`],
-          buttonLabel: block?.[`col${slot}ButtonLabel`],
-        };
-      }).filter(Boolean);
-
-  if (columnsStyle === 'legacy-highlight') {
-    return columns.some((column) => String(column?.title || '').trim());
-  }
-
-  if (columnsStyle === 'loans-value') {
-    return columns.some((column) => [
-      column?.title,
-      column?.body,
-      column?.buttonLabel,
-      String(column?.type || '').trim().toLowerCase() === 'photo' ? column?.imageUrl : '',
-    ].some((value) => String(value || '').trim()));
-  }
-
-  const hasPhotoColumn = columns.some((column) => (
-    String(column?.type || '').trim().toLowerCase() === 'photo'
-    && String(column?.imageUrl || '').trim()
-  ));
-  const hasTextColumn = columns.some((column) => (
-    String(column?.type || '').trim().toLowerCase() !== 'photo'
-    && [
-      column?.title,
-      column?.body,
-      column?.buttonLabel,
-    ].some((value) => String(value || '').trim())
-  ));
-
-  return hasPhotoColumn && hasTextColumn;
-}
-
-function mergeHomeColumnsWithFallback(baseBlock, dynamicSettings) {
-  const settings = dynamicSettings && typeof dynamicSettings === 'object' ? dynamicSettings : {};
-  const merged = { ...baseBlock, ...settings };
-  const columnsData = Array.isArray(merged.columnsData) ? merged.columnsData : null;
-  if (columnsData) {
-    const hasMeaningfulColumnsData = columnsData.some((column) => {
-      if (!column || typeof column !== 'object') {
-        return false;
-      }
-      return [
-        column.title,
-        column.body,
-        column.imageUrl,
-        column.imageAlt,
-        column.buttonLabel,
-        column.buttonUrl,
-      ].some((value) => String(value || '').trim());
-    });
-    if (!hasMeaningfulColumnsData) {
-      delete merged.columnsData;
-    }
-  }
-
-  [
-    'bgTone',
-    'columns',
-    'contentWidth',
-    'col1Type',
-    'col1ImageUrl',
-    'col1ImageAlt',
-    'col1Title',
-    'col1TitleClassName',
-    'col1TitleHighlightsJson',
-    'col1Body',
-    'col1ButtonLabel',
-    'col1ButtonUrl',
-    'col2Type',
-    'col2ImageUrl',
-    'col2ImageAlt',
-    'col2Title',
-    'col2TitleClassName',
-    'col2TitleHighlightsJson',
-    'col2Body',
-    'col2ButtonLabel',
-    'col2ButtonUrl',
-  ].forEach((field) => {
-    const current = merged[field];
-    if (current == null) {
-      merged[field] = baseBlock[field];
-      return;
-    }
-    if (typeof current === 'string' && !current.trim()) {
-      merged[field] = baseBlock[field];
-    }
-  });
-
-  if (!hasRenderableHomeColumnsLayout(merged)) {
-    return { ...baseBlock };
-  }
-
-  return merged;
-}
-
-function summarizeHomeColumnsBlock(block) {
-  if (!block) {
-    return null;
-  }
-  const settings = block?.settings && typeof block.settings === 'object' ? block.settings : {};
-  return {
-    id: String(block.id || '').trim(),
-    mode: String(block.mode || '').trim(),
-    hidden: block.hidden,
-    kind: String(block.kind || '').trim(),
-    col1Type: String(settings.col1Type || '').trim(),
-    col1Title: String(settings.col1Title || '').trim(),
-    col1ImageUrl: String(settings.col1ImageUrl || '').trim(),
-    col2Type: String(settings.col2Type || '').trim(),
-    col2Title: String(settings.col2Title || '').trim(),
-    col2ImageUrl: String(settings.col2ImageUrl || '').trim(),
-    hasRenderableLayout: hasRenderableHomeColumnsLayout(settings),
-  };
 }
 
 export default function HomePage() {
@@ -469,52 +274,17 @@ export default function HomePage() {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const managedHomeColumnsById = useMemo(() => {
+  const managedBlocksById = useMemo(() => {
     const next = new Map();
     managedBlocks.forEach((block) => {
       const blockId = String(block?.id || '').trim();
-      if (block?.kind !== 'columns') {
-        return;
-      }
-      if (blockId !== 'columns_mha' && blockId !== 'columns_math') {
+      if (!blockId) {
         return;
       }
       next.set(blockId, block);
     });
     return next;
   }, [managedBlocks]);
-  const dynamicColumnsMhaBlock = managedHomeColumnsById.get('columns_mha')?.mode === 'dynamic'
-    && isManagedBlockVisible(managedHomeColumnsById.get('columns_mha'))
-    ? managedHomeColumnsById.get('columns_mha')
-    : null;
-  const dynamicColumnsMathBlock = managedHomeColumnsById.get('columns_math')?.mode === 'dynamic'
-    && isManagedBlockVisible(managedHomeColumnsById.get('columns_math'))
-    ? managedHomeColumnsById.get('columns_math')
-    : null;
-  const staticHomeColumnsById = useMemo(() => {
-    const next = new Map();
-    homePageBlocks.forEach((block) => {
-      const blockId = String(block?.id || '').trim();
-      if (block?.type === 'columns' && blockId) {
-        next.set(blockId, block);
-      }
-    });
-    return next;
-  }, []);
-  const columnsMhaHudSettings = useMemo(() => {
-    if (!dynamicColumnsMhaBlock) {
-      return {};
-    }
-    const baseBlock = staticHomeColumnsById.get('columns_mha');
-    return mergeHomeColumnsWithFallback(baseBlock || {}, dynamicColumnsMhaBlock.settings || {});
-  }, [dynamicColumnsMhaBlock, staticHomeColumnsById]);
-  const columnsMathHudSettings = useMemo(() => {
-    if (!dynamicColumnsMathBlock) {
-      return {};
-    }
-    const baseBlock = staticHomeColumnsById.get('columns_math');
-    return mergeHomeColumnsWithFallback(baseBlock || {}, dynamicColumnsMathBlock.settings || {});
-  }, [dynamicColumnsMathBlock, staticHomeColumnsById]);
   const hudPanels = useMemo(
     () => buildHudPanelsFromBlocks(managedBlocks, {
       panelIdById: HOME_HUD_PANEL_ID_BY_BLOCK_ID,
@@ -1118,328 +888,63 @@ export default function HomePage() {
   }, [heroInspection]);
 
   const blocks = useMemo(() => {
-    const impactStatManagedBlock = dynamicImpactStatBlock;
-    const homeImpactStoryManagedBlock = dynamicHomeImpactStoryBlock;
-    const homeServicesFeatureManagedBlock = managedHomeServicesFeatureBlock;
-    const homeServicesFeatureIsActive = Boolean(dynamicHomeServicesFeatureBlock || !homeServicesFeatureManagedBlock);
-    const newsletterManagedBlock = dynamicNewsletterBlock;
-    const servicesGridManagedBlock = dynamicServicesGridBlock;
-    const topStripManagedBlock = dynamicTopStripBlock;
-    const heroManagedBlock = managedHeroBlock;
-    const ctaManagedBlock = dynamicCtaBlock;
-    const columnsMhaBlock = dynamicColumnsMhaBlock;
-    const columnsMathBlock = dynamicColumnsMathBlock;
-
-    const topStripSettings = topStripManagedBlock?.settings && typeof topStripManagedBlock.settings === 'object'
-      ? topStripManagedBlock.settings
+    const topStripSettings = dynamicTopStripBlock?.settings && typeof dynamicTopStripBlock.settings === 'object'
+      ? dynamicTopStripBlock.settings
       : null;
 
-    const newsletterSettings = newsletterManagedBlock?.settings && typeof newsletterManagedBlock.settings === 'object'
-      ? newsletterManagedBlock.settings
+    const newsletterSettings = dynamicNewsletterBlock?.settings && typeof dynamicNewsletterBlock.settings === 'object'
+      ? dynamicNewsletterBlock.settings
       : null;
-    const impactStatSettings = impactStatManagedBlock?.settings && typeof impactStatManagedBlock.settings === 'object'
-      ? impactStatManagedBlock.settings
+    const impactStatSettings = dynamicImpactStatBlock?.settings && typeof dynamicImpactStatBlock.settings === 'object'
+      ? dynamicImpactStatBlock.settings
       : null;
-    const homeServicesFeatureSettings = homeServicesFeatureManagedBlock?.settings
-      && typeof homeServicesFeatureManagedBlock.settings === 'object'
-      ? homeServicesFeatureManagedBlock.settings
+    const homeServicesFeatureSettings = managedHomeServicesFeatureBlock?.settings
+      && typeof managedHomeServicesFeatureBlock.settings === 'object'
+      ? managedHomeServicesFeatureBlock.settings
       : null;
-    const homeImpactStorySettings = homeImpactStoryManagedBlock?.settings && typeof homeImpactStoryManagedBlock.settings === 'object'
-      ? homeImpactStoryManagedBlock.settings
+    const homeImpactStorySettings = dynamicHomeImpactStoryBlock?.settings && typeof dynamicHomeImpactStoryBlock.settings === 'object'
+      ? dynamicHomeImpactStoryBlock.settings
       : null;
-    const servicesGridSettings = servicesGridManagedBlock?.settings && typeof servicesGridManagedBlock.settings === 'object'
-      ? servicesGridManagedBlock.settings
-      : null;
-
-    const ctaSettings = ctaManagedBlock?.settings && typeof ctaManagedBlock.settings === 'object'
-      ? ctaManagedBlock.settings
-      : null;
-    const heroSettings = heroManagedBlock?.settings && typeof heroManagedBlock.settings === 'object'
-      ? normalizeDynamicHeroSettings('/', heroManagedBlock.settings)
-      : null;
-    const columnsMhaSettings = columnsMhaBlock?.settings && typeof columnsMhaBlock.settings === 'object'
-      ? columnsMhaBlock.settings
-      : null;
-    const columnsMathSettings = columnsMathBlock?.settings && typeof columnsMathBlock.settings === 'object'
-      ? columnsMathBlock.settings
+    const servicesGridSettings = dynamicServicesGridBlock?.settings && typeof dynamicServicesGridBlock.settings === 'object'
+      ? dynamicServicesGridBlock.settings
       : null;
 
-    const resolvedBlocks = homePageBlocks.map((block) => {
-      if (block.type === 'site_feature' && block.id === 'home_services_feature_animation') {
-        return {
-          ...block,
-          id: homeServicesFeatureManagedBlock?.id || block.id || 'home_services_feature_animation',
-          kind: homeServicesFeatureManagedBlock?.kind || block.kind || 'site_feature',
-          mode: homeServicesFeatureIsActive ? 'dynamic' : (homeServicesFeatureManagedBlock?.mode || block.mode || 'static'),
-          settings: homeServicesFeatureSettings
-            ? {
-                featureId: String(homeServicesFeatureSettings.featureId || block.featureId || 'home_services_feature_animation').trim() || 'home_services_feature_animation',
-                headline: String(homeServicesFeatureSettings.headline ?? block.headline ?? '').trim(),
-              }
-            : {
-                featureId: String(block.featureId || 'home_services_feature_animation').trim() || 'home_services_feature_animation',
-                headline: String(block.headline || '').trim(),
-              },
-        };
-      }
-
-      if (block.type === 'newsletter' && newsletterSettings) {
-        const fallbackTitle = String(
-          block.title || [block.headingPrefix, block.headingHighlight].filter(Boolean).join(' '),
-        ).trim();
-        const fallbackBodyHtml = hasReadableHtmlContent(block.bodyHtml)
-          ? String(block.bodyHtml || '').trim()
-          : (block.body ? `<p>${block.body}</p>` : '');
-        const nextTitle = String(newsletterSettings.title || '').trim() || fallbackTitle;
-        const nextBodyText = String(newsletterSettings.body || block.body || '').trim();
-        const rawBodyHtml = String(newsletterSettings.bodyHtml || '').trim();
-        const nextBodyHtml = hasReadableHtmlContent(rawBodyHtml)
-          ? rawBodyHtml
-          : (nextBodyText ? `<p>${nextBodyText}</p>` : fallbackBodyHtml);
-        return {
-          ...block,
-          id: newsletterManagedBlock?.id || block.id || 'newsletter',
-          kind: newsletterManagedBlock?.kind || block.kind || 'newsletter',
-          mode: newsletterManagedBlock?.mode || block.mode || 'static',
-          title: nextTitle,
-          titleClassName: String(newsletterSettings.titleClassName || block.titleClassName || '').trim(),
-          titleHighlightsJson: String(newsletterSettings.titleHighlightsJson || block.titleHighlightsJson || '').trim(),
-          bodyHtml: nextBodyHtml,
-          body: nextBodyText || String(block.body || '').trim(),
-          bgTone: String(newsletterSettings.bgTone || block.bgTone || 'grey').trim() || 'grey',
-          textTone: String(newsletterSettings.textTone || block.textTone || 'white').trim() || 'white',
-          formId: String(newsletterSettings.formId || block.formId || HOME_NEWSLETTER_FORM_ID).trim() || HOME_NEWSLETTER_FORM_ID,
-          accountId: String(newsletterSettings.accountId || block.accountId || '').trim(),
-          sourceId: String(newsletterSettings.sourceId || block.sourceId || '').trim(),
-        };
-      }
-
-      if (block.type === 'top_strip' && topStripSettings) {
-        return {
-          ...block,
-          id: topStripManagedBlock?.id || block.id || 'top_strip',
-          kind: topStripManagedBlock?.kind || block.kind || 'top_strip',
-          mode: topStripManagedBlock?.mode || block.mode || 'static',
-          ...topStripSettings,
-          __hudAnchorId: 'home-top-strip',
-          ratesButtonTone: String(topStripSettings.ratesButtonTone || '').trim() || 'mango',
-        };
-      }
-
-      if (block.type === 'services_grid' && servicesGridSettings) {
-        if (homeServicesFeatureIsActive) {
-          return null;
-        }
-        return {
-          ...block,
-          id: servicesGridManagedBlock?.id || block.id || 'services_grid',
-          kind: servicesGridManagedBlock?.kind || block.kind || 'services_grid',
-          mode: servicesGridManagedBlock?.mode || block.mode || 'static',
-          settings: servicesGridSettings,
-        };
-      }
-
-      if (block.type === 'services_grid' && homeServicesFeatureIsActive) {
-        return null;
-      }
-
-      if (block.type === 'impact_stat' && impactStatSettings) {
-        return {
-          ...block,
-          id: impactStatManagedBlock?.id || block.id || 'impact_stat',
-          kind: impactStatManagedBlock?.kind || block.kind || 'impact_stat',
-          mode: impactStatManagedBlock?.mode || block.mode || 'static',
-          settings: impactStatSettings,
-        };
-      }
-
-      if (block.type === 'site_feature' && block.id === 'home_impact_story') {
-        return {
-          ...block,
-          id: homeImpactStoryManagedBlock?.id || block.id || 'home_impact_story',
-          kind: homeImpactStoryManagedBlock?.kind || block.kind || 'site_feature',
-          mode: homeImpactStoryManagedBlock?.mode || block.mode || 'dynamic',
-          settings: homeImpactStorySettings
-            ? {
-                featureId: String(homeImpactStorySettings.featureId || block.featureId || 'home_impact_story').trim() || 'home_impact_story',
-                headline: String(homeImpactStorySettings.headline ?? block.headline ?? '').trim(),
-                body: String(homeImpactStorySettings.body ?? block.body ?? '').trim(),
-                buttonLabel: String(homeImpactStorySettings.buttonLabel ?? block.buttonLabel ?? '').trim(),
-                buttonUrl: String(homeImpactStorySettings.buttonUrl ?? block.buttonUrl ?? '').trim(),
-                buttonPageRef: String(homeImpactStorySettings.buttonPageRef ?? block.buttonPageRef ?? '').trim(),
-                buttonOpenInNewWindow: Boolean(homeImpactStorySettings.buttonOpenInNewWindow ?? false),
-              }
-            : undefined,
-        };
-      }
-
-      if (block.type === 'cta_form' && ctaSettings) {
-        const readCtaSetting = (...keys) => {
-          for (let index = 0; index < keys.length; index += 1) {
-            const key = keys[index];
-            if (Object.prototype.hasOwnProperty.call(ctaSettings, key)) {
-              return ctaSettings[key];
-            }
-          }
-          return undefined;
-        };
-        const fallbackLegacyTitle = [
-          String(block.headingPrefix || '').trim(),
-          String(block.headingHighlight || '').trim(),
-          String(block.headingSuffix || '').trim(),
-        ].filter(Boolean).join(' ').trim();
-        const fallbackLegacyHighlight = String(block.headingHighlight || '').trim();
-        const fallbackLegacyHighlightsJson = fallbackLegacyHighlight
-          ? JSON.stringify([{ text: fallbackLegacyHighlight, className: 'is-atlantean' }])
-          : '';
-        const noteText = String(ctaSettings.note || block.note || '').trim();
-        const fallbackBodyHtml = noteText ? `<p>${noteText}</p>` : '';
-
-        return {
-          ...block,
-          id: ctaManagedBlock?.id || block.id || 'cta_form',
-          kind: ctaManagedBlock?.kind || block.kind || 'cta_form',
-          mode: ctaManagedBlock?.mode || block.mode || 'static',
-          title: String(
-            readCtaSetting('title') ?? block.title ?? fallbackLegacyTitle,
-          ).trim(),
-          titleClassName: String(readCtaSetting('titleClassName') ?? block.titleClassName ?? '').trim(),
-          titleHighlightsJson: String(
-            readCtaSetting('titleHighlightsJson') ?? block.titleHighlightsJson ?? fallbackLegacyHighlightsJson,
-          ).trim(),
-          subtitle: String(
-            readCtaSetting('subtitle') ?? block.subtitle ?? '',
-          ).trim(),
-          bodyHtml: String(
-            readCtaSetting('bodyHtml') ?? block.bodyHtml ?? fallbackBodyHtml,
-          ).trim(),
-          bgTone: 'white',
-          submitStyle: String(
-            readCtaSetting('submitStyle')
-            || block.submitStyle
-            || 'blue',
-          ).trim().toLowerCase() || 'blue',
-          submitTone: String(
-            readCtaSetting('submitTone') ?? block.submitTone ?? '',
-          ).trim().toLowerCase(),
-          submitLabel: String(
-            readCtaSetting('submitLabel', 'buttonLabel')
-            || block.submitLabel
-            || block.buttonLabel
-            || 'Follow-up with me',
-          ).trim() || 'Follow-up with me',
-          salesforceUrl: String(readCtaSetting('salesforceUrl') ?? block.salesforceUrl ?? '').trim(),
-          successMessage: String(readCtaSetting('successMessage') ?? block.successMessage ?? '').trim() || block.successMessage,
-          field1Enabled: ctaSettings.field1Enabled ?? block.field1Enabled,
-          field1Type: String(readCtaSetting('field1Type') ?? block.field1Type ?? '').trim() || block.field1Type,
-          field1Label: String(readCtaSetting('field1Label') ?? block.field1Label ?? '').trim() || block.field1Label,
-          field1Placeholder: String(
-            readCtaSetting('field1Placeholder')
-            || block.field1Placeholder
-            || '',
-          ).trim(),
-          field1Options: String(readCtaSetting('field1Options') ?? block.field1Options ?? '').trim(),
-          field1Required: ctaSettings.field1Required ?? block.field1Required,
-          field2Enabled: ctaSettings.field2Enabled ?? block.field2Enabled,
-          field2Type: String(readCtaSetting('field2Type') ?? block.field2Type ?? '').trim() || block.field2Type,
-          field2Label: String(readCtaSetting('field2Label') ?? block.field2Label ?? '').trim() || block.field2Label,
-          field2Placeholder: String(
-            readCtaSetting('field2Placeholder')
-            || block.field2Placeholder
-            || '',
-          ).trim(),
-          field2Options: String(readCtaSetting('field2Options') ?? block.field2Options ?? '').trim(),
-          field2Required: ctaSettings.field2Required ?? block.field2Required,
-          field3Enabled: ctaSettings.field3Enabled ?? block.field3Enabled,
-          field3Type: String(readCtaSetting('field3Type') ?? block.field3Type ?? '').trim() || block.field3Type,
-          field3Label: String(readCtaSetting('field3Label') ?? block.field3Label ?? '').trim() || block.field3Label,
-          field3Placeholder: String(
-            readCtaSetting('field3Placeholder', 'phonePlaceholder')
-            || block.field3Placeholder
-            || block.phonePlaceholder
-            || '(555) 555-5555',
-          ).trim(),
-          field3Options: String(readCtaSetting('field3Options') ?? block.field3Options ?? '').trim(),
-          field3Required: ctaSettings.field3Required ?? block.field3Required,
-          field4Enabled: ctaSettings.field4Enabled ?? block.field4Enabled,
-          field4Type: String(readCtaSetting('field4Type') ?? block.field4Type ?? '').trim() || block.field4Type,
-          field4Label: String(readCtaSetting('field4Label') ?? block.field4Label ?? '').trim() || block.field4Label,
-          field4Placeholder: String(
-            readCtaSetting('field4Placeholder', 'messagePlaceholder')
-            || block.field4Placeholder
-            || block.messagePlaceholder
-            || 'What would you like to discuss?',
-          ).trim(),
-          field4Options: String(readCtaSetting('field4Options') ?? block.field4Options ?? '').trim(),
-          field4Required: ctaSettings.field4Required ?? block.field4Required,
-        };
-      }
-
-      if (block.type === 'hero') {
-        return {
-          ...block,
-          ...(heroSettings || {}),
-          id: 'hero',
-          kind: 'hero',
-          mode: heroManagedBlock?.mode || block.mode || 'dynamic',
-        };
-      }
-
-      if (block.id === 'columns_mha') {
-        if (columnsMhaSettings) {
-          return {
-            id: columnsMhaBlock?.id || block.id || 'columns_mha',
-            kind: columnsMhaBlock?.kind || block.kind || 'columns',
-            mode: columnsMhaBlock?.mode || 'dynamic',
-            settings: mergeHomeColumnsWithFallback(block, columnsMhaSettings),
-          };
-        }
-      }
-
-      if (block.id === 'columns_math') {
-        if (columnsMathSettings) {
-          return {
-            id: columnsMathBlock?.id || block.id || 'columns_math',
-            kind: columnsMathBlock?.kind || block.kind || 'columns',
-            mode: columnsMathBlock?.mode || 'dynamic',
-            settings: mergeHomeColumnsWithFallback(block, columnsMathSettings),
-          };
-        }
-      }
-
-      return block;
-    }).filter(Boolean);
-
-    const resolvedBlockIds = new Set(
-      resolvedBlocks
-        .map((block) => String(block?.id || '').trim())
-        .filter(Boolean),
-    );
-    const extraRenderableManagedBlocks = managedBlocks.filter((block) => {
-      if (!isManagedBlockVisible(block)) {
-        return false;
-      }
-      if (String(block?.mode || '').trim().toLowerCase() !== 'dynamic') {
-        return false;
-      }
-      const kind = String(block?.kind || block?.type || '').trim().toLowerCase();
-      if (!HOME_EXTRA_RENDERABLE_DYNAMIC_KINDS.has(kind)) {
-        return false;
-      }
-      const blockId = String(block?.id || '').trim();
-      return !blockId || !resolvedBlockIds.has(blockId);
+    const ctaSettings = dynamicCtaBlock?.settings && typeof dynamicCtaBlock.settings === 'object'
+      ? dynamicCtaBlock.settings
+      : null;
+    const heroSettings = managedHeroBlock?.settings && typeof managedHeroBlock.settings === 'object'
+      ? normalizeDynamicHeroSettings('/', managedHeroBlock.settings)
+      : null;
+    return buildResolvedHomeBlocks(homePageBlocks, {
+      defaultNewsletterFormId: HOME_NEWSLETTER_FORM_ID,
+      managedBlocks,
+      managedBlocksById,
+      topStripManagedBlock: dynamicTopStripBlock,
+      topStripSettings,
+      newsletterManagedBlock: dynamicNewsletterBlock,
+      newsletterSettings,
+      servicesGridManagedBlock: dynamicServicesGridBlock,
+      servicesGridSettings,
+      impactStatManagedBlock: dynamicImpactStatBlock,
+      impactStatSettings,
+      homeImpactStoryManagedBlock: dynamicHomeImpactStoryBlock,
+      homeImpactStorySettings,
+      ctaManagedBlock: dynamicCtaBlock,
+      ctaSettings,
+      heroManagedBlock: managedHeroBlock,
+      heroSettings,
+      managedHomeServicesFeatureBlock,
+      homeServicesFeatureSettings,
+      homeServicesFeatureIsActive: Boolean(dynamicHomeServicesFeatureBlock || !managedHomeServicesFeatureBlock),
     });
-
-    return reorderHomeTopBlocks(resolvedBlocks.concat(extraRenderableManagedBlocks));
   }, [
     dynamicHomeServicesFeatureBlock,
-    dynamicColumnsMathBlock,
-    dynamicColumnsMhaBlock,
     dynamicCtaBlock,
-    dynamicHeroBlock,
     dynamicHomeImpactStoryBlock,
     dynamicImpactStatBlock,
+    managedHeroBlock,
     managedHomeServicesFeatureBlock,
+    managedBlocksById,
     managedBlocks,
     dynamicNewsletterBlock,
     dynamicServicesGridBlock,
@@ -1456,19 +961,25 @@ export default function HomePage() {
   useNativeEnhancements(pageRef, nativeEnhancementsKey);
 
   const homeColumnsDiagnostics = useMemo(() => {
-    const renderedColumns = blocks.filter((block) => block?.id === 'columns_mha' || block?.id === 'columns_math');
+    const renderedColumns = blocks.filter((block) => (
+      block?.id === HOME_MINISTRY_ALLIES_BLOCK_ID
+      || block?.id === HOME_DO_THE_MATH_BLOCK_ID
+    ));
     return {
       managed: {
-        columns_mha: summarizeHomeColumnsBlock(managedHomeColumnsById.get('columns_mha') || null),
-        columns_math: summarizeHomeColumnsBlock(managedHomeColumnsById.get('columns_math') || null),
+        [HOME_MINISTRY_ALLIES_BLOCK_ID]: summarizeHomeColumnsBlock(managedBlocksById.get(HOME_MINISTRY_ALLIES_BLOCK_ID) || null),
+        [HOME_DO_THE_MATH_BLOCK_ID]: summarizeHomeColumnsBlock(
+          managedBlocksById.get(HOME_DO_THE_MATH_BLOCK_ID)
+          || null,
+        ),
       },
       renderedIds: renderedColumns.map((block) => String(block?.id || '').trim()),
       renderedCount: renderedColumns.length,
     };
-  }, [blocks, managedHomeColumnsById]);
+  }, [blocks, managedBlocksById]);
   const showHomeColumnsDebug = useMemo(() => {
     const isMissingExpectedColumns = homeColumnsDiagnostics.renderedCount < 2;
-    const hasBrokenManagedLayout = ['columns_mha', 'columns_math'].some((blockId) => {
+    const hasBrokenManagedLayout = [HOME_MINISTRY_ALLIES_BLOCK_ID, HOME_DO_THE_MATH_BLOCK_ID].some((blockId) => {
       const summary = homeColumnsDiagnostics.managed[blockId];
       if (!summary) {
         return false;

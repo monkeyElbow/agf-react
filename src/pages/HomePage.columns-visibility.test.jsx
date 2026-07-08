@@ -51,6 +51,25 @@ function expectHomeMathBlockTitle() {
   expect(screen.getByText((_, node) => String(node?.textContent || '').trim() === '(let us) Do the math.')).toBeTruthy();
 }
 
+function expectHomeMhaBillboard() {
+  expect(screen.getByText('Ministry allies.')).toBeTruthy();
+  expect(document.querySelector('.home-native-billboard[data-block-id="home_ministry_allies"]')).toBeTruthy();
+}
+
+function expectHomeMathBillboardWithoutPhoto({ requireHighlight = true } = {}) {
+  const block = document.querySelector('.home-native-billboard[data-block-id="home_do_the_math"]');
+  expect(block).toBeTruthy();
+  expect(screen.queryByAltText('Calculator and notebook')).toBeNull();
+  expect(block.querySelector('.ag-panel-rail')).toBeTruthy();
+  if (requireHighlight) {
+    expect(block.querySelector('h2 mark.is-atlantean')).toBeTruthy();
+  }
+  const action = block.querySelector('.service-native-action-row .service-native-btn');
+  expect(action).toBeTruthy();
+  expect(action.textContent).toContain('Use the calculators');
+  expect(action.getAttribute('href')).toBe('/calculators');
+}
+
 describe('HomePage columns visibility', () => {
   beforeEach(() => {
     mockBlocksByPath = {};
@@ -77,39 +96,24 @@ describe('HomePage columns visibility', () => {
     mockBlocksByPath = {
       '/': [
         {
-          id: 'columns_mha',
-          kind: 'columns',
+          id: 'home_ministry_allies',
+          kind: 'billboard',
           mode: 'dynamic',
           settings: {
-            bgTone: 'sand',
-            contentWidth: 'content',
-            columns: 'two',
-            col1Type: 'photo',
-            col1ImageUrl: 'mha-photo.jpg',
-            col1ImageAlt: 'Retired couple reviewing financial paperwork',
-            col2Type: 'text',
-            col2Title: 'Ministers Housing Allowance',
-            col2Body: 'This significant tax-saving benefit is available to retired ministers through the AGFinancial 403(b) plan.',
-            col2ButtonLabel: 'See the details',
-            col2ButtonUrl: '/services/retirement/403b#housing',
+            title: 'Ministry allies.',
+            bodyHtml: "<p>We're serving you, alongside you.</p>",
           },
         },
         {
-          id: 'columns_math',
-          kind: 'columns',
+          id: 'home_do_the_math',
+          kind: 'billboard',
           mode: 'static',
           settings: {
-            bgTone: 'white',
-            contentWidth: 'content',
-            columns: 'two',
-            col1Type: 'text',
-            col1Title: '(let us) Do the math.',
-            col1Body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
-            col1ButtonLabel: 'Use the calculators',
-            col1ButtonUrl: '/calculators',
-            col2Type: 'photo',
-            col2ImageUrl: 'math-photo.jpg',
-            col2ImageAlt: 'Calculator and notebook',
+            title: '(let us) Do the math.',
+            titleHighlightsJson: '[{"text":"(let us)","className":"is-atlantean"}]',
+            body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
+            buttonLabel: 'Use the calculators',
+            buttonUrl: '/calculators',
           },
         },
       ],
@@ -117,8 +121,9 @@ describe('HomePage columns visibility', () => {
 
     renderHomePage();
 
-    expect(screen.getByText('Ministers Housing Allowance')).toBeTruthy();
+    expectHomeMhaBillboard();
     expectHomeMathBlockTitle();
+    expectHomeMathBillboardWithoutPhoto({ requireHighlight: false });
   });
 
   it('renders a managed static home hero instead of falling back to the seed hero copy', () => {
@@ -153,37 +158,24 @@ describe('HomePage columns visibility', () => {
     expect(screen.queryByText('Convenient.')).toBeNull();
   });
 
-  it('keeps static home columns visible even if a managed static record is hidden', () => {
+  it('ignores stale static managed home billboard records and keeps the seed billboards visible', () => {
     mockBlocksByPath = {
       '/': [
         {
-          id: 'columns_mha',
-          kind: 'columns',
+          id: 'home_ministry_allies',
+          kind: 'billboard',
           mode: 'static',
           hidden: true,
           settings: {
-            bgTone: 'sand',
-            contentWidth: 'content',
-            columns: 'two',
-            col1Type: 'photo',
-            col1ImageUrl: 'mha-photo.jpg',
-            col1ImageAlt: 'Retired couple reviewing financial paperwork',
-            col2Type: 'text',
-            col2Title: 'Ministers Housing Allowance',
+            title: 'Hidden housing title',
           },
         },
         {
-          id: 'columns_math',
-          kind: 'columns',
+          id: 'home_do_the_math',
+          kind: 'billboard',
           mode: 'static',
           settings: {
-            bgTone: 'white',
-            contentWidth: 'content',
-            columns: 'two',
-            col1Type: 'text',
-            col1Title: '(let us) Do the math.',
-            col2Type: 'photo',
-            col2ImageUrl: 'math-photo.jpg',
+            title: '(let us) Do the math.',
           },
         },
       ],
@@ -191,52 +183,33 @@ describe('HomePage columns visibility', () => {
 
     renderHomePage();
 
-    expect(screen.getByText('Ministers Housing Allowance')).toBeTruthy();
+    expectHomeMhaBillboard();
     expectHomeMathBlockTitle();
+    expectHomeMathBillboardWithoutPhoto();
   });
 
   it('falls back to the static home columns layout when managed settings become unusable', () => {
     mockBlocksByPath = {
       '/': [
         {
-          id: 'columns_mha',
-          kind: 'columns',
+          id: 'home_ministry_allies',
+          kind: 'billboard',
           mode: 'static',
           settings: {
-            bgTone: 'sand',
-            contentWidth: 'content',
-            columns: 'two',
-            col1Type: 'photo',
-            col1ImageUrl: 'mha-photo.jpg',
-            col1ImageAlt: 'Retired couple reviewing financial paperwork',
-            col2Type: 'photo',
-            col2ImageUrl: 'bad-second-photo.jpg',
-            col2ImageAlt: 'Incorrect second photo',
-            col2Title: '',
-            col2Body: '',
-            col2ButtonLabel: '',
+            title: '',
+            bodyHtml: '',
           },
         },
         {
-          id: 'columns_math',
-          kind: 'columns',
+          id: 'home_do_the_math',
+          kind: 'billboard',
           mode: 'dynamic',
           settings: {
-            bgTone: 'white',
-            contentWidth: 'content',
-            columns: 'two',
-            col1Type: 'photo',
-            col1ImageUrl: 'bad-first-photo.jpg',
-            col1ImageAlt: 'Incorrect first photo',
-            col1Title: '',
-            col1Body: '',
-            col1ButtonLabel: '',
-            col2Type: 'photo',
-            col2ImageUrl: 'math-photo.jpg',
-            col2ImageAlt: 'Calculator and notebook',
-            col2Title: '',
-            col2Body: '',
-            col2ButtonLabel: '',
+            title: '',
+            titleHighlightsJson: '',
+            body: '',
+            buttonLabel: '',
+            buttonUrl: '',
           },
         },
       ],
@@ -244,53 +217,29 @@ describe('HomePage columns visibility', () => {
 
     renderHomePage();
 
-    expect(screen.getByText('Ministers Housing Allowance')).toBeTruthy();
+    expectHomeMhaBillboard();
     expectHomeMathBlockTitle();
+    expectHomeMathBillboardWithoutPhoto();
   });
 
-  it('keeps richer dynamic home columns visible when the layout switches away from the legacy split', () => {
+  it('renders managed home math billboard content on the canonical renderer contract', () => {
     mockBlocksByPath = {
       '/': [
         {
-          id: 'columns_mha',
-          kind: 'columns',
+          id: 'home_ministry_allies',
+          kind: 'billboard',
           mode: 'static',
           settings: {
-            bgTone: 'sand',
-            contentWidth: 'content',
-            columns: 'two',
-            col1Type: 'photo',
-            col1ImageUrl: 'mha-photo.jpg',
-            col1ImageAlt: 'Retired couple reviewing financial paperwork',
-            col2Type: 'text',
-            col2Title: 'Ministers Housing Allowance',
+            title: 'Ministry allies.',
           },
         },
         {
-          id: 'columns_math',
-          kind: 'columns',
+          id: 'home_do_the_math',
+          kind: 'billboard',
           mode: 'dynamic',
           settings: {
-            columnsStyle: 'loans-value',
-            bgTone: 'white',
-            contentWidth: 'browser',
-            columns: 'three',
             title: 'Compare the paths.',
-            leadLine: 'Tune the whole section from the HUD.',
-            followupLine: 'This should not fall back to the static split.',
-            col1Enabled: true,
-            col1Type: 'text',
-            col1Title: 'First option',
-            col1Body: 'Test one',
-            col2Enabled: true,
-            col2Type: 'text',
-            col2Title: 'Second option',
-            col2Body: 'Test two',
-            col3Enabled: true,
-            col3Type: 'text',
-            col3Title: 'Third option',
-            col3Body: 'Test three',
-            col4Enabled: false,
+            body: 'Tune the whole section from the HUD.',
           },
         },
       ],
@@ -300,7 +249,7 @@ describe('HomePage columns visibility', () => {
 
     expect(screen.getByText('Compare the paths.')).toBeTruthy();
     expect(screen.getByText('Tune the whole section from the HUD.')).toBeTruthy();
-    expect(screen.getByText('Third option')).toBeTruthy();
+    expectHomeMathBillboardWithoutPhoto({ requireHighlight: false });
   });
 
   it('passes through inserted dynamic site features on the shared home renderer path', () => {

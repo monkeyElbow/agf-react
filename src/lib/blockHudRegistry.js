@@ -16,15 +16,14 @@ const HUD_ID_OVERRIDES = {
     icon: billboardHudIcon,
     editorType: 'billboard',
   },
-  columns_mha: {
+  home_ministry_allies: {
     label: 'Housing',
-    icon: columnsHudIcon,
-    editorType: 'columns',
   },
   columns_math: {
     label: 'Do the Math',
-    icon: columnsHudIcon,
-    editorType: 'columns',
+  },
+  home_do_the_math: {
+    label: 'Do the Math',
   },
 };
 
