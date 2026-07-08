@@ -15,11 +15,8 @@ describe('planned giving and IRA native page content', () => {
     const comparisonSection = legacyContent?.sections?.find((section) => section?.className === 'legacy-giving-comparison');
     const endowmentSections = Array.isArray(endowmentsContent?.sections) ? endowmentsContent.sections : [];
     const generosityHeroActions = Array.isArray(generosityContent?.hero?.actions) ? generosityContent.hero.actions : [];
-    const generosityPreIntroSections = Array.isArray(generosityContent?.preIntroSections) ? generosityContent.preIntroSections : [];
-    const generosityInlineCta = generosityPreIntroSections.find((section) => section?.className === 'legacy-child-native-generosity-request legacy-child-native-generosity-cta legacy-child-native-generosity-request-inline');
     const generosityRequest = generosityContent?.sections?.find((section) => section?.className === 'legacy-child-native-generosity-request');
     const generosityOutro = generosityContent?.sections?.find((section) => section?.className === 'legacy-child-native-generosity-outro');
-    const generosityInlineCtaIndex = generosityPreIntroSections.findIndex((section) => section?.className === 'legacy-child-native-generosity-request legacy-child-native-generosity-cta legacy-child-native-generosity-request-inline');
     const generosityStepsIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-steps');
     const generosityRequestIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-generosity-request');
     const generosityOutroIndex = generosityContent?.sections?.findIndex((section) => section?.className === 'legacy-child-native-generosity-outro');
@@ -58,25 +55,19 @@ describe('planned giving and IRA native page content', () => {
       expect.objectContaining({ label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' }),
       expect.objectContaining({
         label: 'Open a traditional DAF',
-        action: 'open_cta_form',
-        targetAnchorId: 'traditional-daf-inline-form',
+        href: '#traditional-daf-form',
         className: 'is-outline is-tone-super-grey',
       }),
     ]);
-    expect(generosityInlineCta?.anchorId).toBe('traditional-daf-inline-form');
-    expect(generosityInlineCta?.form?.displayMode).toBe('inline_reveal');
-    expect(generosityInlineCta?.form?.triggerMode).toBe('external');
-    expect(generosityInlineCta?.id).toBeUndefined();
     expect(generosityRequest?.id).toBe('traditional-daf-form');
     expect(generosityRequest?.anchorId).toBe('traditional-daf-form');
-    expect(generosityRequest?.body).toEqual([]);
+    expect(generosityRequest?.body).toEqual(['Let’s discover the best way for you to give, and in the easiest way possible.']);
     expect(generosityRequest?.form?.subtitle).toBeUndefined();
-    expect(generosityRequest?.form?.displayMode).toBeUndefined();
-    expect(generosityRequest?.form?.triggerMode).toBeUndefined();
     expect(generosityRequest?.form?.fields).toEqual([
       expect.objectContaining({ id: 'name', label: 'Name*', type: 'text', required: true }),
       expect.objectContaining({ id: 'phone', label: 'Phone*', type: 'tel', required: true }),
       expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
+      expect.objectContaining({ id: 'message', label: 'Message', type: 'textarea', placeholder: 'What would you like to discuss?' }),
     ]);
     expect(generosityOutro?.title).toBe('Simple, joyful giving.');
     expect(generosityOutro?.subtitle).toBe('Powered by your generosity.');
@@ -85,7 +76,6 @@ describe('planned giving and IRA native page content', () => {
       expect.objectContaining({ label: 'Terms and Conditions', documentId: 'document-planned-giving-terms-and-conditions', ghost: true }),
     ]);
     expect(generosityContent?.intro?.heading).toBe('All your charitable giving in one place.');
-    expect(generosityInlineCtaIndex).toBe(0);
     expect(generosityStepsIndex).toBe(0);
     expect(generosityRequestIndex).toBeGreaterThan(generosityStepsIndex);
     expect(generosityOutroIndex).toBeGreaterThan(generosityRequestIndex);

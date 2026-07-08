@@ -296,6 +296,7 @@ describe('ContentAdminContext state normalization', () => {
       'name',
       'phone',
       'email',
+      'message',
     ]);
   });
 
@@ -312,6 +313,7 @@ describe('ContentAdminContext state normalization', () => {
       'name',
       'phone',
       'email',
+      'message',
     ]);
   });
 
@@ -811,10 +813,10 @@ describe('ContentAdminContext state normalization', () => {
     const heroBlock = (normalized.blocksByPath['/services/planned-giving/generosity-fund'] || [])
       .find((block) => block?.id === 'hero');
 
-    expect(heroBlock?.settings?.button2Action).toBe('open_cta_form');
-    expect(heroBlock?.settings?.button2TargetAnchorId).toBe('traditional-daf-inline-form');
-    expect(heroBlock?.settings?.button2TargetBlockId).toBe('');
-    expect(heroBlock?.settings?.button2Url).toBe('');
+    expect(heroBlock?.settings?.button2Action || '').toBe('');
+    expect(heroBlock?.settings?.button2TargetAnchorId || '').toBe('');
+    expect(heroBlock?.settings?.button2TargetBlockId || '').toBe('');
+    expect(heroBlock?.settings?.button2Url).toBe('#traditional-daf-form');
     expect(heroBlock?.settings?.button2PageRef).toBe('');
     expect(heroBlock?.settings?.button1Url).toBe('https://secure.agfinancial.org/generosityfund/signup');
     expect(heroBlock?.editableFields?.map((field) => field?.id)).toEqual(expect.arrayContaining([
@@ -1819,6 +1821,30 @@ describe('ContentAdminContext state normalization', () => {
     expect(impactBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(impactBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(impactBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds invest-by-mail hero and intro blocks while dropping an empty stale page-content block', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/investments/invest-by-mail': [
+          {
+            id: 'page_content',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: '',
+              body: '',
+            },
+          },
+        ],
+      },
+    });
+
+    const blocks = normalized.blocksByPath['/services/investments/invest-by-mail'] || [];
+
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
 });

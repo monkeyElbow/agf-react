@@ -312,6 +312,16 @@ describe('SiteLayout mobile nav drawer', () => {
     expect(cssSource).toContain('border: 1px solid var(--site-nav-menu-border);');
   });
 
+  it('keeps Safari desktop dropdowns on a non-jitter reveal contract', () => {
+    const cssSource = readSource('../styles.css');
+
+    expect(cssSource).toContain('html.ag-browser-safari .site-nav-group::after {');
+    expect(cssSource).toContain('html.ag-browser-safari .site-nav-group:not(.is-admin) .site-nav-dropdown,');
+    expect(cssSource).toContain('html.ag-browser-safari .site-nav-group:not(.is-admin) .site-nav-dropdown a,');
+    expect(cssSource).toContain('html.ag-browser-safari .site-nav-group.is-open .site-nav-dropdown .site-nav-dropdown-link,');
+    expect(cssSource).toContain('transition-delay: 0ms;');
+  });
+
   it('keeps the login icon available on narrow desktop widths until compact mode takes over', () => {
     const cssSource = readSource('../styles.css');
 

@@ -179,6 +179,19 @@ describe('content block blueprint coverage', () => {
     expect(introBlock?.settings?.button1PageRef).toBe('/services/retirement/retirement-consultants');
   });
 
+  it('seeds invest-by-mail with explicit hero and intro blocks instead of fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/investments/invest-by-mail'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Institutional Investments');
+    expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"Investments","className":"is-atlantean"}]');
+    expect(introBlock?.settings?.heading).toBe('Open an Investment by Mail');
+    expect(introBlock?.settings?.bgTone).toBe('sand');
+    expect(introBlock?.settings?.textTone).toBe('dark');
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
   it('seeds charitable gift annuities with explicit managed blocks instead of fallback page content', () => {
     const blocks = contentBlockBlueprintsByPath['/services/planned-giving/charitable-gift-annuities'] || [];
     const requestBlock = blocks.find((block) => block?.id === 'request_form');
@@ -527,11 +540,13 @@ describe('content block blueprint coverage', () => {
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Label).toBe('Open a traditional DAF');
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Url).toBe('#traditional-daf-form');
     expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.title).toBe('Make the most of your giving.');
+    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.body).toBe('Let’s discover the best way for you to give, and in the easiest way possible.');
     expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.targetSectionKey).toBe('id:traditional-daf-form');
     expect(JSON.parse(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.step1FieldsJson || '[]')).toEqual([
       expect.objectContaining({ id: 'name', label: 'Name*', type: 'text', required: true }),
       expect.objectContaining({ id: 'phone', label: 'Phone*', type: 'tel', required: true }),
       expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
+      expect.objectContaining({ id: 'message', label: 'Message', type: 'textarea', placeholder: 'What would you like to discuss?' }),
     ]);
     expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.targetSectionKey).toBe('class:legacy-child-native-generosity-outro');
     expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.button2Style).toBe('ghost');

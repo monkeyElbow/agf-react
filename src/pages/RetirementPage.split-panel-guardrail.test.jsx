@@ -26,6 +26,6 @@ describe('retirement split panel renderer guardrail', () => {
     expect(source).toContain("splitPanelRuntime.presentation === 'certificate_cards'");
     expect(source).toContain('retirement-account-card__cap');
     expect(source).toContain('retirement-account-card__body');
-    expect(source).toContain('service-native-btn is-outline is-tone-${tone}');
+    expect(source).toContain('service-native-btn ${isInternal ? `is-tone-${tone}` : `is-outline is-tone-${tone}`}`');
   });
 });

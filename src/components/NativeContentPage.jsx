@@ -78,6 +78,15 @@ import DynamicRequestFormSection from './DynamicRequestFormSection';
 import FrontHudAnchorTag from './FrontHudAnchorTag';
 import InfoTableSheet from './InfoTableSheet';
 import IraRatesSheet from './IraRatesSheet';
+import {
+  getInvestmentByMailInstitutionStateRule,
+  investmentByMailInstitutionDocumentIds,
+  investmentByMailInstitutionExistingInvestorQuestion,
+  investmentByMailInstitutionLimitedClassAcknowledgment,
+  investmentByMailInstitutionMailAddressLines,
+  investmentByMailInstitutionMailReminder,
+  investmentByMailInstitutionStandardAcknowledgment,
+} from '../data/investmentByMailInstitutionConfig';
 import NewsletterSignupForm from './NewsletterSignupForm';
 import SafeRichText from './SafeRichText';
 import {
@@ -3058,6 +3067,288 @@ function FundAnIraWidget() {
             </div>
           ) : null}
         </section>
+      </div>
+    </div>
+  );
+}
+
+function InstitutionalInvestmentByMailFlowWidget() {
+  const stateOptions = useMemo(
+    () => toStateOptions().sort((a, b) => a.label.localeCompare(b.label)),
+    [],
+  );
+  const [stateCode, setStateCode] = useState('');
+  const [investorRelationship, setInvestorRelationship] = useState('');
+  const [eligibilityConfirmed, setEligibilityConfirmed] = useState(false);
+  const [hasOpenedCircular, setHasOpenedCircular] = useState(false);
+  const [agreedCircular, setAgreedCircular] = useState(false);
+  const [downloadsUnlocked, setDownloadsUnlocked] = useState(false);
+  const [mailStepUnlocked, setMailStepUnlocked] = useState(false);
+
+  const stateRule = getInvestmentByMailInstitutionStateRule(stateCode);
+  const requiresExistingInvestorAnswer = Boolean(stateRule?.requiresExistingInvestorAnswer);
+  const isOhioBlocked = stateRule?.eligibility === 'blocked';
+  const isWashingtonBlocked = stateCode === 'WA' && investorRelationship === 'no';
+  const isBlocked = isOhioBlocked || isWashingtonBlocked;
+  const blockMessage = isOhioBlocked
+    ? stateRule?.blockMessage || ''
+    : (isWashingtonBlocked ? stateRule?.newInvestorBlockMessage || '' : '');
+  const acknowledgmentCopy = stateRule?.eligibility === 'limited'
+    ? investmentByMailInstitutionLimitedClassAcknowledgment
+    : investmentByMailInstitutionStandardAcknowledgment;
+  const canContinueEligibility = Boolean(stateCode) && (!requiresExistingInvestorAnswer || Boolean(investorRelationship));
+  const step2Unlocked = eligibilityConfirmed && !isBlocked;
+  const step3Unlocked = step2Unlocked && agreedCircular && downloadsUnlocked;
+  const step4Unlocked = step3Unlocked && mailStepUnlocked;
+
+  const { resolveDocumentLink } = useDocuments();
+  const offeringCircularDoc = resolveDocumentLink(investmentByMailInstitutionDocumentIds.offeringCircular);
+  const investmentFormDoc = resolveDocumentLink(investmentByMailInstitutionDocumentIds.investmentForm);
+
+  const resetFollowOnSteps = () => {
+    setEligibilityConfirmed(false);
+    setHasOpenedCircular(false);
+    setAgreedCircular(false);
+    setDownloadsUnlocked(false);
+    setMailStepUnlocked(false);
+  };
+
+  const stepClassName = (step) => {
+    if (step === 1) {
+      return `invest-mail-step-card ${eligibilityConfirmed || isBlocked ? 'done' : 'active'}`;
+    }
+    if (step === 2) {
+      if (!step2Unlocked) return 'invest-mail-step-card locked';
+      return `invest-mail-step-card ${downloadsUnlocked ? 'done' : 'active'}`;
+    }
+    if (step === 3) {
+      if (!step3Unlocked) return 'invest-mail-step-card locked';
+      return `invest-mail-step-card ${mailStepUnlocked ? 'done' : 'active'}`;
+    }
+    if (step === 4) {
+      if (!step4Unlocked) return 'invest-mail-step-card locked';
+      return 'invest-mail-step-card active';
+    }
+    return 'invest-mail-step-card';
+  };
+
+  const stepPill = (step) => {
+    if (step === 1) {
+      return eligibilityConfirmed || isBlocked ? 'Done' : 'Required';
+    }
+    if (step === 2) {
+      if (!step2Unlocked) return 'Locked';
+      return downloadsUnlocked ? 'Done' : 'Review';
+    }
+    if (step === 3) {
+      if (!step3Unlocked) return 'Locked';
+      return mailStepUnlocked ? 'Done' : 'Download';
+    }
+    if (step === 4) {
+      return step4Unlocked ? 'Ready' : 'Locked';
+    }
+    return '';
+  };
+
+  return (
+    <div className="invest-mail-widget">
+      <div className="invest-mail-header">
+        <h2>Open an Investment by Mail</h2>
+        <p>Follow the four steps below to open an institutional investment by mail.</p>
+      </div>
+
+      <div className="invest-mail-grid">
+        <section className={`${stepClassName(1)} is-full`}>
+          <div className="invest-mail-step-heading">
+            <span className="invest-mail-step-number">1</span>
+            <div>
+              <p className="invest-mail-step-title">Select Your State</p>
+              <p className="invest-mail-step-sub">Confirm eligibility before downloading anything.</p>
+            </div>
+            <span className="invest-mail-step-pill">{stepPill(1)}</span>
+          </div>
+
+          <label htmlFor="institutional-invest-mail-state" className="invest-mail-label">Select your state</label>
+          <select
+            id="institutional-invest-mail-state"
+            className="invest-mail-select"
+            value={stateCode}
+            onChange={(event) => {
+              setStateCode(event.target.value);
+              resetFollowOnSteps();
+            }}
+          >
+            <option value="">Select your state</option>
+            {stateOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+
+          <fieldset className="invest-mail-radio-group">
+            <legend className="invest-mail-label">{investmentByMailInstitutionExistingInvestorQuestion}</legend>
+            <label className="invest-mail-radio-row">
+              <input
+                type="radio"
+                name="institutional-invest-mail-existing-investor"
+                value="yes"
+                checked={investorRelationship === 'yes'}
+                onChange={(event) => {
+                  setInvestorRelationship(event.target.value);
+                  resetFollowOnSteps();
+                }}
+              />
+              <span>Yes</span>
+            </label>
+            <label className="invest-mail-radio-row">
+              <input
+                type="radio"
+                name="institutional-invest-mail-existing-investor"
+                value="no"
+                checked={investorRelationship === 'no'}
+                onChange={(event) => {
+                  setInvestorRelationship(event.target.value);
+                  resetFollowOnSteps();
+                }}
+              />
+              <span>No</span>
+            </label>
+          </fieldset>
+
+          {isBlocked ? (
+            <div className="invest-mail-alert" role="alert">
+              <p>{blockMessage}</p>
+              <div className="invest-mail-back-row">
+                <Action item={{ label: 'Back to Investments', to: '/services/investments' }} />
+              </div>
+            </div>
+          ) : null}
+
+          {!isBlocked ? (
+            <div className="invest-mail-continue-row">
+              <button
+                type="button"
+                className="service-native-btn is-tone-atlantean"
+                disabled={!canContinueEligibility}
+                onClick={() => setEligibilityConfirmed(true)}
+              >
+                Continue
+              </button>
+            </div>
+          ) : null}
+        </section>
+
+        {step2Unlocked ? (
+          <section className={`${stepClassName(2)} is-full`}>
+            <div className="invest-mail-step-heading">
+              <span className="invest-mail-step-number">2</span>
+              <div>
+                <p className="invest-mail-step-title">Review Terms of Offering</p>
+                <p className="invest-mail-step-sub">Open the Offering Circular, then acknowledge the terms.</p>
+              </div>
+              <span className="invest-mail-step-pill">{stepPill(2)}</span>
+            </div>
+
+            <div className="invest-mail-action-row">
+              <a
+                href={offeringCircularDoc?.url || '/prospectus'}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="service-native-btn is-outline is-tone-atlantean"
+                onClick={() => setHasOpenedCircular(true)}
+              >
+                Offering Circular
+              </a>
+            </div>
+
+            <label className="invest-mail-checkbox-row">
+              <input
+                type="checkbox"
+                checked={agreedCircular}
+                disabled={!hasOpenedCircular}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+                  setAgreedCircular(checked);
+                  if (!checked) {
+                    setDownloadsUnlocked(false);
+                    setMailStepUnlocked(false);
+                  }
+                }}
+              />
+              <span>{acknowledgmentCopy}</span>
+            </label>
+
+            <div className="invest-mail-continue-row">
+              <button
+                type="button"
+                className="service-native-btn is-tone-atlantean"
+                disabled={!agreedCircular}
+                onClick={() => setDownloadsUnlocked(true)}
+              >
+                Continue
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        {step3Unlocked ? (
+          <section className={`${stepClassName(3)} is-full`}>
+            <div className="invest-mail-step-heading">
+              <span className="invest-mail-step-number">3</span>
+              <div>
+                <p className="invest-mail-step-title">Download and Complete the Investment Form</p>
+                <p className="invest-mail-step-sub">Use the managed document link below to get the right paperwork.</p>
+              </div>
+              <span className="invest-mail-step-pill">{stepPill(3)}</span>
+            </div>
+
+            <div className="invest-mail-action-row">
+              <a
+                href={investmentFormDoc?.url || '#'}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="service-native-btn is-outline is-tone-super-grey"
+              >
+                Download Form
+              </a>
+            </div>
+
+            <div className="invest-mail-continue-row">
+              <button
+                type="button"
+                className="service-native-btn is-tone-atlantean"
+                onClick={() => setMailStepUnlocked(true)}
+              >
+                Continue
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        {step4Unlocked ? (
+          <section className={`${stepClassName(4)} is-full`}>
+            <div className="invest-mail-step-heading">
+              <span className="invest-mail-step-number">4</span>
+              <div>
+                <p className="invest-mail-step-title">Mail Your Completed Paperwork to AGFinancial</p>
+                <p className="invest-mail-step-sub">Send the full packet to the address below.</p>
+              </div>
+              <span className="invest-mail-step-pill">{stepPill(4)}</span>
+            </div>
+
+            <div className="invest-mail-copy-stack">
+              <p>Mail all forms and paperwork to:</p>
+              <p className="invest-mail-address">
+                {investmentByMailInstitutionMailAddressLines.map((line, index) => (
+                  <span key={line}>
+                    {line}
+                    {index < investmentByMailInstitutionMailAddressLines.length - 1 ? <br /> : null}
+                  </span>
+                ))}
+              </p>
+              <p>{investmentByMailInstitutionMailReminder}</p>
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );
@@ -6452,6 +6743,10 @@ export default function NativeContentPage({ page }) {
 
             {section.widget === 'retirement-fund-ira' ? (
               <FundAnIraWidget />
+            ) : null}
+
+            {section.widget === 'investments-institutional-by-mail' ? (
+              <InstitutionalInvestmentByMailFlowWidget />
             ) : null}
 
             {section.widget === 'endowment-calculator' ? (

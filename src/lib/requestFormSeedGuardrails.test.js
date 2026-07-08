@@ -188,7 +188,7 @@ function toExpectedRequestSteps(section) {
   }
 
   return [{
-    title: String(form.title || 'Contact details').trim(),
+    title: String(form.title || '').trim(),
     note: String(form.subtitle || '').trim(),
     nextLabel: String(form.nextLabel || '').trim(),
     backLabel: String(form.backLabel || '').trim(),

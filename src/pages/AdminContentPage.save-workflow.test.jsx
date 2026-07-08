@@ -8,13 +8,16 @@ void [MemoryRouter, AdminContentPage];
 const mockSaveSharedDraftNow = vi.fn();
 const mockPublishSharedPageNow = vi.fn();
 const mockGetPageRevisionHistory = vi.fn();
+const mockGetSharedContentBackups = vi.fn();
 const mockRestorePageRevision = vi.fn();
 const mockRestoreBlockRevision = vi.fn();
+const mockRestoreLatestSharedContentBackup = vi.fn();
 const mockSetActiveBlockLock = vi.fn();
 const mockClearActiveBlockLock = vi.fn();
 const mockUpdateBlock = vi.fn();
 const mockRemoveBlock = vi.fn();
 const mockMoveBlock = vi.fn();
+const mockResetContentAdmin = vi.fn();
 let mockSharedSnapshotUpdatedAt = 0;
 let mockLastSharedSaveResult = null;
 let mockLastSharedPublishResult = null;
@@ -138,11 +141,13 @@ vi.mock('../context/ContentAdminContext', async () => {
       saveSharedDraftNow: mockSaveSharedDraftNow,
       publishSharedPageNow: mockPublishSharedPageNow,
       getPageRevisionHistory: mockGetPageRevisionHistory,
+      getSharedContentBackups: mockGetSharedContentBackups,
       restorePageRevision: mockRestorePageRevision,
       restoreBlockRevision: mockRestoreBlockRevision,
+      restoreLatestSharedContentBackup: mockRestoreLatestSharedContentBackup,
       setActiveBlockLock: mockSetActiveBlockLock,
       clearActiveBlockLock: mockClearActiveBlockLock,
-      resetContentAdmin: vi.fn(),
+      resetContentAdmin: mockResetContentAdmin,
       resolveManagedPath: (pathname) => pathname,
       resolveManagedPathFromRef: (pathRef, fallback = '') => pathRef || fallback,
     }),
@@ -154,13 +159,16 @@ describe('AdminContentPage shared save workflow', () => {
     mockSaveSharedDraftNow.mockReset();
     mockPublishSharedPageNow.mockReset();
     mockGetPageRevisionHistory.mockReset();
+    mockGetSharedContentBackups.mockReset();
     mockRestorePageRevision.mockReset();
     mockRestoreBlockRevision.mockReset();
+    mockRestoreLatestSharedContentBackup.mockReset();
     mockSetActiveBlockLock.mockReset();
     mockClearActiveBlockLock.mockReset();
     mockUpdateBlock.mockReset();
     mockRemoveBlock.mockReset();
     mockMoveBlock.mockReset();
+    mockResetContentAdmin.mockReset();
     mockSharedSnapshotUpdatedAt = 0;
     mockLastSharedSaveResult = null;
     mockLastSharedPublishResult = null;
@@ -202,10 +210,28 @@ describe('AdminContentPage shared save workflow', () => {
         ],
       },
     ]);
+    mockGetSharedContentBackups.mockResolvedValue([
+      {
+        fileName: 'content-admin-shared-20260708-120000.json',
+        createdAt: 1720452000000,
+        timestamp: '2026-07-08T17:00:00.000Z',
+        reason: 'before-reset-from-seed',
+        gitCommitHash: 'abc123',
+        metadata: {},
+      },
+    ]);
     mockRestorePageRevision.mockResolvedValue({ ok: true });
     mockRestoreBlockRevision.mockResolvedValue({ ok: true });
+    mockRestoreLatestSharedContentBackup.mockResolvedValue({
+      ok: true,
+      restoredBackup: {
+        fileName: 'content-admin-shared-20260708-120000.json',
+        createdAt: 1720452000000,
+      },
+    });
     mockSetActiveBlockLock.mockReturnValue({ ok: true });
     mockClearActiveBlockLock.mockReturnValue({ ok: true });
+    mockResetContentAdmin.mockResolvedValue({ ok: true });
   });
 
   it('shows the page save bar and revision drawer actions for shared drafting', async () => {
@@ -219,9 +245,11 @@ describe('AdminContentPage shared save workflow', () => {
     expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
     expect(screen.getByRole('button', { name: 'History' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Restore last backup' })).toBeTruthy();
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
     expect(screen.getByText('/services/loans')).toBeTruthy();
     expect(screen.getByText('1 block changed')).toBeTruthy();
+    expect(screen.getByText(/Reset from seed replaces saved admin content with code defaults/i)).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText('Optional save note'), { target: { value: 'Refined CTA copy' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
@@ -237,6 +265,24 @@ describe('AdminContentPage shared save workflow', () => {
     expect(screen.getAllByText(/Refined hero copy/).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Restore page' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Restore selected blocks' })).toBeTruthy();
+  });
+
+  it('restores the latest shared backup from the save bar', async () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Restore last backup' }).disabled).toBe(false);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Restore last backup' }));
+
+    await waitFor(() => {
+      expect(mockRestoreLatestSharedContentBackup).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('restores a whole page revision and selected blocks from the history drawer', async () => {

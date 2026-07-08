@@ -224,14 +224,14 @@ const DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS = {
   leftTitle: 'Individual Retirement Accounts (IRAs)',
   leftBodyHtml: '<p>An IRA (Individual Retirement Account) provides beneficial options, both now and in the future. We offer <strong>Traditional</strong> and <strong>Roth</strong> IRAs. Learn more about each below.</p>',
   leftBody: '',
-  leftButtonLabel: 'Explore IRAs',
+  leftButtonLabel: 'See IRA options',
   leftButtonUrl: '/services/retirement/iras',
   leftButtonPageRef: '/services/retirement/iras',
   leftButtonOpenInNewWindow: false,
   rightTitle: 'Deferred Compensation Plan (409A)',
   rightBodyHtml: '<p>Available exclusively to ministers, ministry employees, and Qualified Church-Controlled Organizations (QCCO), this 409A plan allows participants to defer compensation above and beyond standard retirement contribution limits.</p>',
   rightBody: '',
-  rightButtonLabel: 'Explore 409A',
+  rightButtonLabel: 'Learn more',
   rightButtonUrl: '/services/retirement/409a',
   rightButtonPageRef: '/services/retirement/409a',
   rightButtonOpenInNewWindow: false,
@@ -1717,11 +1717,11 @@ export default function RetirementPage() {
             <h2 className="retirement-plan-heading">AGFinancial 403(b) Retirement Plan</h2>
             <h3 className="retirement-plan-subheading">Smart benefits, strong advantages</h3>
             <p className="retirement-plan-lead">
-              The AGFinancial flagship retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA. Choose from a variety of strategies.
+              The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.
             </p>
           </div>
           <h4 className="retirement-plan-footer">
-            Includes <mark className="is-mango">minister&apos;s housing allowance</mark>, higher contribution limits than IRAs, and more.
+            Includes <mark className="is-mango">minister&apos;s housing allowance</mark>, and a variety of investment strategies.
           </h4>
           <div className="service-native-action-row retirement-plan-actions">
             <Link to="/services/retirement/403b" className="service-native-btn">Explore the 403(b)</Link>
@@ -1750,7 +1750,7 @@ export default function RetirementPage() {
                   'fade-up',
                 ].filter(Boolean).join(' ');
                 const buttonClassName = isCertificateCard
-                  ? `service-native-btn is-outline is-tone-${tone}`
+                  ? `service-native-btn ${isInternal ? `is-tone-${tone}` : `is-outline is-tone-${tone}`}`
                   : 'service-native-btn';
                 const bodyContent = item.bodyHtml ? (
                   <SafeRichText as="div" className="retirement-account-body" html={item.bodyHtml} />

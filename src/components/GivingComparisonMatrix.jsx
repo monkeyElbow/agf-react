@@ -697,7 +697,7 @@ const styles = {
     color: AGF_COLORS.muted,
     fontWeight: 700,
     textTransform: 'uppercase',
-    letterSpacing: '0.04em',
+    letterSpacing: '0',
   },
   select: {
     padding: '8px 10px',
@@ -746,7 +746,7 @@ const styles = {
     fontSize: 12,
     fontWeight: 800,
     color: AGF_COLORS.teal,
-    letterSpacing: '0.08em',
+    letterSpacing: '0',
     textTransform: 'uppercase',
   },
   desktopSelectorTitle: {
@@ -780,7 +780,7 @@ const styles = {
     fontWeight: 800,
     color: AGF_COLORS.slate,
     textTransform: 'uppercase',
-    letterSpacing: '0.06em',
+    letterSpacing: '0',
   },
   desktopSelectorGrid: {
     display: 'flex',
@@ -1043,7 +1043,7 @@ const styles = {
     color: AGF_COLORS.teal,
     fontSize: 12,
     fontWeight: 800,
-    letterSpacing: '0.04em',
+    letterSpacing: '0',
     textTransform: 'uppercase',
   },
   mobileProgramFacts: {
@@ -1060,7 +1060,7 @@ const styles = {
   mobileProgramFactLabel: {
     fontSize: 12,
     fontWeight: 800,
-    letterSpacing: '0.05em',
+    letterSpacing: '0',
     textTransform: 'uppercase',
     color: AGF_COLORS.muted,
   },
@@ -1151,7 +1151,7 @@ const styles = {
     lineHeight: 1.25,
     fontWeight: 800,
     color: AGF_COLORS.teal,
-    letterSpacing: '0.03em',
+    letterSpacing: '0',
     textTransform: 'uppercase',
   },
   mobileAnswerValue: {

@@ -1,13 +1,50 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { normalizePresetBearingBlocks } from '../src/lib/blockPresetIdentity.js';
 import { defaultAnnouncement, normalizeAnnouncement } from '../src/lib/announcementConfig.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
+const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
+const SHARED_CONTENT_BACKUP_FILE_PREFIX = 'content-admin-shared-';
+const SHARED_CONTENT_BACKUP_FILE_SUFFIX = '.json';
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function padTimestampSegment(value) {
+  return String(value).padStart(2, '0');
+}
+
+function formatBackupTimestampToken(timestamp) {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = padTimestampSegment(date.getMonth() + 1);
+  const day = padTimestampSegment(date.getDate());
+  const hours = padTimestampSegment(date.getHours());
+  const minutes = padTimestampSegment(date.getMinutes());
+  const seconds = padTimestampSegment(date.getSeconds());
+  return `${year}${month}${day}-${hours}${minutes}${seconds}`;
+}
+
+function safeBackupMetadata(rawMetadata) {
+  const source = rawMetadata && typeof rawMetadata === 'object' ? rawMetadata : {};
+  return cloneJson(source) || {};
+}
+
+function defaultGitCommitHashResolver() {
+  try {
+    return String(
+      execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
+        cwd: process.cwd(),
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }),
+    ).trim();
+  } catch {
+    return '';
+  }
 }
 
 function normalizeActor(rawActor) {
@@ -94,6 +131,60 @@ function normalizeSharedState(rawState) {
     ),
     pathAliases: cloneJson(source.pathAliases || {}),
     collaborationByPath: normalizeCollaborationByPath(source.collaborationByPath || {}),
+  };
+}
+
+function normalizeStoredRecord(rawRecord, maxRevisionsPerPage) {
+  const parsed = rawRecord && typeof rawRecord === 'object' ? rawRecord : {};
+  return {
+    initialized: Boolean(parsed?.initialized),
+    version: 1,
+    updatedAt: Number.isFinite(Number(parsed?.updatedAt)) ? Number(parsed.updatedAt) : 0,
+    announcementUpdatedAt: Number.isFinite(Number(parsed?.announcementUpdatedAt))
+      ? Number(parsed.announcementUpdatedAt)
+      : 0,
+    announcement: normalizeAnnouncement(parsed?.announcement),
+    state: normalizeSharedState(parsed?.state),
+    baseSnapshot: normalizeSharedState(parsed?.baseSnapshot),
+    revisionsByPath: Object.fromEntries(
+      Object.entries(parsed?.revisionsByPath || {}).map(([pathname, revisions]) => [
+        pathname,
+        (Array.isArray(revisions) ? revisions : [])
+          .map(normalizeRevisionRecord)
+          .filter(Boolean)
+          .slice(0, maxRevisionsPerPage),
+      ]),
+    ),
+  };
+}
+
+function summarizeDestructiveSharedStateChanges(currentState, incomingState) {
+  const current = normalizeSharedState(currentState);
+  const incoming = normalizeSharedState(incomingState);
+  const removedPagePaths = Object.keys(current.pageHierarchy || {}).filter((pathname) => !incoming.pageHierarchy?.[pathname]);
+  const removedBlocksByPath = {};
+
+  Object.keys(current.blocksByPath || {}).forEach((pathname) => {
+    const currentBlockIds = new Set(
+      (Array.isArray(current.blocksByPath?.[pathname]) ? current.blocksByPath[pathname] : [])
+        .map((block) => String(block?.id || '').trim())
+        .filter(Boolean),
+    );
+    const incomingBlockIds = new Set(
+      (Array.isArray(incoming.blocksByPath?.[pathname]) ? incoming.blocksByPath[pathname] : [])
+        .map((block) => String(block?.id || '').trim())
+        .filter(Boolean),
+    );
+    const removedBlockIds = Array.from(currentBlockIds).filter((blockId) => !incomingBlockIds.has(blockId));
+    if (removedBlockIds.length) {
+      removedBlocksByPath[pathname] = removedBlockIds;
+    }
+  });
+
+  return {
+    hasDestructiveChanges: Boolean(removedPagePaths.length || Object.keys(removedBlocksByPath).length),
+    removedPagePaths,
+    removedBlocksByPath,
   };
 }
 
@@ -697,6 +788,9 @@ export function createDevContentAuthorityStore({
   now = () => Date.now(),
   createId = (ts) => `${ts}-${Math.random().toString(36).slice(2, 8)}`,
   maxRevisionsPerPage = DEFAULT_MAX_REVISIONS_PER_PAGE,
+  backupDir = path.resolve(path.dirname(persistenceFile), 'backups'),
+  maxAutomaticBackups = DEFAULT_MAX_AUTOMATIC_BACKUPS,
+  getGitCommitHash = defaultGitCommitHashResolver,
 } = {}) {
   if (!persistenceFile) {
     throw new Error('persistenceFile is required');
@@ -704,10 +798,123 @@ export function createDevContentAuthorityStore({
 
   let record = defaultRecord();
 
-  const persist = () => {
+  const persistRecord = (nextRecord = record) => {
     const dir = path.dirname(persistenceFile);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(persistenceFile, JSON.stringify(record));
+    fs.writeFileSync(persistenceFile, JSON.stringify(nextRecord));
+  };
+
+  const readBackupPayload = (filePath) => {
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const normalizedRecord = normalizeStoredRecord(parsed?.record || parsed, maxRevisionsPerPage);
+    const metadata = parsed?.meta && typeof parsed.meta === 'object'
+      ? cloneJson(parsed.meta)
+      : {};
+    return {
+      fileName: path.basename(filePath),
+      filePath,
+      meta: {
+        createdAt: Number.isFinite(Number(metadata?.createdAt)) ? Number(metadata.createdAt) : 0,
+        timestamp: String(metadata?.timestamp || '').trim(),
+        reason: String(metadata?.reason || '').trim(),
+        gitCommitHash: String(metadata?.gitCommitHash || '').trim(),
+        ...safeBackupMetadata(metadata),
+      },
+      record: normalizedRecord,
+    };
+  };
+
+  const listBackups = () => {
+    if (!fs.existsSync(backupDir)) {
+      return [];
+    }
+    return fs.readdirSync(backupDir)
+      .filter((fileName) => (
+        fileName.startsWith(SHARED_CONTENT_BACKUP_FILE_PREFIX)
+        && fileName.endsWith(SHARED_CONTENT_BACKUP_FILE_SUFFIX)
+      ))
+      .map((fileName) => path.resolve(backupDir, fileName))
+      .map((filePath) => {
+        try {
+          const backup = readBackupPayload(filePath);
+          return {
+            fileName: backup.fileName,
+            filePath: backup.filePath,
+            createdAt: Number.isFinite(Number(backup.meta?.createdAt)) ? Number(backup.meta.createdAt) : 0,
+            timestamp: String(backup.meta?.timestamp || '').trim(),
+            reason: String(backup.meta?.reason || '').trim(),
+            gitCommitHash: String(backup.meta?.gitCommitHash || '').trim(),
+            metadata: safeBackupMetadata(backup.meta),
+          };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean)
+      .sort((left, right) => Number(right.createdAt || 0) - Number(left.createdAt || 0));
+  };
+
+  const pruneBackups = () => {
+    const backups = listBackups();
+    backups.slice(maxAutomaticBackups).forEach((backup) => {
+      try {
+        fs.unlinkSync(backup.filePath);
+      } catch {
+        // Ignore backup prune failures so current work can continue.
+      }
+    });
+  };
+
+  const createSharedContentBackup = (reason, metadata = {}) => {
+    const createdAt = now();
+    fs.mkdirSync(backupDir, { recursive: true });
+    const timestampToken = formatBackupTimestampToken(createdAt);
+    const gitCommitHash = String(getGitCommitHash?.() || '').trim();
+    const baseName = `${SHARED_CONTENT_BACKUP_FILE_PREFIX}${timestampToken}`;
+    let fileName = `${baseName}${SHARED_CONTENT_BACKUP_FILE_SUFFIX}`;
+    let filePath = path.resolve(backupDir, fileName);
+    let suffix = 2;
+
+    while (fs.existsSync(filePath)) {
+      fileName = `${baseName}-${suffix}${SHARED_CONTENT_BACKUP_FILE_SUFFIX}`;
+      filePath = path.resolve(backupDir, fileName);
+      suffix += 1;
+    }
+
+    const payload = {
+      meta: {
+        createdAt,
+        timestamp: new Date(createdAt).toISOString(),
+        reason: String(reason || '').trim() || 'manual-backup',
+        gitCommitHash,
+        persistenceFile: path.basename(persistenceFile),
+        initialized: Boolean(record?.initialized),
+        updatedAt: Number.isFinite(Number(record?.updatedAt)) ? Number(record.updatedAt) : 0,
+        ...safeBackupMetadata(metadata),
+      },
+      record: cloneJson(record),
+    };
+
+    fs.writeFileSync(filePath, JSON.stringify(payload));
+    pruneBackups();
+    return {
+      fileName,
+      filePath,
+      createdAt,
+      timestamp: payload.meta.timestamp,
+      reason: payload.meta.reason,
+      gitCommitHash,
+      metadata: safeBackupMetadata(payload.meta),
+    };
+  };
+
+  const safelyReplaceRecord = (nextRecord, { backupReason = '', backupMetadata = null } = {}) => {
+    const createdBackup = backupReason
+      ? createSharedContentBackup(backupReason, backupMetadata || {})
+      : null;
+    record = nextRecord;
+    persistRecord(record);
+    return createdBackup;
   };
 
   const load = () => {
@@ -717,26 +924,17 @@ export function createDevContentAuthorityStore({
     }
     try {
       const parsed = JSON.parse(fs.readFileSync(persistenceFile, 'utf8'));
-      record = {
-        initialized: Boolean(parsed?.initialized),
-        version: 1,
-        updatedAt: Number.isFinite(Number(parsed?.updatedAt)) ? Number(parsed.updatedAt) : 0,
-        announcementUpdatedAt: Number.isFinite(Number(parsed?.announcementUpdatedAt))
-          ? Number(parsed.announcementUpdatedAt)
-          : 0,
-        announcement: normalizeAnnouncement(parsed?.announcement),
-        state: normalizeSharedState(parsed?.state),
-        baseSnapshot: normalizeSharedState(parsed?.baseSnapshot),
-        revisionsByPath: Object.fromEntries(
-          Object.entries(parsed?.revisionsByPath || {}).map(([pathname, revisions]) => [
-            pathname,
-            (Array.isArray(revisions) ? revisions : [])
-              .map(normalizeRevisionRecord)
-              .filter(Boolean)
-              .slice(0, maxRevisionsPerPage),
-          ]),
-        ),
-      };
+      record = normalizeStoredRecord(parsed, maxRevisionsPerPage);
+      if (JSON.stringify(parsed) !== JSON.stringify(record)) {
+        try {
+          createSharedContentBackup('before-normalization-writeback', {
+            source: 'content-admin-store-load',
+          });
+          persistRecord(record);
+        } catch {
+          // Keep the normalized in-memory record without rewriting the source file if backup creation fails.
+        }
+      }
     } catch {
       record = defaultRecord();
     }
@@ -789,7 +987,7 @@ export function createDevContentAuthorityStore({
       updatedAt: now(),
       state: normalizedNextState,
     };
-    persist();
+    persistRecord();
     return publishSnapshot();
   };
 
@@ -828,7 +1026,7 @@ export function createDevContentAuthorityStore({
         announcement: normalizedAnnouncement,
         announcementUpdatedAt: timestamp,
       };
-      persist();
+      persistRecord();
       return {
         ok: true,
         actor: normalizeActor(actor),
@@ -838,7 +1036,7 @@ export function createDevContentAuthorityStore({
 
     resetFromSeed(seedState, { actor, reason = 'seed-reset' } = {}) {
       const normalizedSeedState = normalizeSharedState(seedState);
-      record = {
+      const nextRecord = {
         initialized: true,
         version: 1,
         updatedAt: now(),
@@ -848,20 +1046,35 @@ export function createDevContentAuthorityStore({
         baseSnapshot: cloneJson(normalizedSeedState),
         revisionsByPath: {},
       };
-      persist();
+      try {
+        safelyReplaceRecord(nextRecord, {
+          backupReason: record.initialized ? 'before-reset-from-seed' : '',
+          backupMetadata: {
+            action: String(reason || '').trim() || 'seed-reset',
+          },
+        });
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'backup-failed',
+          details: error instanceof Error ? error.message : 'backup-failed',
+          ...publishSnapshot(),
+        };
+      }
       const next = publishSnapshot();
       addRevisionsForChangedPaths(normalizeSharedState(null), next.state, {
         actor,
         reason,
         summary: 'seed baseline',
       });
-      persist();
+      persistRecord();
       return publishSnapshot();
     },
 
     saveDraft(nextState, { actor, reason = 'draft-saved', summary = '' } = {}) {
       const normalizedIncomingState = normalizeSharedState(nextState);
       const currentState = normalizeSharedState(record.state);
+      const destructiveChangeSummary = summarizeDestructiveSharedStateChanges(currentState, normalizedIncomingState);
       const nextMergedState = {
         ...normalizeSharedState(currentState),
         pageHierarchy: cloneJson(normalizedIncomingState.pageHierarchy || {}),
@@ -903,6 +1116,24 @@ export function createDevContentAuthorityStore({
       saveResult.didSave = actualChangedPaths.length > 0;
       saveResult.savedPaths = actualChangedPaths;
       saveResult.hasConflicts = saveResult.blockedBlocks.length > 0;
+
+      if (destructiveChangeSummary.hasDestructiveChanges && actualChangedPaths.length > 0) {
+        try {
+          createSharedContentBackup('before-destructive-draft-save', {
+            removedPagePaths: destructiveChangeSummary.removedPagePaths,
+            removedBlocksByPath: destructiveChangeSummary.removedBlocksByPath,
+            changedPaths: actualChangedPaths,
+            summary: String(summary || '').trim(),
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
 
       const snapshot = commitState(nextMergedState, { actor, reason, summary });
       return {
@@ -1087,7 +1318,7 @@ export function createDevContentAuthorityStore({
         state: nextState,
         baseSnapshot: nextBaseSnapshot,
       };
-      persist();
+      persistRecord();
       return {
         ok: true,
         ...publishSnapshot(),
@@ -1135,6 +1366,19 @@ export function createDevContentAuthorityStore({
         return { ok: false, error: 'revision-not-found', snapshot: publishSnapshot() };
       }
       const nextState = replacePageStateFromRevision(normalizedPath, revision);
+      try {
+        createSharedContentBackup('before-page-revision-restore', {
+          pathname: normalizedPath,
+          revisionId: normalizedRevisionId,
+        });
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'backup-failed',
+          details: error instanceof Error ? error.message : 'backup-failed',
+          snapshot: publishSnapshot(),
+        };
+      }
       return {
         ok: true,
         ...commitState(nextState, {
@@ -1169,6 +1413,20 @@ export function createDevContentAuthorityStore({
         currentBlocks.splice(existingIndex, 1, cloneJson(snapshotBlock));
       }
       nextState.blocksByPath[normalizedPath] = currentBlocks;
+      try {
+        createSharedContentBackup('before-block-revision-restore', {
+          pathname: normalizedPath,
+          revisionId: normalizedRevisionId,
+          blockId: normalizedBlockId,
+        });
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'backup-failed',
+          details: error instanceof Error ? error.message : 'backup-failed',
+          snapshot: publishSnapshot(),
+        };
+      }
       return {
         ok: true,
         ...commitState(nextState, {
@@ -1303,6 +1561,73 @@ export function createDevContentAuthorityStore({
           trackRevisions: false,
         }),
       };
+    },
+
+    listBackups() {
+      return listBackups().map((backup) => ({
+        fileName: backup.fileName,
+        createdAt: backup.createdAt,
+        timestamp: backup.timestamp,
+        reason: backup.reason,
+        gitCommitHash: backup.gitCommitHash,
+        metadata: safeBackupMetadata(backup.metadata),
+      }));
+    },
+
+    restoreFromBackup(backupFileName = '', { actor } = {}) {
+      const requestedFileName = String(backupFileName || '').trim();
+      const backups = listBackups();
+      const selectedBackup = requestedFileName
+        ? backups.find((backup) => backup.fileName === requestedFileName)
+        : (backups[0] || null);
+
+      if (!selectedBackup) {
+        return {
+          ok: false,
+          error: 'backup-not-found',
+          details: 'No shared content backup is available to restore.',
+          ...publishSnapshot(),
+        };
+      }
+
+      try {
+        createSharedContentBackup('before-backup-restore', {
+          restoreFromBackupFile: selectedBackup.fileName,
+        });
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'backup-failed',
+          details: error instanceof Error ? error.message : 'backup-failed',
+          ...publishSnapshot(),
+        };
+      }
+
+      try {
+        const backupPayload = readBackupPayload(selectedBackup.filePath);
+        record = backupPayload.record;
+        persistRecord();
+        return {
+          ok: true,
+          restoredBackup: {
+            fileName: selectedBackup.fileName,
+            createdAt: selectedBackup.createdAt,
+            timestamp: selectedBackup.timestamp,
+            reason: selectedBackup.reason,
+            gitCommitHash: selectedBackup.gitCommitHash,
+            metadata: safeBackupMetadata(selectedBackup.metadata),
+          },
+          backups: this.listBackups(),
+          ...publishSnapshot(),
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'backup-restore-failed',
+          details: error instanceof Error ? error.message : 'backup-restore-failed',
+          ...publishSnapshot(),
+        };
+      }
     },
   };
 }

@@ -5,6 +5,7 @@ export const sitePages = [
   { path: '/services/loans', title: 'Loans', section: 'Services', source: null },
   { path: '/services/loans/loan-consultants', title: 'Loan Consultants', section: 'Services', source: null },
   { path: '/services/investments', title: 'Investments', section: 'Services', source: null },
+  { path: '/services/investments/invest-by-mail', title: 'Open an Investment by Mail', section: 'Investments', source: null },
   { path: '/services/retirement', title: 'Retirement', section: 'Services', source: null },
   { path: '/services/retirement/403b', title: '403(b)', section: 'Retirement', source: null },
   { path: '/services/retirement/403b/403b-terms-definitions', title: '403(b) Terms & Definitions', section: 'Retirement', source: null },

@@ -14,8 +14,10 @@ const mockMoveBlockToIndex = vi.fn();
 const mockSaveSharedDraftNow = vi.fn();
 const mockPublishSharedPageNow = vi.fn();
 const mockGetPageRevisionHistory = vi.fn();
+const mockGetSharedContentBackups = vi.fn();
 const mockRestorePageRevision = vi.fn();
 const mockRestoreBlockRevision = vi.fn();
+const mockRestoreLatestSharedContentBackup = vi.fn();
 const mockSetActiveBlockLock = vi.fn();
 const mockClearActiveBlockLock = vi.fn();
 const mockResetContentAdmin = vi.fn();
@@ -152,8 +154,10 @@ vi.mock('../context/ContentAdminContext', async () => {
       saveSharedDraftNow: mockSaveSharedDraftNow,
       publishSharedPageNow: mockPublishSharedPageNow,
       getPageRevisionHistory: mockGetPageRevisionHistory,
+      getSharedContentBackups: mockGetSharedContentBackups,
       restorePageRevision: mockRestorePageRevision,
       restoreBlockRevision: mockRestoreBlockRevision,
+      restoreLatestSharedContentBackup: mockRestoreLatestSharedContentBackup,
       setActiveBlockLock: mockSetActiveBlockLock,
       clearActiveBlockLock: mockClearActiveBlockLock,
       resetContentAdmin: mockResetContentAdmin,
@@ -181,8 +185,10 @@ describe('AdminContentPage page selection', () => {
     mockSaveSharedDraftNow.mockReset();
     mockPublishSharedPageNow.mockReset();
     mockGetPageRevisionHistory.mockReset();
+    mockGetSharedContentBackups.mockReset();
     mockRestorePageRevision.mockReset();
     mockRestoreBlockRevision.mockReset();
+    mockRestoreLatestSharedContentBackup.mockReset();
     mockSetActiveBlockLock.mockReset();
     mockClearActiveBlockLock.mockReset();
     mockResetContentAdmin.mockReset();
@@ -190,8 +196,10 @@ describe('AdminContentPage page selection', () => {
     mockSaveSharedDraftNow.mockResolvedValue({ ok: true });
     mockPublishSharedPageNow.mockResolvedValue({ ok: true });
     mockGetPageRevisionHistory.mockResolvedValue([]);
+    mockGetSharedContentBackups.mockResolvedValue([]);
     mockRestorePageRevision.mockResolvedValue({ ok: true });
     mockRestoreBlockRevision.mockResolvedValue({ ok: true });
+    mockRestoreLatestSharedContentBackup.mockResolvedValue({ ok: true });
     mockSetActiveBlockLock.mockReturnValue({ ok: true });
     mockClearActiveBlockLock.mockReturnValue({ ok: true });
   });

@@ -120,7 +120,6 @@ const SERVICES_BREAKDOWN_ROWS = Object.freeze([
       Object.freeze({ label: 'Group Life', path: '/services/insurance/group-term-life-insurance' }),
       Object.freeze({ label: 'Individual Life', path: '/services/insurance/life-insurance-quote' }),
       Object.freeze({ label: 'Mission Assure', path: '/services/insurance/mission-assure' }),
-      Object.freeze({ label: 'Risk Management', path: '/services/insurance' }),
     ]),
   }),
 ]);
@@ -737,25 +736,16 @@ export default function ServicesPage() {
                     return (
                       <a
                         key={slice.path}
-                        role="button"
-                        tabIndex={0}
+                        href={slice.path}
                         aria-label={slice.title}
-                        aria-pressed={isActive}
                         className={`services-pie-slice-control${isActive ? ' is-active' : ''}`}
                         data-service-wheel-slice={slice.title}
                         onMouseEnter={() => previewHeroSlice(index)}
                         onMouseLeave={clearHeroSlicePreview}
                         onFocus={() => previewHeroSlice(index)}
                         onBlur={clearHeroSlicePreview}
-                        onClick={(event) => {
-                          event.preventDefault();
+                        onClick={() => {
                           selectHeroSlice(index);
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            selectHeroSlice(index);
-                          }
                         }}
                       >
                         <path

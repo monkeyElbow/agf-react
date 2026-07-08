@@ -271,8 +271,26 @@ function formatRelativeTime(value) {
   return new Date(timestamp).toLocaleDateString();
 }
 
+function formatAdminTimestamp(value) {
+  const timestamp = Number(value);
+  if (!Number.isFinite(timestamp) || timestamp <= 0) {
+    return '';
+  }
+  return new Date(timestamp).toLocaleString();
+}
+
 function formatActorName(actor, fallback = 'Unknown') {
   return String(actor?.displayName || '').trim() || fallback;
+}
+
+function getActionFailureMessage(result, fallback) {
+  return String(
+    result?.details
+    || result?.error
+    || result?.reason
+    || fallback
+    || 'Action failed.',
+  ).trim();
 }
 
 function canBlockOpenEditor(block, migratedEditor = null) {
@@ -1473,6 +1491,11 @@ export default function AdminContentPage() {
   const [revisionBlockSelectionById, setRevisionBlockSelectionById] = useState({});
   const [draftSaveNote, setDraftSaveNote] = useState('');
   const [activeEditorBlockId, setActiveEditorBlockId] = useState(null);
+  const [sharedBackupEntries, setSharedBackupEntries] = useState([]);
+  const [sharedBackupsLoading, setSharedBackupsLoading] = useState(false);
+  const [sharedBackupMessage, setSharedBackupMessage] = useState('');
+  const [sharedBackupError, setSharedBackupError] = useState('');
+  const [sharedBackupActionBusy, setSharedBackupActionBusy] = useState('');
   const routeEditorRef = useRef(null);
 
   const {
@@ -1501,8 +1524,10 @@ export default function AdminContentPage() {
     saveSharedDraftNow,
     publishSharedPageNow,
     getPageRevisionHistory,
+    getSharedContentBackups = async () => [],
     restorePageRevision,
     restoreBlockRevision,
+    restoreLatestSharedContentBackup = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
     setActiveBlockLock,
     resetContentAdmin,
     claimBufferedBlockEdit = () => false,
@@ -1510,6 +1535,18 @@ export default function AdminContentPage() {
     registerExternalDraftFlushHandler = null,
   } = useContentAdmin();
   const { testimonials: testimonialsLibrary } = useTestimonials();
+  const loadSharedBackups = useCallback(async () => {
+    setSharedBackupsLoading(true);
+    try {
+      const backups = await getSharedContentBackups();
+      setSharedBackupEntries(Array.isArray(backups) ? backups : []);
+      setSharedBackupError('');
+    } catch {
+      setSharedBackupError('Unable to load shared content backups right now.');
+    } finally {
+      setSharedBackupsLoading(false);
+    }
+  }, [getSharedContentBackups]);
 
   const editablePages = useMemo(
     () => sortPages(
@@ -1756,6 +1793,10 @@ export default function AdminContentPage() {
     };
   }, [getPageRevisionHistory, selectedPath, lastSharedSaveResult?.updatedAt, sharedSnapshotUpdatedAt]);
 
+  useEffect(() => {
+    loadSharedBackups();
+  }, [loadSharedBackups, sharedSnapshotUpdatedAt]);
+
   const clearBlockDragState = () => {
     setDraggingBlockId('');
     setDragOverInsertIndex(-1);
@@ -1866,6 +1907,7 @@ export default function AdminContentPage() {
     : '';
   const pageStateLabel = selectedPathDirty ? 'In progress' : 'Saved';
   const pageStateHeadline = selectedPathDirty ? 'Unsaved changes' : 'Draft saved';
+  const latestSharedBackupEntry = sharedBackupEntries[0] || null;
 
   const beginEditingBlock = (blockId, lockOptions = undefined) => {
     const normalizedBlockId = String(blockId || '').trim();
@@ -1942,8 +1984,12 @@ export default function AdminContentPage() {
 
   const handleRestorePageRevision = async (revisionId) => {
     setRevisionActionBusy(`page:${revisionId}`);
+    setRevisionError('');
     try {
-      await restorePageRevision(selectedPath, revisionId);
+      const result = await restorePageRevision(selectedPath, revisionId);
+      if (result?.ok === false) {
+        setRevisionError(getActionFailureMessage(result, 'Unable to restore that page revision right now.'));
+      }
     } finally {
       setRevisionActionBusy('');
     }
@@ -1957,14 +2003,59 @@ export default function AdminContentPage() {
       return;
     }
     setRevisionActionBusy(`blocks:${revisionId}`);
+    setRevisionError('');
     try {
       for (const blockId of selectedBlockIds) {
         // The shared authority copies revision data into the current draft one block at a time.
         // Sequential restore keeps later restores based on the latest current draft state.
-        await restoreBlockRevision(selectedPath, revisionId, blockId);
+        const result = await restoreBlockRevision(selectedPath, revisionId, blockId);
+        if (result?.ok === false) {
+          setRevisionError(getActionFailureMessage(result, 'Unable to restore the selected block right now.'));
+          break;
+        }
       }
     } finally {
       setRevisionActionBusy('');
+    }
+  };
+
+  const handleResetContentAdmin = async () => {
+    setSharedBackupActionBusy('reset');
+    setSharedBackupError('');
+    setSharedBackupMessage('');
+    try {
+      const result = await resetContentAdmin();
+      if (result?.ok === false) {
+        setSharedBackupError(getActionFailureMessage(result, 'Reset from seed did not complete.'));
+        return;
+      }
+      await loadSharedBackups();
+      setSharedBackupMessage('Seed reset complete. A backup was created automatically before reset.');
+    } finally {
+      setSharedBackupActionBusy('');
+    }
+  };
+
+  const handleRestoreLastBackup = async () => {
+    setSharedBackupActionBusy('restore-last-backup');
+    setSharedBackupError('');
+    setSharedBackupMessage('');
+    try {
+      const result = await restoreLatestSharedContentBackup();
+      if (result?.ok === false) {
+        setSharedBackupError(getActionFailureMessage(result, 'Backup restore did not complete.'));
+        return;
+      }
+      await loadSharedBackups();
+      const restoredBackup = result?.restoredBackup || latestSharedBackupEntry;
+      const restoredAt = formatAdminTimestamp(restoredBackup?.createdAt);
+      setSharedBackupMessage(
+        restoredAt
+          ? `Restored shared content from backup saved ${restoredAt}.`
+          : 'Restored the most recent shared content backup.',
+      );
+    } finally {
+      setSharedBackupActionBusy('');
     }
   };
 
@@ -2314,10 +2405,41 @@ export default function AdminContentPage() {
                 >
                   Make live
                 </button>
-                <button type="button" onClick={resetContentAdmin} className="action-btn action-btn-danger">
+                <button
+                  type="button"
+                  className="action-btn action-btn-outline"
+                  onClick={handleRestoreLastBackup}
+                  disabled={!latestSharedBackupEntry || sharedBackupActionBusy !== ''}
+                  title={latestSharedBackupEntry
+                    ? `Restore backup from ${formatAdminTimestamp(latestSharedBackupEntry.createdAt) || 'the latest saved backup'}`
+                    : 'No shared backup is available yet.'}
+                >
+                  Restore last backup
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetContentAdmin}
+                  className="action-btn action-btn-danger"
+                  disabled={sharedBackupActionBusy !== ''}
+                >
                   Reset from seed
                 </button>
               </div>
+            </div>
+          </div>
+          <div className="admin-page-save-bar-warning">
+            <p>
+              Reset from seed replaces saved admin content with code defaults. A backup will be created automatically before reset.
+            </p>
+            <div className="admin-page-save-bar-warning-meta">
+              {sharedBackupsLoading ? <span>Loading backups…</span> : null}
+              {!sharedBackupsLoading && latestSharedBackupEntry ? (
+                <span>
+                  Latest backup: {formatAdminTimestamp(latestSharedBackupEntry.createdAt) || latestSharedBackupEntry.timestamp}
+                </span>
+              ) : null}
+              {sharedBackupMessage ? <span>{sharedBackupMessage}</span> : null}
+              {sharedBackupError ? <span className="is-error">{sharedBackupError}</span> : null}
             </div>
           </div>
           {historyDrawerOpen ? (

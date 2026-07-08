@@ -69,7 +69,7 @@
   font-family: var(--ag-font-helv);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.038em;
+  letter-spacing: 0;
   line-height: 1.16;
   text-transform: uppercase;
 }
@@ -143,7 +143,7 @@
 .certificate-rates-sheet__value.is-apy {
   font-size: clamp(1.33rem, 1.42vw, 1.48rem);
   font-weight: 780;
-  letter-spacing: 0.012em;
+  letter-spacing: 0;
   color: var(--certificate-rates-band-heading);
 }
 
@@ -185,7 +185,7 @@
   font-family: var(--ag-font-helv);
   font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.035em;
+  letter-spacing: 0;
   line-height: 1.1;
   padding: 0.54rem 0.72rem;
   text-transform: uppercase;
@@ -271,7 +271,7 @@
   font-family: var(--ag-font-helv);
   font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
   line-height: 1.14;
   text-transform: uppercase;
 }
@@ -289,7 +289,7 @@
 .certificate-rates-sheet__term-metric .certificate-rates-sheet__value.is-mobile-rate {
   font-size: clamp(1.3rem, 5vw, 1.46rem);
   font-weight: 780;
-  letter-spacing: 0.012em;
+  letter-spacing: 0;
 }
 
 .certificate-rates-sheet__term-side--premium .certificate-rates-sheet__value.is-apy,

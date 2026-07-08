@@ -2039,6 +2039,11 @@ export default function InvestmentsPage() {
               </article>
             ))}
           </div>
+          <div className="investments-native-cert-fallout">
+            <Link to="/services/investments/invest-by-mail" className="service-native-btn is-outline is-tone-super-grey">
+              Open an investment by mail
+            </Link>
+          </div>
         </div>
       </section>
 

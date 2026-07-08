@@ -59,6 +59,13 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (req.method === 'GET' && url.pathname === '/backups') {
+            sendJson(res, 200, {
+              backups: store.listBackups(),
+            });
+            return;
+          }
+
           if (req.method !== 'POST') {
             sendJson(res, 404, { error: 'not-found' });
             return;
@@ -148,10 +155,19 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/reset') {
-            sendJson(res, 200, store.resetFromSeed(body.seedState, {
+            const result = store.resetFromSeed(body.seedState, {
               actor: body.actor,
               reason: 'seed-reset',
-            }));
+            });
+            sendJson(res, result?.ok === false ? 500 : 200, result);
+            return;
+          }
+
+          if (url.pathname === '/restore-backup') {
+            const result = store.restoreFromBackup(body.backupFileName, {
+              actor: body.actor,
+            });
+            sendJson(res, result?.ok === false ? (result?.error === 'backup-not-found' ? 404 : 500) : 200, result);
             return;
           }
 

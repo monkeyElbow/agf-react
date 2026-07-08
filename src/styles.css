@@ -672,7 +672,7 @@ html.ag-browser-safari button.action-btn {
 .site-nav-admin-overlay-label {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: #456078;
   display: inline-flex;
@@ -689,7 +689,7 @@ html.ag-browser-safari button.action-btn {
   color: #5f6f7d;
   font: inherit;
   font-size: 0.62rem;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   text-transform: none;
   line-height: 1.25;
 }
@@ -746,7 +746,7 @@ html.ag-browser-safari button.action-btn {
 .site-nav-admin-overlay-slider span {
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: #5f6f7d;
 }
@@ -2175,6 +2175,35 @@ html.ag-browser-safari button.action-btn {
       inset 0 1px 0 rgba(255, 255, 255, 0.72),
       0 10px 20px rgba(0, 138, 171, 0.1);
   }
+
+  html.ag-browser-safari .site-nav-group::after {
+    height: 16px;
+  }
+
+  html.ag-browser-safari .site-nav-group:not(.is-admin) .site-nav-dropdown,
+  html.ag-browser-safari .site-nav-group.is-admin .site-nav-dropdown {
+    transform: none;
+    transition:
+      opacity 150ms ease,
+      visibility 150ms step-end;
+  }
+
+  html.ag-browser-safari .site-nav-group:not(.is-admin) .site-nav-dropdown a,
+  html.ag-browser-safari .site-nav-group.is-admin .site-nav-dropdown a,
+  html.ag-browser-safari .site-nav-admin-overlay-row {
+    transform: none;
+    transition:
+      opacity 160ms ease,
+      background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 180ms ease,
+      border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  html.ag-browser-safari .site-nav-group.is-open .site-nav-dropdown .site-nav-dropdown-link,
+  html.ag-browser-safari .site-nav-group.is-open .site-nav-dropdown .site-nav-admin-overlay-row {
+    transition-delay: 0ms;
+  }
 }
 
 @media (max-width: 1099px) {
@@ -2580,31 +2609,38 @@ html.ag-browser-safari button.action-btn {
   padding: 0.4rem 0 0.8rem;
 }
 
+.search-page-results > p {
+  margin: 0 0 0.85rem;
+  padding-inline: 0.25rem;
+}
+
 .search-page-results ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.search-page-results li {
-  border-bottom: 1px solid #e6ebef;
-  padding: 0.6rem 0;
+.search-page-result-item {
+  padding: 0.95rem 1.25rem;
+  border-bottom: 1px solid #edf2f6;
 }
 
-.search-page-results li a {
+.search-page-result-item a {
   color: var(--ag-color-atlantean-dark);
   font-weight: 700;
+  font-size: 1.08rem;
+  line-height: 1.35;
   text-decoration: none;
 }
 
-.search-page-results li span {
+.search-page-result-item span {
   display: block;
   margin-top: 0.18rem;
   color: #6e7880;
   font-size: 0.84rem;
 }
 
-.search-page-results li span + span {
+.search-page-result-item span + span {
   margin-top: 0.28rem;
   font-size: 0.88rem;
   line-height: 1.45;
@@ -2653,11 +2689,6 @@ html.ag-browser-safari button.action-btn {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.search-page-result-item {
-  padding: 0.9rem 1rem;
-  border-bottom: 1px solid #edf2f6;
 }
 
 .search-page-result-item:last-child {
@@ -2801,7 +2832,7 @@ html.ag-browser-safari button.action-btn {
   justify-content: center;
   font-size: 0.8rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
   flex: 0 0 auto;
 }
@@ -2913,7 +2944,7 @@ html.ag-browser-safari button.action-btn {
   color: #0c6653;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -2962,6 +2993,35 @@ html.ag-browser-safari button.action-btn {
 
 .admin-page-save-bar-actions .action-btn {
   flex: 0 0 auto;
+}
+
+.admin-page-save-bar-warning {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #f4d7a6;
+  border-radius: 14px;
+  background: #fff8ed;
+}
+
+.admin-page-save-bar-warning p {
+  margin: 0;
+  color: #6f4512;
+  font-size: 0.84rem;
+}
+
+.admin-page-save-bar-warning-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.8rem;
+  color: #7a6141;
+  font-size: 0.78rem;
+}
+
+.admin-page-save-bar-warning-meta .is-error {
+  color: #b42318;
+  font-weight: 700;
 }
 
 @media (max-width: 1180px) {
@@ -3370,7 +3430,7 @@ html.ag-browser-safari button.action-btn {
   font-family: var(--ag-font-helv);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.045em;
+  letter-spacing: 0;
   line-height: 1.16;
 }
 
@@ -3421,7 +3481,7 @@ html.ag-browser-safari button.action-btn {
   border: 1px solid transparent;
   font-family: var(--ag-font-helv);
   font-weight: 100;
-  letter-spacing: 0.45px;
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding: 0.58rem 1.15rem;
@@ -3497,7 +3557,7 @@ html.ag-browser-safari button.action-btn {
   font-family: var(--ag-font-helv);
   font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -3874,7 +3934,7 @@ html.ag-browser-safari button.action-btn {
 .admin-consultants-select-row span {
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: #4f5f69;
 }
@@ -4093,7 +4153,7 @@ html.ag-browser-safari button.action-btn {
   margin: 0;
   font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: #4e6478;
 }
@@ -4298,7 +4358,7 @@ html.ag-browser-safari button.action-btn {
 .admin-testimonials-page-editor-tags > span {
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: #4f6474;
 }
@@ -5007,7 +5067,7 @@ html.ag-browser-safari button.action-btn {
   justify-content: center;
   font-size: 0.64rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
   flex: 0 0 auto;
 }
@@ -5105,7 +5165,7 @@ html.ag-browser-safari button.action-btn {
   font-weight: 700;
   color: #60707d;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .admin-selected-block-mode-select {
@@ -5136,7 +5196,7 @@ html.ag-browser-safari button.action-btn {
   padding: 0.18rem 0.5rem;
   font-size: 0.71rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .admin-selected-block-inspect-type {
@@ -5189,7 +5249,7 @@ html.ag-browser-safari button.action-btn {
   color: #3d5873;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .admin-block-mode-pill.is-dynamic {
@@ -5294,7 +5354,7 @@ html.ag-browser-safari button.action-btn {
   font: inherit;
   font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   text-transform: uppercase;
   text-align: center;
   text-align-last: center;
@@ -5697,7 +5757,7 @@ html.ag-browser-safari button.action-btn {
   font-size: 0.69rem;
   line-height: 1;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .admin-swatch-list.is-icon-only .admin-swatch-option:not(.is-clear):hover,
@@ -6573,7 +6633,7 @@ html.ag-browser-safari button.action-btn {
 .admin-hero-inline-toolbar-kicker {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: #71818d;
 }
@@ -6714,7 +6774,7 @@ html.ag-browser-safari button.action-btn {
   font-weight: 700;
   color: #5f6f7b;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
 }
 
 .admin-hero-inline-justify-control {
@@ -6761,7 +6821,7 @@ html.ag-browser-safari button.action-btn {
   color: #60717d;
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -6982,7 +7042,7 @@ html.ag-browser-safari button.action-btn {
   font-size: 0.76rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
 }
 
 .admin-hero-inline-spans-overview-actions {
@@ -7018,7 +7078,7 @@ html.ag-browser-safari button.action-btn {
   font-weight: 800;
   color: #465560;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
 }
 
 .admin-line-spacing-control-value,
@@ -7269,7 +7329,7 @@ html.ag-browser-safari button.action-btn {
 .admin-progressive-slot-kicker {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: #687985;
 }
@@ -7610,7 +7670,7 @@ html.ag-browser-safari button.action-btn {
   font-weight: 700;
   color: #60717d;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .admin-request-form-step-field-behavior-toggles {
@@ -7643,7 +7703,7 @@ html.ag-browser-safari button.action-btn {
 .admin-request-form-step-kicker {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: #60717d;
 }
@@ -8581,7 +8641,7 @@ html.ag-browser-safari button.action-btn {
   font-size: 0.62rem;
   line-height: 1;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   text-transform: uppercase;
   border-radius: 999px;
   border: 1px solid rgba(10, 74, 141, 0.22);
@@ -8668,7 +8728,7 @@ html.ag-browser-safari button.action-btn {
   font-weight: 700;
   color: #4a5663;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .admin-testimonial-preview-item {

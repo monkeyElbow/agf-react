@@ -104,7 +104,10 @@ describe('ServicesPage interactive service wheel', () => {
     expect(document.querySelectorAll('[data-service-wheel-slice]')).toHaveLength(DEFAULT_SERVICE_HERO_PIE_SLICES.length);
 
     DEFAULT_SERVICE_HERO_PIE_SLICES.forEach((slice) => {
-      fireEvent.click(screen.getByRole('button', { name: slice.title }));
+      const wedgeLink = document.querySelector(`[data-service-wheel-slice="${slice.title}"]`);
+      expect(wedgeLink).toBeTruthy();
+      expect(wedgeLink.getAttribute('href')).toBe(slice.path);
+      fireEvent.click(wedgeLink);
       const selectedCard = getSelectedCard();
       expect(selectedCard).toBeTruthy();
       expect(within(selectedCard).getByRole('heading', { name: slice.title })).toBeTruthy();
@@ -121,7 +124,7 @@ describe('ServicesPage interactive service wheel', () => {
     expect(within(selectedCard).getByRole('heading', { name: 'Loans' })).toBeTruthy();
     expect(within(selectedCard).getByRole('link', { name: 'Explore Loans' }).getAttribute('href')).toBe('/services/loans');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Insurance' }));
+    fireEvent.click(document.querySelector('[data-service-wheel-slice="Insurance"]'));
 
     expect(within(selectedCard).getByRole('heading', { name: 'Insurance' })).toBeTruthy();
     expect(within(selectedCard).getByText('Coverage built for churches, ministries and individuals to protect what’s most important.')).toBeTruthy();

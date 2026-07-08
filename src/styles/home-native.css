@@ -109,7 +109,7 @@
   padding: var(--home-strip-btn-padding-block) var(--home-strip-btn-padding-inline);
   font-size: 0.8rem;
   font-weight: 650;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   line-height: 1;
   color: var(--strip-btn-text);
   transition:
@@ -538,7 +538,7 @@
   color: color-mix(in srgb, var(--ag-color-super-grey) 72%, #94a0a7 28%);
   font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -827,7 +827,7 @@
   background: transparent;
   color: var(--ag-color-atlantean-dark);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   padding: 0.76rem 1.6rem;
   line-height: 1.1;
   text-decoration: none;
@@ -2361,7 +2361,7 @@ p.home-services-feature-panel-body {
 
 .home-native-page .service-native-section.native-dynamic-cta .native-info-section-copy > h2 {
   font-family: var(--ag-font-heading);
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
+  letter-spacing: -0.035em;
   font-size: clamp(2.35rem, 5.35vw, 3.95rem);
 }
 
@@ -2710,7 +2710,7 @@ p.home-services-feature-panel-body {
 }
 
 .home-native-newsletter-embed {
-  margin: 1.2rem auto 0;
+  margin: clamp(1.8rem, 3vw, 2.35rem) auto 0;
   max-width: 760px;
   width: min(760px, 100%);
 }

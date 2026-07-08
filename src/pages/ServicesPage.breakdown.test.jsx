@@ -130,7 +130,6 @@ describe('ServicesPage breakdown directory', () => {
       ['Group Life', '/services/insurance/group-term-life-insurance'],
       ['Individual Life', '/services/insurance/life-insurance-quote'],
       ['Mission Assure', '/services/insurance/mission-assure'],
-      ['Risk Management', '/services/insurance'],
     ];
 
     expectedLinks.forEach(([label, href]) => {

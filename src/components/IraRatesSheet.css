@@ -30,7 +30,7 @@
   font-family: var(--ag-font-helv);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.038em;
+  letter-spacing: 0;
   line-height: 1.16;
   text-transform: uppercase;
 }
@@ -90,7 +90,7 @@
   color: var(--ag-color-atlantean-dark);
   font-size: clamp(1.15rem, 1.18vw, 1.26rem);
   font-weight: 780;
-  letter-spacing: 0.012em;
+  letter-spacing: 0;
 }
 
 .ira-rates-sheet__card {
@@ -151,7 +151,7 @@
   font-family: var(--ag-font-helv);
   font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
   line-height: 1.14;
   text-transform: uppercase;
 }
@@ -169,7 +169,7 @@
   color: var(--ag-color-atlantean-dark);
   font-size: clamp(1.24rem, 4.7vw, 1.42rem);
   font-weight: 780;
-  letter-spacing: 0.012em;
+  letter-spacing: 0;
 }
 
 @media (max-width: 720px) {

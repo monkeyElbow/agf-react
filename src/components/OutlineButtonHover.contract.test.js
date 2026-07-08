@@ -11,7 +11,7 @@ function readSource(relativePath) {
 }
 
 describe('outline button hover contract', () => {
-  it('keeps thin tracked base button typography in shared button styles while routing Safari through its own heavier browser override', () => {
+  it('keeps base button typography on zero tracking while routing Safari through its own heavier browser override', () => {
     const serviceCssSource = readSource('../styles/service-native.css');
     const appCssSource = readSource('../styles.css');
     const sharedButtonBlock = appCssSource.match(
@@ -29,7 +29,7 @@ describe('outline button hover contract', () => {
 
     expect(serviceCssSource).toContain('.service-native-btn,');
     expect(serviceButtonBlock).toContain('font-weight: 100;');
-    expect(serviceButtonBlock).toContain('letter-spacing: 0.45px;');
+    expect(serviceButtonBlock).toContain('letter-spacing: 0;');
     expect(appCssSource).toContain('a.service-native-btn,');
     expect(sharedButtonBlock).not.toContain('font-family: var(--ag-font-helv);');
     expect(sharedButtonBlock).not.toContain('font-weight: 700;');

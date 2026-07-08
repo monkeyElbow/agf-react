@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   acquireSharedBlockLock,
+  fetchSharedContentBackups,
   fetchSharedAnnouncement,
   initializeSharedContentFromSeed,
   releaseSharedBlockLock,
   resetSharedContentFromSeed,
+  restoreLatestSharedContentBackup,
   restoreSharedBlockRevision,
+  restoreSharedContentBackup,
   restoreSharedPageRevision,
   saveSharedAnnouncement,
   saveSharedPageDraft,
@@ -63,12 +66,16 @@ describe('devContentAuthorityClient', () => {
     await acquireSharedBlockLock('/services/loans', 'hero', actor, { force: true });
     await releaseSharedBlockLock('/services/loans', 'hero', actor);
     await resetSharedContentFromSeed({}, actor);
+    await restoreSharedContentBackup('content-admin-shared-20260708-120000.json', actor);
+    await restoreLatestSharedContentBackup(actor);
 
     const payloads = fetchMock.mock.calls.map(([, request]) => JSON.parse(request.body));
 
     expect(payloads.every((payload) => payload.actor.displayName === 'Sarah MacBook')).toBe(true);
     expect(payloads.every((payload) => payload.actor.userId === 'dev-sarah')).toBe(true);
     expect(payloads[3].force).toBe(true);
+    expect(payloads[6].backupFileName).toBe('content-admin-shared-20260708-120000.json');
+    expect(payloads[7].backupFileName).toBe('');
   });
 
   it('sends block-scoped draft sync payloads for active editor changes', async () => {
@@ -123,5 +130,19 @@ describe('devContentAuthorityClient', () => {
     expect(readUrl).toContain('/announcement');
     expect(saveUrl).toContain('/announcement/save');
     expect(payload.announcement.message).toBe('Shared network banner');
+  });
+
+  it('uses the dedicated shared backup endpoints', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true, backups: [] }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchSharedContentBackups();
+
+    const [readUrl, readRequest] = fetchMock.mock.calls[0];
+    expect(readUrl).toContain('/backups');
+    expect(readRequest.method).toBe('GET');
   });
 });

@@ -43,6 +43,7 @@ import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
 import {
   acquireSharedBlockLock,
+  fetchSharedContentBackups,
   fetchSharedContentSnapshot,
   fetchSharedPageRevisionHistory,
   initializeSharedContentFromSeed,
@@ -50,6 +51,7 @@ import {
   publishSharedPage,
   releaseSharedBlockLock,
   resetSharedContentFromSeed,
+  restoreLatestSharedContentBackup as restoreLatestSharedContentBackupRequest,
   restoreSharedBlockRevision,
   restoreSharedPageRevision,
   saveSharedPageDraft,
@@ -149,6 +151,7 @@ const LIFE_INSURANCE_QUOTE_REQUEST_TARGETS = new Set([
   'insurance-native-life-quote',
 ]);
 const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
+  '/services/investments/invest-by-mail',
   '/services/loans/loan-consultants',
   '/services/retirement/403b/403b-terms-definitions',
   '/services/retirement/403b/403b-group-enrollment',
@@ -1542,31 +1545,7 @@ function withDefaultHeroActions(settings, defaults) {
 
 function normalizeGenerosityFundHeroSettings(rawSettings) {
   const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
-  const next = { ...settings };
-  const button2Label = String(next.button2Label || '').trim();
-  const button2Url = String(next.button2Url || '').trim();
-  const button2PageRef = String(next.button2PageRef || '').trim();
-  const button2Action = String(next.button2Action || '').trim();
-  const button2TargetAnchorId = String(next.button2TargetAnchorId || '').trim();
-  const hasLegacyTraditionalDafHash = (
-    button2Label === 'Open a traditional DAF'
-    && (button2Url === '#traditional-daf-form' || button2PageRef === '#traditional-daf-form')
-  );
-
-  if (hasLegacyTraditionalDafHash || (
-    button2Label === 'Open a traditional DAF'
-    && !button2Action
-    && !button2TargetAnchorId
-  )) {
-    next.button2Action = 'open_cta_form';
-    next.button2TargetAnchorId = 'traditional-daf-inline-form';
-    next.button2TargetBlockId = '';
-    next.button2Url = '';
-    next.button2PageRef = '';
-    next.button2OpenInNewWindow = false;
-  }
-
-  return next;
+  return { ...settings };
 }
 
 function normalizeGenerosityFundJoyfulGivingBillboardSettings(rawSettings) {
@@ -2382,7 +2361,7 @@ function toRequestStepConfigs(form) {
   }
 
   return [{
-    title: String(form.title || 'Contact details').trim(),
+    title: String(form.title || '').trim(),
     note: String(form.subtitle || '').trim(),
     alert: '',
     nextLabel: String(form.nextLabel || '').trim(),
@@ -3519,6 +3498,14 @@ export function normalizeStoredConfig(payload) {
       }
       if (
         path === '/about-us/impact'
+        && isPageContentBlock(storedBlock)
+        && String(storedSettings.html || '').trim() === ''
+        && String(storedSettings.body || '').trim() === ''
+      ) {
+        return;
+      }
+      if (
+        path === '/services/investments/invest-by-mail'
         && isPageContentBlock(storedBlock)
         && String(storedSettings.html || '').trim() === ''
         && String(storedSettings.body || '').trim() === ''
@@ -6114,18 +6101,49 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
     };
 
-    const resetContentAdmin = () => {
+    const getSharedContentBackups = async () => {
+      if (!sharedAuthorityEnabled) {
+        return [];
+      }
+      const snapshot = await fetchSharedContentBackups();
+      return Array.isArray(snapshot?.backups) ? snapshot.backups : [];
+    };
+
+    const resetContentAdmin = async () => {
       const next = normalizeStoredConfig(null);
       clearBufferedBlockSettingCommitTimers();
       updateBufferedBlockSettingDrafts({});
       clearPendingBlockDraftSyncTimers();
       if (sharedAuthorityEnabled) {
-        setState(next);
-        stateRef.current = next;
-        syncSharedSnapshot(() => resetSharedContentFromSeed(next, currentActor));
-        return;
+        const mutationId = latestSharedMutationIdRef.current + 1;
+        latestSharedMutationIdRef.current = mutationId;
+        bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
+        try {
+          const snapshot = await resetSharedContentFromSeed(next, currentActor);
+          if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+            applySharedSnapshotState(snapshot);
+          }
+          return {
+            ok: snapshot?.ok !== false,
+            snapshot,
+          };
+        } catch (error) {
+          const snapshot = error?.payload || null;
+          if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+            applySharedSnapshotState(snapshot);
+          }
+          return {
+            ok: false,
+            reason: snapshot?.error || 'reset-failed',
+            details: snapshot?.details || (error instanceof Error ? error.message : 'reset-failed'),
+            snapshot,
+          };
+        } finally {
+          bumpPendingSharedMutationCount(-1, { lastSettledAt: Date.now() });
+        }
       }
       saveState(next);
+      return { ok: true, snapshot: { state: next } };
     };
 
     const getPageRevisionHistory = async (pathname) => {
@@ -6142,11 +6160,24 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
       clearBufferedBlockSettingCommitTimers();
       updateBufferedBlockSettingDrafts({});
-      const snapshot = await restoreSharedPageRevision(pathname, revisionId, currentActor);
-      if (snapshot?.state) {
-        applySharedSnapshotState(snapshot);
+      try {
+        const snapshot = await restoreSharedPageRevision(pathname, revisionId, currentActor);
+        if (snapshot?.state) {
+          applySharedSnapshotState(snapshot);
+        }
+        return snapshot;
+      } catch (error) {
+        const snapshot = error?.payload || null;
+        if (snapshot?.state) {
+          applySharedSnapshotState(snapshot);
+        }
+        return {
+          ok: false,
+          reason: snapshot?.error || 'restore-page-revision-failed',
+          details: snapshot?.details || (error instanceof Error ? error.message : 'restore-page-revision-failed'),
+          snapshot,
+        };
       }
-      return snapshot;
     };
 
     const restoreBlockRevision = async (pathname, revisionId, blockId) => {
@@ -6155,11 +6186,51 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
       clearBufferedBlockSettingCommitTimers();
       updateBufferedBlockSettingDrafts({});
-      const snapshot = await restoreSharedBlockRevision(pathname, revisionId, blockId, currentActor);
-      if (snapshot?.state) {
-        applySharedSnapshotState(snapshot);
+      try {
+        const snapshot = await restoreSharedBlockRevision(pathname, revisionId, blockId, currentActor);
+        if (snapshot?.state) {
+          applySharedSnapshotState(snapshot);
+        }
+        return snapshot;
+      } catch (error) {
+        const snapshot = error?.payload || null;
+        if (snapshot?.state) {
+          applySharedSnapshotState(snapshot);
+        }
+        return {
+          ok: false,
+          reason: snapshot?.error || 'restore-block-revision-failed',
+          details: snapshot?.details || (error instanceof Error ? error.message : 'restore-block-revision-failed'),
+          snapshot,
+        };
       }
-      return snapshot;
+    };
+
+    const restoreLatestSharedContentBackup = async () => {
+      if (!sharedAuthorityEnabled) {
+        return { ok: false, reason: 'shared-authority-disabled' };
+      }
+      clearBufferedBlockSettingCommitTimers();
+      updateBufferedBlockSettingDrafts({});
+      clearPendingBlockDraftSyncTimers();
+      try {
+        const snapshot = await restoreLatestSharedContentBackupRequest(currentActor);
+        if (snapshot?.state) {
+          applySharedSnapshotState(snapshot);
+        }
+        return snapshot;
+      } catch (error) {
+        const snapshot = error?.payload || null;
+        if (snapshot?.state) {
+          applySharedSnapshotState(snapshot);
+        }
+        return {
+          ok: false,
+          reason: snapshot?.error || 'restore-backup-failed',
+          details: snapshot?.details || (error instanceof Error ? error.message : 'restore-backup-failed'),
+          snapshot,
+        };
+      }
     };
 
     const resolveManagedPath = (pathname) => resolveAliasPath(pathname, pathAliases);
@@ -6263,10 +6334,12 @@ export function ContentAdminProvider({ children, initialState = null }) {
       publishSharedPageNow,
       registerExternalDraftFlushHandler,
       getPageRevisionHistory,
+      getSharedContentBackups,
       setActiveBlockLock,
       clearActiveBlockLock,
       restorePageRevision,
       restoreBlockRevision,
+      restoreLatestSharedContentBackup,
       resetContentAdmin,
       resolveManagedPath,
       resolveManagedPathFromRef,

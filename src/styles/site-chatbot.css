@@ -57,7 +57,7 @@
   font-size: clamp(1.1rem, 2vw, 1.35rem);
   font-weight: 700;
   color: var(--ag-color-super-grey);
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
 }
 
 .site-chatbot-header-copy > p {
@@ -78,7 +78,7 @@
   margin: 0;
   font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: var(--ag-color-atlantean-dark);
 }
@@ -94,7 +94,7 @@
   background: rgba(255, 255, 255, 0.96);
   color: var(--ag-color-super-grey);
   font-size: 0.74rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .site-chatbot-close {
@@ -177,7 +177,7 @@
   margin: 0;
   font-size: 0.71rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: var(--ag-color-atlantean-dark);
 }
@@ -235,7 +235,7 @@
   margin: 0;
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--ag-color-super-grey) 72%, #8f989d 28%);
 }

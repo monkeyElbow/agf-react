@@ -194,7 +194,7 @@ function buildGenerosityFundSeedState() {
   };
 }
 
-function createStore(persistenceFile) {
+function createStore(persistenceFile, options = {}) {
   return createDevContentAuthorityStore({
     persistenceFile,
     now: (() => {
@@ -211,6 +211,7 @@ function createStore(persistenceFile) {
         return `${timestamp}-${seq}`;
       };
     })(),
+    ...options,
   });
 }
 
@@ -230,6 +231,15 @@ function makeTempFile() {
 
 function readPersistedRecord(persistenceFile) {
   return JSON.parse(fs.readFileSync(persistenceFile, 'utf8'));
+}
+
+function listBackupFiles(dir) {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+  return fs.readdirSync(dir)
+    .filter((fileName) => fileName.startsWith('content-admin-shared-') && fileName.endsWith('.json'))
+    .sort();
 }
 
 describe('createDevContentAuthorityStore', () => {
@@ -656,6 +666,111 @@ describe('createDevContentAuthorityStore', () => {
     expect(saved.state.blocksByPath['/services/retirement/403b'][0].templateId).toBe('card_grid');
     expect(saved.state.blocksByPath['/services/retirement/403b'][0].presetId).toBe('step-cards');
     expect(saved.state.blocksByPath['/services/retirement/403b'][0].settings.card2Title).toBe('Submit your request');
+  });
+
+  it('creates a timestamped backup before resetting shared content from seed', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, {
+      backupDir,
+      getGitCommitHash: () => 'abc123',
+    });
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'][0].settings.line1Text = 'Manager draft title';
+    store.saveDraft(nextState, { actor: createActor(), summary: 'manager draft' });
+
+    const reset = store.resetFromSeed(buildSeedState(), { actor: createActor(), reason: 'seed-refresh' });
+    const backupFiles = listBackupFiles(backupDir);
+    const backupPayload = JSON.parse(fs.readFileSync(path.join(backupDir, backupFiles[0]), 'utf8'));
+
+    expect(reset.initialized).toBe(true);
+    expect(backupFiles).toHaveLength(1);
+    expect(backupPayload.meta.reason).toBe('before-reset-from-seed');
+    expect(backupPayload.meta.action).toBe('seed-refresh');
+    expect(backupPayload.meta.gitCommitHash).toBe('abc123');
+    expect(backupPayload.record.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Manager draft title');
+  });
+
+  it('creates a backup before a destructive shared draft save removes blocks', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'] = [nextState.blocksByPath['/services/loans'][0]];
+
+    const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'remove cta form' });
+    const backupFiles = listBackupFiles(backupDir);
+    const backupPayload = JSON.parse(fs.readFileSync(path.join(backupDir, backupFiles[0]), 'utf8'));
+
+    expect(saved.ok).toBe(true);
+    expect(saved.state.blocksByPath['/services/loans']).toHaveLength(1);
+    expect(backupFiles).toHaveLength(1);
+    expect(backupPayload.meta.reason).toBe('before-destructive-draft-save');
+    expect(backupPayload.meta.removedBlocksByPath['/services/loans']).toEqual(['cta_form']);
+  });
+
+  it('aborts destructive shared writes when backup creation fails', () => {
+    const persistenceFile = makeTempFile();
+    const blockedBackupPath = path.join(path.dirname(persistenceFile), 'blocked-backups');
+    fs.writeFileSync(blockedBackupPath, 'not-a-directory');
+    const store = createStore(persistenceFile, { backupDir: blockedBackupPath });
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const before = store.getSnapshot();
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'] = [nextState.blocksByPath['/services/loans'][0]];
+
+    const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'remove cta form' });
+    const after = store.getSnapshot();
+
+    expect(saved.ok).toBe(false);
+    expect(saved.error).toBe('backup-failed');
+    expect(after.state.blocksByPath['/services/loans']).toHaveLength(2);
+    expect(after.state.blocksByPath['/services/loans'][1].id).toBe('cta_form');
+    expect(after.updatedAt).toBe(before.updatedAt);
+  });
+
+  it('restores from a shared content backup and backs up the current state first', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const draftState = buildSeedState();
+    draftState.blocksByPath['/services/loans'][0].settings.line1Text = 'Draft worth restoring';
+    store.saveDraft(draftState, { actor: createActor(), summary: 'draft before reset' });
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor(), reason: 'seed-refresh' });
+    const originalBackupName = listBackupFiles(backupDir)[0];
+    const restored = store.restoreFromBackup(originalBackupName, { actor: createActor() });
+    const backups = store.listBackups();
+
+    expect(restored.ok).toBe(true);
+    expect(restored.restoredBackup.fileName).toBe(originalBackupName);
+    expect(store.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Draft worth restoring');
+    expect(backups).toHaveLength(2);
+    expect(backups[0].reason).toBe('before-backup-restore');
+    expect(backups[1].reason).toBe('before-reset-from-seed');
+  });
+
+  it('keeps normal non-destructive saves working without creating backups', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'][0].settings.line1Text = 'Updated without deletion';
+
+    const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'copy tweak' });
+
+    expect(saved.ok).toBe(true);
+    expect(saved.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Updated without deletion');
+    expect(listBackupFiles(backupDir)).toHaveLength(0);
   });
 
   it('blocks publishing when another admin still owns a draft on that page', () => {

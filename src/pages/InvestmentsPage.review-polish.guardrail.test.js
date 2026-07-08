@@ -105,7 +105,7 @@ describe('investments page review polish guardrails', () => {
     expect(pageSource).toContain('className="service-native-grid is-two investments-native-cert-grid"');
     expect(pageSource).not.toContain('className="service-native-grid is-two investments-native-cert-grid fade-out"');
     expect(pageSource).toContain('fade-up fade-up-force-observe');
-    expect(cssSource).toContain('clamp(1.18rem, 2.45vw, 1.42rem)');
+    expect(cssSource).toContain('clamp(1.8rem, 3.3vw, 2.2rem)');
     expect(cssSource).toContain('margin: 0 0 clamp(0.8rem, 1.75vw, 1.1rem);');
     expect(cssSource).toContain('font-size: clamp(1.9rem, 3.35vw, 2.45rem);');
     expect(cssSource).toContain('clamp(0.62rem, 1.32vw, 0.78rem)');

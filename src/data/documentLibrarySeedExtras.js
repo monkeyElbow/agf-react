@@ -397,6 +397,18 @@ export const documentLibrarySeedExtras = [
     "seedSource": "code-scan"
   },
   {
+    "id": "document-investments-institutional-investment-form",
+    "title": "AGFinancial Investment Form",
+    "url": "https://files.agfinancial.org/Investments/Institutional-Investment-Form.pdf",
+    "kind": "pdf",
+    "category": "document",
+    "topic": "Investments",
+    "active": true,
+    "sortOrder": 0,
+    "notes": "",
+    "seedSource": "manual-investment-by-mail"
+  },
+  {
     "id": "document-planned-giving-brokerage-loa-form",
     "title": "Brokerage LOA form",
     "url": "https://files.agfinancial.org/Planned-Giving/Brokerage-LOA.pdf",

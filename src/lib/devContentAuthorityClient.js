@@ -97,6 +97,10 @@ export async function fetchSharedPageRevisionHistory(pathname) {
   return sendJson(`/revisions?${query.toString()}`, { method: 'GET' });
 }
 
+export async function fetchSharedContentBackups() {
+  return sendJson('/backups', { method: 'GET' });
+}
+
 export async function restoreSharedPageRevision(pathname, revisionId, actor = null) {
   return sendJson('/restore-page-revision', {
     method: 'POST',
@@ -162,4 +166,18 @@ export async function resetSharedContentFromSeed(seedState, actor = null) {
       actor: cloneJson(actor),
     }),
   });
+}
+
+export async function restoreSharedContentBackup(backupFileName = '', actor = null) {
+  return sendJson('/restore-backup', {
+    method: 'POST',
+    body: JSON.stringify({
+      backupFileName: String(backupFileName || ''),
+      actor: cloneJson(actor),
+    }),
+  });
+}
+
+export async function restoreLatestSharedContentBackup(actor = null) {
+  return restoreSharedContentBackup('', actor);
 }

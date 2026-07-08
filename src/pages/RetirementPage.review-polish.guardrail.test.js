@@ -24,8 +24,8 @@ describe('retirement 403(b) review polish guardrail', () => {
     const source = readSource('./RetirementPage.jsx');
 
     expect(source).toContain('Smart benefits, strong advantages');
-    expect(source).toContain('The AGFinancial flagship retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA. Choose from a variety of strategies.');
-    expect(source).toContain('Includes <mark className="is-mango">minister&apos;s housing allowance</mark>, higher contribution limits than IRAs, and more.');
+    expect(source).toContain('The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.');
+    expect(source).toContain('Includes <mark className="is-mango">minister&apos;s housing allowance</mark>, and a variety of investment strategies.');
     expect(source).toContain('>Explore the 403(b)<');
   });
 
@@ -36,14 +36,24 @@ describe('retirement 403(b) review polish guardrail', () => {
     const leadRule = readRuleBlock(cssSource, '.retirement-plan-lead {');
 
     expect(cssSource).toContain('.retirement-plan-section {');
-    expect(cssSource).toContain('background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #5d5c60 100%);');
+    expect(cssSource).toContain('margin-top: -1px;');
+    expect(cssSource).toContain('background: #4a484b;');
     expect(cssSource).toContain('.retirement-plan-intro {');
     expect(introRule).not.toContain('background: #ffffff;');
     expect(headingRule).toContain('color: #ffffff;');
+    expect(headingRule).toContain('font-weight: 700;');
+    expect(headingRule).toContain('font-synthesis: none;');
     expect(cssSource).toContain('.retirement-plan-subheading {');
     expect(cssSource).toContain('color: var(--ag-color-mango);');
+    const subheadingRule = readRuleBlock(cssSource, '.retirement-plan-subheading {');
+    expect(subheadingRule).toContain('font-family: var(--ag-font-helv);');
+    expect(subheadingRule).toContain('font-weight: 600;');
+    expect(subheadingRule).toContain('letter-spacing: var(--ag-letter-spacing-helv-heading);');
+    expect(subheadingRule).toContain('font-synthesis: none;');
     expect(leadRule).toContain('color: #ffffff;');
     expect(cssSource).toContain('.retirement-plan-footer mark {');
+    expect(cssSource).toContain('.retirement-plan-actions .service-native-btn {');
+    expect(cssSource).toContain('.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-tone-mango,');
   });
 
   it('keeps housing and do the math on the shared columns-family path with retirement HUD coverage', () => {

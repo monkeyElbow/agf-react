@@ -19,6 +19,7 @@ import { buildDefaultLoansNativeIntro } from './loansIntroSeed';
 import { getResourceArticleFeatureConfig } from './resourceArticles';
 import { buildDefaultRetirementNativeIntro } from './retirementOverviewSeed';
 import { buildDefaultServicesNativeIntro } from './servicesOverviewSeed';
+import { investmentByMailInstitutionIntroCopy } from './investmentByMailInstitutionConfig';
 
 const TAX_GUIDE_ACCESS_EMAIL = 'info@agfinancial.org';
 const findFormHref = (topic, label) => (
@@ -126,6 +127,15 @@ export function getNativePageContent(path, title) {
       { label: 'Charitable Gift Annuities', to: '/services/planned-giving/charitable-gift-annuities' },
       { label: 'Charitable Trusts', to: '/services/planned-giving/charitable-trusts' },
       { label: 'Talk with a specialist', to: '/contact-us' },
+    ]);
+  }
+
+  if (path.startsWith('/services/investments/')) {
+    return investmentsChildPages[path] || serviceChildContent(title, '/services/investments', [
+      { label: 'Investments overview', to: '/services/investments' },
+      { label: 'Open an Investment by Mail', to: '/services/investments/invest-by-mail' },
+      { label: 'Rates', to: '/rates' },
+      { label: 'Prospectus', to: '/prospectus' },
     ]);
   }
 
@@ -2032,7 +2042,7 @@ const legacyChildPages = {
           },
           {
             title: 'Sustain',
-            body: 'When you pass away, the remainder goes to support ministry.',
+            body: 'When you pass away, a portion of the remainder goes to support ministry.',
             cardClass: 'card2',
           },
         ],
@@ -2049,9 +2059,9 @@ const legacyChildPages = {
               'Cash (a significant portion of the annuity income may be tax-free)',
               'Appreciated securities (may avoid a portion of capital gains tax)',
               '$10,000 minimum',
-              'The SECURE 2.0 Act of 2022 allows you to fund a Charitable Gift Annuity with funds distributed from your IRA up to $50,000* of your annual Qualified Charitable Distribution limit (QCD). This charitable distribution amount is both retirement income for you, and a gift of support to a ministry you choose. Even better, this distribution can count toward your IRA’s annual Required Minimum Distribution (RMD).',
-              '**You’re permitted to take advantage of this unique opportunity only once.**',
+              'The SECURE 2.0 Act of 2022 allows you to fund a Charitable Gift Annuity with funds distributed from your IRA up to $50,000* of your annual Qualified Charitable Distribution limit (QCD). This charitable distribution amount is both retirement income for you, and a gift of support to a ministry you choose. Even better, this distribution can count toward your IRA’s annual Required Minimum Distribution (RMD). You’re permitted to take advantage of this unique opportunity only once.',
             ],
+            fineprint: '*as of 2025',
           },
         ],
         actions: [{ label: 'Learn more about this', to: '/services/planned-giving/charitable-gift-annuities#demo' }],
@@ -2087,7 +2097,6 @@ const legacyChildPages = {
             cardClass: 'card2',
           },
         ],
-        actions: [{ label: 'Try the CGA estimator', to: '/services/planned-giving/charitable-gift-annuities#demo' }],
       },
       {
         className: 'legacy-child-native-cga-comparison',
@@ -2449,8 +2458,7 @@ const legacyChildPages = {
         { label: 'Open a Generosity Fund®', href: 'https://secure.agfinancial.org/generosityfund/signup' },
         {
           label: 'Open a traditional DAF',
-          action: 'open_cta_form',
-          targetAnchorId: 'traditional-daf-inline-form',
+          href: '#traditional-daf-form',
           className: 'is-outline is-tone-super-grey',
         },
       ],
@@ -2461,26 +2469,6 @@ const legacyChildPages = {
         'A **Generosity Fund**® is a Donor Advised Fund (DAF) that provides a convenient, tax-efficient way to manage your giving—from tithing to disaster relief, and all donations in between. Our frictionless process makes even complex securities **easier to give than ever**.',
       ],
     },
-    preIntroSections: [
-      {
-        anchorId: 'traditional-daf-inline-form',
-        className: 'legacy-child-native-generosity-request legacy-child-native-generosity-cta legacy-child-native-generosity-request-inline',
-        copyWrap: true,
-        title: 'Make the most of your giving.',
-        titleHighlights: [{ text: 'most', className: 'is-white' }],
-        body: [],
-        form: {
-          displayMode: 'inline_reveal',
-          triggerMode: 'external',
-          fields: [
-            { id: 'name', label: 'Name*', type: 'text', required: true },
-            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
-            { id: 'email', label: 'Email*', type: 'email', required: true },
-          ],
-          submitLabel: 'Submit',
-        },
-      },
-    ],
     sections: [
       {
         className: 'legacy-child-native-steps',
@@ -2489,17 +2477,17 @@ const legacyChildPages = {
         columns: 'three',
         cards: [
           {
-            title: 'Create & contribute',
+            title: '01',
             body: 'Open a **Generosity Fund®** online, and fund it with cash or appreciated assets. You may receive immediate tax benefits.',
             cardClass: 'card2',
           },
           {
-            title: 'Frictionless',
+            title: '02',
             body: 'AG Foundation takes it from there, keeping track of your giving while handling the details.',
             cardClass: 'card2',
           },
           {
-            title: 'Whenever, wherever',
+            title: '03',
             body: 'Continue giving when and to whom you want by accessing your **Generosity Fund®** online. You may even give anonymously.',
             cardClass: 'card2',
           },
@@ -2517,8 +2505,7 @@ const legacyChildPages = {
               'Cash',
               'Household income',
               'Proceeds from selling a home or business',
-              'Stocks',
-              'Securities',
+              'Securities (Stocks, bonds, mutual funds, etc)',
               'A variety of other funding sources',
               '$10,000 minimum',
               'Additional funding can be made with as little as $100, as often as you like.',
@@ -2534,12 +2521,13 @@ const legacyChildPages = {
         copyWrap: true,
         title: 'Make the most of your giving.',
         titleHighlights: [{ text: 'most', className: 'is-white' }],
-        body: [],
+        body: ['Let’s discover the best way for you to give, and in the easiest way possible.'],
         form: {
           fields: [
             { id: 'name', label: 'Name*', type: 'text', required: true },
             { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
             { id: 'email', label: 'Email*', type: 'email', required: true },
+            { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'What would you like to discuss?' },
           ],
           submitLabel: 'Submit',
         },
@@ -2581,7 +2569,7 @@ const legacyChildPages = {
         columns: 'three',
         cards: [
           {
-            title: 'Transfer',
+            title: '01',
             body: 'Your donor transfers cash or asset(s) to your Ministry Impact Fund®, potentially receiving a charitable deduction and minimized or eliminated capital gains.',
             cardClass: 'card2',
             actions: [
@@ -2589,7 +2577,7 @@ const legacyChildPages = {
             ],
           },
           {
-            title: 'Convert',
+            title: '02',
             body: 'AG Foundation liquidates the asset(s) for you, handling all administrative details.',
             cardClass: 'card2',
             actions: [
@@ -2597,7 +2585,7 @@ const legacyChildPages = {
             ],
           },
           {
-            title: 'Unlock',
+            title: '03',
             body: 'Your ministry gains immediate access to the cash.',
             cardClass: 'card2',
             actions: [
@@ -2821,6 +2809,30 @@ const loansChildPages = {
           ],
           submitLabel: 'Send message',
         },
+      },
+    ],
+  },
+};
+
+const investmentsChildPages = {
+  '/services/investments/invest-by-mail': {
+    pageClass: 'native-info-page--investments-child native-info-page--investments-invest-by-mail',
+    compact: true,
+    hero: { title: 'Institutional Investments', highlight: 'Investments' },
+    intro: {
+      heading: 'Open an Investment by Mail',
+      body: [investmentByMailInstitutionIntroCopy],
+      justify: 'center',
+      bgTone: 'sand',
+      textTone: 'dark',
+    },
+    sections: [
+      {
+        className: 'investments-mail-native-shell',
+        hideTitle: true,
+        sand: true,
+        widget: 'investments-institutional-by-mail',
+        body: [],
       },
     ],
   },
@@ -3542,7 +3554,7 @@ const retirementChildPages = {
       heading: 'One future. Yours.',
       headingHighlights: [{ text: 'Yours.', className: 'is-melon' }],
       body: [
-        'A rollover lets you move funds from one retirement account into an AGFinancial 403(b) without paying taxes or penalties. It’s just that simple. A rollover is an easier way to access and manage your retirement.',
+        'A rollover lets you move funds from other retirement accounts into an AGFinancial 403(b) without paying taxes or penalties. It’s just that simple. A rollover is an easier way to access and manage your retirement.',
       ],
     },
     sections: [
