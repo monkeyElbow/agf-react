@@ -32,16 +32,14 @@ import BlockHudPanelHost from './BlockHudPanelHost';
 import {
   contentBlockBlueprintsByPath,
   genericPageBlockBlueprint,
+  getAllBlockTemplateBlueprints,
 } from '../data/contentBlockBlueprints';
 import { defaultTestimonialsLibrary } from '../data/testimonialsLibrarySeed';
 import { getBlockHudDefinition } from '../lib/blockHudRegistry';
 import { EDITOR_PARITY_CONTRACT, EDITOR_PARITY_TYPES, getEditorParityContract } from '../lib/editorParityContract';
 import { getLegacyEditableFieldsForKind } from '../blocks/registry';
 
-const allBlueprintBlocks = [
-  ...genericPageBlockBlueprint(),
-  ...Object.values(contentBlockBlueprintsByPath).flat(),
-];
+const allBlueprintBlocks = getAllBlockTemplateBlueprints();
 
 const ADMIN_RENDERERS_BY_KIND = {
   hero: HeroBlockEditor,
@@ -451,6 +449,37 @@ function getDynamicBlock(kindOrSelector) {
       settings: {
         certificatesHtml: '<p>Certificates disclosure copy.</p>',
         iraHtml: '<p>IRA disclosure copy.</p>',
+      },
+    };
+  }
+  if (selector.kind === 'cta_band') {
+    return {
+      id: 'cta-band-sample',
+      kind: 'cta_band',
+      mode: 'dynamic',
+      editableFields: getLegacyEditableFieldsForKind('cta_band'),
+      settings: {
+        title: 'Smart stewardship for today and tomorrow.',
+        body: 'Stay connected to the tools you need.',
+        buttonLabel: 'Learn more',
+        buttonUrl: '/services/planned-giving',
+        buttonPageRef: '/services/planned-giving',
+        background: 'blue',
+      },
+    };
+  }
+  if (selector.kind === 'intro') {
+    return {
+      id: 'intro-sample',
+      kind: 'intro',
+      mode: 'dynamic',
+      editableFields: getLegacyEditableFieldsForKind('intro'),
+      settings: {
+        heading: 'Most wealth isn’t cash.',
+        body: 'Let’s look at what your next step can be.',
+        bgTone: 'white',
+        button1Label: 'Talk with us',
+        button1PageRef: '/services/planned-giving/ministry-impact-fund',
       },
     };
   }

@@ -850,7 +850,7 @@ export function buildDynamicBillboardFromBlock(block) {
     lineSpacing,
     scrollReveal,
     copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : '',
-    copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -40% 0px' : '',
+    copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -20% 0px' : '',
     contentMaxWidthPx: hasContentWidthOverride
       ? normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 920)
       : null,
@@ -1534,7 +1534,7 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     salesforceUrl: resolveCtaFormSetting(settings, fallbackSettings, 'salesforceUrl'),
   };
   const { submitLabel, successMessage, salesforceUrl } = normalizeFormSubmissionConfig(submissionSource, {
-    submitLabel: 'Follow-up with me',
+    submitLabel: 'Follow up with me',
     successMessage: 'Thanks. We will reach out soon.',
   });
   const submitStyle = normalizeActionButtonStyle(resolveCtaFormSetting(settings, fallbackSettings, 'submitStyle'));

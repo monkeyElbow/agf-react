@@ -98,17 +98,6 @@ export function resolveBlockPresetDefinition(block) {
     }
   }
 
-  const blockId = String(block?.id || '').trim().toLowerCase();
-  if (blockId) {
-    const byBlockId = presets.find((preset) => (
-      Array.isArray(preset?.legacyBlockIds)
-      && preset.legacyBlockIds.some((candidate) => String(candidate || '').trim().toLowerCase() === blockId)
-    ));
-    if (byBlockId) {
-      return byBlockId;
-    }
-  }
-
   return presets.find((preset) => String(preset?.id || '').trim().toLowerCase() === 'default') || presets[0] || null;
 }
 

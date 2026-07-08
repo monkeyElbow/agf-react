@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { contentBlockBlueprintsByPath, genericPageBlockBlueprint } from '../../data/contentBlockBlueprints';
+import { contentBlockBlueprintsByPath, genericPageBlockBlueprint, getAllBlockTemplateBlueprints } from '../../data/contentBlockBlueprints';
 import { getDefaultSiteFeatureCatalogEntry, getSiteFeatureOptions } from '../../data/siteFeatureCatalog';
 import { BLOCK_KIND_VALUES } from '../foundation/models';
 import { getBlockHudDefinition } from '../../lib/blockHudRegistry';
@@ -60,8 +60,7 @@ describe('canonical block registry', () => {
     ]);
     expect(getBlockDefinition('card_grid')?.editorType).toBe('card_grid');
     expect(getBlockDefinition('card_grid')?.styleScope.cssNamespace).toBe('card-grid');
-    expect(getBlockPresetDefinition('card_grid', 'investment-options')?.templateIds).toContain('investment_strategy_options');
-    expect(getBlockPresetDefinition('card_grid', 'step-cards')?.legacyBlockIds).toContain('loan_apply');
+    expect(getBlockPresetDefinition('card_grid', 'investment-options')?.templateIds).toEqual([]);
     expect(getBlockPresetDefinition('services_grid', 'default')).toBeNull();
   });
 
@@ -72,8 +71,7 @@ describe('canonical block registry', () => {
     ]);
     expect(getBlockDefinition('cta_band')?.editorType).toBe('cta_band');
     expect(getBlockDefinition('cta_band')?.styleScope.cssNamespace).toBe('cta-band');
-    expect(getBlockPresetDefinition('cta_band', 'dashboard-login')?.templateIds).toContain('investor_cta');
-    expect(getBlockPresetDefinition('cta_band', 'default')?.legacyBlockIds).toContain('housing_allowance');
+    expect(getBlockPresetDefinition('cta_band', 'dashboard-login')?.templateIds).toEqual(['dashboard_login_cta']);
     expect(getBlockPresetDefinition('calculator_cta', 'default')).toBeNull();
     expect(getBlockPresetDefinition('feature_panel', 'default')).toBeNull();
     expect(getBlockPresetDefinition('cta_form', 'default')).toBeNull();
@@ -86,9 +84,8 @@ describe('canonical block registry', () => {
       'do-the-math',
       'value-cards',
     ]);
-    expect(getBlockPresetDefinition('columns', 'housing-allowance')?.templateIds).toContain('columns_mha');
-    expect(getBlockPresetDefinition('columns', 'do-the-math')?.legacyBlockIds).toContain('columns_math');
-    expect(getBlockPresetDefinition('columns', 'value-cards')?.templateIds).toContain('value_cards');
+    expect(getBlockPresetDefinition('columns', 'housing-allowance')?.templateIds).toEqual([]);
+    expect(getBlockPresetDefinition('columns', 'value-cards')?.templateIds).toEqual([]);
     expect(getBlockPresetDefinition('photo_column', 'default')).toBeNull();
   });
 
@@ -113,7 +110,7 @@ describe('canonical block registry', () => {
     const genericBlocks = genericPageBlockBlueprint();
     const pageContentBlock = allBlocks.find((block) => block?.kind === 'content' && block?.id === 'page_content' && block?.mode === 'dynamic');
     const calculatorCtaBlock = (contentBlockBlueprintsByPath['/services/investments'] || []).find((block) => block?.kind === 'calculator_cta' && block?.mode === 'dynamic');
-    const ctaBandBlock = (contentBlockBlueprintsByPath['/services/investments'] || []).find((block) => block?.kind === 'cta_band' && block?.mode === 'dynamic');
+    const ctaBandBlock = getAllBlockTemplateBlueprints().find((block) => block?.id === 'dashboard_login_cta');
     const heroBlock = testBlocks.find((block) => block?.kind === 'hero' && block?.mode === 'dynamic');
     const ctaFormBlock = (contentBlockBlueprintsByPath['/'] || []).find((block) => block?.kind === 'cta_form' && block?.mode === 'dynamic');
     const requestFormBlock = allBlocks.find((block) => block?.kind === 'request_form' && block?.mode === 'dynamic');

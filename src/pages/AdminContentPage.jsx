@@ -89,6 +89,10 @@ function normalizeRouteOption(page) {
   };
 }
 
+function getRequestedAdminPagePath(search) {
+  return String(new URLSearchParams(search).get('page') || '').trim();
+}
+
 function sortPages(pages) {
   return [...pages]
     .map(normalizeRouteOption)
@@ -1444,7 +1448,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
 export default function AdminContentPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [selectedPath, setSelectedPath] = useState('/');
+  const [selectedPath, setSelectedPath] = useState(() => getRequestedAdminPagePath(location.search) || '/');
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [insertAtIndex, setInsertAtIndex] = useState(null);
   const [insertChoiceId, setInsertChoiceId] = useState('');
@@ -1631,7 +1635,7 @@ export default function AdminContentPage() {
     if (!editablePages.length) {
       return;
     }
-    const requestedPath = String(new URLSearchParams(location.search).get('page') || '').trim();
+    const requestedPath = getRequestedAdminPagePath(location.search);
     if (!requestedPath || requestedPath === selectedPath) {
       return;
     }

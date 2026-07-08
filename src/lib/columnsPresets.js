@@ -4,7 +4,6 @@ const COLUMNS_PRESET_DEFINITIONS = Object.freeze([
     label: 'Flexible columns',
     description: 'General-purpose columns block for text and photo layouts.',
     templateIds: Object.freeze(['columns']),
-    legacyBlockIds: Object.freeze([]),
     defaults: Object.freeze({
       columnsStyle: 'retirement',
       bgTone: 'white',
@@ -26,8 +25,7 @@ const COLUMNS_PRESET_DEFINITIONS = Object.freeze([
     id: 'housing-allowance',
     label: 'Housing allowance',
     description: 'Two-column retirement highlight used for the ministers housing allowance section.',
-    templateIds: Object.freeze(['columns_mha']),
-    legacyBlockIds: Object.freeze(['columns_mha']),
+    templateIds: Object.freeze([]),
     defaults: Object.freeze({
       columnsStyle: 'retirement',
       bgTone: 'sand',
@@ -49,8 +47,7 @@ const COLUMNS_PRESET_DEFINITIONS = Object.freeze([
     id: 'do-the-math',
     label: 'Do the math',
     description: 'Two-column calculator promo with one text column and one supporting image column.',
-    templateIds: Object.freeze(['columns_math']),
-    legacyBlockIds: Object.freeze(['columns_math']),
+    templateIds: Object.freeze([]),
     defaults: Object.freeze({
       columnsStyle: 'retirement',
       bgTone: 'white',
@@ -72,8 +69,7 @@ const COLUMNS_PRESET_DEFINITIONS = Object.freeze([
     id: 'value-cards',
     label: 'Value cards',
     description: 'Three-column text-only value section for the loans page.',
-    templateIds: Object.freeze(['value_cards']),
-    legacyBlockIds: Object.freeze(['value_cards']),
+    templateIds: Object.freeze([]),
     defaults: Object.freeze({
       columnsStyle: 'loans-value',
       bgTone: 'white',
@@ -99,7 +95,6 @@ function clonePresetForDefinition(preset) {
     label: preset.label,
     description: preset.description,
     templateIds: Object.freeze([...(Array.isArray(preset.templateIds) ? preset.templateIds : [])]),
-    legacyBlockIds: Object.freeze([...(Array.isArray(preset.legacyBlockIds) ? preset.legacyBlockIds : [])]),
     defaults: Object.freeze({ ...(preset.defaults || {}) }),
     editor: Object.freeze({
       ...(preset.editor || {}),
@@ -131,16 +126,6 @@ export function resolveColumnsPresetId(block) {
     const byTemplate = COLUMNS_PRESET_DEFINITIONS.find((preset) => preset.templateIds.includes(templateId));
     if (byTemplate) {
       return byTemplate.id;
-    }
-  }
-
-  const blockId = String(block?.id || '').trim().toLowerCase();
-  if (blockId) {
-    const byBlockId = COLUMNS_PRESET_DEFINITIONS.find((preset) => (
-      Array.isArray(preset.legacyBlockIds) && preset.legacyBlockIds.includes(blockId)
-    ));
-    if (byBlockId) {
-      return byBlockId.id;
     }
   }
 

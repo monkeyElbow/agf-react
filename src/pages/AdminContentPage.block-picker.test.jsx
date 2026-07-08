@@ -68,7 +68,7 @@ describe('AdminContentPage block picker guardrails', () => {
       expect(storedBlocks.some((block) => (
         String(block?.kind || '').trim() === 'cta_band'
         && String(block?.presetId || '').trim() === 'dashboard-login'
-        && String(block?.templateId || '').trim() === 'investor_cta'
+        && String(block?.templateId || '').trim() === 'cta_band'
       ))).toBe(true);
     });
 
@@ -81,7 +81,7 @@ describe('AdminContentPage block picker guardrails', () => {
       expect(storedBlocks.some((block) => (
         String(block?.kind || '').trim() === 'card_grid'
         && String(block?.presetId || '').trim() === 'step-cards'
-        && String(block?.templateId || '').trim() === 'loan_apply'
+        && String(block?.templateId || '').trim() === 'card_grid'
       ))).toBe(true);
     });
 
@@ -94,7 +94,7 @@ describe('AdminContentPage block picker guardrails', () => {
       expect(storedBlocks.some((block) => (
         String(block?.kind || '').trim() === 'columns'
         && String(block?.presetId || '').trim() === 'value-cards'
-        && String(block?.templateId || '').trim() === 'value_cards'
+        && String(block?.templateId || '').trim() === 'columns'
       ))).toBe(true);
     });
   });

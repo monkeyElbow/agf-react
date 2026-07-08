@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import {
   contentBlockBlueprintsByPath,
   defaultInvestmentsIntroSettings,
+  getAllBlockTemplateBlueprints,
   genericPageBlockBlueprint,
 } from '../data/contentBlockBlueprints';
 import { getNativePageContent } from '../data/nativePageContent';
@@ -64,6 +65,7 @@ void [
 const allBlueprintBlocks = [
   ...genericPageBlockBlueprint(),
   ...Object.values(contentBlockBlueprintsByPath).flat(),
+  ...getAllBlockTemplateBlueprints(),
 ];
 
 function cloneBlock(block) {
@@ -162,16 +164,21 @@ describe('dynamic block control wiring', () => {
     });
   });
 
-  it('keeps home columns mode templates wired for both static and dynamic', () => {
-    ['columns_mha', 'columns_math'].forEach((blockId) => {
+  it('keeps home managed billboards wired for both static and dynamic', () => {
+    [
+      { id: 'home_ministry_allies', kind: 'billboard' },
+      { id: 'home_do_the_math', kind: 'billboard' },
+    ].forEach(({ id, kind }) => {
       const blocks = contentBlockBlueprintsByPath['/'] || [];
-      const dynamicColumns = blocks.find((block) => block?.id === blockId && block?.mode === 'dynamic');
-      const staticColumns = blocks.find((block) => block?.id === blockId && block?.mode === 'static');
+      const dynamicBlock = blocks.find((block) => block?.id === id && block?.mode === 'dynamic');
+      const staticBlock = blocks.find((block) => block?.id === id && block?.mode === 'static');
 
-      expect(dynamicColumns).toBeTruthy();
-      expect(Array.isArray(dynamicColumns?.editableFields) ? dynamicColumns.editableFields.length : 0).toBeGreaterThan(0);
-      expect(staticColumns).toBeTruthy();
-      expect(Array.isArray(staticColumns?.editableFields) ? staticColumns.editableFields : []).toHaveLength(0);
+      expect(dynamicBlock).toBeTruthy();
+      expect(dynamicBlock?.kind).toBe(kind);
+      expect(Array.isArray(dynamicBlock?.editableFields) ? dynamicBlock.editableFields.length : 0).toBeGreaterThan(0);
+      expect(staticBlock).toBeTruthy();
+      expect(staticBlock?.kind).toBe(kind);
+      expect(Array.isArray(staticBlock?.editableFields) ? staticBlock.editableFields : []).toHaveLength(0);
     });
   });
 

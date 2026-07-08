@@ -1,9 +1,8 @@
 import {
   getBlockDefinition,
   getBlockPresetDefinitions,
-  resolveBlockPresetDefinition,
 } from '../blocks/registry';
-import { isRetiredInsertCompatibilityTemplateId } from './compatibilityTemplateRetirement';
+import { buildBlockTemplateCreateId } from './blockTemplateIdentity';
 import { PRESET_FAMILY_KINDS } from './presetFamilyContract';
 
 function normalizeToken(value) {
@@ -86,15 +85,24 @@ function buildPresetBearingChoices(templatesByKind, targetMode) {
 
     const familyLabel = String(getBlockDefinition(kind)?.label || kind).trim() || kind;
     const presetDefinitions = getBlockPresetDefinitions(kind);
-    const usedTemplateIds = new Set();
+    const usedTemplateKeys = new Set();
+    const familyUsesExplicitPresetIds = familyTemplates.some((template) => normalizeToken(template?.presetId));
 
     presetDefinitions.forEach((presetDefinition) => {
+      const canonicalPresetId = normalizeToken(presetDefinition?.id);
+      const explicitPresetTemplates = familyTemplates.filter((template) => (
+        normalizeToken(template?.presetId) === canonicalPresetId
+      ));
       const presetTemplateIds = new Set(
         (Array.isArray(presetDefinition?.templateIds) ? presetDefinition.templateIds : [])
           .map(normalizeToken)
           .filter(Boolean),
       );
-      const presetTemplates = familyTemplates.filter((template) => presetTemplateIds.has(normalizeToken(template?.templateId)));
+      const presetTemplates = explicitPresetTemplates.length
+        ? explicitPresetTemplates
+        : (familyUsesExplicitPresetIds
+          ? []
+          : familyTemplates.filter((template) => presetTemplateIds.has(normalizeToken(template?.templateId))));
       if (!presetTemplates.length) {
         return;
       }
@@ -104,12 +112,12 @@ function buildPresetBearingChoices(templatesByKind, targetMode) {
         return;
       }
 
-      usedTemplateIds.add(String(representative.templateId || '').trim());
+      usedTemplateKeys.add(String(representative.templateLookupId || representative.id || representative.templateId || '').trim());
       const usesCanonicalTemplateId = normalizeToken(representative.templateId) === normalizeToken(kind);
 
       choices.push({
         id: `${targetMode}:${kind}:${presetDefinition.id}`,
-        createTemplateId: String(representative.templateLookupId || representative.templateId || '').trim(),
+        createTemplateId: buildBlockTemplateCreateId(representative),
         templateId: String(representative.templateId || '').trim(),
         kind,
         familyKind: kind,
@@ -125,28 +133,6 @@ function buildPresetBearingChoices(templatesByKind, targetMode) {
       });
     });
 
-    familyTemplates
-      .filter((template) => !usedTemplateIds.has(String(template?.templateId || '').trim()))
-      .filter((template) => !isRetiredInsertCompatibilityTemplateId(template?.templateId, targetMode))
-      .forEach((template) => {
-        const presetDefinition = resolveBlockPresetDefinition(template);
-        choices.push({
-          id: `${targetMode}:compat:${String(template?.templateId || '').trim()}`,
-          createTemplateId: String(template?.templateLookupId || template?.templateId || '').trim(),
-          templateId: String(template?.templateId || '').trim(),
-          kind,
-          familyKind: kind,
-          familyLabel,
-          presetId: String(presetDefinition?.id || '').trim(),
-          presetLabel: String(presetDefinition?.label || '').trim(),
-          name: `${familyLabel} compatibility · ${String(template?.name || template?.templateId || familyLabel).trim()}`,
-          description: presetDefinition
-            ? `Compatibility template for ${presetDefinition.label}`
-            : 'Compatibility template',
-          mode: targetMode,
-          isCompatibility: true,
-        });
-      });
   });
 
   return choices;
@@ -178,7 +164,7 @@ export function buildAdminBlockInsertChoices(availableBlockTemplates, options = 
       const definition = getBlockDefinition(kind);
       return {
         id: `${targetMode}:template:${String(template?.templateId || '').trim()}`,
-        createTemplateId: String(template?.templateLookupId || template?.templateId || '').trim(),
+        createTemplateId: buildBlockTemplateCreateId(template),
         templateId: String(template?.templateId || '').trim(),
         kind,
         editorType: String(definition?.editorType || kind).trim(),

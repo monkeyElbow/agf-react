@@ -14,8 +14,7 @@ describe('columns presets', () => {
       'do-the-math',
       'value-cards',
     ]);
-    expect(getColumnsPresetDefinition('housing-allowance')?.templateIds).toEqual(['columns_mha']);
-    expect(getColumnsPresetDefinition('do-the-math')?.legacyBlockIds).toEqual(['columns_math']);
+    expect(getColumnsPresetDefinition('housing-allowance')?.templateIds).toEqual([]);
     expect(getColumnsPresetDefinition('value-cards')?.editor).toMatchObject({
       fixedColumns: true,
       maxColumns: 3,
@@ -24,10 +23,9 @@ describe('columns presets', () => {
     });
   });
 
-  it('resolves preset identity from explicit preset ids, template ids, and legacy block ids', () => {
+  it('resolves preset identity from explicit preset ids and template ids', () => {
     expect(resolveColumnsPresetId({ kind: 'columns', presetId: 'do-the-math' })).toBe('do-the-math');
-    expect(resolveColumnsPresetId({ kind: 'columns', templateId: 'value_cards' })).toBe('value-cards');
-    expect(resolveColumnsPresetId({ kind: 'columns', id: 'columns_mha' })).toBe('housing-allowance');
+    expect(resolveColumnsPresetId({ kind: 'columns', templateId: 'columns' })).toBe('default');
   });
 
   it('builds preset defaults for value cards without reopening the generic style selector', () => {

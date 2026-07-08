@@ -15,16 +15,13 @@ describe('cta band preset definitions', () => {
     ]);
     expect(getCtaBandPresetDefinition('default')?.templateIds).toEqual([
       'cta_band',
-      'housing_allowance',
     ]);
-    expect(getCtaBandPresetDefinition('dashboard-login')?.legacyBlockIds).toEqual(['investor_cta']);
   });
 
-  it('resolves CTA band preset identity from explicit ids, template ids, and narrow legacy block ids', () => {
+  it('resolves CTA band preset identity from explicit ids and template ids', () => {
     expect(resolveCtaBandPresetId({ kind: 'cta_band', presetId: 'dashboard-login' })).toBe('dashboard-login');
-    expect(resolveCtaBandPresetId({ kind: 'cta_band', templateId: 'investor_cta' })).toBe('dashboard-login');
-    expect(resolveCtaBandPresetId({ kind: 'cta_band', id: 'housing_allowance' })).toBe('default');
-    expect(resolveCtaBandPresetDefinition({ kind: 'cta_band', id: 'investor_cta' })?.label).toBe('Dashboard login');
+    expect(resolveCtaBandPresetId({ kind: 'cta_band', templateId: 'dashboard_login_cta' })).toBe('dashboard-login');
+    expect(resolveCtaBandPresetDefinition({ kind: 'cta_band', templateId: 'dashboard_login_cta' })?.label).toBe('Dashboard login');
   });
 
   it('keeps CTA band preset defaults and editor guardrails intentionally bounded', () => {

@@ -124,11 +124,6 @@ export function createBlockDefinition(definition) {
             .map((value) => String(value || '').trim())
             .filter(Boolean))),
         ),
-        legacyBlockIds: Object.freeze(
-          Array.from(new Set((Array.isArray(preset.legacyBlockIds) ? preset.legacyBlockIds : [])
-            .map((value) => String(value || '').trim())
-            .filter(Boolean))),
-        ),
         defaults: Object.freeze({ ...(preset.defaults || {}) }),
         editor: Object.freeze({
           ...(preset.editor || {}),

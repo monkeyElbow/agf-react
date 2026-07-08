@@ -3,8 +3,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
     id: 'default',
     label: 'Flexible cards',
     description: 'General-purpose card grid for mixed card content.',
-    templateIds: Object.freeze(['card_grid', 'services_cards', 'loan_options', 'certificates', 'plan_features']),
-    legacyBlockIds: Object.freeze(['services_cards', 'loan_options', 'certificates', 'plan_features']),
+    templateIds: Object.freeze(['card_grid']),
     defaults: Object.freeze({
       bgTone: 'white',
       contentWidth: 'content',
@@ -36,8 +35,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
     id: 'investment-options',
     label: 'Investment options',
     description: 'Two-column investment cards paired with a separate billboard heading.',
-    templateIds: Object.freeze(['investment_strategy_options']),
-    legacyBlockIds: Object.freeze(['investment_strategy_options']),
+    templateIds: Object.freeze([]),
     defaults: Object.freeze({
       bgTone: 'white',
       contentWidth: 'browser',
@@ -69,8 +67,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
     id: 'eligibility-cards',
     label: 'Eligibility cards',
     description: 'Qualification cards with plain text only and no card-level actions or resources.',
-    templateIds: Object.freeze(['who_qualifies']),
-    legacyBlockIds: Object.freeze(['who_qualifies']),
+    templateIds: Object.freeze([]),
     defaults: Object.freeze({
       bgTone: 'white',
       contentWidth: 'browser',
@@ -102,8 +99,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
     id: 'step-cards',
     label: 'Step-by-step cards',
     description: 'Process cards with a primary action only and no secondary resource stacks.',
-    templateIds: Object.freeze(['loan_apply']),
-    legacyBlockIds: Object.freeze(['loan_apply']),
+    templateIds: Object.freeze([]),
     defaults: Object.freeze({
       bgTone: 'white',
       contentWidth: 'content',
@@ -139,7 +135,6 @@ function clonePresetForDefinition(preset) {
     label: preset.label,
     description: preset.description,
     templateIds: Object.freeze([...(Array.isArray(preset.templateIds) ? preset.templateIds : [])]),
-    legacyBlockIds: Object.freeze([...(Array.isArray(preset.legacyBlockIds) ? preset.legacyBlockIds : [])]),
     defaults: Object.freeze({ ...(preset.defaults || {}) }),
     editor: Object.freeze({
       ...(preset.editor || {}),
@@ -172,16 +167,6 @@ export function resolveCardGridPresetId(block) {
     const byTemplate = CARD_GRID_PRESET_DEFINITIONS.find((preset) => preset.templateIds.includes(templateId));
     if (byTemplate) {
       return byTemplate.id;
-    }
-  }
-
-  const blockId = String(block?.id || '').trim().toLowerCase();
-  if (blockId) {
-    const byBlockId = CARD_GRID_PRESET_DEFINITIONS.find((preset) => (
-      Array.isArray(preset.legacyBlockIds) && preset.legacyBlockIds.includes(blockId)
-    ));
-    if (byBlockId) {
-      return byBlockId.id;
     }
   }
 

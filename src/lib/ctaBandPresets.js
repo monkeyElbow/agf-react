@@ -3,8 +3,7 @@ const CTA_BAND_PRESET_DEFINITIONS = Object.freeze([
     id: 'default',
     label: 'General CTA',
     description: 'Short non-form CTA band with concise copy and one action.',
-    templateIds: Object.freeze(['cta_band', 'housing_allowance']),
-    legacyBlockIds: Object.freeze(['housing_allowance']),
+    templateIds: Object.freeze(['cta_band']),
     defaults: Object.freeze({
       title: 'Take the next step.',
       body: 'Choose the action that moves you forward.',
@@ -23,8 +22,7 @@ const CTA_BAND_PRESET_DEFINITIONS = Object.freeze([
     id: 'dashboard-login',
     label: 'Dashboard login',
     description: 'Investor login prompt with one primary external action.',
-    templateIds: Object.freeze(['investor_cta']),
-    legacyBlockIds: Object.freeze(['investor_cta']),
+    templateIds: Object.freeze(['dashboard_login_cta']),
     defaults: Object.freeze({
       title: 'Already an investor?',
       body: 'Log in to manage.',
@@ -47,7 +45,6 @@ function clonePresetForDefinition(preset) {
     label: preset.label,
     description: preset.description,
     templateIds: Object.freeze([...(Array.isArray(preset.templateIds) ? preset.templateIds : [])]),
-    legacyBlockIds: Object.freeze([...(Array.isArray(preset.legacyBlockIds) ? preset.legacyBlockIds : [])]),
     defaults: Object.freeze({ ...(preset.defaults || {}) }),
     editor: Object.freeze({
       ...(preset.editor || {}),
@@ -80,16 +77,6 @@ export function resolveCtaBandPresetId(block) {
     const byTemplate = CTA_BAND_PRESET_DEFINITIONS.find((preset) => preset.templateIds.includes(templateId));
     if (byTemplate) {
       return byTemplate.id;
-    }
-  }
-
-  const blockId = String(block?.id || '').trim().toLowerCase();
-  if (blockId) {
-    const byBlockId = CTA_BAND_PRESET_DEFINITIONS.find((preset) => (
-      Array.isArray(preset.legacyBlockIds) && preset.legacyBlockIds.includes(blockId)
-    ));
-    if (byBlockId) {
-      return byBlockId.id;
     }
   }
 
