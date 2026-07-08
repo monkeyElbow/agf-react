@@ -214,7 +214,7 @@ describe('buildDynamicCtaFormFromBlock', () => {
       subtitle: 'And we are eager to help.',
       bgTone: 'sand',
       targetSectionKey: 'id:cta-target',
-      submitLabel: 'Follow-up with me',
+      submitLabel: 'Follow up with me',
       successMessage: 'Thanks. We will reach out soon.',
       submitStyle: 'outline',
       submitTone: 'mango',

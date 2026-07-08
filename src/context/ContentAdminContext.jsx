@@ -20,6 +20,7 @@ import {
   buildCtaFormSettingsPatch,
   formatFormChoiceOptionsText,
   normalizeCtaFormFieldType,
+  normalizeLegacyCtaSubmitLabel,
   normalizeRequestFormFieldType,
 } from '../blocks/foundation/forms';
 import {
@@ -3149,7 +3150,7 @@ function buildDynamicCtaDefaultBlocksForPath(pathname, pageTitle, currentBlocks,
       titleHighlightsJson: JSON.stringify(Array.isArray(section?.titleHighlights) ? section.titleHighlights : []),
       bodyHtml: toBodyHtmlFromSection(section, form) || String(clone.settings?.bodyHtml || '').trim(),
       bgTone: inferredBgTone,
-      submitLabel: String(form.submitLabel || clone.settings?.submitLabel || 'Submit').trim() || 'Submit',
+      submitLabel: normalizeLegacyCtaSubmitLabel(form.submitLabel, clone.settings?.submitLabel) || 'Submit',
       successMessage: String(form.successMessage || clone.settings?.successMessage || 'Thanks. We received your request.').trim(),
       targetSectionKey: section?.id
         ? `id:${section.id}`

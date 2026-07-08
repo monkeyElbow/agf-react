@@ -86,7 +86,7 @@ describe('canonical form foundation', () => {
       submitLabel: 'Follow-up with me',
       successMessage: 'Thanks. We will reach out soon.',
     })).toEqual({
-      submitLabel: 'Follow-up with me',
+      submitLabel: 'Follow up with me',
       successMessage: 'Thanks. We will reach out soon.',
       salesforceUrl: '',
     });

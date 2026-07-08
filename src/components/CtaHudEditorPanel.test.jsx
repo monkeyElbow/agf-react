@@ -34,7 +34,7 @@ describe('CtaHudEditorPanel', () => {
 
   it('keeps lead copy and submit controls together in the message card ahead of form fields', () => {
     const { container } = renderPanel({
-      settings: { submitLabel: 'Follow-up with me' },
+      settings: { submitLabel: 'Follow up with me' },
       bodyHtml: '<p>Let us help you take the next step.</p>',
       fields: [
         { id: 'full_name', label: 'Full name', type: 'text', required: true, placeholder: '' },

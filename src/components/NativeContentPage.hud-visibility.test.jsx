@@ -965,7 +965,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             title: 'Tell us how to reach you.',
             bodyHtml: '<p>We will follow up soon.</p>',
             bgTone: 'white',
-            submitLabel: 'Follow-up with me',
+            submitLabel: 'Follow up with me',
             fieldsJson: JSON.stringify([
               { id: 'full_name', label: 'Full name', type: 'text', required: true },
             ]),

@@ -47,7 +47,7 @@ describe('DynamicCtaSection', () => {
             mode: 'dynamic',
             settings: {
               title: 'Imagine the possibilities.',
-              submitLabel: 'Follow-up',
+              submitLabel: 'Follow up',
               submitStyle: 'dark',
               field1Label: 'Email',
               field1Type: 'email',
@@ -62,7 +62,7 @@ describe('DynamicCtaSection', () => {
       />,
     );
 
-    const button = screen.getByRole('button', { name: 'Follow-up' });
+    const button = screen.getByRole('button', { name: 'Follow up' });
     expect(button.className).toContain('service-native-btn');
     expect(button.className).toContain('is-dark');
     expect(button.className).toContain('is-tone-super-grey');
@@ -78,7 +78,7 @@ describe('DynamicCtaSection', () => {
             mode: 'dynamic',
             settings: {
               title: 'Imagine the possibilities.',
-              submitLabel: 'Follow-up',
+              submitLabel: 'Follow up',
               field1Label: 'Email',
               field1Type: 'email',
               field1Required: true,

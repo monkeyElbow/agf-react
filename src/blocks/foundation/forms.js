@@ -46,6 +46,8 @@ export const CTA_FORM_CONTACT_PREFERENCE_OPTIONS = Object.freeze([
   Object.freeze({ value: 'phone', label: 'Phone' }),
   Object.freeze({ value: 'either', label: 'No preference' }),
 ]);
+const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow up with me';
+const LEGACY_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
 
 const CTA_FORM_SPECIFIC_FIELD_IDS = Object.freeze([
   'title',
@@ -577,10 +579,17 @@ export function validateRequiredFormFields(fields, values, options = {}) {
   return '';
 }
 
+export function normalizeLegacyCtaSubmitLabel(value, fallback = '') {
+  const label = String(value || '').trim() || String(fallback || '').trim();
+  if (!label) {
+    return '';
+  }
+  return label === LEGACY_FOLLOW_UP_SUBMIT_LABEL ? DEFAULT_FOLLOW_UP_SUBMIT_LABEL : label;
+}
+
 export function normalizeFormSubmissionConfig(source, defaults = {}) {
   return {
-    submitLabel: String(source?.submitLabel || '').trim()
-      || String(defaults?.submitLabel || '').trim()
+    submitLabel: normalizeLegacyCtaSubmitLabel(source?.submitLabel, defaults?.submitLabel)
       || 'Submit',
     successMessage: String(source?.successMessage || '').trim()
       || String(defaults?.successMessage || '').trim()
