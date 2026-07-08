@@ -2845,7 +2845,7 @@ const retirementChildPages = {
     intro: {
       heading: 'Ministry-powered retirement.',
       body: [
-        'The AGFinancial 403(b) offers higher contribution limits and potential employer matching—advantages you won’t find with an IRA. Designed specifically for ministers and ministry employees, it’s a powerful way to save while you serve.',
+        'The AGFinancial 403(b) is designed specifically for ministers and ministry employees. It’s a powerful way to save while you serve.',
       ],
       bgTone: 'sand',
       textTone: 'dark',

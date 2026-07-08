@@ -13581,6 +13581,10 @@
   min-width: 840px;
 }
 
+.native-info-table-wrap .info-table-sheet {
+  min-width: 100%;
+}
+
 .native-info-page--legacy-giving .service-native-intro {
   background: linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%);
 }
@@ -19662,8 +19666,39 @@ p.impact-proof-story-proof-body {
   margin-top: 0.95rem;
 }
 
-.retirement-403b-rate-widget .data-table {
-  min-width: 560px;
+.retirement-403b-rate-widget .info-table-sheet {
+  max-width: 36rem;
+}
+
+.retirement-403b-rate-widget .info-table-sheet__table thead th:first-child {
+  width: 48%;
+}
+
+.retirement-403b-rate-widget .info-table-sheet__table thead th:nth-child(2),
+.retirement-403b-rate-widget .info-table-sheet__table tbody td:nth-child(2),
+.retirement-403b-rate-widget .info-table-sheet__card-grid .info-table-sheet__card-cell:nth-child(1) {
+  background: rgba(196, 190, 182, 0.16);
+}
+
+.retirement-403b-rate-widget .info-table-sheet__table thead th:nth-child(3),
+.retirement-403b-rate-widget .info-table-sheet__table tbody td:nth-child(3),
+.retirement-403b-rate-widget .info-table-sheet__card-grid .info-table-sheet__card-cell:nth-child(2) {
+  background: rgba(var(--ag-color-atlantean-rgb), 0.08);
+}
+
+.retirement-403b-rate-widget .info-table-sheet__table tbody td:nth-child(2),
+.retirement-403b-rate-widget .info-table-sheet__card-cell:nth-child(1) .info-table-sheet__card-value {
+  font-size: clamp(0.98rem, 1vw, 1.02rem);
+  font-weight: 700;
+}
+
+.retirement-403b-rate-widget .info-table-sheet__table tbody td:nth-child(3),
+.retirement-403b-rate-widget .info-table-sheet__card-cell:nth-child(2) .info-table-sheet__card-value {
+  color: var(--ag-color-atlantean-dark);
+  font-size: clamp(1.18rem, 1.25vw, 1.3rem);
+  font-weight: 780;
+  letter-spacing: 0.012em;
+  line-height: 1.08;
 }
 
 .retirement-403b-rate-widget .service-native-note {
@@ -19732,6 +19767,25 @@ p.impact-proof-story-proof-body {
   font-size: clamp(1rem, 1.45vw, 1.08rem);
   line-height: 1.6;
   text-align: left;
+}
+
+.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-link-list,
+.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-accordion-links {
+  list-style: none;
+  padding-left: 0;
+}
+
+.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-link-list li,
+.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-accordion-links li {
+  margin: 0;
+}
+
+.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-link-list:has(.service-native-btn) {
+  padding-inline: 0.1rem;
+}
+
+.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-accordion-links {
+  padding: 0.2rem 0.85rem 0.85rem;
 }
 
 .native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card .service-native-action-row {
@@ -20158,6 +20212,25 @@ p.impact-proof-story-proof-body {
   text-align: left;
   font-size: clamp(1rem, 1.45vw, 1.08rem);
   line-height: 1.6;
+}
+
+.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-link-list,
+.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-accordion-links {
+  list-style: none;
+  padding-left: 0;
+}
+
+.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-link-list li,
+.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-accordion-links li {
+  margin: 0;
+}
+
+.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-link-list:has(.service-native-btn) {
+  padding-inline: 0.1rem;
+}
+
+.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-accordion-links {
+  padding: 0.2rem 0.85rem 0.85rem;
 }
 
 .native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card .service-native-action-row {

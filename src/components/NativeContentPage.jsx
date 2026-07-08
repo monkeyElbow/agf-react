@@ -76,6 +76,7 @@ import LegacyGivingStewardshipStoryFeature from './LegacyGivingStewardshipStoryF
 import ImpactProofStoryFeature from './ImpactProofStoryFeature';
 import DynamicRequestFormSection from './DynamicRequestFormSection';
 import FrontHudAnchorTag from './FrontHudAnchorTag';
+import InfoTableSheet from './InfoTableSheet';
 import IraRatesSheet from './IraRatesSheet';
 import NewsletterSignupForm from './NewsletterSignupForm';
 import SafeRichText from './SafeRichText';
@@ -2590,26 +2591,16 @@ function Retirement403bRateTableWidget({ rates, ratesMeta }) {
   const rate = ratesMeta?.retirement403bMbaRate || proxyRateRow?.premiumRate || proxyRateRow?.standardRate || '4.000%';
   const apy = ratesMeta?.retirement403bMbaApy || proxyRateRow?.premiumApy || proxyRateRow?.standardApy || '4.07%';
   const effectiveDate = ratesMeta?.certificatesEffectiveDate || 'January 1, 2025';
+  const rows = [['MBA Income Fund', rate, apy]];
 
   return (
     <div className="retirement-403b-rate-widget">
       <div className="native-info-table-wrap">
-        <table className="data-table data-table--fixed">
-          <thead>
-            <tr>
-              <th>Investment Type</th>
-              <th>RATE</th>
-              <th>APY*</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>MBA Income Fund</td>
-              <td>{rate}</td>
-              <td>{apy}</td>
-            </tr>
-          </tbody>
-        </table>
+        <InfoTableSheet
+          headers={['Investment Type', 'Rate', 'APY*']}
+          rows={rows}
+          valueAlignment="right"
+        />
       </div>
       <p className="service-native-note">*Annual Percentage Yield</p>
       <p className="service-native-note">Effective {effectiveDate}</p>
@@ -6497,24 +6488,10 @@ export default function NativeContentPage({ page }) {
 
             {section.table ? (
               <div className="native-info-table-wrap">
-                <table className="data-table data-table--fixed">
-                  <thead>
-                    <tr>
-                      {section.table.headers.map((header) => (
-                        <th key={header}>{header}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {section.table.rows.map((row, rowIndex) => (
-                      <tr key={row.join('|')}>
-                        {row.map((cell, cellIndex) => (
-                          <td key={`${rowIndex}-${cellIndex}-${cell}`}>{cell}</td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <InfoTableSheet
+                  headers={section.table.headers}
+                  rows={section.table.rows}
+                />
               </div>
             ) : null}
 

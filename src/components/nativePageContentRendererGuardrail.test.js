@@ -77,6 +77,32 @@ describe('native page content renderer guardrail', () => {
     expect(source).not.toContain("dynamicSections.find((section) => section?.blockId === 'who_qualifies')");
   });
 
+  it('keeps native public tables on the shared table-sheet renderer instead of legacy data-table markup', () => {
+    const source = readSource('./NativeContentPage.jsx');
+
+    expect(source).toContain("import InfoTableSheet from './InfoTableSheet';");
+    expect(source).toContain('function Retirement403bRateTableWidget({ rates, ratesMeta }) {');
+    expect(source).toContain('<InfoTableSheet');
+    expect(source).toContain("headers={['Investment Type', 'Rate', 'APY*']}");
+    expect(source).toContain('headers={section.table.headers}');
+    expect(source).toContain('rows={section.table.rows}');
+    expect(source).not.toContain('<table className="data-table data-table--fixed">');
+  });
+
+  it('keeps 403(b) strategy document links on button-style lists without native bullets in the retirement card shell', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-link-list,');
+    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-accordion-links {');
+    expect(cssSource).toContain('.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-link-list,');
+    expect(cssSource).toContain('.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-accordion-links {');
+    expect(cssSource).toContain('list-style: none;');
+    expect(cssSource).toContain('padding-left: 0;');
+    expect(cssSource).toContain('.service-native-card-link-list:has(.service-native-btn) {');
+    expect(cssSource).toContain('padding-inline: 0.1rem;');
+    expect(cssSource).toContain('padding: 0.2rem 0.85rem 0.85rem;');
+  });
+
   it('delegates active functional native routes to extracted renderers instead of keeping inline route mini-apps in NativeContentPage', () => {
     const source = readSource('./NativeContentPage.jsx');
 

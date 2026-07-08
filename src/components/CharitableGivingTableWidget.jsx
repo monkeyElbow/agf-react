@@ -1,3 +1,5 @@
+import InfoTableSheet from './InfoTableSheet';
+
 const CG_HEADERS = [
   'Type of Giving',
   "How it's Funded",
@@ -70,24 +72,7 @@ export default function CharitableGivingTableWidget() {
   return (
     <div className="cga-charitable-giving-table-widget">
       <div className="native-info-table-wrap">
-        <table className="data-table data-table--fixed">
-          <thead>
-            <tr>
-              {CG_HEADERS.map((header) => (
-                <th key={header}>{header}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {CG_ROWS.map((row) => (
-              <tr key={row[0]}>
-                {row.map((cell) => (
-                  <td key={`${row[0]}-${cell}`}>{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <InfoTableSheet headers={CG_HEADERS} rows={CG_ROWS} />
       </div>
     </div>
   );

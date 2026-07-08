@@ -997,6 +997,25 @@ describe('NativeContentPage functional routes', () => {
     expect(within(strategyEnrollSection).getByRole('link', { name: 'Enroll now' }).getAttribute('href')).toBe('/services/retirement/403b/403b-individual-enrollment');
   });
 
+  it('renders the 403(b) intro copy and remaining public retirement tables through the shared table-sheet layout', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/403b',
+            title: '403(b)',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('The AGFinancial 403(b) is designed specifically for ministers and ministry employees. It’s a powerful way to save while you serve.')).toBeTruthy();
+    expect(container.querySelector('.retirement-403b-rate-widget .info-table-sheet')).toBeTruthy();
+    expect(container.querySelector('.retirement-child-native-table .info-table-sheet')).toBeTruthy();
+    expect(container.querySelector('.retirement-403b-rate-widget .data-table')).toBeNull();
+    expect(container.querySelector('.retirement-child-native-table .data-table')).toBeNull();
+  });
+
   it('reveals an external inline CTA shell from a single centered charitable trusts trigger while keeping the later form visible', async () => {
     mockBlocksByPath = {
       '/services/planned-giving/charitable-trusts': (

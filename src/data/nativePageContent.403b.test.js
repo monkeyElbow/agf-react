@@ -13,6 +13,10 @@ describe('403(b) overview native page content', () => {
     const qualifySection = sections.find((section) => section?.className === 'retirement-child-native-qualify');
 
     expect(String(content?.pageClass || '')).toContain('native-info-page--retirement-403b');
+    expect(content?.intro?.heading).toBe('Ministry-powered retirement.');
+    expect(content?.intro?.body).toEqual([
+      'The AGFinancial 403(b) is designed specifically for ministers and ministry employees. It’s a powerful way to save while you serve.',
+    ]);
     expect(benefitsCopyIndex).toBeGreaterThanOrEqual(0);
     expect(benefitsCardsIndex).toBeGreaterThan(benefitsCopyIndex);
     expect(ratesIndex).toBeGreaterThan(benefitsCardsIndex);
