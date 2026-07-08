@@ -36,7 +36,7 @@ function RepeatObserveHookHarness() {
       <div
         data-testid="repeat-fade-0"
         className="fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up"
-        data-fade-root-margin="0px 0px -40% 0px"
+        data-fade-root-margin="0px 0px -20% 0px"
       >
         Replay
       </div>
@@ -254,7 +254,7 @@ describe('useNativeEnhancements fade-up reveal', () => {
           <div
             data-testid="custom-fade-0"
             className="fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up"
-            data-fade-root-margin="0px 0px -40% 0px"
+            data-fade-root-margin="0px 0px -20% 0px"
           >
             First
           </div>
@@ -266,7 +266,7 @@ describe('useNativeEnhancements fade-up reveal', () => {
 
     expect(getByTestId('custom-fade-0').getAttribute('data-fade-state')).toBe('pending');
     expect(observedTargets).toHaveLength(1);
-    expect(observerRootMargins).toContain('0px 0px -40% 0px');
+    expect(observerRootMargins).toContain('0px 0px -20% 0px');
   });
 
   it('re-arms repeat-observe fade-up nodes after they leave the viewport', () => {

@@ -15,7 +15,7 @@ describe('home services feature alignment guardrail', () => {
     const cssSource = readSource('../styles/home-native.css');
 
     expect(cssSource).toContain('.home-services-feature {');
-    expect(cssSource).toContain('padding-bottom: clamp(3rem, 5vw, 4.5rem);');
+    expect(cssSource).toContain('padding-bottom: clamp(1.8rem, 3.8vw, 3rem);');
     expect(cssSource).toContain('overflow: visible;');
     expect(cssSource).toContain('overflow-x: clip;');
     expect(cssSource).toContain('.home-services-feature-shell {');
@@ -28,7 +28,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('.home-services-feature-list {');
     expect(cssSource).toContain('gap: var(--home-services-panel-gap);');
     expect(cssSource).toContain('width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-gutter) * 2)));');
-    expect(cssSource).toContain('padding: 0 clamp(0.55rem, 1.2vw, 0.9rem) clamp(3rem, 5vw, 4rem);');
+    expect(cssSource).toContain('padding: 0 clamp(0.55rem, 1.2vw, 0.9rem) clamp(1.4rem, 2.8vw, 2.2rem);');
     expect(cssSource).toContain('perspective: 1800px;');
     expect(cssSource).toContain('.home-services-feature-panel {');
     expect(cssSource).toContain('width: min(100%, 84rem);');
@@ -182,18 +182,19 @@ describe('home services feature alignment guardrail', () => {
   it('keeps the hero visually suppressed on home while the feature intro gets the requested desktop runway', () => {
     const cssSource = readSource('../styles/home-native.css');
     const pageSource = readSource('../pages/HomePage.jsx');
+    const resolverSource = readSource('../lib/homeBlockResolver.js');
 
     expect(pageSource).toContain("const HOME_HERO_TEMPORARILY_HIDDEN = true;");
-    expect(pageSource).toContain('return reorderHomeTopBlocks(resolvedBlocks.concat(extraRenderableManagedBlocks));');
+    expect(resolverSource).toContain('return reorderHomeTopBlocks(resolvedBlocks.concat(extraRenderableManagedBlocks));');
     expect(cssSource).toContain('.home-native-page.is-home-hero-temporarily-hidden [data-block-id="hero"] {');
     expect(cssSource).toContain('display: none;');
     expect(cssSource).toContain('.home-native-page.is-home-hero-temporarily-hidden .home-impact-story-stage {');
     expect(cssSource).toContain('min-height: calc(100vh - clamp(12.25rem, 20vh, 14.5rem));');
     expect(cssSource).toContain('.home-native-page.is-home-hero-temporarily-hidden .home-services-feature-intro {');
-    expect(cssSource).toContain('min-height: 44vh;');
+    expect(cssSource).toContain('min-height: 42vh;');
     expect(cssSource).toContain('justify-items: center;');
-    expect(cssSource).toContain('clamp(3.4rem, 7.2vh, 5.6rem)');
-    expect(cssSource).toContain('clamp(1rem, 2.4vh, 1.5rem)');
+    expect(cssSource).toContain('clamp(3rem, 9vh, 4.5rem)');
+    expect(cssSource).toContain('clamp(0.9rem, 2.3vh, 1.35rem)');
   });
 
   it('keeps intro reveal and panel motion on shell-level vars instead of per-content translation', () => {

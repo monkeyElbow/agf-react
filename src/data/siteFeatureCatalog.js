@@ -158,8 +158,8 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       },
       metrics: Object.freeze([
         Object.freeze({ value: '1,400+', label: 'ministries served by loans', tone: 'sandstone', valueTone: 'white' }),
-        Object.freeze({ value: '29,000+', label: '29,000+ Retirements planned', tone: 'sandstone' }),
-        Object.freeze({ value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone', valueTone: 'super-grey' }),
+        Object.freeze({ value: '29,000+', label: 'retirements planned', tone: 'sandstone' }),
+        Object.freeze({ value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone', valueTone: 'legacy-sandstone' }),
       ]),
       imageUrl: '',
       imageAlt: '',

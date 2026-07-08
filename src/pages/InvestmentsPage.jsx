@@ -14,7 +14,6 @@ import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import SafeRichText from '../components/SafeRichText';
 import CertificateRatesSheet from '../components/CertificateRatesSheet';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
-import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import {
   buildDefaultInvestmentsIntroRuntime,
   defaultInvestmentsIntroSettings,
@@ -137,29 +136,6 @@ const CHURCH_CASH_RESERVES_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   fallbackImageAlt: 'Church Cash Reserves',
 });
 const INVESTMENTS_HERO_ANIMATION_PRESET = getHeroSeedContract('/services/investments')?.animationPreset || 'default';
-const INVESTMENTS_BLUEPRINT_BLOCKS = Object.freeze(
-  Array.isArray(contentBlockBlueprintsByPath['/services/investments'])
-    ? contentBlockBlueprintsByPath['/services/investments']
-    : [],
-);
-const INVESTMENTS_GROWTH_FEATURE_BLUEPRINT = Object.freeze(
-  INVESTMENTS_BLUEPRINT_BLOCKS.find((block) => block?.id === 'growth_feature' && block?.kind === 'site_feature')
-    || {
-      id: 'growth_feature',
-      kind: 'site_feature',
-      mode: 'dynamic',
-      settings: defaultInvestmentsGrowthFeatureSettings,
-    },
-);
-const INVESTMENTS_CTA_FORM_BLUEPRINT = Object.freeze(
-  INVESTMENTS_BLUEPRINT_BLOCKS.find((block) => block?.id === 'cta_form' && block?.kind === 'cta_form')
-    || {
-      id: 'cta_form',
-      kind: 'cta_form',
-      mode: 'dynamic',
-      settings: defaultInvestmentsCtaSettings,
-    },
-);
 
 function resolveInvestmentsHeroAnimationPreset(value) {
   const normalized = String(value || '').trim();
@@ -175,82 +151,6 @@ function clampFrontHudOpacity(value) {
     return 15;
   }
   return Math.max(0, Math.min(100, Math.round(numeric)));
-}
-
-function buildInvestmentsCanonicalBlocks(blocks) {
-  const sourceBlocks = Array.isArray(blocks) ? blocks : [];
-  const visibleBlocks = sourceBlocks.filter((block) => block && typeof block === 'object');
-  const hasGrowthFeature = visibleBlocks.some((block) => block?.id === 'growth_feature' && block?.kind === 'site_feature');
-  const hasCtaForm = visibleBlocks.some((block) => block?.id === 'cta_form' && block?.kind === 'cta_form');
-  const legacyInvestorCta = visibleBlocks.find((block) => block?.id === 'investor_cta' && block?.kind === 'cta_band');
-  const legacyInvestorSettings = legacyInvestorCta?.settings && typeof legacyInvestorCta.settings === 'object'
-    ? legacyInvestorCta.settings
-    : {};
-  const reconciledGrowthFeatureBlock = {
-    ...INVESTMENTS_GROWTH_FEATURE_BLUEPRINT,
-    settings: {
-      ...(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings || {}),
-      body: String(legacyInvestorSettings.body || legacyInvestorSettings.subtitle || '').trim()
-        || String(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.body || '').trim()
-        || defaultInvestmentsGrowthFeatureSettings.body,
-      buttonLabel: String(legacyInvestorSettings.buttonLabel || '').trim()
-        || String(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.buttonLabel || '').trim()
-        || defaultInvestmentsGrowthFeatureSettings.buttonLabel,
-      buttonUrl: String(legacyInvestorSettings.buttonUrl || '').trim()
-        || String(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.buttonUrl || '').trim()
-        || defaultInvestmentsGrowthFeatureSettings.buttonUrl,
-      buttonPageRef: String(legacyInvestorSettings.buttonPageRef || '').trim()
-        || String(INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.buttonPageRef || '').trim()
-        || defaultInvestmentsGrowthFeatureSettings.buttonPageRef,
-      buttonOpenInNewWindow: legacyInvestorSettings.buttonOpenInNewWindow !== undefined
-        ? legacyInvestorSettings.buttonOpenInNewWindow !== false
-        : (INVESTMENTS_GROWTH_FEATURE_BLUEPRINT.settings?.buttonOpenInNewWindow !== false),
-    },
-  };
-
-  const nextBlocks = [];
-  let insertedGrowthFeature = false;
-  let insertedCtaForm = false;
-
-  const insertGrowthFeature = () => {
-    if (insertedGrowthFeature || hasGrowthFeature) {
-      return;
-    }
-    nextBlocks.push(reconciledGrowthFeatureBlock);
-    insertedGrowthFeature = true;
-  };
-
-  const insertCtaForm = () => {
-    if (insertedCtaForm || hasCtaForm) {
-      return;
-    }
-    nextBlocks.push(INVESTMENTS_CTA_FORM_BLUEPRINT);
-    insertedCtaForm = true;
-  };
-
-  visibleBlocks.forEach((block) => {
-    if (block?.id === 'investor_cta' && block?.kind === 'cta_band') {
-      insertGrowthFeature();
-      insertCtaForm();
-      return;
-    }
-
-    nextBlocks.push(block);
-
-    if (block?.id === 'certificates' && !hasGrowthFeature) {
-      insertGrowthFeature();
-    }
-
-    if (block?.id === 'growth_feature') {
-      insertedGrowthFeature = true;
-      insertCtaForm();
-    }
-  });
-
-  insertGrowthFeature();
-  insertCtaForm();
-
-  return nextBlocks;
 }
 
 const ladderStateOptions = [
@@ -893,9 +793,7 @@ export default function InvestmentsPage() {
   useNativeEnhancements(pageRef);
 
   const managedBlocksSource = useMemo(
-    () => buildInvestmentsCanonicalBlocks(
-      Array.isArray(blocksByPath?.['/services/investments']) ? blocksByPath['/services/investments'] : [],
-    ),
+    () => (Array.isArray(blocksByPath?.['/services/investments']) ? blocksByPath['/services/investments'] : []),
     [blocksByPath],
   );
   const { blocks: managedBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({

@@ -34,6 +34,10 @@ export async function fetchSharedContentSnapshot() {
   return sendJson('/state', { method: 'GET' });
 }
 
+export async function fetchSharedAnnouncement() {
+  return sendJson('/announcement', { method: 'GET' });
+}
+
 export async function initializeSharedContentFromSeed(seedState, actor = null) {
   return sendJson('/initialize', {
     method: 'POST',
@@ -51,6 +55,16 @@ export async function saveSharedPageDraft(nextState, actor = null, summary = '')
       state: cloneJson(nextState),
       actor: cloneJson(actor),
       summary: String(summary || ''),
+    }),
+  });
+}
+
+export async function saveSharedAnnouncement(announcement, actor = null) {
+  return sendJson('/announcement/save', {
+    method: 'POST',
+    body: JSON.stringify({
+      announcement: cloneJson(announcement),
+      actor: cloneJson(actor),
     }),
   });
 }

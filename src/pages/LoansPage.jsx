@@ -352,7 +352,7 @@ function buildLoanValueCardsFallbackBlock() {
     kind: 'columns',
     type: 'columns',
     mode: 'dynamic',
-    templateId: 'value_cards',
+    templateId: 'columns',
     presetId: 'value-cards',
     settings: {
       title: "There's more to every loan.",
@@ -396,7 +396,7 @@ function buildLoanValueCardsRenderableBlock(block) {
     ...block,
     kind: 'columns',
     type: 'columns',
-    templateId: String(block.templateId || '').trim() || 'value_cards',
+    templateId: String(block.templateId || '').trim() || 'columns',
     presetId: String(block.presetId || '').trim() || 'value-cards',
     settings: {
       ...(fallbackBlock.settings || {}),

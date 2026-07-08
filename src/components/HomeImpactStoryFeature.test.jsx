@@ -87,8 +87,19 @@ function getVisualStage(container) {
   return stage;
 }
 
+function getMetricNode(root, metricLabel) {
+  const labelNeedle = String(metricLabel || '').trim().toLowerCase();
+  return Array.from(root.querySelectorAll('.home-impact-story-metric')).find((metric) => (
+    String(metric.querySelector('.home-impact-story-metric-label')?.textContent || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+      .includes(labelNeedle)
+  )) || null;
+}
+
 function getMetricValueNode(root, metricLabel) {
-  return within(root).getByText(metricLabel).closest('.home-impact-story-metric')?.querySelector('.home-impact-story-metric-value');
+  return getMetricNode(root, metricLabel)?.querySelector('.home-impact-story-metric-value');
 }
 
 function getTranslateY(node) {
@@ -166,7 +177,7 @@ describe('HomeImpactStoryFeature', () => {
     expect(proof?.getAttribute('style')).toContain('opacity: 0;');
     expect(proofCtaBlock?.getAttribute('style')).toContain('opacity: 1;');
     expect(stageQueries.queryByText('ministries served by loans')).toBeNull();
-    expect(stageQueries.queryByText('29,000+ Retirements planned')).toBeNull();
+    expect(getMetricNode(getVisualStage(container), 'retirements planned')).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Because your mission is ours, too.' })).toBeNull();
   });
 
@@ -351,7 +362,7 @@ describe('HomeImpactStoryFeature', () => {
     expect(headingLock).toBeTruthy();
     expect(proof?.getAttribute('style')).not.toContain('transform');
     expect(stageQueries.queryByText('ministries served by loans')).toBeNull();
-    expect(stageQueries.queryByText('29,000+ Retirements planned')).toBeNull();
+    expect(getMetricNode(getVisualStage(container), 'retirements planned')).toBeNull();
     expect(thirdMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-actor-role')).toBe('incoming');
     expect(thirdMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
     expect(metricsRoot?.querySelectorAll('.home-impact-story-metric-actor')).toHaveLength(1);
@@ -369,7 +380,7 @@ describe('HomeImpactStoryFeature', () => {
 
     const stageQueries = within(getVisualStage(container));
     const firstMetric = stageQueries.getByText('ministries served by loans').closest('.home-impact-story-metric');
-    const secondMetric = stageQueries.getByText('29,000+ Retirements planned').closest('.home-impact-story-metric');
+    const secondMetric = getMetricNode(getVisualStage(container), 'retirements planned');
     const secondActor = secondMetric?.closest('.home-impact-story-metric-actor');
 
     expect(firstMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('exiting');
@@ -420,7 +431,7 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(100);
     });
 
-    const secondMetric = within(getVisualStage(container)).getByText('29,000+ Retirements planned').closest('.home-impact-story-metric');
+    const secondMetric = getMetricNode(getVisualStage(container), 'retirements planned');
     expect(secondMetric?.closest('.home-impact-story-metric-actor')?.getAttribute('data-motion-state')).toBe('entering');
   });
 
@@ -437,7 +448,7 @@ describe('HomeImpactStoryFeature', () => {
     const firstValue = getMetricValueNode(stage, 'ministries served by loans');
     expect(firstValue?.textContent).not.toBe('0+');
     expect(firstValue?.textContent).not.toBe('1,400+');
-    expect(within(stage).queryByText('29,000+ Retirements planned')).toBeNull();
+    expect(getMetricNode(stage, 'retirements planned')).toBeNull();
 
     setEnhancedShellProgress(container, 0.42);
     act(() => {
@@ -454,7 +465,7 @@ describe('HomeImpactStoryFeature', () => {
       vi.advanceTimersByTime(50);
     });
 
-    const secondValue = getMetricValueNode(stage, '29,000+ Retirements planned');
+    const secondValue = getMetricValueNode(stage, 'retirements planned');
     expect(secondValue?.textContent).not.toBe('0+');
     expect(secondValue?.textContent).not.toBe('29,000+');
   });

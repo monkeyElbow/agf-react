@@ -91,7 +91,15 @@ describe('planned giving and IRA native page content', () => {
     expect(generosityOutroIndex).toBeGreaterThan(generosityRequestIndex);
     expect(ministryImpactContent?.intro?.heading).toBe('Most wealth isn’t cash.');
     expect(ministryImpactSections.find((section) => section?.className === 'legacy-child-native-steps')?.cards).toHaveLength(3);
-    expect(ministryImpactStockSection?.actions).toHaveLength(3);
+    expect(ministryImpactStockSection?.cards).toHaveLength(2);
+    expect(ministryImpactStockSection?.cards?.[0]).toMatchObject({
+      title: 'Intent to Gift of Securities',
+    });
+    expect(ministryImpactStockSection?.cards?.[0]?.actions).toHaveLength(2);
+    expect(ministryImpactStockSection?.cards?.[1]).toMatchObject({
+      title: 'Brokerage Letter of Authorization (LOA)',
+    });
+    expect(ministryImpactStockSection?.cards?.[1]?.actions).toHaveLength(1);
     expect(ministryImpactRequestSection?.form?.title).toBe('Talk with planned giving');
     expect(ministryImpactRequestSection?.form?.subtitle).toBe('Let’s map out the best next step.');
     expect(ministryImpactRequestSection?.form?.fields).toEqual([
@@ -141,7 +149,7 @@ describe('planned giving and IRA native page content', () => {
         label: 'Start the process',
         action: 'open_cta_form',
         targetAnchorId: 'charitable-trusts-inline-form',
-        className: 'is-outline is-tone-atlantean',
+        className: 'is-outline is-tone-white',
       }),
     ]);
     expect(charitableTrustsTypes?.cards?.every((card) => !Array.isArray(card?.actions) || card.actions.length === 0)).toBe(true);

@@ -39,6 +39,8 @@ describe('services overview seed guardrail', () => {
 
     expect(pageSource).toContain("from '../data/servicesOverviewSeed'");
     expect(blueprintSource).toContain("from './servicesOverviewSeed'");
+    expect(pageSource).toContain(') : resolvedIntro.body ? (');
+    expect(pageSource).not.toContain('{resolvedIntro.body ? <p>{resolvedIntro.body}</p> : null}');
     expect(pageSource).not.toContain(DEFAULT_SERVICES_INTRO_HEADING);
     expect(blueprintSource).not.toContain(DEFAULT_SERVICES_INTRO_HEADING);
   });

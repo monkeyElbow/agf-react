@@ -645,7 +645,7 @@ describe('NativeContentPage functional routes', () => {
           mode: 'dynamic',
           settings: {
             title: 'Tell us how to reach you.',
-            submitLabel: 'Follow-up with me',
+            submitLabel: 'Follow up with me',
             fieldsJson: JSON.stringify([
               { id: 'full_name', label: 'Full name', type: 'text', required: true },
               { id: 'consent', label: 'Text me updates', type: 'checkbox' },
@@ -670,7 +670,7 @@ describe('NativeContentPage functional routes', () => {
       target: { value: 'Taylor QA' },
     });
     fireEvent.click(screen.getByLabelText('Text me updates'));
-    fireEvent.click(screen.getByRole('button', { name: 'Follow-up with me' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Follow up with me' }));
 
     expect(screen.getByRole('status')).toBeTruthy();
     expect(screen.getByText('Thanks. We will reach out soon.')).toBeTruthy();

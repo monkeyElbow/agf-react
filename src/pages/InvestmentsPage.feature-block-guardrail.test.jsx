@@ -21,16 +21,16 @@ describe('investments feature block guardrails', () => {
     expect(pageSource).toContain('const growthFeatureBlock = useMemo(');
     expect(pageSource).toContain("block?.id === 'growth_feature'");
     expect(pageSource).toContain("block?.kind === 'site_feature'");
-    expect(pageSource).toContain('function buildInvestmentsCanonicalBlocks(blocks) {');
-    expect(pageSource).toContain("block?.id === 'investor_cta' && block?.kind === 'cta_band'");
+    expect(pageSource).not.toContain('function buildInvestmentsCanonicalBlocks(blocks) {');
+    expect(pageSource).not.toContain("block?.id === 'investor_cta' && block?.kind === 'cta_band'");
     expect(pageSource).toContain('<PageBlocksRenderer');
     expect(pageSource).not.toContain('DynamicCtaSection');
     expect(pageSource).not.toContain('toLegacyInvestorBillboardBlock');
 
     expect(blueprintSource).toContain("id: 'growth_feature'");
     expect(blueprintSource).toContain("featureId: 'investments_growth_feature'");
-    expect(blueprintSource).toContain("id: 'investor_cta'");
-    expect(blueprintSource).toContain("templateId: 'investor_cta'");
+    expect(blueprintSource).toContain("id: 'dashboard_login_cta'");
+    expect(blueprintSource).toContain("templateId: 'cta_band'");
     expect(blueprintSource).toContain("kind: 'cta_band'");
     expect(blueprintSource).toContain('hidden: true');
 
