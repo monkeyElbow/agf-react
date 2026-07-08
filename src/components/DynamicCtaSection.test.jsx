@@ -109,7 +109,7 @@ describe('DynamicCtaSection', () => {
             settings: {
               title: 'Ready to build your retirement plan?',
               bodyHtml: '<p>Let&apos;s explore together.</p>',
-              submitLabel: 'Follow-up with me',
+              submitLabel: 'Follow up with me',
               field1Label: 'Name',
               field1Type: 'text',
               field1Required: true,
@@ -130,7 +130,7 @@ describe('DynamicCtaSection', () => {
 
     expect(form?.contains(callout)).toBe(true);
     expect(copy?.textContent).not.toContain("Let's explore together.");
-    expect(screen.getByRole('button', { name: 'Follow-up with me' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Follow up with me' })).toBeTruthy();
   });
 
   it('renders a configured fifth CTA field for legacy-giving style forms', () => {
@@ -143,7 +143,7 @@ describe('DynamicCtaSection', () => {
             mode: 'dynamic',
             settings: {
               title: 'We help every step of the way. Always.',
-              submitLabel: 'Follow-up with me',
+              submitLabel: 'Follow up with me',
               field1Label: 'Name',
               field1Type: 'text',
               field1Required: true,
@@ -181,7 +181,7 @@ describe('DynamicCtaSection', () => {
             settings: {
               title: 'Imagine the possibilities.',
               bodyHtml: '<p>Let&apos;s explore together.</p>',
-              submitLabel: 'Follow-up with me',
+              submitLabel: 'Follow up with me',
               field1Label: 'Name',
               field1Type: 'text',
               field1Required: true,

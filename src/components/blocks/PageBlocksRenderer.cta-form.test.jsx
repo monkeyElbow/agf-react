@@ -33,7 +33,7 @@ describe('PageBlocksRenderer CTA form', () => {
       kind: 'cta_form',
       mode: 'dynamic',
       title: 'Imagine the possibilities.',
-      submitLabel: 'Follow-up with me',
+      submitLabel: 'Follow up with me',
       submitStyle: 'dark',
       submitTone: 'super-grey',
       field1Label: 'Name',
@@ -44,7 +44,7 @@ describe('PageBlocksRenderer CTA form', () => {
       field4Enabled: false,
     });
 
-    const button = screen.getByRole('button', { name: 'Follow-up with me' });
+    const button = screen.getByRole('button', { name: 'Follow up with me' });
     expect(button.className).toContain('is-dark');
     expect(button.className).toContain('is-tone-super-grey');
   });
@@ -56,7 +56,7 @@ describe('PageBlocksRenderer CTA form', () => {
       kind: 'cta_form',
       mode: 'dynamic',
       title: 'Imagine the possibilities.',
-      submitLabel: 'Follow-up with me',
+      submitLabel: 'Follow up with me',
       submitStyle: 'blue',
       submitTone: 'melon',
       field1Label: 'Name',
@@ -67,7 +67,7 @@ describe('PageBlocksRenderer CTA form', () => {
       field4Enabled: false,
     });
 
-    const button = screen.getByRole('button', { name: 'Follow-up with me' });
+    const button = screen.getByRole('button', { name: 'Follow up with me' });
     expect(button.className).not.toContain('is-outline');
     expect(button.className).toContain('is-tone-atlantean');
   });
@@ -80,7 +80,7 @@ describe('PageBlocksRenderer CTA form', () => {
       mode: 'dynamic',
       title: 'Ready to talk?',
       bodyHtml: '<p>It starts with a conversation. We’re happy to reach out.</p>',
-      submitLabel: 'Follow-up with me',
+      submitLabel: 'Follow up with me',
       field1Label: 'Name',
       field1Type: 'text',
       field1Required: true,
@@ -95,7 +95,7 @@ describe('PageBlocksRenderer CTA form', () => {
 
     expect(form?.contains(callout)).toBe(true);
     expect(copy?.textContent).not.toContain('It starts with a conversation. We’re happy to reach out.');
-    expect(screen.getByRole('button', { name: 'Follow-up with me' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Follow up with me' })).toBeTruthy();
   });
 
   it('renders CTA subtitle in the section copy above the form', () => {
@@ -106,7 +106,7 @@ describe('PageBlocksRenderer CTA form', () => {
       mode: 'dynamic',
       title: 'Ready to talk?',
       subtitle: 'It starts with a conversation. We’re happy to reach out.',
-      submitLabel: 'Follow-up with me',
+      submitLabel: 'Follow up with me',
       field1Label: 'Name',
       field1Type: 'text',
       field1Required: true,
@@ -132,7 +132,7 @@ describe('PageBlocksRenderer CTA form', () => {
       title: 'Ready to talk?',
       displayMode: 'inline_reveal',
       triggerMode: 'external',
-      submitLabel: 'Follow-up with me',
+      submitLabel: 'Follow up with me',
       field1Label: 'Name',
       field1Type: 'text',
       field1Required: true,
@@ -149,6 +149,6 @@ describe('PageBlocksRenderer CTA form', () => {
     expect(section?.className).toContain('is-external-inline-reveal');
     expect(formShell?.getAttribute('data-cta-display-mode')).toBe('inline_reveal');
     expect(formShell?.getAttribute('data-cta-trigger-mode')).toBe('external');
-    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Follow-up with me']);
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Follow up with me']);
   });
 });

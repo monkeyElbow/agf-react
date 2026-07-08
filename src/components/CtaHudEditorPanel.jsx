@@ -378,7 +378,7 @@ export default function CtaHudEditorPanel({
               <span>Button Preview</span>
               <div className="admin-billboard-hud-button-preview-row">
                 <span className={toPreviewButtonClassName(submitStyle, submitTone)} aria-hidden="true">
-                  {String(settings.submitLabel || '').trim() || 'Follow-up with me'}
+                  {String(settings.submitLabel || '').trim() || 'Follow up with me'}
                 </span>
               </div>
             </div>

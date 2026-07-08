@@ -1,4 +1,4 @@
-export const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
+export const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow up with me';
 export const DEFAULT_FOLLOW_UP_SUCCESS_MESSAGE = 'Thanks. We’ll reach out soon.';
 export const DEFAULT_PHONE_PLACEHOLDER = '(555) 555-5555';
 export const DEFAULT_MESSAGE_PLACEHOLDER = 'What would you like to discuss?';

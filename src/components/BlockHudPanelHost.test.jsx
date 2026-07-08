@@ -291,7 +291,7 @@ describe('BlockHudPanelHost', () => {
   it('renders cta band blocks with the migrated cta band editor', () => {
     render(createElement(BlockHudPanelHost, {
       block: {
-        id: 'investor_cta',
+        id: 'dashboard_login_cta',
         kind: 'cta_band',
         mode: 'dynamic',
         settings: {

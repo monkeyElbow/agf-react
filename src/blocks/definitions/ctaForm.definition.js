@@ -107,7 +107,7 @@ export const ctaFormBlockDefinition = createFormBlockDefinitionScaffold({
     includeContactPreference: false,
     bgTone: 'white',
     salesforceUrl: '',
-    submitLabel: 'Follow-up with me',
+    submitLabel: 'Follow up with me',
     successMessage: 'Thanks. We will reach out soon.',
     field1Enabled: true,
     field1Type: 'text',

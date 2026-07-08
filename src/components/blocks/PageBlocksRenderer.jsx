@@ -13,6 +13,7 @@ import {
   toDynamicColumnsCountToken,
 } from '../../lib/dynamicColumns';
 import {
+  buildDynamicBillboardFromBlock,
   buildDynamicCtaPresentationClassName,
   buildDynamicCtaFormFromBlock,
   buildDynamicFeaturePanelFromBlock,
@@ -63,6 +64,8 @@ const EMPTY_OWNERSHIP = Object.freeze({
   isOwnedByOther: false,
   owner: null,
 });
+const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow up with me';
+const LEGACY_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
 
 function SharedBlockHudAnchor({ hudAnchor }) {
   if (!hudAnchor) {
@@ -105,6 +108,14 @@ function normalizeHeroJustify(value) {
     return token;
   }
   return 'center';
+}
+
+function normalizeFollowUpSubmitLabel(value) {
+  const label = String(value || '').trim();
+  if (!label) {
+    return DEFAULT_FOLLOW_UP_SUBMIT_LABEL;
+  }
+  return label === LEGACY_FOLLOW_UP_SUBMIT_LABEL ? DEFAULT_FOLLOW_UP_SUBMIT_LABEL : label;
 }
 
 function toBooleanSetting(value) {
@@ -599,6 +610,73 @@ function ImpactStatBlock({ block, resolveTo, ownership, hudAnchor }) {
   );
 }
 
+function BillboardBlock({ block, resolveTo, ownership, hudAnchor }) {
+  const runtime = buildDynamicBillboardFromBlock(block);
+  if (!runtime) {
+    return null;
+  }
+
+  const actions = Array.isArray(runtime.actions)
+    ? runtime.actions.map((action) => buildBillboardAction(action, resolveTo)).filter(Boolean)
+    : [];
+  const sectionStyle = actions.length
+    ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
+    : undefined;
+  const railStyle = runtime.contentMaxWidthPx
+    ? { '--dynamic-billboard-max-width': `${runtime.contentMaxWidthPx}px` }
+    : undefined;
+  const sectionClassName = `service-native-section home-native-billboard is-bg-${normalizePanelBgTone(runtime.bgTone || 'grey')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`;
+  const copyClassName = [
+    'native-info-section-copy',
+    `is-justify-${runtime.justify || 'center'}`,
+    runtime.copyClassName || '',
+  ].filter(Boolean).join(' ');
+
+  return (
+    <section
+      className={`${sectionClassName}${ownership?.className || ''}`}
+      data-block-id={block?.id || undefined}
+      style={sectionStyle}
+    >
+      <BlockOwnershipOverlay ownership={ownership} />
+      <SharedBlockHudAnchor hudAnchor={hudAnchor} />
+      <div className="ag-panel-rail" style={railStyle}>
+        <div className={copyClassName} data-fade-root-margin={runtime.copyFadeRootMargin || undefined}>
+          {runtime.title ? (
+            <h2 className={runtime.titleClassName || undefined} style={runtime.titleStyle}>
+              {runtime.titleHighlights?.length
+                ? renderHighlightedText(runtime.title, runtime.titleHighlights)
+                : runtime.title}
+            </h2>
+          ) : null}
+          {runtime.subtitle ? <p className="home-native-billboard-subtitle">{runtime.subtitle}</p> : null}
+          {runtime.bodyHtml ? (
+            <div
+              className="native-info-rich-html"
+              dangerouslySetInnerHTML={{ __html: runtime.bodyHtml }}
+            />
+          ) : null}
+          {!runtime.bodyHtml && runtime.body ? (
+            <div className="native-info-rich-html">
+              <p>{renderTextWithStrong(runtime.body)}</p>
+            </div>
+          ) : null}
+          {actions.length ? (
+            <div className="service-native-action-row">
+              {actions.map((action) => (
+                <BillboardAction
+                  key={`${action.href || action.to || action.label}-${action.label}`}
+                  item={action}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function normalizeActionButtonStyle(value) {
   const token = String(value || '').trim().toLowerCase();
   return ACTION_BUTTON_STYLE_SET.has(token) ? token : 'blue';
@@ -619,6 +697,69 @@ function toActionButtonClassName(style, tone) {
     normalizedStyle === 'outline' ? 'is-outline' : '',
     `is-tone-${normalizedTone}`,
   ].filter(Boolean).join(' ');
+}
+
+function buildBillboardAction(action, resolveTo) {
+  const label = String(action?.label || '').trim();
+  const rawTarget = String(action?.to || action?.href || '').trim();
+  if (!label || !rawTarget) {
+    return null;
+  }
+
+  const isExternal = isExternalLinkHref(rawTarget);
+  const baseClassName = `service-native-btn ${toActionButtonClassName(action?.style, action?.tone)}`.trim();
+  const className = shouldUseUniversalOutlineButtonLink({
+    href: rawTarget,
+    external: isExternal,
+  })
+    ? normalizeUniversalOutlineButtonClassName(baseClassName, action?.tone || 'atlantean')
+    : baseClassName;
+
+  if (isExternal) {
+    return {
+      label,
+      href: rawTarget,
+      className,
+      openInNewWindow: Boolean(action?.openInNewWindow),
+    };
+  }
+
+  return {
+    label,
+    to: resolveTo(rawTarget, rawTarget || '/'),
+    className,
+    openInNewWindow: Boolean(action?.openInNewWindow),
+  };
+}
+
+function BillboardAction({ item }) {
+  if (!item) {
+    return null;
+  }
+
+  if (item.href) {
+    return (
+      <a
+        href={item.href}
+        className={item.className}
+        target={item.openInNewWindow ? '_blank' : undefined}
+        rel={item.openInNewWindow ? 'noreferrer noopener' : undefined}
+      >
+        {item.label}
+      </a>
+    );
+  }
+
+  return (
+    <Link
+      to={item.to || '/'}
+      className={item.className}
+      target={item.openInNewWindow ? '_blank' : undefined}
+      rel={item.openInNewWindow ? 'noreferrer noopener' : undefined}
+    >
+      {item.label}
+    </Link>
+  );
 }
 
 function buildColumnsAction(label, url, style, tone, pageRef, resolveTo, useFamilyPresetCtaStyle = false) {
@@ -754,7 +895,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
   const bodyHtml = String(runtime.bodyHtml || '').trim();
   const subtitle = String(runtime.subtitle || '').trim();
   const bgTone = normalizePanelBgTone(runtime.bgTone || 'white');
-  const submitLabel = String(runtime.submitLabel || '').trim() || 'Follow-up with me';
+  const submitLabel = normalizeFollowUpSubmitLabel(runtime.submitLabel);
   const successMessage = String(runtime.successMessage || '').trim() || 'Thanks. We will reach out soon.';
   const salesforceUrl = String(runtime.salesforceUrl || '').trim();
   const presentationClassName = buildDynamicCtaPresentationClassName(runtime);
@@ -1526,6 +1667,7 @@ function RequestFormBlock({ block, ownership, hudAnchor }) {
 const blockRenderers = {
   top_strip: TopStripBlock,
   hero: HeroBlock,
+  billboard: BillboardBlock,
   services_grid: ServicesGridBlock,
   impact_stat: ImpactStatBlock,
   cta_form: CtaFormBlock,
