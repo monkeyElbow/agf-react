@@ -23,6 +23,7 @@ describe('services hero pie renderer guardrail', () => {
 
   it('keeps the services wheel selection model card-driven instead of direct slice navigation', () => {
     const source = readSource('./ServicesPage.jsx');
+    const cssSource = readSource('../styles/home-native.css');
 
     expect(source).toContain('const [heroPieUserInteracted, setHeroPieUserInteracted] = useState(false);');
     expect(source).toContain("const wheelButtonClassName = actionButtonClassName('blue');");
@@ -33,6 +34,13 @@ describe('services hero pie renderer guardrail', () => {
     expect(source).not.toContain('className="services-pie-center-copy"');
     expect(source).toContain('<Link to={activeSlice.path} className={wheelButtonClassName} style={activeSliceButtonStyle}>');
     expect(source).toContain('Explore {activeSlice.title}');
+    expect(source).toContain('id="services-pie-active-shadow"');
+    expect(source).toContain('filterUnits="userSpaceOnUse"');
+    expect(source).toContain('className={`services-pie-wedge-shadow');
+    expect(source).toContain('filter="url(#services-pie-active-shadow)"');
+    expect(cssSource).toContain('.services-pie-wedge-shadow {');
+    expect(cssSource).not.toMatch(/\.services-pie-wedge\.is-active\s*\{[^}]*filter:/s);
+    expect(cssSource).not.toMatch(/\.services-pie-slice-control\.is-active\s+\.services-pie-wedge\s*\{[^}]*filter:/s);
   });
 
   it('renders the services overview billboard block through the existing intro shell', () => {

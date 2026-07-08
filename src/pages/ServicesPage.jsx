@@ -713,6 +713,23 @@ export default function ServicesPage() {
             <div className="services-pie-hero-grid">
               <div className="services-pie-wrap">
                 <svg viewBox="0 0 1080 1080" preserveAspectRatio="xMidYMid meet" className="services-pie-chart" aria-label="Services">
+                  <defs>
+                    <filter
+                      id="services-pie-active-shadow"
+                      x="-240"
+                      y="-240"
+                      width="1560"
+                      height="1560"
+                      filterUnits="userSpaceOnUse"
+                      colorInterpolationFilters="sRGB"
+                    >
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="22" result="servicesPieShadowBlur" />
+                      <feOffset in="servicesPieShadowBlur" dy="24" result="servicesPieShadowOffset" />
+                      <feComponentTransfer in="servicesPieShadowOffset" result="servicesPieShadow">
+                        <feFuncA type="linear" slope="0.7" />
+                      </feComponentTransfer>
+                    </filter>
+                  </defs>
                   <circle cx="540" cy="540" r="472" fill="rgba(255, 255, 255, 0.72)" />
                   <circle cx="540" cy="540" r="432" fill="rgba(255, 255, 255, 0.3)" />
                   {heroPieSlices.map((slice, index) => {
@@ -741,6 +758,13 @@ export default function ServicesPage() {
                           }
                         }}
                       >
+                        <path
+                          className={`services-pie-wedge-shadow${isActive ? ' is-active' : ''}`}
+                          d={slice.d}
+                          fill={slice.color}
+                          filter="url(#services-pie-active-shadow)"
+                          aria-hidden="true"
+                        />
                         <path className={`services-pie-wedge${isActive ? ' is-active' : ''}`} d={slice.d} fill={slice.color} />
                       </a>
                     );

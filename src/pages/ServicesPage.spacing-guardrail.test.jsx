@@ -25,6 +25,8 @@ describe('services page spacing and typography guardrail', () => {
     expect(cssSource).toContain('.services-pie-interactive-shell {');
     expect(cssSource).toContain('.services-pie-hero-grid {');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1.24fr) minmax(300px, 0.82fr);');
+    expect(cssSource).toContain('.services-pie-chart {');
+    expect(cssSource).toContain('overflow: visible;');
     expect(cssSource).toContain('.services-pie-card {');
     expect(cssSource).toContain('background: transparent;');
     expect(cssSource).toContain('box-shadow: none;');
