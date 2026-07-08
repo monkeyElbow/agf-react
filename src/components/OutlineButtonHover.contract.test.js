@@ -11,6 +11,35 @@ function readSource(relativePath) {
 }
 
 describe('outline button hover contract', () => {
+  it('keeps thin tracked base button typography in shared button styles while routing Safari through its own heavier browser override', () => {
+    const serviceCssSource = readSource('../styles/service-native.css');
+    const appCssSource = readSource('../styles.css');
+    const sharedButtonBlock = appCssSource.match(
+      /a\.service-native-btn,[\s\S]*?button\.action-btn\s*\{[\s\S]*?\n\}/,
+    )?.[0] || '';
+    const safariButtonBlock = appCssSource.match(
+      /html\.ag-browser-safari a\.service-native-btn,[\s\S]*?button\.action-btn\s*\{[\s\S]*?\n\}/,
+    )?.[0] || '';
+    const actionButtonBlock = appCssSource.match(
+      /\.action-btn\s*\{\n\s*border-radius:[\s\S]*?\n\}/,
+    )?.[0] || '';
+    const serviceButtonBlock = serviceCssSource.match(
+      /\.service-native-action-row\.is-right \{\n  justify-content: flex-end;\n\}\n\n\.service-native-btn,[\s\S]*?text-align: center;\n[\s\S]*?\n\}/,
+    )?.[0] || '';
+
+    expect(serviceCssSource).toContain('.service-native-btn,');
+    expect(serviceButtonBlock).toContain('font-weight: 100;');
+    expect(serviceButtonBlock).toContain('letter-spacing: 0.45px;');
+    expect(appCssSource).toContain('a.service-native-btn,');
+    expect(sharedButtonBlock).not.toContain('font-family: var(--ag-font-helv);');
+    expect(sharedButtonBlock).not.toContain('font-weight: 700;');
+    expect(sharedButtonBlock).not.toContain('letter-spacing: 0.45px;');
+    expect(sharedButtonBlock).not.toContain('font-weight: 100;');
+    expect(safariButtonBlock).toContain('font-weight: 400;');
+    expect(actionButtonBlock).toContain('font-family: var(--ag-font-helv);');
+    expect(actionButtonBlock).toContain('font-weight: 100;');
+  });
+
   it('keeps shared service outline buttons on an outward border-ring expansion instead of transform scale and hover glow', () => {
     const cssSource = readSource('../styles/service-native.css');
 

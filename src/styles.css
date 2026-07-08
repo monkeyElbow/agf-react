@@ -55,14 +55,19 @@ a.home-native-strip-login-btn,
 .home-native-newsletter-form button,
 a.action-btn,
 button.action-btn {
-  font-weight: 100;
-  letter-spacing: 0.45px;
   transition:
     background-color 0.55s ease,
     color 0.5s ease,
     border-color 0.55s ease,
     box-shadow 0.45s ease,
     transform 0.45s ease;
+}
+
+html.ag-browser-safari a.service-native-btn,
+html.ag-browser-safari button.service-native-btn,
+html.ag-browser-safari a.action-btn,
+html.ag-browser-safari button.action-btn {
+  font-weight: 400;
 }
 
 .site-nav {
@@ -3414,8 +3419,11 @@ button.action-btn {
 .action-btn {
   border-radius: 999px;
   border: 1px solid transparent;
+  font-family: var(--ag-font-helv);
   font-weight: 100;
   letter-spacing: 0.45px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   padding: 0.58rem 1.15rem;
   cursor: pointer;
 }

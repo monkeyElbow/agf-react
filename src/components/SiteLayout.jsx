@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { navSections } from '../data/siteMap';
 import { useContentAdmin } from '../context/ContentAdminContext';
 import { FrontHudContext } from '../context/FrontHudContext';
+import { isApplePlatformNavigator, isSafariBrowserNavigator } from '../lib/browserFlags';
 import SiteFooter from './SiteFooter';
 import AnimatedBrandLogo from './AnimatedBrandLogo';
 import SiteChatbotWindow from './SiteChatbotWindow';
@@ -127,10 +128,13 @@ export default function SiteLayout({ children }) {
     if (typeof window === 'undefined') {
       return false;
     }
-    const nav = window.navigator;
-    const platform = String(nav?.userAgentData?.platform || nav?.platform || '');
-    const userAgent = String(nav?.userAgent || '');
-    return /Mac|iPhone|iPad|iPod/i.test(`${platform} ${userAgent}`);
+    return isApplePlatformNavigator(window.navigator);
+  });
+  const [isSafariBrowser] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return isSafariBrowserNavigator(window.navigator);
   });
   const frontHudEnabledRef = useRef(frontHudEnabled);
   const previousFrontHudEnabledRef = useRef(frontHudEnabled);
@@ -140,6 +144,16 @@ export default function SiteLayout({ children }) {
   const navInnerRef = useRef(null);
   const brandRef = useRef(null);
   const navLinksRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+    document.documentElement.classList.toggle('ag-browser-safari', isSafariBrowser);
+    return () => {
+      document.documentElement.classList.remove('ag-browser-safari');
+    };
+  }, [isSafariBrowser]);
 
   const closeNavMenus = () => {
     if (typeof window !== 'undefined' && navHoverCloseTimeoutRef.current !== null) {
