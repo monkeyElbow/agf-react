@@ -637,9 +637,9 @@ function normalizeBillboardTitleFontWeight(value, fontFamily = 'heading') {
 function normalizeBillboardTitleLetterSpacingEm(value, fontFamily = 'heading') {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
-    return fontFamily === 'helv' ? -0.015 : DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM;
+    return fontFamily === 'helv' ? -0.038 : DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM;
   }
-  return Math.max(-0.08, Math.min(0.04, Number(numeric.toFixed(3))));
+  return Math.max(-0.12, Math.min(0.04, Number(numeric.toFixed(3))));
 }
 
 function normalizePanelBgTone(value) {
@@ -1502,6 +1502,8 @@ export default function AdminContentPage() {
     devIdentity,
     pageHierarchy,
     blocksByPath,
+    authoringPageHierarchy,
+    authoringBlocksByPath,
     updatePageHierarchy,
     renamePagePath,
     updateBlock,
@@ -1517,6 +1519,7 @@ export default function AdminContentPage() {
     lastSharedSaveResult,
     lastSharedPublishResult,
     sharedSnapshotUpdatedAt,
+    sharedSeedBaseline,
     isPageDirty,
     getPageChangeSummary,
     getPagePublishSummary,
@@ -1525,15 +1528,20 @@ export default function AdminContentPage() {
     publishSharedPageNow,
     getPageRevisionHistory,
     getSharedContentBackups = async () => [],
+    promoteContentAdminToSeed = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
     restorePageRevision,
     restoreBlockRevision,
     restoreLatestSharedContentBackup = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
     setActiveBlockLock,
+    clearActiveBlockLock = () => ({ ok: false }),
     resetContentAdmin,
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
+    getAuthoringBreadcrumbTrail = null,
   } = useContentAdmin();
+  const adminPageHierarchy = authoringPageHierarchy || pageHierarchy;
+  const adminBlocksByPath = authoringBlocksByPath || blocksByPath;
   const { testimonials: testimonialsLibrary } = useTestimonials();
   const loadSharedBackups = useCallback(async () => {
     setSharedBackupsLoading(true);
@@ -1550,21 +1558,21 @@ export default function AdminContentPage() {
 
   const editablePages = useMemo(
     () => sortPages(
-      Object.values(pageHierarchy || {})
+      Object.values(adminPageHierarchy || {})
         .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search'),
     ),
-    [pageHierarchy],
+    [adminPageHierarchy],
   );
   const routeLinkOptions = useMemo(
     () => sortPages(
-      Object.values(pageHierarchy || {})
+      Object.values(adminPageHierarchy || {})
         .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search'),
     ),
-    [pageHierarchy],
+    [adminPageHierarchy],
   );
 
-  const selectedPage = pageHierarchy[selectedPath] || null;
-  const selectedBlocksSource = blocksByPath[selectedPath] || [];
+  const selectedPage = adminPageHierarchy[selectedPath] || null;
+  const selectedBlocksSource = adminBlocksByPath[selectedPath] || [];
   const { blocks: selectedBlocks, stageLocalBlockSetting } = useLocalBlockDrafts({
     pathname: selectedPath,
     blocks: selectedBlocksSource,
@@ -1587,7 +1595,9 @@ export default function AdminContentPage() {
     && String(selectedBlock.mode || '').trim().toLowerCase() === 'static'
     && hasBlockModeVariantOnPath(selectedPath, selectedBlock, 'dynamic')
   );
-  const breadcrumbTrail = getBreadcrumbTrail(selectedPath);
+  const breadcrumbTrail = typeof getAuthoringBreadcrumbTrail === 'function'
+    ? getAuthoringBreadcrumbTrail(selectedPath)
+    : getBreadcrumbTrail(selectedPath);
   const selectedPathChangeSummary = getPageChangeSummary(selectedPath);
   const selectedPathPublishSummary = getPagePublishSummary(selectedPath);
   const selectedPathWorkflowActivity = getPageWorkflowActivity(selectedPath);
@@ -1717,6 +1727,12 @@ export default function AdminContentPage() {
     }
     setActiveEditorBlockId(null);
   }, [activeEditorBlockId, selectedBlocks]);
+
+  useEffect(() => () => {
+    if (selectedPath && activeEditorBlockId) {
+      clearActiveBlockLock(selectedPath, activeEditorBlockId);
+    }
+  }, [activeEditorBlockId, clearActiveBlockLock, selectedPath]);
 
   useEffect(() => {
     if (insertChoiceId && filteredInsertChoices.some((choice) => choice.id === insertChoiceId)) {
@@ -1934,6 +1950,9 @@ export default function AdminContentPage() {
   };
 
   const stopEditingSelectedBlock = () => {
+    if (selectedPath && selectedBlock?.id) {
+      clearActiveBlockLock(selectedPath, selectedBlock.id);
+    }
     setActiveEditorBlockId((current) => (current === selectedBlock?.id ? null : current));
   };
 
@@ -1953,6 +1972,7 @@ export default function AdminContentPage() {
       setPendingRemoveBlockId(normalizedBlockId);
       return;
     }
+    clearActiveBlockLock(selectedPath, normalizedBlockId);
     removeBlock(selectedPath, normalizedBlockId);
     setPendingRemoveBlockId(null);
     setSelectedBlockId((current) => (current === normalizedBlockId ? null : current));
@@ -1962,6 +1982,9 @@ export default function AdminContentPage() {
   const handleSaveDraft = async () => {
     const result = await saveSharedDraftNow(draftSaveNote);
     if (result?.ok) {
+      if (selectedPath && activeEditorBlockId) {
+        clearActiveBlockLock(selectedPath, activeEditorBlockId);
+      }
       setDraftSaveNote('');
       setActiveEditorBlockId(null);
     }
@@ -1970,6 +1993,9 @@ export default function AdminContentPage() {
   const handleMakeLive = async () => {
     const result = await publishSharedPageNow(selectedPath, draftSaveNote);
     if (result?.ok) {
+      if (selectedPath && activeEditorBlockId) {
+        clearActiveBlockLock(selectedPath, activeEditorBlockId);
+      }
       setDraftSaveNote('');
       setActiveEditorBlockId(null);
     }
@@ -2053,6 +2079,28 @@ export default function AdminContentPage() {
         restoredAt
           ? `Restored shared content from backup saved ${restoredAt}.`
           : 'Restored the most recent shared content backup.',
+      );
+    } finally {
+      setSharedBackupActionBusy('');
+    }
+  };
+
+  const handlePromoteContentToSeed = async () => {
+    setSharedBackupActionBusy('promote-seed');
+    setSharedBackupError('');
+    setSharedBackupMessage('');
+    try {
+      const result = await promoteContentAdminToSeed();
+      if (result?.ok === false) {
+        setSharedBackupError(getActionFailureMessage(result, 'Promoting content to seed did not complete.'));
+        return;
+      }
+      const promotedSeedBaseline = result?.promotedSeedBaseline || sharedSeedBaseline;
+      const promotedAt = formatAdminTimestamp(promotedSeedBaseline?.createdAt);
+      setSharedBackupMessage(
+        promotedAt
+          ? `Promoted current shared content to the seed baseline saved ${promotedAt}. Future resets will use it.`
+          : 'Promoted current shared content to the seed baseline. Future resets will use it.',
       );
     } finally {
       setSharedBackupActionBusy('');
@@ -2408,6 +2456,15 @@ export default function AdminContentPage() {
                 <button
                   type="button"
                   className="action-btn action-btn-outline"
+                  onClick={handlePromoteContentToSeed}
+                  disabled={sharedBackupActionBusy !== ''}
+                  title="Save the current shared admin content as the reset baseline."
+                >
+                  Promote content to seed
+                </button>
+                <button
+                  type="button"
+                  className="action-btn action-btn-outline"
                   onClick={handleRestoreLastBackup}
                   disabled={!latestSharedBackupEntry || sharedBackupActionBusy !== ''}
                   title={latestSharedBackupEntry
@@ -2431,8 +2488,16 @@ export default function AdminContentPage() {
             <p>
               Reset from seed replaces saved admin content with code defaults. A backup will be created automatically before reset.
             </p>
+            <p>
+              Promote content to seed updates that reset baseline to the current shared admin content after it has been approved.
+            </p>
             <div className="admin-page-save-bar-warning-meta">
               {sharedBackupsLoading ? <span>Loading backups…</span> : null}
+              {!sharedBackupsLoading && sharedSeedBaseline?.createdAt ? (
+                <span>
+                  Current promoted seed: {formatAdminTimestamp(sharedSeedBaseline.createdAt) || sharedSeedBaseline.timestamp}
+                </span>
+              ) : null}
               {!sharedBackupsLoading && latestSharedBackupEntry ? (
                 <span>
                   Latest backup: {formatAdminTimestamp(latestSharedBackupEntry.createdAt) || latestSharedBackupEntry.timestamp}

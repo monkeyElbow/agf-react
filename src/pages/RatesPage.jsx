@@ -38,14 +38,19 @@ export default function RatesPage() {
   const managedBlockRef = useRef(null);
   const certificatesSectionRef = useRef(null);
   const iraSectionRef = useRef(null);
-  const { blocksByPath } = useContentAdmin();
+  const {
+    blocksByPath,
+    authoringBlocksByPath,
+    clearActiveBlockLock = () => ({ ok: false }),
+  } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
   useNativeEnhancements(pageRef);
   const managedBlocks = useMemo(
-    () => (Array.isArray(blocksByPath?.['/rates']) ? blocksByPath['/rates'] : []),
-    [blocksByPath],
+    () => (Array.isArray(managedBlocksByPath?.['/rates']) ? managedBlocksByPath['/rates'] : []),
+    [managedBlocksByPath],
   );
   const dynamicRatesPageBlocks = useMemo(
     () => managedBlocks
@@ -148,6 +153,13 @@ export default function RatesPage() {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
   };
+
+  useEffect(() => () => {
+    const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
+    if (activeHudBlockId) {
+      clearActiveBlockLock('/rates', activeHudBlockId);
+    }
+  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
   const renderHudAnchor = (panelId, layerClassName = '') => {
     if (!showFrontHud) {
       return null;

@@ -9,6 +9,7 @@ const mockSaveSharedDraftNow = vi.fn();
 const mockPublishSharedPageNow = vi.fn();
 const mockGetPageRevisionHistory = vi.fn();
 const mockGetSharedContentBackups = vi.fn();
+const mockPromoteContentAdminToSeed = vi.fn();
 const mockRestorePageRevision = vi.fn();
 const mockRestoreBlockRevision = vi.fn();
 const mockRestoreLatestSharedContentBackup = vi.fn();
@@ -142,6 +143,7 @@ vi.mock('../context/ContentAdminContext', async () => {
       publishSharedPageNow: mockPublishSharedPageNow,
       getPageRevisionHistory: mockGetPageRevisionHistory,
       getSharedContentBackups: mockGetSharedContentBackups,
+      promoteContentAdminToSeed: mockPromoteContentAdminToSeed,
       restorePageRevision: mockRestorePageRevision,
       restoreBlockRevision: mockRestoreBlockRevision,
       restoreLatestSharedContentBackup: mockRestoreLatestSharedContentBackup,
@@ -160,6 +162,7 @@ describe('AdminContentPage shared save workflow', () => {
     mockPublishSharedPageNow.mockReset();
     mockGetPageRevisionHistory.mockReset();
     mockGetSharedContentBackups.mockReset();
+    mockPromoteContentAdminToSeed.mockReset();
     mockRestorePageRevision.mockReset();
     mockRestoreBlockRevision.mockReset();
     mockRestoreLatestSharedContentBackup.mockReset();
@@ -229,6 +232,14 @@ describe('AdminContentPage shared save workflow', () => {
         createdAt: 1720452000000,
       },
     });
+    mockPromoteContentAdminToSeed.mockResolvedValue({
+      ok: true,
+      promotedSeedBaseline: {
+        fileName: 'content-admin-seed-baseline.json',
+        createdAt: 1720455600000,
+        timestamp: '2026-07-08T18:00:00.000Z',
+      },
+    });
     mockSetActiveBlockLock.mockReturnValue({ ok: true });
     mockClearActiveBlockLock.mockReturnValue({ ok: true });
     mockResetContentAdmin.mockResolvedValue({ ok: true });
@@ -245,11 +256,13 @@ describe('AdminContentPage shared save workflow', () => {
     expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
     expect(screen.getByRole('button', { name: 'History' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Promote content to seed' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Restore last backup' })).toBeTruthy();
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
     expect(screen.getByText('/services/loans')).toBeTruthy();
     expect(screen.getByText('1 block changed')).toBeTruthy();
     expect(screen.getByText(/Reset from seed replaces saved admin content with code defaults/i)).toBeTruthy();
+    expect(screen.getByText(/Promote content to seed updates that reset baseline/i)).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText('Optional save note'), { target: { value: 'Refined CTA copy' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
@@ -282,6 +295,20 @@ describe('AdminContentPage shared save workflow', () => {
 
     await waitFor(() => {
       expect(mockRestoreLatestSharedContentBackup).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('promotes the current shared content to the reset baseline from the save bar', async () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Promote content to seed' }));
+
+    await waitFor(() => {
+      expect(mockPromoteContentAdminToSeed).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -371,9 +371,9 @@ function normalizeRetirementBillboardTitleSizeRem(value) {
 function normalizeRetirementBillboardLetterSpacingEm(value, fontFamily = 'helv') {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
-    return fontFamily === 'helv' ? -0.015 : -0.03;
+    return fontFamily === 'helv' ? -0.038 : -0.03;
   }
-  return Math.max(-0.08, Math.min(0.04, Number(numeric.toFixed(3))));
+  return Math.max(-0.12, Math.min(0.04, Number(numeric.toFixed(3))));
 }
 
 function normalizeRetirementButtonStyle(value) {
@@ -417,7 +417,10 @@ export default function RetirementPage() {
   const {
     blocksByPath,
     pageHierarchy,
+    authoringBlocksByPath,
+    authoringPageHierarchy,
     setActiveBlockLock = () => ({ ok: false }),
+    clearActiveBlockLock = () => ({ ok: false }),
     getBlockCollaboration = () => null,
     devIdentity = null,
     claimBufferedBlockEdit = () => false,
@@ -425,6 +428,8 @@ export default function RetirementPage() {
     registerExternalDraftFlushHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
+  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
   const { testimonials: testimonialsLibrary } = useTestimonials();
   useNativeEnhancements(pageRef);
   const [calc, setCalc] = useState({
@@ -467,8 +472,8 @@ export default function RetirementPage() {
   const [introHeadingSelection, setIntroHeadingSelection] = useState({ start: 0, end: 0, text: '' });
   const [introBodyMiniEditorEnabled, setIntroBodyMiniEditorEnabled] = useState(false);
   const managedBlocksSource = useMemo(
-    () => buildRetirementCanonicalBlocks(blocksByPath?.['/services/retirement']),
-    [blocksByPath],
+    () => buildRetirementCanonicalBlocks(managedBlocksByPath?.['/services/retirement']),
+    [managedBlocksByPath],
   );
   const { blocks: managedBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({
     pathname: '/services/retirement',
@@ -861,10 +866,10 @@ export default function RetirementPage() {
     [managedBlocks],
   );
   const routeLinkOptions = useMemo(
-    () => Object.values(pageHierarchy || {})
+    () => Object.values(managedPageHierarchy || {})
       .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search')
       .sort((a, b) => a.path.localeCompare(b.path)),
-    [pageHierarchy],
+    [managedPageHierarchy],
   );
   const showFrontHud = frontHudEnabled && hudPanels.length > 0;
   const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanelId);
@@ -969,6 +974,13 @@ export default function RetirementPage() {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
   };
+
+  useEffect(() => () => {
+    const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
+    if (activeHudBlockId) {
+      clearActiveBlockLock('/services/retirement', activeHudBlockId);
+    }
+  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
   const renderHudAnchor = (blockId) => {
     if (!showFrontHud) {
       return null;
@@ -1815,10 +1827,7 @@ export default function RetirementPage() {
       <section className="service-native-section retirement-calc-section" id="retirement-savings-calculator">
         <div className="ag-panel-rail">
           <div className="retirement-calc-intro">
-            <h2
-              className="retirement-calc-title"
-              style={{ fontSize: 'clamp(1.65rem, 2.5vw, 2rem)', lineHeight: 1.05 }}
-            >
+            <h2 className="retirement-calc-title">
               Retirement Savings Calculator
             </h2>
             <p className="retirement-calc-lead">Plug in some numbers. Take a sneak peek at your financial future.</p>
@@ -2066,7 +2075,7 @@ export default function RetirementPage() {
 
       <section
         ref={billboardSectionRef}
-        className={`service-native-section retirement-everyday is-bg-${renderedBillboard.bgTone || 'white'} is-text-${renderedBillboard.textTone || 'dark'}${showFrontHud && billboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('billboard').className || ''}`}
+        className={`service-native-section dynamic-billboard retirement-everyday is-bg-${renderedBillboard.bgTone || 'white'} is-text-${renderedBillboard.textTone || 'dark'}${showFrontHud && billboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('billboard').className || ''}`}
         data-block-id="billboard"
         style={billboardSectionStyle || undefined}
       >
@@ -2078,21 +2087,26 @@ export default function RetirementPage() {
             className={`native-info-section-copy${billboardCopyClassName ? ` ${billboardCopyClassName}` : ''} is-justify-${renderedBillboard.justify || 'center'}`}
             data-fade-root-margin={billboardCopyUsesScrollProgress ? undefined : (renderedBillboard.copyFadeRootMargin || undefined)}
           >
-            <h2
-              className={`${renderedBillboard.titleClassName || ''}${showFrontHud && billboardBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
-              style={renderedBillboardTitleStyle}
-              onClick={showFrontHud && billboardBlock ? handleBillboardTitleEditIntent : undefined}
-              onKeyDown={showFrontHud && billboardBlock ? (event) => handleBodyEditKeyDown(event, handleBillboardTitleEditIntent) : undefined}
-              role={showFrontHud && billboardBlock ? 'button' : undefined}
-              tabIndex={showFrontHud && billboardBlock ? 0 : undefined}
-              aria-label={showFrontHud && billboardBlock ? 'Edit retirement billboard title' : undefined}
-            >
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: renderTextWithHighlights(renderedBillboard.title, renderedBillboard.titleHighlights),
-                }}
-              />
-            </h2>
+            {renderedBillboard.title ? (
+              <h2
+                className={`${renderedBillboard.titleClassName || ''}${showFrontHud && billboardBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+                style={renderedBillboardTitleStyle}
+                onClick={showFrontHud && billboardBlock ? handleBillboardTitleEditIntent : undefined}
+                onKeyDown={showFrontHud && billboardBlock ? (event) => handleBodyEditKeyDown(event, handleBillboardTitleEditIntent) : undefined}
+                role={showFrontHud && billboardBlock ? 'button' : undefined}
+                tabIndex={showFrontHud && billboardBlock ? 0 : undefined}
+                aria-label={showFrontHud && billboardBlock ? 'Edit retirement billboard title' : undefined}
+              >
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: renderTextWithHighlights(renderedBillboard.title, renderedBillboard.titleHighlights),
+                  }}
+                />
+              </h2>
+            ) : null}
+            {renderedBillboard.subtitle ? (
+              <h3 className="native-info-section-subtitle">{renderedBillboard.subtitle}</h3>
+            ) : null}
             {renderedBillboard.bodyHtml ? (
               <SafeRichText
                 as="div"
@@ -2104,8 +2118,12 @@ export default function RetirementPage() {
                 tabIndex={showFrontHud && billboardBlock ? 0 : undefined}
                 aria-label={showFrontHud && billboardBlock ? 'Edit retirement billboard body HTML' : undefined}
               />
+            ) : renderedBillboard.body ? (
+              <div className="native-info-rich-html">
+                <p>{renderedBillboard.body}</p>
+              </div>
             ) : null}
-            {renderedBillboard.action ? (
+            {renderedBillboard.action?.label && (renderedBillboard.action?.to || renderedBillboard.action?.href) ? (
               <div className={`service-native-action-row${(renderedBillboard.justify || 'center') === 'center' ? ' is-centered' : ''}${(renderedBillboard.justify || 'center') === 'right' ? ' is-right' : ''}`}>
                 {(renderedBillboard.action.to
                 || (renderedBillboard.action.href
@@ -2137,7 +2155,7 @@ export default function RetirementPage() {
 
       <section
         ref={rolloverBillboardSectionRef}
-        className={`service-native-section retirement-everyday retirement-rollover-billboard is-bg-${renderedRolloverBillboard.bgTone || 'white'} is-text-${renderedRolloverBillboard.textTone || 'dark'}${showFrontHud && rolloverBillboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isRolloverBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('rollover_billboard').className || ''}`}
+        className={`service-native-section dynamic-billboard retirement-everyday retirement-rollover-billboard is-bg-${renderedRolloverBillboard.bgTone || 'white'} is-text-${renderedRolloverBillboard.textTone || 'dark'}${showFrontHud && rolloverBillboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isRolloverBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('rollover_billboard').className || ''}`}
         data-block-id="rollover_billboard"
         style={rolloverBillboardSectionStyle || undefined}
       >
@@ -2149,21 +2167,26 @@ export default function RetirementPage() {
             className={`native-info-section-copy${rolloverBillboardCopyClassName ? ` ${rolloverBillboardCopyClassName}` : ''} is-justify-${renderedRolloverBillboard.justify || 'center'}`}
             data-fade-root-margin={rolloverBillboardCopyUsesScrollProgress ? undefined : (renderedRolloverBillboard.copyFadeRootMargin || undefined)}
           >
-            <h2
-              className={`${renderedRolloverBillboard.titleClassName || ''}${showFrontHud && rolloverBillboardBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
-              style={renderedRolloverBillboardTitleStyle}
-              onClick={showFrontHud && rolloverBillboardBlock ? handleRolloverBillboardTitleEditIntent : undefined}
-              onKeyDown={showFrontHud && rolloverBillboardBlock ? (event) => handleBodyEditKeyDown(event, handleRolloverBillboardTitleEditIntent) : undefined}
-              role={showFrontHud && rolloverBillboardBlock ? 'button' : undefined}
-              tabIndex={showFrontHud && rolloverBillboardBlock ? 0 : undefined}
-              aria-label={showFrontHud && rolloverBillboardBlock ? 'Edit retirement rollover billboard title' : undefined}
-            >
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: renderTextWithHighlights(renderedRolloverBillboard.title, renderedRolloverBillboard.titleHighlights),
-                }}
-              />
-            </h2>
+            {renderedRolloverBillboard.title ? (
+              <h2
+                className={`${renderedRolloverBillboard.titleClassName || ''}${showFrontHud && rolloverBillboardBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+                style={renderedRolloverBillboardTitleStyle}
+                onClick={showFrontHud && rolloverBillboardBlock ? handleRolloverBillboardTitleEditIntent : undefined}
+                onKeyDown={showFrontHud && rolloverBillboardBlock ? (event) => handleBodyEditKeyDown(event, handleRolloverBillboardTitleEditIntent) : undefined}
+                role={showFrontHud && rolloverBillboardBlock ? 'button' : undefined}
+                tabIndex={showFrontHud && rolloverBillboardBlock ? 0 : undefined}
+                aria-label={showFrontHud && rolloverBillboardBlock ? 'Edit retirement rollover billboard title' : undefined}
+              >
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: renderTextWithHighlights(renderedRolloverBillboard.title, renderedRolloverBillboard.titleHighlights),
+                  }}
+                />
+              </h2>
+            ) : null}
+            {renderedRolloverBillboard.subtitle ? (
+              <h3 className="native-info-section-subtitle">{renderedRolloverBillboard.subtitle}</h3>
+            ) : null}
             {renderedRolloverBillboard.bodyHtml ? (
               <SafeRichText
                 as="div"
@@ -2175,8 +2198,12 @@ export default function RetirementPage() {
                 tabIndex={showFrontHud && rolloverBillboardBlock ? 0 : undefined}
                 aria-label={showFrontHud && rolloverBillboardBlock ? 'Edit retirement rollover billboard body HTML' : undefined}
               />
+            ) : renderedRolloverBillboard.body ? (
+              <div className="native-info-rich-html">
+                <p>{renderedRolloverBillboard.body}</p>
+              </div>
             ) : null}
-            {renderedRolloverBillboard.action ? (
+            {renderedRolloverBillboard.action?.label && (renderedRolloverBillboard.action?.to || renderedRolloverBillboard.action?.href) ? (
               <div className={`service-native-action-row${(renderedRolloverBillboard.justify || 'center') === 'center' ? ' is-centered' : ''}${(renderedRolloverBillboard.justify || 'center') === 'right' ? ' is-right' : ''}`}>
                 {(renderedRolloverBillboard.action.to
                 || (renderedRolloverBillboard.action.href

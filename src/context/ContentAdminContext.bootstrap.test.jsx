@@ -7,6 +7,7 @@ const mockInitializeSharedContentFromSeed = vi.fn();
 const mockResetSharedContentFromSeed = vi.fn();
 const mockFetchSharedContentBackups = vi.fn();
 const mockRestoreLatestSharedContentBackup = vi.fn();
+const mockPromoteSharedContentToSeed = vi.fn();
 
 vi.mock('../lib/devContentAuthorityClient', () => ({
   acquireSharedBlockLock: vi.fn(),
@@ -16,6 +17,7 @@ vi.mock('../lib/devContentAuthorityClient', () => ({
   initializeSharedContentFromSeed: mockInitializeSharedContentFromSeed,
   isDevContentAuthorityEnabled: () => true,
   publishSharedPage: vi.fn(),
+  promoteSharedContentToSeed: mockPromoteSharedContentToSeed,
   releaseSharedBlockLock: vi.fn(),
   resetSharedContentFromSeed: mockResetSharedContentFromSeed,
   restoreLatestSharedContentBackup: mockRestoreLatestSharedContentBackup,
@@ -33,6 +35,7 @@ describe('ContentAdminContext shared bootstrap', () => {
     mockResetSharedContentFromSeed.mockReset();
     mockFetchSharedContentBackups.mockReset();
     mockRestoreLatestSharedContentBackup.mockReset();
+    mockPromoteSharedContentToSeed.mockReset();
   });
 
   it('prefers the shared authority snapshot over the local seed on first render', async () => {

@@ -143,6 +143,70 @@ describe('LoansPage front HUD', () => {
     expect(items.map((item) => item.getAttribute('data-investments-growth-background-panel'))).toEqual(['blue', 'mango', 'sand']);
   });
 
+  it('renders the vision fuel billboard through the shared billboard contract on the loans page', () => {
+    mockBlocksByPath = {
+      '/services/loans': cloneLoansDynamicBlocks().map((block) => (
+        block.id === 'vision_fuel'
+          ? {
+            ...block,
+            settings: {
+              ...(block.settings || {}),
+              titleClassName: 'is-super-grey',
+              titleHighlightsJson: '[{"start":7,"end":11,"className":"is-mango","text":"fuel"}]',
+              bgTone: 'white',
+              textTone: 'dark',
+              justify: 'left',
+              contentMaxWidthPx: 1040,
+            },
+          }
+          : block
+      )),
+    };
+
+    const { container } = renderLoansPage();
+    const section = container.querySelector('.loans-native-vision-fuel');
+    const title = container.querySelector('.loans-native-vision-fuel .native-info-section-copy > h2');
+    const highlight = container.querySelector('.loans-native-vision-fuel .native-info-section-copy > h2 mark.is-mango');
+    const copy = container.querySelector('.loans-native-vision-fuel .native-info-section-copy');
+    const rail = container.querySelector('.loans-native-vision-fuel .ag-panel-rail');
+
+    expect(section?.className.includes('dynamic-billboard')).toBe(true);
+    expect(section?.className.includes('is-bg-white')).toBe(true);
+    expect(section?.className.includes('is-text-dark')).toBe(true);
+    expect(title?.className.includes('is-super-grey')).toBe(true);
+    expect(highlight?.textContent).toBe('fuel');
+    expect(copy?.className.includes('is-justify-left')).toBe(true);
+    expect(rail?.getAttribute('style') || '').toContain('--dynamic-billboard-max-width: 1040px');
+  });
+
+  it('lets the loans billboard subtitle and action disappear when the admin clears them', () => {
+    mockBlocksByPath = {
+      '/services/loans': cloneLoansDynamicBlocks().map((block) => (
+        block.id === 'vision_fuel'
+          ? {
+            ...block,
+            settings: {
+              ...(block.settings || {}),
+              subtitle: '',
+              bodyHtml: '',
+              body: '',
+              buttonLabel: '',
+              buttonUrl: '',
+              buttonPageRef: '',
+            },
+          }
+          : block
+      )),
+    };
+
+    const { container } = renderLoansPage();
+    const section = container.querySelector('.loans-native-vision-fuel');
+
+    expect(section?.querySelector('.native-info-section-subtitle')).toBeNull();
+    expect(section?.querySelector('.native-info-rich-html')).toBeNull();
+    expect(section?.querySelector('.service-native-action-row')).toBeNull();
+  });
+
   it('adds and removes HUD tabs when a block switches between dynamic and static', () => {
     const rendered = renderLoansPage();
 

@@ -153,17 +153,22 @@ export default function HomePage() {
   const {
     blocksByPath,
     pageHierarchy,
+    authoringBlocksByPath,
+    authoringPageHierarchy,
     updateBlock = () => {},
     moveBlock = () => {},
     removeBlock = () => {},
     getBlockCollaboration = () => null,
     devIdentity = null,
     setActiveBlockLock = () => ({ ok: false }),
+    clearActiveBlockLock = () => ({ ok: false }),
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
+  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
   const [showReturnAssist, setShowReturnAssist] = useState(false);
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
@@ -187,8 +192,8 @@ export default function HomePage() {
   });
   const [heroActiveLine, setHeroActiveLine] = useState('line1');
   const managedBlocksSource = useMemo(
-    () => (Array.isArray(blocksByPath?.['/']) ? blocksByPath['/'] : []),
-    [blocksByPath],
+    () => (Array.isArray(managedBlocksByPath?.['/']) ? managedBlocksByPath['/'] : []),
+    [managedBlocksByPath],
   );
   const { blocks: managedBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({
     pathname: '/',
@@ -293,10 +298,10 @@ export default function HomePage() {
     [managedBlocks],
   );
   const routeLinkOptions = useMemo(
-    () => Object.values(pageHierarchy || {})
+    () => Object.values(managedPageHierarchy || {})
       .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search')
       .sort((a, b) => a.path.localeCompare(b.path)),
-    [pageHierarchy],
+    [managedPageHierarchy],
   );
   const activeHudPanel = useMemo(
     () => hudPanels.find((panel) => panel.id === activeHudPanelId) || null,
@@ -470,6 +475,7 @@ export default function HomePage() {
   };
   const closeMobileHudPanel = () => {
     setHudDockCollapsed(true);
+    setActiveHudPanelId('');
     setMobileHudMoreOpen(false);
     setMobileHudDeleteConfirmBlockId('');
   };
@@ -488,6 +494,13 @@ export default function HomePage() {
     setMobileHudMoreOpen(false);
     setMobileHudDeleteConfirmBlockId('');
   };
+
+  useEffect(() => () => {
+    const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
+    if (activeHudBlockId) {
+      clearActiveBlockLock('/', activeHudBlockId);
+    }
+  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
   const handleMobilePageHudClickCapture = (event) => {
     if (!isMobileFrontHud || !showFrontHud || isMobileHudSelectionBlocked(event.target)) {
       return;

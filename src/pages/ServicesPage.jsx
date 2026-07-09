@@ -197,7 +197,10 @@ export default function ServicesPage() {
   const {
     blocksByPath,
     pageHierarchy,
+    authoringBlocksByPath,
+    authoringPageHierarchy,
     setActiveBlockLock = () => ({ ok: false }),
+    clearActiveBlockLock = () => ({ ok: false }),
     getBlockCollaboration = () => null,
     devIdentity = null,
     claimBufferedBlockEdit = () => false,
@@ -205,6 +208,8 @@ export default function ServicesPage() {
     registerExternalDraftFlushHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
+  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
   const { testimonials: testimonialsLibrary } = useTestimonials();
   useNativeEnhancements(pageRef);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -215,8 +220,8 @@ export default function ServicesPage() {
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
   const managedBlocksSource = useMemo(
-    () => (Array.isArray(blocksByPath?.['/services']) ? blocksByPath['/services'] : []),
-    [blocksByPath],
+    () => (Array.isArray(managedBlocksByPath?.['/services']) ? managedBlocksByPath['/services'] : []),
+    [managedBlocksByPath],
   );
   const { blocks: managedBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({
     pathname: '/services',
@@ -352,10 +357,10 @@ export default function ServicesPage() {
     [managedBlocks],
   );
   const routeLinkOptions = useMemo(
-    () => Object.values(pageHierarchy || {})
+    () => Object.values(managedPageHierarchy || {})
       .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search')
       .sort((a, b) => a.path.localeCompare(b.path)),
-    [pageHierarchy],
+    [managedPageHierarchy],
   );
   const activeHudPanel = useMemo(
     () => hudPanels.find((panel) => panel.id === activeHudPanelId) || null,
@@ -569,6 +574,13 @@ export default function ServicesPage() {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
   };
+
+  useEffect(() => () => {
+    const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
+    if (activeHudBlockId) {
+      clearActiveBlockLock('/services', activeHudBlockId);
+    }
+  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
   const renderHudAnchor = (blockId) => {
     if (!showFrontHud) {
       return null;

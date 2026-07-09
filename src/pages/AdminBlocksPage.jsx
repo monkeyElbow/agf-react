@@ -123,7 +123,14 @@ export function collectBlockIssues(block, mode) {
 }
 
 export default function AdminBlocksPage() {
-  const { blocksByPath, pageHierarchy } = useContentAdmin();
+  const {
+    blocksByPath,
+    pageHierarchy,
+    authoringBlocksByPath,
+    authoringPageHierarchy,
+  } = useContentAdmin();
+  const adminBlocksByPath = authoringBlocksByPath || blocksByPath;
+  const adminPageHierarchy = authoringPageHierarchy || pageHierarchy;
   const [search, setSearch] = useState('');
   const [modeFilter, setModeFilter] = useState('all');
   const [issueFilter, setIssueFilter] = useState('all');
@@ -131,13 +138,13 @@ export default function AdminBlocksPage() {
   const audit = useMemo(() => {
     const rows = [];
     const pagesWithIssues = [];
-    const paths = Object.keys(blocksByPath || {})
+    const paths = Object.keys(adminBlocksByPath || {})
       .filter((path) => path && !path.startsWith('/admin/'))
       .sort((a, b) => a.localeCompare(b));
 
     paths.forEach((path) => {
-      const pageTitle = toPageTitle(path, pageHierarchy);
-      const blocks = Array.isArray(blocksByPath[path]) ? blocksByPath[path] : [];
+      const pageTitle = toPageTitle(path, adminPageHierarchy);
+      const blocks = Array.isArray(adminBlocksByPath[path]) ? adminBlocksByPath[path] : [];
       const idCounts = new Map();
       const singletonKindCounts = new Map();
 
@@ -202,7 +209,7 @@ export default function AdminBlocksPage() {
     });
 
     return { rows, pagesWithIssues };
-  }, [blocksByPath, pageHierarchy]);
+  }, [adminBlocksByPath, adminPageHierarchy]);
 
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();
