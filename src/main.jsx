@@ -11,6 +11,8 @@ import { RedirectsProvider } from './context/RedirectsContext';
 import { DocumentsProvider } from './context/DocumentsContext';
 import { ConsultantResponsesProvider } from './context/ConsultantResponsesContext';
 import { TestimonialsProvider } from './context/TestimonialsContext';
+import { DisclosuresProvider } from './context/DisclosuresContext';
+import { ChartsProvider } from './context/ChartsContext';
 
 async function renderApp() {
   const initialContentAdminState = await bootstrapSharedContentAdminState();
@@ -23,13 +25,17 @@ async function renderApp() {
             <CareersJobsProvider>
               <RedirectsProvider>
                 <TestimonialsProvider>
-                  <DocumentsProvider>
-                    <RatesProvider>
-                      <BrowserRouter>
-                        <App />
-                      </BrowserRouter>
-                    </RatesProvider>
-                  </DocumentsProvider>
+                  <DisclosuresProvider>
+                    <ChartsProvider>
+                      <DocumentsProvider>
+                        <RatesProvider>
+                          <BrowserRouter>
+                            <App />
+                          </BrowserRouter>
+                        </RatesProvider>
+                      </DocumentsProvider>
+                    </ChartsProvider>
+                  </DisclosuresProvider>
                 </TestimonialsProvider>
               </RedirectsProvider>
             </CareersJobsProvider>

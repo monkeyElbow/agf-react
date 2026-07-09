@@ -26,6 +26,8 @@ const AdminMediaAuditPage = lazy(() => import('./pages/AdminMediaAuditPage'));
 const AdminMessagePage = lazy(() => import('./pages/AdminMessagePage'));
 const AdminConsultantsPage = lazy(() => import('./pages/AdminConsultantsPage'));
 const AdminTestimonialsPage = lazy(() => import('./pages/AdminTestimonialsPage'));
+const AdminDisclosuresPage = lazy(() => import('./pages/AdminDisclosuresPage'));
+const AdminChartsPage = lazy(() => import('./pages/AdminChartsPage'));
 const AdminJobsPage = lazy(() => import('./pages/AdminJobsPage'));
 const AdminBlocksPage = lazy(() => import('./pages/AdminBlocksPage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
@@ -142,6 +144,22 @@ function PageRoute({ page }) {
     return withTopBands((
       <Suspense fallback={<div className="route-page-loading" />}>
         <AdminTestimonialsPage />
+      </Suspense>
+    ));
+  }
+
+  if (routeKey === '/admin/disclosures') {
+    return withTopBands((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <AdminDisclosuresPage />
+      </Suspense>
+    ));
+  }
+
+  if (routeKey === '/admin/charts') {
+    return withTopBands((
+      <Suspense fallback={<div className="route-page-loading" />}>
+        <AdminChartsPage />
       </Suspense>
     ));
   }

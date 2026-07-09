@@ -19,6 +19,7 @@ const ADMIN_NAV_ITEMS = [
   { to: '/admin/resources', label: 'Resources' },
   { to: '/admin/consultants', label: 'Consultants' },
   { to: '/admin/testimonials', label: 'Testimonials' },
+  { to: '/admin/disclosures', label: 'Disclosures' },
   { to: '/admin/documents', label: 'Documents' },
   { to: '/admin/jobs', label: 'Jobs' },
   { to: '/admin/message', label: 'Message' },

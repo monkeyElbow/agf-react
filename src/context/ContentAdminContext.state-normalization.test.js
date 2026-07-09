@@ -1568,7 +1568,45 @@ describe('ContentAdminContext state normalization', () => {
     expect(loanApplyBlock?.templateId).toBe('card_grid');
     expect(loanApplyBlock?.presetId).toBe('step-cards');
     expect(loanApplyBlock?.settings?.card1Title).toBe('Check your eligibility');
-    expect(loanApplyBlock?.settings?.columns).toBe('two');
+    expect(loanApplyBlock?.settings?.columns).toBe('one');
+  });
+
+  it('normalizes stale 403(b) loan-apply step cards back to the canonical six-step layout', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'loan_apply',
+            kind: 'card_grid',
+            mode: 'dynamic',
+            presetId: 'step-cards',
+            settings: {
+              title: 'How to apply',
+              columns: 'one',
+              card1Title: '1) Review and understand the loan rules',
+              card1Body: '',
+              card2Title: '2) Log in to your profile',
+              card2Body: '',
+              card3Title: '3) Submit your application',
+              card3Body: 'When logged-in, select your 403(b) account, then choose MANAGE MY RETIREMENT below the details. In the top menu, select Loan Services > Loan Modeling/Request to apply.',
+            },
+          },
+        ],
+      },
+    });
+
+    const retirementBlocks = normalized.blocksByPath['/services/retirement/403b'] || [];
+    const loanApplyBlock = retirementBlocks.find((block) => block?.id === 'loan_apply');
+
+    expect(loanApplyBlock?.settings?.card1Title).toBe('1');
+    expect(loanApplyBlock?.settings?.card1Body).toBe('Review the loan rules.');
+    expect(loanApplyBlock?.settings?.card2Title).toBe('2');
+    expect(loanApplyBlock?.settings?.card2Body).toBe('Log in.');
+    expect(loanApplyBlock?.settings?.card3Title).toBe('3');
+    expect(loanApplyBlock?.settings?.card3Body).toBe('Select your 403(b) account.');
+    expect(loanApplyBlock?.settings?.card4Title).toBe('4');
+    expect(loanApplyBlock?.settings?.card5Title).toBe('5');
+    expect(loanApplyBlock?.settings?.card6Title).toBe('6');
   });
 
   it('keeps explicit columns preset identity on the canonical family template id', () => {

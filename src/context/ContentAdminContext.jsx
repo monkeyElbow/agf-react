@@ -49,6 +49,7 @@ import {
   initializeSharedContentFromSeed,
   isDevContentAuthorityEnabled,
   publishSharedPage,
+  promoteSharedContentToSeed as promoteSharedContentToSeedRequest,
   releaseSharedBlockLock,
   resetSharedContentFromSeed,
   restoreLatestSharedContentBackup as restoreLatestSharedContentBackupRequest,
@@ -257,6 +258,37 @@ function isStalePropertyCasualtyRequestContent(settings) {
     || body.includes('Share a few details and we’ll help you explore broader coverage')
     || step1NextLabel === 'Go to next step'
   );
+}
+
+function isLegacyRetirement403bLoanApplySettings(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return false;
+  }
+
+  const card1Title = String(settings.card1Title || '').trim().toLowerCase();
+  const card2Title = String(settings.card2Title || '').trim().toLowerCase();
+  const card3Title = String(settings.card3Title || '').trim().toLowerCase();
+  const card3Body = String(settings.card3Body || '').trim().toLowerCase();
+  const card4Title = String(settings.card4Title || '').trim();
+  const card5Title = String(settings.card5Title || '').trim();
+  const card6Title = String(settings.card6Title || '').trim();
+
+  const hasLegacyTitles = (
+    card1Title.includes('review and understand the loan rules')
+    || card2Title.includes('log in to your profile')
+    || card3Title.includes('submit your application')
+    || /^1\)\s+/.test(card1Title)
+    || /^2\)\s+/.test(card2Title)
+    || /^3\)\s+/.test(card3Title)
+  );
+  const hasLegacyApplicationBody = (
+    card3Body.includes('manage my retirement')
+    || card3Body.includes('loan services')
+    || card3Body.includes('loan modeling/request')
+  );
+  const hasLegacyThreeStepShape = !card4Title && !card5Title && !card6Title;
+
+  return hasLegacyThreeStepShape && (hasLegacyTitles || hasLegacyApplicationBody);
 }
 
 function normalizeRetirementLandingCtaSettings(settings, defaultSettings = {}) {
@@ -3831,6 +3863,26 @@ export function normalizeStoredConfig(payload) {
           };
         }
       }
+      if (
+        path === '/services/retirement/403b'
+        && storedBlock.id === 'loan_apply'
+        && storedKind === 'card_grid'
+        && storedMode === 'dynamic'
+        && defaultBlock
+        && isLegacyRetirement403bLoanApplySettings(nextStoredBlock?.settings)
+      ) {
+        nextStoredBlock = {
+          ...nextStoredBlock,
+          templateId: defaultBlock.templateId || nextStoredBlock.templateId || 'card_grid',
+          presetId: defaultBlock.presetId || nextStoredBlock.presetId || 'step-cards',
+          settings: {
+            ...(defaultBlock?.settings || {}),
+          },
+          editableFields: Array.isArray(defaultBlock?.editableFields)
+            ? [...defaultBlock.editableFields]
+            : (Array.isArray(nextStoredBlock?.editableFields) ? [...nextStoredBlock.editableFields] : []),
+        };
+      }
       if (path === '/services/loans' && storedBlock.id === 'hero' && storedMode === 'dynamic') {
         nextStoredBlock = {
           ...nextStoredBlock,
@@ -4181,10 +4233,52 @@ export async function bootstrapSharedContentAdminState() {
       snapshot = await initializeSharedContentFromSeed(seedState, null);
     }
     const nextState = snapshot?.state || snapshot?.payload?.state;
-    return nextState ? normalizeStoredConfig(nextState) : seedState;
+    if (!nextState) {
+      return seedState;
+    }
+    const normalizedAuthoringState = normalizeStoredConfig(nextState);
+    const normalizedPublishedState = normalizeStoredConfig(
+      snapshot?.baseSnapshot || snapshot?.payload?.baseSnapshot || nextState,
+    );
+    return {
+      ...normalizedAuthoringState,
+      __contentAdminBootstrap: {
+        authoringState: normalizedAuthoringState,
+        publishedState: normalizedPublishedState,
+        updatedAt: Number(snapshot?.updatedAt) || 0,
+        seedBaseline: snapshot?.seedBaseline || null,
+      },
+    };
   } catch {
     return seedState;
   }
+}
+
+function parseInitialContentAdminBootstrapState(initialState) {
+  if (
+    initialState
+    && typeof initialState === 'object'
+    && initialState.__contentAdminBootstrap
+    && typeof initialState.__contentAdminBootstrap === 'object'
+  ) {
+    const bootstrap = initialState.__contentAdminBootstrap;
+    const authoringState = normalizeStoredConfig(bootstrap.authoringState || initialState);
+    const publishedState = normalizeStoredConfig(bootstrap.publishedState || bootstrap.authoringState || initialState);
+    return {
+      authoringState,
+      publishedState,
+      updatedAt: Number(bootstrap.updatedAt) || 0,
+      seedBaseline: bootstrap.seedBaseline || null,
+    };
+  }
+
+  const normalizedState = initialState ? normalizeStoredConfig(initialState) : readInitialState();
+  return {
+    authoringState: normalizedState,
+    publishedState: normalizedState,
+    updatedAt: 0,
+    seedBaseline: null,
+  };
 }
 
 function buildBreadcrumbTrail(pathname, pageHierarchy) {
@@ -4425,13 +4519,16 @@ function summarizePageWorkflowActivity(collaborationByPath, pathname, actor) {
 }
 
 export function ContentAdminProvider({ children, initialState = null }) {
+  const initialBootstrapState = parseInitialContentAdminBootstrapState(initialState);
   const sharedAuthorityEnabled = isDevContentAuthorityEnabled();
-  const [state, setState] = useState(() => (initialState ? normalizeStoredConfig(initialState) : readInitialState()));
+  const [state, setState] = useState(initialBootstrapState.authoringState);
+  const [publishedState, setPublishedState] = useState(initialBootstrapState.publishedState);
   const [devIdentity, setDevIdentity] = useState(readInitialDevIdentity);
   const [lastSharedSaveResult, setLastSharedSaveResult] = useState(null);
   const [lastSharedPublishResult, setLastSharedPublishResult] = useState(null);
   const [bufferedBlockSettingEdits, setBufferedBlockSettingEdits] = useState({});
-  const [sharedSnapshotUpdatedAt, setSharedSnapshotUpdatedAt] = useState(0);
+  const [sharedSnapshotUpdatedAt, setSharedSnapshotUpdatedAt] = useState(initialBootstrapState.updatedAt);
+  const [sharedSeedBaseline, setSharedSeedBaseline] = useState(initialBootstrapState.seedBaseline);
   const [sharedSyncState, setSharedSyncState] = useState({
     pendingMutationCount: 0,
     hasQueuedDraftSync: false,
@@ -4442,8 +4539,8 @@ export function ContentAdminProvider({ children, initialState = null }) {
   const stateRef = useRef(state);
   const hasPersistedNormalizedInitialStateRef = useRef(false);
   const bufferedBlockSettingEditsRef = useRef(bufferedBlockSettingEdits);
-  const persistedSharedAuthoringStateRef = useRef(toComparableAuthoringState(state));
-  const publishedSharedAuthoringStateRef = useRef(toComparableAuthoringState(state));
+  const persistedSharedAuthoringStateRef = useRef(toComparableAuthoringState(initialBootstrapState.authoringState));
+  const publishedSharedAuthoringStateRef = useRef(toComparableAuthoringState(initialBootstrapState.publishedState));
   const pendingSharedMutationCountRef = useRef(0);
   const pendingBlockDraftSyncEntriesRef = useRef(new Map());
   const bufferedBlockSettingCommitTimersRef = useRef(new Map());
@@ -4480,13 +4577,32 @@ export function ContentAdminProvider({ children, initialState = null }) {
   const updatePublishedSharedAuthoringState = (snapshot) => {
     const nextPublishedState = snapshot?.baseSnapshot || snapshot?.payload?.baseSnapshot || snapshot?.state || snapshot?.payload?.state;
     if (!nextPublishedState) {
+      return false;
+    }
+    const normalizedPublishedState = normalizeStoredConfig(nextPublishedState);
+    const nextComparablePublishedState = toComparableAuthoringState(normalizedPublishedState);
+    const currentComparablePublishedState = publishedSharedAuthoringStateRef.current;
+    const didChange = (
+      collectDirtyComparableAuthoringPaths(currentComparablePublishedState, nextComparablePublishedState).length > 0
+      || JSON.stringify(currentComparablePublishedState.pathAliases || {}) !== JSON.stringify(nextComparablePublishedState.pathAliases || {})
+    );
+    publishedSharedAuthoringStateRef.current = nextComparablePublishedState;
+    if (didChange) {
+      setPublishedState(normalizedPublishedState);
+    }
+    return didChange;
+  };
+
+  const applySharedSeedBaseline = (snapshot) => {
+    if (!snapshot || !Object.prototype.hasOwnProperty.call(snapshot, 'seedBaseline')) {
       return;
     }
-    publishedSharedAuthoringStateRef.current = toComparableAuthoringState(normalizeStoredConfig(nextPublishedState));
+    setSharedSeedBaseline(snapshot.seedBaseline || null);
   };
 
   const applySharedSnapshotState = (snapshot, options = {}) => {
     const mergeCollaborationOnlyWhenDirty = Boolean(options?.mergeCollaborationOnlyWhenDirty);
+    applySharedSeedBaseline(snapshot);
     const nextState = snapshot?.state || snapshot?.payload?.state;
     if (!nextState) {
       return false;
@@ -4800,15 +4916,20 @@ export function ContentAdminProvider({ children, initialState = null }) {
   }, [sharedAuthorityEnabled, devIdentity]);
 
   const value = useMemo(() => {
-    const displayState = sharedAuthorityEnabled
+    const authoringDisplayState = sharedAuthorityEnabled
       ? applyBufferedBlockSettingEditsToState(state, bufferedBlockSettingEdits)
       : state;
+    const {
+      pageHierarchy: authoringPageHierarchy,
+      blocksByPath: authoringBlocksByPath,
+      pathAliases: authoringPathAliases,
+      collaborationByPath,
+    } = authoringDisplayState;
     const {
       pageHierarchy,
       blocksByPath,
       pathAliases,
-      collaborationByPath,
-    } = displayState;
+    } = publishedState;
     const availableBlockTemplates = getAllBlockTemplateBlueprints();
     const blockTemplateById = new Map(
       availableBlockTemplates.map((template) => [buildBlockTemplateCreateId(template), template]),
@@ -4881,6 +5002,10 @@ export function ContentAdminProvider({ children, initialState = null }) {
         return;
       }
       if (!sharedAuthorityEnabled) {
+        publishedSharedAuthoringStateRef.current = toComparableAuthoringState(computedState);
+        setPublishedState(computedState);
+      }
+      if (!sharedAuthorityEnabled) {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(computedState));
         } catch {
@@ -4890,12 +5015,16 @@ export function ContentAdminProvider({ children, initialState = null }) {
     };
 
     const setOptimisticState = (nextStateOrUpdater) => {
-      const nextState = typeof nextStateOrUpdater === 'function'
-        ? nextStateOrUpdater(stateRef.current)
-        : nextStateOrUpdater;
-      stateRef.current = nextState;
-      setState(nextState);
-    };
+    const nextState = typeof nextStateOrUpdater === 'function'
+      ? nextStateOrUpdater(stateRef.current)
+      : nextStateOrUpdater;
+    stateRef.current = nextState;
+    setState(nextState);
+    if (!sharedAuthorityEnabled && nextState) {
+      publishedSharedAuthoringStateRef.current = toComparableAuthoringState(nextState);
+      setPublishedState(nextState);
+    }
+  };
 
     const applyBlockSettingsPatchToState = (prevState, pathname, blockId, settingsPatch) => {
       let didUpdate = false;
@@ -6109,6 +6238,60 @@ export function ContentAdminProvider({ children, initialState = null }) {
       return Array.isArray(snapshot?.backups) ? snapshot.backups : [];
     };
 
+    const promoteContentAdminToSeed = async () => {
+      if (!sharedAuthorityEnabled) {
+        return { ok: false, reason: 'shared-authority-disabled' };
+      }
+      flushExternalDraftBuffers();
+      flushAllBufferedBlockSettings();
+      clearPendingBlockDraftSyncTimers();
+      const currentComparableAuthoringState = toComparableAuthoringState(stateRef.current);
+      const hasUnsavedChanges = collectDirtyComparableAuthoringPaths(
+        currentComparableAuthoringState,
+        persistedSharedAuthoringStateRef.current,
+      ).length > 0;
+      if (hasUnsavedChanges) {
+        const saveResult = await saveSharedDraftNow('Prepare seed promotion');
+        if (!saveResult?.ok) {
+          return {
+            ok: false,
+            reason: 'save-before-promote-failed',
+            details: 'Save draft before promoting the current content to seed.',
+            saveResult: saveResult?.saveResult || null,
+          };
+        }
+      }
+      const mutationId = latestSharedMutationIdRef.current + 1;
+      latestSharedMutationIdRef.current = mutationId;
+      bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
+      try {
+        const snapshot = await promoteSharedContentToSeedRequest(currentActor);
+        applySharedSeedBaseline(snapshot);
+        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+          applySharedSnapshotState(snapshot);
+        }
+        return {
+          ok: snapshot?.ok !== false,
+          snapshot,
+          promotedSeedBaseline: snapshot?.promotedSeedBaseline || snapshot?.seedBaseline || null,
+        };
+      } catch (error) {
+        const snapshot = error?.payload || null;
+        applySharedSeedBaseline(snapshot);
+        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+          applySharedSnapshotState(snapshot);
+        }
+        return {
+          ok: false,
+          reason: snapshot?.error || 'promote-seed-failed',
+          details: snapshot?.details || (error instanceof Error ? error.message : 'promote-seed-failed'),
+          snapshot,
+        };
+      } finally {
+        bumpPendingSharedMutationCount(-1, { lastSettledAt: Date.now() });
+      }
+    };
+
     const resetContentAdmin = async () => {
       const next = normalizeStoredConfig(null);
       clearBufferedBlockSettingCommitTimers();
@@ -6283,11 +6466,51 @@ export function ContentAdminProvider({ children, initialState = null }) {
       return fallback;
     };
 
+    const resolveAuthoringManagedPathFromRef = (pageRef, fallbackPath = '') => {
+      const ref = normalizeManagedLinkRef(pageRef);
+      if (ref) {
+        const byRef = Object.values(authoringPageHierarchy).find((page) => (
+          normalizeManagedLinkRef(page.linkRef) === ref
+          || normalizeManagedLinkRef(page.routeKey) === ref
+        ));
+        if (byRef?.path) {
+          return byRef.path;
+        }
+
+        const maybePath = normalizeManagedPathInput(ref);
+        if (maybePath) {
+          if (authoringPageHierarchy[maybePath]) {
+            return maybePath;
+          }
+          const resolvedAlias = resolveAliasPath(maybePath, authoringPathAliases);
+          if (resolvedAlias && authoringPageHierarchy[resolvedAlias]) {
+            return resolvedAlias;
+          }
+        }
+      }
+
+      const fallback = normalizeManagedPathInput(fallbackPath);
+      if (!fallback) {
+        return '';
+      }
+      if (authoringPageHierarchy[fallback]) {
+        return fallback;
+      }
+      const resolvedFallbackAlias = resolveAliasPath(fallback, authoringPathAliases);
+      if (resolvedFallbackAlias && authoringPageHierarchy[resolvedFallbackAlias]) {
+        return resolvedFallbackAlias;
+      }
+      return fallback;
+    };
+
     return {
       devIdentity,
       pageHierarchy,
       blocksByPath,
       pathAliases,
+      authoringPageHierarchy,
+      authoringBlocksByPath,
+      authoringPathAliases,
       updatePageHierarchy,
       renamePagePath,
       updateBlock,
@@ -6305,6 +6528,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       lastSharedSaveResult,
       lastSharedPublishResult,
       sharedSnapshotUpdatedAt,
+      sharedSeedBaseline,
       sharedSyncStatus: {
         isPending: sharedSyncState.pendingMutationCount > 0 || sharedSyncState.hasQueuedDraftSync,
         pendingMutationCount: sharedSyncState.pendingMutationCount,
@@ -6335,6 +6559,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       registerExternalDraftFlushHandler,
       getPageRevisionHistory,
       getSharedContentBackups,
+      promoteContentAdminToSeed,
       setActiveBlockLock,
       clearActiveBlockLock,
       restorePageRevision,
@@ -6343,15 +6568,19 @@ export function ContentAdminProvider({ children, initialState = null }) {
       resetContentAdmin,
       resolveManagedPath,
       resolveManagedPathFromRef,
+      resolveAuthoringManagedPathFromRef,
       getBreadcrumbTrail: (pathname) => buildBreadcrumbTrail(pathname, pageHierarchy),
+      getAuthoringBreadcrumbTrail: (pathname) => buildBreadcrumbTrail(pathname, authoringPageHierarchy),
     };
   }, [
     state,
+    publishedState,
     devIdentity,
     sharedAuthorityEnabled,
     lastSharedSaveResult,
     lastSharedPublishResult,
     sharedSnapshotUpdatedAt,
+    sharedSeedBaseline,
     sharedSyncState,
     bufferedBlockSettingEdits,
   ]);

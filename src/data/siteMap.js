@@ -106,6 +106,8 @@ export const sitePages = [
   { path: '/admin/message', title: 'Admin - Message', section: 'Admin', source: null },
   { path: '/admin/consultants', title: 'Admin - Consultants', section: 'Admin', source: null },
   { path: '/admin/testimonials', title: 'Admin - Testimonials', section: 'Admin', source: null },
+  { path: '/admin/disclosures', title: 'Admin - Disclosures', section: 'Admin', source: null },
+  { path: '/admin/charts', title: 'Admin - Charts', section: 'Admin', source: null },
   { path: '/admin/documents', title: 'Admin - Documents', section: 'Admin', source: null },
   { path: '/admin/jobs', title: 'Admin - Jobs', section: 'Admin', source: null },
   { path: '/admin/redirects', title: 'Admin - Redirects', section: 'Admin', source: null },
