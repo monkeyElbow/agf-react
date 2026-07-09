@@ -1,10 +1,20 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ResourcesProvider, useResources } from '../context/ResourcesContext';
+import { getResourceCategoryTone } from '../lib/resourceCategoryTone';
+
+function normalizeSearchText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/['’]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
 
 function ResourcesPageContent() {
   const { articles } = useResources();
-  const [category, setCategory] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
 
   const publishedArticles = useMemo(
@@ -22,8 +32,11 @@ function ResourcesPageContent() {
     return ['all', ...Array.from(set)];
   }, [publishedArticles]);
 
+  const requestedCategory = searchParams.get('category') || 'all';
+  const category = categories.includes(requestedCategory) ? requestedCategory : 'all';
+
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+    const needle = normalizeSearchText(query);
     return publishedArticles.filter((item) => {
       if (category !== 'all' && item.category !== category) {
         return false;
@@ -37,7 +50,7 @@ function ResourcesPageContent() {
         item.title,
         item.category,
         item.excerpt,
-      ].join(' ').toLowerCase().includes(needle);
+      ].map(normalizeSearchText).join(' ').includes(needle);
     });
   }, [publishedArticles, category, query]);
 
@@ -46,38 +59,52 @@ function ResourcesPageContent() {
       <section className="resources-native-hero">
         <div className="ag-panel-rail">
           <h1>Resource Library</h1>
-          <p>Articles, guides, and practical planning tools for church and personal stewardship.</p>
         </div>
       </section>
 
       <section className="resources-native-filters">
         <div className="ag-panel-rail">
           <div className="resources-native-filter-row">
-            <label htmlFor="resources-type-search">
-              Search
+            <div className="resources-native-filter-field">
+              <label className="sr-only" htmlFor="resources-type-search">
+                Search
+              </label>
               <input
                 id="resources-type-search"
                 type="search"
                 value={query}
-                placeholder="Search resources"
+                placeholder="Search for"
                 onChange={(event) => setQuery(event.target.value)}
               />
-            </label>
+            </div>
 
-            <label htmlFor="resources-type-category">
-              Category
+            <div className="resources-native-filter-field">
+              <label className="sr-only" htmlFor="resources-type-category">
+                Category
+              </label>
               <select
                 id="resources-type-category"
                 value={category}
-                onChange={(event) => setCategory(event.target.value)}
+                onChange={(event) => {
+                  const nextCategory = event.target.value;
+                  setSearchParams((current) => {
+                    const next = new URLSearchParams(current);
+                    if (nextCategory === 'all') {
+                      next.delete('category');
+                    } else {
+                      next.set('category', nextCategory);
+                    }
+                    return next;
+                  });
+                }}
               >
                 {categories.map((item) => (
                   <option key={item} value={item}>
-                    {item === 'all' ? 'All categories' : item}
+                    {item === 'all' ? 'Select category' : item}
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
           </div>
         </div>
       </section>
@@ -94,7 +121,9 @@ function ResourcesPageContent() {
                 ) : null}
 
                 <div className="resources-native-card-copy">
-                  <span className="resources-native-card-category">{article.category || 'Article'}</span>
+                  <span className={`resources-native-card-category is-tone-${getResourceCategoryTone(article.category)}`}>
+                    {article.category || 'Article'}
+                  </span>
                   <h2>
                     <Link to={`/resources/article/${encodeURIComponent(article.slug)}`}>{article.title}</Link>
                   </h2>

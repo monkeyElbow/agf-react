@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ResourcesProvider, useResources } from '../context/ResourcesContext';
+import { getResourceCategoryTone } from '../lib/resourceCategoryTone';
 
 function ResourceArticlePageContent() {
   const { slug: slugParam } = useParams();
@@ -15,8 +16,15 @@ function ResourceArticlePageContent() {
     <article className="resources-native-article-page">
       <header className="resources-native-article-hero">
         <div className="ag-panel-rail">
-          <Link to="/resources" className="resources-native-back-link">Back to resources</Link>
-          <p className="resources-native-article-kicker">{article.category || 'Article'}</p>
+          <div className="resources-native-article-meta">
+            <Link to="/resources" className="resources-native-back-link">Back to Resources</Link>
+            <Link
+              to={`/resources?category=${encodeURIComponent(article.category || 'Article')}`}
+              className={`resources-native-article-category-btn service-native-btn is-outline is-tone-${getResourceCategoryTone(article.category)}`}
+            >
+              {article.category || 'Article'}
+            </Link>
+          </div>
           <h1>{article.title}</h1>
         </div>
       </header>
@@ -31,18 +39,20 @@ function ResourceArticlePageContent() {
 
       <section className="resources-native-article-content-wrap">
         <div className="ag-panel-rail">
-          <div
-            className="resources-native-article-content"
-            dangerouslySetInnerHTML={{ __html: article.bodyHtml || '<p>Article content unavailable.</p>' }}
-          />
-          {article.sourceUrl ? (
-            <p className="resources-native-article-source">
-              Source:{' '}
-              <a href={article.sourceUrl} target="_blank" rel="noreferrer noopener">
-                {article.sourceUrl}
-              </a>
-            </p>
-          ) : null}
+          <div className="resources-native-article-content-shell">
+            <div
+              className="resources-native-article-content"
+              dangerouslySetInnerHTML={{ __html: article.bodyHtml || '<p>Article content unavailable.</p>' }}
+            />
+            {article.sourceUrl ? (
+              <p className="resources-native-article-source">
+                Source:{' '}
+                <a href={article.sourceUrl} target="_blank" rel="noreferrer noopener">
+                  {article.sourceUrl}
+                </a>
+              </p>
+            ) : null}
+          </div>
         </div>
       </section>
     </article>
