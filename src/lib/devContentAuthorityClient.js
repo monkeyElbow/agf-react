@@ -181,3 +181,12 @@ export async function restoreSharedContentBackup(backupFileName = '', actor = nu
 export async function restoreLatestSharedContentBackup(actor = null) {
   return restoreSharedContentBackup('', actor);
 }
+
+export async function promoteSharedContentToSeed(actor = null) {
+  return sendJson('/promote-seed', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+    }),
+  });
+}

@@ -171,6 +171,14 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/promote-seed') {
+            const result = store.promoteCurrentStateToSeed({
+              actor: body.actor,
+            });
+            sendJson(res, result?.ok === false ? 500 : 200, result);
+            return;
+          }
+
           sendJson(res, 404, { error: 'not-found' });
         } catch (error) {
           sendJson(res, 500, {

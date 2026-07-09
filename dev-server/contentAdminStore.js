@@ -9,6 +9,7 @@ const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
 const SHARED_CONTENT_BACKUP_FILE_PREFIX = 'content-admin-shared-';
 const SHARED_CONTENT_BACKUP_FILE_SUFFIX = '.json';
+const SHARED_CONTENT_SEED_BASELINE_FILE_NAME = 'content-admin-seed-baseline.json';
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -789,6 +790,7 @@ export function createDevContentAuthorityStore({
   createId = (ts) => `${ts}-${Math.random().toString(36).slice(2, 8)}`,
   maxRevisionsPerPage = DEFAULT_MAX_REVISIONS_PER_PAGE,
   backupDir = path.resolve(path.dirname(persistenceFile), 'backups'),
+  seedBaselineFile = path.resolve(path.dirname(persistenceFile), SHARED_CONTENT_SEED_BASELINE_FILE_NAME),
   maxAutomaticBackups = DEFAULT_MAX_AUTOMATIC_BACKUPS,
   getGitCommitHash = defaultGitCommitHashResolver,
 } = {}) {
@@ -802,6 +804,99 @@ export function createDevContentAuthorityStore({
     const dir = path.dirname(persistenceFile);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(persistenceFile, JSON.stringify(nextRecord));
+  };
+
+  const readSeedBaselinePayload = (filePath = seedBaselineFile) => {
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const metadata = parsed?.meta && typeof parsed.meta === 'object'
+      ? cloneJson(parsed.meta)
+      : {};
+    return {
+      fileName: path.basename(filePath),
+      filePath,
+      meta: {
+        createdAt: Number.isFinite(Number(metadata?.createdAt)) ? Number(metadata.createdAt) : 0,
+        timestamp: String(metadata?.timestamp || '').trim(),
+        reason: String(metadata?.reason || '').trim(),
+        gitCommitHash: String(metadata?.gitCommitHash || '').trim(),
+        actor: normalizeActor(metadata?.actor),
+        ...safeBackupMetadata(metadata),
+      },
+      seedState: normalizeSharedState(parsed?.seedState || parsed?.state || null),
+    };
+  };
+
+  const getSeedBaselineInfo = () => {
+    if (!seedBaselineFile || !fs.existsSync(seedBaselineFile)) {
+      return null;
+    }
+    try {
+      const baseline = readSeedBaselinePayload(seedBaselineFile);
+      return {
+        fileName: baseline.fileName,
+        createdAt: Number.isFinite(Number(baseline.meta?.createdAt)) ? Number(baseline.meta.createdAt) : 0,
+        timestamp: String(baseline.meta?.timestamp || '').trim(),
+        reason: String(baseline.meta?.reason || '').trim(),
+        gitCommitHash: String(baseline.meta?.gitCommitHash || '').trim(),
+        actor: normalizeActor(baseline.meta?.actor),
+        metadata: safeBackupMetadata(baseline.meta),
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const writeSeedBaselinePayload = (seedState, { actor, reason = 'promote-to-seed-baseline' } = {}) => {
+    const createdAt = now();
+    const dir = path.dirname(seedBaselineFile);
+    const normalizedActor = normalizeActor(actor);
+    const gitCommitHash = String(getGitCommitHash?.() || '').trim();
+    const normalizedSeedState = normalizeSharedState(seedState);
+    const payload = {
+      meta: {
+        createdAt,
+        timestamp: new Date(createdAt).toISOString(),
+        reason: String(reason || '').trim() || 'promote-to-seed-baseline',
+        gitCommitHash,
+        actor: normalizedActor,
+        persistenceFile: path.basename(persistenceFile),
+        seedBaselineFile: path.basename(seedBaselineFile),
+        sourceRecordUpdatedAt: Number.isFinite(Number(record?.updatedAt)) ? Number(record.updatedAt) : 0,
+      },
+      seedState: cloneJson(normalizedSeedState),
+    };
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(seedBaselineFile, JSON.stringify(payload));
+    return {
+      fileName: path.basename(seedBaselineFile),
+      createdAt,
+      timestamp: payload.meta.timestamp,
+      reason: payload.meta.reason,
+      gitCommitHash,
+      actor: normalizedActor,
+      metadata: safeBackupMetadata(payload.meta),
+    };
+  };
+
+  const resolveSeedResetTarget = (fallbackSeedState) => {
+    const promotedBaseline = getSeedBaselineInfo();
+    if (promotedBaseline) {
+      try {
+        const baselinePayload = readSeedBaselinePayload(seedBaselineFile);
+        return {
+          seedState: baselinePayload.seedState,
+          resetSource: 'promoted-seed-baseline',
+          seedBaseline: promotedBaseline,
+        };
+      } catch {
+        // Fall back to the code-derived seed if the promoted baseline cannot be read.
+      }
+    }
+    return {
+      seedState: normalizeSharedState(fallbackSeedState),
+      resetSource: 'code-default-seed',
+      seedBaseline: null,
+    };
   };
 
   const readBackupPayload = (filePath) => {
@@ -947,6 +1042,7 @@ export function createDevContentAuthorityStore({
     announcement: cloneJson(record.announcement),
     state: cloneJson(record.state),
     baseSnapshot: cloneJson(record.baseSnapshot),
+    seedBaseline: getSeedBaselineInfo(),
   });
 
   const publishAnnouncementSnapshot = () => ({
@@ -1035,7 +1131,8 @@ export function createDevContentAuthorityStore({
     },
 
     resetFromSeed(seedState, { actor, reason = 'seed-reset' } = {}) {
-      const normalizedSeedState = normalizeSharedState(seedState);
+      const resetTarget = resolveSeedResetTarget(seedState);
+      const normalizedSeedState = normalizeSharedState(resetTarget.seedState);
       const nextRecord = {
         initialized: true,
         version: 1,
@@ -1051,6 +1148,7 @@ export function createDevContentAuthorityStore({
           backupReason: record.initialized ? 'before-reset-from-seed' : '',
           backupMetadata: {
             action: String(reason || '').trim() || 'seed-reset',
+            resetSource: resetTarget.resetSource,
           },
         });
       } catch (error) {
@@ -1068,7 +1166,10 @@ export function createDevContentAuthorityStore({
         summary: 'seed baseline',
       });
       persistRecord();
-      return publishSnapshot();
+      return {
+        ...publishSnapshot(),
+        resetSource: resetTarget.resetSource,
+      };
     },
 
     saveDraft(nextState, { actor, reason = 'draft-saved', summary = '' } = {}) {
@@ -1572,6 +1673,38 @@ export function createDevContentAuthorityStore({
         gitCommitHash: backup.gitCommitHash,
         metadata: safeBackupMetadata(backup.metadata),
       }));
+    },
+
+    promoteCurrentStateToSeed({ actor } = {}) {
+      try {
+        createSharedContentBackup('before-promote-to-seed-baseline', {
+          action: 'promote-to-seed-baseline',
+        });
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'backup-failed',
+          details: error instanceof Error ? error.message : 'backup-failed',
+          ...publishSnapshot(),
+        };
+      }
+
+      try {
+        const promotedSeedBaseline = writeSeedBaselinePayload(record.state, { actor });
+        return {
+          ok: true,
+          promotedSeedBaseline,
+          seedBaseline: promotedSeedBaseline,
+          ...publishSnapshot(),
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'seed-promotion-failed',
+          details: error instanceof Error ? error.message : 'seed-promotion-failed',
+          ...publishSnapshot(),
+        };
+      }
     },
 
     restoreFromBackup(backupFileName = '', { actor } = {}) {
