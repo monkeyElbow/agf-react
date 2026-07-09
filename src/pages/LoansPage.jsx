@@ -8,7 +8,8 @@ import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import DynamicRequestFormSection from '../components/DynamicRequestFormSection';
 import SafeRichText from '../components/SafeRichText';
-import { ColumnsBlock } from '../components/blocks/PageBlocksRenderer';
+import { ColumnsBlock, renderHighlightedText } from '../components/blocks/PageBlocksRenderer';
+import { useDisclosures } from '../context/DisclosuresContext';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import { useFrontHud } from '../context/FrontHudContext';
 import { useContentAdmin } from '../context/ContentAdminContext';
@@ -415,29 +416,15 @@ function buildLoanVisionFuelConfigFromBlock(block) {
   }
 
   const dynamicBillboard = buildDynamicBillboardFromBlock(block);
-  const settings = block.settings || {};
-  const subtitle = String(settings.subtitle || '').trim();
-  const body = String(settings.body || '').trim();
-  const buttonClassName = dynamicBillboard?.action
-    ? actionButtonClassName(dynamicBillboard.action.style, dynamicBillboard.action.tone)
-    : 'service-native-btn';
-
-  if (!dynamicBillboard && !subtitle && !body) {
+  if (!dynamicBillboard) {
     return null;
   }
 
   return {
-    title: dynamicBillboard?.title || 'Vision fuel.',
-    titleClassName: dynamicBillboard?.titleClassName || '',
-    titleHighlights: dynamicBillboard?.titleHighlights || parseTextHighlights(settings.titleHighlightsJson),
-    titleStyle: dynamicBillboard?.titleStyle || undefined,
-    subtitle: subtitle || 'One bold step at a time.',
-    bodyHtml: String(dynamicBillboard?.bodyHtml || '').trim(),
-    body: body || 'Loans guided by your ministry, driven by your mission, and powered by AGFinancial.',
-    buttonLabel: dynamicBillboard?.action?.label || 'Start the process',
-    buttonHref: dynamicBillboard?.action?.to || dynamicBillboard?.action?.href || '/services/loans#form',
-    buttonOpenInNewWindow: Boolean(dynamicBillboard?.action?.openInNewWindow) || toBooleanFlag(settings.buttonOpenInNewWindow),
-    buttonClassName,
+    ...dynamicBillboard,
+    buttonClassName: dynamicBillboard.action
+      ? actionButtonClassName(dynamicBillboard.action.style, dynamicBillboard.action.tone)
+      : '',
   };
 }
 
@@ -635,8 +622,12 @@ export default function LoansPage({ sectionsOnly = false }) {
   const {
     blocksByPath,
     pageHierarchy,
+    authoringBlocksByPath,
+    authoringPageHierarchy,
     resolveManagedPathFromRef = (pathRef, fallback = '/') => String(pathRef || '').trim() || fallback,
+    resolveAuthoringManagedPathFromRef = null,
     setActiveBlockLock = () => ({ ok: false }),
+    clearActiveBlockLock = () => ({ ok: false }),
     getBlockCollaboration = () => null,
     devIdentity = null,
     claimBufferedBlockEdit = () => false,
@@ -644,7 +635,17 @@ export default function LoansPage({ sectionsOnly = false }) {
     registerExternalDraftFlushHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
+  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
+  const managedResolveManagedPathFromRef = frontHudEnabled
+    ? (resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef)
+    : resolveManagedPathFromRef;
   const { testimonials: testimonialsLibrary } = useTestimonials();
+  const { getDisclosureValue } = useDisclosures();
+  const loanCalculatorDisclosure = getDisclosureValue(
+    'loans-calculator-disclosure',
+    'This calculator uses example data and is not an AGFinancial official quote or recommendation.',
+  );
 
   const [loanAmount, setLoanAmount] = useState('');
   const [interestRate, setInterestRate] = useState('');
@@ -671,8 +672,8 @@ export default function LoansPage({ sectionsOnly = false }) {
   useNativeEnhancements(pageRef);
 
   const managedBlocksSource = useMemo(() => {
-    return Array.isArray(blocksByPath?.['/services/loans']) ? blocksByPath['/services/loans'] : [];
-  }, [blocksByPath]);
+    return Array.isArray(managedBlocksByPath?.['/services/loans']) ? managedBlocksByPath['/services/loans'] : [];
+  }, [managedBlocksByPath]);
   const { blocks: managedBlocks, stageLocalBlockSetting } = useLocalBlockDrafts({
     pathname: '/services/loans',
     blocks: managedBlocksSource,
@@ -744,14 +745,52 @@ export default function LoansPage({ sectionsOnly = false }) {
     () => buildLoanVisionFuelConfigFromBlock(visionFuelBlock),
     [visionFuelBlock],
   );
-  const visionFuelTitle = dynamicVisionFuel?.title || 'Vision fuel.';
-  const visionFuelSubtitle = dynamicVisionFuel?.subtitle || 'One bold step at a time.';
-  const visionFuelBodyHtml = String(dynamicVisionFuel?.bodyHtml || '').trim();
-  const visionFuelBody = dynamicVisionFuel?.body || 'Loans guided by your ministry, driven by your mission, and powered by AGFinancial.';
-  const visionFuelButtonLabel = dynamicVisionFuel?.buttonLabel || 'Start the process';
-  const visionFuelButtonHref = dynamicVisionFuel?.buttonHref || '/services/loans#form';
-  const visionFuelButtonOpenInNewWindow = Boolean(dynamicVisionFuel?.buttonOpenInNewWindow);
-  const visionFuelButtonClassName = String(dynamicVisionFuel?.buttonClassName || 'service-native-btn').trim() || 'service-native-btn';
+  const fallbackVisionFuel = {
+    title: 'Vision fuel.',
+    titleClassName: '',
+    titleHighlights: parseTextHighlights(''),
+    titleStyle: undefined,
+    subtitle: 'One bold step at a time.',
+    bodyHtml: '<p>Loans guided by your ministry, driven by your mission, and powered by AGFinancial.</p>',
+    body: '',
+    bgTone: 'white',
+    textTone: 'dark',
+    justify: 'center',
+    copyClassName: '',
+    copyFadeRootMargin: '',
+    contentMaxWidthPx: null,
+    action: {
+      label: 'Start the process',
+      to: '/services/loans#form',
+      href: '',
+      openInNewWindow: false,
+      style: 'blue',
+      tone: 'atlantean',
+    },
+    buttonClassName: actionButtonClassName('blue', 'atlantean'),
+  };
+  const resolvedVisionFuel = dynamicVisionFuel || fallbackVisionFuel;
+  const visionFuelTitle = String(resolvedVisionFuel.title || '').trim();
+  const visionFuelSubtitle = String(resolvedVisionFuel.subtitle || '').trim();
+  const visionFuelBodyHtml = String(resolvedVisionFuel.bodyHtml || '').trim();
+  const visionFuelBody = String(resolvedVisionFuel.body || '').trim();
+  const visionFuelAction = resolvedVisionFuel.action || null;
+  const visionFuelButtonLabel = String(visionFuelAction?.label || '').trim();
+  const visionFuelButtonHref = String(visionFuelAction?.to || visionFuelAction?.href || '').trim();
+  const visionFuelButtonOpenInNewWindow = Boolean(visionFuelAction?.openInNewWindow);
+  const visionFuelButtonClassName = String(resolvedVisionFuel.buttonClassName || '').trim() || 'service-native-btn';
+  const visionFuelContentMaxWidthPx = Number(resolvedVisionFuel.contentMaxWidthPx);
+  const visionFuelSectionStyle = visionFuelAction
+    ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
+    : undefined;
+  const visionFuelRailStyle = Number.isFinite(visionFuelContentMaxWidthPx) && visionFuelContentMaxWidthPx > 0
+    ? { '--dynamic-billboard-max-width': `${Math.round(visionFuelContentMaxWidthPx)}px` }
+    : undefined;
+  const visionFuelCopyClassName = [
+    'native-info-section-copy',
+    `is-justify-${resolvedVisionFuel.justify || 'center'}`,
+    resolvedVisionFuel.copyClassName || '',
+  ].filter(Boolean).join(' ');
   const testimonialsData = useMemo(
     () => resolveTestimonialsBlockData({
       block: testimonialsBlock,
@@ -763,10 +802,10 @@ export default function LoansPage({ sectionsOnly = false }) {
     [testimonialsBlock, testimonialsLibrary],
   );
   const routeLinkOptions = useMemo(
-    () => Object.values(pageHierarchy || {})
+    () => Object.values(managedPageHierarchy || {})
       .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search')
       .sort((a, b) => a.path.localeCompare(b.path)),
-    [pageHierarchy],
+    [managedPageHierarchy],
   );
   const frontHudOpacityRatio = clampFrontHudOpacity(frontHudOpacity) / 100;
   const hudPanels = useMemo(
@@ -935,7 +974,7 @@ export default function LoansPage({ sectionsOnly = false }) {
       hasAdditionalPrincipal ? `Estimated Interest Saved: $${formatCurrency(estimatedInterestSaved)}` : null,
       hasAdditionalPrincipal ? `Estimated Time Saved: ${formatLoanPayoffLabel(estimatedTimeSavedMonths)}` : null,
       '',
-      'Disclosure: This calculator uses example data and is not an AGFinancial official quote or recommendation.',
+      `Disclosure: ${loanCalculatorDisclosure}`,
     ].filter(Boolean).join('\n');
 
     const blob = buildLoanPdf(summary, loanRows);
@@ -998,6 +1037,13 @@ export default function LoansPage({ sectionsOnly = false }) {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
   };
+
+  useEffect(() => () => {
+    const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
+    if (activeHudBlockId) {
+      clearActiveBlockLock('/services/loans', activeHudBlockId);
+    }
+  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
   const resolveHudAnchor = (blockId) => {
     if (!showFrontHud) {
       return null;
@@ -1028,7 +1074,7 @@ export default function LoansPage({ sectionsOnly = false }) {
     );
   };
   const resolveRoutePath = (pathRef, fallback = '/') => {
-    const resolved = resolveManagedPathFromRef(pathRef, pathRef);
+    const resolved = managedResolveManagedPathFromRef(pathRef, pathRef);
     return resolved || fallback;
   };
 
@@ -1233,12 +1279,14 @@ export default function LoansPage({ sectionsOnly = false }) {
                 <p>{item.description}</p>
               </article>
             ))}
-            <article className="loans-native-option-question fade-up">
-              <h3>Which loan is right for me?</h3>
+          </div>
+          <div className="loans-native-option-question-wrap fade-up">
+            <div className="native-info-section-copy is-justify-center">
+              <h2>Which loan is right for me?</h2>
               <div className="service-native-action-row is-centered">
                 <Link to="/services/loans/loan-consultants" className="service-native-btn">Ask my loan expert</Link>
               </div>
-            </article>
+            </div>
           </div>
         </div>
       </section>
@@ -1262,10 +1310,7 @@ export default function LoansPage({ sectionsOnly = false }) {
 
       <section className="service-native-section loans-native-calculator-wrap" id="run-some-numbers">
         <div className="ag-panel-rail">
-          <h2
-            className="loans-native-calculator-title"
-            style={{ fontSize: 'clamp(1.65rem, 2.5vw, 2rem)', lineHeight: 1.05 }}
-          >
+          <h2 className="loans-native-calculator-title">
             Run some numbers.
             {' '}
             <mark>Impress your pastor.</mark>
@@ -1454,7 +1499,7 @@ export default function LoansPage({ sectionsOnly = false }) {
                   <p className="loans-native-disclaimer">
                     <strong>Disclosure:</strong>
                     {' '}
-                    This calculator uses example data and is not an AGFinancial official quote or recommendation.
+                    {loanCalculatorDisclosure}
                   </p>
                 </div>
               </div>
@@ -1463,48 +1508,67 @@ export default function LoansPage({ sectionsOnly = false }) {
         </div>
       </section>
 
-      <section className={`service-native-section loans-native-vision-fuel${getHudBlockStateClassName('vision_fuel')}${getOwnershipVisualForBlockId('vision_fuel').className || ''}`} data-block-id="vision_fuel">
+      <section
+        className={`service-native-section dynamic-billboard loans-native-vision-fuel is-bg-${resolvedVisionFuel.bgTone || 'white'} is-text-${resolvedVisionFuel.textTone || 'dark'}${getHudBlockStateClassName('vision_fuel')}${getOwnershipVisualForBlockId('vision_fuel').className || ''}`}
+        data-block-id="vision_fuel"
+        style={visionFuelSectionStyle || undefined}
+      >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('vision_fuel')} />
         {renderHudAnchor('vision_fuel')}
-        <div className="ag-panel-rail">
-          <h2
-            className={`loans-native-vision-fuel-title${dynamicVisionFuel?.titleClassName ? ` ${dynamicVisionFuel.titleClassName}` : ''}`}
-            style={dynamicVisionFuel?.titleStyle}
+        <div className="ag-panel-rail" style={visionFuelRailStyle || undefined}>
+          <div
+            className={visionFuelCopyClassName}
+            style={resolvedVisionFuel.copyStyle || undefined}
+            data-fade-root-margin={resolvedVisionFuel.copyFadeRootMargin || undefined}
           >
-            {dynamicVisionFuel ? (
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: renderTextWithHighlights(visionFuelTitle, dynamicVisionFuel.titleHighlights),
-                }}
-              />
-            ) : visionFuelTitle}
-          </h2>
-          <h3 className="loans-native-vision-fuel-subtitle">{visionFuelSubtitle}</h3>
-          {visionFuelBodyHtml ? (
-            <SafeRichText as="div" className="native-info-rich-html" html={visionFuelBodyHtml} />
-          ) : (
-            <p>{visionFuelBody}</p>
-          )}
-          <div className="service-native-action-row is-centered">
-            {visionFuelButtonHref.startsWith('/') ? (
-              <Link
-                to={visionFuelButtonHref}
-                className={visionFuelButtonClassName}
-                target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
-                rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
+            {visionFuelTitle ? (
+              <h2
+                className={resolvedVisionFuel.titleClassName || undefined}
+                style={resolvedVisionFuel.titleStyle}
               >
-                {visionFuelButtonLabel}
-              </Link>
-            ) : (
-              <a
-                href={visionFuelButtonHref}
-                className={visionFuelButtonClassName}
-                target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
-                rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
+                {resolvedVisionFuel.titleHighlights?.length
+                  ? renderHighlightedText(visionFuelTitle, resolvedVisionFuel.titleHighlights)
+                  : visionFuelTitle}
+              </h2>
+            ) : null}
+            {visionFuelSubtitle ? (
+              <p
+                className={['native-info-section-subtitle', resolvedVisionFuel.subtitleClassName || ''].filter(Boolean).join(' ')}
+                style={resolvedVisionFuel.subtitleStyle || undefined}
               >
-                {visionFuelButtonLabel}
-              </a>
-            )}
+                {visionFuelSubtitle}
+              </p>
+            ) : null}
+            {visionFuelBodyHtml ? (
+              <SafeRichText as="div" className="native-info-rich-html" html={visionFuelBodyHtml} />
+            ) : visionFuelBody ? (
+              <div className="native-info-rich-html">
+                <p>{visionFuelBody}</p>
+              </div>
+            ) : null}
+            {visionFuelAction && visionFuelButtonLabel && visionFuelButtonHref ? (
+              <div className="service-native-action-row is-centered">
+                {visionFuelButtonHref.startsWith('/') ? (
+                  <Link
+                    to={visionFuelButtonHref}
+                    className={visionFuelButtonClassName}
+                    target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
+                    rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
+                  >
+                    {visionFuelButtonLabel}
+                  </Link>
+                ) : (
+                  <a
+                    href={visionFuelButtonHref}
+                    className={visionFuelButtonClassName}
+                    target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
+                    rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
+                  >
+                    {visionFuelButtonLabel}
+                  </a>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

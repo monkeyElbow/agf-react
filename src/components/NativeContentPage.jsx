@@ -15,6 +15,8 @@ import { getNativePageContent } from '../data/nativePageContent';
 import { isPageHiddenFromSitemap } from '../data/siteMap';
 import { useConsultants } from '../context/ConsultantsContext';
 import { useCareersJobs } from '../context/CareersJobsContext';
+import { useCharts } from '../context/ChartsContext';
+import { useDisclosures } from '../context/DisclosuresContext';
 import { useRates } from '../context/RatesContext';
 import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
 import { useDocuments } from '../context/DocumentsContext';
@@ -765,9 +767,9 @@ function normalizeBillboardTitleFontWeight(value, fontFamily = 'heading') {
 function normalizeBillboardTitleLetterSpacingEm(value, fontFamily = 'heading') {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
-    return fontFamily === 'helv' ? -0.015 : -0.03;
+    return fontFamily === 'helv' ? -0.038 : -0.03;
   }
-  return Math.max(-0.08, Math.min(0.04, Number(numeric.toFixed(3))));
+  return Math.max(-0.12, Math.min(0.04, Number(numeric.toFixed(3))));
 }
 
 function normalizePanelTextTone(value, fallback = 'dark') {
@@ -973,9 +975,12 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
     titleStyle: runtime.titleStyle,
     titleHighlights: Array.isArray(runtime.titleHighlights) ? runtime.titleHighlights : [],
     subtitle: runtime.subtitle || undefined,
+    subtitleClassName: runtime.subtitleClassName || undefined,
+    subtitleStyle: runtime.subtitleStyle || undefined,
     html: normalizeHtmlContent(runtime.bodyHtml),
     body: runtime.body ? [runtime.body] : [],
     justify: normalizeHeroJustify(runtime.justify),
+    copyStyle: runtime.copyStyle || undefined,
     copyClassName: runtime.copyClassName || '',
     copyFadeRootMargin: runtime.copyFadeRootMargin || undefined,
     sectionStyle,
@@ -1180,6 +1185,71 @@ function mergeClassNames(baseClassName, nextClassName) {
     .split(/\s+/)
     .filter(Boolean);
   return [...new Set(tokens)].join(' ');
+}
+
+function applyManagedDisclosureValue(sourceValue, disclosureId, getDisclosureValue) {
+  const token = String(disclosureId || '').trim();
+  if (!token) {
+    return sourceValue;
+  }
+  return getDisclosureValue(token, sourceValue);
+}
+
+function applyManagedDisclosuresToSection(section, getDisclosureValue) {
+  if (!section || typeof section !== 'object') {
+    return section;
+  }
+
+  const nextSection = {
+    ...section,
+    fineprint: applyManagedDisclosureValue(section.fineprint, section.fineprintDisclosureId, getDisclosureValue),
+  };
+
+  if (Array.isArray(section.cards)) {
+    nextSection.cards = section.cards.map((card) => {
+      if (!card || typeof card !== 'object') {
+        return card;
+      }
+      const nextFineprint = applyManagedDisclosureValue(card.fineprint, card.fineprintDisclosureId, getDisclosureValue);
+      return nextFineprint === card.fineprint
+        ? card
+        : { ...card, fineprint: nextFineprint };
+    });
+  }
+
+  return nextSection;
+}
+
+function applyManagedChartValue(sourceValue, chartId, getChartValue) {
+  const token = String(chartId || '').trim();
+  if (!token) {
+    return sourceValue;
+  }
+  const managedChart = getChartValue(token, null);
+  if (!managedChart || typeof managedChart !== 'object') {
+    return sourceValue;
+  }
+  return {
+    headers: Array.isArray(managedChart.headers) ? managedChart.headers : sourceValue?.headers,
+    rows: Array.isArray(managedChart.rows) ? managedChart.rows : sourceValue?.rows,
+    valueAlignment: String(managedChart.valueAlignment || sourceValue?.valueAlignment || 'left').trim().toLowerCase() === 'right'
+      ? 'right'
+      : 'left',
+  };
+}
+
+function applyManagedChartsToSection(section, getChartValue) {
+  if (!section || typeof section !== 'object') {
+    return section;
+  }
+
+  const nextTable = applyManagedChartValue(section.table, section.tableChartId, getChartValue);
+  return nextTable === section.table
+    ? section
+    : {
+        ...section,
+        table: nextTable,
+      };
 }
 
 function buildDynamicCtaSection(block, pathname) {
@@ -4285,29 +4355,40 @@ export default function NativeContentPage({ page }) {
   useNativeEnhancements(pageRef, templatePath);
   const { getConsultants } = useConsultants();
   const { getVisibleJobs } = useCareersJobs();
+  const { getChartValue } = useCharts();
+  const { getDisclosureValue } = useDisclosures();
   const { rates, iraRates, ratesMeta } = useRates();
+  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
   const {
     blocksByPath,
+    authoringBlocksByPath,
     resolveManagedPathFromRef,
+    resolveAuthoringManagedPathFromRef = null,
     setActiveBlockLock = () => ({ ok: false }),
+    clearActiveBlockLock = () => ({ ok: false }),
     updateBlock = () => {},
     moveBlock = () => {},
     removeBlock = () => {},
     pageHierarchy,
+    authoringPageHierarchy,
     getBlockCollaboration = () => null,
     devIdentity = null,
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
   } = useContentAdmin();
-  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
+  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
+  const managedResolveManagedPathFromRef = frontHudEnabled
+    ? (resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef)
+    : resolveManagedPathFromRef;
   const { addResponse } = useConsultantResponses();
   const { testimonials: testimonialsLibrary } = useTestimonials();
   const baseContent = getNativePageContent(templatePath, page.title);
-  const editableBlockPath = blocksByPath[activePath]
+  const editableBlockPath = managedBlocksByPath[activePath]
     ? activePath
-    : (blocksByPath[templatePath] ? templatePath : '');
-  const editablePageBlocksSource = editableBlockPath ? (blocksByPath[editableBlockPath] || []) : [];
+    : (managedBlocksByPath[templatePath] ? templatePath : '');
+  const editablePageBlocksSource = editableBlockPath ? (managedBlocksByPath[editableBlockPath] || []) : [];
   const { blocks: editablePageBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({
     pathname: editableBlockPath,
     blocks: editablePageBlocksSource,
@@ -4475,9 +4556,12 @@ export default function NativeContentPage({ page }) {
             titleStyle: mappedSection.titleStyle || section.titleStyle,
             titleHighlights: mappedSection.titleHighlights?.length ? mappedSection.titleHighlights : section.titleHighlights,
             subtitle: mappedSection.subtitle || section.subtitle,
+            subtitleClassName: mappedSection.subtitleClassName || section.subtitleClassName,
+            subtitleStyle: mappedSection.subtitleStyle || section.subtitleStyle,
             html: hasMappedHtml ? mappedSection.html : (hasMappedBody ? '' : section.html),
             body: hasMappedBody ? mappedSection.body : (hasMappedHtml ? [] : section.body),
             justify: mappedSection.justify || section.justify,
+            copyStyle: mappedSection.copyStyle || section.copyStyle,
             sectionStyle: {
               ...(section.sectionStyle || {}),
               ...(mappedSection.sectionStyle || {}),
@@ -4885,8 +4969,21 @@ export default function NativeContentPage({ page }) {
       sections: nextSections,
     };
   }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isTestPage, templatePath, testimonialsLibrary]);
-  const preIntroSections = Array.isArray(content.preIntroSections) ? content.preIntroSections : [];
-  const postIntroSections = Array.isArray(content.sections) ? content.sections : [];
+  const contentWithManagedDisclosures = useMemo(() => ({
+    ...content,
+    preIntroSections: Array.isArray(content.preIntroSections)
+      ? content.preIntroSections
+        .map((section) => applyManagedDisclosuresToSection(section, getDisclosureValue))
+        .map((section) => applyManagedChartsToSection(section, getChartValue))
+      : [],
+    sections: Array.isArray(content.sections)
+      ? content.sections
+        .map((section) => applyManagedDisclosuresToSection(section, getDisclosureValue))
+        .map((section) => applyManagedChartsToSection(section, getChartValue))
+      : [],
+  }), [content, getChartValue, getDisclosureValue]);
+  const preIntroSections = Array.isArray(contentWithManagedDisclosures.preIntroSections) ? contentWithManagedDisclosures.preIntroSections : [];
+  const postIntroSections = Array.isArray(contentWithManagedDisclosures.sections) ? contentWithManagedDisclosures.sections : [];
   const sectionList = [...preIntroSections, ...postIntroSections];
   const inlineCtaRevealTargets = useMemo(() => {
     const lookup = new Map();
@@ -4950,7 +5047,7 @@ export default function NativeContentPage({ page }) {
   const introLineSpacing = normalizeIntroLineSpacing(introConfig?.lineSpacing);
   const heroBase = content.hero || null;
   const heroLinkOptions = useMemo(() => {
-    const pages = Object.values(pageHierarchy || {});
+    const pages = Object.values(managedPageHierarchy || {});
     return pages
       .filter((page) => !page.path.startsWith('/admin/') && page.path !== '/search' && !isPageHiddenFromSitemap(page))
       .map((page) => ({
@@ -4958,7 +5055,7 @@ export default function NativeContentPage({ page }) {
         value: page.path,
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [pageHierarchy]);
+  }, [managedPageHierarchy]);
   const introImage = introConfig?.image || '';
   const introImageAlt = introConfig?.imageAlt || '';
   const introSplit = Boolean(introImage && introConfig?.layout === 'split');
@@ -5368,10 +5465,12 @@ export default function NativeContentPage({ page }) {
 
   const closeHudDock = () => {
     setHudDockCollapsed(true);
+    setActiveHudPanelId('');
   };
 
   const closeMobileHudPanel = () => {
     setHudDockCollapsed(true);
+    setActiveHudPanelId('');
     setMobileHudMoreOpen(false);
     setMobileHudDeleteConfirmBlockId('');
   };
@@ -5382,6 +5481,13 @@ export default function NativeContentPage({ page }) {
     setMobileHudMoreOpen(false);
     setMobileHudDeleteConfirmBlockId('');
   };
+
+  useEffect(() => () => {
+    const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
+    if (editableBlockPath && activeHudBlockId) {
+      clearActiveBlockLock(editableBlockPath, activeHudBlockId);
+    }
+  }, [activeHudPanel?.block?.id, clearActiveBlockLock, editableBlockPath]);
 
   const selectMobileHudPanel = (panelId, options = {}) => {
     if (!isMobileFrontHud || !panelId) {
@@ -5712,7 +5818,7 @@ export default function NativeContentPage({ page }) {
           hasOpenHudPanel={hasOpenHudPanel}
           intro={introParagraphs[0] || ''}
           actions={content.actions}
-          sections={content.sections}
+          sections={contentWithManagedDisclosures.sections}
           ActionRenderer={Action}
           NativeLinkRenderer={NativeLink}
         />
@@ -6146,7 +6252,7 @@ export default function NativeContentPage({ page }) {
                 headline={runtime.title}
                 beats={runtime.beats}
                 action={runtime.action}
-                resolveTo={resolveManagedPathFromRef}
+                resolveTo={managedResolveManagedPathFromRef}
               />
               {showSectionHud && !isMobileFrontHud ? (
                 <FrontHudAnchorTag
@@ -6186,7 +6292,7 @@ export default function NativeContentPage({ page }) {
                 body={runtime.body}
                 action={runtime.action}
                 metrics={runtime.metrics}
-                resolveTo={resolveManagedPathFromRef}
+                resolveTo={managedResolveManagedPathFromRef}
               />
               {showSectionHud && !isMobileFrontHud ? (
                 <FrontHudAnchorTag
@@ -6343,6 +6449,7 @@ export default function NativeContentPage({ page }) {
               section.copyWrap ? (
                 <div
                   className={`native-info-section-copy${section.copyClassName ? ` ${section.copyClassName}` : ''}${sectionJustifyToken ? ` is-justify-${sectionJustifyToken}` : ''}`}
+                  style={section.copyStyle || undefined}
                   data-fade-root-margin={section.copyFadeRootMargin || undefined}
                 >
                   {!section.hideTitle ? (
@@ -6364,7 +6471,14 @@ export default function NativeContentPage({ page }) {
                       {renderHighlightedText(section.title, section.titleHighlights)}
                     </h2>
                   ) : null}
-                  {section.subtitle ? <h3 className="native-info-section-subtitle">{section.subtitle}</h3> : null}
+                  {section.subtitle ? (
+                    <h3
+                      className={['native-info-section-subtitle', section.subtitleClassName || ''].filter(Boolean).join(' ')}
+                      style={section.subtitleStyle || undefined}
+                    >
+                      {section.subtitle}
+                    </h3>
+                  ) : null}
                   {section.leadLine ? (
                     <p className={`native-columns-lead-line${section.leadLineClassName ? ` ${section.leadLineClassName}` : ''}`}>
                       {Array.isArray(section.leadLineHighlights) && section.leadLineHighlights.length
@@ -6430,7 +6544,14 @@ export default function NativeContentPage({ page }) {
                       {renderHighlightedText(section.title, section.titleHighlights)}
                     </h2>
                   ) : null}
-                  {section.subtitle ? <h3 className="native-info-section-subtitle">{section.subtitle}</h3> : null}
+                  {section.subtitle ? (
+                    <h3
+                      className={['native-info-section-subtitle', section.subtitleClassName || ''].filter(Boolean).join(' ')}
+                      style={section.subtitleStyle || undefined}
+                    >
+                      {section.subtitle}
+                    </h3>
+                  ) : null}
                   {section.leadLine ? (
                     <p className={`native-columns-lead-line${section.leadLineClassName ? ` ${section.leadLineClassName}` : ''}`}>
                       {Array.isArray(section.leadLineHighlights) && section.leadLineHighlights.length
@@ -6786,6 +6907,7 @@ export default function NativeContentPage({ page }) {
                 <InfoTableSheet
                   headers={section.table.headers}
                   rows={section.table.rows}
+                  valueAlignment={section.table.valueAlignment}
                 />
               </div>
             ) : null}

@@ -4,6 +4,7 @@ import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwne
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import PageBlocksRenderer from '../components/blocks/PageBlocksRenderer';
 import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
+import { useDisclosures } from '../context/DisclosuresContext';
 import { useFrontHud } from '../context/FrontHudContext';
 import { useRates } from '../context/RatesContext';
 import { useDocuments } from '../context/DocumentsContext';
@@ -49,6 +50,7 @@ import {
   isExternalLinkHref,
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
+import { replaceDisclosureTokens } from '../lib/disclosures';
 import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
 import { getHeroSeedContract } from '../lib/heroSeedContracts';
 
@@ -749,7 +751,10 @@ export default function InvestmentsPage() {
   const {
     blocksByPath,
     pageHierarchy,
+    authoringBlocksByPath,
+    authoringPageHierarchy,
     setActiveBlockLock = () => ({ ok: false }),
+    clearActiveBlockLock = () => ({ ok: false }),
     getBlockCollaboration = () => null,
     devIdentity = null,
     claimBufferedBlockEdit = () => false,
@@ -757,11 +762,47 @@ export default function InvestmentsPage() {
     registerExternalDraftFlushHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
+  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
   const { testimonials: testimonialsLibrary } = useTestimonials();
+  const { getDisclosureValue } = useDisclosures();
   const { rates, ratesMeta } = useRates();
   const { resolveDocumentLink } = useDocuments();
   const offeringCircularDoc = resolveDocumentLink('prospectus-prospectus-download-offering-circular')
     || resolveDocumentLink('document-aglf-offering-circular');
+  const offeringCircularHref = offeringCircularDoc?.url || '/prospectus';
+  const investmentsRatesDisclosureHtml = useMemo(
+    () => replaceDisclosureTokens(
+      getDisclosureValue('investments-certificates-rates-details-html', ''),
+      {
+        certificatesEffectiveDate: ratesMeta?.certificatesEffectiveDate || 'January 1, 2026',
+        prospectusHref: offeringCircularHref,
+      },
+    ),
+    [getDisclosureValue, offeringCircularHref, ratesMeta?.certificatesEffectiveDate],
+  );
+  const investmentsLadderDisclosureHtml = useMemo(
+    () => replaceDisclosureTokens(
+      getDisclosureValue('investments-ladder-details-html', ''),
+      {
+        certificatesEffectiveDate: ratesMeta?.certificatesEffectiveDate || 'January 1, 2026',
+        offeringCircularHref,
+      },
+    ),
+    [getDisclosureValue, offeringCircularHref, ratesMeta?.certificatesEffectiveDate],
+  );
+  const investmentsSharedRiskWarning = getDisclosureValue(
+    'investments-shared-risk-warning',
+    'Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee.',
+  );
+  const investmentsSharedAffiliation = getDisclosureValue(
+    'investments-shared-affiliation',
+    'AGFinancial is a DBA of Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group.',
+  );
+  const investmentsSharedDataNote = getDisclosureValue(
+    'investments-shared-data-note',
+    'Note: Information is from sources determined reliable. Information is subject to error, omission, withdrawal, or change.',
+  );
   const ladderRateSeeds = useMemo(() => buildLadderRateSeeds(rates, MAX_LADDER_YEARS), [rates]);
   const [ladderInput, setLadderInput] = useState(() => defaultLadderInput());
   const [ladderRates, setLadderRates] = useState(() => ladderRateSeeds);
@@ -793,8 +834,8 @@ export default function InvestmentsPage() {
   useNativeEnhancements(pageRef);
 
   const managedBlocksSource = useMemo(
-    () => (Array.isArray(blocksByPath?.['/services/investments']) ? blocksByPath['/services/investments'] : []),
-    [blocksByPath],
+    () => (Array.isArray(managedBlocksByPath?.['/services/investments']) ? managedBlocksByPath['/services/investments'] : []),
+    [managedBlocksByPath],
   );
   const { blocks: managedBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({
     pathname: '/services/investments',
@@ -1108,10 +1149,10 @@ export default function InvestmentsPage() {
     [managedBlocks],
   );
   const routeLinkOptions = useMemo(
-    () => Object.values(pageHierarchy || {})
+    () => Object.values(managedPageHierarchy || {})
       .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search')
       .sort((a, b) => a.path.localeCompare(b.path)),
-    [pageHierarchy],
+    [managedPageHierarchy],
   );
   const showFrontHud = frontHudEnabled && hudPanels.length > 0;
   const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanelId);
@@ -1223,6 +1264,13 @@ export default function InvestmentsPage() {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
   };
+
+  useEffect(() => () => {
+    const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
+    if (activeHudBlockId) {
+      clearActiveBlockLock('/services/investments', activeHudBlockId);
+    }
+  }, [activeHudPanel?.block?.id, clearActiveBlockLock]);
   const renderHudAnchor = (blockId) => {
     if (!showFrontHud) {
       return null;
@@ -2040,7 +2088,7 @@ export default function InvestmentsPage() {
             ))}
           </div>
           <div className="investments-native-cert-fallout">
-            <Link to="/services/investments/invest-by-mail" className="service-native-btn is-outline is-tone-super-grey">
+            <Link to="/services/investments/invest-by-mail" className="service-native-btn is-tone-white investments-native-cert-fallout-btn">
               Open an investment by mail
             </Link>
           </div>
@@ -2079,30 +2127,15 @@ export default function InvestmentsPage() {
           <div className="investments-native-rates-wrap fade-up">
             <CertificateRatesSheet rates={rates} className="investments-native-certificate-rates-sheet" />
           </div>
+          <SafeRichText
+            as="div"
+            html={investmentsRatesDisclosureHtml}
+            className="rates-disclaimer investments-native-rates-disclaimer"
+          />
           <div className="rates-disclaimer investments-native-rates-disclaimer">
-            <p className="investments-native-rates-disclaimer-lead">
-              <strong>*Annual Percentage Yield</strong>
-              <br />
-              <strong>**Premium rates may be available for investments of $250,000 or greater.</strong>
-              <br />
-              <strong>Effective {ratesMeta?.certificatesEffectiveDate || 'January 1, 2025'}.</strong>
-            </p>
+            <p>{investmentsSharedRiskWarning}</p>
             <p>
-              Rates subject to change. Demand certificates are investments that do not represent cash and are payable
-              within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.
-            </p>
-            <p>
-              This is not an offer to sell securities referred to herein and we are not soliciting you to purchase
-              these securities. The offering is made only by the Offering Circular which includes risk factors. The
-              Offering Circular may be obtained by writing or calling AGFinancial or by clicking to
-              {' '}
-              <a href={offeringCircularDoc?.url || '/prospectus'} target="_blank" rel="noreferrer noopener">read the prospectus</a>
-              . AGFinancial investments are offered and sold only in states where authorized or exempt from
-              authorization. A limited offering is available in Washington. Not available in Ohio.
-            </p>
-            <p>Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee.</p>
-            <p>
-              <em>AGFinancial is a DBA of Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group.</em>
+              <em>{investmentsSharedAffiliation}</em>
             </p>
           </div>
         </div>
@@ -2475,12 +2508,14 @@ export default function InvestmentsPage() {
                     ) : null}
                     {ladderError ? <p className="investments-native-ladder-error">{ladderError}</p> : null}
                     <div className="investments-native-ladder-fineprint">
-                      <p className="service-native-note">
-                        *Premium rates may be available for individual investments of $250,000 or greater. **Annual Percentage Yield. ***Monthly interest will vary due to differences in compounded cycles. ****Approximate future value assumes that any funds reinvested at maturity will be reinvested at the same rate. 8-Month, 7-Year, and 10-Year terms available for new investments only; funds may not be transferred from an existing or renewing investment. Rates effective January 1, 2026, and subject to change. Penalties may apply to redemptions prior to maturity. This is not an offering to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The offering circular may be obtained <a href="https://files.agfinancial.org/Investments/AGLF-Offering%20Circular.pdf" target="_blank" rel="noreferrer noopener">here</a> or by calling AGFinancial. AGFinancial investments are offered and sold only in states where authorized or exempt from authorization. A limited offering is available in Washington. Not available in Ohio.
-                      </p>
-                      <p className="service-native-note">Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee.</p>
-                      <p className="service-native-note">AGFinancial is a DBA of Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group</p>
-                      <p className="service-native-note">Note: Information is from sources determined reliable. Information is subject to error, omission, withdrawal, or change.</p>
+                      <SafeRichText
+                        as="div"
+                        html={investmentsLadderDisclosureHtml}
+                        className="service-native-note"
+                      />
+                      <p className="service-native-note">{investmentsSharedRiskWarning}</p>
+                      <p className="service-native-note">{investmentsSharedAffiliation}</p>
+                      <p className="service-native-note">{investmentsSharedDataNote}</p>
                     </div>
                   </div>
                 </div>

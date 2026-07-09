@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import AdminHtmlEditor from '../components/AdminHtmlEditor';
+import { Link } from 'react-router-dom';
 import PageShell from '../components/PageShell';
 import SafeRichText from '../components/SafeRichText';
 import { pageByPath } from '../data/siteMap';
@@ -20,10 +20,6 @@ export default function AdminRatesPage() {
     setLegalCopy,
   } = useRates();
   const [draft, setDraft] = useState({ rates, iraRates, ratesMeta, legalCopy });
-  const [openDisclosureEditors, setOpenDisclosureEditors] = useState({
-    certificates: false,
-    ira: false,
-  });
 
     // PDF import
     const [importReport, setImportReport] = useState(null);
@@ -178,28 +174,11 @@ export default function AdminRatesPage() {
     }));
   }
 
-  function updateLegalCopy(key, value) {
-    setDraft((curr) => ({
-      ...curr,
-      legalCopy: {
-        ...curr.legalCopy,
-        [key]: value,
-      },
-    }));
-  }
-
-  function toggleDisclosureEditor(key) {
-    setOpenDisclosureEditors((current) => ({
-      ...current,
-      [key]: !current[key],
-    }));
-  }
-
   return (
     <div className="page-wrap admin-content-page-wrap">
       <PageShell title="Admin: Rates" source={pageByPath['/rates'].source} showBadge={false}>
         <div className="admin-info-note">
-          Edit the public rate tables, disclosure copy, and effective dates here. Changes update the Rates page and the Investments rates section.
+          Edit the public rate tables and effective dates here. Public disclosure copy is now centralized in the disclosures manager.
         </div>
         <div className="admin-import-panel" style={{ marginBottom: '1rem' }}>
   <h3>Import Rates PDF</h3>
@@ -381,17 +360,16 @@ export default function AdminRatesPage() {
         </div>
 
         <h3 style={{ marginTop: '1.2rem' }}>Disclosure Copy</h3>
+        <div className="admin-info-note" style={{ marginBottom: '0.75rem' }}>
+          Manage all site disclosures from one place.
+          {' '}
+          <Link to="/admin/disclosures">Open disclosure manager</Link>
+          .
+        </div>
         <div className="admin-content-field-list admin-rates-wide-fields admin-rates-disclosure-grid">
           <div className="admin-rates-disclosure-panel">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: 600 }}>Certificates disclosure copy</span>
-              <button
-                type="button"
-                className="action-btn action-btn-outline action-btn-compact"
-                onClick={() => toggleDisclosureEditor('certificates')}
-              >
-                {openDisclosureEditors.certificates ? 'Hide editor' : 'Edit disclosure'}
-              </button>
+              <span style={{ fontWeight: 600 }}>Certificates disclosure preview</span>
             </div>
             <div style={{ border: '1px solid #d7dee5', borderRadius: 10, background: '#fff', padding: '0.9rem 1rem' }}>
               <SafeRichText
@@ -400,31 +378,10 @@ export default function AdminRatesPage() {
                 className="rates-disclaimer"
               />
             </div>
-            {openDisclosureEditors.certificates ? (
-              <div style={{ marginTop: '0.75rem' }}>
-                <p style={{ margin: '0 0 0.6rem', fontSize: '0.82rem', color: '#5f6e76' }}>
-                  Automatic effective-date token:
-                  {' '}
-                  <code>{'{{certificatesEffectiveDate}}'}</code>
-                  .
-                </p>
-                <AdminHtmlEditor
-                  value={draft.legalCopy?.certificatesHtml || ''}
-                  onChange={(nextValue) => updateLegalCopy('certificatesHtml', nextValue)}
-                />
-              </div>
-            ) : null}
           </div>
           <div className="admin-rates-disclosure-panel">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: 600 }}>IRA disclosure copy</span>
-              <button
-                type="button"
-                className="action-btn action-btn-outline action-btn-compact"
-                onClick={() => toggleDisclosureEditor('ira')}
-              >
-                {openDisclosureEditors.ira ? 'Hide editor' : 'Edit disclosure'}
-              </button>
+              <span style={{ fontWeight: 600 }}>IRA disclosure preview</span>
             </div>
             <div style={{ border: '1px solid #d7dee5', borderRadius: 10, background: '#fff', padding: '0.9rem 1rem' }}>
               <SafeRichText
@@ -433,19 +390,6 @@ export default function AdminRatesPage() {
                 className="rates-disclaimer"
               />
             </div>
-            {openDisclosureEditors.ira ? (
-              <div style={{ marginTop: '0.75rem' }}>
-                <p style={{ margin: '0 0 0.6rem', fontSize: '0.82rem', color: '#5f6e76' }}>
-                  Automatic effective-date token:
-                  {' '}
-                  <code>{'{{iraEffectiveDate}}'}</code>.
-                </p>
-                <AdminHtmlEditor
-                  value={draft.legalCopy?.iraHtml || ''}
-                  onChange={(nextValue) => updateLegalCopy('iraHtml', nextValue)}
-                />
-              </div>
-            ) : null}
           </div>
         </div>
 

@@ -57,7 +57,7 @@ const RETIREMENT_403B_PLAN_FEATURE_CARDS = [
   {
     title: 'Roth / Pretax Deferrals',
     titleClassName: 'is-atlantean',
-    body: 'This option allows taxes to be paid on the contribution now, in order to provide tax-free withdrawals at retirement.',
+    body: 'Choose how you want to save, and when you wish to be taxed.',
   },
   {
     title: 'Rollovers',
@@ -482,7 +482,7 @@ const directContent = {
       },
       {
         id: 'legacy-giving-stewardship-story',
-        title: 'Smart stewardship—for today and tomorrow.',
+        title: 'Smart stewardship for today and tomorrow.',
         className: 'legacy-giving-stewardship',
         cards: [
           {
@@ -490,11 +490,11 @@ const directContent = {
             cardClass: 'card2',
           },
           {
-            title: 'Transition out of appreciated assets',
+            title: 'Transition out of appreciated assets.',
             cardClass: 'card2',
           },
           {
-            title: 'Leave a legacy for family and ministry',
+            title: 'Leave a legacy for family and ministry.',
             cardClass: 'card2',
           },
         ],
@@ -702,8 +702,8 @@ const directContent = {
             cardClass: 'about-native-values-card about-native-values-card--responsibility',
           },
           {
-            title: 'Experience',
-            body: 'Decades of trusted financial expertise help us successfully navigate challenges for both individuals and ministries.',
+            title: 'Guidance',
+            body: 'Decades of financial experience help us successfully navigate challenges for both individuals and ministries.',
             titleClassName: 'is-super-grey',
             panelTone: 'sand',
             cardClass: 'about-native-values-card about-native-values-card--experience',
@@ -1994,6 +1994,7 @@ const insuranceChildPages = {
         title: 'Coverage notice',
         hideTitle: true,
         className: 'insurance-pc-native-fineprint',
+        fineprintDisclosureId: 'insurance-property-casualty-coverage-notice',
         fineprint: [
           '**CM0045 (04-2020)**',
           'This material may include only a general description of insurance coverages and does not include all terms, conditions, and limitations found in Church Mutual Insurance Company, S.I. (“Church Mutual”) policies. The insurance policy, not any general descriptions of coverage that may be found in this material, will form the contract between the insured and Church Mutual. Neither Church Mutual nor its employees, representatives, or agents shall be liable to any party for the use of any information or statements made or contained herein.',
@@ -2069,6 +2070,7 @@ const legacyChildPages = {
       {
         className: 'legacy-child-native-cga-qcd-fineprint',
         hideTitle: true,
+        fineprintDisclosureId: 'planned-giving-cga-qcd-fineprint',
         body: ['**Also available for Charitable Remainder Unitrust (CRUT) or Charitable Remainder Annuity Trust (CRAT)**'],
         links: [
           { label: 'Charitable Remainder Unitrust (CRUT)', to: '/services/planned-giving/charitable-trusts#crt' },
@@ -2127,6 +2129,7 @@ const legacyChildPages = {
         copyWrap: true,
         title: 'Plenty of options.',
         subtitle: 'Explore other charitable and planned giving strategies.',
+        fineprintDisclosureId: 'planned-giving-cga-state-notices',
         actionsBeforeCards: true,
         actions: [{ label: 'Discover more', to: '/services/planned-giving' }],
         fineprint: [
@@ -2891,26 +2894,21 @@ const retirementChildPages = {
         columns: 'two',
         actionsBeforeCards: true,
         actions: [
-          { label: 'View the monthly performance', documentId: 'document-monthly-performance' },
+          { label: 'View monthly performance', documentId: 'document-monthly-performance' },
+          { label: 'Prospectus', to: '/prospectus', className: 'is-dark is-tone-super-grey' },
         ],
         cards: [
           {
             title: 'MBA Income Fund',
             body: 'AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.',
             links: [
-              { label: 'Download the MBA Fact sheet PDF', documentId: 'fund-descriptor-retirement-mba-income-fund' },
-            ],
-            actions: [
-              { label: 'Prospectus', to: '/prospectus', ghost: true },
+              { label: 'MBA income fund PDF', documentId: 'fund-descriptor-retirement-mba-income-fund' },
             ],
             cardClass: 'card2',
           },
           {
             title: 'Risk-Based Strategies',
             body: 'These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.',
-            actions: [
-              { label: 'Prospectus', to: '/prospectus', ghost: true },
-            ],
             accordions: [
               {
                 title: 'Screened strategy PDFs',
@@ -2936,9 +2934,6 @@ const retirementChildPages = {
           {
             title: 'Target-Date Strategies',
             body: 'Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.',
-            actions: [
-              { label: 'Prospectus', to: '/prospectus', ghost: true },
-            ],
             accordions: [
               {
                 title: 'View target-date fund PDFs',
@@ -2950,11 +2945,8 @@ const retirementChildPages = {
             cardClass: 'card2',
           },
           {
-            title: 'Individual Investment Option',
+            title: 'Individual Investment Options',
             body: 'This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.',
-            actions: [
-              { label: 'Prospectus', to: '/prospectus', ghost: true },
-            ],
             accordions: [
               {
                 title: 'View fund PDFs',
@@ -3018,7 +3010,7 @@ const retirementChildPages = {
             cardClass: 'card2',
           },
           {
-            title: 'For a group',
+            title: 'Employer',
             actions: [{ label: 'Next steps', to: '/services/retirement/403b/403b-group-enrollment' }],
             cardClass: 'card2',
           },
@@ -3027,20 +3019,24 @@ const retirementChildPages = {
       {
         className: 'retirement-child-native-table',
         title: 'Annual Contribution Limits',
+        fineprintDisclosureId: 'retirement-403b-contribution-limits-disclosure',
+        tableChartId: 'retirement-403b-contribution-limits',
         table: {
-          headers: ['403(b) Contribution Limit', '2025', '2024'],
+          headers: ['403(b) Contribution Limit', '2026', '2025'],
           rows: [
-            ['Under age 50 deferral limit (pre-tax and Roth after-tax)', 'The lesser of $23,500 or includible compensation.', 'The lesser of $23,000 or includible compensation.'],
-            ['Age 50 and up deferral limit', 'The lesser of $31,000 or includible compensation.', 'The lesser of $30,500 or includible compensation.'],
-            ['Age 60-63 deferral limit*', 'The lesser of $34,750 or includible compensation.', 'N/A'],
-            ['Overall limit under age 50**', '$70,000', '$69,000'],
-            ['Overall limit age 50 and up†', '$77,500', '$76,500'],
-            ['Overall limit age 60-63*', '$81,250', 'N/A'],
+            ['Under age 50 deferral limit (pre-tax and Roth after-tax)', 'The lesser of $24,500 or includible compensation.', 'The lesser of $23,500 or includible compensation.'],
+            ['Age 50 and up deferral limit*', 'The lesser of $32,500 or includible compensation.', 'The lesser of $31,000 or includible compensation.'],
+            ['Age 60-63 deferral limit**', 'The lesser of $35,750 or includible compensation.', 'The lesser of $34,750 or includible compensation.'],
+            ['Overall limit under age 50***', '$72,000', '$70,000'],
+            ['Overall limit age 50 and up†', '$80,000', '$77,500'],
+            ['Overall limit age 60-63**', '$83,250', '$81,250'],
           ],
+          valueAlignment: 'left',
         },
         fineprint: [
-          '*The rule applies to individuals who will attain age 60 in the taxable year and continues until the taxable year in which they turn 64.',
-          '**All types of contributions including deferrals, employer, and traditional after-tax. Cannot exceed includible compensation.',
+          '*Beginning in 2026, participants who have FICA wages exceeding $150,000 (adjusted for inflation) in the previous calendar year will be required to make any catch-up contributions on a Roth (after-tax) basis. It is the Employer’s responsibility to ensure contributions are correctly submitted to the Plan. Employees below the $150,000 threshold, as well as ministers who earn SECA wages may continue to make catch-up contributions on either a pre-tax or Roth basis, depending on your plan’s design.',
+          '**The rule applies to individuals who will attain age 60 in the taxable year and continues until the taxable year in which they turn 64. So, a participant would be eligible for the entire year in which they turn 60 (even if their birthday is December 31), and they would not be eligible in the year in which they turn 64.',
+          '***All types of contributions including deferrals, employer, and traditional after-tax. Cannot exceed includible compensation.',
           '†All types of contributions including deferrals, employer, and traditional after-tax; amounts over the general overall limit must be age 50 catch-up deferrals. Cannot exceed includible compensation except to the extent that the age 50 or older catch-up deferral has been utilized.',
           'Contact your own tax advisor before taking any action that would have a tax consequence. This information is not tax advice. Information is from sources deemed reliable. Information is subject to error, omission, withdrawal, or change.',
         ],
@@ -3077,7 +3073,7 @@ const retirementChildPages = {
         title: 'Quick Check',
         subtitle: 'Minister’s Housing Allowance',
         body: [
-          'Answer a few questions, total your annual housing expenses, and compare to Fair Rental Value (FRV). You may save a PDF version of your summary, or submit it to a retirement consultant for review and discussion.',
+          'Answer a few questions, total your annual housing expenses, and compare to Fair Rental Value (FRV).',
         ],
         widget: 'retirement-minister-housing-quick-check',
       },
@@ -3136,6 +3132,7 @@ const retirementChildPages = {
         className: 'retirement-child-native-qualify',
         title: 'Confirm eligibility',
         subtitle: 'The AGFinancial 403(b) Retirement Plan is available to these participant groups.',
+        fineprintDisclosureId: 'retirement-403b-501c3-note',
         fullBleed: true,
         columns: 'three',
         cards: [
@@ -3228,6 +3225,7 @@ const retirementChildPages = {
         className: 'retirement-child-native-qualify',
         title: 'Confirm eligibility',
         subtitle: 'Use the group enrollment path when your organization is establishing a plan for eligible ministers or ministry employees.',
+        fineprintDisclosureId: 'retirement-403b-501c3-note',
         fullBleed: true,
         columns: 'three',
         cards: [
@@ -3425,6 +3423,7 @@ const retirementChildPages = {
         title: 'IRA Investment Rates',
         widget: 'retirement-ira-rate-table',
         body: [],
+        fineprintDisclosureId: 'retirement-ira-rates-disclosure',
         fineprint: [
           'Rates subject to change. Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.',
           'This is not an offer to sell securities referred to herein and we are not soliciting you to purchase these securities. The offering is made only by the Offering Circular which includes risk factors. The Offering Circular may be obtained by writing or calling AGFinancial or by clicking **here**.',
@@ -3436,6 +3435,7 @@ const retirementChildPages = {
         className: 'retirement-ira-native-limits',
         anchorId: 'IRA-contribution-limits',
         title: 'Roth and Traditional IRA Contribution Limits',
+        fineprintDisclosureId: 'retirement-ira-contribution-limits-disclosure',
         table: {
           headers: ['Age', '2025', '2024'],
           rows: [
