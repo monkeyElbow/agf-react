@@ -188,7 +188,7 @@ function parseHighlightsJson(rawValue, source = '') {
   }
 }
 
-function renderHighlightedText(source, highlights) {
+export function renderHighlightedText(source, highlights) {
   const text = String(source || '');
   const rules = Array.isArray(highlights) ? highlights.filter(Boolean) : [];
   if (!text || !rules.length) {
@@ -641,7 +641,7 @@ function BillboardBlock({ block, resolveTo, ownership, hudAnchor }) {
       <BlockOwnershipOverlay ownership={ownership} />
       <SharedBlockHudAnchor hudAnchor={hudAnchor} />
       <div className="ag-panel-rail" style={railStyle}>
-        <div className={copyClassName} data-fade-root-margin={runtime.copyFadeRootMargin || undefined}>
+        <div className={copyClassName} style={runtime.copyStyle || undefined} data-fade-root-margin={runtime.copyFadeRootMargin || undefined}>
           {runtime.title ? (
             <h2 className={runtime.titleClassName || undefined} style={runtime.titleStyle}>
               {runtime.titleHighlights?.length
@@ -649,7 +649,14 @@ function BillboardBlock({ block, resolveTo, ownership, hudAnchor }) {
                 : runtime.title}
             </h2>
           ) : null}
-          {runtime.subtitle ? <p className="home-native-billboard-subtitle">{runtime.subtitle}</p> : null}
+          {runtime.subtitle ? (
+            <p
+              className={['home-native-billboard-subtitle', runtime.subtitleClassName || ''].filter(Boolean).join(' ')}
+              style={runtime.subtitleStyle || undefined}
+            >
+              {runtime.subtitle}
+            </p>
+          ) : null}
           {runtime.bodyHtml ? (
             <div
               className="native-info-rich-html"

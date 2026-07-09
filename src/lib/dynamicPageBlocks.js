@@ -668,7 +668,7 @@ function normalizeBillboardTitleFontFamily(value) {
 }
 
 function defaultBillboardTitleLetterSpacingEm(fontFamily) {
-  return fontFamily === 'helv' ? -0.015 : DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM;
+  return fontFamily === 'helv' ? -0.038 : DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM;
 }
 
 function normalizeBillboardTitleFontWeight(value, fontFamily = 'heading') {
@@ -686,7 +686,17 @@ function normalizeBillboardTitleLetterSpacingEm(value, fontFamily = 'heading') {
   if (!Number.isFinite(numeric)) {
     return defaultBillboardTitleLetterSpacingEm(fontFamily);
   }
-  return Math.max(-0.08, Math.min(0.04, Number(numeric.toFixed(3))));
+  return Math.max(-0.12, Math.min(0.04, Number(numeric.toFixed(3))));
+}
+
+function normalizeBillboardSubtitleDisplay(value) {
+  return String(value || '').trim().toLowerCase() === 'headline'
+    ? 'headline'
+    : 'supporting';
+}
+
+function resolveBillboardSubtitleColor(value) {
+  return resolveIntroAccentColor(value);
 }
 
 export function actionButtonClassName(style, tone) {
@@ -782,6 +792,7 @@ export function buildDynamicBillboardFromBlock(block) {
   const titleClassName = sanitizeClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
   const subtitle = String(settings.subtitle || '').trim();
+  const subtitleClassName = normalizeHighlightClassName(settings.subtitleClassName || '');
   const bodyHtml = String(settings.bodyHtml || '').trim();
   const body = String(settings.body || '').trim();
   const bgTone = String(settings.bgTone || 'blue').trim().toLowerCase() || 'blue';
@@ -793,6 +804,18 @@ export function buildDynamicBillboardFromBlock(block) {
   const titleFontWeight = normalizeBillboardTitleFontWeight(settings.titleFontWeight, titleFontFamily);
   const titleSizeRem = normalizeBillboardTitleSizeRem(settings.titleSizeRem);
   const titleLetterSpacingEm = normalizeBillboardTitleLetterSpacingEm(settings.titleLetterSpacingEm, titleFontFamily);
+  const subtitleDisplay = normalizeBillboardSubtitleDisplay(settings.subtitleDisplay);
+  const subtitleHasExplicitSize = String(settings.subtitleSizeRem ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.subtitleSizeRem));
+  const subtitleSizeRem = subtitleHasExplicitSize
+    ? normalizeBillboardTitleSizeRem(settings.subtitleSizeRem)
+    : null;
+  const subtitleResolvedColor = resolveBillboardSubtitleColor(subtitleClassName);
+  const hasHeadlineWidthOverride = String(settings.headlineMaxWidthPx ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.headlineMaxWidthPx));
+  const headlineMaxWidthPx = hasHeadlineWidthOverride
+    ? normalizePageContentMaxWidthPx(settings.headlineMaxWidthPx, 920)
+    : null;
   const hasContentWidthOverride = String(settings.contentMaxWidthPx ?? '').trim() !== ''
     && Number.isFinite(Number(settings.contentMaxWidthPx));
   const actions = [
@@ -835,6 +858,23 @@ export function buildDynamicBillboardFromBlock(block) {
     titleHighlights,
     targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
     subtitle,
+    subtitleClassName,
+    subtitleDisplay,
+    subtitleStyle: {
+      ...(subtitleResolvedColor ? { color: subtitleResolvedColor } : {}),
+      ...(subtitleDisplay === 'headline'
+        ? {
+          fontFamily: titleFontFamily === 'helv' ? 'var(--ag-font-helv)' : 'var(--ag-font-heading)',
+          fontWeight: titleFontWeight,
+          fontSize: `clamp(calc(${(subtitleSizeRem ?? titleSizeRem)}rem * 0.58), 8vw, ${subtitleSizeRem ?? titleSizeRem}rem)`,
+          lineHeight: 1.05,
+          letterSpacing: `${titleLetterSpacingEm}em`,
+        }
+        : {}),
+      ...(subtitleDisplay !== 'headline' && subtitleSizeRem
+        ? { fontSize: `clamp(calc(${subtitleSizeRem}rem * 0.68), 5vw, ${subtitleSizeRem}rem)` }
+        : {}),
+    },
     titleStyle: {
       lineHeight: lineSpacing,
       fontFamily: titleFontFamily === 'helv' ? 'var(--ag-font-helv)' : 'var(--ag-font-heading)',
@@ -849,6 +889,9 @@ export function buildDynamicBillboardFromBlock(block) {
     justify,
     lineSpacing,
     scrollReveal,
+    copyStyle: headlineMaxWidthPx
+      ? { '--dynamic-billboard-copy-max-width': `${headlineMaxWidthPx}px` }
+      : undefined,
     copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : '',
     copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -20% 0px' : '',
     contentMaxWidthPx: hasContentWidthOverride

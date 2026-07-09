@@ -35,6 +35,14 @@ export default function BillboardHudEditorPanel({
   subtitle,
   onSubtitleChange,
   onSubtitleBlur,
+  subtitleColor,
+  onSubtitleColorChange,
+  subtitleColorOptions = [],
+  subtitleDisplay,
+  onSubtitleDisplayChange,
+  subtitleDisplayOptions = [],
+  subtitleSizeRem,
+  onSubtitleSizeRemChange,
   body,
   onBodyChange,
   onBodyBlur,
@@ -98,6 +106,8 @@ export default function BillboardHudEditorPanel({
   button2ToneOptions = [],
   contentMaxWidthPx,
   onContentMaxWidthPxChange,
+  headlineMaxWidthPx,
+  onHeadlineMaxWidthPxChange,
 }) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const hasSelection = Boolean(String(titleSelection?.text || '').trim());
@@ -105,6 +115,9 @@ export default function BillboardHudEditorPanel({
   const resolvedButton2PreviewLabel = String(button2Label || '').trim() || 'Secondary button';
   const normalizedContentWidth = Number.isFinite(Number(contentMaxWidthPx))
     ? Math.round(Number(contentMaxWidthPx))
+    : null;
+  const normalizedHeadlineWidth = Number.isFinite(Number(headlineMaxWidthPx))
+    ? Math.round(Number(headlineMaxWidthPx))
     : null;
   const widthPresetId = BILLBOARD_WIDTH_PRESETS.find((preset) => preset.maxWidthPx === normalizedContentWidth)?.id
     || (normalizedContentWidth == null ? 'default' : '');
@@ -227,7 +240,7 @@ export default function BillboardHudEditorPanel({
                 <span>Letter Spacing {Number(titleLetterSpacingEm || 0).toFixed(3)}em</span>
                 <input
                   type="range"
-                  min="-0.08"
+                  min="-0.12"
                   max="0.04"
                   step="0.005"
                   value={Number(titleLetterSpacingEm || 0)}
@@ -251,6 +264,45 @@ export default function BillboardHudEditorPanel({
             value={String(subtitle || '')}
             onChange={(event) => onSubtitleChange?.(event.target.value)}
             onBlur={() => onSubtitleBlur?.()}
+          />
+        </label>
+        <div className="admin-billboard-hud-compact-grid">
+          <div className="admin-front-hud-row">
+            <span>Subtitle Color</span>
+            <ColorPalette
+              variant="hud"
+              className="is-compact is-icon-only"
+              ariaLabel="Billboard subtitle color"
+              options={subtitleColorOptions}
+              value={subtitleColor}
+              onChange={(nextValue) => onSubtitleColorChange?.(nextValue)}
+            />
+          </div>
+          <div className="admin-front-hud-row">
+            <span>Subtitle Style</span>
+            <div className="admin-front-hud-segment">
+              {subtitleDisplayOptions.map((option) => (
+                <button
+                  key={`billboard-subtitle-display-${option.value}`}
+                  type="button"
+                  className={`admin-front-hud-segment-btn${subtitleDisplay === option.value ? ' is-active' : ''}`}
+                  onClick={() => onSubtitleDisplayChange?.(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <label className="admin-front-hud-range">
+          <span>Subtitle Size {Number(subtitleSizeRem || 0).toFixed(2)}rem</span>
+          <input
+            type="range"
+            min="1"
+            max="8"
+            step="0.05"
+            value={Number(subtitleSizeRem || 1.18)}
+            onChange={(event) => onSubtitleSizeRemChange?.(Number(event.target.value))}
           />
         </label>
         <label className="admin-front-hud-field admin-billboard-hud-field is-tight">
@@ -463,6 +515,21 @@ export default function BillboardHudEditorPanel({
                   onChange={(event) => {
                     const nextValue = event.target.value;
                     onContentMaxWidthPxChange?.(nextValue === '' ? null : Number(nextValue));
+                  }}
+                />
+              </label>
+              <label className="admin-front-hud-field">
+                <span>Headline max width (px)</span>
+                <input
+                  type="number"
+                  min="560"
+                  max="1440"
+                  step="10"
+                  value={normalizedHeadlineWidth ?? ''}
+                  placeholder="Match content"
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    onHeadlineMaxWidthPxChange?.(nextValue === '' ? null : Number(nextValue));
                   }}
                 />
               </label>

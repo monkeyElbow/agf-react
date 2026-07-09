@@ -100,6 +100,7 @@ const DEFAULT_BILLBOARD_LINE_SPACING = 1;
 const DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT = 800;
 const DEFAULT_BILLBOARD_TITLE_SIZE_REM = 3.4;
 const DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM = -0.03;
+const DEFAULT_BILLBOARD_SUBTITLE_SIZE_REM = 1.18;
 const EDITOR_LOCAL_DRAFT_COMMIT_DELAY_MS = 320;
 const SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS = Object.freeze(['headline', 'body', 'buttonLabel', 'buttonUrl']);
 const CTA_BAND_LOCAL_DRAFT_FIELD_IDS = Object.freeze(['title', 'body', 'buttonLabel', 'buttonUrl']);
@@ -699,9 +700,23 @@ function normalizeBillboardTitleFontWeight(value, fontFamily = 'heading') {
 function normalizeBillboardTitleLetterSpacingEm(value, fontFamily = 'heading') {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
-    return fontFamily === 'helv' ? -0.015 : DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM;
+    return fontFamily === 'helv' ? -0.038 : DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM;
   }
-  return Math.max(-0.08, Math.min(0.04, Number(numeric.toFixed(3))));
+  return Math.max(-0.12, Math.min(0.04, Number(numeric.toFixed(3))));
+}
+
+function normalizeBillboardSubtitleDisplay(value) {
+  return String(value || '').trim().toLowerCase() === 'headline'
+    ? 'headline'
+    : 'supporting';
+}
+
+function normalizeBillboardSubtitleSizeRem(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_BILLBOARD_SUBTITLE_SIZE_REM;
+  }
+  return Math.max(1, Math.min(8, Number(numeric.toFixed(2))));
 }
 
 function normalizePanelBgTone(value) {
@@ -4096,6 +4111,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
     settings.titleLetterSpacingEm,
     billboardTitleFontFamily,
   );
+  const billboardSubtitleDisplay = normalizeBillboardSubtitleDisplay(settings.subtitleDisplay);
+  const billboardSubtitleSizeRem = normalizeBillboardSubtitleSizeRem(settings.subtitleSizeRem);
   const billboardTextTone = normalizePanelTextTone(settings.textTone, 'white');
   const billboardTitleInputRef = useRef(null);
   const [billboardTitleSelection, setBillboardTitleSelection] = useState({
@@ -4146,6 +4163,20 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       subtitle={String(draftValues.subtitle || '')}
       onSubtitleChange={(nextValue) => updateDraftField('subtitle', nextValue)}
       onSubtitleBlur={() => commitDraftOnBlur('subtitle')}
+      subtitleColor={extractHeroLineColorToken(String(settings.subtitleClassName || '').trim())}
+      onSubtitleColorChange={(nextValue) => onSettingChange(
+        'subtitleClassName',
+        replaceHeroLineColorClass(String(settings.subtitleClassName || '').trim(), nextValue),
+      )}
+      subtitleColorOptions={HERO_SWATCH_OPTIONS}
+      subtitleDisplay={billboardSubtitleDisplay}
+      onSubtitleDisplayChange={(nextValue) => onSettingChange('subtitleDisplay', nextValue)}
+      subtitleDisplayOptions={[
+        { value: 'supporting', label: 'Supporting' },
+        { value: 'headline', label: 'Headline' },
+      ]}
+      subtitleSizeRem={billboardSubtitleSizeRem}
+      onSubtitleSizeRemChange={(nextValue) => onSettingChange('subtitleSizeRem', Number(nextValue))}
       body={String(draftValues.body || '')}
       onBodyChange={(nextValue) => updateDraftField('body', nextValue)}
       onBodyBlur={() => commitDraftOnBlur('body')}
@@ -4203,6 +4234,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       onTitleSizeRemChange={(nextValue) => onSettingChange('titleSizeRem', Number(nextValue))}
       titleLetterSpacingEm={billboardTitleLetterSpacingEm}
       onTitleLetterSpacingEmChange={(nextValue) => onSettingChange('titleLetterSpacingEm', Number(nextValue))}
+      headlineMaxWidthPx={Number.isFinite(Number(settings.headlineMaxWidthPx)) ? Number(settings.headlineMaxWidthPx) : null}
+      onHeadlineMaxWidthPxChange={(nextValue) => onSettingChange('headlineMaxWidthPx', nextValue == null ? null : Number(nextValue))}
       buttonLabel={String(draftValues.buttonLabel || '')}
       onButtonLabelChange={(nextValue) => updateDraftField('buttonLabel', nextValue)}
       onButtonLabelBlur={() => commitDraftOnBlur('buttonLabel')}

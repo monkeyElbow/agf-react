@@ -77,4 +77,40 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(hudSource).toContain('? SURFACE_BG_TONE_OPTIONS');
     expect(hudSource).toContain(": SURFACE_BG_TONE_OPTIONS.filter((option) => option.value !== 'white');");
   });
+
+  it('keeps custom billboard pages wired to the shared runtime contract instead of page-local fallbacks', () => {
+    const loansSource = readSource('../pages/LoansPage.jsx');
+    const retirementSource = readSource('../pages/RetirementPage.jsx');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(loansSource).toContain("className={`service-native-section dynamic-billboard loans-native-vision-fuel is-bg-${resolvedVisionFuel.bgTone || 'white'} is-text-${resolvedVisionFuel.textTone || 'dark'}");
+    expect(loansSource).toContain("`is-justify-${resolvedVisionFuel.justify || 'center'}`");
+    expect(loansSource).toContain('const visionFuelContentMaxWidthPx = Number(resolvedVisionFuel.contentMaxWidthPx);');
+    expect(loansSource).toContain('Number.isFinite(visionFuelContentMaxWidthPx) && visionFuelContentMaxWidthPx > 0');
+    expect(loansSource).toContain('{visionFuelSubtitle ? (');
+    expect(loansSource).toContain(') : visionFuelBody ? (');
+    expect(loansSource).toContain('visionFuelAction && visionFuelButtonLabel && visionFuelButtonHref');
+    expect(cssSource).toContain('.loans-native-vision-fuel > .ag-panel-rail {');
+    expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy {');
+    expect(cssSource).toContain('width: min(100%, var(--dynamic-billboard-copy-max-width, 68rem));');
+    expect(cssSource).toContain('justify-items: stretch;');
+    expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy > :is(h2, h3, p, .native-info-rich-html, .native-info-link-list, .service-native-action-row),');
+    expect(cssSource).toContain('width: min(var(--dynamic-billboard-body-max-width, 760px), 100%);');
+    expect(loansSource).toContain('renderHighlightedText(visionFuelTitle, resolvedVisionFuel.titleHighlights)');
+    expect(loansSource).toContain("className={['native-info-section-subtitle', resolvedVisionFuel.subtitleClassName || ''].filter(Boolean).join(' ')}");
+    expect(loansSource).toContain('style={resolvedVisionFuel.subtitleStyle || undefined}');
+    expect(cssSource).toContain('.loans-native-vision-fuel .native-info-section-subtitle {');
+    expect(cssSource).toContain('--dynamic-billboard-copy-max-width: 44rem;');
+    expect(cssSource).toContain('--dynamic-billboard-body-max-width: 36ch;');
+    expect(cssSource).not.toContain('.loans-native-vision-fuel .loans-native-vision-fuel-title,');
+
+    expect(retirementSource).toContain("className={`service-native-section dynamic-billboard retirement-everyday is-bg-${renderedBillboard.bgTone || 'white'} is-text-${renderedBillboard.textTone || 'dark'}");
+    expect(retirementSource).toContain("className={`service-native-section dynamic-billboard retirement-everyday retirement-rollover-billboard is-bg-${renderedRolloverBillboard.bgTone || 'white'} is-text-${renderedRolloverBillboard.textTone || 'dark'}");
+    expect(retirementSource).toContain('{renderedBillboard.subtitle ? (');
+    expect(retirementSource).toContain(') : renderedBillboard.body ? (');
+    expect(retirementSource).toContain('{renderedRolloverBillboard.subtitle ? (');
+    expect(retirementSource).toContain(') : renderedRolloverBillboard.body ? (');
+    expect(retirementSource).toContain("renderedBillboard.action?.label && (renderedBillboard.action?.to || renderedBillboard.action?.href)");
+    expect(retirementSource).toContain("renderedRolloverBillboard.action?.label && (renderedRolloverBillboard.action?.to || renderedRolloverBillboard.action?.href)");
+  });
 });

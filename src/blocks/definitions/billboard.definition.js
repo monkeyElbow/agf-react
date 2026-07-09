@@ -81,6 +81,22 @@ const sections = [
       }),
       defineEditorField({ id: 'subtitle', label: 'Subtitle', type: 'text' }),
       defineEditorField({
+        id: 'subtitleClassName',
+        label: 'Subtitle color',
+        type: 'swatch',
+        options: BILLBOARD_TITLE_TONE_OPTIONS,
+      }),
+      defineEditorField({
+        id: 'subtitleDisplay',
+        label: 'Subtitle style',
+        type: 'select',
+        options: [
+          { value: 'supporting', label: 'Supporting copy' },
+          { value: 'headline', label: 'Headline' },
+        ],
+      }),
+      defineEditorField({ id: 'subtitleSizeRem', label: 'Subtitle size (rem)', type: 'number', min: 1, max: 8, step: 0.05 }),
+      defineEditorField({
         id: 'titleFontFamily',
         label: 'Billboard title font',
         type: 'select',
@@ -98,7 +114,7 @@ const sections = [
         step: 100,
       }),
       defineEditorField({ id: 'titleSizeRem', label: 'Billboard heading size (rem)', type: 'number', min: 2.4, max: 8, step: 0.05 }),
-      defineEditorField({ id: 'titleLetterSpacingEm', label: 'Billboard heading letter spacing (em)', type: 'number', min: -0.08, max: 0.04, step: 0.005 }),
+      defineEditorField({ id: 'titleLetterSpacingEm', label: 'Billboard heading letter spacing (em)', type: 'number', min: -0.12, max: 0.04, step: 0.005 }),
       defineEditorField({ id: 'bodyHtml', label: 'Billboard body HTML', type: 'html' }),
       defineEditorField({ id: 'body', label: 'Fallback body text', type: 'textarea', rows: 3 }),
       defineEditorField({
@@ -125,6 +141,7 @@ const sections = [
       }),
       defineEditorField({ id: 'lineSpacing', label: 'Billboard title line spacing', type: 'number' }),
       defineEditorField({ id: 'contentMaxWidthPx', label: 'Billboard content max width (px)', type: 'number', min: 560, max: 1440, step: 10 }),
+      defineEditorField({ id: 'headlineMaxWidthPx', label: 'Headline max width (px)', type: 'number', min: 560, max: 1440, step: 10 }),
     ],
   },
   {
@@ -183,7 +200,8 @@ export const billboardBlockDefinition = createBlockDefinition({
     titleFontFamily: 'helv',
     titleFontWeight: 700,
     titleSizeRem: 3.4,
-    titleLetterSpacingEm: -0.015,
+    titleLetterSpacingEm: -0.038,
+    subtitleDisplay: 'supporting',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),
