@@ -20,7 +20,7 @@ function ResourceArticlePageContent() {
             <Link to="/resources" className="resources-native-back-link">Back to Resources</Link>
             <Link
               to={`/resources?category=${encodeURIComponent(article.category || 'Article')}`}
-              className={`resources-native-article-category-btn service-native-btn is-outline is-tone-${getResourceCategoryTone(article.category)}`}
+              className={`resources-native-article-category-btn service-native-btn is-tone-${getResourceCategoryTone(article.category)}`}
             >
               {article.category || 'Article'}
             </Link>
