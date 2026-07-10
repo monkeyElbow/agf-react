@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useDisclosures } from '../context/DisclosuresContext';
 
 const MONEY_FORMATTER = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -123,6 +124,11 @@ function FinancialInputRow({ label, value, onChange, onBlur }) {
 }
 
 export default function NetWorthCalculatorWidget() {
+  const { getDisclosureValue } = useDisclosures();
+  const disclosure = getDisclosureValue(
+    'calculator-net-worth-disclosure',
+    'Illustration only. Estimates depend on the values entered and should not be used as financial, legal, or tax advice.',
+  );
   const [values, setValues] = useState(() => buildInitialValues());
   const [didCalculate, setDidCalculate] = useState(false);
 
@@ -291,7 +297,7 @@ export default function NetWorthCalculatorWidget() {
       ) : null}
 
       <p className="financial-tool-fineprint">
-        Illustration only. Estimates depend on the values entered and should not be used as financial, legal, or tax advice.
+        {disclosure}
       </p>
     </div>
   );

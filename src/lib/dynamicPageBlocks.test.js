@@ -471,6 +471,9 @@ describe('buildDynamicBillboardFromBlock', () => {
         titleClassName: 'blue',
         titleHighlightsJson: '[{"text":"move","className":"mango"}]',
         subtitle: 'Let us help.',
+        subtitleClassName: 'mango',
+        subtitleDisplay: 'headline',
+        subtitleSizeRem: 3.4,
         bodyHtml: '<p>Shared billboard body.</p>',
         body: 'Fallback body line.',
         bgTone: 'blue',
@@ -481,6 +484,7 @@ describe('buildDynamicBillboardFromBlock', () => {
         titleFontWeight: 700,
         titleSizeRem: 3.4,
         titleLetterSpacingEm: -0.015,
+        headlineMaxWidthPx: 980,
         contentMaxWidthPx: 1100,
         buttonLabel: 'Take the next step',
         buttonPageRef: '/contact-us',
@@ -499,6 +503,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       titleHighlights: [{ text: 'move', className: 'is-mango' }],
       targetSectionKey: '',
       subtitle: 'Let us help.',
+      subtitleClassName: 'is-mango',
       bodyHtml: '<p>Shared billboard body.</p>',
       body: 'Fallback body line.',
       bgTone: 'blue',
@@ -531,6 +536,17 @@ describe('buildDynamicBillboardFromBlock', () => {
     expect(runtime?.titleStyle).toEqual(expect.objectContaining({
       lineHeight: 1.05,
       fontFamily: 'var(--ag-font-helv)',
+    }));
+    expect(runtime?.copyStyle).toEqual({
+      '--dynamic-billboard-copy-max-width': '980px',
+    });
+    expect(runtime?.subtitleStyle).toEqual(expect.objectContaining({
+      color: 'var(--ag-color-mango)',
+      fontFamily: 'var(--ag-font-helv)',
+      fontWeight: 700,
+      fontSize: 'clamp(calc(3.4rem * 0.58), 8vw, 3.4rem)',
+      lineHeight: 1.05,
+      letterSpacing: '-0.015em',
     }));
   });
 
@@ -1058,15 +1074,15 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       featureId: 'legacy_giving_stewardship_story',
       runtimeKey: 'legacy_giving_stewardship_story',
       targetSectionKey: 'id:legacy-giving-stewardship-story',
-      title: 'Smart stewardship—for today and tomorrow.',
+      title: 'Smart stewardship for today and tomorrow.',
       beats: [
         'Receive payments for life.',
-        'Transition out of appreciated assets',
-        'Leave a legacy for family and ministry',
-        'Smart stewardship—for today and tomorrow.',
+        'Transition out of appreciated assets.',
+        'Leave a legacy for family and ministry.',
+        'Smart stewardship for today and tomorrow.',
       ],
       action: {
-        label: 'Learn more',
+        label: 'Compare charitable giving ideas',
         to: '#charitable-giving-plan-comparison',
       },
     });

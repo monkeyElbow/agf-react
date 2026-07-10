@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useDisclosures } from '../context/DisclosuresContext';
 
 const MONEY_FORMATTER = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -111,6 +112,11 @@ function EmergencyInputRow({ label, value, onChange, onBlur, type = 'amount' }) 
 }
 
 export default function EmergencyFundCalculatorWidget() {
+  const { getDisclosureValue } = useDisclosures();
+  const disclosure = getDisclosureValue(
+    'calculator-emergency-fund-disclosure',
+    'Estimates are for illustration only and do not include inflation or all possible tax outcomes. Review with your financial and tax advisors.',
+  );
   const [assumptions, setAssumptions] = useState({
     income: '0',
     currentFunds: '5,000',
@@ -311,7 +317,7 @@ export default function EmergencyFundCalculatorWidget() {
       </div>
 
       <p className="financial-tool-fineprint">
-        Estimates are for illustration only and do not include inflation or all possible tax outcomes. Review with your financial and tax advisors.
+        {disclosure}
       </p>
     </div>
   );

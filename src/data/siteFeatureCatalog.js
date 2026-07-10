@@ -159,7 +159,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       metrics: Object.freeze([
         Object.freeze({ value: '1,400+', label: 'ministries served by loans', tone: 'sandstone', valueTone: 'white' }),
         Object.freeze({ value: '29,000+', label: 'retirements planned', tone: 'sandstone' }),
-        Object.freeze({ value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone', valueTone: 'legacy-sandstone' }),
+        Object.freeze({ value: '$450 million', label: 'distributed to ministries through AG Foundation', tone: 'sandstone', valueTone: 'mango' }),
       ]),
       imageUrl: '',
       imageAlt: '',
@@ -177,15 +177,15 @@ const SITE_FEATURE_CATALOG = Object.freeze([
     experimental: false,
     internalOnly: false,
     buildRuntime: () => ({
-      title: 'Smart stewardship—for today and tomorrow.',
+      title: 'Smart stewardship for today and tomorrow.',
       beats: Object.freeze([
         'Receive payments for life.',
-        'Transition out of appreciated assets',
-        'Leave a legacy for family and ministry',
-        'Smart stewardship—for today and tomorrow.',
+        'Transition out of appreciated assets.',
+        'Leave a legacy for family and ministry.',
+        'Smart stewardship for today and tomorrow.',
       ]),
       action: {
-        label: 'Learn more',
+        label: 'Compare charitable giving ideas',
         to: '#charitable-giving-plan-comparison',
         openInNewWindow: false,
       },

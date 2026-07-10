@@ -33,7 +33,7 @@ describe('services page spacing and typography guardrail', () => {
     expect(cssSource).toContain('.services-pie-card .service-native-btn {');
     expect(cssSource).toContain('margin-top: 1rem;');
     expect(cssSource).toContain('.services-native-intro {');
-    expect(cssSource).toContain('padding: clamp(2.45rem, 5.2vw, 3.85rem) 0 clamp(3rem, 6.2vw, 4.9rem);');
+    expect(cssSource).toContain('padding: clamp(3.2rem, 6.2vw, 4.7rem) 0 clamp(3.9rem, 7.4vw, 5.9rem);');
     expect(cssSource).toContain('.services-native-intro h2 {');
     expect(cssSource).toContain('font-size: clamp(3.38rem, 7.65vw, 5.8rem);');
     expect(cssSource).toContain('letter-spacing: -0.04em;');

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useDisclosures } from '../context/DisclosuresContext';
 
 const numberFormatter = new Intl.NumberFormat('en-US');
 
@@ -95,6 +96,11 @@ function pvAnnuity(annual, rate, years, periods) {
 }
 
 export default function CharitableGiftTestDriveWidget() {
+  const { getDisclosureValue } = useDisclosures();
+  const disclosure = getDisclosureValue(
+    'planned-giving-cga-test-drive-disclosure',
+    'Figures are illustrations for education only and may differ from a personalized ACGA/§7520-based calculation. For a compliant multi-page PDF, please chat with an AGFinancial representative.',
+  );
   const [annuityType, setAnnuityType] = useState('one');
   const [frequency, setFrequency] = useState('Monthly');
   const [name1, setName1] = useState('');
@@ -411,8 +417,7 @@ export default function CharitableGiftTestDriveWidget() {
 
         <div className="cga-test-drive-fineprint">
           <p>
-            Figures are illustrations for education only and may differ from a personalized ACGA/§7520-based calculation.
-            For a compliant multi-page PDF, please chat with an AGFinancial representative.
+            {disclosure}
           </p>
         </div>
       </div>

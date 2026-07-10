@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useDisclosures } from '../context/DisclosuresContext';
 
 const MONEY_FORMATTER = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -149,6 +150,11 @@ function MiniComparisonBars({ yearly }) {
 }
 
 export default function IncreasedContributionCalculatorWidget() {
+  const { getDisclosureValue } = useDisclosures();
+  const disclosure = getDisclosureValue(
+    'calculator-increased-contribution-disclosure',
+    'Educational estimate only. This projection is based on your assumptions and simplified annual compounding; results do not guarantee future performance.',
+  );
   const [fields, setFields] = useState(DEFAULT_FIELDS);
   const [hasCalculated, setHasCalculated] = useState(false);
 
@@ -329,7 +335,7 @@ export default function IncreasedContributionCalculatorWidget() {
       ) : null}
 
       <p className="financial-tool-fineprint">
-        Educational estimate only. This projection is based on your assumptions and simplified annual compounding; results do not guarantee future performance.
+        {disclosure}
       </p>
     </div>
   );

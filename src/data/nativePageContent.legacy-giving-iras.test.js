@@ -42,7 +42,7 @@ describe('planned giving and IRA native page content', () => {
     expect(legacyCards[0]?.body).toContain('Donor Advised Fund');
     expect(legacyCards[2]?.body).toContain('provides payments for you');
     expect(stewardshipSection?.id).toBe('legacy-giving-stewardship-story');
-    expect(stewardshipSection?.title).toBe('Smart stewardship—for today and tomorrow.');
+    expect(stewardshipSection?.title).toBe('Smart stewardship for today and tomorrow.');
     expect(joySection?.className).toContain('fade-out');
     expect(joySection?.copyWrap).toBe(true);
     expect(joySection?.copyClassName).toBe('fade-up');

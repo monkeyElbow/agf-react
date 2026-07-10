@@ -1393,6 +1393,49 @@ describe('dynamic block control wiring', () => {
     }
   });
 
+  it('wires billboard title and body color swatches to the expected settings', () => {
+    const block = getDynamicBlock('billboard');
+    const onSettingChange = vi.fn();
+
+    render(<BillboardBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Billboard title color' }))
+        .getByRole('radio', { name: 'Super Grey' }),
+    );
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Billboard text color' }))
+        .getByRole('radio', { name: 'Super Grey' }),
+    );
+
+    expect(onSettingChange).toHaveBeenCalledWith('titleClassName', 'is-super-grey');
+    expect(onSettingChange).toHaveBeenCalledWith('textTone', 'dark');
+  });
+
+  it('treats the billboard title swatch row as a selection color control when title text is selected', () => {
+    const block = getDynamicBlock('billboard');
+    block.settings.title = 'Vision fuel';
+    const onSettingChange = vi.fn();
+
+    render(<BillboardBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    const titleInput = screen.getByLabelText('Title');
+    titleInput.focus();
+    titleInput.setSelectionRange(7, 11);
+    fireEvent.select(titleInput);
+
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Billboard title color' }))
+        .getByRole('radio', { name: 'Super Grey' }),
+    );
+
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'titleHighlightsJson',
+      '[{"start":7,"end":11,"className":"is-super-grey","text":"fuel"}]',
+    );
+    expect(onSettingChange).not.toHaveBeenCalledWith('titleClassName', 'is-super-grey');
+  });
+
   it('keeps billboard button links on the buffered route-sync path', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('billboard');

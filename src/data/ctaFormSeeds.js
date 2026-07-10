@@ -143,7 +143,7 @@ export function buildNameEmailPhoneStateMessageCtaSettings({
 }
 
 export const defaultServicesCtaSettings = buildNameEmailPhoneMessageCtaSettings({
-  title: 'Connect your faith & finances. Start here.',
+  title: 'Connect your faith & finances.',
   titleHighlightsJson: '[{"text":"faith & finances","className":"is-atlantean"}]',
 });
 

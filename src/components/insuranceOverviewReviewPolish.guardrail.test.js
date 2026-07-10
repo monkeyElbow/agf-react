@@ -31,7 +31,7 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('justify-content: flex-start;');
     expect(cssSource).toContain('text-align: left;');
     expect(cssSource).toContain('font-weight: 700;');
-    expect(cssSource).toContain('font-size: clamp(2rem, 3vw, 2.35rem);');
+    expect(cssSource).toContain('font-size: clamp(2.28rem, 3.45vw, 2.72rem);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {');
     expect(cssSource).toContain('background: none;');
     expect(cssSource).toContain('width: 100%;');
@@ -64,7 +64,7 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('.impact-proof-story-proof.is-tone-super-grey {');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-quote h2 {');
     expect(cssSource).toContain('letter-spacing: -0.06em;');
-    expect(cssSource).toContain('line-height: 0.76;');
-    expect(cssSource).toContain('margin-bottom: 1.2rem;');
+    expect(cssSource).toContain('line-height: 0.88;');
+    expect(cssSource).toContain('margin-bottom: clamp(0.95rem, 2.5vw, 1.65rem);');
   });
 });

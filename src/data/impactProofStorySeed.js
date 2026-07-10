@@ -18,9 +18,9 @@ const IMPACT_PROOF_STORY_ITEMS = Object.freeze([
     id: 'legacy',
     value: '$450 million',
     eyebrow: 'Planned Giving',
-    valueTone: 'legacy-sandstone',
+    valueTone: 'mango',
     label: 'distributed to ministries through AG Foundation.',
-    body: 'That’s the power of generous donors using smart strategies.',
+    body: 'That’s the power of generous donors using smart strategies over the past 10 years alone.',
     tone: 'mango',
     action: Object.freeze({
       label: 'Plan with us',

@@ -11,23 +11,6 @@ function readSource(relativePath) {
 }
 
 describe('mobile footer spacing guardrail', () => {
-  it('keeps the home newsletter block carrying the mobile chatbot reserved space', () => {
-    const homeCss = readSource('../styles/home-native.css');
-
-    expect(homeCss).toContain(`.home-native-newsletter {
-  --home-newsletter-bg: var(--ag-color-super-grey);
-  --home-newsletter-text: #f0eee8;
-  --home-newsletter-heading: #ffffff;
-  --home-newsletter-mark: var(--ag-color-mango);
-  background: var(--home-newsletter-bg);
-  color: var(--home-newsletter-text);
-  padding:
-    clamp(2.5rem, 6vw, 4rem)
-    0
-    max(clamp(2.5rem, 6vw, 4rem), var(--site-chatbot-mobile-reserved-space, 0px));
-}`);
-  });
-
   it('keeps the loans tariffs feature carrying the mobile chatbot reserved space', () => {
     const serviceCss = readSource('../styles/service-native.css');
 

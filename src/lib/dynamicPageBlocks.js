@@ -32,7 +32,10 @@ import {
   normalizeHeroTitleLetterSpacingEm,
   normalizeHeroTitleSizeRem,
 } from './heroTitleSize';
+import { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
 import { resolveSiteFeatureCatalogEntry } from '../data/siteFeatureCatalog';
+
+export { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
 
 function sanitizeClassName(value) {
   return String(value || '')
@@ -1396,36 +1399,6 @@ export function buildDynamicCalculatorCtaFromBlock(block) {
 
   return runtime;
 }
-
-export const DEFAULT_RATES_LEGAL_COPY_SETTINGS = Object.freeze({
-  certificatesHtml: [
-    '<p>',
-    '*Annual Percentage Yield<br />',
-    '**Premium rates may be available for investments of $250,000 or greater.<br />',
-    'Effective {{certificatesEffectiveDate}}.',
-    '</p>',
-    '<p>',
-    'Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.',
-    '</p>',
-    '<p>',
-    'This is not an offer to sell securities. The offering is made only by the Offering Circular, which includes risk factors.',
-    '</p>',
-    '<p>Not FDIC or SIPC insured. Not a bank deposit. No AGFinancial guarantee.</p>',
-  ].join(''),
-  iraHtml: [
-    '<p>',
-    '*Annual Percentage Yield<br />',
-    'Effective {{iraEffectiveDate}}.',
-    '</p>',
-    '<p>',
-    'Demand certificates are investments that do not represent cash and are payable within 30 days after demand by the investor. Penalties may apply to redemptions prior to maturity.',
-    '</p>',
-    '<p>',
-    'This is not an offer to sell securities. The offering is made only by the Offering Circular, which includes risk factors.',
-    '</p>',
-    '<p>Not FDIC or SIPC insured. Not a bank deposit. No AGFinancial guarantee.</p>',
-  ].join(''),
-});
 
 function normalizeHtmlContent(value) {
   const html = String(value || '').trim();

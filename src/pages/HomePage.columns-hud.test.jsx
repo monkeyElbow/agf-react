@@ -257,6 +257,11 @@ describe('HomePage columns HUD', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close panel' }));
     await waitFor(() => {
+      expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
+    });
+
+    fireEvent.click(container.querySelector('[data-block-id="hero"]'));
+    await waitFor(() => {
       expect(screen.getByLabelText('Hero mobile HUD actions')).toBeTruthy();
     });
 

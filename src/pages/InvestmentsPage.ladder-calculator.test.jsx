@@ -170,7 +170,7 @@ describe('investments ladder calculator', () => {
     expect(container.querySelector('[data-ladder-mini-maturity-marker="5"]')).toBeTruthy();
     const ladderSection = container.querySelector('.investments-native-ladder-section');
     expect(within(ladderSection).getByText(/\*Premium rates may be available for individual investments of \$250,000 or greater\./)).toBeTruthy();
-    expect(within(ladderSection).getByRole('link', { name: 'here' }).getAttribute('href')).toBe('https://files.agfinancial.org/Investments/AGLF-Offering%20Circular.pdf');
+    expect(within(ladderSection).getByRole('link', { name: 'here' }).getAttribute('href')).toBe('/prospectus');
     expect(within(ladderSection).getByText('Not FDIC or SIPC Insured. Not a Bank Deposit. No AGFinancial Guarantee.')).toBeTruthy();
     expect(within(ladderSection).getByText(/Assemblies of God Loan Fund, an affiliated entity of Assemblies of God Financial Services Group/)).toBeTruthy();
     expect(within(ladderSection).getByText(/Information is from sources determined reliable\. Information is subject to error, omission, withdrawal, or change\./)).toBeTruthy();
@@ -306,7 +306,8 @@ describe('investments ladder calculator', () => {
     expect(pageSource).toContain('data-ladder-mini-maturity-marker');
     expect(pageSource).toContain('aria-hidden="true"');
     expect(pageSource).toContain('certificate matures in Year');
-    expect(pageSource).toContain('read the prospectus');
+    expect(pageSource).toContain("getDisclosureValue('investments-ladder-details-html'");
+    expect(pageSource).toContain('replaceDisclosureTokens');
     expect(pageSource).toContain('Start with equal investments across 1-year through');
     expect(pageSource).toContain('This view shows the starting ladder. Open the timeline to see how maturities roll forward.');
     expect(pageSource).toContain('View ongoing rollover timeline');

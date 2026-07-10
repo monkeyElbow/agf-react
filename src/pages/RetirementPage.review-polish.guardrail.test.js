@@ -47,7 +47,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('color: var(--ag-color-mango);');
     const subheadingRule = readRuleBlock(cssSource, '.retirement-plan-subheading {');
     expect(subheadingRule).toContain('font-family: var(--ag-font-helv);');
-    expect(subheadingRule).toContain('font-weight: 600;');
+    expect(subheadingRule).toContain('font-weight: 500;');
     expect(subheadingRule).toContain('letter-spacing: var(--ag-letter-spacing-helv-heading);');
     expect(subheadingRule).toContain('font-synthesis: none;');
     expect(leadRule).toContain('color: #ffffff;');
