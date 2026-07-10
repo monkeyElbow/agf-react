@@ -125,6 +125,7 @@ describe('native functional route renderers', () => {
     );
 
     expect(screen.getByText('3 of 3 documents')).toBeTruthy();
+    expect(screen.queryByText('Reference prospectus and investment documents.')).toBeNull();
     expect(screen.getByRole('link', { name: 'Download offering circular' })).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText('Search documents'), { target: { value: 'fidelity' } });

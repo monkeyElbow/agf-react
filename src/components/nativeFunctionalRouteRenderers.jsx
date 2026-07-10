@@ -125,7 +125,7 @@ function SitemapRouteSection() {
   );
 }
 
-function ProspectusRouteSection({ sections, NativeLinkRenderer }) {
+function ProspectusRouteSection({ sections, actions, ActionRenderer, NativeLinkRenderer }) {
   const [query, setQuery] = useState('');
   const docsSection = Array.isArray(sections)
     ? sections.find((section) => Array.isArray(section?.links) && section.links.length)
@@ -136,33 +136,49 @@ function ProspectusRouteSection({ sections, NativeLinkRenderer }) {
     if (!needle) {
       return docs;
     }
-    return docs.filter((item) => String(item.label || '').toLowerCase().includes(needle));
+      return docs.filter((item) => String(item.label || '').toLowerCase().includes(needle));
   }, [docs, query]);
 
   return (
     <section className="service-native-section native-prospectus-section">
       <div className="ag-panel-rail">
         <div className="native-prospectus-tools">
+          {Array.isArray(actions) && actions.length ? (
+            <div className="native-prospectus-tools-actions">
+              {actions.map((item) => (
+                <ActionRenderer
+                  key={`${item.label}-${item.to || item.href || item.documentId}`}
+                  item={{
+                    ...item,
+                    className: `${item.className ? `${item.className} ` : ''}is-outline is-tone-atlantean native-prospectus-download-btn`.trim(),
+                  }}
+                />
+              ))}
+            </div>
+          ) : null}
           <label htmlFor="prospectus-doc-search" className="native-prospectus-search">
-            <span>Search documents</span>
             <input
               id="prospectus-doc-search"
               type="search"
+              aria-label="Search documents"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Type a fund or provider name"
+              placeholder="Search documents"
             />
           </label>
           <p className="native-prospectus-count">
             {filteredDocs.length} of {docs.length} documents
           </p>
         </div>
-        <div className="native-prospectus-grid">
+          <div className="native-prospectus-grid">
           {filteredDocs.map((item) => (
             <article key={`${item.label}-${item.href || item.to || item.documentId}`} className="native-prospectus-card">
               <h3>{item.label}</h3>
-              <NativeLinkRenderer item={item}>
-                {item.href ? 'Open PDF' : 'Open'}
+              <NativeLinkRenderer
+                item={item}
+                className="service-native-btn is-outline is-tone-atlantean"
+              >
+                View
               </NativeLinkRenderer>
             </article>
           ))}
@@ -382,21 +398,15 @@ export function NativeProspectusRouteRenderer({
     <div ref={pageRef} className={`ag-page-shell service-native-page native-info-page${compactClass}${pageClass}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}>
       <section className="native-functional-page-head native-functional-page-head--prospectus">
         <div className="ag-panel-rail">
-          <h1 className="native-prospectus-hero-title">
-            <span>Prospectus</span>
-            <span>financialis.</span>
-          </h1>
-          {intro ? <p>{intro}</p> : null}
-          {Array.isArray(actions) && actions.length ? (
-            <div className="service-native-action-row">
-              {actions.map((item) => (
-                <ActionRenderer key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
-              ))}
-            </div>
-          ) : null}
+          <h1 className="native-prospectus-hero-title">Prospectus</h1>
         </div>
       </section>
-      <ProspectusRouteSection sections={sections} NativeLinkRenderer={NativeLinkRenderer} />
+      <ProspectusRouteSection
+        sections={sections}
+        actions={actions}
+        ActionRenderer={ActionRenderer}
+        NativeLinkRenderer={NativeLinkRenderer}
+      />
     </div>
   );
 }

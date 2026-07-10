@@ -192,8 +192,8 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Search documents')).toBeTruthy();
-    expect(screen.getByText('Reference prospectus and investment documents.')).toBeTruthy();
+    expect(screen.getByRole('searchbox', { name: 'Search documents' })).toBeTruthy();
+    expect(screen.queryByText('Reference prospectus and investment documents.')).toBeNull();
     const offeringCircularLink = screen.getByRole('link', { name: 'Download offering circular' });
     expect(offeringCircularLink).toBeTruthy();
     expect(offeringCircularLink.className).toContain('service-native-btn');
@@ -703,7 +703,7 @@ describe('NativeContentPage functional routes', () => {
     );
 
     const willsHeading = screen.getByRole('heading', { name: 'Wills & Estate Services' });
-    const stewardshipHeading = screen.getByRole('heading', { name: 'Smart stewardship—for today and tomorrow.' });
+    const stewardshipHeading = screen.getByRole('heading', { name: 'Smart stewardship for today and tomorrow.' });
     const joyHeading = screen.getByText((_, element) => (
       element?.tagName === 'H2' && element.textContent === 'More joy in giving.'
     ));
@@ -713,7 +713,7 @@ describe('NativeContentPage functional routes', () => {
     const comparisonSection = document.querySelector('#charitable-giving-plan-comparison');
 
     expect(screen.getByText('Receive payments for life.')).toBeTruthy();
-    expect(stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]')?.textContent).toBe('Learn more');
+    expect(stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]')?.textContent).toBe('Compare charitable giving ideas');
     expect(stewardshipSection?.className).toContain('legacy-giving-stewardship');
     expect(stewardshipSection?.className).toContain('legacy-stewardship-story');
     expect(willsSection && stewardshipSection
@@ -1014,6 +1014,8 @@ describe('NativeContentPage functional routes', () => {
     expect(container.querySelector('.retirement-child-native-table .info-table-sheet')).toBeTruthy();
     expect(container.querySelector('.retirement-403b-rate-widget .data-table')).toBeNull();
     expect(container.querySelector('.retirement-child-native-table .data-table')).toBeNull();
+    expect(screen.getAllByText('2026').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Under age 50 deferral limit (pre-tax and Roth after-tax)').length).toBeGreaterThan(0);
   });
 
   it('reveals an external inline CTA shell from a single centered charitable trusts trigger while keeping the later form visible', async () => {
