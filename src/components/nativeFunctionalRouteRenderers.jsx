@@ -174,12 +174,14 @@ function ProspectusRouteSection({ sections, actions, ActionRenderer, NativeLinkR
           {filteredDocs.map((item) => (
             <article key={`${item.label}-${item.href || item.to || item.documentId}`} className="native-prospectus-card">
               <h3>{item.label}</h3>
-              <NativeLinkRenderer
-                item={item}
-                className="service-native-btn is-outline is-tone-atlantean"
-              >
-                View
-              </NativeLinkRenderer>
+              <div className="service-native-action-row native-prospectus-card-actions">
+                <NativeLinkRenderer
+                  item={item}
+                  className="service-native-btn is-outline is-tone-atlantean"
+                >
+                  View
+                </NativeLinkRenderer>
+              </div>
             </article>
           ))}
         </div>
