@@ -26,3 +26,6 @@ public/wp-content/
 
 # Local WordPress notes
 /wp-notes/
+
+# Local admin content safety backups
+dev-data/backups/

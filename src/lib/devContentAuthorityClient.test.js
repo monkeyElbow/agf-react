@@ -4,6 +4,7 @@ import {
   fetchSharedContentBackups,
   fetchSharedAnnouncement,
   initializeSharedContentFromSeed,
+  promoteSharedContentToSeed,
   releaseSharedBlockLock,
   resetSharedContentFromSeed,
   restoreLatestSharedContentBackup,
@@ -68,6 +69,7 @@ describe('devContentAuthorityClient', () => {
     await resetSharedContentFromSeed({}, actor);
     await restoreSharedContentBackup('content-admin-shared-20260708-120000.json', actor);
     await restoreLatestSharedContentBackup(actor);
+    await promoteSharedContentToSeed(actor);
 
     const payloads = fetchMock.mock.calls.map(([, request]) => JSON.parse(request.body));
 
@@ -76,6 +78,7 @@ describe('devContentAuthorityClient', () => {
     expect(payloads[3].force).toBe(true);
     expect(payloads[6].backupFileName).toBe('content-admin-shared-20260708-120000.json');
     expect(payloads[7].backupFileName).toBe('');
+    expect(payloads[8].actor.displayName).toBe('Sarah MacBook');
   });
 
   it('sends block-scoped draft sync payloads for active editor changes', async () => {
@@ -144,5 +147,27 @@ describe('devContentAuthorityClient', () => {
     const [readUrl, readRequest] = fetchMock.mock.calls[0];
     expect(readUrl).toContain('/backups');
     expect(readRequest.method).toBe('GET');
+  });
+
+  it('uses the dedicated seed promotion endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await promoteSharedContentToSeed({
+      userId: 'dev-jordan',
+      displayName: 'Jordan QA',
+      initials: 'JQ',
+      accentColor: '#00adbb',
+    });
+
+    const [url, request] = fetchMock.mock.calls[0];
+    const payload = JSON.parse(request.body);
+
+    expect(url).toContain('/promote-seed');
+    expect(request.method).toBe('POST');
+    expect(payload.actor.userId).toBe('dev-jordan');
   });
 });

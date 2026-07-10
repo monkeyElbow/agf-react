@@ -242,6 +242,10 @@ function listBackupFiles(dir) {
     .sort();
 }
 
+function readSeedBaselineFile(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
 describe('createDevContentAuthorityStore', () => {
   it('lets multiple clients resolve the same shared page state through one persisted store', () => {
     const persistenceFile = makeTempFile();
@@ -755,6 +759,55 @@ describe('createDevContentAuthorityStore', () => {
     expect(backups).toHaveLength(2);
     expect(backups[0].reason).toBe('before-backup-restore');
     expect(backups[1].reason).toBe('before-reset-from-seed');
+  });
+
+  it('promotes the current shared content to the reset baseline and uses it for future resets', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const seedBaselineFile = path.join(path.dirname(persistenceFile), 'content-admin-seed-baseline.json');
+    const store = createStore(persistenceFile, {
+      backupDir,
+      seedBaselineFile,
+      getGitCommitHash: () => 'abc123',
+    });
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const promotedState = buildSeedState();
+    promotedState.blocksByPath['/services/loans'][0].settings.line1Text = 'Approved shared baseline';
+    store.saveDraft(promotedState, { actor: createActor(), summary: 'approved content' });
+
+    const promoted = store.promoteCurrentStateToSeed({ actor: createActor() });
+    const seedBaselinePayload = readSeedBaselineFile(seedBaselineFile);
+
+    expect(promoted.ok).toBe(true);
+    expect(promoted.promotedSeedBaseline.gitCommitHash).toBe('abc123');
+    expect(seedBaselinePayload.meta.reason).toBe('promote-to-seed-baseline');
+    expect(seedBaselinePayload.seedState.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Approved shared baseline');
+
+    const fallbackSeed = buildSeedState();
+    fallbackSeed.blocksByPath['/services/loans'][0].settings.line1Text = 'Older code default';
+    const reset = store.resetFromSeed(fallbackSeed, { actor: createActor(), reason: 'seed-refresh' });
+
+    expect(reset.resetSource).toBe('promoted-seed-baseline');
+    expect(store.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Approved shared baseline');
+  });
+
+  it('aborts seed promotion when the safety backup cannot be created', () => {
+    const persistenceFile = makeTempFile();
+    const blockedBackupPath = path.join(path.dirname(persistenceFile), 'blocked-backups');
+    const seedBaselineFile = path.join(path.dirname(persistenceFile), 'content-admin-seed-baseline.json');
+    fs.writeFileSync(blockedBackupPath, 'not-a-directory');
+    const store = createStore(persistenceFile, {
+      backupDir: blockedBackupPath,
+      seedBaselineFile,
+    });
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const promoted = store.promoteCurrentStateToSeed({ actor: createActor() });
+
+    expect(promoted.ok).toBe(false);
+    expect(promoted.error).toBe('backup-failed');
+    expect(fs.existsSync(seedBaselineFile)).toBe(false);
   });
 
   it('keeps normal non-destructive saves working without creating backups', () => {

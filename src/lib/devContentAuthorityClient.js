@@ -34,6 +34,10 @@ export async function fetchSharedContentSnapshot() {
   return sendJson('/state', { method: 'GET' });
 }
 
+export async function fetchSharedDisclosuresSnapshot() {
+  return sendJson('/disclosures/state', { method: 'GET' });
+}
+
 export async function fetchSharedAnnouncement() {
   return sendJson('/announcement', { method: 'GET' });
 }
@@ -64,6 +68,43 @@ export async function saveSharedAnnouncement(announcement, actor = null) {
     method: 'POST',
     body: JSON.stringify({
       announcement: cloneJson(announcement),
+      actor: cloneJson(actor),
+    }),
+  });
+}
+
+export async function saveSharedDisclosures(patch, actor = null) {
+  return sendJson('/disclosures/save', {
+    method: 'POST',
+    body: JSON.stringify({
+      patch: cloneJson(patch),
+      actor: cloneJson(actor),
+    }),
+  });
+}
+
+export async function resetSharedDisclosures(actor = null) {
+  return sendJson('/disclosures/reset', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+    }),
+  });
+}
+
+export async function restoreSharedDisclosuresDraftFromLive(actor = null) {
+  return sendJson('/disclosures/restore-live', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+    }),
+  });
+}
+
+export async function publishSharedDisclosures(actor = null) {
+  return sendJson('/disclosures/publish', {
+    method: 'POST',
+    body: JSON.stringify({
       actor: cloneJson(actor),
     }),
   });
