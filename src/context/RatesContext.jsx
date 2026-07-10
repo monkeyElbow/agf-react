@@ -1,10 +1,20 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { defaultIraRates, defaultRates, defaultRatesMeta } from '../data/ratesDefault';
-import { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from '../lib/dynamicPageBlocks';
+import { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from '../lib/ratesLegalCopyDefaults';
+import {
+  fetchSharedDisclosuresSnapshot,
+  isDevContentAuthorityEnabled,
+  publishSharedDisclosures,
+  resetSharedDisclosures,
+  restoreSharedDisclosuresDraftFromLive,
+  saveSharedDisclosures,
+} from '../lib/devContentAuthorityClient';
+import { getOrCreateDevIdentity, toDevIdentitySummary } from '../lib/devIdentity';
 
 const STORAGE_KEY = 'agf-rates-v2';
 const CONTENT_ADMIN_STORAGE_KEY = 'agf-content-admin-v1';
 const RatesContext = createContext(null);
+const SHARED_POLL_INTERVAL_MS = 1500;
 
 function readLegacyRatesLegalCopyFromContentAdminStorage() {
   try {
@@ -59,7 +69,6 @@ function normalizeStoredRates(payload) {
   }
 
   if (Array.isArray(payload)) {
-    // v1 storage fallback (single table only)
     return {
       rates: payload,
       iraRates: defaultIraRates,
@@ -85,8 +94,36 @@ function normalizeStoredRates(payload) {
   };
 }
 
+function readCurrentActorSummary() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  return toDevIdentitySummary(getOrCreateDevIdentity({
+    storage: window.localStorage,
+  }));
+}
+
+function normalizeSharedLegalCopySnapshot(snapshot) {
+  const source = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const legacyLegalCopy = normalizeStoredRatesLegalCopy(source);
+  const publishedLegalCopy = normalizeStoredRatesLegalCopy(source.published?.legalCopy || legacyLegalCopy);
+  const draftLegalCopy = normalizeStoredRatesLegalCopy(source.draft?.legalCopy || legacyLegalCopy);
+  return {
+    publishedLegalCopy,
+    draftLegalCopy,
+    hasUnpublishedChanges: typeof source.hasUnpublishedChanges === 'boolean'
+      ? source.hasUnpublishedChanges
+      : JSON.stringify(publishedLegalCopy) !== JSON.stringify(draftLegalCopy),
+    draftUpdatedAt: Number.isFinite(Number(source.draftUpdatedAt)) ? Number(source.draftUpdatedAt) : 0,
+    draftUpdatedBy: source.draftUpdatedBy || null,
+    publishedAt: Number.isFinite(Number(source.publishedAt)) ? Number(source.publishedAt) : 0,
+    publishedBy: source.publishedBy || null,
+  };
+}
+
 export function RatesProvider({ children }) {
-  const [rateTables, setRateTables] = useState(() => {
+  const sharedAuthorityEnabled = isDevContentAuthorityEnabled();
+  const initialRateTables = useMemo(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return normalizeStoredRates(raw ? JSON.parse(raw) : null);
@@ -98,7 +135,15 @@ export function RatesProvider({ children }) {
         legalCopy: { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS },
       };
     }
-  });
+  }, []);
+  const [rateTables, setRateTables] = useState(initialRateTables);
+  const [draftLegalCopy, setDraftLegalCopyState] = useState(initialRateTables.legalCopy);
+  const [hasUnpublishedLegalCopyChanges, setHasUnpublishedLegalCopyChanges] = useState(false);
+  const [legalCopyDraftUpdatedAt, setLegalCopyDraftUpdatedAt] = useState(0);
+  const [legalCopyDraftUpdatedBy, setLegalCopyDraftUpdatedBy] = useState(null);
+  const [legalCopyPublishedAt, setLegalCopyPublishedAt] = useState(0);
+  const [legalCopyPublishedBy, setLegalCopyPublishedBy] = useState(null);
+  const pendingSharedMutationCountRef = useRef(0);
 
   const { rates, iraRates, ratesMeta, legalCopy } = rateTables;
 
@@ -117,20 +162,95 @@ export function RatesProvider({ children }) {
     }));
   }
 
-  function setLegalCopy(nextLegalCopy) {
+  function applySharedSnapshot(snapshot, { force = false } = {}) {
+    if (!snapshot || (!force && pendingSharedMutationCountRef.current > 0)) {
+      return;
+    }
+    const normalized = normalizeSharedLegalCopySnapshot(snapshot);
     setRateTables((current) => ({
       ...current,
-      legalCopy: {
-        ...DEFAULT_RATES_LEGAL_COPY_SETTINGS,
-        ...(current.legalCopy || {}),
-        ...(nextLegalCopy && typeof nextLegalCopy === 'object' ? nextLegalCopy : {}),
-      },
+      legalCopy: normalized.publishedLegalCopy,
     }));
+    setDraftLegalCopyState(normalized.draftLegalCopy);
+    setHasUnpublishedLegalCopyChanges(normalized.hasUnpublishedChanges);
+    setLegalCopyDraftUpdatedAt(normalized.draftUpdatedAt);
+    setLegalCopyDraftUpdatedBy(normalized.draftUpdatedBy);
+    setLegalCopyPublishedAt(normalized.publishedAt);
+    setLegalCopyPublishedBy(normalized.publishedBy);
+  }
+
+  function setLegalCopy(nextLegalCopy) {
+    const normalizedDraft = {
+      ...DEFAULT_RATES_LEGAL_COPY_SETTINGS,
+      ...(draftLegalCopy || {}),
+      ...(nextLegalCopy && typeof nextLegalCopy === 'object' ? nextLegalCopy : {}),
+    };
+    setDraftLegalCopyState(normalizedDraft);
+
+    if (!sharedAuthorityEnabled) {
+      setRateTables((current) => ({
+        ...current,
+        legalCopy: normalizedDraft,
+      }));
+      setHasUnpublishedLegalCopyChanges(false);
+      return;
+    }
+
+    setHasUnpublishedLegalCopyChanges(JSON.stringify(normalizedDraft) !== JSON.stringify(legalCopy));
+    pendingSharedMutationCountRef.current += 1;
+    void saveSharedDisclosures(
+      { legalCopy: normalizedDraft },
+      readCurrentActorSummary(),
+    )
+      .then((snapshot) => {
+        applySharedSnapshot(snapshot, { force: true });
+      })
+      .catch(() => {
+        // keep optimistic draft state; polling will reconcile once the shared store is reachable again
+      })
+      .finally(() => {
+        pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
+      });
   }
 
   useEffect(() => {
+    if (sharedAuthorityEnabled) {
+      return undefined;
+    }
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rateTables));
-  }, [rateTables]);
+    return undefined;
+  }, [rateTables, sharedAuthorityEnabled]);
+
+  useEffect(() => {
+    if (!sharedAuthorityEnabled) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const syncSnapshot = async ({ force = false } = {}) => {
+      try {
+        const snapshot = await fetchSharedDisclosuresSnapshot();
+        if (cancelled) {
+          return;
+        }
+        applySharedSnapshot(snapshot, { force });
+      } catch {
+        // ignore dev sync failures and keep the last known snapshot
+      }
+    };
+
+    void syncSnapshot({ force: true });
+    const intervalId = window.setInterval(() => {
+      void syncSnapshot();
+    }, SHARED_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [sharedAuthorityEnabled]);
 
   const value = useMemo(
     () => ({
@@ -138,12 +258,82 @@ export function RatesProvider({ children }) {
       iraRates,
       ratesMeta,
       legalCopy,
+      draftLegalCopy,
       setRates,
       setIraRates,
       setRatesMeta,
       setLegalCopy,
+      resetDraftLegalCopy: async () => {
+        if (!sharedAuthorityEnabled) {
+          setDraftLegalCopyState({ ...DEFAULT_RATES_LEGAL_COPY_SETTINGS });
+          setRateTables((current) => ({
+            ...current,
+            legalCopy: { ...DEFAULT_RATES_LEGAL_COPY_SETTINGS },
+          }));
+          setHasUnpublishedLegalCopyChanges(false);
+          return null;
+        }
+        pendingSharedMutationCountRef.current += 1;
+        try {
+          const snapshot = await resetSharedDisclosures(readCurrentActorSummary());
+          applySharedSnapshot(snapshot, { force: true });
+          return snapshot;
+        } finally {
+          pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
+        }
+      },
+      restoreDraftLegalCopyFromLive: async () => {
+        if (!sharedAuthorityEnabled) {
+          setDraftLegalCopyState(legalCopy);
+          setHasUnpublishedLegalCopyChanges(false);
+          return null;
+        }
+        pendingSharedMutationCountRef.current += 1;
+        try {
+          const snapshot = await restoreSharedDisclosuresDraftFromLive(readCurrentActorSummary());
+          applySharedSnapshot(snapshot, { force: true });
+          return snapshot;
+        } finally {
+          pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
+        }
+      },
+      publishDraftLegalCopy: async () => {
+        if (!sharedAuthorityEnabled) {
+          setRateTables((current) => ({
+            ...current,
+            legalCopy: draftLegalCopy,
+          }));
+          setHasUnpublishedLegalCopyChanges(false);
+          return null;
+        }
+        pendingSharedMutationCountRef.current += 1;
+        try {
+          const snapshot = await publishSharedDisclosures(readCurrentActorSummary());
+          applySharedSnapshot(snapshot, { force: true });
+          return snapshot;
+        } finally {
+          pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
+        }
+      },
+      hasUnpublishedLegalCopyChanges,
+      legalCopyDraftUpdatedAt,
+      legalCopyDraftUpdatedBy,
+      legalCopyPublishedAt,
+      legalCopyPublishedBy,
     }),
-    [rates, iraRates, ratesMeta, legalCopy],
+    [
+      draftLegalCopy,
+      hasUnpublishedLegalCopyChanges,
+      iraRates,
+      legalCopy,
+      legalCopyDraftUpdatedAt,
+      legalCopyDraftUpdatedBy,
+      legalCopyPublishedAt,
+      legalCopyPublishedBy,
+      rates,
+      ratesMeta,
+      sharedAuthorityEnabled,
+    ],
   );
   return <RatesContext.Provider value={value}>{children}</RatesContext.Provider>;
 }

@@ -2,6 +2,7 @@ import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { createDevContentAuthorityStore } from './dev-server/contentAdminStore';
+import { createSharedDisclosuresStore } from './dev-server/disclosuresStore';
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
@@ -34,6 +35,9 @@ function contentAdminDevPlugin() {
   const store = createDevContentAuthorityStore({
     persistenceFile: path.resolve(process.cwd(), 'dev-data/content-admin-shared.json'),
   });
+  const disclosuresStore = createSharedDisclosuresStore({
+    persistenceFile: path.resolve(process.cwd(), 'dev-data/disclosures-shared.json'),
+  });
 
   return {
     name: 'agf-dev-content-authority',
@@ -48,6 +52,11 @@ function contentAdminDevPlugin() {
 
           if (req.method === 'GET' && url.pathname === '/announcement') {
             sendJson(res, 200, store.getAnnouncementSnapshot());
+            return;
+          }
+
+          if (req.method === 'GET' && url.pathname === '/disclosures/state') {
+            sendJson(res, 200, disclosuresStore.getSnapshot());
             return;
           }
 
@@ -98,6 +107,26 @@ function contentAdminDevPlugin() {
             sendJson(res, 200, store.saveAnnouncement(body.announcement, {
               actor: body.actor,
             }));
+            return;
+          }
+
+          if (url.pathname === '/disclosures/save') {
+            sendJson(res, 200, disclosuresStore.saveDraftPatch(body.patch, body.actor));
+            return;
+          }
+
+          if (url.pathname === '/disclosures/reset') {
+            sendJson(res, 200, disclosuresStore.resetDraftToDefaults(body.actor));
+            return;
+          }
+
+          if (url.pathname === '/disclosures/restore-live') {
+            sendJson(res, 200, disclosuresStore.restoreDraftFromPublished(body.actor));
+            return;
+          }
+
+          if (url.pathname === '/disclosures/publish') {
+            sendJson(res, 200, disclosuresStore.publishDraft(body.actor));
             return;
           }
 

@@ -1,7 +1,17 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { buildDefaultDisclosuresLibrary } from '../data/disclosuresLibrarySeed';
+import {
+  fetchSharedDisclosuresSnapshot,
+  isDevContentAuthorityEnabled,
+  publishSharedDisclosures,
+  resetSharedDisclosures,
+  restoreSharedDisclosuresDraftFromLive,
+  saveSharedDisclosures,
+} from '../lib/devContentAuthorityClient';
+import { getOrCreateDevIdentity, toDevIdentitySummary } from '../lib/devIdentity';
 
 const STORAGE_KEY = 'agf-disclosures-library-v1';
+const SHARED_POLL_INTERVAL_MS = 1500;
 
 function cloneValue(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -74,9 +84,41 @@ function readInitialDisclosures() {
   }
 }
 
+function readCurrentActorSummary() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  return toDevIdentitySummary(getOrCreateDevIdentity({
+    storage: window.localStorage,
+  }));
+}
+
+function areDisclosureSetsEqual(left, right) {
+  return JSON.stringify(left ?? []) === JSON.stringify(right ?? []);
+}
+
+function normalizeSharedSnapshot(snapshot) {
+  const source = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const legacy = normalizeDisclosureLibrary(source.disclosures);
+  const publishedDisclosures = normalizeDisclosureLibrary(source.published?.disclosures || legacy);
+  const draftDisclosures = normalizeDisclosureLibrary(source.draft?.disclosures || legacy);
+  return {
+    publishedDisclosures,
+    draftDisclosures,
+    hasUnpublishedChanges: typeof source.hasUnpublishedChanges === 'boolean'
+      ? source.hasUnpublishedChanges
+      : !areDisclosureSetsEqual(draftDisclosures, publishedDisclosures),
+    draftUpdatedAt: Number.isFinite(Number(source.draftUpdatedAt)) ? Number(source.draftUpdatedAt) : 0,
+    draftUpdatedBy: source.draftUpdatedBy || null,
+    publishedAt: Number.isFinite(Number(source.publishedAt)) ? Number(source.publishedAt) : 0,
+    publishedBy: source.publishedBy || null,
+  };
+}
+
 const defaultDisclosureLibrary = buildDefaultDisclosuresLibrary();
 const defaultDisclosuresValue = {
   disclosures: defaultDisclosureLibrary,
+  draftDisclosures: defaultDisclosureLibrary,
   getDisclosure: (id) => defaultDisclosureLibrary.find((entry) => entry.id === String(id || '').trim()) || null,
   getDisclosureValue: (id, fallback = null) => {
     const entry = defaultDisclosureLibrary.find((item) => item.id === String(id || '').trim()) || null;
@@ -84,28 +126,93 @@ const defaultDisclosuresValue = {
   },
   updateDisclosure: () => {},
   resetDisclosures: () => {},
+  restoreDisclosureDraftFromLive: async () => null,
+  publishDisclosures: async () => null,
+  hasUnpublishedDisclosureChanges: false,
+  draftUpdatedAt: 0,
+  draftUpdatedBy: null,
+  publishedAt: 0,
+  publishedBy: null,
 };
 
 const DisclosuresContext = createContext(defaultDisclosuresValue);
 
 export function DisclosuresProvider({ children }) {
-  const [disclosures, setDisclosures] = useState(readInitialDisclosures);
+  const sharedAuthorityEnabled = isDevContentAuthorityEnabled();
+  const initialDisclosures = useMemo(readInitialDisclosures, []);
+  const [publishedDisclosures, setPublishedDisclosures] = useState(initialDisclosures);
+  const [draftDisclosures, setDraftDisclosures] = useState(initialDisclosures);
+  const [hasUnpublishedDisclosureChanges, setHasUnpublishedDisclosureChanges] = useState(false);
+  const [draftUpdatedAt, setDraftUpdatedAt] = useState(0);
+  const [draftUpdatedBy, setDraftUpdatedBy] = useState(null);
+  const [publishedAt, setPublishedAt] = useState(0);
+  const [publishedBy, setPublishedBy] = useState(null);
+  const pendingSharedMutationCountRef = useRef(0);
 
   useEffect(() => {
+    if (sharedAuthorityEnabled) {
+      return undefined;
+    }
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(disclosures));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(draftDisclosures));
     } catch {
       // ignore storage write failures
     }
-  }, [disclosures]);
+    return undefined;
+  }, [draftDisclosures, sharedAuthorityEnabled]);
+
+  useEffect(() => {
+    if (!sharedAuthorityEnabled) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const applySnapshot = (snapshot, { force = false } = {}) => {
+      if (cancelled || !snapshot) {
+        return;
+      }
+      if (!force && pendingSharedMutationCountRef.current > 0) {
+        return;
+      }
+      const normalized = normalizeSharedSnapshot(snapshot);
+      setPublishedDisclosures(normalized.publishedDisclosures);
+      setDraftDisclosures(normalized.draftDisclosures);
+      setHasUnpublishedDisclosureChanges(normalized.hasUnpublishedChanges);
+      setDraftUpdatedAt(normalized.draftUpdatedAt);
+      setDraftUpdatedBy(normalized.draftUpdatedBy);
+      setPublishedAt(normalized.publishedAt);
+      setPublishedBy(normalized.publishedBy);
+    };
+
+    const syncSnapshot = async ({ force = false } = {}) => {
+      try {
+        const snapshot = await fetchSharedDisclosuresSnapshot();
+        applySnapshot(snapshot, { force });
+      } catch {
+        // ignore dev sync failures and keep the last known snapshot
+      }
+    };
+
+    void syncSnapshot({ force: true });
+    const intervalId = window.setInterval(() => {
+      void syncSnapshot();
+    }, SHARED_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [sharedAuthorityEnabled]);
 
   const value = useMemo(() => {
-    const byId = new Map(disclosures.map((entry) => [entry.id, entry]));
+    const publishedById = new Map(publishedDisclosures.map((entry) => [entry.id, entry]));
     return {
-      disclosures,
-      getDisclosure: (id) => byId.get(String(id || '').trim()) || null,
+      disclosures: publishedDisclosures,
+      draftDisclosures,
+      getDisclosure: (id) => publishedById.get(String(id || '').trim()) || null,
       getDisclosureValue: (id, fallback = null) => {
-        const entry = byId.get(String(id || '').trim()) || null;
+        const entry = publishedById.get(String(id || '').trim()) || null;
         return entry ? cloneValue(entry.value) : cloneValue(fallback);
       },
       updateDisclosure: (id, nextValue) => {
@@ -113,20 +220,131 @@ export function DisclosuresProvider({ children }) {
         if (!token) {
           return;
         }
-        setDisclosures((current) => current.map((entry) => (
+        const nextDraftEntries = draftDisclosures.map((entry) => (
           entry.id !== token
             ? entry
             : {
                 ...entry,
                 value: normalizeDisclosureValue(entry.format, nextValue, entry.value),
               }
-        )));
+        ));
+        setDraftDisclosures(nextDraftEntries);
+        if (!sharedAuthorityEnabled) {
+          setPublishedDisclosures(nextDraftEntries);
+          setHasUnpublishedDisclosureChanges(false);
+          return;
+        }
+        setHasUnpublishedDisclosureChanges(!areDisclosureSetsEqual(nextDraftEntries, publishedDisclosures));
+        pendingSharedMutationCountRef.current += 1;
+        void saveSharedDisclosures(
+          { disclosures: nextDraftEntries },
+          readCurrentActorSummary(),
+        )
+          .then((snapshot) => {
+            const normalized = normalizeSharedSnapshot(snapshot);
+            setPublishedDisclosures(normalized.publishedDisclosures);
+            setDraftDisclosures(normalized.draftDisclosures);
+            setHasUnpublishedDisclosureChanges(normalized.hasUnpublishedChanges);
+            setDraftUpdatedAt(normalized.draftUpdatedAt);
+            setDraftUpdatedBy(normalized.draftUpdatedBy);
+            setPublishedAt(normalized.publishedAt);
+            setPublishedBy(normalized.publishedBy);
+          })
+          .catch(() => {
+            // keep optimistic draft state; polling will reconcile once the shared store is reachable again
+          })
+          .finally(() => {
+            pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
+          });
       },
       resetDisclosures: () => {
-        setDisclosures(buildDefaultDisclosuresLibrary());
+        const defaults = buildDefaultDisclosuresLibrary();
+        setDraftDisclosures(defaults);
+        if (!sharedAuthorityEnabled) {
+          setPublishedDisclosures(defaults);
+          setHasUnpublishedDisclosureChanges(false);
+          return;
+        }
+        setHasUnpublishedDisclosureChanges(!areDisclosureSetsEqual(defaults, publishedDisclosures));
+        pendingSharedMutationCountRef.current += 1;
+        void resetSharedDisclosures(readCurrentActorSummary())
+          .then((snapshot) => {
+            const normalized = normalizeSharedSnapshot(snapshot);
+            setPublishedDisclosures(normalized.publishedDisclosures);
+            setDraftDisclosures(normalized.draftDisclosures);
+            setHasUnpublishedDisclosureChanges(normalized.hasUnpublishedChanges);
+            setDraftUpdatedAt(normalized.draftUpdatedAt);
+            setDraftUpdatedBy(normalized.draftUpdatedBy);
+            setPublishedAt(normalized.publishedAt);
+            setPublishedBy(normalized.publishedBy);
+          })
+          .catch(() => {
+            // keep optimistic draft state; polling will reconcile once the shared store is reachable again
+          })
+          .finally(() => {
+            pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
+          });
       },
+      restoreDisclosureDraftFromLive: async () => {
+        if (!sharedAuthorityEnabled) {
+          setDraftDisclosures(publishedDisclosures);
+          setHasUnpublishedDisclosureChanges(false);
+          return null;
+        }
+        pendingSharedMutationCountRef.current += 1;
+        try {
+          const snapshot = await restoreSharedDisclosuresDraftFromLive(readCurrentActorSummary());
+          const normalized = normalizeSharedSnapshot(snapshot);
+          setPublishedDisclosures(normalized.publishedDisclosures);
+          setDraftDisclosures(normalized.draftDisclosures);
+          setHasUnpublishedDisclosureChanges(normalized.hasUnpublishedChanges);
+          setDraftUpdatedAt(normalized.draftUpdatedAt);
+          setDraftUpdatedBy(normalized.draftUpdatedBy);
+          setPublishedAt(normalized.publishedAt);
+          setPublishedBy(normalized.publishedBy);
+          return snapshot;
+        } finally {
+          pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
+        }
+      },
+      publishDisclosures: async () => {
+        if (!sharedAuthorityEnabled) {
+          setPublishedDisclosures(draftDisclosures);
+          setHasUnpublishedDisclosureChanges(false);
+          return null;
+        }
+        pendingSharedMutationCountRef.current += 1;
+        try {
+          const snapshot = await publishSharedDisclosures(readCurrentActorSummary());
+          const normalized = normalizeSharedSnapshot(snapshot);
+          setPublishedDisclosures(normalized.publishedDisclosures);
+          setDraftDisclosures(normalized.draftDisclosures);
+          setHasUnpublishedDisclosureChanges(normalized.hasUnpublishedChanges);
+          setDraftUpdatedAt(normalized.draftUpdatedAt);
+          setDraftUpdatedBy(normalized.draftUpdatedBy);
+          setPublishedAt(normalized.publishedAt);
+          setPublishedBy(normalized.publishedBy);
+          return snapshot;
+        } finally {
+          pendingSharedMutationCountRef.current = Math.max(0, pendingSharedMutationCountRef.current - 1);
+        }
+      },
+      hasUnpublishedDisclosureChanges,
+      draftUpdatedAt,
+      draftUpdatedBy,
+      publishedAt,
+      publishedBy,
     };
-  }, [disclosures]);
+  }, [
+    draftDisclosures,
+    draftUpdatedAt,
+    draftUpdatedBy,
+    hasUnpublishedDisclosureChanges,
+    publishedAt,
+    publishedBy,
+    publishedDisclosures,
+    sharedAuthorityEnabled,
+  ]);
 
   return (
     <DisclosuresContext.Provider value={value}>
