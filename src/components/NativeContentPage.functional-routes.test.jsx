@@ -220,7 +220,7 @@ describe('NativeContentPage functional routes', () => {
     expect(formLink.className).toContain('is-outline');
   });
 
-  it('renders calculators with the shared request-form shell and a single calculator intro copy', () => {
+  it('renders calculators with a targeted billboard and CTA form instead of the old request-form block', () => {
     mockBlocksByPath = {
       '/calculators': (contentBlockBlueprintsByPath['/calculators'] || []).map((block) => ({
         ...block,
@@ -240,13 +240,18 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(document.querySelector('.calculators-native-contact.native-dynamic-request')).toBeTruthy();
-    expect(document.querySelector('.calculators-native-contact .dynamic-request-layout')).toBeTruthy();
-    expect(document.querySelector('.calculators-native-contact .native-info-inline-form.dynamic-request-form')).toBeTruthy();
-    expect(document.querySelector('.calculators-native-contact .native-info-inline-form:not(.dynamic-request-form)')).toBeNull();
+    expect(document.querySelector('.calculators-native-billboard.dynamic-billboard')).toBeTruthy();
+    expect(document.querySelector('.calculators-native-contact')).toBeNull();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
-    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
-    expect(screen.getAllByText('Tell us what you are trying to calculate, and one of our team will be in touch within 24 business hours.')).toHaveLength(1);
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="billboard"]')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="cta_form"]')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="cta_form"] .dynamic-cta-form')).toBeTruthy();
+    expect(screen.getByText('Numbers are great.')).toBeTruthy();
+    expect(screen.getByText('People are better.')).toBeTruthy();
+    expect(screen.getAllByText('Complete the short contact form below, and one of our team will be in touch within 24 business hours.')).toHaveLength(1);
+    expect(screen.getByText('Connect your faith & finances. Start here.')).toBeTruthy();
+    expect(screen.getByText('Let’s explore what we can do together.')).toBeTruthy();
   });
 
   it('renders certificate request from the targeted request-form block without a fallback page-content section', () => {

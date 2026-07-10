@@ -689,7 +689,7 @@
   --home-services-stack-gap: clamp(2rem, 4.2vw, 2.75rem);
   --home-services-heading-tracking: clamp(-3.6px, -0.3vw, -1.1px);
   --home-services-grid-gap: clamp(1rem, 1.8vw, 1.5rem);
-  --home-services-card-title-tracking: clamp(-2.15px, -0.16vw, -0.5px);
+  --home-services-card-title-tracking: clamp(-2.45px, -0.18vw, -0.7px);
   background: var(--ag-surface-blue-gradient);
   padding: clamp(3.6rem, 7.8vw, 5.7rem) 0 clamp(2.6rem, 5.6vw, 4rem);
 }
@@ -1352,7 +1352,7 @@
 }
 
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-panel-content {
-  gap: clamp(1.45rem, 2.15vw, 2.15rem);
+  gap: clamp(2.175rem, 3.225vw, 3.225rem);
   filter: none;
 }
 
@@ -1363,7 +1363,7 @@
 }
 
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-panel-copy {
-  gap: clamp(0.85rem, 1.35vw, 1.3rem);
+  gap: clamp(1.275rem, 2.025vw, 1.95rem);
 }
 
 .home-services-feature-panel.is-left .home-services-feature-panel-content {
@@ -2251,6 +2251,11 @@ p.home-services-feature-panel-body {
   --home-impact-metric-bottom: #ded3c3;
 }
 
+.home-impact-story-metric-value.is-mango {
+  --home-impact-metric-top: #ffdc9d;
+  --home-impact-metric-bottom: #f8b13d;
+}
+
 .home-impact-story-metric-value.is-legacy-sandstone {
   --home-impact-metric-top: rgba(0, 0, 0, 0.35);
   --home-impact-metric-bottom: #000000;
@@ -2388,7 +2393,7 @@ p.home-services-feature-panel-body {
 }
 
 .home-native-cta-shell {
-  margin-top: 1.25rem;
+  margin-top: clamp(1.95rem, 3.5vw, 2.65rem);
   padding: clamp(1rem, 2.3vw, 2rem);
   background: #ffffff;
   border: 1px solid #e6e6e6;
@@ -3444,7 +3449,7 @@ p.home-services-feature-panel-body {
 
 .services-native-intro {
   background: linear-gradient(145deg, #414042 0%, #4c4b4d 65%, #5a5652 100%);
-  padding: clamp(2.45rem, 5.2vw, 3.85rem) 0 clamp(3rem, 6.2vw, 4.9rem);
+  padding: clamp(3.2rem, 6.2vw, 4.7rem) 0 clamp(3.9rem, 7.4vw, 5.9rem);
 }
 
 .services-native-intro h2 {
@@ -3812,6 +3817,12 @@ p.home-services-feature-panel-body {
   text-wrap: balance;
   font-kerning: normal;
   font-feature-settings: "kern" 1;
+}
+
+@media (min-width: 900px) {
+  .services-native-connect h2 {
+    white-space: nowrap;
+  }
 }
 
 .services-native-connect h2 mark {

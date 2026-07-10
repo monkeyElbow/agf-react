@@ -844,6 +844,7 @@ const directContent = {
     hero: {
       title: 'Calculators',
       highlight: null,
+      justify: 'left',
       titleSizeRem: 4.5,
       lineHeight: 0.9,
       titleLetterSpacingEm: -0.04,
@@ -851,13 +852,13 @@ const directContent = {
     hideIntro: true,
     sections: [
       {
-        className: 'calculators-native-collection calculators-native-collection--future',
-        columns: 'three',
-        title: 'Plan for the future',
+        className: 'calculators-native-collection calculators-native-collection--grid',
+        columns: 'two',
+        hideTitle: true,
         cards: [
           {
             title: 'Retirement Savings',
-            body: 'See whether your current savings pace is moving you toward retirement.',
+            body: 'Sneak a peek at the future, and discover what you need to do now to make that retirement a reality.',
             stretchedLink: {
               label: 'Launch',
               to: '/services/retirement#retirement-savings-calculator',
@@ -867,7 +868,7 @@ const directContent = {
           },
           {
             title: 'Increased Contribution',
-            body: 'Measure how a higher contribution rate could change your long-term balance.',
+            body: 'Explore how much your retirement balance could grow if you increased your contribution now.',
             stretchedLink: {
               label: 'Launch',
               to: '/calculators/increased-contribution',
@@ -877,7 +878,7 @@ const directContent = {
           },
           {
             title: 'Compound Interest',
-            body: 'Project how steady deposits and time can help your money grow.',
+            body: 'Watch your money grow over time by earning interest on a deposit and monthly contributions.',
             stretchedLink: {
               label: 'Launch',
               to: '/services/retirement#retirement-savings-calculator',
@@ -885,16 +886,9 @@ const directContent = {
             cta: 'Launch',
             cardClass: 'card2',
           },
-        ],
-      },
-      {
-        className: 'calculators-native-collection calculators-native-collection--cashflow',
-        columns: 'two',
-        title: 'Manage cash flow',
-        cards: [
           {
             title: 'Loan Payment',
-            body: 'Estimate a payment schedule and review the cost of borrowing over time.',
+            body: 'Run some numbers to see if the loan you need is in the ballpark.',
             stretchedLink: {
               label: 'Launch',
               to: '/services/loans#run-some-numbers',
@@ -904,7 +898,7 @@ const directContent = {
           },
           {
             title: 'Emergency Fund',
-            body: 'Set a savings target based on expenses and build a more resilient cash reserve.',
+            body: 'Find out how much you need to save in order to cover six months of your expenses.',
             stretchedLink: {
               label: 'Launch',
               to: '/calculators/emergency-fund',
@@ -912,16 +906,9 @@ const directContent = {
             cta: 'Launch',
             cardClass: 'card2',
           },
-        ],
-      },
-      {
-        className: 'calculators-native-collection calculators-native-collection--picture',
-        columns: 'three',
-        title: 'Understand your full picture',
-        cards: [
           {
             title: 'Net Worth',
-            body: 'Organize your assets and liabilities for a clearer view of your financial position.',
+            body: 'Get a view of your financial position, and make adjustments to see how things could change.',
             stretchedLink: {
               label: 'Launch',
               to: '/calculators/net-worth',
@@ -929,16 +916,9 @@ const directContent = {
             cta: 'Launch',
             cardClass: 'card2',
           },
-        ],
-      },
-      {
-        className: 'calculators-native-collection calculators-native-collection--ministry',
-        columns: 'two',
-        title: 'Grow ministry resources',
-        cards: [
           {
             title: 'Laddering',
-            body: 'Compare a laddered certificate approach with shorter-term cash strategies.',
+            body: 'See how much more you could earn by “laddering” your investments instead of focusing only on short-term accounts.',
             stretchedLink: {
               label: 'Launch',
               to: '/services/investments#laddering-calculator',
@@ -946,17 +926,14 @@ const directContent = {
             cta: 'Launch',
             cardClass: 'card2',
           },
-          {
-            title: 'Endowment Investment Earnings',
-            body: 'Estimate how invested endowment assets may support ministry year after year.',
-            stretchedLink: {
-              label: 'Launch',
-              to: '/services/planned-giving/endowments#endowment-investment-earnings-calculator',
-            },
-            cta: 'Launch',
-            cardClass: 'card2',
-          },
         ],
+      },
+      {
+        className: 'calculators-native-billboard',
+      },
+      {
+        className: 'calculators-native-cta',
+        hideTitle: true,
       },
     ],
   },

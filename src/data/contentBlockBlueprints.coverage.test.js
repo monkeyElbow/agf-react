@@ -253,27 +253,31 @@ describe('content block blueprint coverage', () => {
     });
   });
 
-  it('seeds calculators with an explicit request-form block without inert page content', () => {
+  it('seeds calculators with explicit billboard and cta-form blocks without inert page content', () => {
     const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
-    const requestBlock = blocks.find((block) => block?.id === 'request_form');
+    const billboardBlock = blocks.find((block) => block?.id === 'billboard');
+    const ctaBlock = blocks.find((block) => block?.id === 'cta_form');
 
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
-    expect(requestBlock).toMatchObject({
-      kind: 'request_form',
+    expect(blocks.some((block) => block?.id === 'request_form')).toBe(false);
+    expect(billboardBlock).toMatchObject({
+      kind: 'billboard',
       mode: 'dynamic',
       settings: {
         title: 'Numbers are great.',
         subtitle: 'People are better.',
-        targetSectionClassName: 'calculators-native-contact',
+        targetSectionClassName: 'calculators-native-billboard',
       },
     });
-    expect(JSON.parse(requestBlock?.settings?.step1FieldsJson || '[]')).toEqual([
-      expect.objectContaining({ id: 'firstName', label: 'First Name*', type: 'text', required: true }),
-      expect.objectContaining({ id: 'lastName', label: 'Last Name*', type: 'text', required: true }),
-      expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
-      expect.objectContaining({ id: 'phone', label: 'Phone', type: 'tel' }),
-      expect.objectContaining({ id: 'message', label: 'What would you like help calculating?', type: 'textarea', required: true }),
-    ]);
+    expect(ctaBlock).toMatchObject({
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'Connect your faith & finances. Start here.',
+        subtitle: 'Let’s explore what we can do together.',
+        targetSectionClassName: 'calculators-native-cta',
+      },
+    });
   });
 
   it('seeds certificate request, group term life, and retirement consultants without inert page content', () => {
@@ -574,13 +578,17 @@ describe('content block blueprint coverage', () => {
     expect(heroBlock?.settings?.line1Text).toBe('Saving while serving.');
     expect(investmentStrategyHeadingBlock?.mode).toBe('dynamic');
     expect(investmentStrategyHeadingBlock?.settings?.title).toBe('Investment Strategy Options');
+    expect(investmentStrategyHeadingBlock?.settings?.buttonLabel).toBe('View monthly performance');
     expect(investmentStrategyHeadingBlock?.settings?.buttonUrl).toBe('https://files.agfinancial.org/retirement/Performance-Update/Performance-Update.pdf');
     expect(investmentStrategyHeadingBlock?.settings?.buttonPageRef).toBe('');
+    expect(investmentStrategyHeadingBlock?.settings?.button2Label).toBe('Prospectus');
+    expect(investmentStrategyHeadingBlock?.settings?.button2PageRef).toBe('/prospectus');
+    expect(investmentStrategyHeadingBlock?.settings?.button2Style).toBe('dark');
     expect(investmentStrategyOptionsBlock?.presetId).toBe('investment-options');
     expect(investmentStrategyOptionsBlock?.templateId).toBe('card_grid');
     expect(investmentStrategyOptionsBlock?.mode).toBe('dynamic');
     expect(investmentStrategyOptionsBlock?.settings?.columns).toBe('two');
-    expect(investmentStrategyOptionsBlock?.settings?.card1LinksJson).toContain('Download the MBA Fact sheet PDF');
+    expect(investmentStrategyOptionsBlock?.settings?.card1LinksJson).toContain('MBA income fund PDF');
     expect(investmentStrategyOptionsBlock?.settings?.card1LinksJson).toContain('fund-descriptor-retirement-mba-income-fund');
     expect(investmentStrategyOptionsBlock?.settings?.card1ButtonLabel).toBe('');
     expect(investmentStrategyOptionsBlock?.settings?.card1ButtonPageRef).toBe('');
@@ -591,7 +599,8 @@ describe('content block blueprint coverage', () => {
     expect(investmentStrategyOptionsBlock?.settings?.card3ButtonPageRef).toBe('');
     expect(investmentStrategyOptionsBlock?.settings?.card4ButtonLabel).toBe('');
     expect(investmentStrategyOptionsBlock?.settings?.card4ButtonPageRef).toBe('');
-    expect(investmentStrategyOptionsBlock?.settings?.card4Button2PageRef).toBe('/prospectus');
+    expect(investmentStrategyOptionsBlock?.settings?.card4Title).toBe('Individual Investment Options');
+    expect(investmentStrategyOptionsBlock?.settings?.card4Button2PageRef).toBe('');
     expect(whoQualifiesBlock?.presetId).toBe('eligibility-cards');
     expect(whoQualifiesBlock?.templateId).toBe('card_grid');
     expect(whoQualifiesBlock?.mode).toBe('dynamic');
@@ -602,15 +611,20 @@ describe('content block blueprint coverage', () => {
     expect(pageContentBlock?.mode).toBe('dynamic');
     expect(String(pageContentBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
     expect(String(pageContentBlock?.settings?.html || '')).toContain('The requested 403(b) loan amount cannot be less than $1,500');
+    expect(String(pageContentBlock?.settings?.html || '')).not.toContain('Contact your AGFinancial retirement consultant for more information.');
     expect(loanApplyBlock?.presetId).toBe('step-cards');
     expect(loanApplyBlock?.templateId).toBe('card_grid');
     expect(loanApplyBlock?.mode).toBe('dynamic');
-    expect(loanApplyBlock?.settings?.columns).toBe('two');
+    expect(loanApplyBlock?.settings?.columns).toBe('one');
     expect(loanApplyBlock?.settings?.card1ButtonUrl).toBe('https://files.agfinancial.org/retirement/403(b)-Loan-Rules.pdf');
     expect(loanApplyBlock?.settings?.card1ButtonPageRef).toBe('');
+    expect(loanApplyBlock?.settings?.card1Body).toBe('Review the loan rules.');
     expect(loanApplyBlock?.settings?.card2ButtonUrl).toBe('https://secure.agfinancial.org/');
     expect(loanApplyBlock?.settings?.card2ButtonPageRef).toBe('');
-    expect(String(loanApplyBlock?.settings?.card3Body || '')).toContain('Loan Services > Loan Modeling/Request');
+    expect(loanApplyBlock?.settings?.card2Body).toBe('Log in.');
+    expect(loanApplyBlock?.settings?.card3Body).toBe('Select your 403(b) account.');
+    expect(loanApplyBlock?.settings?.card5Body).toContain('**Info**');
+    expect(loanApplyBlock?.settings?.card6Body).toContain('**Request a Loan**');
     expect(onlineContributionsBlock?.mode).toBe('dynamic');
     expect(onlineContributionsBlock?.presetId).toBe('do-the-math');
     expect(onlineContributionsBlock?.settings?.col1Title).toBe('Online Contributions');
