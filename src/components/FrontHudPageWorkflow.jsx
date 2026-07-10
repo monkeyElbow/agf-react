@@ -115,6 +115,8 @@ export default function FrontHudPageWorkflow({
   reviewHref = '',
   reviewLabel = 'Open page admin',
   placement = 'dock',
+  onDoneEditing = null,
+  doneEditingLabel = 'Done editing',
 }) {
   const {
     isPageDirty = () => false,
@@ -385,12 +387,21 @@ export default function FrontHudPageWorkflow({
   }, [placement, revealToken]);
 
   if (placement === 'dock-inline') {
-    if (!showDraftActions && !reviewHref) {
+    if (!showDraftActions && !reviewHref && !onDoneEditing) {
       return null;
     }
 
     return (
       <div className="admin-front-hud-page-workflow is-dock-inline" role="group" aria-label="Page workflow">
+        {onDoneEditing ? (
+          <button
+            type="button"
+            className="admin-front-hud-page-workflow-action is-secondary"
+            onClick={onDoneEditing}
+          >
+            {doneEditingLabel}
+          </button>
+        ) : null}
         {showDraftActions ? (
           <>
             <button

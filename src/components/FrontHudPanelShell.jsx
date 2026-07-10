@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 const FRONT_HUD_PANEL_OFFSET_STORAGE_KEY = 'agf-front-hud-panel-offset-y-v2';
 const FRONT_HUD_PANEL_RECOVERY_HANDLE_PX = 56;
-const FRONT_HUD_PANEL_DEFAULT_OFFSET_RATIO = 0.22;
-const FRONT_HUD_PANEL_DEFAULT_OFFSET_MIN_PX = 96;
-const FRONT_HUD_PANEL_DEFAULT_OFFSET_MAX_PX = 180;
+const FRONT_HUD_PANEL_DEFAULT_OFFSET_RATIO = 0.08;
+const FRONT_HUD_PANEL_DEFAULT_OFFSET_MIN_PX = 24;
+const FRONT_HUD_PANEL_DEFAULT_OFFSET_MAX_PX = 72;
 
 function clampPanelOffset(value, min = 0, max = 0) {
   const numeric = Number(value);

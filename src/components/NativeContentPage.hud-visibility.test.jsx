@@ -388,7 +388,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(container.querySelector('[data-block-id="page_content"]')?.getAttribute('data-mobile-front-hud-selected')).toBe('true');
   });
 
-  it('keeps the mobile sheet close control in the sheet header and returns to the selected tray state when dismissed', async () => {
+  it('keeps the mobile sheet close control in the sheet header and dismisses the current selection when closed', async () => {
     mockFrontHudEnabled = true;
     mockMobileFrontHud = true;
 
@@ -413,9 +413,9 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     fireEvent.click(closeButton);
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Hero mobile HUD actions')).toBeTruthy();
+      expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
     });
-    expect(container.querySelector('[data-block-id="hero"]')?.getAttribute('data-mobile-front-hud-selected')).toBe('true');
+    expect(container.querySelector('[data-block-id="hero"]')?.getAttribute('data-mobile-front-hud-selected')).not.toBe('true');
   });
 
   it('routes mobile tray actions into the existing block handlers and editor panel flow', async () => {

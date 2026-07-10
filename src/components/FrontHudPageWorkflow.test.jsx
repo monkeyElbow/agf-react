@@ -274,17 +274,24 @@ describe('FrontHudPageWorkflow', () => {
   });
 
   it('shows compact dock workflow actions for the active drafter', async () => {
+    const handleDoneEditing = vi.fn();
+
     render(
       <FrontHudPageWorkflow
         pathname="/services/loans"
         reviewHref="/admin/content?page=%2Fservices%2Floans"
         placement="dock-inline"
+        onDoneEditing={handleDoneEditing}
       />,
     );
 
+    expect(screen.getByRole('button', { name: 'Done editing' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
     expect(screen.getByRole('link', { name: 'Open page admin' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Done editing' }));
+    expect(handleDoneEditing).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
 

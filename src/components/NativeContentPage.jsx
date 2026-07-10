@@ -6984,6 +6984,12 @@ export default function NativeContentPage({ page }) {
           draggable={!isMobileFrontHud}
           isMobileSheet={isMobileFrontHud}
         >
+          <FrontHudPageWorkflow
+            pathname={adminHudEditPath}
+            reviewHref={adminHudEditHref}
+            placement="dock-inline"
+            onDoneEditing={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
+          />
           <BlockHudPanelHost
             block={activeHudPanel.block}
             pathname={adminHudEditPath}
