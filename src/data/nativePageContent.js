@@ -3602,21 +3602,24 @@ function companyChildContent(path, title) {
       compact: true,
       hero: {
         lines: [
-          { title: 'Be part of', className: 'careers-hero-line' },
-          { title: 'something', className: 'careers-hero-line' },
+          { title: 'Be part of', className: 'careers-hero-line is-mango' },
+          { title: 'something', className: 'careers-hero-line is-mango' },
           {
             title: 'BIGGER.',
-            className: 'careers-hero-line careers-hero-line--major',
-            highlights: [{ text: 'BIGGER', className: 'is-white' }],
+            className: 'careers-hero-line careers-hero-line--major is-mango',
+            highlights: [{ text: 'BIGGER', className: 'is-mango' }],
           },
         ],
-        titleSizeRem: 7.6,
-        lineGap: 0.08,
+        bgTone: 'white',
+        titleSizeRem: 5.25,
+        lineGap: 0.04,
       },
       intro: {
         className: 'careers-native-top-intro',
-        copyClassName: 'careers-native-top-intro-copy',
-        heading: 'Faith + career.',
+        copyClassName: 'careers-native-top-intro-copy fade-up',
+        headingClassName: 'careers-native-top-intro-heading',
+        emphasisClassName: 'careers-native-top-intro-emphasis fade-up fade-up-force-observe',
+        heading: 'Faith + Career.',
         body: [
           'You can make a difference in your work. We mean that, and our customers experience it. Our office ecosystem is at the intersection of ministry and expertise. At AGFinancial, it’s our desire to honor Jesus by doing great work, and by treating others well.',
         ],
@@ -3626,6 +3629,7 @@ function companyChildContent(path, title) {
         {
           title: 'Just a few reasons you’ll love working here…',
           className: 'careers-native-benefits',
+          titleClassName: 'loans-native-display-heading careers-native-benefits-title',
           fullBleed: true,
           columns: 'four',
           cards: [
@@ -3673,6 +3677,9 @@ function companyChildContent(path, title) {
         },
         {
           className: 'careers-native-ready',
+          copyWrap: true,
+          copyClassName: 'careers-native-ready-copy fade-up',
+          justify: 'center',
           title: 'Ready when you are.',
           body: ['See all open positions below and apply online.'],
         },
@@ -3684,6 +3691,9 @@ function companyChildContent(path, title) {
         },
         {
           className: 'careers-native-matters',
+          copyWrap: true,
+          copyClassName: 'careers-native-matters-copy fade-up',
+          justify: 'center',
           title: 'Your work matters.',
           titleHighlights: [{ text: 'matters', className: 'is-atlantean' }],
           body: ['As part of our team, you’ll make a difference every single day.'],

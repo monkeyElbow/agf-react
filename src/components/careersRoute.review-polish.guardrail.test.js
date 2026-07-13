@@ -14,8 +14,8 @@ describe('careers route review polish guardrail', () => {
   it('keeps negative tracking on the Ready and Work Matters section titles only on the careers route', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.native-info-page--careers .careers-native-ready > .ag-panel-rail > h2 {');
-    expect(cssSource).toContain('.native-info-page--careers .careers-native-matters > .ag-panel-rail > h2 {');
+    expect(cssSource).toContain('.native-info-page--careers .careers-native-ready .native-info-section-copy > h2 {');
+    expect(cssSource).toContain('.native-info-page--careers .careers-native-matters .native-info-section-copy > h2 {');
     expect(cssSource).toContain('letter-spacing: -0.03em;');
   });
 
@@ -23,9 +23,10 @@ describe('careers route review polish guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
     const contentSource = readSource('../data/nativePageContent.js');
 
-    expect(contentSource).toContain("{ title: 'Be part of', className: 'careers-hero-line' }");
-    expect(contentSource).toContain("{ title: 'something', className: 'careers-hero-line' }");
-    expect(contentSource).toContain("className: 'careers-hero-line careers-hero-line--major'");
+    expect(contentSource).toContain("{ title: 'Be part of', className: 'careers-hero-line is-mango' }");
+    expect(contentSource).toContain("{ title: 'something', className: 'careers-hero-line is-mango' }");
+    expect(contentSource).toContain("className: 'careers-hero-line careers-hero-line--major is-mango'");
+    expect(contentSource).toContain("bgTone: 'white'");
     expect(cssSource).toContain('.native-info-page--careers .service-native-hero h1.careers-hero-line--major {');
     expect(cssSource).toContain('transform: scale(1.2);');
   });

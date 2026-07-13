@@ -616,7 +616,7 @@ describe('NativeContentPage functional routes', () => {
     expect(careersIntro?.querySelector('.service-native-intro-copy.careers-native-top-intro-copy')).toBeTruthy();
     expect(careersIntro?.className).not.toContain('about-native-top-intro');
     expect(document.querySelector('.service-native-hero h1.careers-hero-line--major')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Faith + career.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Faith + Career.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Marketing Manager' })).toBeTruthy();
     expect(screen.getByText('Springfield, MO')).toBeTruthy();
     expect(screen.getByText('Posted March 20, 2026')).toBeTruthy();
