@@ -1208,6 +1208,10 @@
   color: var(--ag-color-mango);
 }
 
+.retirement-native-page .service-native-hero h1 {
+  letter-spacing: clamp(-0.065em, -0.22vw, -0.04em);
+}
+
 .service-native-intro {
   --service-native-intro-padding-top: clamp(3.55rem, 8vw, 5.95rem);
   --service-native-intro-padding-bottom: clamp(4.1rem, 9.2vw, 6.95rem);
