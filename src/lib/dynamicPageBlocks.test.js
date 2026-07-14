@@ -568,6 +568,24 @@ describe('buildDynamicBillboardFromBlock', () => {
     });
   });
 
+  it('keeps supporting subtitle size overrides on the shared billboard subtitle sizing path', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      id: 'subtitle_size_billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Make room for the subtitle control',
+        subtitle: 'Support copy',
+        subtitleDisplay: 'supporting',
+        subtitleSizeRem: 1.42,
+      },
+    });
+
+    expect(runtime?.subtitleStyle).toEqual(expect.objectContaining({
+      fontSize: 'clamp(calc(1.42rem * 0.68), 5vw, 1.42rem)',
+    }));
+  });
+
   it('preserves normalized target-section wiring for native targeted billboards', () => {
     const runtime = buildDynamicBillboardFromBlock({
       id: 'daily_billboard',

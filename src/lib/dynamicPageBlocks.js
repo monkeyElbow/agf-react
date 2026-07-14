@@ -32,6 +32,16 @@ import {
   normalizeHeroTitleLetterSpacingEm,
   normalizeHeroTitleSizeRem,
 } from './heroTitleSize';
+import {
+  buildBillboardSubtitleStyle,
+  buildBillboardTitleStyle,
+  normalizeBillboardSubtitleDisplay,
+  normalizeBillboardSubtitleSizeRem,
+  normalizeBillboardTitleFontFamily,
+  normalizeBillboardTitleFontWeight,
+  normalizeBillboardTitleLetterSpacingEm,
+  normalizeBillboardTitleSizeRem,
+} from './dynamicSectionTypography';
 import { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
 import { resolveSiteFeatureCatalogEntry } from '../data/siteFeatureCatalog';
 
@@ -394,13 +404,9 @@ const DYNAMIC_COLUMNS_STYLE_SET = new Set(['retirement', 'legacy-highlight', 'lo
 const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo']);
 const DYNAMIC_COLUMNS_WIDTH_SET = new Set(['content', 'browser']);
 const DYNAMIC_COLUMNS_COUNT_SET = new Set(['two', 'three', 'four']);
-const BILLBOARD_TITLE_FONT_FAMILY_SET = new Set(['heading', 'helv']);
 const TOP_STRIP_BG_TONE_SET = new Set(['white', 'sand', 'blue', 'grey']);
 const TOP_STRIP_TEXT_TONE_SET = new Set(['dark', 'white', 'blue', 'atlantean', 'super-grey', 'mango', 'melon']);
 const TOP_STRIP_BUTTON_TONE_SET = new Set(['atlantean', 'super-grey', 'mango', 'melon', 'white']);
-const DEFAULT_BILLBOARD_TITLE_SIZE_REM = 3.4;
-const DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM = -0.03;
-const DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT = 800;
 
 export const DEFAULT_SERVICE_HERO_PIE_SLICES = Object.freeze([
   Object.freeze({
@@ -657,47 +663,6 @@ function normalizeColumnsCount(value) {
   return DYNAMIC_COLUMNS_COUNT_SET.has(token) ? token : 'two';
 }
 
-function normalizeBillboardTitleSizeRem(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return DEFAULT_BILLBOARD_TITLE_SIZE_REM;
-  }
-  return Math.max(2.4, Math.min(8, Number(numeric.toFixed(2))));
-}
-
-function normalizeBillboardTitleFontFamily(value) {
-  const token = String(value || '').trim().toLowerCase();
-  return BILLBOARD_TITLE_FONT_FAMILY_SET.has(token) ? token : 'helv';
-}
-
-function defaultBillboardTitleLetterSpacingEm(fontFamily) {
-  return fontFamily === 'helv' ? -0.038 : DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM;
-}
-
-function normalizeBillboardTitleFontWeight(value, fontFamily = 'heading') {
-  const numeric = Number(value);
-  const fallback = fontFamily === 'helv' ? 700 : DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT;
-  if (!Number.isFinite(numeric)) {
-    return fallback;
-  }
-  const rounded = Math.round(numeric / 100) * 100;
-  return Math.max(400, Math.min(900, rounded));
-}
-
-function normalizeBillboardTitleLetterSpacingEm(value, fontFamily = 'heading') {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return defaultBillboardTitleLetterSpacingEm(fontFamily);
-  }
-  return Math.max(-0.12, Math.min(0.04, Number(numeric.toFixed(3))));
-}
-
-function normalizeBillboardSubtitleDisplay(value) {
-  return String(value || '').trim().toLowerCase() === 'headline'
-    ? 'headline'
-    : 'supporting';
-}
-
 function resolveBillboardSubtitleColor(value) {
   return resolveIntroAccentColor(value);
 }
@@ -811,7 +776,7 @@ export function buildDynamicBillboardFromBlock(block) {
   const subtitleHasExplicitSize = String(settings.subtitleSizeRem ?? '').trim() !== ''
     && Number.isFinite(Number(settings.subtitleSizeRem));
   const subtitleSizeRem = subtitleHasExplicitSize
-    ? normalizeBillboardTitleSizeRem(settings.subtitleSizeRem)
+    ? normalizeBillboardSubtitleSizeRem(settings.subtitleSizeRem)
     : null;
   const subtitleResolvedColor = resolveBillboardSubtitleColor(subtitleClassName);
   const hasHeadlineWidthOverride = String(settings.headlineMaxWidthPx ?? '').trim() !== ''
@@ -863,28 +828,22 @@ export function buildDynamicBillboardFromBlock(block) {
     subtitle,
     subtitleClassName,
     subtitleDisplay,
-    subtitleStyle: {
-      ...(subtitleResolvedColor ? { color: subtitleResolvedColor } : {}),
-      ...(subtitleDisplay === 'headline'
-        ? {
-          fontFamily: titleFontFamily === 'helv' ? 'var(--ag-font-helv)' : 'var(--ag-font-heading)',
-          fontWeight: titleFontWeight,
-          fontSize: `clamp(calc(${(subtitleSizeRem ?? titleSizeRem)}rem * 0.58), 8vw, ${subtitleSizeRem ?? titleSizeRem}rem)`,
-          lineHeight: 1.05,
-          letterSpacing: `${titleLetterSpacingEm}em`,
-        }
-        : {}),
-      ...(subtitleDisplay !== 'headline' && subtitleSizeRem
-        ? { fontSize: `clamp(calc(${subtitleSizeRem}rem * 0.68), 5vw, ${subtitleSizeRem}rem)` }
-        : {}),
-    },
-    titleStyle: {
-      lineHeight: lineSpacing,
-      fontFamily: titleFontFamily === 'helv' ? 'var(--ag-font-helv)' : 'var(--ag-font-heading)',
-      fontWeight: titleFontWeight,
-      fontSize: `clamp(calc(${titleSizeRem}rem * 0.58), 8vw, ${titleSizeRem}rem)`,
-      letterSpacing: `${titleLetterSpacingEm}em`,
-    },
+    subtitleStyle: buildBillboardSubtitleStyle({
+      resolvedColor: subtitleResolvedColor,
+      subtitleDisplay,
+      subtitleSizeRem,
+      titleFontFamily,
+      titleFontWeight,
+      titleSizeRem,
+      titleLetterSpacingEm,
+    }),
+    titleStyle: buildBillboardTitleStyle({
+      lineSpacing,
+      titleFontFamily,
+      titleFontWeight,
+      titleSizeRem,
+      titleLetterSpacingEm,
+    }),
     bodyHtml,
     body,
     bgTone,

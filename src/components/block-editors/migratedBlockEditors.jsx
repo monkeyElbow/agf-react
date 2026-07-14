@@ -48,6 +48,16 @@ import {
   normalizeHeroTitleLetterSpacingEm,
   normalizeHeroTitleSizeRem,
 } from '../../lib/heroTitleSize';
+import {
+  normalizeBillboardLineSpacing,
+  normalizeBillboardSubtitleDisplay,
+  normalizeBillboardSubtitleSizeRem,
+  normalizeBillboardTitleFontFamily,
+  normalizeBillboardTitleFontWeight,
+  normalizeBillboardTitleLetterSpacingEm,
+  normalizeBillboardTitleSizeRem,
+  normalizeIntroLineSpacing,
+} from '../../lib/dynamicSectionTypography';
 import { getVisibleDynamicColumnSlots } from '../../lib/dynamicColumns';
 import {
   formatTestimonialAttribution,
@@ -97,10 +107,6 @@ const HERO_ANIMATION_PRESET_OPTIONS = [
 
 const DEFAULT_INTRO_LINE_SPACING = 1.04;
 const DEFAULT_BILLBOARD_LINE_SPACING = 1;
-const DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT = 800;
-const DEFAULT_BILLBOARD_TITLE_SIZE_REM = 3.4;
-const DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM = -0.03;
-const DEFAULT_BILLBOARD_SUBTITLE_SIZE_REM = 1.18;
 const EDITOR_LOCAL_DRAFT_COMMIT_DELAY_MS = 320;
 const SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS = Object.freeze(['headline', 'body', 'buttonLabel', 'buttonUrl']);
 const CTA_BAND_LOCAL_DRAFT_FIELD_IDS = Object.freeze(['title', 'body', 'buttonLabel', 'buttonUrl']);
@@ -656,67 +662,6 @@ function normalizeJustifySelection(value, options) {
   const fallback = values.includes('center') ? 'center' : (values[0] || 'center');
   const token = String(value || '').trim();
   return values.includes(token) ? token : fallback;
-}
-
-function normalizeIntroLineSpacing(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return DEFAULT_INTRO_LINE_SPACING;
-  }
-  return Math.max(0.85, Math.min(1.4, Number(numeric.toFixed(2))));
-}
-
-function normalizeBillboardLineSpacing(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return DEFAULT_BILLBOARD_LINE_SPACING;
-  }
-  return Math.max(0.85, Math.min(1.25, Number(numeric.toFixed(2))));
-}
-
-function normalizeBillboardTitleFontFamily(value) {
-  const token = String(value || '').trim().toLowerCase();
-  return ['heading', 'helv'].includes(token) ? token : 'heading';
-}
-
-function normalizeBillboardTitleSizeRem(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return DEFAULT_BILLBOARD_TITLE_SIZE_REM;
-  }
-  return Math.max(2.4, Math.min(8, Number(numeric.toFixed(2))));
-}
-
-function normalizeBillboardTitleFontWeight(value, fontFamily = 'heading') {
-  const numeric = Number(value);
-  const fallback = fontFamily === 'helv' ? 700 : DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT;
-  if (!Number.isFinite(numeric)) {
-    return fallback;
-  }
-  const rounded = Math.round(numeric / 100) * 100;
-  return Math.max(400, Math.min(900, rounded));
-}
-
-function normalizeBillboardTitleLetterSpacingEm(value, fontFamily = 'heading') {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return fontFamily === 'helv' ? -0.038 : DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM;
-  }
-  return Math.max(-0.12, Math.min(0.04, Number(numeric.toFixed(3))));
-}
-
-function normalizeBillboardSubtitleDisplay(value) {
-  return String(value || '').trim().toLowerCase() === 'headline'
-    ? 'headline'
-    : 'supporting';
-}
-
-function normalizeBillboardSubtitleSizeRem(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return DEFAULT_BILLBOARD_SUBTITLE_SIZE_REM;
-  }
-  return Math.max(1, Math.min(8, Number(numeric.toFixed(2))));
 }
 
 function normalizePanelBgTone(value) {

@@ -13,9 +13,11 @@ function readSource(relativePath) {
 describe('native intro and billboard renderer guardrail', () => {
   it('keeps native intro and billboard merge paths sourced from shared canonical runtimes', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
 
     expect(source).toContain('buildDynamicIntroFromBlock,');
     expect(source).toContain('buildDynamicBillboardFromBlock,');
+    expect(source).toContain("import { normalizeIntroLineSpacing } from '../lib/dynamicSectionTypography';");
     expect(source).toContain("function buildActionRowClassName(justify, fallback = 'left') {");
     expect(source).toContain('function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {');
     expect(source).toContain('const runtime = buildDynamicIntroFromBlock(block);');
@@ -33,6 +35,12 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain("const adminIntro = buildNativeIntroConfig(introBlock, { includeTestClassName: true });");
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'billboard') {");
     expect(source).toContain("const billboardSection = buildNativeBillboardSection(block, { includeTestClassName: isTestPage });");
+    expect(source).not.toContain('function normalizeIntroLineSpacing(');
+    expect(source).not.toContain('function normalizeBillboardLineSpacing(');
+    expect(runtimeSource).toContain("} from './dynamicSectionTypography';");
+    expect(runtimeSource).toContain('normalizeBillboardSubtitleSizeRem(settings.subtitleSizeRem)');
+    expect(runtimeSource).toContain('subtitleStyle: buildBillboardSubtitleStyle({');
+    expect(runtimeSource).toContain('titleStyle: buildBillboardTitleStyle({');
     expect(source).not.toContain('copyClassName: `is-justify-${normalizeHeroJustify(runtime.justify)}`');
     expect(source).not.toContain('function buildTestDynamicIntro(');
     expect(source).not.toContain('function buildTestDynamicBillboard(');
@@ -47,7 +55,7 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain('padding: var(--service-native-intro-padding-top) 0 var(--service-native-intro-padding-bottom);');
     expect(cssSource).toContain('.native-info-page--impact .service-native-intro {');
     expect(cssSource).toContain('.native-info-page--careers .service-native-intro.careers-native-top-intro {');
-    expect(cssSource).toContain('.native-info-page--careers .service-native-intro.careers-native-top-intro h2 {');
+    expect(cssSource).toContain('.native-info-page--careers .service-native-intro.careers-native-top-intro h2,');
     expect(cssSource).not.toContain('.native-info-page--impact .service-native-intro {\n  background: linear-gradient(145deg, #f3f0eb 0%, #e6e1d7 100%);\n  padding-bottom: clamp(2.2rem, 5vw, 3.8rem);\n}');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro .service-native-intro-copy > h2.is-super-grey,');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro .service-native-intro-copy > h2 mark.is-super-grey,');
