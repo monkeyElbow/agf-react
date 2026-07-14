@@ -265,7 +265,7 @@ export function HeroInlineLiveEditor({
   readOnly = false,
 }) {
   const normalizedLetterSpacing = normalizeHeroTitleLetterSpacingEm(letterSpacing);
-  const normalizedLineGap = Math.max(0, Math.min(0.4, Number(Number(lineGap || 0).toFixed(2)) || 0));
+  const normalizedLineGap = Math.max(-0.18, Math.min(0.4, Number(Number(lineGap || 0).toFixed(2)) || 0));
   const safeLines = Array.isArray(lines) ? lines : [];
   const {
     draftTexts,

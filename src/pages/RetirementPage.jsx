@@ -264,6 +264,16 @@ const DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS = {
   rightButtonPageRef: '/services/retirement/409a',
   rightButtonOpenInNewWindow: false,
 };
+
+const RETIREMENT_HERO_BASE_LINE_HEIGHT = 0.9;
+
+function normalizeRetirementHeroLineGap(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+  return Math.max(-0.18, Math.min(0.3, Number((numeric - RETIREMENT_HERO_BASE_LINE_HEIGHT).toFixed(2))));
+}
 const RETIREMENT_HUD_BG_SWATCH_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #efefef 100%)' },
   { value: 'sand', label: 'Sand', swatch: 'linear-gradient(145deg, #f2eeeb 0%, #d9d3cb 100%)' },
@@ -685,7 +695,8 @@ export default function RetirementPage() {
   );
   const heroHudLineHeight = Number.isFinite(Number(heroHudSettings.lineHeight))
     ? Number(heroHudSettings.lineHeight)
-    : 0.9;
+    : RETIREMENT_HERO_BASE_LINE_HEIGHT;
+  const heroHudLineGap = normalizeRetirementHeroLineGap(heroHudLineHeight);
   const heroHudBgTone = String(heroHudSettings.bgTone || dynamicHero?.bgTone || 'white').trim() || 'white';
   const heroHudJustify = String(heroHudSettings.justify || dynamicHero?.justify || 'center').trim().toLowerCase() || 'center';
   const heroHudEditableLines = useMemo(() => {
@@ -1647,7 +1658,8 @@ export default function RetirementPage() {
             <HeroInlineLiveEditor
               lines={heroHudEditableLines}
               activeLineKey={heroActiveLineData?.key || ''}
-              lineHeight={heroHudLineHeight}
+              lineHeight={RETIREMENT_HERO_BASE_LINE_HEIGHT}
+              lineGap={heroHudLineGap}
               onLineTextChange={handleHeroHudLineTextChange}
               commitOnBlurOnly
               readOnly={isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId('hero'))}
@@ -1666,7 +1678,8 @@ export default function RetirementPage() {
                 key={`retirement-hero-line-${line.id || index + 1}`}
                 className={className || undefined}
                 style={{
-                  lineHeight: dynamicHero.lineHeight,
+                  lineHeight: RETIREMENT_HERO_BASE_LINE_HEIGHT,
+                  marginTop: index > 0 && heroHudLineGap !== 0 ? `${heroHudLineGap}em` : undefined,
                 }}
               >
                 <span dangerouslySetInnerHTML={{ __html: renderTextWithHighlights(line.text, line.highlights) }} />
