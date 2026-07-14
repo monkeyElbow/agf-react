@@ -61,6 +61,7 @@ import {
 import { getTokenSwatch } from '../lib/colorSystem';
 import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
 import { heroTitleSizeRemToRuntimeCss, normalizeHeroTitleLetterSpacingEm } from '../lib/heroTitleSize';
+import { buildHeroLineStyle } from '../lib/heroLineStyle';
 
 const testimonials = [
   {
@@ -1684,12 +1685,13 @@ export default function RetirementPage() {
               <h1
                 key={`retirement-hero-line-${line.id || index + 1}`}
                 className={className || undefined}
-                style={{
-                  fontSize: heroHudTitleSize,
+                style={buildHeroLineStyle({
                   lineHeight: RETIREMENT_HERO_BASE_LINE_HEIGHT,
+                  fontSize: heroHudTitleSize,
                   letterSpacing: `${heroHudLetterSpacingEm}em`,
-                  marginTop: index > 0 && heroHudLineGap !== 0 ? `${heroHudLineGap}em` : undefined,
-                }}
+                  lineGap: heroHudLineGap,
+                  lineIndex: index,
+                })}
               >
                 <span dangerouslySetInnerHTML={{ __html: renderTextWithHighlights(line.text, line.highlights) }} />
               </h1>

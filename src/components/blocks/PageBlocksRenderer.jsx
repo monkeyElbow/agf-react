@@ -50,6 +50,10 @@ import {
   heroTitleSizeRemToRuntimeCss,
   normalizeHeroTitleSizeRem,
 } from '../../lib/heroTitleSize';
+import {
+  buildHeroLineStyle,
+  normalizeHeroLineGapEm,
+} from '../../lib/heroLineStyle';
 import { setupInvestmentsGrowthRevealMotion } from '../../lib/investmentsGrowthReveal';
 
 const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
@@ -392,6 +396,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
   const line2ClassName = String(block.line2ClassName || 'home-native-title line1 line2').trim() || 'home-native-title line1 line2';
   const line3ClassName = String(block.line3ClassName || 'home-native-title line3').trim() || 'home-native-title line3';
   const lineHeight = Number.isFinite(Number(block.lineHeight)) ? Number(block.lineHeight) : 0.9;
+  const lineGap = normalizeHeroLineGapEm(block.lineGap);
   const heroTitleSize = heroTitleSizeRemToRuntimeCss(normalizeHeroTitleSizeRem(block.titleSizeRem));
   const heroTitleLetterSpacing = `${normalizeHeroTitleLetterSpacingEm(block.titleLetterSpacingEm)}em`;
   const bgTone = normalizePanelBgTone(block.bgTone || 'white');
@@ -457,6 +462,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
             activeLineKey={heroHud?.activeLineKey || ''}
             fontSize={heroTitleSize}
             lineHeight={lineHeight}
+            lineGap={lineGap}
             letterSpacing={block.titleLetterSpacingEm}
             onLineTextChange={heroHud.onLineTextChange}
             commitOnBlurOnly={heroHud?.commitOnBlurOnly === true}
@@ -472,18 +478,36 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
             {line1Text ? (
               <p
                 className={line1ClassName}
-                style={{ lineHeight, fontSize: HOME_HERO_PRIMARY_LINE_SIZE_CSS, letterSpacing: heroTitleLetterSpacing }}
+                style={buildHeroLineStyle({
+                  lineHeight,
+                  fontSize: HOME_HERO_PRIMARY_LINE_SIZE_CSS,
+                  letterSpacing: heroTitleLetterSpacing,
+                  lineGap,
+                  lineIndex: 0,
+                })}
               >
                 {line1Highlights.length ? renderHighlightedText(line1Text, line1Highlights) : line1Text}
               </p>
             ) : null}
             {line2Text ? (
-              <h1 className={line2ClassName} style={{ lineHeight, fontSize: heroTitleSize, letterSpacing: heroTitleLetterSpacing }}>
+              <h1 className={line2ClassName} style={buildHeroLineStyle({
+                lineHeight,
+                fontSize: heroTitleSize,
+                letterSpacing: heroTitleLetterSpacing,
+                lineGap,
+                lineIndex: 1,
+              })}>
                 {line2Highlights.length ? renderHighlightedText(line2Text, line2Highlights) : line2Text}
               </h1>
             ) : null}
             {line3Text ? (
-              <h1 className={line3ClassName} style={{ lineHeight, fontSize: heroTitleSize, letterSpacing: heroTitleLetterSpacing }}>
+              <h1 className={line3ClassName} style={buildHeroLineStyle({
+                lineHeight,
+                fontSize: heroTitleSize,
+                letterSpacing: heroTitleLetterSpacing,
+                lineGap,
+                lineIndex: 2,
+              })}>
                 {line3Highlights.length ? renderHighlightedText(line3Text, line3Highlights) : line3Text}
               </h1>
             ) : null}

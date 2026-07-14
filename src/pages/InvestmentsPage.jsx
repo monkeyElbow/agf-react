@@ -53,6 +53,14 @@ import {
 import { replaceDisclosureTokens } from '../lib/disclosures';
 import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
 import { getHeroSeedContract } from '../lib/heroSeedContracts';
+import {
+  buildHeroLineStyle,
+  normalizeHeroLineGapEm,
+} from '../lib/heroLineStyle';
+import {
+  heroTitleSizeRemToRuntimeCss,
+  normalizeHeroTitleLetterSpacingEm,
+} from '../lib/heroTitleSize';
 
 const BlockHudPanelHost = lazy(() => import('../components/BlockHudPanelHost'));
 const FrontHudPanelShell = lazy(() => import('../components/FrontHudPanelShell'));
@@ -1054,6 +1062,9 @@ export default function InvestmentsPage() {
   const heroHudLineHeight = Number.isFinite(Number(heroHudSettings.lineHeight))
     ? Number(heroHudSettings.lineHeight)
     : 0.9;
+  const heroHudLineGap = normalizeHeroLineGapEm(heroHudSettings.lineGap);
+  const heroHudTitleSize = heroTitleSizeRemToRuntimeCss(heroHudSettings.titleSizeRem);
+  const heroHudLetterSpacingEm = normalizeHeroTitleLetterSpacingEm(heroHudSettings.titleLetterSpacingEm);
   const heroHudBgTone = String(heroHudSettings.bgTone || dynamicHero?.bgTone || 'white').trim() || 'white';
   const heroHudJustify = String(heroHudSettings.justify || dynamicHero?.justify || 'left').trim().toLowerCase() || 'left';
   const heroHudEditableLines = useMemo(() => {
@@ -1909,7 +1920,10 @@ export default function InvestmentsPage() {
               <HeroInlineLiveEditor
                 lines={heroHudEditableLines}
                 activeLineKey={heroActiveLineData?.key || ''}
+                fontSize={heroHudTitleSize}
                 lineHeight={heroHudLineHeight}
+                lineGap={heroHudLineGap}
+                letterSpacing={heroHudLetterSpacingEm}
                 onLineTextChange={handleHeroHudLineTextChange}
                 commitOnBlurOnly
                 readOnly={isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId('hero'))}
@@ -1928,9 +1942,13 @@ export default function InvestmentsPage() {
               <h1
                 key={`investments-hero-line-${line.id || lineNumber}`}
                 className={className || undefined}
-                style={{
+                style={buildHeroLineStyle({
                   lineHeight: dynamicHero.lineHeight,
-                }}
+                  fontSize: heroHudTitleSize,
+                  letterSpacing: `${heroHudLetterSpacingEm}em`,
+                  lineGap: heroHudLineGap,
+                  lineIndex: index,
+                })}
               >
                 <span dangerouslySetInnerHTML={{ __html: renderHeroLineHtml(line.text, line.highlights) }} />
               </h1>

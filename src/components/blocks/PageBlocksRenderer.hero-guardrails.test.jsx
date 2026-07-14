@@ -150,4 +150,15 @@ describe('home hero render guardrails', () => {
     expect(rendererSource).toContain("fontSize: HOME_HERO_PRIMARY_LINE_SIZE_CSS,");
     expect(editorSource).toContain("fontSize: typeof line?.fontSize === 'string' && line.fontSize.trim()");
   });
+
+  it('routes home hero spacing through the shared line-gap helper for both HUD and block render', () => {
+    const rendererSource = readSource('./PageBlocksRenderer.jsx');
+
+    expect(rendererSource).toContain("import {\n  buildHeroLineStyle,\n  normalizeHeroLineGapEm,\n} from '../../lib/heroLineStyle';");
+    expect(rendererSource).toContain('const lineGap = normalizeHeroLineGapEm(block.lineGap);');
+    expect(rendererSource).toContain('lineGap={lineGap}');
+    expect(rendererSource).toContain('style={buildHeroLineStyle({');
+    expect(rendererSource).toContain('lineIndex: 1,');
+    expect(rendererSource).toContain('lineIndex: 2,');
+  });
 });

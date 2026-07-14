@@ -43,6 +43,7 @@ import {
   parseTokenList,
   resolveTestimonialsBlockData,
 } from '../lib/testimonials';
+import { normalizeIntroLineSpacing } from '../lib/dynamicSectionTypography';
 import {
   buildDynamicBillboardFromBlock,
   buildDynamicCtaPresentationClassName,
@@ -109,6 +110,11 @@ import {
   heroTitleSizeRemToRuntimeCss,
   normalizeHeroTitleSizeRem,
 } from '../lib/heroTitleSize';
+import {
+  buildHeroLineStyle,
+  normalizeHeroLineGapEm,
+  normalizeHeroLineHeightEm,
+} from '../lib/heroLineStyle';
 import {
   normalizeButtonTone,
   normalizePanelTextTone as normalizeSharedPanelTextTone,
@@ -704,72 +710,9 @@ function normalizeHeroHeightSvh(value) {
   return Math.max(20, Math.min(90, Math.round(numeric)));
 }
 
-function normalizeHeroLineGapEm(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return 0;
-  }
-  return Math.max(0, Math.min(0.4, Number(numeric.toFixed(2))));
-}
-
-function normalizeHeroLineHeightEm(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return 0.9;
-  }
-  return Math.max(0.72, Math.min(1.2, Number(numeric.toFixed(2))));
-}
-
 function normalizeNativeHeroLineKey(value) {
   const token = String(value || '').trim().toLowerCase();
   return NATIVE_HERO_LINE_KEYS.includes(token) ? token : 'line1';
-}
-
-function normalizeIntroLineSpacing(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return 1.04;
-  }
-  return Math.max(0.85, Math.min(1.4, Number(numeric.toFixed(2))));
-}
-
-function normalizeBillboardLineSpacing(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return 1;
-  }
-  return Math.max(0.85, Math.min(1.25, Number(numeric.toFixed(2))));
-}
-
-function normalizeBillboardTitleFontFamily(value) {
-  const token = String(value || '').trim().toLowerCase();
-  return ['heading', 'helv'].includes(token) ? token : 'heading';
-}
-
-function normalizeBillboardTitleSizeRem(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return 3.4;
-  }
-  return Math.max(2.4, Math.min(8, Number(numeric.toFixed(2))));
-}
-
-function normalizeBillboardTitleFontWeight(value, fontFamily = 'heading') {
-  const numeric = Number(value);
-  const fallback = fontFamily === 'helv' ? 700 : 800;
-  if (!Number.isFinite(numeric)) {
-    return fallback;
-  }
-  const rounded = Math.round(numeric / 100) * 100;
-  return Math.max(400, Math.min(900, rounded));
-}
-
-function normalizeBillboardTitleLetterSpacingEm(value, fontFamily = 'heading') {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return fontFamily === 'helv' ? -0.038 : -0.03;
-  }
-  return Math.max(-0.12, Math.min(0.04, Number(numeric.toFixed(3))));
 }
 
 function normalizePanelTextTone(value, fallback = 'dark') {
@@ -4070,12 +4013,13 @@ function HeroTitle({ hero }) {
             heroBgTone,
           );
 
-          const lineStyle = {
+          const lineStyle = buildHeroLineStyle({
             lineHeight: heroLineHeight,
             fontSize: heroTitleSize,
             letterSpacing: heroLetterSpacing,
-            marginTop: index > 0 && heroLineGap > 0 ? `${heroLineGap}em` : undefined,
-          };
+            lineGap: heroLineGap,
+            lineIndex: index,
+          });
           return (
             <h1
               key={`${lineClass}-${source}`}

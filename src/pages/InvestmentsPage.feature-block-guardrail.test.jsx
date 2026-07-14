@@ -40,4 +40,18 @@ describe('investments feature block guardrails', () => {
     expect(catalogSource).toContain("title: 'Grow your backup plan.'");
     expect(rendererSource).toContain("runtime.runtimeKey === 'investments_growth_feature'");
   });
+
+  it('keeps the investments hero on the shared headline sizing, tracking, and line-gap path', () => {
+    const pageSource = readSource('./InvestmentsPage.jsx');
+
+    expect(pageSource).toContain("import {\n  buildHeroLineStyle,\n  normalizeHeroLineGapEm,\n} from '../lib/heroLineStyle';");
+    expect(pageSource).toContain("import {\n  heroTitleSizeRemToRuntimeCss,\n  normalizeHeroTitleLetterSpacingEm,\n} from '../lib/heroTitleSize';");
+    expect(pageSource).toContain('const heroHudLineGap = normalizeHeroLineGapEm(heroHudSettings.lineGap);');
+    expect(pageSource).toContain('const heroHudTitleSize = heroTitleSizeRemToRuntimeCss(heroHudSettings.titleSizeRem);');
+    expect(pageSource).toContain('const heroHudLetterSpacingEm = normalizeHeroTitleLetterSpacingEm(heroHudSettings.titleLetterSpacingEm);');
+    expect(pageSource).toContain('fontSize={heroHudTitleSize}');
+    expect(pageSource).toContain('lineGap={heroHudLineGap}');
+    expect(pageSource).toContain('letterSpacing={heroHudLetterSpacingEm}');
+    expect(pageSource).toContain('style={buildHeroLineStyle({');
+  });
 });
