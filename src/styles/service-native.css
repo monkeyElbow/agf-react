@@ -1200,10 +1200,6 @@
   letter-spacing: clamp(-0.065em, -0.22vw, -0.04em);
 }
 
-.retirement-native-hero-line + .retirement-native-hero-line {
-  margin-top: 0.2rem;
-}
-
 .retirement-native-hero-line mark.is-mango {
   color: var(--ag-color-mango);
 }

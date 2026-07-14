@@ -7,12 +7,14 @@ function LocalBlockDraftsProbe({
   blocks,
   claimBufferedBlockEdit = () => false,
   commitBlockSettingsPatch = () => false,
+  registerExternalDraftStatusHandler = null,
 }) {
   const { blocks: managedBlocks, stageLocalBlockSetting } = useLocalBlockDrafts({
     pathname: '/services/loans',
     blocks,
     claimBufferedBlockEdit,
     commitBlockSettingsPatch,
+    registerExternalDraftStatusHandler,
   });
   const heroBlock = managedBlocks.find((block) => block?.id === 'hero') || { settings: {} };
 
@@ -84,6 +86,44 @@ describe('useLocalBlockDrafts', () => {
     expect(commitBlockSettingsPatch).toHaveBeenCalledTimes(1);
     expect(commitBlockSettingsPatch).toHaveBeenCalledWith('/services/loans', 'hero', {
       line1Text: 'Borrow wisely',
+    });
+  });
+
+  it('reports pending local drafts through the external status handler', () => {
+    vi.useFakeTimers();
+    const statusHandlers = new Map();
+    const registerExternalDraftStatusHandler = vi.fn((handlerId, getStatus) => {
+      statusHandlers.set(handlerId, getStatus);
+      return () => {
+        statusHandlers.delete(handlerId);
+      };
+    });
+
+    const blocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Before',
+        },
+      },
+    ];
+
+    render(
+      <LocalBlockDraftsProbe
+        blocks={blocks}
+        registerExternalDraftStatusHandler={registerExternalDraftStatusHandler}
+      />,
+    );
+
+    const [statusReader] = [...statusHandlers.values()];
+    expect(typeof statusReader).toBe('function');
+
+    fireEvent.change(screen.getByLabelText('Hero text'), { target: { value: 'Borrow wisely' } });
+
+    expect(statusReader()).toEqual({
+      pathname: '/services/loans',
+      hasPendingDrafts: true,
     });
   });
 });

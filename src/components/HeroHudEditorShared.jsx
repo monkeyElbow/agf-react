@@ -347,7 +347,7 @@ export function HeroInlineLiveEditor({
         <div
           key={`hero-inline-${line.key || index + 1}`}
           className={`admin-front-hud-hero-live-line${index > 0 ? ' is-offset' : ''}`}
-          style={{ marginTop: index > 0 && normalizedLineGap > 0 ? `${normalizedLineGap}em` : undefined }}
+          style={{ marginTop: index > 0 && normalizedLineGap !== 0 ? `${normalizedLineGap}em` : undefined }}
         >
           {(() => {
             const LineTag = typeof resolveLineTagName === 'function'

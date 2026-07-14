@@ -760,6 +760,7 @@ export default function InvestmentsPage() {
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
+    registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
   const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
@@ -843,6 +844,7 @@ export default function InvestmentsPage() {
     claimBufferedBlockEdit,
     commitBlockSettingsPatch,
     registerExternalDraftFlushHandler,
+    registerExternalDraftStatusHandler,
   });
   const heroBlock = useMemo(() => (
     managedBlocks.find((block) => (

@@ -65,6 +65,7 @@ export default function useLocalBlockDrafts({
   claimBufferedBlockEdit = () => false,
   commitBlockSettingsPatch = () => false,
   registerExternalDraftFlushHandler = null,
+  registerExternalDraftStatusHandler = null,
 }) {
   const normalizedPath = String(pathname || '').trim();
   const [draftsByBlockId, setDraftsByBlockId] = useState({});
@@ -225,6 +226,16 @@ export default function useLocalBlockDrafts({
     }
     return registerExternalDraftFlushHandler(flushHandlerIdRef.current, flushAllDrafts);
   }, [flushAllDrafts, registerExternalDraftFlushHandler]);
+
+  useEffect(() => {
+    if (typeof registerExternalDraftStatusHandler !== 'function') {
+      return undefined;
+    }
+    return registerExternalDraftStatusHandler(flushHandlerIdRef.current, () => ({
+      pathname: normalizedPath,
+      hasPendingDrafts: Object.keys(draftsByBlockIdRef.current || {}).length > 0,
+    }));
+  }, [normalizedPath, registerExternalDraftStatusHandler]);
 
   useEffect(() => () => {
     flushAllDrafts();

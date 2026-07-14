@@ -33,6 +33,25 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).toContain('blockId="retirement_plan_feature"');
   });
 
+  it('keeps the retirement hero wired to shared dynamic headline size and tracking controls', () => {
+    const source = readSource('./RetirementPage.jsx');
+
+    expect(source).toContain("import { heroTitleSizeRemToRuntimeCss, normalizeHeroTitleLetterSpacingEm } from '../lib/heroTitleSize';");
+    expect(source).toContain('const heroHudTitleSize = heroTitleSizeRemToRuntimeCss(heroHudSettings.titleSizeRem);');
+    expect(source).toContain('const heroHudLetterSpacingEm = normalizeHeroTitleLetterSpacingEm(heroHudSettings.titleLetterSpacingEm);');
+    expect(source).toContain('fontSize={heroHudTitleSize}');
+    expect(source).toContain('letterSpacing={heroHudLetterSpacingEm}');
+    expect(source).toContain('fontSize: heroHudTitleSize,');
+    expect(source).toContain('letterSpacing: `${heroHudLetterSpacingEm}em`,');
+  });
+
+  it('keeps retirement hero spacing driven by shared HUD line-gap logic instead of a route-only css gap', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.retirement-native-hero-line {');
+    expect(cssSource).not.toContain('.retirement-native-hero-line + .retirement-native-hero-line {');
+  });
+
   it('keeps the rebuilt section on the shared investments reveal path with retirement dark-shell styling', () => {
     const cssSource = readSource('../styles/service-native.css');
     const shellRule = readRuleBlock(cssSource, '.investments-native-growth-feature.retirement-plan-feature {');

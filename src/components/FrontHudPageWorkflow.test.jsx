@@ -40,6 +40,7 @@ let mockSharedSyncStatus = {
   lastSettledAt: 0,
   lastAppliedAt: Date.now() - 10_000,
 };
+let mockHasPendingExternalDrafts = false;
 let mockWorkflowActivity = {
   hasCurrentActorDraft: true,
   hasOtherActorDraft: false,
@@ -55,6 +56,7 @@ vi.mock('../context/ContentAdminContext', () => ({
     lastSharedSaveResult: mockLastSharedSaveResult,
     lastSharedPublishResult: mockLastSharedPublishResult,
     sharedSyncStatus: mockSharedSyncStatus,
+    hasPendingExternalDrafts: () => mockHasPendingExternalDrafts,
     saveSharedDraftNow: mockSaveSharedDraftNow,
     publishSharedPageNow: mockPublishSharedPageNow,
   }),
@@ -102,6 +104,7 @@ describe('FrontHudPageWorkflow', () => {
       lastSettledAt: 0,
       lastAppliedAt: Date.now() - 10_000,
     };
+    mockHasPendingExternalDrafts = false;
     mockWorkflowActivity = {
       hasCurrentActorDraft: true,
       hasOtherActorDraft: false,
@@ -184,6 +187,56 @@ describe('FrontHudPageWorkflow', () => {
     expect(screen.getByRole('button', { name: 'Save draft' }).disabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(true);
     expect(screen.getByRole('link', { name: 'Open page admin' })).toBeTruthy();
+  });
+
+  it('enables save and make-live when the page still has pending local HUD drafts', async () => {
+    mockDirty = false;
+    mockHasPendingExternalDrafts = true;
+    mockChangeSummary = {
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockPublishSummary = {
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockSharedSyncStatus = {
+      isPending: false,
+      pendingMutationCount: 0,
+      hasQueuedDraftSync: false,
+      lastQueuedAt: Date.now() - 60_000,
+      lastSettledAt: Date.now() - 30_000,
+      lastAppliedAt: Date.now() - 30_000,
+    };
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        reviewHref="/admin/content?page=%2Fservices%2Floans"
+      />,
+    );
+
+    const saveButton = screen.getByRole('button', { name: 'Save draft' });
+    const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
+
+    expect(saveButton.disabled).toBe(false);
+    expect(makeLiveButton.disabled).toBe(false);
+    expect(screen.getByText('Editing draft')).toBeTruthy();
+    expect(screen.getByText('Changes stay local while you type.')).toBeTruthy();
+
+    fireEvent.click(saveButton);
+    await waitFor(() => {
+      expect(mockSaveSharedDraftNow).toHaveBeenCalledWith('');
+    });
+
+    fireEvent.click(makeLiveButton);
+    await waitFor(() => {
+      expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/services/loans', '');
+    });
   });
 
   it('holds the workflow strip in a calm updating state through quick draft-sync churn before settling', () => {

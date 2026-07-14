@@ -1538,6 +1538,7 @@ export default function AdminContentPage() {
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
+    registerExternalDraftStatusHandler = null,
     getAuthoringBreadcrumbTrail = null,
   } = useContentAdmin();
   const adminPageHierarchy = authoringPageHierarchy || pageHierarchy;
@@ -1579,6 +1580,7 @@ export default function AdminContentPage() {
     claimBufferedBlockEdit,
     commitBlockSettingsPatch,
     registerExternalDraftFlushHandler,
+    registerExternalDraftStatusHandler,
   });
   const selectedBlock = selectedBlocks.find((block) => block.id === selectedBlockId) || null;
   const selectedBlockMeta = selectedBlock

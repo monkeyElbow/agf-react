@@ -60,6 +60,7 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { getTokenSwatch } from '../lib/colorSystem';
 import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
+import { heroTitleSizeRemToRuntimeCss, normalizeHeroTitleLetterSpacingEm } from '../lib/heroTitleSize';
 
 const testimonials = [
   {
@@ -464,6 +465,7 @@ export default function RetirementPage() {
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
+    registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
   const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
@@ -519,6 +521,7 @@ export default function RetirementPage() {
     claimBufferedBlockEdit,
     commitBlockSettingsPatch,
     registerExternalDraftFlushHandler,
+    registerExternalDraftStatusHandler,
   });
   const heroBlock = useMemo(() => (
     managedBlocks.find((block) => (
@@ -697,6 +700,8 @@ export default function RetirementPage() {
     ? Number(heroHudSettings.lineHeight)
     : RETIREMENT_HERO_BASE_LINE_HEIGHT;
   const heroHudLineGap = normalizeRetirementHeroLineGap(heroHudLineHeight);
+  const heroHudTitleSize = heroTitleSizeRemToRuntimeCss(heroHudSettings.titleSizeRem);
+  const heroHudLetterSpacingEm = normalizeHeroTitleLetterSpacingEm(heroHudSettings.titleLetterSpacingEm);
   const heroHudBgTone = String(heroHudSettings.bgTone || dynamicHero?.bgTone || 'white').trim() || 'white';
   const heroHudJustify = String(heroHudSettings.justify || dynamicHero?.justify || 'center').trim().toLowerCase() || 'center';
   const heroHudEditableLines = useMemo(() => {
@@ -1658,8 +1663,10 @@ export default function RetirementPage() {
             <HeroInlineLiveEditor
               lines={heroHudEditableLines}
               activeLineKey={heroActiveLineData?.key || ''}
+              fontSize={heroHudTitleSize}
               lineHeight={RETIREMENT_HERO_BASE_LINE_HEIGHT}
               lineGap={heroHudLineGap}
+              letterSpacing={heroHudLetterSpacingEm}
               onLineTextChange={handleHeroHudLineTextChange}
               commitOnBlurOnly
               readOnly={isForeignOwnedBlockOwnership(getOwnershipVisualForBlockId('hero'))}
@@ -1678,7 +1685,9 @@ export default function RetirementPage() {
                 key={`retirement-hero-line-${line.id || index + 1}`}
                 className={className || undefined}
                 style={{
+                  fontSize: heroHudTitleSize,
                   lineHeight: RETIREMENT_HERO_BASE_LINE_HEIGHT,
+                  letterSpacing: `${heroHudLetterSpacingEm}em`,
                   marginTop: index > 0 && heroHudLineGap !== 0 ? `${heroHudLineGap}em` : undefined,
                 }}
               >

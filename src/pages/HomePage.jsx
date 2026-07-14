@@ -165,6 +165,7 @@ export default function HomePage() {
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
+    registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
   const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
@@ -201,6 +202,7 @@ export default function HomePage() {
     claimBufferedBlockEdit,
     commitBlockSettingsPatch,
     registerExternalDraftFlushHandler,
+    registerExternalDraftStatusHandler,
   });
   const dynamicTopStripBlock = useMemo(() => (
     managedBlocks.find((block) => (

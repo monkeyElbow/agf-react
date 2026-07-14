@@ -4545,6 +4545,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
   const pendingBlockDraftSyncEntriesRef = useRef(new Map());
   const bufferedBlockSettingCommitTimersRef = useRef(new Map());
   const externalDraftFlushHandlersRef = useRef(new Map());
+  const externalDraftStatusHandlersRef = useRef(new Map());
   const latestSharedMutationIdRef = useRef(0);
   const latestSharedUpdatedAtRef = useRef(0);
 
@@ -6429,6 +6430,38 @@ export function ContentAdminProvider({ children, initialState = null }) {
       };
     };
 
+    const registerExternalDraftStatusHandler = (handlerId, getStatus) => {
+      const normalizedHandlerId = String(handlerId || '').trim();
+      if (!normalizedHandlerId || typeof getStatus !== 'function') {
+        return () => {};
+      }
+      externalDraftStatusHandlersRef.current.set(normalizedHandlerId, getStatus);
+      return () => {
+        externalDraftStatusHandlersRef.current.delete(normalizedHandlerId);
+      };
+    };
+
+    const hasPendingExternalDrafts = (pathname) => {
+      const normalizedPath = String(pathname || '').trim();
+      if (!normalizedPath) {
+        return false;
+      }
+      for (const getStatus of externalDraftStatusHandlersRef.current.values()) {
+        try {
+          const status = getStatus();
+          if (
+            String(status?.pathname || '').trim() === normalizedPath
+            && Boolean(status?.hasPendingDrafts)
+          ) {
+            return true;
+          }
+        } catch {
+          // ignore transient external draft status errors
+        }
+      }
+      return false;
+    };
+
     const resolveManagedPathFromRef = (pageRef, fallbackPath = '') => {
       const ref = normalizeManagedLinkRef(pageRef);
       if (ref) {
@@ -6557,6 +6590,8 @@ export function ContentAdminProvider({ children, initialState = null }) {
       saveSharedDraftNow,
       publishSharedPageNow,
       registerExternalDraftFlushHandler,
+      registerExternalDraftStatusHandler,
+      hasPendingExternalDrafts,
       getPageRevisionHistory,
       getSharedContentBackups,
       promoteContentAdminToSeed,

@@ -4376,6 +4376,7 @@ export default function NativeContentPage({ page }) {
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
+    registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
   const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
@@ -4395,6 +4396,7 @@ export default function NativeContentPage({ page }) {
     claimBufferedBlockEdit,
     commitBlockSettingsPatch,
     registerExternalDraftFlushHandler,
+    registerExternalDraftStatusHandler,
   });
   const heroLineInputRefs = useRef({ line1: null, line2: null, line3: null });
   const heroHudSectionRef = useRef(null);

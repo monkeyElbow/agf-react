@@ -126,6 +126,7 @@ export default function FrontHudPageWorkflow({
     lastSharedSaveResult = null,
     lastSharedPublishResult = null,
     sharedSyncStatus = null,
+    hasPendingExternalDrafts = () => false,
     saveSharedDraftNow = async () => ({ ok: false }),
     publishSharedPageNow = async () => ({ ok: false }),
   } = useContentAdmin() || {};
@@ -165,6 +166,9 @@ export default function FrontHudPageWorkflow({
     ? (getPageWorkflowActivity(normalizedPath) || {})
     : {};
   const pageDirty = normalizedPath ? Boolean(isPageDirty(normalizedPath)) : false;
+  const hasPendingExternalDraftsOnPage = normalizedPath
+    ? Boolean(hasPendingExternalDrafts(normalizedPath))
+    : false;
   const pathSaveResult = useMemo(
     () => summarizeSharedSaveResultForPath(lastSharedSaveResult, normalizedPath),
     [lastSharedSaveResult, normalizedPath],
@@ -177,7 +181,7 @@ export default function FrontHudPageWorkflow({
   const draftScopeLabel = formatWorkflowScopeLabel('Draft saves', changeSummary, 'Draft save clean');
   const publishScopeLabel = formatWorkflowScopeLabel('Make live publishes', publishSummary, 'Already live');
   const syncPending = Boolean(sharedSyncStatus?.isPending);
-  const hasDraftActivitySignal = pageDirty || isSaving || syncPending;
+  const hasDraftActivitySignal = pageDirty || hasPendingExternalDraftsOnPage || isSaving || syncPending;
   const [showSettledStatus, setShowSettledStatus] = useState(() => !hasDraftActivitySignal);
   const shouldUseCalmDraftPresentation = !showSettledStatus && !saveError && !pathSaveResult?.error;
 
@@ -198,7 +202,7 @@ export default function FrontHudPageWorkflow({
 
   const saveFeedbackLabel = saveError
     ? saveError
-    : pageDirty || isSaving
+    : pageDirty || hasPendingExternalDraftsOnPage || isSaving
       ? 'Changes stay local while you type.'
       : shouldUseCalmDraftPresentation
         ? 'Draft updates are settling in the background.'
@@ -229,19 +233,19 @@ export default function FrontHudPageWorkflow({
         : 'Live sync idle';
   const headline = saveError || pathSaveResult?.error
     ? 'Unpublished changes'
-    : pageDirty || isSaving
+    : pageDirty || hasPendingExternalDraftsOnPage || isSaving
       ? 'Editing draft'
       : shouldUseCalmDraftPresentation
         ? 'Updating draft'
         : 'Draft saved';
   const statusToneClassName = saveError || pathSaveResult?.error
     ? 'is-error'
-    : pageDirty || isSaving || shouldUseCalmDraftPresentation
+    : pageDirty || hasPendingExternalDraftsOnPage || isSaving || shouldUseCalmDraftPresentation
       ? 'is-dirty'
       : 'is-saved';
   const draftMarkerToneClassName = saveError || pathSaveResult?.error
     ? 'is-error'
-    : pageDirty || isSaving || shouldUseCalmDraftPresentation
+    : pageDirty || hasPendingExternalDraftsOnPage || isSaving || shouldUseCalmDraftPresentation
       ? 'is-amber'
       : pathSaveResult?.updatedAt
         ? 'is-green'
@@ -274,15 +278,20 @@ export default function FrontHudPageWorkflow({
     : true;
   const publishBlockedByOtherDraft = Boolean(workflowActivity?.hasOtherActorDraft);
   const hasPublishChanges = Boolean(publishSummary?.hasUnsavedChanges);
-  const canMakeLive = showDraftActions && !isSaving && !isPublishing && !publishBlockedByOtherDraft && (pageDirty || hasPublishChanges);
+  const canSaveDraft = showDraftActions && !isSaving && (pageDirty || hasPendingExternalDraftsOnPage);
+  const canMakeLive = showDraftActions
+    && !isSaving
+    && !isPublishing
+    && !publishBlockedByOtherDraft
+    && (pageDirty || hasPublishChanges || hasPendingExternalDraftsOnPage);
   const makeLiveTitle = publishBlockedByOtherDraft
     ? `${workflowActivity.otherActorBlockCount || 1} other-admin block${workflowActivity.otherActorBlockCount === 1 ? '' : 's'} must be resolved before making live.`
-    : hasPublishChanges || pageDirty
+    : hasPublishChanges || pageDirty || hasPendingExternalDraftsOnPage
       ? publishFeedbackLabel
       : 'This page is already live.';
 
   const handleSaveDraft = async () => {
-    if (!normalizedPath || !pageDirty || isSaving) {
+    if (!normalizedPath || !canSaveDraft) {
       return;
     }
     setSaveError('');
@@ -408,7 +417,7 @@ export default function FrontHudPageWorkflow({
               type="button"
               className="admin-front-hud-page-workflow-action"
               onClick={handleSaveDraft}
-              disabled={!pageDirty || isSaving}
+              disabled={!canSaveDraft}
               title={saveFeedbackLabel}
             >
               {isSaving ? 'Saving…' : 'Save draft'}
@@ -481,7 +490,7 @@ export default function FrontHudPageWorkflow({
               type="button"
               className="admin-front-hud-page-workflow-action"
               onClick={handleSaveDraft}
-              disabled={!pageDirty || isSaving}
+              disabled={!canSaveDraft}
             >
               {isSaving ? 'Saving…' : 'Save draft'}
             </button>

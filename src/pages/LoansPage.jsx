@@ -633,6 +633,7 @@ export default function LoansPage({ sectionsOnly = false }) {
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
+    registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
   const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
@@ -680,6 +681,7 @@ export default function LoansPage({ sectionsOnly = false }) {
     claimBufferedBlockEdit,
     commitBlockSettingsPatch,
     registerExternalDraftFlushHandler,
+    registerExternalDraftStatusHandler,
   });
 
   const heroBlock = useMemo(() => {
