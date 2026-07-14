@@ -8,6 +8,7 @@ import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import FrontHudPanelShell from '../components/FrontHudPanelShell';
 import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../components/HeroHudEditorShared';
+import InvestmentsGrowthFeature from '../components/InvestmentsGrowthFeature';
 import SafeRichText from '../components/SafeRichText';
 import { ColumnsBlock } from '../components/blocks/PageBlocksRenderer';
 import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
@@ -96,6 +97,33 @@ const states = [
 const DEFAULT_RETIREMENT_INTRO = buildDefaultRetirementIntroRuntime();
 const DEFAULT_RETIREMENT_BILLBOARD = buildDefaultRetirementBillboardRuntime();
 const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD = buildDefaultRetirementRolloverBillboardRuntime();
+const DEFAULT_RETIREMENT_PLAN_FEATURE = Object.freeze({
+  className: 'retirement-plan-feature',
+  disableInvestorExitReveal: true,
+  headlineLines: Object.freeze([
+    Object.freeze([
+      Object.freeze({ text: 'AGFinancial 403(b) Retirement Plan', className: 'is-white' }),
+    ]),
+  ]),
+  panels: Object.freeze([
+    Object.freeze({
+      title: 'Smart benefits, strong advantages',
+      tone: 'mango',
+      surfaceTone: 'blue',
+      body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.',
+    }),
+    Object.freeze({
+      kind: 'investor',
+      title: 'Includes minister\'s housing allowance, and a variety of investment strategies.',
+      surfaceTone: 'white',
+    }),
+  ]),
+  action: Object.freeze({
+    label: 'Explore the 403(b)',
+    to: '/services/retirement/403b',
+    className: 'service-native-btn retirement-plan-feature-action',
+  }),
+});
 
 function normalizeRetirementCtaSettings(settings = {}) {
   const nextSettings = {
@@ -1723,23 +1751,10 @@ export default function RetirementPage() {
         </div>
       </section>
 
-      <section className="service-native-section retirement-plan-section">
-        <div className="ag-panel-rail-wide">
-          <div className="retirement-plan-intro">
-            <h2 className="retirement-plan-heading">AGFinancial 403(b) Retirement Plan</h2>
-            <h3 className="retirement-plan-subheading">Smart benefits, strong advantages</h3>
-            <p className="retirement-plan-lead">
-              The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.
-            </p>
-          </div>
-          <h4 className="retirement-plan-footer">
-            Includes <mark className="is-mango">minister&apos;s housing allowance</mark>, and a variety of investment strategies.
-          </h4>
-          <div className="service-native-action-row retirement-plan-actions">
-            <Link to="/services/retirement/403b" className="service-native-btn">Explore the 403(b)</Link>
-          </div>
-        </div>
-      </section>
+      <InvestmentsGrowthFeature
+        blockId="retirement_plan_feature"
+        runtime={DEFAULT_RETIREMENT_PLAN_FEATURE}
+      />
 
       {splitPanelRuntime ? (
         <section

@@ -5288,6 +5288,65 @@ export default function NativeContentPage({ page }) {
   }, [resolvedPagePath]);
 
   useEffect(() => {
+    if (resolvedPagePath !== '/about-us/careers' || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const root = pageRef.current;
+    const benefitsSection = root?.querySelector('.careers-native-benefits');
+    const readySection = root?.querySelector('.careers-native-ready');
+    const benefitsHeading = benefitsSection?.querySelector('h2');
+    const readyHeading = readySection?.querySelector('h2');
+    if (
+      !(root instanceof HTMLElement)
+      || !(benefitsSection instanceof HTMLElement)
+      || !(readySection instanceof HTMLElement)
+      || !(benefitsHeading instanceof HTMLElement)
+      || !(readyHeading instanceof HTMLElement)
+    ) {
+      return undefined;
+    }
+
+    let rafId = 0;
+
+    const updateCareersSectionProgress = () => {
+      rafId = 0;
+      const viewportHeight = Math.max(window.innerHeight || 0, 1);
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const benefitsHeadingRect = benefitsHeading.getBoundingClientRect();
+      const readyHeadingRect = readyHeading.getBoundingClientRect();
+      const benefitsHeadingMid = benefitsHeadingRect.top + scrollY + (benefitsHeadingRect.height * 0.5);
+      const readyHeadingMid = readyHeadingRect.top + scrollY + (readyHeadingRect.height * 0.5);
+      const startY = benefitsHeadingMid - (viewportHeight * 0.5);
+      const endY = readyHeadingMid - (viewportHeight * 0.5);
+      const range = Math.max(endY - startY, 1);
+      const progress = Math.max(0, Math.min(1, (scrollY - startY) / range));
+
+      root.style.setProperty('--careers-benefits-ready-progress', progress.toFixed(3));
+    };
+
+    const queueCareersSectionProgress = () => {
+      if (rafId) {
+        return;
+      }
+      rafId = window.requestAnimationFrame(updateCareersSectionProgress);
+    };
+
+    queueCareersSectionProgress();
+    window.addEventListener('scroll', queueCareersSectionProgress, { passive: true });
+    window.addEventListener('resize', queueCareersSectionProgress);
+
+    return () => {
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+      root.style.removeProperty('--careers-benefits-ready-progress');
+      window.removeEventListener('scroll', queueCareersSectionProgress);
+      window.removeEventListener('resize', queueCareersSectionProgress);
+    };
+  }, [resolvedPagePath, sectionList.length]);
+
+  useEffect(() => {
     const root = pageRef.current;
     if (!(root instanceof HTMLElement)) {
       return undefined;

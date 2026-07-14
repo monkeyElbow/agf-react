@@ -20,39 +20,36 @@ function readRuleBlock(source, selector) {
 }
 
 describe('retirement 403(b) review polish guardrail', () => {
-  it('keeps the 403(b) landing section copy aligned with the WP reference phrasing', () => {
+  it('keeps the 403(b) landing section copy aligned with the scroll-feature rebuild', () => {
     const source = readSource('./RetirementPage.jsx');
 
+    expect(source).toContain("import InvestmentsGrowthFeature from '../components/InvestmentsGrowthFeature';");
+    expect(source).toContain("className: 'retirement-plan-feature'");
+    expect(source).toContain("text: 'AGFinancial 403(b) Retirement Plan', className: 'is-white'");
     expect(source).toContain('Smart benefits, strong advantages');
-    expect(source).toContain('The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.');
-    expect(source).toContain('Includes <mark className="is-mango">minister&apos;s housing allowance</mark>, and a variety of investment strategies.');
-    expect(source).toContain('>Explore the 403(b)<');
+    expect(source).toContain("body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.'");
+    expect(source).toContain("title: 'Includes minister\\'s housing allowance, and a variety of investment strategies.'");
+    expect(source).toContain("label: 'Explore the 403(b)'");
+    expect(source).toContain('blockId="retirement_plan_feature"');
   });
 
-  it('keeps the section on the dark-shell hierarchy with reversed title and lead copy', () => {
+  it('keeps the rebuilt section on the shared investments reveal path with retirement dark-shell styling', () => {
     const cssSource = readSource('../styles/service-native.css');
-    const introRule = readRuleBlock(cssSource, '.retirement-plan-intro {');
-    const headingRule = readRuleBlock(cssSource, '.retirement-plan-heading {');
-    const leadRule = readRuleBlock(cssSource, '.retirement-plan-lead {');
+    const shellRule = readRuleBlock(cssSource, '.investments-native-growth-feature.retirement-plan-feature {');
+    const headingRule = readRuleBlock(cssSource, '.service-native-section.retirement-plan-feature h2.investments-native-build-title {');
+    const leadRule = readRuleBlock(cssSource, '.retirement-plan-feature .investments-native-growth-card p {');
 
-    expect(cssSource).toContain('.retirement-plan-section {');
-    expect(cssSource).toContain('margin-top: -1px;');
-    expect(cssSource).toContain('background: #4a484b;');
-    expect(cssSource).toContain('.retirement-plan-intro {');
-    expect(introRule).not.toContain('background: #ffffff;');
+    expect(cssSource).toContain('.investments-native-growth-feature.retirement-plan-feature {');
+    expect(shellRule).toContain('margin-top: -1px;');
+    expect(shellRule).toContain('background: #4a484b;');
+    expect(cssSource).toContain('.investments-native-growth-feature.retirement-plan-feature .investments-native-growth-surface {');
     expect(headingRule).toContain('color: #ffffff;');
     expect(headingRule).toContain('font-weight: 700;');
-    expect(headingRule).toContain('font-synthesis: none;');
-    expect(cssSource).toContain('.retirement-plan-subheading {');
-    expect(cssSource).toContain('color: var(--ag-color-mango);');
-    const subheadingRule = readRuleBlock(cssSource, '.retirement-plan-subheading {');
-    expect(subheadingRule).toContain('font-family: var(--ag-font-helv);');
-    expect(subheadingRule).toContain('font-weight: 500;');
-    expect(subheadingRule).toContain('letter-spacing: var(--ag-letter-spacing-helv-heading);');
-    expect(subheadingRule).toContain('font-synthesis: none;');
-    expect(leadRule).toContain('color: #ffffff;');
-    expect(cssSource).toContain('.retirement-plan-footer mark {');
-    expect(cssSource).toContain('.retirement-plan-actions .service-native-btn {');
+    expect(cssSource).toContain('.service-native-section.retirement-plan-feature h2.investments-native-build-title mark.is-white {');
+    expect(cssSource).toContain('.retirement-plan-feature .investments-native-growth-card h3 {');
+    expect(leadRule).toContain('color: rgba(255, 255, 255, 0.9);');
+    expect(cssSource).toContain('.retirement-plan-feature .investments-native-growth-card--investor .service-native-action-row {');
+    expect(cssSource).toContain('.retirement-plan-feature-action {');
     expect(cssSource).toContain('.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-tone-mango,');
   });
 

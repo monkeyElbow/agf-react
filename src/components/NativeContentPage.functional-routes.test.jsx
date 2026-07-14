@@ -610,13 +610,16 @@ describe('NativeContentPage functional routes', () => {
 
     expect(
       Array.from(document.querySelectorAll('.service-native-hero h1')).map((node) => node.textContent),
-    ).toEqual(['Be part of', 'something', 'BIGGER.']);
+    ).toEqual(['Be part of', 'something', 'bigger.']);
     const careersIntro = document.querySelector('.service-native-intro.careers-native-top-intro');
     expect(careersIntro).toBeTruthy();
     expect(careersIntro?.querySelector('.service-native-intro-copy.careers-native-top-intro-copy')).toBeTruthy();
+    expect(careersIntro?.querySelector('.careers-native-top-intro-body.fade-up.fade-up-force-observe')).toBeTruthy();
+    expect(careersIntro?.querySelector('.careers-native-top-intro-heading.fade-up.fade-up-force-observe.fade-up-no-shift')).toBeTruthy();
     expect(careersIntro?.className).not.toContain('about-native-top-intro');
     expect(document.querySelector('.service-native-hero h1.careers-hero-line--major')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Faith + Career.' })).toBeTruthy();
+    expect(document.querySelector('.careers-native-ready-copy.fade-up.fade-up-force-observe')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Marketing Manager' })).toBeTruthy();
     expect(screen.getByText('Springfield, MO')).toBeTruthy();
     expect(screen.getByText('Posted March 20, 2026')).toBeTruthy();

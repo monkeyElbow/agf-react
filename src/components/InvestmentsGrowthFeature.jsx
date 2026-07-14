@@ -54,7 +54,8 @@ function FeatureAction({ action, resolveTo }) {
   }
   const actionTarget = String(action.to || action.href || '').trim();
   const isInternal = Boolean(action.to || (action.href && !isExternalLinkHref(action.href) && action.href.startsWith('/')));
-  const className = 'service-native-btn is-outline is-tone-atlantean investments-native-dashboard-action';
+  const className = String(action.className || '').trim()
+    || 'service-native-btn is-outline is-tone-atlantean investments-native-dashboard-action';
 
   if (isInternal) {
     return (
@@ -91,6 +92,7 @@ export default function InvestmentsGrowthFeature({
   const sectionRef = useRef(null);
   const investorPanelRef = useRef(null);
   const investorCopyRef = useRef(null);
+  const disableInvestorExitReveal = Boolean(runtime?.disableInvestorExitReveal);
   const headlineLines = Array.isArray(runtime?.headlineLines) ? runtime.headlineLines : [];
   const growthPanels = useMemo(
     () => (Array.isArray(runtime?.panels) ? runtime.panels.filter((panel) => panel?.kind !== 'investor') : []),
@@ -133,7 +135,9 @@ export default function InvestmentsGrowthFeature({
       const rect = section.getBoundingClientRect();
       const entryProgress = clampUnitInterval((viewportHeight * 1.02 - rect.top) / (viewportHeight * 0.62));
       const exitProgress = clampUnitInterval((rect.bottom - viewportHeight * 0.04) / (viewportHeight * 0.48));
-      const progress = easeInvestmentsScrollProgress(Math.min(entryProgress, exitProgress));
+      const progress = easeInvestmentsScrollProgress(
+        disableInvestorExitReveal ? entryProgress : Math.min(entryProgress, exitProgress),
+      );
       const opacity = interpolateInvestmentsValue(0.34, 1, progress);
       const scale = interpolateInvestmentsValue(0.955, 1, progress);
       const translateY = interpolateInvestmentsValue(42, 0, progress);
@@ -174,12 +178,12 @@ export default function InvestmentsGrowthFeature({
         reducedMotionMediaQuery.removeListener(handleReducedMotionChange);
       }
     };
-  }, []);
+  }, [disableInvestorExitReveal]);
 
   return (
     <section
       ref={sectionRef}
-      className={`service-native-section investments-native-growth-feature${ownership?.className || ''}`}
+      className={`service-native-section investments-native-growth-feature${runtime?.className ? ` ${runtime.className}` : ''}${ownership?.className || ''}`}
       data-block-id={blockId}
     >
       <BlockOwnershipOverlay ownership={ownership} />
