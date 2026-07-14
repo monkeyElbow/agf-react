@@ -1197,7 +1197,7 @@
 .retirement-native-hero-line {
   margin: 0;
   text-align: center;
-  letter-spacing: clamp(-0.04em, -0.12vw, -0.022em);
+  letter-spacing: clamp(-0.065em, -0.22vw, -0.04em);
 }
 
 .retirement-native-hero-line + .retirement-native-hero-line {
