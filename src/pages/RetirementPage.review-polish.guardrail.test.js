@@ -72,22 +72,35 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-tone-mango,');
   });
 
-  it('keeps housing and do the math on the shared columns-family path with retirement HUD coverage', () => {
+  it('keeps housing and do the math on retirement-specific renders with shared data and HUD coverage', () => {
     const source = readSource('./RetirementPage.jsx');
 
-    expect(source).toContain("contentBlockBlueprintsByPath['/services/retirement']");
-    expect(source).toContain('function buildRetirementCanonicalBlocks(blocks) {');
-    expect(source).toContain("columns_mha: RETIREMENT_COLUMNS_MHA_HUD_PANEL_ID");
+    expect(source).not.toContain("contentBlockBlueprintsByPath['/services/retirement']");
+    expect(source).not.toContain('function buildRetirementCanonicalBlocks(blocks) {');
+    expect(source).toContain("housing_feature: RETIREMENT_HOUSING_FEATURE_HUD_PANEL_ID");
     expect(source).toContain("columns_math: RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID");
-    expect(source).toContain("columns_math: '.native-dynamic-columns[data-block-id=\"columns_math\"]'");
-    expect(source).toContain("block?.id === 'columns_mha'");
+    expect(source).toContain("housing_feature: '.retirement-ministers-housing-feature'");
+    expect(source).toContain("columns_math: '.retirement-do-the-math-billboard'");
+    expect(source).toContain("block?.id === 'housing_feature'");
+    expect(source).toContain("block?.kind === 'feature_panel'");
     expect(source).toContain("block?.id === 'columns_math'");
-    expect(source).toContain("ownership={getOwnershipVisualForBlockId('columns_mha')}");
-    expect(source).toContain("ownership={getOwnershipVisualForBlockId('columns_math')}");
-    expect(source).toContain("hudAnchor={renderHudAnchor('columns_mha')}");
-    expect(source).toContain("hudAnchor={renderHudAnchor('columns_math')}");
-    expect(source).not.toContain('HousingBlock');
-    expect(source).not.toContain('DoTheMathBlock');
+    expect(source).toContain("block?.kind === 'columns'");
+    expect(source).toContain('function buildRetirementHousingFeatureRuntime(block) {');
+    expect(source).toContain("import { HomeDoTheMathBadge } from '../components/blocks/PageBlocksRenderer';");
+    expect(source).toContain("managedBlocksByPath['/services/retirement'].filter((block) => block && typeof block === 'object')");
+    expect(source).toContain('const housingFeatureRuntime = useMemo(');
+    expect(source).not.toContain('HOME_COLUMNS_MATH_BILLBOARD_DEFAULTS');
+    expect(source).not.toContain('const columnsMathBillboardBlock = useMemo(() => {');
+    expect(source).toContain('className={`service-native-section retirement-ministers-housing-feature');
+    expect(source).toContain('data-block-id="housing_feature"');
+    expect(source).toContain('renderHudAnchor(\'housing_feature\')');
+    expect(source).toContain('setupInvestmentsGrowthRevealMotion(housingRoot, { includeBackgroundMotion: false })');
+    expect(source).toContain('className={`retirement-ministers-housing-feature-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title');
+    expect(source).toContain('function buildRetirementDoTheMathRuntime(block) {');
+    expect(source).toContain('<HomeDoTheMathBadge');
+    expect(source).not.toContain("id: 'home_do_the_math'");
+    expect(source).toContain('className={`service-native-section retirement-do-the-math-billboard');
+    expect(source).toContain("{renderHudAnchor('columns_math')}");
   });
 
   it('keeps the retirement everyday billboard reveal as an opt-in shared billboard feature', () => {
@@ -133,6 +146,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(pageSource).toContain('defaultRetirementBillboardSettings');
     expect(pageSource).toContain('defaultRetirementRolloverBillboardSettings');
     expect(pageSource).toContain('const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;');
+    expect(pageSource).toContain("const renderedBillboardJustify = 'right';");
     expect(pageSource).toContain('const renderedRolloverBillboard = dynamicRolloverBillboard || DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD;');
     expect(pageSource).toContain("rollover_billboard: RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID");
     expect(pageSource).toContain("rollover_billboard: '.retirement-rollover-billboard'");

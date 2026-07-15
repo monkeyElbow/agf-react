@@ -64,7 +64,7 @@ export const defaultRetirementBillboardSettings = Object.freeze({
   bodyHtml: '<h3>Starting now.</h3>',
   bgTone: 'white',
   textTone: 'dark',
-  justify: 'center',
+  justify: 'right',
   scrollReveal: 'scale-up',
   lineSpacing: 0.95,
   titleFontFamily: 'helv',

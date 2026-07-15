@@ -14,9 +14,17 @@ describe('home billboard and newsletter guardrail', () => {
   it('keeps do-the-math aligned to the ministry-allies headline scale and opens the calculator CTA spacing', () => {
     const cssSource = readSource('../styles/home-native.css');
 
-    expect(cssSource).toContain('.home-native-page .service-native-section.home-native-billboard[data-block-id="home_do_the_math"] .native-info-section-copy > h2 {');
+    expect(cssSource).toContain('.service-native-section.home-native-billboard[data-block-id="home_do_the_math"] .native-info-section-copy > h2 {');
     expect(cssSource).toContain('font-size: clamp(calc(5.25rem * 0.58), 8vw, 5.25rem) !important;');
-    expect(cssSource).toContain('.home-native-page .service-native-section.home-native-billboard[data-block-id="home_do_the_math"] .service-native-action-row {');
+    expect(cssSource).toContain('.service-native-section.home-native-billboard[data-block-id="home_do_the_math"] .native-info-section-copy {');
+    expect(cssSource).toContain('justify-items: start;');
+    expect(cssSource).toContain('.service-native-section.home-native-billboard[data-block-id="home_do_the_math"] .home-math-badge {');
+    expect(cssSource).toContain('.service-native-section.home-native-billboard[data-block-id="home_do_the_math"] .home-math-badge.is-pressing .home-math-badge-button {');
+    expect(cssSource).toContain('padding-top: clamp(3.68rem, 6.4vw, 5.12rem);');
+    expect(cssSource).toContain('width: clamp(5.25rem, 7.5vw, 6.6rem);');
+    expect(cssSource).toContain('stroke-width: 2.55px;');
+    expect(cssSource).toContain('@keyframes home-math-badge-press {');
+    expect(cssSource).toContain('.service-native-section.home-native-billboard[data-block-id="home_do_the_math"] .service-native-action-row {');
     expect(cssSource).toContain('margin-top: clamp(1.6rem, 3vw, 2rem);');
   });
 

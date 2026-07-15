@@ -17,6 +17,7 @@ export function composeRetirement403bSections({ pathname, baseContent, dynamicSe
   const strategyBillboardSection = runtimeSections.find((section) => section?.blockId === 'investment_strategy_heading') || null;
   const strategyGridSection = runtimeSections.find((section) => section?.blockId === 'investment_strategy_options') || null;
   const qualifyGridSection = runtimeSections.find((section) => section?.blockId === 'who_qualifies') || null;
+  const rolloverBillboardSection = runtimeSections.find((section) => section?.blockId === 'rollover_billboard') || null;
   const strategyEnrollCtaSection = strategyGridSection
     ? (
       sections.find(
@@ -24,11 +25,15 @@ export function composeRetirement403bSections({ pathname, baseContent, dynamicSe
       ) || null
     )
     : null;
-  const injectedSections = [
+  const strategyInjectedSections = [
     strategyBillboardSection,
     strategyGridSection,
     strategyEnrollCtaSection,
     qualifyGridSection,
+  ].filter(Boolean);
+  const injectedSections = [
+    ...strategyInjectedSections,
+    rolloverBillboardSection,
   ].filter(Boolean);
 
   if (!injectedSections.length) {
@@ -54,12 +59,35 @@ export function composeRetirement403bSections({ pathname, baseContent, dynamicSe
     if (qualifyGridSection && className.includes('retirement-child-native-qualify')) {
       return false;
     }
+    if (rolloverBillboardSection && className.includes('retirement-child-native-rollover')) {
+      return false;
+    }
     return true;
   });
   const enrollSectionIndex = trimmedSections.findIndex((section) => String(section?.className || '').includes('retirement-child-native-enroll'));
   const insertIndex = enrollSectionIndex >= 0 ? enrollSectionIndex : trimmedSections.length;
 
-  trimmedSections.splice(insertIndex, 0, ...injectedSections);
+  if (strategyInjectedSections.length) {
+    trimmedSections.splice(insertIndex, 0, ...strategyInjectedSections);
+  }
+
+  if (rolloverBillboardSection) {
+    const originalRolloverIndex = sections.findIndex((section) => String(section?.className || '').includes('retirement-child-native-rollover'));
+    const nextOriginalSection = originalRolloverIndex >= 0 ? sections[originalRolloverIndex + 1] : null;
+    const nextOriginalClassName = String(nextOriginalSection?.className || '').trim();
+    const nextOriginalSectionIndex = nextOriginalClassName
+      ? trimmedSections.findIndex((section) => String(section?.className || '').trim() === nextOriginalClassName)
+      : -1;
+    const previousOriginalSection = originalRolloverIndex > 0 ? sections[originalRolloverIndex - 1] : null;
+    const previousOriginalClassName = String(previousOriginalSection?.className || '').trim();
+    const previousOriginalSectionIndex = previousOriginalClassName
+      ? trimmedSections.findIndex((section) => String(section?.className || '').trim() === previousOriginalClassName)
+      : -1;
+    const rolloverInsertIndex = nextOriginalSectionIndex >= 0
+      ? nextOriginalSectionIndex
+      : (previousOriginalSectionIndex >= 0 ? previousOriginalSectionIndex + 1 : trimmedSections.length);
+    trimmedSections.splice(rolloverInsertIndex, 0, rolloverBillboardSection);
+  }
 
   return {
     nextBaseContent: {

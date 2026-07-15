@@ -52,6 +52,8 @@ function expectHomeMathBillboardWithoutPhoto() {
   expect(block).toBeTruthy();
   expect(screen.queryByAltText('Calculator and notebook')).toBeNull();
   expect(block.querySelector('.ag-panel-rail')).toBeTruthy();
+  expect(block.querySelector('[data-home-math-badge="true"]')).toBeTruthy();
+  expect(block.querySelectorAll('.home-math-badge-button')).toHaveLength(4);
   expect(block.querySelector('h2 mark.is-atlantean')).toBeTruthy();
   const action = block.querySelector('.service-native-action-row .service-native-btn');
   expect(action).toBeTruthy();

@@ -70,6 +70,8 @@ const EMPTY_OWNERSHIP = Object.freeze({
 });
 const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow up with me';
 const LEGACY_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
+const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
+const HOME_DO_THE_MATH_PRESS_SEQUENCE_MS = 1140;
 
 function SharedBlockHudAnchor({ hudAnchor }) {
   if (!hudAnchor) {
@@ -634,7 +636,245 @@ function ImpactStatBlock({ block, resolveTo, ownership, hudAnchor }) {
   );
 }
 
-function BillboardBlock({ block, resolveTo, ownership, hudAnchor }) {
+export function HomeDoTheMathBadge({ linkTarget = '/calculators' }) {
+  const badgeRef = useRef(null);
+  const pressTimerRef = useRef(0);
+  const hasTriggeredPressInViewRef = useRef(false);
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [isPressing, setIsPressing] = useState(false);
+  const [pressCycle, setPressCycle] = useState(0);
+  const [hoveredButtonId, setHoveredButtonId] = useState('');
+  const buttonLinks = [
+    { id: 'plus', label: 'Open calculators' },
+    { id: 'minus', label: 'Open calculators' },
+    { id: 'times', label: 'Open calculators' },
+    { id: 'equals', label: 'Open calculators' },
+  ];
+  const isExternalTarget = isExternalLinkHref(linkTarget);
+
+  useEffect(() => {
+    const node = badgeRef.current;
+    if (!node) {
+      return undefined;
+    }
+    if (typeof window === 'undefined') {
+      setIsRevealed(true);
+      return undefined;
+    }
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setIsRevealed(true);
+      return undefined;
+    }
+    if (typeof window.IntersectionObserver !== 'function') {
+      setIsRevealed(true);
+      return undefined;
+    }
+
+    const clearPressTimer = () => {
+      if (pressTimerRef.current) {
+        window.clearTimeout(pressTimerRef.current);
+        pressTimerRef.current = 0;
+      }
+    };
+    const triggerPressCycle = () => {
+      clearPressTimer();
+      setIsPressing(false);
+      window.requestAnimationFrame(() => {
+        setPressCycle((current) => current + 1);
+        setIsPressing(true);
+      });
+      pressTimerRef.current = window.setTimeout(() => {
+        setIsPressing(false);
+        pressTimerRef.current = 0;
+      }, HOME_DO_THE_MATH_PRESS_SEQUENCE_MS);
+    };
+    const evaluateBadgePosition = () => {
+      const rect = node.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+      if (!viewportHeight || rect.height <= 0) {
+        return;
+      }
+
+      const visibleTop = Math.max(rect.top, 0);
+      const visibleBottom = Math.min(rect.bottom, viewportHeight);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      const visibleRatio = visibleHeight / Math.max(rect.height, 1);
+
+      if (visibleRatio >= 0.08 && rect.top <= viewportHeight * 0.97) {
+        setIsRevealed(true);
+      }
+
+      const isWithinPressWindow = visibleRatio >= 0.18
+        && rect.top <= viewportHeight * 0.82
+        && rect.bottom >= viewportHeight * 0.2;
+
+      if (!isWithinPressWindow) {
+        hasTriggeredPressInViewRef.current = false;
+        return;
+      }
+
+      if (!hasTriggeredPressInViewRef.current) {
+        hasTriggeredPressInViewRef.current = true;
+        triggerPressCycle();
+      }
+    };
+
+    const revealObserver = new window.IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setIsRevealed(true);
+          revealObserver.disconnect();
+        }
+      });
+    }, {
+      threshold: 0.08,
+      rootMargin: '0px 0px -3% 0px',
+    });
+
+    const pressObserver = new window.IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          hasTriggeredPressInViewRef.current = false;
+          return;
+        }
+        if (entry.intersectionRatio >= 0.18 && !hasTriggeredPressInViewRef.current) {
+          hasTriggeredPressInViewRef.current = true;
+          triggerPressCycle();
+        }
+      });
+    }, {
+      threshold: 0.18,
+      rootMargin: '0px 0px -12% 0px',
+    });
+
+    revealObserver.observe(node);
+    pressObserver.observe(node);
+    evaluateBadgePosition();
+    window.addEventListener('resize', evaluateBadgePosition, { passive: true });
+
+    return () => {
+      revealObserver.disconnect();
+      pressObserver.disconnect();
+      window.removeEventListener('resize', evaluateBadgePosition);
+      clearPressTimer();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={badgeRef}
+      className={`home-math-badge${isRevealed ? ' is-revealed' : ''}${isPressing ? ' is-pressing' : ''}`}
+      data-home-math-press-cycle={String(pressCycle)}
+      data-home-math-badge="true"
+      data-home-math-hovered-button={hoveredButtonId || undefined}
+    >
+      <svg viewBox="0 0 297.1 295.3" role="presentation" focusable="false">
+        <g
+          className={`home-math-badge-button home-math-badge-button--plus${hoveredButtonId === 'plus' ? ' is-hover-pressed' : ''}`}
+          style={{
+            '--home-math-badge-delay': '0ms',
+            '--home-math-fill-rest': 'transparent',
+            '--home-math-stroke-rest': 'var(--ag-color-atlantean)',
+            '--home-math-symbol-rest': 'var(--ag-color-atlantean)',
+            '--home-math-fill-active': 'var(--ag-color-atlantean)',
+            '--home-math-stroke-active': 'var(--ag-color-atlantean-dark)',
+            '--home-math-symbol-active': '#ffffff',
+          }}
+        >
+          <circle className="home-math-badge-circle home-math-badge-circle--outline" cx="71.9" cy="71.9" r="68.7" />
+          <line className="home-math-badge-symbol" x1="36.5" y1="71.9" x2="107.2" y2="71.9" />
+          <line className="home-math-badge-symbol" x1="71.9" y1="107.2" x2="71.9" y2="36.5" />
+        </g>
+        <g
+          className={`home-math-badge-button home-math-badge-button--minus${hoveredButtonId === 'minus' ? ' is-hover-pressed' : ''}`}
+          style={{
+            '--home-math-badge-delay': '180ms',
+            '--home-math-fill-rest': 'transparent',
+            '--home-math-stroke-rest': 'var(--ag-color-atlantean)',
+            '--home-math-symbol-rest': 'var(--ag-color-atlantean)',
+            '--home-math-fill-active': 'var(--ag-color-atlantean)',
+            '--home-math-stroke-active': 'var(--ag-color-atlantean-dark)',
+            '--home-math-symbol-active': '#ffffff',
+          }}
+        >
+          <circle className="home-math-badge-circle home-math-badge-circle--outline" cx="225.3" cy="71.9" r="68.7" />
+          <line className="home-math-badge-symbol" x1="189.9" y1="71.9" x2="260.6" y2="71.9" />
+        </g>
+        <g
+          className={`home-math-badge-button home-math-badge-button--times${hoveredButtonId === 'times' ? ' is-hover-pressed' : ''}`}
+          style={{
+            '--home-math-badge-delay': '360ms',
+            '--home-math-fill-rest': 'transparent',
+            '--home-math-stroke-rest': 'var(--ag-color-atlantean)',
+            '--home-math-symbol-rest': 'var(--ag-color-atlantean)',
+            '--home-math-fill-active': 'var(--ag-color-atlantean)',
+            '--home-math-stroke-active': 'var(--ag-color-atlantean-dark)',
+            '--home-math-symbol-active': '#ffffff',
+          }}
+        >
+          <circle className="home-math-badge-circle home-math-badge-circle--outline" cx="71.9" cy="223.5" r="68.7" />
+          <line className="home-math-badge-symbol" x1="46.8" y1="248.5" x2="96.9" y2="198.5" />
+          <line className="home-math-badge-symbol" x1="96.9" y1="248.5" x2="46.8" y2="198.5" />
+        </g>
+        <g
+          className={`home-math-badge-button home-math-badge-button--equals${hoveredButtonId === 'equals' ? ' is-hover-pressed' : ''}`}
+          style={{
+            '--home-math-badge-delay': '540ms',
+            '--home-math-fill-rest': 'var(--ag-color-mango)',
+            '--home-math-stroke-rest': 'var(--ag-color-mango)',
+            '--home-math-symbol-rest': '#ffffff',
+            '--home-math-fill-active': '#de9208',
+            '--home-math-stroke-active': '#de9208',
+            '--home-math-symbol-active': '#ffffff',
+          }}
+        >
+          <circle className="home-math-badge-circle home-math-badge-circle--filled" cx="225.3" cy="223.5" r="68.7" />
+          <line className="home-math-badge-symbol home-math-badge-symbol--light" x1="195.9" y1="238.7" x2="254.7" y2="238.7" />
+          <line className="home-math-badge-symbol home-math-badge-symbol--light" x1="195.9" y1="208.3" x2="254.7" y2="208.3" />
+        </g>
+      </svg>
+      <div className="home-math-badge-hotspots" aria-label="Open calculators">
+        {buttonLinks.map((button) => (
+          isExternalTarget ? (
+            <a
+              key={button.id}
+              href={linkTarget}
+              className={`home-math-badge-hotspot home-math-badge-hotspot--${button.id}`}
+              aria-label={button.label}
+              onMouseEnter={() => setHoveredButtonId(button.id)}
+              onMouseLeave={() => setHoveredButtonId('')}
+              onFocus={() => setHoveredButtonId(button.id)}
+              onBlur={() => setHoveredButtonId('')}
+            >
+              <span className="sr-only">{button.label}</span>
+            </a>
+          ) : (
+            <Link
+              key={button.id}
+              to={linkTarget}
+              className={`home-math-badge-hotspot home-math-badge-hotspot--${button.id}`}
+              aria-label={button.label}
+              onMouseEnter={() => setHoveredButtonId(button.id)}
+              onMouseLeave={() => setHoveredButtonId('')}
+              onFocus={() => setHoveredButtonId(button.id)}
+              onBlur={() => setHoveredButtonId('')}
+            >
+              <span className="sr-only">{button.label}</span>
+            </Link>
+          )
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function BillboardBlock({
+  block,
+  resolveTo,
+  ownership,
+  hudAnchor,
+  extraSectionClassName = '',
+}) {
   const runtime = buildDynamicBillboardFromBlock(block);
   if (!runtime) {
     return null;
@@ -649,16 +889,28 @@ function BillboardBlock({ block, resolveTo, ownership, hudAnchor }) {
   const railStyle = runtime.contentMaxWidthPx
     ? { '--dynamic-billboard-max-width': `${runtime.contentMaxWidthPx}px` }
     : undefined;
-  const sectionClassName = `service-native-section home-native-billboard is-bg-${normalizePanelBgTone(runtime.bgTone || 'grey')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`;
+  const sectionClassName = [
+    'service-native-section',
+    'home-native-billboard',
+    `is-bg-${normalizePanelBgTone(runtime.bgTone || 'grey')}`,
+    `is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
+    extraSectionClassName,
+    ownership?.className || '',
+  ].filter(Boolean).join(' ');
+  const blockId = String(block?.id || '').trim();
+  const blockPresetId = String(block?.presetId || '').trim();
+  const isHomeDoTheMath = blockId === HOME_DO_THE_MATH_BLOCK_ID || blockPresetId === 'do-the-math';
+  const effectiveJustify = runtime.justify || 'center';
   const copyClassName = [
     'native-info-section-copy',
-    `is-justify-${runtime.justify || 'center'}`,
+    `is-justify-${effectiveJustify}`,
     runtime.copyClassName || '',
   ].filter(Boolean).join(' ');
+  const mathBadgeLinkTarget = actions[0]?.to || actions[0]?.href || '/calculators';
 
   return (
     <section
-      className={`${sectionClassName}${ownership?.className || ''}`}
+      className={sectionClassName}
       data-block-id={block?.id || undefined}
       style={sectionStyle}
     >
@@ -666,6 +918,7 @@ function BillboardBlock({ block, resolveTo, ownership, hudAnchor }) {
       <SharedBlockHudAnchor hudAnchor={hudAnchor} />
       <div className="ag-panel-rail" style={railStyle}>
         <div className={copyClassName} style={runtime.copyStyle || undefined} data-fade-root-margin={runtime.copyFadeRootMargin || undefined}>
+          {isHomeDoTheMath ? <HomeDoTheMathBadge linkTarget={mathBadgeLinkTarget} /> : null}
           {runtime.title ? (
             <h2 className={runtime.titleClassName || undefined} style={runtime.titleStyle}>
               {runtime.titleHighlights?.length
@@ -693,7 +946,10 @@ function BillboardBlock({ block, resolveTo, ownership, hudAnchor }) {
             </div>
           ) : null}
           {actions.length ? (
-            <div className="service-native-action-row">
+            <div
+              className={`service-native-action-row${effectiveJustify === 'center' ? ' is-centered' : ''}${effectiveJustify === 'right' ? ' is-right' : ''}${effectiveJustify === 'left' ? ' is-left' : ''}`}
+              style={buildBillboardActionRowStyle(effectiveJustify)}
+            >
               {actions.map((action) => (
                 <BillboardAction
                   key={`${action.href || action.to || action.label}-${action.label}`}
@@ -791,6 +1047,17 @@ function BillboardAction({ item }) {
       {item.label}
     </Link>
   );
+}
+
+function buildBillboardActionRowStyle(justify) {
+  const token = String(justify || '').trim().toLowerCase();
+  if (token === 'right') {
+    return { justifyContent: 'flex-end' };
+  }
+  if (token === 'left') {
+    return { justifyContent: 'flex-start' };
+  }
+  return { justifyContent: 'center' };
 }
 
 function buildColumnsAction(label, url, style, tone, pageRef, resolveTo, useFamilyPresetCtaStyle = false) {

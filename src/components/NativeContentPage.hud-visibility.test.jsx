@@ -197,6 +197,12 @@ describe('NativeContentPage HUD visibility boundaries', () => {
         breadcrumbLabel: 'Test CTA HUD',
         parentPath: '/services',
       },
+      '/services/retirement/403b': {
+        path: '/services/retirement/403b',
+        title: '403(b)',
+        breadcrumbLabel: '403(b)',
+        parentPath: '/services/retirement',
+      },
     };
   });
 
@@ -1151,6 +1157,53 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(retireHeadings[0]?.closest('section')?.className).toContain('dynamic-billboard');
     expect(rolloverHeadings[0]?.closest('section')?.className).toContain('retirement-child-native-rollover');
     expect(rolloverHeadings[0]?.closest('section')?.className).toContain('dynamic-billboard');
+  });
+
+  it('maps the 403(b) rollover billboard into the native rollover section with the retirement rollover shell classes', () => {
+    mockBlocksByPath = {
+      '/services/retirement/403b': [
+        {
+          id: 'rollover_billboard',
+          name: 'Rollover Billboard',
+          kind: 'billboard',
+          mode: 'dynamic',
+          hidden: false,
+          settings: {
+            title: 'A rollover is easy. Smart, too.',
+            titleHighlightsJson: '[{"text":"Smart, too.","className":"is-melon"}]',
+            subtitle: '',
+            bodyHtml: '<p>Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple...and undeniably smart. One account. One login.</p>',
+            bgTone: 'grey',
+            textTone: 'white',
+            justify: 'center',
+            buttonLabel: 'Start a rollover',
+            buttonPageRef: '/services/retirement/rollovers',
+            targetSectionKey: 'class:retirement-child-native-rollover',
+            targetSectionClassName: 'retirement-child-native-rollover',
+          },
+          editableFields: [],
+        },
+      ],
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/403b',
+            title: '403(b)',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const rolloverHeadings = screen.getAllByRole('heading', { name: /A rollover is easy\..*Smart, too\./ });
+
+    expect(rolloverHeadings).toHaveLength(1);
+    expect(rolloverHeadings[0]?.closest('section')?.className).toContain('retirement-child-native-rollover');
+    expect(rolloverHeadings[0]?.closest('section')?.className).toContain('dynamic-billboard');
+    expect(rolloverHeadings[0]?.closest('section')?.className).toContain('retirement-rollover-billboard');
+    expect(rolloverHeadings[0]?.closest('section')?.className).toContain('retirement-everyday');
   });
 
   it('lets HUD users save draft from the page workflow strip', async () => {

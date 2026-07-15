@@ -10,8 +10,7 @@ import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../components/HeroHudEditorShared';
 import InvestmentsGrowthFeature from '../components/InvestmentsGrowthFeature';
 import SafeRichText from '../components/SafeRichText';
-import { ColumnsBlock } from '../components/blocks/PageBlocksRenderer';
-import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
+import { HomeDoTheMathBadge } from '../components/blocks/PageBlocksRenderer';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import {
   defaultRetirementCtaSettings,
@@ -56,12 +55,14 @@ import {
   buildDynamicSplitPanelFromBlock,
   heroAnimationClassForLine,
   isExternalLinkHref,
+  parseTextHighlights,
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
 import { getTokenSwatch } from '../lib/colorSystem';
 import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
 import { heroTitleSizeRemToRuntimeCss, normalizeHeroTitleLetterSpacingEm } from '../lib/heroTitleSize';
 import { buildHeroLineStyle } from '../lib/heroLineStyle';
+import { setupInvestmentsGrowthRevealMotion } from '../lib/investmentsGrowthReveal';
 
 const testimonials = [
   {
@@ -176,11 +177,156 @@ function getRetirementBillboardCopyClassName(runtime, usesScrollProgress) {
   ].join(' ');
 }
 
+function formatRetirementDailyBillboardTitleHtml(title, highlights) {
+  const rendered = renderTextWithHighlights(title, highlights);
+  if (!/Retire a little every day\.?/i.test(String(title || ''))) {
+    return rendered;
+  }
+  return rendered
+    .replace(/\s+(<[^>]+>every day<\/[^>]+>)\./i, '<br />$1.')
+    .replace(/\s+every day\./i, '<br />every day.');
+}
+
+function buildRetirementBillboardActionRowStyle(justify) {
+  const token = String(justify || '').trim().toLowerCase();
+  if (token === 'right') {
+    return { justifyContent: 'flex-end' };
+  }
+  if (token === 'left') {
+    return { justifyContent: 'flex-start' };
+  }
+  return { justifyContent: 'center' };
+}
+
+function normalizeLegacyInlineMarkedTitle(source, fallbackHighlights = []) {
+  const rawSource = String(source || '').trim();
+  if (!rawSource.includes('<mark')) {
+    return {
+      text: rawSource,
+      highlights: Array.isArray(fallbackHighlights) ? fallbackHighlights : [],
+    };
+  }
+
+  const highlights = [];
+  let plainText = '';
+  let cursor = 0;
+  const markPattern = /<mark\s+class="([^"]+)">([\s\S]*?)<\/mark>/gi;
+  let match;
+
+  while ((match = markPattern.exec(rawSource))) {
+    const [fullMatch, className = '', markedText = ''] = match;
+    const startIndex = match.index;
+    const precedingText = rawSource.slice(cursor, startIndex);
+    const cleanedMarkedText = String(markedText).replace(/<[^>]+>/g, '');
+
+    plainText += precedingText;
+    const highlightStart = plainText.length;
+    plainText += cleanedMarkedText;
+    const highlightEnd = plainText.length;
+
+    if (cleanedMarkedText && className) {
+      highlights.push({ start: highlightStart, end: highlightEnd, className });
+    }
+
+    cursor = startIndex + fullMatch.length;
+  }
+
+  plainText += rawSource.slice(cursor);
+  return {
+    text: plainText.replace(/\s+/g, ' ').trim(),
+    highlights: highlights.length ? highlights : (Array.isArray(fallbackHighlights) ? fallbackHighlights : []),
+  };
+}
+
+function buildRetirementHousingFeatureRuntime(block) {
+  if (!block || block.kind !== 'feature_panel' || block.mode !== 'dynamic') {
+    return null;
+  }
+
+  const settings = block.settings && typeof block.settings === 'object' ? block.settings : {};
+  const imageUrl = String(settings.imageUrl || '').trim();
+  const imageAlt = String(settings.imageAlt || '').trim();
+  const title = String(settings.title || '').trim();
+  const bodyHtml = String(settings.bodyHtml || '').trim();
+  const body = String(settings.body || '').trim();
+  const titleClassName = String(settings.titleClassName || '').trim();
+  const titleHighlights = parseTextHighlights(settings.titleHighlightsJson || '');
+  const actionLabel = String(settings.buttonLabel || '').trim();
+  const actionHref = String(settings.buttonUrl || '').trim();
+  const actionTo = String(settings.buttonPageRef || '').trim();
+  const actionStyle = String(settings.buttonStyle || '').trim();
+  const actionTone = String(settings.buttonTone || '').trim();
+  const action = actionLabel
+    ? {
+      label: actionLabel,
+      href: actionHref,
+      to: actionTo,
+      style: actionStyle,
+      tone: actionTone,
+      openInNewWindow: settings.buttonOpenInNewWindow === true,
+    }
+    : null;
+
+  if (!title && !bodyHtml && !body && !imageUrl && !action) {
+    return null;
+  }
+
+  return {
+    imageUrl,
+    imageAlt,
+    title,
+    titleClassName,
+    titleHighlights,
+    bodyHtml,
+    body,
+    action,
+  };
+}
+
+function buildRetirementDoTheMathRuntime(block) {
+  if (!block || block.kind !== 'columns' || block.mode !== 'dynamic') {
+    return null;
+  }
+
+  const settings = block.settings && typeof block.settings === 'object' ? block.settings : {};
+  const legacyTitleHighlights = parseTextHighlights(settings.col1TitleHighlightsJson || '');
+  const normalizedTitle = normalizeLegacyInlineMarkedTitle(settings.col1Title || '', legacyTitleHighlights);
+  const title = normalizedTitle.text;
+  const titleHighlights = normalizedTitle.highlights;
+  const body = String(settings.col1Body || '').trim();
+  const actionLabel = String(settings.col1ButtonLabel || '').trim();
+  const actionHref = String(settings.col1ButtonUrl || '').trim();
+  const actionTo = String(settings.col1ButtonPageRef || '').trim();
+  const actionStyle = String(settings.col1ButtonStyle || '').trim();
+  const actionTone = String(settings.col1ButtonTone || '').trim();
+  const action = actionLabel
+    ? {
+      label: actionLabel,
+      href: actionHref,
+      to: actionTo,
+      style: actionStyle,
+      tone: actionTone,
+      openInNewWindow: false,
+    }
+    : null;
+
+  if (!title && !body && !action) {
+    return null;
+  }
+
+  return {
+    title,
+    titleHighlights,
+    body,
+    action,
+  };
+}
+
 const RETIREMENT_HERO_HUD_PANEL_ID = 'retirement-hero';
 const RETIREMENT_INTRO_HUD_PANEL_ID = 'retirement-intro';
 const RETIREMENT_BILLBOARD_HUD_PANEL_ID = 'retirement-billboard';
 const RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID = 'retirement-rollover-billboard';
-const RETIREMENT_COLUMNS_MHA_HUD_PANEL_ID = 'retirement-columns-mha';
+const RETIREMENT_HOUSING_FEATURE_HUD_PANEL_ID = 'retirement-housing-feature';
 const RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID = 'retirement-columns-math';
 const RETIREMENT_CTA_HUD_PANEL_ID = 'retirement-cta';
 const RETIREMENT_TESTIMONIALS_HUD_PANEL_ID = 'retirement-testimonials';
@@ -190,7 +336,7 @@ const RETIREMENT_HUD_PANEL_ID_BY_BLOCK_ID = {
   intro: RETIREMENT_INTRO_HUD_PANEL_ID,
   billboard: RETIREMENT_BILLBOARD_HUD_PANEL_ID,
   rollover_billboard: RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID,
-  columns_mha: RETIREMENT_COLUMNS_MHA_HUD_PANEL_ID,
+  housing_feature: RETIREMENT_HOUSING_FEATURE_HUD_PANEL_ID,
   columns_math: RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID,
   cta_form: RETIREMENT_CTA_HUD_PANEL_ID,
   testimonials: RETIREMENT_TESTIMONIALS_HUD_PANEL_ID,
@@ -201,51 +347,12 @@ const RETIREMENT_HUD_ANCHOR_SELECTOR_BY_BLOCK_ID = {
   intro: '.service-native-intro',
   billboard: '.retirement-everyday',
   rollover_billboard: '.retirement-rollover-billboard',
-  columns_mha: '.native-dynamic-columns[data-block-id="columns_mha"]',
-  columns_math: '.native-dynamic-columns[data-block-id="columns_math"]',
+  housing_feature: '.retirement-ministers-housing-feature',
+  columns_math: '.retirement-do-the-math-billboard',
   cta_form: '.native-dynamic-cta',
   testimonials: '.native-dynamic-testimonials, .test-dynamic-testimonials',
   split_options: '.retirement-accounts-section',
 };
-const RETIREMENT_BLUEPRINT_BLOCKS = Object.freeze(
-  Array.isArray(contentBlockBlueprintsByPath['/services/retirement'])
-    ? contentBlockBlueprintsByPath['/services/retirement']
-    : [],
-);
-
-function buildRetirementCanonicalBlocks(blocks) {
-  const sourceBlocks = Array.isArray(blocks) ? blocks.filter((block) => block && typeof block === 'object') : [];
-  if (!RETIREMENT_BLUEPRINT_BLOCKS.length) {
-    return sourceBlocks;
-  }
-
-  const sourceById = new Map(
-    sourceBlocks
-      .map((block) => [String(block?.id || '').trim(), block])
-      .filter(([blockId]) => Boolean(blockId)),
-  );
-  const ordered = [];
-  const seen = new Set();
-
-  RETIREMENT_BLUEPRINT_BLOCKS.forEach((blueprintBlock) => {
-    const blockId = String(blueprintBlock?.id || '').trim();
-    if (!blockId) {
-      return;
-    }
-    ordered.push(sourceById.get(blockId) || blueprintBlock);
-    seen.add(blockId);
-  });
-
-  sourceBlocks.forEach((block) => {
-    const blockId = String(block?.id || '').trim();
-    if (!blockId || seen.has(blockId)) {
-      return;
-    }
-    ordered.push(block);
-  });
-
-  return ordered;
-}
 
 const DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS = {
   presentation: 'certificate_cards',
@@ -437,11 +544,55 @@ function computeProjection(current, monthly, monthlyRate, months) {
     + monthly * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
 }
 
+function DynamicActionLink({ action, resolveManagedPathFromRef }) {
+  if (!action?.label) {
+    return null;
+  }
+
+  const rawTo = String(action.to || '').trim();
+  const rawHref = String(action.href || '').trim();
+  const resolvedTo = rawTo && typeof resolveManagedPathFromRef === 'function'
+    ? (resolveManagedPathFromRef(rawTo, rawTo) || rawTo)
+    : rawTo;
+  const internalTarget = resolvedTo || (rawHref && !isExternalLinkHref(rawHref) && rawHref.startsWith('/') ? rawHref : '');
+  const className = actionButtonClassName(action.style, action.tone);
+
+  if (internalTarget) {
+    return (
+      <Link
+        to={internalTarget}
+        className={className}
+        target={action.openInNewWindow ? '_blank' : undefined}
+        rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
+      >
+        {action.label}
+      </Link>
+    );
+  }
+
+  const externalTarget = rawHref || resolvedTo;
+  if (!externalTarget) {
+    return null;
+  }
+
+  return (
+    <a
+      href={externalTarget}
+      className={className}
+      target={action.openInNewWindow ? '_blank' : undefined}
+      rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
+    >
+      {action.label}
+    </a>
+  );
+}
+
 export default function RetirementPage() {
   const pageRef = useRef(null);
   const heroSectionRef = useRef(null);
   const introSectionRef = useRef(null);
   const billboardSectionRef = useRef(null);
+  const housingFeatureSectionRef = useRef(null);
   const billboardCopyRef = useRef(null);
   const rolloverBillboardSectionRef = useRef(null);
   const rolloverBillboardCopyRef = useRef(null);
@@ -463,6 +614,7 @@ export default function RetirementPage() {
     clearActiveBlockLock = () => ({ ok: false }),
     getBlockCollaboration = () => null,
     devIdentity = null,
+    resolveManagedPathFromRef = (_pathRef, fallback = '/') => fallback,
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
     registerExternalDraftFlushHandler = null,
@@ -513,7 +665,11 @@ export default function RetirementPage() {
   const [introHeadingSelection, setIntroHeadingSelection] = useState({ start: 0, end: 0, text: '' });
   const [introBodyMiniEditorEnabled, setIntroBodyMiniEditorEnabled] = useState(false);
   const managedBlocksSource = useMemo(
-    () => buildRetirementCanonicalBlocks(managedBlocksByPath?.['/services/retirement']),
+    () => (
+      Array.isArray(managedBlocksByPath?.['/services/retirement'])
+        ? managedBlocksByPath['/services/retirement'].filter((block) => block && typeof block === 'object')
+        : []
+    ),
     [managedBlocksByPath],
   );
   const { blocks: managedBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({
@@ -560,10 +716,10 @@ export default function RetirementPage() {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const columnsMhaBlock = useMemo(() => (
+  const housingFeatureBlock = useMemo(() => (
     managedBlocks.find((block) => (
-      block?.id === 'columns_mha'
-      && block?.kind === 'columns'
+      block?.id === 'housing_feature'
+      && block?.kind === 'feature_panel'
       && block?.mode === 'dynamic'
       && block?.hidden !== true
       && block?.hidden !== 'true'
@@ -697,6 +853,22 @@ export default function RetirementPage() {
     }),
     [splitPanelBlock],
   );
+  const housingFeatureRuntime = useMemo(
+    () => buildRetirementHousingFeatureRuntime(housingFeatureBlock),
+    [housingFeatureBlock],
+  );
+  const retirementDoTheMathRuntime = useMemo(
+    () => buildRetirementDoTheMathRuntime(columnsMathBlock),
+    [columnsMathBlock],
+  );
+  const housingFeatureSectionStyle = useMemo(
+    () => (housingFeatureRuntime?.imageUrl ? { backgroundImage: `url("${housingFeatureRuntime.imageUrl}")` } : undefined),
+    [housingFeatureRuntime],
+  );
+  useEffect(() => {
+    const housingRoot = housingFeatureSectionRef.current;
+    return setupInvestmentsGrowthRevealMotion(housingRoot, { includeBackgroundMotion: false });
+  }, [housingFeatureRuntime]);
   const heroHudLineHeight = Number.isFinite(Number(heroHudSettings.lineHeight))
     ? Number(heroHudSettings.lineHeight)
     : RETIREMENT_HERO_BASE_LINE_HEIGHT;
@@ -729,6 +901,7 @@ export default function RetirementPage() {
     () => getRetirementBillboardCopyClassName(renderedBillboard, billboardCopyUsesScrollProgress),
     [billboardCopyUsesScrollProgress, renderedBillboard],
   );
+  const renderedBillboardJustify = 'right';
   const renderedBillboardTitleStyle = renderedBillboard?.titleStyle || {};
   const rolloverBillboardCopyUsesScrollProgress = renderedRolloverBillboard?.scrollReveal === 'scale-up';
   const rolloverBillboardCopyClassName = useMemo(
@@ -920,6 +1093,7 @@ export default function RetirementPage() {
   const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanelId);
   const isHeroHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_HERO_HUD_PANEL_ID;
   const isIntroHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_INTRO_HUD_PANEL_ID;
+  const isColumnsMathHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID;
   const isBillboardHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_BILLBOARD_HUD_PANEL_ID;
   const isRolloverBillboardHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID;
   const isCtaHudFocusTarget = hasOpenHudPanel && activeHudPanelId === RETIREMENT_CTA_HUD_PANEL_ID;
@@ -2092,29 +2266,138 @@ export default function RetirementPage() {
         </div>
       </section>
 
-      {columnsMhaBlock ? (
-        <ColumnsBlock
-          block={columnsMhaBlock}
-          resolveTo={(value) => value}
-          ownership={getOwnershipVisualForBlockId('columns_mha')}
-          hudAnchor={renderHudAnchor('columns_mha')}
-          extraSectionClassName={getHudBlockStateClassName('columns_mha')}
-        />
+      {housingFeatureBlock && housingFeatureRuntime ? (
+        <section
+          ref={housingFeatureSectionRef}
+          className={`service-native-section retirement-ministers-housing-feature is-bg-sand is-text-dark${showFrontHud ? ' has-admin-front-hud' : ''}${getHudBlockStateClassName('housing_feature')}${getOwnershipVisualForBlockId('housing_feature').className || ''}`}
+          data-block-id="housing_feature"
+          style={housingFeatureSectionStyle}
+        >
+          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('housing_feature')} />
+          {renderHudAnchor('housing_feature')}
+          <div className="ag-panel-rail">
+            <div className="retirement-ministers-housing-feature-shell">
+              {housingFeatureRuntime.title ? (
+                <h2
+                  className={`retirement-ministers-housing-feature-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title${housingFeatureRuntime.titleClassName ? ` ${housingFeatureRuntime.titleClassName}` : ''}`}
+                  data-investments-growth-reveal="title"
+                  data-investments-growth-start-vh="0.98"
+                  data-investments-growth-end-vh="0.48"
+                  data-investments-growth-anchor-ratio="0.22"
+                  data-investments-growth-anchor-max-px="120"
+                  data-investments-growth-min-opacity="0.24"
+                  data-investments-growth-base-scale="0.945"
+                  data-investments-growth-shift-y="34"
+                >
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: renderTextWithHighlights(housingFeatureRuntime.title, housingFeatureRuntime.titleHighlights),
+                    }}
+                  />
+                </h2>
+              ) : null}
+              {housingFeatureRuntime.bodyHtml || housingFeatureRuntime.body ? (
+                <div
+                  className="retirement-ministers-housing-feature-body investments-growth-scroll-reveal"
+                  data-investments-growth-reveal="card"
+                  data-investments-growth-start-vh="1.08"
+                  data-investments-growth-end-vh="0.54"
+                  data-investments-growth-anchor-ratio="0.28"
+                  data-investments-growth-anchor-max-px="154"
+                  data-investments-growth-min-opacity="0.18"
+                  data-investments-growth-base-scale="1"
+                  data-investments-growth-shift-y="52"
+                >
+                  {housingFeatureRuntime.bodyHtml ? (
+                    <SafeRichText as="div" html={housingFeatureRuntime.bodyHtml} />
+                  ) : (
+                    <p>{housingFeatureRuntime.body}</p>
+                  )}
+                </div>
+              ) : null}
+              {housingFeatureRuntime.action ? (
+                <div
+                  className="service-native-action-row is-centered investments-growth-scroll-reveal"
+                  data-investments-growth-reveal="card"
+                  data-investments-growth-start-vh="1.08"
+                  data-investments-growth-end-vh="0.54"
+                  data-investments-growth-anchor-ratio="0.28"
+                  data-investments-growth-anchor-max-px="154"
+                  data-investments-growth-min-opacity="0.18"
+                  data-investments-growth-base-scale="1"
+                  data-investments-growth-shift-y="52"
+                >
+                  <DynamicActionLink action={housingFeatureRuntime.action} resolveManagedPathFromRef={resolveManagedPathFromRef} />
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </section>
       ) : null}
 
-      {columnsMathBlock ? (
-        <ColumnsBlock
-          block={columnsMathBlock}
-          resolveTo={(value) => value}
-          ownership={getOwnershipVisualForBlockId('columns_math')}
-          hudAnchor={renderHudAnchor('columns_math')}
-          extraSectionClassName={getHudBlockStateClassName('columns_math')}
-        />
+      {retirementDoTheMathRuntime ? (
+        <section
+          className={`service-native-section retirement-do-the-math-billboard${showFrontHud && columnsMathBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isColumnsMathHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('columns_math').className || ''}`}
+          data-block-id="columns_math"
+        >
+          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('columns_math')} />
+          {renderHudAnchor('columns_math')}
+          <div className="ag-panel-rail">
+            <div className="native-info-section-copy is-justify-left">
+              <HomeDoTheMathBadge
+                linkTarget={
+                  retirementDoTheMathRuntime.action?.to
+                  || retirementDoTheMathRuntime.action?.href
+                  || '/calculators'
+                }
+              />
+              {retirementDoTheMathRuntime.title ? (
+                <h2>
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: renderTextWithHighlights(
+                        retirementDoTheMathRuntime.title,
+                        retirementDoTheMathRuntime.titleHighlights,
+                      ),
+                    }}
+                  />
+                </h2>
+              ) : null}
+              {retirementDoTheMathRuntime.body ? (
+                <div className="native-info-rich-html">
+                  <p>{retirementDoTheMathRuntime.body}</p>
+                </div>
+              ) : null}
+              {retirementDoTheMathRuntime.action?.label && (retirementDoTheMathRuntime.action?.to || retirementDoTheMathRuntime.action?.href) ? (
+                <div className="service-native-action-row is-left">
+                  {(retirementDoTheMathRuntime.action.to
+                    || (retirementDoTheMathRuntime.action.href
+                    && !isExternalLinkHref(retirementDoTheMathRuntime.action.href)
+                    && retirementDoTheMathRuntime.action.href.startsWith('/'))) ? (
+                      <Link
+                        to={retirementDoTheMathRuntime.action.to || retirementDoTheMathRuntime.action.href}
+                        className={actionButtonClassName(retirementDoTheMathRuntime.action.style, retirementDoTheMathRuntime.action.tone)}
+                      >
+                        {retirementDoTheMathRuntime.action.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={retirementDoTheMathRuntime.action.href}
+                        className={actionButtonClassName(retirementDoTheMathRuntime.action.style, retirementDoTheMathRuntime.action.tone)}
+                      >
+                        {retirementDoTheMathRuntime.action.label}
+                      </a>
+                    )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </section>
       ) : null}
 
       <section
         ref={billboardSectionRef}
-        className={`service-native-section dynamic-billboard retirement-everyday is-bg-${renderedBillboard.bgTone || 'white'} is-text-${renderedBillboard.textTone || 'dark'}${showFrontHud && billboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('billboard').className || ''}`}
+        className={`service-native-section dynamic-billboard retirement-everyday is-bg-${renderedBillboard.bgTone || 'white'} is-text-${renderedBillboard.textTone || 'dark'} retirement-daily-billboard${showFrontHud && billboardBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBillboardHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('billboard').className || ''}`}
         data-block-id="billboard"
         style={billboardSectionStyle || undefined}
       >
@@ -2123,7 +2406,8 @@ export default function RetirementPage() {
         <div className="ag-panel-rail" style={billboardRailStyle || undefined}>
           <div
             ref={billboardCopyRef}
-            className={`native-info-section-copy${billboardCopyClassName ? ` ${billboardCopyClassName}` : ''} is-justify-${renderedBillboard.justify || 'center'}`}
+            className={`native-info-section-copy${billboardCopyClassName ? ` ${billboardCopyClassName}` : ''} is-justify-${renderedBillboardJustify}`}
+            style={renderedBillboard.copyStyle || undefined}
             data-fade-root-margin={billboardCopyUsesScrollProgress ? undefined : (renderedBillboard.copyFadeRootMargin || undefined)}
           >
             {renderedBillboard.title ? (
@@ -2138,7 +2422,10 @@ export default function RetirementPage() {
               >
                 <span
                   dangerouslySetInnerHTML={{
-                    __html: renderTextWithHighlights(renderedBillboard.title, renderedBillboard.titleHighlights),
+                    __html: formatRetirementDailyBillboardTitleHtml(
+                      renderedBillboard.title,
+                      renderedBillboard.titleHighlights,
+                    ),
                   }}
                 />
               </h2>
@@ -2163,7 +2450,10 @@ export default function RetirementPage() {
               </div>
             ) : null}
             {renderedBillboard.action?.label && (renderedBillboard.action?.to || renderedBillboard.action?.href) ? (
-              <div className={`service-native-action-row${(renderedBillboard.justify || 'center') === 'center' ? ' is-centered' : ''}${(renderedBillboard.justify || 'center') === 'right' ? ' is-right' : ''}`}>
+              <div
+                className={`service-native-action-row${renderedBillboardJustify === 'center' ? ' is-centered' : ''}${renderedBillboardJustify === 'right' ? ' is-right' : ''}${renderedBillboardJustify === 'left' ? ' is-left' : ''}`}
+                style={buildRetirementBillboardActionRowStyle(renderedBillboardJustify)}
+              >
                 {(renderedBillboard.action.to
                 || (renderedBillboard.action.href
                 && !isExternalLinkHref(renderedBillboard.action.href)
@@ -2204,6 +2494,7 @@ export default function RetirementPage() {
           <div
             ref={rolloverBillboardCopyRef}
             className={`native-info-section-copy${rolloverBillboardCopyClassName ? ` ${rolloverBillboardCopyClassName}` : ''} is-justify-${renderedRolloverBillboard.justify || 'center'}`}
+            style={renderedRolloverBillboard.copyStyle || undefined}
             data-fade-root-margin={rolloverBillboardCopyUsesScrollProgress ? undefined : (renderedRolloverBillboard.copyFadeRootMargin || undefined)}
           >
             {renderedRolloverBillboard.title ? (
@@ -2242,8 +2533,14 @@ export default function RetirementPage() {
                 <p>{renderedRolloverBillboard.body}</p>
               </div>
             ) : null}
-            {renderedRolloverBillboard.action?.label && (renderedRolloverBillboard.action?.to || renderedRolloverBillboard.action?.href) ? (
-              <div className={`service-native-action-row${(renderedRolloverBillboard.justify || 'center') === 'center' ? ' is-centered' : ''}${(renderedRolloverBillboard.justify || 'center') === 'right' ? ' is-right' : ''}`}>
+             {renderedRolloverBillboard.action?.label && (renderedRolloverBillboard.action?.to || renderedRolloverBillboard.action?.href) ? (
+               <div
+                 className={`service-native-action-row${(renderedRolloverBillboard.justify || 'center') === 'center' ? ' is-centered' : ''}${(renderedRolloverBillboard.justify || 'center') === 'right' ? ' is-right' : ''}${(renderedRolloverBillboard.justify || 'center') === 'left' ? ' is-left' : ''}`}
+                 style={{
+                   ...buildRetirementBillboardActionRowStyle(renderedRolloverBillboard.justify || 'center'),
+                   marginTop: 'clamp(2.32rem, 4.16vw, 3.08rem)',
+                 }}
+               >
                 {(renderedRolloverBillboard.action.to
                 || (renderedRolloverBillboard.action.href
                 && !isExternalLinkHref(renderedRolloverBillboard.action.href)

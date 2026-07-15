@@ -57,7 +57,7 @@ const RETIREMENT_403B_PLAN_FEATURE_CARDS = [
   {
     title: 'Roth / Pretax Deferrals',
     titleClassName: 'is-atlantean',
-    body: 'Choose how you want to save, and when you wish to be taxed.',
+    body: 'This option allows taxes to be paid on the contribution now, in order to provide tax-free withdrawals at retirement.',
   },
   {
     title: 'Rollovers',
@@ -2845,12 +2845,7 @@ const retirementChildPages = {
     sections: [
       {
         className: 'retirement-403b-native-benefits-copy',
-        title: 'With benefits like these…',
-        subtitle: 'Smart benefits, strong advantages',
-        body: [
-          'The AGFinancial flagship retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA. Choose from a variety of strategies.',
-          'Includes minister’s housing allowance, higher contribution limits, and more.',
-        ],
+        title: 'Benefits you’ll love.',
       },
       {
         className: 'retirement-403b-native-benefits-cards',
@@ -2860,9 +2855,20 @@ const retirementChildPages = {
         cards: RETIREMENT_403B_PLAN_FEATURE_CARDS,
       },
       {
-        className: 'retirement-403b-native-rate-table',
-        title: '403(b) Investment Rate',
-        widget: 'retirement-403b-rate-table',
+        className: 'retirement-403b-native-benefits-callout',
+        copyWrap: true,
+        justify: 'center',
+        title: 'Includes minister’s housing allowance...which you won’t find with an IRA. See details below.',
+        titleHighlights: [
+          { text: 'minister’s housing allowance', className: 'is-atlantean' },
+        ],
+        actions: [
+          {
+            label: 'Enroll in the 403(b)',
+            to: '/services/retirement/403b/403b-individual-enrollment',
+            className: 'is-outline is-tone-atlantean',
+          },
+        ],
       },
       {
         className: 'retirement-child-native-strategies retirement-403b-native-strategy-options',
@@ -2994,6 +3000,11 @@ const retirementChildPages = {
         ],
       },
       {
+        className: 'retirement-403b-native-rate-table',
+        title: '403(b) Investment Rate',
+        widget: 'retirement-403b-rate-table',
+      },
+      {
         className: 'retirement-child-native-table',
         title: 'Annual Contribution Limits',
         fineprintDisclosureId: 'retirement-403b-contribution-limits-disclosure',
@@ -3028,6 +3039,7 @@ const retirementChildPages = {
         actions: [{ label: 'Let’s simplify things', to: '/services/retirement/rollovers' }],
       },
       {
+        anchorId: 'retired-ministers-housing-allowance',
         className: 'retirement-403b-native-housing',
         hideTitle: true,
         feature: {
@@ -3437,6 +3449,7 @@ const retirementChildPages = {
       {
         className: 'retirement-child-native-cta retirement-ira-native-cta',
         copyWrap: true,
+        justify: 'right',
         title: 'Retire a little every day.',
         titleHighlights: [{ text: 'every day', className: 'is-mango' }],
         subtitle: 'Starting now.',

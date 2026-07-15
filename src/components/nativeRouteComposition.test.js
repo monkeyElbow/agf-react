@@ -13,6 +13,7 @@ describe('native route composition helpers', () => {
         { className: 'retirement-403b-native-strategy-enroll-cta', title: 'Strategy enroll CTA' },
         { className: 'retirement-child-native-qualify', title: 'Fallback qualify' },
         { className: 'retirement-child-native-enroll', title: 'Enroll' },
+        { className: 'retirement-child-native-rollover', title: 'Fallback rollover' },
         { className: 'retirement-child-native-table', title: 'Limits' },
       ],
     };
@@ -20,6 +21,7 @@ describe('native route composition helpers', () => {
       { blockId: 'investment_strategy_heading', className: 'dynamic-billboard', title: 'Strategy heading' },
       { blockId: 'investment_strategy_options', className: 'native-dynamic-grid', title: 'Strategy grid' },
       { blockId: 'who_qualifies', className: 'native-dynamic-grid', title: 'Qualify grid' },
+      { blockId: 'rollover_billboard', className: 'dynamic-billboard retirement-everyday retirement-rollover-billboard', title: 'Rollover billboard' },
       { blockId: 'newsletter_block', className: 'native-dynamic-newsletter', title: 'Newsletter' },
     ];
 
@@ -36,6 +38,7 @@ describe('native route composition helpers', () => {
       'Strategy enroll CTA',
       'Qualify grid',
       'Enroll',
+      'Rollover billboard',
       'Limits',
     ]);
     expect(result.remainingDynamicSections.map((section) => section.blockId)).toEqual(['newsletter_block']);

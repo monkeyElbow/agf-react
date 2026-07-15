@@ -692,6 +692,20 @@ function buildActionRowClassName(justify, fallback = 'left') {
   return 'service-native-action-row is-left';
 }
 
+function buildActionRowStyle(justify, fallback = 'left') {
+  const normalized = normalizeHeroJustify(
+    typeof justify === 'string' && justify.trim() ? justify : fallback,
+  );
+
+  if (normalized === 'center') {
+    return { justifyContent: 'center' };
+  }
+  if (normalized === 'right') {
+    return { justifyContent: 'flex-end' };
+  }
+  return { justifyContent: 'flex-start' };
+}
+
 function toBoolean(value) {
   if (typeof value === 'boolean') {
     return value;
@@ -891,7 +905,7 @@ function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {
   };
 }
 
-function buildNativeBillboardSection(block, { includeTestClassName = false } = {}) {
+function buildNativeBillboardSection(block, pathname, { includeTestClassName = false } = {}) {
   const runtime = buildDynamicBillboardFromBlock(block);
   if (!runtime) {
     return null;
@@ -906,13 +920,16 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
   const railStyle = runtime.contentMaxWidthPx
     ? { '--dynamic-billboard-max-width': `${runtime.contentMaxWidthPx}px` }
     : undefined;
+  const routeScopedClassName = pathname === '/services/retirement/403b' && String(block?.id || '').trim() === 'rollover_billboard'
+    ? ' retirement-everyday retirement-rollover-billboard'
+    : '';
 
   return {
     id: 'dynamic-billboard',
     blockId: String(block?.id || '').trim() || undefined,
     targetSectionKey: runtime.targetSectionKey || '',
     copyWrap: true,
-    className: `dynamic-billboard${includeTestClassName ? ' test-dynamic-billboard' : ''} is-bg-${normalizeHeroBgTone(runtime.bgTone || 'blue')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
+    className: `dynamic-billboard${includeTestClassName ? ' test-dynamic-billboard' : ''}${routeScopedClassName} is-bg-${normalizeHeroBgTone(runtime.bgTone || 'blue')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
     title: runtime.title,
     titleClassName: runtime.titleClassName || undefined,
     titleStyle: runtime.titleStyle,
@@ -4412,7 +4429,7 @@ export default function NativeContentPage({ page }) {
     const targetedDynamicBillboardSections = new Map();
 
     visibleBlocks.forEach((block) => {
-      const mappedSection = buildNativeBillboardSection(block, { includeTestClassName: isTestPage });
+      const mappedSection = buildNativeBillboardSection(block, activePath, { includeTestClassName: isTestPage });
       const targetKey = String(mappedSection?.targetSectionKey || '').trim();
       if (!mappedSection || !targetKey || targetedDynamicBillboardSections.has(targetKey)) {
         return;
@@ -4846,7 +4863,7 @@ export default function NativeContentPage({ page }) {
         if (consumedDynamicBillboardBlockIds.has(block.id)) {
           return acc;
         }
-        const billboardSection = buildNativeBillboardSection(block, { includeTestClassName: isTestPage });
+        const billboardSection = buildNativeBillboardSection(block, activePath, { includeTestClassName: isTestPage });
         if (billboardSection) {
           acc.push(billboardSection);
         }
@@ -6628,7 +6645,10 @@ export default function NativeContentPage({ page }) {
             ) : null}
 
             {section.actionsBeforeCards && Array.isArray(section.actions) && section.actions.length ? (
-              <div className={buildActionRowClassName(sectionJustifyToken, 'left')}>
+              <div
+                className={buildActionRowClassName(sectionJustifyToken, 'left')}
+                style={buildActionRowStyle(sectionJustifyToken, 'left')}
+              >
                 {section.actions.map((item) => (
                   <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
                 ))}
@@ -6961,7 +6981,10 @@ export default function NativeContentPage({ page }) {
             ) : null}
 
             {!section.actionsBeforeCards && Array.isArray(section.actions) && section.actions.length ? (
-              <div className={buildActionRowClassName(sectionJustifyToken, 'left')}>
+              <div
+                className={buildActionRowClassName(sectionJustifyToken, 'left')}
+                style={buildActionRowStyle(sectionJustifyToken, 'left')}
+              >
                 {section.actions.map((item) => (
                   <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
                 ))}
