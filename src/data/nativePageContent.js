@@ -3045,7 +3045,7 @@ const retirementChildPages = {
         feature: {
           image: ministersHousingImage,
           imageAlt: 'Living room with fireplace',
-          title: 'Retired Ministers Housing Allowance',
+          title: "Retired Ministers' Housing Allowance",
           body: [
             'The unique benefit—which gives ministers a significant tax savings—is not available through secular 403(b) plans or IRAs. It allows retired ministers to have distributions from the AGFinancial 403(b) plan designated as clergy housing allowance.',
             'The maximum housing allowance exemption in any tax year is the lesser of:',
@@ -3090,96 +3090,6 @@ const retirementChildPages = {
   },
   '/services/retirement/403b/403b-individual-enrollment': {
     pageClass: 'native-info-page--retirement-child native-info-page--retirement-403b',
-    hero: {
-      justify: 'center',
-      titleSizeRem: 4.8,
-      lineHeight: 0.92,
-      lines: [
-        {
-          title: 'AGFinancial 403(b)',
-          highlights: [{ text: '403', className: 'is-atlantean' }],
-        },
-        {
-          title: 'Individual Enrollment',
-          highlights: [{ text: 'Individual', className: 'is-mango' }],
-        },
-      ],
-      bgTone: 'white',
-    },
-    intro: {
-      heading: 'Start with the 403(b) plan summary.',
-      body: [
-        'Review the plan summary for eligibility, participation details, and key enrollment information before you complete your forms.',
-      ],
-      actions: [{ label: 'Download 403(b) Summary PDF', href: RETIREMENT_403B_PLAN_SUMMARY_URL }],
-      justify: 'center',
-      bgTone: 'blue',
-      textTone: 'white',
-    },
-    sections: [
-      {
-        className: 'retirement-child-native-qualify',
-        title: 'Confirm eligibility',
-        subtitle: 'The AGFinancial 403(b) Retirement Plan is available to these participant groups.',
-        fineprintDisclosureId: 'retirement-403b-501c3-note',
-        fullBleed: true,
-        columns: 'three',
-        cards: [
-          {
-            title: 'Self-employed credentialed ministers',
-            body: 'Assemblies of God credentialed ministers who are self-employed within the meaning of Internal Revenue Code 414(e)(5)(A)(i)(I). Example: an evangelist would qualify.',
-            cardClass: 'card2',
-          },
-          {
-            title: 'Ministers serving outside AG organizations',
-            body: 'Assemblies of God credentialed ministers who provide ministry-related services to organizations unrelated to the Assemblies of God, such as a chaplain. The employer may contribute, or the minister may contribute directly.',
-            cardClass: 'card2',
-          },
-          {
-            title: 'Employees of eligible employers',
-            body: 'Employees of an Assemblies of God church, the General Council, a District Council, or another organization controlled by or associated with the Assemblies of God that is tax-exempt under 501(c)(3).',
-            cardClass: 'card2',
-          },
-        ],
-        fineprint: [
-          '*501(c)(3) organizations are tax-exempt entities organized and operated exclusively for religious, charitable, scientific, testing for public safety, literary, or educational purposes, among other qualified purposes under the Internal Revenue Code.',
-        ],
-      },
-      {
-        className: 'retirement-child-native-strategies',
-        title: 'Complete your enrollment',
-        subtitle: 'Three steps. One clear path.',
-        fullBleed: true,
-        sand: true,
-        columns: 'three',
-        cards: [
-          {
-            title: '1. Complete the enrollment form',
-            body: 'Fill out the AGFinancial 403(b) Individual Enrollment form with the information needed to open your account.',
-            actions: [{ label: 'Download Enrollment Form', href: RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_FORM_URL }],
-            cardClass: 'card2 ministers-group-life-step-card',
-          },
-          {
-            title: '2. Return your enrollment form',
-            body: 'Send the completed enrollment form by mail, fax, or secure online submission.',
-            actions: [{ label: 'Submit securely online', href: RETIREMENT_SECURE_UPLOAD_URL }],
-            cardClass: 'card2 ministers-group-life-step-card',
-          },
-          {
-            title: '3. Complete payroll deduction',
-            body: 'Complete the Payroll Deduction Agreement Form to request pre-tax salary reduction contributions or after-tax Roth 403(b) contributions. Keep a copy for your records and send the original form to your employer.',
-            actions: [{ label: 'Download Payroll Deduction Form', href: RETIREMENT_403B_PAYROLL_DEDUCTION_FORM_URL }],
-            cardClass: 'card2 ministers-group-life-step-card',
-          },
-        ],
-        addressBlock: {
-          className: 'ministers-group-life-copy-address',
-          title: 'Mail or fax completed forms to:',
-          lines: ['AGFinancial', 'PO Box 2515', 'Springfield, MO 65801'],
-        },
-        fineprint: '**FAX:** 417.520.0406',
-      },
-    ],
   },
   '/services/retirement/403b/403b-group-enrollment': {
     pageClass: 'native-info-page--retirement-child native-info-page--retirement-403b',

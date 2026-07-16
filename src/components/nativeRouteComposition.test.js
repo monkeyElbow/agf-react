@@ -21,6 +21,8 @@ describe('native route composition helpers', () => {
       { blockId: 'investment_strategy_heading', className: 'dynamic-billboard', title: 'Strategy heading' },
       { blockId: 'investment_strategy_options', className: 'native-dynamic-grid', title: 'Strategy grid' },
       { blockId: 'who_qualifies', className: 'native-dynamic-grid', title: 'Qualify grid' },
+      { blockId: 'page_content', className: 'native-dynamic-page-content', title: 'Loans' },
+      { blockId: 'loan_apply', className: 'native-dynamic-grid', title: 'How to apply' },
       { blockId: 'rollover_billboard', className: 'dynamic-billboard retirement-everyday retirement-rollover-billboard', title: 'Rollover billboard' },
       { blockId: 'newsletter_block', className: 'native-dynamic-newsletter', title: 'Newsletter' },
     ];
@@ -32,14 +34,16 @@ describe('native route composition helpers', () => {
     });
 
     expect(result.nextBaseContent.sections.map((section) => section.title)).toEqual([
-      'Rates',
+      'Qualify grid',
       'Strategy heading',
       'Strategy grid',
       'Strategy enroll CTA',
-      'Qualify grid',
+      'Loans',
+      'How to apply',
       'Enroll',
-      'Rollover billboard',
+      'Rates',
       'Limits',
+      'Rollover billboard',
     ]);
     expect(result.remainingDynamicSections.map((section) => section.blockId)).toEqual(['newsletter_block']);
   });
@@ -63,7 +67,12 @@ describe('native route composition helpers', () => {
       dynamicSections,
     });
 
-    expect(result.nextBaseContent.sections).toEqual(baseContent.sections);
+    expect(result.nextBaseContent.sections).toEqual([
+      { className: 'retirement-child-native-qualify', title: 'Fallback qualify' },
+      { className: 'retirement-child-native-strategies retirement-403b-native-strategy-options', title: 'Fallback strategies' },
+      { className: 'retirement-403b-native-strategy-enroll-cta', title: 'Strategy enroll CTA' },
+      { className: 'retirement-child-native-enroll', title: 'Enroll' },
+    ]);
     expect(result.remainingDynamicSections).toEqual(dynamicSections);
   });
 

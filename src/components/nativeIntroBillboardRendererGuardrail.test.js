@@ -19,6 +19,7 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain('buildDynamicBillboardFromBlock,');
     expect(source).toContain("import { normalizeIntroLineSpacing } from '../lib/dynamicSectionTypography';");
     expect(source).toContain("function buildActionRowClassName(justify, fallback = 'left') {");
+    expect(source).toContain("function buildActionRowStyle(justify, fallback = 'left') {");
     expect(source).toContain('function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {');
     expect(source).toContain('const runtime = buildDynamicIntroFromBlock(block);');
     expect(source).toContain("className: `dynamic-intro is-bg-${normalizeSurfaceBgTone(runtime.bgTone, 'sand')} is-text-${normalizePanelTextTone(runtime.textTone, 'dark')}${includeTestClassName ? ' test-dynamic-intro' : ''}`");
@@ -31,6 +32,7 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain("const heroActionRowClass = buildActionRowClassName(heroActionJustify, 'center');");
     expect(source).toContain('className={buildActionRowClassName(introJustify, \'center\')}');
     expect(source).toContain("className={buildActionRowClassName(sectionJustifyToken, 'left')}");
+    expect(source).toContain("style={buildActionRowStyle(sectionJustifyToken, 'left')}");
     expect(source).toContain("const introBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'intro');");
     expect(source).toContain("const adminIntro = buildNativeIntroConfig(introBlock, { includeTestClassName: true });");
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'billboard') {");
@@ -100,8 +102,13 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(loansSource).toContain('visionFuelAction && visionFuelButtonLabel && visionFuelButtonHref');
     expect(cssSource).toContain('.loans-native-vision-fuel > .ag-panel-rail {');
     expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy {');
+    expect(cssSource).toContain('.service-native-section.dynamic-billboard > .ag-panel-rail {');
     expect(cssSource).toContain('width: min(100%, var(--dynamic-billboard-copy-max-width, 68rem));');
     expect(cssSource).toContain('justify-items: stretch;');
+    expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-left,');
+    expect(cssSource).toContain('justify-self: start;');
+    expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-right,');
+    expect(cssSource).toContain('justify-self: end;');
     expect(cssSource).toContain('.service-native-section.dynamic-billboard .native-info-section-copy > :is(h2, h3, p, .native-info-rich-html, .native-info-link-list, .service-native-action-row),');
     expect(cssSource).toContain('width: min(var(--dynamic-billboard-body-max-width, 760px), 100%);');
     expect(loansSource).toContain('renderHighlightedText(visionFuelTitle, resolvedVisionFuel.titleHighlights)');

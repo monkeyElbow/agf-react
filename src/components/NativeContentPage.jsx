@@ -26,6 +26,10 @@ import { useTestimonials } from '../context/TestimonialsContext';
 import { logHeroDriftWarningOnce } from '../lib/heroDriftWarnings';
 import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
 import {
+  isBlockOnlyManagedPagePath,
+  toBlockOnlyManagedPageShell,
+} from '../lib/managedPageShells';
+import {
   applySelectionColor,
   extractHeroLineColorToken,
   parseHeroRangeHighlights,
@@ -93,6 +97,7 @@ import {
 import NewsletterSignupForm from './NewsletterSignupForm';
 import SafeRichText from './SafeRichText';
 import {
+  buildConsultantCards,
   composeConsultantSections,
   composeRetirement403bSections,
 } from './nativeRouteComposition';
@@ -929,7 +934,8 @@ function buildNativeBillboardSection(block, pathname, { includeTestClassName = f
     blockId: String(block?.id || '').trim() || undefined,
     targetSectionKey: runtime.targetSectionKey || '',
     copyWrap: true,
-    className: `dynamic-billboard${includeTestClassName ? ' test-dynamic-billboard' : ''}${routeScopedClassName} is-bg-${normalizeHeroBgTone(runtime.bgTone || 'blue')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
+    anchorId: runtime.anchorId || undefined,
+    className: `dynamic-billboard${includeTestClassName ? ' test-dynamic-billboard' : ''}${routeScopedClassName}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${normalizeHeroBgTone(runtime.bgTone || 'blue')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
     title: runtime.title,
     titleClassName: runtime.titleClassName || undefined,
     titleStyle: runtime.titleStyle,
@@ -956,20 +962,49 @@ function buildDynamicPageContentSection(block, pathname) {
   }
 
   const {
+    title,
+    subtitle,
+    body,
     html,
+    widget,
+    table,
+    tableChartId,
+    fineprint,
+    fineprintDisclosureId,
+    fullBleed,
     spaceBeforeRem,
     spaceAfterRem,
     paddingTopRem,
     paddingBottomRem,
     contentMaxWidthPx,
+    anchorId,
+    sectionClassName,
+    copyWrap,
+    actions,
+    addressBlock,
   } = runtime;
+  const blockId = String(block?.id || '').trim() || 'page-content';
+  const sectionClassBase = pathname === '/test' ? 'test-dynamic-page-content' : 'native-dynamic-page-content';
 
   return {
-    id: `${pathname}-page-content`,
+    id: `${pathname}-page-content-${blockId}`,
     blockId: String(block?.id || '').trim() || undefined,
-    hideTitle: true,
-    className: pathname === '/test' ? 'test-dynamic-page-content' : 'native-dynamic-page-content',
+    hideTitle: !title,
+    anchorId: anchorId || undefined,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}`,
+    fullBleed: Boolean(fullBleed),
+    title,
+    subtitle: subtitle || undefined,
+    body: Array.isArray(body) ? body : [],
+    copyWrap: Boolean(copyWrap),
     html,
+    widget: widget || undefined,
+    table: table || undefined,
+    tableChartId: tableChartId || undefined,
+    fineprint: fineprint || undefined,
+    fineprintDisclosureId: fineprintDisclosureId || undefined,
+    actions: Array.isArray(actions) ? actions : [],
+    addressBlock: addressBlock || undefined,
     sectionStyle: {
       '--dyn-content-margin-top': `${spaceBeforeRem}rem`,
       '--dyn-content-margin-bottom': `${spaceAfterRem}rem`,
@@ -980,7 +1015,7 @@ function buildDynamicPageContentSection(block, pathname) {
   };
 }
 
-function buildDynamicGridSection(block, pathname) {
+function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}) {
   const runtime = buildDynamicGridFromBlock(block);
   if (!runtime) {
     return null;
@@ -991,11 +1026,17 @@ function buildDynamicGridSection(block, pathname) {
     title,
     titleClassName,
     titleHighlights,
+    subtitle,
     body,
     bodyHtml,
     bgTone,
     contentWidth,
     columns,
+    sectionClassName,
+    fullBleed,
+    sand,
+    consultantService,
+    locationFilter,
     cardStyle,
     titleTone,
     bodyTone,
@@ -1011,12 +1052,30 @@ function buildDynamicGridSection(block, pathname) {
   const hasIntroCopy = Boolean(title || body || bodyHtml);
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-grid' : 'native-dynamic-grid';
   const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('card_grid', presetId);
-  const cards = (Array.isArray(runtimeCards) ? runtimeCards : [])
+  const consultantCards = consultantService
+    ? buildConsultantCards({
+      consultantService,
+      pagePath: pathname,
+      getConsultants,
+    })
+    : [];
+  const cards = (consultantCards.length ? consultantCards : (Array.isArray(runtimeCards) ? runtimeCards : []))
     .map((card) => ({
       slot: card.slot,
       title: card.title,
       titleClassName: card.titleClassName,
       titleHighlights: Array.isArray(card.titleHighlights) ? card.titleHighlights : [],
+      titleSuffix: card.titleSuffix,
+      subtitle: card.subtitle,
+      phone: card.phone,
+      phoneHref: card.phoneHref,
+      messagePanel: Boolean(card.messagePanel),
+      messageCta: card.messageCta,
+      consultantEmail: card.consultantEmail,
+      states: Array.isArray(card.states) ? card.states : undefined,
+      service: card.service,
+      pagePath: card.pagePath,
+      inquiryLabel: card.inquiryLabel,
       body: card.body,
       list: Array.isArray(card.list) ? card.list : undefined,
       cardClass: card.cardClass,
@@ -1036,11 +1095,16 @@ function buildDynamicGridSection(block, pathname) {
     title,
     titleClassName: titleClassName || undefined,
     titleHighlights: titleHighlights.length ? titleHighlights : [],
+    subtitle: subtitle || undefined,
     body: body ? [body] : [],
     html: bodyHtml,
     copyWrap: hasIntroCopy,
     wide: contentWidth === 'browser',
+    fullBleed,
+    sand,
     columns,
+    locationFilter: locationFilter || undefined,
+    focusMessageCard: Boolean(locationFilter?.focusMessageCard),
     cards,
     sectionStyle: {
       '--dynamic-grid-card-padding': `${cardPaddingRem}rem`,
@@ -1049,7 +1113,7 @@ function buildDynamicGridSection(block, pathname) {
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
     },
     targetSectionKey: targetSectionKey || '',
-    className: `${sectionClassBase} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-divider-tone-${dividerTone} ${presetRuntimeClassName}${cardStyle === 'none' ? ' is-card-none' : ''}${showTitleDivider ? ' is-divider-on' : ' is-divider-off'}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-divider-tone-${dividerTone} ${presetRuntimeClassName}${cardStyle === 'none' ? ' is-card-none' : ''}${showTitleDivider ? ' is-divider-on' : ' is-divider-off'}`,
   };
 }
 
@@ -1227,7 +1291,8 @@ function buildDynamicCtaSection(block, pathname) {
     blockId: String(block?.id || '').trim() || undefined,
     targetSectionKey: runtime.targetSectionKey || '',
     copyWrap: true,
-    className: `${sectionClassBase} is-bg-${runtime.bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}`,
+    anchorId: runtime.anchorId || undefined,
+    className: `${sectionClassBase}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${runtime.bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}`,
     title: runtime.title,
     titleClassName: runtime.titleClassName || undefined,
     titleHighlights: runtime.titleHighlights?.length ? runtime.titleHighlights : [],
@@ -1341,7 +1406,9 @@ function buildDynamicFeaturePanelSection(block, pathname) {
     id: `${pathname}-dynamic-feature-panel-${String(block.id || 'feature-panel').trim() || 'feature-panel'}`,
     blockId: String(block?.id || '').trim() || undefined,
     targetSectionKey: runtime.targetSectionKey || '',
-    className: pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel',
+    anchorId: runtime.anchorId || undefined,
+    className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
+    fullBleed: Boolean(runtime.fullBleed),
     feature: {
       title: runtime.title,
       body: runtime.body ? [runtime.body] : [],
@@ -3821,9 +3888,9 @@ function MinisterHousingQuickCheckWidget() {
     </style>
   </head>
   <body>
-    <h1>Minister's Housing Allowance Quick Check</h1>
+    <h1>Ministers' Housing Allowance Quick Check</h1>
     <p class="muted">Generated ${escapeHtml(nowLabel)}</p>
-    <p class="muted">Educational estimate only. Consult your tax advisor and AGFinancial retirement consultant.</p>
+    <p class="muted">Educational estimate only. Review IRS guidance and consult your own tax advisor before filing.</p>
 
     <h2>Eligibility Checklist</h2>
     <ul>${checksHtml}</ul>
@@ -3848,7 +3915,7 @@ function MinisterHousingQuickCheckWidget() {
   }
 
   return (
-    <div className="retirement-403b-quickcheck-widget" aria-label="Minister's Housing Allowance Quick Check">
+    <div className="retirement-403b-quickcheck-widget" aria-label="Ministers' Housing Allowance Quick Check">
       <div className="ret403b-qc-stepper" role="tablist" aria-label="Quick check steps">
         {STEPS.map((step, index) => (
           <button
@@ -3995,9 +4062,6 @@ function MinisterHousingQuickCheckWidget() {
         <div className="ret403b-qc-actions">
           <button type="button" className="action-btn action-btn-primary" onClick={handleSavePdf}>
             Save PDF summary
-          </button>
-          <button type="button" className="action-btn action-btn-outline" disabled title="Coming soon">
-            Send to a consultant (coming soon)
           </button>
         </div>
       ) : null}
@@ -4311,6 +4375,7 @@ export default function NativeContentPage({ page }) {
   const activePath = String(page?.path || '').trim();
   const templatePath = String(page?.routeKey || page?.path || '').trim();
   const resolvedPagePath = String(activePath || templatePath || '/').trim() || '/';
+  const isBlockOnlyManagedPage = isBlockOnlyManagedPagePath(activePath || templatePath);
   const isTestPage = templatePath === '/test';
   const isLegacyGivingPage = resolvedPagePath === '/services/planned-giving';
   useNativeEnhancements(pageRef, templatePath);
@@ -4346,7 +4411,10 @@ export default function NativeContentPage({ page }) {
     : resolveManagedPathFromRef;
   const { addResponse } = useConsultantResponses();
   const { testimonials: testimonialsLibrary } = useTestimonials();
-  const baseContent = getNativePageContent(templatePath, page.title);
+  const baseNativeContent = getNativePageContent(templatePath, page.title);
+  const baseContent = isBlockOnlyManagedPage
+    ? toBlockOnlyManagedPageShell(baseNativeContent)
+    : baseNativeContent;
   const editableBlockPath = managedBlocksByPath[activePath]
     ? activePath
     : (managedBlocksByPath[templatePath] ? templatePath : '');
@@ -4447,7 +4515,7 @@ export default function NativeContentPage({ page }) {
     });
 
     visibleBlocks.forEach((block) => {
-      const mappedSection = buildDynamicGridSection(block, activePath);
+      const mappedSection = buildDynamicGridSection(block, activePath, { getConsultants });
       const targetKey = String(mappedSection?.targetSectionKey || '').trim();
       if (!mappedSection || !targetKey || targetedDynamicGridSections.has(targetKey)) {
         return;
@@ -4781,7 +4849,7 @@ export default function NativeContentPage({ page }) {
         if (consumedDynamicGridBlockIds.has(block.id)) {
           return acc;
         }
-        const gridSection = buildDynamicGridSection(block, activePath);
+        const gridSection = buildDynamicGridSection(block, activePath, { getConsultants });
         if (gridSection) {
           acc.push(gridSection);
         }
@@ -4880,11 +4948,16 @@ export default function NativeContentPage({ page }) {
       };
     }
 
-    const retirement403bComposition = composeRetirement403bSections({
-      pathname: activePath,
-      baseContent: nextBaseContent,
-      dynamicSections,
-    });
+    const retirement403bComposition = isBlockOnlyManagedPage
+      ? {
+        nextBaseContent,
+        remainingDynamicSections: dynamicSections,
+      }
+      : composeRetirement403bSections({
+        pathname: activePath,
+        baseContent: nextBaseContent,
+        dynamicSections,
+      });
     nextBaseContent = retirement403bComposition.nextBaseContent;
     let remainingDynamicSections = retirement403bComposition.remainingDynamicSections;
 
@@ -4931,7 +5004,7 @@ export default function NativeContentPage({ page }) {
       hideIntro: Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has('intro'),
       sections: nextSections,
     };
-  }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isTestPage, templatePath, testimonialsLibrary]);
+  }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, templatePath, testimonialsLibrary]);
   const contentWithManagedDisclosures = useMemo(() => ({
     ...content,
     preIntroSections: Array.isArray(content.preIntroSections)
@@ -5079,7 +5152,7 @@ export default function NativeContentPage({ page }) {
   );
   const renderedHero = dynamicHeroBlock
     ? {
-      ...heroBase,
+      ...(heroBase || {}),
       ...(renderedDynamicHero || {}),
       bgTone: renderedDynamicHero?.bgTone || heroHudSettings.bgTone,
       justify: renderedDynamicHero?.justify || heroHudSettings.justify,

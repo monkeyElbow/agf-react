@@ -290,6 +290,73 @@ function normalizeOptionalHtmlContent(value) {
   return (!html || html === '<p></p>' || html === '<p><br></p>') ? '' : html;
 }
 
+function parsePageContentTextLines(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((line) => String(line || '').trim())
+      .filter(Boolean);
+  }
+
+  return String(value || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function parsePageContentTableHeaders(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item || '').trim())
+      .filter(Boolean);
+  }
+
+  const raw = String(value || '').trim();
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .map((item) => String(item || '').trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function parsePageContentTableRows(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((row) => (Array.isArray(row)
+        ? row.map((cell) => String(cell || '').trim())
+        : null))
+      .filter((row) => Array.isArray(row) && row.length);
+  }
+
+  const raw = String(value || '').trim();
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .map((row) => (Array.isArray(row)
+        ? row.map((cell) => String(cell || '').trim())
+        : null))
+      .filter((row) => Array.isArray(row) && row.length);
+  } catch {
+    return [];
+  }
+}
+
 function buildSingleActionPromoRuntime(source, {
   includeBodyHtml = false,
   includeBgTone = false,
@@ -825,6 +892,8 @@ export function buildDynamicBillboardFromBlock(block) {
     titleClassName,
     titleHighlights,
     targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
+    anchorId: String(settings.anchorId || '').trim(),
+    sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     subtitle,
     subtitleClassName,
     subtitleDisplay,
@@ -969,6 +1038,9 @@ export function buildDynamicFeaturePanelFromBlock(block) {
   return {
     ...runtime,
     targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
+    anchorId: String(settings.anchorId || '').trim(),
+    sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
+    fullBleed: toBoolean(settings.fullBleed),
   };
 }
 
@@ -1538,6 +1610,8 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     titleClassName,
     titleHighlights,
     targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
+    anchorId: String(settings.anchorId || '').trim(),
+    sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     displayMode,
     triggerMode,
     bodyHtml,
@@ -1823,6 +1897,7 @@ export function buildDynamicGridFromBlock(block) {
   const title = String(settings.title || '').trim();
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
+  const subtitle = String(settings.subtitle || '').trim();
   const body = String(settings.body || '').trim();
   const bodyHtmlSource = String(settings.bodyHtml || '').trim();
   const bodyHtml = (!bodyHtmlSource || bodyHtmlSource === '<p></p>' || bodyHtmlSource === '<p><br></p>')
@@ -1831,6 +1906,21 @@ export function buildDynamicGridFromBlock(block) {
   const bgTone = normalizeGridBgTone(settings.bgTone || 'white');
   const contentWidth = normalizeDynamicGridWidth(settings.contentWidth);
   const columns = normalizeDynamicGridColumns(settings.columns);
+  const sectionClassName = sanitizeClassName(settings.sectionClassName || '');
+  const fullBleed = toBoolean(settings.fullBleed);
+  const sand = toBoolean(settings.sand);
+  const consultantService = String(settings.consultantService || '').trim().toLowerCase();
+  const locationFilter = toBoolean(settings.locationFilterEnabled)
+    ? {
+        type: 'state',
+        label: String(settings.locationFilterLabel || '').trim(),
+        ariaLabel: String(settings.locationFilterAriaLabel || '').trim(),
+        placeholder: String(settings.locationFilterPlaceholder || '').trim(),
+        requireSelection: toBoolean(settings.locationFilterRequireSelection),
+        messageLayout: 'toggle',
+        focusMessageCard: toBoolean(settings.locationFilterFocusMessageCard),
+      }
+    : null;
   const cardStyle = getGridSafeCardStyleForBg(settings.cardStyle, bgTone);
   const titleTone = getGridSafeToneForBg(settings.titleTone, bgTone, 'super-grey');
   const bodyTone = getGridSafeToneForBg(settings.bodyTone, bgTone, 'super-grey');
@@ -1898,7 +1988,7 @@ export function buildDynamicGridFromBlock(block) {
     })
     .filter(Boolean);
 
-  if (!title && !body && !bodyHtml && !cards.length) {
+  if (!title && !subtitle && !body && !bodyHtml && !cards.length && !consultantService) {
     return null;
   }
 
@@ -1907,11 +1997,17 @@ export function buildDynamicGridFromBlock(block) {
     title,
     titleClassName,
     titleHighlights,
+    subtitle,
     body,
     bodyHtml,
     bgTone,
     contentWidth,
     columns,
+    sectionClassName,
+    fullBleed,
+    sand,
+    consultantService,
+    locationFilter,
     cardStyle,
     titleTone,
     bodyTone,
@@ -2004,18 +2100,80 @@ export function buildDynamicPageContentFromBlock(block) {
   }
 
   const settings = block.settings || {};
+  const title = String(settings.title || '').trim();
+  const subtitle = String(settings.subtitle || '').trim();
+  const body = parsePageContentTextLines(settings.body);
   const html = String(settings.html || '').trim();
-  if (!html || html === '<p></p>' || html === '<p><br></p>') {
+  const widget = String(settings.widget || '').trim();
+  const fullBleed = toBoolean(settings.fullBleed);
+  const tableHeaders = parsePageContentTableHeaders(settings.tableHeadersJson);
+  const tableRows = parsePageContentTableRows(settings.tableRowsJson);
+  const table = tableHeaders.length && tableRows.length
+    ? {
+        headers: tableHeaders,
+        rows: tableRows,
+        valueAlignment: String(settings.tableValueAlignment || '').trim() || undefined,
+      }
+    : null;
+  const fineprint = parsePageContentTextLines(settings.fineprint);
+  const action = buildCanonicalActionLinkFromFields(settings, {
+    labelKeys: ['buttonLabel'],
+    hrefKeys: ['buttonUrl'],
+    toKeys: ['buttonPageRef'],
+    documentIdKeys: ['buttonDocumentId'],
+    openInNewWindowKeys: ['buttonOpenInNewWindow'],
+  });
+  const addressTitle = String(settings.addressTitle || '').trim();
+  const addressLines = String(settings.addressLines || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const addressClassName = sanitizeClassName(settings.addressClassName || '');
+  const addressBlock = addressTitle || addressLines.length
+    ? {
+        className: addressClassName || undefined,
+        title: addressTitle,
+        lines: addressLines,
+      }
+    : null;
+
+  const normalizedHtml = (!html || html === '<p></p>' || html === '<p><br></p>') ? '' : html;
+
+  if (
+    !title
+    && !subtitle
+    && !body.length
+    && !normalizedHtml
+    && !widget
+    && !table
+    && !fineprint.length
+    && !action
+    && !addressBlock
+  ) {
     return null;
   }
 
   return {
-    html,
+    title,
+    subtitle,
+    body,
+    html: normalizedHtml,
+    widget,
+    table,
+    tableChartId: String(settings.tableChartId || '').trim(),
+    fineprint: fineprint.length ? fineprint : null,
+    fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
+    fullBleed,
     spaceBeforeRem: normalizePageContentSpaceRem(settings.spaceBeforeRem, 0, 0, 8),
     spaceAfterRem: normalizePageContentSpaceRem(settings.spaceAfterRem, 0, 0, 8),
     paddingTopRem: normalizePageContentSpaceRem(settings.paddingTopRem, 2.4, 0, 8),
     paddingBottomRem: normalizePageContentSpaceRem(settings.paddingBottomRem, 2.4, 0, 8),
     contentMaxWidthPx: normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 980),
+    anchorId: String(settings.anchorId || '').trim(),
+    sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
+    copyWrap: toBoolean(settings.copyWrap),
+    actions: action ? [action] : [],
+    addressBlock,
   };
 }
 

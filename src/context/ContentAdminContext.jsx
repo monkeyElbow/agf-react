@@ -31,6 +31,7 @@ import {
   toDevIdentitySummary,
 } from '../lib/devIdentity';
 import { getHeroSeedContract } from '../lib/heroSeedContracts';
+import { shouldSeedBlocksFromNativePageContent } from '../lib/managedPageShells';
 import {
   DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
   DEFAULT_HERO_TITLE_SIZE_REM,
@@ -260,6 +261,108 @@ function isStalePropertyCasualtyRequestContent(settings) {
   );
 }
 
+function stripSimpleHtmlToText(value) {
+  return String(value || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeRetirement403bBenefitsCopySettings(settings, benefitsCardsTitle) {
+  const nextSettings = {
+    ...(settings && typeof settings === 'object' ? settings : {}),
+  };
+  const title = String(nextSettings.title || '').trim();
+  const subtitle = String(nextSettings.subtitle || '').trim();
+  const body = String(nextSettings.body || '').trim();
+  const html = String(nextSettings.html || '').trim();
+  const normalizedBenefitsCardsTitle = String(benefitsCardsTitle || '').trim();
+  const hasOnlyDuplicateTitle = Boolean(
+    title
+    && normalizedBenefitsCardsTitle
+    && title === normalizedBenefitsCardsTitle
+    && !subtitle
+    && !body
+    && (!html || html === '<p></p>' || html === '<p><br></p>')
+  );
+
+  if (hasOnlyDuplicateTitle) {
+    nextSettings.title = '';
+  }
+
+  return nextSettings;
+}
+
+function normalizeRetirement403bBenefitsCalloutSettings(settings) {
+  const nextSettings = {
+    ...(settings && typeof settings === 'object' ? settings : {}),
+  };
+  const bodyHtml = String(nextSettings.bodyHtml || '').trim();
+  const body = String(nextSettings.body || '').trim();
+
+  if (bodyHtml && body && stripSimpleHtmlToText(bodyHtml) === body) {
+    nextSettings.body = '';
+  }
+
+  return nextSettings;
+}
+
+function normalizeRetirement403bQualifySettings(settings) {
+  return {
+    ...(settings && typeof settings === 'object' ? settings : {}),
+    showTitleDivider: false,
+  };
+}
+
+function normalizeRetirement403bBlockSet(blocks) {
+  const safeBlocks = Array.isArray(blocks) ? blocks : [];
+  const filteredBlocks = safeBlocks.filter((block) => !(
+    block?.id === 'benefits_copy'
+    && String(block?.kind || '').trim().toLowerCase() === 'content'
+    && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
+  ));
+  const loansIndex = filteredBlocks.findIndex((block) => String(block?.id || '').trim() === 'page_content');
+  const loanApplyIndex = filteredBlocks.findIndex((block) => String(block?.id || '').trim() === 'loan_apply');
+  const reorderedBlocks = [...filteredBlocks];
+
+  if (loansIndex !== -1 && loanApplyIndex !== -1 && loanApplyIndex !== loansIndex + 1) {
+    const [loanApplyBlock] = reorderedBlocks.splice(loanApplyIndex, 1);
+    const nextLoansIndex = reorderedBlocks.findIndex((block) => String(block?.id || '').trim() === 'page_content');
+    reorderedBlocks.splice(nextLoansIndex + 1, 0, loanApplyBlock);
+  }
+
+  return reorderedBlocks.map((block) => {
+    if (!block || typeof block !== 'object') {
+      return block;
+    }
+
+    if (
+      block.id === 'benefits_callout'
+      && String(block.kind || '').trim().toLowerCase() === 'billboard'
+      && String(block.mode || '').trim().toLowerCase() === 'dynamic'
+    ) {
+      return {
+        ...block,
+        settings: normalizeRetirement403bBenefitsCalloutSettings(block.settings),
+      };
+    }
+
+    if (
+      block.id === 'who_qualifies'
+      && String(block.kind || '').trim().toLowerCase() === 'card_grid'
+      && String(block.mode || '').trim().toLowerCase() === 'dynamic'
+    ) {
+      return {
+        ...block,
+        settings: normalizeRetirement403bQualifySettings(block.settings),
+      };
+    }
+
+    return block;
+  });
+}
+
 function isLegacyRetirement403bLoanApplySettings(settings) {
   if (!settings || typeof settings !== 'object') {
     return false;
@@ -289,6 +392,41 @@ function isLegacyRetirement403bLoanApplySettings(settings) {
   const hasLegacyThreeStepShape = !card4Title && !card5Title && !card6Title;
 
   return hasLegacyThreeStepShape && (hasLegacyTitles || hasLegacyApplicationBody);
+}
+
+function isStaleRetirement403bStrategyOptionsHtml(html) {
+  const normalizedHtml = String(html || '').trim();
+
+  if (!normalizedHtml) {
+    return true;
+  }
+
+  const hasCanonicalFeatureWrapper = normalizedHtml.includes('ret403b-strategy-feature');
+  const leaksLegacyCardContent = (
+    normalizedHtml.includes('Prospectus')
+    || normalizedHtml.includes('Rollovers')
+    || normalizedHtml.includes('Variety')
+    || normalizedHtml.includes('Your Own Consultant')
+    || normalizedHtml.includes('Education')
+    || normalizedHtml.includes('Faith-Based Investments')
+    || normalizedHtml.includes('Minister’s Housing Allowance')
+    || normalizedHtml.includes("Ministers' Housing Allowance.")
+  );
+
+  return leaksLegacyCardContent || !hasCanonicalFeatureWrapper;
+}
+
+function needsRetirement403bStrategyHeadingProspectusRepair(settings, defaultSettings) {
+  const canonicalButton2Label = String(defaultSettings?.button2Label || '').trim();
+  const canonicalButton2PageRef = String(defaultSettings?.button2PageRef || '').trim();
+  const storedButton2Label = String(settings?.button2Label || '').trim();
+  const storedButton2PageRef = String(settings?.button2PageRef || '').trim();
+
+  if (!canonicalButton2Label || !canonicalButton2PageRef) {
+    return false;
+  }
+
+  return storedButton2Label !== canonicalButton2Label || storedButton2PageRef !== canonicalButton2PageRef;
 }
 
 function normalizeRetirementLandingCtaSettings(settings, defaultSettings = {}) {
@@ -3216,7 +3354,10 @@ function buildDefaultBlocks() {
       return;
     }
 
-    const nativeContent = getNativePageContent(page.path, page.title);
+    const seedFromNativePageContent = shouldSeedBlocksFromNativePageContent(page.path);
+    const nativeContent = seedFromNativePageContent
+      ? getNativePageContent(page.path, page.title)
+      : null;
 
     const orderedBlueprint = orderDefaultBlocksForPath(
       page.path,
@@ -3255,24 +3396,30 @@ function buildDefaultBlocks() {
       return nextBlock;
     });
 
-    const dynamicCtaBlocks = buildDynamicCtaDefaultBlocksForPath(
-      page.path,
-      page.title,
-      seededBlocks,
-      ctaTemplate,
-    );
-    const dynamicRequestBlocks = buildDynamicRequestDefaultBlocksForPath(
-      page.path,
-      page.title,
-      seededBlocks,
-      requestTemplate,
-    );
-    const dynamicTestimonialsBlocks = buildDynamicTestimonialsDefaultBlocksForPath(
-      page.path,
-      page.title,
-      seededBlocks,
-      testimonialsTemplate,
-    );
+    const dynamicCtaBlocks = seedFromNativePageContent
+      ? buildDynamicCtaDefaultBlocksForPath(
+        page.path,
+        page.title,
+        seededBlocks,
+        ctaTemplate,
+      )
+      : [];
+    const dynamicRequestBlocks = seedFromNativePageContent
+      ? buildDynamicRequestDefaultBlocksForPath(
+        page.path,
+        page.title,
+        seededBlocks,
+        requestTemplate,
+      )
+      : [];
+    const dynamicTestimonialsBlocks = seedFromNativePageContent
+      ? buildDynamicTestimonialsDefaultBlocksForPath(
+        page.path,
+        page.title,
+        seededBlocks,
+        testimonialsTemplate,
+      )
+      : [];
 
     let nextBlocks = [...seededBlocks, ...dynamicCtaBlocks];
     if (dynamicRequestBlocks.length) {
@@ -3303,6 +3450,7 @@ function buildDefaultBlocks() {
 
     const introSettingsRaw = (
       introTemplate
+      && seedFromNativePageContent
       && page.path !== '/'
       && !nativeContent?.hideIntro
     )
@@ -3574,7 +3722,9 @@ export function normalizeStoredConfig(payload) {
         && storedBlock.id === 'intro'
         && storedKind === 'intro'
       ) {
-        return;
+        if (path === RETIREMENT_403B_PATH) {
+          return;
+        }
       }
       if (
         path === '/services/insurance/group-term-life-insurance'
@@ -3809,6 +3959,47 @@ export function normalizeStoredConfig(payload) {
         }
       }
       if (
+        path === RETIREMENT_403B_PATH
+        && storedBlock.id === 'rollover_billboard'
+        && storedKind === 'billboard'
+        && storedMode === 'dynamic'
+        && defaultBlock
+      ) {
+        const canonicalRolloverDefaultBlock = defaultForPath.find(
+          (block) => block?.id === 'rollover_billboard'
+            && String(block?.kind || '').trim().toLowerCase() === 'billboard'
+            && String(block?.mode || '').trim().toLowerCase() === 'dynamic',
+        ) || defaultBlock;
+        const rolloverSettings = nextStoredBlock?.settings || {};
+        const targetSectionClassName = String(rolloverSettings.targetSectionClassName || '').trim();
+        const targetSectionKey = String(rolloverSettings.targetSectionKey || '').trim();
+        const buttonLabel = String(rolloverSettings.buttonLabel || '').trim();
+        const bodyHtml = String(rolloverSettings.bodyHtml || '').trim();
+        const isLegacy403bRolloverBillboard = targetSectionClassName !== 'retirement-child-native-rollover'
+          || targetSectionKey !== 'class:retirement-child-native-rollover'
+          || buttonLabel === 'Let’s simplify things'
+          || buttonLabel === "Let's simplify things"
+          || bodyHtml.includes('surprisingly simple…and undeniably smart')
+          || bodyHtml.includes('surprisingly simple...and undeniably smart');
+
+        if (isLegacy403bRolloverBillboard) {
+          nextStoredBlock = {
+            ...cloneTemplateVariant(canonicalRolloverDefaultBlock),
+            id: canonicalRolloverDefaultBlock.id || storedBlock.id,
+            name: canonicalRolloverDefaultBlock.name || storedBlock.name,
+            kind: canonicalRolloverDefaultBlock.kind || storedBlock.kind,
+            mode: 'dynamic',
+            hidden: false,
+            settings: {
+              ...(canonicalRolloverDefaultBlock?.settings || {}),
+            },
+            editableFields: Array.isArray(canonicalRolloverDefaultBlock?.editableFields)
+              ? [...canonicalRolloverDefaultBlock.editableFields]
+              : [],
+          };
+        }
+      }
+      if (
         storedKind === 'cta_form'
         && storedMode === 'dynamic'
         && defaultBlock
@@ -3841,11 +4032,12 @@ export function normalizeStoredConfig(payload) {
           || storedHtml.includes('A 403(b) loan allows you to borrow money from your own retirement savings')
           || storedHtml.includes('The requested 403(b) loan amount cannot be less than $1,500');
         const isCanonical403bLoanHtml = storedHtml.includes('retirement-403b-loan-copy');
+        const hasCanonical403bLoanDetailCard = storedHtml.includes('retirement-403b-loan-detail-card');
         if (
           !storedHtml
           || storedHtml === '<p></p>'
           || storedHtml === '<p><br></p>'
-          || (looksLikeLegacy403bLoanHtml && !isCanonical403bLoanHtml)
+          || (looksLikeLegacy403bLoanHtml && (!isCanonical403bLoanHtml || !hasCanonical403bLoanDetailCard))
         ) {
           nextStoredBlock = {
             ...cloneTemplateVariant(defaultBlock),
@@ -3862,6 +4054,52 @@ export function normalizeStoredConfig(payload) {
               : [],
           };
         }
+      }
+      if (
+        path === RETIREMENT_403B_PATH
+        && storedBlock.id === 'investment_strategy_options'
+        && (storedKind === 'content' || storedKind === 'card_grid')
+        && storedMode === 'dynamic'
+        && defaultBlock
+        && (
+          storedKind === 'card_grid'
+          || isStaleRetirement403bStrategyOptionsHtml(nextStoredBlock?.settings?.html)
+        )
+      ) {
+        nextStoredBlock = {
+          ...cloneTemplateVariant(defaultBlock),
+          id: defaultBlock.id || storedBlock.id,
+          name: defaultBlock.name || storedBlock.name,
+          kind: defaultBlock.kind || storedBlock.kind,
+          mode: 'dynamic',
+          hidden: false,
+          settings: {
+            ...(defaultBlock?.settings || {}),
+          },
+          editableFields: Array.isArray(defaultBlock?.editableFields)
+            ? [...defaultBlock.editableFields]
+            : [],
+        };
+      }
+      if (
+        path === RETIREMENT_403B_PATH
+        && storedBlock.id === 'investment_strategy_heading'
+        && storedKind === 'billboard'
+        && storedMode === 'dynamic'
+        && defaultBlock
+        && needsRetirement403bStrategyHeadingProspectusRepair(nextStoredBlock?.settings, defaultBlock?.settings)
+      ) {
+        nextStoredBlock = {
+          ...nextStoredBlock,
+          settings: {
+            ...(nextStoredBlock?.settings || {}),
+            button2Label: defaultBlock?.settings?.button2Label || '',
+            button2Url: defaultBlock?.settings?.button2Url || '',
+            button2PageRef: defaultBlock?.settings?.button2PageRef || '',
+            button2Style: defaultBlock?.settings?.button2Style || '',
+            button2Tone: defaultBlock?.settings?.button2Tone || '',
+          },
+        };
       }
       if (
         path === '/services/retirement/403b'
@@ -4179,7 +4417,10 @@ export function normalizeStoredConfig(payload) {
         );
       }
     });
-    blocksByPath[path] = normalizePageBlocksState(mergedWithMissingDefaults);
+    const normalizedMergedBlocks = path === RETIREMENT_403B_PATH
+      ? normalizeRetirement403bBlockSet(mergedWithMissingDefaults)
+      : mergedWithMissingDefaults;
+    blocksByPath[path] = normalizePageBlocksState(normalizedMergedBlocks);
   });
 
   const pathAliases = normalizePathAliases(

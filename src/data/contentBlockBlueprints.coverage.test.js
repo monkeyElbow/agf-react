@@ -138,9 +138,24 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
-  it('seeds a real request-form block for 403(b) individual enrollment without fallback page content', () => {
+  it('seeds explicit managed sections for 403(b) individual enrollment without fallback page content', () => {
     const blocks = contentBlockBlueprintsByPath['/services/retirement/403b/403b-individual-enrollment'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const qualifyBlock = blocks.find((block) => block?.id === 'confirm_eligibility' && block?.kind === 'card_grid');
+    const enrollmentStepsBlock = blocks.find((block) => block?.id === 'enrollment_steps' && block?.kind === 'card_grid');
+    const returnFormsBlock = blocks.find((block) => block?.id === 'return_forms' && block?.kind === 'content');
 
+    expect(heroBlock?.settings?.line1Text).toBe('AGFinancial 403(b)');
+    expect(heroBlock?.settings?.line2Text).toBe('Individual Enrollment');
+    expect(introBlock?.settings?.heading).toBe('Start with the 403(b) plan summary.');
+    expect(introBlock?.settings?.button1Label).toBe('Download 403(b) Summary PDF');
+    expect(qualifyBlock?.settings?.title).toBe('Confirm eligibility');
+    expect(qualifyBlock?.settings?.card1Title).toBe('Self-employed credentialed ministers');
+    expect(enrollmentStepsBlock?.settings?.title).toBe('Complete your enrollment');
+    expect(enrollmentStepsBlock?.settings?.card2ButtonLabel).toBe('Submit securely online');
+    expect(returnFormsBlock?.settings?.addressTitle).toBe('Mail or fax completed forms to:');
+    expect(returnFormsBlock?.settings?.fineprint).toContain('417.520.0406');
     expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
@@ -164,10 +179,14 @@ describe('content block blueprint coverage', () => {
     });
   });
 
-  it('seeds 409A with managed hero and intro blocks on the approved blue intro treatment', () => {
+  it('seeds 409A with explicit managed sections instead of fallback page content', () => {
     const blocks = contentBlockBlueprintsByPath['/services/retirement/409a'] || [];
     const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
     const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const scenariosBlock = blocks.find((block) => block?.id === 'scenarios' && block?.kind === 'card_grid');
+    const quoteBlock = blocks.find((block) => block?.id === 'quote' && block?.kind === 'content');
+    const ctaFormBlock = blocks.find((block) => block?.id === 'cta_form' && block?.kind === 'cta_form');
+    const teaserBlock = blocks.find((block) => block?.id === 'teaser' && block?.kind === 'content');
 
     expect(heroBlock?.settings?.line1Text).toBe('Beyond the');
     expect(heroBlock?.settings?.line2Text).toBe('limits.');
@@ -177,6 +196,16 @@ describe('content block blueprint coverage', () => {
     expect(introBlock?.settings?.textTone).toBe('white');
     expect(introBlock?.settings?.button1Label).toBe('Find my consultant');
     expect(introBlock?.settings?.button1PageRef).toBe('/services/retirement/retirement-consultants');
+    expect(scenariosBlock?.settings?.sectionClassName).toBe('retirement-child-native-scenarios');
+    expect(scenariosBlock?.settings?.card1Title).toBe('Maxed-out');
+    expect(quoteBlock?.settings?.sectionClassName).toBe('retirement-child-native-quote');
+    expect(String(quoteBlock?.settings?.body || '')).toContain('all taxable compensation');
+    expect(ctaFormBlock?.settings?.sectionClassName).toBe('retirement-child-native-cta');
+    expect(ctaFormBlock?.settings?.title).toBe('Is a 409A right for you?');
+    expect(ctaFormBlock?.settings?.subtitle).toBe('Start the conversation');
+    expect(teaserBlock?.settings?.sectionClassName).toBe('retirement-child-native-teaser');
+    expect(teaserBlock?.settings?.title).toBe('409A deserves love too.');
+    expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
   });
 
   it('seeds invest-by-mail with explicit hero and intro blocks instead of fallback page content', () => {
@@ -567,15 +596,25 @@ describe('content block blueprint coverage', () => {
   it('seeds the 403(b) loan section with existing content and grid blocks instead of native-only sections', () => {
     const blocks = contentBlockBlueprintsByPath['/services/retirement/403b'] || [];
     const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const benefitsCardsBlock = blocks.find((block) => block?.id === 'benefits_cards' && block?.kind === 'card_grid');
+    const benefitsCalloutBlock = blocks.find((block) => block?.id === 'benefits_callout' && block?.kind === 'billboard');
     const investmentStrategyHeadingBlock = blocks.find((block) => block?.id === 'investment_strategy_heading' && block?.kind === 'billboard');
-    const investmentStrategyOptionsBlock = blocks.find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'card_grid');
+    const investmentStrategyOptionsBlock = blocks.find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'content');
     const whoQualifiesBlock = blocks.find((block) => block?.id === 'who_qualifies' && block?.kind === 'card_grid');
     const pageContentBlock = blocks.find((block) => block?.id === 'page_content' && block?.kind === 'content');
+    const housingFeatureBlock = blocks.find((block) => block?.id === 'housing_feature' && block?.kind === 'content');
     const loanApplyBlock = blocks.find((block) => block?.id === 'loan_apply' && block?.kind === 'card_grid');
     const onlineContributionsBlock = blocks.find((block) => block?.id === 'online_contributions' && block?.kind === 'columns');
 
     expect(heroBlock?.settings?.justify).toBe('right');
     expect(heroBlock?.settings?.line1Text).toBe('Saving while serving.');
+    expect(heroBlock?.settings?.bgTone).toBe('white');
+    expect(benefitsCardsBlock?.settings?.card3Title).toBe('Minister’s Housing Allowance');
+    expect(benefitsCardsBlock?.settings?.card3Body).toContain('retired ministers through the AGFinancial 403(b) plan');
+    expect(benefitsCardsBlock?.settings?.card5Title).toBe('Rollovers');
+    expect(benefitsCardsBlock?.settings?.card8Title).toBe('Education');
+    expect(benefitsCalloutBlock?.settings?.title).toBe('Faith-Based Investments');
+    expect(benefitsCalloutBlock?.settings?.buttonLabel).toBe('');
     expect(investmentStrategyHeadingBlock?.mode).toBe('dynamic');
     expect(investmentStrategyHeadingBlock?.settings?.title).toBe('Investment Strategy Options');
     expect(investmentStrategyHeadingBlock?.settings?.buttonLabel).toBe('View monthly performance');
@@ -584,23 +623,11 @@ describe('content block blueprint coverage', () => {
     expect(investmentStrategyHeadingBlock?.settings?.button2Label).toBe('Prospectus');
     expect(investmentStrategyHeadingBlock?.settings?.button2PageRef).toBe('/prospectus');
     expect(investmentStrategyHeadingBlock?.settings?.button2Style).toBe('dark');
-    expect(investmentStrategyOptionsBlock?.presetId).toBe('investment-options');
-    expect(investmentStrategyOptionsBlock?.templateId).toBe('card_grid');
     expect(investmentStrategyOptionsBlock?.mode).toBe('dynamic');
-    expect(investmentStrategyOptionsBlock?.settings?.columns).toBe('two');
-    expect(investmentStrategyOptionsBlock?.settings?.card1LinksJson).toContain('MBA income fund PDF');
-    expect(investmentStrategyOptionsBlock?.settings?.card1LinksJson).toContain('fund-descriptor-retirement-mba-income-fund');
-    expect(investmentStrategyOptionsBlock?.settings?.card1ButtonLabel).toBe('');
-    expect(investmentStrategyOptionsBlock?.settings?.card1ButtonPageRef).toBe('');
-    expect(investmentStrategyOptionsBlock?.settings?.card2AccordionsJson).toContain('fund-descriptor-retirement-fidelity-asset-manager-40');
-    expect(investmentStrategyOptionsBlock?.settings?.card2ButtonLabel).toBe('');
-    expect(investmentStrategyOptionsBlock?.settings?.card2ButtonPageRef).toBe('');
-    expect(investmentStrategyOptionsBlock?.settings?.card3ButtonLabel).toBe('');
-    expect(investmentStrategyOptionsBlock?.settings?.card3ButtonPageRef).toBe('');
-    expect(investmentStrategyOptionsBlock?.settings?.card4ButtonLabel).toBe('');
-    expect(investmentStrategyOptionsBlock?.settings?.card4ButtonPageRef).toBe('');
-    expect(investmentStrategyOptionsBlock?.settings?.card4Title).toBe('Individual Investment Options');
-    expect(investmentStrategyOptionsBlock?.settings?.card4Button2PageRef).toBe('');
+    expect(investmentStrategyOptionsBlock?.settings?.fullBleed).toBe(true);
+    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).toContain('ret403b-strategy-feature');
+    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).toContain('Individual Investment Options');
+    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).not.toContain('Prospectus');
     expect(whoQualifiesBlock?.presetId).toBe('eligibility-cards');
     expect(whoQualifiesBlock?.templateId).toBe('card_grid');
     expect(whoQualifiesBlock?.mode).toBe('dynamic');
@@ -609,12 +636,20 @@ describe('content block blueprint coverage', () => {
     expect(whoQualifiesBlock?.settings?.card1Body).toContain('church-affiliated, tax-exempt 501(c)(3) organizations');
     expect(whoQualifiesBlock?.settings?.card3Title).toBe('Self-employed credentialed ministers');
     expect(pageContentBlock?.mode).toBe('dynamic');
+    expect(pageContentBlock?.settings?.sectionClassName).toBe('retirement-403b-native-loans');
     expect(String(pageContentBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
     expect(String(pageContentBlock?.settings?.html || '')).toContain('The requested 403(b) loan amount cannot be less than $1,500');
+    expect(String(pageContentBlock?.settings?.html || '')).toContain('retirement-403b-loan-detail-card');
+    expect(String(pageContentBlock?.settings?.html || '')).toContain('retirement-403b-loan-fineprint');
     expect(String(pageContentBlock?.settings?.html || '')).not.toContain('Contact your AGFinancial retirement consultant for more information.');
+    expect(housingFeatureBlock?.settings?.fullBleed).toBe(true);
+    expect(housingFeatureBlock?.settings?.buttonPageRef).toBe('/calculators');
+    expect(String(housingFeatureBlock?.settings?.html || '')).toContain('ret403b-housing-feature-grid');
+    expect(blocks.some((block) => block?.id === 'quickcheck')).toBe(false);
     expect(loanApplyBlock?.presetId).toBe('step-cards');
     expect(loanApplyBlock?.templateId).toBe('card_grid');
     expect(loanApplyBlock?.mode).toBe('dynamic');
+    expect(blocks.findIndex((block) => block?.id === 'loan_apply')).toBe(blocks.findIndex((block) => block?.id === 'page_content') + 1);
     expect(loanApplyBlock?.settings?.columns).toBe('one');
     expect(loanApplyBlock?.settings?.card1ButtonUrl).toBe('https://files.agfinancial.org/retirement/403(b)-Loan-Rules.pdf');
     expect(loanApplyBlock?.settings?.card1ButtonPageRef).toBe('');
@@ -629,6 +664,7 @@ describe('content block blueprint coverage', () => {
     expect(onlineContributionsBlock?.presetId).toBe('do-the-math');
     expect(onlineContributionsBlock?.settings?.col1Title).toBe('Online Contributions');
     expect(onlineContributionsBlock?.settings?.col1ButtonUrl).toBe('/online-contributions');
+    expect(blocks.findIndex((block) => block?.id === 'who_qualifies')).toBeLessThan(blocks.findIndex((block) => block?.id === 'investment_strategy_heading'));
   });
 
   it('keeps migrated blueprint routes on canonical editable field sets', () => {
@@ -665,16 +701,10 @@ describe('content block blueprint coverage', () => {
     expect(homeBlocks.find((block) => block?.id === 'home_do_the_math' && block?.mode === 'dynamic')).toMatchObject({
       kind: 'billboard',
     });
-    expect(retirementBlocks.find((block) => block?.id === 'columns_mha' && block?.mode === 'dynamic')).toMatchObject({
-      kind: 'columns',
-      templateId: 'columns',
-      presetId: 'housing-allowance',
-    });
     expect(retirementBlocks.find((block) => block?.id === 'columns_math' && block?.mode === 'dynamic')).toMatchObject({
-      kind: 'columns',
-      templateId: 'columns',
-      presetId: 'do-the-math',
+      kind: 'billboard',
     });
+    expect(retirementBlocks.some((block) => block?.id === 'housing_feature')).toBe(false);
     expect(loansBlocks.find((block) => block?.id === 'value_cards' && block?.mode === 'dynamic')).toMatchObject({
       kind: 'columns',
       templateId: 'columns',

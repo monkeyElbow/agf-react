@@ -70,7 +70,8 @@ describe('native page content renderer guardrail', () => {
 
     expect(source).toContain("composeRetirement403bSections,");
     expect(source).toContain("composeConsultantSections,");
-    expect(source).toContain('const retirement403bComposition = composeRetirement403bSections({');
+    expect(source).toContain('const retirement403bComposition = isBlockOnlyManagedPage');
+    expect(source).toContain('      : composeRetirement403bSections({');
     expect(source).toContain('let nextSections = composeConsultantSections({');
     expect(source).not.toContain("dynamicSections.find((section) => section?.blockId === 'investment_strategy_heading')");
     expect(source).not.toContain("dynamicSections.find((section) => section?.blockId === 'investment_strategy_options')");
@@ -136,10 +137,17 @@ describe('native page content renderer guardrail', () => {
     const source = readSource('./NativeContentPage.jsx');
 
     expect(source).toContain("const resolvedPagePath = String(activePath || templatePath || '/').trim() || '/';");
+    expect(source).toContain("isBlockOnlyManagedPagePath,");
+    expect(source).toContain("toBlockOnlyManagedPageShell,");
+    expect(source).toContain("const isBlockOnlyManagedPage = isBlockOnlyManagedPagePath(activePath || templatePath);");
+    expect(source).toContain('const baseNativeContent = getNativePageContent(templatePath, page.title);');
+    expect(source).toContain('const baseContent = isBlockOnlyManagedPage');
+    expect(source).toContain('? toBlockOnlyManagedPageShell(baseNativeContent)');
     expect(source).toContain("const isTestPage = templatePath === '/test';");
     expect(source).toContain("const isLegacyGivingPage = resolvedPagePath === '/services/planned-giving';");
     expect(source).toContain("const testimonialsHudDefaultTag = isLegacyGivingPage ? 'legacy-giving' : '';");
-    expect(source).toContain("const retirement403bComposition = composeRetirement403bSections({");
+    expect(source).toContain("const retirement403bComposition = isBlockOnlyManagedPage");
+    expect(source).toContain("      : composeRetirement403bSections({");
     expect(source).toContain('let nextSections = composeConsultantSections({');
     expect(source).toContain('nextSections = buildCareersRouteSections({');
     expect(source).toContain("if (templatePath === '/sitemap') {");

@@ -124,6 +124,11 @@ describe('NativeContentPage functional routes', () => {
         title: '403(b)',
         section: 'Retirement',
       },
+      '/services/retirement/403b/403b-individual-enrollment': {
+        path: '/services/retirement/403b/403b-individual-enrollment',
+        title: '403b Individual Enrollment',
+        section: 'Retirement',
+      },
       '/prospectus': {
         path: '/prospectus',
         title: 'Prospectus',
@@ -158,6 +163,12 @@ describe('NativeContentPage functional routes', () => {
         category: 'form',
         topic: 'Planned Giving',
         active: true,
+      },
+      {
+        id: 'document-retirement-rollover-transfer-form',
+        title: 'Rollover/Transfer Form',
+        url: 'https://files.example.com/rollover-transfer-form.pdf',
+        external: true,
       },
     ];
   });
@@ -372,7 +383,7 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByLabelText('Select your state')).toBeTruthy();
   });
 
-  it('renders retirement rollovers from the targeted request-form block instead of the legacy inline cta shell', () => {
+  it('renders retirement rollovers from explicit managed blocks instead of legacy page-owned sections', () => {
     mockBlocksByPath = {
       '/services/retirement/rollovers': (
         contentBlockBlueprintsByPath['/services/retirement/rollovers'] || []
@@ -398,7 +409,15 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.retirement-rollovers-native-request .dynamic-request-layout')).toBeTruthy();
     expect(document.querySelector('.retirement-rollovers-native-request .native-info-inline-form.dynamic-request-form')).toBeTruthy();
     expect(document.querySelector('.retirement-rollovers-native-cta')).toBeNull();
+    expect(document.querySelector('[data-block-id="hero"]')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="intro"]')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="rollover_options"]')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="rollover_process"]')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Move your funds.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Start the process' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Rollover/Transfer Form' })).toBeTruthy();
     expect(screen.getAllByText('Our rollover specialists are happy to help focus your retirement.')).toHaveLength(1);
   });
 
@@ -979,7 +998,7 @@ describe('NativeContentPage functional routes', () => {
     expect(button.className).toContain('service-native-btn');
   });
 
-  it('renders a single centered 403(b) enroll CTA below the investment strategy options grid', () => {
+  it('renders a single centered 403(b) enroll CTA below the investment strategy feature section', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
         .filter((block) => block?.mode !== 'static'),
@@ -996,7 +1015,7 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    const strategyGridSection = container.querySelector('.native-dynamic-grid.is-card-grid-preset-investment-options');
+    const strategyGridSection = container.querySelector('.retirement-403b-native-strategy-feature');
     const strategyEnrollSection = container.querySelector('.retirement-403b-native-strategy-enroll-cta');
 
     expect(strategyGridSection).toBeTruthy();
@@ -1006,6 +1025,11 @@ describe('NativeContentPage functional routes', () => {
   });
 
   it('renders the 403(b) intro copy and remaining public retirement tables through the shared table-sheet layout', () => {
+    mockBlocksByPath = {
+      '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
+        .filter((block) => block?.mode !== 'static'),
+    };
+
     const { container } = render(
       <MemoryRouter>
         <NativeContentPage
@@ -1024,6 +1048,66 @@ describe('NativeContentPage functional routes', () => {
     expect(container.querySelector('.retirement-child-native-table .data-table')).toBeNull();
     expect(screen.getAllByText('2026').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Under age 50 deferral limit (pre-tax and Roth after-tax)').length).toBeGreaterThan(0);
+  });
+
+  it('renders 409A through explicit blocks instead of page-owned sections', () => {
+    mockBlocksByPath = {
+      '/services/retirement/409a': (contentBlockBlueprintsByPath['/services/retirement/409a'] || [])
+        .filter((block) => block?.mode !== 'static'),
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/409a',
+            title: '409A',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: '409A considerations' })).toBeTruthy();
+    expect(screen.getByText(/all taxable compensation/i)).toBeTruthy();
+    expect(container.querySelector('.retirement-child-native-scenarios.native-dynamic-grid')).toBeTruthy();
+    expect(container.querySelector('.retirement-child-native-quote')).toBeTruthy();
+    expect(container.querySelector('.retirement-child-native-cta.native-dynamic-cta')).toBeTruthy();
+    expect(container.querySelector('.retirement-child-native-teaser')).toBeTruthy();
+  });
+
+  it('renders 403(b) individual enrollment through explicit blocks instead of native route-owned sections', () => {
+    mockBlocksByPath = {
+      '/services/retirement/403b/403b-individual-enrollment': (
+        contentBlockBlueprintsByPath['/services/retirement/403b/403b-individual-enrollment'] || []
+      ).filter((block) => block?.mode !== 'static'),
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/403b/403b-individual-enrollment',
+            title: '403b Individual Enrollment',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: /AGFinancial 403\(b\)/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /IndividualEnrollment/i })).toBeTruthy();
+    expect(screen.getByText('Start with the 403(b) plan summary.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Download 403(b) Summary PDF' }).getAttribute('href'))
+      .toBe('https://files.agfinancial.org/Retirement/Plansummary.pdf');
+    expect(screen.getByRole('heading', { name: 'Confirm eligibility' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Complete your enrollment' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Download Enrollment Form' }).getAttribute('href'))
+      .toBe('https://files.agfinancial.org/retirement/403b-Enrollment-Form.pdf');
+    expect(screen.getByText('Mail or fax completed forms to:')).toBeTruthy();
+    expect(screen.getByText('PO Box 2515')).toBeTruthy();
+    expect(screen.getByText('417.520.0406')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Need help.*enrollment\?/i })).toBeTruthy();
+    expect(container.querySelector('.retirement-child-native-qualify')).toBeNull();
+    expect(container.querySelector('.retirement-child-native-strategies')).toBeNull();
   });
 
   it('reveals an external inline CTA shell from a single centered charitable trusts trigger while keeping the later form visible', async () => {

@@ -28,7 +28,7 @@ A complete financial strategy for your ministry and your family.
 
 ## Additional public support content surfaced on home
 
-### Ministers Housing Allowance
+### Ministers' Housing Allowance.
 
 This significant tax-saving benefit is available to retired ministers through the AGFinancial 403(b) plan.
 

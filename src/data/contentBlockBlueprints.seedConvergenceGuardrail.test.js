@@ -43,7 +43,7 @@ describe('content block blueprint seed convergence guardrail', () => {
     expect(source).toMatch(/id: 'home_do_the_math'[\s\S]*?kind: 'billboard'[\s\S]*?scrollReveal: 'scale-up'[\s\S]*?editableFields: sharedDynamicBillboardEditableFields,/);
     expect(source).toMatch(/createDynamicCardGridBlueprint\(\{[\s\S]*?id: 'card_grid'[\s\S]*?seedBlueprintCardGridCardFields\(1,/);
     expect(source).toMatch(/id: 'home_ministry_allies'[\s\S]*?kind: 'billboard'[\s\S]*?editableFields: sharedDynamicBillboardEditableFields,/);
-    expect(source).toMatch(/createDynamicColumnsBlueprint\(\{[\s\S]*?id: 'columns_math'[\s\S]*?presetId: 'do-the-math'[\s\S]*?\}\)/);
+    expect(source).toMatch(/id: 'columns_math'[\s\S]*?kind: 'billboard'[\s\S]*?scrollReveal: 'scale-up'[\s\S]*?editableFields: sharedDynamicBillboardEditableFields,/);
     expect(source).toMatch(/createDynamicColumnsBlueprint\(\{[\s\S]*?id: 'value_cards'[\s\S]*?presetId: 'value-cards'[\s\S]*?\}\)/);
     expect(source).toMatch(/createDynamicColumnsBlueprint\(\{[\s\S]*?id: 'columns'[\s\S]*?presetId: 'default'[\s\S]*?\}\)/);
     expect(source).toMatch(/id: 'growth_feature'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'investments_growth_feature'/);

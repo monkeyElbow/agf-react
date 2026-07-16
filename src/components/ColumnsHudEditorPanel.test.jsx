@@ -99,7 +99,7 @@ describe('ColumnsHudEditorPanel', () => {
           col1Type: 'photo',
           col1ImageUrl: 'housing-photo.jpg',
           col2Type: 'text',
-          col2Title: 'Ministers Housing Allowance',
+          col2Title: "Ministers' Housing Allowance.",
           col2Body: 'This significant tax-saving benefit is available to retired ministers.',
         }}
         onSettingChange={vi.fn()}
@@ -122,7 +122,7 @@ describe('ColumnsHudEditorPanel', () => {
           col1Type: 'photo',
           col1ImageUrl: 'housing-photo.jpg',
           col2Type: 'text',
-          col2Title: 'Ministers Housing Allowance',
+          col2Title: "Ministers' Housing Allowance.",
           col2Body: 'This significant tax-saving benefit is available to retired ministers.',
         }}
         onSettingChange={onSettingChange}
@@ -156,7 +156,7 @@ describe('ColumnsHudEditorPanel', () => {
           col1Type: 'photo',
           col1ImageUrl: 'housing-photo.jpg',
           col2Type: 'text',
-          col2Title: 'Ministers Housing Allowance',
+          col2Title: "Ministers' Housing Allowance.",
         }}
         onSettingChange={vi.fn()}
       />,
@@ -307,7 +307,7 @@ describe('ColumnsHudEditorPanel', () => {
     render(
       <ColumnsHudEditorPanel
         settings={{
-          title: 'Ministers Housing Allowance',
+          title: "Ministers' Housing Allowance.",
           titleHighlightsJson: '[{"text":"Housing","className":"is-atlantean"}]',
         }}
         onSettingChange={onSettingChange}
@@ -327,7 +327,7 @@ describe('ColumnsHudEditorPanel', () => {
     render(
       <ColumnsHudEditorPanel
         settings={{
-          title: 'Ministers Housing Allowance',
+          title: "Ministers' Housing Allowance.",
         }}
         onSettingChange={onSettingChange}
       />,
@@ -335,7 +335,7 @@ describe('ColumnsHudEditorPanel', () => {
 
     const headingInput = screen.getByLabelText('Heading');
     headingInput.focus();
-    headingInput.setSelectionRange(10, 17);
+    headingInput.setSelectionRange(11, 18);
     fireEvent.select(headingInput);
 
     fireEvent.click(
@@ -345,7 +345,7 @@ describe('ColumnsHudEditorPanel', () => {
 
     expect(onSettingChange).toHaveBeenCalledWith(
       'titleHighlightsJson',
-      '[{"start":10,"end":17,"className":"is-atlantean","text":"Housing"}]',
+      '[{"start":11,"end":18,"className":"is-atlantean","text":"Housing"}]',
     );
   });
 
@@ -355,7 +355,7 @@ describe('ColumnsHudEditorPanel', () => {
     render(
       <ColumnsHudEditorPanel
         settings={{
-          title: 'Ministers Housing Allowance',
+          title: "Ministers' Housing Allowance.",
         }}
         onSettingChange={onSettingChange}
       />,
@@ -375,7 +375,7 @@ describe('ColumnsHudEditorPanel', () => {
     render(
       <ColumnsHudEditorPanel
         settings={{
-          title: 'Ministers Housing Allowance',
+          title: "Ministers' Housing Allowance.",
         }}
         onSettingChange={onSettingChange}
       />,
@@ -383,7 +383,7 @@ describe('ColumnsHudEditorPanel', () => {
 
     const headingInput = screen.getByLabelText('Heading');
     headingInput.focus();
-    headingInput.setSelectionRange(10, 17);
+    headingInput.setSelectionRange(11, 18);
     fireEvent.select(headingInput);
 
     fireEvent.click(
@@ -393,7 +393,7 @@ describe('ColumnsHudEditorPanel', () => {
 
     expect(onSettingChange).toHaveBeenCalledWith(
       'titleHighlightsJson',
-      '[{"start":10,"end":17,"className":"is-sandstone","text":"Housing"}]',
+      '[{"start":11,"end":18,"className":"is-sandstone","text":"Housing"}]',
     );
     expect(onSettingChange).not.toHaveBeenCalledWith('titleClassName', 'is-atlantean');
   });

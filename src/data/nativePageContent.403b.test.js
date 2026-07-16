@@ -42,7 +42,7 @@ describe('403(b) overview native page content', () => {
     expect(contributionLimitsSection?.tableChartId).toBe('retirement-403b-contribution-limits');
     expect(contributionLimitsSection?.table?.headers).toEqual(['403(b) Contribution Limit', '2026', '2025']);
     expect(housingSection?.anchorId).toBe('retired-ministers-housing-allowance');
-    expect(housingSection?.feature?.title).toBe('Retired Ministers Housing Allowance');
+    expect(housingSection?.feature?.title).toBe("Retired Ministers' Housing Allowance");
     expect(quickCheckSection?.body).toEqual([
       'Answer a few questions, total your annual housing expenses, and compare to Fair Rental Value (FRV).',
     ]);

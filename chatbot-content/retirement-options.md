@@ -12,7 +12,7 @@ For decades, we've helped build retirement strategies for ministers, ministry em
 
 It's your ministry, your future, your plan.
 
-## Ministers Housing Allowance
+## Ministers' Housing Allowance.
 
 This significant tax-saving benefit is available to retired ministers through the AGFinancial 403(b) plan.
 

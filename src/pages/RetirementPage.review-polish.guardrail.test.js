@@ -72,31 +72,24 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-tone-mango,');
   });
 
-  it('keeps housing and do the math on retirement-specific renders with shared data and HUD coverage', () => {
+  it('keeps the retirement do-the-math section on a retirement-specific render with billboard data and HUD coverage', () => {
     const source = readSource('./RetirementPage.jsx');
 
     expect(source).not.toContain("contentBlockBlueprintsByPath['/services/retirement']");
     expect(source).not.toContain('function buildRetirementCanonicalBlocks(blocks) {');
-    expect(source).toContain("housing_feature: RETIREMENT_HOUSING_FEATURE_HUD_PANEL_ID");
     expect(source).toContain("columns_math: RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID");
-    expect(source).toContain("housing_feature: '.retirement-ministers-housing-feature'");
     expect(source).toContain("columns_math: '.retirement-do-the-math-billboard'");
-    expect(source).toContain("block?.id === 'housing_feature'");
-    expect(source).toContain("block?.kind === 'feature_panel'");
     expect(source).toContain("block?.id === 'columns_math'");
-    expect(source).toContain("block?.kind === 'columns'");
-    expect(source).toContain('function buildRetirementHousingFeatureRuntime(block) {');
+    expect(source).toContain("block?.kind === 'billboard'");
     expect(source).toContain("import { HomeDoTheMathBadge } from '../components/blocks/PageBlocksRenderer';");
     expect(source).toContain("managedBlocksByPath['/services/retirement'].filter((block) => block && typeof block === 'object')");
-    expect(source).toContain('const housingFeatureRuntime = useMemo(');
     expect(source).not.toContain('HOME_COLUMNS_MATH_BILLBOARD_DEFAULTS');
     expect(source).not.toContain('const columnsMathBillboardBlock = useMemo(() => {');
-    expect(source).toContain('className={`service-native-section retirement-ministers-housing-feature');
-    expect(source).toContain('data-block-id="housing_feature"');
-    expect(source).toContain('renderHudAnchor(\'housing_feature\')');
-    expect(source).toContain('setupInvestmentsGrowthRevealMotion(housingRoot, { includeBackgroundMotion: false })');
-    expect(source).toContain('className={`retirement-ministers-housing-feature-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title');
+    expect(source).not.toContain('buildRetirementHousingFeatureRuntime');
+    expect(source).not.toContain('setupInvestmentsGrowthRevealMotion');
+    expect(source).not.toContain('data-block-id="housing_feature"');
     expect(source).toContain('function buildRetirementDoTheMathRuntime(block) {');
+    expect(source).toContain("const runtime = buildDynamicBillboardFromBlock(block);");
     expect(source).toContain('<HomeDoTheMathBadge');
     expect(source).not.toContain("id: 'home_do_the_math'");
     expect(source).toContain('className={`service-native-section retirement-do-the-math-billboard');
@@ -135,7 +128,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('transition: none;');
   });
 
-  it('keeps the daily billboard restored above the managed rollover billboard and CTA form', () => {
+  it('keeps rollover, daily, do-the-math, calculator, and CTA in the retirement order requested for the custom page', () => {
     const pageSource = readSource('./RetirementPage.jsx');
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');
     const cssSource = readSource('../styles/service-native.css');
@@ -162,12 +155,18 @@ describe('retirement 403(b) review polish guardrail', () => {
 
     const billboardIndex = pageSource.indexOf('data-block-id="billboard"');
     const rolloverBillboardIndex = pageSource.indexOf('data-block-id="rollover_billboard"');
+    const doTheMathIndex = pageSource.indexOf('data-block-id="columns_math"');
+    const calculatorIndex = pageSource.indexOf('id="retirement-savings-calculator"');
     const ctaIndex = pageSource.indexOf('<DynamicCtaSection');
     expect(billboardIndex).toBeGreaterThan(-1);
     expect(rolloverBillboardIndex).toBeGreaterThan(-1);
+    expect(doTheMathIndex).toBeGreaterThan(-1);
+    expect(calculatorIndex).toBeGreaterThan(-1);
     expect(ctaIndex).toBeGreaterThan(-1);
-    expect(billboardIndex).toBeLessThan(rolloverBillboardIndex);
-    expect(rolloverBillboardIndex).toBeLessThan(ctaIndex);
+    expect(rolloverBillboardIndex).toBeLessThan(billboardIndex);
+    expect(billboardIndex).toBeLessThan(doTheMathIndex);
+    expect(doTheMathIndex).toBeLessThan(calculatorIndex);
+    expect(calculatorIndex).toBeLessThan(ctaIndex);
   });
 
   it('keeps the retirement calculator on the shared calculator system while preserving the svg chart structure', () => {

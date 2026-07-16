@@ -26,7 +26,7 @@ const HOME_BILLBOARD_FALLBACK_FIELDS = Object.freeze([
   'buttonOpenInNewWindow',
   'scrollReveal',
 ]);
-const HOME_COLUMNS_MATH_BILLBOARD_DEFAULTS = Object.freeze({
+export const HOME_COLUMNS_MATH_BILLBOARD_DEFAULTS = Object.freeze({
   title: '(let us) Do the math.',
   titleClassName: '',
   titleHighlightsJson: '[{"text":"(let us)","className":"is-atlantean"}]',

@@ -282,13 +282,13 @@ describe('PageBlocksRenderer columns', () => {
       col1ImageUrl: 'mha-photo.jpg',
       col1ImageAlt: 'Retired couple reviewing financial paperwork',
       col2Type: 'text',
-      col2Title: 'Ministers Housing Allowance',
+      col2Title: "Ministers' Housing Allowance.",
       col2Body: 'This significant tax-saving benefit is available to retired ministers.',
       col2ButtonLabel: 'See the details',
       col2ButtonUrl: '/services/retirement/403b#housing',
     });
 
-    const section = screen.getByText('Ministers Housing Allowance').closest('section');
+    const section = screen.getByText("Ministers' Housing Allowance.").closest('section');
     expect(section?.className).toContain('home-native-feature');
     expect(section?.className).not.toContain('native-dynamic-columns');
   });
@@ -405,7 +405,7 @@ describe('PageBlocksRenderer columns', () => {
       col1TitleClassName: 'is-atlantean',
       col2Enabled: true,
       col2Type: 'text',
-      col2Title: 'Ministers Housing Allowance',
+      col2Title: "Ministers' Housing Allowance.",
       col2Body: 'This significant tax-saving benefit is available to retired ministers.',
     });
 

@@ -42,6 +42,16 @@ const sections = [
       }),
     ],
   },
+  {
+    id: 'placement',
+    title: 'Placement',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
+      defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
+      defineEditorField({ id: 'fullBleed', label: 'Use full-bleed rail', type: 'boolean' }),
+    ],
+  },
 ];
 
 export const featurePanelBlockDefinition = createBlockDefinition({
@@ -59,6 +69,9 @@ export const featurePanelBlockDefinition = createBlockDefinition({
     buttonUrl: '/resources',
     buttonPageRef: '/resources',
     buttonOpenInNewWindow: false,
+    anchorId: '',
+    sectionClassName: '',
+    fullBleed: false,
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),
@@ -68,8 +81,8 @@ export const featurePanelBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['content', 'action'],
-    adminSectionIds: ['content', 'action'],
+    hudSectionIds: ['content', 'action', 'placement'],
+    adminSectionIds: ['content', 'action', 'placement'],
   },
   validators: [
     (block) => Boolean(buildDynamicFeaturePanelFromBlock(block)),

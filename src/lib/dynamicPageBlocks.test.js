@@ -1817,32 +1817,88 @@ describe('buildDynamicPageContentFromBlock', () => {
       kind: 'content',
       mode: 'dynamic',
       settings: {
+        title: 'Annual Contribution Limits',
+        subtitle: 'Updated for 2026',
+        body: ['Line one.', 'Line two.'],
         html: '<p>Body copy.</p>',
+        widget: 'retirement-403b-rate-table',
         spaceBeforeRem: 1.25,
         spaceAfterRem: 0.75,
         paddingTopRem: 3,
         paddingBottomRem: 2,
         contentMaxWidthPx: 1140,
+        anchorId: 'section-anchor',
+        sectionClassName: 'custom-shell',
+        copyWrap: true,
+        buttonLabel: 'Download form',
+        buttonDocumentId: 'document-example',
+        tableHeadersJson: ['Limit', '2026'],
+        tableRowsJson: [['Under 50', '$24,500']],
+        tableValueAlignment: 'left',
+        tableChartId: 'managed-chart',
+        fineprint: ['Rates subject to change.', 'Contact your advisor.'],
+        fineprintDisclosureId: 'managed-disclosure',
+        addressClassName: 'custom-address',
+        addressTitle: 'AGFinancial',
+        addressLines: 'PO Box 2515\nSpringfield MO 65801',
       },
     });
 
     expect(runtime).toEqual({
+      title: 'Annual Contribution Limits',
+      subtitle: 'Updated for 2026',
+      body: ['Line one.', 'Line two.'],
       html: '<p>Body copy.</p>',
+      widget: 'retirement-403b-rate-table',
+      table: {
+        headers: ['Limit', '2026'],
+        rows: [['Under 50', '$24,500']],
+        valueAlignment: 'left',
+      },
+      tableChartId: 'managed-chart',
+      fineprint: ['Rates subject to change.', 'Contact your advisor.'],
+      fineprintDisclosureId: 'managed-disclosure',
       spaceBeforeRem: 1.25,
       spaceAfterRem: 0.75,
       paddingTopRem: 3,
       paddingBottomRem: 2,
       contentMaxWidthPx: 1140,
+      anchorId: 'section-anchor',
+      sectionClassName: 'custom-shell',
+      copyWrap: true,
+      actions: [
+        {
+          label: 'Download form',
+          link: {
+            kind: 'document',
+            documentId: 'document-example',
+            openInNewWindow: false,
+          },
+          style: '',
+          tone: '',
+          openInNewWindow: false,
+          documentId: 'document-example',
+          href: undefined,
+          to: undefined,
+        },
+      ],
+      addressBlock: {
+        className: 'custom-address',
+        title: 'AGFinancial',
+        lines: ['PO Box 2515', 'Springfield MO 65801'],
+      },
     });
   });
 
-  it('returns null when page content html is blank', () => {
+  it('returns null when page content payload is blank', () => {
     const runtime = buildDynamicPageContentFromBlock({
       id: 'page_content',
       kind: 'content',
       mode: 'dynamic',
       settings: {
         html: '   ',
+        body: '   ',
+        fineprint: '   ',
       },
     });
 

@@ -183,6 +183,15 @@ const sections = [
       }),
     ],
   },
+  {
+    id: 'placement',
+    title: 'Placement',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
+      defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
+    ],
+  },
 ];
 
 export const billboardBlockDefinition = createBlockDefinition({
@@ -202,6 +211,8 @@ export const billboardBlockDefinition = createBlockDefinition({
     titleSizeRem: 3.4,
     titleLetterSpacingEm: -0.038,
     subtitleDisplay: 'supporting',
+    anchorId: '',
+    sectionClassName: '',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),
@@ -211,8 +222,8 @@ export const billboardBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['content', 'actions'],
-    adminSectionIds: ['content', 'actions'],
+    hudSectionIds: ['content', 'actions', 'placement'],
+    adminSectionIds: ['content', 'actions', 'placement'],
   },
   validators: [
     (block) => Boolean(buildDynamicBillboardFromBlock(block)),

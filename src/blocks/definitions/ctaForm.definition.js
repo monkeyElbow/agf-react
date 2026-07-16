@@ -67,6 +67,15 @@ const sections = [
     ],
   },
   {
+    id: 'placement',
+    title: 'Placement',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
+      defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
+    ],
+  },
+  {
     id: 'fields',
     title: 'Fields',
     surfaces: ['hud', 'admin'],
@@ -109,6 +118,8 @@ export const ctaFormBlockDefinition = createFormBlockDefinitionScaffold({
     salesforceUrl: '',
     submitLabel: 'Follow up with me',
     successMessage: 'Thanks. We will reach out soon.',
+    anchorId: '',
+    sectionClassName: '',
     field1Enabled: true,
     field1Type: 'text',
     field1Label: 'Name',
