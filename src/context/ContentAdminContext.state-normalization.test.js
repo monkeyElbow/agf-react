@@ -950,6 +950,40 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.targetSectionIndex).toBe(0);
   });
 
+  it('keeps customized standalone 403(b) CTA body copy once the route is block-owned', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'cta_form',
+            kind: 'cta_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'Questions about the 403(b)? We’re ready.',
+              subtitle: '',
+              bodyHtml: '<p>And we’re eager to help.</p>',
+              bgTone: 'white',
+              targetSectionKey: '',
+              targetSectionClassName: '',
+              targetSectionIndex: 0,
+            },
+          },
+        ],
+      },
+    });
+
+    const ctaBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.kind === 'cta_form');
+
+    expect(ctaBlock).toBeTruthy();
+    expect(ctaBlock?.settings?.bodyHtml).toBe('<p>And we’re eager to help.</p>');
+    expect(ctaBlock?.settings?.subtitle).toBe('');
+    expect(ctaBlock?.settings?.bgTone).toBe('white');
+    expect(ctaBlock?.settings?.targetSectionKey).toBe('');
+    expect(ctaBlock?.settings?.targetSectionClassName).toBe('');
+    expect(ctaBlock?.settings?.targetSectionIndex).toBe(0);
+  });
+
   it('upgrades stale 403(b) rollover billboards to the canonical retirement rollover block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
@@ -980,8 +1014,9 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(rolloverBlock).toBeTruthy();
     expect(rolloverBlock?.hidden).toBe(false);
-    expect(rolloverBlock?.settings?.targetSectionKey).toBe('class:retirement-child-native-rollover');
-    expect(rolloverBlock?.settings?.targetSectionClassName).toBe('retirement-child-native-rollover');
+    expect(rolloverBlock?.settings?.targetSectionKey).toBe('');
+    expect(rolloverBlock?.settings?.targetSectionClassName).toBe('');
+    expect(rolloverBlock?.settings?.targetSectionIndex).toBe(0);
     expect(rolloverBlock?.settings?.buttonLabel).toBe('Start a rollover');
     expect(rolloverBlock?.settings?.titleFontFamily).toBe('helv');
     expect(rolloverBlock?.settings?.titleFontWeight).toBe(800);
@@ -990,7 +1025,88 @@ describe('ContentAdminContext state normalization', () => {
     expect(rolloverBlock?.settings?.contentMaxWidthPx).toBe(1080);
   });
 
-  it('replaces the stale blank 403(b) page-content fallback with the seeded loan content block', () => {
+  it('keeps customized 403(b) rollover billboard edits while clearing obsolete target-section fields', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'rollover_billboard',
+            kind: 'billboard',
+            mode: 'dynamic',
+            hidden: false,
+            settings: {
+              title: 'Roll your retirement together.',
+              bodyHtml: '<p>Custom rollover copy for the block-owned route.</p>',
+              bgTone: 'blue',
+              textTone: 'white',
+              justify: 'left',
+              buttonLabel: 'Talk to us first',
+              buttonPageRef: '/services/retirement/rollovers',
+              targetSectionKey: 'class:retirement-child-native-rollover',
+              targetSectionClassName: 'retirement-child-native-rollover',
+              targetSectionIndex: 2,
+            },
+          },
+        ],
+      },
+    });
+
+    const rolloverBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'rollover_billboard' && block?.kind === 'billboard');
+
+    expect(rolloverBlock).toBeTruthy();
+    expect(rolloverBlock?.settings?.title).toBe('Roll your retirement together.');
+    expect(rolloverBlock?.settings?.bodyHtml).toBe('<p>Custom rollover copy for the block-owned route.</p>');
+    expect(rolloverBlock?.settings?.bgTone).toBe('blue');
+    expect(rolloverBlock?.settings?.textTone).toBe('white');
+    expect(rolloverBlock?.settings?.justify).toBe('left');
+    expect(rolloverBlock?.settings?.buttonLabel).toBe('Talk to us first');
+    expect(rolloverBlock?.settings?.targetSectionKey).toBe('');
+    expect(rolloverBlock?.settings?.targetSectionClassName).toBe('');
+    expect(rolloverBlock?.settings?.targetSectionIndex).toBe(0);
+  });
+
+  it('keeps customized 403(b) rollover billboard copy when only obsolete target-section fields remain', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'rollover_billboard',
+            kind: 'billboard',
+            mode: 'dynamic',
+            hidden: false,
+            settings: {
+              title: 'A rollover is easy. Smart, too.',
+              bodyHtml: '<p>Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple…and undeniably smart. One account. One login.</p>',
+              bgTone: 'blue',
+              textTone: 'white',
+              justify: 'left',
+              buttonLabel: 'Talk to a consultant',
+              buttonPageRef: '/services/retirement/rollovers',
+              targetSectionKey: 'class:retirement-child-native-rollover',
+              targetSectionClassName: 'retirement-child-native-rollover',
+              targetSectionIndex: 2,
+            },
+          },
+        ],
+      },
+    });
+
+    const rolloverBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'rollover_billboard' && block?.kind === 'billboard');
+
+    expect(rolloverBlock?.settings?.title).toBe('A rollover is easy. Smart, too.');
+    expect(rolloverBlock?.settings?.bodyHtml).toBe('<p>Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple…and undeniably smart. One account. One login.</p>');
+    expect(rolloverBlock?.settings?.bgTone).toBe('blue');
+    expect(rolloverBlock?.settings?.textTone).toBe('white');
+    expect(rolloverBlock?.settings?.justify).toBe('left');
+    expect(rolloverBlock?.settings?.buttonLabel).toBe('Talk to a consultant');
+    expect(rolloverBlock?.settings?.targetSectionKey).toBe('');
+    expect(rolloverBlock?.settings?.targetSectionClassName).toBe('');
+    expect(rolloverBlock?.settings?.targetSectionIndex).toBe(0);
+  });
+
+  it('replaces the stale blank 403(b) loan fallback with the seeded semantic loan block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -1007,12 +1123,38 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const pageContentBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
-      .find((block) => block?.id === 'page_content' && block?.kind === 'content');
+    const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
 
-    expect(pageContentBlock).toBeTruthy();
-    expect(String(pageContentBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
-    expect(String(pageContentBlock?.settings?.html || '')).toContain('The requested 403(b) loan amount cannot be less than $1,500');
+    expect(loanDetailsBlock).toBeTruthy();
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('The requested 403(b) loan amount cannot be less than $1,500');
+  });
+
+  it('drops stale generic 403(b) overview page-content blocks while preserving the canonical block-owned route structure', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'page_content',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              title: 'Benefits you’ll love.',
+              html: '<p>Legacy overview copy that should not survive migration.</p>',
+              contentMaxWidthPx: 980,
+            },
+          },
+        ],
+      },
+    });
+
+    const routeBlocks = normalized.blocksByPath['/services/retirement/403b'] || [];
+
+    expect(routeBlocks.some((block) => block?.id === 'page_content')).toBe(false);
+    expect(routeBlocks.some((block) => block?.id === 'benefits_cards' && block?.kind === 'card_grid')).toBe(true);
+    expect(routeBlocks.some((block) => block?.id === 'rollover_billboard' && block?.kind === 'billboard')).toBe(true);
+    expect(routeBlocks.some((block) => block?.id === 'loan_details' && block?.kind === 'content')).toBe(true);
   });
 
   it('replaces stale legacy 403(b) loan HTML with the canonical wrapped loan content block', () => {
@@ -1039,12 +1181,69 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const pageContentBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
-      .find((block) => block?.id === 'page_content' && block?.kind === 'content');
+    const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
 
-    expect(pageContentBlock).toBeTruthy();
-    expect(String(pageContentBlock?.settings?.html || '')).toContain('retirement-403b-loan-copy');
-    expect(String(pageContentBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
+    expect(loanDetailsBlock).toBeTruthy();
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('retirement-403b-loan-copy');
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
+  });
+
+  it('keeps customized 403(b) loan details html once the stale legacy snapshot signature is gone', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'loan_details',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: `
+                <section>
+                  <h2>403(b) Plan Loans</h2>
+                  <p>Custom loan guidance for current retirement participants.</p>
+                </section>
+              `,
+            },
+          },
+        ],
+      },
+    });
+
+    const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
+
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('Custom loan guidance for current retirement participants.');
+    expect(String(loanDetailsBlock?.settings?.html || '')).not.toContain('retirement-403b-loan-copy');
+  });
+
+  it('keeps customized 403(b) loan details html when only one old loan sentence remains', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'loan_details',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: `
+                <section>
+                  <h2>403(b) Plan Loans</h2>
+                  <p>The requested 403(b) loan amount cannot be less than $1,500.</p>
+                  <p>Custom note for current retirement participants.</p>
+                </section>
+              `,
+            },
+          },
+        ],
+      },
+    });
+
+    const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
+
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('Custom note for current retirement participants.');
+    expect(String(loanDetailsBlock?.settings?.html || '')).not.toContain('retirement-403b-loan-copy');
   });
 
   it('repairs stale stored 403(b) intro blocks back to the canonical managed intro', () => {
@@ -1074,6 +1273,64 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.bodyHtml).toBe('<p>The AGFinancial 403(b) is designed specifically for ministers and ministry employees. It’s a powerful way to save while you serve.</p>');
     expect(introBlock?.settings?.bgTone).toBe('grey');
     expect(introBlock?.settings?.textTone).toBe('white');
+  });
+
+  it('keeps customized stored 403(b) overview intros once the route is block-owned', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'intro',
+            kind: 'intro',
+            mode: 'dynamic',
+            settings: {
+              heading: 'Retirement built for ministry teams.',
+              bodyHtml: '<p>Customized intro copy that should persist after the route cutover.</p>',
+              body: 'Customized intro copy that should persist after the route cutover.',
+              bgTone: 'white',
+              textTone: 'dark',
+            },
+          },
+        ],
+      },
+    });
+
+    const introBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'intro' && block?.kind === 'intro');
+
+    expect(introBlock?.settings?.heading).toBe('Retirement built for ministry teams.');
+    expect(introBlock?.settings?.bodyHtml).toBe('<p>Customized intro copy that should persist after the route cutover.</p>');
+    expect(introBlock?.settings?.bgTone).toBe('white');
+    expect(introBlock?.settings?.textTone).toBe('dark');
+  });
+
+  it('keeps 403(b) overview intros that reuse the canonical heading with new body copy', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'intro',
+            kind: 'intro',
+            mode: 'dynamic',
+            settings: {
+              heading: 'Ministry-powered retirement.',
+              bodyHtml: '<p>Custom overview intro copy that should persist after the route cutover.</p>',
+              body: 'Custom overview intro copy that should persist after the route cutover.',
+              bgTone: 'white',
+              textTone: 'dark',
+            },
+          },
+        ],
+      },
+    });
+
+    const introBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'intro' && block?.kind === 'intro');
+
+    expect(introBlock?.settings?.heading).toBe('Ministry-powered retirement.');
+    expect(introBlock?.settings?.bodyHtml).toBe('<p>Custom overview intro copy that should persist after the route cutover.</p>');
+    expect(introBlock?.settings?.bgTone).toBe('white');
+    expect(introBlock?.settings?.textTone).toBe('dark');
   });
 
   it('drops the transitional 403(b) benefits copy block so the route stays block-owned', () => {
@@ -1119,6 +1376,7 @@ describe('ContentAdminContext state normalization', () => {
               card1Title: 'MBA Income Fund',
               card2Title: 'Screened Investments',
               card3Title: 'Minister’s Housing Allowance',
+              card3TitleHighlightsJson: '[{"text":"Minister’s Housing Allowance","className":"is-super-grey"}]',
               card4Title: 'Roth / Pretax Deferrals',
               card5Title: 'Rollovers',
               card5Body: 'Retirement savings can be simplified by consolidating other retirement accounts into a single 403(b).',
@@ -1138,6 +1396,8 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'benefits_cards' && block?.kind === 'card_grid');
 
     expect(benefitsCardsBlock?.settings?.card1Title).toBe('MBA Income Fund');
+    expect(String(benefitsCardsBlock?.settings?.card3Title || '')).toBe("Ministers' Housing Allowance");
+    expect(String(benefitsCardsBlock?.settings?.card3TitleHighlightsJson || '')).toContain("Ministers' Housing Allowance");
     expect(String(benefitsCardsBlock?.settings?.card5Title || '')).toBe('Rollovers');
     expect(String(benefitsCardsBlock?.settings?.card6Title || '')).toBe('Variety');
     expect(String(benefitsCardsBlock?.settings?.card7Title || '')).toBe('Your Own Consultant');
@@ -1205,7 +1465,9 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'content');
 
     expect(String(strategyBlock?.settings?.html || '')).toContain('ret403b-strategy-feature');
-    expect(String(strategyBlock?.settings?.html || '')).toContain('MBA Income Fund PDF');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('MBA Income Fund');
+    expect(String(strategyBlock?.settings?.html || '')).not.toContain('MBA Income Fund PDF');
     expect(String(strategyBlock?.settings?.html || '')).not.toContain('Rollovers');
     expect(String(strategyBlock?.settings?.html || '')).not.toContain('Education');
     expect(String(strategyBlock?.settings?.html || '')).not.toContain('Prospectus');
@@ -1247,6 +1509,17 @@ describe('ContentAdminContext state normalization', () => {
       blocksByPath: {
         '/services/retirement/403b': [
           {
+            id: 'investment_strategy_options',
+            kind: 'card_grid',
+            mode: 'dynamic',
+            settings: {
+              title: 'Investment Strategy Options',
+              card1Title: 'MBA Income Fund',
+              card1Button2Label: 'Prospectus',
+              card1Button2PageRef: '/prospectus',
+            },
+          },
+          {
             id: 'investment_strategy_heading',
             kind: 'billboard',
             mode: 'dynamic',
@@ -1270,6 +1543,152 @@ describe('ContentAdminContext state normalization', () => {
     expect(headingBlock?.settings?.button2Label).toBe('Prospectus');
     expect(headingBlock?.settings?.button2PageRef).toBe('/prospectus');
     expect(headingBlock?.settings?.button2Tone).toBe('super-grey');
+  });
+
+  it('keeps customized 403(b) investment strategy heading actions once stale strategy content is gone', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'investment_strategy_options',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: `
+                <div class="ret403b-strategy-feature">
+                  <article class="ret403b-strategy-feature-row services-breakdown-panel">
+                    <h3>MBA Income Fund</h3>
+                    <p class="services-breakdown-description">Custom strategy copy.</p>
+                    <nav class="ret403b-strategy-feature-links" aria-label="MBA Income Fund links">
+                      <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="/fund.pdf">Fund brief</a>
+                    </nav>
+                  </article>
+                </div>
+              `,
+            },
+          },
+          {
+            id: 'investment_strategy_heading',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: {
+              title: 'Investment Strategy Options',
+              buttonLabel: 'View monthly performance',
+              buttonUrl: 'https://files.agfinancial.org/retirement/Performance-Update/Performance-Update.pdf',
+              button2Label: '',
+              button2Url: '',
+              button2PageRef: '',
+            },
+          },
+        ],
+      },
+    });
+
+    const headingBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'investment_strategy_heading' && block?.kind === 'billboard');
+
+    expect(headingBlock?.settings?.button2Label).toBe('');
+    expect(headingBlock?.settings?.button2Url).toBe('');
+    expect(headingBlock?.settings?.button2PageRef).toBe('');
+  });
+
+  it('keeps customized 403(b) investment strategy feature html when it already uses the canonical wrapper', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'investment_strategy_options',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: `
+                <div class="ret403b-strategy-feature">
+                  <article class="ret403b-strategy-feature-row services-breakdown-panel">
+                    <h3>Rollovers and Education</h3>
+                    <p class="services-breakdown-description">Prospectus support and custom education copy that should persist.</p>
+                    <nav class="ret403b-strategy-feature-links" aria-label="Rollovers and Education links">
+                      <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="/custom.pdf">Custom brief</a>
+                    </nav>
+                  </article>
+                </div>
+              `,
+            },
+          },
+        ],
+      },
+    });
+
+    const strategyBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'content');
+
+    expect(String(strategyBlock?.settings?.html || '')).toContain('Rollovers and Education');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('Prospectus support and custom education copy that should persist.');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link');
+  });
+
+  it('refreshes wrapper-only 403(b) strategy html to the canonical services-row structure', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'investment_strategy_options',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: `
+                <div class="ret403b-strategy-feature">
+                  <article class="ret403b-strategy-feature-row">
+                    <div class="ret403b-strategy-feature-copy">
+                      <h3>MBA Income Fund</h3>
+                      <p>Old wrapper-only structure.</p>
+                    </div>
+                  </article>
+                </div>
+              `,
+            },
+          },
+        ],
+      },
+    });
+
+    const strategyBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'content');
+
+    expect(String(strategyBlock?.settings?.html || '')).toContain('services-breakdown-panel');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('services-breakdown-description');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('ret403b-strategy-feature-links');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('service-native-btn is-outline is-tone-atlantean');
+    expect(String(strategyBlock?.settings?.html || '')).not.toContain('Old wrapper-only structure.');
+  });
+
+  it('keeps customized 403(b) investment strategy html when it no longer matches the old leaked-card signature', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'investment_strategy_options',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: `
+                <section>
+                  <article>
+                    <h3>Rollovers and Education</h3>
+                    <p>Custom strategy overview copy for current plan participants.</p>
+                  </article>
+                </section>
+              `,
+            },
+          },
+        ],
+      },
+    });
+
+    const strategyBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'content');
+
+    expect(String(strategyBlock?.settings?.html || '')).toContain('Rollovers and Education');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('Custom strategy overview copy for current plan participants.');
   });
 
   it('drops stale stored intro blocks from group term life insurance', () => {
@@ -1327,6 +1746,36 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(introBlock?.kind).toBe('intro');
     expect(introBlock?.settings?.heading).toBe('Start with the 403(b) plan summary.');
+  });
+
+  it('keeps customized 403(b) individual enrollment intros once the stale seed signature is gone', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b/403b-individual-enrollment': [
+          {
+            id: 'intro',
+            kind: 'intro',
+            mode: 'dynamic',
+            settings: {
+              heading: 'What’s one gotta do to get AGFinancial 403(b)?',
+              bodyHtml: '<p>Custom explainer copy for a block-owned intro.</p>',
+              body: 'Custom explainer copy for a block-owned intro.',
+              button1Label: 'Talk to my consultant',
+              button1Url: '/services/retirement/retirement-consultants',
+              button1PageRef: '/services/retirement/retirement-consultants',
+            },
+          },
+        ],
+      },
+    });
+
+    const introBlock = (normalized.blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [])
+      .find((block) => block?.id === 'intro');
+
+    expect(introBlock?.settings?.heading).toBe('What’s one gotta do to get AGFinancial 403(b)?');
+    expect(introBlock?.settings?.bodyHtml).toBe('<p>Custom explainer copy for a block-owned intro.</p>');
+    expect(introBlock?.settings?.button1Label).toBe('Talk to my consultant');
+    expect(introBlock?.settings?.button1PageRef).toBe('/services/retirement/retirement-consultants');
   });
 
   it('refreshes leaked loans intro copy on 403(b) individual enrollment back to the canonical intro block', () => {
@@ -1412,6 +1861,31 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.settings?.salesforceUrl).toBe('403bregs@agfinancial.org');
   });
 
+  it('keeps custom 403(b) individual enrollment billboards that are not the legacy help replacement', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b/403b-individual-enrollment': [
+          {
+            id: 'billboard',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: {
+              title: 'Questions before you enroll?',
+              bodyHtml: '<p>Custom billboard copy that should persist on the block-owned route.</p>',
+            },
+          },
+        ],
+      },
+    });
+
+    const blocks = normalized.blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [];
+    const billboardBlock = blocks.find((block) => block?.id === 'billboard');
+
+    expect(billboardBlock?.kind).toBe('billboard');
+    expect(billboardBlock?.settings?.title).toBe('Questions before you enroll?');
+    expect(billboardBlock?.settings?.bodyHtml).toBe('<p>Custom billboard copy that should persist on the block-owned route.</p>');
+  });
+
   it('appends the seeded hero block to stored 403(b) group enrollment drafts', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
@@ -1436,7 +1910,8 @@ describe('ContentAdminContext state normalization', () => {
     expect(heroBlock?.mode).toBe('dynamic');
     expect(heroBlock?.settings?.line1Text).toBe('AGFinancial 403(b)');
     expect(heroBlock?.settings?.line2Text).toBe('Group Enrollment');
-    expect(blocks.some((block) => block?.id === 'page_content')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
+    expect(blocks.some((block) => block?.id === 'confirm_eligibility')).toBe(true);
     expect(normalized.blocksByPath['/services/retirement/403b-for-groups/403b-group-enrollment']).toBeUndefined();
     expect(normalized.pathAliases['/services/retirement/403b-for-groups/403b-group-enrollment']).toBe('/services/retirement/403b/403b-group-enrollment');
     expect(normalized.pathAliases['/services/retirement/403b-for-groups']).toBe('/services/retirement/403b/403b-group-enrollment');
@@ -1522,6 +1997,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.settings?.title).toBe('Need help with enrollment?');
     expect(requestBlock?.settings?.subtitle).toBe('For assistance, contact 800.622.7526.');
     expect(requestBlock?.settings?.salesforceUrl).toBe('403bregs@agfinancial.org');
+    expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
   });
 
   it('refreshes the stored 403(b) group enrollment compliance billboard to the white treatment', () => {
@@ -1547,6 +2023,31 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(complianceBlock?.settings?.bgTone).toBe('white');
     expect(complianceBlock?.settings?.textTone).toBe('dark');
+  });
+
+  it('keeps customized 403(b) group enrollment compliance billboard tones once the route is block-owned', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b/403b-group-enrollment': [
+          {
+            id: 'billboard',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: {
+              title: '403(b) Compliance Regulations',
+              bgTone: 'blue',
+              textTone: 'white',
+            },
+          },
+        ],
+      },
+    });
+
+    const complianceBlock = (normalized.blocksByPath['/services/retirement/403b/403b-group-enrollment'] || [])
+      .find((block) => block?.id === 'billboard');
+
+    expect(complianceBlock?.settings?.bgTone).toBe('blue');
+    expect(complianceBlock?.settings?.textTone).toBe('white');
   });
 
   it('repairs stored 403(b) group enrollment compliance buttons that saved PDF URLs as page refs', () => {
@@ -1709,6 +2210,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.settings?.textTone).toBe('white');
     expect(requestBlock?.settings?.spaceBeforeRem).toBe(1.6);
     expect(requestBlock?.settings?.spaceAfterRem).toBe(1.6);
+    expect(String(requestBlock?.settings?.targetSectionKey || '')).toBe('');
     expect(requestBlock?.settings?.targetSectionClassName).toBe('loans-consultant-native-contact');
   });
 
@@ -1869,7 +2371,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(loanApplyBlock?.settings?.card6Title).toBe('6');
   });
 
-  it('reorders 403(b) loan-apply directly below the loans content block on migrated pages', () => {
+  it('reorders 403(b) loan-apply directly below the semantic loans block on migrated pages', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -1914,7 +2416,7 @@ describe('ContentAdminContext state normalization', () => {
 
     const retirementBlocks = normalized.blocksByPath['/services/retirement/403b'] || [];
     expect(retirementBlocks.findIndex((block) => block?.id === 'loan_apply')).toBe(
-      retirementBlocks.findIndex((block) => block?.id === 'page_content') + 1,
+      retirementBlocks.findIndex((block) => block?.id === 'loan_details') + 1,
     );
   });
 
@@ -1942,10 +2444,201 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const pageContentBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
-      .find((block) => block?.id === 'page_content' && block?.kind === 'content');
+    const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
 
-    expect(String(pageContentBlock?.settings?.html || '')).toContain('retirement-403b-loan-detail-card');
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('retirement-403b-loan-detail-card');
+  });
+
+  it('refreshes stale canonical 403(b) loan html when the consultant copy and followup class are still missing', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'loan_details',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: `
+                <div class="retirement-403b-loan-copy">
+                  <h2>403(b) Plan Loans</h2>
+                  <p>A 403(b) loan allows you to borrow money from your own retirement savings without incurring early withdrawal tax penalties. The interest paid on this type of loan goes back into your retirement savings.</p>
+                  <div class="retirement-403b-loan-detail-card">
+                    <h3>Details</h3>
+                    <p>The requested 403(b) loan amount cannot be less than $1,500.</p>
+                    <ul>
+                      <li>100% of the total vested account balance if less than $10,000</li>
+                    </ul>
+                  </div>
+                  <p class="retirement-403b-loan-fineprint">Members may have no more than two loans at a time.</p>
+                  <p class="retirement-403b-loan-fineprint">Due to regulations issued by the U.S. Department of the Treasury, 403(b) plan loans issued after Dec. 31, 2008 require employer verification of loan qualifications.</p>
+                </div>
+              `,
+            },
+          },
+        ],
+      },
+    });
+
+    const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
+
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('retirement-403b-loan-followup');
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('Contact your AGFinancial retirement consultant for more information.');
+  });
+
+  it('replaces stale 403(b) start enrollment settings when the old individual label and title divider persist', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'start_enrollment',
+            kind: 'card_grid',
+            mode: 'dynamic',
+            settings: {
+              title: 'Start enrollment',
+              columns: 'two',
+              cardStyle: 'card2',
+              showTitleDivider: true,
+              dividerTone: 'auto',
+              card1Title: 'Enrollment for individuals.',
+              card1ButtonLabel: 'Enroll now',
+              card1ButtonPageRef: '/services/retirement/403b/403b-individual-enrollment',
+              card2Title: 'Establish a plan as an employer.',
+              card2ButtonLabel: 'Next steps',
+              card2ButtonPageRef: '/services/retirement/403b/403b-group-enrollment',
+            },
+          },
+        ],
+      },
+    });
+
+    const enrollmentBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'start_enrollment' && block?.kind === 'card_grid');
+
+    expect(enrollmentBlock?.settings?.showTitleDivider).toBe(false);
+    expect(enrollmentBlock?.settings?.dividerTone).toBe('');
+    expect(enrollmentBlock?.settings?.card1Title).toBe('Establish an individual plan');
+  });
+
+  it('replaces stale 403(b) housing feature settings when the rogue calculator CTA and compare copy persist', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'housing_feature',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              title: "Retired Ministers' Housing Allowance",
+              body: 'The unique benefit, which gives ministers a significant tax savings, is not available through secular 403(b) plans or IRAs.',
+              html: `
+                <div class="ret403b-housing-feature-shell">
+                  <div class="ret403b-housing-feature-grid">
+                    <div class="ret403b-housing-feature-compare">
+                      <p>Compare your annual housing expenses to Fair Rental Value (FRV), and determine the maximum amount you may claim.</p>
+                    </div>
+                  </div>
+                </div>
+              `,
+              buttonLabel: 'Use the quick check calculator',
+              buttonPageRef: '/calculators',
+            },
+          },
+        ],
+      },
+    });
+
+    const housingFeatureBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'housing_feature' && block?.kind === 'columns');
+
+    expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
+    expect(housingFeatureBlock?.settings?.bgTone).toBe('white');
+    expect(housingFeatureBlock?.settings?.col2Title).toBe("Retired Ministers' Housing Allowance");
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain('ret403b-housing-feature-bullet-intro');
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('Compare your annual housing expenses to Fair Rental Value');
+  });
+
+  it('replaces blank migrated 403(b) housing columns with the canonical copy payload', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'housing_feature',
+            kind: 'columns',
+            mode: 'dynamic',
+            presetId: 'housing-allowance',
+            settings: {
+              columnsStyle: 'retirement',
+              bgTone: 'white',
+              col1Enabled: true,
+              col1Type: 'photo',
+              col1ImageUrl: 'housing-photo.jpg',
+              col1ImageAlt: 'Living room with fireplace',
+              col2Enabled: true,
+              col2Type: 'text',
+              col2Title: "Retired Ministers' Housing Allowance",
+              col2Body: '',
+              col2BodyHtml: '',
+            },
+          },
+        ],
+      },
+    });
+
+    const housingFeatureBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'housing_feature' && block?.kind === 'columns');
+
+    expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
+    expect(housingFeatureBlock?.settings?.col2Title).toBe("Retired Ministers' Housing Allowance");
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
+      'The unique benefit, which gives ministers a significant tax savings',
+    );
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
+      'ret403b-housing-feature-bullet-intro',
+    );
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
+      'The amount distributed by your retirement plan to you and declared in advance as your housing allowance',
+    );
+  });
+
+  it('replaces blank-fragment 403(b) housing columns with the canonical copy payload', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'housing_feature',
+            kind: 'columns',
+            mode: 'dynamic',
+            presetId: 'housing-allowance',
+            settings: {
+              columnsStyle: 'retirement',
+              bgTone: 'white',
+              col1Enabled: true,
+              col1Type: 'photo',
+              col1ImageUrl: 'housing-photo.jpg',
+              col1ImageAlt: 'Living room with fireplace',
+              col2Enabled: true,
+              col2Type: 'text',
+              col2Title: "Retired Ministers' Housing Allowance",
+              col2Body: '',
+              col2BodyHtml: '<p><br></p>',
+            },
+          },
+        ],
+      },
+    });
+
+    const housingFeatureBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'housing_feature' && block?.kind === 'columns');
+
+    expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
+      'The unique benefit, which gives ministers a significant tax savings',
+    );
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
+      'ret403b-housing-feature-bullet-intro',
+    );
   });
 
   it('keeps explicit columns preset identity on the canonical family template id', () => {

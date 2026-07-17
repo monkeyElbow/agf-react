@@ -16,7 +16,7 @@ describe('native page content renderer guardrail', () => {
 
     expect(source).toContain('buildDynamicPageContentFromBlock,');
     expect(source).toContain('const runtime = buildDynamicPageContentFromBlock(block);');
-    expect(source).toContain("className: pathname === '/test' ? 'test-dynamic-page-content' : 'native-dynamic-page-content'");
+    expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-page-content' : 'native-dynamic-page-content';");
     expect(source).toContain('const pageContentSection = buildDynamicPageContentSection(block, activePath);');
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'content') {");
     expect(source).toContain("const dynamicSectionPanel = dynamicSectionBlockId ? (hudPanelByBlockId[dynamicSectionBlockId] || null) : null;");
@@ -38,7 +38,7 @@ describe('native page content renderer guardrail', () => {
 
     expect(source).toContain('buildDynamicFeaturePanelFromBlock,');
     expect(source).toContain('const runtime = buildDynamicFeaturePanelFromBlock(block);');
-    expect(source).toContain("className: pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'");
+    expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
     expect(source).toContain('const mappedSection = buildDynamicFeaturePanelSection(block, activePath);');
     expect(source).toContain('const featurePanelSection = buildDynamicFeaturePanelSection(block, activePath);');
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'feature_panel') {");
@@ -65,14 +65,14 @@ describe('native page content renderer guardrail', () => {
     expect(source).not.toContain('loans-legacy');
   });
 
-  it('keeps live child-route composition on named helpers instead of ad hoc inline 403(b) replacement logic', () => {
+  it('keeps live child-route composition narrowed to active helpers instead of a bespoke 403(b) route compositor', () => {
     const source = readSource('./NativeContentPage.jsx');
 
-    expect(source).toContain("composeRetirement403bSections,");
     expect(source).toContain("composeConsultantSections,");
-    expect(source).toContain('const retirement403bComposition = isBlockOnlyManagedPage');
-    expect(source).toContain('      : composeRetirement403bSections({');
     expect(source).toContain('let nextSections = composeConsultantSections({');
+    expect(source).not.toContain("composeRetirement403bSections,");
+    expect(source).not.toContain('const retirement403bComposition = isBlockOnlyManagedPage');
+    expect(source).not.toContain('composeRetirement403bSections({');
     expect(source).not.toContain("dynamicSections.find((section) => section?.blockId === 'investment_strategy_heading')");
     expect(source).not.toContain("dynamicSections.find((section) => section?.blockId === 'investment_strategy_options')");
     expect(source).not.toContain("dynamicSections.find((section) => section?.blockId === 'who_qualifies')");
@@ -102,6 +102,27 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('.service-native-card-link-list:has(.service-native-btn) {');
     expect(cssSource).toContain('padding-inline: 0.1rem;');
     expect(cssSource).toContain('padding: 0.2rem 0.85rem 0.85rem;');
+  });
+
+  it('keeps explicit sibling spacing between 403(b) strategy panels so row separation does not depend on wrapper gap rendering', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--retirement-403b .ret403b-strategy-feature {');
+    expect(cssSource).toContain('display: block;');
+    expect(cssSource).toContain('.native-info-page--retirement-403b .ret403b-strategy-feature > .ret403b-strategy-feature-row.services-breakdown-panel + .ret403b-strategy-feature-row.services-breakdown-panel {');
+    expect(cssSource).toContain('margin-top: clamp(0.8rem, 1.45vw, 1.05rem) !important;');
+    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html .services-breakdown-panel + .services-breakdown-panel,');
+    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html .ret403b-strategy-feature-row + .ret403b-strategy-feature-row {');
+  });
+
+  it('forces 403(b) strategy document links into route-local outline buttons even when older stored markup still uses services-breakdown-links', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) {');
+    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a,');
+    expect(cssSource).toContain('background: transparent !important;');
+    expect(cssSource).toContain('border: 1px solid var(--btn-color) !important;');
+    expect(cssSource).toContain('box-shadow: none !important;');
   });
 
   it('delegates active functional native routes to extracted renderers instead of keeping inline route mini-apps in NativeContentPage', () => {
@@ -146,10 +167,10 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain("const isTestPage = templatePath === '/test';");
     expect(source).toContain("const isLegacyGivingPage = resolvedPagePath === '/services/planned-giving';");
     expect(source).toContain("const testimonialsHudDefaultTag = isLegacyGivingPage ? 'legacy-giving' : '';");
-    expect(source).toContain("const retirement403bComposition = isBlockOnlyManagedPage");
-    expect(source).toContain("      : composeRetirement403bSections({");
     expect(source).toContain('let nextSections = composeConsultantSections({');
     expect(source).toContain('nextSections = buildCareersRouteSections({');
+    expect(source).not.toContain("const retirement403bComposition = isBlockOnlyManagedPage");
+    expect(source).not.toContain("composeRetirement403bSections({");
     expect(source).toContain("if (templatePath === '/sitemap') {");
     expect(source).toContain("if (templatePath === '/prospectus') {");
     expect(source).toContain("if (templatePath === '/forms') {");

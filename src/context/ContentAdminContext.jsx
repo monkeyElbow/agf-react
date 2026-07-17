@@ -96,6 +96,7 @@ const RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH = '/services/retirement/403b/40
 const RETIREMENT_403B_GROUP_ENROLLMENT_PATH = '/services/retirement/403b/403b-group-enrollment';
 const RETIREMENT_403B_GROUP_ENROLLMENT_LEGACY_PATH = '/services/retirement/403b-for-groups/403b-group-enrollment';
 const RETIREMENT_403B_GROUP_OVERVIEW_LEGACY_PATH = '/services/retirement/403b-for-groups';
+const RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID = 'loan_details';
 const PLANNED_GIVING_OVERVIEW_LEGACY_PATH = '/services/legacy-giving';
 const PLANNED_GIVING_CHARITABLE_GIFT_ANNUITIES_LEGACY_PATH = '/services/legacy-giving/charitable-gift-annuities';
 const PLANNED_GIVING_CHARITABLE_TRUSTS_LEGACY_PATH = '/services/legacy-giving/charitable-trusts';
@@ -269,6 +270,16 @@ function stripSimpleHtmlToText(value) {
     .trim();
 }
 
+const RETIREMENT_403B_HOUSING_ALLOWANCE_CANONICAL_TITLE = "Ministers' Housing Allowance";
+const RETIREMENT_403B_HOUSING_ALLOWANCE_LEGACY_TITLES = [
+  'Minister’s Housing Allowance',
+  "Minister's Housing Allowance",
+];
+const RETIREMENT_403B_OVERVIEW_LEGACY_INTRO_TEXT = 'The AGFinancial 403(b) offers higher contribution limits and potential employer matching—advantages you won’t find with an IRA. Designed specifically for ministers and ministry employees, it’s a powerful way to save while you serve.';
+const RETIREMENT_403B_HOUSING_FEATURE_LEGACY_TITLE = "Retired Ministers' Housing Allowance";
+const RETIREMENT_403B_HOUSING_FEATURE_LEGACY_COMPARE_TEXT = 'Compare your annual housing expenses to Fair Rental Value (FRV), and determine the maximum amount you may claim.';
+const RETIREMENT_403B_LOAN_CONSULTANT_COPY = 'Contact your AGFinancial retirement consultant for more information.';
+
 function normalizeRetirement403bBenefitsCopySettings(settings, benefitsCardsTitle) {
   const nextSettings = {
     ...(settings && typeof settings === 'object' ? settings : {}),
@@ -289,6 +300,32 @@ function normalizeRetirement403bBenefitsCopySettings(settings, benefitsCardsTitl
 
   if (hasOnlyDuplicateTitle) {
     nextSettings.title = '';
+  }
+
+  return nextSettings;
+}
+
+function normalizeRetirement403bBenefitsCardsSettings(settings) {
+  const nextSettings = {
+    ...(settings && typeof settings === 'object' ? settings : {}),
+  };
+  const card3Title = String(nextSettings.card3Title || '').trim();
+  const card3TitleHighlightsJson = String(nextSettings.card3TitleHighlightsJson || '').trim();
+  const hasLegacyHousingAllowanceTitle = RETIREMENT_403B_HOUSING_ALLOWANCE_LEGACY_TITLES.includes(card3Title);
+  const hasLegacyHousingAllowanceHighlights = RETIREMENT_403B_HOUSING_ALLOWANCE_LEGACY_TITLES.some((title) => (
+    card3TitleHighlightsJson.includes(title)
+  ));
+
+  if (hasLegacyHousingAllowanceTitle) {
+    nextSettings.card3Title = RETIREMENT_403B_HOUSING_ALLOWANCE_CANONICAL_TITLE;
+  }
+
+  if (hasLegacyHousingAllowanceHighlights) {
+    let normalizedHighlightsJson = card3TitleHighlightsJson;
+    RETIREMENT_403B_HOUSING_ALLOWANCE_LEGACY_TITLES.forEach((title) => {
+      normalizedHighlightsJson = normalizedHighlightsJson.split(title).join(RETIREMENT_403B_HOUSING_ALLOWANCE_CANONICAL_TITLE);
+    });
+    nextSettings.card3TitleHighlightsJson = normalizedHighlightsJson;
   }
 
   return nextSettings;
@@ -315,26 +352,80 @@ function normalizeRetirement403bQualifySettings(settings) {
   };
 }
 
+function isRetirement403bLoanDetailsBlock(block) {
+  if (!block || typeof block !== 'object') {
+    return false;
+  }
+
+  const blockId = String(block.id || '').trim();
+  const blockKind = String(block.kind || '').trim().toLowerCase();
+  const sectionClassName = String(block?.settings?.sectionClassName || '').trim();
+  const html = String(block?.settings?.html || '').trim();
+
+  if (blockId === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID && blockKind === 'content') {
+    return true;
+  }
+
+  return (
+    blockId === 'page_content'
+    && blockKind === 'content'
+    && (
+      sectionClassName === 'retirement-403b-native-loans'
+      || html.includes('retirement-403b-loan-copy')
+      || html.includes('403(b) Plan Loans')
+    )
+  );
+}
+
 function normalizeRetirement403bBlockSet(blocks) {
   const safeBlocks = Array.isArray(blocks) ? blocks : [];
+  const hasCanonicalLoanDetailsBlock = safeBlocks.some((block) => (
+    String(block?.id || '').trim() === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID
+    && String(block?.kind || '').trim().toLowerCase() === 'content'
+  ));
   const filteredBlocks = safeBlocks.filter((block) => !(
     block?.id === 'benefits_copy'
     && String(block?.kind || '').trim().toLowerCase() === 'content'
     && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
-  ));
-  const loansIndex = filteredBlocks.findIndex((block) => String(block?.id || '').trim() === 'page_content');
+  )).filter((block) => !(
+    hasCanonicalLoanDetailsBlock
+    && String(block?.id || '').trim() === 'page_content'
+    && isRetirement403bLoanDetailsBlock(block)
+  )).map((block) => {
+    if (!isRetirement403bLoanDetailsBlock(block) || String(block?.id || '').trim() === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID) {
+      return block;
+    }
+
+    return {
+      ...block,
+      id: RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID,
+      name: 'Loan Details',
+    };
+  });
+  const loansIndex = filteredBlocks.findIndex((block) => String(block?.id || '').trim() === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID);
   const loanApplyIndex = filteredBlocks.findIndex((block) => String(block?.id || '').trim() === 'loan_apply');
   const reorderedBlocks = [...filteredBlocks];
 
   if (loansIndex !== -1 && loanApplyIndex !== -1 && loanApplyIndex !== loansIndex + 1) {
     const [loanApplyBlock] = reorderedBlocks.splice(loanApplyIndex, 1);
-    const nextLoansIndex = reorderedBlocks.findIndex((block) => String(block?.id || '').trim() === 'page_content');
+    const nextLoansIndex = reorderedBlocks.findIndex((block) => String(block?.id || '').trim() === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID);
     reorderedBlocks.splice(nextLoansIndex + 1, 0, loanApplyBlock);
   }
 
   return reorderedBlocks.map((block) => {
     if (!block || typeof block !== 'object') {
       return block;
+    }
+
+    if (
+      block.id === 'benefits_cards'
+      && String(block.kind || '').trim().toLowerCase() === 'card_grid'
+      && String(block.mode || '').trim().toLowerCase() === 'dynamic'
+    ) {
+      return {
+        ...block,
+        settings: normalizeRetirement403bBenefitsCardsSettings(block.settings),
+      };
     }
 
     if (
@@ -394,26 +485,82 @@ function isLegacyRetirement403bLoanApplySettings(settings) {
   return hasLegacyThreeStepShape && (hasLegacyTitles || hasLegacyApplicationBody);
 }
 
+function isBlankLegacyHtmlFragment(html) {
+  const normalizedHtml = String(html || '').trim();
+  return !normalizedHtml || normalizedHtml === '<p></p>' || normalizedHtml === '<p><br></p>';
+}
+
 function isStaleRetirement403bStrategyOptionsHtml(html) {
   const normalizedHtml = String(html || '').trim();
 
-  if (!normalizedHtml) {
+  if (isBlankLegacyHtmlFragment(normalizedHtml)) {
     return true;
   }
 
   const hasCanonicalFeatureWrapper = normalizedHtml.includes('ret403b-strategy-feature');
-  const leaksLegacyCardContent = (
-    normalizedHtml.includes('Prospectus')
-    || normalizedHtml.includes('Rollovers')
-    || normalizedHtml.includes('Variety')
-    || normalizedHtml.includes('Your Own Consultant')
-    || normalizedHtml.includes('Education')
-    || normalizedHtml.includes('Faith-Based Investments')
-    || normalizedHtml.includes('Minister’s Housing Allowance')
-    || normalizedHtml.includes("Ministers' Housing Allowance.")
+  const hasCanonicalSectionTitles = [
+    'MBA Income Fund',
+    'Risk-Based Strategies',
+    'Target-Date Strategies',
+    'Individual Investment Options',
+  ].every((title) => normalizedHtml.includes(title));
+  const hasCanonicalStrategyActions = (
+    normalizedHtml.includes('ret403b-strategy-feature-links')
+    && normalizedHtml.includes('service-native-btn')
+    && normalizedHtml.includes('is-outline')
+    && normalizedHtml.includes('is-tone-atlantean')
   );
+  const hasCanonicalServicesStructure = (
+    normalizedHtml.includes('services-breakdown-panel')
+    && normalizedHtml.includes('services-breakdown-description')
+    && hasCanonicalStrategyActions
+  );
+  const hasLegacyPdfLabels = [
+    'MBA Income Fund PDF',
+    'Screened strategies PDF',
+    'Target-date strategies PDF',
+    'Fund PDF',
+  ].some((label) => normalizedHtml.includes(label));
+  if (hasCanonicalFeatureWrapper) {
+    return (
+      !hasCanonicalServicesStructure
+      || (hasCanonicalSectionTitles && hasLegacyPdfLabels)
+    );
+  }
 
-  return leaksLegacyCardContent || !hasCanonicalFeatureWrapper;
+  const hasLegacyProspectus = normalizedHtml.includes('Prospectus');
+  const legacySignalCount = [
+    normalizedHtml.includes('Rollovers'),
+    normalizedHtml.includes('Variety'),
+    normalizedHtml.includes('Your Own Consultant'),
+    normalizedHtml.includes('Education'),
+    normalizedHtml.includes('Faith-Based Investments'),
+    normalizedHtml.includes('Minister’s Housing Allowance'),
+    normalizedHtml.includes("Ministers' Housing Allowance."),
+  ].filter(Boolean).length;
+
+  return (hasLegacyProspectus && legacySignalCount >= 1) || legacySignalCount >= 3;
+}
+
+function isStaleRetirement403bStrategyOptionsBlock(block) {
+  if (!block || typeof block !== 'object') {
+    return false;
+  }
+
+  if (String(block?.id || '').trim() !== 'investment_strategy_options') {
+    return false;
+  }
+
+  const blockKind = String(block?.kind || '').trim().toLowerCase();
+  if (blockKind === 'card_grid') {
+    return true;
+  }
+
+  if (blockKind !== 'content') {
+    return false;
+  }
+
+  return isStaleRetirement403bStrategyOptionsHtml(block?.settings?.html);
 }
 
 function needsRetirement403bStrategyHeadingProspectusRepair(settings, defaultSettings) {
@@ -427,6 +574,157 @@ function needsRetirement403bStrategyHeadingProspectusRepair(settings, defaultSet
   }
 
   return storedButton2Label !== canonicalButton2Label || storedButton2PageRef !== canonicalButton2PageRef;
+}
+
+function isLegacyRetirement403bIndividualEnrollmentBillboard(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return false;
+  }
+
+  const title = String(settings.title || '').trim();
+  return title === 'Need help with enrollment?';
+}
+
+function isLegacyRetirement403bRolloverBillboard(settings, defaultSettings) {
+  if (!settings || typeof settings !== 'object') {
+    return false;
+  }
+
+  const title = String(settings.title || '').trim();
+  const bodyHtml = String(settings.bodyHtml || '').trim();
+  const buttonLabel = String(settings.buttonLabel || '').trim();
+  const targetSectionClassName = String(settings.targetSectionClassName || '').trim();
+  const targetSectionKey = String(settings.targetSectionKey || '').trim();
+  const canonicalTitle = String(defaultSettings?.title || '').trim();
+  const hasLegacyTargetFields = Boolean(targetSectionClassName || targetSectionKey);
+  const hasLegacyLabel = buttonLabel === 'Let’s simplify things' || buttonLabel === "Let's simplify things";
+  const hasLegacyAsciiBody = bodyHtml.includes('surprisingly simple...and undeniably smart');
+  const titleMatchesCanonical = Boolean(canonicalTitle) && title === canonicalTitle;
+
+  return hasLegacyLabel || (
+    hasLegacyTargetFields
+    && titleMatchesCanonical
+    && hasLegacyAsciiBody
+  );
+}
+
+function isLegacyRetirement403bStartEnrollmentSettings(settings, defaultSettings) {
+  if (!settings || typeof settings !== 'object') {
+    return false;
+  }
+
+  const title = String(settings.title || '').trim();
+  const card1Title = String(settings.card1Title || '').trim();
+  const card1ButtonPageRef = String(settings.card1ButtonPageRef || '').trim();
+  const card2ButtonPageRef = String(settings.card2ButtonPageRef || '').trim();
+  const defaultCard1ButtonPageRef = String(defaultSettings?.card1ButtonPageRef || '').trim();
+  const defaultCard2ButtonPageRef = String(defaultSettings?.card2ButtonPageRef || '').trim();
+  const dividerTone = String(settings.dividerTone || '').trim();
+  const card1DividerTone = String(settings.card1DividerTone || '').trim();
+  const card2DividerTone = String(settings.card2DividerTone || '').trim();
+  const hasLegacyTitle = card1Title === 'Enrollment for individuals.';
+  const hasLegacyDivider = settings.showTitleDivider === true
+    || dividerTone === 'auto'
+    || card1DividerTone === 'auto'
+    || card2DividerTone === 'auto';
+  const matchesCanonicalTargets = (
+    card1ButtonPageRef === defaultCard1ButtonPageRef
+    && card2ButtonPageRef === defaultCard2ButtonPageRef
+  );
+
+  return title === 'Start enrollment' && matchesCanonicalTargets && (hasLegacyTitle || hasLegacyDivider);
+}
+
+function isLegacyRetirement403bHousingFeatureSettings(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return false;
+  }
+
+  const title = String(settings.title || '').trim();
+  const body = String(settings.body || '').trim();
+  const html = String(settings.html || '').trim();
+  const buttonLabel = String(settings.buttonLabel || '').trim().toLowerCase();
+  const buttonPageRef = String(settings.buttonPageRef || '').trim();
+  const col2Title = String(settings.col2Title || '').trim();
+  const col2Type = String(settings.col2Type || '').trim().toLowerCase();
+  const col2Body = String(settings.col2Body || '').trim();
+  const col2BodyHtml = String(settings.col2BodyHtml || '').trim();
+  const hasMeaningfulCol2Html = Boolean(stripSimpleHtmlToText(col2BodyHtml));
+  const hasLegacyTopLevelCopy = (
+    title === RETIREMENT_403B_HOUSING_FEATURE_LEGACY_TITLE
+    && body.includes('The unique benefit, which gives ministers a significant tax savings')
+  );
+  const hasLegacyCalculatorCta = buttonPageRef === '/calculators' || buttonLabel.includes('quick check calculator');
+  const hasLegacyCompareCopy = html.includes(RETIREMENT_403B_HOUSING_FEATURE_LEGACY_COMPARE_TEXT);
+  const hasMissingMigratedColumnsCopy = (
+    col2Title === RETIREMENT_403B_HOUSING_FEATURE_LEGACY_TITLE
+    && (!col2Type || col2Type === 'text')
+    && !col2Body
+    && !hasMeaningfulCol2Html
+  );
+
+  return hasLegacyTopLevelCopy
+    || (hasLegacyCalculatorCta && hasLegacyCompareCopy)
+    || hasMissingMigratedColumnsCopy;
+}
+
+function needsRetirement403bLoanDetailsCanonicalRefresh(html) {
+  const normalizedHtml = String(html || '').trim();
+
+  if (
+    !normalizedHtml.includes('retirement-403b-loan-copy')
+    || !normalizedHtml.includes('retirement-403b-loan-detail-card')
+  ) {
+    return false;
+  }
+
+  const hasLegacyMembersCopy = normalizedHtml.includes('Members may have no more than two loans at a time.');
+  const hasTreasuryDisclosure = normalizedHtml.includes('Due to regulations issued by the U.S. Department of the Treasury');
+  const missingConsultantCopy = !normalizedHtml.includes(RETIREMENT_403B_LOAN_CONSULTANT_COPY);
+  const missingFollowupClass = !normalizedHtml.includes('retirement-403b-loan-followup');
+
+  return hasLegacyMembersCopy && hasTreasuryDisclosure && (missingConsultantCopy || missingFollowupClass);
+}
+
+function shouldResetRetirement403bLoanDetailsHtml(html) {
+  const normalizedHtml = String(html || '').trim();
+
+  if (isBlankLegacyHtmlFragment(normalizedHtml)) {
+    return true;
+  }
+
+  const hasCanonical403bLoanHtml = normalizedHtml.includes('retirement-403b-loan-copy');
+  const hasCanonical403bLoanDetailCard = normalizedHtml.includes('retirement-403b-loan-detail-card');
+  if (hasCanonical403bLoanHtml && hasCanonical403bLoanDetailCard) {
+    return needsRetirement403bLoanDetailsCanonicalRefresh(normalizedHtml);
+  }
+
+  const legacySignalCount = [
+    normalizedHtml.includes('403(b) Plan Loans'),
+    normalizedHtml.includes('A 403(b) loan allows you to borrow money from your own retirement savings'),
+    normalizedHtml.includes('The requested 403(b) loan amount cannot be less than $1,500'),
+    normalizedHtml.includes('Members may have no more than two loans at a time.'),
+    normalizedHtml.includes('Due to regulations issued by the U.S. Department of the Treasury'),
+  ].filter(Boolean).length;
+
+  return legacySignalCount >= 3;
+}
+
+function isLegacyTargetedRetirement403bCta(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return false;
+  }
+
+  const targetSectionClassName = String(settings.targetSectionClassName || '').trim();
+  const targetSectionKey = String(settings.targetSectionKey || '').trim();
+  const bodyHtml = String(settings.bodyHtml || '').trim();
+  const bgTone = String(settings.bgTone || '').trim();
+
+  return (
+    targetSectionClassName === 'retirement-child-native-cta retirement-403b-native-cta'
+    || targetSectionKey === 'class:retirement-child-native-cta retirement-403b-native-cta'
+    || (bodyHtml === '<p>And we’re eager to help.</p>' && bgTone === 'sand')
+  );
 }
 
 function normalizeRetirementLandingCtaSettings(settings, defaultSettings = {}) {
@@ -2298,11 +2596,9 @@ function shouldRefreshStoredIntroFromNative(pathname, settings) {
   }
 
   if (path === RETIREMENT_403B_PATH) {
+    const normalizedLegacyBody = body || stripSimpleHtmlToText(bodyHtml);
     const looksLikeLegacy403bIntro = heading === 'Ministry-powered retirement.'
-      && (
-        body.includes('The AGFinancial 403(b) offers higher contribution limits')
-        || bodyHtml.includes('The AGFinancial 403(b) offers higher contribution limits')
-      );
+      && normalizedLegacyBody === RETIREMENT_403B_OVERVIEW_LEGACY_INTRO_TEXT;
     if (!looksLikeLegacy403bIntro) {
       return false;
     }
@@ -2328,7 +2624,16 @@ function shouldRefreshStoredIntroFromNative(pathname, settings) {
     return false;
   }
 
-  if (heading === 'What’s one gotta do to get AGFinancial 403(b)?') {
+  const hasLegacyIndividualEnrollmentHeading = heading === 'What’s one gotta do to get AGFinancial 403(b)?';
+  const hasLegacyIndividualEnrollmentBody = (
+    body.includes('What’s one gotta do to get AGFinancial 403(b)?')
+    || bodyHtml.includes('What’s one gotta do to get AGFinancial 403(b)?')
+    || body.includes('You’re in luck. We guide you through the process')
+    || bodyHtml.includes('You’re in luck. We guide you through the process')
+  );
+  const hasLegacyIndividualEnrollmentButton = button1Label === '' || button1Label === 'Download Plan Summary';
+
+  if (hasLegacyIndividualEnrollmentHeading && (hasLegacyIndividualEnrollmentBody || hasLegacyIndividualEnrollmentButton)) {
     return true;
   }
 
@@ -3647,6 +3952,10 @@ export function normalizeStoredConfig(payload) {
     const defaultForPath = Array.isArray(defaultBlocks[path]) ? defaultBlocks[path] : [];
     const defaultById = new Map(defaultForPath.map((block) => [block.id, block]));
     const normalizedStoredBlocks = dedupeBlocksByIdPreferLatest(storedBlocks);
+    const hasStaleRetirement403bStrategyOptions = (
+      path === RETIREMENT_403B_PATH
+      && normalizedStoredBlocks.some((block) => isStaleRetirement403bStrategyOptionsBlock(block))
+    );
     const canonicalFormOwner = inferCanonicalFormOwner(defaultForPath);
     const seenIds = new Set();
     const mergedInStoredOrder = [];
@@ -3654,7 +3963,13 @@ export function normalizeStoredConfig(payload) {
     normalizedStoredBlocks.forEach((storedBlock) => {
       const storedBlockId = String(storedBlock?.id || '').trim();
       const storedKind = String(storedBlock?.kind || '').trim().toLowerCase();
-      const effectiveStoredBlockId = storedBlockId;
+      const effectiveStoredBlockId = (
+        path === RETIREMENT_403B_PATH
+        && storedBlockId === 'page_content'
+        && isRetirement403bLoanDetailsBlock(storedBlock)
+      )
+        ? RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID
+        : storedBlockId;
 
       if (!storedBlock || typeof storedBlock !== 'object' || !effectiveStoredBlockId || seenIds.has(effectiveStoredBlockId)) {
         return;
@@ -3711,20 +4026,25 @@ export function normalizeStoredConfig(payload) {
         return;
       }
       if (
-        path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH
-        && storedBlock.id === 'billboard'
-        && storedKind === 'billboard'
+        path === RETIREMENT_403B_GROUP_ENROLLMENT_PATH
+        && isPageContentBlock(storedBlock)
       ) {
         return;
       }
       if (
-        (path === RETIREMENT_403B_PATH || path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH)
-        && storedBlock.id === 'intro'
-        && storedKind === 'intro'
+        path === RETIREMENT_403B_PATH
+        && isPageContentBlock(storedBlock)
+        && !isRetirement403bLoanDetailsBlock(storedBlock)
       ) {
-        if (path === RETIREMENT_403B_PATH) {
-          return;
-        }
+        return;
+      }
+      if (
+        path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH
+        && storedBlock.id === 'billboard'
+        && storedKind === 'billboard'
+        && isLegacyRetirement403bIndividualEnrollmentBillboard(storedSettings)
+      ) {
+        return;
       }
       if (
         path === '/services/insurance/group-term-life-insurance'
@@ -3744,7 +4064,13 @@ export function normalizeStoredConfig(payload) {
       }
 
       let storedMode = String(storedBlock.mode || defaultBlock.mode || '').trim().toLowerCase() || defaultBlock.mode;
-      let nextStoredBlock = storedBlock;
+      let nextStoredBlock = effectiveStoredBlockId !== storedBlockId
+        ? {
+            ...storedBlock,
+            id: effectiveStoredBlockId,
+            name: defaultBlock?.name || storedBlock?.name || 'Loan Details',
+          }
+        : storedBlock;
       if (
         REQUEST_FORM_MODE_LOCKED_PATHS.has(path)
         && storedBlock.id === 'request_form'
@@ -3909,16 +4235,18 @@ export function normalizeStoredConfig(payload) {
         && storedMode === 'dynamic'
       ) {
         const billboardSettings = nextStoredBlock?.settings || {};
+        const bgTone = String(billboardSettings.bgTone || '').trim();
+        const textTone = String(billboardSettings.textTone || '').trim();
         const buttonUrl = String(billboardSettings.buttonUrl || '').trim();
         const buttonPageRef = String(billboardSettings.buttonPageRef || '').trim();
         const button2Url = String(billboardSettings.button2Url || '').trim();
         const button2PageRef = String(billboardSettings.button2PageRef || '').trim();
+        const needsLegacyBillboardToneRepair = bgTone === 'grey' && textTone === 'white';
         nextStoredBlock = {
           ...nextStoredBlock,
           settings: {
             ...billboardSettings,
-            bgTone: 'white',
-            textTone: 'dark',
+            ...(needsLegacyBillboardToneRepair ? { bgTone: 'white', textTone: 'dark' } : {}),
             buttonPageRef: /^https?:\/\/files\.agfinancial\.org\/.+\.pdf$/i.test(buttonUrl) && buttonPageRef === buttonUrl
               ? ''
               : buttonPageRef,
@@ -3935,15 +4263,9 @@ export function normalizeStoredConfig(payload) {
         && storedMode === 'dynamic'
       ) {
         const ctaSettings = nextStoredBlock?.settings || {};
-        const targetSectionClassName = String(ctaSettings.targetSectionClassName || '').trim();
-        const targetSectionKey = String(ctaSettings.targetSectionKey || '').trim();
-        const bodyHtml = String(ctaSettings.bodyHtml || '').trim();
         const subtitle = String(ctaSettings.subtitle || '').trim();
-        const isLegacyTargeted403bCta = targetSectionClassName === 'retirement-child-native-cta retirement-403b-native-cta'
-          || targetSectionKey === 'class:retirement-child-native-cta retirement-403b-native-cta'
-          || bodyHtml === '<p>And we’re eager to help.</p>';
 
-        if (isLegacyTargeted403bCta) {
+        if (isLegacyTargetedRetirement403bCta(ctaSettings)) {
           nextStoredBlock = {
             ...nextStoredBlock,
             settings: {
@@ -3974,13 +4296,11 @@ export function normalizeStoredConfig(payload) {
         const targetSectionClassName = String(rolloverSettings.targetSectionClassName || '').trim();
         const targetSectionKey = String(rolloverSettings.targetSectionKey || '').trim();
         const buttonLabel = String(rolloverSettings.buttonLabel || '').trim();
-        const bodyHtml = String(rolloverSettings.bodyHtml || '').trim();
-        const isLegacy403bRolloverBillboard = targetSectionClassName !== 'retirement-child-native-rollover'
-          || targetSectionKey !== 'class:retirement-child-native-rollover'
-          || buttonLabel === 'Let’s simplify things'
-          || buttonLabel === "Let's simplify things"
-          || bodyHtml.includes('surprisingly simple…and undeniably smart')
-          || bodyHtml.includes('surprisingly simple...and undeniably smart');
+        const hasLegacyTargetFields = Boolean(targetSectionClassName || targetSectionKey);
+        const isLegacy403bRolloverBillboard = isLegacyRetirement403bRolloverBillboard(
+          rolloverSettings,
+          canonicalRolloverDefaultBlock?.settings,
+        );
 
         if (isLegacy403bRolloverBillboard) {
           nextStoredBlock = {
@@ -3996,6 +4316,16 @@ export function normalizeStoredConfig(payload) {
             editableFields: Array.isArray(canonicalRolloverDefaultBlock?.editableFields)
               ? [...canonicalRolloverDefaultBlock.editableFields]
               : [],
+          };
+        } else if (hasLegacyTargetFields) {
+          nextStoredBlock = {
+            ...nextStoredBlock,
+            settings: {
+              ...rolloverSettings,
+              targetSectionKey: '',
+              targetSectionClassName: '',
+              targetSectionIndex: 0,
+            },
           };
         }
       }
@@ -4024,24 +4354,14 @@ export function normalizeStoredConfig(payload) {
       }
       if (
         path === '/services/retirement/403b'
-        && isPageContentBlock(storedBlock)
+        && isRetirement403bLoanDetailsBlock(storedBlock)
         && defaultBlock
       ) {
         const storedHtml = String(nextStoredBlock?.settings?.html || '').trim();
-        const looksLikeLegacy403bLoanHtml = storedHtml.includes('403(b) Plan Loans')
-          || storedHtml.includes('A 403(b) loan allows you to borrow money from your own retirement savings')
-          || storedHtml.includes('The requested 403(b) loan amount cannot be less than $1,500');
-        const isCanonical403bLoanHtml = storedHtml.includes('retirement-403b-loan-copy');
-        const hasCanonical403bLoanDetailCard = storedHtml.includes('retirement-403b-loan-detail-card');
-        if (
-          !storedHtml
-          || storedHtml === '<p></p>'
-          || storedHtml === '<p><br></p>'
-          || (looksLikeLegacy403bLoanHtml && (!isCanonical403bLoanHtml || !hasCanonical403bLoanDetailCard))
-        ) {
+        if (shouldResetRetirement403bLoanDetailsHtml(storedHtml)) {
           nextStoredBlock = {
             ...cloneTemplateVariant(defaultBlock),
-            id: defaultBlock.id || storedBlock.id,
+            id: defaultBlock.id || RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID,
             name: defaultBlock.name || storedBlock.name,
             kind: defaultBlock.kind || storedBlock.kind,
             mode: 'dynamic',
@@ -4052,6 +4372,12 @@ export function normalizeStoredConfig(payload) {
             editableFields: Array.isArray(defaultBlock?.editableFields)
               ? [...defaultBlock.editableFields]
               : [],
+          };
+        } else if (String(nextStoredBlock?.id || '').trim() !== RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID) {
+          nextStoredBlock = {
+            ...nextStoredBlock,
+            id: RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID,
+            name: defaultBlock?.name || nextStoredBlock?.name || 'Loan Details',
           };
         }
       }
@@ -4087,6 +4413,7 @@ export function normalizeStoredConfig(payload) {
         && storedKind === 'billboard'
         && storedMode === 'dynamic'
         && defaultBlock
+        && hasStaleRetirement403bStrategyOptions
         && needsRetirement403bStrategyHeadingProspectusRepair(nextStoredBlock?.settings, defaultBlock?.settings)
       ) {
         nextStoredBlock = {
@@ -4119,6 +4446,49 @@ export function normalizeStoredConfig(payload) {
           editableFields: Array.isArray(defaultBlock?.editableFields)
             ? [...defaultBlock.editableFields]
             : (Array.isArray(nextStoredBlock?.editableFields) ? [...nextStoredBlock.editableFields] : []),
+        };
+      }
+      if (
+        path === RETIREMENT_403B_PATH
+        && storedBlock.id === 'start_enrollment'
+        && storedKind === 'card_grid'
+        && storedMode === 'dynamic'
+        && defaultBlock
+        && isLegacyRetirement403bStartEnrollmentSettings(nextStoredBlock?.settings, defaultBlock?.settings)
+      ) {
+        nextStoredBlock = {
+          ...nextStoredBlock,
+          templateId: defaultBlock.templateId || nextStoredBlock.templateId || 'card_grid',
+          presetId: defaultBlock.presetId || nextStoredBlock.presetId || '',
+          settings: {
+            ...(defaultBlock?.settings || {}),
+          },
+          editableFields: Array.isArray(defaultBlock?.editableFields)
+            ? [...defaultBlock.editableFields]
+            : (Array.isArray(nextStoredBlock?.editableFields) ? [...nextStoredBlock.editableFields] : []),
+        };
+      }
+      if (
+        path === RETIREMENT_403B_PATH
+        && storedBlock.id === 'housing_feature'
+        && (storedKind === 'content' || storedKind === 'columns')
+        && storedMode === 'dynamic'
+        && defaultBlock
+        && isLegacyRetirement403bHousingFeatureSettings(nextStoredBlock?.settings)
+      ) {
+        nextStoredBlock = {
+          ...cloneTemplateVariant(defaultBlock),
+          id: defaultBlock.id || storedBlock.id,
+          name: defaultBlock.name || storedBlock.name,
+          kind: defaultBlock.kind || storedBlock.kind,
+          mode: 'dynamic',
+          hidden: false,
+          settings: {
+            ...(defaultBlock?.settings || {}),
+          },
+          editableFields: Array.isArray(defaultBlock?.editableFields)
+            ? [...defaultBlock.editableFields]
+            : [],
         };
       }
       if (path === '/services/loans' && storedBlock.id === 'hero' && storedMode === 'dynamic') {

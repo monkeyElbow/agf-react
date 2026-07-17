@@ -139,6 +139,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(pageSource).toContain('defaultRetirementBillboardSettings');
     expect(pageSource).toContain('defaultRetirementRolloverBillboardSettings');
     expect(pageSource).toContain('const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;');
+    expect(pageSource).toContain('? Math.max(Number(renderedBillboard.contentMaxWidthPx), 1480)');
     expect(pageSource).toContain("const renderedBillboardJustify = 'right';");
     expect(pageSource).toContain('const renderedRolloverBillboard = dynamicRolloverBillboard || DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD;');
     expect(pageSource).toContain("rollover_billboard: RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID");
@@ -152,6 +153,11 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('width: min(860px, 100%);');
     expect(cssSource).toContain('.retirement-everyday .native-info-rich-html p {');
     expect(cssSource).toContain('font-size: clamp(1.18rem, 1.85vw, 1.42rem);');
+    expect(cssSource).toContain('.retirement-daily-billboard > .ag-panel-rail {');
+    expect(cssSource).toContain('width: min(var(--dynamic-billboard-max-width, 1480px), calc(100% - (var(--ag-panel-gutter) * 2)));');
+    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr) minmax(32rem, min(100%, 40rem));');
+    expect(cssSource).toContain('grid-column: 2;');
+    expect(cssSource).toContain('justify-self: stretch;');
 
     const billboardIndex = pageSource.indexOf('data-block-id="billboard"');
     const rolloverBillboardIndex = pageSource.indexOf('data-block-id="rollover_billboard"');

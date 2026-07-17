@@ -698,9 +698,10 @@ export default function RetirementPage() {
   const billboardSectionStyle = renderedBillboard?.action
     ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
     : undefined;
-  const billboardRailStyle = renderedBillboard?.contentMaxWidthPx
-    ? { '--dynamic-billboard-max-width': `${renderedBillboard.contentMaxWidthPx}px` }
-    : undefined;
+  const billboardRailWidthPx = Number.isFinite(Number(renderedBillboard?.contentMaxWidthPx))
+    ? Math.max(Number(renderedBillboard.contentMaxWidthPx), 1480)
+    : 1480;
+  const billboardRailStyle = { '--dynamic-billboard-max-width': `${billboardRailWidthPx}px` };
   const rolloverBillboardSectionStyle = renderedRolloverBillboard?.action
     ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
     : undefined;

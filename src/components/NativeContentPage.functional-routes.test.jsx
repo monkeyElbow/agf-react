@@ -998,6 +998,34 @@ describe('NativeContentPage functional routes', () => {
     expect(button.className).toContain('service-native-btn');
   });
 
+  it('renders the 403(b) housing columns block with the restored body copy and bullet list', () => {
+    mockBlocksByPath = {
+      '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
+        .filter((block) => block?.mode !== 'static'),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/403b',
+            title: '403(b)',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const heading = screen.getByRole('heading', { name: "Retired Ministers' Housing Allowance" });
+    const section = heading.closest('section');
+
+    expect(section?.className).toContain('native-dynamic-columns');
+    expect(section?.className).toContain('is-columns-preset-housing-allowance');
+    expect(screen.getByText(/The unique benefit, which gives ministers a significant tax savings/i)).toBeTruthy();
+    expect(screen.getByText('The maximum housing allowance exemption in any tax year is the lesser of:')).toBeTruthy();
+    expect(screen.getByText('Your actual expenditures')).toBeTruthy();
+    expect(screen.getByText(/The amount distributed by your retirement plan to you and declared in advance as your housing allowance/i)).toBeTruthy();
+  });
+
   it('renders a single centered 403(b) enroll CTA below the investment strategy feature section', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])

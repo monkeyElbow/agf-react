@@ -412,4 +412,38 @@ describe('PageBlocksRenderer columns', () => {
     expect(screen.getByText('Housing benefit').className).toContain('is-atlantean');
     expect(screen.getByText('Housing benefit').closest('section')?.className).toContain('is-columns-preset-housing-allowance');
   });
+
+  it('renders housing-allowance column body html inside the existing columns shell', () => {
+    renderColumnsBlock({
+      id: 'housing_feature',
+      type: 'columns',
+      kind: 'columns',
+      mode: 'dynamic',
+      templateId: 'columns',
+      presetId: 'housing-allowance',
+      columnsStyle: 'retirement',
+      bgTone: 'white',
+      col1Enabled: true,
+      col1Type: 'photo',
+      col1ImageUrl: 'housing-photo.jpg',
+      col1ImageAlt: 'Living room with fireplace',
+      col2Enabled: true,
+      col2Type: 'text',
+      col2Title: "Retired Ministers' Housing Allowance",
+      col2BodyHtml: `
+        <p>The unique benefit remains available to retired ministers.</p>
+        <p class="ret403b-housing-feature-bullet-intro">The maximum housing allowance exemption in any tax year is the lesser of:</p>
+        <ul>
+          <li>Your actual expenditures</li>
+          <li>The fair rental value of your home</li>
+        </ul>
+      `,
+    });
+
+    const section = screen.getByText("Retired Ministers' Housing Allowance").closest('section');
+    expect(section?.className).toContain('native-dynamic-columns');
+    expect(section?.className).toContain('is-columns-preset-housing-allowance');
+    expect(screen.getByText('The maximum housing allowance exemption in any tax year is the lesser of:')).toBeTruthy();
+    expect(screen.getByText('Your actual expenditures').tagName).toBe('LI');
+  });
 });

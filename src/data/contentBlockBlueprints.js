@@ -559,9 +559,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         submitLabel: 'Submit',
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
-        targetSectionKey: 'class:retirement-rollovers-native-request',
+        targetSectionKey: '',
         targetSectionClassName: 'retirement-rollovers-native-request',
-        targetSectionIndex: 3,
+        targetSectionIndex: 0,
         step1Title: 'Step 1',
         step1Note: '',
         step1Alert: '',
@@ -952,8 +952,10 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         body: '',
         bgTone: 'white',
         textTone: 'dark',
-        justify: 'center',
+        justify: 'right',
         lineSpacing: 1,
+        contentMaxWidthPx: 1216,
+        headlineMaxWidthPx: 560,
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
           hrefField: 'buttonUrl',
@@ -1277,10 +1279,10 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       kind: 'intro',
       mode: 'dynamic',
       settings: {
-        heading: 'What’s one gotta do to get AGFinancial 403(b)?',
+        heading: 'How do I enroll my staff in AGFinancial 403(b)?',
         headingClassName: '',
         headingHighlightsJson: '',
-        bodyHtml: '<p>You’re in luck. We guide you through the process in these super simple easy-to-follow steps.</p>',
+        bodyHtml: '<p>Use these simple steps to establish your organization’s plan, collect employee enrollment forms, and finish the paperwork needed to begin payroll contributions.</p>',
         body: '',
         justify: 'center',
         lineSpacing: 1.04,
@@ -1297,17 +1299,159 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           styleField: 'button1Style',
           toneField: 'button1Tone',
         }),
-        ...seedBlueprintActionFields({
-          labelField: 'button2Label',
-          hrefField: 'button2Url',
-          pageRefField: 'button2PageRef',
-          label: 'Download Enrollment Form',
-          href: 'https://files.agfinancial.org/retirement/403b-Enrollment-Form.pdf',
-          styleField: 'button2Style',
-          toneField: 'button2Tone',
-        }),
       },
       editableFields: sharedDynamicIntroEditableFields,
+    },
+    createDynamicCardGridBlueprint({
+      id: 'confirm_eligibility',
+      name: 'Confirm Eligibility',
+      presetId: 'eligibility-cards',
+      settings: {
+        title: 'Confirm eligibility',
+        subtitle: 'Use the group enrollment path when your organization is establishing a plan for eligible ministers or ministry employees.',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        bodyHtml: '',
+        body: '',
+        fullBleed: true,
+        showTitleDivider: false,
+        sectionClassName: 'retirement-child-native-qualify',
+        ...seedBlueprintCardGridCardFields(1, {
+          title: 'Assemblies of God churches',
+          body: 'Use group enrollment if your church is establishing an AGFinancial 403(b) plan for eligible ministers or ministry employees. This is the employer setup path for churches sponsoring staff participation.',
+        }),
+        ...seedBlueprintCardGridCardFields(2, {
+          title: 'General and district councils',
+          body: 'The General Council of the Assemblies of God and District Councils use this path when establishing 403(b) participation for employees. It supports employer setup, enrollment collection, and payroll coordination.',
+        }),
+        ...seedBlueprintCardGridCardFields(3, {
+          title: 'AG-affiliated 501(c)(3) ministries',
+          body: 'Organizations controlled by or associated with the Assemblies of God that are tax-exempt under 501(c)(3) can use group enrollment for eligible employees. Choose the correct agreement below based on whether your ministry is a church or QCCO, or an NQCCO.',
+        }),
+      },
+    }),
+    {
+      id: 'eligibility_disclosure',
+      name: 'Eligibility Disclosure',
+      kind: PAGE_CONTENT_IDENTITY.kind,
+      mode: 'dynamic',
+      settings: {
+        title: '',
+        subtitle: '',
+        body: '',
+        html: '',
+        widget: '',
+        fullBleed: false,
+        spaceBeforeRem: 0,
+        spaceAfterRem: 0.5,
+        paddingTopRem: 0,
+        paddingBottomRem: 0,
+        contentMaxWidthPx: 1180,
+        anchorId: '',
+        sectionClassName: 'retirement-group-enrollment-eligibility-disclosure',
+        copyWrap: false,
+        buttonLabel: '',
+        buttonUrl: '',
+        buttonPageRef: '',
+        buttonOpenInNewWindow: false,
+        buttonDocumentId: '',
+        addressClassName: '',
+        addressTitle: '',
+        addressLines: '',
+        tableHeadersJson: '',
+        tableRowsJson: '',
+        tableValueAlignment: '',
+        tableChartId: '',
+        fineprint: '*501(c)(3) organizations are tax-exempt entities organized and operated exclusively for religious, charitable, scientific, testing for public safety, literary, or educational purposes, among other qualified purposes under the Internal Revenue Code.',
+        fineprintDisclosureId: 'retirement-403b-501c3-note',
+      },
+      editableFields: sharedDynamicPageContentEditableFields,
+    },
+    createDynamicCardGridBlueprint({
+      id: 'enrollment_steps',
+      name: 'Enrollment Steps',
+      presetId: 'step-cards',
+      settings: {
+        title: 'Complete your enrollment',
+        subtitle: 'Easy steps.',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        bodyHtml: '',
+        body: '',
+        bgTone: 'sand',
+        contentWidth: 'content',
+        columns: 'three',
+        cardStyle: 'card2',
+        fullBleed: true,
+        sectionClassName: 'retirement-403b-group-enrollment-steps',
+        ...seedBlueprintCardGridCardFields(1, {
+          title: '1',
+          body: 'Choose the agreement that matches your ministry structure and review the 403(b) terms and definitions before you collect employee paperwork.',
+          linksJson: JSON.stringify([
+            { label: 'Agreement 1: Church or QCCO', href: 'https://files.agfinancial.org/retirement/403B-QCCO-Agreement.pdf' },
+            { label: 'Agreement 2: NQCCO', href: 'https://files.agfinancial.org/retirement/403B-NQCCO-Agreement.pdf' },
+            { label: '403(b) Terms & Definitions', to: '/services/retirement/403b/403b-terms-definitions' },
+          ]),
+        }),
+        ...seedBlueprintCardGridCardFields(2, {
+          title: '2',
+          body: 'Have each participating employee complete the required enrollment and payroll deduction forms so employer setup and payroll administration stay aligned.',
+          linksJson: JSON.stringify([
+            { label: 'Download Enrollment Form', href: 'https://files.agfinancial.org/retirement/403b-Enrollment-Form.pdf' },
+            { label: 'Download Payroll Deduction Form', href: 'https://files.agfinancial.org/retirement/Payroll-Deduction-Form.pdf' },
+          ]),
+        }),
+        ...seedBlueprintCardGridCardFields(3, {
+          title: '3',
+          body: 'Return the completed forms through secure upload, mail, or fax, then keep the agreement checklist handy for ongoing plan administration.',
+          linksJson: JSON.stringify([
+            { label: 'Submit securely online', href: 'https://sft.agfinancial.org/documents/Send.do' },
+          ]),
+          listJson: JSON.stringify([
+            'Collect completed forms from each participating employee.',
+            'Complete payroll deduction setup for each participating employee.',
+            'QCCO = Qualified Church-Controlled Organization.',
+            'NQCCO = Nonqualified Church-Controlled Organization.',
+          ]),
+        }),
+      },
+    }),
+    {
+      id: 'return_forms',
+      name: 'Return Forms Instructions',
+      kind: PAGE_CONTENT_IDENTITY.kind,
+      mode: 'dynamic',
+      settings: {
+        title: '',
+        subtitle: '',
+        body: '',
+        html: '',
+        widget: '',
+        fullBleed: false,
+        spaceBeforeRem: 0,
+        spaceAfterRem: 1.2,
+        paddingTopRem: 0,
+        paddingBottomRem: 0,
+        contentMaxWidthPx: 980,
+        anchorId: '',
+        sectionClassName: 'retirement-group-enrollment-return',
+        copyWrap: false,
+        buttonLabel: '',
+        buttonUrl: '',
+        buttonPageRef: '',
+        buttonOpenInNewWindow: false,
+        buttonDocumentId: '',
+        addressClassName: 'ministers-group-life-copy-address',
+        addressTitle: 'Mail or fax completed forms to:',
+        addressLines: 'AGFinancial\nPO Box 2515\nSpringfield, MO 65801',
+        tableHeadersJson: '',
+        tableRowsJson: '',
+        tableValueAlignment: '',
+        tableChartId: '',
+        fineprint: 'The service agreement helps define employer and AGFinancial responsibilities for administration, hardship distributions, and plan loans.\n\n**FAX:** 417.520.0406',
+        fineprintDisclosureId: '',
+      },
+      editableFields: sharedDynamicPageContentEditableFields,
     },
     {
       id: 'request_form',
@@ -1403,7 +1547,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: getLegacyEditableFieldsForKind('billboard'),
     },
-    ...genericPageFallbackBlueprint(),
   ],
   '/services/planned-giving/charitable-trusts': [
     {
@@ -1750,8 +1893,8 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           body: 'This unique investment option ensures the securities you own are aligned with biblical ethical standards.',
         }),
         ...seedBlueprintCardGridCardFields(3, {
-          title: 'Minister’s Housing Allowance',
-          titleHighlightsJson: '[{"text":"Minister’s Housing Allowance","className":"is-super-grey"}]',
+          title: "Ministers' Housing Allowance",
+          titleHighlightsJson: '[{"text":"Ministers\' Housing Allowance","className":"is-super-grey"}]',
           body: 'This significant tax-saving benefit is available to retired ministers through the AGFinancial 403(b) plan.',
         }),
         ...seedBlueprintCardGridCardFields(4, {
@@ -1880,6 +2023,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         button2PageRef: '/prospectus',
         button2Style: 'dark',
         button2Tone: 'super-grey',
+        sectionClassName: 'retirement-403b-native-strategy-heading',
       },
       editableFields: sharedDynamicBillboardEditableFields,
     },
@@ -1894,49 +2038,41 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         body: '',
         html: `
           <div class="ret403b-strategy-feature">
-            <article class="ret403b-strategy-feature-row">
-              <div class="ret403b-strategy-feature-copy">
-                <h3>MBA Income Fund</h3>
-                <p>AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.</p>
-              </div>
-              <div class="ret403b-strategy-feature-links">
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf" target="_blank" rel="noreferrer noopener">MBA Income Fund PDF</a>
-              </div>
+            <article class="ret403b-strategy-feature-row services-breakdown-panel">
+              <h3>MBA Income Fund</h3>
+              <p class="services-breakdown-description">AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.</p>
+              <nav class="ret403b-strategy-feature-links" aria-label="MBA Income Fund links">
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf" target="_blank" rel="noreferrer noopener">MBA Income Fund</a>
+              </nav>
             </article>
-            <article class="ret403b-strategy-feature-row">
-              <div class="ret403b-strategy-feature-copy">
-                <h3>Risk-Based Strategies</h3>
-                <p>These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.</p>
-              </div>
-              <div class="ret403b-strategy-feature-links">
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf" target="_blank" rel="noreferrer noopener">Screened strategies PDF</a>
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-40.pdf" target="_blank" rel="noreferrer noopener">Asset Manager 40%</a>
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-60.pdf" target="_blank" rel="noreferrer noopener">Asset Manager 60%</a>
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity%20Asset-Manager%C2%AE-85.pdf" target="_blank" rel="noreferrer noopener">Asset Manager 85%</a>
-              </div>
+            <article class="ret403b-strategy-feature-row services-breakdown-panel">
+              <h3>Risk-Based Strategies</h3>
+              <p class="services-breakdown-description">These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.</p>
+              <nav class="ret403b-strategy-feature-links" aria-label="Risk-Based Strategies links">
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf" target="_blank" rel="noreferrer noopener">Screened strategies</a>
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-40.pdf" target="_blank" rel="noreferrer noopener">Asset Manager 40%</a>
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-60.pdf" target="_blank" rel="noreferrer noopener">Asset Manager 60%</a>
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity%20Asset-Manager%C2%AE-85.pdf" target="_blank" rel="noreferrer noopener">Asset Manager 85%</a>
+              </nav>
             </article>
-            <article class="ret403b-strategy-feature-row">
-              <div class="ret403b-strategy-feature-copy">
-                <h3>Target-Date Strategies</h3>
-                <p>Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.</p>
-              </div>
-              <div class="ret403b-strategy-feature-links">
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Target-Date.pdf" target="_blank" rel="noreferrer noopener">Target-date strategies PDF</a>
-              </div>
+            <article class="ret403b-strategy-feature-row services-breakdown-panel">
+              <h3>Target-Date Strategies</h3>
+              <p class="services-breakdown-description">Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.</p>
+              <nav class="ret403b-strategy-feature-links" aria-label="Target-Date Strategies links">
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Target-Date.pdf" target="_blank" rel="noreferrer noopener">Target-date strategies</a>
+              </nav>
             </article>
-            <article class="ret403b-strategy-feature-row">
-              <div class="ret403b-strategy-feature-copy">
-                <h3>Individual Investment Options</h3>
-                <p>This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.</p>
-              </div>
-              <div class="ret403b-strategy-feature-links">
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Select-Bond.pdf" target="_blank" rel="noreferrer noopener">Steward Select Bond</a>
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Equity-Market-Neutral.pdf" target="_blank" rel="noreferrer noopener">Steward Equity Market Neutral</a>
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Global-Equity.pdf" target="_blank" rel="noreferrer noopener">Steward Global Equity</a>
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Covered-Call.pdf" target="_blank" rel="noreferrer noopener">Steward Covered Call</a>
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-500-Index-Fund.pdf" target="_blank" rel="noreferrer noopener">Fidelity 500 Index</a>
-                <a href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Vanguard-Total-Bond-Market-Index-Fund.pdf" target="_blank" rel="noreferrer noopener">Vanguard Total Bond Market Index</a>
-              </div>
+            <article class="ret403b-strategy-feature-row services-breakdown-panel">
+              <h3>Individual Investment Options</h3>
+              <p class="services-breakdown-description">This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.</p>
+              <nav class="ret403b-strategy-feature-links" aria-label="Individual Investment Options links">
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Select-Bond.pdf" target="_blank" rel="noreferrer noopener">Steward Select Bond</a>
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Equity-Market-Neutral.pdf" target="_blank" rel="noreferrer noopener">Steward Equity Market Neutral</a>
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Global-Equity.pdf" target="_blank" rel="noreferrer noopener">Steward Global Equity</a>
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Covered-Call.pdf" target="_blank" rel="noreferrer noopener">Steward Covered Call</a>
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-500-Index-Fund.pdf" target="_blank" rel="noreferrer noopener">Fidelity 500 Index</a>
+                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Vanguard-Total-Bond-Market-Index-Fund.pdf" target="_blank" rel="noreferrer noopener">Vanguard Total Bond Market Index</a>
+              </nav>
             </article>
           </div>
         `,
@@ -2005,8 +2141,8 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: sharedDynamicPageContentEditableFields,
     },
     {
-      id: PAGE_CONTENT_IDENTITY.blockId,
-      name: 'Page Content',
+      id: 'loan_details',
+      name: 'Loan Details',
       kind: PAGE_CONTENT_IDENTITY.kind,
       mode: 'dynamic',
       settings: {
@@ -2022,8 +2158,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
                 <li>50% of the total vested account balances</li>
                 <li>or $50,000</li>
               </ul>
+              <p class="retirement-403b-loan-consultant">Contact your AGFinancial retirement consultant for more information.</p>
             </div>
-            <p class="retirement-403b-loan-fineprint">Members may have no more than two loans at a time. The interest rate for plan loans is fixed for the life of the loan at 2.0% above the rate of the MBA Income Fund. All loan payments are made by automatic bank draft on the 20th of each month. The maximum term of a loan is 59 months (5 years) regardless of intended use.</p>
+            <p class="retirement-403b-loan-followup">Members may have no more than two loans at a time. The interest rate for plan loans is fixed for the life of the loan at 2.0% above the rate of the MBA Income Fund. All loan payments are made by automatic bank draft on the 20th of each month. The maximum term of a loan is 59 months (5 years) regardless of intended use.</p>
             <p class="retirement-403b-loan-fineprint">Due to regulations issued by the U.S. Department of the Treasury, 403(b) plan loans issued after Dec. 31, 2008 require employer verification of loan qualifications with the following exception: your employer has a sole service provider agreement with Ministers Benefit Association, and has not had multiple service providers since 2004.</p>
           </div>
         `,
@@ -2047,6 +2184,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         bodyHtml: '',
         body: '',
         columns: 'one',
+        sectionClassName: 'retirement-403b-native-loan-apply',
         card1Title: '1',
         card1Body: 'Review the loan rules.',
         card1ButtonStyle: 'outline',
@@ -2100,14 +2238,18 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         contentWidth: 'content',
         columns: 'two',
         cardStyle: 'card2',
+        showTitleDivider: false,
+        dividerTone: '',
         sectionClassName: 'retirement-child-native-enroll',
         ...seedBlueprintCardGridCardFields(1, {
-          title: 'Enrollment for individuals.',
+          title: 'Establish an individual plan',
+          dividerTone: '',
           buttonLabel: 'Enroll now',
           buttonPageRef: '/services/retirement/403b/403b-individual-enrollment',
         }),
         ...seedBlueprintCardGridCardFields(2, {
           title: 'Establish a plan as an employer.',
+          dividerTone: '',
           buttonLabel: 'Next steps',
           buttonPageRef: '/services/retirement/403b/403b-group-enrollment',
         }),
@@ -2240,76 +2382,69 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         button2Tone: 'super-grey',
         anchorId: '',
         sectionClassName: 'retirement-child-native-rollover',
-        targetSectionKey: 'class:retirement-child-native-rollover',
-        targetSectionClassName: 'retirement-child-native-rollover',
+        targetSectionKey: '',
+        targetSectionClassName: '',
         targetSectionIndex: 0,
       },
       editableFields: sharedDynamicBillboardEditableFields,
     },
-    {
+    createDynamicColumnsBlueprint({
       id: 'housing_feature',
       name: 'Housing Feature',
-      kind: PAGE_CONTENT_IDENTITY.kind,
-      mode: 'dynamic',
+      presetId: 'housing-allowance',
       settings: {
-        title: "Retired Ministers' Housing Allowance",
-        subtitle: '',
-        body: 'The unique benefit, which gives ministers a significant tax savings, is not available through secular 403(b) plans or IRAs. It allows retired ministers to have distributions from the AGFinancial 403(b) plan designated as clergy housing allowance.',
-        html: `
-          <div class="ret403b-housing-feature-shell">
-            <div class="ret403b-housing-feature-grid">
-              <figure class="ret403b-housing-feature-media">
-                <img src="${ministersHousingImage}" alt="Living room with fireplace" loading="lazy" />
-              </figure>
-              <div class="ret403b-housing-feature-details">
-                <p class="ret403b-housing-feature-bullet-intro">The maximum housing allowance exemption in any tax year is the lesser of:</p>
-                <ul>
-                  <li>Your actual expenditures</li>
-                  <li>The fair rental value of your home, as furnished, plus utilities</li>
-                  <li>The amount distributed by your retirement plan to you and declared in advance as your housing allowance</li>
-                </ul>
-              </div>
-            </div>
-            <div class="ret403b-housing-feature-compare">
-              <p>Compare your annual housing expenses to Fair Rental Value (FRV), and determine the maximum amount you may claim.</p>
-            </div>
-          </div>
+        title: '',
+        leadLine: '',
+        followupLine: '',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        bodyHtml: '',
+        columnsStyle: 'retirement',
+        bgTone: 'white',
+        contentWidth: 'content',
+        columns: 'two',
+        col1Enabled: true,
+        col1Type: 'photo',
+        col1Title: '',
+        col1Body: '',
+        col1BodyHtml: '',
+        col1ImageUrl: ministersHousingImage,
+        col1ImageAlt: 'Living room with fireplace',
+        ...seedBlueprintColumnButtonFields(1),
+        col2Enabled: true,
+        col2Type: 'text',
+        col2Title: "Retired Ministers' Housing Allowance",
+        col2Body: '',
+        col2BodyHtml: `
+          <p>This unique IRS benefit, which gives ministers a significant tax savings, is not available through secular 403(b) plans or IRAs. It allows retired ministers to have distributions from the AGFinancial 403(b) plan designated as clergy housing allowance.</p>
         `,
-        widget: '',
-        fullBleed: true,
-        spaceBeforeRem: 0,
-        spaceAfterRem: 0,
-        paddingTopRem: 0,
-        paddingBottomRem: 0,
-        contentMaxWidthPx: 1280,
-        ...seedBlueprintActionFields({
-          labelField: 'buttonLabel',
-          hrefField: 'buttonUrl',
-          pageRefField: 'buttonPageRef',
-          label: 'Use the quick check calculator',
-          href: '/calculators',
-          styleField: 'buttonStyle',
-          style: 'dark',
-          toneField: 'buttonTone',
-          tone: 'super-grey',
-          openInNewWindowField: 'buttonOpenInNewWindow',
-        }),
-        anchorId: 'retired-ministers-housing-allowance',
-        sectionClassName: 'retirement-403b-native-housing',
-        copyWrap: false,
-        buttonDocumentId: '',
-        addressClassName: '',
-        addressTitle: '',
-        addressLines: '',
-        tableHeadersJson: '',
-        tableRowsJson: '',
-        tableValueAlignment: '',
-        tableChartId: '',
-        fineprint: '',
-        fineprintDisclosureId: '',
+        col2ImageUrl: '',
+        col2ImageAlt: '',
+        ...seedBlueprintColumnButtonFields(2),
+        col2ButtonLabel: 'See if you qualify',
+        col2ButtonUrl: 'https://www.irs.gov/publications/p517',
+        col2ButtonPageRef: '',
+        col2ButtonStyle: 'outline',
+        col2ButtonTone: 'atlantean',
+        col2ButtonOpenInNewWindow: true,
+        col3Enabled: false,
+        col3Type: 'text',
+        col3Title: '',
+        col3Body: '',
+        col3BodyHtml: '',
+        col3ImageUrl: '',
+        col3ImageAlt: '',
+        ...seedBlueprintColumnButtonFields(3),
+        col4Enabled: false,
+        col4Type: 'text',
+        col4Title: '',
+        col4Body: '',
+        col4BodyHtml: '',
+        col4ImageUrl: '',
+        col4ImageAlt: '',
+        ...seedBlueprintColumnButtonFields(4),
       },
-      editableFields: sharedDynamicPageContentEditableFields,
-    },
+    }),
     createDynamicColumnsBlueprint({
       id: 'online_contributions',
       name: 'Online Contributions',
@@ -2531,8 +2666,10 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         body: '',
         bgTone: 'white',
         textTone: 'dark',
-        justify: 'center',
+        justify: 'right',
         lineSpacing: 1,
+        contentMaxWidthPx: 1216,
+        headlineMaxWidthPx: 560,
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
           hrefField: 'buttonUrl',
@@ -2627,9 +2764,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         submitLabel: 'Send message',
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
-        targetSectionKey: 'class:loans-consultant-native-contact',
+        targetSectionKey: '',
         targetSectionClassName: 'loans-consultant-native-contact',
-        targetSectionIndex: 1,
+        targetSectionIndex: 0,
         step1Title: 'Step 1',
         step1Note: '',
         step1Alert: '',

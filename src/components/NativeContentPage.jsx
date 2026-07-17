@@ -99,7 +99,6 @@ import SafeRichText from './SafeRichText';
 import {
   buildConsultantCards,
   composeConsultantSections,
-  composeRetirement403bSections,
 } from './nativeRouteComposition';
 import {
   buildCareersRouteSections,
@@ -1152,6 +1151,7 @@ function buildDynamicColumnsSection(block, pathname) {
       type: isLegacyHighlight ? 'text' : item.type,
       title: item.title || '',
       body: !isLegacyHighlight && item.body ? [item.body] : [],
+      html: !isLegacyHighlight ? (item.html || item.bodyHtml || '') : '',
       image: !isLegacyHighlight ? (item.imageUrl || '') : '',
       imageAlt: !isLegacyHighlight ? (item.imageAlt || '') : '',
       actions: !isLegacyHighlight && item.action ? [item.action] : [],
@@ -3866,7 +3866,7 @@ function MinisterHousingQuickCheckWidget() {
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Minister Housing Allowance Quick Check</title>
+    <title>Ministers' Housing Allowance Quick Check</title>
     <style>
       body { font-family: Helvetica, Arial, sans-serif; color: #1f2937; margin: 32px; line-height: 1.45; }
       h1 { margin: 0 0 6px; font-size: 28px; color: #414042; }
@@ -3934,7 +3934,7 @@ function MinisterHousingQuickCheckWidget() {
 
       <div className="ret403b-qc-step-meta">
         <strong>Step {stepIndex + 1} of {STEPS.length}</strong>
-        <span>Minister&apos;s Housing Allowance Quick Check</span>
+        <span>Ministers&apos; Housing Allowance Quick Check</span>
       </div>
 
       {stepIndex === 0 ? (
@@ -4948,18 +4948,7 @@ export default function NativeContentPage({ page }) {
       };
     }
 
-    const retirement403bComposition = isBlockOnlyManagedPage
-      ? {
-        nextBaseContent,
-        remainingDynamicSections: dynamicSections,
-      }
-      : composeRetirement403bSections({
-        pathname: activePath,
-        baseContent: nextBaseContent,
-        dynamicSections,
-      });
-    nextBaseContent = retirement403bComposition.nextBaseContent;
-    let remainingDynamicSections = retirement403bComposition.remainingDynamicSections;
+    let remainingDynamicSections = dynamicSections;
 
     if (remainingDynamicSections.length) {
       nextBaseContent = {

@@ -18,6 +18,9 @@ describe('home columns alignment guardrail', () => {
     expect(cssSource).toContain('--dynamic-columns-photo-max-width: 26rem;');
     expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance .native-columns-grid {');
     expect(cssSource).toContain('grid-template-columns: clamp(22.5rem, 34vw, 26rem) minmax(0, 1fr);');
+    expect(cssSource).toContain('align-items: center;');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance .native-columns-item:not(.is-photo) .native-columns-copy {');
+    expect(cssSource).toContain('justify-content: center;');
     expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math .native-columns-grid {');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr) clamp(22.5rem, 34vw, 26rem);');
   });

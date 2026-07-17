@@ -44,6 +44,7 @@ import ImpactProofStoryFeature from '../ImpactProofStoryFeature';
 import InvestmentsGrowthFeature from '../InvestmentsGrowthFeature';
 import LegacyGivingStewardshipStoryFeature from '../LegacyGivingStewardshipStoryFeature';
 import NewsletterSignupForm from '../NewsletterSignupForm';
+import SafeRichText from '../SafeRichText';
 import { extractHeroLineColorToken } from '../../lib/heroHudRanges';
 import {
   normalizeHeroTitleLetterSpacingEm,
@@ -1678,6 +1679,7 @@ export function ColumnsBlock({
         const columnTitleClassName = normalizeToneClass(dynamicBlock[`col${slot}TitleClassName`] || '');
         const columnTitleHighlights = parseHighlightsJson(dynamicBlock[`col${slot}TitleHighlightsJson`], columnTitle);
         const columnBody = String(dynamicBlock[`col${slot}Body`] || '').trim();
+        const columnBodyHtml = String(dynamicBlock[`col${slot}BodyHtml`] || '').trim();
         const columnImage = String(dynamicBlock[`col${slot}ImageUrl`] || '').trim();
         const columnImageAlt = String(dynamicBlock[`col${slot}ImageAlt`] || '').trim();
         const columnAction = buildColumnsAction(
@@ -1694,7 +1696,7 @@ export function ColumnsBlock({
           return null;
         }
 
-        if (!isLegacyHighlight && !columnTitle && !columnBody && !columnImage && !columnAction) {
+        if (!isLegacyHighlight && !columnTitle && !columnBody && !columnBodyHtml && !columnImage && !columnAction) {
           return null;
         }
 
@@ -1706,6 +1708,7 @@ export function ColumnsBlock({
           titleClassName: columnTitleClassName,
           titleHighlights: columnTitleHighlights,
           body: columnBody,
+          bodyHtml: columnBodyHtml,
           image: columnImage,
           imageAlt: columnImageAlt,
           action: columnAction,
@@ -1833,7 +1836,14 @@ export function ColumnsBlock({
                           : renderTextWithStrong(column.title)}
                       </h3>
                     ) : null}
-                    {!isLegacyHighlight && column.body ? (
+                    {!isLegacyHighlight && column.bodyHtml ? (
+                      <SafeRichText
+                        as="div"
+                        className={`native-info-rich-html${column.type === 'photo' ? ' native-columns-photo-caption' : ''}`}
+                        html={column.bodyHtml}
+                      />
+                    ) : null}
+                    {!isLegacyHighlight && !column.bodyHtml && column.body ? (
                       <p className={column.type === 'photo' ? 'native-columns-photo-caption' : undefined}>
                         {renderTextWithStrong(column.body)}
                       </p>

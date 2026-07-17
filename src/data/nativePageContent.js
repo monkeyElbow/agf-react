@@ -907,6 +907,16 @@ const directContent = {
             cardClass: 'card2',
           },
           {
+            title: "Ministers' Housing Allowance Quick Check",
+            body: 'Estimate the maximum retired ministers housing allowance amount you may be able to claim.',
+            stretchedLink: {
+              label: 'Launch',
+              to: '/calculators#ministers-housing-allowance-quick-check',
+            },
+            cta: 'Launch',
+            cardClass: 'card2',
+          },
+          {
             title: 'Net Worth',
             body: 'Get a view of your financial position, and make adjustments to see how things could change.',
             stretchedLink: {
@@ -927,6 +937,15 @@ const directContent = {
             cardClass: 'card2',
           },
         ],
+      },
+      {
+        anchorId: 'ministers-housing-allowance-quick-check',
+        className: 'calculator-tool-shell',
+        title: "Ministers' Housing Allowance Quick Check",
+        body: [
+          'Compare your annual housing expenses to Fair Rental Value (FRV) and estimate the maximum amount you may be able to claim.',
+        ],
+        widget: 'retirement-minister-housing-quick-check',
       },
       {
         className: 'calculators-native-billboard',
@@ -2822,251 +2841,6 @@ const retirementChildPages = {
   '/services/retirement/403b': {
     pageClass: 'native-info-page--retirement-child native-info-page--retirement-403b',
     compact: true,
-    hero: {
-      justify: 'right',
-      lines: [
-        {
-          title: 'Saving while serving.',
-          highlights: [
-            { text: 'Saving', className: 'is-atlantean' },
-            { text: 'serving', className: 'is-mango' },
-          ],
-        },
-      ],
-    },
-    intro: {
-      heading: 'Ministry-powered retirement.',
-      body: [
-        'The AGFinancial 403(b) is designed specifically for ministers and ministry employees. It’s a powerful way to save while you serve.',
-      ],
-      bgTone: 'sand',
-      textTone: 'dark',
-    },
-    sections: [
-      {
-        className: 'retirement-403b-native-benefits-copy',
-        title: 'Benefits you’ll love.',
-      },
-      {
-        className: 'retirement-403b-native-benefits-cards',
-        fullBleed: true,
-        columns: 'four',
-        hideTitle: true,
-        cards: RETIREMENT_403B_PLAN_FEATURE_CARDS,
-      },
-      {
-        className: 'retirement-403b-native-benefits-callout',
-        copyWrap: true,
-        justify: 'center',
-        title: 'Includes minister’s housing allowance...which you won’t find with an IRA. See details below.',
-        titleHighlights: [
-          { text: 'minister’s housing allowance', className: 'is-atlantean' },
-        ],
-        actions: [
-          {
-            label: 'Enroll in the 403(b)',
-            to: '/services/retirement/403b/403b-individual-enrollment',
-            className: 'is-outline is-tone-atlantean',
-          },
-        ],
-      },
-      {
-        className: 'retirement-child-native-strategies retirement-403b-native-strategy-options',
-        title: 'Investment Strategy Options',
-        fullBleed: true,
-        columns: 'two',
-        actionsBeforeCards: true,
-        actions: [
-          { label: 'View monthly performance', documentId: 'document-monthly-performance' },
-          { label: 'Prospectus', to: '/prospectus', className: 'is-dark is-tone-super-grey' },
-        ],
-        cards: [
-          {
-            title: 'MBA Income Fund',
-            body: 'AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.',
-            links: [
-              { label: 'MBA income fund PDF', documentId: 'fund-descriptor-retirement-mba-income-fund' },
-            ],
-            cardClass: 'card2',
-          },
-          {
-            title: 'Risk-Based Strategies',
-            body: 'These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.',
-            accordions: [
-              {
-                title: 'Screened strategy PDFs',
-                links: [
-                  { label: 'Steward Conservative Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
-                  { label: 'Steward Moderate Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
-                  { label: 'Steward Balanced Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
-                  { label: 'Steward Aggressive Growth Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
-                  { label: 'Steward Diversified Equity Strategy', documentId: 'fund-descriptor-retirement-steward-conservative-strategy' },
-                ],
-              },
-              {
-                title: 'Index strategy PDFs',
-                links: [
-                  { label: 'Fidelity Asset Manager 40%', documentId: 'fund-descriptor-retirement-fidelity-asset-manager-40' },
-                  { label: 'Fidelity Asset Manager 60%', documentId: 'fund-descriptor-retirement-fidelity-asset-manager-60' },
-                  { label: 'Fidelity Asset Manager 85%', documentId: 'fund-descriptor-retirement-fidelity-asset-manager-85' },
-                ],
-              },
-            ],
-            cardClass: 'card2',
-          },
-          {
-            title: 'Target-Date Strategies',
-            body: 'Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.',
-            accordions: [
-              {
-                title: 'View target-date fund PDFs',
-                links: [
-                  { label: 'Steward Target-Date Strategies', documentId: 'fund-descriptor-retirement-steward-target-date-strategies' },
-                ],
-              },
-            ],
-            cardClass: 'card2',
-          },
-          {
-            title: 'Individual Investment Options',
-            body: 'This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.',
-            accordions: [
-              {
-                title: 'View fund PDFs',
-                links: [
-                  { label: 'MBA Income Fund', documentId: 'fund-descriptor-retirement-mba-income-fund' },
-                  { label: 'Steward Select Bond Fund', documentId: 'fund-descriptor-retirement-steward-select-bond-fund' },
-                  { label: 'Steward Equity Market Neutral Fund', documentId: 'fund-descriptor-retirement-steward-equity-market-neutral-fund' },
-                  { label: 'Steward Global Equity Income Fund', documentId: 'fund-descriptor-retirement-steward-global-equity-income-fund' },
-                  { label: 'Steward Covered Call Income Fund', documentId: 'fund-descriptor-retirement-steward-covered-call-income-fund' },
-                  { label: 'Fidelity 500 Index Fund', documentId: 'fund-descriptor-retirement-fidelity-500-index-fund' },
-                  { label: 'Vanguard Total Bond Market Index Fund', documentId: 'fund-descriptor-retirement-vanguard-total-bond-market-index-fund' },
-                ],
-              },
-            ],
-            cardClass: 'card2',
-          },
-        ],
-      },
-      {
-        className: 'retirement-403b-native-strategy-enroll-cta',
-        hideTitle: true,
-        justify: 'center',
-        actions: [
-          { label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' },
-        ],
-      },
-      {
-        className: 'retirement-child-native-qualify',
-        title: 'Who qualifies for the AGFinancial 403(b)?',
-        fullBleed: true,
-        columns: 'three',
-        cards: [
-          {
-            title: 'Employees of eligible employers',
-            body: 'For example: churches; denominational headquarters or councils; church-affiliated, tax-exempt 501(c)(3) organizations.',
-            cardClass: 'card2',
-            titleClassName: 'ret-403b-qualify-card-title',
-          },
-          {
-            title: 'Others serving in a ministerial capacity',
-            body: 'Such as a chaplain, campus pastor, or counselor in a non-ministry organization.',
-            cardClass: 'card2',
-            titleClassName: 'ret-403b-qualify-card-title',
-          },
-          {
-            title: 'Self-employed credentialed ministers',
-            body: 'Such as pastors, evangelists, or independent ministry leaders.',
-            cardClass: 'card2',
-            titleClassName: 'ret-403b-qualify-card-title',
-          },
-        ],
-      },
-      {
-        className: 'retirement-child-native-enroll',
-        title: 'Start your enrollment',
-        columns: 'two',
-        cards: [
-          {
-            title: 'For myself',
-            actions: [{ label: 'Enroll now', to: '/services/retirement/403b/403b-individual-enrollment' }],
-            cardClass: 'card2',
-          },
-          {
-            title: 'Employer',
-            actions: [{ label: 'Next steps', to: '/services/retirement/403b/403b-group-enrollment' }],
-            cardClass: 'card2',
-          },
-        ],
-      },
-      {
-        className: 'retirement-403b-native-rate-table',
-        title: '403(b) Investment Rate',
-        widget: 'retirement-403b-rate-table',
-      },
-      {
-        className: 'retirement-child-native-table',
-        title: 'Annual Contribution Limits',
-        fineprintDisclosureId: 'retirement-403b-contribution-limits-disclosure',
-        tableChartId: 'retirement-403b-contribution-limits',
-        table: {
-          headers: ['403(b) Contribution Limit', '2026', '2025'],
-          rows: [
-            ['Under age 50 deferral limit (pre-tax and Roth after-tax)', 'The lesser of $24,500 or includible compensation.', 'The lesser of $23,500 or includible compensation.'],
-            ['Age 50 and up deferral limit*', 'The lesser of $32,500 or includible compensation.', 'The lesser of $31,000 or includible compensation.'],
-            ['Age 60-63 deferral limit**', 'The lesser of $35,750 or includible compensation.', 'The lesser of $34,750 or includible compensation.'],
-            ['Overall limit under age 50***', '$72,000', '$70,000'],
-            ['Overall limit age 50 and up†', '$80,000', '$77,500'],
-            ['Overall limit age 60-63**', '$83,250', '$81,250'],
-          ],
-          valueAlignment: 'left',
-        },
-        fineprint: [
-          '*Beginning in 2026, participants who have FICA wages exceeding $150,000 (adjusted for inflation) in the previous calendar year will be required to make any catch-up contributions on a Roth (after-tax) basis. It is the Employer’s responsibility to ensure contributions are correctly submitted to the Plan. Employees below the $150,000 threshold, as well as ministers who earn SECA wages may continue to make catch-up contributions on either a pre-tax or Roth basis, depending on your plan’s design.',
-          '**The rule applies to individuals who will attain age 60 in the taxable year and continues until the taxable year in which they turn 64. So, a participant would be eligible for the entire year in which they turn 60 (even if their birthday is December 31), and they would not be eligible in the year in which they turn 64.',
-          '***All types of contributions including deferrals, employer, and traditional after-tax. Cannot exceed includible compensation.',
-          '†All types of contributions including deferrals, employer, and traditional after-tax; amounts over the general overall limit must be age 50 catch-up deferrals. Cannot exceed includible compensation except to the extent that the age 50 or older catch-up deferral has been utilized.',
-          'Contact your own tax advisor before taking any action that would have a tax consequence. This information is not tax advice. Information is from sources deemed reliable. Information is subject to error, omission, withdrawal, or change.',
-        ],
-      },
-      {
-        className: 'retirement-child-native-rollover',
-        title: 'A rollover is easy. Smart, too.',
-        titleHighlights: [{ text: 'Smart, too.', className: 'is-melon' }],
-        body: [
-          'Rolling over your scattered retirement savings into a single AGFinancial 403(b) is surprisingly simple…and undeniably smart. One account. One login.',
-        ],
-        actions: [{ label: 'Let’s simplify things', to: '/services/retirement/rollovers' }],
-      },
-      {
-        anchorId: 'retired-ministers-housing-allowance',
-        className: 'retirement-403b-native-housing',
-        hideTitle: true,
-        feature: {
-          image: ministersHousingImage,
-          imageAlt: 'Living room with fireplace',
-          title: "Retired Ministers' Housing Allowance",
-          body: [
-            'The unique benefit—which gives ministers a significant tax savings—is not available through secular 403(b) plans or IRAs. It allows retired ministers to have distributions from the AGFinancial 403(b) plan designated as clergy housing allowance.',
-            'The maximum housing allowance exemption in any tax year is the lesser of:',
-            '• Your actual expenditures',
-            '• The fair rental value of your home, as furnished, plus utilities',
-            '• The amount distributed by your retirement plan to you and declared in advance as your housing allowance',
-            '**Use the Quick Check feature below.**',
-            '**Compare your annual housing expenses to Fair Rental Value (FRV), and determine the maximum amount you may claim.**',
-          ],
-        },
-      },
-      {
-        className: 'retirement-403b-native-quickcheck',
-        title: 'Quick Check',
-        subtitle: 'Minister’s Housing Allowance',
-        body: [
-          'Answer a few questions, total your annual housing expenses, and compare to Fair Rental Value (FRV).',
-        ],
-        widget: 'retirement-minister-housing-quick-check',
-      },
-    ],
   },
   '/services/retirement/403b/403b-terms-definitions': {
     compact: true,
@@ -3093,166 +2867,10 @@ const retirementChildPages = {
   },
   '/services/retirement/403b/403b-group-enrollment': {
     pageClass: 'native-info-page--retirement-child native-info-page--retirement-403b',
-    hero: {
-      justify: 'center',
-      lines: [
-        {
-          title: 'AGFinancial 403(b)',
-          highlights: [{ text: '403', className: 'is-atlantean' }],
-        },
-        {
-          title: 'Group Enrollment',
-          highlights: [{ text: 'Group', className: 'is-mango' }],
-        },
-      ],
-      bgTone: 'white',
-    },
-    intro: {
-      heading: 'How do I enroll my staff in AGFinancial 403(b)?',
-      body: [
-        'Use these simple steps to establish your organization’s plan, collect employee enrollment forms, and finish the paperwork needed to begin payroll contributions.',
-      ],
-      actions: [
-        { label: 'Download Plan Summary', href: RETIREMENT_403B_PLAN_SUMMARY_URL },
-      ],
-      justify: 'center',
-      bgTone: 'blue',
-      textTone: 'white',
-    },
-    sections: [
-      {
-        className: 'retirement-child-native-qualify',
-        title: 'Confirm eligibility',
-        subtitle: 'Use the group enrollment path when your organization is establishing a plan for eligible ministers or ministry employees.',
-        fineprintDisclosureId: 'retirement-403b-501c3-note',
-        fullBleed: true,
-        columns: 'three',
-        cards: [
-          {
-            title: 'Assemblies of God churches',
-            body: 'Use group enrollment if your church is establishing an AGFinancial 403(b) plan for eligible ministers or ministry employees. This is the employer setup path for churches sponsoring staff participation.',
-            cardClass: 'card2',
-          },
-          {
-            title: 'General and district councils',
-            body: 'The General Council of the Assemblies of God and District Councils use this path when establishing 403(b) participation for employees. It supports employer setup, enrollment collection, and payroll coordination.',
-            cardClass: 'card2',
-          },
-          {
-            title: 'AG-affiliated 501(c)(3) ministries',
-            body: 'Organizations controlled by or associated with the Assemblies of God that are tax-exempt under 501(c)(3) can use group enrollment for eligible employees. Choose the correct agreement below based on whether your ministry is a church or QCCO, or an NQCCO.',
-            cardClass: 'card2',
-          },
-        ],
-        fineprint: [
-          '*501(c)(3) organizations are tax-exempt entities organized and operated exclusively for religious, charitable, scientific, testing for public safety, literary, or educational purposes, among other qualified purposes under the Internal Revenue Code.',
-        ],
-      },
-      {
-        className: 'retirement-child-native-strategies retirement-403b-group-enrollment-steps',
-        title: 'Complete your enrollment',
-        subtitle: 'Easy steps.',
-        fullBleed: true,
-        sand: true,
-        columns: 'two',
-        cards: [
-          {
-            title: '1. Establish your plan',
-            body: 'Start by selecting the agreement that matches your ministry structure, then work through the setup items below in order so employer setup, employee enrollment, and payroll administration all stay aligned.',
-            links: [
-              { label: 'Agreement 1: Church or QCCO', href: RETIREMENT_403B_QCCO_AGREEMENT_URL },
-              { label: 'Agreement 2: NQCCO', href: RETIREMENT_403B_NQCCO_AGREEMENT_URL },
-              { label: '403(b) Terms & Definitions', to: '/services/retirement/403b/403b-terms-definitions' },
-              { label: 'Download Enrollment Form', href: RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_FORM_URL },
-              { label: 'Download Payroll Deduction Form', href: RETIREMENT_403B_PAYROLL_DEDUCTION_FORM_URL },
-              { label: 'Submit securely online', href: RETIREMENT_SECURE_UPLOAD_URL },
-            ],
-            list: [
-              'Choose the correct agreement for your organization type.',
-              'Review the 403(b) terms and definitions before collecting employee paperwork.',
-              'Have each participating employee complete an enrollment form.',
-              'Collect completed forms and return them through secure upload, mail, or fax.',
-              'Complete payroll deduction setup for each participating employee.',
-              'QCCO = Qualified Church-Controlled Organization.',
-              'NQCCO = Nonqualified Church-Controlled Organization.',
-            ],
-            fineprint: [
-              'The service agreement helps define employer and AGFinancial responsibilities for administration, hardship distributions, and plan loans.',
-              'Mail or fax completed forms to:',
-              'AGFinancial',
-              'PO Box 2515',
-              'Springfield, MO 65801',
-              '**FAX:** 417.520.0406',
-            ],
-            actions: [],
-            cardClass: 'card2 ministers-group-life-step-card',
-          },
-        ],
-      },
-    ],
   },
   '/services/retirement/409a': {
     pageClass: 'native-info-page--retirement-child native-info-page--retirement-409a',
     compact: true,
-    sections: [
-      {
-        className: 'retirement-child-native-scenarios',
-        title: '409A considerations',
-        fullBleed: true,
-        columns: 'three',
-        cards: [
-          {
-            title: 'Maxed-out',
-            body: 'The participant wants to contribute above the maximum limitation of the AG 403(b) plan.',
-            cardClass: 'card2',
-          },
-          {
-            title: 'Lost time',
-            body: 'The participant has several years’ worth of contributions from an employer who has not been contributing regularly, and/or the employer wants to send a lump sum plus monthly contributions.',
-            cardClass: 'card2',
-          },
-          {
-            title: 'Gift deposit',
-            body: 'The contribution is a lump-sum deposit given to the minister as a retirement gift.',
-            cardClass: 'card2',
-          },
-        ],
-      },
-      {
-        className: 'retirement-child-native-quote',
-        hideTitle: true,
-        title: '409A deferment',
-        body: [
-          'A well-drafted Deferred Compensation Plan can allow for deferment of **all taxable compensation** until distribution. The money still legally belongs to the employer, but it can be set aside and invested for growth in the 409A.',
-        ],
-      },
-      {
-        className: 'retirement-child-native-cta',
-        copyWrap: true,
-        title: 'Is a 409A right for you?',
-        subtitle: 'Let’s walk through it together.',
-        form: {
-          title: 'Start the conversation',
-          fields: [
-            { id: 'firstName', label: 'First Name*', type: 'text', required: true },
-            { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
-            { id: 'phone', label: 'Phone*', type: 'tel', required: true, placeholder: '(555) 555-5555' },
-            { id: 'email', label: 'Email*', type: 'email', required: true },
-            { id: 'organizationName', label: 'Organization Name*', type: 'text', required: true },
-            { id: 'organizationWebsite', label: 'Organization Website', type: 'text' },
-            { id: 'city', label: 'City*', type: 'text', required: true },
-            { id: 'state', label: 'State*', type: 'text', required: true },
-            { id: 'message', label: 'How can we help?', type: 'textarea', rows: 4 },
-          ],
-          submitLabel: DEFAULT_FOLLOW_UP_SUBMIT_LABEL,
-        },
-      },
-      {
-        className: 'retirement-child-native-teaser',
-        title: '409A deserves love too.',
-        body: ['The ugly stepchild of retirement. Just ask Kyle.'],
-      },
-    ],
   },
   '/services/retirement/iras': {
     pageClass: 'native-info-page--retirement-child native-info-page--retirement-iras',
@@ -3387,119 +3005,10 @@ const retirementChildPages = {
   '/services/retirement/retirement-consultants': {
     pageClass: 'native-info-page--loans-consultant native-info-page--retirement-consultants',
     compact: true,
-    hero: { title: 'Retirement Consultants', highlight: 'Consultants' },
-    hideIntro: true,
-    intro: 'Talk with a consultant. Fill out the form to start a conversation with our consultants or find your region contact below.',
-    sections: [
-      {
-        title: 'Select your location',
-        hideTitle: true,
-        className: 'loans-consultant-native-locations',
-        locationFilter: {
-          type: 'state',
-          label: '',
-          ariaLabel: 'Select your state',
-          placeholder: 'Select your state',
-          requireSelection: false,
-          messageLayout: 'toggle',
-          focusMessageCard: true,
-        },
-        cards: [],
-      },
-      {
-        title: 'Talk with a consultant.',
-        className: 'loans-consultant-native-contact',
-        copyWrap: true,
-        body: [
-          'Share a few details below and our team will connect you with the right consultant.',
-        ],
-        form: {
-          steps: [
-            {
-              id: 'contact',
-              fields: [
-                { id: 'firstName', label: 'First name*', type: 'text', required: true },
-                { id: 'lastName', label: 'Last name*', type: 'text', required: true },
-                { id: 'email', label: 'Email*', type: 'email', required: true },
-                { id: 'phone', label: 'Phone*', type: 'tel', placeholder: '(555) 555-5555', required: true },
-              ],
-              nextLabel: 'Next',
-            },
-            {
-              id: 'details',
-              fields: [
-                { id: 'churchOrMinistry', label: 'Church or ministry', type: 'text' },
-                { id: 'state', label: 'State', type: 'text', placeholder: 'Enter state' },
-                { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
-              ],
-              backLabel: 'Back',
-              submitLabel: 'Send message',
-            },
-          ],
-          submitLabel: 'Send message',
-        },
-      },
-    ],
   },
   '/services/retirement/rollovers': {
     pageClass: 'native-info-page--retirement-child native-info-page--retirement-simple native-info-page--retirement-rollovers',
     compact: true,
-    hero: {
-      lines: [
-        { title: 'One account.' },
-        { title: 'One login.', highlights: [{ text: 'login', className: 'is-mango' }] },
-      ],
-    },
-    intro: {
-      heading: 'One future. Yours.',
-      headingHighlights: [{ text: 'Yours.', className: 'is-melon' }],
-      body: [
-        'A rollover lets you move funds from other retirement accounts into an AGFinancial 403(b) without paying taxes or penalties. It’s just that simple. A rollover is an easier way to access and manage your retirement.',
-      ],
-    },
-    sections: [
-      {
-        className: 'retirement-rollovers-native-options',
-        title: 'Move your funds.',
-        columns: 'two',
-        cards: [
-          {
-            title: 'Rollover',
-            body: 'Traditional IRAs can be rolled-over any time. Otherwise, you may roll over because of a qualifying event, such as a separation from service, disability, or turning age 59½. If you meet one of these qualifiers, you may roll over your 401(k), 457, or 403(b).',
-            cardClass: 'card2',
-          },
-          {
-            title: 'Transfer',
-            body: 'A transfer occurs between accounts of the same kind, so you must already have a 403(b) through a current employer and not meet any of the rollover conditions. AGFinancial must be an approved vendor of your employer in order to transfer a 403(b).',
-            cardClass: 'card2',
-          },
-        ],
-      },
-      {
-        className: 'retirement-rollovers-native-process',
-        anchorId: 'start-the-process',
-        title: 'Start the process',
-        body: [
-          'Download and complete the Rollover/Transfer form below.',
-          'Return the completed form, along with the most recent statement(s) from the other account(s) to the address below.',
-          'A confirmation letter will be sent to you when your rollover or transfer is complete.',
-        ],
-        addressBlock: {
-          className: 'rollovers-copy-address',
-          title: 'AGFinancial',
-          lines: ['PO Box 2515', 'Springfield MO 65801'],
-        },
-        actions: [
-          {
-            label: 'Rollover/Transfer Form',
-            documentId: 'document-retirement-rollover-transfer-form',
-          },
-        ],
-      },
-      {
-        className: 'retirement-rollovers-native-request',
-      },
-    ],
   },
 };
 

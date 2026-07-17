@@ -77,6 +77,8 @@ export const defaultRetirementBillboardSettings = Object.freeze({
   buttonStyle: 'blue',
   buttonTone: 'atlantean',
   buttonOpenInNewWindow: false,
+  contentMaxWidthPx: 1216,
+  headlineMaxWidthPx: 560,
 });
 
 export function buildDefaultRetirementBillboardRuntime() {
