@@ -24,7 +24,7 @@ describe('outline button hover contract', () => {
       /\.action-btn\s*\{\n\s*border-radius:[\s\S]*?\n\}/,
     )?.[0] || '';
     const serviceButtonBlock = serviceCssSource.match(
-      /\.service-native-action-row\.is-right \{\n  justify-content: flex-end;\n\}\n\n\.service-native-btn,[\s\S]*?text-align: center;\n[\s\S]*?\n\}/,
+      /\.service-native-action-row\.is-right \{\n {2}justify-content: flex-end;\n\}\n\n\.service-native-btn,[\s\S]*?text-align: center;\n[\s\S]*?\n\}/,
     )?.[0] || '';
 
     expect(serviceCssSource).toContain('.service-native-btn,');

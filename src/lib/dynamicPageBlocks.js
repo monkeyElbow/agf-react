@@ -800,16 +800,6 @@ function parseHeroPieSlices(rawValue) {
   }
 }
 
-export function normalizeTargetSectionKey(value) {
-  const source = String(value || '').trim();
-  if (!source) {
-    return '';
-  }
-  if (source.startsWith('id:') || source.startsWith('class:') || source.startsWith('index:')) {
-    return source;
-  }
-  return '';
-}
 
 function normalizePageContentSpaceRem(value, fallback = 0.5, min = 0, max = 8) {
   const numeric = Number(value);
@@ -1023,7 +1013,6 @@ export function buildDynamicBillboardFromBlock(block) {
     title,
     titleClassName,
     titleHighlights,
-    targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
     anchorId: String(settings.anchorId || '').trim(),
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     subtitle,
@@ -1174,7 +1163,6 @@ export function buildDynamicFeaturePanelFromBlock(block) {
   }
   return {
     ...runtime,
-    targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
     anchorId: String(settings.anchorId || '').trim(),
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     fullBleed: toBoolean(settings.fullBleed),
@@ -1269,7 +1257,6 @@ export function buildDynamicSiteFeatureFromBlock(block) {
     runtimeKey: String(featureEntry.runtimeKey || featureId).trim() || featureId,
     catalogLabel: String(featureEntry.label || '').trim() || featureId,
     isCodeManaged: true,
-    targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     featureIntro,
     title: headline,
@@ -1749,7 +1736,6 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     title,
     titleClassName,
     titleHighlights,
-    targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
     anchorId: String(settings.anchorId || '').trim(),
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     displayMode,
@@ -1813,7 +1799,7 @@ function parseRequestFormStepFieldsJson(value) {
   }
 }
 
-export function buildDynamicRequestFormFromBlock(block, { pathname = '' } = {}) {
+export function buildDynamicRequestFormFromBlock(block) {
   const settings = resolveRequestFormSource(block);
   if (!settings) {
     return null;
@@ -1849,12 +1835,8 @@ export function buildDynamicRequestFormFromBlock(block, { pathname = '' } = {}) 
     return null;
   }
 
-  const isCertificateRequestPath = pathname === '/services/insurance/certificate-request';
   const sectionClassName = Array.from(new Set([
     sanitizeClassName(settings.sectionClassName || ''),
-    String(settings.targetSectionClassName || '').trim(),
-    pathname === '/contact-us' ? 'contact-us-request' : '',
-    isCertificateRequestPath ? 'certificate-request-native-section' : '',
     'native-dynamic-request',
     `is-bg-${bgTone}`,
     `is-text-${textTone}`,
@@ -1865,7 +1847,6 @@ export function buildDynamicRequestFormFromBlock(block, { pathname = '' } = {}) 
     title,
     titleClassName,
     titleHighlightsJson,
-    targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
     anchorId: String(settings.anchorId || '').trim(),
     subtitle,
     bodyHtml,
@@ -1883,7 +1864,7 @@ export function buildDynamicRequestFormFromBlock(block, { pathname = '' } = {}) 
       '--dynamic-request-space-before': `${spaceBeforeRem}rem`,
       '--dynamic-request-space-after': `${spaceAfterRem}rem`,
     },
-    formClassName: isCertificateRequestPath ? 'certificate-request-form' : '',
+    formClassName: sanitizeClassName(settings.formClassName || ''),
     transitionalAdapter: 'step-fields-json',
   };
 }
@@ -2185,7 +2166,6 @@ export function buildDynamicGridFromBlock(block) {
     cardBodyLineHeight,
     actions: sectionAction ? [sectionAction] : [],
     cards,
-    targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
   };
 }
 
@@ -2228,12 +2208,13 @@ export function buildDynamicNewsletterFromBlock(block) {
   };
 }
 
-export function buildDynamicTestimonialsFromBlock(block, { library = [], pathname = '' } = {}) {
+export function buildDynamicTestimonialsFromBlock(block, { library = [] } = {}) {
   if (!block || block.mode !== 'dynamic' || block.kind !== 'testimonials') {
     return null;
   }
 
-  const defaultTag = pathname === '/services/planned-giving' ? 'legacy-giving' : '';
+  const settings = block.settings || {};
+  const defaultTag = String(settings.defaultTag || '').trim();
   const resolved = resolveTestimonialsBlockData({
     block,
     library,
@@ -2246,8 +2227,6 @@ export function buildDynamicTestimonialsFromBlock(block, { library = [], pathnam
     return null;
   }
 
-  const settings = block.settings || {};
-
   return {
     items: resolved.items.map((item) => ({
       id: item.id,
@@ -2256,9 +2235,7 @@ export function buildDynamicTestimonialsFromBlock(block, { library = [], pathnam
       authorTitle: item.authorTitle,
     })),
     fineprint: resolved.showFineprint ? resolved.fineprint : '',
-    targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
-    targetFineprintSectionKey: normalizeTargetSectionKey(settings.targetFineprintSectionKey),
-    sectionClassName: sanitizeClassName(settings.sectionClassName || settings.targetSectionClassName || ''),
+    sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
   };
 }
 

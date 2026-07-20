@@ -15,7 +15,7 @@ vi.mock('./components/SiteAnnouncementBar', () => ({
 }));
 
 vi.mock('./components/NativeContentPage', () => ({
-  default: () => {
+  default: function MockNativeContentPage() {
     const location = useLocation();
     return <div data-testid="native-content-page">{location.pathname}</div>;
   },

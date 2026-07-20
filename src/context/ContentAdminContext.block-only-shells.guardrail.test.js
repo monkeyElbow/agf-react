@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { BLOCK_ONLY_MANAGED_PAGE_PATHS } from '../lib/managedPageShells';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,24 +11,59 @@ function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
 }
 
-describe('ContentAdminContext block-only shell guardrail', () => {
-  it('keeps block-only page seeding behind the managed-page shell contract', () => {
-    const source = readSource('./ContentAdminContext.jsx');
+function readJson(relativePath) {
+  return JSON.parse(readSource(relativePath));
+}
 
-    expect(source).toContain('shouldSeedBlocksFromNativePageContent,');
-    expect(source).toContain('const seedFromNativePageContent = shouldSeedBlocksFromNativePageContent(page.path);');
-    expect(source).toContain('const nativeContent = seedFromNativePageContent');
-    expect(source).toContain('? getNativePageContent(page.path, page.title)');
-    expect(source).toContain('const dynamicCtaBlocks = seedFromNativePageContent');
-    expect(source).toContain('const dynamicRequestBlocks = seedFromNativePageContent');
-    expect(source).toContain('const dynamicTestimonialsBlocks = seedFromNativePageContent');
-    expect(source).toContain("      && seedFromNativePageContent");
-    expect(source).toContain('isBlockOnlyManagedPagePath(path)');
-    expect(source).toContain('isBlocklessManagedPagePath(page.path)');
-    expect(source).toContain('isBlocklessManagedPagePath(path)');
-    expect(source).not.toContain('path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH\n        && isPageContentBlock(storedBlock)');
-    expect(source).not.toContain('path === RETIREMENT_403B_GROUP_ENROLLMENT_PATH\n        && isPageContentBlock(storedBlock)');
-    expect(source).not.toContain('path === RETIREMENT_403B_PATH\n        && isPageContentBlock(storedBlock)\n        && !isRetirement403bLoanDetailsBlock(storedBlock)');
+describe('ContentAdminContext block-only shell guardrail', () => {
+  it('keeps native-section seeding out of the block-only admin contract', () => {
+    const contextSource = readSource('./ContentAdminContext.jsx');
+    const shellSource = readSource('../lib/managedPageShells.js');
+    const retiredNativeSeedingNames = [
+      'shouldSeedBlocksFromNativePageContent',
+      'seedFromNativePageContent',
+      'buildDynamicCtaDefaultBlocksForPath',
+      'buildDynamicRequestDefaultBlocksForPath',
+      'buildDynamicTestimonialsDefaultBlocksForPath',
+      'normalizeDynamicRequestFormSettings',
+      'findStaticRequestFormSection',
+      'targetSectionKey',
+      'targetFineprintSectionKey',
+      'targetSectionClassName',
+      'targetSectionIndex',
+    ];
+
+    retiredNativeSeedingNames.forEach((name) => {
+      expect(contextSource, `${name} should not re-enter ContentAdminContext`).not.toContain(name);
+      expect(shellSource, `${name} should not re-enter managedPageShells`).not.toContain(name);
+    });
+
+    expect(contextSource).toContain('isBlockOnlyManagedPagePath(path)');
+    expect(contextSource).toContain('isBlocklessManagedPagePath(page.path)');
+    expect(contextSource).toContain('isBlocklessManagedPagePath(path)');
+    expect(contextSource).not.toContain('path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH\n        && isPageContentBlock(storedBlock)');
+    expect(contextSource).not.toContain('path === RETIREMENT_403B_GROUP_ENROLLMENT_PATH\n        && isPageContentBlock(storedBlock)');
+    expect(contextSource).not.toContain('path === RETIREMENT_403B_PATH\n        && isPageContentBlock(storedBlock)\n        && !isRetirement403bLoanDetailsBlock(storedBlock)');
+  });
+
+  it('keeps the native page renderer free of targeted-section replacement adapters', () => {
+    const source = readSource('../components/NativeContentPage.jsx');
+    const retiredAdapterNames = [
+      'mappedSection',
+      'targetedDynamic',
+      'consumedDynamic',
+      'targetSectionKey',
+      'targetFineprintSectionKey',
+      'getSectionTargetKeys',
+      'allowTargetedDynamicSections',
+    ];
+
+    retiredAdapterNames.forEach((name) => {
+      expect(source, `${name} should not re-enter NativeContentPage`).not.toContain(name);
+    });
+
+    expect(source).toContain('const dynamicSections = visibleBlocks.reduce');
+    expect(source).toContain('isBlockOnlyManagedPagePath(activePath || templatePath)');
   });
 
   it('keeps managed non-fallback routes out of empty fallback page-content suppression', () => {
@@ -71,6 +107,66 @@ describe('ContentAdminContext block-only shell guardrail', () => {
       expect(suppressionSetSource, `${pathname} should not rely on empty page-content suppression`).not.toMatch(
         new RegExp(`['"]${escapedRegExp(pathname)}['"]`),
       );
+    });
+  });
+
+  it('keeps block-only snapshots free of static block placeholders', () => {
+    [
+      '../../dev-data/content-admin-shared.json',
+      '../../dev-data/content-admin-seed-baseline.json',
+    ].forEach((relativePath) => {
+      const snapshot = readJson(relativePath);
+
+      ['state', 'baseSnapshot', 'seedState'].forEach((rootKey) => {
+        const blocksByPath = snapshot?.[rootKey]?.blocksByPath || {};
+
+        Array.from(BLOCK_ONLY_MANAGED_PAGE_PATHS).forEach((pathname) => {
+          const staticBlockIds = (blocksByPath[pathname] || [])
+            .filter((block) => block?.mode === 'static')
+            .map((block) => block?.id);
+
+          expect(
+            staticBlockIds,
+            `${relativePath} ${rootKey} ${pathname} should not carry static block placeholders`,
+          ).toEqual([]);
+        });
+      });
+    });
+  });
+
+  it('keeps block-only snapshots free of target bridge fields', () => {
+    const targetBridgeSettingKeys = [
+      'targetSectionKey',
+      'targetFineprintSectionKey',
+      'targetSectionClassName',
+      'targetSectionIndex',
+    ];
+
+    [
+      '../../dev-data/content-admin-shared.json',
+      '../../dev-data/content-admin-seed-baseline.json',
+    ].forEach((relativePath) => {
+      const snapshot = readJson(relativePath);
+
+      ['state', 'baseSnapshot', 'seedState'].forEach((rootKey) => {
+        const blocksByPath = snapshot?.[rootKey]?.blocksByPath || {};
+
+        Array.from(BLOCK_ONLY_MANAGED_PAGE_PATHS).forEach((pathname) => {
+          const blocksWithTargetFields = (blocksByPath[pathname] || [])
+            .map((block) => ({
+              id: block?.id,
+              keys: targetBridgeSettingKeys.filter((key) => (
+                Object.prototype.hasOwnProperty.call(block?.settings || {}, key)
+              )),
+            }))
+            .filter((entry) => entry.keys.length);
+
+          expect(
+            blocksWithTargetFields,
+            `${relativePath} ${rootKey} ${pathname} should not carry target bridge fields`,
+          ).toEqual([]);
+        });
+      });
     });
   });
 });

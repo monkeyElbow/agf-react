@@ -213,12 +213,12 @@ describe('buildDynamicCtaFormFromBlock', () => {
       bodyHtml: '<p>It starts with a conversation.</p>',
       subtitle: 'And we are eager to help.',
       bgTone: 'sand',
-      targetSectionKey: 'id:cta-target',
       submitLabel: 'Follow up with me',
       successMessage: 'Thanks. We will reach out soon.',
       submitStyle: 'outline',
       submitTone: 'mango',
     });
+    expect(runtime?.targetSectionKey).toBeUndefined();
     expect(runtime?.titleHighlights).toEqual([{ text: 'faith', className: 'is-mango' }]);
     expect(runtime?.fields).toEqual([
       expect.objectContaining({
@@ -363,11 +363,11 @@ describe('buildDynamicRequestFormFromBlock', () => {
       bodyHtml: '<p>We will respond quickly.</p>',
       bgTone: 'sand',
       textTone: 'dark',
-      targetSectionKey: 'class:request-target',
       submitLabel: 'Submit request',
       successMessage: 'Thanks. We received your request.',
       transitionalAdapter: 'step-fields-json',
     });
+    expect(runtime?.targetSectionKey).toBeUndefined();
     expect(runtime?.steps).toEqual([
       expect.objectContaining({
         id: 'step1',
@@ -393,20 +393,19 @@ describe('buildDynamicRequestFormFromBlock', () => {
     ]);
   });
 
-  it('keeps certificate request route-specific styling in the transitional adapter', () => {
-    const runtime = buildDynamicRequestFormFromBlock(
-      {
-        id: 'request_form',
-        kind: 'request_form',
-        mode: 'dynamic',
-        settings: {
-          step1FieldsJson: JSON.stringify([
-            { id: 'contactFirstName', label: 'First name', type: 'text', required: true },
-          ]),
-        },
+  it('keeps certificate request styling on block-owned settings', () => {
+    const runtime = buildDynamicRequestFormFromBlock({
+      id: 'request_form',
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'certificate-request-native-section',
+        formClassName: 'certificate-request-form',
+        step1FieldsJson: JSON.stringify([
+          { id: 'contactFirstName', label: 'First name', type: 'text', required: true },
+        ]),
       },
-      { pathname: '/services/insurance/certificate-request' },
-    );
+    });
 
     expect(runtime?.formClassName).toBe('certificate-request-form');
     expect(runtime?.sectionClassName).toContain('certificate-request-native-section');
@@ -501,7 +500,6 @@ describe('buildDynamicBillboardFromBlock', () => {
       title: 'Ready to move?',
       titleClassName: 'blue',
       titleHighlights: [{ text: 'move', className: 'is-mango' }],
-      targetSectionKey: '',
       subtitle: 'Let us help.',
       subtitleClassName: 'is-mango',
       bodyHtml: '<p>Shared billboard body.</p>',
@@ -533,6 +531,7 @@ describe('buildDynamicBillboardFromBlock', () => {
         }),
       ],
     });
+    expect(runtime?.targetSectionKey).toBeUndefined();
     expect(runtime?.titleStyle).toEqual(expect.objectContaining({
       lineHeight: 1.05,
       fontFamily: 'var(--ag-font-helv)',
@@ -586,7 +585,7 @@ describe('buildDynamicBillboardFromBlock', () => {
     }));
   });
 
-  it('preserves normalized target-section wiring for native targeted billboards', () => {
+  it('ignores stale target-section wiring for native billboards', () => {
     const runtime = buildDynamicBillboardFromBlock({
       id: 'daily_billboard',
       kind: 'billboard',
@@ -597,7 +596,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       },
     });
 
-    expect(runtime?.targetSectionKey).toBe('class:retirement-ira-native-cta');
+    expect(runtime?.targetSectionKey).toBeUndefined();
   });
 
   it('preserves document-link billboard actions', () => {
@@ -983,8 +982,8 @@ describe('buildDynamicFeaturePanelFromBlock', () => {
         label: 'Ready for the unexpected?',
         to: '/resources',
       },
-      targetSectionKey: 'class:cash-reserves',
     });
+    expect(runtime?.targetSectionKey).toBeUndefined();
     expect(runtime?.action?.link).toEqual({
       kind: 'internal',
       to: '/resources',
@@ -1076,7 +1075,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
     });
   });
 
-  it('maps the planned giving stewardship story to its reviewed runtime and preserves the targeted native section key', () => {
+  it('maps the planned giving stewardship story to its reviewed runtime without native-section targeting', () => {
     const runtime = buildDynamicSiteFeatureFromBlock({
       id: 'stewardship_story',
       kind: 'site_feature',
@@ -1091,7 +1090,6 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       type: 'site_feature',
       featureId: 'legacy_giving_stewardship_story',
       runtimeKey: 'legacy_giving_stewardship_story',
-      targetSectionKey: 'id:legacy-giving-stewardship-story',
       title: 'Smart stewardship for today and tomorrow.',
       beats: [
         'Receive payments for life.',
@@ -1104,6 +1102,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         to: '#charitable-giving-plan-comparison',
       },
     });
+    expect(runtime?.targetSectionKey).toBeUndefined();
   });
 
   it('maps the impact proof story to its reviewed runtime and keeps the editorial proof layout code-owned', () => {
@@ -1122,7 +1121,6 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       type: 'site_feature',
       featureId: 'impact_proof_story',
       runtimeKey: 'impact_proof_story',
-      targetSectionKey: 'class:impact-native-stats',
       title: '',
       metrics: [
         {
@@ -1342,6 +1340,7 @@ describe('buildDynamicTopStripFromBlock', () => {
       ratesIsExternal: false,
       ratesOpenInNewWindow: false,
     });
+    expect(runtime?.targetSectionKey).toBeUndefined();
   });
 
   it('accepts flattened home block data and preserves safe defaults', () => {
@@ -1753,7 +1752,6 @@ describe('buildDynamicTestimonialsFromBlock', () => {
         },
       },
       {
-        pathname: '/services/planned-giving',
         library: [
           {
             id: 'mike-daf-corporate-client',
@@ -1775,9 +1773,9 @@ describe('buildDynamicTestimonialsFromBlock', () => {
 
     expect(runtime).toMatchObject({
       fineprint: 'Custom fineprint',
-      targetSectionKey: 'id:testimonials-target',
-      targetFineprintSectionKey: 'id:legacy-fineprint',
     });
+    expect(runtime?.targetSectionKey).toBeUndefined();
+    expect(runtime?.targetFineprintSectionKey).toBeUndefined();
     expect(runtime?.items).toEqual([
       expect.objectContaining({
         id: 'mike-daf-corporate-client',
@@ -1804,11 +1802,49 @@ describe('buildDynamicTestimonialsFromBlock', () => {
         selectedIdsCsv: '',
       },
     }, {
-      pathname: '/services/loans',
       library: [],
     });
 
     expect(runtime).toBeNull();
+  });
+
+  it('uses a block-owned default testimonial tag instead of inferring one from the route', () => {
+    const runtime = buildDynamicTestimonialsFromBlock(
+      {
+        id: 'testimonials',
+        kind: 'testimonials',
+        mode: 'dynamic',
+        settings: {
+          selectionMode: 'tag',
+          filterTagsCsv: '',
+          defaultTag: 'legacy-giving',
+          limit: 1,
+        },
+      },
+      {
+        library: [
+          {
+            id: 'legacy-match',
+            quote: 'Legacy quote',
+            author: 'Legacy Author',
+            tags: ['legacy-giving'],
+          },
+          {
+            id: 'loan-match',
+            quote: 'Loan quote',
+            author: 'Loan Author',
+            tags: ['loans'],
+          },
+        ],
+      },
+    );
+
+    expect(runtime?.items).toEqual([
+      expect.objectContaining({
+        id: 'legacy-match',
+        quote: 'Legacy quote',
+      }),
+    ]);
   });
 });
 

@@ -143,12 +143,10 @@ function getRouteLinkTextInput(label) {
 }
 
 describe('dynamic block control wiring', () => {
-  it('keeps static blocks non-editable', () => {
+  it('keeps blueprint and insert-template pools free of static blocks', () => {
     const staticBlocks = allBlueprintBlocks.filter((block) => block?.mode === 'static');
-    expect(staticBlocks.length).toBeGreaterThan(0);
-    staticBlocks.forEach((block) => {
-      expect(Array.isArray(block.editableFields) ? block.editableFields : []).toHaveLength(0);
-    });
+
+    expect(staticBlocks).toEqual([]);
   });
 
   it('keeps promoted overview hero templates dynamic-only', () => {

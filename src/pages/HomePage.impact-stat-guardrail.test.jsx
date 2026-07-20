@@ -24,6 +24,6 @@ describe('home page impact stat guardrail', () => {
     expect(pageSource).toContain('impactStatManagedBlock: dynamicImpactStatBlock,');
     expect(resolverSource).toContain("id: context.impactStatManagedBlock?.id || block.id || 'impact_stat',");
     expect(resolverSource).toContain("kind: context.impactStatManagedBlock?.kind || block.kind || 'impact_stat',");
-    expect(resolverSource).toContain("mode: context.impactStatManagedBlock?.mode || block.mode || 'static',");
+    expect(resolverSource).toContain("mode: context.impactStatManagedBlock?.mode || block.mode || 'dynamic',");
   });
 });

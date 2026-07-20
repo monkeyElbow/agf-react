@@ -19,8 +19,9 @@ const CANONICAL_EDITOR_PARITY_CONTRACT = Object.freeze(
     getAllBlockDefinitions().map((definition) => ([
       definition.kind,
       Object.freeze({
-        mode: definition.kind === 'intro'
-          || definition.kind === 'cta_form'
+        mode: definition.kind === 'cta_form'
+          ? 'dedicated-hud-adapter'
+          : definition.kind === 'intro'
           || definition.kind === 'testimonials'
           || definition.kind === 'content'
           || definition.kind === 'top_strip'

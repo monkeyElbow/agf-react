@@ -402,7 +402,7 @@ describe('AdminContentPage shared save workflow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit Hero' }));
 
     expect(mockSetActiveBlockLock).toHaveBeenCalledWith('/services/loans', 'hero');
-    expect(screen.getByLabelText('Block mode')).toBeTruthy();
+    expect(screen.queryByLabelText('Block mode')).toBeNull();
     expect(screen.getByText('Hero animation')).toBeTruthy();
   });
 

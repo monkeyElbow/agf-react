@@ -13,6 +13,6 @@ describe('group term life insurance native page content', () => {
     expect(requestBlock?.settings?.titleClassName).toBe('is-super-grey');
     expect(requestBlock?.settings?.titleHighlightsJson).toBe('[{"start":20,"end":30,"className":"is-white"}]');
     expect(requestBlock?.settings?.sectionClassName).toBe('group-life-native-quote');
-    expect(requestBlock?.settings?.targetSectionKey).toBe('');
+    expect(requestBlock?.settings?.targetSectionKey).toBeUndefined();
   });
 });

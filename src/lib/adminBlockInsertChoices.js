@@ -83,7 +83,8 @@ function buildPresetBearingChoices(templatesByKind, targetMode) {
       return;
     }
 
-    const familyLabel = String(getBlockDefinition(kind)?.label || kind).trim() || kind;
+    const definition = getBlockDefinition(kind);
+    const familyLabel = String(definition?.label || kind).trim() || kind;
     const presetDefinitions = getBlockPresetDefinitions(kind);
     const usedTemplateKeys = new Set();
     const familyUsesExplicitPresetIds = familyTemplates.some((template) => normalizeToken(template?.presetId));
@@ -120,6 +121,8 @@ function buildPresetBearingChoices(templatesByKind, targetMode) {
         createTemplateId: buildBlockTemplateCreateId(representative),
         templateId: String(representative.templateId || '').trim(),
         kind,
+        editorType: String(definition?.editorType || kind).trim(),
+        canonicalLabel: familyLabel,
         familyKind: kind,
         familyLabel,
         presetId: String(presetDefinition.id || '').trim(),

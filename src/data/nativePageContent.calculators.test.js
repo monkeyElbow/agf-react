@@ -35,24 +35,39 @@ describe('calculators native page content', () => {
     expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
   });
 
-  it('restores real team-follow-up forms on standalone calculator routes instead of dead-end cta bands', () => {
+  it('keeps standalone calculator routes shell-only with block-owned intro, widget, and contact form sections', () => {
     [
-      '/calculators/emergency-fund',
-      '/calculators/increased-contribution',
-      '/calculators/net-worth',
-    ].forEach((pathname) => {
+      ['/calculators/emergency-fund', 'emergency-fund-calculator'],
+      ['/calculators/increased-contribution', 'increased-contribution-calculator'],
+      ['/calculators/net-worth', 'net-worth-calculator'],
+    ].forEach(([pathname, widget]) => {
       const content = getNativePageContent(pathname, '');
-      const sections = Array.isArray(content?.sections) ? content.sections : [];
-      const formSection = sections.find((section) => String(section?.className || '').includes('calculator-tool-contact'));
+      const blocks = contentBlockBlueprintsByPath[pathname] || [];
+      const heroBlock = blocks.find((block) => block?.id === 'hero');
+      const introBlock = blocks.find((block) => block?.id === 'intro');
+      const widgetBlock = blocks.find((block) => block?.id === 'calculator_tool');
+      const formBlock = blocks.find((block) => block?.id === 'cta_form');
 
+      expect(content?.hero).toBeUndefined();
+      expect(Array.isArray(content?.sections) ? content.sections : []).toEqual([]);
       expect(Array.isArray(content?.actions) ? content.actions : []).toEqual([]);
-      expect(formSection?.title).toBe('Talk with our team.');
-      expect((Array.isArray(formSection?.form?.fields) ? formSection.form.fields : []).map((field) => field.id)).toEqual([
+      expect(heroBlock?.kind).toBe('hero');
+      expect(introBlock?.kind).toBe('content');
+      expect(introBlock?.settings?.sectionClassName).toBe('calculator-tool-shell');
+      expect(widgetBlock?.kind).toBe('content');
+      expect(widgetBlock?.settings?.widget).toBe(widget);
+      expect(widgetBlock?.settings?.sectionClassName).toBe('calculator-tool-shell calculator-tool-widget');
+      expect(formBlock?.kind).toBe('cta_form');
+      expect(formBlock?.settings?.title).toBe('Talk with our team.');
+      expect(formBlock?.settings?.submitLabel).toBe('Submit');
+      expect(formBlock?.settings?.sectionClassName).toBe('calculator-tool-shell calculator-tool-contact');
+      expect(JSON.parse(formBlock?.settings?.fieldsJson || '[]').map((field) => field.id)).toEqual([
         'name',
         'email',
         'phone',
         'message',
       ]);
+      expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
     });
   });
 });

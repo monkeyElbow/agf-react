@@ -207,6 +207,6 @@ describe('planned giving and IRA native page content', () => {
       buttonUrl: 'https://secure.agfinancial.org/invest',
     });
     expect(rollover?.settings?.bodyHtml).toContain('single AGFinancial IRA');
-    expect(rollover?.settings?.targetSectionKey).toBe('');
+    expect(rollover?.settings?.targetSectionKey).toBeUndefined();
   });
 });

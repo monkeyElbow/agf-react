@@ -64,7 +64,8 @@ describe('AdminContentPage dev identity surfaces', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Take over edit' }));
 
-    expect(screen.getByLabelText('Block mode')).toBeTruthy();
+    expect(screen.queryByLabelText('Block mode')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Done editing' })).toBeTruthy();
     expect(screen.queryByText(/Active edit:/)).toBeNull();
     const historyRegion = screen.getByRole('heading', { name: 'Recent page activity' }).closest('.admin-block-history');
     expect(within(historyRegion).getByText(/block edit taken over/i)).toBeTruthy();
@@ -115,7 +116,8 @@ describe('AdminContentPage dev identity surfaces', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue draft' }));
 
-    expect(screen.getByLabelText('Block mode')).toBeTruthy();
+    expect(screen.queryByLabelText('Block mode')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Done editing' })).toBeTruthy();
     expect(screen.queryByText(/Active edit:/)).toBeNull();
     const historyRegion = screen.getByRole('heading', { name: 'Recent page activity' }).closest('.admin-block-history');
     expect(within(historyRegion).getByText(/block draft claimed/i)).toBeTruthy();

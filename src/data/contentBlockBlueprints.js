@@ -20,12 +20,6 @@ import {
 import { buildCardGridPresetSettings } from '../lib/cardGridPresets';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { buildColumnsPresetSettings } from '../lib/columnsPresets';
-import {
-  COMPATIBILITY_BRIDGE_SURFACES,
-  getCompatibilityBridgeEntry,
-  getCentralRetiredInsertCompatibilityTemplateIds,
-  PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS,
-} from '../lib/compatibilityBridgeInventory';
 import { buildCtaBandPresetSettings } from '../lib/ctaBandPresets';
 import { getTokenSwatch } from '../lib/colorSystem';
 import { PAGE_CONTENT_IDENTITY } from '../lib/pageContentIdentity';
@@ -120,11 +114,7 @@ const splitPanelEditableFields = getLegacyEditableFieldsForKind('split_panel');
 const servicesGridEditableFields = getLegacyEditableFieldsForKind('services_grid');
 const siteFeatureEditableFields = getLegacyEditableFieldsForKind('site_feature');
 
-export const CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID = Object.freeze({});
-
-export const PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS = PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS;
-
-export function resolveBlueprintSeedTemplateId(lookupId, explicitTemplateId = '') {
+function resolveBlueprintSeedTemplateId(lookupId, explicitTemplateId = '') {
   const explicit = String(explicitTemplateId || '').trim();
   if (explicit) {
     return explicit;
@@ -133,12 +123,7 @@ export function resolveBlueprintSeedTemplateId(lookupId, explicitTemplateId = ''
   if (!token) {
     return '';
   }
-  return CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID[token] || token;
-}
-
-export function isPersistedBlueprintBridgeTemplateId(templateId) {
-  const token = String(templateId || '').trim();
-  return Boolean(token) && PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS.includes(token);
+  return token;
 }
 
 function inferInternalPageRefFromHref(href) {
@@ -257,17 +242,6 @@ function seedBlueprintCardGridCardFields(cardNumber, {
   };
 }
 
-function createStaticBlueprintStub({ id, name, kind, settings = {} }) {
-  return {
-    id,
-    name,
-    kind,
-    mode: 'static',
-    settings,
-    editableFields: [],
-  };
-}
-
 function createDynamicCardGridBlueprint({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     id,
@@ -278,14 +252,6 @@ function createDynamicCardGridBlueprint({ id, name, presetId = 'default', templa
     mode: 'dynamic',
     settings: buildCardGridPresetSettings(presetId, settings),
     editableFields: sharedDynamicGridEditableFields,
-  };
-}
-
-function createStaticCardGridBlueprintStub({ id, name, presetId = 'default', templateId = '', settings = {} }) {
-  return {
-    ...createStaticBlueprintStub({ id, name, kind: 'card_grid', settings }),
-    templateId: String(templateId || '').trim() || 'card_grid',
-    presetId,
   };
 }
 
@@ -302,14 +268,6 @@ function createDynamicColumnsBlueprint({ id, name, presetId = 'default', templat
   };
 }
 
-function createStaticColumnsBlueprintStub({ id, name, presetId = 'default', templateId = '', settings = {} }) {
-  return {
-    ...createStaticBlueprintStub({ id, name, kind: 'columns', settings }),
-    templateId: String(templateId || '').trim() || 'columns',
-    presetId,
-  };
-}
-
 function createDynamicCtaBandBlueprint({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     id,
@@ -320,14 +278,6 @@ function createDynamicCtaBandBlueprint({ id, name, presetId = 'default', templat
     mode: 'dynamic',
     settings: buildCtaBandPresetSettings(presetId, settings),
     editableFields: ctaBandEditableFields,
-  };
-}
-
-function createStaticCtaBandBlueprintStub({ id, name, presetId = 'default', templateId = '', settings = {} }) {
-  return {
-    ...createStaticBlueprintStub({ id, name, kind: 'cta_band', settings }),
-    templateId: String(templateId || '').trim() || 'cta_band',
-    presetId,
   };
 }
 
@@ -476,10 +426,158 @@ const testimonialsEditableFields = getLegacyEditableFieldsForKind('testimonials'
 
 const pageContentFallbackOnlyBlueprintPaths = [
   '/brand',
-  '/calculators/emergency-fund',
-  '/calculators/increased-contribution',
-  '/calculators/net-worth',
 ];
+
+const calculatorToolFormFieldsJson = JSON.stringify([
+  { id: 'name', label: 'Name*', type: 'text', required: true },
+  { id: 'email', label: 'Email*', type: 'email', required: true },
+  { id: 'phone', label: 'Phone', type: 'tel', placeholder: DEFAULT_PHONE_PLACEHOLDER },
+  { id: 'message', label: 'Message', type: 'textarea' },
+]);
+
+function createCalculatorToolBlueprints({
+  title,
+  introTitle,
+  introBody,
+  widget,
+  formBody,
+}) {
+  return [
+    {
+      id: 'hero',
+      name: 'Hero',
+      kind: 'hero',
+      mode: 'dynamic',
+      settings: {
+        animationPreset: 'default',
+        bgTone: 'white',
+        justify: 'center',
+        actionJustify: 'center',
+        heightMode: 'default',
+        lineGap: 0,
+        lineHeight: 0.94,
+        line1Text: title,
+        line1ClassName: '',
+        line1HighlightsJson: '',
+        line2Text: '',
+        line2ClassName: '',
+        line2HighlightsJson: '',
+        line3Text: '',
+        line3ClassName: '',
+        line3HighlightsJson: '',
+        titleSizeRem: 4.5,
+        titleLetterSpacingEm: -0.03,
+      },
+      editableFields: sharedDynamicHeroEditableFields,
+    },
+    {
+      id: 'intro',
+      name: 'Intro',
+      kind: PAGE_CONTENT_IDENTITY.kind,
+      mode: 'dynamic',
+      settings: {
+        title: introTitle,
+        titleClassName: '',
+        titleHighlightsJson: '',
+        subtitle: '',
+        body: introBody,
+        html: '',
+        widget: '',
+        fullBleed: false,
+        spaceBeforeRem: 0,
+        spaceAfterRem: 0,
+        paddingTopRem: 2.4,
+        paddingBottomRem: 2.4,
+        contentMaxWidthPx: 980,
+        anchorId: '',
+        sectionClassName: 'calculator-tool-shell',
+        copyWrap: true,
+        buttonLabel: '',
+        buttonUrl: '',
+        buttonPageRef: '',
+        buttonOpenInNewWindow: false,
+        buttonDocumentId: '',
+        addressClassName: '',
+        addressTitle: '',
+        addressLines: '',
+        tableHeadersJson: '',
+        tableRowsJson: '',
+        tableValueAlignment: '',
+        tableChartId: '',
+        fineprint: '',
+        fineprintDisclosureId: '',
+      },
+      editableFields: sharedDynamicPageContentEditableFields,
+    },
+    {
+      id: 'calculator_tool',
+      name: 'Calculator Tool',
+      kind: PAGE_CONTENT_IDENTITY.kind,
+      mode: 'dynamic',
+      settings: {
+        title: '',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        subtitle: '',
+        body: '',
+        html: '',
+        widget,
+        fullBleed: false,
+        spaceBeforeRem: 0,
+        spaceAfterRem: 0,
+        paddingTopRem: 2.4,
+        paddingBottomRem: 2.4,
+        contentMaxWidthPx: 980,
+        anchorId: '',
+        sectionClassName: 'calculator-tool-shell calculator-tool-widget',
+        copyWrap: false,
+        buttonLabel: '',
+        buttonUrl: '',
+        buttonPageRef: '',
+        buttonOpenInNewWindow: false,
+        buttonDocumentId: '',
+        addressClassName: '',
+        addressTitle: '',
+        addressLines: '',
+        tableHeadersJson: '',
+        tableRowsJson: '',
+        tableValueAlignment: '',
+        tableChartId: '',
+        fineprint: '',
+        fineprintDisclosureId: '',
+      },
+      editableFields: sharedDynamicPageContentEditableFields,
+    },
+    {
+      id: 'cta_form',
+      name: 'Calculator Contact Form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      hidden: false,
+      settings: {
+        ...buildNameEmailPhoneMessageCtaSettings({
+          title: 'Talk with our team.',
+          titleClassName: 'is-atlantean',
+          titleHighlightsJson: '[]',
+          bodyHtml: `<p>${formBody}</p>`,
+          subtitle: 'And we’re eager to help.',
+          bgTone: 'sand',
+        }),
+        submitLabel: 'Submit',
+        successMessage: 'Thanks. We received your request.',
+        fieldsJson: calculatorToolFormFieldsJson,
+        sectionClassName: 'calculator-tool-shell calculator-tool-contact',
+        field1Label: 'Name*',
+        field1Placeholder: '',
+        field2Label: 'Email*',
+        field2Placeholder: '',
+        field3Placeholder: DEFAULT_PHONE_PLACEHOLDER,
+        field4Placeholder: '',
+      },
+      editableFields: ctaFormEditableFields,
+    },
+  ];
+}
 
 const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
   ...Object.fromEntries(
@@ -840,9 +938,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
         sectionClassName: 'contact-us-request',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         step1Title: 'Step 1',
         step1Note: '',
         step1Alert: '',
@@ -915,7 +1010,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicHeroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
     {
       id: 'intro',
       name: 'Intro',
@@ -936,7 +1030,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     createDynamicCardGridBlueprint({
       id: 'rollover_options',
       name: 'Rollover Options',
@@ -962,7 +1055,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         }),
       },
     }),
-    createStaticCardGridBlueprintStub({ id: 'rollover_options', name: 'Rollover Options' }),
     {
       id: 'rollover_process',
       name: 'Rollover Process',
@@ -1014,9 +1106,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
         sectionClassName: 'retirement-rollovers-native-request',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         step1Title: 'Step 1',
         step1Note: '',
         step1Alert: '',
@@ -1103,7 +1192,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     createDynamicCardGridBlueprint({
       id: 'scenarios',
       name: '409A Considerations',
@@ -1312,7 +1400,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     {
       id: 'mail_flow',
       name: 'Investment by Mail Flow',
@@ -1575,9 +1662,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
         sectionClassName: 'legacy-child-native-cga-request',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         step1Title: '',
         step1Note: '',
         step1Alert: '',
@@ -1846,9 +1930,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         salesforceUrl: '',
         anchorId: 'ministry-impact-form',
         sectionClassName: 'legacy-child-native-request',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         step1Title: 'Talk with planned giving',
         step1Note: 'Let’s map out the best next step.',
         step1Alert: '',
@@ -1878,6 +1959,30 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       editableFields: requestFormEditableFields,
     },
   ],
+  '/calculators/emergency-fund': createCalculatorToolBlueprints({
+    title: 'Emergency Fund Calculator',
+    introTitle: 'Build a cash cushion with a target in mind.',
+    introBody: 'Use a monthly expense total or itemize your spending to estimate your emergency fund goal and see a simple savings plan to reach it.',
+    widget: 'emergency-fund-calculator',
+    formBody: 'Share a few details if you would like help talking through your reserve target and next step.',
+  }),
+  '/calculators/increased-contribution': createCalculatorToolBlueprints({
+    title: 'Increased Contribution Calculator',
+    introTitle: 'See the impact of a higher contribution rate.',
+    introBody: 'Compare your current and proposed contribution percentages to estimate how a change today may affect your retirement balance over time.',
+    widget: 'increased-contribution-calculator',
+    formBody: 'Share a few details if you would like to talk through contribution options and retirement next steps.',
+  }),
+  '/calculators/net-worth': createCalculatorToolBlueprints({
+    title: 'Net Worth Calculator',
+    introTitle: 'Take inventory of your financial picture.',
+    introBody: [
+      'In order to get where you want to go, you need to know where you are. You can get a view of your financial position by generating a personal net worth statement.',
+      'Over time your net worth will change as your assets earn interest or are depleted and your liabilities increase or decrease. Use this calculator to estimate what your net worth could be in the future based on specified growth rates.',
+    ].join('\n'),
+    widget: 'net-worth-calculator',
+    formBody: 'Share a few details if you would like help reviewing your balance sheet and planning next steps.',
+  }),
   '/calculators': [
     {
       id: 'hero',
@@ -2037,9 +2142,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         buttonPageRef: '',
         buttonOpenInNewWindow: false,
         sectionClassName: 'calculators-native-billboard',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
       },
       editableFields: sharedDynamicBillboardEditableFields,
     },
@@ -2061,9 +2163,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
         sectionClassName: 'calculators-native-cta',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         field4Enabled: false,
         field4Type: 'textarea',
         field4Label: '',
@@ -2853,7 +2952,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     createDynamicCardGridBlueprint({
       id: 'benefits_cards',
       name: 'Benefits Cards',
@@ -3369,10 +3467,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         button2Style: 'outline',
         button2Tone: 'super-grey',
         anchorId: '',
-        sectionClassName: 'retirement-child-native-rollover retirement-403b-native-rollover',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
+        sectionClassName: 'retirement-child-native-rollover retirement-403b-native-rollover retirement-everyday retirement-rollover-billboard',
       },
       editableFields: sharedDynamicBillboardEditableFields,
     },
@@ -3500,9 +3595,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         submitLabel: DEFAULT_FOLLOW_UP_SUBMIT_LABEL,
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         field1Enabled: true,
         field1Type: 'text',
         field1Label: 'Name*',
@@ -3601,7 +3693,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     createDynamicCardGridBlueprint({
       id: 'ira_types',
       name: 'IRA Types',
@@ -3830,13 +3921,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         button2Tone: 'super-grey',
         anchorId: '',
         sectionClassName: 'retirement-child-native-rollover',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
       },
       editableFields: sharedDynamicBillboardEditableFields,
     },
-    createStaticBlueprintStub({ id: 'rollover_billboard', name: 'Already Have IRA Billboard', kind: 'billboard' }),
     {
       id: 'daily_billboard',
       name: 'Retire Every Day Billboard',
@@ -3871,13 +3958,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         button2Tone: 'super-grey',
         anchorId: '',
         sectionClassName: 'retirement-ira-native-cta',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
       },
       editableFields: sharedDynamicBillboardEditableFields,
     },
-    createStaticBlueprintStub({ id: 'daily_billboard', name: 'Retire Every Day Billboard', kind: 'billboard' }),
   ],
   '/services/retirement/iras/fund-an-ira': [
     {
@@ -4016,9 +4099,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
         sectionClassName: 'loans-consultant-native-contact',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         step1Title: 'Step 1',
         step1Note: '',
         step1Alert: '',
@@ -4200,7 +4280,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     createDynamicCardGridBlueprint({
       id: 'confirm_eligibility',
       name: 'Confirm Eligibility',
@@ -4773,10 +4852,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         limit: 3,
         showFineprint: true,
         fineprint: 'Testimonials are examples only. Results differ by situation and are not guaranteed.',
-        targetSectionKey: '',
-        targetFineprintSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: '',
         sectionClassName: 'services-native-testimonials',
       },
       editableFields: testimonialsEditableFields,
@@ -5050,10 +5125,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         limit: 3,
         showFineprint: true,
         fineprint: defaultTestimonialFineprint,
-        targetSectionKey: '',
-        targetFineprintSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: '',
         sectionClassName: 'loans-native-testimonials',
       },
       editableFields: testimonialsEditableFields,
@@ -5144,9 +5215,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
         sectionClassName: 'loans-consultant-native-contact',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         step1Title: 'Step 1',
         step1Note: '',
         step1Alert: '',
@@ -5554,6 +5622,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         selectionMode: 'manual',
         selectedIdsCsv: 'testimonial-8-1\ntestimonial-8-2\ntestimonial-8-3',
         filterTagsCsv: '',
+        defaultTag: 'legacy-giving',
         limit: 3,
         showFineprint: false,
         fineprint: defaultTestimonialFineprint,
@@ -5794,9 +5863,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         successMessage: 'Thanks. We received your request and will follow up soon.',
         salesforceUrl: '',
         sectionClassName: 'legacy-child-native-endowments-legacy-form',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         step1Title: '',
         step1Note: '',
         step1Alert: '',
@@ -5966,9 +6032,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         salesforceUrl: '',
         anchorId: 'traditional-daf-form',
         sectionClassName: 'legacy-child-native-generosity-request',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         step1Title: '',
         step1Note: '',
         step1Alert: '',
@@ -6239,7 +6302,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicHeroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
     {
       id: 'intro',
       name: 'Intro',
@@ -6538,7 +6600,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicHeroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
     {
       id: 'intro_pricing',
       name: 'Intro Pricing',
@@ -6737,7 +6798,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     createDynamicCardGridBlueprint({
       id: 'life_types',
       name: 'Life Insurance Types',
@@ -6882,7 +6942,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicHeroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
     {
       id: 'intro',
       name: 'Intro',
@@ -6921,7 +6980,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     {
       id: 'request_form',
       name: 'Request Form',
@@ -6943,9 +7001,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         successMessage: 'Thanks. We received your request.',
         salesforceUrl: '',
         sectionClassName: 'insurance-pc-native-quote',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: '',
         step1Title: 'Step 1',
         step1Note: '',
         step1Alert: '',
@@ -7232,7 +7287,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicHeroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
     createDynamicCardGridBlueprint({
       id: 'plan_details',
       name: 'Plan Details',
@@ -7501,6 +7555,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         titleSizeRem: 4.6,
         titleLetterSpacingEm: -0.03,
         contentMaxWidthPx: 1080,
+        sectionClassName: 'impact-native-billboard',
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
           hrefField: 'buttonUrl',
@@ -7526,7 +7581,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         buttonUrl: '',
         buttonPageRef: '',
         buttonOpenInNewWindow: false,
-        targetSectionKey: '',
         sectionClassName: 'impact-native-stats impact-proof-story',
         featureIntroJson: JSON.stringify({
           heading: 'Serving you, alongside you.',
@@ -7603,9 +7657,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         buttonUrl: '',
         buttonPageRef: '',
         buttonOpenInNewWindow: false,
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: '',
         sectionClassName: 'retirement-plan-feature',
       },
       editableFields: siteFeatureEditableFields,
@@ -7660,9 +7711,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           styleField: 'buttonStyle',
           toneField: 'buttonTone',
         }),
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: '',
         sectionClassName: 'retirement-rollover-billboard',
       },
       editableFields: sharedDynamicBillboardEditableFields,
@@ -7745,10 +7793,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         limit: 3,
         showFineprint: true,
         fineprint: defaultTestimonialFineprint,
-        targetSectionKey: '',
-        targetFineprintSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: '',
         sectionClassName: 'retirement-testimonials',
       },
       editableFields: testimonialsEditableFields,
@@ -7784,7 +7828,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicHeroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
     {
       id: 'intro',
       name: 'Intro',
@@ -8021,7 +8064,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicHeroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
     {
       id: 'intro',
       name: 'Intro',
@@ -8042,7 +8084,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'intro', name: 'Intro', kind: 'intro' }),
     {
       id: 'lead',
       name: 'Lead',
@@ -8082,9 +8123,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         successMessage: 'Thanks. We will be in touch soon.',
         salesforceUrl: '',
         sectionClassName: 'group-life-native-quote',
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
         step1Title: 'Contact info',
         step1Note: '',
         step1Alert: '',
@@ -8236,7 +8274,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicHeroEditableFields,
     },
-    createStaticBlueprintStub({ id: 'hero', name: 'Hero', kind: 'hero' }),
     ...genericPageBlockBlueprint().filter((block) => block?.id === 'request_form').map((block) => {
       if (block.id !== 'request_form') {
         return block;
@@ -8256,9 +8293,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           submitLabel: 'Submit Request',
           successMessage: 'We’ll be in touch soon.',
           sectionClassName: 'certificate-request-native-section',
-          targetSectionKey: '',
-          targetSectionClassName: '',
-          targetSectionIndex: 0,
+          formClassName: 'certificate-request-form',
           step1Title: 'Requester',
           step1Note: '',
           step1Alert: '',
@@ -9354,6 +9389,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         paddingTopRem: 2.4,
         paddingBottomRem: 2.4,
         contentMaxWidthPx: 760,
+        sectionClassName: 'tax-guide-content',
       },
       editableFields: sharedDynamicPageContentEditableFields,
     },
@@ -9586,38 +9622,6 @@ export function getAllBlockTemplateBlueprints() {
       if (!existing || templateScore(candidate) > templateScore(existing)) {
         byTemplateLookupId.set(templateLookupId, candidate);
       }
-    });
-  });
-
-  getCentralRetiredInsertCompatibilityTemplateIds('static').forEach((templateId) => {
-    const existing = Array.from(byTemplateLookupId.values()).some((template) => (
-      String(template?.templateId || '').trim() === templateId
-    ));
-    if (existing) {
-      return;
-    }
-
-    const bridgeEntry = getCompatibilityBridgeEntry(templateId, COMPATIBILITY_BRIDGE_SURFACES.templateId);
-    const ownerKind = String(bridgeEntry?.owner || '').trim();
-    if (!ownerKind) {
-      return;
-    }
-
-    byTemplateLookupId.set(templateId, {
-      ...cloneBlueprintBlock(createStaticBlueprintStub({
-        id: templateId,
-        name: templateId,
-        kind: ownerKind,
-      })),
-      templateLookupId: templateId,
-      templateId,
-      createTemplateId: buildBlockTemplateCreateId({
-        id: templateId,
-        kind: ownerKind,
-        mode: 'static',
-        templateLookupId: templateId,
-        templateId,
-      }),
     });
   });
 

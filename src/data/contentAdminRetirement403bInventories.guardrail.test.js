@@ -92,7 +92,6 @@ describe('403(b) retirement inventory guardrail', () => {
     const snapshotSets = [
       ['shared state', sharedRecord?.state?.blocksByPath || {}],
       ['shared baseSnapshot', sharedRecord?.baseSnapshot?.blocksByPath || {}],
-      ['seed state', seedRecord?.state?.blocksByPath || {}],
       ['seed seedState', seedRecord?.seedState?.blocksByPath || {}],
     ];
 
@@ -108,7 +107,7 @@ describe('403(b) retirement inventory guardrail', () => {
     const sharedRecord = readJson('../../dev-data/content-admin-shared.json');
     const seedRecord = readJson('../../dev-data/content-admin-seed-baseline.json');
     const sharedBlocksByPath = sharedRecord?.state?.blocksByPath || {};
-    const seedBlocksByPath = seedRecord?.state?.blocksByPath || {};
+    const seedBlocksByPath = seedRecord?.seedState?.blocksByPath || {};
     const canonicalBlocksByPath = normalizeStoredConfig({}).blocksByPath || {};
 
     RETIREMENT_403B_GUARDRAIL_PATHS.forEach((pathname) => {

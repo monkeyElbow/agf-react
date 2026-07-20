@@ -19,20 +19,15 @@ describe('content block blueprint seed convergence guardrail', () => {
     expect(source).toContain('function seedBlueprintColumnButtonFields(columnNumber, options = {})');
     expect(source).toContain('function seedBlueprintServicesGridCardFields(cardNumber, {');
     expect(source).toContain('function seedBlueprintCardGridCardFields(cardNumber, {');
-    expect(source).toContain('export const CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID = Object.freeze({');
-    expect(source).toMatch(/import \{[\s\S]*?PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS,[\s\S]*?\} from '\.\.\/lib\/compatibilityBridgeInventory';/);
-    expect(source).toContain('export const PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS = PERSISTED_COMPATIBILITY_BRIDGE_TEMPLATE_IDS;');
-    expect(source).toContain('export function resolveBlueprintSeedTemplateId(lookupId, explicitTemplateId = \'\') {');
-    expect(source).toContain('export function isPersistedBlueprintBridgeTemplateId(templateId) {');
-    expect(source).toContain('function createStaticBlueprintStub({ id, name, kind, settings = {} })');
+    expect(source).not.toContain('compatibilityBridgeInventory');
+    expect(source).not.toContain('PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS');
+    expect(source).not.toContain('CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID');
+    expect(source).toContain('function resolveBlueprintSeedTemplateId(lookupId, explicitTemplateId = \'\') {');
     expect(source).toContain('function createDynamicCardGridBlueprint({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
-    expect(source).toContain('function createStaticCardGridBlueprintStub({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
     expect(source).toContain("templateId: String(templateId || '').trim() || 'card_grid'");
     expect(source).toContain('function createDynamicColumnsBlueprint({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
-    expect(source).toContain('function createStaticColumnsBlueprintStub({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
     expect(source).toContain("templateId: String(templateId || '').trim() || 'columns'");
     expect(source).toContain('function createDynamicCtaBandBlueprint({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
-    expect(source).toContain('function createStaticCtaBandBlueprintStub({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
     expect(source).toContain("templateId: String(templateId || '').trim() || 'cta_band'");
     expect(source).toContain('const sharedDynamicBillboardEditableFields = getLegacyEditableFieldsForKind(\'billboard\');');
 
@@ -49,7 +44,6 @@ describe('content block blueprint seed convergence guardrail', () => {
     expect(source).toMatch(/id: 'growth_feature'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'investments_growth_feature'/);
     expect(source).toMatch(/id: 'dashboard_login_cta'[\s\S]*?templateId: 'cta_band'[\s\S]*?kind: 'cta_band'[\s\S]*?hidden: true[\s\S]*?buildCtaBandPresetSettings\('dashboard-login'\)/);
     expect(source).toMatch(/id: 'cta_form'[\s\S]*?kind: 'cta_form'[\s\S]*?title: 'Talk with an investments consultant\.'/);
-    expect(source).toMatch(/createStaticBlueprintStub\(\{ id: 'hero', name: 'Hero', kind: 'hero' \}\)/);
     expect(source).toMatch(/createDynamicCardGridBlueprint\(\{[\s\S]*?id: 'loan_options'[\s\S]*?title: 'Every loan, 100% customized\.'/);
     expect(source).toMatch(/id: 'services_cards'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_breakdown'/);
     expect(source).toMatch(/id: 'matters_band'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_matters_band'/);
@@ -57,6 +51,11 @@ describe('content block blueprint seed convergence guardrail', () => {
     expect(source).toMatch(/id: 'billboard'[\s\S]*?name: 'Retire Every Day Billboard'[\s\S]*?editableFields: sharedDynamicBillboardEditableFields,/);
 
     expect(source).not.toContain("id: 'legacy_removed_block'");
+    expect(source).not.toContain('function createStaticBlueprintStub');
+    expect(source).not.toContain('function createStaticCardGridBlueprintStub');
+    expect(source).not.toContain('function createStaticColumnsBlueprintStub');
+    expect(source).not.toContain('function createStaticCtaBandBlueprintStub');
+    expect(source).not.toContain('createStaticBlueprintStub(');
     expect(source).not.toContain('const introDynamicExtraLineToneOptions = [');
     expect(source).not.toContain('const introDynamicTextToneOptions = [');
     expect(source).not.toContain('const heroDynamicHighlightToneOptions =');

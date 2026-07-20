@@ -5851,7 +5851,7 @@ export function LegalCopyBlockEditor({ block, onSettingChange }) {
   );
 }
 
-function useTestimonialsEditorModel(block, pathname = '', testimonialsLibrary = []) {
+function useTestimonialsEditorModel(block, testimonialsLibrary = []) {
   const settings = block?.settings || {};
   const selectionMode = normalizeTestimonialsSelectionMode(settings.selectionMode);
   const selectedIds = useMemo(
@@ -5878,7 +5878,7 @@ function useTestimonialsEditorModel(block, pathname = '', testimonialsLibrary = 
     });
     return Array.from(tags).sort((a, b) => a.localeCompare(b));
   }, [libraryItems]);
-  const defaultTag = pathname === '/services/planned-giving' ? 'legacy-giving' : '';
+  const defaultTag = String(settings.defaultTag || '').trim();
   const resolved = useMemo(
     () => resolveTestimonialsBlockData({
       block,
@@ -5910,7 +5910,8 @@ export function TestimonialsBlockEditor({
   onSettingChange,
   testimonialsLibrary = [],
 }) {
-  const activePath = String(pathname || selectedPath || '').trim();
+  void pathname;
+  void selectedPath;
   const {
     settings,
     selectionMode,
@@ -5920,7 +5921,7 @@ export function TestimonialsBlockEditor({
     availableTags,
     defaultTag,
     previewItems,
-  } = useTestimonialsEditorModel(block, activePath, testimonialsLibrary);
+  } = useTestimonialsEditorModel(block, testimonialsLibrary);
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
 
@@ -5961,13 +5962,6 @@ export function TestimonialsBlockEditor({
       onSettingChange('selectionMode', 'tag');
     }
   };
-
-  const advancedFields = [
-    fieldById.get('targetSectionKey'),
-    fieldById.get('targetFineprintSectionKey'),
-    fieldById.get('targetSectionClassName'),
-    fieldById.get('targetSectionIndex'),
-  ].filter(Boolean);
 
   return (
     <div className="admin-intro-block-editor admin-testimonials-editor">
@@ -6129,17 +6123,6 @@ export function TestimonialsBlockEditor({
             )}
           </div>
 
-          {advancedFields.length ? (
-            <details className="admin-testimonials-advanced">
-              <summary>Advanced targeting</summary>
-              <FieldControlGrid
-                fields={advancedFields}
-                settings={settings}
-                onSettingChange={onSettingChange}
-                className="admin-content-field-list--inline"
-              />
-            </details>
-          ) : null}
         </div>
       </div>
     </div>
@@ -6147,6 +6130,7 @@ export function TestimonialsBlockEditor({
 }
 
 export function TestimonialsHudBlockEditor({ block, pathname = '', onSettingChange, testimonialsLibrary = [] }) {
+  void pathname;
   const {
     settings,
     selectionMode,
@@ -6155,7 +6139,7 @@ export function TestimonialsHudBlockEditor({ block, pathname = '', onSettingChan
     libraryItems,
     availableTags,
     previewItems,
-  } = useTestimonialsEditorModel(block, pathname, testimonialsLibrary);
+  } = useTestimonialsEditorModel(block, testimonialsLibrary);
 
   const setSelectedIds = (nextIds) => {
     const normalized = parseTokenList((Array.isArray(nextIds) ? nextIds : []).join(','));

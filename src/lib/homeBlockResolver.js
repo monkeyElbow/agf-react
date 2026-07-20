@@ -309,7 +309,7 @@ function resolveHomeBlock(block, context) {
       ...block,
       id: context.managedHomeServicesFeatureBlock?.id || block.id || 'home_services_feature_animation',
       kind: context.managedHomeServicesFeatureBlock?.kind || block.kind || 'site_feature',
-      mode: context.homeServicesFeatureIsActive ? 'dynamic' : (context.managedHomeServicesFeatureBlock?.mode || block.mode || 'static'),
+      mode: context.homeServicesFeatureIsActive ? 'dynamic' : (context.managedHomeServicesFeatureBlock?.mode || block.mode || 'dynamic'),
       settings: context.homeServicesFeatureSettings
         ? {
             featureId: String(context.homeServicesFeatureSettings.featureId || block.featureId || 'home_services_feature_animation').trim() || 'home_services_feature_animation',
@@ -339,7 +339,7 @@ function resolveHomeBlock(block, context) {
       ...block,
       id: context.newsletterManagedBlock?.id || block.id || 'newsletter',
       kind: context.newsletterManagedBlock?.kind || block.kind || 'newsletter',
-      mode: context.newsletterManagedBlock?.mode || block.mode || 'static',
+      mode: context.newsletterManagedBlock?.mode || block.mode || 'dynamic',
       title: nextTitle,
       titleClassName: String(context.newsletterSettings.titleClassName || block.titleClassName || '').trim(),
       titleHighlightsJson: String(context.newsletterSettings.titleHighlightsJson || block.titleHighlightsJson || '').trim(),
@@ -358,7 +358,7 @@ function resolveHomeBlock(block, context) {
       ...block,
       id: context.topStripManagedBlock?.id || block.id || 'top_strip',
       kind: context.topStripManagedBlock?.kind || block.kind || 'top_strip',
-      mode: context.topStripManagedBlock?.mode || block.mode || 'static',
+      mode: context.topStripManagedBlock?.mode || block.mode || 'dynamic',
       ...context.topStripSettings,
       __hudAnchorId: 'home-top-strip',
       ratesButtonTone: String(context.topStripSettings.ratesButtonTone || '').trim() || 'mango',
@@ -373,7 +373,7 @@ function resolveHomeBlock(block, context) {
       ...block,
       id: context.servicesGridManagedBlock?.id || block.id || 'services_grid',
       kind: context.servicesGridManagedBlock?.kind || block.kind || 'services_grid',
-      mode: context.servicesGridManagedBlock?.mode || block.mode || 'static',
+      mode: context.servicesGridManagedBlock?.mode || block.mode || 'dynamic',
       settings: context.servicesGridSettings,
     };
   }
@@ -387,7 +387,7 @@ function resolveHomeBlock(block, context) {
       ...block,
       id: context.impactStatManagedBlock?.id || block.id || 'impact_stat',
       kind: context.impactStatManagedBlock?.kind || block.kind || 'impact_stat',
-      mode: context.impactStatManagedBlock?.mode || block.mode || 'static',
+      mode: context.impactStatManagedBlock?.mode || block.mode || 'dynamic',
       settings: context.impactStatSettings,
     };
   }
@@ -438,7 +438,7 @@ function resolveHomeBlock(block, context) {
       ...block,
       id: context.ctaManagedBlock?.id || block.id || 'cta_form',
       kind: context.ctaManagedBlock?.kind || block.kind || 'cta_form',
-      mode: context.ctaManagedBlock?.mode || block.mode || 'static',
+      mode: context.ctaManagedBlock?.mode || block.mode || 'dynamic',
       title: String(readCtaSetting('title') ?? block.title ?? fallbackLegacyTitle).trim(),
       titleClassName: String(readCtaSetting('titleClassName') ?? block.titleClassName ?? '').trim(),
       titleHighlightsJson: String(readCtaSetting('titleHighlightsJson') ?? block.titleHighlightsJson ?? fallbackLegacyHighlightsJson).trim(),

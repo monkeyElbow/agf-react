@@ -910,7 +910,7 @@ function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {
   };
 }
 
-function buildNativeBillboardSection(block, pathname, { includeTestClassName = false } = {}) {
+function buildNativeBillboardSection(block, { includeTestClassName = false } = {}) {
   const runtime = buildDynamicBillboardFromBlock(block);
   if (!runtime) {
     return null;
@@ -925,17 +925,13 @@ function buildNativeBillboardSection(block, pathname, { includeTestClassName = f
   const railStyle = runtime.contentMaxWidthPx
     ? { '--dynamic-billboard-max-width': `${runtime.contentMaxWidthPx}px` }
     : undefined;
-  const routeScopedClassName = pathname === '/services/retirement/403b' && String(block?.id || '').trim() === 'rollover_billboard'
-    ? ' retirement-everyday retirement-rollover-billboard'
-    : '';
 
   return {
     id: 'dynamic-billboard',
     blockId: String(block?.id || '').trim() || undefined,
-    targetSectionKey: runtime.targetSectionKey || '',
     copyWrap: true,
     anchorId: runtime.anchorId || undefined,
-    className: `dynamic-billboard${includeTestClassName ? ' test-dynamic-billboard' : ''}${routeScopedClassName}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${normalizeHeroBgTone(runtime.bgTone || 'blue')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
+    className: `dynamic-billboard${includeTestClassName ? ' test-dynamic-billboard' : ''}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${normalizeHeroBgTone(runtime.bgTone || 'blue')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
     title: runtime.title,
     titleClassName: runtime.titleClassName || undefined,
     titleStyle: runtime.titleStyle,
@@ -1070,7 +1066,6 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardBodyLineHeight,
     actions,
     cards: runtimeCards,
-    targetSectionKey,
   } = runtime;
   const hasIntroCopy = Boolean(title || body || bodyHtml);
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-grid' : 'native-dynamic-grid';
@@ -1140,7 +1135,6 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
     },
-    targetSectionKey: targetSectionKey || '',
     className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-divider-tone-${dividerTone} ${presetRuntimeClassName}${cardStyle === 'none' ? ' is-card-none' : ''}${showTitleDivider ? ' is-divider-on' : ' is-divider-off'}`,
   };
 }
@@ -1212,34 +1206,6 @@ function buildDynamicColumnsSection(block, pathname) {
   };
 }
 
-function getSectionTargetKeys(section, sectionIndex) {
-  const keys = [];
-  const id = String(section?.id || '').trim();
-  const className = String(section?.className || '').trim();
-  if (id) {
-    keys.push(`id:${id}`);
-  }
-  if (className) {
-    keys.push(`class:${className}`);
-    className
-      .split(/\s+/)
-      .map((token) => token.trim())
-      .filter(Boolean)
-      .forEach((token) => {
-        keys.push(`class:${token}`);
-      });
-  }
-  keys.push(`index:${sectionIndex}`);
-  return Array.from(new Set(keys));
-}
-
-function mergeClassNames(baseClassName, nextClassName) {
-  const tokens = `${String(baseClassName || '').trim()} ${String(nextClassName || '').trim()}`
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-  return [...new Set(tokens)].join(' ');
-}
 
 function applyManagedDisclosureValue(sourceValue, disclosureId, getDisclosureValue) {
   const token = String(disclosureId || '').trim();
@@ -1319,7 +1285,6 @@ function buildDynamicCtaSection(block, pathname) {
   return {
     id: `${pathname}-dynamic-cta-${String(block.id || 'cta_form').trim() || 'cta_form'}`,
     blockId: String(block?.id || '').trim() || undefined,
-    targetSectionKey: runtime.targetSectionKey || '',
     copyWrap: true,
     anchorId: runtime.anchorId || undefined,
     className: `${sectionClassBase}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${runtime.bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}`,
@@ -1343,7 +1308,7 @@ function buildDynamicCtaSection(block, pathname) {
 }
 
 function buildDynamicRequestFormSection(block, pathname) {
-  const runtime = buildDynamicRequestFormFromBlock(block, { pathname });
+  const runtime = buildDynamicRequestFormFromBlock(block);
   if (!runtime) {
     return null;
   }
@@ -1351,7 +1316,6 @@ function buildDynamicRequestFormSection(block, pathname) {
   return {
     id: `${pathname}-dynamic-request-${String(block.id || 'request_form').trim() || 'request_form'}`,
     blockId: String(block?.id || '').trim() || undefined,
-    targetSectionKey: runtime.targetSectionKey || '',
     anchorId: runtime.anchorId || undefined,
     hideCopy: true,
     className: runtime.sectionClassName,
@@ -1375,20 +1339,17 @@ function buildDynamicRequestFormSection(block, pathname) {
 
 function buildDynamicTestimonialsSection(block, pathname, testimonialsLibrary) {
   const runtime = buildDynamicTestimonialsFromBlock(block, {
-    pathname,
     library: testimonialsLibrary,
   });
   if (!runtime) {
     return null;
   }
-
-  const { items, fineprint, targetFineprintSectionKey } = runtime;
+  const { items, fineprint } = runtime;
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-testimonials' : 'native-dynamic-testimonials';
 
   return {
     id: `${pathname}-dynamic-testimonials-${String(block.id || 'testimonials').trim() || 'testimonials'}`,
     blockId: String(block?.id || '').trim() || undefined,
-    targetSectionKey: runtime.targetSectionKey || '',
     className: `${sectionClassBase}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
     hideTitle: true,
     testimonials: items.map((item) => ({
@@ -1396,7 +1357,6 @@ function buildDynamicTestimonialsSection(block, pathname, testimonialsLibrary) {
       author: item.authorTitle ? `${item.author}, ${item.authorTitle}` : item.author,
     })),
     fineprint,
-    targetFineprintSectionKey,
   };
 }
 
@@ -1436,7 +1396,6 @@ function buildDynamicFeaturePanelSection(block, pathname) {
   return {
     id: `${pathname}-dynamic-feature-panel-${String(block.id || 'feature-panel').trim() || 'feature-panel'}`,
     blockId: String(block?.id || '').trim() || undefined,
-    targetSectionKey: runtime.targetSectionKey || '',
     anchorId: runtime.anchorId || undefined,
     className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
     fullBleed: Boolean(runtime.fullBleed),
@@ -1460,7 +1419,6 @@ function buildDynamicSiteFeatureSection(block, pathname) {
   const baseSection = {
     id: `${pathname}-dynamic-site-feature-${String(block.id || 'site-feature').trim() || 'site-feature'}`,
     blockId,
-    targetSectionKey: runtime.targetSectionKey || '',
     className: `${pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
     siteFeatureRuntime: runtime,
     featureIntro: runtime.featureIntro || undefined,
@@ -4526,363 +4484,6 @@ export default function NativeContentPage({ page }) {
       }
     }
 
-    const consumedDynamicCtaBlockIds = new Set();
-    const consumedDynamicFeaturePanelBlockIds = new Set();
-    const consumedDynamicGridBlockIds = new Set();
-    const consumedDynamicRequestBlockIds = new Set();
-    const consumedDynamicSiteFeatureBlockIds = new Set();
-    const consumedDynamicTestimonialsBlockIds = new Set();
-    const consumedDynamicBillboardBlockIds = new Set();
-    const targetedDynamicCtaSections = new Map();
-    const targetedDynamicFeatureSections = new Map();
-    const targetedDynamicGridSections = new Map();
-    const targetedDynamicRequestSections = new Map();
-    const targetedDynamicSiteFeatureSections = new Map();
-    const targetedDynamicTestimonialsSections = new Map();
-    const targetedDynamicTestimonialsFineprintSections = new Map();
-    const targetedDynamicBillboardSections = new Map();
-    const allowTargetedDynamicSections = !isBlockOnlyManagedPage;
-
-    visibleBlocks.forEach((block) => {
-      const mappedSection = buildNativeBillboardSection(block, activePath, { includeTestClassName: isTestPage });
-      const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicBillboardSections.has(targetKey)) {
-        return;
-      }
-      targetedDynamicBillboardSections.set(targetKey, { block, mappedSection });
-    });
-
-    visibleBlocks.forEach((block) => {
-      const mappedSection = buildDynamicCtaSection(block, activePath);
-      const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicCtaSections.has(targetKey)) {
-        return;
-      }
-      targetedDynamicCtaSections.set(targetKey, { block, mappedSection });
-    });
-
-    visibleBlocks.forEach((block) => {
-      const mappedSection = buildDynamicGridSection(block, activePath, { getConsultants });
-      const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicGridSections.has(targetKey)) {
-        return;
-      }
-      targetedDynamicGridSections.set(targetKey, { block, mappedSection });
-    });
-
-    visibleBlocks.forEach((block) => {
-      const mappedSection = buildDynamicFeaturePanelSection(block, activePath);
-      const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicFeatureSections.has(targetKey)) {
-        return;
-      }
-      targetedDynamicFeatureSections.set(targetKey, { block, mappedSection });
-    });
-
-    visibleBlocks.forEach((block) => {
-      const mappedSection = buildDynamicSiteFeatureSection(block, activePath);
-      const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicSiteFeatureSections.has(targetKey)) {
-        return;
-      }
-      targetedDynamicSiteFeatureSections.set(targetKey, { block, mappedSection });
-    });
-
-    visibleBlocks.forEach((block) => {
-      const mappedSection = buildDynamicRequestFormSection(block, activePath);
-      const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicRequestSections.has(targetKey)) {
-        return;
-      }
-      targetedDynamicRequestSections.set(targetKey, { block, mappedSection });
-    });
-
-    visibleBlocks.forEach((block) => {
-      const mappedSection = buildDynamicTestimonialsSection(block, activePath, testimonialsLibrary);
-      const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (allowTargetedDynamicSections && mappedSection && targetKey && !targetedDynamicTestimonialsSections.has(targetKey)) {
-        targetedDynamicTestimonialsSections.set(targetKey, { block, mappedSection });
-      }
-      const fineprintTargetKey = String(mappedSection?.targetFineprintSectionKey || '').trim();
-      if (allowTargetedDynamicSections && mappedSection && fineprintTargetKey && !targetedDynamicTestimonialsFineprintSections.has(fineprintTargetKey)) {
-        targetedDynamicTestimonialsFineprintSections.set(fineprintTargetKey, { block, mappedSection });
-      }
-    });
-
-    if (targetedDynamicBillboardSections.size && Array.isArray(nextBaseContent.sections) && nextBaseContent.sections.length) {
-      nextBaseContent = {
-        ...nextBaseContent,
-        sections: nextBaseContent.sections.map((section, sectionIndex) => {
-          const targetKey = getSectionTargetKeys(section, sectionIndex).find((key) => targetedDynamicBillboardSections.has(key));
-          if (!targetKey) {
-            return section;
-          }
-
-          const targetEntry = targetedDynamicBillboardSections.get(targetKey);
-          consumedDynamicBillboardBlockIds.add(targetEntry.block.id);
-          const mappedSection = targetEntry.mappedSection;
-          const hasMappedHtml = Boolean(mappedSection.html);
-          const hasMappedBody = Array.isArray(mappedSection.body) && mappedSection.body.length > 0;
-
-          return {
-            ...section,
-            blockId: mappedSection.blockId || section.blockId,
-            className: mergeClassNames(section.className, mappedSection.className),
-            copyWrap: Object.prototype.hasOwnProperty.call(mappedSection, 'copyWrap') ? mappedSection.copyWrap : section.copyWrap,
-            title: mappedSection.title || section.title,
-            titleClassName: mappedSection.titleClassName || section.titleClassName,
-            titleStyle: mappedSection.titleStyle || section.titleStyle,
-            titleHighlights: mappedSection.titleHighlights?.length ? mappedSection.titleHighlights : section.titleHighlights,
-            subtitle: mappedSection.subtitle || section.subtitle,
-            subtitleClassName: mappedSection.subtitleClassName || section.subtitleClassName,
-            subtitleStyle: mappedSection.subtitleStyle || section.subtitleStyle,
-            html: hasMappedHtml ? mappedSection.html : (hasMappedBody ? '' : section.html),
-            body: hasMappedBody ? mappedSection.body : (hasMappedHtml ? [] : section.body),
-            justify: mappedSection.justify || section.justify,
-            copyStyle: mappedSection.copyStyle || section.copyStyle,
-            sectionStyle: {
-              ...(section.sectionStyle || {}),
-              ...(mappedSection.sectionStyle || {}),
-            },
-            railStyle: {
-              ...(section.railStyle || {}),
-              ...(mappedSection.railStyle || {}),
-            },
-            actions: mappedSection.actions?.length ? mappedSection.actions : section.actions,
-          };
-        }),
-      };
-    }
-
-    if (targetedDynamicGridSections.size && Array.isArray(nextBaseContent.sections) && nextBaseContent.sections.length) {
-      nextBaseContent = {
-        ...nextBaseContent,
-        sections: nextBaseContent.sections.map((section, sectionIndex) => {
-          const targetKey = getSectionTargetKeys(section, sectionIndex).find((key) => targetedDynamicGridSections.has(key));
-          if (!targetKey) {
-            return section;
-          }
-
-          const targetEntry = targetedDynamicGridSections.get(targetKey);
-          consumedDynamicGridBlockIds.add(targetEntry.block.id);
-          const mappedSection = targetEntry.mappedSection;
-
-          return {
-            ...section,
-            blockId: mappedSection.blockId || section.blockId,
-            className: mergeClassNames(section.className, mappedSection.className),
-            hideTitle: mappedSection.hideTitle,
-            title: mappedSection.title || section.title,
-            titleClassName: mappedSection.titleClassName || section.titleClassName,
-            titleHighlights: mappedSection.titleHighlights?.length ? mappedSection.titleHighlights : section.titleHighlights,
-            body: mappedSection.body?.length ? mappedSection.body : section.body,
-            html: mappedSection.html || section.html,
-            columns: mappedSection.columns || section.columns,
-            cards: mappedSection.cards?.length ? mappedSection.cards : section.cards,
-            sectionStyle: {
-              ...(section.sectionStyle || {}),
-              ...(mappedSection.sectionStyle || {}),
-            },
-          };
-        }),
-      };
-    }
-
-    if (targetedDynamicCtaSections.size && Array.isArray(nextBaseContent.sections) && nextBaseContent.sections.length) {
-      nextBaseContent = {
-        ...nextBaseContent,
-        sections: nextBaseContent.sections.map((section, sectionIndex) => {
-          const targetKey = getSectionTargetKeys(section, sectionIndex).find((key) => targetedDynamicCtaSections.has(key));
-          if (!targetKey) {
-            return section;
-          }
-
-          const targetEntry = targetedDynamicCtaSections.get(targetKey);
-          consumedDynamicCtaBlockIds.add(targetEntry.block.id);
-          const mappedSection = targetEntry.mappedSection;
-
-          const baseForm = section?.form && typeof section.form === 'object' ? section.form : {};
-          const mappedForm = mappedSection?.form && typeof mappedSection.form === 'object' ? mappedSection.form : null;
-          const baseFields = Array.isArray(baseForm.fields) ? baseForm.fields : [];
-          const mappedFields = Array.isArray(mappedForm?.fields) ? mappedForm.fields : [];
-          const mergedFormFields = mappedFields.length
-            ? [
-                ...mappedFields,
-                ...baseFields.slice(mappedFields.length),
-              ]
-            : baseFields;
-          const baseSectionIsCtaShell = String(section?.className || '').includes('cta');
-          const fallbackFormTitle = String(
-            baseForm.title
-            || ((section?.hideCopy || baseSectionIsCtaShell) ? (mappedSection.title || section?.title || '') : '')
-            || ''
-          ).trim();
-          const fallbackFormSubtitle = String(
-            baseForm.subtitle
-            || (baseSectionIsCtaShell ? (mappedSection.subtitle || section?.subtitle || '') : '')
-            || ''
-          ).trim();
-          const mergedForm = mappedForm
-            ? {
-                ...baseForm,
-                ...mappedForm,
-                title: String(mappedForm.title || fallbackFormTitle || '').trim(),
-                subtitle: String(mappedForm.subtitle || fallbackFormSubtitle || '').trim(),
-                fields: mergedFormFields.length ? mergedFormFields : baseForm.fields,
-              }
-            : section.form;
-
-          return {
-            ...section,
-            blockId: mappedSection.blockId || section.blockId,
-            title: mappedSection.title || section.title,
-            titleClassName: mappedSection.titleClassName || section.titleClassName,
-            titleHighlights: mappedSection.titleHighlights?.length ? mappedSection.titleHighlights : section.titleHighlights,
-            html: mappedSection.html || section.html,
-            form: mergedForm,
-            copyWrap: Object.prototype.hasOwnProperty.call(mappedSection, 'copyWrap') ? mappedSection.copyWrap : section.copyWrap,
-          };
-        }),
-      };
-    }
-
-    if (targetedDynamicFeatureSections.size && Array.isArray(nextBaseContent.sections) && nextBaseContent.sections.length) {
-      nextBaseContent = {
-        ...nextBaseContent,
-        sections: nextBaseContent.sections.map((section, sectionIndex) => {
-          const targetKey = getSectionTargetKeys(section, sectionIndex).find((key) => targetedDynamicFeatureSections.has(key));
-          if (!targetKey) {
-            return section;
-          }
-
-          const targetEntry = targetedDynamicFeatureSections.get(targetKey);
-          consumedDynamicFeaturePanelBlockIds.add(targetEntry.block.id);
-          const mappedSection = targetEntry.mappedSection;
-          const baseFeature = section?.feature && typeof section.feature === 'object' ? section.feature : {};
-          const mappedFeature = mappedSection?.feature && typeof mappedSection.feature === 'object' ? mappedSection.feature : {};
-
-          return {
-            ...section,
-            blockId: mappedSection.blockId || section.blockId,
-            className: mergeClassNames(section.className, mappedSection.className),
-            feature: {
-              ...baseFeature,
-              ...mappedFeature,
-              title: mappedFeature.title || baseFeature.title,
-              image: mappedFeature.image || baseFeature.image,
-              imageAlt: mappedFeature.imageAlt || baseFeature.imageAlt,
-              body: mappedFeature.body?.length ? mappedFeature.body : baseFeature.body,
-              html: mappedFeature.html || baseFeature.html,
-              actions: mappedFeature.actions?.length ? mappedFeature.actions : baseFeature.actions,
-              titleHighlights: mappedFeature.titleHighlights?.length ? mappedFeature.titleHighlights : baseFeature.titleHighlights,
-            },
-          };
-        }),
-      };
-    }
-
-    if (targetedDynamicSiteFeatureSections.size) {
-      const mergeTargetedSiteFeatureSections = (sections = []) => (
-        sections.map((section, sectionIndex) => {
-          const targetKey = getSectionTargetKeys(section, sectionIndex).find((key) => targetedDynamicSiteFeatureSections.has(key));
-          if (!targetKey) {
-            return section;
-          }
-
-          const targetEntry = targetedDynamicSiteFeatureSections.get(targetKey);
-          consumedDynamicSiteFeatureBlockIds.add(targetEntry.block.id);
-          const mappedSection = targetEntry.mappedSection;
-
-          return {
-            ...section,
-            blockId: mappedSection.blockId || section.blockId,
-            className: mergeClassNames(section.className, mappedSection.className),
-            siteFeatureRuntime: mappedSection.siteFeatureRuntime || null,
-          };
-        })
-      );
-
-      nextBaseContent = {
-        ...nextBaseContent,
-        preIntroSections: Array.isArray(nextBaseContent.preIntroSections)
-          ? mergeTargetedSiteFeatureSections(nextBaseContent.preIntroSections)
-          : nextBaseContent.preIntroSections,
-        sections: Array.isArray(nextBaseContent.sections)
-          ? mergeTargetedSiteFeatureSections(nextBaseContent.sections)
-          : nextBaseContent.sections,
-      };
-    }
-
-    if (targetedDynamicRequestSections.size && Array.isArray(nextBaseContent.sections) && nextBaseContent.sections.length) {
-      nextBaseContent = {
-        ...nextBaseContent,
-        sections: nextBaseContent.sections.map((section, sectionIndex) => {
-          const targetKey = getSectionTargetKeys(section, sectionIndex).find((key) => targetedDynamicRequestSections.has(key));
-          if (!targetKey) {
-            return section;
-          }
-
-          const targetEntry = targetedDynamicRequestSections.get(targetKey);
-          consumedDynamicRequestBlockIds.add(targetEntry.block.id);
-          const mappedSection = targetEntry.mappedSection;
-
-          return {
-            ...section,
-            blockId: mappedSection.blockId || section.blockId,
-            className: mergeClassNames(section.className, mappedSection.className),
-            sectionStyle: {
-              ...(section.sectionStyle || {}),
-              ...(mappedSection.sectionStyle || {}),
-            },
-            hideCopy: Boolean(mappedSection.hideCopy),
-            form: mappedSection.form || section.form,
-          };
-        }),
-      };
-    }
-
-    if (
-      (targetedDynamicTestimonialsSections.size || targetedDynamicTestimonialsFineprintSections.size)
-      && Array.isArray(nextBaseContent.sections)
-      && nextBaseContent.sections.length
-    ) {
-      nextBaseContent = {
-        ...nextBaseContent,
-        sections: nextBaseContent.sections.map((section, sectionIndex) => {
-          const sectionKeys = getSectionTargetKeys(section, sectionIndex);
-          const targetKey = sectionKeys.find((key) => targetedDynamicTestimonialsSections.has(key));
-          const fineprintTargetKey = sectionKeys.find((key) => targetedDynamicTestimonialsFineprintSections.has(key));
-
-          if (!targetKey && !fineprintTargetKey) {
-            return section;
-          }
-
-          if (targetKey) {
-            const targetEntry = targetedDynamicTestimonialsSections.get(targetKey);
-            consumedDynamicTestimonialsBlockIds.add(targetEntry.block.id);
-            const mappedSection = targetEntry.mappedSection;
-
-            return {
-              ...section,
-              blockId: mappedSection.blockId || section.blockId,
-              testimonials: mappedSection.testimonials || section.testimonials,
-              fineprint: mappedSection.fineprint || section.fineprint,
-            };
-          }
-
-          const targetEntry = targetedDynamicTestimonialsFineprintSections.get(fineprintTargetKey);
-          consumedDynamicTestimonialsBlockIds.add(targetEntry.block.id);
-          const mappedSection = targetEntry.mappedSection;
-
-          return {
-            ...section,
-            blockId: mappedSection.blockId || section.blockId,
-            fineprint: mappedSection.fineprint || section.fineprint,
-          };
-        }),
-      };
-    }
-
     const dynamicSections = visibleBlocks.reduce((acc, block) => {
       if (block.mode === 'dynamic' && block.kind === 'content') {
         const pageContentSection = buildDynamicPageContentSection(block, activePath);
@@ -4893,9 +4494,6 @@ export default function NativeContentPage({ page }) {
       }
 
       if (block.mode === 'dynamic' && block.kind === 'card_grid') {
-        if (consumedDynamicGridBlockIds.has(block.id)) {
-          return acc;
-        }
         const gridSection = buildDynamicGridSection(block, activePath, { getConsultants });
         if (gridSection) {
           acc.push(gridSection);
@@ -4920,9 +4518,6 @@ export default function NativeContentPage({ page }) {
       }
 
       if (block.mode === 'dynamic' && block.kind === 'feature_panel') {
-        if (consumedDynamicFeaturePanelBlockIds.has(block.id)) {
-          return acc;
-        }
         const featurePanelSection = buildDynamicFeaturePanelSection(block, activePath);
         if (featurePanelSection) {
           acc.push(featurePanelSection);
@@ -4931,9 +4526,6 @@ export default function NativeContentPage({ page }) {
       }
 
       if (block.mode === 'dynamic' && block.kind === 'site_feature') {
-        if (consumedDynamicSiteFeatureBlockIds.has(block.id)) {
-          return acc;
-        }
         const siteFeatureSection = buildDynamicSiteFeatureSection(block, activePath);
         if (siteFeatureSection) {
           acc.push(siteFeatureSection);
@@ -4942,9 +4534,6 @@ export default function NativeContentPage({ page }) {
       }
 
       if (block.mode === 'dynamic' && block.kind === 'cta_form') {
-        if (consumedDynamicCtaBlockIds.has(block.id)) {
-          return acc;
-        }
         const ctaSection = buildDynamicCtaSection(block, activePath);
         if (ctaSection) {
           acc.push(ctaSection);
@@ -4953,9 +4542,6 @@ export default function NativeContentPage({ page }) {
       }
 
       if (block.mode === 'dynamic' && block.kind === 'request_form') {
-        if (consumedDynamicRequestBlockIds.has(block.id)) {
-          return acc;
-        }
         const requestSection = buildDynamicRequestFormSection(block, activePath);
         if (requestSection) {
           acc.push(requestSection);
@@ -4964,9 +4550,6 @@ export default function NativeContentPage({ page }) {
       }
 
       if (block.mode === 'dynamic' && block.kind === 'testimonials') {
-        if (consumedDynamicTestimonialsBlockIds.has(block.id)) {
-          return acc;
-        }
         const testimonialsSection = buildDynamicTestimonialsSection(block, activePath, testimonialsLibrary);
         if (testimonialsSection) {
           acc.push(testimonialsSection);
@@ -4975,10 +4558,7 @@ export default function NativeContentPage({ page }) {
       }
 
       if (block.mode === 'dynamic' && block.kind === 'billboard') {
-        if (consumedDynamicBillboardBlockIds.has(block.id)) {
-          return acc;
-        }
-        const billboardSection = buildNativeBillboardSection(block, activePath, { includeTestClassName: isTestPage });
+        const billboardSection = buildNativeBillboardSection(block, { includeTestClassName: isTestPage });
         if (billboardSection) {
           acc.push(billboardSection);
         }

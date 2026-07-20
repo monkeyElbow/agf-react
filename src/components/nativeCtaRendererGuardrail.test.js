@@ -22,17 +22,16 @@ describe('native CTA renderer guardrail', () => {
     expect(source).toContain('{config?.subtitle ? <h6>{config.subtitle}</h6> : null}');
   });
 
-  it('preserves native CTA form title, subtitle, and missing trailing fields when a dynamic CTA targets a native section', () => {
+  it('renders dynamic CTA blocks directly instead of targeting native sections', () => {
     const source = readSource('./NativeContentPage.jsx');
 
-    expect(source).toContain('const targetedDynamicCtaSections = new Map();');
-    expect(source).toContain("const targetKey = String(mappedSection?.targetSectionKey || '').trim();");
-    expect(source).toContain("targetedDynamicCtaSections.set(targetKey, { block, mappedSection });");
-    expect(source).toContain('const mergedFormFields = mappedFields.length');
-    expect(source).toContain("const baseSectionIsCtaShell = String(section?.className || '').includes('cta');");
-    expect(source).toContain("title: String(mappedForm.title || fallbackFormTitle || '').trim()");
-    expect(source).toContain("subtitle: String(mappedForm.subtitle || fallbackFormSubtitle || '').trim()");
-    expect(source).toContain('...baseFields.slice(mappedFields.length)');
+    expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'cta_form') {");
+    expect(source).toContain('const ctaSection = buildDynamicCtaSection(block, activePath);');
+    expect(source).toContain('acc.push(ctaSection);');
+    expect(source).not.toContain('const targetedDynamicCtaSections = new Map();');
+    expect(source).not.toContain("const targetKey = String(mappedSection?.targetSectionKey || '').trim();");
+    expect(source).not.toContain("targetedDynamicCtaSections.set(targetKey, { block, mappedSection });");
+    expect(source).not.toContain('mappedFields');
     expect(source).not.toContain('normalizeTargetSectionKey(block?.settings?.targetSectionKey)');
   });
 
@@ -54,7 +53,7 @@ describe('native CTA renderer guardrail', () => {
     expect(cssSource).toContain('.admin-cta-hud-live-heading mark.is-sandstone {');
     expect(cssSource).toContain('.service-native-section.native-dynamic-cta .native-info-section-copy > h2.is-sandstone,');
     expect(cssSource).toContain('.service-native-section.native-dynamic-cta .native-info-section-copy > h2 mark.is-sandstone,');
-    expect(cssSource).toContain('.native-info-page--test .service-native-section.test-dynamic-cta .native-info-section-copy > h2.is-sandstone,');
-    expect(cssSource).toContain('.native-info-page--test .service-native-section.test-dynamic-cta .native-info-section-copy > h2 mark.is-sandstone {');
+    expect(cssSource).toContain('.service-native-section.test-dynamic-cta .native-info-section-copy > h2.is-sandstone,');
+    expect(cssSource).toContain('.service-native-section.test-dynamic-cta .native-info-section-copy > h2 mark.is-sandstone {');
   });
 });

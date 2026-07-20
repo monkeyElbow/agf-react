@@ -5,6 +5,24 @@ import {
   BLOCKLESS_MANAGED_PAGE_PATHS,
 } from '../lib/managedPageShells';
 
+const TARGET_BRIDGE_SETTING_KEYS = [
+  'targetSectionKey',
+  'targetFineprintSectionKey',
+  'targetSectionClassName',
+  'targetSectionIndex',
+];
+
+function expectNoTargetBridgeSettings(block, label = block?.id || 'block') {
+  const settings = block?.settings && typeof block.settings === 'object'
+    ? block.settings
+    : {};
+  const presentKeys = TARGET_BRIDGE_SETTING_KEYS.filter((key) => (
+    Object.prototype.hasOwnProperty.call(settings, key)
+  ));
+
+  expect(presentKeys, `${label} should not carry target bridge settings`).toEqual([]);
+}
+
 describe('ContentAdminContext state normalization', () => {
   it('omits blockless functional routes from normalized block state', () => {
     const staleBlocksByPath = Array.from(BLOCKLESS_MANAGED_PAGE_PATHS).reduce((next, pathname) => {
@@ -50,13 +68,10 @@ describe('ContentAdminContext state normalization', () => {
       const blocks = normalized.blocksByPath[pathname] || [];
 
       expect(blocks.some((block) => block?.id === 'page_content'), pathname).toBe(false);
-      blocks.forEach((block) => {
-        expect(String(block?.settings?.targetSectionKey || ''), `${pathname} ${block?.id}`).toBe('');
-      });
+      blocks.forEach((block) => expectNoTargetBridgeSettings(block, `${pathname} ${block?.id}`));
 
       const staleBlock = blocks.find((block) => block?.id === 'stale_bridge_block');
-      expect(staleBlock?.settings?.targetSectionClassName, pathname).toBe('');
-      expect(staleBlock?.settings?.targetSectionIndex, pathname).toBe(0);
+      expectNoTargetBridgeSettings(staleBlock, pathname);
     });
   });
 
@@ -67,11 +82,58 @@ describe('ContentAdminContext state normalization', () => {
       const blocks = normalized.blocksByPath[pathname] || [];
 
       expect(blocks.some((block) => block?.id === 'page_content'), pathname).toBe(false);
-      blocks.forEach((block) => {
-        expect(String(block?.settings?.targetSectionKey || ''), `${pathname} ${block?.id}`).toBe('');
-        expect(String(block?.settings?.targetSectionClassName || ''), `${pathname} ${block?.id}`).toBe('');
-        expect(Number(block?.settings?.targetSectionIndex || 0), `${pathname} ${block?.id}`).toBe(0);
-      });
+      blocks.forEach((block) => expectNoTargetBridgeSettings(block, `${pathname} ${block?.id}`));
+    });
+  });
+
+  it('upgrades stale static records on block-only managed pages to the current dynamic block contract', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/insurance/property-casualty-insurance': [
+          {
+            id: 'hero',
+            kind: 'hero',
+            mode: 'static',
+            settings: {
+              line1Text: 'Property and casualty',
+              targetSectionKey: 'class:legacy-hero',
+            },
+            editableFields: [],
+          },
+          {
+            id: 'intro',
+            kind: 'intro',
+            mode: 'static',
+            settings: {},
+            editableFields: [],
+          },
+        ],
+        '/services/retirement/403b/403b-terms-definitions': [
+          {
+            id: 'hero',
+            kind: 'hero',
+            mode: 'static',
+            settings: {
+              line1Text: 'Terms and definitions',
+              targetSectionClassName: 'legacy-terms-hero',
+            },
+            editableFields: [],
+          },
+        ],
+      },
+    });
+
+    [
+      ['/services/insurance/property-casualty-insurance', 'hero'],
+      ['/services/insurance/property-casualty-insurance', 'intro'],
+      ['/services/retirement/403b/403b-terms-definitions', 'hero'],
+    ].forEach(([pathname, blockId]) => {
+      const block = (normalized.blocksByPath[pathname] || [])
+        .find((candidate) => candidate?.id === blockId);
+
+      expect(block?.mode, `${pathname} ${blockId}`).toBe('dynamic');
+      expect(Array.isArray(block?.editableFields) ? block.editableFields.length : 0, `${pathname} ${blockId}`).toBeGreaterThan(0);
+      expectNoTargetBridgeSettings(block, `${pathname} ${blockId}`);
     });
   });
 
@@ -121,6 +183,8 @@ describe('ContentAdminContext state normalization', () => {
     expect(blocksById.get('start_enrollment')?.settings?.sectionClassName).toContain('retirement-403b-native-enroll');
     expect(blocksById.get('contribution_limits')?.settings?.sectionClassName).toContain('retirement-403b-native-contribution-limits');
     expect(blocksById.get('rollover_billboard')?.settings?.sectionClassName).toContain('retirement-403b-native-rollover');
+    expect(blocksById.get('rollover_billboard')?.settings?.sectionClassName).toContain('retirement-everyday');
+    expect(blocksById.get('rollover_billboard')?.settings?.sectionClassName).toContain('retirement-rollover-billboard');
   });
 
   it('keeps the canonical home do-the-math billboard on the dynamic managed path', () => {
@@ -290,7 +354,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.button1Label).toBe('More about AG Insurance');
     expect(introBlock?.settings?.button1PageRef).toBe('/services/insurance/property-casualty-insurance#ag-program');
     expect(requestBlock?.settings?.sectionClassName).toBe('insurance-pc-native-quote');
-    expect(String(requestBlock?.settings?.targetSectionKey || '')).toBe('');
+    expectNoTargetBridgeSettings(requestBlock);
     expect(agProgramBlock?.settings?.sectionClassName).toBe('insurance-pc-native-ag-program');
     expect(resourcesBlock?.settings?.sectionClassName).toBe('insurance-pc-native-resources');
     expect(safeBlock?.settings?.titleHighlightsJson).toContain('Safe & sound');
@@ -383,8 +447,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks[0]?.id).toBe('request_form');
     expect(requestBlocks[0]?.settings?.title).toBe('Begin the Endowment sign up process');
     expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-endowments-legacy-form');
-    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('');
-    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('');
+    expectNoTargetBridgeSettings(requestBlocks[0]);
     expect(String(requestBlocks[0]?.settings?.step1Title || '')).toBe('');
   });
 
@@ -424,9 +487,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks[0]?.settings?.title).toBe('Make the most of your giving.');
     expect(requestBlocks[0]?.settings?.anchorId).toBe('traditional-daf-form');
     expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-generosity-request');
-    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('');
-    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('');
-    expect(requestBlocks[0]?.settings?.targetSectionIndex).toBe(0);
+    expectNoTargetBridgeSettings(requestBlocks[0]);
     expect(JSON.parse(requestBlocks[0]?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
       'name',
       'phone',
@@ -443,9 +504,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.id).toBe('request_form');
     expect(requestBlock?.settings?.anchorId).toBe('traditional-daf-form');
     expect(requestBlock?.settings?.sectionClassName).toBe('legacy-child-native-generosity-request');
-    expect(requestBlock?.settings?.targetSectionKey).toBe('');
-    expect(requestBlock?.settings?.targetSectionClassName).toBe('');
-    expect(requestBlock?.settings?.targetSectionIndex).toBe(0);
+    expectNoTargetBridgeSettings(requestBlock);
     expect(JSON.parse(requestBlock?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
       'name',
       'phone',
@@ -490,8 +549,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks[0]?.mode).toBe('dynamic');
     expect(requestBlocks[0]?.settings?.title).toBe('Your gifts are more powerful than you think.');
     expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-cga-request');
-    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('');
-    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('');
+    expectNoTargetBridgeSettings(requestBlocks[0]);
   });
 
   it('drops duplicate ministry-impact-fund request-form blocks and restores the canonical dynamic request target', () => {
@@ -531,8 +589,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks[0]?.settings?.title).toBe('A legacy of giving.');
     expect(requestBlocks[0]?.settings?.anchorId).toBe('ministry-impact-form');
     expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-request');
-    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('');
-    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('');
+    expectNoTargetBridgeSettings(requestBlocks[0]);
   });
 
   it('seeds 403(b) with a CTA block instead of a request-form block', () => {
@@ -553,7 +610,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock).toBeUndefined();
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock.mode).toBe('dynamic');
-    expect(ctaBlock.settings.targetSectionClassName).toBe('');
+    expectNoTargetBridgeSettings(ctaBlock);
     expect(ctaBlock.settings.bodyHtml).toBe('');
     expect(ctaBlock.settings.subtitle).toBe('And we’re eager to help.');
     expect(ctaBlock.settings.bgTone).toBe('white');
@@ -716,7 +773,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock?.mode).toBe('dynamic');
     expect(ctaBlock?.settings?.sectionClassName).toBe('calculators-native-cta');
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('');
+    expectNoTargetBridgeSettings(ctaBlock);
     expect(ctaBlock?.settings?.bgTone).toBe('white');
     expect(ctaBlock?.settings?.titleClassName).toBe('is-atlantean');
     expect(ctaBlock?.settings?.field1Label).toBe('Name');
@@ -745,7 +802,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(calculatorBlocks.some((block) => block?.kind === 'request_form')).toBe(false);
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock?.settings?.sectionClassName).toBe('calculators-native-cta');
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('');
+    expectNoTargetBridgeSettings(ctaBlock);
     expect(ctaBlock?.settings?.bgTone).toBe('white');
   });
 
@@ -1041,7 +1098,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(contactBlocks.some((block) => block?.kind === 'cta_form')).toBe(false);
     expect(requestBlock).toBeTruthy();
     expect(requestBlock?.settings?.sectionClassName).toBe('contact-us-request');
-    expect(requestBlock?.settings?.targetSectionClassName).toBe('');
+    expectNoTargetBridgeSettings(requestBlock);
     expect(requestBlock?.settings?.bgTone).toBe('sand');
   });
 
@@ -1058,7 +1115,8 @@ describe('ContentAdminContext state normalization', () => {
 
       expect(requestBlock, pathname).toBeTruthy();
       expect(requestBlock?.mode, pathname).toBe('dynamic');
-      expect(requestBlock?.settings?.sectionClassName || requestBlock?.settings?.targetSectionClassName, pathname).toBe(targetSectionClassName);
+      expect(requestBlock?.settings?.sectionClassName, pathname).toBe(targetSectionClassName);
+      expectNoTargetBridgeSettings(requestBlock, pathname);
       expect(requestBlock?.settings?.title, pathname).toBe(title);
     });
   });
@@ -1091,9 +1149,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.bodyHtml).toBe('');
     expect(ctaBlock?.settings?.subtitle).toBe('And we’re eager to help.');
     expect(ctaBlock?.settings?.bgTone).toBe('white');
-    expect(ctaBlock?.settings?.targetSectionKey).toBe('');
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('');
-    expect(ctaBlock?.settings?.targetSectionIndex).toBe(0);
+    expectNoTargetBridgeSettings(ctaBlock);
   });
 
   it('keeps customized standalone 403(b) CTA body copy once the route is block-owned', () => {
@@ -1125,9 +1181,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.bodyHtml).toBe('<p>And we’re eager to help.</p>');
     expect(ctaBlock?.settings?.subtitle).toBe('');
     expect(ctaBlock?.settings?.bgTone).toBe('white');
-    expect(ctaBlock?.settings?.targetSectionKey).toBe('');
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('');
-    expect(ctaBlock?.settings?.targetSectionIndex).toBe(0);
+    expectNoTargetBridgeSettings(ctaBlock);
   });
 
   it('upgrades stale 403(b) rollover billboards to the canonical retirement rollover block', () => {
@@ -1160,9 +1214,7 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(rolloverBlock).toBeTruthy();
     expect(rolloverBlock?.hidden).toBe(false);
-    expect(rolloverBlock?.settings?.targetSectionKey).toBe('');
-    expect(rolloverBlock?.settings?.targetSectionClassName).toBe('');
-    expect(rolloverBlock?.settings?.targetSectionIndex).toBe(0);
+    expectNoTargetBridgeSettings(rolloverBlock);
     expect(rolloverBlock?.settings?.buttonLabel).toBe('Start a rollover');
     expect(rolloverBlock?.settings?.titleFontFamily).toBe('helv');
     expect(rolloverBlock?.settings?.titleFontWeight).toBe(800);
@@ -1207,9 +1259,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(rolloverBlock?.settings?.textTone).toBe('white');
     expect(rolloverBlock?.settings?.justify).toBe('left');
     expect(rolloverBlock?.settings?.buttonLabel).toBe('Talk to us first');
-    expect(rolloverBlock?.settings?.targetSectionKey).toBe('');
-    expect(rolloverBlock?.settings?.targetSectionClassName).toBe('');
-    expect(rolloverBlock?.settings?.targetSectionIndex).toBe(0);
+    expectNoTargetBridgeSettings(rolloverBlock);
   });
 
   it('keeps customized 403(b) rollover billboard copy when only obsolete target-section fields remain', () => {
@@ -1247,9 +1297,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(rolloverBlock?.settings?.textTone).toBe('white');
     expect(rolloverBlock?.settings?.justify).toBe('left');
     expect(rolloverBlock?.settings?.buttonLabel).toBe('Talk to a consultant');
-    expect(rolloverBlock?.settings?.targetSectionKey).toBe('');
-    expect(rolloverBlock?.settings?.targetSectionClassName).toBe('');
-    expect(rolloverBlock?.settings?.targetSectionIndex).toBe(0);
+    expectNoTargetBridgeSettings(rolloverBlock);
   });
 
   it('drops the stale blank 403(b) page-content fallback and uses the seeded semantic loan block', () => {
@@ -2257,9 +2305,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.kind).toBe('request_form');
     expect(requestBlock?.hidden).toBe(false);
     expect(requestBlock?.settings?.sectionClassName).toBe('group-life-native-quote');
-    expect(requestBlock?.settings?.targetSectionKey).toBe('');
-    expect(requestBlock?.settings?.targetSectionClassName).toBe('');
-    expect(requestBlock?.settings?.targetSectionIndex).toBe(0);
+    expectNoTargetBridgeSettings(requestBlock);
     expect(requestBlock?.settings?.bgTone).toBe('blue');
     expect(requestBlock?.settings?.textTone).toBe('white');
     expect(requestBlock?.settings?.titleClassName).toBe('is-super-grey');
@@ -2363,8 +2409,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.settings?.spaceBeforeRem).toBe(1.6);
     expect(requestBlock?.settings?.spaceAfterRem).toBe(1.6);
     expect(requestBlock?.settings?.sectionClassName).toBe('loans-consultant-native-contact');
-    expect(String(requestBlock?.settings?.targetSectionKey || '')).toBe('');
-    expect(requestBlock?.settings?.targetSectionClassName).toBe('');
+    expectNoTargetBridgeSettings(requestBlock);
   });
 
   it('replaces the life insurance quote request form with the canonical standalone seeded block', () => {
@@ -2397,8 +2442,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.mode).toBe('dynamic');
     expect(requestBlock?.hidden).toBe(false);
     expect(requestBlock?.settings).toEqual(defaultRequestBlock?.settings);
-    expect(String(requestBlock?.settings?.targetSectionKey || '')).toBe('');
-    expect(String(requestBlock?.settings?.targetSectionClassName || '')).toBe('');
+    expectNoTargetBridgeSettings(requestBlock);
     expect(requestBlock?.settings?.bgTone).toBe('blue');
     expect(requestBlock?.settings?.textTone).toBe('white');
   });

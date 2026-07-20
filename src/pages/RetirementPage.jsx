@@ -1809,7 +1809,7 @@ export default function RetirementPage() {
           blockId="retirement_plan_feature"
           runtime={retirementPlanFeatureRuntime}
           ownership={getOwnershipVisualForBlockId('retirement_plan_feature')}
-          hudAnchor={resolveHudAnchor('retirement_plan_feature')}
+          hudAnchor={renderHudAnchor('retirement_plan_feature')}
         />
       ) : null}
 

@@ -33,15 +33,16 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'site_feature') {");
   });
 
-  it('keeps feature panels on the shared dynamic section path so native pages can target legacy shells without bespoke route code', () => {
+  it('keeps feature panels on the shared dynamic section path without native-section targeting', () => {
     const source = readSource('./NativeContentPage.jsx');
 
     expect(source).toContain('buildDynamicFeaturePanelFromBlock,');
     expect(source).toContain('const runtime = buildDynamicFeaturePanelFromBlock(block);');
     expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
-    expect(source).toContain('const mappedSection = buildDynamicFeaturePanelSection(block, activePath);');
     expect(source).toContain('const featurePanelSection = buildDynamicFeaturePanelSection(block, activePath);');
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'feature_panel') {");
+    expect(source).toContain('acc.push(featurePanelSection);');
+    expect(source).not.toContain('const mappedSection = buildDynamicFeaturePanelSection(block, activePath);');
   });
 
   it('routes static value-card sections through the shared feature-panel shell instead of page-specific card grids', () => {
@@ -178,8 +179,11 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('const baseNativeContent = getNativePageContent(templatePath, page.title);');
     expect(source).toContain('const baseContent = isBlockOnlyManagedPage');
     expect(source).toContain('? toBlockOnlyManagedPageShell(baseNativeContent)');
-    expect(source).toContain('const allowTargetedDynamicSections = !isBlockOnlyManagedPage;');
-    expect(source).toContain('if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicCtaSections.has(targetKey)) {');
+    expect(source).toContain('const dynamicSections = visibleBlocks.reduce');
+    expect(source).not.toContain('const allowTargetedDynamicSections = !isBlockOnlyManagedPage;');
+    expect(source).not.toContain('targetedDynamicCtaSections');
+    expect(source).not.toContain('mappedSection');
+    expect(source).not.toContain('targetSectionKey');
     expect(source).toContain("const isTestPage = templatePath === '/test';");
     expect(source).toContain("const isLegacyGivingPage = resolvedPagePath === '/services/planned-giving';");
     expect(source).toContain("const testimonialsHudDefaultTag = isLegacyGivingPage ? 'legacy-giving' : '';");

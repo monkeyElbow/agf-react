@@ -20,7 +20,6 @@ import {
 } from '../components/block-editors/migratedBlockEditors';
 import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
 import { useTestimonials } from '../context/TestimonialsContext';
-import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { pageByPath } from '../data/siteMap';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import heroBlockIcon from '../assets/admin-block-icons/hero.svg';
@@ -299,23 +298,6 @@ function canBlockOpenEditor(block, migratedEditor = null) {
     (String(block?.mode || '').trim().toLowerCase() === 'dynamic' && migratedEditor)
     || (Array.isArray(block?.editableFields) && block.editableFields.length)
   );
-}
-
-function hasBlockModeVariantOnPath(pathname, block, mode) {
-  const targetMode = String(mode || '').trim().toLowerCase();
-  const targetId = String(block?.id || '').trim();
-  const targetKind = String(block?.kind || '').trim().toLowerCase();
-  const candidates = Array.isArray(contentBlockBlueprintsByPath?.[pathname])
-    ? contentBlockBlueprintsByPath[pathname]
-    : [];
-
-  return candidates.some((candidate) => (
-    String(candidate?.mode || '').trim().toLowerCase() === targetMode
-    && (
-      (targetId && String(candidate?.id || '').trim() === targetId)
-      || (targetKind && String(candidate?.kind || '').trim().toLowerCase() === targetKind)
-    )
-  ));
 }
 
 function formatBlockModeLabel(mode) {
@@ -1425,7 +1407,6 @@ export default function AdminContentPage() {
   const [routePathDraft, setRoutePathDraft] = useState('');
   const [routePathMessage, setRoutePathMessage] = useState('');
   const [routePathError, setRoutePathError] = useState(false);
-  const [insertTemplateModeFilter, setInsertTemplateModeFilter] = useState('dynamic');
   const [insertTemplateSearch, setInsertTemplateSearch] = useState('');
   const [draggingBlockId, setDraggingBlockId] = useState('');
   const [dragOverInsertIndex, setDragOverInsertIndex] = useState(-1);
@@ -1545,11 +1526,6 @@ export default function AdminContentPage() {
     : null;
   const canEditSelectedBlock = canBlockOpenEditor(selectedBlock, MigratedSelectedBlockEditor);
   const selectedBlockIsEditing = Boolean(selectedBlock && selectedBlock.id === activeEditorBlockId);
-  const canSelectedBlockSwitchToDynamic = Boolean(
-    selectedBlock
-    && String(selectedBlock.mode || '').trim().toLowerCase() === 'static'
-    && hasBlockModeVariantOnPath(selectedPath, selectedBlock, 'dynamic')
-  );
   const breadcrumbTrail = typeof getAuthoringBreadcrumbTrail === 'function'
     ? getAuthoringBreadcrumbTrail(selectedPath)
     : getBreadcrumbTrail(selectedPath);
@@ -1583,9 +1559,9 @@ export default function AdminContentPage() {
   const breadcrumbParentTrail = breadcrumbTrail.slice(0, -1);
   const breadcrumbCurrent = breadcrumbTrail[breadcrumbTrail.length - 1] || null;
   const filteredInsertChoices = useMemo(() => buildAdminBlockInsertChoices(availableBlockTemplates, {
-    mode: insertTemplateModeFilter,
+    mode: 'dynamic',
     search: insertTemplateSearch,
-  }), [availableBlockTemplates, insertTemplateModeFilter, insertTemplateSearch]);
+  }), [availableBlockTemplates, insertTemplateSearch]);
 
   const applySelectedPath = useCallback((nextPath, options = {}) => {
     const normalizedPath = String(nextPath || '').trim();
@@ -2597,13 +2573,6 @@ export default function AdminContentPage() {
                         {insertAtIndex === insertIndex ? (
                           <div className="admin-block-insert-editor">
                             <div className="admin-block-insert-picker" role="radiogroup" aria-label="Select block family or preset to insert">
-                              <button
-                                type="button"
-                                className="admin-block-template-filter-link"
-                                onClick={() => setInsertTemplateModeFilter((current) => (current === 'dynamic' ? 'static' : 'dynamic'))}
-                              >
-                                {insertTemplateModeFilter === 'dynamic' ? 'Show static blocks' : 'Show dynamic blocks'}
-                              </button>
                               <input
                                 type="search"
                                 className="admin-block-template-search"
@@ -2884,18 +2853,6 @@ export default function AdminContentPage() {
               </div>
               {selectedBlockIsEditing ? (
                 <div className="admin-selected-block-edit-toolbar" aria-label="Block edit toolbar">
-                  <label className="admin-selected-block-mode-control">
-                    <span>Mode</span>
-                    <select
-                      aria-label="Block mode"
-                      className="search-page-input admin-selected-block-mode-select"
-                      value={selectedBlock.mode}
-                      onChange={(event) => updateBlock(selectedPath, selectedBlock.id, { mode: event.target.value })}
-                    >
-                      <option value="static">Static</option>
-                      <option value="dynamic">Dynamic</option>
-                    </select>
-                  </label>
                   <button
                     type="button"
                     className="action-btn action-btn-outline"
@@ -2981,17 +2938,6 @@ export default function AdminContentPage() {
                       ? 'This block is static and not currently editable.'
                       : 'This dynamic block does not have custom fields yet.'}
                   </p>
-                  {canSelectedBlockSwitchToDynamic ? (
-                    <div className="admin-selected-block-inspect-actions">
-                      <button
-                        type="button"
-                        className="action-btn"
-                        onClick={() => updateBlock(selectedPath, selectedBlock.id, { mode: 'dynamic' })}
-                      >
-                        Use dynamic block
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
               )}
               {recentPageHistory.length ? (

@@ -10,8 +10,13 @@ function ContextProbe() {
   const {
     devIdentity,
     renameDevIdentity,
+    blocksByPath,
+    updateBlock,
     updateBlockSetting,
     moveBlock,
+    moveBlockToIndex,
+    addBlock,
+    removeBlock,
     getBlockCollaboration,
     getPageHistory,
     getPageChangeSummary,
@@ -20,9 +25,11 @@ function ContextProbe() {
 
   const pathname = '/services/loans';
   const blockId = 'hero';
+  const pageBlocks = blocksByPath?.[pathname] || [];
   const meta = getBlockCollaboration(pathname, blockId);
   const history = getPageHistory(pathname);
   const changeSummary = getPageChangeSummary(pathname);
+  const heroBlock = pageBlocks.find((block) => block?.id === blockId) || null;
 
   return (
     <div>
@@ -34,6 +41,8 @@ function ContextProbe() {
       <p data-testid="history-action">{history[0]?.action || ''}</p>
       <p data-testid="changed-block-count">{String(changeSummary?.changedBlockCount || 0)}</p>
       <p data-testid="has-order-changes">{changeSummary?.hasOrderChanges ? 'yes' : 'no'}</p>
+      <p data-testid="block-order">{pageBlocks.map((block) => block.id).join('|')}</p>
+      <p data-testid="hero-hidden">{heroBlock?.hidden ? 'yes' : 'no'}</p>
       <button type="button" onClick={() => renameDevIdentity('Taylor QA')}>Rename</button>
       <button
         type="button"
@@ -41,7 +50,11 @@ function ContextProbe() {
       >
         Save block
       </button>
+      <button type="button" onClick={() => updateBlock(pathname, blockId, { hidden: true })}>Hide block</button>
       <button type="button" onClick={() => moveBlock(pathname, blockId, 'down')}>Move block</button>
+      <button type="button" onClick={() => moveBlockToIndex(pathname, 'cta_band', 1)}>Move CTA band to index 1</button>
+      <button type="button" onClick={() => addBlock(pathname, 'dynamic:cta_band:default', 1)}>Insert CTA band</button>
+      <button type="button" onClick={() => removeBlock(pathname, 'cta_band_2')}>Remove inserted CTA band</button>
       <button
         type="button"
         onClick={() => setActiveBlockLock(pathname, blockId, { force: true })}
@@ -196,5 +209,51 @@ describe('ContentAdminContext dev identity metadata', () => {
 
     expect(screen.getByTestId('changed-block-count').textContent).toBe('1');
     expect(screen.getByTestId('has-order-changes').textContent).toBe('yes');
+  });
+
+  it('keeps structure operations on the page block array without page-renderer intervention', () => {
+    render(
+      <ContentAdminProvider>
+        <ContextProbe />
+      </ContentAdminProvider>,
+    );
+
+    expect(screen.getByTestId('block-order').textContent.split('|').slice(0, 3)).toEqual([
+      'hero',
+      'intro',
+      'request_form',
+    ]);
+    expect(screen.getByTestId('hero-hidden').textContent).toBe('no');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide block' }));
+
+    expect(screen.getByTestId('hero-hidden').textContent).toBe('yes');
+    expect(screen.getByTestId('changed-block-count').textContent).toBe('1');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move CTA band to index 1' }));
+
+    expect(screen.getByTestId('block-order').textContent.split('|').slice(0, 3)).toEqual([
+      'hero',
+      'cta_band',
+      'intro',
+    ]);
+    expect(screen.getByTestId('has-order-changes').textContent).toBe('yes');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Insert CTA band' }));
+
+    expect(screen.getByTestId('block-order').textContent.split('|').slice(0, 4)).toEqual([
+      'hero',
+      'cta_band_2',
+      'cta_band',
+      'intro',
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove inserted CTA band' }));
+
+    expect(screen.getByTestId('block-order').textContent.split('|').slice(0, 3)).toEqual([
+      'hero',
+      'cta_band',
+      'intro',
+    ]);
   });
 });

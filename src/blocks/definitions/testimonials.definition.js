@@ -36,17 +36,6 @@ const sections = [
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
     ],
   },
-  {
-    id: 'targeting',
-    title: 'Targeting',
-    surfaces: ['hud', 'admin'],
-    fields: [
-      defineEditorField({ id: 'targetSectionKey', label: 'Target section key (optional)', type: 'text' }),
-      defineEditorField({ id: 'targetFineprintSectionKey', label: 'Target fineprint section key (optional)', type: 'text' }),
-      defineEditorField({ id: 'targetSectionClassName', label: 'Target section class name (optional)', type: 'text' }),
-      defineEditorField({ id: 'targetSectionIndex', label: 'Target section index (optional)', type: 'number', min: 0, max: 30, step: 1 }),
-    ],
-  },
 ];
 
 export const testimonialsBlockDefinition = createBlockDefinition({
@@ -64,10 +53,6 @@ export const testimonialsBlockDefinition = createBlockDefinition({
     showFineprint: true,
     fineprint: DEFAULT_TESTIMONIAL_FINEPRINT,
     sectionClassName: '',
-    targetSectionKey: '',
-    targetFineprintSectionKey: '',
-    targetSectionClassName: '',
-    targetSectionIndex: '',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),
@@ -77,8 +62,8 @@ export const testimonialsBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['selection', 'display', 'targeting'],
-    adminSectionIds: ['selection', 'display', 'targeting'],
+    hudSectionIds: ['selection', 'display'],
+    adminSectionIds: ['selection', 'display'],
   },
   validators: [
     (block) => Boolean(block && block.kind === 'testimonials' && block.mode === 'dynamic'),

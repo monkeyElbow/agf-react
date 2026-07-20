@@ -23,11 +23,11 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain('function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {');
     expect(source).toContain('const runtime = buildDynamicIntroFromBlock(block);');
     expect(source).toContain("className: `dynamic-intro${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${normalizeSurfaceBgTone(runtime.bgTone, 'sand')} is-text-${normalizePanelTextTone(runtime.textTone, 'dark')}${includeTestClassName ? ' test-dynamic-intro' : ''}`");
-    expect(source).toContain('function buildNativeBillboardSection(block, pathname, { includeTestClassName = false } = {}) {');
+    expect(source).toContain('function buildNativeBillboardSection(block, { includeTestClassName = false } = {}) {');
     expect(source).toContain('const runtime = buildDynamicBillboardFromBlock(block);');
-    expect(source).toContain("targetSectionKey: runtime.targetSectionKey || '',");
-    expect(source).toContain('const targetedDynamicBillboardSections = new Map();');
-    expect(source).toContain('consumedDynamicBillboardBlockIds.add(targetEntry.block.id);');
+    expect(source).not.toContain("targetSectionKey: runtime.targetSectionKey || '',");
+    expect(source).not.toContain('const targetedDynamicBillboardSections = new Map();');
+    expect(source).not.toContain('consumedDynamicBillboardBlockIds.add(targetEntry.block.id);');
     expect(source).toContain('.split(/\\s+/)');
     expect(source).toContain("const heroActionRowClass = buildActionRowClassName(heroActionJustify, 'center');");
     expect(source).toContain('className={buildActionRowClassName(introJustify, \'center\')}');
@@ -36,7 +36,10 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain("const introBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'intro');");
     expect(source).toContain("const adminIntro = buildNativeIntroConfig(introBlock, { includeTestClassName: true });");
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'billboard') {");
-    expect(source).toContain("const billboardSection = buildNativeBillboardSection(block, activePath, { includeTestClassName: isTestPage });");
+    expect(source).toContain("const billboardSection = buildNativeBillboardSection(block, { includeTestClassName: isTestPage });");
+    expect(source).toContain('acc.push(billboardSection);');
+    expect(source).not.toContain('routeScopedClassName');
+    expect(source).not.toContain("pathname === '/services/retirement/403b'");
     expect(source).not.toContain('function normalizeIntroLineSpacing(');
     expect(source).not.toContain('function normalizeBillboardLineSpacing(');
     expect(runtimeSource).toContain("} from './dynamicSectionTypography';");
@@ -72,8 +75,8 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain('.service-native-intro.dynamic-intro.is-text-blue .native-info-rich-html a,');
     expect(cssSource).toContain('.native-info-rich-html .is-atlantean {');
     expect(cssSource).toContain('.native-info-rich-html .is-white {');
-    expect(cssSource).toContain('.native-info-page--test .service-native-section.test-dynamic-billboard .native-info-section-copy > h2.is-sandstone,');
-    expect(cssSource).toContain('.native-info-page--test .service-native-section.test-dynamic-billboard .native-info-section-copy > h2 mark.is-sandstone {');
+    expect(cssSource).toContain('.service-native-section.test-dynamic-billboard .native-info-section-copy > h2.is-sandstone,');
+    expect(cssSource).toContain('.service-native-section.test-dynamic-billboard .native-info-section-copy > h2 mark.is-sandstone {');
   });
 
   it('keeps white available for intro HUD backgrounds without changing the shared intro runtime palette plumbing', () => {

@@ -110,7 +110,7 @@ describe('HomePage columns HUD', () => {
       ],
     };
 
-    const { container } = renderHomePage();
+    renderHomePage();
 
     expect(screen.getByText('Housing intro heading')).toBeTruthy();
     expect(screen.getByText('Housing intro body')).toBeTruthy();

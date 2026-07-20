@@ -30,8 +30,6 @@ import {
 } from './block-editors/migratedBlockEditors';
 import BlockHudPanelHost from './BlockHudPanelHost';
 import {
-  contentBlockBlueprintsByPath,
-  genericPageBlockBlueprint,
   getAllBlockTemplateBlueprints,
 } from '../data/contentBlockBlueprints';
 import { defaultTestimonialsLibrary } from '../data/testimonialsLibrarySeed';

@@ -16,7 +16,7 @@ describe('request form renderer guardrail', () => {
 
     expect(source).toContain("import DynamicRequestFormSection from './DynamicRequestFormSection';");
     expect(source).toContain('buildDynamicRequestFormFromBlock');
-    expect(source).toContain("const runtime = buildDynamicRequestFormFromBlock(block, { pathname });");
+    expect(source).toContain('const runtime = buildDynamicRequestFormFromBlock(block);');
     expect(source).toContain("if (config.variant === 'dynamic-request') {");
     expect(source).toContain('return <DynamicRequestFormSection config={config} />;');
   });
@@ -41,15 +41,16 @@ describe('request form renderer guardrail', () => {
     expect(source).not.toContain('renderInquiryField(');
   });
 
-  it('marks native copy-plus-form sections with the shared inline request shell class', () => {
+  it('renders dynamic request blocks directly instead of targeting native sections', () => {
     const source = readSource('./NativeContentPage.jsx');
 
-    expect(source).toContain("has-inline-request-shell");
-    expect(source).toContain("has-managed-request-shell");
+    expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'request_form') {");
+    expect(source).toContain('const requestSection = buildDynamicRequestFormSection(block, activePath);');
+    expect(source).toContain('acc.push(requestSection);');
     expect(source).toContain('return <DynamicRequestFormSection config={config} />;');
-    expect(source).toContain('const targetedDynamicRequestSections = new Map();');
-    expect(source).toContain("const targetKey = String(mappedSection?.targetSectionKey || '').trim();");
-    expect(source).toContain("targetedDynamicRequestSections.set(targetKey, { block, mappedSection });");
+    expect(source).not.toContain('const targetedDynamicRequestSections = new Map();');
+    expect(source).not.toContain("const targetKey = String(mappedSection?.targetSectionKey || '').trim();");
+    expect(source).not.toContain("targetedDynamicRequestSections.set(targetKey, { block, mappedSection });");
     expect(source).not.toContain('normalizeTargetSectionKey(block?.settings?.targetSectionKey)');
   });
 
@@ -132,10 +133,11 @@ describe('request form renderer guardrail', () => {
   it('keeps the Group Life request heading on dark core copy with white highlighted words in the dynamic request path', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.native-info-page--group-life-quote .group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2,');
-    expect(cssSource).toContain('.native-info-page--group-life-quote .group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2.is-white,');
-    expect(cssSource).toContain('.native-info-page--group-life-quote .group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2.is-super-grey {');
-    expect(cssSource).toContain('.native-info-page--group-life-quote .group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2 mark.is-white {');
+    expect(cssSource).toContain('.group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2,');
+    expect(cssSource).toContain('.group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2.is-white,');
+    expect(cssSource).toContain('.group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2.is-super-grey {');
+    expect(cssSource).toContain('.group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2 mark.is-white {');
+    expect(cssSource).not.toContain('.native-info-page--group-life-quote .group-life-native-quote.native-dynamic-request');
   });
 
   it('keeps request text-tone swatches wired to shared runtime copy color classes', () => {
@@ -202,13 +204,14 @@ describe('request form renderer guardrail', () => {
   it('forces contact-us back onto the shared dynamic request rail instead of a rogue outer two-column grid', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.native-info-page--contact-us .contact-us-request > .ag-panel-rail {');
+    expect(cssSource).toContain('.contact-us-request > .ag-panel-rail {');
     expect(cssSource).toContain('display: block;');
-    expect(cssSource).toContain('.native-info-page--contact-us .native-dynamic-request.contact-us-request .dynamic-request-layout {');
+    expect(cssSource).toContain('.native-dynamic-request.contact-us-request .dynamic-request-layout {');
     expect(cssSource).toContain('width: min(100%, 980px);');
     expect(cssSource).toContain('grid-template-columns: minmax(360px, 460px) minmax(0, 1fr);');
-    expect(cssSource).toContain('.native-info-page--contact-us .native-dynamic-request.contact-us-request .dynamic-request-copy {');
+    expect(cssSource).toContain('.native-dynamic-request.contact-us-request .dynamic-request-copy {');
     expect(cssSource).toContain('justify-self: stretch;');
+    expect(cssSource).not.toContain('.native-info-page--contact-us .native-dynamic-request.contact-us-request');
   });
 
   it('keeps a late shared mobile stack override so request blocks always place copy above form on small screens', () => {

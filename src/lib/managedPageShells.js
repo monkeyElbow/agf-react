@@ -8,6 +8,9 @@ const BLOCK_ONLY_MANAGED_PAGE_PATHS = new Set([
   '/online-contributions',
   '/resources',
   '/calculators',
+  '/calculators/emergency-fund',
+  '/calculators/increased-contribution',
+  '/calculators/net-worth',
   '/contact-us',
   '/about-us/impact',
   '/services',
@@ -53,6 +56,13 @@ const BLOCKLESS_MANAGED_PAGE_PATHS = new Set([
   '/sitemap',
 ]);
 
+const SPECIAL_MANAGED_PAGE_CLASSIFICATIONS = Object.freeze({
+  '/brand': 'functional-brand-kit',
+  '/rates': 'functional-rates-admin',
+  '/taxguide': 'legacy-page-content',
+  '/test': 'development-sandbox',
+});
+
 function normalizeManagedPagePath(pathname) {
   return String(pathname || '').trim() || '/';
 }
@@ -65,8 +75,8 @@ export function isBlocklessManagedPagePath(pathname) {
   return BLOCKLESS_MANAGED_PAGE_PATHS.has(normalizeManagedPagePath(pathname));
 }
 
-export function shouldSeedBlocksFromNativePageContent(pathname) {
-  return !isBlockOnlyManagedPagePath(pathname) && !isBlocklessManagedPagePath(pathname);
+export function getSpecialManagedPageClassification(pathname) {
+  return SPECIAL_MANAGED_PAGE_CLASSIFICATIONS[normalizeManagedPagePath(pathname)] || '';
 }
 
 export function toBlockOnlyManagedPageShell(content) {
@@ -95,4 +105,5 @@ export function toBlockOnlyManagedPageShell(content) {
 export {
   BLOCK_ONLY_MANAGED_PAGE_PATHS,
   BLOCKLESS_MANAGED_PAGE_PATHS,
+  SPECIAL_MANAGED_PAGE_CLASSIFICATIONS,
 };

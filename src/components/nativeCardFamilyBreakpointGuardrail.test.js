@@ -21,7 +21,7 @@ describe('native card family breakpoint guardrail', () => {
     expect(source).toContain("--native-card-family-gap: clamp(0.9rem, 1.8vw, 1.15rem);");
     expect(source).toContain('--native-card-family-gap: 1rem;');
     expect(source).toContain('.service-native-section.native-dynamic-grid .service-native-grid,');
-    expect(source).toContain('.native-info-page--test .service-native-section.test-dynamic-grid .service-native-grid,');
+    expect(source).toContain('.service-native-section.test-dynamic-grid .service-native-grid,');
     expect(source).toContain('.native-columns-grid.is-three,');
     expect(source).toContain('.native-columns-grid.is-four {');
     expect(source).toContain('.native-columns-grid.is-two,');

@@ -100,8 +100,8 @@ vi.mock('../context/ContentAdminContext', async () => {
   };
 });
 
-describe('AdminContentPage static hero recovery', () => {
-  it('keeps a switch-back path to dynamic mode for the static home hero', () => {
+describe('AdminContentPage static block boundary', () => {
+  it('does not expose dashboard mode switching for stale static records', () => {
     render(
       <MemoryRouter initialEntries={['/admin/content?page=/']}>
         <AdminContentPage />
@@ -111,8 +111,8 @@ describe('AdminContentPage static hero recovery', () => {
     fireEvent.click(screen.getAllByText('Hero')[0]);
 
     expect(screen.getByText('This block is static and not currently editable.')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Use dynamic block' }));
-
-    expect(mockUpdateBlock).toHaveBeenCalledWith('/', 'hero', { mode: 'dynamic' });
+    expect(screen.queryByLabelText('Block mode')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Use dynamic block' })).toBeNull();
+    expect(mockUpdateBlock).not.toHaveBeenCalled();
   });
 });

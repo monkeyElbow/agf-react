@@ -69,6 +69,73 @@ describe('ContentAdminContext shared bootstrap', () => {
     expect(mockInitializeSharedContentFromSeed).not.toHaveBeenCalled();
   });
 
+  it('normalizes stale shared snapshots before exposing block-only authoring and published state', async () => {
+    mockFetchSharedContentSnapshot.mockResolvedValueOnce({
+      initialized: true,
+      updatedAt: 1710000000000,
+      state: {
+        pageHierarchy: {},
+        blocksByPath: {
+          '/services/insurance/property-casualty-insurance': [
+            {
+              id: 'page_content',
+              kind: 'content',
+              mode: 'dynamic',
+              settings: {
+                html: '<p>Stale page content.</p>',
+              },
+            },
+            {
+              id: 'hero',
+              kind: 'hero',
+              mode: 'static',
+              settings: {
+                line1Text: 'Property and casualty',
+                targetSectionKey: 'class:legacy-hero',
+              },
+              editableFields: [],
+            },
+          ],
+        },
+        pathAliases: {},
+        collaborationByPath: {},
+      },
+      baseSnapshot: {
+        pageHierarchy: {},
+        blocksByPath: {
+          '/services/insurance/property-casualty-insurance': [
+            {
+              id: 'intro',
+              kind: 'intro',
+              mode: 'static',
+              settings: {
+                targetSectionClassName: 'legacy-intro',
+              },
+              editableFields: [],
+            },
+          ],
+        },
+        pathAliases: {},
+        collaborationByPath: {},
+      },
+    });
+
+    const { bootstrapSharedContentAdminState } = await import('./ContentAdminContext.jsx');
+    const state = await bootstrapSharedContentAdminState();
+    const authoringBlocks = state?.blocksByPath?.['/services/insurance/property-casualty-insurance'] || [];
+    const publishedBlocks = state?.__contentAdminBootstrap?.publishedState?.blocksByPath?.['/services/insurance/property-casualty-insurance'] || [];
+    const authoringHero = authoringBlocks.find((block) => block?.id === 'hero');
+    const publishedIntro = publishedBlocks.find((block) => block?.id === 'intro');
+
+    expect(authoringBlocks.some((block) => block?.id === 'page_content')).toBe(false);
+    expect(authoringHero?.mode).toBe('dynamic');
+    expect(authoringHero?.settings?.targetSectionKey).toBeUndefined();
+    expect(Array.isArray(authoringHero?.editableFields) ? authoringHero.editableFields.length : 0).toBeGreaterThan(0);
+    expect(publishedIntro?.mode).toBe('dynamic');
+    expect(publishedIntro?.settings?.targetSectionClassName).toBeUndefined();
+    expect(Array.isArray(publishedIntro?.editableFields) ? publishedIntro.editableFields.length : 0).toBeGreaterThan(0);
+  });
+
   it('returns a failed shared reset result when backup creation blocks the reset', async () => {
     mockFetchSharedContentSnapshot.mockResolvedValue({
       initialized: true,

@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { getBlockEditorSections } from '../blocks/registry';
+import { getAllBlockDefinitions, getBlockEditorSections } from '../blocks/registry';
+import { getEditorParityContract } from '../lib/editorParityContract';
 import {
   BillboardBlockEditor,
   CalculatorCtaBlockEditor,
@@ -91,6 +92,26 @@ describe('migrated block editor ownership', () => {
     ['content', 'calculator_cta', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip'].forEach((kind) => {
       expect(getBlockEditorSections(kind, 'admin').length).toBeGreaterThan(0);
       expect(getBlockEditorSections(kind, 'hud').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('keeps every canonical dynamic block wired to admin and HUD editing ownership', () => {
+    const source = readSource('./BlockHudPanelHost.jsx');
+
+    getAllBlockDefinitions().forEach((definition) => {
+      expect(getMigratedBlockEditorComponent(definition.kind, 'admin')).toBeTruthy();
+      expect(typeof definition.renderer.buildRuntime).toBe('function');
+      expect(getEditorParityContract(definition.kind)?.label).toBe(definition.label);
+
+      if (definition.kind === 'cta_form') {
+        expect(getMigratedBlockEditorComponent(definition.kind, 'hud')).toBeNull();
+        expect(getEditorParityContract(definition.kind)?.mode).toBe('dedicated-hud-adapter');
+        expect(source).toContain("case 'cta_form':");
+        expect(source).toContain('<CtaHudEditorPanel');
+        return;
+      }
+
+      expect(getMigratedBlockEditorComponent(definition.kind, 'hud')).toBeTruthy();
     });
   });
 

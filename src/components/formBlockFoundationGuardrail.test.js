@@ -26,7 +26,7 @@ describe('form block foundation guardrail', () => {
     expect(pageBlocksSource).toContain("from '../../blocks/foundation/forms'");
 
     expect(nativeSource).toContain('const runtime = buildDynamicCtaFormFromBlock(block);');
-    expect(nativeSource).toContain("const runtime = buildDynamicRequestFormFromBlock(block, { pathname });");
+    expect(nativeSource).toContain('const runtime = buildDynamicRequestFormFromBlock(block);');
     expect(dynamicCtaSource).toContain('buildDynamicCtaFormFromBlock');
     expect(pageBlocksSource).toContain('buildDynamicCtaFormFromBlock');
     expect(pageBlocksSource).toContain('buildDynamicRequestFormFromBlock');

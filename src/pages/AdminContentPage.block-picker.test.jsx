@@ -21,7 +21,7 @@ describe('AdminContentPage block picker guardrails', () => {
     window.localStorage.clear();
   });
 
-  it('shows canonical family preset choices while keeping retired compatibility-only insert entries out of the picker', async () => {
+  it('shows canonical dynamic family preset choices while keeping retired compatibility-only insert entries out of the picker', async () => {
     render(
       <ContentAdminProvider>
         <MemoryRouter initialEntries={['/admin/content?page=/test']}>
@@ -43,10 +43,9 @@ describe('AdminContentPage block picker guardrails', () => {
     expect(screen.getByRole('radio', { name: /Columns · Value cards/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /CTA Band · General CTA/i })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show static blocks' }));
-
     expect(screen.queryByRole('radio', { name: /CTA Band compatibility · What You Do Matters/i })).toBeNull();
     expect(screen.queryByRole('radio', { name: /Card Grid compatibility · Loan Options Grid/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Show static blocks/i })).toBeNull();
   });
 
   it('creates preset-bearing blocks with the intended family and preset identity', async () => {

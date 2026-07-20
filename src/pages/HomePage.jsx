@@ -970,7 +970,7 @@ export default function HomePage() {
     [blocks, showReturnAssist],
   );
   const nativeEnhancementsKey = useMemo(
-    () => blocks.map((block) => `${String(block?.id || block?.type || '')}:${String(block?.mode || 'static')}`).join('|'),
+    () => blocks.map((block) => `${String(block?.id || block?.type || '')}:${String(block?.mode || 'dynamic')}`).join('|'),
     [blocks],
   );
   useNativeEnhancements(pageRef, nativeEnhancementsKey);

@@ -11,6 +11,12 @@ function readSource(relativePath) {
 }
 
 describe('home page services grid guardrail', () => {
+  it('keeps managed home resolver branches from falling back to static mode', () => {
+    const resolverSource = readSource('../lib/homeBlockResolver.js');
+
+    expect(resolverSource).not.toContain("|| 'static'");
+  });
+
   it('keeps the live home services grid on the managed HUD and dynamic override path', () => {
     const pageSource = readSource('./HomePage.jsx');
     const resolverSource = readSource('../lib/homeBlockResolver.js');
@@ -30,6 +36,6 @@ describe('home page services grid guardrail', () => {
     expect(pageSource).toContain('homeServicesFeatureIsActive: Boolean(dynamicHomeServicesFeatureBlock || !managedHomeServicesFeatureBlock),');
     expect(resolverSource).toContain("id: context.servicesGridManagedBlock?.id || block.id || 'services_grid',");
     expect(resolverSource).toContain("kind: context.servicesGridManagedBlock?.kind || block.kind || 'services_grid',");
-    expect(resolverSource).toContain("mode: context.servicesGridManagedBlock?.mode || block.mode || 'static',");
+    expect(resolverSource).toContain("mode: context.servicesGridManagedBlock?.mode || block.mode || 'dynamic',");
   });
 });

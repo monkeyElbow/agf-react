@@ -1,8 +1,5 @@
 import ministersHousingImage from '../assets/ministers-housing.jpg';
 import { formsLibraryLinks } from './formsLibraryLinks';
-import {
-  DEFAULT_PHONE_PLACEHOLDER,
-} from './ctaFormSeeds';
 
 const TAX_GUIDE_ACCESS_EMAIL = 'info@agfinancial.org';
 const RETIREMENT_403B_PLAN_SUMMARY_URL = 'https://files.agfinancial.org/Retirement/Plansummary.pdf';
@@ -55,24 +52,6 @@ const RETIREMENT_403B_PLAN_FEATURE_CARDS = [
     body: 'Onsite education for your participants is available, and includes retirement trends, IRS regulations, and customized action plans.',
   },
 ];
-
-function buildCalculatorTeamFormSection(body) {
-  return {
-    className: 'calculator-tool-shell calculator-tool-contact',
-    copyWrap: true,
-    title: 'Talk with our team.',
-    body: [body],
-    form: {
-      fields: [
-        { id: 'name', label: 'Name*', type: 'text', required: true },
-        { id: 'email', label: 'Email*', type: 'email', required: true },
-        { id: 'phone', label: 'Phone', type: 'tel', required: false, placeholder: DEFAULT_PHONE_PLACEHOLDER },
-        { id: 'message', label: 'Message', type: 'textarea', required: false, rows: 4 },
-      ],
-      submitLabel: 'Submit',
-    },
-  };
-}
 
 export function getNativePageContent(path, title) {
   const direct = directContent[path];
@@ -202,98 +181,16 @@ const directContent = {
   '/calculators/emergency-fund': {
     pageClass: 'native-info-page--calculator-tool',
     compact: true,
-    hero: {
-      title: 'Emergency Fund Calculator',
-      highlight: null,
-      titleSizeRem: 4.5,
-      lineHeight: 0.94,
-      titleLetterSpacingEm: -0.03,
-    },
-    hideIntro: true,
-    sections: [
-      {
-        className: 'calculator-tool-shell',
-        copyWrap: true,
-        title: 'Build a cash cushion with a target in mind.',
-        body: [
-          'Use a monthly expense total or itemize your spending to estimate your emergency fund goal and see a simple savings plan to reach it.',
-        ],
-      },
-      {
-        className: 'calculator-tool-shell calculator-tool-widget',
-        hideTitle: true,
-        widget: 'emergency-fund-calculator',
-      },
-      buildCalculatorTeamFormSection(
-        'Share a few details if you would like help talking through your reserve target and next step.',
-      ),
-    ],
-    actions: [],
   },
 
   '/calculators/increased-contribution': {
     pageClass: 'native-info-page--calculator-tool native-info-page--calculator-increased-contribution',
     compact: true,
-    hero: {
-      title: 'Increased Contribution Calculator',
-      highlight: null,
-      titleSizeRem: 4.5,
-      lineHeight: 0.94,
-      titleLetterSpacingEm: -0.03,
-    },
-    hideIntro: true,
-    sections: [
-      {
-        className: 'calculator-tool-shell',
-        copyWrap: true,
-        title: 'See the impact of a higher contribution rate.',
-        body: [
-          'Compare your current and proposed contribution percentages to estimate how a change today may affect your retirement balance over time.',
-        ],
-      },
-      {
-        className: 'calculator-tool-shell calculator-tool-widget',
-        hideTitle: true,
-        widget: 'increased-contribution-calculator',
-      },
-      buildCalculatorTeamFormSection(
-        'Share a few details if you would like to talk through contribution options and retirement next steps.',
-      ),
-    ],
-    actions: [],
   },
 
   '/calculators/net-worth': {
     pageClass: 'native-info-page--calculator-tool',
     compact: true,
-    hero: {
-      title: 'Net Worth Calculator',
-      highlight: null,
-      titleSizeRem: 4.5,
-      lineHeight: 0.94,
-      titleLetterSpacingEm: -0.03,
-    },
-    hideIntro: true,
-    sections: [
-      {
-        className: 'calculator-tool-shell',
-        copyWrap: true,
-        title: 'Take inventory of your financial picture.',
-        body: [
-          'In order to get where you want to go, you need to know where you are. You can get a view of your financial position by generating a personal net worth statement.',
-          'Over time your net worth will change as your assets earn interest or are depleted and your liabilities increase or decrease. Use this calculator to estimate what your net worth could be in the future based on specified growth rates.',
-        ],
-      },
-      {
-        className: 'calculator-tool-shell calculator-tool-widget',
-        hideTitle: true,
-        widget: 'net-worth-calculator',
-      },
-      buildCalculatorTeamFormSection(
-        'Share a few details if you would like help reviewing your balance sheet and planning next steps.',
-      ),
-    ],
-    actions: [],
   },
 
   '/contact-us': {

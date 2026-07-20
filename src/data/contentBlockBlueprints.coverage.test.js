@@ -2,16 +2,28 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { sitePages } from './siteMap';
 import {
-  CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID,
   contentBlockBlueprintsByPath,
   genericPageBlockBlueprint,
   genericPageFallbackBlueprint,
   getAllBlockTemplateBlueprints,
-  isPersistedBlueprintBridgeTemplateId,
-  PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS,
 } from './contentBlockBlueprints';
-import { getRetiredInsertCompatibilityTemplateIds } from '../lib/compatibilityTemplateRetirement';
+import { BLOCK_ONLY_MANAGED_PAGE_PATHS } from '../lib/managedPageShells';
 import { getLegacyEditableFieldsForKind } from '../blocks/registry';
+
+const TARGET_BRIDGE_SETTING_KEYS = [
+  'targetSectionKey',
+  'targetFineprintSectionKey',
+  'targetSectionClassName',
+  'targetSectionIndex',
+];
+
+function getTargetBridgeSettingKeys(block) {
+  const settings = block?.settings && typeof block.settings === 'object'
+    ? block.settings
+    : {};
+
+  return TARGET_BRIDGE_SETTING_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(settings, key));
+}
 
 describe('content block blueprint coverage', () => {
   it('keeps explicit blueprint coverage for every non-admin site route', () => {
@@ -94,6 +106,37 @@ describe('content block blueprint coverage', () => {
     });
   });
 
+  it('keeps tax guide page-content styling owned by its content block hook', () => {
+    const blocks = contentBlockBlueprintsByPath['/taxguide'] || [];
+    const pageContentBlock = blocks.find((block) => block?.id === 'page_content');
+
+    expect(pageContentBlock).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'tax-guide-content',
+      },
+    });
+  });
+
+  it('keeps block-only managed page blueprints dynamic-only and target-bridge-free', () => {
+    Array.from(BLOCK_ONLY_MANAGED_PAGE_PATHS).forEach((pathname) => {
+      const blocks = contentBlockBlueprintsByPath[pathname] || [];
+      const staticBlocks = blocks
+        .filter((block) => block?.mode === 'static')
+        .map((block) => block?.id);
+      const targetBridgeBlocks = blocks
+        .map((block) => ({
+          id: block?.id,
+          keys: getTargetBridgeSettingKeys(block),
+        }))
+        .filter((entry) => entry.keys.length);
+
+      expect(staticBlocks, `${pathname} should not seed static block placeholders`).toEqual([]);
+      expect(targetBridgeBlocks, `${pathname} should not seed target bridge fields`).toEqual([]);
+    });
+  });
+
   it('seeds contact us as block-owned hero, address, and request form sections', () => {
     const blocks = contentBlockBlueprintsByPath['/contact-us'] || [];
     const heroBlock = blocks.find((block) => block?.id === 'hero');
@@ -122,8 +165,6 @@ describe('content block blueprint coverage', () => {
       settings: {
         title: 'How can we help?',
         sectionClassName: 'contact-us-request',
-        targetSectionKey: '',
-        targetSectionClassName: '',
       },
     });
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
@@ -139,7 +180,7 @@ describe('content block blueprint coverage', () => {
     const ctaBlock = blocks.find((block) => block?.id === 'cta_form');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(false);
     expect(detailsBlock).toMatchObject({
       kind: 'card_grid',
       mode: 'dynamic',
@@ -235,7 +276,7 @@ describe('content block blueprint coverage', () => {
     const fraudBlock = blocks.find((block) => block?.id === 'fraud_feature');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(false);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(coverageBlock).toMatchObject({
       kind: 'card_grid',
@@ -320,7 +361,7 @@ describe('content block blueprint coverage', () => {
     const campSafety = blocks.find((block) => block?.id === 'camp_safety');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(false);
     expect(introPricing).toMatchObject({
       kind: 'content',
       mode: 'dynamic',
@@ -379,6 +420,7 @@ describe('content block blueprint coverage', () => {
     expect(dynamicBillboard?.settings?.title).toBe("We're making a difference together.");
     expect(dynamicBillboard?.settings?.subtitle).toBe('');
     expect(dynamicBillboard?.settings?.body).toBe('');
+    expect(dynamicBillboard?.settings?.sectionClassName).toBe('impact-native-billboard');
     expect(blocks.find((block) => (
       block?.id === 'impact_proof_story'
       && block?.kind === 'site_feature'
@@ -386,7 +428,6 @@ describe('content block blueprint coverage', () => {
     ))).toMatchObject({
       settings: {
         featureId: 'impact_proof_story',
-        targetSectionKey: '',
         sectionClassName: 'impact-native-stats impact-proof-story',
       },
     });
@@ -441,8 +482,6 @@ describe('content block blueprint coverage', () => {
         titleHighlightsJson: '[{"text":"P&C","className":"is-white"}]',
         body: 'Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.',
         sectionClassName: 'insurance-pc-native-quote',
-        targetSectionKey: '',
-        targetSectionClassName: '',
       },
     });
     expect(agProgramBlock).toMatchObject({
@@ -686,7 +725,6 @@ describe('content block blueprint coverage', () => {
         title: 'Numbers are great.',
         subtitle: 'People are better.',
         sectionClassName: 'calculators-native-billboard',
-        targetSectionClassName: '',
       },
     });
     expect(ctaBlock).toMatchObject({
@@ -696,7 +734,6 @@ describe('content block blueprint coverage', () => {
         title: 'Connect your faith & finances. Start here.',
         subtitle: 'Let’s explore what we can do together.',
         sectionClassName: 'calculators-native-cta',
-        targetSectionClassName: '',
       },
     });
     expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
@@ -719,13 +756,11 @@ describe('content block blueprint coverage', () => {
     expect(certificateRequestBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(certificateRequestBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
     expect(certificateRequestBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('certificate-request-native-section');
-    expect(certificateRequestBlocks.find((block) => block?.id === 'request_form')?.settings?.targetSectionKey).toBe('');
     expect(groupLifeBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(groupLifeBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(groupLifeBlocks.find((block) => block?.id === 'lead')?.settings?.sectionClassName).toBe('group-life-native-lead');
     expect(groupLifeBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
     expect(groupLifeBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('group-life-native-quote');
-    expect(groupLifeBlocks.find((block) => block?.id === 'request_form')?.settings?.targetSectionKey).toBe('');
     expect(groupLifeBlocks.find((block) => block?.id === 'honor')?.settings?.sectionClassName).toBe('group-life-native-honor');
     expect(groupLifeBlocks.find((block) => block?.id === 'benefits')?.settings?.sectionClassName).toBe('group-life-native-benefits');
     expect(groupLifeBlocks.find((block) => block?.id === 'benefits_cta')?.settings?.buttonPageRef).toBe('/services/insurance/ministers-group-life-plan');
@@ -743,8 +778,6 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'loans-consultant-native-contact',
-        targetSectionKey: '',
-        targetSectionClassName: '',
       },
     });
   });
@@ -1132,8 +1165,6 @@ describe('content block blueprint coverage', () => {
     expect(iraBlocks.find((block) => block?.id === 'comparison_table')?.settings?.tableHeadersJson).toEqual(['Key difference', 'Traditional IRA', 'Roth IRA']);
     expect(iraBlocks.find((block) => block?.id === 'rate_table')?.settings?.fineprintDisclosureId).toBe('retirement-ira-rates-disclosure');
     expect(iraBlocks.find((block) => block?.id === 'contribution_limits')?.settings?.fineprintDisclosureId).toBe('retirement-ira-contribution-limits-disclosure');
-    expect(iraBlocks.find((block) => block?.id === 'rollover_billboard')?.settings?.targetSectionKey).toBe('');
-    expect(iraBlocks.find((block) => block?.id === 'daily_billboard')?.settings?.targetSectionKey).toBe('');
     expect(iraBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
@@ -1579,13 +1610,12 @@ describe('content block blueprint coverage', () => {
     expect(testGrid?.settings?.card8ButtonPageRef).toBe('');
   });
 
-  it('preserves touched static blueprint placeholders after cleanup simplification', () => {
+  it('keeps touched blueprint inventories dynamic-only after cleanup simplification', () => {
     const homeBlocks = contentBlockBlueprintsByPath['/'] || [];
     const servicesBlocks = contentBlockBlueprintsByPath['/services'] || [];
     const loansBlocks = contentBlockBlueprintsByPath['/services/loans'] || [];
     const investmentBlocks = contentBlockBlueprintsByPath['/services/investments'] || [];
     const retirementBlocks = contentBlockBlueprintsByPath['/services/retirement'] || [];
-    const testBlocks = contentBlockBlueprintsByPath['/test'] || [];
 
     expect(homeBlocks.some((block) => block?.id === 'top_strip' && block?.mode === 'dynamic' && block?.kind === 'top_strip')).toBe(true);
     expect(homeBlocks.some((block) => block?.id === 'hero' && block?.mode === 'dynamic' && block?.kind === 'hero')).toBe(true);
@@ -1658,7 +1688,6 @@ describe('content block blueprint coverage', () => {
     expect(retirementBlocks.some((block) => block?.mode === 'static')).toBe(false);
     expect(retirementBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
     expect(retirementBlocks.some((block) => block?.id === 'housing_allowance')).toBe(false);
-    expect(testBlocks.some((block) => block?.id === 'hero' && block?.mode === 'static' && block?.kind === 'hero')).toBe(true);
     expect(homeBlocks.find((block) => block?.id === 'home_ministry_allies' && block?.mode === 'dynamic')).toMatchObject({
       kind: 'billboard',
     });
@@ -1667,20 +1696,18 @@ describe('content block blueprint coverage', () => {
     });
   });
 
-  it('distinguishes canonical seed defaults from persisted bridge ids in aggregated template sources', () => {
+  it('keeps aggregated template sources on direct blueprint template ids without persisted bridges', () => {
     const templates = getAllBlockTemplateBlueprints();
     const servicesCardsTemplate = templates.find((template) => template?.templateLookupId === 'services_cards');
     const mattersBandTemplate = templates.find((template) => template?.templateLookupId === 'matters_band');
     const loanOptionsTemplate = templates.find((template) => template?.templateLookupId === 'loan_options');
 
-    expect(CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID).toEqual({});
     expect(servicesCardsTemplate).toMatchObject({
       templateLookupId: 'services_cards',
       templateId: 'services_cards',
       mode: 'dynamic',
       kind: 'site_feature',
     });
-    expect(isPersistedBlueprintBridgeTemplateId(servicesCardsTemplate?.templateId)).toBe(false);
 
     expect(mattersBandTemplate).toMatchObject({
       templateLookupId: 'matters_band',
@@ -1694,16 +1721,8 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       kind: 'card_grid',
     });
-
-    expect(PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS).toEqual([]);
-    PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS.forEach((templateId) => {
-      expect(isPersistedBlueprintBridgeTemplateId(templateId)).toBe(true);
-    });
-
-    expect(getRetiredInsertCompatibilityTemplateIds('static')).toEqual([]);
-    getRetiredInsertCompatibilityTemplateIds('static').forEach((templateId) => {
-      expect(PERSISTED_BLUEPRINT_BRIDGE_TEMPLATE_IDS.includes(templateId)).toBe(true);
-    });
+    expect(templates.some((template) => template?.mode === 'static')).toBe(false);
+    expect(templates.some((template) => template?.isCompatibility)).toBe(false);
   });
 
   it('keeps investments growth follow-up seeded on the site feature plus reusable CTA form path', () => {

@@ -59,7 +59,7 @@ describe('insurance native page content', () => {
     expect(content?.intro).toBeUndefined();
     expect(content?.sections).toBeUndefined();
     expect(requestBlock?.settings?.sectionClassName).toBe('insurance-pc-native-quote');
-    expect(requestBlock?.settings?.targetSectionKey).toBe('');
+    expect(requestBlock?.settings?.targetSectionKey).toBeUndefined();
     expect(resourcesBlock?.settings?.card1Title).toBe('Additional coverages available');
     expect(noticeBlock?.settings?.fineprintDisclosureId).toBe('insurance-property-casualty-coverage-notice');
   });

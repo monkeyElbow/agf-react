@@ -43,11 +43,11 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('width: min(680px, 100%);');
     expect(cssSource).toContain('margin-inline: auto;');
     expect(cssSource).toContain('padding: clamp(2.2rem, 4vw, 3rem) clamp(1.3rem, 2.4vw, 1.85rem) clamp(1.65rem, 2.9vw, 2.3rem);');
-    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-cta .dynamic-cta-form-heading {');
+    expect(cssSource).toContain('.legacy-giving-cta .dynamic-cta-form-heading {');
     expect(cssSource).toContain('max-width: 30rem;');
     expect(cssSource).toContain('margin: 0 auto clamp(1.95rem, 4vw, 2.6rem);');
     expect(cssSource).toContain('text-align: center;');
-    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-cta .dynamic-cta-form-subtitle {');
+    expect(cssSource).toContain('.legacy-giving-cta .dynamic-cta-form-subtitle {');
     expect(cssSource).toContain('max-width: 24rem;');
     expect(cssSource).toContain('margin: 0.7rem auto 0;');
   });
@@ -145,12 +145,12 @@ describe('planned giving review polish guardrail', () => {
     const contentSource = readSource('../data/nativePageContent.js');
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
-    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline,');
+    expect(cssSource).toContain('.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline,');
     expect(cssSource).toContain('--btn-hover-bg: transparent;');
     expect(cssSource).toContain('--btn-hover-text: var(--btn-hover-color);');
-    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:hover,');
-    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:focus-visible,');
-    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:active {');
+    expect(cssSource).toContain('.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:hover,');
+    expect(cssSource).toContain('.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:focus-visible,');
+    expect(cssSource).toContain('.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:active {');
     expect(cssSource).toContain('background: transparent;');
     expect(contentSource).toContain("pageClass: 'native-info-page--legacy-child native-info-page--legacy-trusts'");
     expect(blueprintSource).toContain("id: 'cta_trigger'");

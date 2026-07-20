@@ -40,9 +40,6 @@ describe('retirement overview seed guardrail', () => {
     expect(billboardBlock?.settings).toEqual(defaultRetirementBillboardSettings);
     expect(rolloverBlock?.settings).toEqual({
       ...defaultRetirementRolloverBillboardSettings,
-      targetSectionKey: '',
-      targetSectionClassName: '',
-      targetSectionIndex: '',
       sectionClassName: 'retirement-rollover-billboard',
     });
     expect(nativeIntro).toBeUndefined();

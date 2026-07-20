@@ -16,25 +16,18 @@ import {
 } from '../data/contentBlockBlueprints';
 import { getSingletonBlockKinds } from '../blocks/registry';
 import {
-  CTA_FORM_MAX_FIELDS,
-  buildCtaFormSettingsPatch,
   formatFormChoiceOptionsText,
-  normalizeCtaFormFieldType,
-  normalizeLegacyCtaSubmitLabel,
-  normalizeRequestFormFieldType,
 } from '../blocks/foundation/forms';
 import {
   DEV_IDENTITY_STORAGE_KEY,
   getOrCreateDevIdentity,
   normalizeDevIdentity,
   renameStoredDevIdentity,
-  toDevIdentitySummary,
 } from '../lib/devIdentity';
 import { getHeroSeedContract } from '../lib/heroSeedContracts';
 import {
   isBlockOnlyManagedPagePath,
   isBlocklessManagedPagePath,
-  shouldSeedBlocksFromNativePageContent,
 } from '../lib/managedPageShells';
 import {
   DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
@@ -46,6 +39,25 @@ import { normalizePresetBearingBlocks } from '../lib/blockPresetIdentity';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
+import {
+  appendHistoryEntry,
+  blockSnapshotEquals,
+  buildEditingBlockMeta,
+  buildHistoryEntry,
+  collectChangedCollaborationPaths,
+  getForeignOwnershipMeta,
+  getSharedContentPollDelayForActivity,
+  hasActiveSharedEditing,
+  mergeSharedAuthoringSnapshot,
+  mergeSharedCollaborationSnapshot,
+  normalizeCollaborationState,
+  normalizeContentActor,
+  normalizeContentBlockMeta,
+  normalizeContentHistoryEntry,
+  normalizeSharedPublishResult,
+  normalizeSharedSaveResult,
+  releaseUserLocks,
+} from '../lib/contentAdminCollaboration';
 import {
   acquireSharedBlockLock,
   fetchSharedContentBackups,
@@ -64,36 +76,23 @@ import {
   syncSharedBlockDraft,
 } from '../lib/devContentAuthorityClient';
 
+export {
+  getSharedContentPollDelay,
+  getSharedContentPollDelayForActivity,
+  mergeSharedAuthoringSnapshot,
+  mergeSharedCollaborationSnapshot,
+} from '../lib/contentAdminCollaboration';
+
 const STORAGE_KEY = 'agf-content-admin-v1';
 const ContentAdminContext = createContext(null);
-const MAX_CONTENT_HISTORY_ENTRIES = 40;
 const LOCAL_BUFFERED_BLOCK_SETTING_COMMIT_DELAY_MS = 1600;
 export const LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS = 1200;
 const SHARED_BLOCK_DRAFT_SYNC_TEXT_DELAY_MS = 140;
 const SHARED_BLOCK_DRAFT_SYNC_DISCRETE_DELAY_MS = 90;
-const SHARED_ACTIVE_CONTENT_POLL_DELAY_MS = 650;
-const SHARED_VISIBLE_CONTENT_POLL_DELAY_MS = 1800;
 const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
 const LEGACY_GIVING_ENDOWMENTS_PATH = '/services/planned-giving/endowments';
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
 const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
-const REQUEST_FORM_DYNAMIC_PATHS = new Set([
-  '/calculators',
-  '/contact-us',
-  '/services/loans',
-  '/services/insurance/certificate-request',
-  '/services/insurance/group-term-life-insurance',
-  '/services/insurance/life-insurance-quote',
-  '/services/insurance/property-casualty-insurance',
-  LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH,
-  LEGACY_GIVING_ENDOWMENTS_PATH,
-  LEGACY_GIVING_GENEROSITY_FUND_PATH,
-  LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH,
-  '/services/loans/loan-consultants',
-  '/services/retirement/retirement-consultants',
-]);
-const INTRO_ACTION_LOCKED_PATHS = new Set([
-]);
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
 const RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH = '/services/retirement/403b/403b-individual-enrollment';
 const RETIREMENT_403B_GROUP_ENROLLMENT_PATH = '/services/retirement/403b/403b-group-enrollment';
@@ -123,6 +122,14 @@ const REQUEST_FORM_MODE_LOCKED_PATHS = new Set([
   LEGACY_GIVING_GENEROSITY_FUND_PATH,
   LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH,
 ]);
+const CANONICAL_REQUEST_FORM_RESTORE_PATHS = new Set([
+  '/services/insurance/group-term-life-insurance',
+  '/services/insurance/life-insurance-quote',
+  LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH,
+  LEGACY_GIVING_ENDOWMENTS_PATH,
+  LEGACY_GIVING_GENEROSITY_FUND_PATH,
+  LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH,
+]);
 const REQUEST_FORM_SINGLETON_IDS_BY_PATH = Object.freeze({
   [LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH]: new Set(['request_form']),
   [LEGACY_GIVING_ENDOWMENTS_PATH]: new Set(['request_form']),
@@ -135,26 +142,6 @@ const LOANS_LEGACY_DYNAMIC_BLOCK_IDS = new Set([
   'vision_fuel',
   'cta_form',
   'testimonials',
-]);
-const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_REQUEST_TARGETS = new Set([
-  'class:legacy-child-native-cga-request',
-  'legacy-child-native-cga-request',
-]);
-const LEGACY_GIVING_ENDOWMENTS_REQUEST_TARGETS = new Set([
-  'class:legacy-child-native-endowments-legacy-form',
-  'legacy-child-native-endowments-legacy-form',
-]);
-const LEGACY_GIVING_GENEROSITY_FUND_REQUEST_TARGETS = new Set([
-  'class:legacy-child-native-generosity-request',
-  'legacy-child-native-generosity-request',
-]);
-const LEGACY_GIVING_MINISTRY_IMPACT_FUND_REQUEST_TARGETS = new Set([
-  'class:legacy-child-native-request',
-  'legacy-child-native-request',
-]);
-const LIFE_INSURANCE_QUOTE_REQUEST_TARGETS = new Set([
-  'class:insurance-native-life-quote',
-  'insurance-native-life-quote',
 ]);
 const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
   '/services/investments/invest-by-mail',
@@ -170,56 +157,6 @@ function isBlankSettingsObject(settings) {
     return true;
   }
   return Object.keys(settings).length === 0;
-}
-
-function isStaleLegacyRequestTarget(settings, expectedTargets, expectedClassName) {
-  const targetKey = String(settings?.targetSectionKey || '').trim();
-  const targetClassName = String(settings?.targetSectionClassName || '').trim();
-
-  if (!targetKey && !targetClassName) {
-    return true;
-  }
-
-  if (targetKey && !expectedTargets.has(targetKey)) {
-    return true;
-  }
-
-  if (targetClassName && targetClassName !== expectedClassName) {
-    return true;
-  }
-
-  return false;
-}
-
-function isStaleLegacyCharitableGiftAnnuitiesRequestTarget(settings) {
-  return isStaleLegacyRequestTarget(
-    settings,
-    LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_REQUEST_TARGETS,
-    'legacy-child-native-cga-request',
-  );
-}
-
-function isStaleLegacyGenerosityFundRequestTarget(settings) {
-  return isStaleLegacyRequestTarget(
-    settings,
-    LEGACY_GIVING_GENEROSITY_FUND_REQUEST_TARGETS,
-    'legacy-child-native-generosity-request',
-  );
-}
-
-function isStaleLegacyMinistryImpactFundRequestTarget(settings) {
-  return isStaleLegacyRequestTarget(
-    settings,
-    LEGACY_GIVING_MINISTRY_IMPACT_FUND_REQUEST_TARGETS,
-    'legacy-child-native-request',
-  );
-}
-
-function isStaleLifeInsuranceQuoteRequestTarget(settings) {
-  const targetKey = String(settings?.targetSectionKey || '').trim();
-  const targetClassName = String(settings?.targetSectionClassName || '').trim();
-  return LIFE_INSURANCE_QUOTE_REQUEST_TARGETS.has(targetKey)
-    || LIFE_INSURANCE_QUOTE_REQUEST_TARGETS.has(targetClassName);
 }
 
 function isStalePropertyCasualtyRequestContent(settings) {
@@ -529,19 +466,12 @@ function isLegacyRetirement403bRolloverBillboard(settings, defaultSettings) {
   const title = String(settings.title || '').trim();
   const bodyHtml = String(settings.bodyHtml || '').trim();
   const buttonLabel = String(settings.buttonLabel || '').trim();
-  const targetSectionClassName = String(settings.targetSectionClassName || '').trim();
-  const targetSectionKey = String(settings.targetSectionKey || '').trim();
   const canonicalTitle = String(defaultSettings?.title || '').trim();
-  const hasLegacyTargetFields = Boolean(targetSectionClassName || targetSectionKey);
   const hasLegacyLabel = buttonLabel === 'Let’s simplify things' || buttonLabel === "Let's simplify things";
   const hasLegacyAsciiBody = bodyHtml.includes('surprisingly simple...and undeniably smart');
   const titleMatchesCanonical = Boolean(canonicalTitle) && title === canonicalTitle;
 
-  return hasLegacyLabel || (
-    hasLegacyTargetFields
-    && titleMatchesCanonical
-    && hasLegacyAsciiBody
-  );
+  return hasLegacyLabel || (titleMatchesCanonical && hasLegacyAsciiBody);
 }
 
 function isLegacyRetirement403bStartEnrollmentSettings(settings, defaultSettings) {
@@ -671,7 +601,12 @@ function normalizeRetirement403bSectionClassSettings(pathname, settings, default
   const defaultSectionClassName = String(defaultSettings?.sectionClassName || '').trim();
   const requiredTokens = defaultSectionClassName
     .split(/\s+/)
-    .filter((token) => token.startsWith('retirement-403b-native-') || token.startsWith('ret403b-'))
+    .filter((token) => (
+      token.startsWith('retirement-403b-native-')
+      || token.startsWith('ret403b-')
+      || token === 'retirement-everyday'
+      || token === 'retirement-rollover-billboard'
+    ))
     .join(' ');
   if (!requiredTokens) {
     return settings;
@@ -688,21 +623,15 @@ function normalizeRetirement403bSectionClassSettings(pathname, settings, default
   };
 }
 
-function isLegacyTargetedRetirement403bCta(settings) {
+function isLegacyRetirement403bCta(settings) {
   if (!settings || typeof settings !== 'object') {
     return false;
   }
 
-  const targetSectionClassName = String(settings.targetSectionClassName || '').trim();
-  const targetSectionKey = String(settings.targetSectionKey || '').trim();
   const bodyHtml = String(settings.bodyHtml || '').trim();
   const bgTone = String(settings.bgTone || '').trim();
 
-  return (
-    targetSectionClassName === 'retirement-child-native-cta retirement-403b-native-cta'
-    || targetSectionKey === 'class:retirement-child-native-cta retirement-403b-native-cta'
-    || (bodyHtml === '<p>And we’re eager to help.</p>' && bgTone === 'sand')
-  );
+  return bodyHtml === '<p>And we’re eager to help.</p>' && bgTone === 'sand';
 }
 
 function normalizeRetirementLandingCtaSettings(settings, defaultSettings = {}) {
@@ -739,14 +668,6 @@ function normalizeRetirementLandingCtaSettings(settings, defaultSettings = {}) {
   return nextSettings;
 }
 
-function isStaleLegacyEndowmentsRequestTarget(settings) {
-  return isStaleLegacyRequestTarget(
-    settings,
-    LEGACY_GIVING_ENDOWMENTS_REQUEST_TARGETS,
-    'legacy-child-native-endowments-legacy-form',
-  );
-}
-
 function cloneCanonicalRequestFormBlock(defaultBlock, storedBlock) {
   return {
     ...cloneTemplateVariant(defaultBlock),
@@ -764,172 +685,25 @@ function cloneCanonicalRequestFormBlock(defaultBlock, storedBlock) {
   };
 }
 
-function normalizeContentActor(rawActor) {
-  const source = rawActor && typeof rawActor === 'object' ? rawActor : null;
-  if (!source) {
-    return null;
-  }
-  return toDevIdentitySummary(source);
-}
-
-function normalizeContentBlockMeta(rawMeta) {
-  const source = rawMeta && typeof rawMeta === 'object' ? rawMeta : {};
+function upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock, options = {}) {
   return {
-    draftedBy: normalizeContentActor(source.draftedBy),
-    draftedAt: Number.isFinite(Number(source.draftedAt)) ? Number(source.draftedAt) : null,
-    savedBy: normalizeContentActor(source.savedBy),
-    savedAt: Number.isFinite(Number(source.savedAt)) ? Number(source.savedAt) : null,
-    lockedBy: normalizeContentActor(source.lockedBy),
-    lockedAt: Number.isFinite(Number(source.lockedAt)) ? Number(source.lockedAt) : null,
-  };
-}
-
-function normalizeContentHistoryEntry(rawEntry) {
-  const source = rawEntry && typeof rawEntry === 'object' ? rawEntry : {};
-  const action = String(source.action || '').trim();
-  const actor = normalizeContentActor(source.actor || source.createdBy);
-  const createdAt = Number.isFinite(Number(source.createdAt)) ? Number(source.createdAt) : null;
-  if (!action || !actor || !createdAt) {
-    return null;
-  }
-
-  return {
-    id: String(source.id || `${createdAt}-${action}`).trim() || `${createdAt}-${action}`,
-    action,
-    blockId: String(source.blockId || '').trim(),
-    details: String(source.details || '').trim(),
-    actor,
-    previousActor: normalizeContentActor(source.previousActor),
-    createdAt,
-  };
-}
-
-function normalizeCollaborationState(rawState) {
-  const source = rawState && typeof rawState === 'object' ? rawState : {};
-  const next = {};
-
-  Object.entries(source).forEach(([pathname, rawEntry]) => {
-    const entry = rawEntry && typeof rawEntry === 'object' ? rawEntry : {};
-    const normalizedBlocks = {};
-
-    Object.entries(entry.blocks || {}).forEach(([blockId, blockMeta]) => {
-      const normalizedBlockId = String(blockId || '').trim();
-      if (!normalizedBlockId) {
-        return;
-      }
-      normalizedBlocks[normalizedBlockId] = normalizeContentBlockMeta(blockMeta);
-    });
-
-    const history = (Array.isArray(entry.history) ? entry.history : [])
-      .map(normalizeContentHistoryEntry)
-      .filter(Boolean)
-      .slice(0, MAX_CONTENT_HISTORY_ENTRIES);
-
-    next[pathname] = {
-      blocks: normalizedBlocks,
-      history,
-    };
-  });
-
-  return next;
-}
-
-function normalizeSharedSaveResult(rawResult) {
-  const source = rawResult && typeof rawResult === 'object' ? rawResult : {};
-  return {
-    error: String(source.error || '').trim(),
-    didSave: Boolean(source.didSave),
-    hasConflicts: Boolean(source.hasConflicts),
-    changedPaths: Array.isArray(source.changedPaths) ? source.changedPaths.map((value) => String(value || '').trim()).filter(Boolean) : [],
-    savedPaths: Array.isArray(source.savedPaths) ? source.savedPaths.map((value) => String(value || '').trim()).filter(Boolean) : [],
-    savedBlockIdsByPath: Object.fromEntries(
-      Object.entries(source.savedBlockIdsByPath || {}).map(([pathname, blockIds]) => [
-        String(pathname || '').trim(),
-        (Array.isArray(blockIds) ? blockIds : []).map((value) => String(value || '').trim()).filter(Boolean),
-      ]),
-    ),
-    blockedBlockIdsByPath: Object.fromEntries(
-      Object.entries(source.blockedBlockIdsByPath || {}).map(([pathname, blockIds]) => [
-        String(pathname || '').trim(),
-        (Array.isArray(blockIds) ? blockIds : []).map((value) => String(value || '').trim()).filter(Boolean),
-      ]),
-    ),
-    blockedBlocks: (Array.isArray(source.blockedBlocks) ? source.blockedBlocks : [])
-      .map((entry) => ({
-        pathname: String(entry?.pathname || '').trim(),
-        blockId: String(entry?.blockId || '').trim(),
-        reason: String(entry?.reason || '').trim(),
-        state: String(entry?.state || '').trim(),
-        owner: normalizeContentActor(entry?.owner),
-      }))
-      .filter((entry) => entry.pathname && entry.blockId),
-    updatedAt: Number.isFinite(Number(source.updatedAt)) ? Number(source.updatedAt) : Date.now(),
-  };
-}
-
-function normalizeSharedPublishResult(rawResult) {
-  const source = rawResult && typeof rawResult === 'object' ? rawResult : {};
-  return {
-    error: String(source.error || '').trim(),
-    didPublish: Boolean(source.didPublish),
-    hasConflicts: Boolean(source.hasConflicts),
-    changedPaths: Array.isArray(source.changedPaths) ? source.changedPaths.map((value) => String(value || '').trim()).filter(Boolean) : [],
-    publishedPaths: Array.isArray(source.publishedPaths) ? source.publishedPaths.map((value) => String(value || '').trim()).filter(Boolean) : [],
-    publishedBlockIdsByPath: Object.fromEntries(
-      Object.entries(source.publishedBlockIdsByPath || {}).map(([pathname, blockIds]) => [
-        String(pathname || '').trim(),
-        (Array.isArray(blockIds) ? blockIds : []).map((value) => String(value || '').trim()).filter(Boolean),
-      ]),
-    ),
-    blockedBlockIdsByPath: Object.fromEntries(
-      Object.entries(source.blockedBlockIdsByPath || {}).map(([pathname, blockIds]) => [
-        String(pathname || '').trim(),
-        (Array.isArray(blockIds) ? blockIds : []).map((value) => String(value || '').trim()).filter(Boolean),
-      ]),
-    ),
-    blockedBlocks: (Array.isArray(source.blockedBlocks) ? source.blockedBlocks : [])
-      .map((entry) => ({
-        pathname: String(entry?.pathname || '').trim(),
-        blockId: String(entry?.blockId || '').trim(),
-        reason: String(entry?.reason || '').trim(),
-        state: String(entry?.state || '').trim(),
-        owner: normalizeContentActor(entry?.owner),
-      }))
-      .filter((entry) => entry.pathname && entry.blockId),
-    hasOrderChangesByPath: Object.fromEntries(
-      Object.entries(source.hasOrderChangesByPath || {}).map(([pathname, hasChanges]) => [
-        String(pathname || '').trim(),
-        Boolean(hasChanges),
-      ]),
-    ),
-    hasPageMetaChangesByPath: Object.fromEntries(
-      Object.entries(source.hasPageMetaChangesByPath || {}).map(([pathname, hasChanges]) => [
-        String(pathname || '').trim(),
-        Boolean(hasChanges),
-      ]),
-    ),
-    updatedAt: Number.isFinite(Number(source.updatedAt)) ? Number(source.updatedAt) : Date.now(),
-  };
-}
-
-export function getSharedContentPollDelay(isDocumentHidden) {
-  return getSharedContentPollDelayForActivity(isDocumentHidden, false);
-}
-
-export function getSharedContentPollDelayForActivity(isDocumentHidden, hasActiveEditing) {
-  if (isDocumentHidden) {
-    return 10000;
-  }
-  return hasActiveEditing ? SHARED_ACTIVE_CONTENT_POLL_DELAY_MS : SHARED_VISIBLE_CONTENT_POLL_DELAY_MS;
-}
-
-export function mergeSharedCollaborationSnapshot(currentState, snapshotState) {
-  if (JSON.stringify(currentState?.collaborationByPath || {}) === JSON.stringify(snapshotState?.collaborationByPath || {})) {
-    return currentState;
-  }
-  return {
-    ...currentState,
-    collaborationByPath: snapshotState?.collaborationByPath || {},
+    ...storedBlock,
+    kind: defaultBlock.kind || storedBlock.kind,
+    mode: 'dynamic',
+    hidden: Object.prototype.hasOwnProperty.call(options, 'hidden')
+      ? options.hidden
+      : (Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
+          ? defaultBlock.hidden
+          : storedBlock.hidden),
+    settings: isBlankSettingsObject(storedBlock?.settings)
+      ? { ...(defaultBlock?.settings || {}) }
+      : {
+          ...(defaultBlock?.settings || {}),
+          ...(storedBlock?.settings || {}),
+        },
+    editableFields: Array.isArray(defaultBlock?.editableFields)
+      ? [...defaultBlock.editableFields]
+      : (Array.isArray(storedBlock?.editableFields) ? [...storedBlock.editableFields] : []),
   };
 }
 
@@ -946,151 +720,6 @@ function blockSettingsValueEquals(left, right) {
     return false;
   }
   return JSON.stringify(left) === JSON.stringify(right);
-}
-
-function blockSnapshotEquals(left, right) {
-  if (left === right) {
-    return true;
-  }
-  if (!left || !right) {
-    return false;
-  }
-  return JSON.stringify(left) === JSON.stringify(right);
-}
-
-function mergeBlocksPreservingReferences(currentBlocks, nextBlocks) {
-  const currentList = Array.isArray(currentBlocks) ? currentBlocks : [];
-  const nextList = Array.isArray(nextBlocks) ? nextBlocks : [];
-  const currentById = new Map(currentList.map((block) => [String(block?.id || '').trim(), block]));
-  let changed = currentList.length !== nextList.length;
-  const merged = nextList.map((nextBlock, index) => {
-    const nextId = String(nextBlock?.id || '').trim();
-    const currentBlock = currentById.get(nextId);
-    if (currentBlock && blockSnapshotEquals(currentBlock, nextBlock)) {
-      if (currentList[index] !== currentBlock) {
-        changed = true;
-      }
-      return currentBlock;
-    }
-    changed = true;
-    return nextBlock;
-  });
-  return changed ? merged : currentList;
-}
-
-function getComparablePageAliases(pathAliases, pathname) {
-  const normalizedPath = String(pathname || '').trim();
-  return Object.fromEntries(
-    Object.entries(pathAliases || {}).filter(([fromPath, toPath]) => (
-      String(fromPath || '').trim() === normalizedPath || String(toPath || '').trim() === normalizedPath
-    )),
-  );
-}
-
-function collectChangedCollaborationPaths(currentState, snapshotState) {
-  const allPaths = new Set([
-    ...Object.keys(currentState?.collaborationByPath || {}),
-    ...Object.keys(snapshotState?.collaborationByPath || {}),
-  ]);
-  return [...allPaths].filter((pathname) => (
-    JSON.stringify(currentState?.collaborationByPath?.[pathname] || null)
-    !== JSON.stringify(snapshotState?.collaborationByPath?.[pathname] || null)
-  ));
-}
-
-export function mergeSharedAuthoringSnapshot(currentState, snapshotState, options = {}) {
-  const authoringPaths = new Set(Array.isArray(options.authoringPaths) ? options.authoringPaths : []);
-  const collaborationPaths = new Set(Array.isArray(options.collaborationPaths) ? options.collaborationPaths : []);
-  if (!authoringPaths.size && !collaborationPaths.size) {
-    return currentState;
-  }
-
-  let blocksByPath = currentState.blocksByPath || {};
-  let pageHierarchy = currentState.pageHierarchy || {};
-  let pathAliases = currentState.pathAliases || {};
-  let collaborationByPath = currentState.collaborationByPath || {};
-
-  authoringPaths.forEach((pathname) => {
-    const nextBlocks = mergeBlocksPreservingReferences(
-      currentState.blocksByPath?.[pathname] || [],
-      snapshotState.blocksByPath?.[pathname] || [],
-    );
-    if (nextBlocks !== (currentState.blocksByPath?.[pathname] || [])) {
-      if (blocksByPath === currentState.blocksByPath) {
-        blocksByPath = {
-          ...(currentState.blocksByPath || {}),
-        };
-      }
-      blocksByPath[pathname] = nextBlocks;
-    }
-
-    const currentPage = currentState.pageHierarchy?.[pathname] || null;
-    const nextPage = snapshotState.pageHierarchy?.[pathname] || null;
-    if (JSON.stringify(currentPage) !== JSON.stringify(nextPage)) {
-      if (pageHierarchy === currentState.pageHierarchy) {
-        pageHierarchy = {
-          ...(currentState.pageHierarchy || {}),
-        };
-      }
-      pageHierarchy[pathname] = nextPage;
-    }
-
-    const currentAliases = getComparablePageAliases(currentState.pathAliases, pathname);
-    const nextAliases = getComparablePageAliases(snapshotState.pathAliases, pathname);
-    if (JSON.stringify(currentAliases) !== JSON.stringify(nextAliases)) {
-      if (pathAliases === currentState.pathAliases) {
-        pathAliases = { ...(currentState.pathAliases || {}) };
-      }
-      Object.keys(pathAliases).forEach((fromPath) => {
-        const toPath = pathAliases[fromPath];
-        if (String(fromPath || '').trim() === pathname || String(toPath || '').trim() === pathname) {
-          delete pathAliases[fromPath];
-        }
-      });
-      Object.assign(pathAliases, nextAliases);
-    }
-  });
-
-  collaborationPaths.forEach((pathname) => {
-    const currentEntry = currentState.collaborationByPath?.[pathname] || null;
-    const nextEntry = snapshotState.collaborationByPath?.[pathname] || null;
-    if (JSON.stringify(currentEntry) === JSON.stringify(nextEntry)) {
-      return;
-    }
-    if (collaborationByPath === currentState.collaborationByPath) {
-      collaborationByPath = {
-        ...(currentState.collaborationByPath || {}),
-      };
-    }
-    collaborationByPath[pathname] = nextEntry;
-  });
-
-  if (
-    blocksByPath === currentState.blocksByPath
-    && pageHierarchy === currentState.pageHierarchy
-    && pathAliases === currentState.pathAliases
-    && collaborationByPath === currentState.collaborationByPath
-  ) {
-    return currentState;
-  }
-
-  return {
-    ...currentState,
-    blocksByPath,
-    pageHierarchy,
-    pathAliases,
-    collaborationByPath,
-  };
-}
-
-function hasActiveSharedEditing(state, currentActor = null) {
-  const currentUserId = String(currentActor?.userId || '').trim();
-  return Object.values(state?.collaborationByPath || {}).some((entry) => (
-    Object.values(entry?.blocks || {}).some((meta) => {
-      const lockedById = String(meta?.lockedBy?.userId || '').trim();
-      return Boolean(lockedById && lockedById !== currentUserId);
-    })
-  ));
 }
 
 const TEXT_LIKE_BLOCK_SETTING_PATTERN = /(text|title|heading|body|html|subtitle|label|message|copy|lead|followup|caption|alt|placeholder|options|url|ref|note|summary|json)/i;
@@ -1236,103 +865,6 @@ function applyBufferedBlockSettingEditsToState(currentState, bufferedEdits) {
 
 function readInitialDevIdentity() {
   return getOrCreateDevIdentity();
-}
-
-function buildHistoryEntry({ action, blockId = '', actor, details = '', previousActor = null, now = Date.now() }) {
-  const normalizedActor = normalizeContentActor(actor);
-  if (!normalizedActor) {
-    return null;
-  }
-  const normalizedPreviousActor = normalizeContentActor(previousActor);
-  return {
-    id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
-    action: String(action || '').trim(),
-    blockId: String(blockId || '').trim(),
-    details: String(details || '').trim(),
-    actor: normalizedActor,
-    previousActor: normalizedPreviousActor,
-    createdAt: now,
-  };
-}
-
-function appendHistoryEntry(history, nextEntry) {
-  const entry = normalizeContentHistoryEntry(nextEntry);
-  const current = Array.isArray(history) ? history : [];
-  if (!entry) {
-    return current;
-  }
-  return [entry, ...current].slice(0, MAX_CONTENT_HISTORY_ENTRIES);
-}
-
-function buildEditingBlockMeta(previousMeta, actor, now = Date.now()) {
-  const current = normalizeContentBlockMeta(previousMeta);
-  const normalizedActor = normalizeContentActor(actor);
-  if (!normalizedActor) {
-    return current;
-  }
-
-  return {
-    draftedBy: current.draftedBy,
-    draftedAt: current.draftedAt,
-    savedBy: current.savedBy,
-    savedAt: current.savedAt,
-    lockedBy: normalizedActor,
-    lockedAt: now,
-  };
-}
-
-function getForeignOwnershipMeta(meta, actor) {
-  const normalizedMeta = normalizeContentBlockMeta(meta);
-  const normalizedActor = normalizeContentActor(actor);
-  const lockedByOther = normalizedMeta.lockedBy?.userId && normalizedMeta.lockedBy.userId !== normalizedActor?.userId
-    ? normalizedMeta.lockedBy
-    : null;
-  const draftedByOther = normalizedMeta.draftedBy?.userId && normalizedMeta.draftedBy.userId !== normalizedActor?.userId
-    ? normalizedMeta.draftedBy
-    : null;
-  return {
-    lockedByOther,
-    draftedByOther,
-  };
-}
-
-function releaseUserLocks(collaborationByPath, userId, { keepPath = '', keepBlockId = '' } = {}) {
-  const normalizedUserId = String(userId || '').trim();
-  if (!normalizedUserId) {
-    return collaborationByPath && typeof collaborationByPath === 'object' ? collaborationByPath : {};
-  }
-
-  const source = collaborationByPath && typeof collaborationByPath === 'object' ? collaborationByPath : {};
-  let changed = false;
-  const next = {};
-
-  Object.entries(source).forEach(([pathname, entry]) => {
-    const blocks = entry?.blocks || {};
-    let blockChanged = false;
-    const nextBlocks = {};
-
-    Object.entries(blocks).forEach(([blockId, rawMeta]) => {
-      const meta = normalizeContentBlockMeta(rawMeta);
-      const shouldKeep = pathname === keepPath && blockId === keepBlockId;
-      if (!shouldKeep && meta.lockedBy?.userId === normalizedUserId) {
-        blockChanged = true;
-        nextBlocks[blockId] = {
-          ...meta,
-          lockedBy: null,
-          lockedAt: null,
-        };
-        return;
-      }
-      nextBlocks[blockId] = meta;
-    });
-
-    next[pathname] = blockChanged
-      ? { ...entry, blocks: nextBlocks }
-      : entry;
-    changed = changed || blockChanged;
-  });
-
-  return changed ? next : source;
 }
 
 function shouldUpgradeLegacyLoansDynamicBlock(pathname, storedBlock, defaultBlock) {
@@ -1563,9 +1095,45 @@ function normalizeSingletonKindBlocks(blocks) {
 }
 
 function normalizePageBlocksState(blocks) {
-  return normalizePresetBearingBlocks(
+  return stripTargetBridgeFieldsFromBlocks(normalizePresetBearingBlocks(
     normalizeSingletonKindBlocks(dedupeBlocksByIdPreferLatest(blocks)),
-  );
+  ));
+}
+
+const RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS = [
+  ['target', 'Section', 'Key'].join(''),
+  ['target', 'Fineprint', 'Section', 'Key'].join(''),
+  ['target', 'Section', 'ClassName'].join(''),
+  ['target', 'Section', 'Index'].join(''),
+];
+
+function hasRetiredNativeSectionBridgeSettings(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return false;
+  }
+  return RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS.some((key) => (
+    Object.prototype.hasOwnProperty.call(settings, key)
+  ));
+}
+
+function stripTargetBridgeFieldsFromBlocks(blocks) {
+  return (Array.isArray(blocks) ? blocks : []).map((block) => {
+    if (!block || typeof block !== 'object' || !block.settings || typeof block.settings !== 'object') {
+      return block;
+    }
+
+    const settings = { ...block.settings };
+    let changed = false;
+
+    RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(settings, key)) {
+        delete settings[key];
+        changed = true;
+      }
+    });
+
+    return changed ? { ...block, settings } : block;
+  });
 }
 
 function normalizeBlockDisplayName(name, mode, fallbackName = '', blockKind = '') {
@@ -2425,28 +1993,6 @@ function normalizeTopStripSettings(rawSettings) {
   return next;
 }
 
-function toSlugToken(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
-}
-
-function escapeHtmlText(value) {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function paragraphizeText(value) {
-  const text = String(value || '').trim();
-  return text ? `<p>${escapeHtmlText(text)}</p>` : '';
-}
-
 function decodeIntroHtmlTextEntities(value) {
   return String(value || '')
     .replace(/&nbsp;/gi, ' ')
@@ -2524,19 +2070,6 @@ function isPlaceholderIntroSettings(settings) {
     return true;
   }
   return false;
-}
-
-function clearIntroActionSettings(settings) {
-  const nextSettings = settings && typeof settings === 'object' ? { ...settings } : {};
-  nextSettings.button1Label = '';
-  nextSettings.button1Url = '';
-  nextSettings.button1PageRef = '';
-  nextSettings.button1OpenInNewWindow = false;
-  nextSettings.button2Label = '';
-  nextSettings.button2Url = '';
-  nextSettings.button2PageRef = '';
-  nextSettings.button2OpenInNewWindow = false;
-  return nextSettings;
 }
 
 function shouldRefreshStoredIntroFromNative(pathname, settings) {
@@ -2636,102 +2169,6 @@ function shouldRefreshStoredIntroFromNative(pathname, settings) {
   return false;
 }
 
-function toBodyHtmlFromSection(section, form) {
-  const html = String(section?.html || '').trim();
-  if (html) {
-    return html;
-  }
-  const parts = [];
-  const bodyList = Array.isArray(section?.body) ? section.body : (section?.body ? [section.body] : []);
-  bodyList.forEach((line) => {
-    const next = paragraphizeText(line);
-    if (next) {
-      parts.push(next);
-    }
-  });
-
-  const subtitle = paragraphizeText(form?.subtitle || section?.subtitle || '');
-  if (subtitle && !parts.length) {
-    parts.push(subtitle);
-  }
-
-  return parts.join('');
-}
-
-function toCtaFieldOptionsText(options) {
-  return formatFormChoiceOptionsText(options);
-}
-
-function isBasicContactField(field) {
-  const idLabel = `${field?.id || ''} ${field?.label || ''}`.toLowerCase();
-  return (
-    idLabel.includes('first name')
-    || idLabel.includes('last name')
-    || idLabel === 'name'
-    || idLabel.includes(' email')
-    || idLabel.includes('phone')
-    || idLabel.includes('contact first')
-    || idLabel.includes('contact last')
-    || idLabel.includes('contact email')
-    || idLabel.includes('contact phone')
-  );
-}
-
-function collectNativeFormFields(form) {
-  if (!form || typeof form !== 'object') {
-    return [];
-  }
-  if (Array.isArray(form.steps) && form.steps.length) {
-    return form.steps
-      .flatMap((step) => (Array.isArray(step?.fields) ? step.fields : []))
-      .filter(Boolean);
-  }
-  return (Array.isArray(form.fields) ? form.fields : []).filter(Boolean);
-}
-
-function pickCtaFields(form) {
-  const candidates = collectNativeFormFields(form)
-    .filter((field) => field?.id && field?.label)
-    .filter((field) => String(field.type || '').trim().toLowerCase() !== 'file')
-    .map((field) => ({
-      id: String(field.id || '').trim(),
-      label: String(field.label || '').trim(),
-      type: normalizeCtaFormFieldType(field.type),
-      placeholder: String(field.placeholder || '').trim(),
-      required: Boolean(field.required),
-      optionsText: toCtaFieldOptionsText(field.options),
-    }));
-
-  if (!candidates.length) {
-    return [];
-  }
-
-  const selected = candidates.slice(0, CTA_FORM_MAX_FIELDS);
-
-  const requiredSpecial = candidates.find((field) => field.required && !isBasicContactField(field));
-  if (requiredSpecial && !selected.some((field) => field.id === requiredSpecial.id)) {
-    const replaceIndex = selected.findIndex((field) => !field.required && isBasicContactField(field));
-    const targetIndex = replaceIndex >= 0 ? replaceIndex : Math.max(0, selected.length - 1);
-    selected[targetIndex] = requiredSpecial;
-  }
-
-  const deduped = [];
-  const seenIds = new Set();
-  selected.forEach((field) => {
-    if (!field?.id || seenIds.has(field.id)) {
-      return;
-    }
-    seenIds.add(field.id);
-    deduped.push(field);
-  });
-
-  return deduped.slice(0, CTA_FORM_MAX_FIELDS);
-}
-
-function isRequestDynamicPath(pathname) {
-  return REQUEST_FORM_DYNAMIC_PATHS.has(String(pathname || '').trim());
-}
-
 function inferCanonicalFormOwner(defaultBlocks) {
   const blocks = Array.isArray(defaultBlocks) ? defaultBlocks : [];
   const hasCtaForm = blocks.some((block) => String(block?.kind || '').trim().toLowerCase() === 'cta_form');
@@ -2746,891 +2183,8 @@ function inferCanonicalFormOwner(defaultBlocks) {
   return '';
 }
 
-function toRequestFieldConfig(field) {
-  const id = String(field?.id || '').trim();
-  const label = String(field?.label || '').trim();
-  const type = normalizeRequestFormFieldType(field?.type);
-  if (!id || !label || !type) {
-    return null;
-  }
-  const config = {
-    id,
-    label,
-    type,
-    required: Boolean(field?.required),
-    placeholder: String(field?.placeholder || '').trim(),
-    full: Boolean(field?.full),
-    help: String(field?.help || '').trim(),
-    format: String(field?.format || '').trim(),
-    errorMessage: String(field?.errorMessage || '').trim(),
-  };
-  const maxLength = Number(field?.maxLength);
-  if (Number.isFinite(maxLength) && maxLength > 0) {
-    config.maxLength = maxLength;
-  }
-  if (type === 'textarea') {
-    const rows = Number(field?.rows);
-    if (Number.isFinite(rows) && rows > 0) {
-      config.rows = rows;
-    }
-  }
-  if (Array.isArray(field?.options) && field.options.length) {
-    config.options = field.options
-      .map((option) => ({
-        value: String(option?.value || '').trim(),
-        label: String(option?.label || '').trim(),
-      }))
-      .filter((option) => option.value || option.label);
-  }
-  return config;
-}
-
-function toRequestStepConfigs(form) {
-  if (!form || typeof form !== 'object') {
-    return [];
-  }
-
-  if (Array.isArray(form.steps) && form.steps.length) {
-    return form.steps
-      .map((step, index) => ({
-        title: String(step?.title || `Step ${index + 1}`).trim(),
-        note: String(step?.note || '').trim(),
-        alert: String(step?.alert || '').trim(),
-        nextLabel: String(step?.nextLabel || '').trim(),
-        backLabel: String(step?.backLabel || '').trim(),
-        fields: (Array.isArray(step?.fields) ? step.fields : [])
-          .map(toRequestFieldConfig)
-          .filter(Boolean),
-      }))
-      .filter((step) => step.fields.length)
-      .slice(0, 5);
-  }
-
-  const singleFields = (Array.isArray(form.fields) ? form.fields : [])
-    .map(toRequestFieldConfig)
-    .filter(Boolean);
-  if (!singleFields.length) {
-    return [];
-  }
-
-  return [{
-    title: String(form.title || '').trim(),
-    note: String(form.subtitle || '').trim(),
-    alert: '',
-    nextLabel: String(form.nextLabel || '').trim(),
-    backLabel: String(form.backLabel || '').trim(),
-    fields: singleFields,
-  }];
-}
-
-function inferRequestTextTone(section, bgTone) {
-  if (bgTone === 'blue' || bgTone === 'grey') {
-    return 'white';
-  }
-  const hasWhiteHighlight = Array.isArray(section?.titleHighlights)
-    && section.titleHighlights.some((entry) => String(entry?.className || '').trim().toLowerCase() === 'is-white');
-  if (hasWhiteHighlight) {
-    return 'white';
-  }
-  return 'dark';
-}
-
-function inferCtaBgTone(section) {
-  const classToken = String(section?.className || '').toLowerCase();
-  if (classToken.includes('loans-consultant-native-contact')) {
-    return 'blue';
-  }
-  if (classToken.includes('legacy-giving-joy')) {
-    return 'white';
-  }
-  if (classToken.includes('calculators-native-contact')) {
-    return 'white';
-  }
-  if (classToken.includes('grey') || classToken.includes('gray') || classToken.includes('dark')) {
-    return 'grey';
-  }
-  if (classToken.includes('blue')) {
-    return 'blue';
-  }
-  if (classToken.includes('sand')) {
-    return 'sand';
-  }
-  if (classToken.includes('white')) {
-    return 'white';
-  }
-  const hasWhiteHighlight = Array.isArray(section?.titleHighlights)
-    && section.titleHighlights.some((entry) => String(entry?.className || '').trim().toLowerCase() === 'is-white');
-  if (hasWhiteHighlight) {
-    return 'blue';
-  }
-  return 'sand';
-}
-
-function findStaticRequestFormSection(pathname, rawSettings) {
-  const nativeContent = getNativePageContent(pathname);
-  const sections = Array.isArray(nativeContent?.sections) ? nativeContent.sections : [];
-  if (!sections.length) {
-    return null;
-  }
-
-  const targetKey = String(rawSettings?.targetSectionKey || '').trim();
-  const targetClassName = String(rawSettings?.targetSectionClassName || '').trim().toLowerCase();
-
-  if (targetKey) {
-    const exact = sections.find((section, index) => toSectionTargetKey(section, index) === targetKey);
-    if (exact?.form && !isInlineRevealRequestInferenceSection(exact)) {
-      return exact;
-    }
-  }
-
-  if (targetClassName) {
-    const exact = sections.find((section) => String(section?.className || '').trim().toLowerCase() === targetClassName);
-    if (exact?.form && !isInlineRevealRequestInferenceSection(exact)) {
-      return exact;
-    }
-  }
-
-  return sections.find((section) => (
-    section?.form
-    && typeof section.form === 'object'
-    && !isInlineRevealRequestInferenceSection(section)
-  )) || null;
-}
-
-function isInlineRevealRequestInferenceSection(section) {
-  const form = section?.form && typeof section.form === 'object' ? section.form : null;
-  if (!form) {
-    return false;
-  }
-
-  const displayMode = String(form.displayMode || '').trim().toLowerCase();
-  const triggerMode = String(form.triggerMode || '').trim().toLowerCase();
-  return displayMode === 'inline_reveal' || triggerMode === 'external';
-}
-
-function getDynamicRequestTemplateSettings() {
-  const template = genericPageBlockBlueprint().find((block) => (
-    String(block?.kind || '').trim().toLowerCase() === 'request_form'
-    && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
-  ));
-  return template?.settings && typeof template.settings === 'object' ? template.settings : {};
-}
-
-function shouldRestoreRequestSetting(currentValue, templateValue, expectedValue) {
-  const current = String(currentValue || '').trim();
-  const template = String(templateValue || '').trim();
-  const expected = String(expectedValue || '').trim();
-
-  if (!expected) {
-    return false;
-  }
-  if (!current) {
-    return true;
-  }
-  return current === template && current !== expected;
-}
-
-function shouldRestoreRequestHighlights(currentValue, templateValue, expectedValue) {
-  const current = String(currentValue || '').trim();
-  const template = String(templateValue || '').trim();
-  const expected = String(expectedValue || '').trim();
-
-  if (!expected) {
-    return false;
-  }
-  if (!current || current === '[]') {
-    return true;
-  }
-  return current === template && current !== expected;
-}
-
-function shouldRestoreRequestFields(currentValue, templateValue, expectedValue) {
-  const current = String(currentValue || '').trim();
-  const template = String(templateValue || '').trim();
-  const expected = String(expectedValue || '').trim();
-
-  if (!expected || expected === '[]') {
-    return false;
-  }
-  if (!current || current === '[]') {
-    return true;
-  }
-  if (current === template && current !== expected) {
-    return true;
-  }
-
-  try {
-    const currentFields = JSON.parse(current);
-    const expectedFields = JSON.parse(expected);
-    if (!Array.isArray(currentFields) || !Array.isArray(expectedFields)) {
-      return false;
-    }
-    const currentIds = new Set(currentFields.map((field) => String(field?.id || '').trim()).filter(Boolean));
-    const expectedIds = expectedFields.map((field) => String(field?.id || '').trim()).filter(Boolean);
-    return expectedIds.some((fieldId) => !currentIds.has(fieldId));
-  } catch {
-    return false;
-  }
-}
-
-function shouldRestoreRequestStepTitle(currentValue, templateValue, expectedValue) {
-  const current = String(currentValue || '').trim();
-  const template = String(templateValue || '').trim();
-  const expected = String(expectedValue || '').trim();
-
-  if (!expected) {
-    return false;
-  }
-  if (!current) {
-    return true;
-  }
-  if (current === template && current !== expected) {
-    return true;
-  }
-
-  const genericTitles = new Set(['contact', 'contact info', 'contact details']);
-  return genericTitles.has(current.toLowerCase()) && current !== expected;
-}
-
-function requestFormSettingsTargetMatchesSection(settings, section, sectionIndex) {
-  if (!section || typeof section !== 'object') {
-    return false;
-  }
-  const targetKey = String(settings?.targetSectionKey || '').trim();
-  const targetClassName = String(settings?.targetSectionClassName || '').trim().toLowerCase();
-  const normalizedIndex = Number.isFinite(Number(settings?.targetSectionIndex))
-    ? Number(settings.targetSectionIndex)
-    : NaN;
-  const expectedTargetKey = section?.id
-    ? `id:${section.id}`
-    : (section?.className ? `class:${section.className}` : (sectionIndex >= 0 ? `index:${sectionIndex}` : ''));
-  const expectedTargetClassName = String(section?.className || '').trim().toLowerCase();
-
-  return (
-    (targetKey && targetKey === expectedTargetKey)
-    || (targetClassName && targetClassName === expectedTargetClassName)
-    || (Number.isFinite(normalizedIndex) && normalizedIndex === sectionIndex)
-  );
-}
-
-export function normalizeDynamicRequestFormSettings(pathname, rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
-  const section = findStaticRequestFormSection(pathname, settings);
-  if (!section) {
-    return settings;
-  }
-
-  const form = section?.form && typeof section.form === 'object' ? section.form : {};
-  const bgTone = inferCtaBgTone(section);
-  const bodyList = Array.isArray(section?.body) ? section.body : (section?.body ? [section.body] : []);
-  const expectedBody = bodyList
-    .map((line) => String(line || '').trim())
-    .filter(Boolean)
-    .join('\n\n');
-  const templateDefaults = getDynamicRequestTemplateSettings();
-  const sectionIndex = Array.isArray(getNativePageContent(pathname)?.sections)
-    ? getNativePageContent(pathname).sections.findIndex((candidate) => candidate === section)
-    : -1;
-  const next = { ...settings };
-  const expectedTitle = String(section?.title || form?.title || '').trim();
-  const expectedTitleClassName = String(section?.titleClassName || '').trim();
-  const expectedTitleHighlightsJson = toHeroDefaultHighlightsJson(section?.titleHighlights);
-  const expectedSubtitle = String(section?.subtitle || bodyList[0] || form?.subtitle || '').trim();
-  const expectedSubtitleOnly = String(section?.subtitle || form?.subtitle || '').trim();
-  const expectedTextTone = inferRequestTextTone(section, bgTone);
-  const expectedTargetSectionKey = section?.id
-    ? `id:${section.id}`
-    : (section?.className ? `class:${section.className}` : (sectionIndex >= 0 ? `index:${sectionIndex}` : ''));
-  const expectedTargetSectionClassName = String(section?.className || '').trim();
-  const hasValidTarget = requestFormSettingsTargetMatchesSection(settings, section, sectionIndex);
-  const expectedSteps = toRequestStepConfigs(form);
-  const suppressGenericSingleStepHeading = (
-    pathname === LEGACY_GIVING_ENDOWMENTS_PATH
-    && expectedSteps.length === 1
-    && String(expectedSteps[0]?.title || '').trim().toLowerCase() === 'contact details'
-  );
-
-  if ((!hasValidTarget && expectedTitle) || shouldRestoreRequestSetting(next.title, templateDefaults.title, expectedTitle)) {
-    next.title = expectedTitle;
-  }
-  if (
-    (!hasValidTarget && String(next.titleClassName || '').trim() !== expectedTitleClassName)
-    || shouldRestoreRequestSetting(next.titleClassName, templateDefaults.titleClassName, expectedTitleClassName)
-  ) {
-    next.titleClassName = expectedTitleClassName;
-  }
-  if (
-    pathname === '/services/insurance/group-term-life-insurance'
-    && expectedTitleClassName
-    && String(next.titleClassName || '').trim() === 'is-white'
-  ) {
-    next.titleClassName = expectedTitleClassName;
-  }
-  if (
-    (!hasValidTarget && String(next.titleHighlightsJson || '').trim() !== expectedTitleHighlightsJson)
-    || shouldRestoreRequestHighlights(next.titleHighlightsJson, templateDefaults.titleHighlightsJson, expectedTitleHighlightsJson)
-  ) {
-    next.titleHighlightsJson = expectedTitleHighlightsJson;
-  }
-  if (
-    pathname === '/services/insurance/group-term-life-insurance'
-    && String(next.titleHighlightsJson || '').trim() === '[{"text":"group life","className":"is-white"}]'
-  ) {
-    next.titleHighlightsJson = expectedTitleHighlightsJson;
-  }
-  if (!expectedSubtitleOnly && String(next.subtitle || '').trim() === String(templateDefaults.subtitle || '').trim()) {
-    next.subtitle = '';
-  } else if (
-    (!hasValidTarget && String(next.subtitle || '').trim() !== expectedSubtitleOnly)
-    || shouldRestoreRequestSetting(next.subtitle, templateDefaults.subtitle, expectedSubtitleOnly)
-  ) {
-    next.subtitle = expectedSubtitleOnly;
-  }
-  if (
-    (!hasValidTarget && String(next.body || '').trim() !== expectedBody)
-    || shouldRestoreRequestSetting(next.body, templateDefaults.body, expectedBody)
-  ) {
-    next.body = expectedBody;
-  }
-  if (
-    (!hasValidTarget && String(next.bgTone || '').trim() !== bgTone)
-    || shouldRestoreRequestSetting(next.bgTone, templateDefaults.bgTone, bgTone)
-  ) {
-    next.bgTone = bgTone;
-  }
-  if (
-    (!hasValidTarget && String(next.textTone || '').trim() !== expectedTextTone)
-    || shouldRestoreRequestSetting(next.textTone, templateDefaults.textTone, expectedTextTone)
-  ) {
-    next.textTone = expectedTextTone;
-  }
-  const shouldCanonicalizeTargetKeyToSectionId = Boolean(section?.id)
-    && String(next.targetSectionKey || '').trim() !== expectedTargetSectionKey;
-  if (
-    shouldCanonicalizeTargetKeyToSectionId
-    || !hasValidTarget
-    || shouldRestoreRequestSetting(next.targetSectionKey, '', expectedTargetSectionKey)
-  ) {
-    next.targetSectionKey = expectedTargetSectionKey;
-  }
-  if (!hasValidTarget || shouldRestoreRequestSetting(next.targetSectionClassName, '', expectedTargetSectionClassName)) {
-    next.targetSectionClassName = expectedTargetSectionClassName;
-  }
-  if ((!hasValidTarget || !Number.isFinite(Number(next.targetSectionIndex))) && sectionIndex >= 0) {
-    next.targetSectionIndex = sectionIndex;
-  }
-
-  for (let slot = 1; slot <= 5; slot += 1) {
-    const expectedStep = expectedSteps[slot - 1] || null;
-    const titleKey = `step${slot}Title`;
-    const noteKey = `step${slot}Note`;
-    const alertKey = `step${slot}Alert`;
-    const fieldsKey = `step${slot}FieldsJson`;
-    const nextLabelKey = `step${slot}NextLabel`;
-    const backLabelKey = `step${slot}BackLabel`;
-    const expectedStepTitle = suppressGenericSingleStepHeading && slot === 1
-      ? ''
-      : String(expectedStep?.title || '').trim();
-    const expectedStepNote = String(expectedStep?.note || '').trim();
-    const expectedStepFieldsJson = expectedStep?.fields?.length ? JSON.stringify(expectedStep.fields) : '[]';
-    const expectedStepNextLabel = String(expectedStep?.nextLabel || '').trim();
-    const expectedStepBackLabel = String(expectedStep?.backLabel || '').trim();
-
-    if (
-      expectedStepTitle
-      && (
-        (!hasValidTarget && String(next[titleKey] || '').trim() !== expectedStepTitle)
-        || shouldRestoreRequestStepTitle(next[titleKey], templateDefaults[titleKey], expectedStepTitle)
-      )
-    ) {
-      next[titleKey] = expectedStepTitle;
-    }
-    if (
-      (!hasValidTarget && String(next[noteKey] || '').trim() !== expectedStepNote)
-      || shouldRestoreRequestSetting(next[noteKey], templateDefaults[noteKey], expectedStepNote)
-    ) {
-      next[noteKey] = expectedStepNote;
-    }
-    if (
-      expectedStep
-      && (
-        (!hasValidTarget && String(next[fieldsKey] || '').trim() !== expectedStepFieldsJson)
-        || shouldRestoreRequestFields(next[fieldsKey], templateDefaults[fieldsKey], expectedStepFieldsJson)
-      )
-    ) {
-      next[fieldsKey] = expectedStepFieldsJson;
-    }
-    if (
-      expectedStep
-      && (
-        (!hasValidTarget && String(next[nextLabelKey] || '').trim() !== expectedStepNextLabel)
-        || shouldRestoreRequestSetting(next[nextLabelKey], templateDefaults[nextLabelKey], expectedStepNextLabel)
-      )
-    ) {
-      next[nextLabelKey] = expectedStepNextLabel;
-    }
-    if (
-      expectedStep
-      && (
-        (!hasValidTarget && String(next[backLabelKey] || '').trim() !== expectedStepBackLabel)
-        || shouldRestoreRequestSetting(next[backLabelKey], templateDefaults[backLabelKey], expectedStepBackLabel)
-      )
-    ) {
-      next[backLabelKey] = expectedStepBackLabel;
-    }
-    if (!expectedStep && String(next[fieldsKey] || '').trim() === String(templateDefaults[fieldsKey] || '').trim()) {
-      next[titleKey] = '';
-      next[noteKey] = '';
-      next[alertKey] = '';
-      next[fieldsKey] = '[]';
-      next[nextLabelKey] = '';
-      next[backLabelKey] = '';
-    }
-  }
-
-  return next;
-}
-
-function inferCtaTitleClassName(section, bgTone) {
-  const explicit = String(section?.titleClassName || '').trim();
-  if (explicit) {
-    return explicit;
-  }
-
-  const classToken = String(section?.className || '').toLowerCase();
-  if (classToken.includes('calculators-native-contact') || classToken.includes('about-native-cta-form')) {
-    return 'is-atlantean';
-  }
-  if (bgTone === 'blue' || bgTone === 'grey') {
-    return 'is-white';
-  }
-  return '';
-}
-
-export function buildDynamicRequestDefaultBlocksForPath(pathname, pageTitle, currentBlocks, requestTemplate) {
-  if (!requestTemplate || pathname === '/test' || !isRequestDynamicPath(pathname)) {
-    return [];
-  }
-  const hasExplicitDynamicRequestSeed = Array.isArray(currentBlocks) && currentBlocks.some((block) => (
-    String(block?.kind || '').trim().toLowerCase() === 'request_form'
-    && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
-  ));
-  if (hasExplicitDynamicRequestSeed) {
-    // Explicit request-form seeds should stay authoritative instead of being inferred again from native sections.
-    return [];
-  }
-
-  const nativeContent = getNativePageContent(pathname, pageTitle);
-  const sections = Array.isArray(nativeContent?.sections) ? nativeContent.sections : [];
-  if (!sections.length) {
-    return [];
-  }
-
-  const existingIds = new Set((Array.isArray(currentBlocks) ? currentBlocks : []).map((block) => String(block?.id || '').trim()));
-  const nextBlocks = [];
-
-  sections.forEach((section, sectionIndex) => {
-    const form = section?.form;
-    if (!form || typeof form !== 'object') {
-      return;
-    }
-    if (isInlineRevealRequestInferenceSection(section)) {
-      return;
-    }
-    if (String(form.variant || '').trim().toLowerCase() === 'certificate-request') {
-      return;
-    }
-
-    const steps = toRequestStepConfigs(form);
-    if (!steps.length) {
-      return;
-    }
-
-    const clone = cloneTemplateVariant(requestTemplate);
-    const sectionLabel = String(
-      section?.title
-      || form?.title
-      || section?.className
-      || `Request ${sectionIndex + 1}`,
-    ).trim();
-    const idTokenSource = String(section?.id || section?.className || sectionLabel || `request_${sectionIndex + 1}`).trim();
-    const blockId = nextBlocks.length === 0
-      ? 'request_form'
-      : toUniqueIdFromBase(`request_form_${idTokenSource}`, existingIds);
-    existingIds.add(blockId);
-
-    const bgTone = inferCtaBgTone(section);
-    const bodyList = Array.isArray(section?.body) ? section.body : (section?.body ? [section.body] : []);
-    const subtitleFallback = String(section?.subtitle || form?.subtitle || '').trim();
-    const bodyValue = bodyList
-      .map((line) => String(line || '').trim())
-      .filter(Boolean)
-      .join('\n\n');
-    const settings = {
-      ...(clone.settings || {}),
-      title: String(section?.title || form?.title || clone.settings?.title || '').trim(),
-      titleClassName: String(section?.titleClassName || clone.settings?.titleClassName || '').trim(),
-      titleHighlightsJson: toHeroDefaultHighlightsJson(section?.titleHighlights),
-      subtitle: subtitleFallback,
-      body: bodyValue || String(clone.settings?.body || '').trim(),
-      bgTone,
-      textTone: inferRequestTextTone(section, bgTone),
-      submitLabel: String(form.submitLabel || clone.settings?.submitLabel || 'Submit request').trim(),
-      successMessage: String(form.successMessage || clone.settings?.successMessage || 'Thanks. We received your request.').trim(),
-      targetSectionKey: section?.id
-        ? `id:${section.id}`
-        : (section?.className ? `class:${section.className}` : `index:${sectionIndex}`),
-      targetSectionClassName: String(section?.className || '').trim(),
-      targetSectionIndex: sectionIndex,
-    };
-
-    for (let slot = 1; slot <= 5; slot += 1) {
-      settings[`step${slot}Title`] = '';
-      settings[`step${slot}Note`] = '';
-      settings[`step${slot}Alert`] = '';
-      settings[`step${slot}FieldsJson`] = '[]';
-    }
-
-    steps.forEach((step, index) => {
-      const slot = index + 1;
-      settings[`step${slot}Title`] = String(step.title || '').trim() || `Step ${slot}`;
-      settings[`step${slot}Note`] = String(step.note || '').trim();
-      settings[`step${slot}Alert`] = String(step.alert || '').trim();
-      settings[`step${slot}FieldsJson`] = JSON.stringify(step.fields);
-    });
-
-    nextBlocks.push({
-      ...clone,
-      id: blockId,
-      name: sectionLabel ? `Request Form · ${sectionLabel}` : `Request Form ${sectionIndex + 1}`,
-      kind: 'request_form',
-      mode: 'dynamic',
-      hidden: false,
-      settings,
-    });
-  });
-
-  return nextBlocks;
-}
-
-function inferTestimonialTagFromPath(pathname) {
-  const path = String(pathname || '').trim().toLowerCase();
-  if (path.includes('/legacy-giving')) {
-    return 'legacy-giving';
-  }
-  if (path.includes('/retirement')) {
-    return 'retirement';
-  }
-  if (path.includes('/investments')) {
-    return 'investments';
-  }
-  if (path.includes('/loans')) {
-    return 'loans';
-  }
-  if (path === '/services') {
-    return 'services';
-  }
-  return '';
-}
-
-function toSectionTargetKey(section, sectionIndex) {
-  if (section?.id) {
-    return `id:${section.id}`;
-  }
-  if (section?.className) {
-    return `class:${section.className}`;
-  }
-  return `index:${sectionIndex}`;
-}
-
-function buildDynamicTestimonialsDefaultBlocksForPath(pathname, pageTitle, currentBlocks, testimonialsTemplate) {
-  if (!testimonialsTemplate || pathname === '/test') {
-    return [];
-  }
-
-  const existingBlocks = Array.isArray(currentBlocks) ? currentBlocks : [];
-  if (existingBlocks.some((block) => String(block?.kind || '').trim().toLowerCase() === 'testimonials')) {
-    return [];
-  }
-
-  const nativeContent = getNativePageContent(pathname, pageTitle);
-  const sections = Array.isArray(nativeContent?.sections) ? nativeContent.sections : [];
-  if (!sections.length) {
-    return [];
-  }
-
-  const existingIds = new Set(existingBlocks.map((block) => String(block?.id || '').trim()));
-  const nextBlocks = [];
-  const pageTag = inferTestimonialTagFromPath(pathname);
-
-  sections.forEach((section, sectionIndex) => {
-    const testimonials = Array.isArray(section?.testimonials) ? section.testimonials : [];
-    if (!testimonials.length) {
-      return;
-    }
-
-    const clone = cloneTemplateVariant(testimonialsTemplate);
-    const sectionLabel = String(section?.title || section?.className || `Testimonials ${sectionIndex + 1}`).trim();
-    const idBase = nextBlocks.length === 0 ? 'testimonials' : `testimonials_${section?.id || section?.className || sectionIndex + 1}`;
-    const blockId = toUniqueIdFromBase(idBase, existingIds);
-    existingIds.add(blockId);
-
-    const selectedIdsCsv = testimonials
-      .map((item, index) => normalizeTestimonialRecord(item, `testimonial-${sectionIndex + 1}-${index + 1}`).id)
-      .join('\n');
-    const sectionFineprint = String(section?.fineprint || '').trim();
-
-    const nextSection = sections[sectionIndex + 1];
-    const nextSectionFineprint = String(nextSection?.fineprint || '').trim();
-    const nextIsFineprintSection = Boolean(
-      nextSectionFineprint
-      && String(nextSection?.className || '').toLowerCase().includes('fineprint'),
-    );
-    const fineprintText = sectionFineprint || nextSectionFineprint;
-
-    const settings = {
-      ...(clone.settings || {}),
-      selectionMode: 'manual',
-      selectedIdsCsv,
-      filterTagsCsv: pageTag,
-      limit: testimonials.length,
-      showFineprint: Boolean(fineprintText) && !nextIsFineprintSection,
-      fineprint: fineprintText || String(clone.settings?.fineprint || '').trim(),
-      targetSectionKey: toSectionTargetKey(section, sectionIndex),
-      targetFineprintSectionKey: nextIsFineprintSection ? toSectionTargetKey(nextSection, sectionIndex + 1) : '',
-      targetSectionClassName: String(section?.className || '').trim(),
-      targetSectionIndex: sectionIndex,
-    };
-
-    nextBlocks.push({
-      ...clone,
-      id: blockId,
-      name: sectionLabel ? `Testimonials · ${sectionLabel}` : `Testimonials ${sectionIndex + 1}`,
-      kind: 'testimonials',
-      mode: 'dynamic',
-      settings,
-    });
-  });
-
-  return nextBlocks;
-}
-
-function normalizeToneFromClassName(className) {
-  const token = String(className || '')
-    .trim()
-    .toLowerCase()
-    .replace(/^is-/, '')
-    .replace(/[^a-z-]+/g, '');
-  const allowed = new Set(['atlantean', 'mango', 'melon', 'super-grey', 'white', 'blue']);
-  return allowed.has(token) ? token : '';
-}
-
-function toUniqueIdFromBase(baseId, existingIds) {
-  const normalizedBase = toSlugToken(baseId) || 'cta_form';
-  if (!existingIds.has(normalizedBase)) {
-    return normalizedBase;
-  }
-  let suffix = 2;
-  let candidate = `${normalizedBase}_${suffix}`;
-  while (existingIds.has(candidate)) {
-    suffix += 1;
-    candidate = `${normalizedBase}_${suffix}`;
-  }
-  return candidate;
-}
-
-function buildDynamicIntroSettingsFromNative(intro, pageTitle, templateDefaults = {}) {
-  if (!intro) {
-    return null;
-  }
-
-  const defaults = templateDefaults && typeof templateDefaults === 'object' ? templateDefaults : {};
-  const settings = clearIntroActionSettings(defaults);
-  settings.heading = '';
-  settings.headingClassName = '';
-  settings.headingHighlightsJson = '';
-  settings.body = '';
-  settings.bodyHtml = '';
-  settings.extraLine = '';
-  settings.extraLineTone = '';
-
-  const normalizedIntro = typeof intro === 'string' ? { body: intro, centered: true } : intro;
-  const bodyList = Array.isArray(normalizedIntro.body)
-    ? normalizedIntro.body
-    : (normalizedIntro.body ? [normalizedIntro.body] : []);
-  const headingHighlightsJson = normalizedIntro.headingHighlights
-    ? JSON.stringify(normalizedIntro.headingHighlights)
-    : '';
-
-  if (normalizedIntro.heading) {
-    settings.heading = normalizedIntro.heading;
-  } else if (!normalizedIntro.body && !settings.heading && pageTitle) {
-    settings.heading = pageTitle;
-  }
-
-  if (headingHighlightsJson) {
-    settings.headingHighlightsJson = headingHighlightsJson;
-  }
-
-  if (normalizedIntro.headingClassName) {
-    settings.headingClassName = normalizedIntro.headingClassName;
-  }
-
-  settings.bgTone = String(normalizedIntro.bgTone || settings.bgTone || 'white').trim() || 'white';
-  settings.textTone = String(normalizedIntro.textTone || settings.textTone || 'dark').trim() || 'dark';
-
-  if (normalizedIntro.bodyHtml) {
-    settings.bodyHtml = normalizedIntro.bodyHtml;
-  } else if (bodyList.length) {
-    const parts = bodyList
-      .map((line) => String(line || '').trim())
-      .filter(Boolean)
-      .map((line) => paragraphizeText(line))
-      .join('');
-    settings.body = bodyList.join('\n\n');
-    settings.bodyHtml = parts;
-  }
-
-  if (normalizedIntro.emphasis) {
-    settings.extraLine = normalizedIntro.emphasis;
-  }
-  if (normalizedIntro.emphasisClassName) {
-    settings.extraLineTone = normalizeToneFromClassName(normalizedIntro.emphasisClassName);
-  }
-
-  if (normalizedIntro.justify) {
-    settings.justify = normalizedIntro.justify;
-  } else if (normalizedIntro.centered) {
-    settings.justify = 'center';
-  }
-
-  if (normalizedIntro.lineSpacing) {
-    settings.lineSpacing = normalizedIntro.lineSpacing;
-  }
-
-  const actions = Array.isArray(normalizedIntro.actions) ? normalizedIntro.actions : [];
-  if (actions[0]) {
-    settings.button1Label = actions[0].label || settings.button1Label;
-    settings.button1Url = actions[0].href || actions[0].to || settings.button1Url;
-    settings.button1PageRef = actions[0].to || settings.button1PageRef;
-    settings.button1Style = actions[0].style
-      || (actions[0].ghost ? 'outline' : settings.button1Style);
-    settings.button1Tone = actions[0].tone || settings.button1Tone;
-    settings.button1OpenInNewWindow = Boolean(actions[0].openInNewWindow);
-  }
-  if (actions[1]) {
-    settings.button2Label = actions[1].label || settings.button2Label;
-    settings.button2Url = actions[1].href || actions[1].to || settings.button2Url;
-    settings.button2PageRef = actions[1].to || settings.button2PageRef;
-    settings.button2Style = actions[1].style
-      || (actions[1].ghost ? 'outline' : settings.button2Style);
-    settings.button2Tone = actions[1].tone || settings.button2Tone;
-    settings.button2OpenInNewWindow = Boolean(actions[1].openInNewWindow);
-  }
-
-  return normalizeIntroBodyMirror(settings);
-}
-
-function buildDynamicCtaDefaultBlocksForPath(pathname, pageTitle, currentBlocks, ctaTemplate) {
-  if (!ctaTemplate || pathname === '/test' || isRequestDynamicPath(pathname)) {
-    return [];
-  }
-
-  const nativeContent = getNativePageContent(pathname, pageTitle);
-  const sections = Array.isArray(nativeContent?.sections) ? nativeContent.sections : [];
-  if (!sections.length) {
-    return [];
-  }
-
-  const existingIds = new Set((Array.isArray(currentBlocks) ? currentBlocks : []).map((block) => String(block?.id || '').trim()));
-  const nextBlocks = [];
-
-  sections.forEach((section, sectionIndex) => {
-    const form = section?.form;
-    if (!form || typeof form !== 'object') {
-      return;
-    }
-
-    if (String(form.variant || '').trim().toLowerCase() === 'certificate-request') {
-      return;
-    }
-
-    const fieldList = pickCtaFields(form);
-    if (!fieldList.length) {
-      return;
-    }
-
-    const clone = cloneTemplateVariant(ctaTemplate);
-    const sectionLabel = String(
-      section?.title
-      || form?.title
-      || section?.className
-      || `Form ${sectionIndex + 1}`,
-    ).trim();
-    const idTokenSource = String(section?.id || section?.className || sectionLabel || `form_${sectionIndex + 1}`).trim();
-    const baseId = nextBlocks.length === 0 ? 'cta_form' : `cta_form_${idTokenSource}`;
-    const blockId = toUniqueIdFromBase(baseId, existingIds);
-    existingIds.add(blockId);
-
-    const inferredBgTone = inferCtaBgTone(section);
-    const displayMode = String(form?.displayMode || '').trim();
-    const triggerMode = String(form?.triggerMode || '').trim();
-    const settings = {
-      ...(clone.settings || {}),
-      title: String(section?.title || form?.title || clone.settings?.title || '').trim() || clone.settings?.title || '',
-      titleClassName: inferCtaTitleClassName(section, inferredBgTone) || String(clone.settings?.titleClassName || '').trim(),
-      titleHighlightsJson: JSON.stringify(Array.isArray(section?.titleHighlights) ? section.titleHighlights : []),
-      bodyHtml: toBodyHtmlFromSection(section, form) || String(clone.settings?.bodyHtml || '').trim(),
-      bgTone: inferredBgTone,
-      submitLabel: normalizeLegacyCtaSubmitLabel(form.submitLabel, clone.settings?.submitLabel) || 'Submit',
-      successMessage: String(form.successMessage || clone.settings?.successMessage || 'Thanks. We received your request.').trim(),
-      targetSectionKey: section?.id
-        ? `id:${section.id}`
-        : (section?.className ? `class:${section.className}` : `index:${sectionIndex}`),
-      targetSectionClassName: String(section?.className || '').trim(),
-      targetSectionIndex: sectionIndex,
-    };
-
-    if (displayMode) {
-      settings.displayMode = displayMode;
-    }
-    if (triggerMode) {
-      settings.triggerMode = triggerMode;
-    }
-
-    Object.assign(settings, buildCtaFormSettingsPatch({ fields: fieldList }));
-
-    nextBlocks.push({
-      ...clone,
-      id: blockId,
-      name: sectionLabel ? `CTA Form · ${sectionLabel}` : `CTA Form ${sectionIndex + 1}`,
-      kind: 'cta_form',
-      mode: 'dynamic',
-      settings,
-    });
-  });
-
-  return nextBlocks;
-}
-
 function buildDefaultBlocks() {
   const blocksByPath = {};
-  const ctaTemplate = getAllBlockTemplateBlueprints().find((template) => (
-    String(template?.kind || '').trim().toLowerCase() === 'cta_form'
-    && String(template?.mode || '').trim().toLowerCase() === 'dynamic'
-  ));
-  const introTemplate = getAllBlockTemplateBlueprints().find((template) => (
-    String(template?.kind || '').trim().toLowerCase() === 'intro'
-    && String(template?.mode || '').trim().toLowerCase() === 'dynamic'
-  ));
-  const requestTemplate = getAllBlockTemplateBlueprints().find((template) => (
-    String(template?.kind || '').trim().toLowerCase() === 'request_form'
-    && String(template?.mode || '').trim().toLowerCase() === 'dynamic'
-  ));
-  const testimonialsTemplate = getAllBlockTemplateBlueprints().find((template) => (
-    String(template?.kind || '').trim().toLowerCase() === 'testimonials'
-    && String(template?.mode || '').trim().toLowerCase() === 'dynamic'
-  ));
 
   sitePages.forEach((page) => {
     if (page.path.startsWith('/admin/')) {
@@ -3639,11 +2193,6 @@ function buildDefaultBlocks() {
     if (isBlocklessManagedPagePath(page.path)) {
       return;
     }
-
-    const seedFromNativePageContent = shouldSeedBlocksFromNativePageContent(page.path);
-    const nativeContent = seedFromNativePageContent
-      ? getNativePageContent(page.path, page.title)
-      : null;
 
     const orderedBlueprint = orderDefaultBlocksForPath(
       page.path,
@@ -3681,48 +2230,7 @@ function buildDefaultBlocks() {
 
       return nextBlock;
     });
-
-    const dynamicCtaBlocks = seedFromNativePageContent
-      ? buildDynamicCtaDefaultBlocksForPath(
-        page.path,
-        page.title,
-        seededBlocks,
-        ctaTemplate,
-      )
-      : [];
-    const dynamicRequestBlocks = seedFromNativePageContent
-      ? buildDynamicRequestDefaultBlocksForPath(
-        page.path,
-        page.title,
-        seededBlocks,
-        requestTemplate,
-      )
-      : [];
-    const dynamicTestimonialsBlocks = seedFromNativePageContent
-      ? buildDynamicTestimonialsDefaultBlocksForPath(
-        page.path,
-        page.title,
-        seededBlocks,
-        testimonialsTemplate,
-      )
-      : [];
-
-    let nextBlocks = [...seededBlocks, ...dynamicCtaBlocks];
-    if (dynamicRequestBlocks.length) {
-      dynamicRequestBlocks.forEach((requestBlock, index) => {
-        if (index === 0) {
-          const existingIndex = nextBlocks.findIndex((block) => block?.id === 'request_form');
-          if (existingIndex >= 0) {
-            nextBlocks.splice(existingIndex, 1, requestBlock);
-            return;
-          }
-        }
-        nextBlocks.push(requestBlock);
-      });
-    }
-    if (dynamicTestimonialsBlocks.length) {
-      nextBlocks = [...nextBlocks, ...dynamicTestimonialsBlocks];
-    }
+    let nextBlocks = [...seededBlocks];
 
     if (EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS.has(page.path)) {
       nextBlocks = nextBlocks.filter((block) => {
@@ -3734,72 +2242,10 @@ function buildDefaultBlocks() {
       });
     }
 
-    const introSettingsRaw = (
-      introTemplate
-      && seedFromNativePageContent
-      && page.path !== '/'
-      && !nativeContent?.hideIntro
-    )
-      ? buildDynamicIntroSettingsFromNative(
-        nativeContent?.intro,
-        page.title,
-        introTemplate.settings,
-      )
-      : null;
-    const introSettings = introSettingsRaw && !isPlaceholderIntroSettings(introSettingsRaw)
-      ? introSettingsRaw
-      : null;
-
-    if (introSettings) {
-      const introClone = cloneTemplateVariant(introTemplate);
-      const introBlock = {
-        ...introClone,
-        settings: { ...(introClone.settings || {}), ...introSettings },
-      };
-      const existingIntroIndex = nextBlocks.findIndex((block) => block?.id === 'intro');
-      if (existingIntroIndex >= 0) {
-        nextBlocks.splice(existingIntroIndex, 1, introBlock);
-      } else {
-        const heroIndex = nextBlocks.findIndex((block) => block?.id === 'hero');
-        const insertIndex = heroIndex >= 0 ? heroIndex + 1 : 0;
-        nextBlocks.splice(insertIndex, 0, introBlock);
-      }
-    }
-
     blocksByPath[page.path] = nextBlocks;
   });
 
   return blocksByPath;
-}
-
-function clearBlockOnlyTargetSectionFields(path, blocks) {
-  if (!isBlockOnlyManagedPagePath(path) || !Array.isArray(blocks)) {
-    return blocks;
-  }
-
-  return blocks.map((block) => {
-    const settings = block?.settings && typeof block.settings === 'object'
-      ? block.settings
-      : null;
-    const hasTargetSectionFields = Boolean(
-      String(settings?.targetSectionKey || '').trim()
-      || String(settings?.targetSectionClassName || '').trim()
-      || Number(settings?.targetSectionIndex || 0),
-    );
-    if (!settings || !hasTargetSectionFields) {
-      return block;
-    }
-
-    return {
-      ...block,
-      settings: {
-        ...settings,
-        targetSectionKey: '',
-        targetSectionClassName: '',
-        targetSectionIndex: 0,
-      },
-    };
-  });
 }
 
 function scoreTemplateVariant(block) {
@@ -4060,27 +2506,22 @@ export function normalizeStoredConfig(payload) {
           }
         : storedBlock;
       if (
+        isBlockOnlyManagedPagePath(path)
+        && defaultBlock
+        && String(defaultBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+        && storedMode !== 'dynamic'
+      ) {
+        storedMode = 'dynamic';
+        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock);
+      }
+      if (
         REQUEST_FORM_MODE_LOCKED_PATHS.has(path)
         && storedBlock.id === 'request_form'
         && storedKind === 'request_form'
         && storedMode !== 'dynamic'
       ) {
         storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...storedBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: false,
-          settings: isBlankSettingsObject(storedBlock?.settings)
-            ? { ...(defaultBlock?.settings || {}) }
-            : {
-                ...(defaultBlock?.settings || {}),
-                ...(storedBlock?.settings || {}),
-              },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? defaultBlock.editableFields
-            : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
-        };
+        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock, { hidden: false });
       }
       if (
         path === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
@@ -4115,61 +2556,21 @@ export function normalizeStoredConfig(payload) {
         };
       }
       if (
-        path === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
-        && storedBlock.id === 'request_form'
-        && storedKind === 'request_form'
-        && defaultBlock
-        && isStaleLegacyCharitableGiftAnnuitiesRequestTarget(storedSettings)
-      ) {
-        storedMode = 'dynamic';
-        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
-      }
-      if (
-        path === LEGACY_GIVING_ENDOWMENTS_PATH
-        && storedBlock.id === 'request_form'
-        && storedKind === 'request_form'
-        && defaultBlock
-        && isStaleLegacyEndowmentsRequestTarget(storedSettings)
-      ) {
-        storedMode = 'dynamic';
-        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
-      }
-      if (
-        path === LEGACY_GIVING_GENEROSITY_FUND_PATH
-        && storedBlock.id === 'request_form'
-        && storedKind === 'request_form'
-        && defaultBlock
-        && isStaleLegacyGenerosityFundRequestTarget(storedSettings)
-      ) {
-        storedMode = 'dynamic';
-        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
-      }
-      if (
-        path === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
-        && storedBlock.id === 'request_form'
-        && storedKind === 'request_form'
-        && defaultBlock
-        && isStaleLegacyMinistryImpactFundRequestTarget(storedSettings)
-      ) {
-        storedMode = 'dynamic';
-        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
-      }
-      if (
-        path === '/services/insurance/life-insurance-quote'
-        && storedBlock.id === 'request_form'
-        && storedKind === 'request_form'
-        && defaultBlock
-        && isStaleLifeInsuranceQuoteRequestTarget(storedSettings)
-      ) {
-        storedMode = 'dynamic';
-        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
-      }
-      if (
         path === '/services/insurance/property-casualty-insurance'
         && storedBlock.id === 'request_form'
         && storedKind === 'request_form'
         && defaultBlock
         && isStalePropertyCasualtyRequestContent(storedSettings)
+      ) {
+        storedMode = 'dynamic';
+        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
+      }
+      if (
+        CANONICAL_REQUEST_FORM_RESTORE_PATHS.has(path)
+        && storedBlock.id === 'request_form'
+        && storedKind === 'request_form'
+        && defaultBlock
+        && hasRetiredNativeSectionBridgeSettings(storedSettings)
       ) {
         storedMode = 'dynamic';
         nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
@@ -4198,23 +2599,7 @@ export function normalizeStoredConfig(payload) {
       }
       if (shouldUpgradeLegacyLoansDynamicBlock(path, storedBlock, defaultBlock)) {
         storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...storedBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
-            ? defaultBlock.hidden
-            : storedBlock.hidden,
-          settings: isBlankSettingsObject(storedBlock?.settings)
-            ? { ...(defaultBlock?.settings || {}) }
-            : {
-                ...(defaultBlock?.settings || {}),
-                ...(storedBlock?.settings || {}),
-              },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? defaultBlock.editableFields
-            : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
-        };
+        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock);
       }
       if (
         path === RETIREMENT_403B_GROUP_ENROLLMENT_PATH
@@ -4253,7 +2638,7 @@ export function normalizeStoredConfig(payload) {
         const ctaSettings = nextStoredBlock?.settings || {};
         const subtitle = String(ctaSettings.subtitle || '').trim();
 
-        if (isLegacyTargetedRetirement403bCta(ctaSettings)) {
+        if (isLegacyRetirement403bCta(ctaSettings)) {
           nextStoredBlock = {
             ...nextStoredBlock,
             settings: {
@@ -4261,9 +2646,6 @@ export function normalizeStoredConfig(payload) {
               bodyHtml: '',
               subtitle: subtitle || 'And we’re eager to help.',
               bgTone: 'white',
-              targetSectionKey: '',
-              targetSectionClassName: '',
-              targetSectionIndex: 0,
             },
           };
         }
@@ -4281,10 +2663,6 @@ export function normalizeStoredConfig(payload) {
             && String(block?.mode || '').trim().toLowerCase() === 'dynamic',
         ) || defaultBlock;
         const rolloverSettings = nextStoredBlock?.settings || {};
-        const targetSectionClassName = String(rolloverSettings.targetSectionClassName || '').trim();
-        const targetSectionKey = String(rolloverSettings.targetSectionKey || '').trim();
-        const buttonLabel = String(rolloverSettings.buttonLabel || '').trim();
-        const hasLegacyTargetFields = Boolean(targetSectionClassName || targetSectionKey);
         const isLegacy403bRolloverBillboard = isLegacyRetirement403bRolloverBillboard(
           rolloverSettings,
           canonicalRolloverDefaultBlock?.settings,
@@ -4304,16 +2682,6 @@ export function normalizeStoredConfig(payload) {
             editableFields: Array.isArray(canonicalRolloverDefaultBlock?.editableFields)
               ? [...canonicalRolloverDefaultBlock.editableFields]
               : [],
-          };
-        } else if (hasLegacyTargetFields) {
-          nextStoredBlock = {
-            ...nextStoredBlock,
-            settings: {
-              ...rolloverSettings,
-              targetSectionKey: '',
-              targetSectionClassName: '',
-              targetSectionIndex: 0,
-            },
           };
         }
       }
@@ -4516,23 +2884,7 @@ export function normalizeStoredConfig(payload) {
         && storedMode !== 'dynamic'
       ) {
         storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...storedBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
-            ? defaultBlock.hidden
-            : storedBlock.hidden,
-          settings: isBlankSettingsObject(storedBlock?.settings)
-            ? { ...(defaultBlock?.settings || {}) }
-            : {
-                ...(defaultBlock?.settings || {}),
-                ...(storedBlock?.settings || {}),
-              },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? defaultBlock.editableFields
-            : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
-        };
+        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock);
       }
       if (
         path === '/services/investments'
@@ -4541,23 +2893,7 @@ export function normalizeStoredConfig(payload) {
         && storedMode !== 'dynamic'
       ) {
         storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...storedBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
-            ? defaultBlock.hidden
-            : storedBlock.hidden,
-          settings: isBlankSettingsObject(storedBlock?.settings)
-            ? { ...(defaultBlock?.settings || {}) }
-            : {
-                ...(defaultBlock?.settings || {}),
-                ...(storedBlock?.settings || {}),
-              },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? defaultBlock.editableFields
-            : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
-        };
+        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock);
       }
       if (
         path === '/services/retirement'
@@ -4593,23 +2929,7 @@ export function normalizeStoredConfig(payload) {
         && storedMode !== 'dynamic'
       ) {
         storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...storedBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
-            ? defaultBlock.hidden
-            : storedBlock.hidden,
-          settings: isBlankSettingsObject(storedBlock?.settings)
-            ? { ...(defaultBlock?.settings || {}) }
-            : {
-                ...(defaultBlock?.settings || {}),
-                ...(storedBlock?.settings || {}),
-              },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? defaultBlock.editableFields
-            : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
-        };
+        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock);
       }
       if (
         path === '/'
@@ -4618,23 +2938,7 @@ export function normalizeStoredConfig(payload) {
         && storedMode !== 'dynamic'
       ) {
         storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...storedBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
-            ? defaultBlock.hidden
-            : storedBlock.hidden,
-          settings: isBlankSettingsObject(storedBlock?.settings)
-            ? { ...(defaultBlock?.settings || {}) }
-            : {
-                ...(defaultBlock?.settings || {}),
-                ...(storedBlock?.settings || {}),
-              },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? defaultBlock.editableFields
-            : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
-        };
+        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock);
       }
       if (
         path === '/'
@@ -4643,23 +2947,7 @@ export function normalizeStoredConfig(payload) {
         && defaultBlock?.mode === 'dynamic'
       ) {
         storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...storedBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
-            ? defaultBlock.hidden
-            : storedBlock.hidden,
-          settings: isBlankSettingsObject(storedBlock?.settings)
-            ? { ...(defaultBlock?.settings || {}) }
-            : {
-                ...(defaultBlock?.settings || {}),
-                ...(storedBlock?.settings || {}),
-              },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? defaultBlock.editableFields
-            : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
-        };
+        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock);
       }
       if (
         path === '/'
@@ -4668,48 +2956,7 @@ export function normalizeStoredConfig(payload) {
         && storedMode !== 'dynamic'
       ) {
         storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...storedBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
-            ? defaultBlock.hidden
-            : storedBlock.hidden,
-          settings: isBlankSettingsObject(storedBlock?.settings)
-            ? { ...(defaultBlock?.settings || {}) }
-            : {
-                ...(defaultBlock?.settings || {}),
-                ...(storedBlock?.settings || {}),
-              },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? defaultBlock.editableFields
-            : (Array.isArray(storedBlock?.editableFields) ? storedBlock.editableFields : []),
-        };
-      }
-      if (
-        isRequestDynamicPath(path)
-        && storedKind === 'request_form'
-        && storedMode === 'dynamic'
-      ) {
-        const normalizedRequestSettings = normalizeDynamicRequestFormSettings(path, nextStoredBlock?.settings);
-        const shouldRestoreGroupLifeHeading = (
-          path === '/services/insurance/group-term-life-insurance'
-          && (
-            String(normalizedRequestSettings?.titleClassName || '').trim() === 'is-white'
-            || String(normalizedRequestSettings?.titleHighlightsJson || '').trim() === '[{"text":"group life","className":"is-white"}]'
-          )
-        );
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          hidden: false,
-          settings: shouldRestoreGroupLifeHeading
-            ? {
-                ...normalizedRequestSettings,
-                titleClassName: defaultBlock?.settings?.titleClassName || '',
-                titleHighlightsJson: defaultBlock?.settings?.titleHighlightsJson || '',
-              }
-            : normalizedRequestSettings,
-        };
+        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock);
       }
       const modeVariant = getModeTemplateVariant({
         pathname: path,
@@ -4727,12 +2974,6 @@ export function normalizeStoredConfig(payload) {
         nextStoredBlock = {
           ...nextStoredBlock,
           settings: { ...(defaultBlock?.settings || {}) },
-        };
-      }
-      if (INTRO_ACTION_LOCKED_PATHS.has(path) && storedBlock.id === 'intro' && storedMode === 'dynamic') {
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          settings: clearIntroActionSettings(nextStoredBlock?.settings),
         };
       }
       const mergedSettings = storedBlock.id === 'intro' && storedMode === 'dynamic'
@@ -4792,7 +3033,7 @@ export function normalizeStoredConfig(payload) {
     const normalizedMergedBlocks = path === RETIREMENT_403B_PATH
       ? normalizeRetirement403bBlockSet(mergedWithMissingDefaults)
       : mergedWithMissingDefaults;
-    blocksByPath[path] = normalizePageBlocksState(clearBlockOnlyTargetSectionFields(path, normalizedMergedBlocks));
+    blocksByPath[path] = normalizePageBlocksState(normalizedMergedBlocks);
   });
 
   const pathAliases = normalizePathAliases(
@@ -5446,7 +3687,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
     let cancelled = false;
     let timeoutId = null;
     const seedState = normalizeStoredConfig(null);
-    const currentActor = toDevIdentitySummary(devIdentity);
+    const currentActor = normalizeContentActor(devIdentity);
     const getPollingDelay = () => {
       if (typeof document === 'undefined') {
         return getSharedContentPollDelayForActivity(false, hasActiveSharedEditing(stateRef.current, currentActor));
@@ -5548,7 +3789,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
     const blockTemplateById = new Map(
       availableBlockTemplates.map((template) => [buildBlockTemplateCreateId(template), template]),
     );
-    const currentActor = toDevIdentitySummary(devIdentity);
+    const currentActor = normalizeContentActor(devIdentity);
     const authoringStateForDirtyChecks = sharedAuthorityEnabled
       ? applyBufferedBlockSettingEditsToState(stateRef.current, bufferedBlockSettingEditsRef.current)
       : stateRef.current;
