@@ -39,7 +39,7 @@ export default [
     },
   },
   {
-    files: ['src/**/*.test.js', 'src/**/*.test.jsx', 'src/test/**/*.js', 'scripts/**/*.cjs', 'vite.config.js', 'vitest.config.js'],
+    files: ['src/**/*.test.js', 'src/**/*.test.jsx', 'src/test/**/*.js', 'scripts/**/*.cjs', 'scripts/**/*.mjs', 'vite.config.js', 'vitest.config.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

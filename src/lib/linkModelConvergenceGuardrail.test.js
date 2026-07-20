@@ -12,6 +12,7 @@ function readSource(relativePath) {
 
 describe('link model convergence guardrail', () => {
   it('keeps migrated CTA/action block link shaping on the shared helper path', () => {
+    const linkValueSource = readSource('./linkValue.js');
     const runtimeSource = readSource('./dynamicPageBlocks.js');
     const heroDefinitionSource = readSource('../blocks/definitions/hero.definition.js');
     const introDefinitionSource = readSource('../blocks/definitions/intro.definition.js');
@@ -25,22 +26,28 @@ describe('link model convergence guardrail', () => {
     const servicesGridDefinitionSource = readSource('../blocks/definitions/servicesGrid.definition.js');
     const cardGridDefinitionSource = readSource('../blocks/definitions/cardGrid.definition.js');
 
-    expect(runtimeSource).toContain('coerceLegacyLinkValueFromFields');
+    expect(runtimeSource).toContain('coerceLinkValueFromFields');
     expect(runtimeSource).toContain('function buildCanonicalActionLinkFromFields(source, {');
-    expect(runtimeSource).not.toContain('coerceLegacyLinkValue({');
+    expect(runtimeSource).not.toContain('coerceLinkValue({');
+    expect(linkValueSource).toContain('export function coerceLinkValue');
+    expect(linkValueSource).toContain('export function validateActionFieldGroup');
+    expect(linkValueSource).not.toContain('coerceLegacyLinkValue');
+    expect(linkValueSource).not.toContain('validateLegacyActionFieldGroup');
+    expect(linkValueSource).not.toContain('validateLegacyLinkFieldGroup');
+    expect(linkValueSource).not.toContain('linkValueToLegacyLinkProps');
 
-    expect(heroDefinitionSource).toContain('validateLegacyActionFieldGroup');
-    expect(introDefinitionSource).toContain('validateLegacyLinkFieldGroups');
-    expect(columnsDefinitionSource).toContain('validateLegacyLinkFieldGroups');
-    expect(photoColumnDefinitionSource).toContain('validateLegacyLinkFieldGroup');
-    expect(servicesGridDefinitionSource).toContain('validateLegacyLinkFieldGroups');
-    expect(cardGridDefinitionSource).toContain('validateLegacyLinkFieldGroups');
+    expect(heroDefinitionSource).toContain('validateActionFieldGroup');
+    expect(introDefinitionSource).toContain('validateLinkFieldGroups');
+    expect(columnsDefinitionSource).toContain('validateLinkFieldGroups');
+    expect(photoColumnDefinitionSource).toContain('validateLinkFieldGroup');
+    expect(servicesGridDefinitionSource).toContain('validateLinkFieldGroups');
+    expect(cardGridDefinitionSource).toContain('validateLinkFieldGroups');
 
-    expect(billboardDefinitionSource).toContain('validateLegacyActionFieldGroup');
-    expect(featurePanelDefinitionSource).toContain('validateLegacyActionFieldGroup');
-    expect(ctaBandDefinitionSource).toContain('validateLegacyActionFieldGroup');
-    expect(impactStatDefinitionSource).toContain('validateLegacyActionFieldGroup');
-    expect(splitPanelDefinitionSource).toContain('validateLegacyActionFieldGroups');
+    expect(billboardDefinitionSource).toContain('validateActionFieldGroup');
+    expect(featurePanelDefinitionSource).toContain('validateActionFieldGroup');
+    expect(ctaBandDefinitionSource).toContain('validateActionFieldGroup');
+    expect(impactStatDefinitionSource).toContain('validateActionFieldGroup');
+    expect(splitPanelDefinitionSource).toContain('validateActionFieldGroups');
 
     [
       heroDefinitionSource,
@@ -55,7 +62,7 @@ describe('link model convergence guardrail', () => {
       servicesGridDefinitionSource,
       cardGridDefinitionSource,
     ].forEach((source) => {
-      expect(source).not.toContain('coerceLegacyLinkValue({');
+      expect(source).not.toContain('coerceLinkValue({');
     });
   });
 });

@@ -301,7 +301,7 @@ function canBlockOpenEditor(block, migratedEditor = null) {
 }
 
 function formatBlockModeLabel(mode) {
-  return String(mode || '').trim().toLowerCase() === 'dynamic' ? 'Dynamic' : 'Static';
+  return String(mode || '').trim().toLowerCase() === 'dynamic' ? 'Dynamic' : 'Legacy snapshot';
 }
 
 function getEditEntryLabel(ownershipState, defaultLabel = 'Edit') {
@@ -2935,7 +2935,7 @@ export default function AdminContentPage() {
                 <div className="admin-selected-block-inspect-card">
                   <p className="blank-state-note">
                     {selectedBlock.mode === 'static'
-                      ? 'This block is static and not currently editable.'
+                      ? 'This legacy snapshot block is not currently editable.'
                       : 'This dynamic block does not have custom fields yet.'}
                   </p>
                 </div>

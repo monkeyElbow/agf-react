@@ -6,13 +6,13 @@ import loansIcon from '../../assets/service-icons/Loans.png';
 import retireIcon from '../../assets/service-icons/Retire.png';
 import ratesIcon from '../../assets/service-icons/chart.png';
 import { buildDynamicServicesGridFromBlock } from '../../lib/dynamicPageBlocks';
-import { validateLegacyLinkFieldGroups } from '../../lib/linkValue';
+import { validateLinkFieldGroups } from '../../lib/linkValue';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalLinkFields } from '../foundation/editorDescriptors';
 
 function validateServicesGridLinks(block) {
   const settings = block?.settings || {};
-  return validateLegacyLinkFieldGroups(
+  return validateLinkFieldGroups(
     settings,
     [
       {

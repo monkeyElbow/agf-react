@@ -3,6 +3,7 @@ import {
   BLOCK_ONLY_MANAGED_PAGE_PATHS,
   BLOCKLESS_MANAGED_PAGE_PATHS,
   SPECIAL_MANAGED_PAGE_CLASSIFICATIONS,
+  getManagedPageRouteClassification,
   getSpecialManagedPageClassification,
   isBlockOnlyManagedPagePath,
   isBlocklessManagedPagePath,
@@ -83,6 +84,25 @@ describe('managed page shells', () => {
       expect(isBlockOnlyManagedPagePath(pathname)).toBe(false);
       expect(isBlocklessManagedPagePath(pathname)).toBe(false);
       expect(getSpecialManagedPageClassification(pathname)).toBe(SPECIAL_MANAGED_PAGE_CLASSIFICATIONS[pathname]);
+    });
+  });
+
+  it('reports one explicit route classification for system checks', () => {
+    expect(getManagedPageRouteClassification('/services/loans')).toEqual({
+      type: 'block-only',
+      id: 'block-only',
+    });
+    expect(getManagedPageRouteClassification('/forms')).toEqual({
+      type: 'blockless',
+      id: 'blockless-functional',
+    });
+    expect(getManagedPageRouteClassification('/taxguide')).toEqual({
+      type: 'special',
+      id: 'legacy-page-content',
+    });
+    expect(getManagedPageRouteClassification('/unclassified-route')).toEqual({
+      type: 'unclassified',
+      id: '',
     });
   });
 

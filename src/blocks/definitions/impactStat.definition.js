@@ -1,6 +1,6 @@
 import billboardHudIcon from '../../assets/admin-block-icons/billboard.svg';
 import { buildDynamicImpactStatFromBlock } from '../../lib/dynamicPageBlocks';
-import { validateLegacyActionFieldGroup } from '../../lib/linkValue';
+import { validateActionFieldGroup } from '../../lib/linkValue';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 
@@ -15,7 +15,7 @@ const IMPACT_STAT_TONE_OPTIONS = [
 
 function validateImpactStatAction(block) {
   const settings = block?.settings || {};
-  return validateLegacyActionFieldGroup(settings, {
+  return validateActionFieldGroup(settings, {
     labelKeys: ['ctaLabel'],
     hrefKeys: ['ctaPath'],
     toKeys: ['ctaPageRef'],

@@ -7,23 +7,24 @@ import {
   BLOCKLESS_MANAGED_PAGE_PATHS,
   SPECIAL_MANAGED_PAGE_CLASSIFICATIONS,
 } from '../lib/managedPageShells';
+import {
+  CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS,
+  CONTENT_ADMIN_PAGE_CONTENT_ALLOWED_CLASSIFICATIONS,
+} from '../lib/contentAdminSnapshotSchema';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, '../..');
 
-const ACTIVE_SNAPSHOT_ROOTS = Object.freeze([
-  ['shared state', '../../dev-data/content-admin-shared.json', 'state'],
-  ['shared baseSnapshot', '../../dev-data/content-admin-shared.json', 'baseSnapshot'],
-  ['seed seedState', '../../dev-data/content-admin-seed-baseline.json', 'seedState'],
-]);
-
-const ALLOWED_PAGE_CONTENT_PATHS = Object.freeze([
-  '/brand',
-  '/taxguide',
-]);
+const ALLOWED_PAGE_CONTENT_PATHS = Object.freeze(
+  Object.entries(SPECIAL_MANAGED_PAGE_CLASSIFICATIONS)
+    .filter(([, classification]) => CONTENT_ADMIN_PAGE_CONTENT_ALLOWED_CLASSIFICATIONS.includes(classification))
+    .map(([pathname]) => pathname)
+    .sort(),
+);
 
 function readJson(relativePath) {
-  return JSON.parse(readFileSync(path.resolve(__dirname, relativePath), 'utf8'));
+  return JSON.parse(readFileSync(path.resolve(repoRoot, relativePath), 'utf8'));
 }
 
 function toBlockSignature(block) {
@@ -59,13 +60,13 @@ function findPageContentPaths(blocksByPath = {}) {
 
 describe('content admin source convergence', () => {
   it('keeps the seed baseline file to one content source', () => {
-    const seedRecord = readJson('../../dev-data/content-admin-seed-baseline.json');
+    const seedRecord = readJson('dev-data/content-admin-seed-baseline.json');
 
     expect(Object.keys(seedRecord).sort()).toEqual(['meta', 'seedState']);
   });
 
   it('keeps shared authoring, shared published, and seed baseline inventories converged', () => {
-    const snapshots = ACTIVE_SNAPSHOT_ROOTS.map(([label, relativePath, rootKey]) => {
+    const snapshots = CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS.map(({ label, relativePath, rootKey }) => {
       const record = readJson(relativePath);
       return [label, toInventory(record?.[rootKey]?.blocksByPath || {})];
     });
@@ -79,7 +80,7 @@ describe('content admin source convergence', () => {
   it('keeps active snapshot inventories aligned with non-empty block blueprints', () => {
     const blueprintInventory = toInventory(contentBlockBlueprintsByPath);
 
-    ACTIVE_SNAPSHOT_ROOTS.forEach(([label, relativePath, rootKey]) => {
+    CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS.forEach(({ label, relativePath, rootKey }) => {
       const record = readJson(relativePath);
       const snapshotInventory = toInventory(record?.[rootKey]?.blocksByPath || {});
 
@@ -90,7 +91,7 @@ describe('content admin source convergence', () => {
   it('keeps page-content usage isolated to classified special routes', () => {
     expect(findPageContentPaths(contentBlockBlueprintsByPath), 'blueprint page_content paths').toEqual(ALLOWED_PAGE_CONTENT_PATHS);
 
-    ACTIVE_SNAPSHOT_ROOTS.forEach(([label, relativePath, rootKey]) => {
+    CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS.forEach(({ label, relativePath, rootKey }) => {
       const record = readJson(relativePath);
       const pageContentPaths = findPageContentPaths(record?.[rootKey]?.blocksByPath || {});
 

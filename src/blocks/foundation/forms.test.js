@@ -102,7 +102,7 @@ describe('canonical form foundation', () => {
     })).toBe('Missing Consent');
   });
 
-  it('supports structured CTA field definitions with legacy slot syncing', () => {
+  it('supports structured CTA field definitions with slot compatibility syncing', () => {
     const fields = parseCtaFormFieldsJson(JSON.stringify([
       {
         id: 'full_name',

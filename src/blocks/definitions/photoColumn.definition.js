@@ -1,6 +1,6 @@
 import photoColumnHudIcon from '../../assets/admin-block-icons/photo-column.svg';
 import { buildDynamicPhotoColumnFromBlock } from '../../lib/dynamicPageBlocks';
-import { validateLegacyLinkFieldGroup } from '../../lib/linkValue';
+import { validateLinkFieldGroup } from '../../lib/linkValue';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 
@@ -20,7 +20,7 @@ const PHOTO_COLUMN_BUTTON_TONE_OPTIONS = [
 
 function validatePhotoColumnLink(block) {
   const settings = block?.settings || {};
-  return validateLegacyLinkFieldGroup(settings, {
+  return validateLinkFieldGroup(settings, {
     hrefKeys: ['buttonUrl'],
     toKeys: ['buttonPageRef'],
   });

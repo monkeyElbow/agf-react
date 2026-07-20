@@ -3,7 +3,7 @@ import { getAllBlockDefinitions, getBlockDefinition } from '../blocks/registry';
 // Guardrail: HUD editors may be slimmer than admin, but they must preserve
 // the core editing surface for the same block. Admin may expose extra or more
 // advanced controls on top of the parity baseline.
-const LEGACY_EDITOR_PARITY_CONTRACT = Object.freeze({
+const EDITOR_PARITY_BASE_CONTRACT = Object.freeze({
   grid: Object.freeze({
     mode: 'shared-admin',
     label: 'Grid',
@@ -47,7 +47,7 @@ const CANONICAL_EDITOR_TYPE_ALIASES = Object.freeze(
 export const EDITOR_PARITY_CONTRACT = Object.freeze({
   ...CANONICAL_EDITOR_PARITY_CONTRACT,
   ...CANONICAL_EDITOR_TYPE_ALIASES,
-  ...LEGACY_EDITOR_PARITY_CONTRACT,
+  ...EDITOR_PARITY_BASE_CONTRACT,
 });
 
 export const EDITOR_PARITY_TYPES = Object.freeze(Object.keys(EDITOR_PARITY_CONTRACT));

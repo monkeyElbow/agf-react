@@ -8,7 +8,7 @@ import {
   getAllBlockTemplateBlueprints,
 } from './contentBlockBlueprints';
 import { BLOCK_ONLY_MANAGED_PAGE_PATHS } from '../lib/managedPageShells';
-import { getLegacyEditableFieldsForKind } from '../blocks/registry';
+import { getEditableFieldsForKind } from '../blocks/registry';
 
 const TARGET_BRIDGE_SETTING_KEYS = [
   'targetSectionKey',
@@ -1526,19 +1526,19 @@ describe('content block blueprint coverage', () => {
     const testBlocks = contentBlockBlueprintsByPath['/test'] || [];
 
     expect(loansBlocks.find((block) => block?.id === 'value_cards')?.editableFields).toEqual(
-      getLegacyEditableFieldsForKind('columns'),
+      getEditableFieldsForKind('columns'),
     );
     expect(retirementBlocks.find((block) => block?.id === 'billboard')?.editableFields).toEqual(
-      getLegacyEditableFieldsForKind('billboard'),
+      getEditableFieldsForKind('billboard'),
     );
     expect(testBlocks.find((block) => block?.id === 'intro')?.editableFields).toEqual(
-      getLegacyEditableFieldsForKind('intro'),
+      getEditableFieldsForKind('intro'),
     );
     expect(testBlocks.find((block) => block?.id === 'billboard')?.editableFields).toEqual(
-      getLegacyEditableFieldsForKind('billboard'),
+      getEditableFieldsForKind('billboard'),
     );
     expect(testBlocks.find((block) => block?.id === 'columns')?.editableFields).toEqual(
-      getLegacyEditableFieldsForKind('columns'),
+      getEditableFieldsForKind('columns'),
     );
   });
 

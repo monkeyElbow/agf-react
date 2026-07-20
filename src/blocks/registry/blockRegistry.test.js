@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath, genericPageBlockBlueprint, getAllBlockTemplateBlueprints } from '../../data/contentBlockBlueprints';
 import { getDefaultSiteFeatureCatalogEntry, getSiteFeatureOptions } from '../../data/siteFeatureCatalog';
-import { BLOCK_KIND_VALUES } from '../foundation/models';
+import { BLOCK_KIND_VALUES, BLOCK_MODE_VALUES } from '../foundation/models';
 import { getBlockHudDefinition } from '../../lib/blockHudRegistry';
 import { getEditorParityContract } from '../../lib/editorParityContract';
 import {
@@ -12,7 +12,7 @@ import {
   getBlockEditorSections,
   getBlockPresetDefinition,
   getBlockPresetDefinitions,
-  getLegacyEditableFieldsForKind,
+  getEditableFieldsForKind,
   getMigratedBlockKinds,
   getSingletonBlockKinds,
 } from './index';
@@ -28,6 +28,7 @@ describe('canonical block registry', () => {
   it('registers the first migrated block kinds with required metadata', () => {
     expect(getMigratedBlockKinds()).toEqual(['content', 'calculator_cta', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip']);
     expect(BLOCK_KIND_VALUES).not.toContain('rates_table');
+    expect(BLOCK_MODE_VALUES).toEqual(['dynamic']);
 
     getMigratedBlockKinds().forEach((kind) => {
       const definition = getBlockDefinition(kind);
@@ -93,7 +94,7 @@ describe('canonical block registry', () => {
     getMigratedBlockKinds().forEach((kind) => {
       const hudSections = getBlockEditorSections(kind, 'hud');
       const adminSections = getBlockEditorSections(kind, 'admin');
-      const editableFields = getLegacyEditableFieldsForKind(kind);
+      const editableFields = getEditableFieldsForKind(kind);
 
       expect(hudSections.length).toBeGreaterThan(0);
       expect(adminSections.length).toBeGreaterThan(0);
@@ -102,6 +103,13 @@ describe('canonical block registry', () => {
       expect(adminSections.flatMap((section) => section.fields).map((field) => field.id))
         .toEqual(editableFields.map((field) => field.id));
     });
+  });
+
+  it('uses the canonical editable-field API name', () => {
+    const registrySource = readSource('./index.js');
+
+    expect(registrySource).toContain('export function getEditableFieldsForKind');
+    expect(registrySource).not.toContain('getLegacyEditableFieldsForKind');
   });
 
   it('adapts blueprint editable fields for migrated dynamic blocks from the canonical registry', () => {
@@ -129,27 +137,27 @@ describe('canonical block registry', () => {
     const testimonialsBlock = allBlocks.find((block) => block?.kind === 'testimonials' && block?.mode === 'dynamic');
     const topStripBlock = (contentBlockBlueprintsByPath['/'] || []).find((block) => block?.kind === 'top_strip' && block?.mode === 'dynamic');
 
-    expect(pageContentBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('content'));
-    expect(calculatorCtaBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('calculator_cta'));
-    expect(ctaBandBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('cta_band'));
-    expect(ctaFormBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('cta_form'));
-    expect(requestFormBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('request_form'));
-    expect(heroBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('hero'));
-    expect(heroPieBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('hero_pie'));
-    expect(impactStatBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('impact_stat'));
-    expect(introBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('intro'));
-    expect(billboardBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('billboard'));
-    expect(columnsBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('columns'));
-    expect(featurePanelBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('feature_panel'));
-    expect(splitPanelBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('split_panel'));
-    expect(cardGridBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('card_grid'));
-    expect(newsletterBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('newsletter'));
-    expect(ratesBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('rates'));
-    expect(servicesGridBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('services_grid'));
-    expect(siteFeatureBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('site_feature'));
-    expect(testimonialsBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('testimonials'));
-    expect(topStripBlock?.editableFields).toEqual(getLegacyEditableFieldsForKind('top_strip'));
-    expect(getLegacyEditableFieldsForKind('photo_column').length).toBeGreaterThan(0);
+    expect(pageContentBlock?.editableFields).toEqual(getEditableFieldsForKind('content'));
+    expect(calculatorCtaBlock?.editableFields).toEqual(getEditableFieldsForKind('calculator_cta'));
+    expect(ctaBandBlock?.editableFields).toEqual(getEditableFieldsForKind('cta_band'));
+    expect(ctaFormBlock?.editableFields).toEqual(getEditableFieldsForKind('cta_form'));
+    expect(requestFormBlock?.editableFields).toEqual(getEditableFieldsForKind('request_form'));
+    expect(heroBlock?.editableFields).toEqual(getEditableFieldsForKind('hero'));
+    expect(heroPieBlock?.editableFields).toEqual(getEditableFieldsForKind('hero_pie'));
+    expect(impactStatBlock?.editableFields).toEqual(getEditableFieldsForKind('impact_stat'));
+    expect(introBlock?.editableFields).toEqual(getEditableFieldsForKind('intro'));
+    expect(billboardBlock?.editableFields).toEqual(getEditableFieldsForKind('billboard'));
+    expect(columnsBlock?.editableFields).toEqual(getEditableFieldsForKind('columns'));
+    expect(featurePanelBlock?.editableFields).toEqual(getEditableFieldsForKind('feature_panel'));
+    expect(splitPanelBlock?.editableFields).toEqual(getEditableFieldsForKind('split_panel'));
+    expect(cardGridBlock?.editableFields).toEqual(getEditableFieldsForKind('card_grid'));
+    expect(newsletterBlock?.editableFields).toEqual(getEditableFieldsForKind('newsletter'));
+    expect(ratesBlock?.editableFields).toEqual(getEditableFieldsForKind('rates'));
+    expect(servicesGridBlock?.editableFields).toEqual(getEditableFieldsForKind('services_grid'));
+    expect(siteFeatureBlock?.editableFields).toEqual(getEditableFieldsForKind('site_feature'));
+    expect(testimonialsBlock?.editableFields).toEqual(getEditableFieldsForKind('testimonials'));
+    expect(topStripBlock?.editableFields).toEqual(getEditableFieldsForKind('top_strip'));
+    expect(getEditableFieldsForKind('photo_column').length).toBeGreaterThan(0);
   });
 
   it('feeds HUD and parity metadata from canonical definitions for migrated kinds', () => {
@@ -195,7 +203,7 @@ describe('canonical block registry', () => {
 
   it('keeps site-feature canonical and intentionally code-owned', () => {
     const definition = getBlockDefinition('site_feature');
-    const editableFieldIds = getLegacyEditableFieldsForKind('site_feature').map((field) => field.id);
+    const editableFieldIds = getEditableFieldsForKind('site_feature').map((field) => field.id);
     const featureIdField = definition?.schema?.fields?.find((field) => field.id === 'featureId');
 
     expect(definition?.editorType).toBe('site_feature');

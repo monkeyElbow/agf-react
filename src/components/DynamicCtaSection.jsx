@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   createInitialFormValues,
   formatFormPhoneInput,
+  normalizeFollowUpSubmitLabel,
   validateRequiredFormFields,
 } from '../blocks/foundation/forms';
 import {
@@ -12,16 +13,6 @@ import {
 import BlockOwnershipOverlay from './BlockOwnershipOverlay';
 const CTA_DYNAMIC_SUBMIT_STYLE_SET = new Set(['blue', 'dark', 'outline']);
 const CTA_DYNAMIC_SUBMIT_TONE_SET = new Set(['atlantean', 'super-grey', 'mango', 'melon', 'white']);
-const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow up with me';
-const LEGACY_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
-
-function normalizeFollowUpSubmitLabel(value) {
-  const label = String(value || '').trim();
-  if (!label) {
-    return DEFAULT_FOLLOW_UP_SUBMIT_LABEL;
-  }
-  return label === LEGACY_FOLLOW_UP_SUBMIT_LABEL ? DEFAULT_FOLLOW_UP_SUBMIT_LABEL : label;
-}
 
 function normalizeDynamicCtaSubmitStyle(value) {
   const token = String(value || '').trim().toLowerCase();

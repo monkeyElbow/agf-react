@@ -77,7 +77,7 @@ export function validateLinkValue(link) {
   };
 }
 
-export function coerceLegacyLinkValue(source) {
+export function coerceLinkValue(source) {
   const link = source && typeof source === 'object' ? source : {};
   if (isLinkValueKind(link.kind)) {
     return createLinkValue(link);
@@ -167,7 +167,7 @@ function normalizeFieldKeyList(keys, fallback = []) {
   return fallback;
 }
 
-function readFirstLegacyFieldValue(source, keys) {
+function readFirstFieldValue(source, keys) {
   const fieldKeys = normalizeFieldKeyList(keys);
   const record = source && typeof source === 'object' ? source : {};
   for (const key of fieldKeys) {
@@ -181,25 +181,25 @@ function readFirstLegacyFieldValue(source, keys) {
   return undefined;
 }
 
-function readFirstLegacyStringField(source, keys) {
-  const value = readFirstLegacyFieldValue(source, keys);
+function readFirstStringField(source, keys) {
+  const value = readFirstFieldValue(source, keys);
   return typeof value === 'string' ? value.trim() : String(value || '').trim();
 }
 
-export function coerceLegacyLinkValueFromFields(source, {
+export function coerceLinkValueFromFields(source, {
   kindKeys = ['kind'],
   documentIdKeys = ['documentId'],
   toKeys = ['to', 'pageRef'],
   hrefKeys = ['href', 'url'],
   openInNewWindowKeys = ['openInNewWindow'],
 } = {}) {
-  const kind = readFirstLegacyStringField(source, kindKeys);
-  const documentId = readFirstLegacyStringField(source, documentIdKeys);
-  const to = readFirstLegacyStringField(source, toKeys);
-  const href = readFirstLegacyStringField(source, hrefKeys);
-  const openInNewWindow = Boolean(readFirstLegacyFieldValue(source, openInNewWindowKeys));
+  const kind = readFirstStringField(source, kindKeys);
+  const documentId = readFirstStringField(source, documentIdKeys);
+  const to = readFirstStringField(source, toKeys);
+  const href = readFirstStringField(source, hrefKeys);
+  const openInNewWindow = Boolean(readFirstFieldValue(source, openInNewWindowKeys));
 
-  return coerceLegacyLinkValue({
+  return coerceLinkValue({
     kind,
     documentId,
     to,
@@ -208,34 +208,70 @@ export function coerceLegacyLinkValueFromFields(source, {
   });
 }
 
-export function validateLegacyLinkFieldGroup(source, options = {}) {
-  const linkValue = coerceLegacyLinkValueFromFields(source, options);
+export function validateLinkFieldGroup(source, options = {}) {
+  const linkValue = coerceLinkValueFromFields(source, options);
   return !linkValue || validateLinkValue(linkValue).valid;
 }
 
-export function validateLegacyLinkFieldGroups(source, groups = []) {
-  return groups.every((group) => validateLegacyLinkFieldGroup(source, group));
+export function validateLinkFieldGroups(source, groups = []) {
+  return groups.every((group) => validateLinkFieldGroup(source, group));
 }
 
-export function validateLegacyActionFieldGroup(source, {
+function inferActionDocumentIdKeys(labelKeys) {
+  const normalizedLabelKeys = normalizeFieldKeyList(labelKeys, ['label']);
+  return Array.from(new Set([
+    'documentId',
+    ...normalizedLabelKeys
+      .map((key) => String(key || '').trim())
+      .filter((key) => /Label$/.test(key))
+      .map((key) => key.replace(/Label$/, 'DocumentId')),
+  ]));
+}
+
+function inferActionFieldKeys(labelKeys, suffix, fallback) {
+  const normalizedLabelKeys = normalizeFieldKeyList(labelKeys, ['label']);
+  return Array.from(new Set([
+    fallback,
+    ...normalizedLabelKeys
+      .map((key) => String(key || '').trim())
+      .filter((key) => /Label$/.test(key))
+      .map((key) => key.replace(/Label$/, suffix)),
+  ]));
+}
+
+export function validateActionFieldGroup(source, {
   labelKeys = ['label'],
+  documentIdKeys = inferActionDocumentIdKeys(labelKeys),
+  actionKeys = inferActionFieldKeys(labelKeys, 'Action', 'action'),
+  targetAnchorIdKeys = inferActionFieldKeys(labelKeys, 'TargetAnchorId', 'targetAnchorId'),
+  targetBlockIdKeys = inferActionFieldKeys(labelKeys, 'TargetBlockId', 'targetBlockId'),
   ...linkOptions
 } = {}) {
-  const label = readFirstLegacyStringField(source, labelKeys);
-  const linkValue = coerceLegacyLinkValueFromFields(source, linkOptions);
+  const label = readFirstStringField(source, labelKeys);
+  const action = readFirstStringField(source, actionKeys);
+  const targetAnchorId = readFirstStringField(source, targetAnchorIdKeys);
+  const targetBlockId = readFirstStringField(source, targetBlockIdKeys);
+  const linkValue = coerceLinkValueFromFields(source, {
+    ...linkOptions,
+    documentIdKeys,
+  });
 
-  if (!label && !linkValue) {
+  if (!label && !linkValue && !action) {
+    return true;
+  }
+
+  if (label && action && (targetAnchorId || targetBlockId)) {
     return true;
   }
 
   return Boolean(label) && Boolean(linkValue) && validateLinkValue(linkValue).valid;
 }
 
-export function validateLegacyActionFieldGroups(source, groups = []) {
-  return groups.every((group) => validateLegacyActionFieldGroup(source, group));
+export function validateActionFieldGroups(source, groups = []) {
+  return groups.every((group) => validateActionFieldGroup(source, group));
 }
 
-export function linkValueToLegacyLinkProps(link) {
+export function linkValueToLinkProps(link) {
   const normalized = createLinkValue(link);
   if (!normalized) {
     return {};

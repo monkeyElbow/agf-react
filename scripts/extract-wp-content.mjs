@@ -103,7 +103,7 @@ function rewriteContentLinks(html, sourceFile) {
     return `srcset=${quote}${rewritten.join(', ')}${quote}`;
   });
 
-  output = output.replace(/url\((['"]?)\.\/([^'"\)]+)\1\)/gi, (full, quote, relAsset) => {
+  output = output.replace(/url\((['"]?)\.\/([^'")]+)\1\)/gi, (full, quote, relAsset) => {
     const rel = `${relDir}/${relAsset}`;
     return `url('/wp-pages/${encodePathSegments(rel)}')`;
   });

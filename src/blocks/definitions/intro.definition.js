@@ -3,7 +3,7 @@ import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 import { buildDynamicIntroFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch } from '../../lib/colorSystem';
-import { validateLegacyLinkFieldGroups } from '../../lib/linkValue';
+import { validateLinkFieldGroups } from '../../lib/linkValue';
 
 const SHARED_HEADING_TONE_OPTIONS = [
   { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
@@ -40,7 +40,7 @@ const INTRO_EXTRA_LINE_TONE_OPTIONS = [
 
 function validateIntroLinks(block) {
   const settings = block?.settings || {};
-  return validateLegacyLinkFieldGroups(settings, [
+  return validateLinkFieldGroups(settings, [
     {
       hrefKeys: ['button1Url'],
       toKeys: ['button1PageRef'],

@@ -35,7 +35,7 @@ import {
 import { defaultTestimonialsLibrary } from '../data/testimonialsLibrarySeed';
 import { getBlockHudDefinition } from '../lib/blockHudRegistry';
 import { EDITOR_PARITY_CONTRACT, EDITOR_PARITY_TYPES, getEditorParityContract } from '../lib/editorParityContract';
-import { getLegacyEditableFieldsForKind } from '../blocks/registry';
+import { getEditableFieldsForKind } from '../blocks/registry';
 
 const allBlueprintBlocks = getAllBlockTemplateBlueprints();
 
@@ -423,7 +423,7 @@ function getDynamicBlock(kindOrSelector) {
       id: 'photo-column-sample',
       kind: 'photo_column',
       mode: 'dynamic',
-      editableFields: getLegacyEditableFieldsForKind('photo_column'),
+      editableFields: getEditableFieldsForKind('photo_column'),
       settings: {
         title: 'Mission team',
         body: 'Coverage that travels with you.',
@@ -443,7 +443,7 @@ function getDynamicBlock(kindOrSelector) {
       id: 'legal-copy-sample',
       kind: 'legal_copy',
       mode: 'dynamic',
-      editableFields: getLegacyEditableFieldsForKind('legal_copy'),
+      editableFields: getEditableFieldsForKind('legal_copy'),
       settings: {
         certificatesHtml: '<p>Certificates disclosure copy.</p>',
         iraHtml: '<p>IRA disclosure copy.</p>',
@@ -455,7 +455,7 @@ function getDynamicBlock(kindOrSelector) {
       id: 'cta-band-sample',
       kind: 'cta_band',
       mode: 'dynamic',
-      editableFields: getLegacyEditableFieldsForKind('cta_band'),
+      editableFields: getEditableFieldsForKind('cta_band'),
       settings: {
         title: 'Smart stewardship for today and tomorrow.',
         body: 'Stay connected to the tools you need.',
@@ -471,7 +471,7 @@ function getDynamicBlock(kindOrSelector) {
       id: 'intro-sample',
       kind: 'intro',
       mode: 'dynamic',
-      editableFields: getLegacyEditableFieldsForKind('intro'),
+      editableFields: getEditableFieldsForKind('intro'),
       settings: {
         heading: 'Most wealth isn’t cash.',
         body: 'Let’s look at what your next step can be.',

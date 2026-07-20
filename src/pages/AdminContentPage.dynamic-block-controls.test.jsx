@@ -34,7 +34,7 @@ import {
   TestimonialsBlockEditor,
   TopStripBlockEditor,
 } from '../components/block-editors/migratedBlockEditors';
-import { getLegacyEditableFieldsForKind } from '../blocks/registry';
+import { getEditableFieldsForKind } from '../blocks/registry';
 import { remapHighlightsJsonForTextChange } from '../lib/heroHudRanges';
 
 void [
@@ -78,7 +78,7 @@ function getDynamicBlock(kind) {
       id: 'photo-column-sample',
       kind: 'photo_column',
       mode: 'dynamic',
-      editableFields: getLegacyEditableFieldsForKind('photo_column'),
+      editableFields: getEditableFieldsForKind('photo_column'),
       settings: {
         title: 'Mission team',
         body: 'Coverage that travels with you.',
@@ -99,7 +99,7 @@ function getDynamicBlock(kind) {
       id: 'legal-copy-sample',
       kind: 'legal_copy',
       mode: 'dynamic',
-      editableFields: getLegacyEditableFieldsForKind('legal_copy'),
+      editableFields: getEditableFieldsForKind('legal_copy'),
       settings: {
         certificatesHtml: '<p>Certificates disclosure copy.</p>',
         iraHtml: '<p>IRA disclosure copy.</p>',

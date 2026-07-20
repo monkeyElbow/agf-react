@@ -7,7 +7,7 @@ import {
   DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
   DEFAULT_HERO_TITLE_SIZE_REM,
 } from '../../lib/heroTitleSize';
-import { validateLegacyActionFieldGroup } from '../../lib/linkValue';
+import { validateActionFieldGroup } from '../../lib/linkValue';
 
 const HERO_LINE_TONE_OPTIONS = [
   { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
@@ -57,7 +57,7 @@ function validateHeroAction(settings, buttonNumber) {
     return Boolean(label && explicitAction && hasExplicitTarget);
   }
 
-  return validateLegacyActionFieldGroup(settings, {
+  return validateActionFieldGroup(settings, {
     labelKeys: [`button${buttonNumber}Label`],
     hrefKeys: [`button${buttonNumber}Url`],
     toKeys: [`button${buttonNumber}PageRef`],

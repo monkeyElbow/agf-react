@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { collectBlockIssues } from './AdminBlocksPage';
+import {
+  ADMIN_BLOCKS_AUDIT_SURFACE,
+  collectBlockIssues,
+} from './AdminBlocksPage';
 
 describe('collectBlockIssues', () => {
+  it('classifies the admin blocks page as a legacy snapshot diagnostic surface', () => {
+    expect(ADMIN_BLOCKS_AUDIT_SURFACE).toMatchObject({
+      id: 'admin-blocks-legacy-snapshot-diagnostics',
+      purpose: 'legacy-snapshot-diagnostics',
+    });
+    expect(ADMIN_BLOCKS_AUDIT_SURFACE.retireWhen).toMatch(/health dashboard|remove/);
+  });
+
   it('does not flag the loans hero styling hook as a legacy class token', () => {
     const issues = collectBlockIssues({
       id: 'hero',

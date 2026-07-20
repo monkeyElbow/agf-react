@@ -1,12 +1,12 @@
 import billboardHudIcon from '../../assets/admin-block-icons/billboard.svg';
 import { buildDynamicFeaturePanelFromBlock } from '../../lib/dynamicPageBlocks';
-import { validateLegacyActionFieldGroup } from '../../lib/linkValue';
+import { validateActionFieldGroup } from '../../lib/linkValue';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 
 function validateFeaturePanelAction(block) {
   const settings = block?.settings || {};
-  return validateLegacyActionFieldGroup(settings, {
+  return validateActionFieldGroup(settings, {
     labelKeys: ['buttonLabel'],
     hrefKeys: ['buttonUrl'],
     toKeys: ['buttonPageRef'],

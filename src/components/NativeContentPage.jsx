@@ -108,7 +108,7 @@ import {
   NativeProspectusRouteRenderer,
   NativeSitemapRouteRenderer,
 } from './nativeFunctionalRouteRenderers';
-import { coerceLegacyLinkValue, createLinkValue } from '../lib/linkValue';
+import { coerceLinkValue, createLinkValue } from '../lib/linkValue';
 import {
   normalizeHeroTitleLetterSpacingEm,
   heroTitleSizeRemToRuntimeCss,
@@ -430,7 +430,7 @@ function isExternalLinkTarget(value) {
 
 function resolveNativeLinkItem(item, resolveDocumentLink, resolveManagedPathFromRef) {
   const source = item && typeof item === 'object' ? item : {};
-  const linkValue = createLinkValue(source.link) || coerceLegacyLinkValue(source);
+  const linkValue = createLinkValue(source.link) || coerceLinkValue(source);
   const openInNewWindow = Boolean(linkValue?.openInNewWindow ?? source.openInNewWindow);
 
   if (linkValue?.kind === 'document' && typeof resolveDocumentLink === 'function') {

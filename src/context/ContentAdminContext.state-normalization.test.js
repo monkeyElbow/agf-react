@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeStoredConfig } from './ContentAdminContext';
+import {
+  getContentAdminMigrationAdapterInventory,
+  normalizeStoredConfig,
+} from './ContentAdminContext';
 import {
   BLOCK_ONLY_MANAGED_PAGE_PATHS,
   BLOCKLESS_MANAGED_PAGE_PATHS,
@@ -24,6 +27,25 @@ function expectNoTargetBridgeSettings(block, label = block?.id || 'block') {
 }
 
 describe('ContentAdminContext state normalization', () => {
+  it('keeps migration adapters named with path scopes and retirement criteria', () => {
+    const inventory = getContentAdminMigrationAdapterInventory();
+
+    expect(inventory.map((entry) => entry.id)).toEqual([
+      'managed-path-aliases',
+      'retirement-403b-snapshot-repairs',
+      'loans-dynamic-block-upgrade',
+      'property-casualty-request-repair',
+      'native-hero-default-import',
+    ]);
+
+    inventory.forEach((entry) => {
+      expect(entry.id).toMatch(/^[a-z0-9-]+$/);
+      expect(entry.paths.length, `${entry.id} paths`).toBeGreaterThan(0);
+      expect(entry.helpers.length, `${entry.id} helpers`).toBeGreaterThan(0);
+      expect(entry.retireWhen, `${entry.id} retirement criteria`).toMatch(/\w/);
+    });
+  });
+
   it('omits blockless functional routes from normalized block state', () => {
     const staleBlocksByPath = Array.from(BLOCKLESS_MANAGED_PAGE_PATHS).reduce((next, pathname) => {
       next[pathname] = [

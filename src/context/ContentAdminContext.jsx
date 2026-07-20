@@ -115,6 +115,54 @@ const DEFAULT_MANAGED_PATH_ALIASES = {
   [PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH]: LEGACY_GIVING_GENEROSITY_FUND_PATH,
   [PLANNED_GIVING_MINISTRY_IMPACT_FUND_LEGACY_PATH]: LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH,
 };
+const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
+  {
+    id: 'managed-path-aliases',
+    paths: Object.freeze(Object.keys(DEFAULT_MANAGED_PATH_ALIASES)),
+    helpers: Object.freeze(['DEFAULT_MANAGED_PATH_ALIASES']),
+    retireWhen: 'No active shared, seed, backup, or revision snapshot can reference retired 403(b) or planned-giving paths.',
+  },
+  {
+    id: 'retirement-403b-snapshot-repairs',
+    paths: Object.freeze([
+      RETIREMENT_403B_PATH,
+      RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH,
+      RETIREMENT_403B_GROUP_ENROLLMENT_PATH,
+      '/services/retirement/rollovers',
+    ]),
+    helpers: Object.freeze([
+      'isLegacyRetirement403bLoanApplySettings',
+      'isBlankLegacyHtmlFragment',
+      'isStaleRetirement403bStrategyOptionsHtml',
+      'isStaleRetirement403bStrategyOptionsBlock',
+      'isLegacyRetirement403bIndividualEnrollmentBillboard',
+      'isLegacyRetirement403bRolloverBillboard',
+      'isLegacyRetirement403bStartEnrollmentSettings',
+      'isLegacyRetirement403bHousingFeatureSettings',
+      'shouldResetRetirement403bLoanDetailsHtml',
+      'isLegacyRetirement403bCta',
+    ]),
+    retireWhen: '403(b) and rollover snapshots have been schema-versioned past the migration and old backups are archived outside active restore flows.',
+  },
+  {
+    id: 'loans-dynamic-block-upgrade',
+    paths: Object.freeze(['/services/loans']),
+    helpers: Object.freeze(['LOANS_LEGACY_DYNAMIC_BLOCK_IDS', 'shouldUpgradeLegacyLoansDynamicBlock']),
+    retireWhen: 'Loan page snapshots cannot contain pre-dynamic block records after versioned migration.',
+  },
+  {
+    id: 'property-casualty-request-repair',
+    paths: Object.freeze(['/services/insurance/property-casualty-insurance']),
+    helpers: Object.freeze(['isStalePropertyCasualtyRequestContent']),
+    retireWhen: 'Property and casualty request-form snapshots have been versioned and old backups are archived outside active restore flows.',
+  },
+  {
+    id: 'native-hero-default-import',
+    paths: Object.freeze(['managed block-only pages without explicit hero seed contracts']),
+    helpers: Object.freeze(['getStaticHeroDefaultsForPath']),
+    retireWhen: 'All managed hero defaults come from explicit seed contracts or block blueprints instead of native page content.',
+  },
+]);
 const REQUEST_FORM_MODE_LOCKED_PATHS = new Set([
   '/services/insurance/group-term-life-insurance',
   LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH,
@@ -151,6 +199,10 @@ const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
   '/calculators/net-worth',
   '/contact-us',
 ]);
+
+export function getContentAdminMigrationAdapterInventory() {
+  return CONTENT_ADMIN_MIGRATION_ADAPTERS;
+}
 
 function isBlankSettingsObject(settings) {
   if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {

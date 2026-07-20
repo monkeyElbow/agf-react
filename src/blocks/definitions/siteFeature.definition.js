@@ -4,13 +4,13 @@ import {
   getSiteFeatureOptions,
 } from '../../data/siteFeatureCatalog';
 import { buildDynamicSiteFeatureFromBlock } from '../../lib/dynamicPageBlocks';
-import { validateLegacyActionFieldGroup } from '../../lib/linkValue';
+import { validateActionFieldGroup } from '../../lib/linkValue';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 
 function validateSiteFeatureAction(block) {
   const settings = block?.settings || {};
-  return validateLegacyActionFieldGroup(settings, {
+  return validateActionFieldGroup(settings, {
     labelKeys: ['buttonLabel'],
     hrefKeys: ['buttonUrl'],
     toKeys: ['buttonPageRef'],

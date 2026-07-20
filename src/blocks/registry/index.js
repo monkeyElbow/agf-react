@@ -123,7 +123,7 @@ export function getBlockEditorSections(kind, surface = 'admin') {
   return getDefinitionSections(definition, surface);
 }
 
-export function getLegacyEditableFieldsForKind(kind, surface = 'admin') {
+export function getEditableFieldsForKind(kind, surface = 'admin') {
   return flattenEditorFields(getBlockEditorSections(kind, surface));
 }
 
@@ -135,7 +135,7 @@ export function applyCanonicalDefinitionToBlock(block, surface = 'admin') {
 
   return {
     ...block,
-    editableFields: getLegacyEditableFieldsForKind(block.kind, surface),
+    editableFields: getEditableFieldsForKind(block.kind, surface),
   };
 }
 

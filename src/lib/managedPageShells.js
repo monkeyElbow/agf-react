@@ -67,6 +67,33 @@ function normalizeManagedPagePath(pathname) {
   return String(pathname || '').trim() || '/';
 }
 
+export function getManagedPageRouteClassification(pathname) {
+  const normalizedPath = normalizeManagedPagePath(pathname);
+  if (BLOCK_ONLY_MANAGED_PAGE_PATHS.has(normalizedPath)) {
+    return {
+      type: 'block-only',
+      id: 'block-only',
+    };
+  }
+  if (BLOCKLESS_MANAGED_PAGE_PATHS.has(normalizedPath)) {
+    return {
+      type: 'blockless',
+      id: 'blockless-functional',
+    };
+  }
+  const specialId = SPECIAL_MANAGED_PAGE_CLASSIFICATIONS[normalizedPath] || '';
+  if (specialId) {
+    return {
+      type: 'special',
+      id: specialId,
+    };
+  }
+  return {
+    type: 'unclassified',
+    id: '',
+  };
+}
+
 export function isBlockOnlyManagedPagePath(pathname) {
   return BLOCK_ONLY_MANAGED_PAGE_PATHS.has(normalizeManagedPagePath(pathname));
 }

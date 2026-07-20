@@ -3,7 +3,7 @@ import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 import { buildDynamicBillboardFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch } from '../../lib/colorSystem';
-import { validateLegacyActionFieldGroups } from '../../lib/linkValue';
+import { validateActionFieldGroups } from '../../lib/linkValue';
 
 const BILLBOARD_TITLE_TONE_OPTIONS = [
   { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
@@ -44,7 +44,7 @@ const BILLBOARD_BUTTON_TONE_OPTIONS = [
 
 function validateBillboardAction(block) {
   const settings = block?.settings || {};
-  return validateLegacyActionFieldGroups(settings, [
+  return validateActionFieldGroups(settings, [
     {
       labelKeys: ['buttonLabel'],
       hrefKeys: ['buttonUrl'],

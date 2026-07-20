@@ -29,7 +29,7 @@ describe('content block blueprint seed convergence guardrail', () => {
     expect(source).toContain("templateId: String(templateId || '').trim() || 'columns'");
     expect(source).toContain('function createDynamicCtaBandBlueprint({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
     expect(source).toContain("templateId: String(templateId || '').trim() || 'cta_band'");
-    expect(source).toContain('const sharedDynamicBillboardEditableFields = getLegacyEditableFieldsForKind(\'billboard\');');
+    expect(source).toContain('const sharedDynamicBillboardEditableFields = getEditableFieldsForKind(\'billboard\');');
 
     expect(source).toMatch(/\/test': \[[\s\S]*?id: 'intro'[\s\S]*?editableFields: sharedDynamicIntroEditableFields,/);
     expect(source).toMatch(/\/test': \[[\s\S]*?id: 'billboard'[\s\S]*?editableFields: sharedDynamicBillboardEditableFields,/);

@@ -1,4 +1,4 @@
-import { coerceLegacyLinkValue, coerceLegacyLinkValueFromFields, linkValueToLegacyLinkProps } from './linkValue';
+import { coerceLinkValue, coerceLinkValueFromFields, linkValueToLinkProps } from './linkValue';
 import { resolveTestimonialsBlockData } from './testimonials';
 import {
   createCtaContactPreferenceField,
@@ -271,7 +271,7 @@ function buildCanonicalActionLinkFromFields(source, {
   const action = readFirstStringValue(source, actionKeys);
   const targetAnchorId = readFirstStringValue(source, targetAnchorIdKeys);
   const targetBlockId = readFirstStringValue(source, targetBlockIdKeys);
-  const linkValue = coerceLegacyLinkValueFromFields(source, {
+  const linkValue = coerceLinkValueFromFields(source, {
     hrefKeys,
     toKeys,
     documentIdKeys,
@@ -310,7 +310,7 @@ function buildCanonicalActionLinkFromFields(source, {
       ? { className: readFirstStringValue(source, classNameKeys) }
       : {}),
     openInNewWindow: Boolean(linkValue.openInNewWindow),
-    ...linkValueToLegacyLinkProps(linkValue),
+    ...linkValueToLinkProps(linkValue),
   };
 }
 
@@ -505,7 +505,7 @@ function buildSingleActionPromoRuntime(source, {
 function normalizeCardGridLinkItem(item) {
   const source = item && typeof item === 'object' ? item : {};
   const label = readFirstStringValue(source, ['label', 'title', 'text']);
-  const linkValue = coerceLegacyLinkValue(source.link) || coerceLegacyLinkValue(source);
+  const linkValue = coerceLinkValue(source.link) || coerceLinkValue(source);
 
   if (!label || !linkValue) {
     return null;
@@ -515,7 +515,7 @@ function normalizeCardGridLinkItem(item) {
     label,
     link: linkValue,
     openInNewWindow: Boolean(linkValue.openInNewWindow),
-    ...linkValueToLegacyLinkProps(linkValue),
+    ...linkValueToLinkProps(linkValue),
   };
 }
 
@@ -1350,7 +1350,7 @@ export function buildDynamicSplitPanelFromBlock(block) {
 }
 
 function resolveLegacyLinkTarget(hrefValue, pageRefValue) {
-  const link = coerceLegacyLinkValueFromFields(
+  const link = coerceLinkValueFromFields(
     { hrefValue, pageRefValue },
     {
       hrefKeys: ['hrefValue'],

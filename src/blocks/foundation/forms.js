@@ -39,7 +39,7 @@ const REQUEST_FORM_STEP_FIELD_TYPE_SET = new Set(
 );
 
 export const CTA_FORM_MAX_FIELDS = 8;
-export const CTA_FORM_LEGACY_SLOT_COUNT = 5;
+export const CTA_FORM_SLOT_COMPAT_FIELD_COUNT = 5;
 export const CTA_FORM_CONTACT_PREFERENCE_FIELD_ID = 'contact_preference';
 export const CTA_FORM_CONTACT_PREFERENCE_OPTIONS = Object.freeze([
   Object.freeze({ value: 'email', label: 'Email' }),
@@ -47,7 +47,7 @@ export const CTA_FORM_CONTACT_PREFERENCE_OPTIONS = Object.freeze([
   Object.freeze({ value: 'either', label: 'No preference' }),
 ]);
 const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow up with me';
-const LEGACY_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
+const PREVIOUS_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
 
 const CTA_FORM_SPECIFIC_FIELD_IDS = Object.freeze([
   'title',
@@ -59,7 +59,7 @@ const CTA_FORM_SPECIFIC_FIELD_IDS = Object.freeze([
   'bgTone',
   'submitStyle',
   'submitTone',
-  ...Array.from({ length: CTA_FORM_LEGACY_SLOT_COUNT }, (_, index) => {
+  ...Array.from({ length: CTA_FORM_SLOT_COMPAT_FIELD_COUNT }, (_, index) => {
     const slot = index + 1;
     return [
       `field${slot}Enabled`,
@@ -77,7 +77,7 @@ const CTA_FORM_EXCLUSIVE_FIELD_IDS = Object.freeze([
   'includeContactPreference',
   'submitStyle',
   'submitTone',
-  ...Array.from({ length: CTA_FORM_LEGACY_SLOT_COUNT }, (_, index) => {
+  ...Array.from({ length: CTA_FORM_SLOT_COMPAT_FIELD_COUNT }, (_, index) => {
     const slot = index + 1;
     return [
       `field${slot}Enabled`,
@@ -387,8 +387,8 @@ export function parseCtaFormFieldsJson(value) {
   }
 }
 
-export function buildLegacyCtaFormFields(source) {
-  return Array.from({ length: CTA_FORM_LEGACY_SLOT_COUNT }, (_, index) => index + 1)
+export function buildCtaFormSlotFields(source) {
+  return Array.from({ length: CTA_FORM_SLOT_COMPAT_FIELD_COUNT }, (_, index) => index + 1)
     .map((slotNumber, index) => {
       const enabledValue = source?.[`field${slotNumber}Enabled`];
       const isEnabled = readBooleanField(enabledValue, slotNumber <= 4);
@@ -419,9 +419,9 @@ export function extractCtaFormFields(source, fallbackSource = null) {
     return configuredFields;
   }
 
-  const legacyFields = buildLegacyCtaFormFields(source);
-  if (legacyFields.length || !fallbackSource || fallbackSource === source) {
-    return legacyFields;
+  const slotFields = buildCtaFormSlotFields(source);
+  if (slotFields.length || !fallbackSource || fallbackSource === source) {
+    return slotFields;
   }
 
   return extractCtaFormFields(fallbackSource, null);
@@ -453,13 +453,13 @@ export function serializeCtaFormFields(fields = []) {
   );
 }
 
-export function buildLegacyCtaFormFieldSettings(fields = []) {
+export function buildCtaFormSlotFieldSettings(fields = []) {
   const normalizedFields = (Array.isArray(fields) ? fields : [])
     .map((field, index) => normalizeCtaFormFieldRecord(field, index))
     .filter(Boolean);
   const settings = {};
 
-  for (let slot = 1; slot <= CTA_FORM_LEGACY_SLOT_COUNT; slot += 1) {
+  for (let slot = 1; slot <= CTA_FORM_SLOT_COMPAT_FIELD_COUNT; slot += 1) {
     settings[`field${slot}Enabled`] = false;
     settings[`field${slot}Type`] = 'text';
     settings[`field${slot}Label`] = '';
@@ -468,7 +468,7 @@ export function buildLegacyCtaFormFieldSettings(fields = []) {
     settings[`field${slot}Required`] = false;
   }
 
-  normalizedFields.slice(0, CTA_FORM_LEGACY_SLOT_COUNT).forEach((field, index) => {
+  normalizedFields.slice(0, CTA_FORM_SLOT_COMPAT_FIELD_COUNT).forEach((field, index) => {
     const slot = index + 1;
     settings[`field${slot}Enabled`] = true;
     settings[`field${slot}Type`] = field.type;
@@ -488,7 +488,7 @@ export function buildCtaFormSettingsPatch({ fields = [], includeContactPreferenc
     .slice(0, CTA_FORM_MAX_FIELDS);
   const patch = {
     fieldsJson: serializeCtaFormFields(normalizedFields),
-    ...buildLegacyCtaFormFieldSettings(normalizedFields),
+    ...buildCtaFormSlotFieldSettings(normalizedFields),
   };
 
   if (includeContactPreference !== undefined) {
@@ -579,17 +579,17 @@ export function validateRequiredFormFields(fields, values, options = {}) {
   return '';
 }
 
-export function normalizeLegacyCtaSubmitLabel(value, fallback = '') {
+export function normalizeFollowUpSubmitLabel(value, fallback = '') {
   const label = String(value || '').trim() || String(fallback || '').trim();
   if (!label) {
     return '';
   }
-  return label === LEGACY_FOLLOW_UP_SUBMIT_LABEL ? DEFAULT_FOLLOW_UP_SUBMIT_LABEL : label;
+  return label === PREVIOUS_FOLLOW_UP_SUBMIT_LABEL ? DEFAULT_FOLLOW_UP_SUBMIT_LABEL : label;
 }
 
 export function normalizeFormSubmissionConfig(source, defaults = {}) {
   return {
-    submitLabel: normalizeLegacyCtaSubmitLabel(source?.submitLabel, defaults?.submitLabel)
+    submitLabel: normalizeFollowUpSubmitLabel(source?.submitLabel, defaults?.submitLabel)
       || 'Submit',
     successMessage: String(source?.successMessage || '').trim()
       || String(defaults?.successMessage || '').trim()

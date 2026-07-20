@@ -26,7 +26,7 @@ import { PAGE_CONTENT_IDENTITY } from '../lib/pageContentIdentity';
 import {
   applyCanonicalDefinitionToBlock,
   applyCanonicalDefinitionsToBlueprintMap,
-  getLegacyEditableFieldsForKind,
+  getEditableFieldsForKind,
 } from '../blocks/registry';
 import {
   getAllowedSiteFeatureEditableFieldIds,
@@ -77,14 +77,14 @@ const requestFormTitleHighlightToneOptions = [
   { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
 ];
 
-const sharedDynamicPageContentEditableFields = getLegacyEditableFieldsForKind(PAGE_CONTENT_IDENTITY.kind);
-const calculatorCtaEditableFields = getLegacyEditableFieldsForKind('calculator_cta');
-const columnsEditableFields = getLegacyEditableFieldsForKind('columns');
-const ctaFormEditableFields = getLegacyEditableFieldsForKind('cta_form');
-const heroPieEditableFields = getLegacyEditableFieldsForKind('hero_pie');
-const ratesEditableFields = getLegacyEditableFieldsForKind('rates');
-const topStripEditableFields = getLegacyEditableFieldsForKind('top_strip');
-const requestFormEditableFields = getLegacyEditableFieldsForKind('request_form');
+const sharedDynamicPageContentEditableFields = getEditableFieldsForKind(PAGE_CONTENT_IDENTITY.kind);
+const calculatorCtaEditableFields = getEditableFieldsForKind('calculator_cta');
+const columnsEditableFields = getEditableFieldsForKind('columns');
+const ctaFormEditableFields = getEditableFieldsForKind('cta_form');
+const heroPieEditableFields = getEditableFieldsForKind('hero_pie');
+const ratesEditableFields = getEditableFieldsForKind('rates');
+const topStripEditableFields = getEditableFieldsForKind('top_strip');
+const requestFormEditableFields = getEditableFieldsForKind('request_form');
 
 const loanInquiryStateOptions = US_STATE_OPTIONS;
 
@@ -103,16 +103,16 @@ const TAX_GUIDE_PAGE_CONTENT_HTML = `
   <p><em>Per our distribution agreement, we are able to offer the guide only to Assemblies of God ministers. If you are an AG minister and did not receive access to the guide via email, please contact us at <a href="mailto:info@agfinancial.org">info@agfinancial.org</a>.</em></p>
 `;
 
-const sharedDynamicIntroEditableFields = getLegacyEditableFieldsForKind('intro');
-const sharedDynamicGridEditableFields = getLegacyEditableFieldsForKind('card_grid');
-const sharedDynamicBillboardEditableFields = getLegacyEditableFieldsForKind('billboard');
-const impactStatEditableFields = getLegacyEditableFieldsForKind('impact_stat');
-const ctaBandEditableFields = getLegacyEditableFieldsForKind('cta_band');
-const sharedDynamicNewsletterEditableFields = getLegacyEditableFieldsForKind('newsletter');
-const featurePanelEditableFields = getLegacyEditableFieldsForKind('feature_panel');
-const splitPanelEditableFields = getLegacyEditableFieldsForKind('split_panel');
-const servicesGridEditableFields = getLegacyEditableFieldsForKind('services_grid');
-const siteFeatureEditableFields = getLegacyEditableFieldsForKind('site_feature');
+const sharedDynamicIntroEditableFields = getEditableFieldsForKind('intro');
+const sharedDynamicGridEditableFields = getEditableFieldsForKind('card_grid');
+const sharedDynamicBillboardEditableFields = getEditableFieldsForKind('billboard');
+const impactStatEditableFields = getEditableFieldsForKind('impact_stat');
+const ctaBandEditableFields = getEditableFieldsForKind('cta_band');
+const sharedDynamicNewsletterEditableFields = getEditableFieldsForKind('newsletter');
+const featurePanelEditableFields = getEditableFieldsForKind('feature_panel');
+const splitPanelEditableFields = getEditableFieldsForKind('split_panel');
+const servicesGridEditableFields = getEditableFieldsForKind('services_grid');
+const siteFeatureEditableFields = getEditableFieldsForKind('site_feature');
 
 function resolveBlueprintSeedTemplateId(lookupId, explicitTemplateId = '') {
   const explicit = String(explicitTemplateId || '').trim();
@@ -418,11 +418,11 @@ const heroDynamicLineToneOptions = [
   { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
 ];
 
-const sharedDynamicHeroEditableFields = getLegacyEditableFieldsForKind('hero');
+const sharedDynamicHeroEditableFields = getEditableFieldsForKind('hero');
 
 const defaultTestimonialFineprint = 'Testimonials found on this site are examples of what we have done for other clients, and what some of our clients have said about us. However, we cannot guarantee the results in any case. Your results may vary and every situation is different. No compensation was provided for these testimonials.';
 
-const testimonialsEditableFields = getLegacyEditableFieldsForKind('testimonials');
+const testimonialsEditableFields = getEditableFieldsForKind('testimonials');
 
 const pageContentFallbackOnlyBlueprintPaths = [
   '/brand',
@@ -2472,7 +2472,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         }),
         sectionClassName: 'retirement-403b-group-compliance-billboard',
       },
-      editableFields: getLegacyEditableFieldsForKind('billboard'),
+      editableFields: getEditableFieldsForKind('billboard'),
     },
   ],
   '/services/planned-giving/charitable-trusts': [

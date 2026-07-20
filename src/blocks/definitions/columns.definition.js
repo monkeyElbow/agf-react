@@ -4,7 +4,7 @@ import { defineEditorField, defineTransitionalActionFields } from '../foundation
 import { buildDynamicColumnsFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch } from '../../lib/colorSystem';
 import { getColumnsPresetDefinitions } from '../../lib/columnsPresets';
-import { validateLegacyLinkFieldGroups } from '../../lib/linkValue';
+import { validateLinkFieldGroups } from '../../lib/linkValue';
 
 const COLUMNS_HEADING_TONE_OPTIONS = [
   { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
@@ -57,7 +57,7 @@ const COLUMNS_BUTTON_TONE_OPTIONS = [
 
 function validateColumnsLinks(block) {
   const settings = block?.settings || {};
-  return validateLegacyLinkFieldGroups(
+  return validateLinkFieldGroups(
     settings,
     Array.from({ length: 4 }, (_, index) => {
       const slot = index + 1;

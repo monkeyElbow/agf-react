@@ -2,7 +2,7 @@ import billboardHudIcon from '../../assets/admin-block-icons/billboard.svg';
 import { buildDynamicCtaBandFromBlock } from '../../lib/dynamicPageBlocks';
 import { getCtaBandPresetDefinitions } from '../../lib/ctaBandPresets';
 import { getTokenSwatch } from '../../lib/colorSystem';
-import { validateLegacyActionFieldGroup } from '../../lib/linkValue';
+import { validateActionFieldGroup } from '../../lib/linkValue';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 
@@ -15,7 +15,7 @@ const CTA_BAND_BG_OPTIONS = [
 
 function validateCtaBandAction(block) {
   const settings = block?.settings || {};
-  return validateLegacyActionFieldGroup(settings, {
+  return validateActionFieldGroup(settings, {
     labelKeys: ['buttonLabel'],
     hrefKeys: ['buttonUrl'],
     toKeys: ['buttonPageRef'],

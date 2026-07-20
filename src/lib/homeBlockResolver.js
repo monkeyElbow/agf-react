@@ -1,5 +1,5 @@
-const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow up with me';
-const LEGACY_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
+import { normalizeFollowUpSubmitLabel } from '../blocks/foundation/forms';
+
 const HOME_MINISTRY_ALLIES_BLOCK_ID = 'home_ministry_allies';
 const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
 const HOME_BILLBOARD_FALLBACK_FIELDS = Object.freeze([
@@ -115,14 +115,6 @@ function hasReadableHtmlContent(value) {
     .replace(/\s+/g, ' ')
     .trim();
   return Boolean(text);
-}
-
-function normalizeFollowUpSubmitLabel(value) {
-  const label = String(value || '').trim();
-  if (!label) {
-    return DEFAULT_FOLLOW_UP_SUBMIT_LABEL;
-  }
-  return label === LEGACY_FOLLOW_UP_SUBMIT_LABEL ? DEFAULT_FOLLOW_UP_SUBMIT_LABEL : label;
 }
 
 function hasRenderableHomeColumnsLayout(block) {
@@ -454,8 +446,8 @@ function resolveHomeBlock(block, context) {
       submitLabel: normalizeFollowUpSubmitLabel(
         readCtaSetting('submitLabel', 'buttonLabel')
         || block.submitLabel
-        || block.buttonLabel
-        || DEFAULT_FOLLOW_UP_SUBMIT_LABEL,
+        || block.buttonLabel,
+        'Follow up with me',
       ),
       salesforceUrl: String(readCtaSetting('salesforceUrl') ?? block.salesforceUrl ?? '').trim(),
       successMessage: String(readCtaSetting('successMessage') ?? block.successMessage ?? '').trim() || block.successMessage,

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  coerceLegacyLinkValue,
-  coerceLegacyLinkValueFromFields,
-  linkValueToLegacyLinkProps,
-  validateLegacyActionFieldGroup,
-  validateLegacyLinkFieldGroups,
+  coerceLinkValue,
+  coerceLinkValueFromFields,
+  linkValueToLinkProps,
+  validateActionFieldGroup,
+  validateLinkFieldGroups,
   validateLinkValue,
 } from './linkValue';
 
@@ -16,19 +16,19 @@ describe('link value helpers', () => {
   });
 
   it('coerces legacy page refs and URLs into canonical link values', () => {
-    expect(coerceLegacyLinkValue({ to: '/services/investments' })).toEqual({
+    expect(coerceLinkValue({ to: '/services/investments' })).toEqual({
       kind: 'internal',
       to: '/services/investments',
       openInNewWindow: false,
     });
 
-    expect(coerceLegacyLinkValue({ href: 'mailto:info@agfinancial.org' })).toEqual({
+    expect(coerceLinkValue({ href: 'mailto:info@agfinancial.org' })).toEqual({
       kind: 'email',
       href: 'mailto:info@agfinancial.org',
       openInNewWindow: false,
     });
 
-    expect(coerceLegacyLinkValue({ documentId: 'ministers-plan-pdf' })).toEqual({
+    expect(coerceLinkValue({ documentId: 'ministers-plan-pdf' })).toEqual({
       kind: 'document',
       documentId: 'ministers-plan-pdf',
       openInNewWindow: false,
@@ -36,7 +36,7 @@ describe('link value helpers', () => {
   });
 
   it('coerces legacy split field groups through one shared field resolver', () => {
-    expect(coerceLegacyLinkValueFromFields({
+    expect(coerceLinkValueFromFields({
       buttonPageRef: '/services/investments',
       buttonOpenInNewWindow: true,
     }, {
@@ -48,7 +48,7 @@ describe('link value helpers', () => {
       openInNewWindow: true,
     });
 
-    expect(coerceLegacyLinkValueFromFields({
+    expect(coerceLinkValueFromFields({
       browsePath: 'https://example.com',
     }, {
       hrefKeys: ['browsePath'],
@@ -58,7 +58,7 @@ describe('link value helpers', () => {
       openInNewWindow: false,
     });
 
-    expect(coerceLegacyLinkValueFromFields({
+    expect(coerceLinkValueFromFields({
       buttonPageRef: 'https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf',
     }, {
       toKeys: ['buttonPageRef'],
@@ -70,7 +70,7 @@ describe('link value helpers', () => {
   });
 
   it('keeps transitional action and link validators explicit and narrow', () => {
-    expect(validateLegacyActionFieldGroup({
+    expect(validateActionFieldGroup({
       buttonLabel: 'Open dashboard',
       buttonPageRef: '/services/investments',
     }, {
@@ -78,7 +78,27 @@ describe('link value helpers', () => {
       toKeys: ['buttonPageRef'],
     })).toBe(true);
 
-    expect(validateLegacyActionFieldGroup({
+    expect(validateActionFieldGroup({
+      buttonLabel: 'Download packet',
+      buttonDocumentId: 'form-planned-giving-will-planning-document',
+    }, {
+      labelKeys: ['buttonLabel'],
+      toKeys: ['buttonPageRef'],
+      hrefKeys: ['buttonUrl'],
+    })).toBe(true);
+
+    expect(validateActionFieldGroup({
+      buttonLabel: 'Start the process',
+      buttonAction: 'open_cta_form',
+      buttonTargetAnchorId: 'charitable-trusts-inline-form',
+    }, {
+      labelKeys: ['buttonLabel'],
+      actionKeys: ['buttonAction'],
+      targetAnchorIdKeys: ['buttonTargetAnchorId'],
+      targetBlockIdKeys: ['buttonTargetBlockId'],
+    })).toBe(true);
+
+    expect(validateActionFieldGroup({
       buttonLabel: 'Broken external',
       buttonUrl: '/not-external',
     }, {
@@ -86,7 +106,7 @@ describe('link value helpers', () => {
       hrefKeys: ['buttonUrl'],
     })).toBe(true);
 
-    expect(validateLegacyActionFieldGroup({
+    expect(validateActionFieldGroup({
       buttonLabel: 'Broken external',
       buttonUrl: 'ftp://example.com',
     }, {
@@ -94,7 +114,7 @@ describe('link value helpers', () => {
       hrefKeys: ['buttonUrl'],
     })).toBe(false);
 
-    expect(validateLegacyLinkFieldGroups({
+    expect(validateLinkFieldGroups({
       card1ButtonPageRef: '/services/loans',
       card2ButtonUrl: 'https://example.com',
     }, [
@@ -104,14 +124,14 @@ describe('link value helpers', () => {
   });
 
   it('maps canonical links back into the legacy runtime props used by existing renderers', () => {
-    expect(linkValueToLegacyLinkProps({ kind: 'internal', to: '/services/retirement' })).toEqual({
+    expect(linkValueToLinkProps({ kind: 'internal', to: '/services/retirement' })).toEqual({
       to: '/services/retirement',
       href: undefined,
       documentId: undefined,
       openInNewWindow: false,
     });
 
-    expect(linkValueToLegacyLinkProps({ kind: 'external', href: 'https://example.com', openInNewWindow: true })).toEqual({
+    expect(linkValueToLinkProps({ kind: 'external', href: 'https://example.com', openInNewWindow: true })).toEqual({
       to: undefined,
       href: 'https://example.com',
       documentId: undefined,

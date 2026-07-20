@@ -4,7 +4,7 @@ import { defineEditorField, defineTransitionalActionFields } from '../foundation
 import { buildDynamicGridFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch } from '../../lib/colorSystem';
 import { getCardGridPresetDefinitions } from '../../lib/cardGridPresets';
-import { validateLegacyLinkFieldGroups } from '../../lib/linkValue';
+import { validateLinkFieldGroups } from '../../lib/linkValue';
 
 const GRID_HEADING_TONE_OPTIONS = [
   { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
@@ -228,7 +228,7 @@ const sections = [
 
 function validateCardGridLinks(block) {
   const settings = block?.settings || {};
-  return validateLegacyLinkFieldGroups(
+  return validateLinkFieldGroups(
     settings,
     [{
       hrefKeys: ['buttonUrl'],

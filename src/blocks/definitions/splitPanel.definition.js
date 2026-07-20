@@ -1,7 +1,7 @@
 import columnsHudIcon from '../../assets/admin-block-icons/columns.svg';
 import { buildDynamicSplitPanelFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch } from '../../lib/colorSystem';
-import { validateLegacyActionFieldGroups } from '../../lib/linkValue';
+import { validateActionFieldGroups } from '../../lib/linkValue';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 
@@ -19,7 +19,7 @@ const SPLIT_PANEL_TONE_OPTIONS = [
 
 function validateSplitPanelActions(block) {
   const settings = block?.settings || {};
-  return validateLegacyActionFieldGroups(settings, [
+  return validateActionFieldGroups(settings, [
     {
       labelKeys: ['leftButtonLabel'],
       hrefKeys: ['leftButtonUrl'],

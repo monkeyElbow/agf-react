@@ -4,6 +4,7 @@ import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwne
 import FrontHudAnchorTag from '../FrontHudAnchorTag';
 import {
   createInitialFormValues,
+  normalizeFollowUpSubmitLabel,
   validateRequiredFormFields,
 } from '../../blocks/foundation/forms';
 import { useContentAdmin } from '../../context/ContentAdminContext';
@@ -69,8 +70,6 @@ const EMPTY_OWNERSHIP = Object.freeze({
   isOwnedByOther: false,
   owner: null,
 });
-const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow up with me';
-const LEGACY_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
 const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
 const HOME_DO_THE_MATH_PRESS_SEQUENCE_MS = 1140;
 
@@ -115,14 +114,6 @@ function normalizeHeroJustify(value) {
     return token;
   }
   return 'center';
-}
-
-function normalizeFollowUpSubmitLabel(value) {
-  const label = String(value || '').trim();
-  if (!label) {
-    return DEFAULT_FOLLOW_UP_SUBMIT_LABEL;
-  }
-  return label === LEGACY_FOLLOW_UP_SUBMIT_LABEL ? DEFAULT_FOLLOW_UP_SUBMIT_LABEL : label;
 }
 
 function toBooleanSetting(value) {

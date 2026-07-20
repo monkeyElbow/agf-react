@@ -4662,7 +4662,7 @@ html.ag-browser-safari button.action-btn {
   color: #005f74;
 }
 
-.admin-block-audit-mode-pill.is-static {
+.admin-block-audit-mode-pill.is-legacy_static {
   border-color: rgba(65, 64, 66, 0.2);
   background: rgba(65, 64, 66, 0.08);
   color: #414042;

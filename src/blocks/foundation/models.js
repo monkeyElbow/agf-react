@@ -27,7 +27,6 @@ export const BLOCK_KIND_VALUES = Object.freeze([
 
 export const BLOCK_MODE_VALUES = Object.freeze([
   'dynamic',
-  'static',
 ]);
 
 export const BLOCK_VARIANT_VALUES = Object.freeze([
@@ -62,7 +61,7 @@ function normalizeStringList(values) {
 /**
  * @typedef {string} BlockKind
  * @typedef {string} BlockVariant
- * @typedef {'dynamic'|'static'} BlockMode
+ * @typedef {'dynamic'} BlockMode
  * @typedef {{
  *   id?: string,
  *   kind: BlockKind,

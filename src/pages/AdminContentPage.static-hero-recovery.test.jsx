@@ -110,7 +110,7 @@ describe('AdminContentPage static block boundary', () => {
 
     fireEvent.click(screen.getAllByText('Hero')[0]);
 
-    expect(screen.getByText('This block is static and not currently editable.')).toBeTruthy();
+    expect(screen.getByText('This legacy snapshot block is not currently editable.')).toBeTruthy();
     expect(screen.queryByLabelText('Block mode')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Use dynamic block' })).toBeNull();
     expect(mockUpdateBlock).not.toHaveBeenCalled();
