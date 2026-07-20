@@ -44,8 +44,10 @@ import {
   actionButtonClassName,
   buildDynamicCalculatorCtaFromBlock,
   buildDynamicFeaturePanelFromBlock,
+  buildDynamicGridFromBlock,
   buildDynamicHeroFromBlock,
   buildDynamicIntroFromBlock,
+  buildDynamicRatesFromBlock,
   heroAnimationClassForLine,
   isExternalLinkHref,
   renderTextWithHighlights,
@@ -82,24 +84,27 @@ const HeroInlineLiveEditor = lazy(async () => {
   };
 });
 
-const certificateCards = [
-  {
-    titleTop: 'Demand',
-    titleBottom: 'Certificates',
-    tone: 'atlantean',
-    buttonTone: 'atlantean',
-    description: 'Demand Certificates are variable rate investments that provide access to funds on demand (within 30 days).',
-    minimum: 'Minimum investment $250.',
+const DEFAULT_CERTIFICATES_BLOCK = {
+  id: 'certificates',
+  kind: 'card_grid',
+  mode: 'dynamic',
+  settings: {
+    card1Title: 'Demand Certificates',
+    card1Body: 'Demand Certificates are variable rate investments that provide access to funds on demand (within 30 days). Minimum investment $250.',
+    card1ButtonLabel: 'Start investing',
+    card1ButtonUrl: 'https://secure.agfinancial.org/invest',
+    card1ButtonOpenInNewWindow: true,
+    card1Tone: 'atlantean',
+    card1ButtonTone: 'atlantean',
+    card2Title: 'Term Certificates',
+    card2Body: 'Term Certificates have fixed or variable interest rates over a predetermined amount of time, ranging from three months to ten years. Minimum investment $500.',
+    card2ButtonLabel: 'Start investing',
+    card2ButtonUrl: 'https://secure.agfinancial.org/invest',
+    card2ButtonOpenInNewWindow: true,
+    card2Tone: 'mango',
+    card2ButtonTone: 'mango',
   },
-  {
-    titleTop: 'Term',
-    titleBottom: 'Certificates',
-    tone: 'mango',
-    buttonTone: 'mango',
-    description: 'Term Certificates have fixed or variable interest rates over a predetermined amount of time, ranging from three months to ten years.',
-    minimum: 'Minimum investment $500.',
-  },
-];
+};
 
 const testimonials = [
   {
@@ -129,14 +134,17 @@ const INVESTMENTS_INTRO_HUD_PANEL_ID = 'investments-intro';
 const INVESTMENTS_TESTIMONIALS_HUD_PANEL_ID = 'investments-testimonials';
 const INVESTMENTS_FEATURE_PANEL_HUD_PANEL_ID = 'investments-feature-panel';
 const INVESTMENTS_GROWTH_FEATURE_HUD_PANEL_ID = 'investments-growth-feature';
+const INVESTMENTS_RATES_HUD_PANEL_ID = 'investments-rates';
 const INVESTMENTS_CALCULATOR_CTA_HUD_PANEL_ID = 'investments-calculator-cta';
 const INVESTMENTS_CTA_HUD_PANEL_ID = 'investments-cta';
 const INVESTMENTS_HUD_PANEL_ID_BY_BLOCK_ID = {
   hero: INVESTMENTS_HERO_HUD_PANEL_ID,
   intro: INVESTMENTS_INTRO_HUD_PANEL_ID,
+  certificates: 'investments-certificates',
   testimonials: INVESTMENTS_TESTIMONIALS_HUD_PANEL_ID,
   cash_reserves: INVESTMENTS_FEATURE_PANEL_HUD_PANEL_ID,
   growth_feature: INVESTMENTS_GROWTH_FEATURE_HUD_PANEL_ID,
+  certificates_table: INVESTMENTS_RATES_HUD_PANEL_ID,
   cta_form: INVESTMENTS_CTA_HUD_PANEL_ID,
   laddering: INVESTMENTS_CALCULATOR_CTA_HUD_PANEL_ID,
 };
@@ -146,6 +154,106 @@ const CHURCH_CASH_RESERVES_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   fallbackImageAlt: 'Church Cash Reserves',
 });
 const INVESTMENTS_HERO_ANIMATION_PRESET = getHeroSeedContract('/services/investments')?.animationPreset || 'default';
+const DEFAULT_CERTIFICATES_RATES_BLOCK = {
+  id: 'certificates_table',
+  kind: 'rates',
+  mode: 'dynamic',
+  settings: {},
+};
+const DEFAULT_LADDERING_BLOCK = {
+  id: 'laddering',
+  kind: 'calculator_cta',
+  mode: 'dynamic',
+  settings: {
+    title: 'Investment Laddering Strategy',
+    subtitle: 'Longer term rates with shorter term access',
+    body: 'Laddering splits your savings into multiple certificates that mature at different times. That gives you regular access to cash while you pursue longer-term rates.',
+    howItWorksTitle: 'How it works',
+    step1: 'Split your total into equal parts.',
+    step2: 'Start by buying certificates with staggered maturities (1-year, 2-year, 3-year...).',
+    step3: 'When one matures, either reinvest into your selected longest-term certificate to keep the ladder going, or take the maturity as cash.',
+    totalInvestmentLabel: 'Total Investment Amount',
+    ladderYearsLabel: 'Ladder span (years / longest term)',
+    ladderYearsHelper: 'Builds 1-year through N-year certificates; reinvestment uses the N-year term.',
+    maturityLabel: 'When a certificate matures',
+    reinvestOptionLabel: 'Reinvest matured principal into longest term',
+    cashOutOptionLabel: 'Keep matured principal as cash',
+    visualizeYearsLabel: 'Timeline years to visualize',
+    visualizeYearsHelper: 'Timeline filter only. Increase or decrease to expand the visual range.',
+    calculateLabel: 'Calculate',
+    note: 'Calculator math uses APY as an effective annual yield estimate.',
+    disclaimer: 'This tool illustrates ladder mechanics. APY values can change. Results are estimates.',
+    customRatesNote: 'Rates entered here are for illustration only and are not AGFinancial posted APY values or guarantees.',
+    resultsTitle: 'Ladder Breakdown',
+    downloadTitle: 'Download your laddering sample.',
+    downloadBody: 'Provide your name and email to get your personalized laddering summary, including your inputs and yearly breakdown.',
+    downloadButtonLabel: 'Download sample',
+    discussTitle: 'Ready to discuss your investment possibilities?',
+    discussBody: 'A member of our investments team will contact you, ready to guide you through the process.',
+    discussButtonLabel: 'Send',
+  },
+};
+
+function isHiddenManagedBlock(block) {
+  return block?.hidden === true || block?.hidden === 'true';
+}
+
+function isVisibleDynamicBlock(block, kind) {
+  return block?.kind === kind && block?.mode === 'dynamic' && !isHiddenManagedBlock(block);
+}
+
+function splitCertificateTitle(title) {
+  const normalized = String(title || '').trim().replace(/\s+/g, ' ');
+  if (!normalized) {
+    return { titleTop: '', titleBottom: '' };
+  }
+  const [first, ...rest] = normalized.split(' ');
+  return {
+    titleTop: first,
+    titleBottom: rest.join(' '),
+  };
+}
+
+function splitCertificateBody(body) {
+  const normalized = String(body || '').trim().replace(/\s+/g, ' ');
+  const minimumMatch = normalized.match(/\bMinimum investment\b.*$/i);
+  if (!minimumMatch) {
+    return {
+      description: normalized,
+      minimum: '',
+    };
+  }
+  return {
+    description: normalized.slice(0, minimumMatch.index).trim(),
+    minimum: minimumMatch[0].trim(),
+  };
+}
+
+function resolveInvestmentCertificateCards(block) {
+  const sourceBlock = block?.mode === 'dynamic' && block?.kind === 'card_grid'
+    ? block
+    : DEFAULT_CERTIFICATES_BLOCK;
+  const runtime = buildDynamicGridFromBlock(sourceBlock) || buildDynamicGridFromBlock(DEFAULT_CERTIFICATES_BLOCK);
+  const settings = sourceBlock.settings || DEFAULT_CERTIFICATES_BLOCK.settings;
+
+  return (runtime?.cards || []).map((card, index) => {
+    const slot = Number(card.slot || index + 1);
+    const { titleTop, titleBottom } = splitCertificateTitle(card.title);
+    const { description, minimum } = splitCertificateBody(card.body);
+    const action = card.action || {};
+    return {
+      titleTop,
+      titleBottom,
+      tone: String(settings[`card${slot}Tone`] || (slot === 2 ? 'mango' : 'atlantean')).trim() || 'atlantean',
+      buttonTone: String(action.tone || settings[`card${slot}ButtonTone`] || (slot === 2 ? 'mango' : 'atlantean')).trim() || 'atlantean',
+      description,
+      minimum,
+      actionLabel: action.label || String(settings[`card${slot}ButtonLabel`] || '').trim() || 'Start investing',
+      actionHref: action.href || action.to || String(settings[`card${slot}ButtonUrl`] || '').trim() || 'https://secure.agfinancial.org/invest',
+      actionOpenInNewWindow: action.openInNewWindow !== false,
+    };
+  });
+}
 
 function resolveInvestmentsHeroAnimationPreset(value) {
   const normalized = String(value || '').trim();
@@ -747,9 +855,11 @@ export default function InvestmentsPage() {
   const pageRef = useRef(null);
   const heroSectionRef = useRef(null);
   const introSectionRef = useRef(null);
+  const certificatesSectionRef = useRef(null);
   const testimonialsSectionRef = useRef(null);
   const featurePanelSectionRef = useRef(null);
   const growthFeatureSectionRef = useRef(null);
+  const ratesSectionRef = useRef(null);
   const ctaSectionRef = useRef(null);
   const calculatorCtaSectionRef = useRef(null);
   const introHeadingInputRef = useRef(null);
@@ -854,78 +964,91 @@ export default function InvestmentsPage() {
     registerExternalDraftFlushHandler,
     registerExternalDraftStatusHandler,
   });
-  const heroBlock = useMemo(() => (
+  const heroBlockRecord = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'hero'
       && block?.kind === 'hero'
-      && block?.mode === 'dynamic'
-      && block?.hidden !== true
-      && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const introBlock = useMemo(() => (
+  const heroBlock = isVisibleDynamicBlock(heroBlockRecord, 'hero') ? heroBlockRecord : null;
+  const heroBlockIsHidden = isHiddenManagedBlock(heroBlockRecord);
+  const introBlockRecord = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'intro'
       && block?.kind === 'intro'
-      && block?.mode === 'dynamic'
-      && block?.hidden !== true
-      && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const dynamicTestimonialsBlock = useMemo(() => (
+  const introBlock = isVisibleDynamicBlock(introBlockRecord, 'intro') ? introBlockRecord : null;
+  const introBlockIsHidden = isHiddenManagedBlock(introBlockRecord);
+  const certificatesBlockRecord = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'certificates'
+      && block?.kind === 'card_grid'
+    )) || null
+  ), [managedBlocks]);
+  const certificatesBlock = isVisibleDynamicBlock(certificatesBlockRecord, 'card_grid') ? certificatesBlockRecord : null;
+  const certificatesBlockIsHidden = isHiddenManagedBlock(certificatesBlockRecord);
+  const testimonialsBlockRecord = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'testimonials'
       && block?.kind === 'testimonials'
-      && block?.mode === 'dynamic'
-      && block?.hidden !== true
-      && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const featurePanelBlock = useMemo(() => (
+  const dynamicTestimonialsBlock = isVisibleDynamicBlock(testimonialsBlockRecord, 'testimonials') ? testimonialsBlockRecord : null;
+  const testimonialsBlockIsHidden = isHiddenManagedBlock(testimonialsBlockRecord);
+  const featurePanelBlockRecord = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'cash_reserves'
       && block?.kind === 'feature_panel'
-      && block?.mode === 'dynamic'
-      && block?.hidden !== true
-      && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const growthFeatureBlock = useMemo(() => (
+  const featurePanelBlock = isVisibleDynamicBlock(featurePanelBlockRecord, 'feature_panel') ? featurePanelBlockRecord : null;
+  const featurePanelBlockIsHidden = isHiddenManagedBlock(featurePanelBlockRecord);
+  const growthFeatureBlockRecord = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'growth_feature'
       && block?.kind === 'site_feature'
-      && block?.mode === 'dynamic'
-      && block?.hidden !== true
-      && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const ctaFormBlock = useMemo(() => (
+  const growthFeatureBlock = isVisibleDynamicBlock(growthFeatureBlockRecord, 'site_feature') ? growthFeatureBlockRecord : null;
+  const growthFeatureBlockIsHidden = isHiddenManagedBlock(growthFeatureBlockRecord);
+  const ratesBlockRecord = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'certificates_table'
+      && block?.kind === 'rates'
+    )) || null
+  ), [managedBlocks]);
+  const ratesBlock = isVisibleDynamicBlock(ratesBlockRecord, 'rates') ? ratesBlockRecord : null;
+  const ratesBlockIsHidden = isHiddenManagedBlock(ratesBlockRecord);
+  const ctaFormBlockRecord = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'cta_form'
       && block?.kind === 'cta_form'
-      && block?.mode === 'dynamic'
-      && block?.hidden !== true
-      && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const calculatorCtaBlock = useMemo(() => (
+  const ctaFormBlock = isVisibleDynamicBlock(ctaFormBlockRecord, 'cta_form') ? ctaFormBlockRecord : null;
+  const ctaFormBlockIsHidden = isHiddenManagedBlock(ctaFormBlockRecord);
+  const calculatorCtaBlockRecord = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'laddering'
       && block?.kind === 'calculator_cta'
-      && block?.mode === 'dynamic'
-      && block?.hidden !== true
-      && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
+  const calculatorCtaBlock = isVisibleDynamicBlock(calculatorCtaBlockRecord, 'calculator_cta') ? calculatorCtaBlockRecord : null;
+  const calculatorCtaBlockIsHidden = isHiddenManagedBlock(calculatorCtaBlockRecord);
   const testimonialsData = useMemo(
-    () => resolveTestimonialsBlockData({
+    () => (testimonialsBlockIsHidden ? null : resolveTestimonialsBlockData({
       block: dynamicTestimonialsBlock,
       library: testimonialsLibrary,
       fallbackItems: testimonials,
       fallbackFineprint: defaultInvestmentsTestimonialsFineprint,
       defaultTag: 'investments',
-    }),
-    [dynamicTestimonialsBlock, testimonialsLibrary],
+    })),
+    [dynamicTestimonialsBlock, testimonialsBlockIsHidden, testimonialsLibrary],
+  );
+  const resolvedCertificateCards = useMemo(
+    () => (certificatesBlockIsHidden ? [] : resolveInvestmentCertificateCards(certificatesBlock || DEFAULT_CERTIFICATES_BLOCK)),
+    [certificatesBlock, certificatesBlockIsHidden],
   );
   const introHudSettings = useMemo(
     () => ({ ...defaultInvestmentsIntroSettings, ...(introBlock?.settings && typeof introBlock.settings === 'object' ? introBlock.settings : {}) }),
@@ -941,8 +1064,8 @@ export default function InvestmentsPage() {
     });
   }, [introBlock, introHudSettings]);
   const resolvedIntro = useMemo(
-    () => dynamicIntro || buildDefaultInvestmentsIntroRuntime(),
-    [dynamicIntro],
+    () => (introBlockIsHidden ? null : dynamicIntro || buildDefaultInvestmentsIntroRuntime()),
+    [dynamicIntro, introBlockIsHidden],
   );
   const heroInspection = useMemo(
     () => inspectDynamicHeroSettings('/services/investments', heroBlock?.settings),
@@ -964,6 +1087,9 @@ export default function InvestmentsPage() {
     });
   }, [heroBlock, heroHudSettings]);
   const featurePanelRuntime = useMemo(() => {
+    if (featurePanelBlockIsHidden) {
+      return null;
+    }
     const fallbackSettings = {
       title: 'Church Cash Reserves',
       bodyHtml: '<p>Financial stability is essential for long-term growth. Build a practical reserve strategy so your ministry is ready for both opportunity and disruption.</p>',
@@ -1006,58 +1132,30 @@ export default function InvestmentsPage() {
       ...sourceBlock,
       settings: normalizedSettings,
     });
-  }, [featurePanelBlock]);
+  }, [featurePanelBlock, featurePanelBlockIsHidden]);
   const renderedGrowthFeatureBlock = useMemo(() => (
-    growthFeatureBlock || {
+    growthFeatureBlockIsHidden ? null : growthFeatureBlock || {
       id: 'growth_feature',
       kind: 'site_feature',
       mode: 'dynamic',
       settings: defaultInvestmentsGrowthFeatureSettings,
     }
-  ), [growthFeatureBlock]);
+  ), [growthFeatureBlock, growthFeatureBlockIsHidden]);
   const renderedCtaFormBlock = useMemo(() => (
-    ctaFormBlock || {
+    ctaFormBlockIsHidden ? null : ctaFormBlock || {
       id: 'cta_form',
       kind: 'cta_form',
       mode: 'dynamic',
       settings: defaultInvestmentsCtaSettings,
     }
-  ), [ctaFormBlock]);
+  ), [ctaFormBlock, ctaFormBlockIsHidden]);
+  const ratesRuntime = useMemo(
+    () => (ratesBlockIsHidden ? null : buildDynamicRatesFromBlock(ratesBlock || DEFAULT_CERTIFICATES_RATES_BLOCK)),
+    [ratesBlock, ratesBlockIsHidden],
+  );
   const calculatorCtaRuntime = useMemo(
-    () => buildDynamicCalculatorCtaFromBlock(calculatorCtaBlock || {
-      id: 'laddering',
-      kind: 'calculator_cta',
-      mode: 'dynamic',
-      settings: {
-        title: 'Investment Laddering Strategy',
-        subtitle: 'Longer term rates with shorter term access',
-        body: 'Laddering splits your savings into multiple certificates that mature at different times. That gives you regular access to cash while you pursue longer-term rates.',
-        howItWorksTitle: 'How it works',
-        step1: 'Split your total into equal parts.',
-        step2: 'Start by buying certificates with staggered maturities (1-year, 2-year, 3-year...).',
-        step3: 'When one matures, either reinvest into your selected longest-term certificate to keep the ladder going, or take the maturity as cash.',
-        totalInvestmentLabel: 'Total Investment Amount',
-        ladderYearsLabel: 'Ladder span (years / longest term)',
-        ladderYearsHelper: 'Builds 1-year through N-year certificates; reinvestment uses the N-year term.',
-        maturityLabel: 'When a certificate matures',
-        reinvestOptionLabel: 'Reinvest matured principal into longest term',
-        cashOutOptionLabel: 'Keep matured principal as cash',
-        visualizeYearsLabel: 'Timeline years to visualize',
-        visualizeYearsHelper: 'Timeline filter only. Increase or decrease to expand the visual range.',
-        calculateLabel: 'Calculate',
-        note: 'Calculator math uses APY as an effective annual yield estimate.',
-        disclaimer: 'This tool illustrates ladder mechanics. APY values can change. Results are estimates.',
-        customRatesNote: 'Rates entered here are for illustration only and are not AGFinancial posted APY values or guarantees.',
-        resultsTitle: 'Ladder Breakdown',
-        downloadTitle: 'Download your laddering sample.',
-        downloadBody: 'Provide your name and email to get your personalized laddering summary, including your inputs and yearly breakdown.',
-        downloadButtonLabel: 'Download sample',
-        discussTitle: 'Ready to discuss your investment possibilities?',
-        discussBody: 'A member of our investments team will contact you, ready to guide you through the process.',
-        discussButtonLabel: 'Send',
-      },
-    }),
-    [calculatorCtaBlock],
+    () => (calculatorCtaBlockIsHidden ? null : buildDynamicCalculatorCtaFromBlock(calculatorCtaBlock || DEFAULT_LADDERING_BLOCK)),
+    [calculatorCtaBlock, calculatorCtaBlockIsHidden],
   );
   const heroHudLineHeight = Number.isFinite(Number(heroHudSettings.lineHeight))
     ? Number(heroHudSettings.lineHeight)
@@ -1147,17 +1245,21 @@ export default function InvestmentsPage() {
         ? heroSectionRef
         : panel.blockId === 'intro'
           ? introSectionRef
-          : panel.blockId === 'testimonials'
-            ? testimonialsSectionRef
-            : panel.blockId === 'cash_reserves'
-              ? featurePanelSectionRef
-              : panel.blockId === 'growth_feature'
-                ? growthFeatureSectionRef
-                : panel.blockId === 'cta_form'
-                    ? ctaSectionRef
-                    : panel.blockId === 'laddering'
-                      ? calculatorCtaSectionRef
-                      : null,
+          : panel.blockId === 'certificates'
+            ? certificatesSectionRef
+            : panel.blockId === 'testimonials'
+              ? testimonialsSectionRef
+              : panel.blockId === 'cash_reserves'
+                ? featurePanelSectionRef
+                : panel.blockId === 'growth_feature'
+                  ? growthFeatureSectionRef
+                  : panel.blockId === 'certificates_table'
+                    ? ratesSectionRef
+                    : panel.blockId === 'cta_form'
+                      ? ctaSectionRef
+                      : panel.blockId === 'laddering'
+                        ? calculatorCtaSectionRef
+                        : null,
     })),
     [managedBlocks],
   );
@@ -1902,11 +2004,12 @@ export default function InvestmentsPage() {
           </FrontHudPanelShell>
         </Suspense>
       ) : null}
-      <section
-        ref={heroSectionRef}
-        className={`service-native-hero investments-native-hero${dynamicHero ? ` is-bg-${dynamicHero.bgTone || 'white'} is-justify-${dynamicHero.justify || 'left'}` : ''}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isHeroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('hero').className || ''}`}
-        data-block-id="hero"
-      >
+      {heroBlockIsHidden ? null : (
+        <section
+          ref={heroSectionRef}
+          className={`service-native-hero investments-native-hero${dynamicHero ? ` is-bg-${dynamicHero.bgTone || 'white'} is-justify-${dynamicHero.justify || 'left'}` : ''}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isHeroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('hero').className || ''}`}
+          data-block-id="hero"
+        >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('hero')} />
         {renderHudAnchor('hero')}
         <div className="ag-panel-rail">
@@ -1967,13 +2070,15 @@ export default function InvestmentsPage() {
             </>
           )}
         </div>
-      </section>
+        </section>
+      )}
 
-      <section
-        ref={introSectionRef}
-        className={`service-native-intro investments-native-intro fade-out dynamic-intro is-bg-${resolvedIntro.bgTone || defaultInvestmentsIntroSettings.bgTone} is-text-${resolvedIntro.textTone || defaultInvestmentsIntroSettings.textTone}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
-        data-block-id="intro"
-      >
+      {resolvedIntro ? (
+        <section
+          ref={introSectionRef}
+          className={`service-native-intro investments-native-intro fade-out dynamic-intro is-bg-${resolvedIntro.bgTone || defaultInvestmentsIntroSettings.bgTone} is-text-${resolvedIntro.textTone || defaultInvestmentsIntroSettings.textTone}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
+          data-block-id="intro"
+        >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
         {renderHudAnchor('intro')}
         <div className="ag-panel-rail">
@@ -2074,99 +2179,129 @@ export default function InvestmentsPage() {
             ) : null}
           </div>
         </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section className="service-native-section investments-native-panel" id="certificates">
-        <div className="ag-panel-rail">
-          <div className="service-native-grid is-two investments-native-cert-grid">
-            {certificateCards.map((card) => (
-              <article
-                key={`${card.titleTop}-${card.titleBottom}`}
-                className={`service-native-card investments-native-cert-card investments-native-cert-card--${card.tone} fade-up fade-up-force-observe`}
-              >
-                <div className="investments-native-cert-card__cap">
-                  <h3>{card.titleTop}<br />{card.titleBottom}</h3>
-                </div>
-                <div className="investments-native-cert-card__body">
-                  <p>
-                    {card.description}
-                    {' '}
-                    <strong>{card.minimum}</strong>
-                  </p>
-                  <div className="service-native-action-row">
-                    <a
-                      href="https://secure.agfinancial.org/invest"
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className={`service-native-btn is-outline is-tone-${card.buttonTone}`}
-                    >
-                      Start investing
-                    </a>
+      {resolvedCertificateCards.length ? (
+        <section
+          ref={certificatesSectionRef}
+          className={`service-native-section investments-native-panel${getHudBlockStateClassName('certificates')}${getOwnershipVisualForBlockId('certificates').className || ''}`}
+          id="certificates"
+          data-block-id="certificates"
+        >
+          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('certificates')} />
+          {renderHudAnchor('certificates')}
+          <div className="ag-panel-rail">
+            <div className="service-native-grid is-two investments-native-cert-grid">
+              {resolvedCertificateCards.map((card) => (
+                <article
+                  key={`${card.titleTop}-${card.titleBottom}`}
+                  className={`service-native-card investments-native-cert-card investments-native-cert-card--${card.tone} fade-up fade-up-force-observe`}
+                >
+                  <div className="investments-native-cert-card__cap">
+                    <h3>
+                      {card.titleTop}
+                      {card.titleBottom ? <><br />{card.titleBottom}</> : null}
+                    </h3>
                   </div>
-                </div>
-              </article>
-            ))}
+                  <div className="investments-native-cert-card__body">
+                    <p>
+                      {card.description}
+                      {card.minimum ? (
+                        <>
+                          {' '}
+                          <strong>{card.minimum}</strong>
+                        </>
+                      ) : null}
+                    </p>
+                    <div className="service-native-action-row">
+                      <a
+                        href={card.actionHref}
+                        target={card.actionOpenInNewWindow ? '_blank' : undefined}
+                        rel={card.actionOpenInNewWindow ? 'noreferrer noopener' : undefined}
+                        className={`service-native-btn is-outline is-tone-${card.buttonTone}`}
+                      >
+                        {card.actionLabel}
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="investments-native-cert-fallout">
+              <Link to="/services/investments/invest-by-mail" className="service-native-btn is-tone-white investments-native-cert-fallout-btn">
+                Open an investment by mail
+              </Link>
+            </div>
           </div>
-          <div className="investments-native-cert-fallout">
-            <Link to="/services/investments/invest-by-mail" className="service-native-btn is-tone-white investments-native-cert-fallout-btn">
-              Open an investment by mail
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <div ref={growthFeatureSectionRef}>
-        <PageBlocksRenderer
-          blocks={[renderedGrowthFeatureBlock]}
-          ownershipEnabled={showFrontHud}
-          ownershipPathname="/services/investments"
-          hudAnchorsByBlockId={showFrontHud ? hudAnchorPanelsByBlockId : null}
-          activeHudPanelId={activeHudPanelId}
-          hudDockCollapsed={hudDockCollapsed}
-          hudOpacityRatio={frontHudOpacityRatio}
-          onHudAnchorClick={showFrontHud ? openHudPanelBySelector : null}
-        />
-      </div>
-
-      <div ref={ctaSectionRef}>
-        <PageBlocksRenderer
-          blocks={[renderedCtaFormBlock]}
-          ownershipEnabled={showFrontHud}
-          ownershipPathname="/services/investments"
-          hudAnchorsByBlockId={showFrontHud ? hudAnchorPanelsByBlockId : null}
-          activeHudPanelId={activeHudPanelId}
-          hudDockCollapsed={hudDockCollapsed}
-          hudOpacityRatio={frontHudOpacityRatio}
-          onHudAnchorClick={showFrontHud ? openHudPanelBySelector : null}
-        />
-      </div>
-
-      <section className="service-native-section investments-native-rates-section">
-        <div className="ag-panel-rail" id="rates">
-          <h2 className="investments-native-rates-title">AGFinancial Investment Certificates Rates</h2>
-          <div className="investments-native-rates-wrap fade-up">
-            <CertificateRatesSheet rates={rates} className="investments-native-certificate-rates-sheet" />
-          </div>
-          <SafeRichText
-            as="div"
-            html={investmentsRatesDisclosureHtml}
-            className="rates-disclaimer investments-native-rates-disclaimer"
+      {renderedGrowthFeatureBlock ? (
+        <div ref={growthFeatureSectionRef}>
+          <PageBlocksRenderer
+            blocks={[renderedGrowthFeatureBlock]}
+            ownershipEnabled={showFrontHud}
+            ownershipPathname="/services/investments"
+            hudAnchorsByBlockId={showFrontHud ? hudAnchorPanelsByBlockId : null}
+            activeHudPanelId={activeHudPanelId}
+            hudDockCollapsed={hudDockCollapsed}
+            hudOpacityRatio={frontHudOpacityRatio}
+            onHudAnchorClick={showFrontHud ? openHudPanelBySelector : null}
           />
-          <div className="rates-disclaimer investments-native-rates-disclaimer">
-            <p>{investmentsSharedRiskWarning}</p>
-            <p>
-              <em>{investmentsSharedAffiliation}</em>
-            </p>
-          </div>
         </div>
-      </section>
+      ) : null}
 
-      <section
-        ref={calculatorCtaSectionRef}
-        className={`service-native-section investments-native-ladder-section${getHudBlockStateClassName('laddering')}${getOwnershipVisualForBlockId('laddering').className || ''}`}
-        id="laddering-calculator"
-        data-block-id="laddering"
-      >
+      {renderedCtaFormBlock ? (
+        <div ref={ctaSectionRef}>
+          <PageBlocksRenderer
+            blocks={[renderedCtaFormBlock]}
+            ownershipEnabled={showFrontHud}
+            ownershipPathname="/services/investments"
+            hudAnchorsByBlockId={showFrontHud ? hudAnchorPanelsByBlockId : null}
+            activeHudPanelId={activeHudPanelId}
+            hudDockCollapsed={hudDockCollapsed}
+            hudOpacityRatio={frontHudOpacityRatio}
+            onHudAnchorClick={showFrontHud ? openHudPanelBySelector : null}
+          />
+        </div>
+      ) : null}
+
+      {ratesRuntime ? (
+        <section
+          ref={ratesSectionRef}
+          className={`service-native-section investments-native-rates-section${getHudBlockStateClassName('certificates_table')}${getOwnershipVisualForBlockId('certificates_table').className || ''}`}
+          data-block-id="certificates_table"
+        >
+          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('certificates_table')} />
+          {renderHudAnchor('certificates_table')}
+          <div className="ag-panel-rail" id="rates">
+            <h2 className="investments-native-rates-title">AGFinancial Investment Certificates Rates</h2>
+            <div className="investments-native-rates-wrap fade-up">
+              <CertificateRatesSheet rates={rates} className="investments-native-certificate-rates-sheet" />
+            </div>
+            <SafeRichText
+              as="div"
+              html={investmentsRatesDisclosureHtml}
+              className="rates-disclaimer investments-native-rates-disclaimer"
+            />
+            <div className="rates-disclaimer investments-native-rates-disclaimer">
+              <p>{investmentsSharedRiskWarning}</p>
+              <p>
+                <em>{investmentsSharedAffiliation}</em>
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {calculatorCtaRuntime ? (
+        <section
+          ref={calculatorCtaSectionRef}
+          className={`service-native-section investments-native-ladder-section${getHudBlockStateClassName('laddering')}${getOwnershipVisualForBlockId('laddering').className || ''}`}
+          id="laddering-calculator"
+          data-block-id="laddering"
+        >
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('laddering')} />
         {renderHudAnchor('laddering')}
         <div className="ag-panel-rail">
@@ -2841,39 +2976,42 @@ export default function InvestmentsPage() {
             ) : null}
           </div>
         </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section
-        ref={testimonialsSectionRef}
-        className={`service-native-section${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`}
-        data-block-id="testimonials"
-      >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
-        {renderHudAnchor('testimonials')}
-        <div className="ag-panel-rail">
-          <div className="service-native-testimonials-wrap carousel-stack">
-            {testimonialsData.items.length ? testimonialsData.items.map((item, index) => (
-              <article key={`${item.author}-${item.quote.slice(0, 24)}`} className={`carousel-frame${index === 0 ? ' is-active' : ''}`}>
-                <p style={{ fontSize: 'clamp(1.35rem, 2.9vw, 2.2rem)', lineHeight: 1.15 }}>{item.quote}</p>
-                <p>
-                  -<strong>{item.author}{item.authorTitle ? ',' : ''}</strong>
-                  {item.authorTitle ? <em> {item.authorTitle}</em> : null}
-                </p>
-              </article>
-            )) : showFrontHud ? (
-              <article className="carousel-frame is-active">
-                <p style={{ fontSize: 'clamp(1.35rem, 2.9vw, 2.2rem)', lineHeight: 1.15 }}>No testimonials selected yet.</p>
-                <p><strong>Choose quotes in the HUD selector.</strong></p>
-              </article>
+      {testimonialsData ? (
+        <section
+          ref={testimonialsSectionRef}
+          className={`service-native-section${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`}
+          data-block-id="testimonials"
+        >
+          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
+          {renderHudAnchor('testimonials')}
+          <div className="ag-panel-rail">
+            <div className="service-native-testimonials-wrap carousel-stack">
+              {testimonialsData.items.length ? testimonialsData.items.map((item, index) => (
+                <article key={`${item.author}-${item.quote.slice(0, 24)}`} className={`carousel-frame${index === 0 ? ' is-active' : ''}`}>
+                  <p style={{ fontSize: 'clamp(1.35rem, 2.9vw, 2.2rem)', lineHeight: 1.15 }}>{item.quote}</p>
+                  <p>
+                    -<strong>{item.author}{item.authorTitle ? ',' : ''}</strong>
+                    {item.authorTitle ? <em> {item.authorTitle}</em> : null}
+                  </p>
+                </article>
+              )) : showFrontHud ? (
+                <article className="carousel-frame is-active">
+                  <p style={{ fontSize: 'clamp(1.35rem, 2.9vw, 2.2rem)', lineHeight: 1.15 }}>No testimonials selected yet.</p>
+                  <p><strong>Choose quotes in the HUD selector.</strong></p>
+                </article>
+              ) : null}
+            </div>
+            {testimonialsData.showFineprint ? (
+              <p className="service-native-note" style={{ textAlign: 'center' }}>
+                {testimonialsData.fineprint}
+              </p>
             ) : null}
           </div>
-          {testimonialsData.showFineprint ? (
-            <p className="service-native-note" style={{ textAlign: 'center' }}>
-              {testimonialsData.fineprint}
-            </p>
-          ) : null}
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {featurePanelRuntime ? (
         <section

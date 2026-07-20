@@ -207,7 +207,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
   });
 
   it('keeps the ministers group life hero visible when HUD is off and a static stub is hidden', () => {
-    const { container } = render(
+    render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -230,7 +230,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       '/services/planned-giving': [],
     };
 
-    const { container } = render(
+    render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -241,8 +241,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: /generous.*giving\./i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /with.*strategy\./i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Planned Giving' })).toBeTruthy();
     expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('Native hero drift detected'));
 
     warnSpy.mockRestore();
@@ -251,7 +250,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
   it('keeps the ministers group life hero visible when HUD is on while showing HUD chrome only then', () => {
     mockFrontHudEnabled = true;
 
-    const { container } = render(
+    render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -287,7 +286,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       },
     };
 
-    const { container } = render(
+    render(
       <MemoryRouter>
         <NativeContentPage
           page={{
@@ -304,7 +303,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getByRole('button', { name: 'Open Intro HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Card Grid · Flexible cards HUD panel' })).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Open Billboard HUD panel' })).toHaveLength(2);
-    expect(screen.queryByRole('button', { name: 'Open Page Content HUD panel' })).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'Open Page Content HUD panel' })).toHaveLength(3);
   });
 
   it('switches mobile HUD to selection mode without rendering the desktop dock chrome', () => {
@@ -535,15 +534,6 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           editableFields: [],
         },
         {
-          id: 'billboard',
-          name: 'Billboard',
-          kind: 'billboard',
-          mode: 'static',
-          hidden: true,
-          settings: {},
-          editableFields: [],
-        },
-        {
           id: 'impact_proof_story',
           name: 'Site Feature · Impact proof story',
           kind: 'site_feature',
@@ -551,17 +541,14 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           hidden: false,
           settings: {
             featureId: 'impact_proof_story',
-            targetSectionKey: 'class:impact-native-stats',
+            targetSectionKey: '',
+            sectionClassName: 'impact-native-stats impact-proof-story',
+            featureIntroJson: JSON.stringify({
+              heading: 'Serving you, alongside you.',
+              body: 'AGFinancial was created to support churches and ministries, ministers, and individuals by improving financial health while growing God’s kingdom. As a client, you become part of that vision.',
+              emphasis: 'We’re ministry allies.',
+            }),
           },
-          editableFields: [],
-        },
-        {
-          id: 'impact_proof_story',
-          name: 'Site Feature · Impact proof story',
-          kind: 'site_feature',
-          mode: 'static',
-          hidden: true,
-          settings: {},
           editableFields: [],
         },
       ],
@@ -1043,9 +1030,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             button2DocumentId: 'document-planned-giving-terms-and-conditions',
             button2Style: 'outline',
             button2Tone: 'super-grey',
-            targetSectionKey: 'class:legacy-child-native-generosity-outro',
-            targetSectionClassName: 'legacy-child-native-generosity-outro',
-            targetSectionIndex: 0,
+            sectionClassName: 'legacy-child-native-generosity-outro',
           },
           editableFields: [],
         },
@@ -1081,7 +1066,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(within(billboardSection).getByRole('link', { name: 'Terms and Conditions' })).toBeTruthy();
   });
 
-  it('merges targeted IRA billboards into their native sections instead of appending duplicates', () => {
+  it('renders block-only IRA billboards once with their standalone section classes', () => {
     mockBlocksByPath = {
       '/services/retirement/iras': [
         {
@@ -1100,8 +1085,9 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             justify: 'center',
             buttonLabel: 'Let’s simplify things',
             buttonPageRef: '/services/retirement/rollovers',
-            targetSectionKey: 'class:retirement-child-native-rollover',
-            targetSectionClassName: 'retirement-child-native-rollover',
+            sectionClassName: 'retirement-child-native-rollover',
+            targetSectionKey: '',
+            targetSectionClassName: '',
           },
           editableFields: [],
         },
@@ -1121,8 +1107,9 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             justify: 'center',
             buttonLabel: 'Reach my consultant',
             buttonPageRef: '/services/retirement/retirement-consultants',
-            targetSectionKey: 'class:retirement-ira-native-cta',
-            targetSectionClassName: 'retirement-ira-native-cta',
+            sectionClassName: 'retirement-ira-native-cta',
+            targetSectionKey: '',
+            targetSectionClassName: '',
           },
           editableFields: [],
         },
@@ -1159,7 +1146,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(rolloverHeadings[0]?.closest('section')?.className).toContain('dynamic-billboard');
   });
 
-  it('maps the 403(b) rollover billboard into the native rollover section with the retirement rollover shell classes', () => {
+  it('renders the block-only 403(b) rollover billboard with standalone shell classes', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': [
         {
@@ -1178,8 +1165,9 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             justify: 'center',
             buttonLabel: 'Start a rollover',
             buttonPageRef: '/services/retirement/rollovers',
-            targetSectionKey: 'class:retirement-child-native-rollover',
-            targetSectionClassName: 'retirement-child-native-rollover',
+            sectionClassName: 'retirement-child-native-rollover',
+            targetSectionKey: '',
+            targetSectionClassName: '',
           },
           editableFields: [],
         },

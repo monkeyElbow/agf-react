@@ -1,10 +1,56 @@
 const BLOCK_ONLY_MANAGED_PAGE_PATHS = new Set([
   // Add paths here only after every visible section on that route is owned by explicit blocks.
+  '/',
   '/services/retirement/403b',
   '/services/retirement/403b/403b-individual-enrollment',
+  '/services/retirement/403b/403b-group-enrollment',
+  '/services/retirement/403b/403b-terms-definitions',
+  '/online-contributions',
+  '/resources',
+  '/calculators',
+  '/contact-us',
+  '/about-us/impact',
+  '/services',
+  '/services/loans',
+  '/services/retirement',
   '/services/retirement/409a',
+  '/services/retirement/iras',
+  '/services/retirement/iras/fund-an-ira',
   '/services/retirement/rollovers',
   '/services/retirement/retirement-consultants',
+  '/services/loans/loan-consultants',
+  '/services/investments',
+  '/about-us',
+  '/services/planned-giving',
+  '/services/planned-giving/charitable-gift-annuities',
+  '/services/planned-giving/charitable-trusts',
+  '/services/planned-giving/endowments',
+  '/services/planned-giving/generosity-fund',
+  '/services/planned-giving/ministry-impact-fund',
+  '/services/insurance',
+  '/services/insurance/certificate-request',
+  '/services/insurance/group-term-life-insurance',
+  '/services/insurance/life-insurance-quote',
+  '/services/insurance/ministers-group-life-plan',
+  '/services/insurance/mission-assure',
+  '/services/insurance/mission-assure/report-a-claim',
+  '/services/insurance/property-casualty-insurance',
+  '/accessibility',
+  '/privacy-policy',
+  '/subscribe',
+  '/terms-of-service',
+  '/vineyard',
+  '/yourplan',
+  '/services/investments/invest-by-mail',
+]);
+
+const BLOCKLESS_MANAGED_PAGE_PATHS = new Set([
+  // Functional and specialized native routes whose visible UI is owned outside admin blocks.
+  '/about-us/careers',
+  '/forms',
+  '/prospectus',
+  '/search',
+  '/sitemap',
 ]);
 
 function normalizeManagedPagePath(pathname) {
@@ -15,8 +61,12 @@ export function isBlockOnlyManagedPagePath(pathname) {
   return BLOCK_ONLY_MANAGED_PAGE_PATHS.has(normalizeManagedPagePath(pathname));
 }
 
+export function isBlocklessManagedPagePath(pathname) {
+  return BLOCKLESS_MANAGED_PAGE_PATHS.has(normalizeManagedPagePath(pathname));
+}
+
 export function shouldSeedBlocksFromNativePageContent(pathname) {
-  return !isBlockOnlyManagedPagePath(pathname);
+  return !isBlockOnlyManagedPagePath(pathname) && !isBlocklessManagedPagePath(pathname);
 }
 
 export function toBlockOnlyManagedPageShell(content) {
@@ -42,4 +92,7 @@ export function toBlockOnlyManagedPageShell(content) {
   };
 }
 
-export { BLOCK_ONLY_MANAGED_PAGE_PATHS };
+export {
+  BLOCK_ONLY_MANAGED_PAGE_PATHS,
+  BLOCKLESS_MANAGED_PAGE_PATHS,
+};

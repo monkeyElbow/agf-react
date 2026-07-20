@@ -1,27 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { getNativePageContent } from './nativePageContent';
-import { buildImpactProofNativeCards, buildImpactProofStoryMetrics } from './impactProofStorySeed';
+import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
+import { buildDynamicSiteFeatureFromBlock } from '../lib/dynamicPageBlocks';
+import { buildImpactProofStoryMetrics } from './impactProofStorySeed';
 import { getSiteFeatureCatalogEntry } from './siteFeatureCatalog';
 
 describe('impact proof story seed guardrail', () => {
-  it('keeps the native fallback and managed site-feature runtime aligned to one shared content seed', () => {
-    const nativeImpactPage = getNativePageContent('/about-us/impact', 'Impact');
-    const nativeSection = nativeImpactPage.sections.find((section) => section?.className === 'impact-native-stats');
+  it('keeps the managed site-feature runtime aligned to one shared content seed', () => {
+    const impactBlock = (contentBlockBlueprintsByPath['/about-us/impact'] || [])
+      .find((block) => block?.id === 'impact_proof_story');
+    const managedRuntime = buildDynamicSiteFeatureFromBlock(impactBlock);
     const featureRuntime = getSiteFeatureCatalogEntry('impact_proof_story')?.buildRuntime?.({ settings: {} });
 
-    expect(nativeSection?.cards).toEqual(buildImpactProofNativeCards());
     expect(featureRuntime?.metrics).toEqual(buildImpactProofStoryMetrics());
+    expect(managedRuntime?.featureIntro).toMatchObject({
+      heading: 'Serving you, alongside you.',
+      emphasis: 'We’re ministry allies.',
+    });
+    expect(managedRuntime?.metrics).toHaveLength(featureRuntime?.metrics?.length || 0);
 
-    expect(nativeSection?.cards).toHaveLength(featureRuntime?.metrics?.length || 0);
+    managedRuntime.metrics.forEach((managedMetric, index) => {
+      const catalogMetric = featureRuntime.metrics[index];
 
-    nativeSection.cards.forEach((card, index) => {
-      const metric = featureRuntime.metrics[index];
-
-      expect(card.title).toBe(metric.value);
-      expect(card.subtitle).toBe(metric.label);
-      expect(card.body).toBe(metric.body);
-      expect(card.cta).toBe(metric.action.label);
-      expect(card.to).toBe(metric.action.to);
+      expect(managedMetric.value).toBe(catalogMetric.value);
+      expect(managedMetric.label).toBe(catalogMetric.label);
+      expect(managedMetric.body).toBe(catalogMetric.body);
+      expect(managedMetric.action.label).toBe(catalogMetric.action.label);
+      expect(managedMetric.action.to).toBe(catalogMetric.action.to);
     });
   });
 });

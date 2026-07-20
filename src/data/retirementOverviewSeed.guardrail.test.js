@@ -7,7 +7,6 @@ import { getNativePageContent } from './nativePageContent';
 import {
   buildDefaultRetirementBillboardRuntime,
   buildDefaultRetirementIntroRuntime,
-  buildDefaultRetirementNativeIntro,
   buildDefaultRetirementRolloverBillboardRuntime,
   defaultRetirementBillboardSettings,
   defaultRetirementIntroSettings,
@@ -39,8 +38,14 @@ describe('retirement overview seed guardrail', () => {
 
     expect(introBlock?.settings).toEqual(defaultRetirementIntroSettings);
     expect(billboardBlock?.settings).toEqual(defaultRetirementBillboardSettings);
-    expect(rolloverBlock?.settings).toEqual(defaultRetirementRolloverBillboardSettings);
-    expect(nativeIntro).toEqual(buildDefaultRetirementNativeIntro());
+    expect(rolloverBlock?.settings).toEqual({
+      ...defaultRetirementRolloverBillboardSettings,
+      targetSectionKey: '',
+      targetSectionClassName: '',
+      targetSectionIndex: '',
+      sectionClassName: 'retirement-rollover-billboard',
+    });
+    expect(nativeIntro).toBeUndefined();
     expect(runtimeIntro.heading).toBe(DEFAULT_RETIREMENT_INTRO_HEADING);
     expect(runtimeIntro.bodyHtml).toContain(DEFAULT_RETIREMENT_INTRO_BODY_TEXT);
     expect(runtimeIntro.extraLine).toBe(DEFAULT_RETIREMENT_INTRO_EXTRA_LINE);

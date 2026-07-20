@@ -10,21 +10,48 @@ import { getNativePageContent } from '../data/nativePageContent';
 const AUTO_REQUEST_FORM_ROUTES = [];
 
 const EXPLICIT_REQUEST_FORM_ROUTES = [
-  '/contact-us',
   '/services/planned-giving/charitable-gift-annuities',
   '/services/planned-giving/endowments',
   '/services/planned-giving/generosity-fund',
   '/services/planned-giving/ministry-impact-fund',
-  '/services/insurance/group-term-life-insurance',
-  '/services/insurance/property-casualty-insurance',
-  '/services/insurance/certificate-request',
-  '/services/loans/loan-consultants',
-  '/services/retirement/retirement-consultants',
 ];
 
 const STANDALONE_EXPLICIT_REQUEST_FORM_ROUTES = [
   '/services/insurance/life-insurance-quote',
 ];
+
+const STANDALONE_CLASS_HOOK_REQUEST_FORM_ROUTES = {
+  '/contact-us': {
+    sectionClassName: 'contact-us-request',
+    step1Signal: '"firstName"',
+    step2Signal: '"inquiryType"',
+  },
+  '/services/loans/loan-consultants': {
+    sectionClassName: 'loans-consultant-native-contact',
+    step1Signal: '"firstName"',
+    step2Signal: '"ministry"',
+  },
+  '/services/retirement/retirement-consultants': {
+    sectionClassName: 'loans-consultant-native-contact',
+    step1Signal: '"firstName"',
+    step2Signal: '"churchOrMinistry"',
+  },
+  '/services/insurance/certificate-request': {
+    sectionClassName: 'certificate-request-native-section',
+    step1Signal: '"firstName"',
+    step2Signal: '"address1"',
+  },
+  '/services/insurance/group-term-life-insurance': {
+    sectionClassName: 'group-life-native-quote',
+    step1Signal: '"contactFirstName"',
+    step2Signal: '"organizationName"',
+  },
+  '/services/insurance/property-casualty-insurance': {
+    sectionClassName: 'insurance-pc-native-quote',
+    step1Signal: '"contactFirstName"',
+    step2Signal: '"organizationName"',
+  },
+};
 
 const CTA_OWNED_FORM_ROUTES = [
   '/about-us',
@@ -38,14 +65,7 @@ const CTA_OWNED_FORM_ROUTES = [
   '/services/retirement/rollovers',
 ];
 
-const EXPLICIT_REQUEST_OVERRIDES = {
-  '/services/insurance/certificate-request': {
-    title: 'Need proof of insurance?',
-    subtitle: 'Please complete this form in full, including location details. Incomplete submissions may delay your insurance certificate request.',
-    bgTone: 'white',
-    textTone: 'dark',
-  },
-};
+const EXPLICIT_REQUEST_OVERRIDES = {};
 
 function getRequestTemplate() {
   const template = genericPageBlockBlueprint().find((block) => (
@@ -254,6 +274,26 @@ describe('request form seed guardrails', () => {
         throw new Error(`Missing explicit request form seed for ${pathname}`);
       }
 
+      if (
+        pathname === '/services/planned-giving/charitable-gift-annuities'
+        || pathname === '/services/planned-giving/endowments'
+        || pathname === '/services/planned-giving/generosity-fund'
+        || pathname === '/services/planned-giving/ministry-impact-fund'
+      ) {
+        expect(block.settings?.sectionClassName).toBe(
+          pathname === '/services/planned-giving/charitable-gift-annuities'
+            ? 'legacy-child-native-cga-request'
+            : pathname === '/services/planned-giving/endowments'
+              ? 'legacy-child-native-endowments-legacy-form'
+              : pathname === '/services/planned-giving/generosity-fund'
+                ? 'legacy-child-native-generosity-request'
+                : 'legacy-child-native-request',
+        );
+        expect(String(block.settings?.targetSectionKey || '')).toBe('');
+        expect(String(block.settings?.targetSectionClassName || '')).toBe('');
+        return;
+      }
+
       expectRequestSettingsToMatchStatic(pathname, block.settings || {}, { includeCertificate: true });
     });
   });
@@ -261,7 +301,11 @@ describe('request form seed guardrails', () => {
   it('does not auto-generate request-form seeds for routes with explicit request-form blueprints', () => {
     const requestTemplate = getRequestTemplate();
 
-    [...EXPLICIT_REQUEST_FORM_ROUTES, ...STANDALONE_EXPLICIT_REQUEST_FORM_ROUTES].forEach((pathname) => {
+    [
+      ...EXPLICIT_REQUEST_FORM_ROUTES,
+      ...STANDALONE_EXPLICIT_REQUEST_FORM_ROUTES,
+      ...Object.keys(STANDALONE_CLASS_HOOK_REQUEST_FORM_ROUTES),
+    ].forEach((pathname) => {
       const blocks = buildDynamicRequestDefaultBlocksForPath(
         pathname,
         '',
@@ -337,32 +381,7 @@ describe('request form seed guardrails', () => {
     });
   });
 
-  it('repairs stale generic insurance request-form settings back to the static version', () => {
-    const requestTemplate = getRequestTemplate();
-    const templateSettings = requestTemplate?.settings || {};
-
-    [
-      '/services/insurance/property-casualty-insurance',
-    ].forEach((pathname) => {
-      const staticSection = getStaticRequestSections(pathname)[0];
-      if (!staticSection) {
-        throw new Error(`Missing insurance request section for ${pathname}`);
-      }
-
-      const normalized = normalizeDynamicRequestFormSettings(pathname, {
-        ...templateSettings,
-        titleHighlightsJson: '[]',
-        body: '',
-        targetSectionKey: toSectionTargetKey(staticSection.section, staticSection.index),
-        targetSectionClassName: '',
-        targetSectionIndex: NaN,
-      });
-
-      expectRequestSettingsToMatchStatic(pathname, normalized);
-    });
-  });
-
-  it('repairs stale property and casualty request-form browser state back to the canonical block', () => {
+  it('repairs stale property and casualty request-form browser state back to the standalone canonical block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/insurance/property-casualty-insurance': [
@@ -389,7 +408,14 @@ describe('request form seed guardrails', () => {
       .find((entry) => entry?.id === 'request_form');
 
     expect(block).toBeTruthy();
-    expectRequestSettingsToMatchStatic('/services/insurance/property-casualty-insurance', block?.settings || {});
+    expect(block?.settings?.sectionClassName).toBe('insurance-pc-native-quote');
+    expect(String(block?.settings?.targetSectionKey || '')).toBe('');
+    expect(String(block?.settings?.targetSectionClassName || '')).toBe('');
+    expect(String(block?.settings?.targetSectionIndex || '')).toBe('');
+    expect(block?.settings?.title).toBe('Request a P&C quote.');
+    expect(block?.settings?.body).toBe('Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.');
+    expect(block?.settings?.step1FieldsJson).toContain('"contactFirstName"');
+    expect(block?.settings?.step2FieldsJson).toContain('"organizationName"');
     expect(String(block?.settings?.step1NextLabel || '')).toBe('Next');
     expect(String(block?.settings?.step2BackLabel || '')).toBe('Back');
     expect(String(block?.settings?.step2NextLabel || '')).toBe('Next');
@@ -410,6 +436,25 @@ describe('request form seed guardrails', () => {
       expect(String(block?.settings?.targetSectionClassName || '')).toBe('');
       expect(block?.settings?.step1FieldsJson).toContain('"firstName"');
       expect(block?.settings?.step3FieldsJson).toContain('"policyExpirationDate"');
+    });
+  });
+
+  it('keeps standalone explicit request-form seeds with class hooks authoritative after removing the native request section', () => {
+    Object.entries(STANDALONE_CLASS_HOOK_REQUEST_FORM_ROUTES).forEach(([pathname, expected]) => {
+      const block = (contentBlockBlueprintsByPath[pathname] || []).find((entry) => (
+        entry?.kind === 'request_form' && entry?.mode === 'dynamic'
+      ));
+
+      if (!block) {
+        throw new Error(`Missing standalone class-hook request form seed for ${pathname}`);
+      }
+
+      expect(getStaticRequestSections(pathname)).toHaveLength(0);
+      expect(String(block?.settings?.sectionClassName || '')).toBe(expected.sectionClassName);
+      expect(String(block?.settings?.targetSectionKey || '')).toBe('');
+      expect(String(block?.settings?.targetSectionClassName || '')).toBe('');
+      expect(block?.settings?.step1FieldsJson).toContain(expected.step1Signal);
+      expect(block?.settings?.step2FieldsJson).toContain(expected.step2Signal);
     });
   });
 

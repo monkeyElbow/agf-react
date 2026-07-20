@@ -47,13 +47,3 @@ export function buildDefaultServicesIntroRuntime() {
     actions: billboardRuntime?.actions || [],
   });
 }
-
-export function buildDefaultServicesNativeIntro() {
-  return Object.freeze({
-    heading: DEFAULT_SERVICES_INTRO_HEADING,
-    headingHighlights: DEFAULT_SERVICES_INTRO_HIGHLIGHTS,
-    justify: defaultServicesIntroBillboardSettings.justify,
-    bgTone: defaultServicesIntroBillboardSettings.bgTone,
-    textTone: defaultServicesIntroBillboardSettings.textTone,
-  });
-}

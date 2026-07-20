@@ -15,9 +15,9 @@ describe('loans options heading styles', () => {
     const pageSource = readSource('./LoansPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(pageSource).toContain('className="loans-native-display-heading loans-native-options-title"');
+    expect(pageSource).toContain("loanOptionsGrid.titleClassName || 'loans-native-display-heading loans-native-options-title'");
     expect(pageSource).toContain('className="loans-native-display-heading loans-native-options-subtitle"');
-    expect(pageSource).toContain('className="loans-native-options-lead"');
+    expect(pageSource).toContain('className="loans-native-options-lead native-info-rich-html"');
     expect(pageSource).not.toContain("fontSize: '54.5px'");
     expect(pageSource).not.toContain("fontSize: '38.4px'");
     expect(pageSource).not.toContain("marginBottom: 'clamp(2.1rem, 4.5vw, 3.3rem)'");

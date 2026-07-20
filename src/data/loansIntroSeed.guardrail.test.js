@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import {
   buildDefaultLoansIntroRuntime,
-  buildDefaultLoansNativeIntro,
   defaultLoansIntroSettings,
   DEFAULT_LOANS_INTRO_BODY_TEXT,
   DEFAULT_LOANS_INTRO_HEADING,
@@ -26,11 +25,9 @@ describe('loans intro seed guardrail', () => {
     const runtimeIntro = buildDefaultLoansIntroRuntime();
 
     expect(introBlock?.settings).toEqual(defaultLoansIntroSettings);
-    expect(nativeIntro).toEqual(buildDefaultLoansNativeIntro());
+    expect(nativeIntro).toBeUndefined();
     expect(runtimeIntro.heading).toBe(DEFAULT_LOANS_INTRO_HEADING);
     expect(runtimeIntro.bodyHtml).toContain(DEFAULT_LOANS_INTRO_BODY_TEXT);
-    expect(nativeIntro?.heading).toBe(DEFAULT_LOANS_INTRO_HEADING);
-    expect(nativeIntro?.body).toEqual([DEFAULT_LOANS_INTRO_BODY_TEXT]);
   });
 
   it('keeps LoansPage on the shared intro seed instead of page-local editorial fallback copy', () => {

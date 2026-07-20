@@ -14,7 +14,7 @@ describe('site feature catalog', () => {
     const catalog = getSiteFeatureCatalog();
     const defaultEntry = getDefaultSiteFeatureCatalogEntry();
 
-    expect(catalog).toHaveLength(6);
+    expect(catalog).toHaveLength(10);
     expect(defaultEntry).toMatchObject({
       featureId: 'editorial_spotlight',
       label: 'Editorial spotlight',
@@ -30,16 +30,24 @@ describe('site feature catalog', () => {
     const entry = getSiteFeatureCatalogEntry('editorial_spotlight');
     const homeServicesEntry = getSiteFeatureCatalogEntry('home_services_feature_animation');
     const homeImpactEntry = getSiteFeatureCatalogEntry('home_impact_story');
+    const servicesBreakdownEntry = getSiteFeatureCatalogEntry('services_breakdown');
+    const servicesMattersEntry = getSiteFeatureCatalogEntry('services_matters_band');
+    const retirementPlanEntry = getSiteFeatureCatalogEntry('retirement_plan_feature');
     const legacyGivingEntry = getSiteFeatureCatalogEntry('legacy_giving_stewardship_story');
     const impactProofEntry = getSiteFeatureCatalogEntry('impact_proof_story');
+    const aboutHistoryEntry = getSiteFeatureCatalogEntry('about_history_feature');
     const investmentsGrowthEntry = getSiteFeatureCatalogEntry('investments_growth_feature');
 
     expect(getSiteFeatureOptions()).toEqual([
       { value: 'editorial_spotlight', label: 'Editorial spotlight' },
       { value: 'home_services_feature_animation', label: 'Home services feature animation' },
       { value: 'home_impact_story', label: 'Home impact story' },
+      { value: 'services_breakdown', label: 'Services breakdown' },
+      { value: 'services_matters_band', label: 'Services matters band' },
+      { value: 'retirement_plan_feature', label: 'Retirement plan feature' },
       { value: 'legacy_giving_stewardship_story', label: 'Planned Giving stewardship story' },
       { value: 'impact_proof_story', label: 'Impact proof story' },
+      { value: 'about_history_feature', label: 'About history feature' },
       { value: 'investments_growth_feature', label: 'Investments growth feature' },
     ]);
     expect(getAllowedSiteFeatureEditableFieldIds('editorial_spotlight')).toEqual(entry?.allowedEditableFieldIds);
@@ -79,6 +87,32 @@ describe('site feature catalog', () => {
     expect(legacyGivingEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
     expect(homeServicesEntry?.routeAllowlist).toEqual(['/']);
     expect(homeImpactEntry?.routeAllowlist).toEqual(['/']);
+    expect(getAllowedSiteFeatureEditableFieldIds('services_breakdown')).toEqual(servicesBreakdownEntry?.allowedEditableFieldIds);
+    expect(servicesBreakdownEntry?.allowedEditableFieldIds).toEqual([
+      'featureId',
+    ]);
+    expect(getAllowedSiteFeatureEditableFieldIds('services_matters_band')).toEqual(servicesMattersEntry?.allowedEditableFieldIds);
+    expect(servicesMattersEntry?.allowedEditableFieldIds).toEqual([
+      'featureId',
+      'body',
+      'buttonLabel',
+      'buttonUrl',
+      'buttonPageRef',
+    ]);
+    expect(servicesBreakdownEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
+    expect(servicesMattersEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
+    expect(servicesBreakdownEntry?.routeAllowlist).toEqual(['/services']);
+    expect(servicesMattersEntry?.routeAllowlist).toEqual(['/services']);
+    expect(getAllowedSiteFeatureEditableFieldIds('retirement_plan_feature')).toEqual(retirementPlanEntry?.allowedEditableFieldIds);
+    expect(retirementPlanEntry?.allowedEditableFieldIds).toEqual([
+      'featureId',
+      'body',
+      'buttonLabel',
+      'buttonUrl',
+      'buttonPageRef',
+    ]);
+    expect(retirementPlanEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
+    expect(retirementPlanEntry?.routeAllowlist).toEqual(['/services/retirement']);
     expect(legacyGivingEntry?.routeAllowlist).toEqual(['/services/planned-giving']);
     expect(getAllowedSiteFeatureEditableFieldIds('impact_proof_story')).toEqual(impactProofEntry?.allowedEditableFieldIds);
     expect(impactProofEntry?.allowedEditableFieldIds).toEqual([
@@ -90,6 +124,13 @@ describe('site feature catalog', () => {
     ]);
     expect(impactProofEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
     expect(impactProofEntry?.routeAllowlist).toEqual(['/about-us/impact']);
+    expect(getAllowedSiteFeatureEditableFieldIds('about_history_feature')).toEqual(aboutHistoryEntry?.allowedEditableFieldIds);
+    expect(aboutHistoryEntry?.allowedEditableFieldIds).toEqual([
+      'featureId',
+    ]);
+    expect(aboutHistoryEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
+    expect(aboutHistoryEntry?.routeAllowlist).toEqual(['/about-us']);
+    expect(aboutHistoryEntry?.buildRuntime?.({ settings: {} })?.cards).toHaveLength(6);
     expect(getAllowedSiteFeatureEditableFieldIds('investments_growth_feature')).toEqual(investmentsGrowthEntry?.allowedEditableFieldIds);
     expect(investmentsGrowthEntry?.allowedEditableFieldIds).toEqual([
       'featureId',
@@ -110,6 +151,8 @@ describe('site feature catalog', () => {
       'Planned Giving',
       'Insurance',
     ]);
+    expect(servicesBreakdownEntry?.buildRuntime?.({ settings: {} })?.rows).toHaveLength(5);
+    expect(servicesMattersEntry?.buildRuntime?.({ settings: {} })?.action?.to).toBe('/about-us/impact');
   });
 
   it('falls back unknown ids to the default reviewed entry', () => {

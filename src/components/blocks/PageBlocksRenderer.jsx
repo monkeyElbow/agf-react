@@ -58,7 +58,7 @@ import {
 import { setupInvestmentsGrowthRevealMotion } from '../../lib/investmentsGrowthReveal';
 
 const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
-const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo']);
+const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo', 'flow-step', 'support']);
 const DYNAMIC_COLUMNS_STYLE_SET = new Set(['retirement', 'legacy-highlight', 'loans-value']);
 const HOME_HERO_PRIMARY_LINE_SIZE_CSS = 'clamp(3.4rem, 11vw, 8rem)';
 const EMPTY_OWNERSHIP = Object.freeze({
@@ -1493,6 +1493,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
         <BlockOwnershipOverlay ownership={ownership} />
         <SharedBlockHudAnchor hudAnchor={hudAnchor} />
         <ImpactProofStoryFeature
+          intro={runtime.featureIntro || undefined}
           headline={runtime.title}
           body={runtime.body}
           action={runtime.action}
@@ -1634,6 +1635,7 @@ export function ColumnsBlock({
     const followupLineClassName = normalizeToneClass(dynamicBlock.followupLineClassName || '');
     const followupLineHighlights = parseHighlightsJson(dynamicBlock.followupLineHighlightsJson, followupLine);
     const bodyHtml = String(dynamicBlock.bodyHtml || '').trim();
+    const sectionClassName = String(dynamicBlock.sectionClassName || '').trim();
     const columnsStyle = normalizeDynamicColumnsStyle(dynamicBlock.columnsStyle);
     const justify = normalizeHeroJustify(dynamicBlock.justify || 'center');
     const bgTone = columnsStyle === 'legacy-highlight'
@@ -1733,6 +1735,7 @@ export function ColumnsBlock({
           `is-width-${contentWidth}`,
           `is-columns-style-${columnsStyle}`,
           presetRuntimeClassName,
+          sectionClassName,
           String(extraSectionClassName || '').trim(),
           String(ownership?.className || '').trim(),
         ].filter(Boolean).join(' ')}
@@ -1945,6 +1948,7 @@ function RequestFormBlock({ block, ownership, hudAnchor }) {
 
   return (
     <section
+      id={runtime.anchorId || undefined}
       className={`service-native-section ${runtime.sectionClassName}${ownership?.className || ''}`}
       style={runtime.sectionStyle}
       data-block-id={block?.id || undefined}

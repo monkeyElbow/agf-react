@@ -37,6 +37,8 @@ const COLUMNS_COUNT_OPTIONS = [
 const COLUMNS_TYPE_OPTIONS = [
   { value: 'text', label: 'Text column' },
   { value: 'photo', label: 'Photo column' },
+  { value: 'flow-step', label: 'Flow step' },
+  { value: 'support', label: 'Support content' },
 ];
 
 const COLUMNS_BUTTON_STYLE_OPTIONS = [
@@ -116,6 +118,7 @@ const sections = [
         type: 'select',
         options: COLUMNS_COUNT_OPTIONS,
       }),
+      defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
     ],
   },
   {
@@ -133,6 +136,7 @@ const sections = [
         }),
         defineEditorField({ id: `col${slot}Title`, label: `Column ${slot} title`, type: 'text' }),
         defineEditorField({ id: `col${slot}Body`, label: `Column ${slot} body`, type: 'textarea', rows: 3 }),
+        defineEditorField({ id: `col${slot}BodyHtml`, label: `Column ${slot} body HTML`, type: 'html' }),
         defineEditorField({ id: `col${slot}ImageUrl`, label: `Column ${slot} photo URL`, type: 'text' }),
         defineEditorField({ id: `col${slot}ImageAlt`, label: `Column ${slot} photo alt text`, type: 'text' }),
         ...defineTransitionalActionFields({
@@ -175,6 +179,7 @@ export const columnsBlockDefinition = createBlockDefinition({
     bgTone: 'white',
     contentWidth: 'content',
     columns: 'two',
+    sectionClassName: '',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),

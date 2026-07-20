@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NativeContentPage from './NativeContentPage';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 
 let mockPageHierarchy = {};
 let mockBlocksByPath = {};
@@ -108,7 +109,9 @@ function openMailingStep() {
 describe('NativeContentPage institutional investment by mail flow', () => {
   beforeEach(() => {
     window.scrollTo = vi.fn();
-    mockBlocksByPath = {};
+    mockBlocksByPath = {
+      '/services/investments/invest-by-mail': contentBlockBlueprintsByPath['/services/investments/invest-by-mail'],
+    };
     mockPageHierarchy = {
       '/services/investments': {
         path: '/services/investments',
@@ -158,6 +161,8 @@ describe('NativeContentPage institutional investment by mail flow', () => {
     expect(heroSection?.textContent).toContain('Institutional Investments');
     expect(introSection).toBeTruthy();
     expect(introSection?.textContent).toContain('Open an Investment by Mail');
+    expect(container.querySelector('[data-block-id="mail_flow"]')).toBeTruthy();
+    expect(container.querySelector('.investments-mail-native-shell.native-dynamic-page-content')).toBeTruthy();
     expect(container.querySelector('[data-block-id="page_content"]')).toBeNull();
   });
 

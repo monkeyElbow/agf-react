@@ -12,11 +12,7 @@ describe('admin block insert choices', () => {
       createTemplateId: 'dynamic:card_grid:default',
       isCompatibility: false,
     });
-    expect(choices.find((choice) => choice.kind === 'card_grid' && choice.presetId === 'investment-options')).toMatchObject({
-      name: 'Card Grid · Investment options',
-      createTemplateId: 'dynamic:card_grid:investment-options',
-      isCompatibility: false,
-    });
+    expect(choices.some((choice) => choice.kind === 'card_grid' && choice.presetId === 'investment-options')).toBe(false);
     expect(choices.find((choice) => choice.kind === 'cta_band' && choice.presetId === 'dashboard-login')).toMatchObject({
       name: 'CTA Band · Dashboard login',
       createTemplateId: 'dynamic:cta_band:dashboard-login',
@@ -38,20 +34,18 @@ describe('admin block insert choices', () => {
       description: 'Code-managed editorial placeholder for future art-directed storytelling moments.',
       isCompatibility: false,
     });
-    expect(choices.some((choice) => choice.kind === 'cta_band' && choice.presetId === 'default')).toBe(false);
+    expect(choices.find((choice) => choice.kind === 'cta_band' && choice.presetId === 'default')).toMatchObject({
+      name: 'CTA Band · General CTA',
+      createTemplateId: 'dynamic:cta_band:default',
+      isCompatibility: false,
+    });
   });
 
-  it('keeps canonical static family entries available while retired compatibility-only insert choices stay hidden', () => {
+  it('keeps retired compatibility-only insert choices hidden after static family bridges are cleared', () => {
     const choices = buildAdminBlockInsertChoices(getAllBlockTemplateBlueprints(), { mode: 'static' });
 
-    expect(choices.find((choice) => choice.kind === 'card_grid' && choice.presetId === 'default' && !choice.isCompatibility)).toMatchObject({
-      name: 'Card Grid · Flexible cards',
-      createTemplateId: 'static:card_grid:default',
-    });
-    expect(choices.find((choice) => choice.kind === 'cta_band' && choice.presetId === 'default' && !choice.isCompatibility)).toMatchObject({
-      name: 'CTA Band · General CTA',
-      createTemplateId: 'static:cta_band:default',
-    });
+    expect(choices.some((choice) => choice.kind === 'card_grid' && choice.presetId === 'default' && !choice.isCompatibility)).toBe(false);
+    expect(choices.some((choice) => choice.kind === 'cta_band' && choice.presetId === 'default' && !choice.isCompatibility)).toBe(false);
 
     getRetiredInsertCompatibilityTemplateIds('static').forEach((templateId) => {
       expect(choices.some((choice) => choice.templateId === templateId)).toBe(false);

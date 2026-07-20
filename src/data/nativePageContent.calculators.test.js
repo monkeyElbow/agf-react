@@ -1,31 +1,38 @@
 import { describe, expect, it } from 'vitest';
+import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import { getNativePageContent } from './nativePageContent';
 
 describe('calculators native page content', () => {
-  it('keeps calculators on a single grid, removes the old category buckets, and leaves billboard and cta targets for managed blocks', () => {
+  it('keeps calculators shell-only with block-owned cards, widget, billboard, and cta sections', () => {
     const content = getNativePageContent('/calculators', '');
-    const sections = Array.isArray(content?.sections) ? content.sections : [];
-    const collections = sections.filter((section) => String(section?.className || '').includes('calculators-native-collection'));
-    const cards = collections.flatMap((section) => (Array.isArray(section?.cards) ? section.cards : []));
+    const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
+    const cardsBlock = blocks.find((block) => block?.id === 'calculator_cards');
+    const quickCheckBlock = blocks.find((block) => block?.id === 'ministers_housing_quick_check');
+    const billboardBlock = blocks.find((block) => block?.id === 'billboard');
+    const ctaBlock = blocks.find((block) => block?.id === 'cta_form');
 
     expect(content?.pageClass).toBe('native-info-page--calculators');
-    expect(collections).toHaveLength(1);
-    expect(collections[0]?.columns).toBe('two');
-    expect(collections[0]?.hideTitle).toBe(true);
-    expect(cards).toHaveLength(7);
-    expect(cards.every((card) => card?.stretchedLink?.label === 'Launch')).toBe(true);
-    expect(cards.map((card) => card?.stretchedLink?.to)).toEqual([
+    expect(content?.hero).toBeUndefined();
+    expect(content?.hideIntro).toBeUndefined();
+    expect(Array.isArray(content?.sections) ? content.sections : []).toEqual([]);
+    expect(cardsBlock?.settings?.columns).toBe('two');
+    expect(cardsBlock?.settings?.sectionClassName).toBe('calculators-native-collection calculators-native-collection--grid');
+    expect(Array.from({ length: 8 }, (_, index) => cardsBlock?.settings?.[`card${index + 1}ButtonLabel`])).toEqual(Array(8).fill('Launch'));
+    expect(Array.from({ length: 8 }, (_, index) => cardsBlock?.settings?.[`card${index + 1}ButtonUrl`])).toEqual([
       '/services/retirement#retirement-savings-calculator',
       '/calculators/increased-contribution',
       '/services/retirement#retirement-savings-calculator',
       '/services/loans#run-some-numbers',
       '/calculators/emergency-fund',
+      '/calculators#ministers-housing-allowance-quick-check',
       '/calculators/net-worth',
       '/services/investments#laddering-calculator',
     ]);
-    expect(sections.some((section) => String(section?.className || '').includes('calculators-native-contact'))).toBe(false);
-    expect(sections.some((section) => String(section?.className || '').includes('calculators-native-billboard'))).toBe(true);
-    expect(sections.some((section) => String(section?.className || '').includes('calculators-native-cta'))).toBe(true);
+    expect(quickCheckBlock?.settings?.widget).toBe('retirement-minister-housing-quick-check');
+    expect(quickCheckBlock?.settings?.anchorId).toBe('ministers-housing-allowance-quick-check');
+    expect(billboardBlock?.settings?.sectionClassName).toBe('calculators-native-billboard');
+    expect(ctaBlock?.settings?.sectionClassName).toBe('calculators-native-cta');
+    expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
   });
 
   it('restores real team-follow-up forms on standalone calculator routes instead of dead-end cta bands', () => {

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { sitePages } from './siteMap';
 import {
@@ -31,23 +32,176 @@ describe('content block blueprint coverage', () => {
     expect(fallbackBlocks[0]?.kind).toBe('content');
   });
 
+  it('keeps migrated retirement routes out of the fallback-only blueprint list', () => {
+    const source = readFileSync('src/data/contentBlockBlueprints.js', 'utf8');
+    const fallbackListSource = source.match(/const pageContentFallbackOnlyBlueprintPaths = \[[\s\S]*?\];/)?.[0] || '';
+
+    [
+      '/',
+      '/services/retirement/403b',
+      '/services/retirement/403b/403b-group-enrollment',
+      '/services/retirement/403b/403b-individual-enrollment',
+      '/services/retirement/403b/403b-terms-definitions',
+      '/about-us/careers',
+      '/online-contributions',
+      '/calculators',
+      '/contact-us',
+      '/forms',
+      '/prospectus',
+      '/services/retirement',
+      '/services/retirement/iras',
+      '/services/retirement/iras/fund-an-ira',
+      '/services/retirement/rollovers',
+      '/services/retirement/retirement-consultants',
+      '/services/loans',
+      '/services/loans/loan-consultants',
+      '/services/investments',
+      '/resources',
+      '/services/insurance',
+      '/services/insurance/ministers-group-life-plan',
+      '/services/insurance/mission-assure',
+      '/search',
+      '/services/insurance/mission-assure/report-a-claim',
+      '/sitemap',
+      '/accessibility',
+      '/privacy-policy',
+      '/subscribe',
+      '/terms-of-service',
+      '/vineyard',
+      '/yourplan',
+    ].forEach((pathname) => {
+      const escapedPathname = pathname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      expect(fallbackListSource, `${pathname} should use explicit block blueprints`).not.toMatch(new RegExp(`['"]${escapedPathname}['"]`));
+    });
+  });
+
   it('keeps the generic template source available for request-form seeding', () => {
     const templateBlocks = genericPageBlockBlueprint();
 
     expect(templateBlocks.some((block) => block?.kind === 'request_form')).toBe(true);
   });
 
-  it('seeds a real hero block for ministers group life instead of fallback-only page content', () => {
+  it('keeps blockless functional routes explicit without fallback page-content blueprints', () => {
+    [
+      '/about-us/careers',
+      '/forms',
+      '/prospectus',
+      '/search',
+      '/sitemap',
+    ].forEach((pathname) => {
+      expect(contentBlockBlueprintsByPath).toHaveProperty(pathname);
+      expect(contentBlockBlueprintsByPath[pathname]).toEqual([]);
+    });
+  });
+
+  it('seeds contact us as block-owned hero, address, and request form sections', () => {
+    const blocks = contentBlockBlueprintsByPath['/contact-us'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero');
+    const addressBlock = blocks.find((block) => block?.id === 'contact_address');
+    const requestBlock = blocks.find((block) => block?.id === 'request_form');
+
+    expect(heroBlock).toMatchObject({
+      kind: 'hero',
+      mode: 'dynamic',
+      settings: {
+        line1Text: 'Contact',
+      },
+    });
+    expect(addressBlock).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'AGFinancial',
+        sectionClassName: 'contact-us-address',
+      },
+    });
+    expect(addressBlock?.settings?.body).toContain('3900 S Overland Avenue');
+    expect(requestBlock).toMatchObject({
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'How can we help?',
+        sectionClassName: 'contact-us-request',
+        targetSectionKey: '',
+        targetSectionClassName: '',
+      },
+    });
+    expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
+    expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
+  });
+
+  it('seeds ministers group life as block-owned plan, enrollment, support, and CTA sections', () => {
     const blocks = contentBlockBlueprintsByPath['/services/insurance/ministers-group-life-plan'] || [];
+    const detailsBlock = blocks.find((block) => block?.id === 'plan_details');
+    const enrollBlock = blocks.find((block) => block?.id === 'enroll_steps');
+    const returnBlock = blocks.find((block) => block?.id === 'enroll_return');
+    const supportBlock = blocks.find((block) => block?.id === 'support');
+    const ctaBlock = blocks.find((block) => block?.id === 'cta_form');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(detailsBlock).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'ministers-group-life-native-details',
+        card1Title: 'Ministers',
+        card2Title: 'Missionaries',
+      },
+    });
+    expect(enrollBlock).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'ministers-group-life-native-enroll',
+        card1ButtonLabel: 'Minister enrollment form',
+        card1Button2Label: 'Missionary enrollment form',
+        card3ButtonLabel: 'Electronic Funds Transfer form',
+      },
+    });
+    expect(returnBlock).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'ministers-group-life-native-enroll ministers-group-life-native-enroll-return',
+        addressClassName: 'ministers-group-life-copy-address',
+        fineprint: '**FAX:** 417.447.7475',
+      },
+    });
+    expect(supportBlock).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'ministers-group-life-native-support',
+        supportGroupsExpanded: true,
+        supportGroupsCollapsible: false,
+      },
+    });
+    expect(supportBlock?.settings?.supportGroupsJson).toContain('Life Services Toolkit');
+    expect(ctaBlock).toMatchObject({
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        anchorId: 'form',
+        sectionClassName: 'ministers-group-life-native-cta insurance-native-cta',
+        title: 'Still need help?',
+      },
+    });
+    expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
+    expect(blocks.some((block) => block?.kind === 'site_feature')).toBe(false);
+    blocks.forEach((block) => {
+      expect(String(block?.settings?.targetSectionKey || ''), block?.id).toBe('');
+      expect(String(block?.settings?.targetSectionClassName || ''), block?.id).toBe('');
+    });
   });
 
   it('seeds real hero and intro blocks for life insurance quote instead of relying on fallback-only native content', () => {
     const blocks = contentBlockBlueprintsByPath['/services/insurance/life-insurance-quote'] || [];
     const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
     const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const typesBlock = blocks.find((block) => block?.id === 'life_types');
+    const bridgeBlock = blocks.find((block) => block?.id === 'quote_bridge');
+    const requestBlock = blocks.find((block) => block?.id === 'request_form');
 
     expect(heroBlock?.settings?.line1Text).toBe('Get a life quote.');
     expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"Get a","className":"is-mango"}]');
@@ -55,20 +209,94 @@ describe('content block blueprint coverage', () => {
     expect(introBlock?.settings?.headingHighlightsJson).toBe('[{"text":"family","className":"is-mango"}]');
     expect(introBlock?.settings?.bgTone).toBe('grey');
     expect(introBlock?.settings?.textTone).toBe('white');
+    expect(typesBlock?.kind).toBe('card_grid');
+    expect(typesBlock?.settings?.sectionClassName).toBe('life-quote-native-types');
+    expect(typesBlock?.settings?.card1Title).toBe('Term Life');
+    expect(typesBlock?.settings?.card2Title).toBe('Whole Life');
+    expect(typesBlock?.settings?.card3Title).toBe('Universal Life');
+    expect(bridgeBlock?.kind).toBe('content');
+    expect(bridgeBlock?.settings?.sectionClassName).toBe('life-quote-native-bridge');
+    expect(bridgeBlock?.settings?.anchorId).toBe('quote');
+    expect(requestBlock?.kind).toBe('request_form');
+    expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
+    blocks.forEach((block) => {
+      expect(String(block?.settings?.targetSectionKey || ''), block?.id).toBe('');
+    });
   });
 
-  it('seeds real hero and intro blocks for the insurance overview page', () => {
+  it('seeds the insurance overview as block-owned cards, billboards, features, and CTA form sections', () => {
     const blocks = contentBlockBlueprintsByPath['/services/insurance'] || [];
+    const coverageBlock = blocks.find((block) => block?.id === 'coverage_solutions');
+    const quoteBlock = blocks.find((block) => block?.id === 'quote_billboard');
+    const certificateBlock = blocks.find((block) => block?.id === 'certificate_proof');
+    const riskBlock = blocks.find((block) => block?.id === 'risk_management');
+    const ctaBlock = blocks.find((block) => block?.id === 'cta_form');
     const missionAssureBlock = blocks.find((block) => block?.id === 'mission_assure');
+    const fraudBlock = blocks.find((block) => block?.id === 'fraud_feature');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(coverageBlock).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-native-coverage',
+        card1Title: 'Property & Casualty',
+        card2Button2PageRef: '/services/insurance/group-term-life-insurance',
+        card4ButtonUrl: 'https://www.orsurety.com/commercial-bonds',
+      },
+    });
+    expect(quoteBlock).toMatchObject({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-native-quote',
+        buttonPageRef: '/services/insurance/life-insurance-quote',
+        button2PageRef: '/services/insurance/property-casualty-insurance',
+      },
+    });
+    expect(certificateBlock).toMatchObject({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-native-certificate-proof',
+        buttonPageRef: '/services/insurance/certificate-request',
+      },
+    });
+    expect(riskBlock).toMatchObject({
+      kind: 'feature_panel',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-native-risk',
+        buttonUrl: 'https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf',
+      },
+    });
+    expect(ctaBlock).toMatchObject({
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-native-cta',
+        title: 'What coverage is best for your ministry?',
+      },
+    });
+    expect(ctaBlock?.settings?.step1FieldsJson).toContain('coverageFocus');
     expect(missionAssureBlock).toMatchObject({
       kind: 'feature_panel',
       mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-native-mission-assure',
+      },
     });
-    expect(missionAssureBlock?.settings?.targetSectionKey).toBe('class:insurance-native-mission-assure');
+    expect(fraudBlock).toMatchObject({
+      kind: 'feature_panel',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-native-fraud',
+        buttonPageRef: '/resources/article/defend-yourself-against-fraud',
+      },
+    });
+    expect(missionAssureBlock?.settings?.targetSectionKey).toBeUndefined();
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
@@ -83,23 +311,56 @@ describe('content block blueprint coverage', () => {
     expect(servicesIntroBand?.settings?.textTone).toBe('white');
   });
 
-  it('seeds Mission Assure with a real hero and targeted billboard blocks instead of a fallback page-content block', () => {
+  it('seeds Mission Assure as block-owned content, billboard, and feature sections without bridge targets', () => {
     const blocks = contentBlockBlueprintsByPath['/services/insurance/mission-assure'] || [];
+    const introPricing = blocks.find((block) => block?.id === 'intro_pricing');
+    const medicalIncluded = blocks.find((block) => block?.id === 'medical_included');
     const getCovered = blocks.find((block) => block?.id === 'get_covered_billboard');
     const reportClaim = blocks.find((block) => block?.id === 'report_claim_billboard');
+    const campSafety = blocks.find((block) => block?.id === 'camp_safety');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(introPricing).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        widget: 'mission-assure-pricing',
+        sectionClassName: 'mission-assure-native-intro',
+      },
+    });
+    expect(introPricing?.settings?.pricingEntriesJson).toContain('"Domestic"');
+    expect(medicalIncluded).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'mission-assure-native-medical',
+      },
+    });
+    expect(medicalIncluded?.settings?.html).toContain('mission-assure-medical-badge');
     expect(getCovered).toMatchObject({
       kind: 'billboard',
       mode: 'dynamic',
+      settings: {
+        sectionClassName: 'mission-assure-native-get-covered',
+      },
     });
     expect(reportClaim).toMatchObject({
       kind: 'billboard',
       mode: 'dynamic',
+      settings: {
+        sectionClassName: 'mission-assure-native-report-claim',
+      },
     });
-    expect(getCovered?.settings?.targetSectionKey).toBe('class:mission-assure-native-get-covered');
-    expect(reportClaim?.settings?.targetSectionKey).toBe('class:mission-assure-native-report-claim');
+    expect(campSafety).toMatchObject({
+      kind: 'feature_panel',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'mission-assure-native-camp-safety',
+      },
+    });
+    expect(getCovered?.settings?.targetSectionKey).toBeUndefined();
+    expect(reportClaim?.settings?.targetSectionKey).toBeUndefined();
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
@@ -110,11 +371,9 @@ describe('content block blueprint coverage', () => {
     const dynamicBillboard = blocks.find((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(false);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'static')).toBe(true);
     expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'static')).toBe(true);
     expect(dynamicHero?.hidden).toBe(true);
     expect(dynamicIntro?.hidden).toBe(true);
     expect(dynamicBillboard?.settings?.title).toBe("We're making a difference together.");
@@ -127,15 +386,17 @@ describe('content block blueprint coverage', () => {
     ))).toMatchObject({
       settings: {
         featureId: 'impact_proof_story',
-        targetSectionKey: 'class:impact-native-stats',
+        targetSectionKey: '',
+        sectionClassName: 'impact-native-stats impact-proof-story',
       },
     });
     expect(blocks.some((block) => (
       block?.id === 'impact_proof_story'
       && block?.kind === 'site_feature'
       && block?.mode === 'static'
-    ))).toBe(true);
+    ))).toBe(false);
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(blocks.some((block) => block?.mode === 'static')).toBe(false);
   });
 
   it('seeds explicit managed sections for 403(b) individual enrollment without fallback page content', () => {
@@ -160,9 +421,14 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
-  it('seeds property and casualty with managed hero, intro, and the shorter quote request copy', () => {
+  it('seeds property and casualty as block-owned quote, program, resources, CTA, and notice sections', () => {
     const blocks = contentBlockBlueprintsByPath['/services/insurance/property-casualty-insurance'] || [];
     const requestBlock = blocks.find((block) => block?.id === 'request_form');
+    const agProgramBlock = blocks.find((block) => block?.id === 'ag_program');
+    const partnerBlock = blocks.find((block) => block?.id === 'partner');
+    const resourcesBlock = blocks.find((block) => block?.id === 'resources');
+    const safeBlock = blocks.find((block) => block?.id === 'safe_sound');
+    const noticeBlock = blocks.find((block) => block?.id === 'coverage_notice');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
@@ -174,8 +440,43 @@ describe('content block blueprint coverage', () => {
         titleClassName: 'is-super-grey',
         titleHighlightsJson: '[{"text":"P&C","className":"is-white"}]',
         body: 'Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.',
-        targetSectionClassName: 'insurance-pc-native-quote',
+        sectionClassName: 'insurance-pc-native-quote',
+        targetSectionKey: '',
+        targetSectionClassName: '',
       },
+    });
+    expect(agProgramBlock).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        anchorId: 'ag-program',
+        sectionClassName: 'insurance-pc-native-ag-program',
+        title: 'AG Insurance Program',
+      },
+    });
+    expect(partnerBlock).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-pc-native-partner',
+        logoAlt: 'Church Mutual Insurance',
+      },
+    });
+    expect(resourcesBlock).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'insurance-pc-native-resources',
+        card1Title: 'Additional coverages available',
+        card2Title: 'Extensive risk management resources',
+      },
+    });
+    expect(safeBlock?.settings?.titleHighlightsJson).toBe('[{"text":"Safe & sound","className":"is-sandstone"}]');
+    expect(noticeBlock?.settings?.fineprintDisclosureId).toBe('insurance-property-casualty-coverage-notice');
+    expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
+    blocks.forEach((block) => {
+      expect(String(block?.settings?.targetSectionKey || ''), block?.id).toBe('');
+      expect(String(block?.settings?.targetSectionClassName || ''), block?.id).toBe('');
     });
   });
 
@@ -212,12 +513,15 @@ describe('content block blueprint coverage', () => {
     const blocks = contentBlockBlueprintsByPath['/services/investments/invest-by-mail'] || [];
     const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
     const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const mailFlowBlock = blocks.find((block) => block?.id === 'mail_flow' && block?.kind === 'content' && block?.mode === 'dynamic');
 
     expect(heroBlock?.settings?.line1Text).toBe('Institutional Investments');
     expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"Investments","className":"is-atlantean"}]');
     expect(introBlock?.settings?.heading).toBe('Open an Investment by Mail');
     expect(introBlock?.settings?.bgTone).toBe('sand');
     expect(introBlock?.settings?.textTone).toBe('dark');
+    expect(mailFlowBlock?.settings?.widget).toBe('investments-institutional-by-mail');
+    expect(mailFlowBlock?.settings?.sectionClassName).toBe('investments-mail-native-shell');
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
@@ -227,27 +531,58 @@ describe('content block blueprint coverage', () => {
     const outroBlock = blocks.find((block) => block?.id === 'outro' && block?.mode === 'dynamic');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'static')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'how_it_works' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'gift_assets' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'qcd_fineprint' && block?.kind === 'legal_copy' && block?.mode === 'static')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'annuity_options' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
+    expect(blocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-steps',
+        columns: 'three',
+        card1Title: 'Fund',
+      },
+    });
+    expect(blocks.find((block) => block?.id === 'gift_assets')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-assets legacy-child-native-cga-assets',
+        card1Title: 'Gift funding options',
+        card1Fineprint: '*as of 2025',
+      },
+    });
+    expect(blocks.find((block) => block?.id === 'qcd_fineprint')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-cga-qcd-fineprint',
+        fineprintDisclosureId: 'planned-giving-cga-qcd-fineprint',
+      },
+    });
+    expect(blocks.find((block) => block?.id === 'annuity_options')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-options legacy-child-native-cga-options',
+        columns: 'two',
+      },
+    });
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(blocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
     expect(requestBlock).toMatchObject({
       kind: 'request_form',
       mode: 'dynamic',
       settings: {
         title: 'Your gifts are more powerful than you think.',
-        targetSectionClassName: 'legacy-child-native-cga-request',
+        sectionClassName: 'legacy-child-native-cga-request',
       },
     });
     expect(outroBlock).toMatchObject({
       kind: 'billboard',
       settings: {
         title: 'Plenty of options.',
-        targetSectionClassName: 'legacy-child-native-cga-outro',
+        sectionClassName: 'legacy-child-native-cga-outro',
+        fineprintDisclosureId: 'planned-giving-cga-state-notices',
       },
     });
   });
@@ -258,44 +593,100 @@ describe('content block blueprint coverage', () => {
     const outroBlock = blocks.find((block) => block?.id === 'outro' && block?.mode === 'dynamic');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'static')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'how_it_works' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'gift_types' && block?.kind === 'card_grid' && block?.mode === 'static')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'stock_transfer' && block?.kind === 'billboard' && block?.mode === 'static')).toBe(true);
+    expect(blocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-steps',
+        card1Title: '01',
+        card2ButtonUrl: 'https://uploads.agfinancial.org/',
+      },
+    });
+    expect(blocks.find((block) => block?.id === 'gift_types')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-assets',
+        card1Title: 'Gift types',
+        card1TitleClassName: 'legacy-child-native-assets-card-title',
+      },
+    });
+    expect(blocks.find((block) => block?.id === 'stock_transfer')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        anchorId: 'stock-transfer',
+        sectionClassName: 'legacy-child-native-stock',
+        card1ButtonDocumentId: 'document-planned-giving-intent-to-gift-form',
+        card2ButtonDocumentId: 'document-planned-giving-brokerage-loa-form',
+      },
+    });
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(blocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
     expect(requestBlock).toMatchObject({
       kind: 'request_form',
       mode: 'dynamic',
       settings: {
         title: 'A legacy of giving.',
-        targetSectionClassName: 'legacy-child-native-request',
+        anchorId: 'ministry-impact-form',
+        sectionClassName: 'legacy-child-native-request',
       },
     });
     expect(outroBlock).toMatchObject({
       kind: 'billboard',
       settings: {
         title: 'More joy in receiving.',
-        targetSectionClassName: 'legacy-child-native-billboard',
+        sectionClassName: 'legacy-child-native-billboard',
       },
     });
   });
 
   it('seeds calculators with explicit billboard and cta-form blocks without inert page content', () => {
     const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero');
+    const cardsBlock = blocks.find((block) => block?.id === 'calculator_cards');
+    const quickCheckBlock = blocks.find((block) => block?.id === 'ministers_housing_quick_check');
     const billboardBlock = blocks.find((block) => block?.id === 'billboard');
     const ctaBlock = blocks.find((block) => block?.id === 'cta_form');
 
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
     expect(blocks.some((block) => block?.id === 'request_form')).toBe(false);
+    expect(heroBlock).toMatchObject({
+      kind: 'hero',
+      mode: 'dynamic',
+      settings: {
+        line1Text: 'Calculators',
+      },
+    });
+    expect(cardsBlock).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        columns: 'two',
+        sectionClassName: 'calculators-native-collection calculators-native-collection--grid',
+        card1Title: 'Retirement Savings',
+        card8Title: 'Laddering',
+      },
+    });
+    expect(quickCheckBlock).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        widget: 'retirement-minister-housing-quick-check',
+        anchorId: 'ministers-housing-allowance-quick-check',
+        sectionClassName: 'calculator-tool-shell',
+      },
+    });
     expect(billboardBlock).toMatchObject({
       kind: 'billboard',
       mode: 'dynamic',
       settings: {
         title: 'Numbers are great.',
         subtitle: 'People are better.',
-        targetSectionClassName: 'calculators-native-billboard',
+        sectionClassName: 'calculators-native-billboard',
+        targetSectionClassName: '',
       },
     });
     expect(ctaBlock).toMatchObject({
@@ -304,23 +695,58 @@ describe('content block blueprint coverage', () => {
       settings: {
         title: 'Connect your faith & finances. Start here.',
         subtitle: 'Let’s explore what we can do together.',
-        targetSectionClassName: 'calculators-native-cta',
+        sectionClassName: 'calculators-native-cta',
+        targetSectionClassName: '',
       },
     });
+    expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
   });
 
   it('seeds certificate request, group term life, and retirement consultants without inert page content', () => {
     const certificateRequestBlocks = contentBlockBlueprintsByPath['/services/insurance/certificate-request'] || [];
     const groupLifeBlocks = contentBlockBlueprintsByPath['/services/insurance/group-term-life-insurance'] || [];
     const retirementConsultantBlocks = contentBlockBlueprintsByPath['/services/retirement/retirement-consultants'] || [];
+    const loanConsultantBlocks = contentBlockBlueprintsByPath['/services/loans/loan-consultants'] || [];
 
     expect(certificateRequestBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(certificateRequestBlocks.some((block) => block?.id === 'site_feature')).toBe(false);
     expect(groupLifeBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(groupLifeBlocks.some((block) => block?.id === 'site_feature')).toBe(false);
     expect(retirementConsultantBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(retirementConsultantBlocks.some((block) => block?.kind === 'hero' && block?.mode !== 'dynamic')).toBe(false);
+    expect(loanConsultantBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
 
+    expect(certificateRequestBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(certificateRequestBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+    expect(certificateRequestBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('certificate-request-native-section');
+    expect(certificateRequestBlocks.find((block) => block?.id === 'request_form')?.settings?.targetSectionKey).toBe('');
+    expect(groupLifeBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(groupLifeBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(groupLifeBlocks.find((block) => block?.id === 'lead')?.settings?.sectionClassName).toBe('group-life-native-lead');
     expect(groupLifeBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+    expect(groupLifeBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('group-life-native-quote');
+    expect(groupLifeBlocks.find((block) => block?.id === 'request_form')?.settings?.targetSectionKey).toBe('');
+    expect(groupLifeBlocks.find((block) => block?.id === 'honor')?.settings?.sectionClassName).toBe('group-life-native-honor');
+    expect(groupLifeBlocks.find((block) => block?.id === 'benefits')?.settings?.sectionClassName).toBe('group-life-native-benefits');
+    expect(groupLifeBlocks.find((block) => block?.id === 'benefits_cta')?.settings?.buttonPageRef).toBe('/services/insurance/ministers-group-life-plan');
     expect(retirementConsultantBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+    expect(loanConsultantBlocks.find((block) => block?.id === 'consultant_directory')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'loans-consultant-native-locations',
+        consultantService: 'loans',
+      },
+    });
+    expect(loanConsultantBlocks.find((block) => block?.id === 'request_form')).toMatchObject({
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'loans-consultant-native-contact',
+        targetSectionKey: '',
+        targetSectionClassName: '',
+      },
+    });
   });
 
   it('seeds explicit managed blocks for 403(b) group enrollment without fallback page content', () => {
@@ -333,7 +759,7 @@ describe('content block blueprint coverage', () => {
     const introBlock = blocks.find((block) => block?.id === 'intro');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(false);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
@@ -369,7 +795,6 @@ describe('content block blueprint coverage', () => {
     const iraBlocks = contentBlockBlueprintsByPath['/services/retirement/iras'] || [];
 
     expect(legacyGivingBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(legacyGivingBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(true);
     expect(legacyGivingBlocks.find((block) => block?.id === 'hero' && block?.mode === 'dynamic')).toMatchObject({
       settings: {
         line1Text: 'Generous giving.',
@@ -377,7 +802,7 @@ describe('content block blueprint coverage', () => {
       },
     });
     expect(legacyGivingBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
-    expect(legacyGivingBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'static')).toBe(true);
+    expect(legacyGivingBlocks.some((block) => block?.mode === 'static')).toBe(false);
     expect(legacyGivingBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')).toMatchObject({
       settings: {
         heading: 'Make a difference that lasts for generations.',
@@ -391,7 +816,7 @@ describe('content block blueprint coverage', () => {
     ))).toMatchObject({
       settings: {
         title: 'This is legacy planning and charitable giving made easy.',
-        targetSectionKey: 'class:legacy-giving-types',
+        sectionClassName: 'legacy-giving-types',
         card1ButtonStyle: 'ghost',
         card1Button2Style: 'blue',
         card4Button2Style: 'ghost',
@@ -411,26 +836,17 @@ describe('content block blueprint coverage', () => {
         buttonStyle: 'outline',
         button2Label: 'Online form*',
         button2Url: 'https://sft.agfinancial.org/documents/Send.do',
-        targetSectionKey: 'class:legacy-giving-wills',
+        sectionClassName: 'legacy-giving-wills',
       },
     });
-    expect(legacyGivingBlocks.some((block) => (
-      block?.id === 'giving_options'
-      && block?.kind === 'card_grid'
-      && block?.mode === 'static'
-    ))).toBe(true);
-    expect(legacyGivingBlocks.some((block) => (
-      block?.id === 'wills_estate_billboard'
-      && block?.kind === 'billboard'
-      && block?.mode === 'static'
-    ))).toBe(true);
     expect(legacyGivingBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(legacyGivingBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetFineprintSectionKey))).toBe(false);
     expect(legacyGivingBlocks.find((block) => block?.id === 'stewardship_story')).toMatchObject({
       kind: 'site_feature',
       mode: 'dynamic',
       settings: {
         featureId: 'legacy_giving_stewardship_story',
-        targetSectionKey: 'id:legacy-giving-stewardship-story',
+        sectionClassName: 'legacy-giving-stewardship legacy-stewardship-story',
       },
     });
     expect(legacyGivingBlocks.find((block) => (
@@ -441,14 +857,58 @@ describe('content block blueprint coverage', () => {
       settings: {
         title: 'More joy in giving.',
         subtitle: 'It’s easier than you think.',
-        targetSectionKey: 'class:legacy-giving-joy',
+        sectionClassName: 'legacy-giving-joy fade-out',
+        copyClassName: 'fade-up',
       },
     });
-    expect(legacyGivingBlocks.some((block) => (
-      block?.id === 'joy_billboard'
-      && block?.kind === 'billboard'
-      && block?.mode === 'static'
-    ))).toBe(true);
+    expect(legacyGivingBlocks.find((block) => block?.id === 'cta_form')).toMatchObject({
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-giving-cta',
+        field4Label: 'Planned giving product of interest*',
+      },
+    });
+    expect(legacyGivingBlocks.find((block) => block?.id === 'comparison_table')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        anchorId: 'charitable-giving-plan-comparison',
+        sectionClassName: 'legacy-giving-comparison',
+        widget: 'charitable-giving-table',
+      },
+    });
+    expect(legacyGivingBlocks.find((block) => block?.id === 'comparison_matrix')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-giving-comparison-matrix',
+        widget: 'giving-comparison-matrix',
+      },
+    });
+    expect(legacyGivingBlocks.find((block) => block?.id === 'testimonials')).toMatchObject({
+      kind: 'testimonials',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-giving-testimonials',
+        showFineprint: false,
+      },
+    });
+    expect(legacyGivingBlocks.find((block) => block?.id === 'testimonials_fineprint')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-giving-fineprint',
+      },
+    });
+    expect(legacyGivingBlocks.find((block) => block?.id === 'opportunity_feature')).toMatchObject({
+      kind: 'feature_panel',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-giving-opportunity',
+        buttonPageRef: '/resources/article/opportunity',
+      },
+    });
 
     expect(charitableTrustsBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(charitableTrustsBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
@@ -470,18 +930,13 @@ describe('content block blueprint coverage', () => {
       settings: {
         columns: 'two',
         showTitleDivider: false,
-        targetSectionKey: 'class:legacy-child-native-trust-choices--trusts',
+        sectionClassName: 'legacy-child-native-trust-choices legacy-child-native-trust-choices--trusts',
         card1Title: 'Charitable Remainder Trust (CRT)',
         card1TitleHighlightsJson: '[{"text":"Remainder","className":"is-melon"}]',
         card2Title: 'Charitable Lead Trust (CLT)',
         card2TitleHighlightsJson: '[{"text":"Lead","className":"is-mango"}]',
       },
     });
-    expect(charitableTrustsBlocks.some((block) => (
-      block?.id === 'trust_type_cards'
-      && block?.kind === 'card_grid'
-      && block?.mode === 'static'
-    ))).toBe(true);
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'trust_differences'
       && block?.kind === 'card_grid'
@@ -492,17 +947,12 @@ describe('content block blueprint coverage', () => {
         columns: 'three',
         cardStyle: 'none',
         showTitleDivider: false,
-        targetSectionKey: 'class:legacy-child-native-trusts-differences',
+        sectionClassName: 'legacy-child-native-trusts-differences',
         card1ListJson: '["Cash","Securities (stocks, bonds, mutual funds)","Real estate","Other marketable assets"]',
         card2Title: 'CRTs & taxes',
         card3Title: 'CLTs & taxes',
       },
     });
-    expect(charitableTrustsBlocks.some((block) => (
-      block?.id === 'trust_differences'
-      && block?.kind === 'card_grid'
-      && block?.mode === 'static'
-    ))).toBe(true);
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'remainder_trust_billboard'
       && block?.kind === 'billboard'
@@ -512,14 +962,10 @@ describe('content block blueprint coverage', () => {
         title: 'Charitable Remainder Trust',
         bgTone: 'blue',
         textTone: 'white',
-        targetSectionKey: 'class:legacy-child-native-trusts-crt',
+        anchorId: 'crt',
+        sectionClassName: 'legacy-child-native-trusts-crt',
       },
     });
-    expect(charitableTrustsBlocks.some((block) => (
-      block?.id === 'remainder_trust_billboard'
-      && block?.kind === 'billboard'
-      && block?.mode === 'static'
-    ))).toBe(true);
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'remainder_trust_type_cards'
       && block?.kind === 'card_grid'
@@ -528,16 +974,31 @@ describe('content block blueprint coverage', () => {
       settings: {
         columns: 'two',
         showTitleDivider: false,
-        targetSectionKey: 'class:legacy-child-native-trusts-crt-types',
+        sectionClassName: 'legacy-child-native-trusts-crt-types',
         card1Title: 'Charitable Remainder Unitrust (CRUT)',
         card2Title: 'Charitable Remainder Annuity (CRAT)',
       },
     });
-    expect(charitableTrustsBlocks.some((block) => (
-      block?.id === 'remainder_trust_type_cards'
-      && block?.kind === 'card_grid'
-      && block?.mode === 'static'
-    ))).toBe(true);
+    expect(charitableTrustsBlocks.find((block) => block?.id === 'cta_trigger')).toMatchObject({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-trusts-crt-trigger',
+        buttonLabel: 'Start the process',
+        buttonAction: 'open_cta_form',
+        buttonTargetAnchorId: 'charitable-trusts-inline-form',
+      },
+    });
+    expect(charitableTrustsBlocks.find((block) => block?.id === 'cta_form')).toMatchObject({
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        anchorId: 'charitable-trusts-inline-form',
+        sectionClassName: 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline',
+        displayMode: 'inline_reveal',
+        triggerMode: 'external',
+      },
+    });
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'lead_trust_billboard'
       && block?.kind === 'billboard'
@@ -547,14 +1008,10 @@ describe('content block blueprint coverage', () => {
         title: 'Charitable Lead Trust',
         bgTone: 'sand',
         textTone: 'dark',
-        targetSectionKey: 'class:legacy-child-native-trusts-clt',
+        anchorId: 'clt',
+        sectionClassName: 'legacy-child-native-trusts-clt',
       },
     });
-    expect(charitableTrustsBlocks.some((block) => (
-      block?.id === 'lead_trust_billboard'
-      && block?.kind === 'billboard'
-      && block?.mode === 'static'
-    ))).toBe(true);
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'lead_trust_type_cards'
       && block?.kind === 'card_grid'
@@ -563,48 +1020,381 @@ describe('content block blueprint coverage', () => {
       settings: {
         columns: 'two',
         showTitleDivider: false,
-        targetSectionKey: 'class:legacy-child-native-trusts-clt-types',
+        sectionClassName: 'legacy-child-native-trusts-clt-types',
         card1Title: 'Grantor Lead Trust',
         card2Title: 'Non-Grantor Lead Trust',
       },
     });
-    expect(charitableTrustsBlocks.some((block) => (
-      block?.id === 'lead_trust_type_cards'
-      && block?.kind === 'card_grid'
-      && block?.mode === 'static'
-    ))).toBe(true);
+    expect(charitableTrustsBlocks.find((block) => block?.id === 'cta_form_legacy_child_native_cta_legacy_child_native_trusts_cta')).toMatchObject({
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        anchorId: 'charitable-trusts-form',
+        sectionClassName: 'legacy-child-native-cta legacy-child-native-trusts-cta',
+      },
+    });
     expect(charitableTrustsBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(charitableTrustsBlocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(charitableTrustsBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
 
     expect(endowmentBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(endowmentBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
-    expect(endowmentBlocks.some((block) => block?.id === 'give_forever' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
-    expect(endowmentBlocks.find((block) => block?.id === 'request_form')?.settings?.targetSectionKey).toBe('class:legacy-child-native-endowments-legacy-form');
+    expect(endowmentBlocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
+      kind: 'columns',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-endowments-duo',
+        columns: 'three',
+        col1Type: 'flow-step',
+        col4Type: 'support',
+      },
+    });
+    expect(endowmentBlocks.find((block) => block?.id === 'calculator')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        widget: 'endowment-calculator',
+        sectionClassName: 'legacy-child-native-endowments-calculator',
+      },
+    });
+    expect(endowmentBlocks.find((block) => block?.id === 'give_forever')).toMatchObject({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-endowments-big-cta',
+      },
+    });
+    expect(endowmentBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-legacy-form');
     expect(endowmentBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(endowmentBlocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(endowmentBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
 
     expect(generosityBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(generosityBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button1Label).toBe('Open a Generosity Fund®');
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Label).toBe('Open a traditional DAF');
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Url).toBe('#traditional-daf-form');
+    expect(generosityBlocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-steps',
+        card1Title: '01',
+        card3Title: '03',
+      },
+    });
+    expect(generosityBlocks.find((block) => block?.id === 'gift_assets')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-assets legacy-child-native-generosity-assets',
+        card1Title: 'What you give',
+        card1ClassName: 'generosity-fund-assets-card',
+      },
+    });
     expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.title).toBe('Make the most of your giving.');
     expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.body).toBe('Let’s discover the best way for you to give, and in the easiest way possible.');
-    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.targetSectionKey).toBe('id:traditional-daf-form');
+    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.anchorId).toBe('traditional-daf-form');
+    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('legacy-child-native-generosity-request');
     expect(JSON.parse(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.step1FieldsJson || '[]')).toEqual([
       expect.objectContaining({ id: 'name', label: 'Name*', type: 'text', required: true }),
       expect.objectContaining({ id: 'phone', label: 'Phone*', type: 'tel', required: true }),
       expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
       expect.objectContaining({ id: 'message', label: 'Message', type: 'textarea', placeholder: 'What would you like to discuss?' }),
     ]);
-    expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.targetSectionKey).toBe('class:legacy-child-native-generosity-outro');
+    expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.sectionClassName).toBe('legacy-child-native-generosity-outro');
     expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.button2Style).toBe('ghost');
     expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.button2Tone).toBe('super-grey');
     expect(generosityBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(generosityBlocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(generosityBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
 
     expect(iraBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(iraBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
-    expect(iraBlocks.find((block) => block?.id === 'rollover_billboard')?.settings?.targetSectionKey).toBe('class:retirement-child-native-rollover');
-    expect(iraBlocks.find((block) => block?.id === 'daily_billboard')?.settings?.targetSectionKey).toBe('class:retirement-ira-native-cta');
+    expect(iraBlocks.find((block) => block?.id === 'ira_types')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        columns: 'two',
+        sectionClassName: 'retirement-child-native-ira-types',
+        card1Title: 'Traditional IRA',
+        card2Title: 'Roth IRA',
+      },
+    });
+    expect(iraBlocks.find((block) => block?.id === 'open_ira')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        buttonLabel: 'Open IRA',
+        buttonUrl: 'https://secure.agfinancial.org/invest',
+      },
+    });
+    expect(iraBlocks.find((block) => block?.id === 'comparison_table')?.settings?.tableHeadersJson).toEqual(['Key difference', 'Traditional IRA', 'Roth IRA']);
+    expect(iraBlocks.find((block) => block?.id === 'rate_table')?.settings?.fineprintDisclosureId).toBe('retirement-ira-rates-disclosure');
+    expect(iraBlocks.find((block) => block?.id === 'contribution_limits')?.settings?.fineprintDisclosureId).toBe('retirement-ira-contribution-limits-disclosure');
+    expect(iraBlocks.find((block) => block?.id === 'rollover_billboard')?.settings?.targetSectionKey).toBe('');
+    expect(iraBlocks.find((block) => block?.id === 'daily_billboard')?.settings?.targetSectionKey).toBe('');
     expect(iraBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds fund-an-IRA as a block-owned widget route without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/retirement/iras/fund-an-ira'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const widgetBlock = blocks.find((block) => block?.id === 'fund_ira_widget' && block?.kind === 'content');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Fund an IRA');
+    expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"IRA","className":"is-mango"}]');
+    expect(widgetBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        widget: 'retirement-fund-ira',
+        sectionClassName: 'retirement-fund-ira-native-shell',
+        paddingTopRem: 0,
+        paddingBottomRem: 0,
+      },
+    });
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds 403(b) terms definitions as explicit editable blocks', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/retirement/403b/403b-terms-definitions'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const definitionsBlock = blocks.find((block) => block?.id === 'core_definitions' && block?.kind === 'content');
+
+    expect(heroBlock?.settings?.line1Text).toBe('403(b) Terms & Definitions');
+    expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"Terms","className":"is-mango"}]');
+    expect(introBlock?.settings?.bodyHtml).toContain('Key 403(b) terms');
+    expect(definitionsBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'retirement-403b-terms-definitions-core',
+        copyWrap: true,
+        buttonLabel: 'Back to 403(b)',
+        buttonPageRef: '/services/retirement/403b',
+      },
+    });
+    expect(definitionsBlock?.settings?.html).toContain('QCCO = Qualified Church-Controlled Organization.');
+    expect(definitionsBlock?.settings?.html).toContain('403bregs@agfinancial.org');
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds subscribe as explicit editable blocks without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/subscribe'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const contentBlock = blocks.find((block) => block?.id === 'stay_in_loop' && block?.kind === 'content');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Subscribe');
+    expect(introBlock?.settings?.bodyHtml).toBe('<p>Subscribe to the newsletter.</p>');
+    expect(contentBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'subscribe-native-stay-in-loop',
+        copyWrap: true,
+        buttonLabel: 'Go to home signup',
+        buttonPageRef: '/#stay-in-the-loop',
+      },
+    });
+    expect(contentBlock?.settings?.html).toContain('Stay in the loop');
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds yourplan as explicit editable blocks without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/yourplan'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const startHereBlock = blocks.find((block) => block?.id === 'start_here' && block?.kind === 'card_grid');
+    const contactBlock = blocks.find((block) => block?.id === 'contact_cta' && block?.kind === 'content');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Your Plan');
+    expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"Plan","className":"is-mango"}]');
+    expect(introBlock?.settings?.bodyHtml).toContain('Build a practical plan');
+    expect(startHereBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        title: 'Start here',
+        sectionClassName: 'yourplan-native-start-here',
+        card1ButtonPageRef: '/services/loans',
+        card5ButtonPageRef: '/services/insurance',
+      },
+    });
+    expect(contactBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'yourplan-native-contact-cta',
+        buttonLabel: 'Contact us',
+        buttonPageRef: '/contact-us',
+      },
+    });
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds vineyard as explicit editable blocks without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/vineyard'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const cardsBlock = blocks.find((block) => block?.id === 'faith_money_cards' && block?.kind === 'card_grid');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Welcome, Vineyard');
+    expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"Vineyard","className":"is-mango"}]');
+    expect(introBlock?.settings?.bodyHtml).toContain('support churches, ministers, and individuals');
+    expect(cardsBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        title: 'Put your money where your faith is',
+        sectionClassName: 'vineyard-native-faith-money',
+        card1ButtonPageRef: '/services/investments',
+        card4ButtonPageRef: '/services/loans',
+      },
+    });
+    expect(cardsBlock?.settings?.card2ButtonPageRef).toBe('/services/insurance/property-casualty-insurance');
+    expect(cardsBlock?.settings?.card3ButtonPageRef).toBe('/services/planned-giving');
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds privacy policy as explicit editable blocks without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/privacy-policy'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const contentBlock = blocks.find((block) => block?.id === 'privacy_details' && block?.kind === 'content');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Privacy Policy');
+    expect(introBlock?.settings?.bodyHtml).toContain('privacy practices applicable to all internet users');
+    expect(contentBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legal-native-privacy-details',
+        copyWrap: true,
+        buttonLabel: 'Contact us',
+        buttonPageRef: '/contact-us',
+      },
+    });
+    expect(contentBlock?.settings?.html).toContain('Collection and Use of Personal Information');
+    expect(contentBlock?.settings?.html).toContain('webmaster@agfinancial.org');
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds accessibility as explicit editable blocks without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/accessibility'] || [];
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const conformanceBlock = blocks.find((block) => block?.id === 'conformance_status' && block?.kind === 'content');
+    const limitationsBlock = blocks.find((block) => block?.id === 'limitations' && block?.kind === 'content');
+    const feedbackBlock = blocks.find((block) => block?.id === 'feedback' && block?.kind === 'content');
+
+    expect(blocks.some((block) => block?.id === 'hero')).toBe(false);
+    expect(introBlock?.settings?.heading).toBe("We're committed to accessibility.");
+    expect(introBlock?.settings?.bodyHtml).toContain('ensuring visitors with disabilities');
+    expect(conformanceBlock?.settings?.html).toContain('https://www.w3.org/WAI/standards-guidelines/wcag/');
+    expect(limitationsBlock?.settings?.html).toContain('https://osxdaily.com/2014/10/22/increase-contrast-mac-os-x-yosemite/');
+    expect(limitationsBlock?.settings?.html).toContain('https://support.microsoft.com/en-us/help/13862/windows-10-use-high-contrast-mode');
+    expect(feedbackBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'accessibility-native-feedback',
+        buttonLabel: 'Contact Us',
+        buttonPageRef: '/contact-us',
+      },
+    });
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds mission assure report-a-claim as explicit editable blocks without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/insurance/mission-assure/report-a-claim'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const contactsBlock = blocks.find((block) => block?.id === 'claim_contacts' && block?.kind === 'card_grid');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Report a claim');
+    expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"claim","className":"is-mango"}]');
+    expect(introBlock?.settings?.bodyHtml).toContain('policy holder name');
+    expect(contactsBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        title: 'Claim contact information',
+        sectionClassName: 'mission-assure-claim-contacts',
+        card1ButtonUrl: 'mailto:ACEClaimsFirstNotice@acegroup.com',
+        card1ButtonPageRef: '',
+      },
+    });
+    expect(contactsBlock?.settings?.card1Body).toContain('ACEClaimsFirstNotice@acegroup.com');
+    expect(contactsBlock?.settings?.card4Body).toContain('Scranton, PA 18505-0554');
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds resources as explicit editable blocks without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/resources'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const featuredBlock = blocks.find((block) => block?.id === 'featured_resources' && block?.kind === 'card_grid');
+    const categoriesBlock = blocks.find((block) => block?.id === 'categories' && block?.kind === 'content');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Resources');
+    expect(introBlock?.settings?.bodyHtml).toContain('Articles, calculators');
+    expect(featuredBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        title: 'Featured',
+        sectionClassName: 'resources-native-featured',
+        card1ButtonPageRef: '/resources',
+        card3ButtonPageRef: '/resources',
+      },
+    });
+    expect(featuredBlock?.settings?.card3Title).toContain('Tariffs');
+    expect(categoriesBlock?.settings?.html).toContain('<a href="/calculators">Calculators</a>');
+    expect(categoriesBlock?.settings?.html).toContain('Tax &amp; End of Year');
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds online contributions as explicit editable blocks without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/online-contributions'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const overviewBlock = blocks.find((block) => block?.id === 'setup_overview' && block?.kind === 'content');
+    const stepsBlock = blocks.find((block) => block?.id === 'setup_steps' && block?.kind === 'card_grid');
+    const helpBlock = blocks.find((block) => block?.id === 'help_cta' && block?.kind === 'billboard');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Employer contributions');
+    expect(introBlock?.settings?.heading).toBe('Manage Contributions');
+    expect(overviewBlock?.settings?.sectionClassName).toBe('online-contrib-native-overview');
+    expect(overviewBlock?.settings?.html).toContain('clientservices@agfinancial.org');
+    expect(stepsBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'online-contrib-native-steps',
+        card1ButtonUrl: 'https://secure.agfinancial.org/cp/do/user/login',
+        card3ButtonUrl: 'mailto:clientservices@agfinancial.org',
+        card3Button2Url: 'tel:18666211787',
+      },
+    });
+    expect(helpBlock?.settings).toMatchObject({
+      sectionClassName: 'online-contrib-native-help',
+      buttonUrl: 'mailto:retirement@agfinancial.org',
+      button2Url: 'tel:18006227526',
+    });
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+  });
+
+  it('seeds terms of service as explicit editable blocks without fallback page content', () => {
+    const blocks = contentBlockBlueprintsByPath['/terms-of-service'] || [];
+    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const contentBlock = blocks.find((block) => block?.id === 'terms_details' && block?.kind === 'content');
+
+    expect(heroBlock?.settings?.line1Text).toBe('Terms of Service');
+    expect(introBlock?.settings?.bodyHtml).toContain('subject to these Terms of Service');
+    expect(contentBlock).toMatchObject({
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legal-native-terms-details',
+        copyWrap: true,
+        buttonLabel: 'Contact us',
+        buttonPageRef: '/contact-us',
+      },
+    });
+    expect(contentBlock?.settings?.html).toContain('Acceptance of Terms');
+    expect(contentBlock?.settings?.html).toContain('Disclaimers and Liability');
+    expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
   it('seeds the 403(b) loan section with explicit semantic blocks instead of native-only sections', () => {
@@ -797,35 +1587,82 @@ describe('content block blueprint coverage', () => {
     const retirementBlocks = contentBlockBlueprintsByPath['/services/retirement'] || [];
     const testBlocks = contentBlockBlueprintsByPath['/test'] || [];
 
-    expect(homeBlocks.some((block) => block?.id === 'top_strip' && block?.mode === 'static' && block?.kind === 'top_strip')).toBe(true);
-    expect(homeBlocks.some((block) => block?.id === 'hero' && block?.mode === 'static' && block?.kind === 'hero')).toBe(true);
+    expect(homeBlocks.some((block) => block?.id === 'top_strip' && block?.mode === 'dynamic' && block?.kind === 'top_strip')).toBe(true);
+    expect(homeBlocks.some((block) => block?.id === 'hero' && block?.mode === 'dynamic' && block?.kind === 'hero')).toBe(true);
+    expect(homeBlocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(homeBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
 
     expect(servicesBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')?.kind).toBe('billboard');
     expect(servicesBlocks.find((block) => block?.id === 'intro' && block?.mode === 'dynamic')?.settings?.title).toBe('A robust financial strategy for your ministry and your family.');
-    expect(servicesBlocks.find((block) => block?.id === 'services_cards' && block?.mode === 'static')?.settings?.cardStyle).toBe('card2');
-    expect(servicesBlocks.find((block) => block?.id === 'services_cards' && block?.mode === 'static')?.templateId).toBe('card_grid');
-    expect(servicesBlocks.find((block) => block?.id === 'services_cards' && block?.mode === 'static')?.presetId).toBe('default');
-    expect(servicesBlocks.find((block) => block?.id === 'matters_band' && block?.mode === 'static')?.settings?.background).toBe('blue');
+    expect(servicesBlocks.find((block) => block?.id === 'services_cards')).toMatchObject({
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'services_breakdown',
+        sectionClassName: 'services-native-grid-wrap services-breakdown-section',
+      },
+    });
+    expect(servicesBlocks.find((block) => block?.id === 'matters_band')).toMatchObject({
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'services_matters_band',
+        sectionClassName: 'services-native-matters',
+      },
+    });
+    expect(servicesBlocks.find((block) => block?.id === 'testimonials')?.settings?.sectionClassName).toBe('services-native-testimonials');
+    expect(servicesBlocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(servicesBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
 
-    expect(loansBlocks.some((block) => block?.id === 'loan_options' && block?.mode === 'static' && block?.kind === 'card_grid')).toBe(true);
-    expect(loansBlocks.find((block) => block?.id === 'loan_options' && block?.mode === 'static')?.templateId).toBe('card_grid');
-    expect(loansBlocks.find((block) => block?.id === 'loan_options' && block?.mode === 'static')?.presetId).toBe('default');
-    expect(loansBlocks.some((block) => block?.id === 'cta_band' && block?.mode === 'static' && block?.kind === 'cta_band')).toBe(true);
-    expect(loansBlocks.find((block) => block?.id === 'cta_band' && block?.mode === 'static')?.templateId).toBe('cta_band');
-    expect(loansBlocks.find((block) => block?.id === 'cta_band' && block?.mode === 'static')?.presetId).toBe('default');
-    expect(investmentBlocks.some((block) => block?.id === 'certificates' && block?.mode === 'static' && block?.kind === 'card_grid')).toBe(true);
-    expect(investmentBlocks.find((block) => block?.id === 'certificates' && block?.mode === 'static')?.templateId).toBe('card_grid');
-    expect(investmentBlocks.find((block) => block?.id === 'certificates' && block?.mode === 'static')?.presetId).toBe('default');
+    expect(loansBlocks.find((block) => block?.id === 'loan_options')).toMatchObject({
+      kind: 'card_grid',
+      mode: 'dynamic',
+      templateId: 'card_grid',
+      presetId: 'default',
+      settings: {
+        title: 'Every loan, 100% customized.',
+        sectionClassName: 'loans-native-options',
+      },
+    });
+    expect(loansBlocks.find((block) => block?.id === 'cta_band')).toMatchObject({
+      kind: 'cta_band',
+      mode: 'dynamic',
+      templateId: 'cta_band',
+      presetId: 'default',
+      settings: {
+        title: 'Which loan is right for me?',
+      },
+    });
+    expect(loansBlocks.find((block) => block?.id === 'testimonials')?.settings?.sectionClassName).toBe('loans-native-testimonials');
+    expect(loansBlocks.some((block) => block?.id === 'hero' && block?.mode === 'dynamic' && block?.kind === 'hero')).toBe(true);
+    expect(loansBlocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(loansBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
+    expect(investmentBlocks.some((block) => block?.id === 'hero' && block?.mode === 'dynamic' && block?.kind === 'hero')).toBe(true);
+    expect(investmentBlocks.some((block) => block?.id === 'hero' && block?.mode === 'static')).toBe(false);
+    expect(investmentBlocks.some((block) => block?.id === 'certificates' && block?.mode === 'dynamic' && block?.kind === 'card_grid')).toBe(true);
+    expect(investmentBlocks.find((block) => block?.id === 'certificates' && block?.mode === 'dynamic')?.templateId).toBe('card_grid');
+    expect(investmentBlocks.find((block) => block?.id === 'certificates' && block?.mode === 'dynamic')?.presetId).toBe('default');
+    expect(investmentBlocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(investmentBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
     expect(investmentBlocks.some((block) => block?.id === 'rates_table')).toBe(false);
-    expect(retirementBlocks.some((block) => block?.id === 'plan_features' && block?.mode === 'static' && block?.kind === 'card_grid')).toBe(true);
-    expect(retirementBlocks.find((block) => block?.id === 'plan_features' && block?.mode === 'static')?.templateId).toBe('card_grid');
-    expect(retirementBlocks.find((block) => block?.id === 'plan_features' && block?.mode === 'static')?.presetId).toBe('default');
+    expect(retirementBlocks.find((block) => block?.id === 'retirement_plan_feature')).toMatchObject({
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'retirement_plan_feature',
+        sectionClassName: 'retirement-plan-feature',
+      },
+    });
+    expect(retirementBlocks.find((block) => block?.id === 'rollover_billboard')?.settings?.sectionClassName).toBe('retirement-rollover-billboard');
+    expect(retirementBlocks.find((block) => block?.id === 'testimonials')?.settings?.sectionClassName).toBe('retirement-testimonials');
+    expect(retirementBlocks.some((block) => block?.mode === 'static')).toBe(false);
+    expect(retirementBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
     expect(retirementBlocks.some((block) => block?.id === 'housing_allowance')).toBe(false);
     expect(testBlocks.some((block) => block?.id === 'hero' && block?.mode === 'static' && block?.kind === 'hero')).toBe(true);
-    expect(homeBlocks.find((block) => block?.id === 'home_ministry_allies' && block?.mode === 'static')).toMatchObject({
+    expect(homeBlocks.find((block) => block?.id === 'home_ministry_allies' && block?.mode === 'dynamic')).toMatchObject({
       kind: 'billboard',
     });
-    expect(homeBlocks.find((block) => block?.id === 'home_do_the_math' && block?.mode === 'static')).toMatchObject({
+    expect(homeBlocks.find((block) => block?.id === 'home_do_the_math' && block?.mode === 'dynamic')).toMatchObject({
       kind: 'billboard',
     });
   });
@@ -839,22 +1676,22 @@ describe('content block blueprint coverage', () => {
     expect(CANONICAL_BLUEPRINT_SEED_TEMPLATE_IDS_BY_LOOKUP_ID).toEqual({});
     expect(servicesCardsTemplate).toMatchObject({
       templateLookupId: 'services_cards',
-      templateId: 'card_grid',
-      mode: 'static',
-      kind: 'card_grid',
+      templateId: 'services_cards',
+      mode: 'dynamic',
+      kind: 'site_feature',
     });
     expect(isPersistedBlueprintBridgeTemplateId(servicesCardsTemplate?.templateId)).toBe(false);
 
     expect(mattersBandTemplate).toMatchObject({
       templateLookupId: 'matters_band',
-      templateId: 'cta_band',
-      mode: 'static',
-      kind: 'cta_band',
+      templateId: 'matters_band',
+      mode: 'dynamic',
+      kind: 'site_feature',
     });
     expect(loanOptionsTemplate).toMatchObject({
       templateLookupId: 'loan_options',
       templateId: 'card_grid',
-      mode: 'static',
+      mode: 'dynamic',
       kind: 'card_grid',
     });
 
@@ -875,18 +1712,37 @@ describe('content block blueprint coverage', () => {
     const ctaFormBlock = investmentBlocks.find((block) => block?.id === 'cta_form');
     const featurePanelBlock = investmentBlocks.find((block) => block?.id === 'cash_reserves');
     const calculatorCtaBlock = investmentBlocks.find((block) => block?.id === 'laddering');
+    const testimonialsBlock = investmentBlocks.find((block) => block?.id === 'testimonials');
+    const certificatesBlock = investmentBlocks.find((block) => block?.id === 'certificates');
+    const ratesBlock = investmentBlocks.find((block) => block?.id === 'certificates_table');
 
+    expect(certificatesBlock?.kind).toBe('card_grid');
+    expect(certificatesBlock?.mode).toBe('dynamic');
+    expect(certificatesBlock?.settings?.card1Title).toBe('Demand Certificates');
+    expect(certificatesBlock?.settings?.card2Title).toBe('Term Certificates');
+    expect(ratesBlock).toMatchObject({
+      kind: 'rates',
+      mode: 'dynamic',
+    });
     expect(growthFeatureBlock?.kind).toBe('site_feature');
     expect(growthFeatureBlock?.settings?.featureId).toBe('investments_growth_feature');
     expect(ctaFormBlock?.kind).toBe('cta_form');
     expect(ctaFormBlock?.settings?.submitStyle).toBe('outline');
+    expect(ctaFormBlock?.settings?.targetSectionKey).toBeUndefined();
+    expect(ctaFormBlock?.settings?.targetSectionClassName).toBeUndefined();
+    expect(ctaFormBlock?.settings?.targetSectionIndex).toBeUndefined();
     expect(featurePanelBlock?.kind).toBe('feature_panel');
     expect(featurePanelBlock?.presetId).toBeUndefined();
     expect(calculatorCtaBlock?.kind).toBe('calculator_cta');
     expect(calculatorCtaBlock?.presetId).toBeUndefined();
+    expect(testimonialsBlock?.kind).toBe('testimonials');
+    expect(testimonialsBlock?.settings?.targetSectionKey).toBeUndefined();
+    expect(testimonialsBlock?.settings?.targetFineprintSectionKey).toBeUndefined();
+    expect(testimonialsBlock?.settings?.targetSectionClassName).toBeUndefined();
+    expect(testimonialsBlock?.settings?.targetSectionIndex).toBeUndefined();
   });
 
-  it('keeps /rates seeded on canonical rates identity without an investments rates placeholder block', () => {
+  it('keeps /rates and investments seeded on canonical rates identity without retired rates placeholders', () => {
     const ratesBlocks = contentBlockBlueprintsByPath['/rates'] || [];
     const investmentBlocks = contentBlockBlueprintsByPath['/services/investments'] || [];
 
@@ -898,7 +1754,12 @@ describe('content block blueprint coverage', () => {
       kind: 'rates',
       mode: 'dynamic',
     });
+    expect(investmentBlocks.find((block) => block?.id === 'certificates_table')).toMatchObject({
+      kind: 'rates',
+      mode: 'dynamic',
+    });
     expect(ratesBlocks.some((block) => block?.kind === 'rates_table')).toBe(false);
     expect(investmentBlocks.some((block) => block?.id === 'rates_table')).toBe(false);
+    expect(investmentBlocks.some((block) => block?.kind === 'rates_table')).toBe(false);
   });
 });

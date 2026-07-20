@@ -37,10 +37,17 @@ vi.mock('../context/TestimonialsContext', () => ({
 
 vi.mock('../context/ContentAdminContext', async () => {
   const actual = await vi.importActual('../context/ContentAdminContext.jsx');
+  const { contentBlockBlueprintsByPath } = await vi.importActual('../data/contentBlockBlueprints.js');
+  const servicesBlocks = contentBlockBlueprintsByPath['/services'].map((block) => ({
+    ...block,
+    settings: { ...(block.settings || {}) },
+  }));
   return {
     ...actual,
     useContentAdmin: () => ({
-      blocksByPath: {},
+      blocksByPath: {
+        '/services': servicesBlocks,
+      },
       pageHierarchy: {
         '/services': { path: '/services', title: 'Services', breadcrumbLabel: 'Services', parentPath: '/' },
         ...DEFAULT_SERVICE_HERO_PIE_SLICES.reduce((accumulator, slice) => ({

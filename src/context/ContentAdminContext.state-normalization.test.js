@@ -1,7 +1,128 @@
 import { describe, expect, it } from 'vitest';
 import { normalizeStoredConfig } from './ContentAdminContext';
+import {
+  BLOCK_ONLY_MANAGED_PAGE_PATHS,
+  BLOCKLESS_MANAGED_PAGE_PATHS,
+} from '../lib/managedPageShells';
 
 describe('ContentAdminContext state normalization', () => {
+  it('omits blockless functional routes from normalized block state', () => {
+    const staleBlocksByPath = Array.from(BLOCKLESS_MANAGED_PAGE_PATHS).reduce((next, pathname) => {
+      next[pathname] = [
+        {
+          id: 'page_content',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: { html: '<p>Stale functional route fallback</p>' },
+        },
+      ];
+      return next;
+    }, {});
+
+    const normalized = normalizeStoredConfig({ blocksByPath: staleBlocksByPath });
+
+    Array.from(BLOCKLESS_MANAGED_PAGE_PATHS).forEach((pathname) => {
+      expect(normalized.blocksByPath).not.toHaveProperty(pathname);
+    });
+  });
+
+  it('clears target-section bridge keys from block-only managed pages', () => {
+    const staleBlocksByPath = Array.from(BLOCK_ONLY_MANAGED_PAGE_PATHS).reduce((next, pathname) => {
+      next[pathname] = [
+        {
+          id: 'stale_bridge_block',
+          kind: 'billboard',
+          mode: 'dynamic',
+          settings: {
+            title: `Legacy bridge for ${pathname}`,
+            targetSectionKey: 'class:legacy-native-section',
+            targetSectionClassName: 'legacy-native-section',
+            targetSectionIndex: 9,
+          },
+        },
+      ];
+      return next;
+    }, {});
+
+    const normalized = normalizeStoredConfig({ blocksByPath: staleBlocksByPath });
+
+    Array.from(BLOCK_ONLY_MANAGED_PAGE_PATHS).forEach((pathname) => {
+      const blocks = normalized.blocksByPath[pathname] || [];
+
+      expect(blocks.some((block) => block?.id === 'page_content'), pathname).toBe(false);
+      blocks.forEach((block) => {
+        expect(String(block?.settings?.targetSectionKey || ''), `${pathname} ${block?.id}`).toBe('');
+      });
+
+      const staleBlock = blocks.find((block) => block?.id === 'stale_bridge_block');
+      expect(staleBlock?.settings?.targetSectionClassName, pathname).toBe('');
+      expect(staleBlock?.settings?.targetSectionIndex, pathname).toBe(0);
+    });
+  });
+
+  it('keeps normalized block-only managed pages free of page-content and target-section metadata', () => {
+    const normalized = normalizeStoredConfig({});
+
+    Array.from(BLOCK_ONLY_MANAGED_PAGE_PATHS).forEach((pathname) => {
+      const blocks = normalized.blocksByPath[pathname] || [];
+
+      expect(blocks.some((block) => block?.id === 'page_content'), pathname).toBe(false);
+      blocks.forEach((block) => {
+        expect(String(block?.settings?.targetSectionKey || ''), `${pathname} ${block?.id}`).toBe('');
+        expect(String(block?.settings?.targetSectionClassName || ''), `${pathname} ${block?.id}`).toBe('');
+        expect(Number(block?.settings?.targetSectionIndex || 0), `${pathname} ${block?.id}`).toBe(0);
+      });
+    });
+  });
+
+  it('backfills promoted 403(b) section class hooks on stored blocks that still use shared retirement-child classes', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'who_qualifies',
+            kind: 'card_grid',
+            mode: 'dynamic',
+            settings: {
+              sectionClassName: 'retirement-child-native-qualify',
+            },
+          },
+          {
+            id: 'start_enrollment',
+            kind: 'card_grid',
+            mode: 'dynamic',
+            settings: {
+              sectionClassName: 'retirement-child-native-enroll',
+            },
+          },
+          {
+            id: 'contribution_limits',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              sectionClassName: 'retirement-child-native-table',
+            },
+          },
+          {
+            id: 'rollover_billboard',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: {
+              sectionClassName: 'retirement-child-native-rollover',
+            },
+          },
+        ],
+      },
+    });
+
+    const blocksById = new Map((normalized.blocksByPath['/services/retirement/403b'] || []).map((block) => [block?.id, block]));
+
+    expect(blocksById.get('who_qualifies')?.settings?.sectionClassName).toContain('retirement-403b-native-qualify');
+    expect(blocksById.get('start_enrollment')?.settings?.sectionClassName).toContain('retirement-403b-native-enroll');
+    expect(blocksById.get('contribution_limits')?.settings?.sectionClassName).toContain('retirement-403b-native-contribution-limits');
+    expect(blocksById.get('rollover_billboard')?.settings?.sectionClassName).toContain('retirement-403b-native-rollover');
+  });
+
   it('keeps the canonical home do-the-math billboard on the dynamic managed path', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
@@ -101,7 +222,8 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock).toBeUndefined();
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock.mode).toBe('dynamic');
-    expect(ctaBlock.settings.targetSectionClassName).toBe('legacy-giving-cta');
+    expect(ctaBlock.settings.sectionClassName).toBe('legacy-giving-cta');
+    expect(ctaBlock.settings.targetSectionClassName).toBeUndefined();
     expect(ctaBlock.settings.field4Label).toBe('Planned giving product of interest*');
     expect(ctaBlock.settings.field4Type).toBe('select');
     expect(ctaBlock.settings.field4Required).toBe(true);
@@ -146,10 +268,14 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.body).toBe(defaultIntroBlock?.settings?.body);
   });
 
-  it('seeds property and casualty with managed hero and intro blocks', () => {
+  it('seeds property and casualty with standalone managed blocks', () => {
     const blocks = normalizeStoredConfig({}).blocksByPath['/services/insurance/property-casualty-insurance'] || [];
     const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
     const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
+    const requestBlock = blocks.find((block) => block?.id === 'request_form');
+    const agProgramBlock = blocks.find((block) => block?.id === 'ag_program');
+    const resourcesBlock = blocks.find((block) => block?.id === 'resources');
+    const safeBlock = blocks.find((block) => block?.id === 'safe_sound');
 
     expect(heroBlock).toBeTruthy();
     expect(heroBlock?.settings?.line1Text).toBe('Property');
@@ -163,6 +289,12 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.textTone).toBe('white');
     expect(introBlock?.settings?.button1Label).toBe('More about AG Insurance');
     expect(introBlock?.settings?.button1PageRef).toBe('/services/insurance/property-casualty-insurance#ag-program');
+    expect(requestBlock?.settings?.sectionClassName).toBe('insurance-pc-native-quote');
+    expect(String(requestBlock?.settings?.targetSectionKey || '')).toBe('');
+    expect(agProgramBlock?.settings?.sectionClassName).toBe('insurance-pc-native-ag-program');
+    expect(resourcesBlock?.settings?.sectionClassName).toBe('insurance-pc-native-resources');
+    expect(safeBlock?.settings?.titleHighlightsJson).toContain('Safe & sound');
+    expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
   });
 
   it('refreshes stale property and casualty intro tones back to the dark gradient treatment', () => {
@@ -216,7 +348,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(legacyGivingBlocks.some((block) => block?.kind === 'cta_form')).toBe(true);
   });
 
-  it('drops duplicate endowments request-form blocks and keeps the canonical legacy-form target', () => {
+  it('drops duplicate endowments request-form blocks and keeps the canonical legacy-form section class', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/planned-giving/endowments': [
@@ -250,8 +382,9 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks).toHaveLength(1);
     expect(requestBlocks[0]?.id).toBe('request_form');
     expect(requestBlocks[0]?.settings?.title).toBe('Begin the Endowment sign up process');
-    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('class:legacy-child-native-endowments-legacy-form');
-    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('legacy-child-native-endowments-legacy-form');
+    expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-endowments-legacy-form');
+    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('');
+    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('');
     expect(String(requestBlocks[0]?.settings?.step1Title || '')).toBe('');
   });
 
@@ -289,9 +422,11 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks).toHaveLength(1);
     expect(requestBlocks[0]?.id).toBe('request_form');
     expect(requestBlocks[0]?.settings?.title).toBe('Make the most of your giving.');
-    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('id:traditional-daf-form');
-    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('legacy-child-native-generosity-request');
-    expect(requestBlocks[0]?.settings?.targetSectionIndex).toBe(2);
+    expect(requestBlocks[0]?.settings?.anchorId).toBe('traditional-daf-form');
+    expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-generosity-request');
+    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('');
+    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('');
+    expect(requestBlocks[0]?.settings?.targetSectionIndex).toBe(0);
     expect(JSON.parse(requestBlocks[0]?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
       'name',
       'phone',
@@ -306,9 +441,11 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => String(block?.kind || '').trim().toLowerCase() === 'request_form');
 
     expect(requestBlock?.id).toBe('request_form');
-    expect(requestBlock?.settings?.targetSectionKey).toBe('id:traditional-daf-form');
-    expect(requestBlock?.settings?.targetSectionClassName).toBe('legacy-child-native-generosity-request');
-    expect(requestBlock?.settings?.targetSectionIndex).toBe(2);
+    expect(requestBlock?.settings?.anchorId).toBe('traditional-daf-form');
+    expect(requestBlock?.settings?.sectionClassName).toBe('legacy-child-native-generosity-request');
+    expect(requestBlock?.settings?.targetSectionKey).toBe('');
+    expect(requestBlock?.settings?.targetSectionClassName).toBe('');
+    expect(requestBlock?.settings?.targetSectionIndex).toBe(0);
     expect(JSON.parse(requestBlock?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
       'name',
       'phone',
@@ -352,8 +489,9 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks[0]?.id).toBe('request_form');
     expect(requestBlocks[0]?.mode).toBe('dynamic');
     expect(requestBlocks[0]?.settings?.title).toBe('Your gifts are more powerful than you think.');
-    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('class:legacy-child-native-cga-request');
-    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('legacy-child-native-cga-request');
+    expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-cga-request');
+    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('');
+    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('');
   });
 
   it('drops duplicate ministry-impact-fund request-form blocks and restores the canonical dynamic request target', () => {
@@ -391,8 +529,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks[0]?.id).toBe('request_form');
     expect(requestBlocks[0]?.mode).toBe('dynamic');
     expect(requestBlocks[0]?.settings?.title).toBe('A legacy of giving.');
-    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('class:legacy-child-native-request');
-    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('legacy-child-native-request');
+    expect(requestBlocks[0]?.settings?.anchorId).toBe('ministry-impact-form');
+    expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-request');
+    expect(requestBlocks[0]?.settings?.targetSectionKey).toBe('');
+    expect(requestBlocks[0]?.settings?.targetSectionClassName).toBe('');
   });
 
   it('seeds 403(b) with a CTA block instead of a request-form block', () => {
@@ -575,7 +715,8 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock).toBeUndefined();
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock?.mode).toBe('dynamic');
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('calculators-native-cta');
+    expect(ctaBlock?.settings?.sectionClassName).toBe('calculators-native-cta');
+    expect(ctaBlock?.settings?.targetSectionClassName).toBe('');
     expect(ctaBlock?.settings?.bgTone).toBe('white');
     expect(ctaBlock?.settings?.titleClassName).toBe('is-atlantean');
     expect(ctaBlock?.settings?.field1Label).toBe('Name');
@@ -603,7 +744,8 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(calculatorBlocks.some((block) => block?.kind === 'request_form')).toBe(false);
     expect(ctaBlock).toBeTruthy();
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('calculators-native-cta');
+    expect(ctaBlock?.settings?.sectionClassName).toBe('calculators-native-cta');
+    expect(ctaBlock?.settings?.targetSectionClassName).toBe('');
     expect(ctaBlock?.settings?.bgTone).toBe('white');
   });
 
@@ -617,7 +759,8 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock).toBeUndefined();
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock?.mode).toBe('dynamic');
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('about-native-cta-form');
+    expect(ctaBlock?.settings?.sectionClassName).toBe('about-native-cta-form');
+    expect(ctaBlock?.settings?.targetSectionClassName).toBeUndefined();
     expect(ctaBlock?.settings?.title).toBe('What can we do for you?');
     expect(ctaBlock?.settings?.titleClassName).toBe('is-atlantean');
     expect(ctaBlock?.settings?.field4Label).toBe('What would you like to discuss?');
@@ -665,13 +808,14 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(aboutBlocks.some((block) => block?.kind === 'request_form')).toBe(false);
     expect(ctaBlock).toBeTruthy();
-    expect(ctaBlock?.settings?.targetSectionClassName).toBe('about-native-cta-form');
+    expect(ctaBlock?.settings?.sectionClassName).toBe('about-native-cta-form');
+    expect(ctaBlock?.settings?.targetSectionClassName).toBeUndefined();
   });
 
   it('seeds the other audited CTA-owned form routes with CTA blocks instead of request-form blocks', () => {
     const normalized = normalizeStoredConfig({});
     const auditedRoutes = [
-      ['/services/insurance', { targetSectionClassName: 'insurance-native-cta' }],
+      ['/services/insurance', { sectionClassName: 'insurance-native-cta' }],
       ['/services/retirement/409a', { sectionClassName: 'retirement-child-native-cta' }],
     ];
 
@@ -697,24 +841,26 @@ describe('ContentAdminContext state normalization', () => {
     const charitableTrustsBlocks = (normalized.blocksByPath['/services/planned-giving/charitable-trusts'] || [])
       .filter((block) => block?.kind === 'cta_form');
     const inlineCtaBlock = charitableTrustsBlocks.find((block) => (
-      block?.settings?.targetSectionClassName === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline'
+      block?.settings?.sectionClassName === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline'
     ));
     const fallbackCtaBlock = charitableTrustsBlocks.find((block) => (
-      block?.settings?.targetSectionClassName === 'legacy-child-native-cta legacy-child-native-trusts-cta'
+      block?.settings?.sectionClassName === 'legacy-child-native-cta legacy-child-native-trusts-cta'
     ));
     const fields = JSON.parse(String(inlineCtaBlock?.settings?.fieldsJson || '[]'));
 
     expect(charitableTrustsBlocks).toHaveLength(2);
     expect(inlineCtaBlock?.settings?.displayMode).toBe('inline_reveal');
     expect(inlineCtaBlock?.settings?.triggerMode).toBe('external');
+    expect(inlineCtaBlock?.settings?.targetSectionClassName).toBeUndefined();
     expect(fallbackCtaBlock?.settings?.displayMode).toBeUndefined();
     expect(fallbackCtaBlock?.settings?.triggerMode).toBeUndefined();
+    expect(fallbackCtaBlock?.settings?.targetSectionClassName).toBeUndefined();
     expect(fields.map((field) => field.id)).toEqual([
-      'firstname',
-      'lastname',
+      'firstName',
+      'lastName',
       'phone',
       'email',
-      'trustproduct',
+      'trustProduct',
       'message',
     ]);
   });
@@ -762,7 +908,7 @@ describe('ContentAdminContext state normalization', () => {
 
   it('drops stale request-form blocks from the other audited CTA-owned form routes and restores the CTA block', () => {
     const auditedRoutes = [
-      ['/services/insurance', { targetSectionClassName: 'insurance-native-cta' }],
+      ['/services/insurance', { sectionClassName: 'insurance-native-cta' }],
       ['/services/retirement/409a', { sectionClassName: 'retirement-child-native-cta' }],
     ];
 
@@ -894,7 +1040,8 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(contactBlocks.some((block) => block?.kind === 'cta_form')).toBe(false);
     expect(requestBlock).toBeTruthy();
-    expect(requestBlock?.settings?.targetSectionClassName).toBe('contact-us-request');
+    expect(requestBlock?.settings?.sectionClassName).toBe('contact-us-request');
+    expect(requestBlock?.settings?.targetSectionClassName).toBe('');
     expect(requestBlock?.settings?.bgTone).toBe('sand');
   });
 
@@ -902,7 +1049,6 @@ describe('ContentAdminContext state normalization', () => {
     const normalized = normalizeStoredConfig({});
     const expectations = [
       ['/contact-us', 'contact-us-request', 'How can we help?'],
-      ['/services/insurance/property-casualty-insurance', 'insurance-pc-native-quote', 'Request a P&C quote.'],
       ['/services/loans/loan-consultants', 'loans-consultant-native-contact', 'Talk with a consultant.'],
     ];
 
@@ -912,7 +1058,7 @@ describe('ContentAdminContext state normalization', () => {
 
       expect(requestBlock, pathname).toBeTruthy();
       expect(requestBlock?.mode, pathname).toBe('dynamic');
-      expect(requestBlock?.settings?.targetSectionClassName, pathname).toBe(targetSectionClassName);
+      expect(requestBlock?.settings?.sectionClassName || requestBlock?.settings?.targetSectionClassName, pathname).toBe(targetSectionClassName);
       expect(requestBlock?.settings?.title, pathname).toBe(title);
     });
   });
@@ -1106,7 +1252,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(rolloverBlock?.settings?.targetSectionIndex).toBe(0);
   });
 
-  it('replaces the stale blank 403(b) loan fallback with the seeded semantic loan block', () => {
+  it('drops the stale blank 403(b) page-content fallback and uses the seeded semantic loan block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -1126,6 +1272,7 @@ describe('ContentAdminContext state normalization', () => {
     const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
       .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
 
+    expect((normalized.blocksByPath['/services/retirement/403b'] || []).some((block) => block?.id === 'page_content')).toBe(false);
     expect(loanDetailsBlock).toBeTruthy();
     expect(String(loanDetailsBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
     expect(String(loanDetailsBlock?.settings?.html || '')).toContain('The requested 403(b) loan amount cannot be less than $1,500');
@@ -1157,12 +1304,12 @@ describe('ContentAdminContext state normalization', () => {
     expect(routeBlocks.some((block) => block?.id === 'loan_details' && block?.kind === 'content')).toBe(true);
   });
 
-  it('replaces stale legacy 403(b) loan HTML with the canonical wrapped loan content block', () => {
+  it('replaces stale legacy 403(b) loan-details HTML with the canonical wrapped loan content block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
           {
-            id: 'page_content',
+            id: 'loan_details',
             kind: 'content',
             mode: 'dynamic',
             settings: {
@@ -1691,7 +1838,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(String(strategyBlock?.settings?.html || '')).toContain('Custom strategy overview copy for current plan participants.');
   });
 
-  it('drops stale stored intro blocks from group term life insurance', () => {
+  it('keeps the group term life intro now that the route is block-owned', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/insurance/group-term-life-insurance': [
@@ -1719,7 +1866,10 @@ describe('ContentAdminContext state normalization', () => {
     const groupLifeBlocks = normalized.blocksByPath['/services/insurance/group-term-life-insurance'] || [];
     const introBlock = groupLifeBlocks.find((block) => block?.id === 'intro');
 
-    expect(introBlock).toBeUndefined();
+    expect(introBlock?.kind).toBe('intro');
+    expect(introBlock?.settings?.heading).toBe('Take care of the team.');
+    expect(introBlock?.settings?.bodyHtml).toBe('<p>Protect the people who power your ministry.</p>');
+    expect(introBlock?.settings?.button1Label).toBe('Get started');
   });
 
   it('keeps the 403(b) individual enrollment intro now that the route is block-owned', () => {
@@ -2081,7 +2231,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(complianceBlock?.settings?.button2PageRef).toBe('');
   });
 
-  it('upgrades stale group term life request blocks back onto the dynamic targeted renderer path', () => {
+  it('upgrades stale group term life request blocks back onto the standalone dynamic renderer path', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/insurance/group-term-life-insurance': [
@@ -2106,9 +2256,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.mode).toBe('dynamic');
     expect(requestBlock?.kind).toBe('request_form');
     expect(requestBlock?.hidden).toBe(false);
-    expect(requestBlock?.settings?.targetSectionKey).toBe('class:group-life-native-quote');
-    expect(requestBlock?.settings?.targetSectionClassName).toBe('group-life-native-quote');
-    expect(requestBlock?.settings?.targetSectionIndex).toBe(1);
+    expect(requestBlock?.settings?.sectionClassName).toBe('group-life-native-quote');
+    expect(requestBlock?.settings?.targetSectionKey).toBe('');
+    expect(requestBlock?.settings?.targetSectionClassName).toBe('');
+    expect(requestBlock?.settings?.targetSectionIndex).toBe(0);
     expect(requestBlock?.settings?.bgTone).toBe('blue');
     expect(requestBlock?.settings?.textTone).toBe('white');
     expect(requestBlock?.settings?.titleClassName).toBe('is-super-grey');
@@ -2128,8 +2279,9 @@ describe('ContentAdminContext state normalization', () => {
               title: 'Request a quote for group life.',
               titleClassName: 'is-white',
               titleHighlightsJson: '[{"text":"group life","className":"is-white"}]',
-              targetSectionKey: 'class:group-life-native-quote',
-              targetSectionClassName: 'group-life-native-quote',
+              sectionClassName: 'group-life-native-quote',
+              targetSectionKey: '',
+              targetSectionClassName: '',
               bgTone: 'blue',
               textTone: 'white',
               step1Title: 'Contact info',
@@ -2210,8 +2362,9 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.settings?.textTone).toBe('white');
     expect(requestBlock?.settings?.spaceBeforeRem).toBe(1.6);
     expect(requestBlock?.settings?.spaceAfterRem).toBe(1.6);
+    expect(requestBlock?.settings?.sectionClassName).toBe('loans-consultant-native-contact');
     expect(String(requestBlock?.settings?.targetSectionKey || '')).toBe('');
-    expect(requestBlock?.settings?.targetSectionClassName).toBe('loans-consultant-native-contact');
+    expect(requestBlock?.settings?.targetSectionClassName).toBe('');
   });
 
   it('replaces the life insurance quote request form with the canonical standalone seeded block', () => {
@@ -2376,7 +2529,7 @@ describe('ContentAdminContext state normalization', () => {
       blocksByPath: {
         '/services/retirement/403b': [
           {
-            id: 'page_content',
+            id: 'loan_details',
             kind: 'content',
             mode: 'dynamic',
             settings: {
@@ -2420,12 +2573,12 @@ describe('ContentAdminContext state normalization', () => {
     );
   });
 
-  it('refreshes canonical-looking 403(b) loan html when the new bordered detail card wrapper is missing', () => {
+  it('refreshes canonical-looking 403(b) loan-details html when the new bordered detail card wrapper is missing', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
           {
-            id: 'page_content',
+            id: 'loan_details',
             kind: 'content',
             mode: 'dynamic',
             settings: {
@@ -2555,7 +2708,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
     expect(housingFeatureBlock?.settings?.bgTone).toBe('white');
     expect(housingFeatureBlock?.settings?.col2Title).toBe("Retired Ministers' Housing Allowance");
-    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain('ret403b-housing-feature-bullet-intro');
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain('This unique IRS benefit');
     expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('Compare your annual housing expenses to Fair Rental Value');
   });
 
@@ -2592,14 +2745,9 @@ describe('ContentAdminContext state normalization', () => {
     expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
     expect(housingFeatureBlock?.settings?.col2Title).toBe("Retired Ministers' Housing Allowance");
     expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
-      'The unique benefit, which gives ministers a significant tax savings',
+      'This unique IRS benefit, which gives ministers a significant tax savings',
     );
-    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
-      'ret403b-housing-feature-bullet-intro',
-    );
-    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
-      'The amount distributed by your retirement plan to you and declared in advance as your housing allowance',
-    );
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('ret403b-housing-feature-bullet-intro');
   });
 
   it('replaces blank-fragment 403(b) housing columns with the canonical copy payload', () => {
@@ -2634,11 +2782,9 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
     expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
-      'The unique benefit, which gives ministers a significant tax savings',
+      'This unique IRS benefit, which gives ministers a significant tax savings',
     );
-    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
-      'ret403b-housing-feature-bullet-intro',
-    );
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('ret403b-housing-feature-bullet-intro');
   });
 
   it('keeps explicit columns preset identity on the canonical family template id', () => {

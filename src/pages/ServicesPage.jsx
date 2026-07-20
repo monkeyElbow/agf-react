@@ -26,6 +26,7 @@ import {
   buildDynamicBillboardFromBlock,
   buildDynamicHeroPieFromBlock,
   buildDynamicIntroFromBlock,
+  buildDynamicSiteFeatureFromBlock,
   DEFAULT_SERVICE_HERO_PIE_SLICES,
   isExternalLinkHref,
   renderTextWithHighlights,
@@ -52,77 +53,24 @@ const testimonials = [
 ];
 const defaultServicesTestimonialsFineprint = 'Testimonials are examples only. Results differ by situation and are not guaranteed.';
 const SERVICES_HERO_PIE_HUD_PANEL_ID = 'services-hero-pie';
+const SERVICES_BREAKDOWN_HUD_PANEL_ID = 'services-breakdown';
+const SERVICES_MATTERS_HUD_PANEL_ID = 'services-matters';
 const SERVICES_CTA_HUD_PANEL_ID = 'services-cta';
 const SERVICES_TESTIMONIALS_HUD_PANEL_ID = 'services-testimonials';
 const SERVICES_HUD_PANEL_ID_BY_BLOCK_ID = {
   hero_pie: SERVICES_HERO_PIE_HUD_PANEL_ID,
+  services_cards: SERVICES_BREAKDOWN_HUD_PANEL_ID,
+  matters_band: SERVICES_MATTERS_HUD_PANEL_ID,
   cta_form: SERVICES_CTA_HUD_PANEL_ID,
   testimonials: SERVICES_TESTIMONIALS_HUD_PANEL_ID,
 };
 const SERVICES_HUD_SECTION_KEY_BY_BLOCK_ID = {
   hero_pie: 'heroPie',
+  services_cards: 'servicesBreakdown',
+  matters_band: 'matters',
   cta_form: 'cta',
   testimonials: 'testimonials',
 };
-const SERVICES_BREAKDOWN_ROWS = Object.freeze([
-  Object.freeze({
-    slug: 'loans',
-    title: 'Loans',
-    path: '/services/loans',
-    description: 'The right loan can change everything for your ministry. 100% customized. Every loan, from construction to lines of credit.',
-    links: Object.freeze([
-      Object.freeze({ label: 'Loan options', path: '/services/loans' }),
-    ]),
-  }),
-  Object.freeze({
-    slug: 'investments',
-    title: 'Investments',
-    path: '/services/investments',
-    description: "It's much more than money. Your funds help churches reach their communities. Growth for you, growth for Kingdom.",
-    links: Object.freeze([
-      Object.freeze({ label: 'Rates', path: '/services/investments#rates' }),
-      Object.freeze({ label: 'Demand Certificates', path: '/services/investments#certificates' }),
-      Object.freeze({ label: 'Term Certificates', path: '/services/investments#certificates' }),
-    ]),
-  }),
-  Object.freeze({
-    slug: 'retirement',
-    title: 'Retirement',
-    path: '/services/retirement',
-    description: 'Plan, contribute, and build for tomorrow. Options include screened investments, IRAs, and our very own MBA Income Fund.',
-    links: Object.freeze([
-      Object.freeze({ label: '403(b)', path: '/services/retirement/403b' }),
-      Object.freeze({ label: 'IRAs', path: '/services/retirement/iras' }),
-      Object.freeze({ label: '409A', path: '/services/retirement/409a' }),
-    ]),
-  }),
-  Object.freeze({
-    slug: 'planned-giving',
-    title: 'Planned Giving',
-    path: '/services/planned-giving',
-    description: 'Legacy planning and charitable giving made easy. Tax savings and income generation options that benefit ministries, donors, and loved ones.',
-    links: Object.freeze([
-      Object.freeze({ label: 'Charitable Gift Annuities', path: '/services/planned-giving/charitable-gift-annuities' }),
-      Object.freeze({ label: 'Charitable Trusts', path: '/services/planned-giving/charitable-trusts' }),
-      Object.freeze({ label: 'Donor Advised Funds / Generosity Fund', path: '/services/planned-giving/generosity-fund' }),
-      Object.freeze({ label: 'Endowments', path: '/services/planned-giving/endowments' }),
-      Object.freeze({ label: 'Ministry Impact Fund®', path: '/services/planned-giving/ministry-impact-fund' }),
-      Object.freeze({ label: 'Wills & Estate Services', path: '/services/planned-giving' }),
-    ]),
-  }),
-  Object.freeze({
-    slug: 'insurance',
-    title: 'Insurance',
-    path: '/services/insurance',
-    description: 'Coverage built for churches, ministries and individuals to protect what’s most important.',
-    links: Object.freeze([
-      Object.freeze({ label: 'Property & Casualty', path: '/services/insurance/property-casualty-insurance' }),
-      Object.freeze({ label: 'Group Life', path: '/services/insurance/group-term-life-insurance' }),
-      Object.freeze({ label: 'Individual Life', path: '/services/insurance/life-insurance-quote' }),
-      Object.freeze({ label: 'Mission Assure', path: '/services/insurance/mission-assure' }),
-    ]),
-  }),
-]);
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -192,6 +140,8 @@ export default function ServicesPage() {
   const pageRef = useRef(null);
   const heroPieSectionRef = useRef(null);
   const heroPieCardSizerRef = useRef(null);
+  const servicesBreakdownSectionRef = useRef(null);
+  const servicesMattersSectionRef = useRef(null);
   const ctaSectionRef = useRef(null);
   const testimonialsSectionRef = useRef(null);
   const {
@@ -277,6 +227,32 @@ export default function ServicesPage() {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
+  const servicesBreakdownBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'services_cards'
+      && block?.kind === 'site_feature'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
+  const servicesMattersBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'matters_band'
+      && block?.kind === 'site_feature'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
+  const servicesBreakdownRuntime = useMemo(
+    () => buildDynamicSiteFeatureFromBlock(servicesBreakdownBlock),
+    [servicesBreakdownBlock],
+  );
+  const servicesMattersRuntime = useMemo(
+    () => buildDynamicSiteFeatureFromBlock(servicesMattersBlock),
+    [servicesMattersBlock],
+  );
   const testimonialsData = useMemo(
     () => resolveTestimonialsBlockData({
       block: dynamicTestimonialsBlock,
@@ -552,6 +528,14 @@ export default function ServicesPage() {
   const scrollToHudSection = (sectionKey) => {
     if (sectionKey === 'heroPie') {
       scrollElementWithNavOffset(heroPieSectionRef.current);
+      return;
+    }
+    if (sectionKey === 'servicesBreakdown') {
+      scrollElementWithNavOffset(servicesBreakdownSectionRef.current);
+      return;
+    }
+    if (sectionKey === 'matters') {
+      scrollElementWithNavOffset(servicesMattersSectionRef.current);
       return;
     }
     if (sectionKey === 'cta') {
@@ -864,15 +848,22 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <section className="services-native-grid-wrap services-breakdown-section">
+    {servicesBreakdownRuntime ? (
+      <section
+        ref={servicesBreakdownSectionRef}
+        className={`${servicesBreakdownRuntime.sectionClassName || 'services-native-grid-wrap services-breakdown-section'}${getOwnershipVisualForBlockId('services_cards').className || ''}`}
+        data-block-id="services_cards"
+      >
+        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('services_cards')} />
+        {renderHudAnchor('services_cards')}
         <div className="services-native-grid-bleed">
           <div className="services-breakdown-shell">
             <header className="services-breakdown-header fade-up">
-              <h2>What would you like to explore?</h2>
+              <h2>{servicesBreakdownRuntime.title || 'What would you like to explore?'}</h2>
             </header>
 
             <div className="services-breakdown-list">
-              {SERVICES_BREAKDOWN_ROWS.map((service) => (
+              {(Array.isArray(servicesBreakdownRuntime.rows) ? servicesBreakdownRuntime.rows : []).map((service) => (
               <article
                 key={`${service.path}-${service.title}`}
                 className="services-breakdown-panel fade-up fade-up-force-observe"
@@ -903,23 +894,54 @@ export default function ServicesPage() {
           </div>
         </div>
       </section>
+      ) : null}
 
-      <section className="services-native-matters">
+    {servicesMattersRuntime ? (
+      <section
+        ref={servicesMattersSectionRef}
+        className={`${servicesMattersRuntime.sectionClassName || 'services-native-matters'}${getOwnershipVisualForBlockId('matters_band').className || ''}`}
+        data-block-id="matters_band"
+      >
+        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('matters_band')} />
+        {renderHudAnchor('matters_band')}
         <div className="ag-panel-rail">
-          <h2>
-            What you do
-            {' '}
-            <mark>matters</mark>
-            .
-          </h2>
-          <p>
-            As an AGFinancial customer, your financial decisions fund real ministry work, transforming lives, including yours.
-          </p>
-          <div className="service-native-action-row is-centered">
-            <Link to="/about-us/impact" className="service-native-btn is-dark">See what you're part of</Link>
-          </div>
+          {servicesMattersRuntime.title === 'What you do matters.' ? (
+            <h2>
+              What you do
+              {' '}
+              <mark>matters</mark>
+              .
+            </h2>
+          ) : (
+            <h2>{servicesMattersRuntime.title}</h2>
+          )}
+          {servicesMattersRuntime.body ? <p>{servicesMattersRuntime.body}</p> : null}
+          {servicesMattersRuntime.action ? (
+            <div className="service-native-action-row is-centered">
+              {isExternalLinkHref(servicesMattersRuntime.action.href || servicesMattersRuntime.action.to) ? (
+                <a
+                  href={servicesMattersRuntime.action.href || servicesMattersRuntime.action.to}
+                  className="service-native-btn is-dark"
+                  target={servicesMattersRuntime.action.openInNewWindow ? '_blank' : undefined}
+                  rel={servicesMattersRuntime.action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                >
+                  {servicesMattersRuntime.action.label}
+                </a>
+              ) : (
+                <Link
+                  to={servicesMattersRuntime.action.to || servicesMattersRuntime.action.href}
+                  className="service-native-btn is-dark"
+                  target={servicesMattersRuntime.action.openInNewWindow ? '_blank' : undefined}
+                  rel={servicesMattersRuntime.action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                >
+                  {servicesMattersRuntime.action.label}
+                </Link>
+              )}
+            </div>
+          ) : null}
         </div>
       </section>
+      ) : null}
 
       <div ref={ctaSectionRef}>
         <DynamicCtaSection

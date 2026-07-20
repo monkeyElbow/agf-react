@@ -19,7 +19,7 @@ describe('native grid renderer guardrail', () => {
     expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-grid' : 'native-dynamic-grid';");
     expect(source).toContain("const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('card_grid', presetId);");
     expect(source).not.toContain('is-card-grid-preset-${presetId}');
-    expect(source).toContain('const gridSection = buildDynamicGridSection(block, activePath);');
+    expect(source).toContain('const gridSection = buildDynamicGridSection(block, activePath, { getConsultants });');
     expect(source).not.toContain('buildDynamicGridSection(block, activePath, resolveManagedPathFromRef)');
   });
 

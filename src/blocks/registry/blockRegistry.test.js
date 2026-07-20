@@ -207,6 +207,7 @@ describe('canonical block registry', () => {
       'featureId',
       'headline',
       'body',
+      'sectionClassName',
       'buttonLabel',
       'buttonUrl',
       'buttonPageRef',

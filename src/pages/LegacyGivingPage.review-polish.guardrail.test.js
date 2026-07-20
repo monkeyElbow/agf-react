@@ -64,22 +64,22 @@ describe('planned giving review polish guardrail', () => {
 
   it('keeps the endowments explainer on the native columns system with a three-step flow and supporting asset list', () => {
     const cssSource = readSource('../styles/service-native.css');
-    const contentSource = readSource('../data/nativePageContent.js');
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
-    expect(contentSource).toContain("className: 'legacy-child-native-endowments-duo'");
-    expect(contentSource).toContain("title: 'How it works'");
-    expect(contentSource).toContain("columns: 'three'");
-    expect(contentSource).toContain("type: 'flow-step'");
-    expect(contentSource).not.toContain("title: 'You give assets'");
-    expect(contentSource).not.toContain("title: 'Principal stays invested'");
-    expect(contentSource).not.toContain("title: 'Earnings support ministry'");
-    expect(contentSource).toContain("'Designated assets are invested to ensure their protection and growth.'");
-    expect(contentSource).toContain("'Payments are made from ongoing interest earned from the gifted asset(s).'");
-    expect(contentSource).toContain("'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.'");
-    expect(contentSource).toContain("type: 'support'");
-    expect(contentSource).toContain("title: 'Assets you may give'");
-    expect(contentSource).toContain("Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.");
-    expect(contentSource).toContain("Endowments may be funded with:");
+    expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-duo'");
+    expect(blueprintSource).toContain("title: 'How it works'");
+    expect(blueprintSource).toContain("columns: 'three'");
+    expect(blueprintSource).toContain("col1Type: 'flow-step'");
+    expect(blueprintSource).not.toContain("title: 'You give assets'");
+    expect(blueprintSource).not.toContain("title: 'Principal stays invested'");
+    expect(blueprintSource).not.toContain("title: 'Earnings support ministry'");
+    expect(blueprintSource).toContain("col1Body: 'Designated assets are invested to ensure their protection and growth.'");
+    expect(blueprintSource).toContain("col2Body: 'Payments are made from ongoing interest earned from the gifted asset(s).'");
+    expect(blueprintSource).toContain("col3Body: 'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.'");
+    expect(blueprintSource).toContain("col4Type: 'support'");
+    expect(blueprintSource).toContain("col4Title: 'Assets you may give'");
+    expect(blueprintSource).toContain("Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.");
+    expect(blueprintSource).toContain("Endowments may be funded with:");
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo {');
     expect(cssSource).toContain('background: #faf7f1;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-grid {');
@@ -111,21 +111,21 @@ describe('planned giving review polish guardrail', () => {
   });
 
   it('keeps the planned giving route wired to the comparison widget and the opportunity feature block', () => {
-    const contentSource = readSource('../data/nativePageContent.js');
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
-    expect(contentSource).toContain("className: 'legacy-giving-comparison-matrix'");
-    expect(contentSource).toContain("widget: 'giving-comparison-matrix'");
-    expect(contentSource).toContain("className: 'legacy-giving-opportunity'");
+    expect(blueprintSource).toContain("sectionClassName: 'legacy-giving-comparison-matrix'");
+    expect(blueprintSource).toContain("widget: 'giving-comparison-matrix'");
+    expect(blueprintSource).toContain("sectionClassName: 'legacy-giving-opportunity'");
   });
 
   it('keeps the endowments calculator heading and intro copy on the tighter centered rhythm', () => {
     const cssSource = readSource('../styles/service-native.css');
-    const contentSource = readSource('../data/nativePageContent.js');
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
     const componentSource = readSource('../components/NativeContentPage.jsx');
 
-    expect(contentSource).toContain("className: 'legacy-child-native-endowments-calculator'");
-    expect(contentSource).toContain("title: 'See how your endowment can keep giving.'");
-    expect(contentSource).toContain("widget: 'endowment-calculator'");
+    expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-calculator'");
+    expect(blueprintSource).toContain("title: 'See how your endowment can keep giving.'");
+    expect(blueprintSource).toContain("widget: 'endowment-calculator'");
     expect(componentSource).toContain('Enter assets you may gift. We’ll show your <em>annual ministry impact</em> from investment earnings (your principal remains invested).');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-calculator > .ag-panel-rail > h2 {');
     expect(cssSource).toContain('margin-bottom: 0.1rem;');
@@ -143,6 +143,7 @@ describe('planned giving review polish guardrail', () => {
   it('keeps the charitable trusts process trigger on the non-filling outline hover pattern', () => {
     const cssSource = readSource('../styles/service-native.css');
     const contentSource = readSource('../data/nativePageContent.js');
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline,');
     expect(cssSource).toContain('--btn-hover-bg: transparent;');
@@ -152,9 +153,12 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-trusts .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:active {');
     expect(cssSource).toContain('background: transparent;');
     expect(contentSource).toContain("pageClass: 'native-info-page--legacy-child native-info-page--legacy-trusts'");
-    expect(contentSource).toContain("className: 'legacy-child-native-trusts-crt-trigger'");
-    expect(contentSource).toContain("label: 'Start the process'");
-    expect(contentSource).toContain("targetAnchorId: 'charitable-trusts-inline-form'");
-    expect(contentSource).toContain("className: 'is-outline is-tone-atlantean'");
+    expect(blueprintSource).toContain("id: 'cta_trigger'");
+    expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-trusts-crt-trigger'");
+    expect(blueprintSource).toContain("buttonLabel: 'Start the process'");
+    expect(blueprintSource).toContain("buttonAction: 'open_cta_form'");
+    expect(blueprintSource).toContain("buttonTargetAnchorId: 'charitable-trusts-inline-form'");
+    expect(blueprintSource).toContain("buttonStyle: 'outline'");
+    expect(blueprintSource).toContain("buttonTone: 'white'");
   });
 });

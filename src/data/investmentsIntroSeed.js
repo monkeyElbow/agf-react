@@ -48,15 +48,3 @@ export function buildDefaultInvestmentsIntroRuntime() {
     textTone: defaultInvestmentsIntroSettings.textTone,
   });
 }
-
-export function buildDefaultInvestmentsNativeIntro() {
-  return Object.freeze({
-    heading: defaultInvestmentsIntroSettings.heading,
-    headingHighlights: DEFAULT_INVESTMENTS_INTRO_HEADING_HIGHLIGHTS,
-    body: Object.freeze([DEFAULT_INVESTMENTS_INTRO_BODY_TEXT]),
-    emphasis: DEFAULT_INVESTMENTS_INTRO_EXTRA_LINE,
-    justify: defaultInvestmentsIntroSettings.justify,
-    bgTone: defaultInvestmentsIntroSettings.bgTone,
-    textTone: defaultInvestmentsIntroSettings.textTone,
-  });
-}

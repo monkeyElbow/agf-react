@@ -3,6 +3,19 @@ import { buildDynamicPageContentFromBlock } from '../../lib/dynamicPageBlocks';
 import { PAGE_CONTENT_IDENTITY } from '../../lib/pageContentIdentity';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
+import { getTokenSwatch } from '../../lib/colorSystem';
+
+const PAGE_CONTENT_HEADING_TONE_OPTIONS = [
+  { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
+  { value: 'is-atlantean', label: 'Blue', swatch: getTokenSwatch('atlantean') },
+  { value: 'is-mango', label: 'Mango', swatch: 'linear-gradient(145deg, #f6b146 0%, #e8991f 100%)' },
+  { value: 'is-melon', label: 'Melon', swatch: 'linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)' },
+  { value: 'is-super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
+  { value: 'is-sandstone', label: 'Sandstone', swatch: 'linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)' },
+  { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
+];
+
+const PAGE_CONTENT_HIGHLIGHT_TONE_OPTIONS = PAGE_CONTENT_HEADING_TONE_OPTIONS.filter((option) => option.value);
 
 const sections = [
   {
@@ -11,10 +24,32 @@ const sections = [
     surfaces: ['hud', 'admin'],
     fields: [
       defineEditorField({ id: 'title', label: 'Section title', type: 'textarea', rows: 2 }),
+      defineEditorField({
+        id: 'titleClassName',
+        label: 'Section title color',
+        type: 'swatch',
+        options: PAGE_CONTENT_HEADING_TONE_OPTIONS,
+      }),
+      defineEditorField({
+        id: 'titleHighlightsJson',
+        label: 'Section title highlights',
+        type: 'highlight_list',
+        options: PAGE_CONTENT_HIGHLIGHT_TONE_OPTIONS,
+      }),
       defineEditorField({ id: 'subtitle', label: 'Section subtitle', type: 'text' }),
       defineEditorField({ id: 'body', label: 'Section body', type: 'textarea', rows: 4 }),
       defineEditorField({ id: 'html', label: 'Page Content HTML', type: 'html' }),
       defineEditorField({ id: 'widget', label: 'Widget key', type: 'text' }),
+    ],
+  },
+  {
+    id: 'media',
+    title: 'Media',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({ id: 'logoImage', label: 'Logo image URL', type: 'text' }),
+      defineEditorField({ id: 'logoAlt', label: 'Logo alt text', type: 'text' }),
+      defineEditorField({ id: 'logoText', label: 'Logo text fallback', type: 'text' }),
     ],
   },
   {
@@ -90,6 +125,16 @@ const sections = [
     ],
   },
   {
+    id: 'support',
+    title: 'Support Library',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({ id: 'supportGroupsJson', label: 'Support groups JSON', type: 'textarea', rows: 8 }),
+      defineEditorField({ id: 'supportGroupsExpanded', label: 'Expand support items by default', type: 'boolean' }),
+      defineEditorField({ id: 'supportGroupsCollapsible', label: 'Support items are collapsible', type: 'boolean' }),
+    ],
+  },
+  {
     id: 'fineprint',
     title: 'Fineprint',
     surfaces: ['hud', 'admin'],
@@ -109,10 +154,15 @@ export const pageContentBlockDefinition = createBlockDefinition({
   supportedModes: ['dynamic'],
   defaults: {
     title: '',
+    titleClassName: '',
+    titleHighlightsJson: '',
     subtitle: '',
     body: '',
     html: '',
     widget: '',
+    logoImage: '',
+    logoAlt: '',
+    logoText: '',
     fullBleed: false,
     spaceBeforeRem: 0.5,
     spaceAfterRem: 0.5,
@@ -130,6 +180,9 @@ export const pageContentBlockDefinition = createBlockDefinition({
     addressClassName: '',
     addressTitle: '',
     addressLines: '',
+    supportGroupsJson: '',
+    supportGroupsExpanded: false,
+    supportGroupsCollapsible: true,
     tableHeadersJson: '',
     tableRowsJson: '',
     tableValueAlignment: '',
@@ -145,8 +198,8 @@ export const pageContentBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['content', 'layout', 'placement', 'actions', 'address', 'table', 'fineprint'],
-    adminSectionIds: ['content', 'layout', 'placement', 'actions', 'address', 'table', 'fineprint'],
+    hudSectionIds: ['content', 'layout', 'placement', 'media', 'actions', 'address', 'table', 'support', 'fineprint'],
+    adminSectionIds: ['content', 'layout', 'placement', 'media', 'actions', 'address', 'table', 'support', 'fineprint'],
   },
   validators: [
     (block) => Boolean(buildDynamicPageContentFromBlock(block)),

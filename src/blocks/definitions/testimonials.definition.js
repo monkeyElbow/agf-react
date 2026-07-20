@@ -33,6 +33,7 @@ const sections = [
     fields: [
       defineEditorField({ id: 'showFineprint', label: 'Show fineprint', type: 'boolean' }),
       defineEditorField({ id: 'fineprint', label: 'Fineprint text', type: 'textarea', rows: 3 }),
+      defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
     ],
   },
   {
@@ -62,6 +63,7 @@ export const testimonialsBlockDefinition = createBlockDefinition({
     limit: 0,
     showFineprint: true,
     fineprint: DEFAULT_TESTIMONIAL_FINEPRINT,
+    sectionClassName: '',
     targetSectionKey: '',
     targetFineprintSectionKey: '',
     targetSectionClassName: '',

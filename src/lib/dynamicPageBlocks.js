@@ -261,9 +261,16 @@ function buildCanonicalActionLinkFromFields(source, {
   documentIdKeys = ['documentId'],
   styleKeys = ['style'],
   toneKeys = ['tone'],
+  classNameKeys = [],
   openInNewWindowKeys = ['openInNewWindow'],
+  actionKeys = ['action'],
+  targetAnchorIdKeys = ['targetAnchorId'],
+  targetBlockIdKeys = ['targetBlockId'],
 } = {}) {
   const label = readFirstStringValue(source, labelKeys);
+  const action = readFirstStringValue(source, actionKeys);
+  const targetAnchorId = readFirstStringValue(source, targetAnchorIdKeys);
+  const targetBlockId = readFirstStringValue(source, targetBlockIdKeys);
   const linkValue = coerceLegacyLinkValueFromFields(source, {
     hrefKeys,
     toKeys,
@@ -271,7 +278,26 @@ function buildCanonicalActionLinkFromFields(source, {
     openInNewWindowKeys,
   });
 
-  if (!label || !linkValue) {
+  if (!label) {
+    return null;
+  }
+
+  if (action && (targetAnchorId || targetBlockId)) {
+    return {
+      label,
+      action,
+      targetAnchorId,
+      targetBlockId,
+      style: readFirstStringValue(source, styleKeys),
+      tone: readFirstStringValue(source, toneKeys),
+      ...(readFirstStringValue(source, classNameKeys)
+        ? { className: readFirstStringValue(source, classNameKeys) }
+        : {}),
+      openInNewWindow: false,
+    };
+  }
+
+  if (!linkValue) {
     return null;
   }
 
@@ -280,6 +306,9 @@ function buildCanonicalActionLinkFromFields(source, {
     link: linkValue,
     style: readFirstStringValue(source, styleKeys),
     tone: readFirstStringValue(source, toneKeys),
+    ...(readFirstStringValue(source, classNameKeys)
+      ? { className: readFirstStringValue(source, classNameKeys) }
+      : {}),
     openInNewWindow: Boolean(linkValue.openInNewWindow),
     ...linkValueToLegacyLinkProps(linkValue),
   };
@@ -352,6 +381,85 @@ function parsePageContentTableRows(value) {
         ? row.map((cell) => String(cell || '').trim())
         : null))
       .filter((row) => Array.isArray(row) && row.length);
+  } catch {
+    return [];
+  }
+}
+
+function normalizePageContentSupportLink(link) {
+  if (!link || typeof link !== 'object') {
+    return null;
+  }
+  const label = String(link.label || '').trim();
+  const href = String(link.href || '').trim();
+  const to = String(link.to || '').trim();
+  const documentId = String(link.documentId || '').trim();
+  if (!label || (!href && !to && !documentId)) {
+    return null;
+  }
+  return {
+    label,
+    ...(href ? { href } : {}),
+    ...(to ? { to } : {}),
+    ...(documentId ? { documentId } : {}),
+    ...(toBoolean(link.openInNewWindow) ? { openInNewWindow: true } : {}),
+  };
+}
+
+function parsePageContentSupportGroups(value) {
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value || '[]') : value;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .map((group) => {
+        const title = String(group?.title || '').trim();
+        const description = String(group?.description || '').trim();
+        const links = Array.isArray(group?.links)
+          ? group.links.map(normalizePageContentSupportLink).filter(Boolean)
+          : [];
+        const items = Array.isArray(group?.items)
+          ? group.items.map((item) => {
+            const question = String(item?.question || '').trim();
+            const answer = String(item?.answer || '').trim();
+            const itemLinks = Array.isArray(item?.links)
+              ? item.links.map(normalizePageContentSupportLink).filter(Boolean)
+              : [];
+            return question || answer || itemLinks.length
+              ? { question, answer, links: itemLinks }
+              : null;
+          }).filter(Boolean)
+          : [];
+
+        return title && (description || links.length || items.length)
+          ? { title, ...(description ? { description } : {}), links, items }
+          : null;
+      })
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function parseMissionAssurePricingEntries(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => ({
+        trip: String(entry?.trip || '').trim(),
+        rate: String(entry?.rate || '').trim(),
+        note: String(entry?.note || '').trim(),
+      }))
+      .filter((entry) => entry.trip || entry.rate || entry.note);
+  }
+
+  const raw = String(value || '').trim();
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    return parseMissionAssurePricingEntries(JSON.parse(raw));
   } catch {
     return [];
   }
@@ -465,10 +573,28 @@ function parseCardGridListJson(value) {
   }
 }
 
+function parseSiteFeatureIntroJson(value) {
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value || '{}') : value;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null;
+    }
+    const heading = String(parsed.heading || '').trim();
+    const body = String(parsed.body || '').trim();
+    const emphasis = String(parsed.emphasis || '').trim();
+    if (!heading && !body && !emphasis) {
+      return null;
+    }
+    return { heading, body, emphasis };
+  } catch {
+    return null;
+  }
+}
+
 const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline', 'ghost']);
 const IMPACT_STAT_TONE_SET = new Set(['atlantean', 'mango', 'melon', 'sandstone', 'super-grey', 'white']);
 const DYNAMIC_COLUMNS_STYLE_SET = new Set(['retirement', 'legacy-highlight', 'loans-value']);
-const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo']);
+const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo', 'flow-step', 'support']);
 const DYNAMIC_COLUMNS_WIDTH_SET = new Set(['content', 'browser']);
 const DYNAMIC_COLUMNS_COUNT_SET = new Set(['two', 'three', 'four']);
 const TOP_STRIP_BG_TONE_SET = new Set(['white', 'sand', 'blue', 'grey']);
@@ -771,6 +897,7 @@ export function buildDynamicIntroFromBlock(block) {
   const textTone = normalizeSharedPanelTextTone(settings.textTone, 'dark');
   const justify = String(settings.justify || 'center').trim().toLowerCase();
   const lineSpacing = Number.isFinite(Number(settings.lineSpacing)) ? Number(settings.lineSpacing) : 1.04;
+  const sectionClassName = sanitizeClassName(settings.sectionClassName || '');
 
   const actions = [
     buildCanonicalActionLinkFromFields(settings, {
@@ -813,6 +940,7 @@ export function buildDynamicIntroFromBlock(block) {
     textTone,
     justify: justify || 'center',
     lineSpacing,
+    sectionClassName,
     actions,
   };
 }
@@ -830,6 +958,7 @@ export function buildDynamicBillboardFromBlock(block) {
   const subtitleClassName = normalizeHighlightClassName(settings.subtitleClassName || '');
   const bodyHtml = String(settings.bodyHtml || '').trim();
   const body = String(settings.body || '').trim();
+  const fineprint = parsePageContentTextLines(settings.fineprint);
   const bgTone = String(settings.bgTone || 'blue').trim().toLowerCase() || 'blue';
   const textTone = String(settings.textTone || 'white').trim().toLowerCase() || 'white';
   const justify = String(settings.justify || 'center').trim().toLowerCase() || 'center';
@@ -862,6 +991,9 @@ export function buildDynamicBillboardFromBlock(block) {
       styleKeys: ['buttonStyle'],
       toneKeys: ['buttonTone'],
       openInNewWindowKeys: ['buttonOpenInNewWindow'],
+      actionKeys: ['buttonAction'],
+      targetAnchorIdKeys: ['buttonTargetAnchorId'],
+      targetBlockIdKeys: ['buttonTargetBlockId'],
     }),
     buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['button2Label'],
@@ -883,7 +1015,7 @@ export function buildDynamicBillboardFromBlock(block) {
       ),
     }));
 
-  if (!title && !subtitle && !bodyHtml && !body && !actions.length) {
+  if (!title && !subtitle && !bodyHtml && !body && !fineprint.length && !actions.length) {
     return null;
   }
 
@@ -915,6 +1047,8 @@ export function buildDynamicBillboardFromBlock(block) {
     }),
     bodyHtml,
     body,
+    fineprint: fineprint.length ? fineprint : null,
+    fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
     bgTone,
     textTone,
     justify,
@@ -923,7 +1057,8 @@ export function buildDynamicBillboardFromBlock(block) {
     copyStyle: headlineMaxWidthPx
       ? { '--dynamic-billboard-copy-max-width': `${headlineMaxWidthPx}px` }
       : undefined,
-    copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : '',
+    copyClassName: sanitizeClassName(settings.copyClassName || '')
+      || (scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : ''),
     copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -20% 0px' : '',
     contentMaxWidthPx: hasContentWidthOverride
       ? normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 920)
@@ -970,6 +1105,7 @@ export function buildDynamicColumnsFromBlock(block) {
         titleClassName: normalizeHighlightClassName(settings[`col${slot}TitleClassName`] || ''),
         titleHighlights: parseTextHighlights(settings[`col${slot}TitleHighlightsJson`]),
         body: String(settings[`col${slot}Body`] || '').trim(),
+        bodyHtml: normalizeOptionalHtmlContent(settings[`col${slot}BodyHtml`]),
         imageUrl: String(settings[`col${slot}ImageUrl`] || '').trim(),
         imageAlt: String(settings[`col${slot}ImageAlt`] || '').trim(),
         widthShare: Number.isFinite(Number(settings[`col${slot}WidthShare`]))
@@ -990,7 +1126,7 @@ export function buildDynamicColumnsFromBlock(block) {
         return item.title ? item : null;
       }
 
-      return (item.title || item.body || item.imageUrl || item.action) ? item : null;
+      return (item.title || item.body || item.bodyHtml || item.imageUrl || item.action) ? item : null;
     })
     .filter(Boolean);
 
@@ -1014,6 +1150,7 @@ export function buildDynamicColumnsFromBlock(block) {
     contentWidth,
     columns,
     columnsStyle,
+    sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     items,
   };
 }
@@ -1068,6 +1205,7 @@ export function buildDynamicSiteFeatureFromBlock(block) {
   const defaultBody = String(featureRuntime.body || '').trim();
   const defaultImageUrl = String(featureRuntime.imageUrl || '').trim();
   const defaultImageAlt = String(featureRuntime.imageAlt || '').trim();
+  const featureIntro = parseSiteFeatureIntroJson(settings.featureIntroJson || featureRuntime.featureIntro);
 
   const headline = featureId === 'impact_proof_story'
     ? defaultTitle
@@ -1132,6 +1270,8 @@ export function buildDynamicSiteFeatureFromBlock(block) {
     catalogLabel: String(featureEntry.label || '').trim() || featureId,
     isCodeManaged: true,
     targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
+    sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
+    featureIntro,
     title: headline,
     body,
     imageUrl: defaultImageUrl,
@@ -1711,6 +1851,7 @@ export function buildDynamicRequestFormFromBlock(block, { pathname = '' } = {}) 
 
   const isCertificateRequestPath = pathname === '/services/insurance/certificate-request';
   const sectionClassName = Array.from(new Set([
+    sanitizeClassName(settings.sectionClassName || ''),
     String(settings.targetSectionClassName || '').trim(),
     pathname === '/contact-us' ? 'contact-us-request' : '',
     isCertificateRequestPath ? 'certificate-request-native-section' : '',
@@ -1725,6 +1866,7 @@ export function buildDynamicRequestFormFromBlock(block, { pathname = '' } = {}) 
     titleClassName,
     titleHighlightsJson,
     targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
+    anchorId: String(settings.anchorId || '').trim(),
     subtitle,
     bodyHtml,
     body,
@@ -1894,6 +2036,9 @@ export function buildDynamicGridFromBlock(block) {
 
   const settings = block.settings || {};
   const presetId = resolveCardGridPresetId(block);
+  const cardsPreset = String(block?.presetId || settings.cardsPreset || '').trim().toLowerCase() === 'value-cards'
+    ? 'value-cards'
+    : '';
   const title = String(settings.title || '').trim();
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
@@ -1933,12 +2078,23 @@ export function buildDynamicGridFromBlock(block) {
     ? true
     : toBoolean(settings.showTitleDivider);
   const resolvedCardClass = cardStyle === 'none' ? 'card-none' : cardStyle;
+  const sectionAction = buildCanonicalActionLinkFromFields(settings, {
+    labelKeys: ['buttonLabel'],
+    hrefKeys: ['buttonUrl'],
+    toKeys: ['buttonPageRef'],
+    documentIdKeys: ['buttonDocumentId'],
+    openInNewWindowKeys: ['buttonOpenInNewWindow'],
+    styleKeys: ['buttonStyle'],
+    toneKeys: ['buttonTone'],
+  });
 
   const cards = Array.from({ length: 8 }, (_, index) => index + 1)
     .map((slot) => {
       const cardTitle = String(settings[`card${slot}Title`] || '').trim();
+      const cardTitleClassName = normalizeHighlightClassName(settings[`card${slot}TitleClassName`] || '');
       const cardTitleHighlights = parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
       const cardBody = String(settings[`card${slot}Body`] || '').trim();
+      const cardClassName = sanitizeClassName(settings[`card${slot}ClassName`] || '');
       const cardPrimaryAction = buildCanonicalActionLinkFromFields({
         ...settings,
         [`__card${slot}PrimaryStyle`]: String(settings[`card${slot}ButtonStyle`] || 'blue').trim() || 'blue',
@@ -1947,9 +2103,11 @@ export function buildDynamicGridFromBlock(block) {
         labelKeys: [`card${slot}ButtonLabel`],
         hrefKeys: [`card${slot}ButtonUrl`],
         toKeys: [`card${slot}ButtonPageRef`],
+        documentIdKeys: [`card${slot}ButtonDocumentId`],
         openInNewWindowKeys: [`card${slot}ButtonOpenInNewWindow`],
         styleKeys: [`__card${slot}PrimaryStyle`],
         toneKeys: [`__card${slot}PrimaryTone`],
+        classNameKeys: [`card${slot}ButtonClassName`],
       });
       const cardSecondaryAction = buildCanonicalActionLinkFromFields({
         ...settings,
@@ -1959,26 +2117,32 @@ export function buildDynamicGridFromBlock(block) {
         labelKeys: [`card${slot}Button2Label`],
         hrefKeys: [`card${slot}Button2Url`],
         toKeys: [`card${slot}Button2PageRef`],
+        documentIdKeys: [`card${slot}Button2DocumentId`],
         openInNewWindowKeys: [`card${slot}Button2OpenInNewWindow`],
         styleKeys: [`__card${slot}SecondaryStyle`],
         toneKeys: [`__card${slot}SecondaryTone`],
+        classNameKeys: [`card${slot}Button2ClassName`],
       });
       const cardDividerTone = normalizeDynamicGridCardDividerTone(settings[`card${slot}DividerTone`]);
       const cardList = parseCardGridListJson(settings[`card${slot}ListJson`]);
+      const cardFineprint = parsePageContentTextLines(settings[`card${slot}Fineprint`]);
       const cardLinks = parseCardGridLinkItemsJson(settings[`card${slot}LinksJson`]);
       const cardAccordions = parseCardGridAccordionsJson(settings[`card${slot}AccordionsJson`]);
       const cardActions = [cardPrimaryAction, cardSecondaryAction].filter(Boolean);
-      if (!cardTitle && !cardBody && !cardList.length && !cardActions.length && !cardLinks.length && !cardAccordions.length) {
+      if (!cardTitle && !cardBody && !cardList.length && !cardFineprint.length && !cardActions.length && !cardLinks.length && !cardAccordions.length) {
         return null;
       }
 
       return {
         slot,
         title: cardTitle || `Card ${slot}`,
+        titleClassName: cardTitleClassName,
         titleHighlights: cardTitleHighlights,
         body: cardBody,
         list: cardList,
-        cardClass: resolvedCardClass,
+        fineprint: cardFineprint.length ? cardFineprint : null,
+        cardClass: [resolvedCardClass, cardClassName].filter(Boolean).join(' '),
+        panelTone: String(settings[`card${slot}PanelTone`] || '').trim(),
         dividerTone: cardDividerTone || undefined,
         action: cardActions[0] || null,
         actions: cardActions,
@@ -1988,18 +2152,20 @@ export function buildDynamicGridFromBlock(block) {
     })
     .filter(Boolean);
 
-  if (!title && !subtitle && !body && !bodyHtml && !cards.length && !consultantService) {
+  if (!title && !subtitle && !body && !bodyHtml && !cards.length && !consultantService && !sectionAction) {
     return null;
   }
 
   return {
     presetId,
+    cardsPreset,
     title,
     titleClassName,
     titleHighlights,
     subtitle,
     body,
     bodyHtml,
+    anchorId: String(settings.anchorId || '').trim(),
     bgTone,
     contentWidth,
     columns,
@@ -2017,6 +2183,7 @@ export function buildDynamicGridFromBlock(block) {
     cardTitleSizeRem,
     cardBodySizeRem,
     cardBodyLineHeight,
+    actions: sectionAction ? [sectionAction] : [],
     cards,
     targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
   };
@@ -2091,6 +2258,7 @@ export function buildDynamicTestimonialsFromBlock(block, { library = [], pathnam
     fineprint: resolved.showFineprint ? resolved.fineprint : '',
     targetSectionKey: normalizeTargetSectionKey(settings.targetSectionKey),
     targetFineprintSectionKey: normalizeTargetSectionKey(settings.targetFineprintSectionKey),
+    sectionClassName: sanitizeClassName(settings.sectionClassName || settings.targetSectionClassName || ''),
   };
 }
 
@@ -2101,10 +2269,17 @@ export function buildDynamicPageContentFromBlock(block) {
 
   const settings = block.settings || {};
   const title = String(settings.title || '').trim();
+  const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
+  const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
   const subtitle = String(settings.subtitle || '').trim();
   const body = parsePageContentTextLines(settings.body);
   const html = String(settings.html || '').trim();
   const widget = String(settings.widget || '').trim();
+  const logoImage = String(settings.logoImage || '').trim();
+  const logoAlt = String(settings.logoAlt || '').trim();
+  const logoText = String(settings.logoText || '').trim();
+  const pricingEntries = parseMissionAssurePricingEntries(settings.pricingEntriesJson);
+  const supportGroups = parsePageContentSupportGroups(settings.supportGroupsJson);
   const fullBleed = toBoolean(settings.fullBleed);
   const tableHeaders = parsePageContentTableHeaders(settings.tableHeadersJson);
   const tableRows = parsePageContentTableRows(settings.tableRowsJson);
@@ -2145,7 +2320,10 @@ export function buildDynamicPageContentFromBlock(block) {
     && !body.length
     && !normalizedHtml
     && !widget
+    && !logoImage
+    && !logoText
     && !table
+    && !supportGroups.length
     && !fineprint.length
     && !action
     && !addressBlock
@@ -2155,12 +2333,23 @@ export function buildDynamicPageContentFromBlock(block) {
 
   return {
     title,
+    titleClassName,
+    titleHighlights,
     subtitle,
     body,
     html: normalizedHtml,
     widget,
+    logoImage,
+    logoAlt,
+    logoText,
+    ...(pricingEntries.length ? { pricing: { entries: pricingEntries } } : {}),
     table,
     tableChartId: String(settings.tableChartId || '').trim(),
+    supportGroups,
+    supportGroupsExpanded: toBoolean(settings.supportGroupsExpanded),
+    supportGroupsCollapsible: settings.supportGroupsCollapsible === undefined
+      ? true
+      : toBoolean(settings.supportGroupsCollapsible),
     fineprint: fineprint.length ? fineprint : null,
     fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
     fullBleed,

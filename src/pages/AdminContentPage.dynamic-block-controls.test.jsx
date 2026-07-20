@@ -151,7 +151,7 @@ describe('dynamic block control wiring', () => {
     });
   });
 
-  it('keeps hero mode templates wired sitewide', () => {
+  it('keeps promoted overview hero templates dynamic-only', () => {
     ['/', '/services/loans', '/services/investments', '/services/retirement'].forEach((pathname) => {
       const blocks = contentBlockBlueprintsByPath[pathname] || [];
       const dynamicHero = blocks.find((block) => block?.id === 'hero' && block?.mode === 'dynamic');
@@ -159,12 +159,11 @@ describe('dynamic block control wiring', () => {
 
       expect(dynamicHero).toBeTruthy();
       expect(Array.isArray(dynamicHero?.editableFields) ? dynamicHero.editableFields.length : 0).toBeGreaterThan(0);
-      expect(staticHero).toBeTruthy();
-      expect(Array.isArray(staticHero?.editableFields) ? staticHero.editableFields : []).toHaveLength(0);
+      expect(staticHero).toBeUndefined();
     });
   });
 
-  it('keeps home managed billboards wired for both static and dynamic', () => {
+  it('keeps home managed billboards wired as dynamic blocks', () => {
     [
       { id: 'home_ministry_allies', kind: 'billboard' },
       { id: 'home_do_the_math', kind: 'billboard' },
@@ -176,13 +175,11 @@ describe('dynamic block control wiring', () => {
       expect(dynamicBlock).toBeTruthy();
       expect(dynamicBlock?.kind).toBe(kind);
       expect(Array.isArray(dynamicBlock?.editableFields) ? dynamicBlock.editableFields.length : 0).toBeGreaterThan(0);
-      expect(staticBlock).toBeTruthy();
-      expect(staticBlock?.kind).toBe(kind);
-      expect(Array.isArray(staticBlock?.editableFields) ? staticBlock.editableFields : []).toHaveLength(0);
+      expect(staticBlock).toBeUndefined();
     });
   });
 
-  it('keeps intro seeds aligned with native page styling for loans and investments', () => {
+  it('keeps root service intro seeds in dynamic blueprints after native shells are cleared', () => {
     const loansIntro = (contentBlockBlueprintsByPath['/services/loans'] || [])
       .find((block) => block?.id === 'intro' && block?.mode === 'dynamic');
     const investmentsIntro = (contentBlockBlueprintsByPath['/services/investments'] || [])
@@ -193,13 +190,11 @@ describe('dynamic block control wiring', () => {
     expect(loansIntro?.settings?.bgTone).toBe('blue');
     expect(loansIntro?.settings?.textTone).toBe('white');
     expect(loansIntro?.settings?.button1Label).toBe('Get started');
-    expect(loansNativeIntro?.bgTone).toBe('blue');
-    expect(loansNativeIntro?.textTone).toBe('white');
+    expect(loansNativeIntro).toBeUndefined();
     expect(investmentsIntro?.settings?.bgTone).toBe(defaultInvestmentsIntroSettings.bgTone);
     expect(investmentsIntro?.settings?.textTone).toBe(defaultInvestmentsIntroSettings.textTone);
     expect(investmentsIntro?.settings?.heading).toBe(defaultInvestmentsIntroSettings.heading);
-    expect(investmentsNativeIntro?.bgTone).toBe(defaultInvestmentsIntroSettings.bgTone);
-    expect(investmentsNativeIntro?.textTone).toBe(defaultInvestmentsIntroSettings.textTone);
+    expect(investmentsNativeIntro).toBeUndefined();
   });
 
   it('wires top strip controls through the migrated top strip editor', () => {
@@ -803,7 +798,7 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
-      expect(screen.getByText('Dashboard login')).toBeTruthy();
+      expect(screen.getByText('General CTA')).toBeTruthy();
       fireEvent.change(screen.getByLabelText('CTA band title'), {
         target: { value: 'Already connected?' },
       });
@@ -1532,8 +1527,20 @@ describe('dynamic block control wiring', () => {
 
   it('lets admins add CTA fields and enable contact preference', () => {
     const onSettingChange = vi.fn();
+    const block = getDynamicBlock('cta_form');
+    block.settings = {
+      ...block.settings,
+      fieldsJson: '',
+      field1Enabled: true,
+      field2Enabled: true,
+      field3Enabled: true,
+      field4Enabled: false,
+      field4Label: '',
+      field5Enabled: false,
+      field5Label: '',
+    };
 
-    render(<CtaFormBlockEditor block={getDynamicBlock('cta_form')} onSettingChange={onSettingChange} />);
+    render(<CtaFormBlockEditor block={block} onSettingChange={onSettingChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Add field' }));
     expect(onSettingChange).toHaveBeenCalledWith('fieldsJson', expect.stringContaining('"label":"Field 4"'));
@@ -2178,24 +2185,25 @@ describe('dynamic block control wiring', () => {
     expect(container.textContent).toContain('1 direct links');
   });
 
-  it('keeps the investment-options preset on the canonical grid editor while moving intro copy outside the grid', () => {
+  it('keeps the migrated investment options section on the page content editor', () => {
     const block = cloneBlock(
       (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
         .find((entry) => entry?.id === 'investment_strategy_options'),
     );
     const onSettingChange = vi.fn();
 
-    render(<GridBlockEditor block={block} onSettingChange={onSettingChange} routeOptions={[]} />);
+    render(<PageContentBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    expect(screen.getByText('Card Grid Preset')).toBeTruthy();
-    expect(screen.getByText('Investment options')).toBeTruthy();
-    expect(screen.queryByText('Grid intro heading')).toBeNull();
+    expect(block?.kind).toBe('content');
+    expect(block?.settings?.sectionClassName).toBe('retirement-403b-native-strategy-feature');
+    expect(screen.queryByText('Card Grid Preset')).toBeNull();
 
-    fireEvent.click(screen.getByText('Card 1').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: 'Advanced layout' }));
+    fireEvent.change(screen.getByLabelText('Content max width (px)'), {
+      target: { value: '1200' },
+    });
 
-    expect(screen.getByLabelText('Card 1 button label')).toBeTruthy();
-    expect(screen.getByLabelText('Card 1 button 2 label')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Add direct link' })).toBeTruthy();
+    expect(onSettingChange).toHaveBeenCalledWith('contentMaxWidthPx', 1200);
   });
 
   it('bounds the eligibility preset to plain-text cards without card-level actions or resource stacks', () => {

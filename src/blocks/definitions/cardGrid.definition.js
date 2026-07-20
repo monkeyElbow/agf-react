@@ -132,9 +132,36 @@ const sections = [
         options: GRID_TEXT_TONE_OPTIONS,
       }),
       defineEditorField({ id: 'subtitle', label: 'Grid subtitle', type: 'textarea', rows: 2 }),
+      defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
       defineEditorField({ id: 'fullBleed', label: 'Use full-bleed rail', type: 'boolean' }),
       defineEditorField({ id: 'sand', label: 'Use sand section surface', type: 'boolean' }),
+      ...defineTransitionalActionFields({
+        labelId: 'buttonLabel',
+        labelLabel: 'Section button label',
+        hrefId: 'buttonUrl',
+        hrefLabel: 'Section button URL',
+        toId: 'buttonPageRef',
+        toLabel: 'Section internal page path',
+        openInNewWindowId: 'buttonOpenInNewWindow',
+        openInNewWindowLabel: 'Section button opens in new window',
+      }),
+      defineEditorField({
+        id: 'buttonStyle',
+        label: 'Section button style',
+        type: 'select',
+        options: [
+          { value: 'blue', label: 'Blue' },
+          { value: 'dark', label: 'Dark' },
+          { value: 'outline', label: 'Outline' },
+        ],
+      }),
+      defineEditorField({
+        id: 'buttonTone',
+        label: 'Section button color',
+        type: 'swatch',
+        options: GRID_TEXT_TONE_OPTIONS,
+      }),
       defineEditorField({
         id: 'consultantService',
         label: 'Consultant directory source',
@@ -160,8 +187,12 @@ const sections = [
     fields: [
       ...[1, 2, 3, 4, 5, 6, 7, 8].flatMap((slot) => ([
         defineEditorField({ id: `card${slot}Title`, label: `Card ${slot} title`, type: 'text' }),
+        defineEditorField({ id: `card${slot}TitleClassName`, label: `Card ${slot} title class name`, type: 'text' }),
+        defineEditorField({ id: `card${slot}ClassName`, label: `Card ${slot} class name`, type: 'text' }),
+        defineEditorField({ id: `card${slot}PanelTone`, label: `Card ${slot} panel tone`, type: 'text' }),
         defineEditorField({ id: `card${slot}Body`, label: `Card ${slot} body`, type: 'textarea', rows: 2 }),
         defineEditorField({ id: `card${slot}ListJson`, label: `Card ${slot} bullet list JSON`, type: 'textarea', rows: 5 }),
+        defineEditorField({ id: `card${slot}Fineprint`, label: `Card ${slot} fineprint`, type: 'textarea', rows: 2 }),
         defineEditorField({ id: `card${slot}LinksJson`, label: `Card ${slot} PDF / link list JSON`, type: 'textarea', rows: 4 }),
         defineEditorField({ id: `card${slot}AccordionsJson`, label: `Card ${slot} accordion JSON`, type: 'textarea', rows: 6 }),
         defineEditorField({
@@ -178,6 +209,8 @@ const sections = [
           toId: `card${slot}ButtonPageRef`,
           toLabel: `Card ${slot} internal page path`,
         }),
+        defineEditorField({ id: `card${slot}ButtonDocumentId`, label: `Card ${slot} button document ID`, type: 'text' }),
+        defineEditorField({ id: `card${slot}ButtonClassName`, label: `Card ${slot} button class name`, type: 'text' }),
         ...defineTransitionalActionFields({
           labelId: `card${slot}Button2Label`,
           labelLabel: `Card ${slot} button 2 label`,
@@ -186,6 +219,8 @@ const sections = [
           toId: `card${slot}Button2PageRef`,
           toLabel: `Card ${slot} button 2 internal page path`,
         }),
+        defineEditorField({ id: `card${slot}Button2DocumentId`, label: `Card ${slot} button 2 document ID`, type: 'text' }),
+        defineEditorField({ id: `card${slot}Button2ClassName`, label: `Card ${slot} button 2 class name`, type: 'text' }),
       ])),
     ],
   },
@@ -195,13 +230,17 @@ function validateCardGridLinks(block) {
   const settings = block?.settings || {};
   return validateLegacyLinkFieldGroups(
     settings,
-    Array.from({ length: 8 }, (_, index) => {
+    [{
+      hrefKeys: ['buttonUrl'],
+      toKeys: ['buttonPageRef'],
+      openInNewWindowKeys: ['buttonOpenInNewWindow'],
+    }].concat(Array.from({ length: 8 }, (_, index) => {
       const slot = index + 1;
       return {
         hrefKeys: [`card${slot}ButtonUrl`],
         toKeys: [`card${slot}ButtonPageRef`],
       };
-    }).concat(
+    })).concat(
       Array.from({ length: 8 }, (_, index) => {
         const slot = index + 1;
         return {
@@ -234,6 +273,13 @@ export const cardGridBlockDefinition = createBlockDefinition({
     cardTitleSizeRem: 1.14,
     cardBodySizeRem: 1,
     cardBodyLineHeight: 1.58,
+    anchorId: '',
+    buttonLabel: '',
+    buttonUrl: '',
+    buttonPageRef: '',
+    buttonOpenInNewWindow: false,
+    buttonStyle: 'blue',
+    buttonTone: 'atlantean',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),

@@ -37,14 +37,3 @@ export function buildDefaultLoansIntroRuntime() {
     settings: defaultLoansIntroSettings,
   }));
 }
-
-export function buildDefaultLoansNativeIntro() {
-  return Object.freeze({
-    heading: DEFAULT_LOANS_INTRO_HEADING,
-    body: Object.freeze([DEFAULT_LOANS_INTRO_BODY_TEXT]),
-    actions: Object.freeze([{ label: 'Get started', to: '/services/loans#form' }]),
-    justify: defaultLoansIntroSettings.justify,
-    bgTone: defaultLoansIntroSettings.bgTone,
-    textTone: defaultLoansIntroSettings.textTone,
-  });
-}

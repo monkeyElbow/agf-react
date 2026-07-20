@@ -20,5 +20,7 @@ describe('native card-grid style ownership guardrail', () => {
     expect(source).not.toContain('.service-native-section.native-dynamic-grid[data-block-id="investment_strategy_options"]');
     expect(source).not.toContain('.service-native-section.native-dynamic-grid[data-block-id="who_qualifies"]');
     expect(source).not.toContain('.service-native-section.native-dynamic-grid[data-block-id="loan_apply"]');
+    expect(source).not.toContain('.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options');
+    expect(source).not.toContain('.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-eligibility-cards');
   });
 });

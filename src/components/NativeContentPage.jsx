@@ -877,9 +877,10 @@ function toNativeActionItem(action) {
     return null;
   }
   const className = toActionButtonClassConfig(action.style, action.tone).className;
+  const customClassName = String(action.className || '').trim();
   return {
     ...action,
-    className: className || undefined,
+    className: [className, customClassName].filter(Boolean).join(' ') || undefined,
   };
 }
 
@@ -905,7 +906,7 @@ function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {
     justify: normalizeHeroJustify(runtime.justify),
     lineSpacing: normalizeIntroLineSpacing(runtime.lineSpacing),
     actions,
-    className: `dynamic-intro is-bg-${normalizeSurfaceBgTone(runtime.bgTone, 'sand')} is-text-${normalizePanelTextTone(runtime.textTone, 'dark')}${includeTestClassName ? ' test-dynamic-intro' : ''}`,
+    className: `dynamic-intro${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${normalizeSurfaceBgTone(runtime.bgTone, 'sand')} is-text-${normalizePanelTextTone(runtime.textTone, 'dark')}${includeTestClassName ? ' test-dynamic-intro' : ''}`,
   };
 }
 
@@ -944,6 +945,8 @@ function buildNativeBillboardSection(block, pathname, { includeTestClassName = f
     subtitleStyle: runtime.subtitleStyle || undefined,
     html: normalizeHtmlContent(runtime.bodyHtml),
     body: runtime.body ? [runtime.body] : [],
+    fineprint: runtime.fineprint || undefined,
+    fineprintDisclosureId: runtime.fineprintDisclosureId || undefined,
     justify: normalizeHeroJustify(runtime.justify),
     copyStyle: runtime.copyStyle || undefined,
     copyClassName: runtime.copyClassName || '',
@@ -962,12 +965,21 @@ function buildDynamicPageContentSection(block, pathname) {
 
   const {
     title,
+    titleClassName,
+    titleHighlights,
     subtitle,
     body,
     html,
     widget,
+    logoImage,
+    logoAlt,
+    logoText,
+    pricing,
     table,
     tableChartId,
+    supportGroups,
+    supportGroupsExpanded,
+    supportGroupsCollapsible,
     fineprint,
     fineprintDisclosureId,
     fullBleed,
@@ -993,13 +1005,22 @@ function buildDynamicPageContentSection(block, pathname) {
     className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}`,
     fullBleed: Boolean(fullBleed),
     title,
+    titleClassName: titleClassName || undefined,
+    titleHighlights: Array.isArray(titleHighlights) ? titleHighlights : [],
     subtitle: subtitle || undefined,
     body: Array.isArray(body) ? body : [],
     copyWrap: Boolean(copyWrap),
     html,
     widget: widget || undefined,
+    logoImage: logoImage || undefined,
+    logoAlt: logoAlt || undefined,
+    logoText: logoText || undefined,
+    pricing: pricing || undefined,
     table: table || undefined,
     tableChartId: tableChartId || undefined,
+    supportGroups: Array.isArray(supportGroups) && supportGroups.length ? supportGroups : undefined,
+    supportGroupsExpanded: Boolean(supportGroupsExpanded),
+    supportGroupsCollapsible,
     fineprint: fineprint || undefined,
     fineprintDisclosureId: fineprintDisclosureId || undefined,
     actions: Array.isArray(actions) ? actions : [],
@@ -1022,12 +1043,14 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
 
   const {
     presetId,
+    cardsPreset,
     title,
     titleClassName,
     titleHighlights,
     subtitle,
     body,
     bodyHtml,
+    anchorId,
     bgTone,
     contentWidth,
     columns,
@@ -1045,6 +1068,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardTitleSizeRem,
     cardBodySizeRem,
     cardBodyLineHeight,
+    actions,
     cards: runtimeCards,
     targetSectionKey,
   } = runtime;
@@ -1077,7 +1101,9 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       inquiryLabel: card.inquiryLabel,
       body: card.body,
       list: Array.isArray(card.list) ? card.list : undefined,
+      fineprint: card.fineprint || undefined,
       cardClass: card.cardClass,
+      panelTone: card.panelTone,
       dividerTone: card.dividerTone,
       actions: (Array.isArray(card.actions) ? card.actions : (card.action ? [card.action] : []))
         .map((action) => toNativeActionItem(action))
@@ -1090,6 +1116,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
   return {
     id: `${pathname}-dynamic-grid-${String(block.id || 'grid').trim() || 'grid'}`,
     blockId: String(block?.id || '').trim() || undefined,
+    anchorId: anchorId || undefined,
     hideTitle: !title,
     title,
     titleClassName: titleClassName || undefined,
@@ -1098,10 +1125,12 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     body: body ? [body] : [],
     html: bodyHtml,
     copyWrap: hasIntroCopy,
+    cardsPreset,
     wide: contentWidth === 'browser',
     fullBleed,
     sand,
     columns,
+    actions: (Array.isArray(actions) ? actions : []).map((action) => toNativeActionItem(action)).filter(Boolean),
     locationFilter: locationFilter || undefined,
     focusMessageCard: Boolean(locationFilter?.focusMessageCard),
     cards,
@@ -1138,6 +1167,7 @@ function buildDynamicColumnsSection(block, pathname) {
     contentWidth,
     columns,
     columnsStyle,
+    sectionClassName,
     items,
   } = runtime;
   const hasIntroCopy = Boolean(title || leadLine || bodyHtml || followupLine);
@@ -1178,7 +1208,7 @@ function buildDynamicColumnsSection(block, pathname) {
     columns,
     columnsStyle,
     columnsItems,
-    className: `${sectionClassBase} is-bg-${bgTone} is-width-${contentWidth} is-columns-style-${columnsStyle} ${presetRuntimeClassName}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-columns-style-${columnsStyle} ${presetRuntimeClassName}`,
   };
 }
 
@@ -1322,6 +1352,7 @@ function buildDynamicRequestFormSection(block, pathname) {
     id: `${pathname}-dynamic-request-${String(block.id || 'request_form').trim() || 'request_form'}`,
     blockId: String(block?.id || '').trim() || undefined,
     targetSectionKey: runtime.targetSectionKey || '',
+    anchorId: runtime.anchorId || undefined,
     hideCopy: true,
     className: runtime.sectionClassName,
     sectionStyle: runtime.sectionStyle,
@@ -1358,7 +1389,7 @@ function buildDynamicTestimonialsSection(block, pathname, testimonialsLibrary) {
     id: `${pathname}-dynamic-testimonials-${String(block.id || 'testimonials').trim() || 'testimonials'}`,
     blockId: String(block?.id || '').trim() || undefined,
     targetSectionKey: runtime.targetSectionKey || '',
-    className: sectionClassBase,
+    className: `${sectionClassBase}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
     hideTitle: true,
     testimonials: items.map((item) => ({
       quote: item.quote,
@@ -1425,13 +1456,28 @@ function buildDynamicSiteFeatureSection(block, pathname) {
   if (!runtime) {
     return null;
   }
+  const blockId = String(block?.id || '').trim() || undefined;
+  const baseSection = {
+    id: `${pathname}-dynamic-site-feature-${String(block.id || 'site-feature').trim() || 'site-feature'}`,
+    blockId,
+    targetSectionKey: runtime.targetSectionKey || '',
+    className: `${pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
+    siteFeatureRuntime: runtime,
+    featureIntro: runtime.featureIntro || undefined,
+  };
+
+  if (runtime.runtimeKey === 'about_history_feature') {
+    return {
+      ...baseSection,
+      hideTitle: true,
+      cardsPreset: 'value-cards',
+      cards: Array.isArray(runtime.cards) ? runtime.cards : [],
+      actions: runtime.action ? [toNativeActionItem(runtime.action)].filter(Boolean) : [],
+    };
+  }
 
   return {
-    id: `${pathname}-dynamic-site-feature-${String(block.id || 'site-feature').trim() || 'site-feature'}`,
-    blockId: String(block?.id || '').trim() || undefined,
-    targetSectionKey: runtime.targetSectionKey || '',
-    className: pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature',
-    siteFeatureRuntime: runtime,
+    ...baseSection,
     feature: {
       title: runtime.title,
       body: runtime.body ? [runtime.body] : [],
@@ -4495,11 +4541,12 @@ export default function NativeContentPage({ page }) {
     const targetedDynamicTestimonialsSections = new Map();
     const targetedDynamicTestimonialsFineprintSections = new Map();
     const targetedDynamicBillboardSections = new Map();
+    const allowTargetedDynamicSections = !isBlockOnlyManagedPage;
 
     visibleBlocks.forEach((block) => {
       const mappedSection = buildNativeBillboardSection(block, activePath, { includeTestClassName: isTestPage });
       const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!mappedSection || !targetKey || targetedDynamicBillboardSections.has(targetKey)) {
+      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicBillboardSections.has(targetKey)) {
         return;
       }
       targetedDynamicBillboardSections.set(targetKey, { block, mappedSection });
@@ -4508,7 +4555,7 @@ export default function NativeContentPage({ page }) {
     visibleBlocks.forEach((block) => {
       const mappedSection = buildDynamicCtaSection(block, activePath);
       const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!mappedSection || !targetKey || targetedDynamicCtaSections.has(targetKey)) {
+      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicCtaSections.has(targetKey)) {
         return;
       }
       targetedDynamicCtaSections.set(targetKey, { block, mappedSection });
@@ -4517,7 +4564,7 @@ export default function NativeContentPage({ page }) {
     visibleBlocks.forEach((block) => {
       const mappedSection = buildDynamicGridSection(block, activePath, { getConsultants });
       const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!mappedSection || !targetKey || targetedDynamicGridSections.has(targetKey)) {
+      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicGridSections.has(targetKey)) {
         return;
       }
       targetedDynamicGridSections.set(targetKey, { block, mappedSection });
@@ -4526,7 +4573,7 @@ export default function NativeContentPage({ page }) {
     visibleBlocks.forEach((block) => {
       const mappedSection = buildDynamicFeaturePanelSection(block, activePath);
       const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!mappedSection || !targetKey || targetedDynamicFeatureSections.has(targetKey)) {
+      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicFeatureSections.has(targetKey)) {
         return;
       }
       targetedDynamicFeatureSections.set(targetKey, { block, mappedSection });
@@ -4535,7 +4582,7 @@ export default function NativeContentPage({ page }) {
     visibleBlocks.forEach((block) => {
       const mappedSection = buildDynamicSiteFeatureSection(block, activePath);
       const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!mappedSection || !targetKey || targetedDynamicSiteFeatureSections.has(targetKey)) {
+      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicSiteFeatureSections.has(targetKey)) {
         return;
       }
       targetedDynamicSiteFeatureSections.set(targetKey, { block, mappedSection });
@@ -4544,7 +4591,7 @@ export default function NativeContentPage({ page }) {
     visibleBlocks.forEach((block) => {
       const mappedSection = buildDynamicRequestFormSection(block, activePath);
       const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (!mappedSection || !targetKey || targetedDynamicRequestSections.has(targetKey)) {
+      if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicRequestSections.has(targetKey)) {
         return;
       }
       targetedDynamicRequestSections.set(targetKey, { block, mappedSection });
@@ -4553,11 +4600,11 @@ export default function NativeContentPage({ page }) {
     visibleBlocks.forEach((block) => {
       const mappedSection = buildDynamicTestimonialsSection(block, activePath, testimonialsLibrary);
       const targetKey = String(mappedSection?.targetSectionKey || '').trim();
-      if (mappedSection && targetKey && !targetedDynamicTestimonialsSections.has(targetKey)) {
+      if (allowTargetedDynamicSections && mappedSection && targetKey && !targetedDynamicTestimonialsSections.has(targetKey)) {
         targetedDynamicTestimonialsSections.set(targetKey, { block, mappedSection });
       }
       const fineprintTargetKey = String(mappedSection?.targetFineprintSectionKey || '').trim();
-      if (mappedSection && fineprintTargetKey && !targetedDynamicTestimonialsFineprintSections.has(fineprintTargetKey)) {
+      if (allowTargetedDynamicSections && mappedSection && fineprintTargetKey && !targetedDynamicTestimonialsFineprintSections.has(fineprintTargetKey)) {
         targetedDynamicTestimonialsFineprintSections.set(fineprintTargetKey, { block, mappedSection });
       }
     });

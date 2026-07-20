@@ -117,6 +117,8 @@ const sections = [
       defineEditorField({ id: 'titleLetterSpacingEm', label: 'Billboard heading letter spacing (em)', type: 'number', min: -0.12, max: 0.04, step: 0.005 }),
       defineEditorField({ id: 'bodyHtml', label: 'Billboard body HTML', type: 'html' }),
       defineEditorField({ id: 'body', label: 'Fallback body text', type: 'textarea', rows: 3 }),
+      defineEditorField({ id: 'fineprint', label: 'Fineprint', type: 'textarea', rows: 4 }),
+      defineEditorField({ id: 'fineprintDisclosureId', label: 'Fineprint disclosure ID', type: 'text' }),
       defineEditorField({
         id: 'bgTone',
         label: 'Billboard background',
@@ -165,6 +167,17 @@ const sections = [
         toneLabel: 'Button 1 color',
         toneOptions: BILLBOARD_BUTTON_TONE_OPTIONS,
       }),
+      defineEditorField({
+        id: 'buttonAction',
+        label: 'Button 1 action type',
+        type: 'select',
+        options: [
+          { value: '', label: 'Link action' },
+          { value: 'open_cta_form', label: 'Reveal CTA form' },
+        ],
+      }),
+      defineEditorField({ id: 'buttonTargetAnchorId', label: 'Button 1 target anchor ID', type: 'text' }),
+      defineEditorField({ id: 'buttonTargetBlockId', label: 'Button 1 target block ID', type: 'text' }),
       ...defineTransitionalActionFields({
         labelId: 'button2Label',
         labelLabel: 'Button 2 label',
@@ -190,6 +203,7 @@ const sections = [
     fields: [
       defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
+      defineEditorField({ id: 'copyClassName', label: 'Copy class name', type: 'text' }),
     ],
   },
 ];
@@ -213,6 +227,12 @@ export const billboardBlockDefinition = createBlockDefinition({
     subtitleDisplay: 'supporting',
     anchorId: '',
     sectionClassName: '',
+    copyClassName: '',
+    fineprint: '',
+    fineprintDisclosureId: '',
+    buttonAction: '',
+    buttonTargetAnchorId: '',
+    buttonTargetBlockId: '',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),

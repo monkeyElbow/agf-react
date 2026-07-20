@@ -1451,6 +1451,7 @@ describe('buildDynamicGridFromBlock', () => {
         card1DividerTone: 'melon',
         card1ButtonLabel: 'Learn more',
         card1ButtonPageRef: '/services/retirement',
+        card1ButtonClassName: 'custom-grid-action',
       },
     });
 
@@ -1486,6 +1487,7 @@ describe('buildDynamicGridFromBlock', () => {
           to: '/services/retirement',
           style: 'blue',
           tone: 'atlantean',
+          className: 'custom-grid-action',
         }),
       }),
     ]);
@@ -1818,10 +1820,15 @@ describe('buildDynamicPageContentFromBlock', () => {
       mode: 'dynamic',
       settings: {
         title: 'Annual Contribution Limits',
+        titleClassName: 'is-atlantean',
+        titleHighlightsJson: '[{"text":"Limits","className":"is-mango"}]',
         subtitle: 'Updated for 2026',
         body: ['Line one.', 'Line two.'],
         html: '<p>Body copy.</p>',
         widget: 'retirement-403b-rate-table',
+        logoImage: '/logo.png',
+        logoAlt: 'Partner logo',
+        logoText: '',
         spaceBeforeRem: 1.25,
         spaceAfterRem: 0.75,
         paddingTopRem: 3,
@@ -1846,18 +1853,27 @@ describe('buildDynamicPageContentFromBlock', () => {
 
     expect(runtime).toEqual({
       title: 'Annual Contribution Limits',
+      titleClassName: 'is-atlantean',
+      titleHighlights: [{ text: 'Limits', className: 'is-mango' }],
       subtitle: 'Updated for 2026',
       body: ['Line one.', 'Line two.'],
       html: '<p>Body copy.</p>',
       widget: 'retirement-403b-rate-table',
+      logoImage: '/logo.png',
+      logoAlt: 'Partner logo',
+      logoText: '',
       table: {
         headers: ['Limit', '2026'],
         rows: [['Under 50', '$24,500']],
         valueAlignment: 'left',
       },
       tableChartId: 'managed-chart',
+      supportGroups: [],
+      supportGroupsExpanded: false,
+      supportGroupsCollapsible: true,
       fineprint: ['Rates subject to change.', 'Contact your advisor.'],
       fineprintDisclosureId: 'managed-disclosure',
+      fullBleed: false,
       spaceBeforeRem: 1.25,
       spaceAfterRem: 0.75,
       paddingTopRem: 3,
@@ -1888,6 +1904,54 @@ describe('buildDynamicPageContentFromBlock', () => {
         lines: ['PO Box 2515', 'Springfield MO 65801'],
       },
     });
+  });
+
+  it('parses page content support groups with document links', () => {
+    const runtime = buildDynamicPageContentFromBlock({
+      id: 'support',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        supportGroupsExpanded: true,
+        supportGroupsCollapsible: false,
+        supportGroupsJson: JSON.stringify([
+          {
+            title: 'Plan details',
+            links: [
+              {
+                label: 'Ministers enrolled after March 1, 2005 (PDF)',
+                documentId: 'policy-insurance-group-life-credentialed-ministers-after-2005',
+              },
+              {
+                label: 'External packet',
+                href: 'https://example.com/packet.pdf',
+                openInNewWindow: true,
+              },
+            ],
+          },
+        ]),
+      },
+    });
+
+    expect(runtime?.supportGroups).toEqual([
+      {
+        title: 'Plan details',
+        links: [
+          {
+            label: 'Ministers enrolled after March 1, 2005 (PDF)',
+            documentId: 'policy-insurance-group-life-credentialed-ministers-after-2005',
+          },
+          {
+            label: 'External packet',
+            href: 'https://example.com/packet.pdf',
+            openInNewWindow: true,
+          },
+        ],
+        items: [],
+      },
+    ]);
+    expect(runtime?.supportGroupsExpanded).toBe(true);
+    expect(runtime?.supportGroupsCollapsible).toBe(false);
   });
 
   it('returns null when page content payload is blank', () => {

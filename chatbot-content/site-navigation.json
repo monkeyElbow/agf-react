@@ -74,7 +74,7 @@
     { "title": "Certificate Request", "path": "/services/insurance/certificate-request", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
     { "title": "Group term life insurance", "path": "/services/insurance/group-term-life-insurance", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
     { "title": "Life Insurance Quote", "path": "/services/insurance/life-insurance-quote", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
-    { "title": "Minister's Group Life Plan", "path": "/services/insurance/ministers-group-life-plan", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
+    { "title": "Ministers' Group Life Plan", "path": "/services/insurance/ministers-group-life-plan", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
     { "title": "Mission Assure", "path": "/services/insurance/mission-assure", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
     { "title": "Report a claim", "path": "/services/insurance/mission-assure/report-a-claim", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },
     { "title": "Property & Casualty Insurance", "path": "/services/insurance/property-casualty-insurance", "section": "Insurance", "hideFromSitemap": false, "recommendationTier": "secondary", "linkRefAliases": [] },

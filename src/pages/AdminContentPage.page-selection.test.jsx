@@ -58,6 +58,30 @@ vi.mock('../context/ContentAdminContext', async () => {
           breadcrumbLabel: 'Services',
           parentPath: '/',
         },
+        '/forms': {
+          path: '/forms',
+          title: 'Forms',
+          breadcrumbLabel: 'Forms',
+          parentPath: '/resources',
+        },
+        '/prospectus': {
+          path: '/prospectus',
+          title: 'Prospectus',
+          breadcrumbLabel: 'Prospectus',
+          parentPath: '/resources',
+        },
+        '/sitemap': {
+          path: '/sitemap',
+          title: 'Sitemap',
+          breadcrumbLabel: 'Sitemap',
+          parentPath: null,
+        },
+        '/about-us/careers': {
+          path: '/about-us/careers',
+          title: 'Careers',
+          breadcrumbLabel: 'Careers',
+          parentPath: '/about-us',
+        },
         '/': {
           path: '/',
           title: 'Home',
@@ -230,5 +254,23 @@ describe('AdminContentPage page selection', () => {
     });
     expect(container.querySelector('.admin-page-save-bar-context strong')?.textContent).toBe('Investments');
     expect(container.querySelector('.admin-page-save-bar-context span')?.textContent).toBe('/services/investments');
+  });
+
+  it('keeps blockless functional routes out of the editable page picker', async () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    const pageSelect = await screen.findByLabelText('Page route');
+    const optionValues = Array.from(pageSelect.querySelectorAll('option')).map((option) => option.value);
+
+    expect(optionValues).toContain('/services/loans');
+    expect(optionValues).toContain('/services/investments');
+    expect(optionValues).not.toContain('/about-us/careers');
+    expect(optionValues).not.toContain('/forms');
+    expect(optionValues).not.toContain('/prospectus');
+    expect(optionValues).not.toContain('/sitemap');
   });
 });

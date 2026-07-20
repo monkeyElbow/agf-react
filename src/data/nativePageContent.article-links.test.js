@@ -1,40 +1,35 @@
 import { describe, expect, it } from 'vitest';
-import { getNativePageContent } from './nativePageContent';
+import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 
 describe('native page content article feature links', () => {
   it('wires the insurance fraud feature to the seeded article route and media', () => {
-    const content = getNativePageContent('/services/insurance', '');
-    const sections = Array.isArray(content?.sections) ? content.sections : [];
-    const featureSection = sections.find((section) => section?.className === 'insurance-native-fraud');
-    const action = featureSection?.feature?.actions?.[0];
+    const blocks = contentBlockBlueprintsByPath['/services/insurance'] || [];
+    const featureBlock = blocks.find((block) => block?.id === 'fraud_feature');
 
-    expect(featureSection?.feature?.title).toBe('Defend Yourself Against Fraud');
-    expect(featureSection?.feature?.image).toContain('media.agfinancial.org');
-    expect(action?.label).toBe('Read article');
-    expect(action?.to).toBe('/resources/article/defend-yourself-against-fraud');
+    expect(featureBlock?.settings?.title).toBe('Defend Yourself Against Fraud');
+    expect(featureBlock?.settings?.imageUrl).toContain('media.agfinancial.org');
+    expect(featureBlock?.settings?.buttonLabel).toBe('Read article');
+    expect(featureBlock?.settings?.buttonPageRef).toBe('/resources/article/defend-yourself-against-fraud');
   });
 
   it('wires the planned giving opportunity feature to the seeded article route and media', () => {
-    const content = getNativePageContent('/services/planned-giving', '');
-    const sections = Array.isArray(content?.sections) ? content.sections : [];
-    const featureSection = sections.find((section) => section?.className === 'legacy-giving-opportunity');
-    const action = featureSection?.feature?.actions?.[0];
+    const blocks = contentBlockBlueprintsByPath['/services/planned-giving'] || [];
+    const featureBlock = blocks.find((block) => block?.id === 'opportunity_feature');
 
-    expect(featureSection?.feature?.title).toBe('Opportunity is Knocking');
-    expect(featureSection?.feature?.image).toContain('media.agfinancial.org');
-    expect(action?.label).toBe('Answer the door');
-    expect(action?.to).toBe('/resources/article/opportunity');
+    expect(featureBlock?.settings?.title).toBe('Opportunity is Knocking');
+    expect(featureBlock?.settings?.imageUrl).toContain('media.agfinancial.org');
+    expect(featureBlock?.settings?.buttonLabel).toBe('Answer the door');
+    expect(featureBlock?.settings?.buttonPageRef).toBe('/resources/article/opportunity');
+    expect(featureBlock?.settings?.sectionClassName).toBe('legacy-giving-opportunity');
   });
 
   it('wires the mission assure summer camp feature to the seeded article route and media', () => {
-    const content = getNativePageContent('/services/insurance/mission-assure', '');
-    const sections = Array.isArray(content?.sections) ? content.sections : [];
-    const featureSection = sections.find((section) => section?.className === 'mission-assure-native-camp-safety');
-    const action = featureSection?.feature?.actions?.[0];
+    const blocks = contentBlockBlueprintsByPath['/services/insurance/mission-assure'] || [];
+    const featureBlock = blocks.find((block) => block?.id === 'camp_safety');
 
-    expect(featureSection?.feature?.title).toBe('Summer Camp Safety Tips');
-    expect(featureSection?.feature?.image).toContain('media.agfinancial.org');
-    expect(action?.label).toBe('Go safely!');
-    expect(action?.to).toBe('/resources/article/summer-camp-safety-tips');
+    expect(featureBlock?.settings?.title).toBe('Summer Camp Safety Tips');
+    expect(featureBlock?.settings?.imageUrl).toContain('media.agfinancial.org');
+    expect(featureBlock?.settings?.buttonLabel).toBe('Go safely!');
+    expect(featureBlock?.settings?.buttonPageRef).toBe('/resources/article/summer-camp-safety-tips');
   });
 });

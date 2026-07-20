@@ -265,7 +265,7 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Let’s explore what we can do together.')).toBeTruthy();
   });
 
-  it('renders certificate request from the targeted request-form block without a fallback page-content section', () => {
+  it('renders certificate request from standalone blocks without fallback page content', () => {
     mockBlocksByPath = {
       '/services/insurance/certificate-request': (
         contentBlockBlueprintsByPath['/services/insurance/certificate-request'] || []
@@ -292,10 +292,12 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.certificate-request-native-section')).toBeTruthy();
     expect(document.querySelector('.certificate-request-native-section .certificate-request-form')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="site_feature"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="hero"]')).toBeTruthy();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
   });
 
-  it('renders group term life from the targeted request-form block without a fallback page-content section', () => {
+  it('renders group term life from standalone blocks without fallback page content', () => {
     mockBlocksByPath = {
       '/services/insurance/group-term-life-insurance': (
         contentBlockBlueprintsByPath['/services/insurance/group-term-life-insurance'] || []
@@ -318,13 +320,88 @@ describe('NativeContentPage functional routes', () => {
     );
 
     expect(document.querySelector('.service-native-hero h1')?.textContent).toBe('Get a group quote.');
+    expect(document.querySelector('.group-life-native-lead.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('.group-life-native-quote.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('.group-life-native-honor.native-dynamic-page-content')).toBeTruthy();
+    expect(document.querySelector('.group-life-native-benefits.native-dynamic-grid')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="site_feature"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
     expect(screen.getAllByText('Provide a few specifics, and we’ll contact you about a policy customized specifically for your team.')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: "Ministers' Group Life Plan details" }).getAttribute('href')).toBe('/services/insurance/ministers-group-life-plan');
   });
 
-  it('renders property and casualty from the targeted request-form block with the shortened quote copy', () => {
+  it('renders ministers group life from standalone blocks without native fallback content', () => {
+    mockBlocksByPath = {
+      '/services/insurance/ministers-group-life-plan': (
+        contentBlockBlueprintsByPath['/services/insurance/ministers-group-life-plan'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/ministers-group-life-plan',
+            title: "Ministers' Group Life Plan",
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.service-native-hero h1')?.textContent).toBe('AG Ministry');
+    expect(document.querySelector('.ministers-group-life-native-details.native-dynamic-grid')).toBeTruthy();
+    expect(document.querySelector('.ministers-group-life-native-enroll.native-dynamic-grid')).toBeTruthy();
+    expect(document.querySelector('.ministers-group-life-native-support.native-dynamic-page-content')).toBeTruthy();
+    expect(document.querySelector('.ministers-group-life-native-cta.native-dynamic-cta')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="site_feature"]')).toBeNull();
+    expect(screen.getByText('About the plan')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Minister enrollment form' })).toBeTruthy();
+    expect(screen.getByText('Support for current clients')).toBeTruthy();
+    expect(screen.getByLabelText('Search support')).toBeTruthy();
+    expect(screen.getByText('Life Services Toolkit')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Still need help?' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Follow up with me' })).toBeTruthy();
+  });
+
+  it('renders life insurance quote from standalone blocks without native fallback content', () => {
+    mockBlocksByPath = {
+      '/services/insurance/life-insurance-quote': (
+        contentBlockBlueprintsByPath['/services/insurance/life-insurance-quote'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/life-insurance-quote',
+            title: 'Life Insurance Quote',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.service-native-hero h1')?.textContent).toBe('Get a life quote.');
+    expect(document.querySelector('.life-quote-native-types.native-dynamic-grid')).toBeTruthy();
+    expect(document.querySelector('.life-quote-native-bridge.native-dynamic-page-content')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Which is best for you?' })).toBeTruthy();
+    expect(screen.getByText('Use the quote form below to get started.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Request a Life Insurance Quote' })).toBeTruthy();
+  });
+
+  it('renders property and casualty from standalone blocks without native fallback content', () => {
     mockBlocksByPath = {
       '/services/insurance/property-casualty-insurance': (
         contentBlockBlueprintsByPath['/services/insurance/property-casualty-insurance'] || []
@@ -347,10 +424,21 @@ describe('NativeContentPage functional routes', () => {
     );
 
     expect(document.querySelector('.insurance-pc-native-quote.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('.insurance-pc-native-ag-program.native-dynamic-page-content')).toBeTruthy();
+    expect(document.querySelector('.insurance-pc-native-partner.native-dynamic-page-content')).toBeTruthy();
+    expect(document.querySelector('.insurance-pc-native-resources.native-dynamic-grid')).toBeTruthy();
+    expect(document.querySelector('.insurance-pc-native-safe.native-dynamic-page-content')).toBeTruthy();
+    expect(document.querySelector('.insurance-pc-native-fineprint.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="site_feature"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Request a P&C quote.' })).toBeTruthy();
     expect(screen.getByText('Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'AG Insurance Program' })).toBeTruthy();
+    expect(screen.getByAltText('Church Mutual Insurance')).toBeTruthy();
+    expect(screen.getByText('Additional coverages available')).toBeTruthy();
+    expect(screen.getByText('Safe & sound')).toBeTruthy();
+    expect(screen.getByText('CM0045 (04-2020)')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
   });
 
@@ -480,6 +568,16 @@ describe('NativeContentPage functional routes', () => {
   });
 
   it('renders the about us route with the updated intro, full-width image section, strategy links, and allies CTA', () => {
+    mockBlocksByPath = {
+      '/about-us': (
+        contentBlockBlueprintsByPath['/about-us'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
     render(
       <MemoryRouter>
         <NativeContentPage
@@ -544,7 +642,7 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.about-native-cta-form')).toBeTruthy();
   });
 
-  it('replaces the impact native stats grid in place with the managed proof story feature while keeping the native fallback when blocks are absent', () => {
+  it('renders the impact proof story as a managed block without native stats fallback', () => {
     mockBlocksByPath = {
       '/about-us/impact': (
         contentBlockBlueprintsByPath['/about-us/impact'] || []
@@ -597,10 +695,7 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    const fallbackStatsSection = document.querySelector('.impact-native-stats');
-    expect(fallbackStatsSection).toBeTruthy();
-    expect(fallbackStatsSection?.querySelectorAll('.impact-native-card')).toHaveLength(4);
-    expect(fallbackStatsSection?.querySelector('.impact-proof-story-shell, .impact-proof-story-static')).toBeNull();
+    expect(document.querySelector('.impact-native-stats')).toBeNull();
   });
 
   it('renders the careers route through NativeContentPage with delegated jobs behavior intact', () => {
@@ -703,19 +798,10 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Thanks. We will reach out soon.')).toBeTruthy();
   });
 
-  it('renders the planned giving stewardship site feature in place of the static stewardship section and wires its CTA to the comparison anchor', () => {
+  it('renders the planned giving stewardship site feature from standalone blocks and wires its CTA to the comparison anchor', () => {
     mockBlocksByPath = {
-      '/services/planned-giving': [
-        {
-          id: 'stewardship_story',
-          kind: 'site_feature',
-          mode: 'dynamic',
-          settings: {
-            featureId: 'legacy_giving_stewardship_story',
-            targetSectionKey: 'id:legacy-giving-stewardship-story',
-          },
-        },
-      ],
+      '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
+        .filter((block) => block?.mode === 'dynamic'),
     };
 
     render(
@@ -741,6 +827,7 @@ describe('NativeContentPage functional routes', () => {
 
     expect(screen.getByText('Receive payments for life.')).toBeTruthy();
     expect(stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]')?.textContent).toBe('Compare charitable giving ideas');
+    expect(stewardshipSection?.getAttribute('data-block-id')).toBe('stewardship_story');
     expect(stewardshipSection?.className).toContain('legacy-giving-stewardship');
     expect(stewardshipSection?.className).toContain('legacy-stewardship-story');
     expect(willsSection && stewardshipSection
@@ -752,10 +839,11 @@ describe('NativeContentPage functional routes', () => {
     expect(joySection?.className).toContain('fade-out');
     expect(joySection?.querySelector('.native-info-section-copy.fade-up')).toBeTruthy();
     expect(comparisonSection?.id).toBe('charitable-giving-plan-comparison');
+    expect(comparisonSection?.getAttribute('data-block-id')).toBe('comparison_table');
     expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
   });
 
-  it('renders the planned giving joy section through the billboard block target while preserving the native motion classes', () => {
+  it('renders the planned giving joy section through a standalone billboard block while preserving the native motion classes', () => {
     mockBlocksByPath = {
       '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
@@ -850,7 +938,7 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
   });
 
-  it('renders the planned giving types section through the managed card grid target without changing its current design shell', () => {
+  it('renders the planned giving types section through the managed card grid without changing its current design shell', () => {
     mockBlocksByPath = {
       '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
@@ -891,7 +979,7 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelectorAll('section[data-block-id="giving_options"]')).toHaveLength(1);
   });
 
-  it('renders the planned giving wills section through the targeted billboard block while preserving the current action styles', () => {
+  it('renders the planned giving wills section through a standalone billboard block while preserving the current action styles', () => {
     mockBlocksByPath = {
       '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
@@ -916,7 +1004,7 @@ describe('NativeContentPage functional routes', () => {
     expect(willsSection?.getAttribute('data-block-id')).toBe('wills_estate_billboard');
     expect(willsSection?.className).toContain('legacy-giving-wills');
     expect(willsSection?.className).toContain('dynamic-billboard');
-    expect(willsSection?.className).toContain('is-sand');
+    expect(willsSection?.className).toContain('is-bg-sand');
     expect(downloadPacketLink.className).toContain('is-outline');
     expect(downloadPacketLink.className).toContain('is-tone-atlantean');
     expect(onlineFormLink.className).toContain('is-tone-atlantean');
@@ -998,7 +1086,7 @@ describe('NativeContentPage functional routes', () => {
     expect(button.className).toContain('service-native-btn');
   });
 
-  it('renders the 403(b) housing columns block with the restored body copy and bullet list', () => {
+  it('renders the 403(b) housing columns block with the canonical body copy', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
         .filter((block) => block?.mode !== 'static'),
@@ -1020,10 +1108,9 @@ describe('NativeContentPage functional routes', () => {
 
     expect(section?.className).toContain('native-dynamic-columns');
     expect(section?.className).toContain('is-columns-preset-housing-allowance');
-    expect(screen.getByText(/The unique benefit, which gives ministers a significant tax savings/i)).toBeTruthy();
-    expect(screen.getByText('The maximum housing allowance exemption in any tax year is the lesser of:')).toBeTruthy();
-    expect(screen.getByText('Your actual expenditures')).toBeTruthy();
-    expect(screen.getByText(/The amount distributed by your retirement plan to you and declared in advance as your housing allowance/i)).toBeTruthy();
+    expect(screen.getByText(/This unique IRS benefit, which gives ministers a significant tax savings/i)).toBeTruthy();
+    expect(screen.queryByText('The maximum housing allowance exemption in any tax year is the lesser of:')).toBeNull();
+    expect(screen.queryByText('Your actual expenditures')).toBeNull();
   });
 
   it('renders a single centered 403(b) enroll CTA below the investment strategy feature section', () => {
@@ -1243,6 +1330,23 @@ describe('NativeContentPage functional routes', () => {
             button2PageRef: '',
             button2Style: 'outline',
             button2Tone: 'super-grey',
+          },
+        },
+        {
+          id: 'request_form',
+          kind: 'request_form',
+          mode: 'dynamic',
+          settings: {
+            title: 'Make the most of your giving.',
+            body: 'Let’s discover the best way for you to give, and in the easiest way possible.',
+            bgTone: 'blue',
+            textTone: 'white',
+            submitLabel: 'Submit',
+            anchorId: 'traditional-daf-form',
+            sectionClassName: 'legacy-child-native-generosity-request',
+            step1FieldsJson: JSON.stringify([
+              { id: 'name', label: 'Name*', type: 'text', required: true },
+            ]),
           },
         },
       ],

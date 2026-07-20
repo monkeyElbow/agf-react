@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { defaultInvestmentsIntroSettings as blueprintIntroDefaults } from './contentBlockBlueprints';
 import {
   buildDefaultInvestmentsIntroRuntime,
-  buildDefaultInvestmentsNativeIntro,
   defaultInvestmentsIntroSettings,
   DEFAULT_INVESTMENTS_INTRO_BODY_TEXT,
   DEFAULT_INVESTMENTS_INTRO_EXTRA_LINE,
@@ -21,18 +20,15 @@ function readSource(relativePath) {
 }
 
 describe('investments intro seed guardrail', () => {
-  it('keeps blueprint defaults, native route seed, and runtime fallback aligned to one canonical intro seed', () => {
+  it('keeps blueprint defaults and runtime fallback aligned to one canonical intro seed', () => {
     const nativeIntro = getNativePageContent('/services/investments', 'Investments')?.intro;
     const runtimeIntro = buildDefaultInvestmentsIntroRuntime();
 
     expect(blueprintIntroDefaults).toEqual(defaultInvestmentsIntroSettings);
-    expect(nativeIntro).toEqual(buildDefaultInvestmentsNativeIntro());
+    expect(nativeIntro).toBeUndefined();
     expect(runtimeIntro.heading).toBe(DEFAULT_INVESTMENTS_INTRO_HEADING);
     expect(runtimeIntro.bodyHtml).toContain(DEFAULT_INVESTMENTS_INTRO_BODY_TEXT);
     expect(runtimeIntro.extraLine).toBe(DEFAULT_INVESTMENTS_INTRO_EXTRA_LINE);
-    expect(nativeIntro?.heading).toBe(DEFAULT_INVESTMENTS_INTRO_HEADING);
-    expect(nativeIntro?.body).toEqual([DEFAULT_INVESTMENTS_INTRO_BODY_TEXT]);
-    expect(nativeIntro?.emphasis).toBe(DEFAULT_INVESTMENTS_INTRO_EXTRA_LINE);
   });
 
   it('keeps InvestmentsPage and contentBlockBlueprints on the shared intro seed instead of local literal copy', () => {

@@ -22,6 +22,8 @@ import { resolveTestimonialsBlockData } from '../lib/testimonials';
 import {
   actionButtonClassName,
   buildDynamicBillboardFromBlock,
+  buildDynamicCtaBandFromBlock,
+  buildDynamicGridFromBlock,
   buildDynamicHeroFromBlock,
   buildDynamicIntroFromBlock,
   heroAnimationClassForLine,
@@ -31,37 +33,6 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { defaultLoansCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultLoansIntroRuntime } from '../data/loansIntroSeed';
-
-const loanOptions = [
-  {
-    title: 'Permanent',
-    description: 'Permanent, first-mortgage financing to help you purchase facilities or refinance existing loans. No short-sighted balloon notes that can leave your ministry financially vulnerable.',
-  },
-  {
-    title: 'First Permanent Location',
-    description: 'Designed exclusively for young, high-performing, growing churches to purchase a first permanent facility. This loan helps establish permanent roots, and leaves leasing in the past.',
-  },
-  {
-    title: 'Construction',
-    description: 'New construction or renovation, with interest-only payments during the project. After construction, there is a guaranteed conversion-at no cost-to permanent financing.',
-  },
-  {
-    title: 'Facelift',
-    description: 'Made for a quick win for "opportunity areas" (cracked parking lot, ancient carpet, music on cassette, etc.) while keeping cash in the bank and holding fundraising for larger future needs.',
-  },
-  {
-    title: 'Vision',
-    description: "For large churches with a God-sized vision to buy a new campus, build a new facility, or refresh an existing building. Designed to be a 'war chest' of resources ready when God opens a door and time is of the essence.",
-  },
-  {
-    title: 'Campus Startup',
-    description: 'Often, a parent-affiliated church (PAC) is an effective way to reach more of the larger geographic community. This financing package was created for a PAC to plant or revitalize a daughter church.',
-  },
-  {
-    title: 'Credit Line',
-    description: 'Precisely what its name implies, a credit line is a convenient, customized alternative for short-term expenses, smaller renovation projects, and ongoing cash flow needs.',
-  },
-];
 
 const valueCards = [
   {
@@ -127,11 +98,13 @@ const DEFAULT_LOANS_INTRO = buildDefaultLoansIntroRuntime();
 const LOANS_HUD_ANCHOR_SELECTOR_BY_ID = {
   hero: '.service-native-hero',
   intro: '.service-native-intro',
+  loan_options: '.loans-native-options',
   request_form: '.loans-native-inquiry',
   value_cards: '.loans-native-more',
   vision_fuel: '.loans-native-vision-fuel',
   cta_form: '.native-dynamic-cta',
   testimonials: '.loans-native-testimonials',
+  cta_band: '.loans-native-option-question-wrap',
 };
 
 function clampFrontHudOpacity(value) {
@@ -700,6 +673,15 @@ export default function LoansPage({ sectionsOnly = false }) {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
+  const loanOptionsBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'loan_options'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
   const valueCardsBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'value_cards'
@@ -716,10 +698,10 @@ export default function LoansPage({ sectionsOnly = false }) {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const ctaBlock = useMemo(() => (
+  const loanOptionsCtaBandBlock = useMemo(() => (
     managedBlocks.find((block) => (
-      block?.id === 'cta_form'
-      && block?.kind === 'cta_form'
+      block?.id === 'cta_band'
+      && block?.kind === 'cta_band'
       && block?.mode === 'dynamic'
       && block?.hidden !== true
       && block?.hidden !== 'true'
@@ -739,9 +721,17 @@ export default function LoansPage({ sectionsOnly = false }) {
     () => buildLoanInquiryConfigFromBlock(requestFormBlock) || buildDefaultLoanInquiryConfig(),
     [requestFormBlock],
   );
+  const loanOptionsGrid = useMemo(
+    () => buildDynamicGridFromBlock(loanOptionsBlock),
+    [loanOptionsBlock],
+  );
   const renderedValueCardsBlock = useMemo(
     () => buildLoanValueCardsRenderableBlock(valueCardsBlock),
     [valueCardsBlock],
+  );
+  const loanOptionsCtaBand = useMemo(
+    () => buildDynamicCtaBandFromBlock(loanOptionsCtaBandBlock),
+    [loanOptionsCtaBandBlock],
   );
   const dynamicVisionFuel = useMemo(
     () => buildLoanVisionFuelConfigFromBlock(visionFuelBlock),
@@ -1086,6 +1076,20 @@ export default function LoansPage({ sectionsOnly = false }) {
     }
     stageLocalBlockSetting(block.id, settingKey, settingValue);
   };
+  const loanOptionsCards = Array.isArray(loanOptionsGrid?.cards) ? loanOptionsGrid.cards : [];
+  const showLoanOptionsSection = Boolean(
+    loanOptionsGrid?.title
+    || loanOptionsGrid?.subtitle
+    || loanOptionsGrid?.bodyHtml
+    || loanOptionsGrid?.body
+    || loanOptionsCards.length
+    || loanOptionsCtaBand,
+  );
+  const loanOptionsCtaAction = loanOptionsCtaBand?.action || null;
+  const loanOptionsCtaHref = String(loanOptionsCtaAction?.to || loanOptionsCtaAction?.href || '').trim();
+  const loanOptionsCtaLabel = String(loanOptionsCtaAction?.label || '').trim();
+  const loanOptionsCtaClassName = loanOptionsCtaAction?.className
+    || actionButtonClassName(loanOptionsCtaAction?.style || 'blue', loanOptionsCtaAction?.tone || 'atlantean');
 
   return (
     <div
@@ -1256,42 +1260,119 @@ export default function LoansPage({ sectionsOnly = false }) {
       </section>
       ) : null}
 
-      <section className="service-native-section loans-native-options" id="loan-options">
+      {showLoanOptionsSection ? (
+      <section
+        className={`service-native-section loans-native-options${getHudBlockStateClassName('loan_options')}${getOwnershipVisualForBlockId('loan_options').className || ''}`}
+        id="loan-options"
+        data-block-id="loan_options"
+      >
+        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('loan_options')} />
+        {renderHudAnchor('loan_options')}
         <div className="ag-panel-rail-wide">
-          <h2
-            className="loans-native-display-heading loans-native-options-title"
-          >
-            Every loan, 100% customized.
-          </h2>
-          <h3
-            className="loans-native-display-heading loans-native-options-subtitle"
-          >
-            You won&apos;t find this at a bank.
-          </h3>
-          <p className="loans-native-options-lead">
-            We&apos;re more than a financial partner. We&apos;re part of your ministry. It&apos;s our pleasure to design
-            a loan with rates and flexible terms <strong>specifically for you</strong>. The loans lineup below might
-            give you a great place to start.
-          </p>
-          <div className="service-native-grid loans-native-options-grid">
-            {loanOptions.map((item) => (
-              <article key={item.title} className="service-native-card loans-native-option-card card2 fade-up">
-                <h3>{item.title}</h3>
-                <hr />
-                <p>{item.description}</p>
-              </article>
-            ))}
-          </div>
-          <div className="loans-native-option-question-wrap fade-up">
-            <div className="native-info-section-copy is-justify-center">
-              <h2>Which loan is right for me?</h2>
-              <div className="service-native-action-row is-centered">
-                <Link to="/services/loans/loan-consultants" className="service-native-btn">Ask my loan expert</Link>
+          {loanOptionsGrid?.title ? (
+            <h2 className={loanOptionsGrid.titleClassName || 'loans-native-display-heading loans-native-options-title'}>
+              {loanOptionsGrid.titleHighlights?.length
+                ? renderHighlightedText(loanOptionsGrid.title, loanOptionsGrid.titleHighlights)
+                : loanOptionsGrid.title}
+            </h2>
+          ) : null}
+          {loanOptionsGrid?.subtitle ? (
+            <h3 className="loans-native-display-heading loans-native-options-subtitle">
+              {loanOptionsGrid.subtitle}
+            </h3>
+          ) : null}
+          {loanOptionsGrid?.bodyHtml ? (
+            <SafeRichText as="div" className="loans-native-options-lead native-info-rich-html" html={loanOptionsGrid.bodyHtml} />
+          ) : loanOptionsGrid?.body ? (
+            <p className="loans-native-options-lead">{loanOptionsGrid.body}</p>
+          ) : null}
+          {loanOptionsCards.length ? (
+            <div className="service-native-grid loans-native-options-grid">
+              {loanOptionsCards.map((item) => (
+                <article
+                  key={`loan-option-${item.slot}-${item.title}`}
+                  className={['service-native-card loans-native-option-card fade-up', item.cardClass || 'card2'].filter(Boolean).join(' ')}
+                >
+                  <h3 className={item.titleClassName || undefined}>
+                    {item.titleHighlights?.length
+                      ? renderHighlightedText(item.title, item.titleHighlights)
+                      : item.title}
+                  </h3>
+                  {loanOptionsGrid.showTitleDivider ? <hr /> : null}
+                  {item.body ? <p>{item.body}</p> : null}
+                  {item.actions?.length ? (
+                    <div className="service-native-action-row">
+                      {item.actions.map((action) => {
+                        const actionTarget = action.to || action.href || '';
+                        const isInternal = Boolean(action.to || (action.href && !isExternalLinkHref(action.href) && action.href.startsWith('/')));
+                        const buttonClassName = action.className || actionButtonClassName(action.style || 'blue', action.tone || 'atlantean');
+                        return isInternal ? (
+                          <Link
+                            key={`${item.slot}-${action.label}-${actionTarget}`}
+                            to={actionTarget}
+                            className={buttonClassName}
+                            target={action.openInNewWindow ? '_blank' : undefined}
+                            rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                          >
+                            {action.label}
+                          </Link>
+                        ) : (
+                          <a
+                            key={`${item.slot}-${action.label}-${actionTarget}`}
+                            href={actionTarget}
+                            className={buttonClassName}
+                            target={action.openInNewWindow ? '_blank' : undefined}
+                            rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
+                          >
+                            {action.label}
+                          </a>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          ) : null}
+          {loanOptionsCtaBand ? (
+            <div
+              className={`loans-native-option-question-wrap fade-up${getHudBlockStateClassName('cta_band')}${getOwnershipVisualForBlockId('cta_band').className || ''}`}
+              data-block-id="cta_band"
+            >
+              <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('cta_band')} />
+              {renderHudAnchor('cta_band')}
+              <div className="native-info-section-copy is-justify-center">
+                {loanOptionsCtaBand.title ? <h2>{loanOptionsCtaBand.title}</h2> : null}
+                {loanOptionsCtaBand.body ? <p>{loanOptionsCtaBand.body}</p> : null}
+                {loanOptionsCtaLabel && loanOptionsCtaHref ? (
+                  <div className="service-native-action-row is-centered">
+                    {loanOptionsCtaHref.startsWith('/') ? (
+                      <Link
+                        to={loanOptionsCtaHref}
+                        className={loanOptionsCtaClassName}
+                        target={loanOptionsCtaAction?.openInNewWindow ? '_blank' : undefined}
+                        rel={loanOptionsCtaAction?.openInNewWindow ? 'noreferrer noopener' : undefined}
+                      >
+                        {loanOptionsCtaLabel}
+                      </Link>
+                    ) : (
+                      <a
+                        href={loanOptionsCtaHref}
+                        className={loanOptionsCtaClassName}
+                        target={loanOptionsCtaAction?.openInNewWindow ? '_blank' : undefined}
+                        rel={loanOptionsCtaAction?.openInNewWindow ? 'noreferrer noopener' : undefined}
+                      >
+                        {loanOptionsCtaLabel}
+                      </a>
+                    )}
+                  </div>
+                ) : null}
               </div>
             </div>
-          </div>
+          ) : null}
         </div>
       </section>
+      ) : null}
 
       <section className={`service-native-section loans-native-inquiry native-dynamic-request is-bg-blue is-text-white${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`} id="form" data-block-id="request_form">
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('request_form')} />

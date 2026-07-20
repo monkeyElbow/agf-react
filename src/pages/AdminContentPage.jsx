@@ -57,6 +57,7 @@ import {
   resolvePanelTextToneClassName,
 } from '../lib/colorSystem';
 import { buildAdminBlockInsertChoices } from '../lib/adminBlockInsertChoices';
+import { isBlocklessManagedPagePath } from '../lib/managedPageShells';
 import { isPageContentKind, isPageContentTemplateId } from '../lib/pageContentIdentity';
 export {
   MigratedBillboardBlockEditor as BillboardBlockEditor,
@@ -1507,7 +1508,12 @@ export default function AdminContentPage() {
   const editablePages = useMemo(
     () => sortPages(
       Object.values(adminPageHierarchy || {})
-        .filter((page) => page && page.path && !page.path.startsWith('/admin/') && page.path !== '/search'),
+        .filter((page) => (
+          page
+          && page.path
+          && !page.path.startsWith('/admin/')
+          && !isBlocklessManagedPagePath(page.path)
+        )),
     ),
     [adminPageHierarchy],
   );

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import { getNativePageContent } from './nativePageContent';
 
 describe('native page disclosure wiring', () => {
@@ -8,13 +9,19 @@ describe('native page disclosure wiring', () => {
     const retirement403b = getNativePageContent('/services/retirement/403b', '');
     const retirement403bGroup = getNativePageContent('/services/retirement/403b/403b-group-enrollment', '');
     const retirementIras = getNativePageContent('/services/retirement/iras', '');
+    const propertyCasualtyBlocks = contentBlockBlueprintsByPath['/services/insurance/property-casualty-insurance'] || [];
+    const charitableGiftAnnuitiesBlocks = contentBlockBlueprintsByPath['/services/planned-giving/charitable-gift-annuities'] || [];
+    const iraBlocks = contentBlockBlueprintsByPath['/services/retirement/iras'] || [];
 
-    expect(propertyCasualty.sections.find((section) => section?.className === 'insurance-pc-native-fineprint')?.fineprintDisclosureId).toBe('insurance-property-casualty-coverage-notice');
-    expect(charitableGiftAnnuities.sections.find((section) => section?.className === 'legacy-child-native-cga-qcd-fineprint')?.fineprintDisclosureId).toBe('planned-giving-cga-qcd-fineprint');
-    expect(charitableGiftAnnuities.sections.find((section) => section?.className === 'legacy-child-native-cga-outro')?.fineprintDisclosureId).toBe('planned-giving-cga-state-notices');
-    expect(retirement403b.sections.find((section) => section?.className === 'retirement-child-native-table')?.fineprintDisclosureId).toBe('retirement-403b-contribution-limits-disclosure');
-    expect(retirement403bGroup.sections.find((section) => section?.className === 'retirement-child-native-qualify')?.fineprintDisclosureId).toBe('retirement-403b-501c3-note');
-    expect(retirementIras.sections.find((section) => section?.className === 'retirement-ira-native-rates')?.fineprintDisclosureId).toBe('retirement-ira-rates-disclosure');
-    expect(retirementIras.sections.find((section) => section?.className === 'retirement-ira-native-limits')?.fineprintDisclosureId).toBe('retirement-ira-contribution-limits-disclosure');
+    expect(Array.isArray(propertyCasualty.sections) ? propertyCasualty.sections : []).toEqual([]);
+    expect(propertyCasualtyBlocks.find((block) => block?.id === 'coverage_notice')?.settings?.fineprintDisclosureId).toBe('insurance-property-casualty-coverage-notice');
+    expect(Array.isArray(charitableGiftAnnuities.sections) ? charitableGiftAnnuities.sections : []).toEqual([]);
+    expect(charitableGiftAnnuitiesBlocks.find((block) => block?.id === 'qcd_fineprint')?.settings?.fineprintDisclosureId).toBe('planned-giving-cga-qcd-fineprint');
+    expect(charitableGiftAnnuitiesBlocks.find((block) => block?.id === 'outro')?.settings?.fineprintDisclosureId).toBe('planned-giving-cga-state-notices');
+    expect(Array.isArray(retirement403b.sections) ? retirement403b.sections : []).toEqual([]);
+    expect(Array.isArray(retirement403bGroup.sections) ? retirement403bGroup.sections : []).toEqual([]);
+    expect(Array.isArray(retirementIras.sections) ? retirementIras.sections : []).toEqual([]);
+    expect(iraBlocks.find((block) => block?.id === 'rate_table')?.settings?.fineprintDisclosureId).toBe('retirement-ira-rates-disclosure');
+    expect(iraBlocks.find((block) => block?.id === 'contribution_limits')?.settings?.fineprintDisclosureId).toBe('retirement-ira-contribution-limits-disclosure');
   });
 });

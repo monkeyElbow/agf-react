@@ -107,6 +107,7 @@ const sections = [
         layout: 'half',
         options: INTRO_TEXT_TONE_OPTIONS,
       }),
+      defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
     ],
   },
   {
@@ -151,6 +152,7 @@ export const introBlockDefinition = createBlockDefinition({
     lineSpacing: 1.04,
     bgTone: 'sand',
     textTone: 'dark',
+    sectionClassName: '',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),

@@ -31,7 +31,11 @@ import {
   toDevIdentitySummary,
 } from '../lib/devIdentity';
 import { getHeroSeedContract } from '../lib/heroSeedContracts';
-import { shouldSeedBlocksFromNativePageContent } from '../lib/managedPageShells';
+import {
+  isBlockOnlyManagedPagePath,
+  isBlocklessManagedPagePath,
+  shouldSeedBlocksFromNativePageContent,
+} from '../lib/managedPageShells';
 import {
   DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
   DEFAULT_HERO_TITLE_SIZE_REM,
@@ -89,7 +93,6 @@ const REQUEST_FORM_DYNAMIC_PATHS = new Set([
   '/services/retirement/retirement-consultants',
 ]);
 const INTRO_ACTION_LOCKED_PATHS = new Set([
-  '/services/insurance/group-term-life-insurance',
 ]);
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
 const RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH = '/services/retirement/403b/403b-individual-enrollment';
@@ -156,34 +159,10 @@ const LIFE_INSURANCE_QUOTE_REQUEST_TARGETS = new Set([
 const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
   '/services/investments/invest-by-mail',
   '/services/loans/loan-consultants',
-  '/services/retirement/403b/403b-terms-definitions',
-  '/services/retirement/403b/403b-group-enrollment',
-  '/services/retirement/409a',
-  '/services/retirement/iras/fund-an-ira',
-  '/services/retirement/rollovers',
-  '/services/insurance/life-insurance-quote',
-  '/services/insurance/ministers-group-life-plan',
-  '/services/insurance/mission-assure',
-  '/services/insurance/mission-assure/report-a-claim',
-  '/services/insurance/property-casualty-insurance',
-  '/about-us',
-  '/about-us/careers',
-  '/resources',
-  '/forms',
   '/calculators/emergency-fund',
   '/calculators/increased-contribution',
   '/calculators/net-worth',
   '/contact-us',
-  '/online-contributions',
-  '/prospectus',
-  '/subscribe',
-  '/search',
-  '/sitemap',
-  '/terms-of-service',
-  '/privacy-policy',
-  '/accessibility',
-  '/vineyard',
-  '/yourplan',
 ]);
 
 function isBlankSettingsObject(settings) {
@@ -352,56 +331,13 @@ function normalizeRetirement403bQualifySettings(settings) {
   };
 }
 
-function isRetirement403bLoanDetailsBlock(block) {
-  if (!block || typeof block !== 'object') {
-    return false;
-  }
-
-  const blockId = String(block.id || '').trim();
-  const blockKind = String(block.kind || '').trim().toLowerCase();
-  const sectionClassName = String(block?.settings?.sectionClassName || '').trim();
-  const html = String(block?.settings?.html || '').trim();
-
-  if (blockId === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID && blockKind === 'content') {
-    return true;
-  }
-
-  return (
-    blockId === 'page_content'
-    && blockKind === 'content'
-    && (
-      sectionClassName === 'retirement-403b-native-loans'
-      || html.includes('retirement-403b-loan-copy')
-      || html.includes('403(b) Plan Loans')
-    )
-  );
-}
-
 function normalizeRetirement403bBlockSet(blocks) {
   const safeBlocks = Array.isArray(blocks) ? blocks : [];
-  const hasCanonicalLoanDetailsBlock = safeBlocks.some((block) => (
-    String(block?.id || '').trim() === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID
-    && String(block?.kind || '').trim().toLowerCase() === 'content'
-  ));
   const filteredBlocks = safeBlocks.filter((block) => !(
     block?.id === 'benefits_copy'
     && String(block?.kind || '').trim().toLowerCase() === 'content'
     && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
-  )).filter((block) => !(
-    hasCanonicalLoanDetailsBlock
-    && String(block?.id || '').trim() === 'page_content'
-    && isRetirement403bLoanDetailsBlock(block)
-  )).map((block) => {
-    if (!isRetirement403bLoanDetailsBlock(block) || String(block?.id || '').trim() === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID) {
-      return block;
-    }
-
-    return {
-      ...block,
-      id: RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID,
-      name: 'Loan Details',
-    };
-  });
+  ));
   const loansIndex = filteredBlocks.findIndex((block) => String(block?.id || '').trim() === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID);
   const loanApplyIndex = filteredBlocks.findIndex((block) => String(block?.id || '').trim() === 'loan_apply');
   const reorderedBlocks = [...filteredBlocks];
@@ -708,6 +644,48 @@ function shouldResetRetirement403bLoanDetailsHtml(html) {
   ].filter(Boolean).length;
 
   return legacySignalCount >= 3;
+}
+
+function appendClassNameTokens(value, requiredValue) {
+  const currentTokens = String(value || '').trim().split(/\s+/).filter(Boolean);
+  const currentTokenSet = new Set(currentTokens);
+  String(requiredValue || '').trim().split(/\s+/).filter(Boolean).forEach((token) => {
+    if (!currentTokenSet.has(token)) {
+      currentTokens.push(token);
+      currentTokenSet.add(token);
+    }
+  });
+  return currentTokens.join(' ');
+}
+
+function normalizeRetirement403bSectionClassSettings(pathname, settings, defaultSettings) {
+  const path = String(pathname || '').trim();
+  if (
+    path !== RETIREMENT_403B_PATH
+    && path !== RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH
+    && path !== RETIREMENT_403B_GROUP_ENROLLMENT_PATH
+  ) {
+    return settings;
+  }
+
+  const defaultSectionClassName = String(defaultSettings?.sectionClassName || '').trim();
+  const requiredTokens = defaultSectionClassName
+    .split(/\s+/)
+    .filter((token) => token.startsWith('retirement-403b-native-') || token.startsWith('ret403b-'))
+    .join(' ');
+  if (!requiredTokens) {
+    return settings;
+  }
+
+  const nextSectionClassName = appendClassNameTokens(settings?.sectionClassName || '', requiredTokens);
+  if (nextSectionClassName === String(settings?.sectionClassName || '').trim()) {
+    return settings;
+  }
+
+  return {
+    ...(settings && typeof settings === 'object' ? settings : {}),
+    sectionClassName: nextSectionClassName,
+  };
 }
 
 function isLegacyTargetedRetirement403bCta(settings) {
@@ -3658,6 +3636,9 @@ function buildDefaultBlocks() {
     if (page.path.startsWith('/admin/')) {
       return;
     }
+    if (isBlocklessManagedPagePath(page.path)) {
+      return;
+    }
 
     const seedFromNativePageContent = shouldSeedBlocksFromNativePageContent(page.path);
     const nativeContent = seedFromNativePageContent
@@ -3789,6 +3770,36 @@ function buildDefaultBlocks() {
   });
 
   return blocksByPath;
+}
+
+function clearBlockOnlyTargetSectionFields(path, blocks) {
+  if (!isBlockOnlyManagedPagePath(path) || !Array.isArray(blocks)) {
+    return blocks;
+  }
+
+  return blocks.map((block) => {
+    const settings = block?.settings && typeof block.settings === 'object'
+      ? block.settings
+      : null;
+    const hasTargetSectionFields = Boolean(
+      String(settings?.targetSectionKey || '').trim()
+      || String(settings?.targetSectionClassName || '').trim()
+      || Number(settings?.targetSectionIndex || 0),
+    );
+    if (!settings || !hasTargetSectionFields) {
+      return block;
+    }
+
+    return {
+      ...block,
+      settings: {
+        ...settings,
+        targetSectionKey: '',
+        targetSectionClassName: '',
+        targetSectionIndex: 0,
+      },
+    };
+  });
 }
 
 function scoreTemplateVariant(block) {
@@ -3948,6 +3959,9 @@ export function normalizeStoredConfig(payload) {
     if (!Array.isArray(storedBlocks)) {
       return;
     }
+    if (isBlocklessManagedPagePath(path)) {
+      return;
+    }
 
     const defaultForPath = Array.isArray(defaultBlocks[path]) ? defaultBlocks[path] : [];
     const defaultById = new Map(defaultForPath.map((block) => [block.id, block]));
@@ -3963,13 +3977,7 @@ export function normalizeStoredConfig(payload) {
     normalizedStoredBlocks.forEach((storedBlock) => {
       const storedBlockId = String(storedBlock?.id || '').trim();
       const storedKind = String(storedBlock?.kind || '').trim().toLowerCase();
-      const effectiveStoredBlockId = (
-        path === RETIREMENT_403B_PATH
-        && storedBlockId === 'page_content'
-        && isRetirement403bLoanDetailsBlock(storedBlock)
-      )
-        ? RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID
-        : storedBlockId;
+      const effectiveStoredBlockId = storedBlockId;
 
       if (!storedBlock || typeof storedBlock !== 'object' || !effectiveStoredBlockId || seenIds.has(effectiveStoredBlockId)) {
         return;
@@ -4020,21 +4028,8 @@ export function normalizeStoredConfig(payload) {
         return;
       }
       if (
-        path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH
+        isBlockOnlyManagedPagePath(path)
         && isPageContentBlock(storedBlock)
-      ) {
-        return;
-      }
-      if (
-        path === RETIREMENT_403B_GROUP_ENROLLMENT_PATH
-        && isPageContentBlock(storedBlock)
-      ) {
-        return;
-      }
-      if (
-        path === RETIREMENT_403B_PATH
-        && isPageContentBlock(storedBlock)
-        && !isRetirement403bLoanDetailsBlock(storedBlock)
       ) {
         return;
       }
@@ -4043,13 +4038,6 @@ export function normalizeStoredConfig(payload) {
         && storedBlock.id === 'billboard'
         && storedKind === 'billboard'
         && isLegacyRetirement403bIndividualEnrollmentBillboard(storedSettings)
-      ) {
-        return;
-      }
-      if (
-        path === '/services/insurance/group-term-life-insurance'
-        && storedBlock.id === 'intro'
-        && storedKind === 'intro'
       ) {
         return;
       }
@@ -4354,7 +4342,8 @@ export function normalizeStoredConfig(payload) {
       }
       if (
         path === '/services/retirement/403b'
-        && isRetirement403bLoanDetailsBlock(storedBlock)
+        && storedBlock.id === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID
+        && storedKind === 'content'
         && defaultBlock
       ) {
         const storedHtml = String(nextStoredBlock?.settings?.html || '').trim();
@@ -4702,10 +4691,24 @@ export function normalizeStoredConfig(payload) {
         && storedKind === 'request_form'
         && storedMode === 'dynamic'
       ) {
+        const normalizedRequestSettings = normalizeDynamicRequestFormSettings(path, nextStoredBlock?.settings);
+        const shouldRestoreGroupLifeHeading = (
+          path === '/services/insurance/group-term-life-insurance'
+          && (
+            String(normalizedRequestSettings?.titleClassName || '').trim() === 'is-white'
+            || String(normalizedRequestSettings?.titleHighlightsJson || '').trim() === '[{"text":"group life","className":"is-white"}]'
+          )
+        );
         nextStoredBlock = {
           ...nextStoredBlock,
           hidden: false,
-          settings: normalizeDynamicRequestFormSettings(path, nextStoredBlock?.settings),
+          settings: shouldRestoreGroupLifeHeading
+            ? {
+                ...normalizedRequestSettings,
+                titleClassName: defaultBlock?.settings?.titleClassName || '',
+                titleHighlightsJson: defaultBlock?.settings?.titleHighlightsJson || '',
+              }
+            : normalizedRequestSettings,
         };
       }
       const modeVariant = getModeTemplateVariant({
@@ -4732,6 +4735,15 @@ export function normalizeStoredConfig(payload) {
           settings: clearIntroActionSettings(nextStoredBlock?.settings),
         };
       }
+      const mergedSettings = storedBlock.id === 'intro' && storedMode === 'dynamic'
+        ? normalizeIntroBodyMirror({
+          ...(modeVariant.settings || {}),
+          ...(nextStoredBlock.settings || {}),
+        })
+        : {
+            ...(modeVariant.settings || {}),
+            ...(nextStoredBlock.settings || {}),
+          };
       mergedInStoredOrder.push({
         ...modeVariant,
         ...nextStoredBlock,
@@ -4743,17 +4755,7 @@ export function normalizeStoredConfig(payload) {
         ),
         mode: storedMode,
         kind: nextStoredBlock.kind || modeVariant.kind,
-        settings: (
-          storedBlock.id === 'intro' && storedMode === 'dynamic'
-            ? normalizeIntroBodyMirror({
-              ...(modeVariant.settings || {}),
-              ...(nextStoredBlock.settings || {}),
-            })
-            : {
-                ...(modeVariant.settings || {}),
-                ...(nextStoredBlock.settings || {}),
-              }
-        ),
+        settings: normalizeRetirement403bSectionClassSettings(path, mergedSettings, modeVariant.settings),
         // Field schema should come from the current mode variant blueprint so admin UI upgrades appear automatically.
         editableFields: Array.isArray(modeVariant.editableFields) ? modeVariant.editableFields : [],
       });
@@ -4790,7 +4792,7 @@ export function normalizeStoredConfig(payload) {
     const normalizedMergedBlocks = path === RETIREMENT_403B_PATH
       ? normalizeRetirement403bBlockSet(mergedWithMissingDefaults)
       : mergedWithMissingDefaults;
-    blocksByPath[path] = normalizePageBlocksState(normalizedMergedBlocks);
+    blocksByPath[path] = normalizePageBlocksState(clearBlockOnlyTargetSectionFields(path, normalizedMergedBlocks));
   });
 
   const pathAliases = normalizePathAliases(

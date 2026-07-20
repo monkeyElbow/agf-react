@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import { getNativePageContent } from './nativePageContent';
 
 describe('group term life insurance native page content', () => {
-  it('keeps the request heading on dark core copy with only "group life" highlighted white', () => {
+  it('keeps native content shell-only and owns the request heading in blocks', () => {
     const content = getNativePageContent('/services/insurance/group-term-life-insurance', '');
-    const sections = Array.isArray(content?.sections) ? content.sections : [];
-    const requestSection = sections.find((section) => section?.className === 'group-life-native-quote');
+    const blocks = contentBlockBlueprintsByPath['/services/insurance/group-term-life-insurance'] || [];
+    const requestBlock = blocks.find((block) => block?.id === 'request_form');
 
-    expect(requestSection?.title).toBe('Request a quote for group life.');
-    expect(requestSection?.titleHighlights).toEqual([
-      { start: 20, end: 30, className: 'is-white' },
-    ]);
+    expect(content?.sections).toBeUndefined();
+    expect(requestBlock?.settings?.title).toBe('Request a quote for group life.');
+    expect(requestBlock?.settings?.titleClassName).toBe('is-super-grey');
+    expect(requestBlock?.settings?.titleHighlightsJson).toBe('[{"start":20,"end":30,"className":"is-white"}]');
+    expect(requestBlock?.settings?.sectionClassName).toBe('group-life-native-quote');
+    expect(requestBlock?.settings?.targetSectionKey).toBe('');
   });
 });

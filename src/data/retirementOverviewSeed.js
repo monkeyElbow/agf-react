@@ -39,18 +39,6 @@ export function buildDefaultRetirementIntroRuntime() {
   }));
 }
 
-export function buildDefaultRetirementNativeIntro() {
-  return Object.freeze({
-    heading: DEFAULT_RETIREMENT_INTRO_HEADING,
-    body: Object.freeze([DEFAULT_RETIREMENT_INTRO_BODY_TEXT]),
-    emphasis: DEFAULT_RETIREMENT_INTRO_EXTRA_LINE,
-    justify: defaultRetirementIntroSettings.justify,
-    bgTone: defaultRetirementIntroSettings.bgTone,
-    textTone: defaultRetirementIntroSettings.textTone,
-    actions: Object.freeze([]),
-  });
-}
-
 export const DEFAULT_RETIREMENT_BILLBOARD_TITLE = 'Retire a little every day.';
 export const DEFAULT_RETIREMENT_BILLBOARD_TITLE_HIGHLIGHTS = Object.freeze([
   Object.freeze({ text: 'every day', className: 'is-mango' }),

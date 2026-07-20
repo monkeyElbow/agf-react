@@ -52,6 +52,7 @@ import {
   buildDynamicBillboardFromBlock,
   buildDynamicHeroFromBlock,
   buildDynamicIntroFromBlock,
+  buildDynamicSiteFeatureFromBlock,
   buildDynamicSplitPanelFromBlock,
   heroAnimationClassForLine,
   isExternalLinkHref,
@@ -98,34 +99,6 @@ const states = [
 const DEFAULT_RETIREMENT_INTRO = buildDefaultRetirementIntroRuntime();
 const DEFAULT_RETIREMENT_BILLBOARD = buildDefaultRetirementBillboardRuntime();
 const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD = buildDefaultRetirementRolloverBillboardRuntime();
-const DEFAULT_RETIREMENT_PLAN_FEATURE = Object.freeze({
-  className: 'retirement-plan-feature',
-  disableInvestorExitReveal: true,
-  headlineLines: Object.freeze([
-    Object.freeze([
-      Object.freeze({ text: 'AGFinancial 403(b) Retirement Plan', className: 'is-white' }),
-    ]),
-  ]),
-  panels: Object.freeze([
-    Object.freeze({
-      title: 'Smart benefits, strong advantages',
-      tone: 'mango',
-      surfaceTone: 'blue',
-      body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.',
-    }),
-    Object.freeze({
-      kind: 'investor',
-      title: 'Includes minister\'s housing allowance, and a variety of investment strategies.',
-      surfaceTone: 'white',
-    }),
-  ]),
-  action: Object.freeze({
-    label: 'Explore the 403(b)',
-    to: '/services/retirement/403b',
-    className: 'service-native-btn retirement-plan-feature-action',
-  }),
-});
-
 function normalizeRetirementCtaSettings(settings = {}) {
   const nextSettings = {
     ...defaultRetirementCtaSettings,
@@ -220,9 +193,11 @@ const RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID = 'retirement-columns-math';
 const RETIREMENT_CTA_HUD_PANEL_ID = 'retirement-cta';
 const RETIREMENT_TESTIMONIALS_HUD_PANEL_ID = 'retirement-testimonials';
 const RETIREMENT_SPLIT_PANEL_HUD_PANEL_ID = 'retirement-split-panel';
+const RETIREMENT_PLAN_FEATURE_HUD_PANEL_ID = 'retirement-plan-feature';
 const RETIREMENT_HUD_PANEL_ID_BY_BLOCK_ID = {
   hero: RETIREMENT_HERO_HUD_PANEL_ID,
   intro: RETIREMENT_INTRO_HUD_PANEL_ID,
+  retirement_plan_feature: RETIREMENT_PLAN_FEATURE_HUD_PANEL_ID,
   billboard: RETIREMENT_BILLBOARD_HUD_PANEL_ID,
   rollover_billboard: RETIREMENT_ROLLOVER_BILLBOARD_HUD_PANEL_ID,
   columns_math: RETIREMENT_COLUMNS_MATH_HUD_PANEL_ID,
@@ -233,6 +208,7 @@ const RETIREMENT_HUD_PANEL_ID_BY_BLOCK_ID = {
 const RETIREMENT_HUD_ANCHOR_SELECTOR_BY_BLOCK_ID = {
   hero: '.service-native-hero',
   intro: '.service-native-intro',
+  retirement_plan_feature: '.retirement-plan-feature',
   billboard: '.retirement-everyday',
   rollover_billboard: '.retirement-rollover-billboard',
   columns_math: '.retirement-do-the-math-billboard',
@@ -602,6 +578,15 @@ export default function RetirementPage() {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
+  const retirementPlanFeatureBlock = useMemo(() => (
+    managedBlocks.find((block) => (
+      block?.id === 'retirement_plan_feature'
+      && block?.kind === 'site_feature'
+      && block?.mode === 'dynamic'
+      && block?.hidden !== true
+      && block?.hidden !== 'true'
+    )) || null
+  ), [managedBlocks]);
   const columnsMathBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'columns_math'
@@ -695,6 +680,10 @@ export default function RetirementPage() {
   }, [rolloverBillboardBlock, rolloverBillboardHudSettings]);
   const renderedBillboard = dynamicBillboard || DEFAULT_RETIREMENT_BILLBOARD;
   const renderedRolloverBillboard = dynamicRolloverBillboard || DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD;
+  const retirementPlanFeatureRuntime = useMemo(
+    () => buildDynamicSiteFeatureFromBlock(retirementPlanFeatureBlock),
+    [retirementPlanFeatureBlock],
+  );
   const billboardSectionStyle = renderedBillboard?.action
     ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
     : undefined;
@@ -1815,10 +1804,14 @@ export default function RetirementPage() {
         </div>
       </section>
 
-      <InvestmentsGrowthFeature
-        blockId="retirement_plan_feature"
-        runtime={DEFAULT_RETIREMENT_PLAN_FEATURE}
-      />
+      {retirementPlanFeatureRuntime ? (
+        <InvestmentsGrowthFeature
+          blockId="retirement_plan_feature"
+          runtime={retirementPlanFeatureRuntime}
+          ownership={getOwnershipVisualForBlockId('retirement_plan_feature')}
+          hudAnchor={resolveHudAnchor('retirement_plan_feature')}
+        />
+      ) : null}
 
       {splitPanelRuntime ? (
         <section

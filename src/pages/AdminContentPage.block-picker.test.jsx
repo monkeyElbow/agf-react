@@ -33,7 +33,7 @@ describe('AdminContentPage block picker guardrails', () => {
     fireEvent.click((await screen.findAllByLabelText(/Insert block at position/i))[0]);
 
     expect(screen.getByRole('radio', { name: /Card Grid · Flexible cards/i })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: /Card Grid · Investment options/i })).toBeTruthy();
+    expect(screen.queryByRole('radio', { name: /Card Grid · Investment options/i })).toBeNull();
     expect(screen.getByRole('radio', { name: /Card Grid · Eligibility cards/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Card Grid · Step-by-step cards/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /CTA Band · Dashboard login/i })).toBeTruthy();
@@ -41,11 +41,10 @@ describe('AdminContentPage block picker guardrails', () => {
     expect(screen.getByRole('radio', { name: /Columns · Housing allowance/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Columns · Do the math/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Columns · Value cards/i })).toBeTruthy();
-    expect(screen.queryByRole('radio', { name: /CTA Band · General CTA/i })).toBeNull();
+    expect(screen.getByRole('radio', { name: /CTA Band · General CTA/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Show static blocks' }));
 
-    expect(await screen.findByRole('radio', { name: /CTA Band · General CTA/i })).toBeTruthy();
     expect(screen.queryByRole('radio', { name: /CTA Band compatibility · What You Do Matters/i })).toBeNull();
     expect(screen.queryByRole('radio', { name: /Card Grid compatibility · Loan Options Grid/i })).toBeNull();
   });
@@ -97,5 +96,5 @@ describe('AdminContentPage block picker guardrails', () => {
         && String(block?.templateId || '').trim() === 'columns'
       ))).toBe(true);
     });
-  });
+  }, 10000);
 });

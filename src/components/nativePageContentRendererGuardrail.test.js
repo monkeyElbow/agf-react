@@ -28,7 +28,7 @@ describe('native page content renderer guardrail', () => {
 
     expect(source).toContain('buildDynamicSiteFeatureFromBlock,');
     expect(source).toContain('const runtime = buildDynamicSiteFeatureFromBlock(block);');
-    expect(source).toContain("className: pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'");
+    expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
     expect(source).toContain('const siteFeatureSection = buildDynamicSiteFeatureSection(block, activePath);');
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'site_feature') {");
   });
@@ -90,13 +90,13 @@ describe('native page content renderer guardrail', () => {
     expect(source).not.toContain('<table className="data-table data-table--fixed">');
   });
 
-  it('keeps 403(b) strategy document links on button-style lists without native bullets in the retirement card shell', () => {
+  it('keeps 403(b) strategy document links on button-style lists without native bullets on the active preset shell', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-link-list,');
-    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-child-native-strategies .service-native-card-accordion-links {');
-    expect(cssSource).toContain('.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-link-list,');
-    expect(cssSource).toContain('.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-accordion-links {');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-link-list,');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-accordion-links {');
+    expect(cssSource).not.toContain('.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options');
+    expect(cssSource).not.toContain('.native-info-page--retirement-403b .retirement-child-native-strategies');
     expect(cssSource).toContain('list-style: none;');
     expect(cssSource).toContain('padding-left: 0;');
     expect(cssSource).toContain('.service-native-card-link-list:has(.service-native-btn) {');
@@ -107,22 +107,36 @@ describe('native page content renderer guardrail', () => {
   it('keeps explicit sibling spacing between 403(b) strategy panels so row separation does not depend on wrapper gap rendering', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.native-info-page--retirement-403b .ret403b-strategy-feature {');
+    expect(cssSource).toContain('.ret403b-strategy-feature {');
     expect(cssSource).toContain('display: block;');
-    expect(cssSource).toContain('.native-info-page--retirement-403b .ret403b-strategy-feature > .ret403b-strategy-feature-row.services-breakdown-panel + .ret403b-strategy-feature-row.services-breakdown-panel {');
+    expect(cssSource).toContain('.ret403b-strategy-feature > .ret403b-strategy-feature-row.services-breakdown-panel + .ret403b-strategy-feature-row.services-breakdown-panel {');
     expect(cssSource).toContain('margin-top: clamp(0.8rem, 1.45vw, 1.05rem) !important;');
-    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html .services-breakdown-panel + .services-breakdown-panel,');
-    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html .ret403b-strategy-feature-row + .ret403b-strategy-feature-row {');
+    expect(cssSource).toContain('.retirement-403b-native-strategy-feature .native-info-rich-html .services-breakdown-panel + .services-breakdown-panel,');
+    expect(cssSource).toContain('.retirement-403b-native-strategy-feature .native-info-rich-html .ret403b-strategy-feature-row + .ret403b-strategy-feature-row {');
+    expect(cssSource).not.toContain('.native-info-page--retirement-403b .ret403b-strategy-feature {');
   });
 
-  it('forces 403(b) strategy document links into route-local outline buttons even when older stored markup still uses services-breakdown-links', () => {
+  it('forces 403(b) strategy document links into block-owned outline buttons even when older stored markup still uses services-breakdown-links', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) {');
-    expect(cssSource).toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a,');
+    expect(cssSource).toContain('.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) {');
+    expect(cssSource).toContain('.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a,');
     expect(cssSource).toContain('background: transparent !important;');
     expect(cssSource).toContain('border: 1px solid var(--btn-color) !important;');
     expect(cssSource).toContain('box-shadow: none !important;');
+    expect(cssSource).not.toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) {');
+  });
+
+  it('keeps promoted 403(b) block-owned class families out of route-scoped CSS selectors', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).not.toMatch(/\.native-info-page--retirement-403b\s+\.retirement-403b-native-/);
+    expect(cssSource).not.toMatch(/\.native-info-page--retirement-403b\s+\.ret403b-/);
+    expect(cssSource).not.toMatch(/\.native-info-page--retirement-403b\s+\.retirement-403b-loan-/);
+    expect(cssSource).not.toMatch(/\.native-info-page--retirement-403b[^{\n]*\.retirement-403b-group-compliance-copy/);
+    expect(cssSource).not.toMatch(/\.native-info-page--retirement-403b\s+\.retirement-child-native-(qualify|enroll|table|rollover)/);
+    expect(cssSource).not.toMatch(/\.native-info-page--retirement-403b\s+\.retirement-child-native-(strategies|highlight|housing|loans)/);
+    expect(cssSource).not.toContain('.native-info-page--retirement-403b .service-native-section.dynamic-billboard');
   });
 
   it('delegates active functional native routes to extracted renderers instead of keeping inline route mini-apps in NativeContentPage', () => {
@@ -164,6 +178,8 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('const baseNativeContent = getNativePageContent(templatePath, page.title);');
     expect(source).toContain('const baseContent = isBlockOnlyManagedPage');
     expect(source).toContain('? toBlockOnlyManagedPageShell(baseNativeContent)');
+    expect(source).toContain('const allowTargetedDynamicSections = !isBlockOnlyManagedPage;');
+    expect(source).toContain('if (!allowTargetedDynamicSections || !mappedSection || !targetKey || targetedDynamicCtaSections.has(targetKey)) {');
     expect(source).toContain("const isTestPage = templatePath === '/test';");
     expect(source).toContain("const isLegacyGivingPage = resolvedPagePath === '/services/planned-giving';");
     expect(source).toContain("const testimonialsHudDefaultTag = isLegacyGivingPage ? 'legacy-giving' : '';");
@@ -177,5 +193,19 @@ describe('native page content renderer guardrail', () => {
     expect(source).not.toContain("templatePath === '/about-us/careers'");
     expect(source).not.toContain("templatePath === '/services/retirement/403b'");
     expect(source).not.toContain("templatePath === '/services/retirement/retirement-consultants'");
+  });
+
+  it('keeps the investments by-mail widget block-owned instead of native-section-owned', () => {
+    const nativeContentSource = readSource('../data/nativePageContent.js');
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(nativeContentSource).toContain("'/services/investments/invest-by-mail': {");
+    expect(nativeContentSource).not.toContain("widget: 'investments-institutional-by-mail'");
+    expect(blueprintSource).toContain("id: 'mail_flow'");
+    expect(blueprintSource).toContain("widget: 'investments-institutional-by-mail'");
+    expect(blueprintSource).toContain("sectionClassName: 'investments-mail-native-shell'");
+    expect(cssSource).toContain('.investments-mail-native-shell {');
+    expect(cssSource).not.toContain('.native-info-page--investments-invest-by-mail .investments-mail');
   });
 });

@@ -44,6 +44,7 @@ const sections = [
         type: 'textarea',
         rows: 4,
       }),
+      defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
     ],
   },
   {
@@ -80,6 +81,7 @@ export const siteFeatureBlockDefinition = createBlockDefinition({
     buttonUrl: '',
     buttonPageRef: '',
     buttonOpenInNewWindow: false,
+    sectionClassName: '',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),

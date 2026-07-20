@@ -22,8 +22,8 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain("function buildActionRowStyle(justify, fallback = 'left') {");
     expect(source).toContain('function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {');
     expect(source).toContain('const runtime = buildDynamicIntroFromBlock(block);');
-    expect(source).toContain("className: `dynamic-intro is-bg-${normalizeSurfaceBgTone(runtime.bgTone, 'sand')} is-text-${normalizePanelTextTone(runtime.textTone, 'dark')}${includeTestClassName ? ' test-dynamic-intro' : ''}`");
-    expect(source).toContain('function buildNativeBillboardSection(block, { includeTestClassName = false } = {}) {');
+    expect(source).toContain("className: `dynamic-intro${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${normalizeSurfaceBgTone(runtime.bgTone, 'sand')} is-text-${normalizePanelTextTone(runtime.textTone, 'dark')}${includeTestClassName ? ' test-dynamic-intro' : ''}`");
+    expect(source).toContain('function buildNativeBillboardSection(block, pathname, { includeTestClassName = false } = {}) {');
     expect(source).toContain('const runtime = buildDynamicBillboardFromBlock(block);');
     expect(source).toContain("targetSectionKey: runtime.targetSectionKey || '',");
     expect(source).toContain('const targetedDynamicBillboardSections = new Map();');
@@ -36,7 +36,7 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain("const introBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'intro');");
     expect(source).toContain("const adminIntro = buildNativeIntroConfig(introBlock, { includeTestClassName: true });");
     expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'billboard') {");
-    expect(source).toContain("const billboardSection = buildNativeBillboardSection(block, { includeTestClassName: isTestPage });");
+    expect(source).toContain("const billboardSection = buildNativeBillboardSection(block, activePath, { includeTestClassName: isTestPage });");
     expect(source).not.toContain('function normalizeIntroLineSpacing(');
     expect(source).not.toContain('function normalizeBillboardLineSpacing(');
     expect(runtimeSource).toContain("} from './dynamicSectionTypography';");

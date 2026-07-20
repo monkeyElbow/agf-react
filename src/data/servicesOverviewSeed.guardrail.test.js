@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import {
   buildDefaultServicesIntroRuntime,
-  buildDefaultServicesNativeIntro,
   defaultServicesIntroBillboardSettings,
   DEFAULT_SERVICES_INTRO_HEADING,
   DEFAULT_SERVICES_INTRO_HIGHLIGHTS,
@@ -20,17 +19,15 @@ function readSource(relativePath) {
 }
 
 describe('services overview seed guardrail', () => {
-  it('keeps blueprint defaults, native route seed, and runtime fallback aligned to one canonical services intro seed', () => {
+  it('keeps blueprint defaults and runtime fallback aligned to one canonical services intro seed', () => {
     const introBlock = contentBlockBlueprintsByPath['/services']?.find((block) => block?.id === 'intro' && block?.kind === 'billboard');
     const nativeIntro = getNativePageContent('/services', 'Services')?.intro;
     const runtimeIntro = buildDefaultServicesIntroRuntime();
 
     expect(introBlock?.settings).toEqual(defaultServicesIntroBillboardSettings);
-    expect(nativeIntro).toEqual(buildDefaultServicesNativeIntro());
+    expect(nativeIntro).toBeUndefined();
     expect(runtimeIntro.heading).toBe(DEFAULT_SERVICES_INTRO_HEADING);
     expect(runtimeIntro.headingHighlights).toEqual(DEFAULT_SERVICES_INTRO_HIGHLIGHTS);
-    expect(nativeIntro?.heading).toBe(DEFAULT_SERVICES_INTRO_HEADING);
-    expect(nativeIntro?.headingHighlights).toEqual(DEFAULT_SERVICES_INTRO_HIGHLIGHTS);
   });
 
   it('keeps ServicesPage on the shared intro seed instead of page-local editorial fallback markup', () => {

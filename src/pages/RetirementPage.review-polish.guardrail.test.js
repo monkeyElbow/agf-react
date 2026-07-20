@@ -22,14 +22,17 @@ function readRuleBlock(source, selector) {
 describe('retirement 403(b) review polish guardrail', () => {
   it('keeps the 403(b) landing section copy aligned with the scroll-feature rebuild', () => {
     const source = readSource('./RetirementPage.jsx');
+    const catalogSource = readSource('../data/siteFeatureCatalog.js');
 
     expect(source).toContain("import InvestmentsGrowthFeature from '../components/InvestmentsGrowthFeature';");
-    expect(source).toContain("className: 'retirement-plan-feature'");
-    expect(source).toContain("text: 'AGFinancial 403(b) Retirement Plan', className: 'is-white'");
-    expect(source).toContain('Smart benefits, strong advantages');
-    expect(source).toContain("body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.'");
-    expect(source).toContain("title: 'Includes minister\\'s housing allowance, and a variety of investment strategies.'");
-    expect(source).toContain("label: 'Explore the 403(b)'");
+    expect(source).toContain('buildDynamicSiteFeatureFromBlock');
+    expect(catalogSource).toContain("featureId: 'retirement_plan_feature'");
+    expect(catalogSource).toContain("className: 'retirement-plan-feature'");
+    expect(catalogSource).toContain("text: 'AGFinancial 403(b) Retirement Plan', className: 'is-white'");
+    expect(catalogSource).toContain('Smart benefits, strong advantages');
+    expect(catalogSource).toContain("body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.'");
+    expect(catalogSource).toContain("title: 'Includes minister\\'s housing allowance, and a variety of investment strategies.'");
+    expect(catalogSource).toContain("label: 'Explore the 403(b)'");
     expect(source).toContain('blockId="retirement_plan_feature"');
   });
 
@@ -107,7 +110,8 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(retirementSource).toContain("'billboard-scroll-progress-copy'");
     expect(retirementSource).toContain('data-fade-root-margin={billboardCopyUsesScrollProgress ? undefined : (renderedBillboard.copyFadeRootMargin || undefined)}');
     expect(runtimeSource).toContain('const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);');
-    expect(runtimeSource).toContain("copyClassName: scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : ''");
+    expect(runtimeSource).toContain("copyClassName: sanitizeClassName(settings.copyClassName || '')");
+    expect(runtimeSource).toContain("|| (scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : '')");
     expect(runtimeSource).toContain("copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -20% 0px' : ''");
     expect(nativePageSource).toContain("data-fade-root-margin={section.copyFadeRootMargin || undefined}");
   });
