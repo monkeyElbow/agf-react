@@ -6619,6 +6619,7 @@ export default function NativeContentPage({ page }) {
                   headers={section.table.headers}
                   rows={section.table.rows}
                   valueAlignment={section.table.valueAlignment}
+                  firstColumnHeader={section.table.firstColumnHeader}
                 />
               </div>
             ) : null}

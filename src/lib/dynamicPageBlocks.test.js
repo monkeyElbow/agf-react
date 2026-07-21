@@ -2070,6 +2070,7 @@ describe('buildDynamicPageContentFromBlock', () => {
         headers: ['Limit', '2026'],
         rows: [['Under 50', '$24,500']],
         valueAlignment: 'left',
+        firstColumnHeader: true,
       },
       tableChartId: 'managed-chart',
       supportGroups: [],
@@ -2108,6 +2109,28 @@ describe('buildDynamicPageContentFromBlock', () => {
         title: 'AGFinancial',
         lines: ['PO Box 2515', 'Springfield MO 65801'],
       },
+    });
+  });
+
+  it('preserves page content table settings when the first visible column is not a row header', () => {
+    const runtime = buildDynamicPageContentFromBlock({
+      id: 'page_content',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        tableHeadersJson: ['Traditional IRA', 'Roth IRA'],
+        tableRowsJson: [
+          ['Eligibility\nMust have earned income.', 'Eligibility\nMust meet Roth IRA income eligibility limits.'],
+        ],
+        tableFirstColumnHeader: false,
+      },
+    });
+
+    expect(runtime?.table).toEqual({
+      headers: ['Traditional IRA', 'Roth IRA'],
+      rows: [['Eligibility\nMust have earned income.', 'Eligibility\nMust meet Roth IRA income eligibility limits.']],
+      valueAlignment: undefined,
+      firstColumnHeader: false,
     });
   });
 

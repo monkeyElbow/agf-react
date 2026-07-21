@@ -23,4 +23,26 @@ describe('InfoTableSheet', () => {
     expect(container.querySelectorAll('.info-table-sheet__card')).toHaveLength(2);
     expect(container.querySelector('.data-table')).toBeNull();
   });
+
+  it('can render all visible columns as data cells without a hidden row-header column', () => {
+    const { container } = render(
+      <InfoTableSheet
+        headers={['Traditional IRA', 'Roth IRA']}
+        rows={[
+          [
+            'Eligibility\nMust have earned income.',
+            'Eligibility\nMust meet Roth IRA income eligibility limits.',
+          ],
+        ]}
+        firstColumnHeader={false}
+      />,
+    );
+
+    expect(container.querySelector('.info-table-sheet')?.getAttribute('data-info-table-first-column-header')).toBe('false');
+    expect(container.querySelectorAll('tbody th[scope="row"]')).toHaveLength(0);
+    expect(container.querySelectorAll('tbody td')).toHaveLength(2);
+    expect(screen.queryByRole('heading', { name: /eligibility/i })).toBeNull();
+    expect(screen.getAllByText('Traditional IRA').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Roth IRA').length).toBeGreaterThan(0);
+  });
 });

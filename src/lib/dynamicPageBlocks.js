@@ -2289,10 +2289,13 @@ export function buildDynamicPageContentFromBlock(block) {
   const tableRows = parsePageContentTableRows(settings.tableRowsJson);
   const table = tableHeaders.length && tableRows.length
     ? {
-        headers: tableHeaders,
-        rows: tableRows,
-        valueAlignment: String(settings.tableValueAlignment || '').trim() || undefined,
-      }
+      headers: tableHeaders,
+      rows: tableRows,
+      valueAlignment: String(settings.tableValueAlignment || '').trim() || undefined,
+      firstColumnHeader: settings.tableFirstColumnHeader === undefined
+        ? true
+        : toBoolean(settings.tableFirstColumnHeader),
+    }
     : null;
   const fineprint = parsePageContentTextLines(settings.fineprint);
   const action = buildCanonicalActionLinkFromFields(settings, {

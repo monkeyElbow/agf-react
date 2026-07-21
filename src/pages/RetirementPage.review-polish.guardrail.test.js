@@ -177,8 +177,8 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(doTheMathIndex).toBeGreaterThan(-1);
     expect(calculatorIndex).toBeGreaterThan(-1);
     expect(ctaIndex).toBeGreaterThan(-1);
-    expect(rolloverBillboardIndex).toBeLessThan(billboardIndex);
-    expect(billboardIndex).toBeLessThan(doTheMathIndex);
+    expect(billboardIndex).toBeLessThan(rolloverBillboardIndex);
+    expect(rolloverBillboardIndex).toBeLessThan(doTheMathIndex);
     expect(doTheMathIndex).toBeLessThan(calculatorIndex);
     expect(calculatorIndex).toBeLessThan(ctaIndex);
   });

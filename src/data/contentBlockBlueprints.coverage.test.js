@@ -1410,7 +1410,13 @@ describe('content block blueprint coverage', () => {
       href: 'https://secure.agfinancial.org/invest',
       openInNewWindow: true,
     });
-    expect(iraBlocks.find((block) => block?.id === 'comparison_table')?.settings?.tableHeadersJson).toEqual(['Key difference', 'Traditional IRA', 'Roth IRA']);
+    const iraComparisonTable = iraBlocks.find((block) => block?.id === 'comparison_table');
+    expect(iraComparisonTable?.settings?.tableHeadersJson).toEqual(['Traditional IRA', 'Roth IRA']);
+    expect(iraComparisonTable?.settings?.tableFirstColumnHeader).toBe(false);
+    expect(iraComparisonTable?.settings?.tableRowsJson?.[0]).toEqual([
+      'Eligibility\nMust have earned income. No income limits to establish.',
+      'Eligibility\nMust have earned income and meet Roth IRA income eligibility limits.',
+    ]);
     expect(iraBlocks.find((block) => block?.id === 'rate_table')?.settings?.fineprintDisclosureId).toBe('retirement-ira-rates-disclosure');
     expect(iraBlocks.find((block) => block?.id === 'contribution_limits')?.settings?.fineprintDisclosureId).toBe('retirement-ira-contribution-limits-disclosure');
     expect(iraBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);

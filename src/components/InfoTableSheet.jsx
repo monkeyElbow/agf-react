@@ -19,10 +19,12 @@ export default function InfoTableSheet({
   rows = [],
   className = '',
   valueAlignment = 'left',
+  firstColumnHeader = true,
 }) {
   const normalizedHeaders = normalizeHeaders(headers);
   const normalizedRows = normalizeRows(rows, normalizedHeaders.length);
-  const metricHeaders = normalizedHeaders.slice(1);
+  const useFirstColumnHeader = firstColumnHeader !== false;
+  const metricHeaders = useFirstColumnHeader ? normalizedHeaders.slice(1) : normalizedHeaders;
   const compactMobileGrid = metricHeaders.length <= 2;
 
   if (normalizedHeaders.length < 2 || !normalizedRows.length) {
@@ -34,6 +36,7 @@ export default function InfoTableSheet({
       className={`info-table-sheet${className ? ` ${className}` : ''}`.trim()}
       data-info-table-layout="table-and-cards"
       data-info-table-align={valueAlignment === 'right' ? 'right' : 'left'}
+      data-info-table-first-column-header={useFirstColumnHeader ? 'true' : 'false'}
     >
       <div className="info-table-sheet__desktop">
         <div className="info-table-sheet__desktop-shell">
@@ -48,9 +51,15 @@ export default function InfoTableSheet({
             <tbody>
               {normalizedRows.map((row, rowIndex) => (
                 <tr key={`${row[0]}-${rowIndex + 1}`}>
-                  <th scope="row">{row[0]}</th>
-                  {row.slice(1).map((cell, cellIndex) => (
-                    <td key={`${row[0]}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}>{cell}</td>
+                  {useFirstColumnHeader ? (
+                    <>
+                      <th scope="row">{row[0]}</th>
+                      {row.slice(1).map((cell, cellIndex) => (
+                        <td key={`${row[0]}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}>{cell}</td>
+                      ))}
+                    </>
+                  ) : row.map((cell, cellIndex) => (
+                    <td key={`${rowIndex + 1}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}>{cell}</td>
                   ))}
                 </tr>
               ))}
@@ -65,11 +74,13 @@ export default function InfoTableSheet({
             key={`mobile-${row[0]}-${rowIndex + 1}`}
             className="info-table-sheet__card"
           >
-            <header className="info-table-sheet__card-header">
-              <h3>{row[0]}</h3>
-            </header>
+            {useFirstColumnHeader ? (
+              <header className="info-table-sheet__card-header">
+                <h3>{row[0]}</h3>
+              </header>
+            ) : null}
             <div className={`info-table-sheet__card-grid${compactMobileGrid ? ' is-compact' : ''}`}>
-              {row.slice(1).map((cell, cellIndex) => (
+              {(useFirstColumnHeader ? row.slice(1) : row).map((cell, cellIndex) => (
                 <div
                   key={`${row[0]}-mobile-${metricHeaders[cellIndex]}-${cellIndex + 1}`}
                   className="info-table-sheet__card-cell"
