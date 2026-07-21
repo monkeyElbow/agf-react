@@ -14,20 +14,20 @@ function normalizeRows(rows = [], columnCount = 0) {
     : [];
 }
 
-function renderCellContent(cell, splitInlineLabel = false) {
-  const value = String(cell || '');
-  if (!splitInlineLabel || !value.includes('\n')) {
-    return value;
+function renderCellContent(cell, renderList = false) {
+  const lines = String(cell || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (!renderList || lines.length < 2) {
+    return lines.join('\n');
   }
 
-  const [label, ...bodyParts] = value.split('\n');
-  const body = bodyParts.join('\n').trim();
-
   return (
-    <>
-      <span className="info-table-sheet__cell-kicker">{label.trim()}</span>
-      {body ? <span className="info-table-sheet__cell-body">{body}</span> : null}
-    </>
+    <ul className="info-table-sheet__cell-list">
+      {lines.map((line) => <li key={line}>{line}</li>)}
+    </ul>
   );
 }
 
@@ -107,9 +107,9 @@ export default function InfoTableSheet({
                   className="info-table-sheet__card-cell"
                 >
                   <span className="info-table-sheet__card-label">{metricHeaders[cellIndex]}</span>
-                  <span className="info-table-sheet__card-value">
+                  <div className="info-table-sheet__card-value">
                     {renderCellContent(cell, !useFirstColumnHeader)}
-                  </span>
+                  </div>
                 </div>
               ))}
             </div>

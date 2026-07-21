@@ -204,6 +204,33 @@ const REQUEST_FORM_SINGLETON_IDS_BY_PATH = Object.freeze({
   [LEGACY_GIVING_GENEROSITY_FUND_PATH]: new Set(['request_form']),
   [LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH]: new Set(['request_form']),
 });
+const RETIREMENT_IRA_COMPARISON_TABLE_HEADERS = Object.freeze(['Traditional IRA', 'Roth IRA']);
+const RETIREMENT_IRA_COMPARISON_TRADITIONAL_ITEMS = Object.freeze([
+  'Must have earned income',
+  'No income limits to establish',
+  'Contributions may be tax-deductible',
+  'Earnings are tax-deferred until distributed',
+  'Distributions may begin at age 59½',
+  'Early distributions may be subject to penalty',
+  'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
+]);
+const RETIREMENT_IRA_COMPARISON_ROTH_ITEMS = Object.freeze([
+  'Income limits must be met for Roth IRA eligibility',
+  'Contributions are not tax-deductible',
+  'No age limit to contribute as long as you have earned income',
+  'Earnings may be tax-free at distribution if qualified',
+  'Principal contributions may be distributed without penalty',
+  'Qualified distributions on earnings may begin at 59½',
+  'Early distributions on earnings are subject to penalty',
+  'No required distribution age',
+  'Traditional IRAs may be converted to Roth IRAs',
+]);
+const RETIREMENT_IRA_COMPARISON_TABLE_ROWS = Object.freeze([
+  Object.freeze([
+    RETIREMENT_IRA_COMPARISON_TRADITIONAL_ITEMS.join('\n'),
+    RETIREMENT_IRA_COMPARISON_ROTH_ITEMS.join('\n'),
+  ]),
+]);
 const LOANS_RETIRED_DYNAMIC_BLOCK_IDS = new Set([
   'request_form',
   'value_cards',
@@ -397,26 +424,20 @@ function normalizeRetirementIraComparisonTableSettings(rawSettings) {
   const headerKey = headers.map((header) => String(header || '').trim()).join('|');
   const hasLegacyHeaders = headerKey === 'Key difference|Traditional IRA|Roth IRA';
   const hasLegacyRows = rows.some((row) => Array.isArray(row) && row.length >= 3);
+  const hasPreviousPairedRows = rows.length > 1 && rows.every((row) => (
+    Array.isArray(row)
+    && row.length === 2
+    && row.every((cell) => String(cell || '').includes('\n'))
+  ));
 
-  if (!hasLegacyHeaders && !hasLegacyRows) {
+  if (!hasLegacyHeaders && !hasLegacyRows && !hasPreviousPairedRows) {
     return settings;
   }
 
   return {
     ...settings,
-    tableHeadersJson: ['Traditional IRA', 'Roth IRA'],
-    tableRowsJson: rows.map((row) => {
-      if (!Array.isArray(row) || row.length < 3) {
-        return row;
-      }
-      const label = String(row[0] || '').trim();
-      const traditional = String(row[1] || '').trim();
-      const roth = String(row[2] || '').trim();
-      return [
-        [label, traditional].filter(Boolean).join('\n'),
-        [label, roth].filter(Boolean).join('\n'),
-      ];
-    }),
+    tableHeadersJson: [...RETIREMENT_IRA_COMPARISON_TABLE_HEADERS],
+    tableRowsJson: RETIREMENT_IRA_COMPARISON_TABLE_ROWS.map((row) => [...row]),
     tableFirstColumnHeader: false,
   };
 }

@@ -163,12 +163,14 @@ describe('service-native style ownership', () => {
       '.retirement-child-native-comparison .native-info-table-wrap .data-table',
       '.retirement-child-native-comparison .native-info-table-wrap .data-table thead th:nth-child(3)',
       '.retirement-child-native-comparison .native-info-table-wrap .data-table tbody td:nth-child(3)',
+      '.retirement-child-native-comparison .info-table-sheet__cell-kicker',
     ].forEach((retiredSelector) => {
       expect(source).not.toContain(retiredSelector);
     });
 
     [
       '.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table thead th:nth-child(1) {',
+      'border-radius: 14px 14px 0 0;',
       'background: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);',
       '.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table thead th:nth-child(2) {',
       'background: linear-gradient(135deg, #f7b229 0%, var(--ag-color-mango) 100%);',
@@ -176,6 +178,7 @@ describe('service-native style ownership', () => {
       'background: #eef8fa;',
       '.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody td:nth-child(2) {',
       'background: #fff6e8;',
+      '.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__cell-list li + li {',
     ].forEach((ownedSelector) => {
       expect(source).toContain(ownedSelector);
     });

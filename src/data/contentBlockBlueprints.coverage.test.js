@@ -1413,9 +1413,28 @@ describe('content block blueprint coverage', () => {
     const iraComparisonTable = iraBlocks.find((block) => block?.id === 'comparison_table');
     expect(iraComparisonTable?.settings?.tableHeadersJson).toEqual(['Traditional IRA', 'Roth IRA']);
     expect(iraComparisonTable?.settings?.tableFirstColumnHeader).toBe(false);
+    expect(iraComparisonTable?.settings?.tableRowsJson).toHaveLength(1);
     expect(iraComparisonTable?.settings?.tableRowsJson?.[0]).toEqual([
-      'Eligibility\nMust have earned income. No income limits to establish.',
-      'Eligibility\nMust have earned income and meet Roth IRA income eligibility limits.',
+      [
+        'Must have earned income',
+        'No income limits to establish',
+        'Contributions may be tax-deductible',
+        'Earnings are tax-deferred until distributed',
+        'Distributions may begin at age 59½',
+        'Early distributions may be subject to penalty',
+        'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
+      ].join('\n'),
+      [
+        'Income limits must be met for Roth IRA eligibility',
+        'Contributions are not tax-deductible',
+        'No age limit to contribute as long as you have earned income',
+        'Earnings may be tax-free at distribution if qualified',
+        'Principal contributions may be distributed without penalty',
+        'Qualified distributions on earnings may begin at 59½',
+        'Early distributions on earnings are subject to penalty',
+        'No required distribution age',
+        'Traditional IRAs may be converted to Roth IRAs',
+      ].join('\n'),
     ]);
     expect(iraBlocks.find((block) => block?.id === 'rate_table')?.settings?.fineprintDisclosureId).toBe('retirement-ira-rates-disclosure');
     expect(iraBlocks.find((block) => block?.id === 'contribution_limits')?.settings?.fineprintDisclosureId).toBe('retirement-ira-contribution-limits-disclosure');
