@@ -132,11 +132,19 @@ function inferInternalPageRefFromHref(href) {
   return value.startsWith('/') ? value : '';
 }
 
-function seedBlueprintLinkFields({ hrefField, pageRefField, href = '', pageRef = inferInternalPageRefFromHref(href) }) {
-  return {
+function seedBlueprintLinkFields({
+  hrefField,
+  pageRefField,
+  href = '',
+  pageRef = inferInternalPageRefFromHref(href),
+  openInNewWindowField,
+  openInNewWindow = false,
+}) {
+  return normalizeSplitLinkFieldSettings({
     [hrefField]: href,
     [pageRefField]: pageRef,
-  };
+    ...(openInNewWindowField ? { [openInNewWindowField]: openInNewWindow } : {}),
+  }, { stripSplitFields: true });
 }
 
 function seedBlueprintActionFields({
@@ -155,10 +163,16 @@ function seedBlueprintActionFields({
 }) {
   return {
     [labelField]: label,
-    ...seedBlueprintLinkFields({ hrefField, pageRefField, href, pageRef }),
+    ...seedBlueprintLinkFields({
+      hrefField,
+      pageRefField,
+      href,
+      pageRef,
+      openInNewWindowField,
+      openInNewWindow,
+    }),
     ...(styleField ? { [styleField]: style } : {}),
     ...(toneField ? { [toneField]: tone } : {}),
-    ...(openInNewWindowField ? { [openInNewWindowField]: openInNewWindow } : {}),
   };
 }
 
@@ -209,11 +223,13 @@ function seedBlueprintCardGridCardFields(cardNumber, {
   buttonLabel = '',
   buttonHref = '',
   buttonPageRef = inferInternalPageRefFromHref(buttonHref),
+  buttonOpenInNewWindow = false,
   buttonDocumentId = '',
   buttonClassName = '',
   button2Label = '',
   button2Href = '',
   button2PageRef = inferInternalPageRefFromHref(button2Href),
+  button2OpenInNewWindow = false,
   button2DocumentId = '',
   button2ClassName = '',
   linksJson = '',
@@ -231,13 +247,25 @@ function seedBlueprintCardGridCardFields(cardNumber, {
     [`card${cardNumber}AccordionsJson`]: accordionsJson,
     [`card${cardNumber}DividerTone`]: dividerTone,
     [`card${cardNumber}ButtonLabel`]: buttonLabel,
-    [`card${cardNumber}ButtonUrl`]: buttonHref,
-    [`card${cardNumber}ButtonPageRef`]: buttonPageRef,
+    ...seedBlueprintLinkFields({
+      hrefField: `card${cardNumber}ButtonUrl`,
+      pageRefField: `card${cardNumber}ButtonPageRef`,
+      href: buttonHref,
+      pageRef: buttonPageRef,
+      openInNewWindowField: `card${cardNumber}ButtonOpenInNewWindow`,
+      openInNewWindow: buttonOpenInNewWindow,
+    }),
     [`card${cardNumber}ButtonDocumentId`]: buttonDocumentId,
     [`card${cardNumber}ButtonClassName`]: buttonClassName,
     [`card${cardNumber}Button2Label`]: button2Label,
-    [`card${cardNumber}Button2Url`]: button2Href,
-    [`card${cardNumber}Button2PageRef`]: button2PageRef,
+    ...seedBlueprintLinkFields({
+      hrefField: `card${cardNumber}Button2Url`,
+      pageRefField: `card${cardNumber}Button2PageRef`,
+      href: button2Href,
+      pageRef: button2PageRef,
+      openInNewWindowField: `card${cardNumber}Button2OpenInNewWindow`,
+      openInNewWindow: button2OpenInNewWindow,
+    }),
     [`card${cardNumber}Button2DocumentId`]: button2DocumentId,
     [`card${cardNumber}Button2ClassName`]: button2ClassName,
   };
@@ -6162,10 +6190,10 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           body: 'We partner with Old Republic Surety to offer notary bonds upon request. For contracting, license, permit, and more, use the form below.',
           buttonLabel: 'Old Republic Surety',
           buttonHref: 'https://www.orsurety.com/commercial-bonds',
+          buttonOpenInNewWindow: true,
         }),
         card4ButtonStyle: 'outline',
         card4ButtonTone: 'super-grey',
-        card4ButtonOpenInNewWindow: true,
       },
       editableFields: sharedDynamicGridEditableFields,
     },

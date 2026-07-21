@@ -34,6 +34,7 @@ import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
+import { serializeLinkValue } from '../lib/linkValue';
 import {
   applySelectionColor,
   extractHeroLineColorToken,
@@ -244,16 +245,20 @@ const DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS = {
   leftBodyHtml: '<p>An IRA (Individual Retirement Account) provides beneficial options, both now and in the future. We offer <strong>Traditional</strong> and <strong>Roth</strong> IRAs. Learn more about each below.</p>',
   leftBody: '',
   leftButtonLabel: 'See IRA options',
-  leftButtonUrl: '/services/retirement/iras',
-  leftButtonPageRef: '/services/retirement/iras',
-  leftButtonOpenInNewWindow: false,
+  leftButtonLinkJson: serializeLinkValue({
+    kind: 'internal',
+    to: '/services/retirement/iras',
+    openInNewWindow: false,
+  }),
   rightTitle: 'Deferred Compensation Plan (409A)',
   rightBodyHtml: '<p>Available exclusively to ministers, ministry employees, and Qualified Church-Controlled Organizations (QCCO), this 409A plan allows participants to defer compensation above and beyond standard retirement contribution limits.</p>',
   rightBody: '',
   rightButtonLabel: 'Learn more',
-  rightButtonUrl: '/services/retirement/409a',
-  rightButtonPageRef: '/services/retirement/409a',
-  rightButtonOpenInNewWindow: false,
+  rightButtonLinkJson: serializeLinkValue({
+    kind: 'internal',
+    to: '/services/retirement/409a',
+    openInNewWindow: false,
+  }),
 };
 
 const RETIREMENT_HERO_BASE_LINE_HEIGHT = 0.9;

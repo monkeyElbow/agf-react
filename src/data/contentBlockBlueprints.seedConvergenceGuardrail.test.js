@@ -14,7 +14,10 @@ describe('content block blueprint seed convergence guardrail', () => {
   it('keeps migrated link/action blueprint seeding on narrow shared helpers', () => {
     const source = readSource('./contentBlockBlueprints.js');
 
-    expect(source).toContain('function seedBlueprintLinkFields({ hrefField, pageRefField, href = \'\', pageRef = inferInternalPageRefFromHref(href) })');
+    expect(source).toContain('function seedBlueprintLinkFields({');
+    expect(source).toContain('openInNewWindowField,');
+    expect(source).toContain('return normalizeSplitLinkFieldSettings({');
+    expect(source).toContain('}, { stripSplitFields: true });');
     expect(source).toContain('function seedBlueprintActionFields({');
     expect(source).toContain('function seedBlueprintColumnButtonFields(columnNumber, options = {})');
     expect(source).toContain('function seedBlueprintServicesGridCardFields(cardNumber, {');

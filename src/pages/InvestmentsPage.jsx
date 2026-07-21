@@ -15,6 +15,7 @@ import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import SafeRichText from '../components/SafeRichText';
 import CertificateRatesSheet from '../components/CertificateRatesSheet';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
+import { serializeLinkValue } from '../lib/linkValue';
 import {
   buildDefaultInvestmentsIntroRuntime,
   defaultInvestmentsIntroSettings,
@@ -63,7 +64,6 @@ import {
   heroTitleSizeRemToRuntimeCss,
   normalizeHeroTitleLetterSpacingEm,
 } from '../lib/heroTitleSize';
-import { serializeLinkValue } from '../lib/linkValue';
 
 const BlockHudPanelHost = lazy(() => import('../components/BlockHudPanelHost'));
 const FrontHudPanelShell = lazy(() => import('../components/FrontHudPanelShell'));
@@ -93,15 +93,21 @@ const DEFAULT_CERTIFICATES_BLOCK = {
     card1Title: 'Demand Certificates',
     card1Body: 'Demand Certificates are variable rate investments that provide access to funds on demand (within 30 days). Minimum investment $250.',
     card1ButtonLabel: 'Start investing',
-    card1ButtonUrl: 'https://secure.agfinancial.org/invest',
-    card1ButtonOpenInNewWindow: true,
+    card1ButtonLinkJson: serializeLinkValue({
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/invest',
+      openInNewWindow: true,
+    }),
     card1Tone: 'atlantean',
     card1ButtonTone: 'atlantean',
     card2Title: 'Term Certificates',
     card2Body: 'Term Certificates have fixed or variable interest rates over a predetermined amount of time, ranging from three months to ten years. Minimum investment $500.',
     card2ButtonLabel: 'Start investing',
-    card2ButtonUrl: 'https://secure.agfinancial.org/invest',
-    card2ButtonOpenInNewWindow: true,
+    card2ButtonLinkJson: serializeLinkValue({
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/invest',
+      openInNewWindow: true,
+    }),
     card2Tone: 'mango',
     card2ButtonTone: 'mango',
   },

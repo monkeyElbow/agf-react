@@ -28,6 +28,8 @@ describe('link model convergence guardrail', () => {
     const snapshotAuditSource = readSource('../../scripts/content-admin-snapshot-audit.mjs');
     const contentAdminContextSource = readSource('../context/ContentAdminContext.jsx');
     const contentAdminStoreSource = readSource('../../dev-server/contentAdminStore.js');
+    const investmentsPageSource = readSource('../pages/InvestmentsPage.jsx');
+    const retirementPageSource = readSource('../pages/RetirementPage.jsx');
 
     expect(runtimeSource).toContain('coerceLinkValueFromFields');
     expect(runtimeSource).toContain('function buildCanonicalActionLinkFromFields(source, {');
@@ -57,6 +59,8 @@ describe('link model convergence guardrail', () => {
     expect(runtimeSource).not.toMatch(
       /(hrefKeys|toKeys|openInNewWindowKeys): \[[^\]]*(?:button\d*|button2?|cta|browse|card\d+(?:Button\d*)?|col\d+Button|leftButton|rightButton)(?:Url|Path|PageRef|OpenInNewWindow)/,
     );
+    expect(investmentsPageSource).not.toMatch(/DEFAULT_CERTIFICATES_BLOCK[\s\S]*(?:card\d+ButtonUrl|card\d+ButtonOpenInNewWindow)/);
+    expect(retirementPageSource).not.toMatch(/DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS[\s\S]*(?:leftButtonUrl|leftButtonPageRef|leftButtonOpenInNewWindow|rightButtonUrl|rightButtonPageRef|rightButtonOpenInNewWindow)/);
 
     expect(heroDefinitionSource).toContain('validateActionFieldGroup');
     expect(introDefinitionSource).toContain('validateLinkFieldGroups');
