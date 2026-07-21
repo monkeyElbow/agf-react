@@ -1392,6 +1392,7 @@ describe('content block blueprint coverage', () => {
       kind: 'card_grid',
       mode: 'dynamic',
       settings: {
+        bgTone: 'grey',
         columns: 'two',
         sectionClassName: 'retirement-child-native-ira-types',
         card1Title: 'Traditional IRA',

@@ -3501,7 +3501,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         titleHighlightsJson: '',
         bodyHtml: '',
         body: '',
-        bgTone: 'white',
+        bgTone: 'grey',
         contentWidth: 'content',
         columns: 'two',
         cardStyle: 'card2',

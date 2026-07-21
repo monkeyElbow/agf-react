@@ -200,7 +200,6 @@ describe('service-native style ownership', () => {
 
     [
       '.native-info-page--retirement-iras .retirement-child-native-ira-types {',
-      'background: linear-gradient(145deg, #333335 0%, var(--ag-color-super-grey) 48%, #5f5e61 100%);',
       'padding-bottom: clamp(1.35rem, 2.9vw, 2.25rem);',
       'box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26);',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {',
@@ -211,6 +210,10 @@ describe('service-native style ownership', () => {
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
     });
+
+    expect(source).toContain('.service-native-section.native-dynamic-grid.is-bg-grey,');
+    expect(source).toContain('background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);');
+    expect(source).not.toContain('background: linear-gradient(145deg, #333335 0%, var(--ag-color-super-grey) 48%, #5f5e61 100%);');
   });
 
   it('keeps the IRA comparison section on the light card treatment', () => {

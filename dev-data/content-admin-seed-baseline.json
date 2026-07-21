@@ -123876,7 +123876,7 @@
           "kind": "card_grid",
           "mode": "dynamic",
           "settings": {
-            "bgTone": "white",
+            "bgTone": "grey",
             "contentWidth": "content",
             "columns": "two",
             "cardStyle": "card2",

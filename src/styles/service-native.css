@@ -19875,7 +19875,6 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types {
-  background: linear-gradient(145deg, #333335 0%, var(--ag-color-super-grey) 48%, #5f5e61 100%);
   padding-top: clamp(2.4rem, 5vw, 4rem);
   padding-bottom: clamp(1.35rem, 2.9vw, 2.25rem);
 }
