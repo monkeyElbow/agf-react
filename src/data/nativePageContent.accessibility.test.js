@@ -2,6 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import { getNativePageContent } from './nativePageContent';
 
+function expectInternalLink(settings, fieldId, to) {
+  expect(JSON.parse(settings?.[fieldId] || '{}')).toEqual(expect.objectContaining({
+    kind: 'internal',
+    to,
+    openInNewWindow: false,
+  }));
+}
+
 describe('accessibility native page content', () => {
   it('keeps the native route shell while blocks own the live-site accessibility statement', () => {
     const content = getNativePageContent('/accessibility', 'Accessibility');
@@ -23,6 +31,6 @@ describe('accessibility native page content', () => {
     expect(limitationsBlock?.settings?.html).toContain('https://osxdaily.com/2014/10/22/increase-contrast-mac-os-x-yosemite/');
     expect(limitationsBlock?.settings?.html).toContain('https://support.microsoft.com/en-us/help/13862/windows-10-use-high-contrast-mode');
     expect(feedbackBlock?.settings?.buttonLabel).toBe('Contact Us');
-    expect(feedbackBlock?.settings?.buttonPageRef).toBe('/contact-us');
+    expectInternalLink(feedbackBlock?.settings, 'buttonLinkJson', '/contact-us');
   });
 });

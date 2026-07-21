@@ -21,6 +21,8 @@ const TARGET_BRIDGE_SETTING_KEYS = [
   'targetSectionIndex',
 ];
 const SPLIT_LINK_HREF_SUFFIXES = ['Url', 'Path', 'Href'];
+const SPLIT_LINK_SETTING_SUFFIX_PATTERN = /(?:Url|Path|Href|PageRef|OpenInNewWindow)$/;
+const ACTION_LIKE_SPLIT_LINK_BASE_PATTERN = /^(?:button\d*|button2?|cta|browse|card\d+(?:Button\d*)?|col\d+Button|leftButton|rightButton)$/i;
 
 function getTargetBridgeSettingKeys(block) {
   const settings = block?.settings && typeof block.settings === 'object'
@@ -70,7 +72,42 @@ function getSplitLinkFindings({ pathname, block }) {
   return findings;
 }
 
+function expectCanonicalLink(settings, fieldId, expectedLink) {
+  expect(settings?.[fieldId]).toBeTruthy();
+  expect(JSON.parse(settings[fieldId])).toEqual(expect.objectContaining({
+    openInNewWindow: false,
+    ...expectedLink,
+  }));
+}
+
+function expectNoSettings(settings, fieldIds) {
+  fieldIds.forEach((fieldId) => {
+    expect(Object.prototype.hasOwnProperty.call(settings || {}, fieldId)).toBe(false);
+  });
+}
+
 describe('content block blueprint coverage', () => {
+  it('exports canonical link settings without action-like split link settings', () => {
+    const offenders = [];
+    const inspectBlock = (scope, block) => {
+      const settings = block?.settings && typeof block.settings === 'object' ? block.settings : {};
+      Object.keys(settings).forEach((key) => {
+        const baseKey = key.replace(SPLIT_LINK_SETTING_SUFFIX_PATTERN, '');
+        if (baseKey !== key && ACTION_LIKE_SPLIT_LINK_BASE_PATTERN.test(baseKey)) {
+          offenders.push(`${scope}:${block?.id || 'block'}:${key}`);
+        }
+      });
+    };
+
+    Object.entries(contentBlockBlueprintsByPath).forEach(([pathname, blocks]) => {
+      (Array.isArray(blocks) ? blocks : []).forEach((block) => inspectBlock(pathname, block));
+    });
+    genericPageBlockBlueprint().forEach((block) => inspectBlock('generic', block));
+    getAllBlockTemplateBlueprints().forEach((block) => inspectBlock('template', block));
+
+    expect(offenders).toEqual([]);
+  });
+
   it('does not expose split link compatibility fields as editable authoring controls', () => {
     const offenders = [];
     Object.entries(contentBlockBlueprintsByPath).forEach(([pathname, blocks]) => {
@@ -422,34 +459,54 @@ describe('content block blueprint coverage', () => {
       settings: {
         sectionClassName: 'insurance-native-coverage',
         card1Title: 'Property & Casualty',
-        card2Button2PageRef: '/services/insurance/group-term-life-insurance',
-        card4ButtonUrl: 'https://www.orsurety.com/commercial-bonds',
       },
+    });
+    expectCanonicalLink(coverageBlock?.settings, 'card2Button2LinkJson', {
+      kind: 'internal',
+      to: '/services/insurance/group-term-life-insurance',
+    });
+    expectCanonicalLink(coverageBlock?.settings, 'card4ButtonLinkJson', {
+      kind: 'external',
+      href: 'https://www.orsurety.com/commercial-bonds',
+      openInNewWindow: true,
     });
     expect(quoteBlock).toMatchObject({
       kind: 'billboard',
       mode: 'dynamic',
       settings: {
         sectionClassName: 'insurance-native-quote',
-        buttonPageRef: '/services/insurance/life-insurance-quote',
-        button2PageRef: '/services/insurance/property-casualty-insurance',
       },
+    });
+    expectCanonicalLink(quoteBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/services/insurance/life-insurance-quote',
+    });
+    expectCanonicalLink(quoteBlock?.settings, 'button2LinkJson', {
+      kind: 'internal',
+      to: '/services/insurance/property-casualty-insurance',
     });
     expect(certificateBlock).toMatchObject({
       kind: 'billboard',
       mode: 'dynamic',
       settings: {
         sectionClassName: 'insurance-native-certificate-proof',
-        buttonPageRef: '/services/insurance/certificate-request',
       },
+    });
+    expectCanonicalLink(certificateBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/services/insurance/certificate-request',
     });
     expect(riskBlock).toMatchObject({
       kind: 'feature_panel',
       mode: 'dynamic',
       settings: {
         sectionClassName: 'insurance-native-risk',
-        buttonUrl: 'https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf',
       },
+    });
+    expectCanonicalLink(riskBlock?.settings, 'buttonLinkJson', {
+      kind: 'external',
+      href: 'https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf',
+      openInNewWindow: true,
     });
     expect(ctaBlock).toMatchObject({
       kind: 'cta_form',
@@ -472,8 +529,11 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'insurance-native-fraud',
-        buttonPageRef: '/resources/article/defend-yourself-against-fraud',
       },
+    });
+    expectCanonicalLink(fraudBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/resources/article/defend-yourself-against-fraud',
     });
     expect(missionAssureBlock?.settings?.targetSectionKey).toBeUndefined();
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
@@ -678,7 +738,10 @@ describe('content block blueprint coverage', () => {
     expect(introBlock?.settings?.bgTone).toBe('blue');
     expect(introBlock?.settings?.textTone).toBe('white');
     expect(introBlock?.settings?.button1Label).toBe('Find my consultant');
-    expect(introBlock?.settings?.button1PageRef).toBe('/services/retirement/retirement-consultants');
+    expectCanonicalLink(introBlock?.settings, 'button1LinkJson', {
+      kind: 'internal',
+      to: '/services/retirement/retirement-consultants',
+    });
     expect(scenariosBlock?.settings?.sectionClassName).toBe('retirement-child-native-scenarios');
     expect(scenariosBlock?.settings?.card1Title).toBe('Maxed-out');
     expect(quoteBlock?.settings?.sectionClassName).toBe('retirement-child-native-quote');
@@ -782,8 +845,11 @@ describe('content block blueprint coverage', () => {
       settings: {
         sectionClassName: 'legacy-child-native-steps',
         card1Title: '01',
-        card2ButtonUrl: 'https://uploads.agfinancial.org/',
       },
+    });
+    expectCanonicalLink(blocks.find((block) => block?.id === 'how_it_works')?.settings, 'card2ButtonLinkJson', {
+      kind: 'external',
+      href: 'https://uploads.agfinancial.org/',
     });
     expect(blocks.find((block) => block?.id === 'gift_types')).toMatchObject({
       kind: 'card_grid',
@@ -906,7 +972,10 @@ describe('content block blueprint coverage', () => {
     expect(groupLifeBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('group-life-native-quote');
     expect(groupLifeBlocks.find((block) => block?.id === 'honor')?.settings?.sectionClassName).toBe('group-life-native-honor');
     expect(groupLifeBlocks.find((block) => block?.id === 'benefits')?.settings?.sectionClassName).toBe('group-life-native-benefits');
-    expect(groupLifeBlocks.find((block) => block?.id === 'benefits_cta')?.settings?.buttonPageRef).toBe('/services/insurance/ministers-group-life-plan');
+    expectCanonicalLink(groupLifeBlocks.find((block) => block?.id === 'benefits_cta')?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/services/insurance/ministers-group-life-plan',
+    });
     expect(retirementConsultantBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
     expect(loanConsultantBlocks.find((block) => block?.id === 'consultant_directory')).toMatchObject({
       kind: 'card_grid',
@@ -949,16 +1018,23 @@ describe('content block blueprint coverage', () => {
     expect(enrollmentStepsBlock?.settings?.card3ListJson).toContain('QCCO = Qualified Church-Controlled Organization.');
     expect(returnFormsBlock?.settings?.addressTitle).toBe('Mail or fax completed forms to:');
     expect(returnFormsBlock?.settings?.fineprint).toContain('**FAX:** 417.520.0406');
-    expect(introBlock?.settings?.button1Url).toBe('https://files.agfinancial.org/Retirement/Plansummary.pdf');
-    expect(introBlock?.settings?.button1PageRef).toBe('');
-    expect(introBlock?.settings?.button2Url).toBeUndefined();
-    expect(introBlock?.settings?.button2PageRef).toBeUndefined();
+    expectCanonicalLink(introBlock?.settings, 'button1LinkJson', {
+      kind: 'external',
+      href: 'https://files.agfinancial.org/Retirement/Plansummary.pdf',
+    });
+    expect(introBlock?.settings?.button2LinkJson).toBeUndefined();
+    expectNoSettings(introBlock?.settings, ['button1Url', 'button1PageRef', 'button2Url', 'button2PageRef']);
     expect(complianceBillboard?.settings?.bgTone).toBe('white');
     expect(complianceBillboard?.settings?.textTone).toBe('dark');
-    expect(complianceBillboard?.settings?.buttonUrl).toBe('https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf');
-    expect(complianceBillboard?.settings?.buttonPageRef).toBe('');
-    expect(complianceBillboard?.settings?.button2Url).toBe('https://files.agfinancial.org/retirement/NQCCO-Guidelines.pdf');
-    expect(complianceBillboard?.settings?.button2PageRef).toBe('');
+    expectCanonicalLink(complianceBillboard?.settings, 'buttonLinkJson', {
+      kind: 'external',
+      href: 'https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf',
+    });
+    expectCanonicalLink(complianceBillboard?.settings, 'button2LinkJson', {
+      kind: 'external',
+      href: 'https://files.agfinancial.org/retirement/NQCCO-Guidelines.pdf',
+    });
+    expectNoSettings(complianceBillboard?.settings, ['buttonUrl', 'buttonPageRef', 'button2Url', 'button2PageRef']);
     expect((blocks.findIndex((block) => block?.id === 'request_form'))).toBeLessThan(blocks.findIndex((block) => block?.id === 'billboard'));
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
@@ -1011,10 +1087,17 @@ describe('content block blueprint coverage', () => {
         buttonDocumentId: 'form-planned-giving-will-planning-document',
         buttonStyle: 'outline',
         button2Label: 'Online form*',
-        button2Url: 'https://sft.agfinancial.org/documents/Send.do',
         sectionClassName: 'legacy-giving-wills',
       },
     });
+    expectCanonicalLink(
+      legacyGivingBlocks.find((block) => block?.id === 'wills_estate_billboard')?.settings,
+      'button2LinkJson',
+      {
+        kind: 'external',
+        href: 'https://sft.agfinancial.org/documents/Send.do',
+      },
+    );
     expect(legacyGivingBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(legacyGivingBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetFineprintSectionKey))).toBe(false);
     expect(legacyGivingBlocks.find((block) => block?.id === 'stewardship_story')).toMatchObject({
@@ -1078,9 +1161,16 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'legacy-giving-opportunity',
-        buttonPageRef: '/resources/article/opportunity',
       },
     });
+    expectCanonicalLink(
+      legacyGivingBlocks.find((block) => block?.id === 'opportunity_feature')?.settings,
+      'buttonLinkJson',
+      {
+        kind: 'internal',
+        to: '/resources/article/opportunity',
+      },
+    );
 
     expect(charitableTrustsBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(charitableTrustsBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
@@ -1245,7 +1335,10 @@ describe('content block blueprint coverage', () => {
     expect(generosityBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button1Label).toBe('Open a Generosity Fund®');
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Label).toBe('Open a traditional DAF');
-    expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Url).toBe('#traditional-daf-form');
+    expectCanonicalLink(generosityBlocks.find((block) => block?.id === 'hero')?.settings, 'button2LinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
+    });
     expect(generosityBlocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
       kind: 'card_grid',
       mode: 'dynamic',
@@ -1298,8 +1391,12 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         buttonLabel: 'Open IRA',
-        buttonUrl: 'https://secure.agfinancial.org/invest',
       },
+    });
+    expectCanonicalLink(iraBlocks.find((block) => block?.id === 'open_ira')?.settings, 'buttonLinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/invest',
+      openInNewWindow: true,
     });
     expect(iraBlocks.find((block) => block?.id === 'comparison_table')?.settings?.tableHeadersJson).toEqual(['Key difference', 'Traditional IRA', 'Roth IRA']);
     expect(iraBlocks.find((block) => block?.id === 'rate_table')?.settings?.fineprintDisclosureId).toBe('retirement-ira-rates-disclosure');
@@ -1341,8 +1438,11 @@ describe('content block blueprint coverage', () => {
         sectionClassName: 'retirement-403b-terms-definitions-core',
         copyWrap: true,
         buttonLabel: 'Back to 403(b)',
-        buttonPageRef: '/services/retirement/403b',
       },
+    });
+    expectCanonicalLink(definitionsBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/services/retirement/403b',
     });
     expect(definitionsBlock?.settings?.html).toContain('QCCO = Qualified Church-Controlled Organization.');
     expect(definitionsBlock?.settings?.html).toContain('403bregs@agfinancial.org');
@@ -1363,8 +1463,11 @@ describe('content block blueprint coverage', () => {
         sectionClassName: 'subscribe-native-stay-in-loop',
         copyWrap: true,
         buttonLabel: 'Go to home signup',
-        buttonPageRef: '/#stay-in-the-loop',
       },
+    });
+    expectCanonicalLink(contentBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/#stay-in-the-loop',
     });
     expect(contentBlock?.settings?.html).toContain('Stay in the loop');
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
@@ -1385,17 +1488,26 @@ describe('content block blueprint coverage', () => {
       settings: {
         title: 'Start here',
         sectionClassName: 'yourplan-native-start-here',
-        card1ButtonPageRef: '/services/loans',
-        card5ButtonPageRef: '/services/insurance',
       },
+    });
+    expectCanonicalLink(startHereBlock?.settings, 'card1ButtonLinkJson', {
+      kind: 'internal',
+      to: '/services/loans',
+    });
+    expectCanonicalLink(startHereBlock?.settings, 'card5ButtonLinkJson', {
+      kind: 'internal',
+      to: '/services/insurance',
     });
     expect(contactBlock).toMatchObject({
       mode: 'dynamic',
       settings: {
         sectionClassName: 'yourplan-native-contact-cta',
         buttonLabel: 'Contact us',
-        buttonPageRef: '/contact-us',
       },
+    });
+    expectCanonicalLink(contactBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/contact-us',
     });
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
@@ -1414,12 +1526,24 @@ describe('content block blueprint coverage', () => {
       settings: {
         title: 'Put your money where your faith is',
         sectionClassName: 'vineyard-native-faith-money',
-        card1ButtonPageRef: '/services/investments',
-        card4ButtonPageRef: '/services/loans',
       },
     });
-    expect(cardsBlock?.settings?.card2ButtonPageRef).toBe('/services/insurance/property-casualty-insurance');
-    expect(cardsBlock?.settings?.card3ButtonPageRef).toBe('/services/planned-giving');
+    expectCanonicalLink(cardsBlock?.settings, 'card1ButtonLinkJson', {
+      kind: 'internal',
+      to: '/services/investments',
+    });
+    expectCanonicalLink(cardsBlock?.settings, 'card2ButtonLinkJson', {
+      kind: 'internal',
+      to: '/services/insurance/property-casualty-insurance',
+    });
+    expectCanonicalLink(cardsBlock?.settings, 'card3ButtonLinkJson', {
+      kind: 'internal',
+      to: '/services/planned-giving',
+    });
+    expectCanonicalLink(cardsBlock?.settings, 'card4ButtonLinkJson', {
+      kind: 'internal',
+      to: '/services/loans',
+    });
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
@@ -1437,8 +1561,11 @@ describe('content block blueprint coverage', () => {
         sectionClassName: 'legal-native-privacy-details',
         copyWrap: true,
         buttonLabel: 'Contact us',
-        buttonPageRef: '/contact-us',
       },
+    });
+    expectCanonicalLink(contentBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/contact-us',
     });
     expect(contentBlock?.settings?.html).toContain('Collection and Use of Personal Information');
     expect(contentBlock?.settings?.html).toContain('webmaster@agfinancial.org');
@@ -1463,8 +1590,11 @@ describe('content block blueprint coverage', () => {
       settings: {
         sectionClassName: 'accessibility-native-feedback',
         buttonLabel: 'Contact Us',
-        buttonPageRef: '/contact-us',
       },
+    });
+    expectCanonicalLink(feedbackBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/contact-us',
     });
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
@@ -1483,9 +1613,11 @@ describe('content block blueprint coverage', () => {
       settings: {
         title: 'Claim contact information',
         sectionClassName: 'mission-assure-claim-contacts',
-        card1ButtonUrl: 'mailto:ACEClaimsFirstNotice@acegroup.com',
-        card1ButtonPageRef: '',
       },
+    });
+    expectCanonicalLink(contactsBlock?.settings, 'card1ButtonLinkJson', {
+      kind: 'email',
+      href: 'mailto:ACEClaimsFirstNotice@acegroup.com',
     });
     expect(contactsBlock?.settings?.card1Body).toContain('ACEClaimsFirstNotice@acegroup.com');
     expect(contactsBlock?.settings?.card4Body).toContain('Scranton, PA 18505-0554');
@@ -1506,9 +1638,15 @@ describe('content block blueprint coverage', () => {
       settings: {
         title: 'Featured',
         sectionClassName: 'resources-native-featured',
-        card1ButtonPageRef: '/resources',
-        card3ButtonPageRef: '/resources',
       },
+    });
+    expectCanonicalLink(featuredBlock?.settings, 'card1ButtonLinkJson', {
+      kind: 'internal',
+      to: '/resources',
+    });
+    expectCanonicalLink(featuredBlock?.settings, 'card3ButtonLinkJson', {
+      kind: 'internal',
+      to: '/resources',
     });
     expect(featuredBlock?.settings?.card3Title).toContain('Tariffs');
     expect(categoriesBlock?.settings?.html).toContain('<a href="/calculators">Calculators</a>');
@@ -1532,15 +1670,30 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'online-contrib-native-steps',
-        card1ButtonUrl: 'https://secure.agfinancial.org/cp/do/user/login',
-        card3ButtonUrl: 'mailto:clientservices@agfinancial.org',
-        card3Button2Url: 'tel:18666211787',
       },
+    });
+    expectCanonicalLink(stepsBlock?.settings, 'card1ButtonLinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/cp/do/user/login',
+    });
+    expectCanonicalLink(stepsBlock?.settings, 'card3ButtonLinkJson', {
+      kind: 'email',
+      href: 'mailto:clientservices@agfinancial.org',
+    });
+    expectCanonicalLink(stepsBlock?.settings, 'card3Button2LinkJson', {
+      kind: 'phone',
+      href: 'tel:18666211787',
     });
     expect(helpBlock?.settings).toMatchObject({
       sectionClassName: 'online-contrib-native-help',
-      buttonUrl: 'mailto:retirement@agfinancial.org',
-      button2Url: 'tel:18006227526',
+    });
+    expectCanonicalLink(helpBlock?.settings, 'buttonLinkJson', {
+      kind: 'email',
+      href: 'mailto:retirement@agfinancial.org',
+    });
+    expectCanonicalLink(helpBlock?.settings, 'button2LinkJson', {
+      kind: 'phone',
+      href: 'tel:18006227526',
     });
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
@@ -1559,8 +1712,11 @@ describe('content block blueprint coverage', () => {
         sectionClassName: 'legal-native-terms-details',
         copyWrap: true,
         buttonLabel: 'Contact us',
-        buttonPageRef: '/contact-us',
       },
+    });
+    expectCanonicalLink(contentBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/contact-us',
     });
     expect(contentBlock?.settings?.html).toContain('Acceptance of Terms');
     expect(contentBlock?.settings?.html).toContain('Disclaimers and Liability');
@@ -1592,10 +1748,15 @@ describe('content block blueprint coverage', () => {
     expect(investmentStrategyHeadingBlock?.mode).toBe('dynamic');
     expect(investmentStrategyHeadingBlock?.settings?.title).toBe('Investment Strategy Options');
     expect(investmentStrategyHeadingBlock?.settings?.buttonLabel).toBe('View the monthly performance');
-    expect(investmentStrategyHeadingBlock?.settings?.buttonUrl).toBe('https://files.agfinancial.org/retirement/Performance-Update/Performance-Update.pdf');
-    expect(investmentStrategyHeadingBlock?.settings?.buttonPageRef).toBe('');
+    expectCanonicalLink(investmentStrategyHeadingBlock?.settings, 'buttonLinkJson', {
+      kind: 'external',
+      href: 'https://files.agfinancial.org/retirement/Performance-Update/Performance-Update.pdf',
+    });
     expect(investmentStrategyHeadingBlock?.settings?.button2Label).toBe('Prospectus');
-    expect(investmentStrategyHeadingBlock?.settings?.button2PageRef).toBe('/prospectus');
+    expectCanonicalLink(investmentStrategyHeadingBlock?.settings, 'button2LinkJson', {
+      kind: 'internal',
+      to: '/prospectus',
+    });
     expect(investmentStrategyHeadingBlock?.settings?.button2Style).toBe('dark');
     expect(investmentStrategyOptionsBlock?.mode).toBe('dynamic');
     expect(investmentStrategyOptionsBlock?.settings?.fullBleed).toBe(true);
@@ -1629,10 +1790,13 @@ describe('content block blueprint coverage', () => {
     expect(housingFeatureBlock?.settings?.col2Title).toBe("Retired Ministers' Housing Allowance");
     expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain('This unique IRS benefit');
     expect(housingFeatureBlock?.settings?.col2ButtonLabel).toBe('IRS information');
-    expect(housingFeatureBlock?.settings?.col2ButtonUrl).toBe('https://www.irs.gov/publications/p517');
+    expectCanonicalLink(housingFeatureBlock?.settings, 'col2ButtonLinkJson', {
+      kind: 'external',
+      href: 'https://www.irs.gov/publications/p517',
+      openInNewWindow: true,
+    });
     expect(housingFeatureBlock?.settings?.col2ButtonStyle).toBe('outline');
     expect(housingFeatureBlock?.settings?.col2ButtonTone).toBe('atlantean');
-    expect(housingFeatureBlock?.settings?.col2ButtonOpenInNewWindow).toBe(true);
     expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('The maximum housing allowance exemption in any tax year is the lesser of:');
     expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('<ul>');
     expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('Compare your annual housing expenses to Fair Rental Value');
@@ -1642,11 +1806,15 @@ describe('content block blueprint coverage', () => {
     expect(loanApplyBlock?.mode).toBe('dynamic');
     expect(blocks.findIndex((block) => block?.id === 'loan_apply')).toBe(blocks.findIndex((block) => block?.id === 'loan_details') + 1);
     expect(loanApplyBlock?.settings?.columns).toBe('one');
-    expect(loanApplyBlock?.settings?.card1ButtonUrl).toBe('https://files.agfinancial.org/retirement/403(b)-Loan-Rules.pdf');
-    expect(loanApplyBlock?.settings?.card1ButtonPageRef).toBe('');
+    expectCanonicalLink(loanApplyBlock?.settings, 'card1ButtonLinkJson', {
+      kind: 'external',
+      href: 'https://files.agfinancial.org/retirement/403(b)-Loan-Rules.pdf',
+    });
     expect(loanApplyBlock?.settings?.card1Body).toBe('Review the loan rules.');
-    expect(loanApplyBlock?.settings?.card2ButtonUrl).toBe('https://secure.agfinancial.org/');
-    expect(loanApplyBlock?.settings?.card2ButtonPageRef).toBe('');
+    expectCanonicalLink(loanApplyBlock?.settings, 'card2ButtonLinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/',
+    });
     expect(loanApplyBlock?.settings?.card2Body).toBe('Log in.');
     expect(loanApplyBlock?.settings?.card3Body).toBe('Select your 403(b) account.');
     expect(loanApplyBlock?.settings?.card5Body).toContain('**Info**');
@@ -1655,7 +1823,10 @@ describe('content block blueprint coverage', () => {
     expect(onlineContributionsBlock?.mode).toBe('dynamic');
     expect(onlineContributionsBlock?.presetId).toBe('do-the-math');
     expect(onlineContributionsBlock?.settings?.col1Title).toBe('Online Contributions');
-    expect(onlineContributionsBlock?.settings?.col1ButtonUrl).toBe('/online-contributions');
+    expectCanonicalLink(onlineContributionsBlock?.settings, 'col1ButtonLinkJson', {
+      kind: 'internal',
+      to: '/online-contributions',
+    });
     expect(blocks.findIndex((block) => block?.id === 'who_qualifies')).toBeLessThan(blocks.findIndex((block) => block?.id === 'investment_strategy_heading'));
   });
 
@@ -1709,7 +1880,7 @@ describe('content block blueprint coverage', () => {
     });
   });
 
-  it('preserves nested transitional split fields for touched grid and column blueprint seeds', () => {
+  it('exports canonical link settings for touched grid and column blueprint seeds', () => {
     const homeBlocks = contentBlockBlueprintsByPath['/'] || [];
     const loansBlocks = contentBlockBlueprintsByPath['/services/loans'] || [];
     const testBlocks = contentBlockBlueprintsByPath['/test'] || [];
@@ -1723,30 +1894,48 @@ describe('content block blueprint coverage', () => {
     expect(homeServicesFeature?.mode).toBe('dynamic');
     expect(homeServicesFeature?.settings?.featureId).toBe('home_services_feature_animation');
     expect(homeServicesFeature?.settings?.headline).toBe('Bold, smart steps.\nTogether.');
-    expect(servicesGrid?.settings?.browsePath).toBe('/services');
-    expect(servicesGrid?.settings?.browsePageRef).toBe('/services');
-    expect(servicesGrid?.settings?.card1Path).toBe('/services/loans');
-    expect(servicesGrid?.settings?.card1PageRef).toBe('/services/loans');
-    expect(servicesGrid?.settings?.card6Path).toBe('/rates');
-    expect(servicesGrid?.settings?.card6PageRef).toBe('/rates');
+    expectCanonicalLink(servicesGrid?.settings, 'browseLinkJson', {
+      kind: 'internal',
+      to: '/services',
+    });
+    expectCanonicalLink(servicesGrid?.settings, 'card1LinkJson', {
+      kind: 'internal',
+      to: '/services/loans',
+    });
+    expectCanonicalLink(servicesGrid?.settings, 'card6LinkJson', {
+      kind: 'internal',
+      to: '/rates',
+    });
+    expectNoSettings(servicesGrid?.settings, [
+      'browsePath',
+      'browsePageRef',
+      'card1Path',
+      'card1PageRef',
+      'card6Path',
+      'card6PageRef',
+    ]);
 
     expect(loansValueCards?.settings?.col1ButtonLabel).toBe('');
-    expect(loansValueCards?.settings?.col1ButtonUrl).toBe('');
-    expect(loansValueCards?.settings?.col1ButtonPageRef).toBe('');
     expect(loansValueCards?.settings?.col4ButtonLabel).toBe('');
-    expect(loansValueCards?.settings?.col4ButtonUrl).toBe('');
-    expect(loansValueCards?.settings?.col4ButtonPageRef).toBe('');
+    expectNoSettings(loansValueCards?.settings, [
+      'col1ButtonUrl',
+      'col1ButtonPageRef',
+      'col4ButtonUrl',
+      'col4ButtonPageRef',
+    ]);
     expect(loansValueCards?.templateId).toBe('columns');
     expect(loansValueCards?.presetId).toBe('value-cards');
 
     expect(testGrid?.templateId).toBe('card_grid');
     expect(testGrid?.presetId).toBe('default');
     expect(testGrid?.settings?.card1ButtonLabel).toBe('');
-    expect(testGrid?.settings?.card1ButtonUrl).toBe('');
-    expect(testGrid?.settings?.card1ButtonPageRef).toBe('');
     expect(testGrid?.settings?.card8ButtonLabel).toBe('');
-    expect(testGrid?.settings?.card8ButtonUrl).toBe('');
-    expect(testGrid?.settings?.card8ButtonPageRef).toBe('');
+    expectNoSettings(testGrid?.settings, [
+      'card1ButtonUrl',
+      'card1ButtonPageRef',
+      'card8ButtonUrl',
+      'card8ButtonPageRef',
+    ]);
   });
 
   it('keeps touched blueprint inventories dynamic-only after cleanup simplification', () => {

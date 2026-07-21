@@ -18,6 +18,58 @@ function getDynamicHeroSettings(pathname) {
   return heroBlock.settings || {};
 }
 
+function parseLinkJson(value) {
+  if (!value) {
+    return null;
+  }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function expectActionLinkSettings(settings, buttonNumber, action) {
+  const linkValue = parseLinkJson(settings[`button${buttonNumber}LinkJson`]);
+  const expectedPageRef = String(action.pageRef || '');
+  const expectedUrl = String(action.url || '');
+
+  if (linkValue) {
+    if (expectedPageRef) {
+      expect(linkValue).toEqual(expect.objectContaining({
+        kind: 'internal',
+        to: expectedPageRef,
+        openInNewWindow: Boolean(action.openInNewWindow),
+      }));
+    } else if (expectedUrl.startsWith('#')) {
+      expect(linkValue).toEqual(expect.objectContaining({
+        kind: 'anchor',
+        href: expectedUrl,
+        openInNewWindow: Boolean(action.openInNewWindow),
+      }));
+    } else if (expectedUrl.startsWith('/')) {
+      expect(linkValue).toEqual(expect.objectContaining({
+        kind: 'internal',
+        to: expectedUrl,
+        openInNewWindow: Boolean(action.openInNewWindow),
+      }));
+    } else if (expectedUrl) {
+      expect(linkValue).toEqual(expect.objectContaining({
+        kind: 'external',
+        href: expectedUrl,
+        openInNewWindow: Boolean(action.openInNewWindow),
+      }));
+    } else {
+      expect(linkValue).toBeNull();
+    }
+    return;
+  }
+
+  expect(String(settings[`button${buttonNumber}PageRef`] || '')).toBe(expectedPageRef);
+  expect(String(settings[`button${buttonNumber}Url`] || '')).toBe(expectedUrl);
+  expect(Boolean(settings[`button${buttonNumber}OpenInNewWindow`])).toBe(Boolean(action.openInNewWindow));
+}
+
 function expectHeroSettingsToMatchContract(settings, contract) {
   expect(settings.animationPreset).toBe(contract.animationPreset);
   expect(settings.bgTone).toBe(contract.bgTone);
@@ -39,11 +91,9 @@ function expectHeroSettingsToMatchContract(settings, contract) {
   contract.actions.forEach((action, index) => {
     const buttonNumber = index + 1;
     expect(String(settings[`button${buttonNumber}Label`] || '')).toBe(action.label);
-    expect(String(settings[`button${buttonNumber}PageRef`] || '')).toBe(action.pageRef);
-    expect(String(settings[`button${buttonNumber}Url`] || '')).toBe(action.url);
+    expectActionLinkSettings(settings, buttonNumber, action);
     expect(String(settings[`button${buttonNumber}Style`] || '')).toBe(action.style);
     expect(String(settings[`button${buttonNumber}Tone`] || '')).toBe(action.tone);
-    expect(Boolean(settings[`button${buttonNumber}OpenInNewWindow`])).toBe(Boolean(action.openInNewWindow));
   });
 }
 

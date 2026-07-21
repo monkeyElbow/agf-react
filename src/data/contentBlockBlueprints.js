@@ -50,6 +50,7 @@ import {
 } from './ctaFormSeeds';
 import { formsLibraryLinks } from './formsLibraryLinks';
 import { defaultLoansIntroSettings } from './loansIntroSeed';
+import { normalizeSplitLinkFieldSettings } from '../lib/linkValue';
 import { getResourceArticleFeatureConfig } from './resourceArticles';
 import {
   defaultRetirementBillboardSettings,
@@ -253,6 +254,31 @@ function createDynamicCardGridBlueprint({ id, name, presetId = 'default', templa
     settings: buildCardGridPresetSettings(presetId, settings),
     editableFields: sharedDynamicGridEditableFields,
   };
+}
+
+function canonicalizeBlueprintBlockLinks(block) {
+  if (!block || typeof block !== 'object') {
+    return block;
+  }
+  const settings = block.settings && typeof block.settings === 'object'
+    ? normalizeSplitLinkFieldSettings(block.settings, { stripSplitFields: true })
+    : block.settings;
+  return settings === block.settings
+    ? block
+    : { ...block, settings };
+}
+
+function canonicalizeBlueprintBlocksLinks(blocks) {
+  return (Array.isArray(blocks) ? blocks : []).map(canonicalizeBlueprintBlockLinks);
+}
+
+function canonicalizeBlueprintMapLinks(blueprintsByPath) {
+  return Object.fromEntries(
+    Object.entries(blueprintsByPath || {}).map(([pathname, blocks]) => [
+      pathname,
+      canonicalizeBlueprintBlocksLinks(blocks),
+    ]),
+  );
 }
 
 function createDynamicColumnsBlueprint({ id, name, presetId = 'default', templateId = '', settings = {} }) {
@@ -9136,7 +9162,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
   ],
 };
 
-export const contentBlockBlueprintsByPath = applyCanonicalDefinitionsToBlueprintMap(RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH);
+export const contentBlockBlueprintsByPath = applyCanonicalDefinitionsToBlueprintMap(
+  canonicalizeBlueprintMapLinks(RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH),
+);
 
 const TEMPLATE_ONLY_BLOCK_BLUEPRINTS = Object.freeze([
   applyCanonicalDefinitionToBlock({
@@ -9177,7 +9205,7 @@ export function genericPageFallbackBlueprint() {
 export function genericPageBlockBlueprint() {
   const defaultSiteFeatureEntry = getDefaultSiteFeatureCatalogEntry();
 
-  return [
+  return canonicalizeBlueprintBlocksLinks([
     genericPageContentBlueprintBlock(),
     {
       id: 'site_feature',
@@ -9313,7 +9341,7 @@ export function genericPageBlockBlueprint() {
         { id: 'step5FieldsJson', label: 'Step 5 fields (JSON array)', type: 'textarea', rows: 4 },
       ],
     },
-  ].map((block) => applyCanonicalDefinitionToBlock(block));
+  ].map((block) => applyCanonicalDefinitionToBlock(block)));
 }
 
 function cloneBlueprintBlock(block) {
@@ -9338,7 +9366,7 @@ export function getAllBlockTemplateBlueprints() {
   const sources = [
     ...Object.values(contentBlockBlueprintsByPath || {}),
     genericPageBlockBlueprint(),
-    TEMPLATE_ONLY_BLOCK_BLUEPRINTS,
+    canonicalizeBlueprintBlocksLinks(TEMPLATE_ONLY_BLOCK_BLUEPRINTS),
   ];
 
   sources.forEach((blocks) => {

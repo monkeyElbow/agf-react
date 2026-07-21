@@ -10,6 +10,7 @@ import {
   DEFAULT_LOANS_INTRO_HEADING,
 } from './loansIntroSeed';
 import { getNativePageContent } from './nativePageContent';
+import { normalizeSplitLinkFieldSettings } from '../lib/linkValue';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,7 +25,9 @@ describe('loans intro seed guardrail', () => {
     const nativeIntro = getNativePageContent('/services/loans', 'Loans')?.intro;
     const runtimeIntro = buildDefaultLoansIntroRuntime();
 
-    expect(introBlock?.settings).toEqual(defaultLoansIntroSettings);
+    expect(introBlock?.settings).toEqual(
+      normalizeSplitLinkFieldSettings(defaultLoansIntroSettings, { stripSplitFields: true }),
+    );
     expect(nativeIntro).toBeUndefined();
     expect(runtimeIntro.heading).toBe(DEFAULT_LOANS_INTRO_HEADING);
     expect(runtimeIntro.bodyHtml).toContain(DEFAULT_LOANS_INTRO_BODY_TEXT);

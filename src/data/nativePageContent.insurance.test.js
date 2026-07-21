@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import { getNativePageContent } from './nativePageContent';
 
+function expectLink(settings, fieldId, expectedLink) {
+  expect(JSON.parse(settings?.[fieldId] || '{}')).toEqual(expect.objectContaining(expectedLink));
+}
+
 describe('insurance native page content', () => {
   it('keeps insurance overview native content shell-only with visible sections owned by blocks', () => {
     const content = getNativePageContent('/services/insurance', '');
@@ -30,10 +34,18 @@ describe('insurance native page content', () => {
     expect(coverageBlock?.settings?.card1Body).toBe('Our specialty is helping protect churches, schools, ministries, and other nonprofits, as well as businesses.');
     expect(coverageBlock?.settings?.card3Body).toContain('Mission Assure® offers superior protection at minimum cost.');
     expect(coverageBlock?.settings?.card4Body).toContain('We partner with Old Republic Surety');
-    expect(coverageBlock?.settings?.card4ButtonUrl).toBe('https://www.orsurety.com/commercial-bonds');
+    expectLink(coverageBlock?.settings, 'card4ButtonLinkJson', {
+      kind: 'external',
+      href: 'https://www.orsurety.com/commercial-bonds',
+      openInNewWindow: true,
+    });
     expect(certificateProofBlock?.settings?.title).toBe('Need proof of insurance?');
     expect(certificateProofBlock?.settings?.titleClassName).toBe('is-mango');
-    expect(certificateProofBlock?.settings?.buttonPageRef).toBe('/services/insurance/certificate-request');
+    expectLink(certificateProofBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/services/insurance/certificate-request',
+      openInNewWindow: false,
+    });
     expect(ctaBlock?.settings?.title).toBe('What coverage is best for your ministry?');
     expect(ctaBlock?.settings?.subtitle).toBe('Let’s walk through the options.');
     expect(JSON.parse(ctaBlock?.settings?.fieldsJson || '[]').map((field) => field.id)).toEqual([

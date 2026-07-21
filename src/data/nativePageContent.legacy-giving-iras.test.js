@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import { getNativePageContent } from './nativePageContent';
 
+function expectLink(settings, fieldId, expectedLink) {
+  expect(JSON.parse(settings?.[fieldId] || '{}')).toEqual(expect.objectContaining(expectedLink));
+}
+
 describe('planned giving and IRA native page content', () => {
   it('keeps planned giving overview block-only while preserving child-route cleanup', () => {
     const legacyContent = getNativePageContent('/services/planned-giving', '');
@@ -81,10 +85,16 @@ describe('planned giving and IRA native page content', () => {
     expect(generosityHero?.settings).toMatchObject({
       line1Text: 'Your giving.',
       line2Text: 'Managed.',
-      button1Url: 'https://secure.agfinancial.org/generosityfund/signup',
-      button2Url: '#traditional-daf-form',
       button2Style: 'outline',
       button2Tone: 'super-grey',
+    });
+    expectLink(generosityHero?.settings, 'button1LinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/generosityfund/signup',
+    });
+    expectLink(generosityHero?.settings, 'button2LinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
     });
     expect(generosityIntro?.settings?.heading).toBe('All your charitable giving in one place.');
     expect(generositySteps?.settings).toMatchObject({
@@ -95,7 +105,10 @@ describe('planned giving and IRA native page content', () => {
     expect(generosityAssets?.settings).toMatchObject({
       sectionClassName: 'legacy-child-native-assets legacy-child-native-generosity-assets',
       card1Title: 'What you give',
-      card1ButtonUrl: 'https://secure.agfinancial.org/generosityfund/signup',
+    });
+    expectLink(generosityAssets?.settings, 'card1ButtonLinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/generosityfund/signup',
     });
     expect(generosityRequest?.settings).toMatchObject({
       anchorId: 'traditional-daf-form',
@@ -111,9 +124,12 @@ describe('planned giving and IRA native page content', () => {
     expect(generosityOutro?.settings).toMatchObject({
       title: 'Simple, joyful giving.',
       subtitle: 'Powered by your generosity.',
-      buttonUrl: 'https://secure.agfinancial.org/generosityfund/signup',
       button2DocumentId: 'document-planned-giving-terms-and-conditions',
       sectionClassName: 'legacy-child-native-generosity-outro',
+    });
+    expectLink(generosityOutro?.settings, 'buttonLinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/generosityfund/signup',
     });
     expect(generosityStepsIndex).toBeGreaterThan(generosityBlocks.findIndex((block) => block?.id === 'intro'));
     expect(generosityRequestIndex).toBeGreaterThan(generosityStepsIndex);
@@ -130,7 +146,10 @@ describe('planned giving and IRA native page content', () => {
     expect(ministryImpactSteps?.settings?.card3Title).toBe('03');
     expect(ministryImpactStockSection?.settings?.card1Title).toBe('Intent to Gift of Securities');
     expect(ministryImpactStockSection?.settings?.card1ButtonDocumentId).toBe('document-planned-giving-intent-to-gift-form');
-    expect(ministryImpactStockSection?.settings?.card1Button2Url).toBe('https://uploads.agfinancial.org/');
+    expectLink(ministryImpactStockSection?.settings, 'card1Button2LinkJson', {
+      kind: 'external',
+      href: 'https://uploads.agfinancial.org/',
+    });
     expect(ministryImpactStockSection?.settings?.card2Title).toBe('Brokerage Letter of Authorization (LOA)');
     expect(ministryImpactStockSection?.settings?.card2ButtonDocumentId).toBe('document-planned-giving-brokerage-loa-form');
     expect(ministryImpactRequestSection?.settings?.step1Title).toBe('Talk with planned giving');
@@ -143,8 +162,14 @@ describe('planned giving and IRA native page content', () => {
     expect(charitableTrustsContent?.hero).toBeUndefined();
     expect(charitableTrustsContent?.intro).toBeUndefined();
     expect(charitableTrustsContent?.sections).toBeUndefined();
-    expect(charitableTrustsChoiceCards?.settings?.card1ButtonPageRef).toBe('/services/planned-giving/charitable-trusts#crt');
-    expect(charitableTrustsChoiceCards?.settings?.card2ButtonPageRef).toBe('/services/planned-giving/charitable-trusts#clt');
+    expectLink(charitableTrustsChoiceCards?.settings, 'card1ButtonLinkJson', {
+      kind: 'internal',
+      to: '/services/planned-giving/charitable-trusts#crt',
+    });
+    expectLink(charitableTrustsChoiceCards?.settings, 'card2ButtonLinkJson', {
+      kind: 'internal',
+      to: '/services/planned-giving/charitable-trusts#clt',
+    });
     expect(charitableTrustsDifferences?.settings?.title).toBe('The differences. At a glance.');
     expect(charitableTrustsDifferences?.settings?.card1ListJson).toBe('["Cash","Securities (stocks, bonds, mutual funds)","Real estate","Other marketable assets"]');
     expect(charitableTrustsDifferences?.settings?.card2ListJson).toContain('**Best for:** Appreciated assets');
@@ -204,7 +229,11 @@ describe('planned giving and IRA native page content', () => {
     expect(iraTypes?.settings?.card2ButtonLabel).toBe('');
     expect(openIra?.settings).toMatchObject({
       buttonLabel: 'Open IRA',
-      buttonUrl: 'https://secure.agfinancial.org/invest',
+    });
+    expectLink(openIra?.settings, 'buttonLinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/invest',
+      openInNewWindow: true,
     });
     expect(rollover?.settings?.bodyHtml).toContain('single AGFinancial IRA');
     expect(rollover?.settings?.targetSectionKey).toBeUndefined();

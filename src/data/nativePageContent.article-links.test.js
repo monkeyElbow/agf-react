@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 
+function expectInternalLink(settings, fieldId, to) {
+  expect(JSON.parse(settings?.[fieldId] || '{}')).toEqual(expect.objectContaining({
+    kind: 'internal',
+    to,
+    openInNewWindow: false,
+  }));
+}
+
 describe('native page content article feature links', () => {
   it('wires the insurance fraud feature to the seeded article route and media', () => {
     const blocks = contentBlockBlueprintsByPath['/services/insurance'] || [];
@@ -9,7 +17,7 @@ describe('native page content article feature links', () => {
     expect(featureBlock?.settings?.title).toBe('Defend Yourself Against Fraud');
     expect(featureBlock?.settings?.imageUrl).toContain('media.agfinancial.org');
     expect(featureBlock?.settings?.buttonLabel).toBe('Read article');
-    expect(featureBlock?.settings?.buttonPageRef).toBe('/resources/article/defend-yourself-against-fraud');
+    expectInternalLink(featureBlock?.settings, 'buttonLinkJson', '/resources/article/defend-yourself-against-fraud');
   });
 
   it('wires the planned giving opportunity feature to the seeded article route and media', () => {
@@ -19,7 +27,7 @@ describe('native page content article feature links', () => {
     expect(featureBlock?.settings?.title).toBe('Opportunity is Knocking');
     expect(featureBlock?.settings?.imageUrl).toContain('media.agfinancial.org');
     expect(featureBlock?.settings?.buttonLabel).toBe('Answer the door');
-    expect(featureBlock?.settings?.buttonPageRef).toBe('/resources/article/opportunity');
+    expectInternalLink(featureBlock?.settings, 'buttonLinkJson', '/resources/article/opportunity');
     expect(featureBlock?.settings?.sectionClassName).toBe('legacy-giving-opportunity');
   });
 
@@ -30,6 +38,6 @@ describe('native page content article feature links', () => {
     expect(featureBlock?.settings?.title).toBe('Summer Camp Safety Tips');
     expect(featureBlock?.settings?.imageUrl).toContain('media.agfinancial.org');
     expect(featureBlock?.settings?.buttonLabel).toBe('Go safely!');
-    expect(featureBlock?.settings?.buttonPageRef).toBe('/resources/article/summer-camp-safety-tips');
+    expectInternalLink(featureBlock?.settings, 'buttonLinkJson', '/resources/article/summer-camp-safety-tips');
   });
 });

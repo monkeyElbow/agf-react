@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import { getNativePageContent } from './nativePageContent';
 
+function readLinkTarget(settings, fieldId) {
+  const linkValue = JSON.parse(settings?.[fieldId] || '{}');
+  return linkValue.to || linkValue.href || '';
+}
+
 describe('calculators native page content', () => {
   it('keeps calculators shell-only with block-owned cards, widget, billboard, and cta sections', () => {
     const content = getNativePageContent('/calculators', '');
@@ -18,7 +23,9 @@ describe('calculators native page content', () => {
     expect(cardsBlock?.settings?.columns).toBe('two');
     expect(cardsBlock?.settings?.sectionClassName).toBe('calculators-native-collection calculators-native-collection--grid');
     expect(Array.from({ length: 8 }, (_, index) => cardsBlock?.settings?.[`card${index + 1}ButtonLabel`])).toEqual(Array(8).fill('Launch'));
-    expect(Array.from({ length: 8 }, (_, index) => cardsBlock?.settings?.[`card${index + 1}ButtonUrl`])).toEqual([
+    expect(Array.from({ length: 8 }, (_, index) => (
+      readLinkTarget(cardsBlock?.settings, `card${index + 1}ButtonLinkJson`)
+    ))).toEqual([
       '/services/retirement#retirement-savings-calculator',
       '/calculators/increased-contribution',
       '/services/retirement#retirement-savings-calculator',
