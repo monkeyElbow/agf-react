@@ -2433,12 +2433,12 @@ export default function RetirementPage() {
         </section>
       ) : null}
 
-      <section className="service-native-section retirement-top3">
+      <section className="service-native-section service-native-article-teaser retirement-top3">
         <div className="ag-panel-rail-wide">
           <div className="service-native-dark-feature">
             <div className="service-native-dark-feature-inner">
               <div
-                className="service-native-dark-feature-media retirement-top3-media"
+                className="service-native-dark-feature-media"
                 role="img"
                 aria-label={RETIREMENT_TOP_3_ARTICLE_FEATURE.imageAlt || 'Top 3 investing mistakes to avoid'}
                 style={RETIREMENT_TOP_3_ARTICLE_FEATURE.image ? { backgroundImage: `url(${RETIREMENT_TOP_3_ARTICLE_FEATURE.image})` } : undefined}

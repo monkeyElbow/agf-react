@@ -2997,7 +2997,7 @@ export default function InvestmentsPage() {
       {featurePanelRuntime ? (
         <section
           ref={featurePanelSectionRef}
-          className={`service-native-section${getHudBlockStateClassName('cash_reserves')}${getOwnershipVisualForBlockId('cash_reserves').className || ''}`}
+          className={`service-native-section service-native-article-teaser${getHudBlockStateClassName('cash_reserves')}${getOwnershipVisualForBlockId('cash_reserves').className || ''}`}
           data-block-id="cash_reserves"
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('cash_reserves')} />

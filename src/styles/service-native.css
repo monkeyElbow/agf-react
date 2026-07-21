@@ -2458,43 +2458,43 @@
   padding-top: 0;
 }
 
-.retirement-top3 {
+.service-native-article-teaser {
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.retirement-top3 .ag-panel-rail-wide {
+.service-native-article-teaser .ag-panel-rail-wide {
   width: 100%;
   max-width: none;
 }
 
-.retirement-top3 .service-native-dark-feature {
+.service-native-article-teaser .service-native-dark-feature {
   border-radius: 0;
 }
 
-.retirement-top3 .service-native-dark-feature-inner {
+.service-native-article-teaser .service-native-dark-feature-inner {
   min-height: clamp(340px, 52vh, 620px);
 }
 
-.retirement-top3 .service-native-dark-feature-copy {
+.service-native-article-teaser .service-native-dark-feature-copy {
   padding: clamp(1.8rem, 3.6vw, 3.1rem);
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-.retirement-top3-media {
+.service-native-article-teaser .service-native-dark-feature-media {
   min-height: 100%;
   background-size: cover;
   background-position: center;
 }
 
-.retirement-top3 .service-native-dark-feature-copy h3 {
+.service-native-article-teaser .service-native-dark-feature-copy h3 {
   font-size: clamp(2rem, 4.2vw, 3.3rem);
   line-height: 1;
 }
 
-.retirement-top3 .service-native-dark-feature-copy p {
+.service-native-article-teaser .service-native-dark-feature-copy p {
   font-size: clamp(1rem, 2vw, 1.25rem);
 }
 
@@ -5820,24 +5820,8 @@
   line-height: 1.55;
 }
 
-.loans-native-tariffs {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.loans-native-tariffs .ag-panel-rail-wide {
-  width: 100%;
-  max-width: none;
-}
-
 .loans-native-tariffs .service-native-dark-feature {
-  border-radius: 0;
   padding-bottom: var(--site-chatbot-mobile-reserved-space, 0px);
-}
-
-.loans-native-tariffs .service-native-dark-feature-copy h3 {
-  font-size: clamp(2.1rem, 4.4vw, 4rem);
-  line-height: 0.98;
 }
 
 .loans-native-tariffs-media {

@@ -1604,7 +1604,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         </div>
       </section>
 
-      <section className="service-native-section loans-native-tariffs">
+      <section className="service-native-section service-native-article-teaser loans-native-tariffs">
         <div className="ag-panel-rail-wide">
           <div className="service-native-dark-feature fade-up">
             <div className="service-native-dark-feature-inner">
