@@ -4718,10 +4718,20 @@ export default function NativeContentPage({ page }) {
   const introImage = introConfig?.image || '';
   const introImageAlt = introConfig?.imageAlt || '';
   const introSplit = Boolean(introImage && introConfig?.layout === 'split');
+  const hasIntroParagraphs = introParagraphs.some((paragraph) => String(paragraph || '').trim());
+  const hasIntroContent = Boolean(
+    introHeading
+    || introBodyHtml
+    || hasIntroParagraphs
+    || introEmphasis
+    || introActions.length
+    || introSplit
+  );
   const pageClass = content.pageClass ? ` ${content.pageClass}` : '';
   const compactClass = content.compact ? ' is-compact' : '';
   const hideHero = Boolean(content.hideHero);
   const hideIntro = Boolean(content.hideIntro);
+  const shouldRenderIntro = !hideIntro && hasIntroContent;
   const legalDoc = content?.legalDocument || null;
   const visibleEditablePageBlocks = useMemo(
     () => editablePageBlocks.filter((block) => !toBoolean(block?.hidden)),
@@ -4880,7 +4890,7 @@ export default function NativeContentPage({ page }) {
   const heroHudPanel = dynamicHeroBlock ? (hudPanelByBlockId[dynamicHeroBlock.id] || null) : null;
   const introHudPanel = dynamicIntroBlock ? (hudPanelByBlockId[dynamicIntroBlock.id] || null) : null;
   const showHeroHud = showFrontHud && !hideHero && Boolean(heroHudPanel);
-  const showIntroHud = showFrontHud && !hideIntro && Boolean(introHudPanel);
+  const showIntroHud = showFrontHud && shouldRenderIntro && Boolean(introHudPanel);
   const getOwnershipVisualForBlockId = (blockId) => {
     if (!showFrontHud || !editableBlockPath || !blockId) {
       return { className: '', overlayLabel: '', overlayDetail: '', state: 'none', isOwnedByOther: false };
@@ -5733,7 +5743,7 @@ export default function NativeContentPage({ page }) {
         );
       })}
 
-      {!hideIntro ? (
+      {shouldRenderIntro ? (
         <section
           ref={dynamicIntroBlock ? introHudSectionRef : undefined}
           className={`service-native-intro${introSplit ? ' is-split' : ''}${introConfig?.className ? ` ${introConfig.className}` : ''}${showIntroHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId(dynamicIntroBlock?.id).className || ''}`}

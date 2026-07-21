@@ -258,6 +258,7 @@ describe('NativeContentPage functional routes', () => {
 
     expect(document.querySelector('.calculators-native-billboard.dynamic-billboard')).toBeTruthy();
     expect(document.querySelector('.calculators-native-contact')).toBeNull();
+    expect(document.querySelector('.service-native-intro')).toBeNull();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeNull();
     expect(document.querySelector('[data-block-id="billboard"]')).toBeTruthy();
@@ -293,7 +294,9 @@ describe('NativeContentPage functional routes', () => {
     const widgetSection = document.querySelector('[data-block-id="calculator_tool"]');
     const introSection = document.querySelector('[data-block-id="intro"]');
 
-    expect(introSection?.className).toContain('service-native-intro');
+    expect(document.querySelector('.service-native-intro')).toBeNull();
+    expect(introSection?.className).toContain('native-dynamic-calculator-intro');
+    expect(introSection?.className).not.toContain('service-native-intro');
     expect(introSection?.className).not.toContain('native-dynamic-page-content');
     expect(widgetSection).toBeTruthy();
     expect(widgetSection?.className).toContain('calculator-tool-widget');
@@ -796,6 +799,14 @@ describe('NativeContentPage functional routes', () => {
   });
 
   it('does not apply the careers intro variant to unrelated native pages like insurance', () => {
+    mockBlocksByPath = {
+      '/services/insurance': (contentBlockBlueprintsByPath['/services/insurance'] || []).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
     render(
       <MemoryRouter>
         <NativeContentPage
