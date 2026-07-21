@@ -200,8 +200,8 @@ describe('calculator page-content ghost guardrail', () => {
       kind: 'content',
       mode: 'dynamic',
       settings: {
-        title: 'Take inventory of your financial picture.',
-        body: 'Estimate what your net worth could be in the future based on specified growth rates.',
+        title: 'Take inventory of your financial reality.',
+        body: '',
         html: '',
         widget: '',
         fullBleed: false,

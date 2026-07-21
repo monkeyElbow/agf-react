@@ -174,10 +174,6 @@ export default function NetWorthCalculatorWidget() {
 
   return (
     <div className="native-financial-tool net-worth-tool">
-      <p className="native-financial-tool-lead">
-        Add your assets and liabilities to estimate your current net worth and review where your balance sheet is concentrated.
-      </p>
-
       <div className="financial-tool-groups-grid">
         {NET_WORTH_ASSET_GROUPS.map((group) => (
           <section key={group.key} className="financial-tool-group">

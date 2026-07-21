@@ -84,6 +84,8 @@ describe('service-native style ownership', () => {
       'padding-block: clamp(0.7rem, 1.2vw, 1rem);',
       '.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-shell {',
       'padding-top: 0;',
+      '.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-contact.native-dynamic-cta {',
+      'padding-top: clamp(2.1rem, 4.4vw, 3.4rem);',
       '.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell {',
       'padding-block: clamp(0.52rem, 0.9vw, 0.78rem);',
     ].forEach((expectedSelector) => {

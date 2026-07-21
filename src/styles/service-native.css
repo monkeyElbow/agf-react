@@ -538,7 +538,7 @@
 .native-info-page--calculator-tool .service-native-hero {
   background: #ffffff;
   padding: clamp(0.72rem, 1.3vw, 0.95rem) 0 clamp(0.28rem, 0.7vw, 0.45rem);
-  border-bottom: 1px solid rgba(65, 64, 66, 0.1);
+  border-bottom: 0;
 }
 
 .native-info-page--calculator-tool .service-native-hero .ag-panel-rail {
@@ -582,6 +582,10 @@
 }
 
 .native-info-page--calculator-tool .calculator-tool-contact.native-dynamic-cta {
+  padding-top: clamp(2.1rem, 4.4vw, 3.4rem);
+}
+
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-contact.native-dynamic-cta {
   padding-top: clamp(2.1rem, 4.4vw, 3.4rem);
 }
 

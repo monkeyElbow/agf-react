@@ -1934,8 +1934,8 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
   }),
   '/calculators/net-worth': createCalculatorToolBlueprints({
     title: 'Net Worth Calculator',
-    introTitle: 'Take inventory of your financial picture.',
-    introBody: 'Estimate what your net worth could be in the future based on specified growth rates.',
+    introTitle: 'Take inventory of your financial reality.',
+    introBody: '',
     widget: 'net-worth-calculator',
     formBody: 'Share a few details if you would like help reviewing your balance sheet and planning next steps.',
   }),

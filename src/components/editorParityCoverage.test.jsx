@@ -484,10 +484,10 @@ function getDynamicBlock(kindOrSelector) {
       mode: 'dynamic',
       editableFields: getEditableFieldsForKind('calculator_intro'),
       settings: {
-        title: 'Take inventory of your financial picture.',
+        title: 'Take inventory of your financial reality.',
         titleClassName: '',
         titleHighlightsJson: '',
-        body: 'Estimate what your net worth could be in the future based on specified growth rates.',
+        body: '',
         fullBleed: false,
         spaceBeforeRem: 0,
         spaceAfterRem: 0,
