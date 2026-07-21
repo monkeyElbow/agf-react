@@ -58,6 +58,8 @@ describe('calculators native page content', () => {
       expect(content?.hero).toBeUndefined();
       expect(Array.isArray(content?.sections) ? content.sections : []).toEqual([]);
       expect(Array.isArray(content?.actions) ? content.actions : []).toEqual([]);
+      expect(blocks.map((block) => block?.id)).toEqual(['hero', 'intro', 'calculator_tool', 'cta_form']);
+      expect(blocks.some((block) => block?.id === 'page_content' || block?.kind === 'page_content')).toBe(false);
       expect(heroBlock?.kind).toBe('hero');
       expect(introBlock?.kind).toBe('content');
       expect(introBlock?.settings?.sectionClassName).toBe('calculator-tool-shell');

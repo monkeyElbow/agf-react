@@ -76,6 +76,29 @@ describe('service-native style ownership', () => {
     );
   });
 
+  it('keeps calculator tool content shells from inheriting default blank content-block spacing', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--calculator-tool .service-native-section.calculator-tool-shell {',
+      'padding-block: clamp(0.7rem, 1.2vw, 1rem);',
+      '.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-shell {',
+      'padding-top: 0;',
+      '.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell {',
+      'padding-block: clamp(0.52rem, 0.9vw, 0.78rem);',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+
+    [
+      '.native-info-page--calculator-tool .calculator-tool-shell {',
+      '.native-info-page--calculator-tool .calculator-tool-shell + .calculator-tool-shell {',
+      '.native-info-page--calculator-increased-contribution .calculator-tool-shell {',
+    ].forEach((weakSelector) => {
+      expect(source).not.toContain(weakSelector);
+    });
+  });
+
   it('keeps migrated dynamic block style hooks block-owned instead of page-prefixed', () => {
     const source = readSource('./service-native.css');
 

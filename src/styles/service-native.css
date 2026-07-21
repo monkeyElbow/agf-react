@@ -555,15 +555,15 @@
   text-align: left;
 }
 
-.native-info-page--calculator-tool .calculator-tool-shell {
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell {
   padding-block: clamp(0.7rem, 1.2vw, 1rem);
 }
 
-.native-info-page--calculator-tool .calculator-tool-shell + .calculator-tool-shell {
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-shell {
   padding-top: 0;
 }
 
-.native-info-page--calculator-tool .calculator-tool-shell .native-info-section-copy > h2 {
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell .native-info-section-copy > h2 {
   margin-inline: auto;
   font-family: var(--ag-font-helv);
   letter-spacing: -0.03em;
@@ -573,7 +573,7 @@
   text-align: center;
 }
 
-.native-info-page--calculator-tool .calculator-tool-shell .native-info-section-copy > p {
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell .native-info-section-copy > p {
   margin-inline: auto;
   max-width: min(70ch, 100%);
   font-size: clamp(1.08rem, 1.5vw, 1.24rem);
@@ -595,15 +595,15 @@
   line-height: 1.03;
 }
 
-.native-info-page--calculator-increased-contribution .calculator-tool-shell {
+.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell {
   padding-block: clamp(0.52rem, 0.9vw, 0.78rem);
 }
 
-.native-info-page--calculator-increased-contribution .calculator-tool-shell .native-info-section-copy > h2 {
+.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell .native-info-section-copy > h2 {
   margin-bottom: 0.35rem;
 }
 
-.native-info-page--calculator-increased-contribution .calculator-tool-shell .native-info-section-copy > p {
+.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell .native-info-section-copy > p {
   max-width: 76ch;
 }
 

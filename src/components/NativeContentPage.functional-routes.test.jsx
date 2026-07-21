@@ -270,6 +270,35 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Let’s explore what we can do together.')).toBeTruthy();
   });
 
+  it('renders standalone calculator widgets without blank page-content shell copy', () => {
+    mockBlocksByPath = {
+      '/calculators/net-worth': (contentBlockBlueprintsByPath['/calculators/net-worth'] || []).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/calculators/net-worth',
+            title: 'Net Worth Calculator',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const widgetSection = document.querySelector('[data-block-id="calculator_tool"]');
+
+    expect(widgetSection).toBeTruthy();
+    expect(widgetSection?.className).toContain('calculator-tool-widget');
+    expect(widgetSection?.querySelector('.net-worth-tool')).toBeTruthy();
+    expect(widgetSection?.querySelector('.native-info-section-copy')).toBeNull();
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+  });
+
   it('renders certificate request from standalone blocks without fallback page content', () => {
     mockBlocksByPath = {
       '/services/insurance/certificate-request': (
