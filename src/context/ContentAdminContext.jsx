@@ -305,20 +305,6 @@ function normalizeRetirement403bBenefitsCardsSettings(settings) {
   return nextSettings;
 }
 
-function normalizeRetirement403bBenefitsCalloutSettings(settings) {
-  const nextSettings = {
-    ...(settings && typeof settings === 'object' ? settings : {}),
-  };
-  const bodyHtml = String(nextSettings.bodyHtml || '').trim();
-  const body = String(nextSettings.body || '').trim();
-
-  if (bodyHtml && body && stripSimpleHtmlToText(bodyHtml) === body) {
-    nextSettings.body = '';
-  }
-
-  return nextSettings;
-}
-
 function normalizeRetirement403bQualifySettings(settings) {
   return {
     ...(settings && typeof settings === 'object' ? settings : {}),
@@ -356,17 +342,6 @@ function normalizeRetirement403bBlockSet(blocks) {
       return {
         ...block,
         settings: normalizeRetirement403bBenefitsCardsSettings(block.settings),
-      };
-    }
-
-    if (
-      block.id === 'benefits_callout'
-      && String(block.kind || '').trim().toLowerCase() === 'billboard'
-      && String(block.mode || '').trim().toLowerCase() === 'dynamic'
-    ) {
-      return {
-        ...block,
-        settings: normalizeRetirement403bBenefitsCalloutSettings(block.settings),
       };
     }
 
@@ -503,7 +478,6 @@ function shouldQuarantineRetirement403bStrategyOptionsHtml(html) {
     normalizedHtml.includes('Variety'),
     normalizedHtml.includes('Your Own Consultant'),
     normalizedHtml.includes('Education'),
-    normalizedHtml.includes('Faith-Based Investments'),
     normalizedHtml.includes('Minister’s Housing Allowance'),
     normalizedHtml.includes("Ministers' Housing Allowance."),
   ].filter(Boolean).length;

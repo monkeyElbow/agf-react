@@ -1905,30 +1905,6 @@ describe('ContentAdminContext state normalization', () => {
     expect(String(benefitsCardsBlock?.settings?.card8Body || '')).toContain('Onsite education');
   });
 
-  it('clears duplicate 403(b) benefits callout body text when the same sentence exists in bodyHtml', () => {
-    const normalized = normalizeStoredConfig({
-      blocksByPath: {
-        '/services/retirement/403b': [
-          {
-            id: 'benefits_callout',
-            kind: 'billboard',
-            mode: 'dynamic',
-            settings: {
-              title: 'Faith-Based Investments',
-              bodyHtml: '<p>Our values, beliefs about stewardship, and our mission are the same as yours.</p>',
-              body: 'Our values, beliefs about stewardship, and our mission are the same as yours.',
-            },
-          },
-        ],
-      },
-    });
-
-    const benefitsCalloutBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
-      .find((block) => block?.id === 'benefits_callout');
-
-    expect(benefitsCalloutBlock?.settings?.body).toBe('');
-  });
-
   it('replaces stale 403(b) investment strategy card-grid html with the canonical feature rows', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {

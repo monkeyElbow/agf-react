@@ -19,10 +19,9 @@ const RETIREMENT_403B_CANONICAL_INVENTORY = [
   { id: 'hero', kind: 'hero', mode: 'dynamic' },
   { id: 'intro', kind: 'intro', mode: 'dynamic' },
   { id: 'benefits_cards', kind: 'card_grid', mode: 'dynamic' },
-  { id: 'benefits_callout', kind: 'billboard', mode: 'dynamic' },
-  { id: 'who_qualifies', kind: 'card_grid', mode: 'dynamic' },
   { id: 'investment_strategy_heading', kind: 'billboard', mode: 'dynamic' },
   { id: 'investment_strategy_options', kind: 'content', mode: 'dynamic' },
+  { id: 'who_qualifies', kind: 'card_grid', mode: 'dynamic' },
   { id: 'loan_details', kind: 'content', mode: 'dynamic' },
   { id: 'loan_apply', kind: 'card_grid', mode: 'dynamic' },
   { id: 'start_enrollment', kind: 'card_grid', mode: 'dynamic' },
@@ -34,6 +33,10 @@ const RETIREMENT_403B_CANONICAL_INVENTORY = [
   { id: 'cta_form', kind: 'cta_form', mode: 'dynamic' },
 ];
 const RETIREMENT_403B_STALE_RMHA_SNAPSHOT_STRINGS = [
+  'benefits_callout',
+  'retirement-403b-native-benefits-callout',
+  'Faith-Based Investments',
+  'Our values, beliefs about stewardship, and our mission are the same as yours.',
   'strategy_enroll_cta',
   'retirement-403b-native-strategy-enroll-cta',
   'ret403b-housing-feature-bullet-intro',
@@ -132,6 +135,13 @@ function expectNoStale403bRmhaSnapshotStrings(blocks, label) {
   });
 }
 
+function expectNoStale403bSnapshotRecordStrings(record, label) {
+  const snapshotText = JSON.stringify(record || {});
+  RETIREMENT_403B_STALE_RMHA_SNAPSHOT_STRINGS.forEach((staleString) => {
+    expect(snapshotText.includes(staleString), `${label} should not contain ${staleString}`).toBe(false);
+  });
+}
+
 describe('403(b) retirement inventory guardrail', () => {
   it('keeps promoted block-only snapshots free of page-content and target-section bridge metadata', () => {
     const sharedRecord = readJson('../../dev-data/content-admin-shared.json');
@@ -194,6 +204,18 @@ describe('403(b) retirement inventory guardrail', () => {
 
     snapshotSets.forEach(([label, blocks]) => {
       expectNoStale403bRmhaSnapshotStrings(blocks, label);
+    });
+
+    [
+      ['shared collaboration', sharedRecord?.state?.collaborationByPath?.[RETIREMENT_403B_PATH] || {}],
+      ['shared baseSnapshot collaboration', sharedRecord?.baseSnapshot?.collaborationByPath?.[RETIREMENT_403B_PATH] || {}],
+      ['seed collaboration', seedRecord?.seedState?.collaborationByPath?.[RETIREMENT_403B_PATH] || {}],
+      ...((sharedRecord?.revisionsByPath?.[RETIREMENT_403B_PATH] || []).map((revision, index) => [
+        `shared revision ${index}`,
+        revision?.snapshot || {},
+      ])),
+    ].forEach(([label, record]) => {
+      expectNoStale403bSnapshotRecordStrings(record, label);
     });
   });
 

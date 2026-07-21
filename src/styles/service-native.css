@@ -20366,8 +20366,7 @@ p.impact-proof-story-proof-body {
   padding-bottom: clamp(1.7rem, 3.3vw, 2.45rem);
 }
 
-.retirement-403b-native-benefits-copy > .ag-panel-rail,
-.retirement-403b-native-benefits-cards > .ag-panel-rail-wide {
+.retirement-403b-native-benefits-copy > .ag-panel-rail {
   max-width: 68rem;
   text-align: center;
 }
@@ -20416,7 +20415,8 @@ p.impact-proof-story-proof-body {
 }
 
 .retirement-403b-native-benefits-cards > .ag-panel-rail-wide {
-  width: min(calc(100% - (var(--ag-panel-gutter) * 0.8)), 72rem);
+  width: min(calc(100% - (var(--ag-panel-gutter) * 0.8)), var(--ag-panel-wide-max));
+  text-align: center;
 }
 
 .retirement-403b-native-benefits-cards .service-native-grid {
@@ -20436,7 +20436,7 @@ p.impact-proof-story-proof-body {
 
 .retirement-403b-native-benefits-cards .service-native-card h3 {
   font-size: clamp(1.48rem, 2.25vw, 1.9rem);
-  line-height: 1.02;
+  line-height: 0.96;
   letter-spacing: -0.025em;
   min-height: 2em;
   display: flex;
@@ -20445,9 +20445,13 @@ p.impact-proof-story-proof-body {
   justify-self: stretch;
   width: 100%;
   margin: 0;
-  padding-bottom: 0.68rem;
-  border-bottom: 1px solid rgba(65, 64, 66, 0.2);
+  padding-bottom: 0;
+  border-bottom: 0;
   text-align: left;
+}
+
+.retirement-403b-native-benefits-cards .service-native-card h3::after {
+  display: none !important;
 }
 
 .retirement-403b-native-benefits-cards .service-native-card h3.is-atlantean {
@@ -20479,60 +20483,6 @@ p.impact-proof-story-proof-body {
   text-align: left;
   font-size: clamp(0.96rem, 0.9vw, 1.08rem);
   line-height: 1.54;
-}
-
-.retirement-403b-native-benefits-callout {
-  background: linear-gradient(180deg, #f0eee8 0%, #ffffff 100%);
-  padding-top: clamp(0.3rem, 1vw, 0.65rem);
-  padding-bottom: clamp(1.3rem, 2.6vw, 2rem);
-}
-
-.retirement-403b-native-benefits-callout > .ag-panel-rail {
-  max-width: 78rem;
-}
-
-.retirement-403b-native-benefits-callout .native-info-section-copy {
-  display: grid;
-  justify-items: center;
-  text-align: center;
-}
-
-.retirement-403b-native-benefits-callout .native-info-section-copy > h2 {
-  max-width: 20ch;
-  margin: 0;
-  color: var(--ag-color-atlantean);
-  font-family: var(--ag-font-helv);
-  font-size: clamp(2.85rem, 5.2vw, 3.9rem);
-  font-weight: 700;
-  line-height: 0.96;
-  letter-spacing: -0.03em;
-  text-wrap: pretty;
-}
-
-.retirement-403b-native-benefits-callout .native-info-rich-html {
-  width: min(100%, 76rem);
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.retirement-403b-native-benefits-callout .native-info-rich-html p {
-  max-width: 28ch;
-  margin: clamp(0.8rem, 1.6vw, 1.1rem) auto 0;
-  font-size: clamp(1.58rem, 2.55vw, 2.05rem);
-  font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-  white-space: normal;
-}
-
-.retirement-403b-native-benefits-callout .native-info-section-copy > h2 mark.is-atlantean {
-  color: var(--ag-color-atlantean);
-}
-
-.retirement-403b-native-benefits-callout .service-native-action-row {
-  justify-content: center;
-  margin-top: clamp(1.6rem, 3.2vw, 2.35rem);
 }
 
 .retirement-403b-rate-widget .native-info-table-wrap {
@@ -24971,8 +24921,8 @@ p.impact-proof-story-proof-body {
 
 .retirement-403b-native-qualify .service-native-card h3,
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-eligibility-cards .service-native-card h3 {
-  font-size: clamp(1.88rem, 2.85vw, 2.38rem);
-  letter-spacing: -0.03em;
+  font-size: clamp(1.42rem, 2.1vw, 1.78rem);
+  letter-spacing: -0.02em;
 }
 
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).retirement-403b-native-qualify.is-card-none .service-native-card.card-none,
@@ -24982,8 +24932,8 @@ p.impact-proof-story-proof-body {
 }
 
 .retirement-403b-native-loans {
-  --dyn-content-padding-top: clamp(8rem, 12vw, 10rem);
-  padding-top: clamp(8rem, 12vw, 10rem);
+  --dyn-content-padding-top: clamp(10rem, 15vw, 13rem);
+  padding-top: clamp(10rem, 15vw, 13rem);
 }
 
 .retirement-403b-loan-copy {
@@ -25048,6 +24998,8 @@ p.impact-proof-story-proof-body {
   margin-right: auto;
   margin-bottom: 0.3rem;
   max-width: 14ch;
+  font-size: clamp(1.95rem, 3.2vw, 2.65rem);
+  line-height: 0.98;
 }
 
 .retirement-403b-native-enroll .service-native-card h3::after {
@@ -25065,11 +25017,6 @@ p.impact-proof-story-proof-body {
   padding-top: clamp(4rem, 6.8vw, 5.4rem);
 }
 
-@media (min-width: 981px) {
-  .retirement-403b-native-benefits-callout .native-info-rich-html p {
-    white-space: normal;
-  }
-}
 
 .native-info-page--retirement-409a .retirement-child-native-scenarios {
   background: #fff;

@@ -99119,7 +99119,7 @@
           "mode": "dynamic",
           "settings": {
             "bgTone": "white",
-            "contentWidth": "content",
+            "contentWidth": "browser",
             "columns": "four",
             "cardStyle": "card2",
             "titleTone": "super-grey",
@@ -99266,2067 +99266,6 @@
             "card8Button2Label": "",
             "card8Button2DocumentId": "",
             "card8Button2ClassName": ""
-          },
-          "editableFields": [
-            {
-              "id": "title",
-              "label": "Grid heading",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Grid heading color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Grid heading highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "bodyHtml",
-              "label": "Grid intro HTML",
-              "type": "html"
-            },
-            {
-              "id": "body",
-              "label": "Fallback body text",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "bgTone",
-              "label": "Grid background",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand Gradient",
-                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue Gradient",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Super Grey Gradient",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
-                }
-              ]
-            },
-            {
-              "id": "contentWidth",
-              "label": "Content width",
-              "type": "select",
-              "options": [
-                {
-                  "value": "content",
-                  "label": "Content width"
-                },
-                {
-                  "value": "browser",
-                  "label": "Page/browser width"
-                }
-              ]
-            },
-            {
-              "id": "columns",
-              "label": "Grid columns",
-              "type": "select",
-              "options": [
-                {
-                  "value": "two",
-                  "label": "2 columns"
-                },
-                {
-                  "value": "three",
-                  "label": "3 columns"
-                },
-                {
-                  "value": "four",
-                  "label": "4 columns"
-                }
-              ]
-            },
-            {
-              "id": "cardStyle",
-              "label": "Card style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "card1",
-                  "label": "Card 1"
-                },
-                {
-                  "value": "card2",
-                  "label": "Card 2"
-                },
-                {
-                  "value": "card3",
-                  "label": "Card 3"
-                },
-                {
-                  "value": "card4",
-                  "label": "Card 4"
-                },
-                {
-                  "value": "none",
-                  "label": "No card style"
-                }
-              ]
-            },
-            {
-              "id": "showTitleDivider",
-              "label": "Title divider under card titles",
-              "type": "boolean"
-            },
-            {
-              "id": "dividerTone",
-              "label": "Divider line color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "auto",
-                  "label": "Auto",
-                  "swatch": "linear-gradient(145deg, #c9d3dc 0%, #a8b6c3 100%)"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "cardPaddingRem",
-              "label": "Card padding (rem)",
-              "type": "number",
-              "min": 0.75,
-              "max": 3,
-              "step": 0.05
-            },
-            {
-              "id": "cardTitleSizeRem",
-              "label": "Card title size (rem)",
-              "type": "number",
-              "min": 0.9,
-              "max": 2,
-              "step": 0.05
-            },
-            {
-              "id": "cardBodySizeRem",
-              "label": "Card body size (rem)",
-              "type": "number",
-              "min": 0.8,
-              "max": 1.5,
-              "step": 0.05
-            },
-            {
-              "id": "cardBodyLineHeight",
-              "label": "Card body line height",
-              "type": "number",
-              "min": 1.1,
-              "max": 2.1,
-              "step": 0.05
-            },
-            {
-              "id": "titleTone",
-              "label": "Title color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "bodyTone",
-              "label": "Body color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Grid subtitle",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "anchorId",
-              "label": "Anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "sectionClassName",
-              "label": "Section class name",
-              "type": "text"
-            },
-            {
-              "id": "fullBleed",
-              "label": "Use full-bleed rail",
-              "type": "boolean"
-            },
-            {
-              "id": "sand",
-              "label": "Use sand section surface",
-              "type": "boolean"
-            },
-            {
-              "id": "buttonLabel",
-              "label": "Section button label",
-              "type": "text"
-            },
-            {
-              "id": "buttonLinkJson",
-              "label": "Section button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "buttonStyle",
-              "label": "Section button style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "buttonTone",
-              "label": "Section button color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "consultantService",
-              "label": "Consultant directory source",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Manual cards"
-                },
-                {
-                  "value": "loans",
-                  "label": "Loans consultants"
-                },
-                {
-                  "value": "retirement",
-                  "label": "Retirement consultants"
-                }
-              ]
-            },
-            {
-              "id": "locationFilterEnabled",
-              "label": "Enable state filter",
-              "type": "boolean"
-            },
-            {
-              "id": "locationFilterLabel",
-              "label": "Filter label",
-              "type": "text"
-            },
-            {
-              "id": "locationFilterAriaLabel",
-              "label": "Filter aria label",
-              "type": "text"
-            },
-            {
-              "id": "locationFilterPlaceholder",
-              "label": "Filter placeholder",
-              "type": "text"
-            },
-            {
-              "id": "locationFilterRequireSelection",
-              "label": "Require a state selection",
-              "type": "boolean"
-            },
-            {
-              "id": "locationFilterFocusMessageCard",
-              "label": "Focus selected consultant card",
-              "type": "boolean"
-            },
-            {
-              "id": "card1Title",
-              "label": "Card 1 title",
-              "type": "text"
-            },
-            {
-              "id": "card1TitleClassName",
-              "label": "Card 1 title class name",
-              "type": "text"
-            },
-            {
-              "id": "card1ClassName",
-              "label": "Card 1 class name",
-              "type": "text"
-            },
-            {
-              "id": "card1PanelTone",
-              "label": "Card 1 panel tone",
-              "type": "text"
-            },
-            {
-              "id": "card1Body",
-              "label": "Card 1 body",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card1ListJson",
-              "label": "Card 1 bullet list JSON",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "card1Fineprint",
-              "label": "Card 1 fineprint",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card1LinksJson",
-              "label": "Card 1 PDF / link list JSON",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "card1AccordionsJson",
-              "label": "Card 1 accordion JSON",
-              "type": "textarea",
-              "rows": 6
-            },
-            {
-              "id": "card1DividerTone",
-              "label": "Card 1 line color override",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Global",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "card1ButtonLabel",
-              "label": "Card 1 button label",
-              "type": "text"
-            },
-            {
-              "id": "card1ButtonLinkJson",
-              "label": "Card 1 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card1ButtonDocumentId",
-              "label": "Card 1 button document ID",
-              "type": "text"
-            },
-            {
-              "id": "card1ButtonClassName",
-              "label": "Card 1 button class name",
-              "type": "text"
-            },
-            {
-              "id": "card1Button2Label",
-              "label": "Card 1 button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "card1Button2LinkJson",
-              "label": "Card 1 button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card1Button2DocumentId",
-              "label": "Card 1 button 2 document ID",
-              "type": "text"
-            },
-            {
-              "id": "card1Button2ClassName",
-              "label": "Card 1 button 2 class name",
-              "type": "text"
-            },
-            {
-              "id": "card2Title",
-              "label": "Card 2 title",
-              "type": "text"
-            },
-            {
-              "id": "card2TitleClassName",
-              "label": "Card 2 title class name",
-              "type": "text"
-            },
-            {
-              "id": "card2ClassName",
-              "label": "Card 2 class name",
-              "type": "text"
-            },
-            {
-              "id": "card2PanelTone",
-              "label": "Card 2 panel tone",
-              "type": "text"
-            },
-            {
-              "id": "card2Body",
-              "label": "Card 2 body",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card2ListJson",
-              "label": "Card 2 bullet list JSON",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "card2Fineprint",
-              "label": "Card 2 fineprint",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card2LinksJson",
-              "label": "Card 2 PDF / link list JSON",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "card2AccordionsJson",
-              "label": "Card 2 accordion JSON",
-              "type": "textarea",
-              "rows": 6
-            },
-            {
-              "id": "card2DividerTone",
-              "label": "Card 2 line color override",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Global",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "card2ButtonLabel",
-              "label": "Card 2 button label",
-              "type": "text"
-            },
-            {
-              "id": "card2ButtonLinkJson",
-              "label": "Card 2 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card2ButtonDocumentId",
-              "label": "Card 2 button document ID",
-              "type": "text"
-            },
-            {
-              "id": "card2ButtonClassName",
-              "label": "Card 2 button class name",
-              "type": "text"
-            },
-            {
-              "id": "card2Button2Label",
-              "label": "Card 2 button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "card2Button2LinkJson",
-              "label": "Card 2 button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card2Button2DocumentId",
-              "label": "Card 2 button 2 document ID",
-              "type": "text"
-            },
-            {
-              "id": "card2Button2ClassName",
-              "label": "Card 2 button 2 class name",
-              "type": "text"
-            },
-            {
-              "id": "card3Title",
-              "label": "Card 3 title",
-              "type": "text"
-            },
-            {
-              "id": "card3TitleClassName",
-              "label": "Card 3 title class name",
-              "type": "text"
-            },
-            {
-              "id": "card3ClassName",
-              "label": "Card 3 class name",
-              "type": "text"
-            },
-            {
-              "id": "card3PanelTone",
-              "label": "Card 3 panel tone",
-              "type": "text"
-            },
-            {
-              "id": "card3Body",
-              "label": "Card 3 body",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card3ListJson",
-              "label": "Card 3 bullet list JSON",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "card3Fineprint",
-              "label": "Card 3 fineprint",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card3LinksJson",
-              "label": "Card 3 PDF / link list JSON",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "card3AccordionsJson",
-              "label": "Card 3 accordion JSON",
-              "type": "textarea",
-              "rows": 6
-            },
-            {
-              "id": "card3DividerTone",
-              "label": "Card 3 line color override",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Global",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "card3ButtonLabel",
-              "label": "Card 3 button label",
-              "type": "text"
-            },
-            {
-              "id": "card3ButtonLinkJson",
-              "label": "Card 3 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card3ButtonDocumentId",
-              "label": "Card 3 button document ID",
-              "type": "text"
-            },
-            {
-              "id": "card3ButtonClassName",
-              "label": "Card 3 button class name",
-              "type": "text"
-            },
-            {
-              "id": "card3Button2Label",
-              "label": "Card 3 button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "card3Button2LinkJson",
-              "label": "Card 3 button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card3Button2DocumentId",
-              "label": "Card 3 button 2 document ID",
-              "type": "text"
-            },
-            {
-              "id": "card3Button2ClassName",
-              "label": "Card 3 button 2 class name",
-              "type": "text"
-            },
-            {
-              "id": "card4Title",
-              "label": "Card 4 title",
-              "type": "text"
-            },
-            {
-              "id": "card4TitleClassName",
-              "label": "Card 4 title class name",
-              "type": "text"
-            },
-            {
-              "id": "card4ClassName",
-              "label": "Card 4 class name",
-              "type": "text"
-            },
-            {
-              "id": "card4PanelTone",
-              "label": "Card 4 panel tone",
-              "type": "text"
-            },
-            {
-              "id": "card4Body",
-              "label": "Card 4 body",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card4ListJson",
-              "label": "Card 4 bullet list JSON",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "card4Fineprint",
-              "label": "Card 4 fineprint",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card4LinksJson",
-              "label": "Card 4 PDF / link list JSON",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "card4AccordionsJson",
-              "label": "Card 4 accordion JSON",
-              "type": "textarea",
-              "rows": 6
-            },
-            {
-              "id": "card4DividerTone",
-              "label": "Card 4 line color override",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Global",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "card4ButtonLabel",
-              "label": "Card 4 button label",
-              "type": "text"
-            },
-            {
-              "id": "card4ButtonLinkJson",
-              "label": "Card 4 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card4ButtonDocumentId",
-              "label": "Card 4 button document ID",
-              "type": "text"
-            },
-            {
-              "id": "card4ButtonClassName",
-              "label": "Card 4 button class name",
-              "type": "text"
-            },
-            {
-              "id": "card4Button2Label",
-              "label": "Card 4 button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "card4Button2LinkJson",
-              "label": "Card 4 button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card4Button2DocumentId",
-              "label": "Card 4 button 2 document ID",
-              "type": "text"
-            },
-            {
-              "id": "card4Button2ClassName",
-              "label": "Card 4 button 2 class name",
-              "type": "text"
-            },
-            {
-              "id": "card5Title",
-              "label": "Card 5 title",
-              "type": "text"
-            },
-            {
-              "id": "card5TitleClassName",
-              "label": "Card 5 title class name",
-              "type": "text"
-            },
-            {
-              "id": "card5ClassName",
-              "label": "Card 5 class name",
-              "type": "text"
-            },
-            {
-              "id": "card5PanelTone",
-              "label": "Card 5 panel tone",
-              "type": "text"
-            },
-            {
-              "id": "card5Body",
-              "label": "Card 5 body",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card5ListJson",
-              "label": "Card 5 bullet list JSON",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "card5Fineprint",
-              "label": "Card 5 fineprint",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card5LinksJson",
-              "label": "Card 5 PDF / link list JSON",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "card5AccordionsJson",
-              "label": "Card 5 accordion JSON",
-              "type": "textarea",
-              "rows": 6
-            },
-            {
-              "id": "card5DividerTone",
-              "label": "Card 5 line color override",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Global",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "card5ButtonLabel",
-              "label": "Card 5 button label",
-              "type": "text"
-            },
-            {
-              "id": "card5ButtonLinkJson",
-              "label": "Card 5 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card5ButtonDocumentId",
-              "label": "Card 5 button document ID",
-              "type": "text"
-            },
-            {
-              "id": "card5ButtonClassName",
-              "label": "Card 5 button class name",
-              "type": "text"
-            },
-            {
-              "id": "card5Button2Label",
-              "label": "Card 5 button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "card5Button2LinkJson",
-              "label": "Card 5 button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card5Button2DocumentId",
-              "label": "Card 5 button 2 document ID",
-              "type": "text"
-            },
-            {
-              "id": "card5Button2ClassName",
-              "label": "Card 5 button 2 class name",
-              "type": "text"
-            },
-            {
-              "id": "card6Title",
-              "label": "Card 6 title",
-              "type": "text"
-            },
-            {
-              "id": "card6TitleClassName",
-              "label": "Card 6 title class name",
-              "type": "text"
-            },
-            {
-              "id": "card6ClassName",
-              "label": "Card 6 class name",
-              "type": "text"
-            },
-            {
-              "id": "card6PanelTone",
-              "label": "Card 6 panel tone",
-              "type": "text"
-            },
-            {
-              "id": "card6Body",
-              "label": "Card 6 body",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card6ListJson",
-              "label": "Card 6 bullet list JSON",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "card6Fineprint",
-              "label": "Card 6 fineprint",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card6LinksJson",
-              "label": "Card 6 PDF / link list JSON",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "card6AccordionsJson",
-              "label": "Card 6 accordion JSON",
-              "type": "textarea",
-              "rows": 6
-            },
-            {
-              "id": "card6DividerTone",
-              "label": "Card 6 line color override",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Global",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "card6ButtonLabel",
-              "label": "Card 6 button label",
-              "type": "text"
-            },
-            {
-              "id": "card6ButtonLinkJson",
-              "label": "Card 6 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card6ButtonDocumentId",
-              "label": "Card 6 button document ID",
-              "type": "text"
-            },
-            {
-              "id": "card6ButtonClassName",
-              "label": "Card 6 button class name",
-              "type": "text"
-            },
-            {
-              "id": "card6Button2Label",
-              "label": "Card 6 button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "card6Button2LinkJson",
-              "label": "Card 6 button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card6Button2DocumentId",
-              "label": "Card 6 button 2 document ID",
-              "type": "text"
-            },
-            {
-              "id": "card6Button2ClassName",
-              "label": "Card 6 button 2 class name",
-              "type": "text"
-            },
-            {
-              "id": "card7Title",
-              "label": "Card 7 title",
-              "type": "text"
-            },
-            {
-              "id": "card7TitleClassName",
-              "label": "Card 7 title class name",
-              "type": "text"
-            },
-            {
-              "id": "card7ClassName",
-              "label": "Card 7 class name",
-              "type": "text"
-            },
-            {
-              "id": "card7PanelTone",
-              "label": "Card 7 panel tone",
-              "type": "text"
-            },
-            {
-              "id": "card7Body",
-              "label": "Card 7 body",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card7ListJson",
-              "label": "Card 7 bullet list JSON",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "card7Fineprint",
-              "label": "Card 7 fineprint",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card7LinksJson",
-              "label": "Card 7 PDF / link list JSON",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "card7AccordionsJson",
-              "label": "Card 7 accordion JSON",
-              "type": "textarea",
-              "rows": 6
-            },
-            {
-              "id": "card7DividerTone",
-              "label": "Card 7 line color override",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Global",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "card7ButtonLabel",
-              "label": "Card 7 button label",
-              "type": "text"
-            },
-            {
-              "id": "card7ButtonLinkJson",
-              "label": "Card 7 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card7ButtonDocumentId",
-              "label": "Card 7 button document ID",
-              "type": "text"
-            },
-            {
-              "id": "card7ButtonClassName",
-              "label": "Card 7 button class name",
-              "type": "text"
-            },
-            {
-              "id": "card7Button2Label",
-              "label": "Card 7 button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "card7Button2LinkJson",
-              "label": "Card 7 button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card7Button2DocumentId",
-              "label": "Card 7 button 2 document ID",
-              "type": "text"
-            },
-            {
-              "id": "card7Button2ClassName",
-              "label": "Card 7 button 2 class name",
-              "type": "text"
-            },
-            {
-              "id": "card8Title",
-              "label": "Card 8 title",
-              "type": "text"
-            },
-            {
-              "id": "card8TitleClassName",
-              "label": "Card 8 title class name",
-              "type": "text"
-            },
-            {
-              "id": "card8ClassName",
-              "label": "Card 8 class name",
-              "type": "text"
-            },
-            {
-              "id": "card8PanelTone",
-              "label": "Card 8 panel tone",
-              "type": "text"
-            },
-            {
-              "id": "card8Body",
-              "label": "Card 8 body",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card8ListJson",
-              "label": "Card 8 bullet list JSON",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "card8Fineprint",
-              "label": "Card 8 fineprint",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "card8LinksJson",
-              "label": "Card 8 PDF / link list JSON",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "card8AccordionsJson",
-              "label": "Card 8 accordion JSON",
-              "type": "textarea",
-              "rows": 6
-            },
-            {
-              "id": "card8DividerTone",
-              "label": "Card 8 line color override",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Global",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "card8ButtonLabel",
-              "label": "Card 8 button label",
-              "type": "text"
-            },
-            {
-              "id": "card8ButtonLinkJson",
-              "label": "Card 8 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card8ButtonDocumentId",
-              "label": "Card 8 button document ID",
-              "type": "text"
-            },
-            {
-              "id": "card8ButtonClassName",
-              "label": "Card 8 button class name",
-              "type": "text"
-            },
-            {
-              "id": "card8Button2Label",
-              "label": "Card 8 button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "card8Button2LinkJson",
-              "label": "Card 8 button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "card8Button2DocumentId",
-              "label": "Card 8 button 2 document ID",
-              "type": "text"
-            },
-            {
-              "id": "card8Button2ClassName",
-              "label": "Card 8 button 2 class name",
-              "type": "text"
-            }
-          ]
-        },
-        {
-          "id": "benefits_callout",
-          "name": "Billboard",
-          "kind": "billboard",
-          "mode": "dynamic",
-          "settings": {
-            "title": "Faith-Based Investments",
-            "titleClassName": "",
-            "titleHighlightsJson": "",
-            "subtitle": "",
-            "subtitleClassName": "",
-            "subtitleDisplay": "supporting",
-            "subtitleSizeRem": "",
-            "titleFontFamily": "helv",
-            "titleFontWeight": 800,
-            "titleSizeRem": 3.35,
-            "titleLetterSpacingEm": -0.02,
-            "bodyHtml": "<p>Our values, beliefs about stewardship, and our mission are the same as yours.</p>",
-            "body": "",
-            "bgTone": "white",
-            "textTone": "dark",
-            "justify": "center",
-            "lineSpacing": 1,
-            "contentMaxWidthPx": 1120,
-            "headlineMaxWidthPx": "",
-            "buttonLabel": "",
-            "buttonStyle": "outline",
-            "buttonTone": "atlantean",
-            "button2Label": "",
-            "button2Style": "outline",
-            "button2Tone": "super-grey",
-            "anchorId": "",
-            "sectionClassName": "retirement-403b-native-benefits-callout"
-          },
-          "editableFields": [
-            {
-              "id": "title",
-              "label": "Billboard title",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Billboard title color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Billboard title highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Subtitle",
-              "type": "text"
-            },
-            {
-              "id": "subtitleClassName",
-              "label": "Subtitle color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitleDisplay",
-              "label": "Subtitle style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "supporting",
-                  "label": "Supporting copy"
-                },
-                {
-                  "value": "headline",
-                  "label": "Headline"
-                }
-              ]
-            },
-            {
-              "id": "subtitleSizeRem",
-              "label": "Subtitle size (rem)",
-              "type": "number",
-              "min": 1,
-              "max": 8,
-              "step": 0.05
-            },
-            {
-              "id": "titleFontFamily",
-              "label": "Billboard title font",
-              "type": "select",
-              "options": [
-                {
-                  "value": "heading",
-                  "label": "Avenir"
-                },
-                {
-                  "value": "helv",
-                  "label": "Helvetica"
-                }
-              ]
-            },
-            {
-              "id": "titleFontWeight",
-              "label": "Billboard title font weight",
-              "type": "number",
-              "min": 400,
-              "max": 900,
-              "step": 100
-            },
-            {
-              "id": "titleSizeRem",
-              "label": "Billboard heading size (rem)",
-              "type": "number",
-              "min": 2.4,
-              "max": 8,
-              "step": 0.05
-            },
-            {
-              "id": "titleLetterSpacingEm",
-              "label": "Billboard heading letter spacing (em)",
-              "type": "number",
-              "min": -0.12,
-              "max": 0.04,
-              "step": 0.005
-            },
-            {
-              "id": "bodyHtml",
-              "label": "Billboard body HTML",
-              "type": "html"
-            },
-            {
-              "id": "body",
-              "label": "Fallback body text",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "fineprint",
-              "label": "Fineprint",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "fineprintDisclosureId",
-              "label": "Fineprint disclosure ID",
-              "type": "text"
-            },
-            {
-              "id": "bgTone",
-              "label": "Billboard background",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand Gradient",
-                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue Gradient",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Super Grey Gradient",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
-                }
-              ]
-            },
-            {
-              "id": "textTone",
-              "label": "Billboard text color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "dark",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5c5b5d 100%)"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "justify",
-              "label": "Billboard justify",
-              "type": "select",
-              "options": [
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "lineSpacing",
-              "label": "Billboard title line spacing",
-              "type": "number"
-            },
-            {
-              "id": "contentMaxWidthPx",
-              "label": "Billboard content max width (px)",
-              "type": "number",
-              "min": 560,
-              "max": 1440,
-              "step": 10
-            },
-            {
-              "id": "headlineMaxWidthPx",
-              "label": "Headline max width (px)",
-              "type": "number",
-              "min": 560,
-              "max": 1440,
-              "step": 10
-            },
-            {
-              "id": "buttonLabel",
-              "label": "Button 1 label",
-              "type": "text"
-            },
-            {
-              "id": "buttonLinkJson",
-              "label": "Button 1 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "buttonStyle",
-              "label": "Button 1 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "buttonTone",
-              "label": "Button 1 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "buttonAction",
-              "label": "Button 1 action type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Link action"
-                },
-                {
-                  "value": "open_cta_form",
-                  "label": "Reveal CTA form"
-                }
-              ]
-            },
-            {
-              "id": "buttonTargetAnchorId",
-              "label": "Button 1 target anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "buttonTargetBlockId",
-              "label": "Button 1 target block ID",
-              "type": "text"
-            },
-            {
-              "id": "button2Label",
-              "label": "Button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "button2LinkJson",
-              "label": "Button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "button2Style",
-              "label": "Button 2 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "button2Tone",
-              "label": "Button 2 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "anchorId",
-              "label": "Anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "sectionClassName",
-              "label": "Section class name",
-              "type": "text"
-            },
-            {
-              "id": "copyClassName",
-              "label": "Copy class name",
-              "type": "text"
-            }
-          ]
-        },
-        {
-          "id": "who_qualifies",
-          "templateId": "card_grid",
-          "presetId": "eligibility-cards",
-          "name": "Card Grid · Eligibility Cards",
-          "kind": "card_grid",
-          "mode": "dynamic",
-          "settings": {
-            "bgTone": "white",
-            "contentWidth": "browser",
-            "columns": "three",
-            "cardStyle": "none",
-            "titleTone": "super-grey",
-            "bodyTone": "super-grey",
-            "showTitleDivider": false,
-            "dividerTone": "auto",
-            "cardPaddingRem": 0.75,
-            "cardTitleSizeRem": 1.88,
-            "cardBodySizeRem": 1.08,
-            "cardBodyLineHeight": 1.45,
-            "title": "Who qualifies for the AGFinancial 403(b)?",
-            "titleClassName": "",
-            "titleHighlightsJson": "",
-            "bodyHtml": "",
-            "body": "",
-            "fullBleed": true,
-            "sectionClassName": "retirement-child-native-qualify retirement-403b-native-qualify",
-            "card1Title": "Employees of eligible employers",
-            "card1TitleClassName": "",
-            "card1TitleHighlightsJson": "",
-            "card1ClassName": "",
-            "card1Body": "For example: churches; denominational headquarters or councils; church-affiliated, tax-exempt 501(c)(3) organizations.",
-            "card1ListJson": "",
-            "card1Fineprint": "",
-            "card1LinksJson": "",
-            "card1AccordionsJson": "",
-            "card1DividerTone": "",
-            "card1ButtonLabel": "",
-            "card1ButtonDocumentId": "",
-            "card1ButtonClassName": "",
-            "card1Button2Label": "",
-            "card1Button2DocumentId": "",
-            "card1Button2ClassName": "",
-            "card2Title": "Others serving in a ministerial capacity",
-            "card2TitleClassName": "",
-            "card2TitleHighlightsJson": "",
-            "card2ClassName": "",
-            "card2Body": "Such as a chaplain, campus pastor, or counselor in a non-ministry organization.",
-            "card2ListJson": "",
-            "card2Fineprint": "",
-            "card2LinksJson": "",
-            "card2AccordionsJson": "",
-            "card2DividerTone": "",
-            "card2ButtonLabel": "",
-            "card2ButtonDocumentId": "",
-            "card2ButtonClassName": "",
-            "card2Button2Label": "",
-            "card2Button2DocumentId": "",
-            "card2Button2ClassName": "",
-            "card3Title": "Self-employed credentialed ministers",
-            "card3TitleClassName": "",
-            "card3TitleHighlightsJson": "",
-            "card3ClassName": "",
-            "card3Body": "Such as pastors, evangelists, or independent ministry leaders.",
-            "card3ListJson": "",
-            "card3Fineprint": "",
-            "card3LinksJson": "",
-            "card3AccordionsJson": "",
-            "card3DividerTone": "",
-            "card3ButtonLabel": "",
-            "card3ButtonDocumentId": "",
-            "card3ButtonClassName": "",
-            "card3Button2Label": "",
-            "card3Button2DocumentId": "",
-            "card3Button2ClassName": ""
           },
           "editableFields": [
             {
@@ -103584,6 +101523,1566 @@
             }
           ],
           "hidden": false
+        },
+        {
+          "id": "who_qualifies",
+          "templateId": "card_grid",
+          "presetId": "eligibility-cards",
+          "name": "Card Grid · Eligibility Cards",
+          "kind": "card_grid",
+          "mode": "dynamic",
+          "settings": {
+            "bgTone": "white",
+            "contentWidth": "browser",
+            "columns": "three",
+            "cardStyle": "none",
+            "titleTone": "super-grey",
+            "bodyTone": "super-grey",
+            "showTitleDivider": false,
+            "dividerTone": "auto",
+            "cardPaddingRem": 0.75,
+            "cardTitleSizeRem": 1.58,
+            "cardBodySizeRem": 1.08,
+            "cardBodyLineHeight": 1.45,
+            "title": "Who qualifies for the AGFinancial 403(b)?",
+            "titleClassName": "",
+            "titleHighlightsJson": "",
+            "bodyHtml": "",
+            "body": "",
+            "fullBleed": true,
+            "sectionClassName": "retirement-child-native-qualify retirement-403b-native-qualify",
+            "card1Title": "Employees of eligible employers",
+            "card1TitleClassName": "",
+            "card1TitleHighlightsJson": "",
+            "card1ClassName": "",
+            "card1Body": "For example: churches; denominational headquarters or councils; church-affiliated, tax-exempt 501(c)(3) organizations.",
+            "card1ListJson": "",
+            "card1Fineprint": "",
+            "card1LinksJson": "",
+            "card1AccordionsJson": "",
+            "card1DividerTone": "",
+            "card1ButtonLabel": "",
+            "card1ButtonDocumentId": "",
+            "card1ButtonClassName": "",
+            "card1Button2Label": "",
+            "card1Button2DocumentId": "",
+            "card1Button2ClassName": "",
+            "card2Title": "Others serving in a ministerial capacity",
+            "card2TitleClassName": "",
+            "card2TitleHighlightsJson": "",
+            "card2ClassName": "",
+            "card2Body": "Such as a chaplain, campus pastor, or counselor in a non-ministry organization.",
+            "card2ListJson": "",
+            "card2Fineprint": "",
+            "card2LinksJson": "",
+            "card2AccordionsJson": "",
+            "card2DividerTone": "",
+            "card2ButtonLabel": "",
+            "card2ButtonDocumentId": "",
+            "card2ButtonClassName": "",
+            "card2Button2Label": "",
+            "card2Button2DocumentId": "",
+            "card2Button2ClassName": "",
+            "card3Title": "Self-employed credentialed ministers",
+            "card3TitleClassName": "",
+            "card3TitleHighlightsJson": "",
+            "card3ClassName": "",
+            "card3Body": "Such as pastors, evangelists, or independent ministry leaders.",
+            "card3ListJson": "",
+            "card3Fineprint": "",
+            "card3LinksJson": "",
+            "card3AccordionsJson": "",
+            "card3DividerTone": "",
+            "card3ButtonLabel": "",
+            "card3ButtonDocumentId": "",
+            "card3ButtonClassName": "",
+            "card3Button2Label": "",
+            "card3Button2DocumentId": "",
+            "card3Button2ClassName": ""
+          },
+          "editableFields": [
+            {
+              "id": "title",
+              "label": "Grid heading",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "titleClassName",
+              "label": "Grid heading color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "titleHighlightsJson",
+              "label": "Grid heading highlights",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "bodyHtml",
+              "label": "Grid intro HTML",
+              "type": "html"
+            },
+            {
+              "id": "body",
+              "label": "Fallback body text",
+              "type": "textarea",
+              "rows": 3
+            },
+            {
+              "id": "bgTone",
+              "label": "Grid background",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                },
+                {
+                  "value": "sand",
+                  "label": "Sand Gradient",
+                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
+                },
+                {
+                  "value": "blue",
+                  "label": "Blue Gradient",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "grey",
+                  "label": "Super Grey Gradient",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
+                }
+              ]
+            },
+            {
+              "id": "contentWidth",
+              "label": "Content width",
+              "type": "select",
+              "options": [
+                {
+                  "value": "content",
+                  "label": "Content width"
+                },
+                {
+                  "value": "browser",
+                  "label": "Page/browser width"
+                }
+              ]
+            },
+            {
+              "id": "columns",
+              "label": "Grid columns",
+              "type": "select",
+              "options": [
+                {
+                  "value": "two",
+                  "label": "2 columns"
+                },
+                {
+                  "value": "three",
+                  "label": "3 columns"
+                },
+                {
+                  "value": "four",
+                  "label": "4 columns"
+                }
+              ]
+            },
+            {
+              "id": "cardStyle",
+              "label": "Card style",
+              "type": "select",
+              "options": [
+                {
+                  "value": "card1",
+                  "label": "Card 1"
+                },
+                {
+                  "value": "card2",
+                  "label": "Card 2"
+                },
+                {
+                  "value": "card3",
+                  "label": "Card 3"
+                },
+                {
+                  "value": "card4",
+                  "label": "Card 4"
+                },
+                {
+                  "value": "none",
+                  "label": "No card style"
+                }
+              ]
+            },
+            {
+              "id": "showTitleDivider",
+              "label": "Title divider under card titles",
+              "type": "boolean"
+            },
+            {
+              "id": "dividerTone",
+              "label": "Divider line color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "auto",
+                  "label": "Auto",
+                  "swatch": "linear-gradient(145deg, #c9d3dc 0%, #a8b6c3 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "cardPaddingRem",
+              "label": "Card padding (rem)",
+              "type": "number",
+              "min": 0.75,
+              "max": 3,
+              "step": 0.05
+            },
+            {
+              "id": "cardTitleSizeRem",
+              "label": "Card title size (rem)",
+              "type": "number",
+              "min": 0.9,
+              "max": 2,
+              "step": 0.05
+            },
+            {
+              "id": "cardBodySizeRem",
+              "label": "Card body size (rem)",
+              "type": "number",
+              "min": 0.8,
+              "max": 1.5,
+              "step": 0.05
+            },
+            {
+              "id": "cardBodyLineHeight",
+              "label": "Card body line height",
+              "type": "number",
+              "min": 1.1,
+              "max": 2.1,
+              "step": 0.05
+            },
+            {
+              "id": "titleTone",
+              "label": "Title color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "bodyTone",
+              "label": "Body color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "subtitle",
+              "label": "Grid subtitle",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "anchorId",
+              "label": "Anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "sectionClassName",
+              "label": "Section class name",
+              "type": "text"
+            },
+            {
+              "id": "fullBleed",
+              "label": "Use full-bleed rail",
+              "type": "boolean"
+            },
+            {
+              "id": "sand",
+              "label": "Use sand section surface",
+              "type": "boolean"
+            },
+            {
+              "id": "buttonLabel",
+              "label": "Section button label",
+              "type": "text"
+            },
+            {
+              "id": "buttonLinkJson",
+              "label": "Section button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "buttonStyle",
+              "label": "Section button style",
+              "type": "select",
+              "options": [
+                {
+                  "value": "blue",
+                  "label": "Blue"
+                },
+                {
+                  "value": "dark",
+                  "label": "Dark"
+                },
+                {
+                  "value": "outline",
+                  "label": "Outline"
+                }
+              ]
+            },
+            {
+              "id": "buttonTone",
+              "label": "Section button color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "consultantService",
+              "label": "Consultant directory source",
+              "type": "select",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Manual cards"
+                },
+                {
+                  "value": "loans",
+                  "label": "Loans consultants"
+                },
+                {
+                  "value": "retirement",
+                  "label": "Retirement consultants"
+                }
+              ]
+            },
+            {
+              "id": "locationFilterEnabled",
+              "label": "Enable state filter",
+              "type": "boolean"
+            },
+            {
+              "id": "locationFilterLabel",
+              "label": "Filter label",
+              "type": "text"
+            },
+            {
+              "id": "locationFilterAriaLabel",
+              "label": "Filter aria label",
+              "type": "text"
+            },
+            {
+              "id": "locationFilterPlaceholder",
+              "label": "Filter placeholder",
+              "type": "text"
+            },
+            {
+              "id": "locationFilterRequireSelection",
+              "label": "Require a state selection",
+              "type": "boolean"
+            },
+            {
+              "id": "locationFilterFocusMessageCard",
+              "label": "Focus selected consultant card",
+              "type": "boolean"
+            },
+            {
+              "id": "card1Title",
+              "label": "Card 1 title",
+              "type": "text"
+            },
+            {
+              "id": "card1TitleClassName",
+              "label": "Card 1 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card1ClassName",
+              "label": "Card 1 class name",
+              "type": "text"
+            },
+            {
+              "id": "card1PanelTone",
+              "label": "Card 1 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card1Body",
+              "label": "Card 1 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card1ListJson",
+              "label": "Card 1 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card1Fineprint",
+              "label": "Card 1 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card1LinksJson",
+              "label": "Card 1 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card1AccordionsJson",
+              "label": "Card 1 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card1DividerTone",
+              "label": "Card 1 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card1ButtonLabel",
+              "label": "Card 1 button label",
+              "type": "text"
+            },
+            {
+              "id": "card1ButtonLinkJson",
+              "label": "Card 1 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card1ButtonDocumentId",
+              "label": "Card 1 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card1ButtonClassName",
+              "label": "Card 1 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card1Button2Label",
+              "label": "Card 1 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card1Button2LinkJson",
+              "label": "Card 1 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card1Button2DocumentId",
+              "label": "Card 1 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card1Button2ClassName",
+              "label": "Card 1 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card2Title",
+              "label": "Card 2 title",
+              "type": "text"
+            },
+            {
+              "id": "card2TitleClassName",
+              "label": "Card 2 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card2ClassName",
+              "label": "Card 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card2PanelTone",
+              "label": "Card 2 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card2Body",
+              "label": "Card 2 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card2ListJson",
+              "label": "Card 2 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card2Fineprint",
+              "label": "Card 2 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card2LinksJson",
+              "label": "Card 2 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card2AccordionsJson",
+              "label": "Card 2 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card2DividerTone",
+              "label": "Card 2 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card2ButtonLabel",
+              "label": "Card 2 button label",
+              "type": "text"
+            },
+            {
+              "id": "card2ButtonLinkJson",
+              "label": "Card 2 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card2ButtonDocumentId",
+              "label": "Card 2 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card2ButtonClassName",
+              "label": "Card 2 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card2Button2Label",
+              "label": "Card 2 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card2Button2LinkJson",
+              "label": "Card 2 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card2Button2DocumentId",
+              "label": "Card 2 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card2Button2ClassName",
+              "label": "Card 2 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card3Title",
+              "label": "Card 3 title",
+              "type": "text"
+            },
+            {
+              "id": "card3TitleClassName",
+              "label": "Card 3 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card3ClassName",
+              "label": "Card 3 class name",
+              "type": "text"
+            },
+            {
+              "id": "card3PanelTone",
+              "label": "Card 3 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card3Body",
+              "label": "Card 3 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card3ListJson",
+              "label": "Card 3 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card3Fineprint",
+              "label": "Card 3 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card3LinksJson",
+              "label": "Card 3 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card3AccordionsJson",
+              "label": "Card 3 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card3DividerTone",
+              "label": "Card 3 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card3ButtonLabel",
+              "label": "Card 3 button label",
+              "type": "text"
+            },
+            {
+              "id": "card3ButtonLinkJson",
+              "label": "Card 3 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card3ButtonDocumentId",
+              "label": "Card 3 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card3ButtonClassName",
+              "label": "Card 3 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card3Button2Label",
+              "label": "Card 3 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card3Button2LinkJson",
+              "label": "Card 3 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card3Button2DocumentId",
+              "label": "Card 3 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card3Button2ClassName",
+              "label": "Card 3 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card4Title",
+              "label": "Card 4 title",
+              "type": "text"
+            },
+            {
+              "id": "card4TitleClassName",
+              "label": "Card 4 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card4ClassName",
+              "label": "Card 4 class name",
+              "type": "text"
+            },
+            {
+              "id": "card4PanelTone",
+              "label": "Card 4 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card4Body",
+              "label": "Card 4 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card4ListJson",
+              "label": "Card 4 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card4Fineprint",
+              "label": "Card 4 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card4LinksJson",
+              "label": "Card 4 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card4AccordionsJson",
+              "label": "Card 4 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card4DividerTone",
+              "label": "Card 4 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card4ButtonLabel",
+              "label": "Card 4 button label",
+              "type": "text"
+            },
+            {
+              "id": "card4ButtonLinkJson",
+              "label": "Card 4 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card4ButtonDocumentId",
+              "label": "Card 4 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card4ButtonClassName",
+              "label": "Card 4 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card4Button2Label",
+              "label": "Card 4 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card4Button2LinkJson",
+              "label": "Card 4 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card4Button2DocumentId",
+              "label": "Card 4 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card4Button2ClassName",
+              "label": "Card 4 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card5Title",
+              "label": "Card 5 title",
+              "type": "text"
+            },
+            {
+              "id": "card5TitleClassName",
+              "label": "Card 5 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card5ClassName",
+              "label": "Card 5 class name",
+              "type": "text"
+            },
+            {
+              "id": "card5PanelTone",
+              "label": "Card 5 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card5Body",
+              "label": "Card 5 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card5ListJson",
+              "label": "Card 5 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card5Fineprint",
+              "label": "Card 5 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card5LinksJson",
+              "label": "Card 5 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card5AccordionsJson",
+              "label": "Card 5 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card5DividerTone",
+              "label": "Card 5 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card5ButtonLabel",
+              "label": "Card 5 button label",
+              "type": "text"
+            },
+            {
+              "id": "card5ButtonLinkJson",
+              "label": "Card 5 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card5ButtonDocumentId",
+              "label": "Card 5 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card5ButtonClassName",
+              "label": "Card 5 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card5Button2Label",
+              "label": "Card 5 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card5Button2LinkJson",
+              "label": "Card 5 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card5Button2DocumentId",
+              "label": "Card 5 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card5Button2ClassName",
+              "label": "Card 5 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card6Title",
+              "label": "Card 6 title",
+              "type": "text"
+            },
+            {
+              "id": "card6TitleClassName",
+              "label": "Card 6 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card6ClassName",
+              "label": "Card 6 class name",
+              "type": "text"
+            },
+            {
+              "id": "card6PanelTone",
+              "label": "Card 6 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card6Body",
+              "label": "Card 6 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card6ListJson",
+              "label": "Card 6 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card6Fineprint",
+              "label": "Card 6 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card6LinksJson",
+              "label": "Card 6 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card6AccordionsJson",
+              "label": "Card 6 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card6DividerTone",
+              "label": "Card 6 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card6ButtonLabel",
+              "label": "Card 6 button label",
+              "type": "text"
+            },
+            {
+              "id": "card6ButtonLinkJson",
+              "label": "Card 6 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card6ButtonDocumentId",
+              "label": "Card 6 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card6ButtonClassName",
+              "label": "Card 6 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card6Button2Label",
+              "label": "Card 6 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card6Button2LinkJson",
+              "label": "Card 6 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card6Button2DocumentId",
+              "label": "Card 6 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card6Button2ClassName",
+              "label": "Card 6 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card7Title",
+              "label": "Card 7 title",
+              "type": "text"
+            },
+            {
+              "id": "card7TitleClassName",
+              "label": "Card 7 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card7ClassName",
+              "label": "Card 7 class name",
+              "type": "text"
+            },
+            {
+              "id": "card7PanelTone",
+              "label": "Card 7 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card7Body",
+              "label": "Card 7 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card7ListJson",
+              "label": "Card 7 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card7Fineprint",
+              "label": "Card 7 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card7LinksJson",
+              "label": "Card 7 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card7AccordionsJson",
+              "label": "Card 7 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card7DividerTone",
+              "label": "Card 7 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card7ButtonLabel",
+              "label": "Card 7 button label",
+              "type": "text"
+            },
+            {
+              "id": "card7ButtonLinkJson",
+              "label": "Card 7 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card7ButtonDocumentId",
+              "label": "Card 7 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card7ButtonClassName",
+              "label": "Card 7 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card7Button2Label",
+              "label": "Card 7 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card7Button2LinkJson",
+              "label": "Card 7 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card7Button2DocumentId",
+              "label": "Card 7 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card7Button2ClassName",
+              "label": "Card 7 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card8Title",
+              "label": "Card 8 title",
+              "type": "text"
+            },
+            {
+              "id": "card8TitleClassName",
+              "label": "Card 8 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card8ClassName",
+              "label": "Card 8 class name",
+              "type": "text"
+            },
+            {
+              "id": "card8PanelTone",
+              "label": "Card 8 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card8Body",
+              "label": "Card 8 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card8ListJson",
+              "label": "Card 8 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card8Fineprint",
+              "label": "Card 8 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card8LinksJson",
+              "label": "Card 8 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card8AccordionsJson",
+              "label": "Card 8 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card8DividerTone",
+              "label": "Card 8 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card8ButtonLabel",
+              "label": "Card 8 button label",
+              "type": "text"
+            },
+            {
+              "id": "card8ButtonLinkJson",
+              "label": "Card 8 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card8ButtonDocumentId",
+              "label": "Card 8 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card8ButtonClassName",
+              "label": "Card 8 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card8Button2Label",
+              "label": "Card 8 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card8Button2LinkJson",
+              "label": "Card 8 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card8Button2DocumentId",
+              "label": "Card 8 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card8Button2ClassName",
+              "label": "Card 8 button 2 class name",
+              "type": "text"
+            }
+          ]
         },
         {
           "id": "loan_details",
@@ -154565,24 +154064,6 @@
             "lockedBy": null,
             "lockedAt": 0
           },
-          "benefits_callout": {
-            "draftedBy": {
-              "userId": "dev-1775156049310-yf9neh3d",
-              "displayName": "Ok, ok.",
-              "initials": "OO",
-              "accentColor": "#00adbb"
-            },
-            "draftedAt": 1784575765664,
-            "savedBy": {
-              "userId": "dev-1775156049310-yf9neh3d",
-              "displayName": "Ok, ok.",
-              "initials": "OO",
-              "accentColor": "#00adbb"
-            },
-            "savedAt": 1784575765664,
-            "lockedBy": null,
-            "lockedAt": 0
-          },
           "who_qualifies": {
             "draftedBy": {
               "userId": "dev-1775156049310-yf9neh3d",
@@ -154969,20 +154450,6 @@
             "id": "1784575765664-zlag7f",
             "action": "block-draft-saved",
             "blockId": "who_qualifies",
-            "details": "",
-            "actor": {
-              "userId": "dev-1775156049310-yf9neh3d",
-              "displayName": "Ok, ok.",
-              "initials": "OO",
-              "accentColor": "#00adbb"
-            },
-            "previousActor": null,
-            "createdAt": 1784575765664
-          },
-          {
-            "id": "1784575765664-4emw6a",
-            "action": "block-draft-saved",
-            "blockId": "benefits_callout",
             "details": "",
             "actor": {
               "userId": "dev-1775156049310-yf9neh3d",

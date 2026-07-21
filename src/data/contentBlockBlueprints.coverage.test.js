@@ -1741,7 +1741,6 @@ describe('content block blueprint coverage', () => {
     const blocks = contentBlockBlueprintsByPath['/services/retirement/403b'] || [];
     const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
     const benefitsCardsBlock = blocks.find((block) => block?.id === 'benefits_cards' && block?.kind === 'card_grid');
-    const benefitsCalloutBlock = blocks.find((block) => block?.id === 'benefits_callout' && block?.kind === 'billboard');
     const investmentStrategyHeadingBlock = blocks.find((block) => block?.id === 'investment_strategy_heading' && block?.kind === 'billboard');
     const investmentStrategyOptionsBlock = blocks.find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'content');
     const whoQualifiesBlock = blocks.find((block) => block?.id === 'who_qualifies' && block?.kind === 'card_grid');
@@ -1753,12 +1752,13 @@ describe('content block blueprint coverage', () => {
     expect(heroBlock?.settings?.justify).toBe('right');
     expect(heroBlock?.settings?.line1Text).toBe('Saving while serving.');
     expect(heroBlock?.settings?.bgTone).toBe('white');
+    expect(benefitsCardsBlock?.settings?.contentWidth).toBe('browser');
+    expect(benefitsCardsBlock?.settings?.fullBleed).toBe(true);
     expect(benefitsCardsBlock?.settings?.card3Title).toBe("Ministers' Housing Allowance");
     expect(benefitsCardsBlock?.settings?.card3Body).toContain('retired ministers through the AGFinancial 403(b) plan');
     expect(benefitsCardsBlock?.settings?.card5Title).toBe('Rollovers');
     expect(benefitsCardsBlock?.settings?.card8Title).toBe('Education');
-    expect(benefitsCalloutBlock?.settings?.title).toBe('Faith-Based Investments');
-    expect(benefitsCalloutBlock?.settings?.buttonLabel).toBe('');
+    expect(blocks.some((block) => block?.id === 'benefits_callout')).toBe(false);
     expect(investmentStrategyHeadingBlock?.mode).toBe('dynamic');
     expect(investmentStrategyHeadingBlock?.settings?.title).toBe('Investment Strategy Options');
     expect(investmentStrategyHeadingBlock?.settings?.buttonLabel).toBe('View the monthly performance');
@@ -1785,6 +1785,7 @@ describe('content block blueprint coverage', () => {
     expect(whoQualifiesBlock?.templateId).toBe('card_grid');
     expect(whoQualifiesBlock?.mode).toBe('dynamic');
     expect(whoQualifiesBlock?.settings?.cardStyle).toBe('none');
+    expect(whoQualifiesBlock?.settings?.cardTitleSizeRem).toBe(1.58);
     expect(whoQualifiesBlock?.settings?.card1Title).toBe('Employees of eligible employers');
     expect(whoQualifiesBlock?.settings?.card1Body).toContain('church-affiliated, tax-exempt 501(c)(3) organizations');
     expect(whoQualifiesBlock?.settings?.card3Title).toBe('Self-employed credentialed ministers');
@@ -1841,7 +1842,8 @@ describe('content block blueprint coverage', () => {
       kind: 'internal',
       to: '/online-contributions',
     });
-    expect(blocks.findIndex((block) => block?.id === 'who_qualifies')).toBeLessThan(blocks.findIndex((block) => block?.id === 'investment_strategy_heading'));
+    expect(blocks.findIndex((block) => block?.id === 'investment_strategy_options')).toBeLessThan(blocks.findIndex((block) => block?.id === 'who_qualifies'));
+    expect(blocks.findIndex((block) => block?.id === 'who_qualifies')).toBeLessThan(blocks.findIndex((block) => block?.id === 'loan_details'));
   });
 
   it('keeps migrated blueprint routes on canonical editable field sets', () => {

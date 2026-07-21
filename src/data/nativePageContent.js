@@ -1,4 +1,3 @@
-import ministersHousingImage from '../assets/ministers-housing.jpg';
 import { formsLibraryLinks } from './formsLibraryLinks';
 
 const TAX_GUIDE_ACCESS_EMAIL = 'info@agfinancial.org';
@@ -10,49 +9,6 @@ const RETIREMENT_403B_NQCCO_AGREEMENT_URL = 'https://files.agfinancial.org/Retir
 const RETIREMENT_403B_QCCO_GUIDELINES_URL = 'https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf';
 const RETIREMENT_403B_NQCCO_GUIDELINES_URL = 'https://files.agfinancial.org/retirement/NQCCO-Guidelines.pdf';
 const RETIREMENT_SECURE_UPLOAD_URL = 'https://sft.agfinancial.org/documents/Send.do';
-const RETIREMENT_403B_PLAN_FEATURE_CARDS = [
-  {
-    title: 'MBA Income Fund',
-    titleClassName: 'is-atlantean',
-    body: 'The AGFinancial flagship fixed income investment option provides a fixed rate of return, and helps build churches and ministry facilities.',
-  },
-  {
-    title: 'Screened Investments',
-    titleClassName: 'is-mango',
-    body: 'This unique investment option ensures the securities you own are aligned with biblical ethical standards.',
-  },
-  {
-    title: 'Faith-Based Investments',
-    titleClassName: 'is-super-grey',
-    body: 'Our values, beliefs about stewardship, and our mission are the same as yours.',
-  },
-  {
-    title: 'Roth / Pretax Deferrals',
-    titleClassName: 'is-atlantean',
-    body: 'This option allows taxes to be paid on the contribution now, in order to provide tax-free withdrawals at retirement.',
-  },
-  {
-    title: 'Rollovers',
-    titleClassName: 'is-mango',
-    body: 'Retirement savings can be simplified by consolidating other retirement accounts into a single 403(b).',
-  },
-  {
-    title: 'Variety',
-    titleClassName: 'is-super-grey',
-    body: 'Investment options include low-cost index funds, actively-managed funds, risk-based and target-date strategies, and individual funds.',
-  },
-  {
-    title: 'Your Own Consultant',
-    titleClassName: 'is-atlantean',
-    body: 'Our regional consultants are available to answer your questions, help customize your plan, and assist you with implementation.',
-  },
-  {
-    title: 'Education',
-    titleClassName: 'is-mango',
-    body: 'Onsite education for your participants is available, and includes retirement trends, IRS regulations, and customized action plans.',
-  },
-];
-
 export function getNativePageContent(path, title) {
   const direct = directContent[path];
   if (direct) {
