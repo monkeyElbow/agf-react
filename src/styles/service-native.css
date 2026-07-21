@@ -19963,8 +19963,12 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap {
-  max-width: 68rem;
+  --ira-comparison-shadow-gutter: clamp(1.1rem, 2.2vw, 1.6rem);
+  box-sizing: border-box;
+  max-width: calc(68rem + (var(--ira-comparison-shadow-gutter) * 2));
   margin: 0 auto;
+  padding: 0 var(--ira-comparison-shadow-gutter) clamp(1.6rem, 2.8vw, 2.2rem);
+  overflow: visible;
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet {
