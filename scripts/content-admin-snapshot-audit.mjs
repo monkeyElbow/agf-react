@@ -340,23 +340,10 @@ function scanBlocks({ recordLabel, rootName, pathname, blocks, findings }) {
       findings.push(createFinding('retired-block', 'Block is a retired 403(b) or planned-giving structure.', location));
     }
 
-    const routeLinkOpenFieldIds = new Set(
-      (Array.isArray(block?.editableFields) ? block.editableFields : [])
-        .filter((field) => field?.type === 'route_link')
-        .map((field) => String(field?.openInNewWindowFieldId || '').trim())
-        .filter(Boolean),
-    );
-
     (Array.isArray(block?.editableFields) ? block.editableFields : []).forEach((field) => {
       const fieldId = String(field?.id || '').trim();
       if (fieldId.endsWith('PageRef')) {
         findings.push(createFinding('split-link-page-ref-editable-field', 'Split link PageRef compatibility fields must not be exposed as editable fields.', {
-          ...location,
-          field: fieldId,
-        }));
-      }
-      if (routeLinkOpenFieldIds.has(fieldId)) {
-        findings.push(createFinding('split-link-new-window-editable-field', 'Split link open-in-new-window fields must be edited through the canonical route-link control.', {
           ...location,
           field: fieldId,
         }));
@@ -370,12 +357,15 @@ function scanBlocks({ recordLabel, rootName, pathname, blocks, findings }) {
             linkJsonFieldId,
           }));
         }
-        if (!String(field.legacyHrefFieldId || '').trim()) {
-          findings.push(createFinding('canonical-link-legacy-href-metadata-missing', 'Route-link editable fields must keep legacy href metadata until render compatibility fields are retired.', {
-            ...location,
-            field: fieldId,
-          }));
-        }
+        ['legacyHrefFieldId', 'routeRefFieldId', 'linkJsonFieldId', 'openInNewWindowFieldId'].forEach((metadataField) => {
+          if (String(field?.[metadataField] || '').trim()) {
+            findings.push(createFinding('canonical-link-legacy-metadata-persisted', 'Route-link editable fields must not persist legacy split-link metadata.', {
+              ...location,
+              field: fieldId,
+              metadataField,
+            }));
+          }
+        });
       }
     });
 

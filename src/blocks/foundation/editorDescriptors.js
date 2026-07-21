@@ -32,10 +32,6 @@ export function defineTransitionalLinkFields({
       id: linkJsonFieldId || hrefId,
       label: hrefLabel,
       type: 'route_link',
-      legacyHrefFieldId: hrefId,
-      routeRefFieldId: toId || '',
-      linkJsonFieldId,
-      openInNewWindowFieldId: openInNewWindowId || '',
       openInNewWindowLabel,
     }));
   }

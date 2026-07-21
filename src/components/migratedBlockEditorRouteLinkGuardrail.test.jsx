@@ -11,14 +11,13 @@ function readSource(relativePath) {
 }
 
 describe('migrated block editor route-link guardrail', () => {
-  it('keeps route-link promotion on shared local helpers in migrated block editors', () => {
+  it('keeps route-link editing canonical in migrated block editors', () => {
     const source = readSource('./block-editors/migratedBlockEditors.jsx');
 
     expect(source).toContain('function promoteRouteLinkDescriptor(field, routeRefFieldId) {');
     expect(source).toContain('function getPromotedRouteLinkField(fieldById, fieldId, routeRefFieldId) {');
     expect(source).toContain('function resolveRouteLinkFieldMeta(fieldOrId, explicitRouteRefFieldId = \'\') {');
     expect(source).toContain('function commitCanonicalRouteLink(');
-    expect(source).toContain('legacyHrefFieldId');
     expect(source).toContain('getCanonicalLinkJsonFieldId');
     expect(source).toContain('serializeLinkValue');
     expect(source).toContain('onRouteLinkChange');
@@ -29,6 +28,9 @@ describe('migrated block editor route-link guardrail', () => {
     expect(source).not.toContain('syncRouteRefDraftField');
     expect(source).not.toContain('commitSplitRouteLinkSettings');
     expect(source).not.toContain('commitCanonicalRouteLinkWithSplitMirror');
+    expect(source).not.toContain('legacyHrefFieldId: field.legacyHrefFieldId');
+    expect(source).not.toContain('routeRefFieldId: routeRefFieldId');
+    expect(source).not.toContain('openInNewWindowFieldId: field.openInNewWindowFieldId');
     expect(source).not.toContain("buttonUrlField ? {");
     expect(source).not.toContain("pathField ? {");
   });

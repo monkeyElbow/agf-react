@@ -58,6 +58,13 @@ import {
 import { buildAdminBlockInsertChoices } from '../lib/adminBlockInsertChoices';
 import { isBlocklessManagedPagePath } from '../lib/managedPageShells';
 import { isPageContentKind, isPageContentTemplateId } from '../lib/pageContentIdentity';
+import {
+  coerceLinkValue,
+  linkValueToEditableHref,
+  linkValueToRouteRef,
+  parseLinkValueJson,
+  serializeLinkValue,
+} from '../lib/linkValue';
 export {
   MigratedBillboardBlockEditor as BillboardBlockEditor,
   MigratedColumnsBlockEditor as ColumnsBlockEditor,
@@ -1379,12 +1386,33 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
 
   if (field.type === 'route_link') {
     const routeRefFieldId = String(field.routeRefFieldId || '').trim();
+    const parsedLinkValue = parseLinkValueJson(value);
+    const routeLinkValue = field.id?.endsWith('LinkJson')
+      ? linkValueToEditableHref(parsedLinkValue)
+      : value;
+    const routeLinkRouteRefValue = field.id?.endsWith('LinkJson')
+      ? linkValueToRouteRef(parsedLinkValue)
+      : (routeRefFieldId ? settings?.[routeRefFieldId] : '');
+    const commitRouteLink = (nextHrefValue, nextRouteRefValue = '') => {
+      if (!field.id?.endsWith('LinkJson')) {
+        onChange(nextHrefValue);
+        if (routeRefFieldId) {
+          onSettingChange(routeRefFieldId, nextRouteRefValue);
+        }
+        return;
+      }
+      const routeRef = String(nextRouteRefValue || '').trim();
+      const linkValue = routeRef.startsWith('/')
+        ? coerceLinkValue({ to: routeRef })
+        : coerceLinkValue({ href: nextHrefValue });
+      onChange(serializeLinkValue(linkValue));
+    };
     return (
       <RouteLinkField
-        value={value}
-        routeRefValue={routeRefFieldId ? settings?.[routeRefFieldId] : ''}
-        onChange={onChange}
-        onRouteRefChange={routeRefFieldId ? (nextValue) => onSettingChange(routeRefFieldId, nextValue) : undefined}
+        value={routeLinkValue}
+        routeRefValue={routeLinkRouteRefValue}
+        onChange={(nextValue) => commitRouteLink(nextValue)}
+        onRouteRefChange={(nextRouteRefValue) => commitRouteLink(routeLinkValue, nextRouteRefValue)}
         routeOptions={routeOptions}
       />
     );

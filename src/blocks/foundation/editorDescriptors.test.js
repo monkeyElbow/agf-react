@@ -5,7 +5,7 @@ import {
 } from './editorDescriptors';
 
 describe('editor descriptor transitional link helpers', () => {
-  it('builds a canonical-aware route-link control with hidden split compatibility metadata', () => {
+  it('builds a canonical route-link control without split compatibility metadata', () => {
     expect(defineTransitionalLinkFields({
       hrefId: 'buttonUrl',
       hrefLabel: 'Button URL / Path',
@@ -18,12 +18,19 @@ describe('editor descriptor transitional link helpers', () => {
         id: 'buttonLinkJson',
         label: 'Button URL / Path',
         type: 'route_link',
-        legacyHrefFieldId: 'buttonUrl',
-        routeRefFieldId: 'buttonPageRef',
-        linkJsonFieldId: 'buttonLinkJson',
-        openInNewWindowFieldId: 'buttonOpenInNewWindow',
+        openInNewWindowLabel: 'Open button in new window',
       }),
     ]);
+    expect(defineTransitionalLinkFields({
+      hrefId: 'buttonUrl',
+      toId: 'buttonPageRef',
+      openInNewWindowId: 'buttonOpenInNewWindow',
+    })[0]).not.toEqual(expect.objectContaining({
+      legacyHrefFieldId: expect.any(String),
+      routeRefFieldId: expect.any(String),
+      linkJsonFieldId: expect.any(String),
+      openInNewWindowFieldId: expect.any(String),
+    }));
   });
 
   it('builds explicit action field groups with optional style and tone controls', () => {
@@ -47,10 +54,7 @@ describe('editor descriptor transitional link helpers', () => {
       expect.objectContaining({
         id: 'buttonLinkJson',
         type: 'route_link',
-        legacyHrefFieldId: 'buttonUrl',
-        routeRefFieldId: 'buttonPageRef',
-        linkJsonFieldId: 'buttonLinkJson',
-        openInNewWindowFieldId: '',
+        label: 'Button URL / Path',
       }),
       expect.objectContaining({
         id: 'buttonStyle',

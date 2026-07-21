@@ -1202,7 +1202,6 @@ function canonicalizeRouteLinkEditableFieldsInBlocks(blocks) {
       return block;
     }
 
-    const routeLinkOpenFieldIds = new Set();
     const canonicalFields = block.editableFields.map((field) => {
       const fieldId = String(field?.id || '').trim();
       if (!field || typeof field !== 'object' || field.type !== 'route_link') {
@@ -1212,22 +1211,21 @@ function canonicalizeRouteLinkEditableFieldsInBlocks(blocks) {
       const legacyHrefFieldId = String(field.legacyHrefFieldId || (fieldId.endsWith('LinkJson') ? '' : fieldId) || '').trim();
       const baseFieldId = String(routeRefFieldId || legacyHrefFieldId || fieldId).replace(/(?:PageRef|Url|Path|Href|LinkJson)$/, '');
       const linkJsonFieldId = String(field.linkJsonFieldId || (fieldId.endsWith('LinkJson') ? fieldId : '') || (baseFieldId ? `${baseFieldId}LinkJson` : '')).trim();
-      const openInNewWindowFieldId = String(field.openInNewWindowFieldId || (legacyHrefFieldId ? legacyHrefFieldId.replace(/(?:Url|Path|Href)$/, 'OpenInNewWindow') : '') || '').trim();
-      if (openInNewWindowFieldId) {
-        routeLinkOpenFieldIds.add(openInNewWindowFieldId);
-      }
+      const {
+        legacyHrefFieldId: _legacyHrefFieldId,
+        routeRefFieldId: _routeRefFieldId,
+        linkJsonFieldId: _linkJsonFieldId,
+        openInNewWindowFieldId: _openInNewWindowFieldId,
+        ...fieldWithoutLegacyMetadata
+      } = field;
       return {
-        ...field,
+        ...fieldWithoutLegacyMetadata,
         id: linkJsonFieldId || fieldId,
-        legacyHrefFieldId,
-        routeRefFieldId,
-        linkJsonFieldId,
-        openInNewWindowFieldId,
       };
     });
     const editableFields = canonicalFields.filter((field) => {
       const fieldId = String(field?.id || '').trim();
-      return !fieldId.endsWith('PageRef') && !routeLinkOpenFieldIds.has(fieldId);
+      return !fieldId.endsWith('PageRef') && !fieldId.endsWith('OpenInNewWindow');
     });
     return JSON.stringify(editableFields) === JSON.stringify(block.editableFields)
       ? block

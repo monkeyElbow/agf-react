@@ -223,10 +223,12 @@ describe('canonical block registry', () => {
     ]);
     expect(buttonLinkField).toEqual(expect.objectContaining({
       type: 'route_link',
-      legacyHrefFieldId: 'buttonUrl',
-      routeRefFieldId: 'buttonPageRef',
-      linkJsonFieldId: 'buttonLinkJson',
-      openInNewWindowFieldId: 'buttonOpenInNewWindow',
+    }));
+    expect(buttonLinkField).not.toEqual(expect.objectContaining({
+      legacyHrefFieldId: expect.any(String),
+      routeRefFieldId: expect.any(String),
+      linkJsonFieldId: expect.any(String),
+      openInNewWindowFieldId: expect.any(String),
     }));
     expect(editableFieldIds.some((fieldId) => /layout|animation|image/i.test(fieldId))).toBe(false);
   });
