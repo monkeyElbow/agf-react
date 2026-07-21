@@ -71,6 +71,8 @@ describe('planned giving and IRA native page content', () => {
     expect(endowmentsContent?.intro).toBeUndefined();
     expect(endowmentsContent?.sections).toBeUndefined();
     expect(endowmentBlocks.find((block) => block?.id === 'how_it_works')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-duo');
+    expect(endowmentBlocks.find((block) => block?.id === 'how_it_works')?.settings?.col4Enabled).toBe(false);
+    expect(endowmentBlocks.find((block) => block?.id === 'assets_you_may_give')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-assets');
     expect(endowmentBlocks.find((block) => block?.id === 'give_forever')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-big-cta');
     expect(endowmentBlocks.find((block) => block?.id === 'give_forever')?.settings?.buttonLabel).toBe('');
     expect(endowmentBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-legacy-form');

@@ -62,7 +62,7 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('margin-top: 0.2rem;');
   });
 
-  it('keeps the endowments explainer on the native columns system with a three-step flow and supporting asset list', () => {
+  it('keeps the endowments explainer as a three-step flow with assets on its own content rail', () => {
     const cssSource = readSource('../styles/service-native.css');
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
@@ -76,10 +76,13 @@ describe('planned giving review polish guardrail', () => {
     expect(blueprintSource).toContain("col1Body: 'Designated assets are invested to ensure their protection and growth.'");
     expect(blueprintSource).toContain("col2Body: 'Payments are made from ongoing interest earned from the gifted asset(s).'");
     expect(blueprintSource).toContain("col3Body: 'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.'");
-    expect(blueprintSource).toContain("col4Type: 'support'");
-    expect(blueprintSource).toContain("col4Title: 'Assets you may give'");
+    expect(blueprintSource).toContain("col4Enabled: false");
+    expect(blueprintSource).toContain("id: 'assets_you_may_give'");
+    expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-assets'");
+    expect(blueprintSource).toContain("contentMaxWidthPx: 1040");
     expect(blueprintSource).toContain("Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.");
-    expect(blueprintSource).toContain("Endowments may be funded with:");
+    expect(blueprintSource).toContain("class=\"endowments-asset-badges\"");
+    expect(blueprintSource).not.toContain("Endowments may be funded with:");
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo {');
     expect(cssSource).toContain('background: #faf7f1;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-grid {');
@@ -88,19 +91,17 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('font-size: clamp(3rem, 5.2vw, 4.55rem);');
     expect(cssSource).toContain('font-family: var(--ag-font-heading);');
     expect(cssSource).toContain('margin-bottom: clamp(0.4rem, 0.9vw, 0.65rem);');
-    expect(cssSource).toContain(".native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support {");
-    expect(cssSource).toContain('grid-column: 1 / -1;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step .native-columns-copy {');
     expect(cssSource).toContain('padding-top: clamp(0.4rem, 0.9vw, 0.65rem);');
     expect(cssSource).toContain('border-top: 0;');
-    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-columns-copy h3 {');
-    expect(cssSource).toContain('color: var(--ag-color-atlantean);');
-    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > p {');
-    expect(cssSource).toContain('max-width: min(100%, 56rem);');
-    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul {');
-    expect(cssSource).toContain('width: min(100%, 25rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets {');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .native-info-rich-html {');
+    expect(cssSource).toContain('grid-template-columns: minmax(24rem, 0.95fr) minmax(0, 1.05fr);');
+    expect(cssSource).toContain('width: min(var(--dyn-content-max-width, 1040px), 100%);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-asset-badges {');
+    expect(cssSource).toContain('grid-template-columns: repeat(3, max-content);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-asset-badges li:nth-child(4) {');
     expect(cssSource).toContain('text-align: left;');
-    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul li + li {');
     expect(cssSource).toContain('@media (max-width: 960px) {');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step {');

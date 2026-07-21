@@ -1320,10 +1320,19 @@ describe('content block blueprint coverage', () => {
         sectionClassName: 'legacy-child-native-endowments-duo',
         columns: 'three',
         col1Type: 'flow-step',
-        col4Type: 'support',
+        col4Enabled: false,
       },
     });
-    const endowmentAssetsHtml = endowmentBlocks.find((block) => block?.id === 'how_it_works')?.settings?.col4BodyHtml || '';
+    const endowmentAssetsBlock = endowmentBlocks.find((block) => block?.id === 'assets_you_may_give');
+    expect(endowmentAssetsBlock).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-endowments-assets',
+        contentMaxWidthPx: 1040,
+      },
+    });
+    const endowmentAssetsHtml = endowmentAssetsBlock?.settings?.html || '';
     expect(endowmentAssetsHtml).toContain('class="endowments-asset-badges"');
     expect(endowmentAssetsHtml).toContain('<li>Securities (restricted and marketable)</li>');
     expect(endowmentAssetsHtml).not.toContain('<button');

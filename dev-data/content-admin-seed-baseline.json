@@ -80803,13 +80803,13 @@
             "col3ImageUrl": "",
             "col3ImageAlt": "",
             "col3WidthShare": 1,
-            "col4Enabled": true,
+            "col4Enabled": false,
             "col4Type": "support",
-            "col4Title": "Assets you may give",
-            "col4TitleClassName": "endowments-assets-title",
+            "col4Title": "",
+            "col4TitleClassName": "",
             "col4TitleHighlightsJson": "",
             "col4Body": "",
-            "col4BodyHtml": "<p class=\"endowments-assets-funding\">Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p><ul class=\"endowments-asset-badges\"><li>Cash</li><li>Real estate</li><li>Art</li><li>Securities (restricted and marketable)</li><li>Antiques</li><li>Business interests</li></ul>",
+            "col4BodyHtml": "",
             "col4ImageUrl": "",
             "col4ImageAlt": "",
             "col4WidthShare": 1
@@ -81485,6 +81485,323 @@
               "min": 0.5,
               "max": 2.5,
               "step": 0.05
+            }
+          ]
+        },
+        {
+          "id": "assets_you_may_give",
+          "name": "Assets You May Give",
+          "kind": "content",
+          "mode": "dynamic",
+          "settings": {
+            "title": "",
+            "titleClassName": "",
+            "titleHighlightsJson": "",
+            "subtitle": "",
+            "body": "",
+            "html": "<h2 class=\"endowments-assets-title\">Assets you may give</h2><p class=\"endowments-assets-funding\">Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p><ul class=\"endowments-asset-badges\"><li>Cash</li><li>Real estate</li><li>Art</li><li>Securities (restricted and marketable)</li><li>Antiques</li><li>Business interests</li></ul>",
+            "widget": "",
+            "fullBleed": false,
+            "spaceBeforeRem": 0,
+            "spaceAfterRem": 0,
+            "paddingTopRem": 2.8,
+            "paddingBottomRem": 3.2,
+            "contentMaxWidthPx": 1040,
+            "anchorId": "",
+            "sectionClassName": "legacy-child-native-endowments-assets",
+            "copyWrap": false,
+            "buttonLabel": "",
+            "buttonOpenInNewWindow": false,
+            "addressClassName": "",
+            "addressTitle": "",
+            "addressLines": "",
+            "tableHeadersJson": "",
+            "tableRowsJson": "",
+            "tableValueAlignment": "",
+            "tableChartId": "",
+            "fineprint": "",
+            "fineprintDisclosureId": ""
+          },
+          "editableFields": [
+            {
+              "id": "title",
+              "label": "Section title",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "titleClassName",
+              "label": "Section title color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "titleHighlightsJson",
+              "label": "Section title highlights",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "subtitle",
+              "label": "Section subtitle",
+              "type": "text"
+            },
+            {
+              "id": "body",
+              "label": "Section body",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "html",
+              "label": "Page Content HTML",
+              "type": "html"
+            },
+            {
+              "id": "widget",
+              "label": "Widget key",
+              "type": "text"
+            },
+            {
+              "id": "logoImage",
+              "label": "Logo image URL",
+              "type": "text"
+            },
+            {
+              "id": "logoAlt",
+              "label": "Logo alt text",
+              "type": "text"
+            },
+            {
+              "id": "logoText",
+              "label": "Logo text fallback",
+              "type": "text"
+            },
+            {
+              "id": "fullBleed",
+              "label": "Full bleed rail",
+              "type": "boolean"
+            },
+            {
+              "id": "spaceBeforeRem",
+              "label": "Space before (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "spaceAfterRem",
+              "label": "Space after (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingTopRem",
+              "label": "Padding top (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingBottomRem",
+              "label": "Padding bottom (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "contentMaxWidthPx",
+              "label": "Content max width (px)",
+              "type": "number",
+              "min": 560,
+              "max": 1440,
+              "step": 10
+            },
+            {
+              "id": "anchorId",
+              "label": "Anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "sectionClassName",
+              "label": "Section class name",
+              "type": "text"
+            },
+            {
+              "id": "copyWrap",
+              "label": "Wrap section copy",
+              "type": "boolean"
+            },
+            {
+              "id": "buttonLabel",
+              "label": "Button label",
+              "type": "text"
+            },
+            {
+              "id": "buttonLinkJson",
+              "label": "Button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "buttonDocumentId",
+              "label": "Button document ID",
+              "type": "text"
+            },
+            {
+              "id": "addressClassName",
+              "label": "Address block class name",
+              "type": "text"
+            },
+            {
+              "id": "addressTitle",
+              "label": "Address title",
+              "type": "text"
+            },
+            {
+              "id": "addressLines",
+              "label": "Address lines",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "tableHeadersJson",
+              "label": "Table headers JSON",
+              "type": "textarea",
+              "rows": 3
+            },
+            {
+              "id": "tableRowsJson",
+              "label": "Table rows JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "tableValueAlignment",
+              "label": "Table value alignment",
+              "type": "select",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default"
+                },
+                {
+                  "value": "left",
+                  "label": "Left"
+                },
+                {
+                  "value": "center",
+                  "label": "Center"
+                },
+                {
+                  "value": "right",
+                  "label": "Right"
+                }
+              ]
+            },
+            {
+              "id": "tableChartId",
+              "label": "Managed chart ID",
+              "type": "text"
+            },
+            {
+              "id": "supportGroupsJson",
+              "label": "Support groups JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "supportGroupsExpanded",
+              "label": "Expand support items by default",
+              "type": "boolean"
+            },
+            {
+              "id": "supportGroupsCollapsible",
+              "label": "Support items are collapsible",
+              "type": "boolean"
+            },
+            {
+              "id": "fineprint",
+              "label": "Fineprint lines",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "fineprintDisclosureId",
+              "label": "Managed disclosure ID",
+              "type": "text"
             }
           ]
         },
