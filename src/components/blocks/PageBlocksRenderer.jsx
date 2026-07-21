@@ -37,6 +37,10 @@ import {
   buildPresetFamilyRuntimeClassName,
   resolvePresetFamilyClassToken,
 } from '../../lib/presetFamilyContract';
+import {
+  coerceLinkValueFromFields,
+  linkValueToEditableHref,
+} from '../../lib/linkValue';
 import DynamicRequestFormSection from '../DynamicRequestFormSection';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../HeroHudEditorShared';
 import HomeImpactStoryFeature, { HomeImpactStoryStaticContent } from '../HomeImpactStoryFeature';
@@ -1857,6 +1861,13 @@ export function ColumnsBlock({
     );
   }
 
+  const resolveColumnButtonUrl = (slot) => linkValueToEditableHref(coerceLinkValueFromFields(block, {
+    linkJsonKeys: [`col${slot}ButtonLinkJson`],
+    hrefKeys: [`col${slot}ButtonUrl`],
+    toKeys: [`col${slot}ButtonPageRef`],
+    openInNewWindowKeys: [`col${slot}ButtonOpenInNewWindow`],
+  }));
+
   const columns = Array.isArray(block.columnsData)
     ? block.columnsData
     : [
@@ -1869,7 +1880,7 @@ export function ColumnsBlock({
           titleHighlights: parseHighlightsJson(block.col1TitleHighlightsJson, block.col1Title),
           body: block.col1Body,
           buttonLabel: block.col1ButtonLabel,
-          buttonUrl: block.col1ButtonUrl,
+          buttonUrl: resolveColumnButtonUrl(1),
         },
         {
           type: block.col2Type || 'text',
@@ -1880,7 +1891,7 @@ export function ColumnsBlock({
           titleHighlights: parseHighlightsJson(block.col2TitleHighlightsJson, block.col2Title),
           body: block.col2Body,
           buttonLabel: block.col2ButtonLabel,
-          buttonUrl: block.col2ButtonUrl,
+          buttonUrl: resolveColumnButtonUrl(2),
         },
       ];
 

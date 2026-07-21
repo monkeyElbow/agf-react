@@ -882,7 +882,7 @@ function resolveCanonicalRouteLinkOpenInNewWindow(settings, fieldOrId, explicitR
   return Boolean(resolveCanonicalRouteLinkValue(settings, fieldOrId, explicitRouteRefFieldId)?.openInNewWindow);
 }
 
-function commitCanonicalRouteLinkWithSplitMirror(
+function commitCanonicalRouteLink(
   onSettingChange,
   fieldOrId,
   routeRefFieldId,
@@ -899,30 +899,6 @@ function commitCanonicalRouteLinkWithSplitMirror(
 
   if (meta.linkJsonFieldId) {
     onSettingChange(meta.linkJsonFieldId, linkJsonValue);
-  }
-
-  if (meta.openInNewWindowFieldId) {
-    onSettingChange(meta.openInNewWindowFieldId, Boolean(nextOpenInNewWindowValue));
-  }
-
-  if (!meta.routeRefFieldId) {
-    if (meta.legacyHrefFieldId) {
-      onSettingChange(meta.legacyHrefFieldId, nextHrefValue);
-    }
-    return;
-  }
-
-  if (routeRef.startsWith('/')) {
-    onSettingChange(meta.routeRefFieldId, routeRef);
-    if (meta.legacyHrefFieldId) {
-      onSettingChange(meta.legacyHrefFieldId, nextHrefValue);
-    }
-    return;
-  }
-
-  onSettingChange(meta.routeRefFieldId, '');
-  if (meta.legacyHrefFieldId) {
-    onSettingChange(meta.legacyHrefFieldId, nextHrefValue);
   }
 }
 
@@ -1585,12 +1561,11 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
         openInNewWindowValue={resolvedOpenInNewWindowValue}
         openInNewWindowLabel={field.openInNewWindowLabel || 'Open in new window'}
         onChange={onChange}
-        onRouteRefChange={routeRefFieldId ? (nextValue) => onSettingChange(routeRefFieldId, nextValue) : undefined}
         onRouteLinkChange={routeRefFieldId ? (nextValue, nextRouteRefValue) => {
-          commitCanonicalRouteLinkWithSplitMirror(onSettingChange, field, routeRefFieldId, nextValue, nextRouteRefValue, resolvedOpenInNewWindowValue);
+          commitCanonicalRouteLink(onSettingChange, field, routeRefFieldId, nextValue, nextRouteRefValue, resolvedOpenInNewWindowValue);
         } : undefined}
         onOpenInNewWindowChange={(nextOpenInNewWindowValue) => {
-          commitCanonicalRouteLinkWithSplitMirror(
+          commitCanonicalRouteLink(
             onSettingChange,
             field,
             routeRefFieldId,
@@ -3853,7 +3828,6 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [] }) 
     routeRefDraftValues,
     updateDraftField,
     commitDraftOnBlur,
-    handleRouteRefChange,
     commitRouteLinkField,
   } = useBufferedStringFieldDrafts({
     settings: introDraftSettings,
@@ -4041,7 +4015,6 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [] }) 
                     openInNewWindowValue={resolveCanonicalRouteLinkOpenInNewWindow(settings, field)}
                     openInNewWindowLabel={field.openInNewWindowLabel || 'Open in new window'}
                     onChange={(nextValue) => updateDraftField(fieldId, nextValue)}
-                    onRouteRefChange={field.routeRefFieldId ? (nextValue) => handleRouteRefChange(fieldId, nextValue) : undefined}
                     onRouteLinkChange={field.routeRefFieldId ? (nextValue, nextRouteRefValue) => {
                       commitRouteLinkField(fieldId, nextValue, nextRouteRefValue, resolveCanonicalRouteLinkOpenInNewWindow(settings, field));
                     } : undefined}
@@ -4630,7 +4603,7 @@ function useBufferedStringFieldDrafts({
         : { ...current, [fieldId]: nextRouteRefValue }
     ));
     setDirtyFieldIds((current) => (current.includes(fieldId) ? current : [...current, fieldId]));
-    commitCanonicalRouteLinkWithSplitMirror(onSettingChange, routeLinkField, routeRefFieldId, nextValue, nextRouteRefValue, nextOpenInNewWindowValue);
+    commitCanonicalRouteLink(onSettingChange, routeLinkField, routeRefFieldId, nextValue, nextRouteRefValue, nextOpenInNewWindowValue);
   };
 
   const commitRouteLinkHref = (fieldId, nextValue) => {
@@ -4685,7 +4658,6 @@ function DraftBackedFieldControlGrid({
     routeRefDraftValues,
     updateDraftField,
     commitDraftOnBlur,
-    handleRouteRefChange,
     commitRouteLinkField,
   } = useBufferedStringFieldDrafts({
     settings,
@@ -4718,7 +4690,6 @@ function DraftBackedFieldControlGrid({
                   openInNewWindowValue={resolveCanonicalRouteLinkOpenInNewWindow(settings, field)}
                   openInNewWindowLabel={field.openInNewWindowLabel || 'Open in new window'}
                   onChange={(nextValue) => updateDraftField(fieldId, nextValue)}
-                  onRouteRefChange={field.routeRefFieldId ? (nextValue) => handleRouteRefChange(fieldId, nextValue) : undefined}
                   onRouteLinkChange={field.routeRefFieldId ? (nextValue, nextRouteRefValue) => {
                     commitRouteLinkField(fieldId, nextValue, nextRouteRefValue, resolveCanonicalRouteLinkOpenInNewWindow(settings, field));
                   } : undefined}
@@ -4918,16 +4889,11 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const featureEntry = resolveSiteFeatureCatalogEntry(settings.featureId);
   const allowedFieldIds = new Set(getAllowedSiteFeatureEditableFieldIds(settings.featureId));
-  const normalizedRouteOptions = useMemo(
-    () => sortPages(Array.isArray(routeOptions) ? routeOptions : []),
-    [routeOptions],
-  );
   const featureIdField = fieldById.get('featureId');
   const headlineField = fieldById.get('headline');
   const bodyField = fieldById.get('body');
   const buttonLabelField = fieldById.get('buttonLabel');
   const buttonUrlField = getPromotedRouteLinkField(fieldById, 'buttonUrl', 'buttonPageRef');
-  const buttonOpenInNewWindowField = fieldById.get('buttonOpenInNewWindow');
   const allowsActionOverrides = SITE_FEATURE_ACTION_FIELD_IDS.some((fieldId) => allowedFieldIds.has(fieldId));
   const [draftValues, setDraftValues] = useState(() => readEditorLocalDrafts(settings, SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS));
   const [dirtyFieldIds, setDirtyFieldIds] = useState([]);
@@ -4976,12 +4942,6 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
     }
 
     onSettingChange(fieldId, nextValue);
-    if (fieldId !== 'buttonUrl' || skipRouteRefSync) {
-      return;
-    }
-
-    const exactPage = normalizedRouteOptions.find((page) => page.path === String(nextValue || '').trim());
-    onSettingChange('buttonPageRef', exactPage ? toManagedPageLinkRef(exactPage) : '');
   };
 
   const commitButtonRouteLink = (nextValue, nextRouteRefValue) => {
@@ -4996,7 +4956,7 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
         : { ...current, buttonUrl: nextValue }
     ));
     setDirtyFieldIds((current) => (current.includes('buttonUrl') ? current : [...current, 'buttonUrl']));
-    commitCanonicalRouteLinkWithSplitMirror(
+    commitCanonicalRouteLink(
       onSettingChange,
       buttonUrlField || 'buttonUrl',
       'buttonPageRef',
@@ -5092,42 +5052,23 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
               <SiteFeatureDraftField
                 field={buttonUrlField}
                 value={draftValues.buttonUrl}
-                routeRefValue={String(settings.buttonPageRef || '')}
+                routeRefValue={resolveCanonicalRouteLinkRouteRef(settings, buttonUrlField || 'buttonUrl', 'buttonPageRef')}
                 openInNewWindowValue={resolveCanonicalRouteLinkOpenInNewWindow(settings, buttonUrlField || 'buttonUrl', 'buttonPageRef')}
                 showOpenInNewWindow={allowedFieldIds.has('buttonOpenInNewWindow')}
                 onChange={(nextValue) => updateDraftField('buttonUrl', nextValue)}
-                onRouteRefChange={(nextValue) => {
-                  onSettingChange('buttonPageRef', nextValue);
-                  const matchedPage = normalizedRouteOptions.find((page) => toManagedPageLinkRef(page) === String(nextValue || '').trim());
-                  if (matchedPage?.path) {
-                    updateDraftField('buttonUrl', matchedPage.path, {
-                      commitImmediately: true,
-                      skipRouteRefSync: true,
-                    });
-                  }
-                }}
                 onRouteLinkChange={commitButtonRouteLink}
                 onOpenInNewWindowChange={(nextOpenInNewWindowValue) => {
-                  commitCanonicalRouteLinkWithSplitMirror(
+                  commitCanonicalRouteLink(
                     onSettingChange,
                     buttonUrlField || 'buttonUrl',
                     'buttonPageRef',
                     draftValues.buttonUrl,
-                    String(settings.buttonPageRef || ''),
+                    resolveCanonicalRouteLinkRouteRef(settings, buttonUrlField || 'buttonUrl', 'buttonPageRef'),
                     nextOpenInNewWindowValue,
                   );
                 }}
                 routeOptions={routeOptions}
                 fullWidth
-              />
-            ) : null}
-            {buttonOpenInNewWindowField && allowedFieldIds.has('buttonOpenInNewWindow') ? (
-              <FieldControlGrid
-                fields={[buttonOpenInNewWindowField]}
-                settings={settings}
-                onSettingChange={onSettingChange}
-                className="admin-content-field-list--inline"
-                routeOptions={routeOptions}
               />
             ) : null}
           </div>

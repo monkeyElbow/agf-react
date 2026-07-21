@@ -357,8 +357,6 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('button1PageRef', '/contact-us');
-      expect(onSettingChange).toHaveBeenCalledWith('button2PageRef', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('button1LinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
       expect(onSettingChange).toHaveBeenCalledWith('button2LinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
@@ -366,8 +364,10 @@ describe('dynamic block control wiring', () => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('button1Url', '/contact-us');
-      expect(onSettingChange).toHaveBeenCalledWith('button2Url', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button1PageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button2PageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button1Url', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button2Url', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -884,14 +884,14 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('buttonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('buttonUrl', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('buttonPageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -916,13 +916,14 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('buttonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('buttonUrl', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('buttonPageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -990,14 +991,14 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('ctaPageRef', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('ctaLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('ctaPath', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('ctaPageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('ctaPath', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -1278,8 +1279,6 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('button1PageRef', '/contact-us');
-      expect(onSettingChange).toHaveBeenCalledWith('button2PageRef', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('button1LinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
       expect(onSettingChange).toHaveBeenCalledWith('button2LinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
@@ -1287,8 +1286,10 @@ describe('dynamic block control wiring', () => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('button1Url', '/contact-us');
-      expect(onSettingChange).toHaveBeenCalledWith('button2Url', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button1PageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button2PageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button1Url', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button2Url', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -1449,15 +1450,17 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
-      expect(onSettingChange).toHaveBeenCalledWith('button2PageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('buttonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
+      expect(onSettingChange).toHaveBeenCalledWith('button2LinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('buttonUrl', '/contact-us');
-      expect(onSettingChange).toHaveBeenCalledWith('button2Url', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('buttonPageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button2PageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('button2Url', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -1820,14 +1823,14 @@ describe('dynamic block control wiring', () => {
         target: { value: '/services/insurance' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('browsePageRef', '/services/insurance');
       expect(onSettingChange).toHaveBeenCalledWith('browseLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/services/insurance"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('browsePath', '/services/insurance');
+      expect(onSettingChange).not.toHaveBeenCalledWith('browsePageRef', '/services/insurance');
+      expect(onSettingChange).not.toHaveBeenCalledWith('browsePath', '/services/insurance');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -2068,14 +2071,14 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('card1ButtonPageRef', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('card1ButtonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('card1ButtonUrl', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('card1ButtonPageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('card1ButtonUrl', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -2406,14 +2409,14 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('col1ButtonPageRef', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('col1ButtonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('col1ButtonUrl', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('col1ButtonPageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('col1ButtonUrl', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -2553,8 +2556,9 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('leftButtonUrl', '/contact-us');
-      expect(onSettingChange).toHaveBeenCalledWith('leftButtonPageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('leftButtonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
+      expect(onSettingChange).not.toHaveBeenCalledWith('leftButtonUrl', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('leftButtonPageRef', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -2647,14 +2651,14 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('buttonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('buttonUrl', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('buttonPageRef', '/contact-us');
+      expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/contact-us');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();

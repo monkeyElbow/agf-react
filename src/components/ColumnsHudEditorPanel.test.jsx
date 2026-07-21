@@ -474,12 +474,12 @@ describe('ColumnsHudEditorPanel', () => {
     expect(onSettingChange).toHaveBeenCalledWith('col1ImageUrl', '/images/draft.jpg');
     expect(onSettingChange).toHaveBeenCalledWith('col1ImageAlt', 'Draft alt text');
     expect(onSettingChange).toHaveBeenCalledWith('col1ButtonLabel', 'Draft button');
-    expect(onSettingChange).toHaveBeenCalledWith('col1ButtonUrl', '/draft-path');
-    expect(onSettingChange).toHaveBeenCalledWith('col1ButtonPageRef', '/draft-path');
     expect(onSettingChange).toHaveBeenCalledWith(
       'col1ButtonLinkJson',
       '{"kind":"internal","openInNewWindow":false,"to":"/draft-path"}',
     );
+    expect(onSettingChange).not.toHaveBeenCalledWith('col1ButtonUrl', '/draft-path');
+    expect(onSettingChange).not.toHaveBeenCalledWith('col1ButtonPageRef', '/draft-path');
   });
 
   it('clears column button page refs for manual external URLs', () => {
@@ -504,12 +504,12 @@ describe('ColumnsHudEditorPanel', () => {
     });
     fireEvent.blur(screen.getByLabelText('URL / path'));
 
-    expect(onSettingChange).toHaveBeenCalledWith('col1ButtonPageRef', '');
-    expect(onSettingChange).toHaveBeenCalledWith('col1ButtonUrl', 'https://example.com/resource');
     expect(onSettingChange).toHaveBeenCalledWith(
       'col1ButtonLinkJson',
       '{"kind":"external","openInNewWindow":false,"href":"https://example.com/resource"}',
     );
+    expect(onSettingChange).not.toHaveBeenCalledWith('col1ButtonPageRef', '');
+    expect(onSettingChange).not.toHaveBeenCalledWith('col1ButtonUrl', 'https://example.com/resource');
   });
 
   it('keeps section heading and body drafts stable and commits them on blur without debounce commits', () => {

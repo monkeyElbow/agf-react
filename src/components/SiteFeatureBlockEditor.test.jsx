@@ -70,7 +70,7 @@ describe('SiteFeatureBlockEditor', () => {
     expect(onSettingChange).toHaveBeenCalledWith('headline', 'Draft headline');
   });
 
-  it('renders the CTA URL editor on its own full-width row and preserves route refs', () => {
+  it('renders the CTA URL editor on its own full-width row and writes canonical links', () => {
     const onSettingChange = vi.fn();
     render(
       createElement(SiteFeatureBlockEditor, {
@@ -92,8 +92,9 @@ describe('SiteFeatureBlockEditor', () => {
       vi.advanceTimersByTime(350);
     });
 
-    expect(onSettingChange).toHaveBeenCalledWith('buttonUrl', '/forms');
-    expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/forms');
+    expect(onSettingChange).toHaveBeenCalledWith('buttonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/forms"}');
+    expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/forms');
+    expect(onSettingChange).not.toHaveBeenCalledWith('buttonPageRef', '/forms');
   });
 
   it('keeps the home impact story editor surface limited to headline, body, and CTA path overrides', () => {

@@ -12,6 +12,7 @@ import {
 } from '../lib/dynamicColumns';
 import {
   coerceLinkValue,
+  coerceLinkValueFromFields,
   getCanonicalLinkJsonFieldId,
   resolveEditableHrefFromLinkFields,
   serializeLinkValue,
@@ -695,11 +696,15 @@ export default function ColumnsHudEditorPanel({
           commit: (nextValue) => {
             const routeRefValue = String(nextValue || '').trim().startsWith('/') ? nextValue : '';
             const buttonLinkJsonFieldId = getCanonicalLinkJsonFieldId(`col${slot}Button`);
+            const currentButtonLinkValue = coerceLinkValueFromFields(settings, {
+              linkJsonKeys: [buttonLinkJsonFieldId],
+              hrefKeys: [buttonUrlFieldId],
+              toKeys: [buttonPageRefFieldId],
+              openInNewWindowKeys: [`col${slot}ButtonOpenInNewWindow`],
+            });
             const buttonLinkValue = routeRefValue
-              ? coerceLinkValue({ to: routeRefValue })
-              : coerceLinkValue({ href: nextValue });
-            onSettingChange(buttonPageRefFieldId, routeRefValue);
-            onSettingChange(buttonUrlFieldId, nextValue);
+              ? coerceLinkValue({ to: routeRefValue, openInNewWindow: currentButtonLinkValue?.openInNewWindow })
+              : coerceLinkValue({ href: nextValue, openInNewWindow: currentButtonLinkValue?.openInNewWindow });
             onSettingChange(buttonLinkJsonFieldId, serializeLinkValue(buttonLinkValue));
           },
         },
