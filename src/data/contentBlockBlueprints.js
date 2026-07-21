@@ -3532,7 +3532,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         spaceBeforeRem: 0,
         spaceAfterRem: 0,
         paddingTopRem: 0,
-        paddingBottomRem: 1.6,
+        paddingBottomRem: 3.2,
         contentMaxWidthPx: 980,
         anchorId: '',
         sectionClassName: 'retirement-child-native-ira-types-action',

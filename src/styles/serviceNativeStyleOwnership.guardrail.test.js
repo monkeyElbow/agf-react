@@ -195,6 +195,20 @@ describe('service-native style ownership', () => {
     );
   });
 
+  it('keeps the IRA type cards free from shared card title top spacing', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {',
+      'display: block;',
+      'min-height: 0;',
+      'margin: 0 0 0.95rem;',
+      'padding-bottom: 0;',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+  });
+
   it('keeps About one-off visual restorations on named section surfaces', () => {
     const source = readSource('./service-native.css');
 
