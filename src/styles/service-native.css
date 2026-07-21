@@ -22021,73 +22021,93 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support {
   grid-column: 1 / -1;
-  margin-top: clamp(0.5rem, 1.6vw, 1rem);
-  padding-top: clamp(1.4rem, 2.7vw, 2rem);
+  margin-top: clamp(1.3rem, 3.5vw, 2.8rem);
+  padding: clamp(2.6rem, 5vw, 4.2rem) 0 clamp(1.6rem, 3.8vw, 3rem);
   border-top: 0;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-columns-copy {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: clamp(0.9rem, 1.8vw, 1.3rem);
-  align-items: start;
-  justify-items: center;
-  text-align: center;
+  grid-template-columns: minmax(18rem, 0.86fr) minmax(22rem, 1.14fr);
+  column-gap: clamp(3rem, 7vw, 6rem);
+  row-gap: clamp(1.1rem, 2.2vw, 1.6rem);
+  align-items: center;
+  text-align: left;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-columns-copy h3 {
-  margin-top: clamp(0.35rem, 0.9vw, 0.6rem);
-  color: var(--ag-color-atlantean);
-  font-size: clamp(2rem, 3.4vw, 2.8rem);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: var(--ag-letter-spacing-helv-heading);
+  margin: 0;
+  max-width: 10ch;
+  color: #000000;
+  font-size: clamp(4.2rem, 8.4vw, 7.4rem);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.06em;
   text-transform: none;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html {
+  display: contents;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .endowments-assets-funding {
+  grid-column: 1;
+  margin: 0;
+  max-width: 18.5ch;
+  color: #000000;
+  font-family: var(--ag-font-helv);
+  font-size: clamp(2rem, 3.6vw, 3.55rem);
+  font-weight: 800;
+  letter-spacing: -0.054em;
+  line-height: 1.06;
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .endowments-assets-funding strong {
+  font-weight: inherit;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > p {
   margin: 0;
-  max-width: min(100%, 56rem);
-  color: rgba(65, 64, 66, 0.84);
-  font-size: clamp(1rem, 1.28vw, 1.08rem);
-  line-height: 1.65;
+  color: #000000;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > p + p {
   margin-top: clamp(0.7rem, 1.3vw, 0.9rem);
 }
 
-.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul {
-  width: min(100%, 25rem);
-  margin: clamp(0.65rem, 1.2vw, 0.85rem) auto 0;
+.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .endowments-asset-badges {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(1.2rem, 2.5vw, 2rem) clamp(1rem, 2vw, 1.6rem);
+  width: min(100%, 45rem);
+  margin: 0;
   padding: 0;
   list-style: none;
-  text-align: left;
+  text-align: center;
 }
 
-.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul li {
-  position: relative;
+.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .endowments-asset-badges li {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   min-width: 0;
-  padding: 0 0 0 0.95rem;
-  color: var(--ag-color-super-grey);
-  font-size: clamp(1rem, 1.18vw, 1.05rem);
-  line-height: 1.56;
-}
-
-.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul li + li {
-  margin-top: clamp(0.45rem, 0.8vw, 0.6rem);
-}
-
-.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-info-rich-html > ul li::before {
-  content: '';
-  position: absolute;
-  top: 0.7em;
-  left: 0;
-  width: 0.3rem;
-  height: 0.3rem;
+  min-height: clamp(3.9rem, 6.2vw, 5.25rem);
+  padding: clamp(0.6rem, 1.2vw, 0.9rem) clamp(1.8rem, 3.2vw, 3rem);
+  border: 0;
   border-radius: 999px;
-  background: var(--ag-color-mango);
+  background: linear-gradient(145deg, #f1f1f1 0%, #dedfe1 100%);
+  color: #000000;
+  font-family: var(--ag-font-helv);
+  font-size: clamp(1.55rem, 2.9vw, 2.55rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-calculator > .ag-panel-rail {
@@ -23035,7 +23055,24 @@ p.impact-proof-story-proof-body {
 
   .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-columns-copy {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0.7rem;
+    gap: clamp(1rem, 3vw, 1.5rem);
+    text-align: center;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .native-columns-copy h3,
+  .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .endowments-assets-funding {
+    margin-inline: auto;
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .endowments-asset-badges {
+    grid-column: 1;
+    grid-row: auto;
+    justify-content: center;
+    margin-top: clamp(0.6rem, 2vw, 1rem);
+  }
+
+  .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-support .endowments-asset-badges li {
+    white-space: normal;
   }
 
   .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-inquiry > .ag-panel-rail,

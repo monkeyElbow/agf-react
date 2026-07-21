@@ -1323,6 +1323,11 @@ describe('content block blueprint coverage', () => {
         col4Type: 'support',
       },
     });
+    const endowmentAssetsHtml = endowmentBlocks.find((block) => block?.id === 'how_it_works')?.settings?.col4BodyHtml || '';
+    expect(endowmentAssetsHtml).toContain('class="endowments-asset-badges"');
+    expect(endowmentAssetsHtml).toContain('<li>Securities (restricted and marketable)</li>');
+    expect(endowmentAssetsHtml).not.toContain('<button');
+    expect(endowmentAssetsHtml).not.toContain('Other assets');
     expect(endowmentBlocks.find((block) => block?.id === 'calculator')).toMatchObject({
       kind: 'content',
       mode: 'dynamic',

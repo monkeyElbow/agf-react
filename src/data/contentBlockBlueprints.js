@@ -5479,7 +5479,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         col4TitleClassName: 'endowments-assets-title',
         col4TitleHighlightsJson: '',
         col4Body: '',
-        col4BodyHtml: '<p>Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p><p>Endowments may be funded with:</p><ul><li>Cash</li><li>Real estate</li><li>Securities (restricted and marketable)</li><li>Art</li><li>Antiques</li><li>Business interests</li><li>Other assets</li></ul>',
+        col4BodyHtml: '<p class="endowments-assets-funding">Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p><ul class="endowments-asset-badges"><li>Cash</li><li>Real estate</li><li>Art</li><li>Securities (restricted and marketable)</li><li>Antiques</li><li>Business interests</li></ul>',
         col4ImageUrl: '',
         col4ImageAlt: '',
         col4WidthShare: 1,
