@@ -206,7 +206,7 @@ describe('canonical block registry', () => {
     const editableFields = getEditableFieldsForKind('site_feature');
     const editableFieldIds = editableFields.map((field) => field.id);
     const featureIdField = definition?.schema?.fields?.find((field) => field.id === 'featureId');
-    const buttonUrlField = editableFields.find((field) => field.id === 'buttonUrl');
+    const buttonLinkField = editableFields.find((field) => field.id === 'buttonLinkJson');
 
     expect(definition?.editorType).toBe('site_feature');
     expect(definition?.label).toBe('Site Feature');
@@ -219,13 +219,14 @@ describe('canonical block registry', () => {
       'body',
       'sectionClassName',
       'buttonLabel',
-      'buttonUrl',
-      'buttonOpenInNewWindow',
+      'buttonLinkJson',
     ]);
-    expect(buttonUrlField).toEqual(expect.objectContaining({
+    expect(buttonLinkField).toEqual(expect.objectContaining({
       type: 'route_link',
+      legacyHrefFieldId: 'buttonUrl',
       routeRefFieldId: 'buttonPageRef',
       linkJsonFieldId: 'buttonLinkJson',
+      openInNewWindowFieldId: 'buttonOpenInNewWindow',
     }));
     expect(editableFieldIds.some((fieldId) => /layout|animation|image/i.test(fieldId))).toBe(false);
   });

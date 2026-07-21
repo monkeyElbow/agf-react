@@ -16,7 +16,9 @@ describe('migrated block editor route-link guardrail', () => {
 
     expect(source).toContain('function promoteRouteLinkDescriptor(field, routeRefFieldId) {');
     expect(source).toContain('function getPromotedRouteLinkField(fieldById, fieldId, routeRefFieldId) {');
-    expect(source).toContain('function commitCanonicalRouteLinkWithSplitMirror(onSettingChange, hrefFieldId, routeRefFieldId, nextHrefValue, nextRouteRefValue) {');
+    expect(source).toContain('function resolveRouteLinkFieldMeta(fieldOrId, explicitRouteRefFieldId = \'\') {');
+    expect(source).toContain('function commitCanonicalRouteLinkWithSplitMirror(');
+    expect(source).toContain('legacyHrefFieldId');
     expect(source).toContain('getCanonicalLinkJsonFieldId');
     expect(source).toContain('serializeLinkValue');
     expect(source).toContain('onRouteLinkChange');

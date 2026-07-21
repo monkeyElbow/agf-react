@@ -15,17 +15,13 @@ describe('editor descriptor transitional link helpers', () => {
       openInNewWindowLabel: 'Open button in new window',
     })).toEqual([
       expect.objectContaining({
-        id: 'buttonUrl',
+        id: 'buttonLinkJson',
         label: 'Button URL / Path',
         type: 'route_link',
+        legacyHrefFieldId: 'buttonUrl',
         routeRefFieldId: 'buttonPageRef',
         linkJsonFieldId: 'buttonLinkJson',
         openInNewWindowFieldId: 'buttonOpenInNewWindow',
-      }),
-      expect.objectContaining({
-        id: 'buttonOpenInNewWindow',
-        label: 'Open button in new window',
-        type: 'boolean',
       }),
     ]);
   });
@@ -49,10 +45,12 @@ describe('editor descriptor transitional link helpers', () => {
         type: 'text',
       }),
       expect.objectContaining({
-        id: 'buttonUrl',
+        id: 'buttonLinkJson',
         type: 'route_link',
+        legacyHrefFieldId: 'buttonUrl',
         routeRefFieldId: 'buttonPageRef',
         linkJsonFieldId: 'buttonLinkJson',
+        openInNewWindowFieldId: '',
       }),
       expect.objectContaining({
         id: 'buttonStyle',

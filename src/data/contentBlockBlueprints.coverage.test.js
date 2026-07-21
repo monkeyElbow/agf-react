@@ -71,24 +71,54 @@ function getSplitLinkFindings({ pathname, block }) {
 }
 
 describe('content block blueprint coverage', () => {
-  it('does not expose split page-ref fields as editable authoring controls', () => {
+  it('does not expose split link compatibility fields as editable authoring controls', () => {
     const offenders = [];
     Object.entries(contentBlockBlueprintsByPath).forEach(([pathname, blocks]) => {
       (Array.isArray(blocks) ? blocks : []).forEach((block) => {
+        const routeLinkOpenFieldIds = new Set(
+          (Array.isArray(block?.editableFields) ? block.editableFields : [])
+            .filter((field) => field?.type === 'route_link')
+            .map((field) => String(field?.openInNewWindowFieldId || '').trim())
+            .filter(Boolean),
+        );
         (Array.isArray(block?.editableFields) ? block.editableFields : []).forEach((field) => {
           const fieldId = String(field?.id || '').trim();
           if (fieldId.endsWith('PageRef')) {
             offenders.push(`${pathname}:${block?.id || 'block'}:${fieldId}`);
+          }
+          if (routeLinkOpenFieldIds.has(fieldId)) {
+            offenders.push(`${pathname}:${block?.id || 'block'}:${fieldId}`);
+          }
+          if (field?.type === 'route_link') {
+            const linkJsonFieldId = String(field.linkJsonFieldId || '').trim();
+            if (!fieldId.endsWith('LinkJson') || (linkJsonFieldId && fieldId !== linkJsonFieldId)) {
+              offenders.push(`${pathname}:${block?.id || 'block'}:${fieldId}:not-canonical-link-json-id`);
+            }
           }
         });
       });
     });
 
     getAllBlockTemplateBlueprints().forEach((block) => {
+      const routeLinkOpenFieldIds = new Set(
+        (Array.isArray(block?.editableFields) ? block.editableFields : [])
+          .filter((field) => field?.type === 'route_link')
+          .map((field) => String(field?.openInNewWindowFieldId || '').trim())
+          .filter(Boolean),
+      );
       (Array.isArray(block?.editableFields) ? block.editableFields : []).forEach((field) => {
         const fieldId = String(field?.id || '').trim();
         if (fieldId.endsWith('PageRef')) {
           offenders.push(`template:${block?.id || block?.kind || 'block'}:${fieldId}`);
+        }
+        if (routeLinkOpenFieldIds.has(fieldId)) {
+          offenders.push(`template:${block?.id || block?.kind || 'block'}:${fieldId}`);
+        }
+        if (field?.type === 'route_link') {
+          const linkJsonFieldId = String(field.linkJsonFieldId || '').trim();
+          if (!fieldId.endsWith('LinkJson') || (linkJsonFieldId && fieldId !== linkJsonFieldId)) {
+            offenders.push(`template:${block?.id || block?.kind || 'block'}:${fieldId}:not-canonical-link-json-id`);
+          }
         }
       });
     });

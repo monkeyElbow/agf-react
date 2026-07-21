@@ -359,6 +359,8 @@ describe('dynamic block control wiring', () => {
 
       expect(onSettingChange).toHaveBeenCalledWith('button1PageRef', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('button2PageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('button1LinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
+      expect(onSettingChange).toHaveBeenCalledWith('button2LinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -867,7 +869,7 @@ describe('dynamic block control wiring', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('cta_band');
     const onSettingChange = vi.fn();
-    const buttonUrlField = getField(block, 'buttonUrl');
+    const buttonUrlField = getField(block, 'buttonLinkJson');
 
     try {
       render(
@@ -883,6 +885,7 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('buttonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -972,7 +975,7 @@ describe('dynamic block control wiring', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('impact_stat');
     const onSettingChange = vi.fn();
-    const ctaPathField = getField(block, 'ctaPath');
+    const ctaPathField = getField(block, 'ctaLinkJson');
 
     try {
       render(
@@ -988,6 +991,7 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('ctaPageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('ctaLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -1255,8 +1259,8 @@ describe('dynamic block control wiring', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('intro');
     const onSettingChange = vi.fn();
-    const button1UrlField = getField(block, 'button1Url');
-    const button2UrlField = getField(block, 'button2Url');
+    const button1UrlField = getField(block, 'button1LinkJson');
+    const button2UrlField = getField(block, 'button2LinkJson');
 
     try {
       render(
@@ -1276,6 +1280,8 @@ describe('dynamic block control wiring', () => {
 
       expect(onSettingChange).toHaveBeenCalledWith('button1PageRef', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('button2PageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('button1LinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
+      expect(onSettingChange).toHaveBeenCalledWith('button2LinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -1799,7 +1805,7 @@ describe('dynamic block control wiring', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('services_grid');
     const onSettingChange = vi.fn();
-    const browsePathField = getField(block, 'browsePath');
+    const browsePathField = getField(block, 'browseLinkJson');
 
     try {
       render(
@@ -1815,6 +1821,7 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('browsePageRef', '/services/insurance');
+      expect(onSettingChange).toHaveBeenCalledWith('browseLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/services/insurance"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -2045,7 +2052,7 @@ describe('dynamic block control wiring', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('card_grid');
     const onSettingChange = vi.fn();
-    const buttonUrlField = getField(block, 'card1ButtonUrl');
+    const buttonUrlField = getField(block, 'card1ButtonLinkJson');
 
     try {
       render(
@@ -2062,6 +2069,7 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('card1ButtonPageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('card1ButtonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -2383,7 +2391,7 @@ describe('dynamic block control wiring', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('columns');
     const onSettingChange = vi.fn();
-    const buttonUrlField = getField(block, 'col1ButtonUrl');
+    const buttonUrlField = getField(block, 'col1ButtonLinkJson');
 
     try {
       render(
@@ -2399,6 +2407,7 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('col1ButtonPageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('col1ButtonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -2623,7 +2632,7 @@ describe('dynamic block control wiring', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('photo_column');
     const onSettingChange = vi.fn();
-    const buttonUrlField = getField(block, 'buttonUrl');
+    const buttonUrlField = getField(block, 'buttonLinkJson');
 
     try {
       render(
@@ -2639,6 +2648,7 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
+      expect(onSettingChange).toHaveBeenCalledWith('buttonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
 
       act(() => {
         vi.advanceTimersByTime(350);

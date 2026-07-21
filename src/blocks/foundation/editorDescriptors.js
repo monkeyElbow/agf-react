@@ -27,21 +27,16 @@ export function defineTransitionalLinkFields({
 
   if (hrefId) {
     const baseId = String(toId || hrefId || '').replace(/(?:PageRef|Url|Path|Href)$/, '');
+    const linkJsonFieldId = baseId ? `${baseId}LinkJson` : '';
     fields.push(defineEditorField({
-      id: hrefId,
+      id: linkJsonFieldId || hrefId,
       label: hrefLabel,
       type: 'route_link',
+      legacyHrefFieldId: hrefId,
       routeRefFieldId: toId || '',
-      linkJsonFieldId: baseId ? `${baseId}LinkJson` : '',
+      linkJsonFieldId,
       openInNewWindowFieldId: openInNewWindowId || '',
-    }));
-  }
-
-  if (openInNewWindowId) {
-    fields.push(defineEditorField({
-      id: openInNewWindowId,
-      label: openInNewWindowLabel,
-      type: 'boolean',
+      openInNewWindowLabel,
     }));
   }
 

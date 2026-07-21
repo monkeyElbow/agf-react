@@ -626,11 +626,37 @@ function normalizeCtaFormCanonicalFieldSettings(rawSettings) {
   };
 }
 
-function stripSplitLinkPageRefEditableFields(editableFields) {
+function canonicalizeRouteLinkEditableFields(editableFields) {
   if (!Array.isArray(editableFields)) {
     return editableFields;
   }
-  return editableFields.filter((field) => !String(field?.id || '').trim().endsWith('PageRef'));
+  const routeLinkOpenFieldIds = new Set();
+  const canonicalFields = editableFields.map((field) => {
+    const fieldId = String(field?.id || '').trim();
+    if (!field || typeof field !== 'object' || field.type !== 'route_link') {
+      return field;
+    }
+    const routeRefFieldId = String(field.routeRefFieldId || '').trim();
+    const legacyHrefFieldId = String(field.legacyHrefFieldId || (fieldId.endsWith('LinkJson') ? '' : fieldId) || '').trim();
+    const baseFieldId = String(routeRefFieldId || legacyHrefFieldId || fieldId).replace(/(?:PageRef|Url|Path|Href|LinkJson)$/, '');
+    const linkJsonFieldId = String(field.linkJsonFieldId || (fieldId.endsWith('LinkJson') ? fieldId : '') || (baseFieldId ? `${baseFieldId}LinkJson` : '')).trim();
+    const openInNewWindowFieldId = String(field.openInNewWindowFieldId || (legacyHrefFieldId ? legacyHrefFieldId.replace(/(?:Url|Path|Href)$/, 'OpenInNewWindow') : '') || '').trim();
+    if (openInNewWindowFieldId) {
+      routeLinkOpenFieldIds.add(openInNewWindowFieldId);
+    }
+    return {
+      ...field,
+      id: linkJsonFieldId || fieldId,
+      legacyHrefFieldId,
+      routeRefFieldId,
+      linkJsonFieldId,
+      openInNewWindowFieldId,
+    };
+  });
+  return canonicalFields.filter((field) => {
+    const fieldId = String(field?.id || '').trim();
+    return !fieldId.endsWith('PageRef') && !routeLinkOpenFieldIds.has(fieldId);
+  });
 }
 
 function normalizePageBlockState(pathname, block) {
@@ -641,7 +667,7 @@ function normalizePageBlockState(pathname, block) {
     });
   }
   if (Array.isArray(nextBlock.editableFields)) {
-    nextBlock.editableFields = stripSplitLinkPageRefEditableFields(nextBlock.editableFields);
+    nextBlock.editableFields = canonicalizeRouteLinkEditableFields(nextBlock.editableFields);
   }
   if (
     String(nextBlock?.kind || '').trim().toLowerCase() === 'cta_form'
