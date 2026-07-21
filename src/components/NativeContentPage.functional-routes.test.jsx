@@ -304,6 +304,9 @@ describe('NativeContentPage functional routes', () => {
     expect(widgetSection?.className).not.toContain('native-dynamic-page-content');
     expect(widgetSection?.querySelector('.net-worth-tool')).toBeTruthy();
     expect(widgetSection?.querySelector('.native-info-section-copy')).toBeNull();
+    expect(screen.getByText('Take inventory of your financial reality.')).toBeTruthy();
+    expect(screen.queryByText(/Add your assets and liabilities/i)).toBeNull();
+    expect(screen.queryByText(/Estimate what your net worth could be in the future based on specified growth rates/i)).toBeNull();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
   });
 
