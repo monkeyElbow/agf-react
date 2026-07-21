@@ -13371,11 +13371,19 @@
 }
 
 .native-info-page--forms .native-functional-page-head--forms {
-  padding-bottom: clamp(0.65rem, 1.25vw, 0.95rem);
+  padding: clamp(2.1rem, 4vw, 3rem) 0 clamp(1.15rem, 3vw, 1.9rem);
+  background: #ffffff;
+  border-bottom: 0;
 }
 
 .native-info-page--forms .native-functional-page-head--forms h1 {
-  margin-bottom: 0.18rem;
+  --ag-letter-spacing-avenir-heading: var(--ag-letter-spacing-avenir-hero);
+  margin: 0;
+  color: var(--ag-color-atlantean);
+  font-family: var(--ag-font-heading);
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
 }
 
 .native-info-page--forms .native-functional-page-head--forms p {
@@ -13728,7 +13736,7 @@
 }
 
 .native-forms-section {
-  padding-top: clamp(0.9rem, 1.8vw, 1.2rem);
+  padding-top: 0;
 }
 
 .native-forms-tools {
@@ -13736,7 +13744,21 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.75rem 1rem;
   align-items: end;
-  margin-bottom: 0.9rem;
+  margin-bottom: clamp(1.7rem, 3vw, 2.35rem);
+}
+
+.native-forms-search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.native-forms-search > input {
+  min-height: 3.35rem;
+  padding: 0.72rem 1.2rem;
 }
 
 .native-forms-grid {
@@ -13770,9 +13792,9 @@
   margin: 0;
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-helv);
-  font-size: clamp(1.05rem, 1.45vw, 1.22rem);
+  font-size: clamp(1.22rem, 1.8vw, 1.48rem);
   line-height: 1.12;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .native-forms-group-head p {

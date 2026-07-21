@@ -247,13 +247,13 @@ function FormsLibraryRouteSection({ seedForms, NativeLinkRenderer }) {
       <div className="ag-panel-rail">
         <div className="native-forms-tools">
           <label htmlFor="forms-library-search" className="native-prospectus-search native-forms-search">
-            <span>Search forms</span>
+            <span className="native-forms-search-label">Search forms</span>
             <input
               id="forms-library-search"
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Type a form name or topic"
+              placeholder="Start typing to search"
             />
           </label>
           <p className="native-prospectus-count native-forms-count">
@@ -421,12 +421,15 @@ export function NativeFormsRouteRenderer({
   seedForms,
   NativeLinkRenderer,
 }) {
+  const displayIntro = String(intro || '').trim();
+  const shouldShowIntro = displayIntro && displayIntro !== 'Browse AGFinancial form links by topic.';
+
   return (
     <div ref={pageRef} className={`ag-page-shell service-native-page native-info-page${compactClass}${pageClass}`}>
       <section className="native-functional-page-head native-functional-page-head--forms">
         <div className="ag-panel-rail">
           <h1>Forms</h1>
-          {intro ? <p>{intro}</p> : null}
+          {shouldShowIntro ? <p>{displayIntro}</p> : null}
         </div>
       </section>
       <FormsLibraryRouteSection seedForms={seedForms} NativeLinkRenderer={NativeLinkRenderer} />

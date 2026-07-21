@@ -173,6 +173,8 @@ describe('native functional route renderers', () => {
     );
 
     expect(screen.getByText('2 of 2 forms')).toBeTruthy();
+    expect(screen.queryByText('Browse AGFinancial form links by topic.')).toBeNull();
+    expect(screen.getByPlaceholderText('Start typing to search')).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Seed Fallback Form' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'Insurance' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Retirement' })).toBeTruthy();
