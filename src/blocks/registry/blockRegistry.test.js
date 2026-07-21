@@ -24,6 +24,14 @@ function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
 }
 
+const ACTION_LIKE_SPLIT_LINK_SETTING_PATTERN = /^(?:button\d*|button2?|cta|browse|card\d+(?:Button\d*)?|col\d+Button|leftButton|rightButton)(?:Url|Path|Href|PageRef|OpenInNewWindow)$/;
+
+function expectNoActionLikeSplitLinkSettings(settings = {}) {
+  Object.keys(settings || {}).forEach((key) => {
+    expect(key).not.toMatch(ACTION_LIKE_SPLIT_LINK_SETTING_PATTERN);
+  });
+}
+
 describe('canonical block registry', () => {
   it('registers the first migrated block kinds with required metadata', () => {
     expect(getMigratedBlockKinds()).toEqual(['content', 'calculator_cta', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip']);
@@ -76,6 +84,16 @@ describe('canonical block registry', () => {
     expect(getBlockPresetDefinition('calculator_cta', 'default')).toBeNull();
     expect(getBlockPresetDefinition('feature_panel', 'default')).toBeNull();
     expect(getBlockPresetDefinition('cta_form', 'default')).toBeNull();
+  });
+
+  it('keeps definition and preset defaults free of action-like split link settings', () => {
+    getMigratedBlockKinds().forEach((kind) => {
+      const definition = getBlockDefinition(kind);
+      expectNoActionLikeSplitLinkSettings(definition?.defaults);
+      getBlockPresetDefinitions(kind).forEach((preset) => {
+        expectNoActionLikeSplitLinkSettings(preset?.defaults);
+      });
+    });
   });
 
   it('keeps columns variants on the canonical columns definition while photo-column remains separate', () => {

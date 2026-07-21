@@ -6,6 +6,7 @@ import {
   resolveCtaBandPresetDefinition,
   resolveCtaBandPresetId,
 } from './ctaBandPresets';
+import { parseLinkValueJson } from './linkValue';
 
 describe('cta band preset definitions', () => {
   it('keeps the canonical non-form CTA presets explicit', () => {
@@ -25,16 +26,26 @@ describe('cta band preset definitions', () => {
   });
 
   it('keeps CTA band preset defaults and editor guardrails intentionally bounded', () => {
-    expect(buildCtaBandPresetSettings('dashboard-login')).toMatchObject({
+    const dashboardSettings = buildCtaBandPresetSettings('dashboard-login');
+
+    expect(dashboardSettings).toMatchObject({
       title: 'Already an investor?',
       body: 'Log in to manage.',
       buttonLabel: 'Go to my dashboard',
-      buttonUrl: 'https://secure.agfinancial.org/',
-      buttonOpenInNewWindow: true,
     });
+    expect(parseLinkValueJson(dashboardSettings.buttonLinkJson)).toEqual({
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/',
+      openInNewWindow: true,
+    });
+    expect(dashboardSettings).not.toEqual(expect.objectContaining({
+      buttonUrl: expect.any(String),
+      buttonPageRef: expect.any(String),
+      buttonOpenInNewWindow: expect.any(Boolean),
+    }));
     expect(getCtaBandPresetDefinition('default')?.editor).toMatchObject({
       contentFieldIds: ['title', 'body', 'bgTone'],
-      actionFieldIds: ['buttonLabel', 'buttonUrl', 'buttonPageRef', 'buttonOpenInNewWindow'],
+      actionFieldIds: ['buttonLabel', 'buttonLinkJson'],
     });
   });
 });

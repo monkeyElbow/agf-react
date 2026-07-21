@@ -1,3 +1,5 @@
+import { serializeLinkValue } from './linkValue';
+
 const CTA_BAND_PRESET_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: 'default',
@@ -9,13 +11,15 @@ const CTA_BAND_PRESET_DEFINITIONS = Object.freeze([
       body: 'Choose the action that moves you forward.',
       bgTone: 'white',
       buttonLabel: 'Contact us',
-      buttonUrl: '/contact-us',
-      buttonPageRef: '/contact-us',
-      buttonOpenInNewWindow: false,
+      buttonLinkJson: serializeLinkValue({
+        kind: 'internal',
+        to: '/contact-us',
+        openInNewWindow: false,
+      }),
     }),
     editor: Object.freeze({
       contentFieldIds: Object.freeze(['title', 'body', 'bgTone']),
-      actionFieldIds: Object.freeze(['buttonLabel', 'buttonUrl', 'buttonPageRef', 'buttonOpenInNewWindow']),
+      actionFieldIds: Object.freeze(['buttonLabel', 'buttonLinkJson']),
     }),
   }),
   Object.freeze({
@@ -28,13 +32,15 @@ const CTA_BAND_PRESET_DEFINITIONS = Object.freeze([
       body: 'Log in to manage.',
       bgTone: 'white',
       buttonLabel: 'Go to my dashboard',
-      buttonUrl: 'https://secure.agfinancial.org/',
-      buttonPageRef: '',
-      buttonOpenInNewWindow: true,
+      buttonLinkJson: serializeLinkValue({
+        kind: 'external',
+        href: 'https://secure.agfinancial.org/',
+        openInNewWindow: true,
+      }),
     }),
     editor: Object.freeze({
       contentFieldIds: Object.freeze(['title', 'body', 'bgTone']),
-      actionFieldIds: Object.freeze(['buttonLabel', 'buttonUrl', 'buttonPageRef', 'buttonOpenInNewWindow']),
+      actionFieldIds: Object.freeze(['buttonLabel', 'buttonLinkJson']),
     }),
   }),
 ]);

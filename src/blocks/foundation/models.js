@@ -1,4 +1,5 @@
 import { defineEditorSections, getEditorSectionsForSurface } from './editorDescriptors';
+import { normalizeSplitLinkFieldSettings } from '../../lib/linkValue';
 
 export const BLOCK_KIND_VALUES = Object.freeze([
   'billboard',
@@ -55,6 +56,13 @@ function normalizeStringList(values) {
     Array.from(new Set((Array.isArray(values) ? values : [])
       .map((value) => String(value || '').trim())
       .filter(Boolean))),
+  );
+}
+
+function normalizeBlockDefaultSettings(settings) {
+  return normalizeSplitLinkFieldSettings(
+    settings && typeof settings === 'object' ? settings : {},
+    { stripSplitFields: true },
   );
 }
 
@@ -123,7 +131,7 @@ export function createBlockDefinition(definition) {
             .map((value) => String(value || '').trim())
             .filter(Boolean))),
         ),
-        defaults: Object.freeze({ ...(preset.defaults || {}) }),
+        defaults: Object.freeze({ ...normalizeBlockDefaultSettings(preset.defaults || {}) }),
         editor: Object.freeze({
           ...(preset.editor || {}),
           layoutFieldIds: Object.freeze(Array.isArray(preset?.editor?.layoutFieldIds) ? preset.editor.layoutFieldIds.map((value) => String(value || '').trim()).filter(Boolean) : []),
@@ -179,7 +187,7 @@ export function createBlockDefinition(definition) {
     presets,
     allowedVariants,
     supportedModes,
-    defaults: Object.freeze({ ...(nextDefinition.defaults || {}) }),
+    defaults: Object.freeze({ ...normalizeBlockDefaultSettings(nextDefinition.defaults || {}) }),
     schema: Object.freeze({
       ...(nextDefinition.schema || {}),
       fields: Object.freeze(Array.isArray(schemaFields) ? schemaFields.map((field) => ({ ...field })) : []),

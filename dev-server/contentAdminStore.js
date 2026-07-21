@@ -1066,6 +1066,10 @@ function defaultRecord() {
   };
 }
 
+function stringifyPersistedJson(value) {
+  return `${JSON.stringify(value, null, 2)}\n`;
+}
+
 export function createDevContentAuthorityStore({
   persistenceFile,
   now = () => Date.now(),
@@ -1085,7 +1089,7 @@ export function createDevContentAuthorityStore({
   const persistRecord = (nextRecord = record) => {
     const dir = path.dirname(persistenceFile);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(persistenceFile, JSON.stringify(nextRecord));
+    fs.writeFileSync(persistenceFile, stringifyPersistedJson(nextRecord));
   };
 
   const readSeedBaselinePayload = (filePath = seedBaselineFile) => {
@@ -1148,7 +1152,7 @@ export function createDevContentAuthorityStore({
       seedState: cloneJson(normalizedSeedState),
     };
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(seedBaselineFile, JSON.stringify(payload));
+    fs.writeFileSync(seedBaselineFile, stringifyPersistedJson(payload));
     return {
       fileName: path.basename(seedBaselineFile),
       createdAt,
@@ -1272,7 +1276,7 @@ export function createDevContentAuthorityStore({
       record: cloneJson(record),
     };
 
-    fs.writeFileSync(filePath, JSON.stringify(payload));
+    fs.writeFileSync(filePath, stringifyPersistedJson(payload));
     pruneBackups();
     return {
       fileName,
