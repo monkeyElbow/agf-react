@@ -427,16 +427,16 @@ function companyChildContent(path, title) {
         className: 'careers-native-top-intro',
         copyClassName: 'careers-native-top-intro-copy',
         headingClassName: 'careers-native-top-intro-heading fade-up fade-up-force-observe fade-up-no-shift',
-        emphasisClassName: 'careers-native-top-intro-emphasis fade-up fade-up-force-observe',
+        emphasisClassName: 'careers-native-top-intro-emphasis',
         heading: 'Faith + Career.',
         bodyHtml: '<p class="careers-native-top-intro-body fade-up fade-up-force-observe">You can make a difference in your work. We mean that, and our customers experience it. Our office ecosystem is at the intersection of ministry and expertise. At AGFinancial, it’s our desire to honor Jesus by doing great work, and by treating others well.</p>',
         emphasis: 'What you do here truly matters.',
       },
       sections: [
         {
-          title: 'Just a few reasons you’ll love working here…',
+          title: 'A few reasons you’ll love working here…',
           className: 'careers-native-benefits',
-          titleClassName: 'loans-native-display-heading careers-native-benefits-title',
+          titleClassName: 'loans-native-display-heading careers-native-benefits-title careers-native-benefits-title--roll fade-up fade-up-force-observe',
           fullBleed: true,
           columns: 'four',
           cards: [

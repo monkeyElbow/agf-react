@@ -91,14 +91,16 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(hudSource).toContain(": SURFACE_BG_TONE_OPTIONS.filter((option) => option.value !== 'white');");
   });
 
-  it('keeps custom billboard pages wired to the shared runtime contract instead of page-local fallbacks', () => {
+  it('keeps custom billboard pages wired to the shared runtime contract without page-local fallback blocks', () => {
     const loansSource = readSource('../pages/LoansPage.jsx');
     const retirementSource = readSource('../pages/RetirementPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
     expect(loansSource).toContain("className={`service-native-section dynamic-billboard loans-native-vision-fuel is-bg-${resolvedVisionFuel.bgTone || 'white'} is-text-${resolvedVisionFuel.textTone || 'dark'}");
-    expect(loansSource).toContain("`is-justify-${resolvedVisionFuel.justify || 'center'}`");
-    expect(loansSource).toContain('const visionFuelContentMaxWidthPx = Number(resolvedVisionFuel.contentMaxWidthPx);');
+    expect(loansSource).toContain('{resolvedVisionFuel ? (');
+    expect(loansSource).toContain("`is-justify-${resolvedVisionFuel?.justify || 'center'}`");
+    expect(loansSource).toContain('const visionFuelContentMaxWidthPx = Number(resolvedVisionFuel?.contentMaxWidthPx);');
+    expect(loansSource).not.toContain('fallbackVisionFuel');
     expect(loansSource).toContain('Number.isFinite(visionFuelContentMaxWidthPx) && visionFuelContentMaxWidthPx > 0');
     expect(loansSource).toContain('{visionFuelSubtitle ? (');
     expect(loansSource).toContain(') : visionFuelBody ? (');

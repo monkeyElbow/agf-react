@@ -73,16 +73,16 @@ export const SYSTEM_READABILITY_BOUNDARIES = Object.freeze([
   },
   {
     file: 'src/pages/InvestmentsPage.jsx',
-    owner: 'investments root product route and convergence fallback adapters',
-    currentBoundary: 'root product page with dynamic blocks plus functional fallback assemblies',
-    nextSplit: 'move fallback assemblies behind common block renderer or document them as retained functional behavior',
+    owner: 'investments root product route and custom dynamic block rendering',
+    currentBoundary: 'root product page with route-local calculator, rates, HUD, and block rendering',
+    nextSplit: 'separate calculator/rates widgets from route shell or move simple blocks behind the common renderer',
     pass: 'Pass 5',
   },
   {
     file: 'src/pages/RetirementPage.jsx',
-    owner: 'retirement root product route and convergence fallback adapters',
-    currentBoundary: 'root product page with dynamic blocks plus functional fallback assemblies',
-    nextSplit: 'move fallback assemblies behind common block renderer or document them as retained functional behavior',
+    owner: 'retirement root product route and custom dynamic block rendering',
+    currentBoundary: 'root product page with route-local calculators, HUD, and block rendering',
+    nextSplit: 'separate calculator widgets from route shell or move simple blocks behind the common renderer',
     pass: 'Pass 5',
   },
 ]);
@@ -121,15 +121,15 @@ export const SYSTEM_VISUAL_ACCESSIBILITY_GATES = Object.freeze([
 export const SYSTEM_2_0_READINESS_TARGETS = Object.freeze([
   {
     id: 'forms-canonical-array-schema',
-    status: 'future-migration',
-    currentAdapter: 'CTA form slot compatibility fields',
+    status: 'partially-complete',
+    currentAdapter: 'canonical CTA fieldsJson arrays with guarded slot compatibility fields',
     retireWhen: 'form settings use canonical arrays plus endpoint-specific serializers',
     pass: 'Pass 7',
   },
   {
     id: 'links-canonical-object',
     status: 'partially-complete',
-    currentAdapter: 'canonical link value object with transitional field readers',
+    currentAdapter: 'canonical runtime link value object with guarded transitional snapshot/editor field readers',
     retireWhen: 'runtime, editor, and snapshots all store one canonical link object shape',
     pass: 'Pass 7',
   },
@@ -168,16 +168,9 @@ export const SYSTEM_2_0_READINESS_TARGETS = Object.freeze([
   {
     id: 'admin-blocks-diagnostics',
     route: '/admin/blocks',
-    status: 'legacy-snapshot-diagnostic',
-    currentAdapter: 'legacy snapshot residue audit surface',
-    retireWhen: 'converted into a permanent health dashboard or removed after snapshot recovery is versioned elsewhere',
-    pass: 'Pass 7',
-  },
-  {
-    id: 'root-product-page-fallbacks',
-    status: 'convergence-adapter',
-    currentAdapter: 'Investments, Loans, Retirement, and Services fallback assemblies',
-    retireWhen: 'root product pages converge to common block renderer or keep documented functional fallback behavior',
+    status: 'snapshot-health-diagnostic',
+    currentAdapter: 'snapshot residue audit surface',
+    retireWhen: 'kept as a permanent health dashboard or removed after snapshot recovery is observable elsewhere',
     pass: 'Pass 7',
   },
 ]);

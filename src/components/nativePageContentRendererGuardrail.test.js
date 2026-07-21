@@ -140,6 +140,14 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).not.toContain('.native-info-page--retirement-403b .service-native-section.dynamic-billboard');
   });
 
+  it('keeps the retired standalone 403(b) RMHA feature selectors out of service-native styles', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).not.toContain('retirement-ministers-housing-feature');
+    expect(cssSource).not.toContain('ret403b-housing-feature-');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance');
+  });
+
   it('delegates active functional native routes to extracted renderers instead of keeping inline route mini-apps in NativeContentPage', () => {
     const source = readSource('./NativeContentPage.jsx');
 

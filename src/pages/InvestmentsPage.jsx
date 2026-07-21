@@ -106,25 +106,6 @@ const DEFAULT_CERTIFICATES_BLOCK = {
   },
 };
 
-const testimonials = [
-  {
-    quote: '"It\'s an easy yes for me to continue to recommend AGFinancial."',
-    authorName: 'Jeremy Johnson',
-    authorTitle: 'President, Northwest University',
-  },
-  {
-    quote: '"There are two returns. There\'s a return on the investment, and there\'s a return to the Kingdom."',
-    authorName: 'Bryan Jarrett',
-    authorTitle: 'Pastor, Northplace Church, TX',
-  },
-  {
-    quote: '"Convoy of Hope would not be where we are without our partnership with AGFinancial."',
-    authorName: 'Hal Donaldson',
-    authorTitle: 'President, Convoy of Hope',
-  },
-];
-const defaultInvestmentsTestimonialsFineprint = 'Testimonials are examples only. Every situation is different and results vary.';
-
 const MAX_LADDER_YEARS = 20;
 const DEFAULT_LADDER_YEARS = 5;
 const MAX_VISUALIZE_YEARS = 60;
@@ -1040,8 +1021,6 @@ export default function InvestmentsPage() {
     () => (testimonialsBlockIsHidden ? null : resolveTestimonialsBlockData({
       block: dynamicTestimonialsBlock,
       library: testimonialsLibrary,
-      fallbackItems: testimonials,
-      fallbackFineprint: defaultInvestmentsTestimonialsFineprint,
       defaultTag: 'investments',
     })),
     [dynamicTestimonialsBlock, testimonialsBlockIsHidden, testimonialsLibrary],
@@ -1090,7 +1069,10 @@ export default function InvestmentsPage() {
     if (featurePanelBlockIsHidden) {
       return null;
     }
-    const fallbackSettings = {
+    if (!featurePanelBlock) {
+      return null;
+    }
+    const articleDefaults = {
       title: 'Church Cash Reserves',
       bodyHtml: '<p>Financial stability is essential for long-term growth. Build a practical reserve strategy so your ministry is ready for both opportunity and disruption.</p>',
       body: '',
@@ -1101,17 +1083,11 @@ export default function InvestmentsPage() {
       buttonPageRef: CHURCH_CASH_RESERVES_ARTICLE_FEATURE.to,
       buttonOpenInNewWindow: false,
     };
-    const sourceBlock = featurePanelBlock || {
-      id: 'cash_reserves',
-      kind: 'feature_panel',
-      mode: 'dynamic',
-      settings: fallbackSettings,
-    };
-    const sourceSettings = sourceBlock?.settings && typeof sourceBlock.settings === 'object'
-      ? sourceBlock.settings
+    const sourceSettings = featurePanelBlock?.settings && typeof featurePanelBlock.settings === 'object'
+      ? featurePanelBlock.settings
       : {};
     const normalizedSettings = {
-      ...fallbackSettings,
+      ...articleDefaults,
       ...sourceSettings,
     };
     const currentButtonUrl = String(normalizedSettings.buttonUrl || '').trim();
@@ -1129,7 +1105,7 @@ export default function InvestmentsPage() {
       normalizedSettings.buttonPageRef = CHURCH_CASH_RESERVES_ARTICLE_FEATURE.to;
     }
     return buildDynamicFeaturePanelFromBlock({
-      ...sourceBlock,
+      ...featurePanelBlock,
       settings: normalizedSettings,
     });
   }, [featurePanelBlock, featurePanelBlockIsHidden]);
@@ -1226,8 +1202,6 @@ export default function InvestmentsPage() {
     () => resolveTestimonialsBlockData({
       block: dynamicTestimonialsBlock,
       library: testimonialsHudLibrary,
-      fallbackItems: [],
-      fallbackFineprint: '',
       defaultTag: 'investments',
     }),
     [dynamicTestimonialsBlock, testimonialsHudLibrary],

@@ -7,6 +7,7 @@ import {
   defaultInvestmentsCtaSettings,
   defaultInvestmentsGrowthFeatureSettings,
 } from './investmentsPageSeed';
+import { parseCtaFormFieldsJson } from '../blocks/foundation/forms';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +26,9 @@ describe('investments page seed guardrail', () => {
     expect(ctaBlock?.settings?.title).toBe(defaultInvestmentsCtaSettings.title);
     expect(ctaBlock?.settings?.bodyHtml).toBe(defaultInvestmentsCtaSettings.bodyHtml);
     expect(ctaBlock?.settings?.submitLabel).toBe(defaultInvestmentsCtaSettings.submitLabel);
-    expect(ctaBlock?.settings?.field4Placeholder).toBe(defaultInvestmentsCtaSettings.field4Placeholder);
+    expect(parseCtaFormFieldsJson(ctaBlock?.settings?.fieldsJson)[3]?.placeholder).toBe(
+      parseCtaFormFieldsJson(defaultInvestmentsCtaSettings.fieldsJson)[3]?.placeholder,
+    );
   });
 
   it('keeps InvestmentsPage on the shared investments page seeds instead of local default objects', () => {

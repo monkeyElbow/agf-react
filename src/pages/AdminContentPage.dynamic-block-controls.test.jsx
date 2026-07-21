@@ -358,9 +358,7 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('button1PageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('button1Url', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('button2PageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('button2Url', '/contact-us');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -885,7 +883,6 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/contact-us');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -917,7 +914,6 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/contact-us');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -992,7 +988,6 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('ctaPageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('ctaPath', '/contact-us');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -1280,9 +1275,7 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('button1PageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('button1Url', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('button2PageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('button2Url', '/contact-us');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -1451,9 +1444,7 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('button2PageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('button2Url', '/contact-us');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -1469,23 +1460,24 @@ describe('dynamic block control wiring', () => {
 
   it('wires CTA form controls', () => {
     const block = getDynamicBlock('cta_form');
-    const fieldType = getField(block, 'field1Type');
     const onSettingChange = vi.fn();
 
     render(<CtaFormBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    fireEvent.change(screen.getByLabelText(fieldType.label), {
+    fireEvent.change(screen.getByLabelText('Field 1 type'), {
       target: { value: 'checkbox' },
     });
 
-    expect(onSettingChange).toHaveBeenCalledWith('field1Type', 'checkbox');
+    expect(onSettingChange).toHaveBeenCalledWith('fieldsJson', expect.stringContaining('"type":"checkbox"'));
+    expect(onSettingChange).not.toHaveBeenCalledWith('field1Type', 'checkbox');
   });
 
-  it('keeps CTA form editable fields free of request-form step controls', () => {
+  it('keeps CTA form editable fields canonical while slot controls stay generated mirrors', () => {
     const block = getDynamicBlock('cta_form');
     const editableFieldIds = (Array.isArray(block.editableFields) ? block.editableFields : []).map((field) => field.id);
 
-    expect(editableFieldIds).toContain('field5Label');
+    expect(editableFieldIds).toContain('fieldsJson');
+    expect(editableFieldIds).not.toContain('field5Label');
     expect(editableFieldIds).not.toContain('step1FieldsJson');
     expect(editableFieldIds).not.toContain('step2FieldsJson');
     expect(editableFieldIds).not.toContain('step3FieldsJson');
@@ -1495,7 +1487,7 @@ describe('dynamic block control wiring', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('cta_form');
     const onSettingChange = vi.fn();
-    const fieldLabel = getField(block, 'field1Label').label;
+    const fieldLabel = 'Field 1 label';
 
     try {
       const { rerender } = render(<CtaFormBlockEditor block={block} onSettingChange={onSettingChange} />);
@@ -1516,7 +1508,8 @@ describe('dynamic block control wiring', () => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('field1Label', 'Preferred contact method');
+      expect(onSettingChange).toHaveBeenCalledWith('fieldsJson', expect.stringContaining('"label":"Preferred contact method"'));
+      expect(onSettingChange).not.toHaveBeenCalledWith('field1Label', 'Preferred contact method');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -1529,20 +1522,13 @@ describe('dynamic block control wiring', () => {
     block.settings = {
       ...block.settings,
       fieldsJson: '',
-      field1Enabled: true,
-      field2Enabled: true,
-      field3Enabled: true,
-      field4Enabled: false,
-      field4Label: '',
-      field5Enabled: false,
-      field5Label: '',
     };
 
     render(<CtaFormBlockEditor block={block} onSettingChange={onSettingChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Add field' }));
-    expect(onSettingChange).toHaveBeenCalledWith('fieldsJson', expect.stringContaining('"label":"Field 4"'));
-    expect(onSettingChange).toHaveBeenCalledWith('field4Enabled', true);
+    expect(onSettingChange).toHaveBeenCalledWith('fieldsJson', expect.stringContaining('"label":"Field 1"'));
+    expect(onSettingChange).not.toHaveBeenCalledWith('field4Enabled', true);
 
     fireEvent.click(screen.getByLabelText('Ask for contact preference'));
     expect(onSettingChange).toHaveBeenCalledWith('includeContactPreference', true);
@@ -1829,7 +1815,6 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('browsePageRef', '/services/insurance');
-      expect(onSettingChange).not.toHaveBeenCalledWith('browsePath', '/services/insurance');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -2077,7 +2062,6 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('card1ButtonPageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('card1ButtonUrl', '/contact-us');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -2415,7 +2399,6 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('col1ButtonPageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('col1ButtonUrl', '/contact-us');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -2561,12 +2544,6 @@ describe('dynamic block control wiring', () => {
         target: { value: '/contact-us' },
       });
 
-      expect(onSettingChange).not.toHaveBeenCalledWith('leftButtonUrl', '/contact-us');
-
-      act(() => {
-        vi.advanceTimersByTime(350);
-      });
-
       expect(onSettingChange).toHaveBeenCalledWith('leftButtonUrl', '/contact-us');
       expect(onSettingChange).toHaveBeenCalledWith('leftButtonPageRef', '/contact-us');
     } finally {
@@ -2662,7 +2639,6 @@ describe('dynamic block control wiring', () => {
       });
 
       expect(onSettingChange).toHaveBeenCalledWith('buttonPageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/contact-us');
 
       act(() => {
         vi.advanceTimersByTime(350);

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import { getNativePageContent } from './nativePageContent';
+import { parseCtaFormFieldsJson } from '../blocks/foundation/forms';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,7 +38,7 @@ describe('ministers group life native page content', () => {
     expect(supportBlock?.settings?.supportGroupsJson).toContain('Life Services Toolkit');
     expect(ctaBlock?.settings?.anchorId).toBe('form');
     expect(ctaBlock?.settings?.title).toBe('Still need help?');
-    expect(ctaBlock?.settings?.field4Placeholder).toBe('How can we help?');
+    expect(parseCtaFormFieldsJson(ctaBlock?.settings?.fieldsJson)[3]?.placeholder).toBe('How can we help?');
   });
 
   it('keeps the enrollment steps on a white, full-content-width single-column stack with tighter copy and spaced subtitle rhythm', () => {

@@ -946,6 +946,7 @@ export function buildDynamicBillboardFromBlock(block) {
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
   const subtitle = String(settings.subtitle || '').trim();
   const subtitleClassName = normalizeHighlightClassName(settings.subtitleClassName || '');
+  const sectionClassName = sanitizeClassName(settings.sectionClassName || '');
   const bodyHtml = String(settings.bodyHtml || '').trim();
   const body = String(settings.body || '').trim();
   const fineprint = parsePageContentTextLines(settings.fineprint);
@@ -954,7 +955,9 @@ export function buildDynamicBillboardFromBlock(block) {
   const justify = String(settings.justify || 'center').trim().toLowerCase() || 'center';
   const lineSpacing = Number.isFinite(Number(settings.lineSpacing)) ? Number(settings.lineSpacing) : 1;
   const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);
-  const titleFontFamily = normalizeBillboardTitleFontFamily(settings.titleFontFamily);
+  const titleFontFamily = sectionClassName.split(/\s+/).includes('legacy-giving-joy')
+    ? 'helv'
+    : normalizeBillboardTitleFontFamily(settings.titleFontFamily);
   const titleFontWeight = normalizeBillboardTitleFontWeight(settings.titleFontWeight, titleFontFamily);
   const titleSizeRem = normalizeBillboardTitleSizeRem(settings.titleSizeRem);
   const titleLetterSpacingEm = normalizeBillboardTitleLetterSpacingEm(settings.titleLetterSpacingEm, titleFontFamily);
@@ -1014,7 +1017,7 @@ export function buildDynamicBillboardFromBlock(block) {
     titleClassName,
     titleHighlights,
     anchorId: String(settings.anchorId || '').trim(),
-    sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
+    sectionClassName,
     subtitle,
     subtitleClassName,
     subtitleDisplay,
@@ -1640,7 +1643,10 @@ function insertCtaContactPreferenceField(fields) {
 }
 
 function buildDynamicCtaFieldsFromSource(primarySource, fallbackSource = null) {
-  const baseFields = extractCtaFormFields(primarySource, fallbackSource).map((field) => ({
+  const baseFields = extractCtaFormFields(primarySource, fallbackSource, {
+    allowSlotCompatibility: false,
+    preferFallbackSourceBeforeSlotCompatibility: true,
+  }).map((field) => ({
     id: String(field.id || '').trim(),
     label: String(field.label || '').trim(),
     type: String(field.type || 'text').trim().toLowerCase() || 'text',
@@ -2017,7 +2023,9 @@ export function buildDynamicGridFromBlock(block) {
 
   const settings = block.settings || {};
   const presetId = resolveCardGridPresetId(block);
-  const cardsPreset = String(block?.presetId || settings.cardsPreset || '').trim().toLowerCase() === 'value-cards'
+  const sectionClassName = sanitizeClassName(settings.sectionClassName || '');
+  const presetToken = String(block?.presetId || settings.cardsPreset || '').trim().toLowerCase();
+  const cardsPreset = presetToken === 'value-cards' || sectionClassName.split(/\s+/).includes('about-native-values')
     ? 'value-cards'
     : '';
   const title = String(settings.title || '').trim();
@@ -2032,7 +2040,6 @@ export function buildDynamicGridFromBlock(block) {
   const bgTone = normalizeGridBgTone(settings.bgTone || 'white');
   const contentWidth = normalizeDynamicGridWidth(settings.contentWidth);
   const columns = normalizeDynamicGridColumns(settings.columns);
-  const sectionClassName = sanitizeClassName(settings.sectionClassName || '');
   const fullBleed = toBoolean(settings.fullBleed);
   const sand = toBoolean(settings.sand);
   const consultantService = String(settings.consultantService || '').trim().toLowerCase();
@@ -2258,6 +2265,8 @@ export function buildDynamicPageContentFromBlock(block) {
   const pricingEntries = parseMissionAssurePricingEntries(settings.pricingEntriesJson);
   const supportGroups = parsePageContentSupportGroups(settings.supportGroupsJson);
   const fullBleed = toBoolean(settings.fullBleed);
+  const justifyToken = String(settings.justify || 'center').trim().toLowerCase();
+  const justify = justifyToken === 'left' || justifyToken === 'right' ? justifyToken : 'center';
   const tableHeaders = parsePageContentTableHeaders(settings.tableHeadersJson);
   const tableRows = parsePageContentTableRows(settings.tableRowsJson);
   const table = tableHeaders.length && tableRows.length
@@ -2338,6 +2347,7 @@ export function buildDynamicPageContentFromBlock(block) {
     anchorId: String(settings.anchorId || '').trim(),
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     copyWrap: toBoolean(settings.copyWrap),
+    justify,
     actions: action ? [action] : [],
     addressBlock,
   };

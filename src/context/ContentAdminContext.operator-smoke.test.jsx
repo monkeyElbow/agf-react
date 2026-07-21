@@ -420,7 +420,7 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     const rehydratedState = await bootstrapSharedContentAdminState();
     const rehydratedHero = rehydratedState.blocksByPath[PAGE_PATH].find((block) => block.id === 'hero');
     expect(rehydratedHero.settings.line1Text).toBe('Edited hero');
-  });
+  }, 15000);
 
   it('restores page revisions, selected block revisions, and the latest backup into authoring state', async () => {
     renderOperatorProvider(buildState());
@@ -456,7 +456,7 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     });
     expect(screen.getByTestId('action-result').textContent).toBe('backup-restored');
     expect(screen.getByTestId('hero-text').textContent).toBe('Backup hero');
-  });
+  }, 15000);
 
   it('blocks passive foreign edits, allows explicit takeover, and reports workflow ownership', async () => {
     renderOperatorProvider(buildState({

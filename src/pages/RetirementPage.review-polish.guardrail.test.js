@@ -93,6 +93,10 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).not.toContain('data-block-id="housing_feature"');
     expect(source).toContain('function buildRetirementDoTheMathRuntime(block) {');
     expect(source).toContain("const runtime = buildDynamicBillboardFromBlock(block);");
+    expect(source).toContain("const RETIREMENT_SCALE_REVEAL_CLASS_NAME = 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up';");
+    expect(source).toContain("const RETIREMENT_SCALE_REVEAL_ROOT_MARGIN = '0px 0px -20% 0px';");
+    expect(source).toContain('copyClassName: appendRetirementScaleRevealClassName(runtime.copyClassName),');
+    expect(source).toContain('data-fade-root-margin={retirementDoTheMathRuntime.copyFadeRootMargin || RETIREMENT_SCALE_REVEAL_ROOT_MARGIN}');
     expect(source).toContain('<HomeDoTheMathBadge');
     expect(source).not.toContain("id: 'home_do_the_math'");
     expect(source).toContain('className={`service-native-section retirement-do-the-math-billboard');

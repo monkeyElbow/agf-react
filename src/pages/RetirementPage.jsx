@@ -13,8 +13,11 @@ import SafeRichText from '../components/SafeRichText';
 import { HomeDoTheMathBadge } from '../components/blocks/PageBlocksRenderer';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import {
+  parseCtaFormFieldsJson,
+  serializeCtaFormFields,
+} from '../blocks/foundation/forms';
+import {
   defaultRetirementCtaSettings,
-  RETIREMENT_CTA_STATE_OPTIONS_TEXT,
 } from '../data/ctaFormSeeds';
 import {
   buildDefaultRetirementBillboardRuntime,
@@ -63,20 +66,6 @@ import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
 import { heroTitleSizeRemToRuntimeCss, normalizeHeroTitleLetterSpacingEm } from '../lib/heroTitleSize';
 import { buildHeroLineStyle } from '../lib/heroLineStyle';
 
-const testimonials = [
-  {
-    quote: '“I so appreciate AGFinancial for making sure our church team is set up for success.”',
-    author: 'Russell Bryan Johnson, Lead Pastor, Pursuit NW',
-  },
-  {
-    quote: 'AGFinancial is more than a financial institution. They are my partners and coworkers who are also involved in ministry, so they speak my language.',
-    author: 'Nino Gonzales, Lead Pastor, Calvario City Church, FL',
-  },
-  {
-    quote: '“I absolutely trust what they stand for. I trust the people who work there…professional, godly, friendly.”',
-    author: 'Mike McClaflin, AGWM, Convoy of Hope',
-  },
-];
 const RETIREMENT_TOP_3_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   slug: 'top-3-investing-mistakes-to-avoid',
   title: 'Top 3 investing mistakes to avoid...',
@@ -99,31 +88,50 @@ const states = [
 const DEFAULT_RETIREMENT_INTRO = buildDefaultRetirementIntroRuntime();
 const DEFAULT_RETIREMENT_BILLBOARD = buildDefaultRetirementBillboardRuntime();
 const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD = buildDefaultRetirementRolloverBillboardRuntime();
+const RETIREMENT_SCALE_REVEAL_CLASS_NAME = 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up';
+const RETIREMENT_SCALE_REVEAL_ROOT_MARGIN = '0px 0px -20% 0px';
 function normalizeRetirementCtaSettings(settings = {}) {
   const nextSettings = {
     ...defaultRetirementCtaSettings,
     ...(settings && typeof settings === 'object' ? settings : {}),
   };
-  const field4Label = String(nextSettings.field4Label || '').trim().toLowerCase();
-  const field4Type = String(nextSettings.field4Type || '').trim().toLowerCase();
-  const hasLegacyMessageField = field4Label === 'message' || field4Type === 'textarea';
-  const hasStateField = field4Type === 'select' && field4Label === 'state';
+  const fields = parseCtaFormFieldsJson(nextSettings.fieldsJson);
+  const defaultFields = parseCtaFormFieldsJson(defaultRetirementCtaSettings.fieldsJson);
+  const defaultStateField = defaultFields.find((field) => (
+    String(field.id || '').trim().toLowerCase() === 'state'
+    || (
+      String(field.type || '').trim().toLowerCase() === 'select'
+      && String(field.label || '').trim().toLowerCase() === 'state'
+    )
+  ));
+  const hasStateField = fields.some((field) => (
+    String(field.id || '').trim().toLowerCase() === 'state'
+    || (
+      String(field.type || '').trim().toLowerCase() === 'select'
+      && String(field.label || '').trim().toLowerCase() === 'state'
+    )
+  ));
+  const messageIndex = fields.findIndex((field) => (
+    String(field.id || '').trim().toLowerCase() === 'message'
+    || String(field.label || '').trim().toLowerCase() === 'message'
+    || String(field.type || '').trim().toLowerCase() === 'textarea'
+  ));
 
   nextSettings.bodyHtml = '';
 
-  if (!hasStateField && hasLegacyMessageField) {
-    nextSettings.field4Enabled = true;
-    nextSettings.field4Type = 'select';
-    nextSettings.field4Label = 'State';
-    nextSettings.field4Placeholder = 'Select a State';
-    nextSettings.field4Options = RETIREMENT_CTA_STATE_OPTIONS_TEXT;
-    nextSettings.field4Required = true;
-    nextSettings.field5Enabled = true;
-    nextSettings.field5Type = 'textarea';
-    nextSettings.field5Label = 'Message';
-    nextSettings.field5Placeholder = 'What would you like to discuss?';
-    nextSettings.field5Options = '';
-    nextSettings.field5Required = false;
+  if (!hasStateField && messageIndex >= 0 && defaultStateField) {
+    const messageField = {
+      ...fields[messageIndex],
+      id: 'message',
+      label: 'Message',
+      type: 'textarea',
+      placeholder: fields[messageIndex]?.placeholder || 'What would you like to discuss?',
+    };
+    nextSettings.fieldsJson = serializeCtaFormFields([
+      ...fields.filter((_, index) => index !== messageIndex),
+      defaultStateField,
+      messageField,
+    ]);
   }
 
   return nextSettings;
@@ -169,6 +177,14 @@ function buildRetirementBillboardActionRowStyle(justify) {
   return { justifyContent: 'center' };
 }
 
+function appendRetirementScaleRevealClassName(className) {
+  const classNames = [
+    ...String(className || '').split(/\s+/),
+    ...RETIREMENT_SCALE_REVEAL_CLASS_NAME.split(/\s+/),
+  ].map((token) => token.trim()).filter(Boolean);
+  return [...new Set(classNames)].join(' ');
+}
+
 function buildRetirementDoTheMathRuntime(block) {
   if (!block || block.kind !== 'billboard' || block.mode !== 'dynamic') {
     return null;
@@ -182,6 +198,9 @@ function buildRetirementDoTheMathRuntime(block) {
   return {
     ...runtime,
     justify: 'left',
+    scrollReveal: runtime.scrollReveal || 'scale-up',
+    copyClassName: appendRetirementScaleRevealClassName(runtime.copyClassName),
+    copyFadeRootMargin: runtime.copyFadeRootMargin || RETIREMENT_SCALE_REVEAL_ROOT_MARGIN,
   };
 }
 
@@ -627,7 +646,6 @@ export default function RetirementPage() {
     () => resolveTestimonialsBlockData({
       block: dynamicTestimonialsBlock,
       library: testimonialsLibrary,
-      fallbackItems: testimonials,
       defaultTag: 'retirement',
     }),
     [dynamicTestimonialsBlock, testimonialsLibrary],
@@ -921,8 +939,6 @@ export default function RetirementPage() {
     () => resolveTestimonialsBlockData({
       block: dynamicTestimonialsBlock,
       library: testimonialsHudLibrary,
-      fallbackItems: [],
-      fallbackFineprint: '',
       defaultTag: 'retirement',
     }),
     [dynamicTestimonialsBlock, testimonialsHudLibrary],
@@ -2078,7 +2094,10 @@ export default function RetirementPage() {
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('columns_math')} />
           {renderHudAnchor('columns_math')}
           <div className="ag-panel-rail">
-            <div className="native-info-section-copy is-justify-left">
+            <div
+              className={`native-info-section-copy ${retirementDoTheMathRuntime.copyClassName || RETIREMENT_SCALE_REVEAL_CLASS_NAME} is-justify-left`}
+              data-fade-root-margin={retirementDoTheMathRuntime.copyFadeRootMargin || RETIREMENT_SCALE_REVEAL_ROOT_MARGIN}
+            >
               <HomeDoTheMathBadge
                 linkTarget={
                   retirementDoTheMathRuntime.action?.to
@@ -2373,6 +2392,7 @@ export default function RetirementPage() {
           submitButtonClassName="service-native-btn retirement-btn-reset"
           fieldIdPrefix="retirement-connect"
           titlePlacement="inside"
+          renderDefaultWhenMissing={false}
         />
       </div>
 

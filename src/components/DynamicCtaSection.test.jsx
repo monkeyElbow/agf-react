@@ -1,6 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { serializeCtaFormFields } from '../blocks/foundation/forms';
 import DynamicCtaSection from './DynamicCtaSection';
+
+const ctaFieldsJson = (fields) => serializeCtaFormFields(fields);
 
 describe('DynamicCtaSection', () => {
   it('applies outline submit button styling from dynamic CTA settings', () => {
@@ -16,12 +19,9 @@ describe('DynamicCtaSection', () => {
               submitLabel: 'Send it',
               submitStyle: 'outline',
               submitTone: 'mango',
-              field1Label: 'Name',
-              field1Type: 'text',
-              field1Required: true,
-              field2Enabled: false,
-              field3Enabled: false,
-              field4Enabled: false,
+              fieldsJson: ctaFieldsJson([
+                { id: 'name', label: 'Name', type: 'text', required: true },
+              ]),
             },
           },
         ]}
@@ -37,6 +37,41 @@ describe('DynamicCtaSection', () => {
     expect(button.className).toContain('is-tone-mango');
   });
 
+  it('can suppress default CTA rendering when a managed page is missing its CTA block', () => {
+    const { container } = render(
+      <DynamicCtaSection
+        managedBlocks={[]}
+        defaultSettings={{
+          title: 'Default CTA',
+          fieldsJson: ctaFieldsJson([
+            { id: 'email', label: 'Email', type: 'email', required: true },
+          ]),
+        }}
+        renderDefaultWhenMissing={false}
+      />,
+    );
+
+    expect(container.querySelector('.native-dynamic-cta')).toBeNull();
+    expect(screen.queryByText('Default CTA')).toBeNull();
+  });
+
+  it('keeps default CTA rendering available for unmanaged fallback callers', () => {
+    render(
+      <DynamicCtaSection
+        managedBlocks={[]}
+        defaultSettings={{
+          title: 'Default CTA',
+          fieldsJson: ctaFieldsJson([
+            { id: 'email', label: 'Email', type: 'email', required: true },
+          ]),
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Default CTA')).toBeTruthy();
+    expect(screen.getByLabelText('Email')).toBeTruthy();
+  });
+
   it('falls back to dark submit tone when dark style is selected', () => {
     render(
       <DynamicCtaSection
@@ -49,12 +84,9 @@ describe('DynamicCtaSection', () => {
               title: 'Imagine the possibilities.',
               submitLabel: 'Follow up',
               submitStyle: 'dark',
-              field1Label: 'Email',
-              field1Type: 'email',
-              field1Required: true,
-              field2Enabled: false,
-              field3Enabled: false,
-              field4Enabled: false,
+              fieldsJson: ctaFieldsJson([
+                { id: 'email', label: 'Email', type: 'email', required: true },
+              ]),
             },
           },
         ]}
@@ -79,12 +111,9 @@ describe('DynamicCtaSection', () => {
             settings: {
               title: 'Imagine the possibilities.',
               submitLabel: 'Follow up',
-              field1Label: 'Email',
-              field1Type: 'email',
-              field1Required: true,
-              field2Enabled: false,
-              field3Enabled: false,
-              field4Enabled: false,
+              fieldsJson: ctaFieldsJson([
+                { id: 'email', label: 'Email', type: 'email', required: true },
+              ]),
             },
           },
         ]}
@@ -110,12 +139,9 @@ describe('DynamicCtaSection', () => {
               title: 'Ready to build your retirement plan?',
               bodyHtml: '<p>Let&apos;s explore together.</p>',
               submitLabel: 'Follow up with me',
-              field1Label: 'Name',
-              field1Type: 'text',
-              field1Required: true,
-              field2Enabled: false,
-              field3Enabled: false,
-              field4Enabled: false,
+              fieldsJson: ctaFieldsJson([
+                { id: 'name', label: 'Name', type: 'text', required: true },
+              ]),
             },
           },
         ]}
@@ -144,21 +170,19 @@ describe('DynamicCtaSection', () => {
             settings: {
               title: 'We help every step of the way. Always.',
               submitLabel: 'Follow up with me',
-              field1Label: 'Name',
-              field1Type: 'text',
-              field1Required: true,
-              field2Label: 'Email',
-              field2Type: 'email',
-              field2Required: true,
-              field3Label: 'Phone',
-              field3Type: 'tel',
-              field4Label: 'Planned giving product of interest*',
-              field4Type: 'select',
-              field4Options: 'donor-advised-fund|Donor Advised Fund',
-              field4Required: true,
-              field5Enabled: true,
-              field5Label: 'Message',
-              field5Type: 'textarea',
+              fieldsJson: ctaFieldsJson([
+                { id: 'name', label: 'Name', type: 'text', required: true },
+                { id: 'email', label: 'Email', type: 'email', required: true },
+                { id: 'phone', label: 'Phone', type: 'tel' },
+                {
+                  id: 'planned_giving_product_of_interest',
+                  label: 'Planned giving product of interest*',
+                  type: 'select',
+                  required: true,
+                  options: [{ value: 'donor-advised-fund', label: 'Donor Advised Fund' }],
+                },
+                { id: 'message', label: 'Message', type: 'textarea' },
+              ]),
             },
           },
         ]}
@@ -182,12 +206,9 @@ describe('DynamicCtaSection', () => {
               title: 'Imagine the possibilities.',
               bodyHtml: '<p>Let&apos;s explore together.</p>',
               submitLabel: 'Follow up with me',
-              field1Label: 'Name',
-              field1Type: 'text',
-              field1Required: true,
-              field2Enabled: false,
-              field3Enabled: false,
-              field4Enabled: false,
+              fieldsJson: ctaFieldsJson([
+                { id: 'name', label: 'Name', type: 'text', required: true },
+              ]),
             },
           },
         ]}
@@ -242,12 +263,9 @@ describe('DynamicCtaSection', () => {
               displayMode: 'inline_reveal',
               triggerMode: 'external',
               submitLabel: 'Send',
-              field1Label: 'Email',
-              field1Type: 'email',
-              field1Required: true,
-              field2Enabled: false,
-              field3Enabled: false,
-              field4Enabled: false,
+              fieldsJson: ctaFieldsJson([
+                { id: 'email', label: 'Email', type: 'email', required: true },
+              ]),
             },
           },
         ]}
@@ -277,12 +295,9 @@ describe('DynamicCtaSection', () => {
             settings: {
               title: 'Start here.',
               submitLabel: 'Send',
-              field1Label: 'Email',
-              field1Type: 'email',
-              field1Required: true,
-              field2Enabled: false,
-              field3Enabled: false,
-              field4Enabled: false,
+              fieldsJson: ctaFieldsJson([
+                { id: 'email', label: 'Email', type: 'email', required: true },
+              ]),
             },
           },
         ]}

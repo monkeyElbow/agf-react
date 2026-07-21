@@ -830,7 +830,31 @@ function JustifyPillControl({ label, value, options, onChange, className = '' })
   );
 }
 
-function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, routeOptions = [] }) {
+function commitSplitRouteLinkSettings(onSettingChange, hrefFieldId, routeRefFieldId, nextHrefValue, nextRouteRefValue) {
+  if (!routeRefFieldId) {
+    onSettingChange(hrefFieldId, nextHrefValue);
+    return;
+  }
+
+  const routeRef = String(nextRouteRefValue || '').trim();
+  if (routeRef.startsWith('/')) {
+    onSettingChange(routeRefFieldId, routeRef);
+    onSettingChange(hrefFieldId, nextHrefValue);
+    return;
+  }
+
+  onSettingChange(routeRefFieldId, '');
+  onSettingChange(hrefFieldId, nextHrefValue);
+}
+
+function RouteLinkField({
+  value,
+  routeRefValue,
+  onChange,
+  onRouteRefChange,
+  onRouteLinkChange,
+  routeOptions = [],
+}) {
   const [routeSearch, setRouteSearch] = useState('');
   const allRouteOptions = useMemo(
     () => sortPages(Array.isArray(routeOptions) ? routeOptions : []),
@@ -851,9 +875,14 @@ function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, rout
     if (!page || !page.path) {
       return;
     }
+    const nextRouteRefValue = toManagedPageLinkRef(page);
+    if (typeof onRouteLinkChange === 'function') {
+      onRouteLinkChange(page.path, nextRouteRefValue);
+      return;
+    }
     onChange(page.path);
     if (typeof onRouteRefChange === 'function') {
-      onRouteRefChange(toManagedPageLinkRef(page));
+      onRouteRefChange(nextRouteRefValue);
     }
   };
 
@@ -874,8 +903,12 @@ function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, rout
     if (String(value || '').trim() === matchedPage.path) {
       return;
     }
+    if (typeof onRouteLinkChange === 'function') {
+      onRouteLinkChange(matchedPage.path, String(routeRefValue).trim());
+      return;
+    }
     onChange(matchedPage.path);
-  }, [routeRefValue, value, onChange, onRouteRefChange, allRouteOptions]);
+  }, [routeRefValue, value, onChange, onRouteRefChange, onRouteLinkChange, allRouteOptions]);
 
   return (
     <div className="admin-route-link-control">
@@ -885,10 +918,15 @@ function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, rout
         placeholder="/contact-us"
         onChange={(event) => {
           const nextValue = event.target.value;
+          const exactPage = allRouteOptions.find((page) => page.path === nextValue.trim());
+          const nextRouteRefValue = exactPage ? toManagedPageLinkRef(exactPage) : '';
+          if (typeof onRouteLinkChange === 'function') {
+            onRouteLinkChange(nextValue, nextRouteRefValue);
+            return;
+          }
           onChange(nextValue);
           if (typeof onRouteRefChange === 'function') {
-            const exactPage = allRouteOptions.find((page) => page.path === nextValue.trim());
-            onRouteRefChange(exactPage ? toManagedPageLinkRef(exactPage) : '');
+            onRouteRefChange(nextRouteRefValue);
           }
         }}
       />
@@ -1424,6 +1462,9 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
         routeRefValue={routeRefFieldId ? settings?.[routeRefFieldId] : ''}
         onChange={onChange}
         onRouteRefChange={routeRefFieldId ? (nextValue) => onSettingChange(routeRefFieldId, nextValue) : undefined}
+        onRouteLinkChange={routeRefFieldId ? (nextValue, nextRouteRefValue) => {
+          commitSplitRouteLinkSettings(onSettingChange, field.id, routeRefFieldId, nextValue, nextRouteRefValue);
+        } : undefined}
         routeOptions={routeOptions}
       />
     );
@@ -3679,6 +3720,7 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [] }) 
     updateDraftField,
     commitDraftOnBlur,
     handleRouteRefChange,
+    commitRouteLinkField,
   } = useBufferedStringFieldDrafts({
     settings: introDraftSettings,
     onSettingChange,
@@ -3863,6 +3905,9 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [] }) 
                     routeRefValue={field.routeRefFieldId ? routeRefDraftValues[fieldId] ?? '' : ''}
                     onChange={(nextValue) => updateDraftField(fieldId, nextValue)}
                     onRouteRefChange={field.routeRefFieldId ? (nextValue) => handleRouteRefChange(fieldId, nextValue) : undefined}
+                    onRouteLinkChange={field.routeRefFieldId ? (nextValue, nextRouteRefValue) => {
+                      commitRouteLinkField(fieldId, nextValue, nextRouteRefValue);
+                    } : undefined}
                     routeOptions={routeOptions}
                   />
                 ) : (
@@ -4069,7 +4114,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
     draftValues,
     updateDraftField,
     commitDraftOnBlur,
-    syncRouteRefDraftField,
+    commitRouteLinkHref,
   } = useBufferedStringFieldDrafts({
     settings: billboardDraftSettings,
     onSettingChange,
@@ -4186,8 +4231,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       onButtonLabelBlur={() => commitDraftOnBlur('buttonLabel')}
       buttonHref={String(draftValues.buttonUrl || '')}
       onButtonHrefChange={(nextValue) => {
-        updateDraftField('buttonUrl', nextValue, { skipRouteRefSync: true });
-        syncRouteRefDraftField('buttonUrl', nextValue);
+        commitRouteLinkHref('buttonUrl', nextValue);
       }}
       onButtonHrefBlur={() => commitDraftOnBlur('buttonUrl')}
       buttonHrefLabel="Button URL/path"
@@ -4202,8 +4246,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       onButton2LabelBlur={() => commitDraftOnBlur('button2Label')}
       button2Href={String(draftValues.button2Url || '')}
       onButton2HrefChange={(nextValue) => {
-        updateDraftField('button2Url', nextValue, { skipRouteRefSync: true });
-        syncRouteRefDraftField('button2Url', nextValue);
+        commitRouteLinkHref('button2Url', nextValue);
       }}
       onButton2HrefBlur={() => commitDraftOnBlur('button2Url')}
       button2HrefLabel="Button 2 URL/path"
@@ -4389,21 +4432,6 @@ function useBufferedStringFieldDrafts({
     commitDraftField(fieldId, draftValues[fieldId] ?? '');
   };
 
-  const syncRouteRefDraftField = (fieldId, nextValue) => {
-    const routeRefFieldId = routeFieldIdByFieldId[fieldId];
-    if (!routeRefFieldId) {
-      return;
-    }
-    const exactPage = normalizedRouteOptions.find((page) => page.path === String(nextValue || '').trim());
-    const nextRouteRefValue = exactPage ? toManagedPageLinkRef(exactPage) : '';
-    setRouteRefDraftValues((current) => (
-      current[fieldId] === nextRouteRefValue
-        ? current
-        : { ...current, [fieldId]: nextRouteRefValue }
-    ));
-    onSettingChange(routeRefFieldId, nextRouteRefValue);
-  };
-
   const handleRouteRefChange = (fieldId, nextValue) => {
     const routeRefFieldId = routeFieldIdByFieldId[fieldId];
     if (!routeRefFieldId) {
@@ -4427,13 +4455,46 @@ function useBufferedStringFieldDrafts({
     }
   };
 
+  const commitRouteLinkField = (fieldId, nextValue, nextRouteRefValue) => {
+    const routeRefFieldId = routeFieldIdByFieldId[fieldId];
+    if (!routeRefFieldId) {
+      updateDraftField(fieldId, nextValue, { commitImmediately: true });
+      return;
+    }
+
+    const timerId = commitTimersRef.current.get(fieldId);
+    if (timerId) {
+      window.clearTimeout(timerId);
+      commitTimersRef.current.delete(fieldId);
+    }
+
+    setDraftValues((current) => (
+      current[fieldId] === nextValue
+        ? current
+        : { ...current, [fieldId]: nextValue }
+    ));
+    setRouteRefDraftValues((current) => (
+      current[fieldId] === nextRouteRefValue
+        ? current
+        : { ...current, [fieldId]: nextRouteRefValue }
+    ));
+    setDirtyFieldIds((current) => (current.includes(fieldId) ? current : [...current, fieldId]));
+    commitSplitRouteLinkSettings(onSettingChange, fieldId, routeRefFieldId, nextValue, nextRouteRefValue);
+  };
+
+  const commitRouteLinkHref = (fieldId, nextValue) => {
+    const exactPage = normalizedRouteOptions.find((page) => page.path === String(nextValue || '').trim());
+    commitRouteLinkField(fieldId, nextValue, exactPage ? toManagedPageLinkRef(exactPage) : '');
+  };
+
   return {
     draftValues,
     routeRefDraftValues,
     updateDraftField,
     commitDraftOnBlur,
-    syncRouteRefDraftField,
     handleRouteRefChange,
+    commitRouteLinkField,
+    commitRouteLinkHref,
   };
 }
 
@@ -4468,6 +4529,7 @@ function DraftBackedFieldControlGrid({
     updateDraftField,
     commitDraftOnBlur,
     handleRouteRefChange,
+    commitRouteLinkField,
   } = useBufferedStringFieldDrafts({
     settings,
     onSettingChange,
@@ -4496,6 +4558,9 @@ function DraftBackedFieldControlGrid({
                   routeRefValue={field.routeRefFieldId ? routeRefDraftValues[fieldId] ?? '' : ''}
                   onChange={(nextValue) => updateDraftField(fieldId, nextValue)}
                   onRouteRefChange={field.routeRefFieldId ? (nextValue) => handleRouteRefChange(fieldId, nextValue) : undefined}
+                  onRouteLinkChange={field.routeRefFieldId ? (nextValue, nextRouteRefValue) => {
+                    commitRouteLinkField(fieldId, nextValue, nextRouteRefValue);
+                  } : undefined}
                   routeOptions={routeOptions}
                 />
               ) : field.type === 'textarea' ? (
@@ -4539,6 +4604,7 @@ function SiteFeatureDraftField({
   onBlur,
   routeRefValue = '',
   onRouteRefChange,
+  onRouteLinkChange,
   routeOptions = [],
   fullWidth = false,
 }) {
@@ -4564,6 +4630,7 @@ function SiteFeatureDraftField({
         routeRefValue={routeRefValue}
         onChange={onChange}
         onRouteRefChange={onRouteRefChange}
+        onRouteLinkChange={onRouteLinkChange}
         routeOptions={routeOptions}
       />
     );
@@ -4740,6 +4807,21 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
     onSettingChange('buttonPageRef', exactPage ? toManagedPageLinkRef(exactPage) : '');
   };
 
+  const commitButtonRouteLink = (nextValue, nextRouteRefValue) => {
+    const timerId = commitTimersRef.current.get('buttonUrl');
+    if (timerId) {
+      window.clearTimeout(timerId);
+      commitTimersRef.current.delete('buttonUrl');
+    }
+    setDraftValues((current) => (
+      current.buttonUrl === nextValue
+        ? current
+        : { ...current, buttonUrl: nextValue }
+    ));
+    setDirtyFieldIds((current) => (current.includes('buttonUrl') ? current : [...current, 'buttonUrl']));
+    commitSplitRouteLinkSettings(onSettingChange, 'buttonUrl', 'buttonPageRef', nextValue, nextRouteRefValue);
+  };
+
   const scheduleDraftCommit = (fieldId, nextValue, options = {}) => {
     const timerId = commitTimersRef.current.get(fieldId);
     if (timerId) {
@@ -4838,6 +4920,7 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
                     });
                   }
                 }}
+                onRouteLinkChange={commitButtonRouteLink}
                 routeOptions={routeOptions}
                 fullWidth
               />

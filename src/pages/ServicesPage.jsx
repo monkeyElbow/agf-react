@@ -37,21 +37,6 @@ import { buildDefaultServicesIntroRuntime } from '../data/servicesOverviewSeed';
 const SERVICES_HERO_PIE_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const DEFAULT_SERVICES_INTRO = buildDefaultServicesIntroRuntime();
 
-const testimonials = [
-  {
-    quote: '“Their experience has been a game-changer for us.”',
-    author: 'Rich Wilkerson Jr, Vous Church',
-  },
-  {
-    quote: '“We feel like we’re part of the good work AGFinancial is doing.”',
-    author: 'Mike, Donor Advised Fund Corporate Client',
-  },
-  {
-    quote: '“Our 120-acre center for ministry for children and rural pastors wouldn’t be here today had it not been for the creative ways that AGFinancial can help leverage people’s resources.”',
-    author: 'Bryan Jarrett, Lead Pastor, Northplace Church, TX',
-  },
-];
-const defaultServicesTestimonialsFineprint = 'Testimonials are examples only. Results differ by situation and are not guaranteed.';
 const SERVICES_HERO_PIE_HUD_PANEL_ID = 'services-hero-pie';
 const SERVICES_BREAKDOWN_HUD_PANEL_ID = 'services-breakdown';
 const SERVICES_MATTERS_HUD_PANEL_ID = 'services-matters';
@@ -257,8 +242,6 @@ export default function ServicesPage() {
     () => resolveTestimonialsBlockData({
       block: dynamicTestimonialsBlock,
       library: testimonialsLibrary,
-      fallbackItems: testimonials,
-      fallbackFineprint: defaultServicesTestimonialsFineprint,
       defaultTag: 'services',
     }),
     [dynamicTestimonialsBlock, testimonialsLibrary],
@@ -316,8 +299,6 @@ export default function ServicesPage() {
     () => resolveTestimonialsBlockData({
       block: dynamicTestimonialsBlock,
       library: testimonialsHudLibrary,
-      fallbackItems: [],
-      fallbackFineprint: '',
       defaultTag: 'services',
     }),
     [dynamicTestimonialsBlock, testimonialsHudLibrary],
@@ -952,6 +933,7 @@ export default function ServicesPage() {
           ownership={getOwnershipVisualForBlockId('cta_form')}
           hudAnchor={renderHudAnchor('cta_form')}
           fieldIdPrefix="services-connect"
+          renderDefaultWhenMissing={false}
         />
       </div>
 

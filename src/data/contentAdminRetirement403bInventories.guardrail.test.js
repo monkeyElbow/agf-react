@@ -13,6 +13,41 @@ const RETIREMENT_403B_GUARDRAIL_PATHS = [
   '/services/retirement/403b/403b-individual-enrollment',
   '/services/retirement/403b/403b-group-enrollment',
 ];
+const RETIREMENT_403B_PATH = '/services/retirement/403b';
+const RETIREMENT_403B_CANONICAL_INVENTORY = [
+  { id: 'hero', kind: 'hero', mode: 'dynamic' },
+  { id: 'intro', kind: 'intro', mode: 'dynamic' },
+  { id: 'benefits_cards', kind: 'card_grid', mode: 'dynamic' },
+  { id: 'benefits_callout', kind: 'billboard', mode: 'dynamic' },
+  { id: 'who_qualifies', kind: 'card_grid', mode: 'dynamic' },
+  { id: 'investment_strategy_heading', kind: 'billboard', mode: 'dynamic' },
+  { id: 'investment_strategy_options', kind: 'content', mode: 'dynamic' },
+  { id: 'loan_details', kind: 'content', mode: 'dynamic' },
+  { id: 'loan_apply', kind: 'card_grid', mode: 'dynamic' },
+  { id: 'start_enrollment', kind: 'card_grid', mode: 'dynamic' },
+  { id: 'rate_table', kind: 'content', mode: 'dynamic' },
+  { id: 'contribution_limits', kind: 'content', mode: 'dynamic' },
+  { id: 'rollover_billboard', kind: 'billboard', mode: 'dynamic' },
+  { id: 'housing_feature', kind: 'columns', mode: 'dynamic' },
+  { id: 'online_contributions', kind: 'columns', mode: 'dynamic' },
+  { id: 'cta_form', kind: 'cta_form', mode: 'dynamic' },
+];
+const RETIREMENT_403B_STALE_RMHA_SNAPSHOT_STRINGS = [
+  'strategy_enroll_cta',
+  'retirement-403b-native-strategy-enroll-cta',
+  'ret403b-housing-feature-bullet-intro',
+  'The maximum housing allowance exemption in any tax year is the lesser of:',
+  'The unique benefit, which gives ministers a significant tax savings',
+  'ret403b-housing-feature-shell',
+  'retirement-ministers-housing-feature',
+];
+const RETIREMENT_403B_RUNTIME_RESCUE_STRINGS = [
+  'strategy_enroll_cta',
+  'retirement-403b-native-strategy-enroll-cta',
+  'ret403b-housing-feature-bullet-intro',
+  'The maximum housing allowance exemption in any tax year is the lesser of:',
+  'The unique benefit, which gives ministers a significant tax savings',
+];
 const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
 const RETIREMENT_FUND_AN_IRA_PATH = '/services/retirement/iras/fund-an-ira';
 const RETIREMENT_403B_TERMS_DEFINITIONS_PATH = '/services/retirement/403b/403b-terms-definitions';
@@ -85,6 +120,13 @@ function summarizeContentBlocks(blocks) {
     }));
 }
 
+function expectNoStale403bRmhaSnapshotStrings(blocks, label) {
+  const snapshotText = JSON.stringify(Array.isArray(blocks) ? blocks : []);
+  RETIREMENT_403B_STALE_RMHA_SNAPSHOT_STRINGS.forEach((staleString) => {
+    expect(snapshotText.includes(staleString), `${label} should not contain ${staleString}`).toBe(false);
+  });
+}
+
 describe('403(b) retirement inventory guardrail', () => {
   it('keeps promoted block-only snapshots free of page-content and target-section bridge metadata', () => {
     const sharedRecord = readJson('../../dev-data/content-admin-shared.json');
@@ -117,6 +159,50 @@ describe('403(b) retirement inventory guardrail', () => {
 
       expect(sharedInventory, `${pathname} shared inventory drifted from canonical blueprints`).toEqual(canonicalInventory);
       expect(seedInventory, `${pathname} seed inventory drifted from canonical blueprints`).toEqual(canonicalInventory);
+    });
+  });
+
+  it('keeps the 403(b) canonical block ids and order stable across blueprints and promoted snapshots', () => {
+    const sharedRecord = readJson('../../dev-data/content-admin-shared.json');
+    const seedRecord = readJson('../../dev-data/content-admin-seed-baseline.json');
+    const canonicalBlocksByPath = normalizeStoredConfig({}).blocksByPath || {};
+    const snapshotSets = [
+      ['canonical blueprints', canonicalBlocksByPath[RETIREMENT_403B_PATH] || []],
+      ['shared state', sharedRecord?.state?.blocksByPath?.[RETIREMENT_403B_PATH] || []],
+      ['shared baseSnapshot', sharedRecord?.baseSnapshot?.blocksByPath?.[RETIREMENT_403B_PATH] || []],
+      ['seed seedState', seedRecord?.seedState?.blocksByPath?.[RETIREMENT_403B_PATH] || []],
+    ];
+
+    snapshotSets.forEach(([label, blocks]) => {
+      expect(summarizeInventory(blocks), `${label} 403(b) canonical order drifted`).toEqual(RETIREMENT_403B_CANONICAL_INVENTORY);
+    });
+  });
+
+  it('keeps promoted 403(b) snapshots free of stale RMHA and retired CTA strings', () => {
+    const sharedRecord = readJson('../../dev-data/content-admin-shared.json');
+    const seedRecord = readJson('../../dev-data/content-admin-seed-baseline.json');
+    const snapshotSets = [
+      ['shared state', sharedRecord?.state?.blocksByPath?.[RETIREMENT_403B_PATH] || []],
+      ['shared baseSnapshot', sharedRecord?.baseSnapshot?.blocksByPath?.[RETIREMENT_403B_PATH] || []],
+      ['seed seedState', seedRecord?.seedState?.blocksByPath?.[RETIREMENT_403B_PATH] || []],
+    ];
+
+    snapshotSets.forEach(([label, blocks]) => {
+      expectNoStale403bRmhaSnapshotStrings(blocks, label);
+    });
+  });
+
+  it('keeps stale 403(b) RMHA rescue strings out of runtime normalization sources', () => {
+    const runtimeSources = [
+      ['ContentAdminContext', '../../src/context/ContentAdminContext.jsx'],
+      ['contentAdminStore', '../../dev-server/contentAdminStore.js'],
+    ];
+
+    runtimeSources.forEach(([label, relativePath]) => {
+      const source = readFileSync(path.resolve(__dirname, relativePath), 'utf8');
+      RETIREMENT_403B_RUNTIME_RESCUE_STRINGS.forEach((staleString) => {
+        expect(source.includes(staleString), `${label} should not silently rescue ${staleString}`).toBe(false);
+      });
     });
   });
 

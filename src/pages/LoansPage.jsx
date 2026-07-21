@@ -34,39 +34,6 @@ import {
 import { defaultLoansCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultLoansIntroRuntime } from '../data/loansIntroSeed';
 
-const valueCards = [
-  {
-    title: 'Smart consulting.',
-    tone: 'is-atlantean',
-    body: "Construction surprises usually aren't fun. Reducing those through front-of-project, detailed consultation has saved numerous churches hundreds of thousands of dollars in 'surprise' expenses and fees. Included with every construction loan.",
-  },
-  {
-    title: 'Teamwork.',
-    tone: 'is-mango',
-    body: "We're part of your team. Your AGFinancial consultant is ready to answer questions, hear your dreams, listen to your concerns, and make it all as easy as possible. We don't do broker fees, so that relationship you experience? It's genuine.",
-  },
-  {
-    title: 'Roots with values.',
-    tone: 'is-sandstone',
-    body: 'Over the past 75+ years, AGFinancial has funded more than $1.6 billion in loans to an impressive variety of churches and ministries. Through it all, and just like you, we want to honor Jesus in our partnerships and how we do business.',
-  },
-];
-
-const testimonials = [
-  {
-    quote: '“With AGFinancial’s partnership, we’re excited for what’s ahead.”',
-    author: 'Jen DeWeerdt, City First Church',
-  },
-  {
-    quote: '“Their experience has been a game-changer for us.”',
-    author: 'Rich Wilkerson Jr, Vous Church',
-  },
-  {
-    quote: '“We couldn’t be more pleased with how easy it is to work with their team.”',
-    author: 'Mike Santiago, Focus Church',
-  },
-];
-const defaultLoansTestimonialsFineprint = 'Testimonials found on this site are examples of what we have done for other clients, and what some of our clients have said about us. However, we cannot guarantee the results in any case. Your results may vary and every situation is different. No compensation was provided for these testimonials.';
 const LOANS_TARIFFS_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   slug: 'tariffs-timing-truth-keep-building-through-the-chaos',
   title: 'Tariffs, Timing & Truth: Keep Building Through the Chaos',
@@ -320,50 +287,9 @@ function toBooleanFlag(value) {
   return !['false', '0', 'no', 'off'].includes(token);
 }
 
-function buildLoanValueCardsFallbackBlock() {
-  return {
-    id: 'value_cards',
-    kind: 'columns',
-    type: 'columns',
-    mode: 'dynamic',
-    templateId: 'columns',
-    presetId: 'value-cards',
-    settings: {
-      title: "There's more to every loan.",
-      leadLine: '',
-      followupLine: '',
-      titleClassName: '',
-      titleHighlightsJson: '',
-      bodyHtml: '',
-      justify: 'center',
-      columnsStyle: 'loans-value',
-      bgTone: 'white',
-      contentWidth: 'browser',
-      columns: 'three',
-      col1Enabled: true,
-      col1Type: 'text',
-      col1Title: valueCards[0]?.title || 'Smart consulting.',
-      col1Body: valueCards[0]?.body || '',
-      col2Enabled: true,
-      col2Type: 'text',
-      col2Title: valueCards[1]?.title || 'Teamwork.',
-      col2Body: valueCards[1]?.body || '',
-      col3Enabled: true,
-      col3Type: 'text',
-      col3Title: valueCards[2]?.title || 'Roots with values.',
-      col3Body: valueCards[2]?.body || '',
-      col4Enabled: false,
-      col4Type: 'text',
-      col4Title: '',
-      col4Body: '',
-    },
-  };
-}
-
 function buildLoanValueCardsRenderableBlock(block) {
-  const fallbackBlock = buildLoanValueCardsFallbackBlock();
   if (!block || block.mode !== 'dynamic') {
-    return fallbackBlock;
+    return null;
   }
 
   return {
@@ -373,7 +299,6 @@ function buildLoanValueCardsRenderableBlock(block) {
     templateId: String(block.templateId || '').trim() || 'columns',
     presetId: String(block.presetId || '').trim() || 'value-cards',
     settings: {
-      ...(fallbackBlock.settings || {}),
       ...(block.settings || {}),
       columnsStyle: 'loans-value',
       bgTone: 'white',
@@ -737,41 +662,17 @@ export default function LoansPage({ sectionsOnly = false }) {
     () => buildLoanVisionFuelConfigFromBlock(visionFuelBlock),
     [visionFuelBlock],
   );
-  const fallbackVisionFuel = {
-    title: 'Vision fuel.',
-    titleClassName: '',
-    titleHighlights: parseTextHighlights(''),
-    titleStyle: undefined,
-    subtitle: 'One bold step at a time.',
-    bodyHtml: '<p>Loans guided by your ministry, driven by your mission, and powered by AGFinancial.</p>',
-    body: '',
-    bgTone: 'white',
-    textTone: 'dark',
-    justify: 'center',
-    copyClassName: '',
-    copyFadeRootMargin: '',
-    contentMaxWidthPx: null,
-    action: {
-      label: 'Start the process',
-      to: '/services/loans#form',
-      href: '',
-      openInNewWindow: false,
-      style: 'blue',
-      tone: 'atlantean',
-    },
-    buttonClassName: actionButtonClassName('blue', 'atlantean'),
-  };
-  const resolvedVisionFuel = dynamicVisionFuel || fallbackVisionFuel;
-  const visionFuelTitle = String(resolvedVisionFuel.title || '').trim();
-  const visionFuelSubtitle = String(resolvedVisionFuel.subtitle || '').trim();
-  const visionFuelBodyHtml = String(resolvedVisionFuel.bodyHtml || '').trim();
-  const visionFuelBody = String(resolvedVisionFuel.body || '').trim();
-  const visionFuelAction = resolvedVisionFuel.action || null;
+  const resolvedVisionFuel = dynamicVisionFuel;
+  const visionFuelTitle = String(resolvedVisionFuel?.title || '').trim();
+  const visionFuelSubtitle = String(resolvedVisionFuel?.subtitle || '').trim();
+  const visionFuelBodyHtml = String(resolvedVisionFuel?.bodyHtml || '').trim();
+  const visionFuelBody = String(resolvedVisionFuel?.body || '').trim();
+  const visionFuelAction = resolvedVisionFuel?.action || null;
   const visionFuelButtonLabel = String(visionFuelAction?.label || '').trim();
   const visionFuelButtonHref = String(visionFuelAction?.to || visionFuelAction?.href || '').trim();
   const visionFuelButtonOpenInNewWindow = Boolean(visionFuelAction?.openInNewWindow);
-  const visionFuelButtonClassName = String(resolvedVisionFuel.buttonClassName || '').trim() || 'service-native-btn';
-  const visionFuelContentMaxWidthPx = Number(resolvedVisionFuel.contentMaxWidthPx);
+  const visionFuelButtonClassName = String(resolvedVisionFuel?.buttonClassName || '').trim() || 'service-native-btn';
+  const visionFuelContentMaxWidthPx = Number(resolvedVisionFuel?.contentMaxWidthPx);
   const visionFuelSectionStyle = visionFuelAction
     ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
     : undefined;
@@ -780,15 +681,13 @@ export default function LoansPage({ sectionsOnly = false }) {
     : undefined;
   const visionFuelCopyClassName = [
     'native-info-section-copy',
-    `is-justify-${resolvedVisionFuel.justify || 'center'}`,
-    resolvedVisionFuel.copyClassName || '',
+    `is-justify-${resolvedVisionFuel?.justify || 'center'}`,
+    resolvedVisionFuel?.copyClassName || '',
   ].filter(Boolean).join(' ');
   const testimonialsData = useMemo(
     () => resolveTestimonialsBlockData({
       block: testimonialsBlock,
       library: testimonialsLibrary,
-      fallbackItems: testimonials,
-      fallbackFineprint: defaultLoansTestimonialsFineprint,
       defaultTag: 'loans',
     }),
     [testimonialsBlock, testimonialsLibrary],
@@ -1382,14 +1281,16 @@ export default function LoansPage({ sectionsOnly = false }) {
         </div>
       </section>
 
-      <ColumnsBlock
-        block={renderedValueCardsBlock}
-        resolveTo={resolveRoutePath}
-        ownership={getOwnershipVisualForBlockId('value_cards')}
-        hudAnchor={resolveHudAnchor('value_cards')}
-        sectionId="theresmore"
-        extraSectionClassName={`loans-native-more${getHudBlockStateClassName('value_cards')}`}
-      />
+      {renderedValueCardsBlock ? (
+        <ColumnsBlock
+          block={renderedValueCardsBlock}
+          resolveTo={resolveRoutePath}
+          ownership={getOwnershipVisualForBlockId('value_cards')}
+          hudAnchor={resolveHudAnchor('value_cards')}
+          sectionId="theresmore"
+          extraSectionClassName={`loans-native-more${getHudBlockStateClassName('value_cards')}`}
+        />
+      ) : null}
 
       <section className="service-native-section loans-native-calculator-wrap" id="run-some-numbers">
         <div className="ag-panel-rail">
@@ -1591,70 +1492,72 @@ export default function LoansPage({ sectionsOnly = false }) {
         </div>
       </section>
 
-      <section
-        className={`service-native-section dynamic-billboard loans-native-vision-fuel is-bg-${resolvedVisionFuel.bgTone || 'white'} is-text-${resolvedVisionFuel.textTone || 'dark'}${getHudBlockStateClassName('vision_fuel')}${getOwnershipVisualForBlockId('vision_fuel').className || ''}`}
-        data-block-id="vision_fuel"
-        style={visionFuelSectionStyle || undefined}
-      >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('vision_fuel')} />
-        {renderHudAnchor('vision_fuel')}
-        <div className="ag-panel-rail" style={visionFuelRailStyle || undefined}>
-          <div
-            className={visionFuelCopyClassName}
-            style={resolvedVisionFuel.copyStyle || undefined}
-            data-fade-root-margin={resolvedVisionFuel.copyFadeRootMargin || undefined}
-          >
-            {visionFuelTitle ? (
-              <h2
-                className={resolvedVisionFuel.titleClassName || undefined}
-                style={resolvedVisionFuel.titleStyle}
-              >
-                {resolvedVisionFuel.titleHighlights?.length
-                  ? renderHighlightedText(visionFuelTitle, resolvedVisionFuel.titleHighlights)
-                  : visionFuelTitle}
-              </h2>
-            ) : null}
-            {visionFuelSubtitle ? (
-              <p
-                className={['native-info-section-subtitle', resolvedVisionFuel.subtitleClassName || ''].filter(Boolean).join(' ')}
-                style={resolvedVisionFuel.subtitleStyle || undefined}
-              >
-                {visionFuelSubtitle}
-              </p>
-            ) : null}
-            {visionFuelBodyHtml ? (
-              <SafeRichText as="div" className="native-info-rich-html" html={visionFuelBodyHtml} />
-            ) : visionFuelBody ? (
-              <div className="native-info-rich-html">
-                <p>{visionFuelBody}</p>
-              </div>
-            ) : null}
-            {visionFuelAction && visionFuelButtonLabel && visionFuelButtonHref ? (
-              <div className="service-native-action-row is-centered">
-                {visionFuelButtonHref.startsWith('/') ? (
-                  <Link
-                    to={visionFuelButtonHref}
-                    className={visionFuelButtonClassName}
-                    target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
-                    rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
-                  >
-                    {visionFuelButtonLabel}
-                  </Link>
-                ) : (
-                  <a
-                    href={visionFuelButtonHref}
-                    className={visionFuelButtonClassName}
-                    target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
-                    rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
-                  >
-                    {visionFuelButtonLabel}
-                  </a>
-                )}
-              </div>
-            ) : null}
+      {resolvedVisionFuel ? (
+        <section
+          className={`service-native-section dynamic-billboard loans-native-vision-fuel is-bg-${resolvedVisionFuel.bgTone || 'white'} is-text-${resolvedVisionFuel.textTone || 'dark'}${getHudBlockStateClassName('vision_fuel')}${getOwnershipVisualForBlockId('vision_fuel').className || ''}`}
+          data-block-id="vision_fuel"
+          style={visionFuelSectionStyle || undefined}
+        >
+          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('vision_fuel')} />
+          {renderHudAnchor('vision_fuel')}
+          <div className="ag-panel-rail" style={visionFuelRailStyle || undefined}>
+            <div
+              className={visionFuelCopyClassName}
+              style={resolvedVisionFuel.copyStyle || undefined}
+              data-fade-root-margin={resolvedVisionFuel.copyFadeRootMargin || undefined}
+            >
+              {visionFuelTitle ? (
+                <h2
+                  className={resolvedVisionFuel.titleClassName || undefined}
+                  style={resolvedVisionFuel.titleStyle}
+                >
+                  {resolvedVisionFuel.titleHighlights?.length
+                    ? renderHighlightedText(visionFuelTitle, resolvedVisionFuel.titleHighlights)
+                    : visionFuelTitle}
+                </h2>
+              ) : null}
+              {visionFuelSubtitle ? (
+                <p
+                  className={['native-info-section-subtitle', resolvedVisionFuel.subtitleClassName || ''].filter(Boolean).join(' ')}
+                  style={resolvedVisionFuel.subtitleStyle || undefined}
+                >
+                  {visionFuelSubtitle}
+                </p>
+              ) : null}
+              {visionFuelBodyHtml ? (
+                <SafeRichText as="div" className="native-info-rich-html" html={visionFuelBodyHtml} />
+              ) : visionFuelBody ? (
+                <div className="native-info-rich-html">
+                  <p>{visionFuelBody}</p>
+                </div>
+              ) : null}
+              {visionFuelAction && visionFuelButtonLabel && visionFuelButtonHref ? (
+                <div className="service-native-action-row is-centered">
+                  {visionFuelButtonHref.startsWith('/') ? (
+                    <Link
+                      to={visionFuelButtonHref}
+                      className={visionFuelButtonClassName}
+                      target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
+                      rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
+                    >
+                      {visionFuelButtonLabel}
+                    </Link>
+                  ) : (
+                    <a
+                      href={visionFuelButtonHref}
+                      className={visionFuelButtonClassName}
+                      target={visionFuelButtonOpenInNewWindow ? '_blank' : undefined}
+                      rel={visionFuelButtonOpenInNewWindow ? 'noreferrer' : undefined}
+                    >
+                      {visionFuelButtonLabel}
+                    </a>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <DynamicCtaSection
         managedBlocks={managedBlocks}
@@ -1665,6 +1568,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         hudAnchor={renderHudAnchor('cta_form')}
         formWrapperClassName="loans-native-addon-form"
         fieldIdPrefix="loans-connect"
+        renderDefaultWhenMissing={false}
         onSubmitData={({ values }) => {
           const payload = {
             fields: values,

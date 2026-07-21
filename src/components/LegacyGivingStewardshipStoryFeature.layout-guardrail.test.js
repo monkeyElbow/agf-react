@@ -15,7 +15,7 @@ describe('planned giving stewardship story layout guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.legacy-stewardship-story {');
-    expect(cssSource).toContain('--legacy-stewardship-final-cta-gap: clamp(1rem, 2vw, 1.45rem);');
+    expect(cssSource).toContain('--legacy-stewardship-final-cta-gap: clamp(0.55rem, 1.1vw, 0.85rem);');
     expect(cssSource).toContain('rgba(0, 56, 81, 0.98)');
     expect(cssSource).toContain('linear-gradient(146deg, #036c93 0%, #0899b5 52%, #17b3c7 100%)');
     expect(cssSource).toContain('padding-top: 0;');
@@ -46,7 +46,7 @@ describe('planned giving stewardship story layout guardrail', () => {
     expect(cssSource).toContain('justify-content: center;');
     expect(cssSource).toContain('gap: clamp(0.7rem, 1.3vw, 1rem);');
     expect(cssSource).toContain('min-height: clamp(14.5rem, 24vw, 18rem);');
-    expect(cssSource).toContain('margin-top: clamp(2.8rem, 5.8vw, 4.35rem);');
+    expect(cssSource).toContain('margin-top: 0;');
     expect(cssSource).toContain('@media (max-width: 1099px) {');
     expect(cssSource).toContain('radial-gradient(circle at 16% 14%, rgba(36, 201, 217, 0.22), transparent 34%)');
     expect(cssSource).toContain('gap: clamp(2.15rem, 4.8vw, 3rem);');

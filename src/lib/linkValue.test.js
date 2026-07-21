@@ -3,6 +3,7 @@ import {
   coerceLinkValue,
   coerceLinkValueFromFields,
   linkValueToLinkProps,
+  normalizeSplitLinkFieldSettings,
   validateActionFieldGroup,
   validateLinkFieldGroups,
   validateLinkValue,
@@ -136,6 +137,32 @@ describe('link value helpers', () => {
       href: 'https://example.com',
       documentId: undefined,
       openInNewWindow: true,
+    });
+  });
+
+  it('normalizes transitional split link settings before persistence', () => {
+    expect(normalizeSplitLinkFieldSettings({
+      buttonUrl: '/stale-path',
+      buttonPageRef: '/contact-us',
+      buttonOpenInNewWindow: 'false',
+      button2Url: '/services/loans',
+      button2PageRef: '',
+      button2OpenInNewWindow: 'yes',
+      button3Url: '',
+      button3PageRef: '#anchor',
+      button4Url: 'https://example.com/old',
+      button4PageRef: '/current-page',
+    })).toEqual({
+      buttonUrl: '/contact-us',
+      buttonPageRef: '/contact-us',
+      buttonOpenInNewWindow: false,
+      button2Url: '/services/loans',
+      button2PageRef: '/services/loans',
+      button2OpenInNewWindow: true,
+      button3Url: '#anchor',
+      button3PageRef: '',
+      button4Url: '/current-page',
+      button4PageRef: '/current-page',
     });
   });
 });

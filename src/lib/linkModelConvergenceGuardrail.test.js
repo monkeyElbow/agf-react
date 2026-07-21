@@ -25,16 +25,26 @@ describe('link model convergence guardrail', () => {
     const columnsDefinitionSource = readSource('../blocks/definitions/columns.definition.js');
     const servicesGridDefinitionSource = readSource('../blocks/definitions/servicesGrid.definition.js');
     const cardGridDefinitionSource = readSource('../blocks/definitions/cardGrid.definition.js');
+    const snapshotAuditSource = readSource('../../scripts/content-admin-snapshot-audit.mjs');
+    const contentAdminContextSource = readSource('../context/ContentAdminContext.jsx');
+    const contentAdminStoreSource = readSource('../../dev-server/contentAdminStore.js');
 
     expect(runtimeSource).toContain('coerceLinkValueFromFields');
     expect(runtimeSource).toContain('function buildCanonicalActionLinkFromFields(source, {');
     expect(runtimeSource).not.toContain('coerceLinkValue({');
     expect(linkValueSource).toContain('export function coerceLinkValue');
+    expect(linkValueSource).toContain('export function normalizeSplitLinkFieldSettings');
     expect(linkValueSource).toContain('export function validateActionFieldGroup');
     expect(linkValueSource).not.toContain('coerceLegacyLinkValue');
     expect(linkValueSource).not.toContain('validateLegacyActionFieldGroup');
     expect(linkValueSource).not.toContain('validateLegacyLinkFieldGroup');
     expect(linkValueSource).not.toContain('linkValueToLegacyLinkProps');
+    expect(snapshotAuditSource).toContain('split-link-page-ref-not-internal');
+    expect(snapshotAuditSource).toContain('split-link-internal-target-drift');
+    expect(snapshotAuditSource).toContain('split-link-page-ref-missing');
+    expect(snapshotAuditSource).toContain('split-link-target-conflict');
+    expect(contentAdminContextSource).toContain('normalizeSplitLinkFieldSettings');
+    expect(contentAdminStoreSource).toContain('normalizeSplitLinkFieldSettings');
 
     expect(heroDefinitionSource).toContain('validateActionFieldGroup');
     expect(introDefinitionSource).toContain('validateLinkFieldGroups');

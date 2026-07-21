@@ -7,6 +7,7 @@ import {
   BLOCK_ONLY_MANAGED_PAGE_PATHS,
   BLOCKLESS_MANAGED_PAGE_PATHS,
 } from '../lib/managedPageShells';
+import { parseCtaFormFieldsJson } from '../blocks/foundation/forms';
 
 const TARGET_BRIDGE_SETTING_KEYS = [
   'targetSectionKey',
@@ -26,6 +27,14 @@ function expectNoTargetBridgeSettings(block, label = block?.id || 'block') {
   expect(presentKeys, `${label} should not carry target bridge settings`).toEqual([]);
 }
 
+function getCtaFields(block) {
+  return parseCtaFormFieldsJson(block?.settings?.fieldsJson);
+}
+
+function cloneJson(value) {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
 describe('ContentAdminContext state normalization', () => {
   it('keeps migration adapters named with path scopes and retirement criteria', () => {
     const inventory = getContentAdminMigrationAdapterInventory();
@@ -33,9 +42,9 @@ describe('ContentAdminContext state normalization', () => {
     expect(inventory.map((entry) => entry.id)).toEqual([
       'managed-path-aliases',
       'retirement-403b-snapshot-repairs',
+      'planned-giving-retired-static-comparison',
       'loans-dynamic-block-upgrade',
       'property-casualty-request-repair',
-      'native-hero-default-import',
     ]);
 
     inventory.forEach((entry) => {
@@ -209,6 +218,73 @@ describe('ContentAdminContext state normalization', () => {
     expect(blocksById.get('rollover_billboard')?.settings?.sectionClassName).toContain('retirement-rollover-billboard');
   });
 
+  it('does not silently drop stale standalone 403(b) strategy enroll CTAs from arbitrary stored snapshots', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'investment_strategy_options',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: '<div class="ret403b-strategy-feature"></div>',
+              sectionClassName: 'retirement-403b-native-strategy-feature',
+            },
+          },
+          {
+            id: 'strategy_enroll_cta',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              sectionClassName: 'retirement-403b-native-strategy-enroll-cta',
+              buttonLabel: 'Enroll now',
+              buttonPageRef: '/services/retirement/403b/403b-individual-enrollment',
+            },
+          },
+          {
+            id: 'loan_details',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: '<div class="retirement-403b-loan-copy"><h2>403(b) Plan Loans</h2></div>',
+              sectionClassName: 'retirement-403b-native-loans',
+            },
+          },
+        ],
+      },
+    });
+
+    const blocks = normalized.blocksByPath['/services/retirement/403b'] || [];
+
+    expect(blocks.some((block) => block?.id === 'strategy_enroll_cta')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'investment_strategy_options')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'loan_details')).toBe(true);
+  });
+
+  it('leaves clean current 403(b) snapshots unchanged by legacy ghost rescue branches', () => {
+    const canonicalBlocks = normalizeStoredConfig({}).blocksByPath['/services/retirement/403b'] || [];
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': cloneJson(canonicalBlocks),
+      },
+    });
+    const normalizedBlocks = normalized.blocksByPath['/services/retirement/403b'] || [];
+    const canonicalLoanDetails = canonicalBlocks.find((block) => block?.id === 'loan_details');
+    const normalizedLoanDetails = normalizedBlocks.find((block) => block?.id === 'loan_details');
+    const canonicalHousingFeature = canonicalBlocks.find((block) => block?.id === 'housing_feature');
+    const normalizedHousingFeature = normalizedBlocks.find((block) => block?.id === 'housing_feature');
+
+    expect(normalizedBlocks.map((block) => block?.id)).toEqual(canonicalBlocks.map((block) => block?.id));
+    expect(normalizedBlocks.some((block) => block?.id === 'strategy_enroll_cta')).toBe(false);
+    expect(normalizedLoanDetails?.settings?.title || '').toBe(canonicalLoanDetails?.settings?.title || '');
+    expect(normalizedLoanDetails?.settings?.body || '').toBe(canonicalLoanDetails?.settings?.body || '');
+    expect(normalizedLoanDetails?.settings?.buttonLabel || '').toBe(canonicalLoanDetails?.settings?.buttonLabel || '');
+    expect(normalizedLoanDetails?.settings?.buttonPageRef || '').toBe(canonicalLoanDetails?.settings?.buttonPageRef || '');
+    expect(normalizedLoanDetails?.settings?.anchorId || '').toBe(canonicalLoanDetails?.settings?.anchorId || '');
+    expect(normalizedHousingFeature?.settings?.col2BodyHtml).toBe(canonicalHousingFeature?.settings?.col2BodyHtml);
+    expect(normalizedHousingFeature?.settings?.col2BodyHtml).not.toContain('ret403b-housing-feature-bullet-intro');
+  });
+
   it('keeps the canonical home do-the-math billboard on the dynamic managed path', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
@@ -310,11 +386,13 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock.mode).toBe('dynamic');
     expect(ctaBlock.settings.sectionClassName).toBe('legacy-giving-cta');
     expect(ctaBlock.settings.targetSectionClassName).toBeUndefined();
-    expect(ctaBlock.settings.field4Label).toBe('Planned giving product of interest*');
-    expect(ctaBlock.settings.field4Type).toBe('select');
-    expect(ctaBlock.settings.field4Required).toBe(true);
-    expect(ctaBlock.settings.field5Label).toBe('Message');
-    expect(ctaBlock.settings.field5Type).toBe('textarea');
+    const fields = getCtaFields(ctaBlock);
+    expect(fields[3]).toMatchObject({
+      label: 'Planned giving product of interest*',
+      type: 'select',
+      required: true,
+    });
+    expect(fields[4]).toMatchObject({ label: 'Message', type: 'textarea' });
   });
 
   it('hydrates HTML-backed intro seeds with full body content before any admin edits', () => {
@@ -432,6 +510,72 @@ describe('ContentAdminContext state normalization', () => {
     const legacyGivingBlocks = normalized.blocksByPath['/services/planned-giving'] || [];
     expect(legacyGivingBlocks.some((block) => block?.kind === 'request_form')).toBe(false);
     expect(legacyGivingBlocks.some((block) => block?.kind === 'cta_form')).toBe(true);
+  });
+
+  it('drops the retired planned giving static comparison matrix while keeping the dynamic comparison table', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/planned-giving': [
+          {
+            id: 'comparison_table',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              widget: 'charitable-giving-table',
+              anchorId: 'charitable-giving-plan-comparison',
+              sectionClassName: 'legacy-giving-comparison',
+            },
+          },
+          {
+            id: 'comparison_matrix',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              widget: 'giving-comparison-matrix',
+              sectionClassName: 'legacy-giving-comparison-matrix',
+            },
+          },
+        ],
+      },
+      collaborationByPath: {
+        '/services/planned-giving': {
+          blocks: {
+            comparison_matrix: {
+              draftedBy: { userId: 'dev-old' },
+            },
+            comparison_table: {
+              draftedBy: { userId: 'dev-current' },
+            },
+          },
+          history: [
+            {
+              id: '1710000000000-matrix',
+              action: 'block-draft-saved',
+              blockId: 'comparison_matrix',
+              actor: { userId: 'dev-old', displayName: 'Old Admin' },
+              createdAt: 1710000000000,
+            },
+            {
+              id: '1710000000001-table',
+              action: 'block-draft-saved',
+              blockId: 'comparison_table',
+              actor: { userId: 'dev-current', displayName: 'Current Admin' },
+              createdAt: 1710000000001,
+            },
+          ],
+        },
+      },
+    });
+
+    const legacyGivingBlocks = normalized.blocksByPath['/services/planned-giving'] || [];
+
+    expect(legacyGivingBlocks.some((block) => block?.id === 'comparison_table')).toBe(true);
+    expect(legacyGivingBlocks.some((block) => block?.id === 'comparison_matrix')).toBe(false);
+    expect(legacyGivingBlocks.some((block) => block?.settings?.widget === 'giving-comparison-matrix')).toBe(false);
+    expect(normalized.collaborationByPath['/services/planned-giving']?.blocks?.comparison_matrix).toBeUndefined();
+    expect(normalized.collaborationByPath['/services/planned-giving']?.blocks?.comparison_table).toBeTruthy();
+    expect(normalized.collaborationByPath['/services/planned-giving']?.history).toHaveLength(1);
+    expect(normalized.collaborationByPath['/services/planned-giving']?.history?.[0]?.blockId).toBe('comparison_table');
   });
 
   it('drops duplicate endowments request-form blocks and keeps the canonical legacy-form section class', () => {
@@ -637,9 +781,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock.settings.subtitle).toBe('And we’re eager to help.');
     expect(ctaBlock.settings.bgTone).toBe('white');
     expect(ctaBlock.settings.submitLabel).toBe('Follow up with me');
-    expect(ctaBlock.settings.field1Label).toBe('Name*');
-    expect(ctaBlock.settings.field2Label).toBe('Email*');
-    expect(ctaBlock.settings.field3Label).toBe('Phone*');
+    const fields = getCtaFields(ctaBlock);
+    expect(fields[0]?.label).toBe('Name*');
+    expect(fields[1]?.label).toBe('Email*');
+    expect(fields[2]?.label).toBe('Phone*');
   });
 
   it('drops stale 403(b) request-form blocks from stored config and keeps the CTA block', () => {
@@ -798,8 +943,8 @@ describe('ContentAdminContext state normalization', () => {
     expectNoTargetBridgeSettings(ctaBlock);
     expect(ctaBlock?.settings?.bgTone).toBe('white');
     expect(ctaBlock?.settings?.titleClassName).toBe('is-atlantean');
-    expect(ctaBlock?.settings?.field1Label).toBe('Name');
-    expect(ctaBlock?.settings?.field4Enabled).toBe(false);
+    expect(getCtaFields(ctaBlock)[0]?.label).toBe('Name');
+    expect(getCtaFields(ctaBlock)).toHaveLength(3);
   });
 
   it('keeps the calculators CTA block canonical when stored config already carries it', () => {
@@ -828,6 +973,75 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.bgTone).toBe('white');
   });
 
+  it('backfills canonical CTA fieldsJson from slot fields during state normalization', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/loans': [
+          {
+            id: 'cta_form',
+            kind: 'cta_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'Slot-only CTA',
+              fieldsJson: '',
+              field1Enabled: true,
+              field1Type: 'text',
+              field1Label: 'Full name',
+              field1Placeholder: '',
+              field1Options: '',
+              field1Required: true,
+              field2Enabled: true,
+              field2Type: 'email',
+              field2Label: 'Email',
+              field2Placeholder: '',
+              field2Options: '',
+              field2Required: true,
+              field3Enabled: false,
+              field4Enabled: false,
+              field5Enabled: false,
+            },
+          },
+        ],
+      },
+    });
+
+    const loansBlocks = normalized.blocksByPath['/services/loans'] || [];
+    const ctaBlock = loansBlocks.find((block) => block?.kind === 'cta_form');
+    const fields = parseCtaFormFieldsJson(ctaBlock?.settings?.fieldsJson);
+
+    expect(fields).toEqual([
+      expect.objectContaining({ id: 'field1', label: 'Full name', type: 'text', required: true }),
+      expect.objectContaining({ id: 'field2', label: 'Email', type: 'email', required: true }),
+    ]);
+    expect(Object.keys(ctaBlock?.settings || {}).filter((key) => /^field[1-5]/.test(key))).toEqual([]);
+  });
+
+  it('normalizes split link target drift during state normalization', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/loans': [
+          {
+            id: 'hero',
+            kind: 'hero',
+            mode: 'dynamic',
+            settings: {
+              line1Text: 'Loans',
+              buttonUrl: '/old-target',
+              buttonPageRef: '/contact-us',
+              buttonOpenInNewWindow: 'false',
+            },
+          },
+        ],
+      },
+    });
+
+    const heroBlock = normalized.blocksByPath['/services/loans']?.[0];
+
+    expect(heroBlock?.settings?.buttonUrl).toBe('/contact-us');
+    expect(heroBlock?.settings?.buttonPageRef).toBe('/contact-us');
+    expect(heroBlock?.settings?.buttonOpenInNewWindow).toBe(false);
+  });
+
   it('seeds about us with a CTA block instead of a request-form block', () => {
     const normalized = normalizeStoredConfig({});
     const aboutBlocks = normalized.blocksByPath['/about-us'] || [];
@@ -842,7 +1056,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.targetSectionClassName).toBeUndefined();
     expect(ctaBlock?.settings?.title).toBe('What can we do for you?');
     expect(ctaBlock?.settings?.titleClassName).toBe('is-atlantean');
-    expect(ctaBlock?.settings?.field4Label).toBe('What would you like to discuss?');
+    expect(getCtaFields(ctaBlock)[3]?.label).toBe('What would you like to discuss?');
     expect(pageContentBlock).toBeUndefined();
   });
 
@@ -1374,7 +1588,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(routeBlocks.some((block) => block?.id === 'loan_details' && block?.kind === 'content')).toBe(true);
   });
 
-  it('replaces stale legacy 403(b) loan-details HTML with the canonical wrapped loan content block', () => {
+  it('does not silently replace stale legacy 403(b) loan-details HTML', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -1402,7 +1616,49 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
 
     expect(loanDetailsBlock).toBeTruthy();
-    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('retirement-403b-loan-copy');
+    expect(String(loanDetailsBlock?.settings?.html || '')).not.toContain('retirement-403b-loan-copy');
+    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
+  });
+
+  it('does not silently remove leaked housing metadata from arbitrary 403(b) loan-details blocks', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'loan_details',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              title: "Retired Ministers' Housing Allowance",
+              body: 'The unique benefit, which gives ministers a significant tax savings, is not available through secular 403(b) plans or IRAs.',
+              html: `
+                <div class="retirement-403b-loan-copy">
+                  <h2>403(b) Plan Loans</h2>
+                  <p>A 403(b) loan allows you to borrow money from your own retirement savings without incurring early withdrawal tax penalties.</p>
+                  <div class="retirement-403b-loan-detail-card">
+                    <h3>Details</h3>
+                  </div>
+                </div>
+              `,
+              sectionClassName: 'retirement-403b-native-loans',
+              buttonLabel: 'Use the quick check calculator',
+              buttonPageRef: '/calculators',
+              anchorId: 'retired-ministers-housing-allowance',
+            },
+          },
+        ],
+      },
+    });
+
+    const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
+
+    expect(loanDetailsBlock).toBeTruthy();
+    expect(loanDetailsBlock?.settings?.title || '').toBe("Retired Ministers' Housing Allowance");
+    expect(loanDetailsBlock?.settings?.body || '').toContain('The unique benefit, which gives ministers');
+    expect(loanDetailsBlock?.settings?.buttonLabel || '').toBe('Use the quick check calculator');
+    expect(loanDetailsBlock?.settings?.buttonPageRef || '').toBe('/calculators');
+    expect(loanDetailsBlock?.settings?.anchorId || '').toBe('retired-ministers-housing-allowance');
     expect(String(loanDetailsBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
   });
 
@@ -1463,7 +1719,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(String(loanDetailsBlock?.settings?.html || '')).not.toContain('retirement-403b-loan-copy');
   });
 
-  it('repairs stale stored 403(b) intro blocks back to the canonical managed intro', () => {
+  it('does not silently repair stale stored 403(b) intro copy', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -1487,9 +1743,9 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(introBlock).toBeTruthy();
     expect(introBlock?.settings?.heading).toBe('Ministry-powered retirement.');
-    expect(introBlock?.settings?.bodyHtml).toBe('<p>The AGFinancial 403(b) is designed specifically for ministers and ministry employees. It’s a powerful way to save while you serve.</p>');
-    expect(introBlock?.settings?.bgTone).toBe('grey');
-    expect(introBlock?.settings?.textTone).toBe('white');
+    expect(introBlock?.settings?.bodyHtml).toContain('offers higher contribution limits');
+    expect(introBlock?.settings?.bgTone).toBe('white');
+    expect(introBlock?.settings?.textTone).toBe('dark');
   });
 
   it('keeps customized stored 403(b) overview intros once the route is block-owned', () => {
@@ -2639,7 +2895,7 @@ describe('ContentAdminContext state normalization', () => {
     );
   });
 
-  it('refreshes canonical-looking 403(b) loan-details html when the new bordered detail card wrapper is missing', () => {
+  it('does not silently refresh canonical-looking 403(b) loan-details html when wrappers are missing', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2666,10 +2922,10 @@ describe('ContentAdminContext state normalization', () => {
     const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
       .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
 
-    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('retirement-403b-loan-detail-card');
+    expect(String(loanDetailsBlock?.settings?.html || '')).not.toContain('retirement-403b-loan-detail-card');
   });
 
-  it('refreshes stale canonical 403(b) loan html when the consultant copy and followup class are still missing', () => {
+  it('does not silently refresh stale canonical 403(b) loan html when followup copy is missing', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2702,8 +2958,8 @@ describe('ContentAdminContext state normalization', () => {
     const loanDetailsBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
       .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
 
-    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('retirement-403b-loan-followup');
-    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('Contact your AGFinancial retirement consultant for more information.');
+    expect(String(loanDetailsBlock?.settings?.html || '')).not.toContain('retirement-403b-loan-followup');
+    expect(String(loanDetailsBlock?.settings?.html || '')).not.toContain('Contact your AGFinancial retirement consultant for more information.');
   });
 
   it('replaces stale 403(b) start enrollment settings when the old individual label and title divider persist', () => {
@@ -2740,7 +2996,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(enrollmentBlock?.settings?.card1Title).toBe('Establish an individual plan');
   });
 
-  it('replaces stale 403(b) housing feature settings when the rogue calculator CTA and compare copy persist', () => {
+  it('does not silently replace stale 403(b) housing feature settings when rogue copy persists', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2769,16 +3025,14 @@ describe('ContentAdminContext state normalization', () => {
     });
 
     const housingFeatureBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
-      .find((block) => block?.id === 'housing_feature' && block?.kind === 'columns');
+      .find((block) => block?.id === 'housing_feature' && block?.kind === 'content');
 
-    expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
-    expect(housingFeatureBlock?.settings?.bgTone).toBe('white');
-    expect(housingFeatureBlock?.settings?.col2Title).toBe("Retired Ministers' Housing Allowance");
-    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain('This unique IRS benefit');
-    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('Compare your annual housing expenses to Fair Rental Value');
+    expect(housingFeatureBlock?.settings?.title).toBe("Retired Ministers' Housing Allowance");
+    expect(String(housingFeatureBlock?.settings?.body || '')).toContain('The unique benefit, which gives ministers');
+    expect(String(housingFeatureBlock?.settings?.html || '')).toContain('Compare your annual housing expenses to Fair Rental Value');
   });
 
-  it('replaces blank migrated 403(b) housing columns with the canonical copy payload', () => {
+  it('does not silently replace blank migrated 403(b) housing columns with canonical copy', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2810,13 +3064,11 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
     expect(housingFeatureBlock?.settings?.col2Title).toBe("Retired Ministers' Housing Allowance");
-    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
-      'This unique IRS benefit, which gives ministers a significant tax savings',
-    );
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toBe('');
     expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('ret403b-housing-feature-bullet-intro');
   });
 
-  it('replaces blank-fragment 403(b) housing columns with the canonical copy payload', () => {
+  it('does not silently replace blank-fragment 403(b) housing columns with canonical copy', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2847,10 +3099,50 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'housing_feature' && block?.kind === 'columns');
 
     expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
-    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain(
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toBe('<p><br></p>');
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('ret403b-housing-feature-bullet-intro');
+  });
+
+  it('does not silently replace legacy migrated 403(b) housing columns with canonical copy', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/403b': [
+          {
+            id: 'housing_feature',
+            kind: 'columns',
+            mode: 'dynamic',
+            presetId: 'housing-allowance',
+            settings: {
+              columnsStyle: 'retirement',
+              bgTone: 'white',
+              col1Enabled: true,
+              col1Type: 'photo',
+              col1ImageUrl: 'housing-photo.jpg',
+              col1ImageAlt: 'Living room with fireplace',
+              col2Enabled: true,
+              col2Type: 'text',
+              col2Title: "Retired Ministers' Housing Allowance",
+              col2Body: '',
+              col2BodyHtml: `
+                <p>The unique benefit, which gives ministers a significant tax savings, is not available through secular 403(b) plans or IRAs.</p>
+                <p class="ret403b-housing-feature-bullet-intro">The maximum housing allowance exemption in any tax year is the lesser of:</p>
+                <ul><li>Your actual expenditures</li></ul>
+              `,
+            },
+          },
+        ],
+      },
+    });
+
+    const housingFeatureBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
+      .find((block) => block?.id === 'housing_feature' && block?.kind === 'columns');
+
+    expect(housingFeatureBlock?.presetId).toBe('housing-allowance');
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain(
       'This unique IRS benefit, which gives ministers a significant tax savings',
     );
-    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).not.toContain('ret403b-housing-feature-bullet-intro');
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain('ret403b-housing-feature-bullet-intro');
+    expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain('The maximum housing allowance exemption');
   });
 
   it('keeps explicit columns preset identity on the canonical family template id', () => {
@@ -2970,12 +3262,10 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(ctaBlock?.mode).toBe('dynamic');
     expect(ctaBlock?.settings?.bodyHtml).toBe('');
-    expect(ctaBlock?.settings?.field4Type).toBe('select');
-    expect(ctaBlock?.settings?.field4Label).toBe('State');
-    expect(String(ctaBlock?.settings?.field4Options || '')).toContain('TX|Texas');
-    expect(ctaBlock?.settings?.field5Enabled).toBe(true);
-    expect(ctaBlock?.settings?.field5Type).toBe('textarea');
-    expect(ctaBlock?.settings?.field5Label).toBe('Message');
+    const fields = getCtaFields(ctaBlock);
+    expect(fields[3]).toMatchObject({ type: 'select', label: 'State' });
+    expect(fields[3]?.options).toContainEqual({ value: 'TX', label: 'Texas' });
+    expect(fields[4]).toMatchObject({ type: 'textarea', label: 'Message' });
   });
 
   it('upgrades stale home services-grid blocks back onto the dynamic canonical path', () => {

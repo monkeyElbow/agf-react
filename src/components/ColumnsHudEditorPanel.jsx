@@ -680,8 +680,9 @@ export default function ColumnsHudEditorPanel({
           value: String(settings[buttonPageRefFieldId] || settings[buttonUrlFieldId] || ''),
           mode: 'blur',
           commit: (nextValue) => {
+            const routeRefValue = String(nextValue || '').trim().startsWith('/') ? nextValue : '';
+            onSettingChange(buttonPageRefFieldId, routeRefValue);
             onSettingChange(buttonUrlFieldId, nextValue);
-            onSettingChange(buttonPageRefFieldId, nextValue);
           },
         },
       );

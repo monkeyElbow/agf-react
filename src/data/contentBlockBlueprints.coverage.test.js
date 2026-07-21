@@ -9,6 +9,10 @@ import {
 } from './contentBlockBlueprints';
 import { BLOCK_ONLY_MANAGED_PAGE_PATHS } from '../lib/managedPageShells';
 import { getEditableFieldsForKind } from '../blocks/registry';
+import {
+  CTA_FORM_SLOT_COMPAT_FIELD_PATTERN,
+  parseCtaFormFieldsJson,
+} from '../blocks/foundation/forms';
 
 const TARGET_BRIDGE_SETTING_KEYS = [
   'targetSectionKey',
@@ -16,6 +20,7 @@ const TARGET_BRIDGE_SETTING_KEYS = [
   'targetSectionClassName',
   'targetSectionIndex',
 ];
+const SPLIT_LINK_HREF_SUFFIXES = ['Url', 'Path', 'Href'];
 
 function getTargetBridgeSettingKeys(block) {
   const settings = block?.settings && typeof block.settings === 'object'
@@ -23,6 +28,46 @@ function getTargetBridgeSettingKeys(block) {
     : {};
 
   return TARGET_BRIDGE_SETTING_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(settings, key));
+}
+
+function getSplitLinkFindings({ pathname, block }) {
+  const settings = block?.settings && typeof block.settings === 'object'
+    ? block.settings
+    : {};
+  const findings = [];
+
+  Object.entries(settings).forEach(([key, value]) => {
+    if (!key.endsWith('PageRef')) {
+      return;
+    }
+
+    const pageRef = String(value || '').trim();
+    const baseKey = key.replace(/PageRef$/, '');
+    const hrefKeys = SPLIT_LINK_HREF_SUFFIXES
+      .map((suffix) => `${baseKey}${suffix}`)
+      .filter((hrefKey) => Object.prototype.hasOwnProperty.call(settings, hrefKey));
+
+    if (pageRef && !pageRef.startsWith('/')) {
+      findings.push(`${pathname}:${block?.id || 'block'}:${key}:non-internal`);
+    }
+
+    hrefKeys.forEach((hrefKey) => {
+      const href = String(settings[hrefKey] || '').trim();
+      if (pageRef && href && !href.startsWith('/')) {
+        findings.push(`${pathname}:${block?.id || 'block'}:${hrefKey}:target-conflict`);
+        return;
+      }
+      if (href.startsWith('/') && !pageRef) {
+        findings.push(`${pathname}:${block?.id || 'block'}:${hrefKey}:missing-page-ref`);
+        return;
+      }
+      if (href.startsWith('/') && pageRef && href !== pageRef) {
+        findings.push(`${pathname}:${block?.id || 'block'}:${hrefKey}:target-drift`);
+      }
+    });
+  });
+
+  return findings;
 }
 
 describe('content block blueprint coverage', () => {
@@ -135,6 +180,44 @@ describe('content block blueprint coverage', () => {
       expect(staticBlocks, `${pathname} should not seed static block placeholders`).toEqual([]);
       expect(targetBridgeBlocks, `${pathname} should not seed target bridge fields`).toEqual([]);
     });
+  });
+
+  it('keeps CTA form blueprints authored with canonical fieldsJson', () => {
+    const routeBlocks = Object.entries(contentBlockBlueprintsByPath)
+      .flatMap(([pathname, blocks]) => (
+        (Array.isArray(blocks) ? blocks : []).map((block) => ({ pathname, block }))
+      ));
+    const templateBlocks = getAllBlockTemplateBlueprints()
+      .map((block) => ({ pathname: 'template', block }));
+    const ctaBlocksMissingFieldsJson = [...routeBlocks, ...templateBlocks]
+      .filter(({ block }) => String(block?.kind || '').trim() === 'cta_form')
+      .filter(({ block }) => !parseCtaFormFieldsJson(block?.settings?.fieldsJson).length)
+      .map(({ pathname, block }) => `${pathname}:${block?.id || 'cta_form'}`);
+    const ctaBlocksWithSlotSettings = [...routeBlocks, ...templateBlocks]
+      .filter(({ block }) => String(block?.kind || '').trim() === 'cta_form')
+      .map(({ pathname, block }) => ({
+        id: `${pathname}:${block?.id || 'cta_form'}`,
+        slotKeys: Object.keys(block?.settings || {})
+          .filter((key) => CTA_FORM_SLOT_COMPAT_FIELD_PATTERN.test(String(key || ''))),
+      }))
+      .filter(({ slotKeys }) => slotKeys.length);
+
+    expect(ctaBlocksMissingFieldsJson).toEqual([]);
+    expect(ctaBlocksWithSlotSettings).toEqual([]);
+  });
+
+  it('keeps blueprint split link targets normalized', () => {
+    const routeBlocks = Object.entries(contentBlockBlueprintsByPath)
+      .flatMap(([pathname, blocks]) => (
+        (Array.isArray(blocks) ? blocks : []).map((block) => ({ pathname, block }))
+      ));
+    const templateBlocks = getAllBlockTemplateBlueprints()
+      .map((block) => ({ pathname: 'template', block }));
+
+    const findings = [...routeBlocks, ...templateBlocks]
+      .flatMap(getSplitLinkFindings);
+
+    expect(findings).toEqual([]);
   });
 
   it('seeds contact us as block-owned hero, address, and request form sections', () => {
@@ -321,7 +404,7 @@ describe('content block blueprint coverage', () => {
         title: 'What coverage is best for your ministry?',
       },
     });
-    expect(ctaBlock?.settings?.step1FieldsJson).toContain('coverageFocus');
+    expect(ctaBlock?.settings?.fieldsJson).toContain('coverageFocus');
     expect(missionAssureBlock).toMatchObject({
       kind: 'feature_panel',
       mode: 'dynamic',
@@ -410,6 +493,8 @@ describe('content block blueprint coverage', () => {
     const dynamicHero = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
     const dynamicIntro = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
     const dynamicBillboard = blocks.find((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic');
+    const impactProofStoryIndex = blocks.findIndex((block) => block?.id === 'impact_proof_story');
+    const billboardIndex = blocks.findIndex((block) => block?.id === 'billboard');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(false);
@@ -421,6 +506,9 @@ describe('content block blueprint coverage', () => {
     expect(dynamicBillboard?.settings?.subtitle).toBe('');
     expect(dynamicBillboard?.settings?.body).toBe('');
     expect(dynamicBillboard?.settings?.sectionClassName).toBe('impact-native-billboard');
+    expect(impactProofStoryIndex).toBeGreaterThan(-1);
+    expect(billboardIndex).toBe(blocks.length - 1);
+    expect(billboardIndex).toBeGreaterThan(impactProofStoryIndex);
     expect(blocks.find((block) => (
       block?.id === 'impact_proof_story'
       && block?.kind === 'site_feature'
@@ -899,9 +987,11 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'legacy-giving-cta',
-        field4Label: 'Planned giving product of interest*',
       },
     });
+    expect(parseCtaFormFieldsJson(
+      legacyGivingBlocks.find((block) => block?.id === 'cta_form')?.settings?.fieldsJson,
+    )[3]).toMatchObject({ label: 'Planned giving product of interest*', type: 'select' });
     expect(legacyGivingBlocks.find((block) => block?.id === 'comparison_table')).toMatchObject({
       kind: 'content',
       mode: 'dynamic',
@@ -911,14 +1001,8 @@ describe('content block blueprint coverage', () => {
         widget: 'charitable-giving-table',
       },
     });
-    expect(legacyGivingBlocks.find((block) => block?.id === 'comparison_matrix')).toMatchObject({
-      kind: 'content',
-      mode: 'dynamic',
-      settings: {
-        sectionClassName: 'legacy-giving-comparison-matrix',
-        widget: 'giving-comparison-matrix',
-      },
-    });
+    expect(legacyGivingBlocks.find((block) => block?.id === 'comparison_matrix')).toBeUndefined();
+    expect(legacyGivingBlocks.some((block) => block?.settings?.widget === 'giving-comparison-matrix')).toBe(false);
     expect(legacyGivingBlocks.find((block) => block?.id === 'testimonials')).toMatchObject({
       kind: 'testimonials',
       mode: 'dynamic',
@@ -1452,7 +1536,7 @@ describe('content block blueprint coverage', () => {
     expect(benefitsCalloutBlock?.settings?.buttonLabel).toBe('');
     expect(investmentStrategyHeadingBlock?.mode).toBe('dynamic');
     expect(investmentStrategyHeadingBlock?.settings?.title).toBe('Investment Strategy Options');
-    expect(investmentStrategyHeadingBlock?.settings?.buttonLabel).toBe('View monthly performance');
+    expect(investmentStrategyHeadingBlock?.settings?.buttonLabel).toBe('View the monthly performance');
     expect(investmentStrategyHeadingBlock?.settings?.buttonUrl).toBe('https://files.agfinancial.org/retirement/Performance-Update/Performance-Update.pdf');
     expect(investmentStrategyHeadingBlock?.settings?.buttonPageRef).toBe('');
     expect(investmentStrategyHeadingBlock?.settings?.button2Label).toBe('Prospectus');
@@ -1489,7 +1573,7 @@ describe('content block blueprint coverage', () => {
     expect(housingFeatureBlock?.settings?.col1Type).toBe('photo');
     expect(housingFeatureBlock?.settings?.col2Title).toBe("Retired Ministers' Housing Allowance");
     expect(String(housingFeatureBlock?.settings?.col2BodyHtml || '')).toContain('This unique IRS benefit');
-    expect(housingFeatureBlock?.settings?.col2ButtonLabel).toBe('See if you qualify');
+    expect(housingFeatureBlock?.settings?.col2ButtonLabel).toBe('IRS information');
     expect(housingFeatureBlock?.settings?.col2ButtonUrl).toBe('https://www.irs.gov/publications/p517');
     expect(housingFeatureBlock?.settings?.col2ButtonStyle).toBe('outline');
     expect(housingFeatureBlock?.settings?.col2ButtonTone).toBe('atlantean');

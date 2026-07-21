@@ -19,6 +19,8 @@ describe('careers route review polish guardrail', () => {
     expect(cssSource).toContain('letter-spacing: -0.03em;');
     expect(cssSource).toContain('.native-info-page--careers .careers-native-ready > .ag-panel-rail {');
     expect(cssSource).toContain('align-content: center;');
+    expect(cssSource).toContain('padding-bottom: clamp(1.65rem, 3vw, 2.35rem);');
+    expect(cssSource).toContain('min-height: clamp(176px, 16vw, 218px);');
     expect(cssSource).toContain('white-space: nowrap;');
   });
 
@@ -42,9 +44,14 @@ describe('careers route review polish guardrail', () => {
 
     expect(contentSource).toContain("copyClassName: 'careers-native-ready-copy fade-up fade-up-force-observe'");
     expect(contentSource).toContain("headingClassName: 'careers-native-top-intro-heading fade-up fade-up-force-observe fade-up-no-shift'");
+    expect(contentSource).toContain("emphasisClassName: 'careers-native-top-intro-emphasis'");
+    expect(contentSource).not.toContain("emphasisClassName: 'careers-native-top-intro-emphasis fade-up");
+    expect(contentSource).toContain("title: 'A few reasons you’ll love working here…'");
+    expect(contentSource).toContain("titleClassName: 'loans-native-display-heading careers-native-benefits-title careers-native-benefits-title--roll fade-up fade-up-force-observe'");
     expect(cssSource).toContain('--careers-benefits-ready-progress: 0;');
     expect(cssSource).toContain('.service-native-page .fade-up.fade-up-no-shift[data-fade-state="pending"] {');
     expect(cssSource).toContain('.native-info-page--careers .careers-native-benefits > .native-info-full-bleed > h2.careers-native-benefits-title {');
+    expect(cssSource).toContain('.native-info-page--careers .careers-native-benefits > .native-info-full-bleed > h2.careers-native-benefits-title--roll[data-fade-state="pending"] {');
     expect(cssSource).toContain('color: var(--ag-color-super-grey);');
     expect(cssSource).toContain('.native-info-page--careers .careers-native-ready .native-info-section-copy > h2,');
     expect(cssSource).toContain('color: #ffffff;');

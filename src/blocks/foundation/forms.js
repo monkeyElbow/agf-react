@@ -40,6 +40,20 @@ const REQUEST_FORM_STEP_FIELD_TYPE_SET = new Set(
 
 export const CTA_FORM_MAX_FIELDS = 8;
 export const CTA_FORM_SLOT_COMPAT_FIELD_COUNT = 5;
+export const CTA_FORM_SLOT_COMPAT_FIELD_IDS = Object.freeze(
+  Array.from({ length: CTA_FORM_SLOT_COMPAT_FIELD_COUNT }, (_, index) => {
+    const slot = index + 1;
+    return [
+      `field${slot}Enabled`,
+      `field${slot}Type`,
+      `field${slot}Label`,
+      `field${slot}Placeholder`,
+      `field${slot}Options`,
+      `field${slot}Required`,
+    ];
+  }).flat(),
+);
+export const CTA_FORM_SLOT_COMPAT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
 export const CTA_FORM_CONTACT_PREFERENCE_FIELD_ID = 'contact_preference';
 export const CTA_FORM_CONTACT_PREFERENCE_OPTIONS = Object.freeze([
   Object.freeze({ value: 'email', label: 'Email' }),
@@ -59,17 +73,6 @@ const CTA_FORM_SPECIFIC_FIELD_IDS = Object.freeze([
   'bgTone',
   'submitStyle',
   'submitTone',
-  ...Array.from({ length: CTA_FORM_SLOT_COMPAT_FIELD_COUNT }, (_, index) => {
-    const slot = index + 1;
-    return [
-      `field${slot}Enabled`,
-      `field${slot}Type`,
-      `field${slot}Label`,
-      `field${slot}Placeholder`,
-      `field${slot}Options`,
-      `field${slot}Required`,
-    ];
-  }).flat(),
 ]);
 
 const CTA_FORM_EXCLUSIVE_FIELD_IDS = Object.freeze([
@@ -77,17 +80,6 @@ const CTA_FORM_EXCLUSIVE_FIELD_IDS = Object.freeze([
   'includeContactPreference',
   'submitStyle',
   'submitTone',
-  ...Array.from({ length: CTA_FORM_SLOT_COMPAT_FIELD_COUNT }, (_, index) => {
-    const slot = index + 1;
-    return [
-      `field${slot}Enabled`,
-      `field${slot}Type`,
-      `field${slot}Label`,
-      `field${slot}Placeholder`,
-      `field${slot}Options`,
-      `field${slot}Required`,
-    ];
-  }).flat(),
 ]);
 
 const REQUEST_FORM_SPECIFIC_FIELD_IDS = Object.freeze([
@@ -137,6 +129,7 @@ export const CANONICAL_FORM_BLOCK_BOUNDARIES = Object.freeze({
     exclusiveFieldIds: CTA_FORM_EXCLUSIVE_FIELD_IDS,
     runtimeIdentity: 'cta_form',
     editorOwner: 'CtaFormBlockEditor',
+    compatibilityFieldIds: CTA_FORM_SLOT_COMPAT_FIELD_IDS,
     transitionalAdapters: Object.freeze(['slot-settings']),
   }),
   request_form: Object.freeze({
@@ -146,6 +139,7 @@ export const CANONICAL_FORM_BLOCK_BOUNDARIES = Object.freeze({
     exclusiveFieldIds: REQUEST_FORM_EXCLUSIVE_FIELD_IDS,
     runtimeIdentity: 'request_form',
     editorOwner: 'RequestFormBlockEditor',
+    compatibilityFieldIds: Object.freeze([]),
     transitionalAdapters: Object.freeze(['step-fields-json']),
   }),
 });
@@ -176,6 +170,10 @@ export function getFormBlockSpecificFieldIds(kind) {
 
 export function getFormBlockExclusiveFieldIds(kind) {
   return Array.from(getCanonicalFormBlockBoundary(kind)?.exclusiveFieldIds || []);
+}
+
+export function getFormBlockCompatibilityFieldIds(kind) {
+  return Array.from(getCanonicalFormBlockBoundary(kind)?.compatibilityFieldIds || []);
 }
 
 export function getFormBlockAllowedFieldIds(kind) {
@@ -413,18 +411,50 @@ export function buildCtaFormSlotFields(source) {
     .filter(Boolean);
 }
 
-export function extractCtaFormFields(source, fallbackSource = null) {
+export function stripCtaFormSlotFieldSettings(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return settings;
+  }
+
+  let changed = false;
+  const nextSettings = { ...settings };
+  Object.keys(nextSettings).forEach((key) => {
+    if (CTA_FORM_SLOT_COMPAT_FIELD_PATTERN.test(String(key || ''))) {
+      delete nextSettings[key];
+      changed = true;
+    }
+  });
+
+  return changed ? nextSettings : settings;
+}
+
+export function extractCtaFormFields(source, fallbackSource = null, options = {}) {
+  const {
+    allowSlotCompatibility = true,
+    preferFallbackSourceBeforeSlotCompatibility = false,
+  } = options && typeof options === 'object' ? options : {};
   const configuredFields = parseCtaFormFieldsJson(source?.fieldsJson);
   if (configuredFields.length) {
     return configuredFields;
   }
 
-  const slotFields = buildCtaFormSlotFields(source);
+  if (
+    preferFallbackSourceBeforeSlotCompatibility
+    && fallbackSource
+    && fallbackSource !== source
+  ) {
+    const fallbackConfiguredFields = parseCtaFormFieldsJson(fallbackSource?.fieldsJson);
+    if (fallbackConfiguredFields.length) {
+      return fallbackConfiguredFields;
+    }
+  }
+
+  const slotFields = allowSlotCompatibility ? buildCtaFormSlotFields(source) : [];
   if (slotFields.length || !fallbackSource || fallbackSource === source) {
     return slotFields;
   }
 
-  return extractCtaFormFields(fallbackSource, null);
+  return extractCtaFormFields(fallbackSource, null, { allowSlotCompatibility });
 }
 
 export function serializeCtaFormFields(fields = []) {
@@ -481,15 +511,22 @@ export function buildCtaFormSlotFieldSettings(fields = []) {
   return settings;
 }
 
-export function buildCtaFormSettingsPatch({ fields = [], includeContactPreference } = {}) {
+export function buildCtaFormSettingsPatch({
+  fields = [],
+  includeContactPreference,
+  includeSlotCompatibility = false,
+} = {}) {
   const normalizedFields = (Array.isArray(fields) ? fields : [])
     .map((field, index) => normalizeCtaFormFieldRecord(field, index))
     .filter(Boolean)
     .slice(0, CTA_FORM_MAX_FIELDS);
   const patch = {
     fieldsJson: serializeCtaFormFields(normalizedFields),
-    ...buildCtaFormSlotFieldSettings(normalizedFields),
   };
+
+  if (includeSlotCompatibility) {
+    Object.assign(patch, buildCtaFormSlotFieldSettings(normalizedFields));
+  }
 
   if (includeContactPreference !== undefined) {
     patch.includeContactPreference = Boolean(includeContactPreference);

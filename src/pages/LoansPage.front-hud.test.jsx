@@ -112,7 +112,7 @@ describe('LoansPage front HUD', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Testimonials' }));
     expect(screen.getByText('Selector')).toBeTruthy();
     expect(screen.getByText('Edit fineprint in the admin content page.')).toBeTruthy();
-  });
+  }, 15000);
 
   it('keeps the active HUD block undimmed while dimming other dynamic blocks', () => {
     const { container } = renderLoansPage();

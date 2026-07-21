@@ -478,6 +478,32 @@ describe('ColumnsHudEditorPanel', () => {
     expect(onSettingChange).toHaveBeenCalledWith('col1ButtonPageRef', '/draft-path');
   });
 
+  it('clears column button page refs for manual external URLs', () => {
+    const onSettingChange = vi.fn();
+
+    render(
+      <BufferedColumnsHarness
+        initialSettings={{
+          col1Title: 'Column one title',
+          col1Body: 'Column one body',
+          col1ButtonLabel: 'Original button',
+          col1ButtonUrl: '/original-path',
+          col1ButtonPageRef: '/original-path',
+        }}
+        onSettingChange={onSettingChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('Button'));
+    fireEvent.change(screen.getByLabelText('URL / path'), {
+      target: { value: 'https://example.com/resource' },
+    });
+    fireEvent.blur(screen.getByLabelText('URL / path'));
+
+    expect(onSettingChange).toHaveBeenCalledWith('col1ButtonPageRef', '');
+    expect(onSettingChange).toHaveBeenCalledWith('col1ButtonUrl', 'https://example.com/resource');
+  });
+
   it('keeps section heading and body drafts stable and commits them on blur without debounce commits', () => {
     const onSettingChange = vi.fn();
 

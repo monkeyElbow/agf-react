@@ -101,7 +101,6 @@ describe('system readiness inventory', () => {
     expect(targetIds).toContain('forms-canonical-array-schema');
     expect(targetIds).toContain('links-canonical-object');
     expect(targetIds).toContain('admin-blocks-diagnostics');
-    expect(targetIds).toContain('root-product-page-fallbacks');
     ['/brand', '/taxguide', '/rates', '/test'].forEach((route) => {
       expect(SYSTEM_2_0_READINESS_TARGETS.some((target) => target.route === route)).toBe(true);
     });

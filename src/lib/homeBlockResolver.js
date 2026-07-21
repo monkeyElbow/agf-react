@@ -1,4 +1,6 @@
-import { normalizeFollowUpSubmitLabel } from '../blocks/foundation/forms';
+import {
+  normalizeFollowUpSubmitLabel,
+} from '../blocks/foundation/forms';
 
 const HOME_MINISTRY_ALLIES_BLOCK_ID = 'home_ministry_allies';
 const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
@@ -426,7 +428,7 @@ function resolveHomeBlock(block, context) {
     const noteText = String(context.ctaSettings.note || block.note || '').trim();
     const fallbackBodyHtml = noteText ? `<p>${noteText}</p>` : '';
 
-    return {
+    const resolvedCtaBlock = {
       ...block,
       id: context.ctaManagedBlock?.id || block.id || 'cta_form',
       kind: context.ctaManagedBlock?.kind || block.kind || 'cta_form',
@@ -451,41 +453,9 @@ function resolveHomeBlock(block, context) {
       ),
       salesforceUrl: String(readCtaSetting('salesforceUrl') ?? block.salesforceUrl ?? '').trim(),
       successMessage: String(readCtaSetting('successMessage') ?? block.successMessage ?? '').trim() || block.successMessage,
-      field1Enabled: context.ctaSettings.field1Enabled ?? block.field1Enabled,
-      field1Type: String(readCtaSetting('field1Type') ?? block.field1Type ?? '').trim() || block.field1Type,
-      field1Label: String(readCtaSetting('field1Label') ?? block.field1Label ?? '').trim() || block.field1Label,
-      field1Placeholder: String(readCtaSetting('field1Placeholder') || block.field1Placeholder || '').trim(),
-      field1Options: String(readCtaSetting('field1Options') ?? block.field1Options ?? '').trim(),
-      field1Required: context.ctaSettings.field1Required ?? block.field1Required,
-      field2Enabled: context.ctaSettings.field2Enabled ?? block.field2Enabled,
-      field2Type: String(readCtaSetting('field2Type') ?? block.field2Type ?? '').trim() || block.field2Type,
-      field2Label: String(readCtaSetting('field2Label') ?? block.field2Label ?? '').trim() || block.field2Label,
-      field2Placeholder: String(readCtaSetting('field2Placeholder') || block.field2Placeholder || '').trim(),
-      field2Options: String(readCtaSetting('field2Options') ?? block.field2Options ?? '').trim(),
-      field2Required: context.ctaSettings.field2Required ?? block.field2Required,
-      field3Enabled: context.ctaSettings.field3Enabled ?? block.field3Enabled,
-      field3Type: String(readCtaSetting('field3Type') ?? block.field3Type ?? '').trim() || block.field3Type,
-      field3Label: String(readCtaSetting('field3Label') ?? block.field3Label ?? '').trim() || block.field3Label,
-      field3Placeholder: String(
-        readCtaSetting('field3Placeholder', 'phonePlaceholder')
-        || block.field3Placeholder
-        || block.phonePlaceholder
-        || '(555) 555-5555'
-      ).trim(),
-      field3Options: String(readCtaSetting('field3Options') ?? block.field3Options ?? '').trim(),
-      field3Required: context.ctaSettings.field3Required ?? block.field3Required,
-      field4Enabled: context.ctaSettings.field4Enabled ?? block.field4Enabled,
-      field4Type: String(readCtaSetting('field4Type') ?? block.field4Type ?? '').trim() || block.field4Type,
-      field4Label: String(readCtaSetting('field4Label') ?? block.field4Label ?? '').trim() || block.field4Label,
-      field4Placeholder: String(
-        readCtaSetting('field4Placeholder', 'messagePlaceholder')
-        || block.field4Placeholder
-        || block.messagePlaceholder
-        || 'What would you like to discuss?'
-      ).trim(),
-      field4Options: String(readCtaSetting('field4Options') ?? block.field4Options ?? '').trim(),
-      field4Required: context.ctaSettings.field4Required ?? block.field4Required,
+      fieldsJson: String(readCtaSetting('fieldsJson') ?? block.fieldsJson ?? '').trim() || block.fieldsJson,
     };
+    return resolvedCtaBlock;
   }
 
   if (block.type === 'hero') {

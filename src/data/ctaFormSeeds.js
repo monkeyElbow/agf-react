@@ -1,3 +1,8 @@
+import {
+  parseFormChoiceOptionsText,
+  serializeCtaFormFields,
+} from '../blocks/foundation/forms';
+
 export const DEFAULT_FOLLOW_UP_SUBMIT_LABEL = 'Follow up with me';
 export const DEFAULT_FOLLOW_UP_SUCCESS_MESSAGE = 'Thanks. We’ll reach out soon.';
 export const DEFAULT_PHONE_PLACEHOLDER = '(555) 555-5555';
@@ -62,6 +67,41 @@ export const US_STATE_OPTIONS = Object.freeze(
 
 export const RETIREMENT_CTA_STATE_OPTIONS_TEXT = US_STATE_ENTRIES.map(([value, label]) => `${value}|${label}`).join('\n');
 
+const BASE_CONTACT_FIELDS = Object.freeze([
+  Object.freeze({
+    id: 'name',
+    label: 'Name',
+    type: 'text',
+    required: true,
+  }),
+  Object.freeze({
+    id: 'email',
+    label: 'Email',
+    type: 'email',
+    required: true,
+  }),
+  Object.freeze({
+    id: 'phone',
+    label: 'Phone',
+    type: 'tel',
+    placeholder: DEFAULT_PHONE_PLACEHOLDER,
+  }),
+]);
+
+const MESSAGE_FIELD = Object.freeze({
+  id: 'message',
+  label: 'Message',
+  type: 'textarea',
+  placeholder: DEFAULT_MESSAGE_PLACEHOLDER,
+});
+
+function withCanonicalFieldsJson(settings, fields) {
+  return {
+    ...settings,
+    fieldsJson: serializeCtaFormFields(fields),
+  };
+}
+
 function buildBaseFollowUpSettings({
   title = '',
   titleClassName = '',
@@ -86,38 +126,15 @@ function buildBaseFollowUpSettings({
     ...(submitStyle ? { submitStyle } : {}),
     ...(submitTone ? { submitTone } : {}),
     ...(includeContactPreference === undefined ? {} : { includeContactPreference }),
-    field1Enabled: true,
-    field1Type: 'text',
-    field1Label: 'Name',
-    field1Placeholder: '',
-    field1Options: '',
-    field1Required: true,
-    field2Enabled: true,
-    field2Type: 'email',
-    field2Label: 'Email',
-    field2Placeholder: '',
-    field2Options: '',
-    field2Required: true,
-    field3Enabled: true,
-    field3Type: 'tel',
-    field3Label: 'Phone',
-    field3Placeholder: DEFAULT_PHONE_PLACEHOLDER,
-    field3Options: '',
-    field3Required: false,
   };
 }
 
 export function buildNameEmailPhoneMessageCtaSettings(options = {}) {
   const base = buildBaseFollowUpSettings(options);
-  return Object.freeze({
-    ...base,
-    field4Enabled: true,
-    field4Type: 'textarea',
-    field4Label: 'Message',
-    field4Placeholder: DEFAULT_MESSAGE_PLACEHOLDER,
-    field4Options: '',
-    field4Required: false,
-  });
+  return Object.freeze(withCanonicalFieldsJson(base, [
+    ...BASE_CONTACT_FIELDS,
+    MESSAGE_FIELD,
+  ]));
 }
 
 export function buildNameEmailPhoneStateMessageCtaSettings({
@@ -125,21 +142,18 @@ export function buildNameEmailPhoneStateMessageCtaSettings({
   ...options
 } = {}) {
   const base = buildBaseFollowUpSettings(options);
-  return Object.freeze({
-    ...base,
-    field4Enabled: true,
-    field4Type: 'select',
-    field4Label: 'State',
-    field4Placeholder: 'Select a State',
-    field4Options: stateOptionsText,
-    field4Required: true,
-    field5Enabled: true,
-    field5Type: 'textarea',
-    field5Label: 'Message',
-    field5Placeholder: DEFAULT_MESSAGE_PLACEHOLDER,
-    field5Options: '',
-    field5Required: false,
-  });
+  return Object.freeze(withCanonicalFieldsJson(base, [
+    ...BASE_CONTACT_FIELDS,
+    {
+      id: 'state',
+      label: 'State',
+      type: 'select',
+      placeholder: 'Select a State',
+      required: true,
+      options: parseFormChoiceOptionsText(stateOptionsText),
+    },
+    MESSAGE_FIELD,
+  ]));
 }
 
 export const defaultServicesCtaSettings = buildNameEmailPhoneMessageCtaSettings({

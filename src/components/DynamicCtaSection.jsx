@@ -13,6 +13,7 @@ import {
 import BlockOwnershipOverlay from './BlockOwnershipOverlay';
 const CTA_DYNAMIC_SUBMIT_STYLE_SET = new Set(['blue', 'dark', 'outline']);
 const CTA_DYNAMIC_SUBMIT_TONE_SET = new Set(['atlantean', 'super-grey', 'mango', 'melon', 'white']);
+const EMPTY_CTA_FIELDS = Object.freeze([]);
 
 function normalizeDynamicCtaSubmitStyle(value) {
   const token = String(value || '').trim().toLowerCase();
@@ -63,6 +64,7 @@ export default function DynamicCtaSection({
   fieldIdPrefix = 'dynamic-cta',
   onSubmitData = null,
   titlePlacement = 'outside',
+  renderDefaultWhenMissing = true,
 }) {
   const [values, setValues] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -87,13 +89,16 @@ export default function DynamicCtaSection({
         fallbackSettings: defaultSettings,
       });
     }
+    if (!renderDefaultWhenMissing) {
+      return null;
+    }
     return buildDynamicCtaFormFromBlock({
       id: 'cta_form',
       kind: 'cta_form',
       mode: 'dynamic',
       settings: defaultSettings,
     });
-  }, [defaultSettings, dynamicCtaBlock]);
+  }, [defaultSettings, dynamicCtaBlock, renderDefaultWhenMissing]);
 
   const title = String(runtime?.title || '').trim();
   const titleClassName = String(runtime?.titleClassName || '').trim();
@@ -108,7 +113,7 @@ export default function DynamicCtaSection({
     () => buildDynamicCtaSubmitButtonClassName(submitButtonClassName, runtime),
     [runtime, submitButtonClassName],
   );
-  const fields = Array.isArray(runtime?.fields) ? runtime.fields : [];
+  const fields = Array.isArray(runtime?.fields) ? runtime.fields : EMPTY_CTA_FIELDS;
   const renderTitleInsideShell = titlePlacement === 'inside';
   const presentationClassName = useMemo(
     () => buildDynamicCtaPresentationClassName(runtime),

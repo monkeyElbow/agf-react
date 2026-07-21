@@ -124,4 +124,53 @@ describe('service-native style ownership', () => {
       expect(source).toContain(ownedSelector);
     });
   });
+
+  it('keeps retired 403b section selectors out of service-native CSS', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      'retirement-403b-native-quickcheck',
+      'retirement-403b-native-cta',
+      'retirement-403b-native-apply',
+      'retirement-403b-native-housing',
+      'ret403b-housing-feature-',
+    ].forEach((retiredSelectorToken) => {
+      expect(source).not.toContain(retiredSelectorToken);
+    });
+  });
+
+  it('keeps the ministers housing quick check calculator widget styled as a functional surface', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.retirement-403b-quickcheck-widget {',
+      '.ret403b-qc-stepper {',
+      '.ret403b-qc-card {',
+      '.ret403b-qc-fields {',
+      '.ret403b-qc-nav {',
+    ].forEach((ownedSelector) => {
+      expect(source).toContain(ownedSelector);
+    });
+  });
+
+  it('keeps About one-off visual restorations on named section surfaces', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--about .about-native-building-shot .native-columns-media-wrap {',
+      'min-height: clamp(430px, 53vw, 760px);',
+      '.native-info-page--about .about-native-values {',
+      '--investments-growth-display-size: clamp(3.8rem, 8.2vw, 6.35rem);',
+      '.native-info-page--about .about-native-values .investments-native-growth-grid {',
+      'grid-template-columns: minmax(0, 1fr);',
+      '.native-info-page--about .about-native-values .investments-native-growth-card h3 {',
+      'width: max-content;',
+      'white-space: nowrap;',
+      '.native-info-page--about .about-native-strategy .service-native-action-row {',
+      '.native-info-page--about .about-native-allies .service-native-action-row {',
+      '.native-info-page--about .about-native-history .service-native-action-row {',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+  });
 });

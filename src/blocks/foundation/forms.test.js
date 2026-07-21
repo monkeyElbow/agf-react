@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { getBlockHudDefinition } from '../../lib/blockHudRegistry';
 import { getEditorParityContract } from '../../lib/editorParityContract';
 import {
+  buildNameEmailPhoneMessageCtaSettings,
+  defaultRetirementCtaSettings,
+} from '../../data/ctaFormSeeds';
+import {
   buildCtaFormSettingsPatch,
   CANONICAL_FORM_BLOCK_KINDS,
   createCtaContactPreferenceField,
@@ -10,6 +14,7 @@ import {
   createInitialFormValues,
   formatFormPhoneInput,
   getCanonicalFormBlockBoundary,
+  getFormBlockCompatibilityFieldIds,
   getSharedFormConfigFieldIds,
   isFieldAllowedForFormBlock,
   normalizeFormSubmissionConfig,
@@ -37,7 +42,10 @@ describe('canonical form foundation', () => {
   });
 
   it('keeps shared form primitives from collapsing block-specific field boundaries', () => {
-    expect(isFieldAllowedForFormBlock('cta_form', 'field1Type')).toBe(true);
+    expect(getCanonicalFormBlockBoundary('cta_form')?.specificFieldIds).toContain('fieldsJson');
+    expect(getCanonicalFormBlockBoundary('cta_form')?.specificFieldIds).not.toContain('field1Type');
+    expect(getFormBlockCompatibilityFieldIds('cta_form')).toContain('field1Type');
+    expect(isFieldAllowedForFormBlock('cta_form', 'field1Type')).toBe(false);
     expect(isFieldAllowedForFormBlock('cta_form', 'step1FieldsJson')).toBe(false);
     expect(isFieldAllowedForFormBlock('request_form', 'step1FieldsJson')).toBe(true);
     expect(isFieldAllowedForFormBlock('request_form', 'field1Type')).toBe(false);
@@ -141,8 +149,28 @@ describe('canonical form foundation', () => {
       fieldsJson: serializeCtaFormFields(fields),
     })).toEqual(fields);
 
-    expect(buildCtaFormSettingsPatch({ fields, includeContactPreference: true })).toMatchObject({
+    expect(extractCtaFormFields({
+      field1Enabled: true,
+      field1Label: 'Legacy slot field',
+      field1Type: 'text',
+    }, {
+      fieldsJson: serializeCtaFormFields(fields),
+    }, {
+      preferFallbackSourceBeforeSlotCompatibility: true,
+    })).toEqual(fields);
+
+    expect(buildCtaFormSettingsPatch({ fields, includeContactPreference: true })).toEqual({
       includeContactPreference: true,
+      fieldsJson: serializeCtaFormFields(fields),
+    });
+
+    expect(buildCtaFormSettingsPatch({
+      fields,
+      includeContactPreference: true,
+      includeSlotCompatibility: true,
+    })).toMatchObject({
+      includeContactPreference: true,
+      fieldsJson: serializeCtaFormFields(fields),
       field1Enabled: true,
       field1Label: 'Full name',
       field2Type: 'select',
@@ -154,6 +182,13 @@ describe('canonical form foundation', () => {
       label: 'Preferred contact method',
       type: 'select',
     });
+  });
+
+  it('keeps common CTA seed presets authored with canonical fieldsJson', () => {
+    const messageSettings = buildNameEmailPhoneMessageCtaSettings();
+
+    expect(parseCtaFormFieldsJson(messageSettings.fieldsJson)).toHaveLength(4);
+    expect(parseCtaFormFieldsJson(defaultRetirementCtaSettings.fieldsJson)).toHaveLength(5);
   });
 
   it('provides a future definition scaffold that preserves form block identity', () => {

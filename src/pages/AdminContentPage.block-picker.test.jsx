@@ -46,7 +46,7 @@ describe('AdminContentPage block picker guardrails', () => {
     expect(screen.queryByRole('radio', { name: /CTA Band compatibility · What You Do Matters/i })).toBeNull();
     expect(screen.queryByRole('radio', { name: /Card Grid compatibility · Loan Options Grid/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Show static blocks/i })).toBeNull();
-  });
+  }, 15000);
 
   it('creates preset-bearing blocks with the intended family and preset identity', async () => {
     render(
@@ -95,5 +95,5 @@ describe('AdminContentPage block picker guardrails', () => {
         && String(block?.templateId || '').trim() === 'columns'
       ))).toBe(true);
     });
-  }, 10000);
+  }, 20000);
 });

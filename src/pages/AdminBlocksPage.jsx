@@ -16,12 +16,12 @@ const PLACEHOLDER_TEXT_TOKENS = [
   'saved-page copy restoration',
   'dynamic hero test route for panel experiments',
 ];
-const LEGACY_STATIC_BLOCK_MODE = 'static';
-const LEGACY_STATIC_AUDIT_MODE = 'legacy_static';
+const SNAPSHOT_RESIDUE_SOURCE_MODE = 'static';
+const SNAPSHOT_RESIDUE_AUDIT_MODE = 'snapshot_residue';
 export const ADMIN_BLOCKS_AUDIT_SURFACE = Object.freeze({
-  id: 'admin-blocks-legacy-snapshot-diagnostics',
-  purpose: 'legacy-snapshot-diagnostics',
-  retireWhen: 'Convert to a permanent admin health dashboard or remove once legacy snapshot recovery is versioned and observable elsewhere.',
+  id: 'admin-blocks-snapshot-health',
+  purpose: 'snapshot-health-diagnostics',
+  retireWhen: 'Keep as a permanent admin health dashboard or remove once snapshot recovery is observable elsewhere.',
 });
 
 function normalizeBlockMode(value) {
@@ -29,8 +29,8 @@ function normalizeBlockMode(value) {
   if (token === 'dynamic') {
     return token;
   }
-  if (token === LEGACY_STATIC_BLOCK_MODE) {
-    return LEGACY_STATIC_AUDIT_MODE;
+  if (token === SNAPSHOT_RESIDUE_SOURCE_MODE) {
+    return SNAPSHOT_RESIDUE_AUDIT_MODE;
   }
   return 'other';
 }
@@ -39,8 +39,8 @@ function toDisplayMode(value) {
   if (value === 'dynamic') {
     return 'Dynamic';
   }
-  if (value === LEGACY_STATIC_AUDIT_MODE) {
-    return 'Legacy static';
+  if (value === SNAPSHOT_RESIDUE_AUDIT_MODE) {
+    return 'Snapshot residue';
   }
   return 'Other';
 }
@@ -250,7 +250,7 @@ export default function AdminBlocksPage() {
   const summary = useMemo(() => {
     const total = audit.rows.length;
     const dynamic = audit.rows.filter((row) => row.mode === 'dynamic').length;
-    const legacyStatic = audit.rows.filter((row) => row.mode === LEGACY_STATIC_AUDIT_MODE).length;
+    const snapshotResidue = audit.rows.filter((row) => row.mode === SNAPSHOT_RESIDUE_AUDIT_MODE).length;
     const withIssues = audit.rows.filter((row) => row.hasIssue).length;
     const withConfigIssues = audit.rows.filter((row) => row.hasConfigIssue).length;
     const pagesWithIssues = audit.pagesWithIssues.length;
@@ -258,7 +258,7 @@ export default function AdminBlocksPage() {
     return {
       total,
       dynamic,
-      legacyStatic,
+      snapshotResidue,
       withIssues,
       withConfigIssues,
       pagesWithIssues,
@@ -270,7 +270,7 @@ export default function AdminBlocksPage() {
     <div className="page-wrap admin-content-page-wrap">
       <PageShell title="Admin: Blocks Audit" source={pageByPath['/admin/blocks']?.source ?? null} showBadge={false}>
         <div className="admin-info-note">
-          Legacy snapshot diagnostic. Review current dynamic blocks and legacy snapshot residue across all pages, including block IDs and duplicate warnings.
+          Snapshot health diagnostic. Review current dynamic blocks and snapshot residue across all pages, including block IDs and duplicate warnings.
         </div>
 
         <section className="admin-content-section">
@@ -296,7 +296,7 @@ export default function AdminBlocksPage() {
               >
                 <option value="all">All modes</option>
                 <option value="dynamic">Dynamic only</option>
-                <option value={LEGACY_STATIC_AUDIT_MODE}>Legacy snapshot residue only</option>
+                <option value={SNAPSHOT_RESIDUE_AUDIT_MODE}>Snapshot residue only</option>
                 <option value="other">Other mode values</option>
               </select>
             </label>
@@ -319,7 +319,7 @@ export default function AdminBlocksPage() {
           <div className="admin-block-audit-summary" role="status" aria-live="polite">
             <p><strong>Total:</strong> {summary.total}</p>
             <p><strong>Dynamic:</strong> {summary.dynamic}</p>
-            <p><strong>Legacy snapshot residue:</strong> {summary.legacyStatic}</p>
+            <p><strong>Snapshot residue:</strong> {summary.snapshotResidue}</p>
             <p><strong>Rows with issues:</strong> {summary.withIssues}</p>
             <p><strong>Rows with config issues:</strong> {summary.withConfigIssues}</p>
             <p><strong>Pages with issues:</strong> {summary.pagesWithIssues}</p>

@@ -3,10 +3,26 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { normalizePresetBearingBlocks } from '../src/lib/blockPresetIdentity.js';
 import { defaultAnnouncement, normalizeAnnouncement } from '../src/lib/announcementConfig.js';
+import {
+  buildCtaFormSlotFields,
+  parseCtaFormFieldsJson,
+  serializeCtaFormFields,
+  stripCtaFormSlotFieldSettings,
+} from '../src/blocks/foundation/forms.js';
+import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
 const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
+const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
+const RETIREMENT_403B_PATH = '/services/retirement/403b';
+const RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS = Object.freeze([
+  'targetSectionKey',
+  'targetFineprintSectionKey',
+  'targetSectionClassName',
+  'targetSectionIndex',
+]);
+const CTA_FORM_SLOT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
 const SHARED_CONTENT_BACKUP_FILE_PREFIX = 'content-admin-shared-';
 const SHARED_CONTENT_BACKUP_FILE_SUFFIX = '.json';
 const SHARED_CONTENT_SEED_BASELINE_FILE_NAME = 'content-admin-seed-baseline.json';
@@ -108,13 +124,36 @@ function normalizeCollaborationByPath(rawState) {
       if (!normalizedBlockId) {
         return;
       }
+      if (
+        pathname === RETIREMENT_403B_PATH
+        && normalizedBlockId === 'page_content'
+      ) {
+        return;
+      }
+      if (
+        pathname === PLANNED_GIVING_OVERVIEW_PATH
+        && normalizedBlockId === 'comparison_matrix'
+      ) {
+        return;
+      }
       blocks[normalizedBlockId] = normalizeBlockMeta(rawMeta);
     });
     next[pathname] = {
       blocks,
       history: (Array.isArray(entry.history) ? entry.history : [])
         .map(normalizeHistoryEntry)
-        .filter(Boolean),
+        .filter((historyEntry) => (
+          historyEntry
+          && !(
+            (
+              pathname === RETIREMENT_403B_PATH
+              && historyEntry.blockId === 'page_content'
+            ) || (
+              pathname === PLANNED_GIVING_OVERVIEW_PATH
+              && historyEntry.blockId === 'comparison_matrix'
+            )
+          )
+        )),
     };
   });
   return next;
@@ -533,8 +572,77 @@ function normalizeGenerosityFundJoyfulGivingBillboardSettings(rawSettings) {
   return next;
 }
 
+function isRetiredRetirement403bPageContentBlock(block) {
+  return (
+    String(block?.id || '').trim() === 'page_content'
+    || String(block?.kind || '').trim() === 'page_content'
+  );
+}
+
+function isRetiredPlannedGivingComparisonMatrixBlock(block) {
+  if (!block || typeof block !== 'object') {
+    return false;
+  }
+
+  const blockId = String(block?.id || '').trim();
+  const widget = String(block?.settings?.widget || '').trim();
+  const sectionClassName = String(block?.settings?.sectionClassName || '').trim();
+
+  return blockId === 'comparison_matrix'
+    || widget === 'giving-comparison-matrix'
+    || sectionClassName.split(/\s+/).includes('legacy-giving-comparison-matrix');
+}
+
+function stripRetiredTargetBridgeSettings(rawSettings) {
+  if (!rawSettings || typeof rawSettings !== 'object') {
+    return rawSettings;
+  }
+
+  const nextSettings = { ...rawSettings };
+  let changed = false;
+
+  RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(nextSettings, key)) {
+      delete nextSettings[key];
+      changed = true;
+    }
+  });
+
+  return changed ? nextSettings : rawSettings;
+}
+
+function normalizeCtaFormCanonicalFieldSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+  const slotFields = buildCtaFormSlotFields(settings);
+  const canonicalFields = parseCtaFormFieldsJson(settings.fieldsJson);
+  const normalizedSettings = stripCtaFormSlotFieldSettings(settings);
+  if (!slotFields.length || canonicalFields.length) {
+    return normalizedSettings;
+  }
+
+  return {
+    ...normalizedSettings,
+    fieldsJson: serializeCtaFormFields(slotFields),
+  };
+}
+
 function normalizePageBlockState(pathname, block) {
   const nextBlock = cloneJson(block);
+  if (nextBlock?.settings && typeof nextBlock.settings === 'object') {
+    nextBlock.settings = normalizeSplitLinkFieldSettings(stripRetiredTargetBridgeSettings(nextBlock.settings));
+  }
+  if (
+    String(nextBlock?.kind || '').trim().toLowerCase() === 'cta_form'
+  ) {
+    if (nextBlock?.settings && typeof nextBlock.settings === 'object') {
+      nextBlock.settings = normalizeCtaFormCanonicalFieldSettings(nextBlock.settings);
+    }
+    if (Array.isArray(nextBlock.editableFields)) {
+      nextBlock.editableFields = nextBlock.editableFields.filter((field) => (
+        !CTA_FORM_SLOT_FIELD_PATTERN.test(String(field?.id || ''))
+      ));
+    }
+  }
   if (
     pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH
     && String(nextBlock?.id || '').trim() === 'hero'
@@ -556,8 +664,146 @@ function normalizePageBlockState(pathname, block) {
 
 function normalizePageBlocksState(pathname, blocks) {
   return normalizePresetBearingBlocks(
-    (Array.isArray(blocks) ? blocks : []).map((block) => normalizePageBlockState(pathname, block)),
+    (Array.isArray(blocks) ? blocks : [])
+      .filter((block) => !(pathname === RETIREMENT_403B_PATH && isRetiredRetirement403bPageContentBlock(block)))
+      .filter((block) => !(pathname === PLANNED_GIVING_OVERVIEW_PATH && isRetiredPlannedGivingComparisonMatrixBlock(block)))
+      .map((block) => normalizePageBlockState(pathname, block)),
   );
+}
+
+function reconcileBlocksToCurrentInventory(pathname, blocks, currentBlocks) {
+  const canonicalBlocks = normalizePageBlocksState(pathname, currentBlocks);
+  if (!canonicalBlocks.length) {
+    return normalizePageBlocksState(pathname, blocks);
+  }
+
+  const blocksById = new Map(
+    normalizePageBlocksState(pathname, blocks)
+      .map((block) => [String(block?.id || '').trim(), block])
+      .filter(([blockId]) => blockId),
+  );
+
+  return canonicalBlocks.map((canonicalBlock) => {
+    const blockId = String(canonicalBlock?.id || '').trim();
+    const candidate = blocksById.get(blockId);
+    if (
+      candidate
+      && String(candidate.kind || '').trim() === String(canonicalBlock.kind || '').trim()
+      && String(candidate.mode || '').trim() === 'dynamic'
+    ) {
+      return {
+        ...cloneJson(canonicalBlock),
+        ...cloneJson(candidate),
+        kind: canonicalBlock.kind,
+        mode: 'dynamic',
+        editableFields: Array.isArray(canonicalBlock.editableFields)
+          ? cloneJson(canonicalBlock.editableFields)
+          : [],
+      };
+    }
+    return cloneJson(canonicalBlock);
+  });
+}
+
+function reconcileCollaborationToCurrentInventory(pathname, collaboration, currentBlocks) {
+  const canonicalBlockIds = new Set(
+    normalizePageBlocksState(pathname, currentBlocks)
+      .map((block) => String(block?.id || '').trim())
+      .filter(Boolean),
+  );
+  const source = collaboration && typeof collaboration === 'object'
+    ? collaboration
+    : { blocks: {}, history: [] };
+  const blocks = {};
+
+  Object.entries(source.blocks || {}).forEach(([blockId, meta]) => {
+    if (canonicalBlockIds.has(String(blockId || '').trim())) {
+      blocks[blockId] = cloneJson(meta);
+    }
+  });
+
+  return {
+    ...cloneJson(source),
+    blocks,
+    history: (Array.isArray(source.history) ? source.history : [])
+      .filter((entry) => {
+        const blockId = String(entry?.blockId || '').trim();
+        return !blockId || canonicalBlockIds.has(blockId);
+      })
+      .map(cloneJson),
+  };
+}
+
+function reconcileSharedStateToReferenceInventory(state, referenceState) {
+  const source = normalizeSharedState(state);
+  const reference = normalizeSharedState(referenceState);
+  const pageHierarchy = {};
+  const blocksByPath = {};
+  const collaborationByPath = {};
+
+  Object.entries(reference.blocksByPath || {}).forEach(([pathname, referenceBlocks]) => {
+    pageHierarchy[pathname] = {
+      ...(reference.pageHierarchy?.[pathname] || {}),
+      ...(source.pageHierarchy?.[pathname] || {}),
+      path: pathname,
+    };
+    blocksByPath[pathname] = reconcileBlocksToCurrentInventory(
+      pathname,
+      source.blocksByPath?.[pathname],
+      referenceBlocks,
+    );
+    collaborationByPath[pathname] = reconcileCollaborationToCurrentInventory(
+      pathname,
+      source.collaborationByPath?.[pathname],
+      referenceBlocks,
+    );
+  });
+
+  return {
+    ...source,
+    pageHierarchy,
+    blocksByPath,
+    pathAliases: cloneJson(reference.pathAliases || {}),
+    collaborationByPath,
+  };
+}
+
+function reconcileRecordToReferenceInventory(recordToReconcile, referenceRecord, maxRevisionsPerPage = DEFAULT_MAX_REVISIONS_PER_PAGE) {
+  const source = normalizeStoredRecord(recordToReconcile, maxRevisionsPerPage);
+  const referenceState = normalizeSharedState(referenceRecord?.state);
+  const referenceBaseSnapshot = normalizeSharedState(referenceRecord?.baseSnapshot || referenceState);
+  const nextRevisionsByPath = {};
+
+  Object.entries(source.revisionsByPath || {}).forEach(([pathname, revisions]) => {
+    const referenceBlocks = referenceState.blocksByPath?.[pathname];
+    if (!Array.isArray(referenceBlocks)) {
+      return;
+    }
+
+    nextRevisionsByPath[pathname] = (Array.isArray(revisions) ? revisions : []).map((revision) => ({
+      ...revision,
+      snapshot: {
+        ...(revision.snapshot || {}),
+        blocks: reconcileBlocksToCurrentInventory(
+          pathname,
+          revision.snapshot?.blocks,
+          referenceBlocks,
+        ),
+        collaboration: reconcileCollaborationToCurrentInventory(
+          pathname,
+          revision.snapshot?.collaboration,
+          referenceBlocks,
+        ),
+      },
+    }));
+  });
+
+  return {
+    ...source,
+    state: reconcileSharedStateToReferenceInventory(source.state, referenceState),
+    baseSnapshot: reconcileSharedStateToReferenceInventory(source.baseSnapshot, referenceBaseSnapshot),
+    revisionsByPath: nextRevisionsByPath,
+  };
 }
 
 function summarizePageAuthoringDiff(currentState, baselineState, pathname) {
@@ -661,7 +907,7 @@ function resolveRevisionSnapshotPageSlice(snapshot, pathname) {
     return {
       pathname: normalizedPath,
       page: cloneJson(source.page || null),
-      blocks: cloneJson(Array.isArray(source.blocks) ? source.blocks : []),
+      blocks: cloneJson(normalizePageBlocksState(normalizedPath, Array.isArray(source.blocks) ? source.blocks : [])),
       collaboration: cloneJson(
         source.collaboration && typeof source.collaboration === 'object'
           ? source.collaboration
@@ -1090,12 +1336,19 @@ export function createDevContentAuthorityStore({
   const replacePageStateFromRevision = (pathname, revision) => {
     const nextState = normalizeSharedState(record.state);
     const pageSlice = resolveRevisionSnapshotPageSlice(revision?.snapshot, pathname);
+    const currentBlocks = nextState.blocksByPath[pathname];
     if (pageSlice.page) {
       nextState.pageHierarchy[pathname] = cloneJson(pageSlice.page);
     }
-    nextState.blocksByPath[pathname] = cloneJson(pageSlice.blocks);
-    nextState.collaborationByPath[pathname] = cloneJson(
+    nextState.blocksByPath[pathname] = reconcileBlocksToCurrentInventory(
+      pathname,
+      pageSlice.blocks,
+      currentBlocks,
+    );
+    nextState.collaborationByPath[pathname] = reconcileCollaborationToCurrentInventory(
+      pathname,
       pageSlice.collaboration || { blocks: {}, history: [] },
+      currentBlocks,
     );
     Object.entries(pageSlice.pathAliases || {}).forEach(([fromPath, toPath]) => {
       nextState.pathAliases[fromPath] = toPath;
@@ -1738,7 +1991,11 @@ export function createDevContentAuthorityStore({
 
       try {
         const backupPayload = readBackupPayload(selectedBackup.filePath);
-        record = backupPayload.record;
+        record = reconcileRecordToReferenceInventory(
+          backupPayload.record,
+          record,
+          maxRevisionsPerPage,
+        );
         persistRecord();
         return {
           ok: true,

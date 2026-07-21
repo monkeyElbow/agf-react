@@ -56,6 +56,252 @@ function buildSeedState() {
   };
 }
 
+function buildRetirement403bStateWithGhosts() {
+  const pathname = '/services/retirement/403b';
+  return {
+    pageHierarchy: {
+      [pathname]: {
+        path: pathname,
+        title: '403(b)',
+      },
+    },
+    blocksByPath: {
+      [pathname]: [
+        {
+          id: 'investment_strategy_options',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: {
+            html: '<div class="ret403b-strategy-feature"></div>',
+            sectionClassName: 'retirement-403b-native-strategy-feature',
+          },
+        },
+        {
+          id: 'strategy_enroll_cta',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: {
+            sectionClassName: 'retirement-403b-native-strategy-enroll-cta',
+            buttonLabel: 'Enroll now',
+          },
+        },
+        {
+          id: 'page_content',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: {
+            html: `<h2>Retired Ministers' Housing Allowance</h2><p>The unique benefit, which gives ministers a significant tax savings.</p>`,
+          },
+        },
+        {
+          id: 'loan_details',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: {
+            title: "Retired Ministers' Housing Allowance",
+            body: 'The unique benefit, which gives ministers a significant tax savings.',
+            anchorId: 'retired-ministers-housing-allowance',
+            buttonLabel: 'Quick check calculator',
+            buttonPageRef: '/calculators',
+            html: '<div class="retirement-403b-loan-copy"><h2>403(b) Plan Loans</h2><div class="retirement-403b-loan-detail-card">Loan detail</div></div>',
+            sectionClassName: 'retirement-403b-native-loans',
+          },
+        },
+        {
+          id: 'housing_feature',
+          kind: 'columns',
+          mode: 'dynamic',
+          settings: {
+            col2Title: "Retired Ministers' Housing Allowance",
+            col2BodyHtml: `
+              <p>The unique benefit, which gives ministers a significant tax savings, is not available through secular 403(b) plans or IRAs.</p>
+              <p class="ret403b-housing-feature-bullet-intro">The maximum housing allowance exemption in any tax year is the lesser of:</p>
+              <ul><li>Your actual expenditures</li></ul>
+            `,
+          },
+        },
+      ],
+    },
+    pathAliases: {},
+    collaborationByPath: {
+      [pathname]: {
+        blocks: {
+          strategy_enroll_cta: {
+            draftedBy: createActor(),
+            draftedAt: 1710000000000,
+            savedBy: createActor(),
+            savedAt: 1710000000000,
+            lockedBy: null,
+            lockedAt: null,
+          },
+          page_content: {
+            draftedBy: createActor(),
+            draftedAt: 1710000000000,
+            savedBy: createActor(),
+            savedAt: 1710000000000,
+            lockedBy: null,
+            lockedAt: null,
+          },
+        },
+        history: [
+          {
+            id: '1710000000000-strategy',
+            action: 'block-draft-saved',
+            blockId: 'strategy_enroll_cta',
+            actor: createActor(),
+            createdAt: 1710000000000,
+          },
+          {
+            id: '1710000000000-page-content',
+            action: 'block-draft-saved',
+            blockId: 'page_content',
+            actor: createActor(),
+            createdAt: 1710000000000,
+          },
+        ],
+      },
+    },
+  };
+}
+
+function buildCleanRetirement403bState() {
+  const pathname = '/services/retirement/403b';
+  return {
+    pageHierarchy: {
+      [pathname]: {
+        path: pathname,
+        title: '403(b)',
+      },
+    },
+    blocksByPath: {
+      [pathname]: [
+        {
+          id: 'investment_strategy_options',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: {
+            html: '<div class="ret403b-strategy-feature"></div>',
+            sectionClassName: 'retirement-403b-native-strategy-feature',
+          },
+        },
+        {
+          id: 'loan_details',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: {
+            title: '',
+            body: '',
+            anchorId: '',
+            buttonLabel: '',
+            buttonPageRef: '',
+            html: '<div class="retirement-403b-loan-copy"><h2>403(b) Plan Loans</h2><div class="retirement-403b-loan-detail-card">Loan detail</div><p class="retirement-403b-loan-followup">Contact your AGFinancial retirement consultant for more information.</p></div>',
+            sectionClassName: 'retirement-403b-native-loans',
+          },
+        },
+        {
+          id: 'housing_feature',
+          kind: 'columns',
+          mode: 'dynamic',
+          templateId: 'columns',
+          presetId: 'default',
+          settings: {
+            col2Title: "Retired Ministers' Housing Allowance",
+            col2Body: '',
+            col2BodyHtml: '<p>This unique IRS benefit, which gives ministers a significant tax savings, is not available through secular 403(b) plans or IRAs. It allows retired ministers to have distributions from the AGFinancial 403(b) plan designated as clergy housing allowance.</p>',
+            col2ButtonLabel: 'IRS information',
+            col2ButtonUrl: 'https://www.irs.gov/publications/p517',
+            col2ButtonPageRef: '',
+            col2ButtonStyle: 'outline',
+            col2ButtonTone: 'atlantean',
+            col2ButtonOpenInNewWindow: true,
+          },
+        },
+      ],
+    },
+    pathAliases: {},
+    collaborationByPath: {
+      [pathname]: {
+        blocks: {},
+        history: [],
+      },
+    },
+  };
+}
+
+function buildPlannedGivingStateWithRetiredComparisonMatrix() {
+  const pathname = '/services/planned-giving';
+  return {
+    pageHierarchy: {
+      [pathname]: {
+        path: pathname,
+        title: 'Planned Giving',
+      },
+    },
+    blocksByPath: {
+      [pathname]: [
+        {
+          id: 'comparison_table',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: {
+            widget: 'charitable-giving-table',
+            anchorId: 'charitable-giving-plan-comparison',
+            sectionClassName: 'legacy-giving-comparison',
+          },
+        },
+        {
+          id: 'comparison_matrix',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: {
+            widget: 'giving-comparison-matrix',
+            sectionClassName: 'legacy-giving-comparison-matrix',
+          },
+        },
+      ],
+    },
+    pathAliases: {},
+    collaborationByPath: {
+      [pathname]: {
+        blocks: {
+          comparison_matrix: {
+            draftedBy: createActor(),
+            draftedAt: 1710000000000,
+            savedBy: createActor(),
+            savedAt: 1710000000000,
+            lockedBy: null,
+            lockedAt: null,
+          },
+          comparison_table: {
+            draftedBy: createActor(),
+            draftedAt: 1710000000000,
+            savedBy: createActor(),
+            savedAt: 1710000000000,
+            lockedBy: null,
+            lockedAt: null,
+          },
+        },
+        history: [
+          {
+            id: '1710000000000-matrix',
+            action: 'block-draft-saved',
+            blockId: 'comparison_matrix',
+            actor: createActor(),
+            createdAt: 1710000000000,
+          },
+          {
+            id: '1710000000001-table',
+            action: 'block-draft-saved',
+            blockId: 'comparison_table',
+            actor: createActor(),
+            createdAt: 1710000000001,
+          },
+        ],
+      },
+    },
+  };
+}
+
 function buildSeedStateWithOtherDraft() {
   const seedState = buildSeedState();
   seedState.collaborationByPath['/services/loans'].blocks.hero = {
@@ -262,6 +508,63 @@ describe('createDevContentAuthorityStore', () => {
     expect(storeB.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Shared draft title');
   });
 
+  it('persists canonical CTA fieldsJson when incoming state only has slot fields', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'][1].settings = {
+      title: 'Slot-only CTA',
+      fieldsJson: '',
+      field1Enabled: true,
+      field1Type: 'text',
+      field1Label: 'Full name',
+      field1Placeholder: '',
+      field1Options: '',
+      field1Required: true,
+      field2Enabled: true,
+      field2Type: 'email',
+      field2Label: 'Email',
+      field2Placeholder: '',
+      field2Options: '',
+      field2Required: true,
+    };
+
+    const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'slot-only cta' });
+    const persistedCta = readPersistedRecord(persistenceFile).state.blocksByPath['/services/loans'][1];
+    const fields = JSON.parse(persistedCta.settings.fieldsJson);
+
+    expect(saved.ok).toBe(true);
+    expect(fields).toEqual([
+      expect.objectContaining({ id: 'field1', label: 'Full name', type: 'text', required: true }),
+      expect.objectContaining({ id: 'field2', label: 'Email', type: 'email', required: true }),
+    ]);
+    expect(Object.keys(persistedCta.settings).filter((key) => /^field[1-5]/.test(key))).toEqual([]);
+  });
+
+  it('normalizes split link targets before saving shared snapshots', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'][0].settings = {
+      ...nextState.blocksByPath['/services/loans'][0].settings,
+      buttonUrl: '/old-target',
+      buttonPageRef: '/contact-us',
+      buttonOpenInNewWindow: 'false',
+    };
+
+    const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'split link repair' });
+    const persistedBlock = readPersistedRecord(persistenceFile).state.blocksByPath['/services/loans'][0];
+
+    expect(saved.ok).toBe(true);
+    expect(persistedBlock.settings.buttonUrl).toBe('/contact-us');
+    expect(persistedBlock.settings.buttonPageRef).toBe('/contact-us');
+    expect(persistedBlock.settings.buttonOpenInNewWindow).toBe(false);
+  });
+
   it('persists the shared site announcement for other clients', () => {
     const persistenceFile = makeTempFile();
     const storeA = createStore(persistenceFile);
@@ -355,6 +658,272 @@ describe('createDevContentAuthorityStore', () => {
     expect(history).toHaveLength(1);
     expect(history[0].summary).toBe('legacy revision');
     expect(history[0].blocks.map((block) => block.id)).toEqual(['hero', 'cta_form']);
+  });
+
+  it('reconciles partial old page revisions to the current block inventory on restore', () => {
+    const persistenceFile = makeTempFile();
+    const currentState = buildSeedState();
+    const pathname = '/services/loans';
+    const ctaRevisionBlock = {
+      ...cloneJson(currentState.blocksByPath[pathname][1]),
+      settings: {
+        title: 'Revision CTA',
+        targetSectionKey: 'class:old-native-section',
+      },
+    };
+
+    fs.writeFileSync(persistenceFile, JSON.stringify({
+      initialized: true,
+      version: 1,
+      updatedAt: 1710000005000,
+      state: currentState,
+      baseSnapshot: currentState,
+      revisionsByPath: {
+        [pathname]: [
+          {
+            id: '1710000005000-partial',
+            pathname,
+            createdAt: 1710000005000,
+            actor: createActor(),
+            reason: 'draft-saved',
+            summary: 'partial old revision',
+            snapshot: {
+              pathname,
+              page: currentState.pageHierarchy[pathname],
+              blocks: [
+                ctaRevisionBlock,
+                {
+                  id: 'old_static_section',
+                  kind: 'content',
+                  mode: 'static',
+                  settings: {
+                    html: '<p>Old static section</p>',
+                  },
+                },
+              ],
+              collaboration: {
+                blocks: {
+                  cta_form: {
+                    draftedBy: createActor(),
+                    draftedAt: 1710000000000,
+                    savedBy: createActor(),
+                    savedAt: 1710000000000,
+                    lockedBy: null,
+                    lockedAt: null,
+                  },
+                  old_static_section: {
+                    draftedBy: createActor(),
+                    draftedAt: 1710000000000,
+                    savedBy: createActor(),
+                    savedAt: 1710000000000,
+                    lockedBy: null,
+                    lockedAt: null,
+                  },
+                },
+                history: [
+                  {
+                    id: '1710000000000-cta',
+                    action: 'block-draft-saved',
+                    blockId: 'cta_form',
+                    actor: createActor(),
+                    createdAt: 1710000000000,
+                  },
+                  {
+                    id: '1710000000000-old-static',
+                    action: 'block-draft-saved',
+                    blockId: 'old_static_section',
+                    actor: createActor(),
+                    createdAt: 1710000000000,
+                  },
+                ],
+              },
+              pathAliases: {},
+            },
+          },
+        ],
+      },
+    }));
+
+    const store = createStore(persistenceFile);
+    const restored = store.restorePageRevision(pathname, '1710000005000-partial', { actor: createActor() });
+    const restoredBlocks = restored.state.blocksByPath[pathname];
+    const restoredCollaboration = restored.state.collaborationByPath[pathname];
+
+    expect(restored.ok).toBe(true);
+    expect(restoredBlocks.map((block) => `${block.id}:${block.kind}:${block.mode}`)).toEqual([
+      'hero:hero:dynamic',
+      'cta_form:cta_form:dynamic',
+    ]);
+    expect(restoredBlocks.find((block) => block.id === 'hero')?.settings.line1Text).toBe('Original title');
+    expect(restoredBlocks.find((block) => block.id === 'cta_form')?.settings.title).toBe('Revision CTA');
+    expect(restoredBlocks.find((block) => block.id === 'cta_form')?.settings.targetSectionKey).toBeUndefined();
+    expect(restoredCollaboration.blocks.cta_form).toBeTruthy();
+    expect(restoredCollaboration.blocks.old_static_section).toBeUndefined();
+    expect(restoredCollaboration.history.map((entry) => entry.blockId)).toEqual(['cta_form']);
+  });
+
+  it('does not silently repair retired 403(b) strategy CTAs or RMHA copy from persisted revision restores', () => {
+    const persistenceFile = makeTempFile();
+    const ghostState = buildRetirement403bStateWithGhosts();
+    const pathname = '/services/retirement/403b';
+
+    fs.writeFileSync(persistenceFile, JSON.stringify({
+      initialized: true,
+      version: 1,
+      updatedAt: 1710000005000,
+      state: ghostState,
+      baseSnapshot: ghostState,
+      revisionsByPath: {
+        [pathname]: [
+          {
+            id: '1710000005000-ghost',
+            pathname,
+            createdAt: 1710000005000,
+            actor: createActor(),
+            reason: 'draft-saved',
+            summary: 'ghost revision',
+            snapshot: {
+              pathname,
+              page: ghostState.pageHierarchy[pathname],
+              blocks: ghostState.blocksByPath[pathname],
+              collaboration: ghostState.collaborationByPath[pathname],
+              pathAliases: {},
+            },
+          },
+        ],
+      },
+    }));
+
+    const store = createStore(persistenceFile);
+    const activeBlocks = store.getSnapshot().state.blocksByPath[pathname];
+    const activeLoanDetails = activeBlocks.find((block) => block.id === 'loan_details');
+
+    expect(activeBlocks.some((block) => block.id === 'strategy_enroll_cta')).toBe(true);
+    expect(activeBlocks.some((block) => block.id === 'page_content')).toBe(false);
+    expect(activeLoanDetails.settings.title).toBe("Retired Ministers' Housing Allowance");
+    expect(activeLoanDetails.settings.body).toContain('The unique benefit, which gives ministers');
+    expect(activeLoanDetails.settings.anchorId).toBe('retired-ministers-housing-allowance');
+    expect(activeBlocks.find((block) => block.id === 'housing_feature')?.settings.col2Title).toBe("Retired Ministers' Housing Allowance");
+    expect(activeBlocks.find((block) => block.id === 'housing_feature')?.settings.col2BodyHtml).toContain('ret403b-housing-feature-bullet-intro');
+    expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.strategy_enroll_cta).toBeTruthy();
+    expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.page_content).toBeUndefined();
+    expect(store.getSnapshot().state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['strategy_enroll_cta']);
+
+    const history = store.getRevisionHistory(pathname);
+    expect(history[0].blocks.map((block) => block.id)).toEqual([
+      'investment_strategy_options',
+      'strategy_enroll_cta',
+      'loan_details',
+      'housing_feature',
+    ]);
+
+    const restored = store.restorePageRevision(pathname, '1710000005000-ghost', { actor: createActor() });
+    const restoredBlocks = restored.state.blocksByPath[pathname];
+    const restoredLoanDetails = restoredBlocks.find((block) => block.id === 'loan_details');
+
+    expect(restored.ok).toBe(true);
+    expect(restoredBlocks.some((block) => block.id === 'strategy_enroll_cta')).toBe(true);
+    expect(restoredBlocks.some((block) => block.id === 'page_content')).toBe(false);
+    expect(restoredLoanDetails.settings.title).toBe("Retired Ministers' Housing Allowance");
+    expect(restoredLoanDetails.settings.buttonPageRef).toBe('/calculators');
+    expect(restored.state.collaborationByPath[pathname].blocks.strategy_enroll_cta).toBeTruthy();
+    expect(restored.state.collaborationByPath[pathname].blocks.page_content).toBeUndefined();
+    expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['strategy_enroll_cta']);
+  });
+
+  it('leaves clean 403(b) snapshots unchanged without RMHA runtime rescue branches', () => {
+    const persistenceFile = makeTempFile();
+    const cleanState = buildCleanRetirement403bState();
+    const pathname = '/services/retirement/403b';
+
+    fs.writeFileSync(persistenceFile, JSON.stringify({
+      initialized: true,
+      version: 1,
+      updatedAt: 1710000005000,
+      state: cleanState,
+      baseSnapshot: cleanState,
+      revisionsByPath: {
+        [pathname]: [
+          {
+            id: '1710000005000-clean',
+            pathname,
+            createdAt: 1710000005000,
+            actor: createActor(),
+            reason: 'draft-saved',
+            summary: 'clean revision',
+            snapshot: {
+              pathname,
+              page: cleanState.pageHierarchy[pathname],
+              blocks: cleanState.blocksByPath[pathname],
+              collaboration: cleanState.collaborationByPath[pathname],
+              pathAliases: {},
+            },
+          },
+        ],
+      },
+    }));
+
+    const store = createStore(persistenceFile);
+    const snapshot = store.getSnapshot();
+    const history = store.getRevisionHistory(pathname);
+
+    expect(snapshot.state.blocksByPath[pathname]).toEqual(cleanState.blocksByPath[pathname]);
+    expect(snapshot.baseSnapshot.blocksByPath[pathname]).toEqual(cleanState.blocksByPath[pathname]);
+    expect(history[0].blocks.map((block) => block.id)).toEqual(cleanState.blocksByPath[pathname].map((block) => block.id));
+  });
+
+  it('sanitizes the retired planned giving static comparison matrix from persisted snapshots and revision restores', () => {
+    const persistenceFile = makeTempFile();
+    const ghostState = buildPlannedGivingStateWithRetiredComparisonMatrix();
+    const pathname = '/services/planned-giving';
+
+    fs.writeFileSync(persistenceFile, JSON.stringify({
+      initialized: true,
+      version: 1,
+      updatedAt: 1710000005000,
+      state: ghostState,
+      baseSnapshot: ghostState,
+      revisionsByPath: {
+        [pathname]: [
+          {
+            id: '1710000005000-comparison',
+            pathname,
+            createdAt: 1710000005000,
+            actor: createActor(),
+            reason: 'draft-saved',
+            summary: 'comparison matrix revision',
+            snapshot: {
+              pathname,
+              page: ghostState.pageHierarchy[pathname],
+              blocks: ghostState.blocksByPath[pathname],
+              collaboration: ghostState.collaborationByPath[pathname],
+              pathAliases: {},
+            },
+          },
+        ],
+      },
+    }));
+
+    const store = createStore(persistenceFile);
+    const activeBlocks = store.getSnapshot().state.blocksByPath[pathname];
+
+    expect(activeBlocks.map((block) => block.id)).toEqual(['comparison_table']);
+    expect(activeBlocks.some((block) => block.settings?.widget === 'giving-comparison-matrix')).toBe(false);
+    expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.comparison_matrix).toBeUndefined();
+    expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.comparison_table).toBeTruthy();
+    expect(store.getSnapshot().state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['comparison_table']);
+
+    const history = store.getRevisionHistory(pathname);
+    expect(history[0].blocks.map((block) => block.id)).toEqual(['comparison_table']);
+
+    const restored = store.restorePageRevision(pathname, '1710000005000-comparison', { actor: createActor() });
+    const restoredBlocks = restored.state.blocksByPath[pathname];
+
+    expect(restored.ok).toBe(true);
+    expect(restoredBlocks.map((block) => block.id)).toEqual(['comparison_table']);
+    expect(restored.state.collaborationByPath[pathname].blocks.comparison_matrix).toBeUndefined();
+    expect(restored.state.collaborationByPath[pathname].blocks.comparison_table).toBeTruthy();
+    expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['comparison_table']);
   });
 
   it('resets the shared state back to seed', () => {
@@ -759,6 +1328,135 @@ describe('createDevContentAuthorityStore', () => {
     expect(backups).toHaveLength(2);
     expect(backups[0].reason).toBe('before-backup-restore');
     expect(backups[1].reason).toBe('before-reset-from-seed');
+  });
+
+  it('reconciles restored backup records to the current block inventory', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+    const currentState = buildSeedState();
+    const pathname = '/services/loans';
+    const oldBackupState = buildSeedState();
+
+    oldBackupState.blocksByPath[pathname] = [
+      {
+        ...cloneJson(currentState.blocksByPath[pathname][1]),
+        settings: {
+          title: 'Backup CTA',
+          targetSectionClassName: 'old-native-section',
+        },
+      },
+      {
+        id: 'old_static_section',
+        kind: 'content',
+        mode: 'static',
+        settings: {
+          html: '<p>Old static backup section</p>',
+        },
+      },
+    ];
+    oldBackupState.collaborationByPath[pathname] = {
+      blocks: {
+        old_static_section: {
+          draftedBy: createActor(),
+          draftedAt: 1710000000000,
+          savedBy: createActor(),
+          savedAt: 1710000000000,
+          lockedBy: null,
+          lockedAt: null,
+        },
+      },
+      history: [
+        {
+          id: '1710000000000-old-static',
+          action: 'block-draft-saved',
+          blockId: 'old_static_section',
+          actor: createActor(),
+          createdAt: 1710000000000,
+        },
+      ],
+    };
+    oldBackupState.pathAliases = {
+      '/old-loans': pathname,
+    };
+    oldBackupState.pageHierarchy['/old-route'] = {
+      path: '/old-route',
+      title: 'Old Route',
+    };
+    oldBackupState.blocksByPath['/old-route'] = [
+      {
+        id: 'page_content',
+        kind: 'content',
+        mode: 'static',
+        settings: {
+          html: '<p>Old route</p>',
+        },
+      },
+    ];
+    oldBackupState.collaborationByPath['/old-route'] = {
+      blocks: {},
+      history: [],
+    };
+
+    store.resetFromSeed(currentState, { actor: createActor() });
+    fs.mkdirSync(backupDir, { recursive: true });
+    fs.writeFileSync(path.join(backupDir, 'content-admin-shared-20260720-120000.json'), JSON.stringify({
+      meta: {
+        createdAt: 1784577600000,
+        timestamp: '2026-07-20T12:00:00.000Z',
+        reason: 'manual-old-backup',
+      },
+      record: {
+        initialized: true,
+        version: 1,
+        updatedAt: 1784577600000,
+        state: oldBackupState,
+        baseSnapshot: oldBackupState,
+        revisionsByPath: {
+          [pathname]: [
+            {
+              id: '1784577600000-old-backup-revision',
+              pathname,
+              createdAt: 1784577600000,
+              actor: createActor(),
+              reason: 'draft-saved',
+              summary: 'old backup revision',
+              snapshot: {
+                pathname,
+                page: oldBackupState.pageHierarchy[pathname],
+                blocks: oldBackupState.blocksByPath[pathname],
+                collaboration: oldBackupState.collaborationByPath[pathname],
+                pathAliases: {},
+              },
+            },
+          ],
+        },
+      },
+    }));
+
+    const restored = store.restoreFromBackup('content-admin-shared-20260720-120000.json', { actor: createActor() });
+    const restoredBlocks = restored.state.blocksByPath[pathname];
+    const restoredCta = restoredBlocks.find((block) => block.id === 'cta_form');
+    const restoredRevisionBlocks = readPersistedRecord(persistenceFile)
+      .revisionsByPath[pathname][0].snapshot.blocks;
+
+    expect(restored.ok).toBe(true);
+    expect(restoredBlocks.map((block) => `${block.id}:${block.kind}:${block.mode}`)).toEqual([
+      'hero:hero:dynamic',
+      'cta_form:cta_form:dynamic',
+    ]);
+    expect(restoredBlocks.some((block) => block.id === 'old_static_section')).toBe(false);
+    expect(restoredCta.settings.title).toBe('Backup CTA');
+    expect(restoredCta.settings.targetSectionClassName).toBeUndefined();
+    expect(restored.state.blocksByPath['/old-route']).toBeUndefined();
+    expect(restored.state.pageHierarchy['/old-route']).toBeUndefined();
+    expect(restored.state.pathAliases['/old-loans']).toBeUndefined();
+    expect(restored.state.collaborationByPath[pathname].blocks.old_static_section).toBeUndefined();
+    expect(restored.state.collaborationByPath[pathname].history).toEqual([]);
+    expect(restoredRevisionBlocks.map((block) => `${block.id}:${block.kind}:${block.mode}`)).toEqual([
+      'hero:hero:dynamic',
+      'cta_form:cta_form:dynamic',
+    ]);
   });
 
   it('promotes the current shared content to the reset baseline and uses it for future resets', () => {

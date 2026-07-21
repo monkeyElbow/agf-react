@@ -6,6 +6,9 @@ export const LINK_VALUE_KIND_VALUES = Object.freeze([
   'internal',
   'phone',
 ]);
+export const SPLIT_LINK_HREF_SUFFIXES = Object.freeze(['Url', 'Path', 'Href']);
+export const SPLIT_LINK_PAGE_REF_SUFFIX = 'PageRef';
+export const SPLIT_LINK_OPEN_IN_NEW_WINDOW_SUFFIX = 'OpenInNewWindow';
 
 export function isLinkValueKind(value) {
   return LINK_VALUE_KIND_VALUES.includes(String(value || '').trim());
@@ -184,6 +187,91 @@ function readFirstFieldValue(source, keys) {
 function readFirstStringField(source, keys) {
   const value = readFirstFieldValue(source, keys);
   return typeof value === 'string' ? value.trim() : String(value || '').trim();
+}
+
+function isInternalLinkPath(value) {
+  return String(value || '').trim().startsWith('/');
+}
+
+function readBooleanValue(value) {
+  if (value === undefined) {
+    return false;
+  }
+  if (typeof value === 'string') {
+    const token = value.trim().toLowerCase();
+    if (!token) {
+      return false;
+    }
+    return token !== 'false' && token !== '0' && token !== 'off' && token !== 'no';
+  }
+  return Boolean(value);
+}
+
+function getSplitLinkHrefKeys(settings, baseKey) {
+  return SPLIT_LINK_HREF_SUFFIXES
+    .map((suffix) => `${baseKey}${suffix}`)
+    .filter((key) => Object.prototype.hasOwnProperty.call(settings, key));
+}
+
+export function normalizeSplitLinkFieldSettings(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return settings;
+  }
+
+  let changed = false;
+  const nextSettings = { ...settings };
+
+  Object.entries(settings).forEach(([key, value]) => {
+    if (key.endsWith(SPLIT_LINK_OPEN_IN_NEW_WINDOW_SUFFIX) && value !== true && value !== false) {
+      nextSettings[key] = readBooleanValue(value);
+      changed = true;
+      return;
+    }
+
+    if (!key.endsWith(SPLIT_LINK_PAGE_REF_SUFFIX)) {
+      return;
+    }
+
+    const pageRef = readFirstStringField(settings, [key]);
+    const baseKey = key.slice(0, -SPLIT_LINK_PAGE_REF_SUFFIX.length);
+    const hrefKeys = getSplitLinkHrefKeys(settings, baseKey);
+
+    if (pageRef && !isInternalLinkPath(pageRef)) {
+      const emptyHrefKey = hrefKeys.find((hrefKey) => !readFirstStringField(settings, [hrefKey]));
+      if (emptyHrefKey) {
+        nextSettings[emptyHrefKey] = pageRef;
+      }
+      nextSettings[key] = '';
+      changed = true;
+      return;
+    }
+
+    const internalHref = hrefKeys
+      .map((hrefKey) => [hrefKey, readFirstStringField(settings, [hrefKey])])
+      .find(([, href]) => isInternalLinkPath(href));
+
+    if (!pageRef && internalHref) {
+      nextSettings[key] = internalHref[1];
+      changed = true;
+    }
+
+    const canonicalTarget = pageRef || internalHref?.[1] || '';
+    if (!canonicalTarget) {
+      return;
+    }
+
+    hrefKeys.forEach((hrefKey) => {
+      const href = readFirstStringField(settings, [hrefKey]);
+      if (pageRef || !href || isInternalLinkPath(href)) {
+        if (href !== canonicalTarget) {
+          nextSettings[hrefKey] = canonicalTarget;
+          changed = true;
+        }
+      }
+    });
+  });
+
+  return changed ? nextSettings : settings;
 }
 
 export function coerceLinkValueFromFields(source, {

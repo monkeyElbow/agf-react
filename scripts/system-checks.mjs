@@ -51,12 +51,11 @@ const STATIC_SOURCE_PATTERNS = Object.freeze([
   },
 ]);
 
-const LEGACY_ADAPTER_INVENTORY = Object.freeze([
+const RETIRED_LEGACY_SOURCE_PATTERNS = Object.freeze([
   {
-    label: 'Content admin stale/legacy snapshot repair helpers',
+    label: 'Content admin retired snapshot repair helper legacy naming',
     files: ['src/context/ContentAdminContext.jsx'],
     pattern: /\b(?:is|should|normalize|upgrade|reset|read|to|with|default|get|build)[A-Za-z0-9_]*(?:Legacy|Stale|Compat|Fallback|Static)[A-Za-z0-9_]*\b/g,
-    retireWhen: 'Each ContentAdminContext migration adapter has schema-versioned snapshots, archived old backups, and an inventory entry with deletion criteria.',
   },
   {
     label: 'Retired editable-field API name',
@@ -79,12 +78,6 @@ const LEGACY_ADAPTER_INVENTORY = Object.freeze([
     pattern: /\bLEGACY_EDITOR_PARITY_CONTRACT\b/g,
   },
   {
-    label: 'Admin block audit legacy static diagnostics',
-    files: ['src/pages/AdminBlocksPage.jsx'],
-    pattern: /\bLEGACY_STATIC_BLOCK_MODE\b|\bLEGACY_STATIC_AUDIT_MODE\b|Legacy snapshot residue/g,
-    retireWhen: 'The /admin/blocks surface is converted to a permanent health dashboard or removed after legacy snapshot recovery is versioned elsewhere.',
-  },
-  {
     label: 'Block mode static compatibility token',
     files: ['src/blocks/foundation/models.js'],
     pattern: /'static'|\bdynamic'\|'static\b/g,
@@ -97,9 +90,11 @@ const LEGACY_ADAPTER_INVENTORY = Object.freeze([
       'src/pages/RetirementPage.jsx',
       'src/pages/ServicesPage.jsx',
     ],
-    pattern: /\b[A-Za-z0-9_]*fallback[A-Za-z0-9_]*\b|\bfallbackItems\b|\bfallbackFineprint\b/g,
-    retireWhen: 'Investments, loans, retirement, and services root pages either converge to the common block renderer or their functional fallback behavior is documented as intentional.',
+    pattern: /\b(?:build[A-Za-z0-9_]*FallbackBlock|[A-Za-z0-9_]*FallbackBlock|fallbackBlock|fallbackItems|fallbackFineprint|fallbackSettings|fallbackVisionFuel)\b/g,
   },
+]);
+
+const LEGACY_ADAPTER_INVENTORY = Object.freeze([
 ]);
 
 function readText(relativePath) {
@@ -266,8 +261,32 @@ function scanStatic() {
   console.log('Static/createStatic scan passed.');
 }
 
+function scanRetiredLegacySourceNames() {
+  const matches = [];
+
+  RETIRED_LEGACY_SOURCE_PATTERNS.forEach((entry) => {
+    const files = entry.files.filter((relativePath) => {
+      try {
+        statSync(path.resolve(repoRoot, relativePath));
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    matches.push(...collectPatternMatches(files, [{ label: entry.label, pattern: entry.pattern }]));
+  });
+
+  if (matches.length) {
+    printFailure('Retired legacy source-name scan failed.', matches);
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log('Retired legacy source-name scan passed.');
+}
+
 function scanTargetBridge() {
-  const files = [
+  const sourceFiles = [
     ...walkFiles('src', {
       extensions: new Set(['.js', '.jsx', '.json']),
       ignoreFile: (relativePath) => (
@@ -275,18 +294,41 @@ function scanTargetBridge() {
         || relativePath.includes('.guardrail.')
       ),
     }),
-    ...walkFiles('dev-data', {
-      extensions: new Set(['.json']),
-      ignoreDirs: new Set(['backups']),
-    }),
   ];
-  const matches = collectPatternMatches(
-    files,
+  const sourceMatches = collectPatternMatches(
+    sourceFiles,
     TARGET_BRIDGE_PATTERNS.map((token) => ({
       label: token,
       pattern: new RegExp(`\\b${token}\\b`, 'g'),
     })),
   );
+  const dataMatches = [];
+
+  CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS.forEach(({ label, relativePath, rootKey }) => {
+    const record = readJson(relativePath);
+    const blocksByPath = record?.[rootKey]?.blocksByPath || {};
+    Object.entries(blocksByPath).forEach(([pathname, blocks]) => {
+      (Array.isArray(blocks) ? blocks : []).forEach((block) => {
+        const settings = block?.settings && typeof block.settings === 'object'
+          ? block.settings
+          : {};
+
+        TARGET_BRIDGE_PATTERNS.forEach((token) => {
+          if (!Object.prototype.hasOwnProperty.call(settings, token)) {
+            return;
+          }
+          dataMatches.push({
+            label: `${label} ${token}`,
+            file: `${relativePath}#${rootKey}`,
+            line: 1,
+            text: `${pathname} ${block?.id || '(missing id)'}`,
+          });
+        });
+      });
+    });
+  });
+
+  const matches = [...sourceMatches, ...dataMatches];
 
   if (matches.length) {
     printFailure('Target bridge scan failed.', matches);
@@ -495,6 +537,7 @@ function scanAll() {
   scanPageContent();
   scanSnapshotSchema();
   scanReadability();
+  scanRetiredLegacySourceNames();
   scanSafetyNets();
   scanLegacyAdapters();
 }
@@ -508,6 +551,7 @@ const commands = {
   'page-content': scanPageContent,
   'snapshot-schema': scanSnapshotSchema,
   readability: scanReadability,
+  'retired-legacy-source-names': scanRetiredLegacySourceNames,
   'safety-nets': scanSafetyNets,
   'legacy-adapters': scanLegacyAdapters,
 };

@@ -71,7 +71,6 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { buildNativeHudPanels } from '../lib/nativeHudPanels';
 import useHudDockOrder from '../hooks/useHudDockOrder';
-import GivingComparisonMatrix from './GivingComparisonMatrix';
 import CharitableGivingTableWidget from './CharitableGivingTableWidget';
 import CharitableGiftTestDriveWidget from './CharitableGiftTestDriveWidget';
 import EmergencyFundCalculatorWidget from './EmergencyFundCalculatorWidget';
@@ -987,6 +986,7 @@ function buildDynamicPageContentSection(block, pathname) {
     anchorId,
     sectionClassName,
     copyWrap,
+    justify,
     actions,
     addressBlock,
   } = runtime;
@@ -1006,6 +1006,7 @@ function buildDynamicPageContentSection(block, pathname) {
     subtitle: subtitle || undefined,
     body: Array.isArray(body) ? body : [],
     copyWrap: Boolean(copyWrap),
+    justify,
     html,
     widget: widget || undefined,
     logoImage: logoImage || undefined,
@@ -1430,6 +1431,7 @@ function buildDynamicSiteFeatureSection(block, pathname) {
       hideTitle: true,
       cardsPreset: 'value-cards',
       cards: Array.isArray(runtime.cards) ? runtime.cards : [],
+      justify: 'center',
       actions: runtime.action ? [toNativeActionItem(runtime.action)].filter(Boolean) : [],
     };
   }
@@ -4408,11 +4410,9 @@ export default function NativeContentPage({ page }) {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
-  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
-  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
-  const managedResolveManagedPathFromRef = frontHudEnabled
-    ? (resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef)
-    : resolveManagedPathFromRef;
+  const managedBlocksByPath = authoringBlocksByPath || blocksByPath;
+  const managedPageHierarchy = authoringPageHierarchy || pageHierarchy;
+  const managedResolveManagedPathFromRef = resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef;
   const { addResponse } = useConsultantResponses();
   const { testimonials: testimonialsLibrary } = useTestimonials();
   const baseNativeContent = getNativePageContent(templatePath, page.title);
@@ -6586,10 +6586,6 @@ export default function NativeContentPage({ page }) {
 
             {section.widget === 'endowment-calculator' ? (
               <EndowmentCalculatorWidget />
-            ) : null}
-
-            {section.widget === 'giving-comparison-matrix' ? (
-              <GivingComparisonMatrix />
             ) : null}
 
             {section.widget === 'charitable-giving-table' ? (

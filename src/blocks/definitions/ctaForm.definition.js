@@ -3,9 +3,9 @@ import { buildDynamicCtaFormFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch } from '../../lib/colorSystem';
 import { defineEditorField } from '../foundation/editorDescriptors';
 import {
-  CTA_FORM_DYNAMIC_FIELD_TYPE_OPTIONS,
   CTA_FORM_MAX_FIELDS,
   createFormBlockDefinitionScaffold,
+  serializeCtaFormFields,
 } from '../foundation/forms';
 
 const CTA_FORM_HEADING_TONE_OPTIONS = [
@@ -25,6 +25,13 @@ const CTA_FORM_BACKGROUND_OPTIONS = [
   { value: 'blue', label: 'Blue Gradient', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
 ];
+
+const defaultCtaFormFieldsJson = serializeCtaFormFields([
+  { id: 'name', label: 'Name', type: 'text', required: true },
+  { id: 'email', label: 'Email', type: 'email', required: true },
+  { id: 'phone', label: 'Phone', type: 'tel', placeholder: '(555) 555-5555' },
+  { id: 'message', label: 'Message', type: 'textarea', placeholder: 'What would you like to discuss?' },
+]);
 
 const sections = [
   {
@@ -75,30 +82,6 @@ const sections = [
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
     ],
   },
-  {
-    id: 'fields',
-    title: 'Fields',
-    surfaces: ['hud', 'admin'],
-    fields: [1, 2, 3, 4, 5].flatMap((slot) => ([
-      defineEditorField({ id: `field${slot}Enabled`, label: `Field ${slot} enabled`, type: 'boolean' }),
-      defineEditorField({
-        id: `field${slot}Type`,
-        label: `Field ${slot} type`,
-        type: 'select',
-        options: CTA_FORM_DYNAMIC_FIELD_TYPE_OPTIONS,
-      }),
-      defineEditorField({ id: `field${slot}Label`, label: `Field ${slot} label`, type: 'text' }),
-      defineEditorField({ id: `field${slot}Placeholder`, label: `Field ${slot} placeholder`, type: 'text' }),
-      defineEditorField({
-        id: `field${slot}Options`,
-        label: `Field ${slot} dropdown choices`,
-        type: 'textarea',
-        rows: 4,
-        placeholder: 'Option label\nvalue|Custom label',
-      }),
-      defineEditorField({ id: `field${slot}Required`, label: `Field ${slot} required`, type: 'boolean' }),
-    ])),
-  },
 ];
 
 export const ctaFormBlockDefinition = createFormBlockDefinitionScaffold({
@@ -112,7 +95,7 @@ export const ctaFormBlockDefinition = createFormBlockDefinitionScaffold({
     titleHighlightsJson: '',
     bodyHtml: '',
     subtitle: '',
-    fieldsJson: '',
+    fieldsJson: defaultCtaFormFieldsJson,
     includeContactPreference: false,
     bgTone: 'white',
     salesforceUrl: '',
@@ -120,36 +103,6 @@ export const ctaFormBlockDefinition = createFormBlockDefinitionScaffold({
     successMessage: 'Thanks. We will reach out soon.',
     anchorId: '',
     sectionClassName: '',
-    field1Enabled: true,
-    field1Type: 'text',
-    field1Label: 'Name',
-    field1Placeholder: '',
-    field1Options: '',
-    field1Required: true,
-    field2Enabled: true,
-    field2Type: 'email',
-    field2Label: 'Email',
-    field2Placeholder: '',
-    field2Options: '',
-    field2Required: true,
-    field3Enabled: true,
-    field3Type: 'tel',
-    field3Label: 'Phone',
-    field3Placeholder: '(555) 555-5555',
-    field3Options: '',
-    field3Required: false,
-    field4Enabled: true,
-    field4Type: 'textarea',
-    field4Label: 'Message',
-    field4Placeholder: 'What would you like to discuss?',
-    field4Options: '',
-    field4Required: false,
-    field5Enabled: false,
-    field5Type: 'text',
-    field5Label: '',
-    field5Placeholder: '',
-    field5Options: '',
-    field5Required: false,
   },
   renderer: {
     buildRuntime: buildDynamicCtaFormFromBlock,

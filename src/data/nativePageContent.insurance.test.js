@@ -36,7 +36,7 @@ describe('insurance native page content', () => {
     expect(certificateProofBlock?.settings?.buttonPageRef).toBe('/services/insurance/certificate-request');
     expect(ctaBlock?.settings?.title).toBe('What coverage is best for your ministry?');
     expect(ctaBlock?.settings?.subtitle).toBe('Let’s walk through the options.');
-    expect(JSON.parse(ctaBlock?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
+    expect(JSON.parse(ctaBlock?.settings?.fieldsJson || '[]').map((field) => field.id)).toEqual([
       'name',
       'email',
       'phone',

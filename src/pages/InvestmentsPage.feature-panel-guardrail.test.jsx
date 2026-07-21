@@ -15,8 +15,7 @@ describe('investments feature panel renderer guardrail', () => {
     const source = readSource('./InvestmentsPage.jsx');
 
     expect(source).toContain('buildDynamicFeaturePanelFromBlock,');
-    expect(source).toContain("kind: 'feature_panel',");
-    expect(source).toContain("id: 'cash_reserves',");
+    expect(source).toContain("block?.id === 'cash_reserves'");
     expect(source).toContain('const featurePanelRuntime = useMemo(');
     expect(source).toContain("panel.blockId === 'cash_reserves'");
     expect(source).toContain('data-block-id="cash_reserves"');

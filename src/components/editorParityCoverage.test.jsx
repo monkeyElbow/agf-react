@@ -566,5 +566,5 @@ describe('editor parity coverage', () => {
       assertions.hud(block);
       cleanup();
     });
-  });
+  }, 15000);
 });

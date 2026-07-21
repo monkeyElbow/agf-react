@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  serializeCtaFormFields,
+} from '../blocks/foundation/forms';
+import {
   buildDynamicCalculatorCtaFromBlock,
   buildDynamicBillboardFromBlock,
   buildDynamicColumnsFromBlock,
@@ -27,6 +30,8 @@ import {
   normalizeUniversalOutlineButtonClassName,
   shouldUseUniversalOutlineButtonLink,
 } from './dynamicPageBlocks';
+
+const ctaFieldsJson = (fields) => serializeCtaFormFields(fields);
 
 describe('heroAnimationClassForLine', () => {
   it('keeps loans hero lines in ordered sequence when a third line exists', () => {
@@ -191,18 +196,18 @@ describe('buildDynamicCtaFormFromBlock', () => {
         successMessage: 'Thanks. We will reach out soon.',
         submitStyle: 'outline',
         submitTone: 'mango',
-        field1Enabled: true,
-        field1Type: 'text',
-        field1Label: 'Name',
-        field1Required: true,
-        field2Enabled: true,
-        field2Type: 'multiselect',
-        field2Label: 'Topics',
-        field2Options: 'investments|Investments,loans|Loans',
-        field2Required: false,
-        field3Enabled: false,
-        field4Enabled: false,
-        field5Enabled: false,
+        fieldsJson: ctaFieldsJson([
+          { id: 'name', label: 'Name', type: 'text', required: true },
+          {
+            id: 'topics',
+            label: 'Topics',
+            type: 'multiselect',
+            options: [
+              { value: 'investments', label: 'Investments' },
+              { value: 'loans', label: 'Loans' },
+            ],
+          },
+        ]),
       },
     });
 
@@ -222,13 +227,13 @@ describe('buildDynamicCtaFormFromBlock', () => {
     expect(runtime?.titleHighlights).toEqual([{ text: 'faith', className: 'is-mango' }]);
     expect(runtime?.fields).toEqual([
       expect.objectContaining({
-        id: 'field1',
+        id: 'name',
         label: 'Name',
         type: 'text',
         required: true,
       }),
       expect.objectContaining({
-        id: 'field2',
+        id: 'topics',
         label: 'Topics',
         type: 'multiselect',
         options: [
@@ -256,10 +261,9 @@ describe('buildDynamicCtaFormFromBlock', () => {
       {
         fallbackSettings: {
           title: 'Default CTA',
-          field1Enabled: true,
-          field1Type: 'email',
-          field1Label: 'Email',
-          field1Required: true,
+          fieldsJson: ctaFieldsJson([
+            { id: 'email', label: 'Email', type: 'email', required: true },
+          ]),
         },
       },
     );
@@ -271,7 +275,40 @@ describe('buildDynamicCtaFormFromBlock', () => {
     });
     expect(runtime?.fields).toEqual([
       expect.objectContaining({
-        id: 'field1',
+        id: 'email',
+        label: 'Email',
+        type: 'email',
+        required: true,
+      }),
+    ]);
+  });
+
+  it('treats CTA slot fields as compatibility rescue behind canonical defaults', () => {
+    const runtime = buildDynamicCtaFormFromBlock(
+      {
+        id: 'cta_form',
+        kind: 'cta_form',
+        mode: 'dynamic',
+        settings: {
+          title: 'Managed CTA',
+          field1Enabled: true,
+          field1Label: 'Stale slot name',
+          field1Type: 'text',
+          field1Required: true,
+        },
+      },
+      {
+        fallbackSettings: {
+          fieldsJson: ctaFieldsJson([
+            { id: 'email', label: 'Email', type: 'email', required: true },
+          ]),
+        },
+      },
+    );
+
+    expect(runtime?.fields).toEqual([
+      expect.objectContaining({
+        id: 'email',
         label: 'Email',
         type: 'email',
         required: true,
@@ -565,6 +602,24 @@ describe('buildDynamicBillboardFromBlock', () => {
       copyClassName: 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up',
       copyFadeRootMargin: '0px 0px -20% 0px',
     });
+  });
+
+  it('defaults the planned giving joy billboard heading to Helv for older saved blocks', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      id: 'joy_billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'More joy in giving.',
+        sectionClassName: 'legacy-giving-joy fade-out',
+      },
+    });
+
+    expect(runtime?.titleStyle).toEqual(expect.objectContaining({
+      fontFamily: 'var(--ag-font-helv)',
+      fontWeight: 700,
+      letterSpacing: '-0.038em',
+    }));
   });
 
   it('keeps supporting subtitle size overrides on the shared billboard subtitle sizing path', () => {
@@ -1543,6 +1598,40 @@ describe('buildDynamicGridFromBlock', () => {
     expect(runtime?.presetId).toBe('eligibility-cards');
   });
 
+  it('restores the About values block to the animated value-card presentation from its section class', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'values',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      templateId: 'card_grid',
+      presetId: 'default',
+      settings: {
+        sectionClassName: 'about-native-values',
+        cardStyle: 'none',
+        card1Title: 'Focus',
+        card1Body: 'Focused copy.',
+        card1PanelTone: 'blue',
+        card2Title: 'Responsibility',
+        card2Body: 'Responsible copy.',
+        card2PanelTone: 'mango',
+        card3Title: 'Guidance',
+        card3Body: 'Guidance copy.',
+        card3PanelTone: 'sand',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      presetId: 'default',
+      cardsPreset: 'value-cards',
+      sectionClassName: 'about-native-values',
+      cards: [
+        expect.objectContaining({ title: 'Focus', panelTone: 'blue' }),
+        expect.objectContaining({ title: 'Responsibility', panelTone: 'mango' }),
+        expect.objectContaining({ title: 'Guidance', panelTone: 'sand' }),
+      ],
+    });
+  });
+
   it('keeps light backgrounds on safe tones and card styles', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'grid',
@@ -1918,6 +2007,7 @@ describe('buildDynamicPageContentFromBlock', () => {
       anchorId: 'section-anchor',
       sectionClassName: 'custom-shell',
       copyWrap: true,
+      justify: 'center',
       actions: [
         {
           label: 'Download form',

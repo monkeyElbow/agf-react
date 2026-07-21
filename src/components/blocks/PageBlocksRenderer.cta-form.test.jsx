@@ -2,6 +2,7 @@ import { createElement } from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import { serializeCtaFormFields } from '../../blocks/foundation/forms';
 
 vi.mock('../../context/ContentAdminContext', async () => {
   const actual = await vi.importActual('../../context/ContentAdminContext.jsx');
@@ -14,6 +15,8 @@ vi.mock('../../context/ContentAdminContext', async () => {
 });
 
 import PageBlocksRenderer from './PageBlocksRenderer';
+
+const ctaFieldsJson = (fields) => serializeCtaFormFields(fields);
 
 function renderCtaBlock(block) {
   return render(
@@ -36,12 +39,9 @@ describe('PageBlocksRenderer CTA form', () => {
       submitLabel: 'Follow up with me',
       submitStyle: 'dark',
       submitTone: 'super-grey',
-      field1Label: 'Name',
-      field1Type: 'text',
-      field1Required: true,
-      field2Enabled: false,
-      field3Enabled: false,
-      field4Enabled: false,
+      fieldsJson: ctaFieldsJson([
+        { id: 'name', label: 'Name', type: 'text', required: true },
+      ]),
     });
 
     const button = screen.getByRole('button', { name: 'Follow up with me' });
@@ -59,12 +59,9 @@ describe('PageBlocksRenderer CTA form', () => {
       submitLabel: 'Follow up with me',
       submitStyle: 'blue',
       submitTone: 'melon',
-      field1Label: 'Name',
-      field1Type: 'text',
-      field1Required: true,
-      field2Enabled: false,
-      field3Enabled: false,
-      field4Enabled: false,
+      fieldsJson: ctaFieldsJson([
+        { id: 'name', label: 'Name', type: 'text', required: true },
+      ]),
     });
 
     const button = screen.getByRole('button', { name: 'Follow up with me' });
@@ -81,12 +78,9 @@ describe('PageBlocksRenderer CTA form', () => {
       title: 'Ready to talk?',
       bodyHtml: '<p>It starts with a conversation. We’re happy to reach out.</p>',
       submitLabel: 'Follow up with me',
-      field1Label: 'Name',
-      field1Type: 'text',
-      field1Required: true,
-      field2Enabled: false,
-      field3Enabled: false,
-      field4Enabled: false,
+      fieldsJson: ctaFieldsJson([
+        { id: 'name', label: 'Name', type: 'text', required: true },
+      ]),
     });
 
     const copy = container.querySelector('.native-info-section-copy');
@@ -107,12 +101,9 @@ describe('PageBlocksRenderer CTA form', () => {
       title: 'Ready to talk?',
       subtitle: 'It starts with a conversation. We’re happy to reach out.',
       submitLabel: 'Follow up with me',
-      field1Label: 'Name',
-      field1Type: 'text',
-      field1Required: true,
-      field2Enabled: false,
-      field3Enabled: false,
-      field4Enabled: false,
+      fieldsJson: ctaFieldsJson([
+        { id: 'name', label: 'Name', type: 'text', required: true },
+      ]),
     });
 
     const copy = container.querySelector('.native-info-section-copy');
@@ -133,12 +124,9 @@ describe('PageBlocksRenderer CTA form', () => {
       displayMode: 'inline_reveal',
       triggerMode: 'external',
       submitLabel: 'Follow up with me',
-      field1Label: 'Name',
-      field1Type: 'text',
-      field1Required: true,
-      field2Enabled: false,
-      field3Enabled: false,
-      field4Enabled: false,
+      fieldsJson: ctaFieldsJson([
+        { id: 'name', label: 'Name', type: 'text', required: true },
+      ]),
     });
 
     const section = container.querySelector('section.native-dynamic-cta');
