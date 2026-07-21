@@ -33,6 +33,8 @@ describe('link model convergence guardrail', () => {
     expect(runtimeSource).toContain('function buildCanonicalActionLinkFromFields(source, {');
     expect(runtimeSource).not.toContain('coerceLinkValue({');
     expect(linkValueSource).toContain('export function coerceLinkValue');
+    expect(linkValueSource).toContain('export function parseLinkValueJson');
+    expect(linkValueSource).toContain('export function serializeLinkValue');
     expect(linkValueSource).toContain('export function normalizeSplitLinkFieldSettings');
     expect(linkValueSource).toContain('export function validateActionFieldGroup');
     expect(linkValueSource).not.toContain('coerceLegacyLinkValue');
@@ -43,6 +45,9 @@ describe('link model convergence guardrail', () => {
     expect(snapshotAuditSource).toContain('split-link-internal-target-drift');
     expect(snapshotAuditSource).toContain('split-link-page-ref-missing');
     expect(snapshotAuditSource).toContain('split-link-target-conflict');
+    expect(snapshotAuditSource).toContain('canonical-link-json-invalid');
+    expect(snapshotAuditSource).toContain('canonical-link-json-missing');
+    expect(snapshotAuditSource).toContain('canonical-link-json-mismatch');
     expect(contentAdminContextSource).toContain('normalizeSplitLinkFieldSettings');
     expect(contentAdminStoreSource).toContain('normalizeSplitLinkFieldSettings');
 

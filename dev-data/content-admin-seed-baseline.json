@@ -891,7 +891,8 @@
             "button2PageRef": "",
             "button2Style": "dark",
             "button2Tone": "super-grey",
-            "button2OpenInNewWindow": false
+            "button2OpenInNewWindow": false,
+            "button1LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/investments\"}"
           },
           "editableFields": [
             {
@@ -1623,7 +1624,14 @@
             "card6ImageUrl": "/src/assets/service-icons/chart.png",
             "card6ImageAlt": "",
             "card6Action": "View Rates",
-            "card6Featured": true
+            "card6Featured": true,
+            "browseLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services\"}",
+            "card1LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/loans\"}",
+            "card2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement\"}",
+            "card3LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/investments\"}",
+            "card4LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving\"}",
+            "card5LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance\"}",
+            "card6LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/rates\"}"
           },
           "editableFields": [
             {
@@ -1904,7 +1912,8 @@
             "stat2Tone": "sandstone",
             "stat3Value": "$450 million",
             "stat3Label": "distributed to ministries through AG Foundation",
-            "stat3Tone": "sandstone"
+            "stat3Tone": "sandstone",
+            "ctaLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/about-us/impact\"}"
           },
           "editableFields": [
             {
@@ -2099,7 +2108,8 @@
             "buttonPageRef": "/about-us/impact",
             "buttonStyle": "dark",
             "buttonTone": "super-grey",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/about-us/impact\"}"
           },
           "editableFields": [
             {
@@ -2726,7 +2736,8 @@
             "buttonPageRef": "/calculators",
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/calculators\"}"
           },
           "editableFields": [
             {
@@ -4400,7 +4411,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services\"}"
           },
           "editableFields": [
             {
@@ -6478,7 +6490,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/about-us/impact\"}"
           },
           "editableFields": [
             {
@@ -8067,7 +8080,8 @@
             "buttonPageRef": "/services",
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services\"}"
           },
           "editableFields": [
             {
@@ -9522,7 +9536,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/contact-us\"}"
           },
           "editableFields": [
             {
@@ -10917,7 +10932,15 @@
             "card8Button2Url": "",
             "card8Button2PageRef": "",
             "card8Button2DocumentId": "",
-            "card8Button2ClassName": ""
+            "card8Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement#retirement-savings-calculator\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/calculators/increased-contribution\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement#retirement-savings-calculator\"}",
+            "card4ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/loans#run-some-numbers\"}",
+            "card5ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/calculators/emergency-fund\"}",
+            "card6ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/calculators#ministers-housing-allowance-quick-check\"}",
+            "card7ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/calculators/net-worth\"}",
+            "card8ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/investments#laddering-calculator\"}"
           },
           "editableFields": [
             {
@@ -19913,7 +19936,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://secure.agfinancial.org/cp/do/user/login\"}"
           },
           "editableFields": [
             {
@@ -20294,7 +20318,10 @@
             "card3Button2Url": "tel:18666211787",
             "card3Button2PageRef": "",
             "card3Button2DocumentId": "",
-            "card3Button2ClassName": ""
+            "card3Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://secure.agfinancial.org/cp/do/user/login\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"email\",\"openInNewWindow\":false,\"href\":\"mailto:clientservices@agfinancial.org\"}",
+            "card3Button2LinkJson": "{\"kind\":\"phone\",\"openInNewWindow\":false,\"href\":\"tel:18666211787\"}"
           },
           "editableFields": [
             {
@@ -21890,7 +21917,9 @@
             "button2Tone": "super-grey",
             "button2OpenInNewWindow": false,
             "anchorId": "",
-            "sectionClassName": "online-contrib-native-help"
+            "sectionClassName": "online-contrib-native-help",
+            "buttonLinkJson": "{\"kind\":\"email\",\"openInNewWindow\":false,\"href\":\"mailto:retirement@agfinancial.org\"}",
+            "button2LinkJson": "{\"kind\":\"phone\",\"openInNewWindow\":false,\"href\":\"tel:18006227526\"}"
           },
           "editableFields": [
             {
@@ -23296,7 +23325,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/contact-us\"}"
           },
           "editableFields": [
             {
@@ -24581,7 +24611,10 @@
             "card3Button2Url": "",
             "card3Button2PageRef": "",
             "card3Button2DocumentId": "",
-            "card3Button2ClassName": ""
+            "card3Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/resources\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/resources\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/resources\"}"
           },
           "editableFields": [
             {
@@ -27114,7 +27147,8 @@
             "buttonUrl": "/about-us/impact",
             "buttonPageRef": "/about-us/impact",
             "buttonOpenInNewWindow": false,
-            "sectionClassName": "services-native-matters"
+            "sectionClassName": "services-native-matters",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/about-us/impact\"}"
           },
           "editableFields": [
             {
@@ -28057,7 +28091,8 @@
             "button2Url": "",
             "button2PageRef": "",
             "button2Style": "dark",
-            "button2Tone": "super-grey"
+            "button2Tone": "super-grey",
+            "button1LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/life-insurance-quote\"}"
           },
           "editableFields": [
             {
@@ -28420,7 +28455,12 @@
             "card4Button2ClassName": "",
             "card4ButtonStyle": "outline",
             "card4ButtonTone": "super-grey",
-            "card4ButtonOpenInNewWindow": true
+            "card4ButtonOpenInNewWindow": true,
+            "card1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/property-casualty-insurance\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/life-insurance-quote\"}",
+            "card2Button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/group-term-life-insurance\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/mission-assure\"}",
+            "card4ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://www.orsurety.com/commercial-bonds\"}"
           },
           "editableFields": [
             {
@@ -30013,7 +30053,9 @@
             "button2Style": "outline",
             "button2Tone": "super-grey",
             "buttonOpenInNewWindow": false,
-            "button2OpenInNewWindow": false
+            "button2OpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/life-insurance-quote\"}",
+            "button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/property-casualty-insurance\"}"
           },
           "editableFields": [
             {
@@ -30531,7 +30573,8 @@
             "button2PageRef": "",
             "button2Style": "outline",
             "button2Tone": "super-grey",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/certificate-request\"}"
           },
           "editableFields": [
             {
@@ -31035,7 +31078,8 @@
             "buttonPageRef": "",
             "buttonOpenInNewWindow": true,
             "buttonStyle": "blue",
-            "buttonTone": "atlantean"
+            "buttonTone": "atlantean",
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf\"}"
           },
           "editableFields": [
             {
@@ -31277,7 +31321,8 @@
             "buttonPageRef": "/services/insurance/mission-assure",
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/mission-assure\"}"
           },
           "editableFields": [
             {
@@ -31351,7 +31396,8 @@
             "buttonPageRef": "/resources/article/defend-yourself-against-fraud",
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/resources/article/defend-yourself-against-fraud\"}"
           },
           "editableFields": [
             {
@@ -35953,7 +35999,8 @@
             "buttonLabel": "Ministers' Group Life Plan details",
             "buttonUrl": "/services/insurance/ministers-group-life-plan",
             "buttonPageRef": "/services/insurance/ministers-group-life-plan",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/ministers-group-life-plan\"}"
           },
           "editableFields": [
             {
@@ -40201,7 +40248,9 @@
             "card2Button2ClassName": "",
             "card2ButtonOpenInNewWindow": true,
             "card2ButtonStyle": "outline",
-            "card2ButtonTone": "mango"
+            "card2ButtonTone": "mango",
+            "card1ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://www.standard.com/eforms/12505vl_646522a.pdf\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://www.standard.com/eforms/12505vl_646524a.pdf\"}"
           },
           "editableFields": [
             {
@@ -41860,7 +41909,11 @@
             "card3Button2ClassName": "",
             "card3ButtonOpenInNewWindow": true,
             "card3ButtonStyle": "outline",
-            "card3ButtonTone": "super-grey"
+            "card3ButtonTone": "super-grey",
+            "card1ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://files.agfinancial.org/Insurance/Enrollment-and-Change-Form-646527-Minister.pdf\"}",
+            "card1Button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://www.standard.com/eforms/12505vl_646527a.pdf\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://www.standard.com/eforms/12505vl_646527a.pdf\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://files.agfinancial.org/Insurance/AGFIS-Electronic-Funds-Transfer-Form.pdf\"}"
           },
           "editableFields": [
             {
@@ -45501,7 +45554,8 @@
             "button2PageRef": "",
             "button2Style": "outline",
             "button2Tone": "super-grey",
-            "sectionClassName": "mission-assure-native-get-covered"
+            "sectionClassName": "mission-assure-native-get-covered",
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://www.missionassure.com/\"}"
           },
           "editableFields": [
             {
@@ -45968,7 +46022,8 @@
             "button2PageRef": "",
             "button2Style": "outline",
             "button2Tone": "super-grey",
-            "sectionClassName": "mission-assure-native-report-claim"
+            "sectionClassName": "mission-assure-native-report-claim",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/mission-assure/report-a-claim\"}"
           },
           "editableFields": [
             {
@@ -46422,7 +46477,8 @@
             "buttonPageRef": "/resources/article/summer-camp-safety-tips",
             "buttonOpenInNewWindow": false,
             "buttonStyle": "blue",
-            "buttonTone": "atlantean"
+            "buttonTone": "atlantean",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/resources/article/summer-camp-safety-tips\"}"
           },
           "editableFields": [
             {
@@ -47471,7 +47527,8 @@
             "card4Button2Url": "",
             "card4Button2PageRef": "",
             "card4Button2DocumentId": "",
-            "card4Button2ClassName": ""
+            "card4Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"email\",\"openInNewWindow\":false,\"href\":\"mailto:ACEClaimsFirstNotice@acegroup.com\"}"
           },
           "editableFields": [
             {
@@ -49662,7 +49719,8 @@
             "button2Url": "",
             "button2PageRef": "",
             "button2Style": "dark",
-            "button2Tone": "super-grey"
+            "button2Tone": "super-grey",
+            "button1LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/property-casualty-insurance#ag-program\"}"
           },
           "editableFields": [
             {
@@ -52594,7 +52652,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/property-casualty-insurance#quote\"}"
           },
           "editableFields": [
             {
@@ -54192,7 +54251,9 @@
             "card2Button2ClassName": "",
             "card2ButtonOpenInNewWindow": true,
             "card2Tone": "mango",
-            "card2ButtonTone": "mango"
+            "card2ButtonTone": "mango",
+            "card1ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://secure.agfinancial.org/invest\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://secure.agfinancial.org/invest\"}"
           },
           "editableFields": [
             {
@@ -55762,7 +55823,8 @@
             "buttonLabel": "Go to my dashboard",
             "buttonUrl": "https://secure.agfinancial.org/",
             "buttonPageRef": "",
-            "buttonOpenInNewWindow": true
+            "buttonOpenInNewWindow": true,
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://secure.agfinancial.org/\"}"
           },
           "editableFields": [
             {
@@ -56277,7 +56339,8 @@
             "buttonLabel": "Ready for the unexpected?",
             "buttonUrl": "/resources/article/church-cash-reserves",
             "buttonPageRef": "/resources/article/church-cash-reserves",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/resources/article/church-cash-reserves\"}"
           },
           "editableFields": [
             {
@@ -58170,7 +58233,8 @@
             "button2PageRef": "",
             "button2Style": "dark",
             "button2Tone": "super-grey",
-            "button2OpenInNewWindow": false
+            "button2OpenInNewWindow": false,
+            "button1LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/loans#form\"}"
           },
           "editableFields": [
             {
@@ -61290,7 +61354,8 @@
             "buttonPageRef": "/services/loans#form",
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/loans#form\"}"
           },
           "editableFields": [
             {
@@ -61902,7 +61967,8 @@
             "buttonLabel": "Ask my loan expert",
             "buttonUrl": "/services/loans/loan-consultants",
             "buttonPageRef": "/services/loans/loan-consultants",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/loans/loan-consultants\"}"
           },
           "editableFields": [
             {
@@ -65574,7 +65640,15 @@
             "card8Button2PageRef": "",
             "card8Button2DocumentId": "",
             "card8Button2ClassName": "",
-            "sectionClassName": "legacy-giving-types"
+            "sectionClassName": "legacy-giving-types",
+            "card1ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://media.agfinancial.org/2021_Generosity-Fund.mp4\"}",
+            "card1Button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/generosity-fund\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/endowments\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/charitable-gift-annuities\"}",
+            "card4ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://aggift.org/?pageID=123\"}",
+            "card4Button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://aggift.org/?pageID=124\"}",
+            "card5ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/charitable-trusts\"}",
+            "card6ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/ministry-impact-fund\"}"
           },
           "editableFields": [
             {
@@ -67166,7 +67240,8 @@
             "button2PageRef": "",
             "button2Style": "blue",
             "button2Tone": "atlantean",
-            "sectionClassName": "legacy-giving-wills"
+            "sectionClassName": "legacy-giving-wills",
+            "button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://sft.agfinancial.org/documents/Send.do\"}"
           },
           "editableFields": [
             {
@@ -69045,7 +69120,8 @@
             "buttonLabel": "Answer the door",
             "buttonUrl": "/resources/article/opportunity",
             "buttonPageRef": "/resources/article/opportunity",
-            "buttonOpenInNewWindow": false
+            "buttonOpenInNewWindow": false,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/resources/article/opportunity\"}"
           },
           "editableFields": [
             {
@@ -71676,7 +71752,8 @@
             "card1Button2Url": "",
             "card1Button2PageRef": "",
             "card1Button2DocumentId": "",
-            "card1Button2ClassName": ""
+            "card1Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/charitable-gift-annuities#demo\"}"
           },
           "editableFields": [
             {
@@ -75875,7 +75952,8 @@
             "button2Tone": "super-grey",
             "sectionClassName": "legacy-child-native-cga-outro",
             "fineprint": "Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.\n\nAdditional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.\n\nAdditional information for Oklahoma residents: A Charitable Gift Annuity is not regulated by the Oklahoma Insurance Department and is not protected by a guaranty association with the Oklahoma Insurance Department.\n\nAdditional information for South Dakota residents: Charitable Gift Annuities are not regulated by and are not under the jurisdiction of the South Dakota Division of Insurance.",
-            "fineprintDisclosureId": "planned-giving-cga-state-notices"
+            "fineprintDisclosureId": "planned-giving-cga-state-notices",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving\"}"
           },
           "editableFields": [
             {
@@ -77310,7 +77388,9 @@
             "card2Button2Url": "",
             "card2Button2PageRef": "",
             "card2Button2DocumentId": "",
-            "card2Button2ClassName": ""
+            "card2Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/charitable-trusts#crt\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/charitable-trusts#clt\"}"
           },
           "editableFields": [
             {
@@ -88373,7 +88453,8 @@
             "button2Action": "open_cta_form",
             "button2TargetAnchorId": "traditional-daf-inline-form",
             "button2TargetBlockId": "",
-            "button2OpenInNewWindow": false
+            "button2OpenInNewWindow": false,
+            "button1LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://secure.agfinancial.org/generosityfund/signup\"}"
           },
           "editableFields": [
             {
@@ -90925,7 +91006,8 @@
             "card1Button2Url": "",
             "card1Button2PageRef": "",
             "card1Button2DocumentId": "",
-            "card1Button2ClassName": ""
+            "card1Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://secure.agfinancial.org/generosityfund/signup\"}"
           },
           "editableFields": [
             {
@@ -92850,7 +92932,8 @@
             "button2Style": "ghost",
             "button2Tone": "super-grey",
             "button2DocumentId": "document-planned-giving-terms-and-conditions",
-            "sectionClassName": "legacy-child-native-generosity-outro"
+            "sectionClassName": "legacy-child-native-generosity-outro",
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://secure.agfinancial.org/generosityfund/signup\"}"
           },
           "editableFields": [
             {
@@ -94308,7 +94391,10 @@
             "card3Button2Url": "",
             "card3Button2PageRef": "",
             "card3Button2DocumentId": "",
-            "card3Button2ClassName": ""
+            "card3Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"anchor\",\"openInNewWindow\":false,\"href\":\"#ministry-impact-form\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://uploads.agfinancial.org/\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"email\",\"openInNewWindow\":false,\"href\":\"mailto:plannedgiving@agfinancial.org\"}"
           },
           "editableFields": [
             {
@@ -95912,7 +95998,8 @@
             "card1Button2Url": "",
             "card1Button2PageRef": "",
             "card1Button2DocumentId": "",
-            "card1Button2ClassName": ""
+            "card1Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"anchor\",\"openInNewWindow\":false,\"href\":\"#ministry-impact-form\"}"
           },
           "editableFields": [
             {
@@ -97537,7 +97624,8 @@
             "card2Button2Url": "",
             "card2Button2PageRef": "",
             "card2Button2DocumentId": "",
-            "card2Button2ClassName": ""
+            "card2Button2ClassName": "",
+            "card1Button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://uploads.agfinancial.org/\"}"
           },
           "editableFields": [
             {
@@ -100857,7 +100945,9 @@
             "rightButtonLabel": "Explore 409A",
             "rightButtonUrl": "/services/retirement/409a",
             "rightButtonPageRef": "/services/retirement/409a",
-            "rightButtonOpenInNewWindow": false
+            "rightButtonOpenInNewWindow": false,
+            "leftButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/iras\"}",
+            "rightButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/409a\"}"
           },
           "editableFields": [
             {
@@ -101029,7 +101119,8 @@
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
             "buttonOpenInNewWindow": false,
-            "sectionClassName": "retirement-rollover-billboard"
+            "sectionClassName": "retirement-rollover-billboard",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/rollovers\"}"
           },
           "editableFields": [
             {
@@ -101491,7 +101582,8 @@
             "buttonTone": "atlantean",
             "buttonOpenInNewWindow": false,
             "contentMaxWidthPx": 1216,
-            "headlineMaxWidthPx": 560
+            "headlineMaxWidthPx": 560,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/retirement-consultants\"}"
           },
           "editableFields": [
             {
@@ -101955,7 +102047,8 @@
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
             "buttonOpenInNewWindow": false,
-            "headlineMaxWidthPx": 832
+            "headlineMaxWidthPx": 832,
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/calculators\"}"
           },
           "editableFields": [
             {
@@ -107505,7 +107598,9 @@
             "button2PageRef": "/prospectus",
             "button2Style": "dark",
             "button2Tone": "super-grey",
-            "sectionClassName": "retirement-403b-native-strategy-heading"
+            "sectionClassName": "retirement-403b-native-strategy-heading",
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://files.agfinancial.org/retirement/Performance-Update/Performance-Update.pdf\"}",
+            "button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/prospectus\"}"
           },
           "editableFields": [
             {
@@ -108672,7 +108767,9 @@
             "card6DividerTone": "",
             "card6ButtonLabel": "",
             "card6ButtonUrl": "",
-            "card6ButtonPageRef": ""
+            "card6ButtonPageRef": "",
+            "card1ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://files.agfinancial.org/retirement/403(b)-Loan-Rules.pdf\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://secure.agfinancial.org/\"}"
           },
           "editableFields": [
             {
@@ -109892,7 +109989,9 @@
             "card2Button2Url": "",
             "card2Button2PageRef": "",
             "card2Button2DocumentId": "",
-            "card2Button2ClassName": ""
+            "card2Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/403b/403b-individual-enrollment\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/403b/403b-group-enrollment\"}"
           },
           "editableFields": [
             {
@@ -112181,7 +112280,8 @@
             "button2Style": "outline",
             "button2Tone": "super-grey",
             "anchorId": "",
-            "sectionClassName": "retirement-child-native-rollover retirement-403b-native-rollover retirement-everyday retirement-rollover-billboard"
+            "sectionClassName": "retirement-child-native-rollover retirement-403b-native-rollover retirement-everyday retirement-rollover-billboard",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/rollovers\"}"
           },
           "editableFields": [
             {
@@ -112738,7 +112838,8 @@
             "col1WidthShare": 1,
             "col2WidthShare": 1,
             "col3WidthShare": 1,
-            "col4WidthShare": 1
+            "col4WidthShare": 1,
+            "col2ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://www.irs.gov/publications/p517\"}"
           },
           "editableFields": [
             {
@@ -113495,7 +113596,8 @@
             "col4ButtonPageRef": "",
             "col4ButtonStyle": "blue",
             "col4ButtonTone": "atlantean",
-            "col4WidthShare": 1
+            "col4WidthShare": 1,
+            "col1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/online-contributions\"}"
           },
           "editableFields": [
             {
@@ -114983,7 +115085,9 @@
             "button2Url": "https://files.agfinancial.org/retirement/403b-Enrollment-Form.pdf",
             "button2PageRef": "",
             "button2Style": "blue",
-            "button2Tone": "atlantean"
+            "button2Tone": "atlantean",
+            "button1LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://files.agfinancial.org/Retirement/Plansummary.pdf\"}",
+            "button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://files.agfinancial.org/retirement/403b-Enrollment-Form.pdf\"}"
           },
           "editableFields": [
             {
@@ -119554,7 +119658,9 @@
             "button2PageRef": "",
             "button2Style": "blue",
             "button2Tone": "atlantean",
-            "sectionClassName": "retirement-403b-group-compliance-billboard"
+            "sectionClassName": "retirement-403b-group-compliance-billboard",
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf\"}",
+            "button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://files.agfinancial.org/retirement/NQCCO-Guidelines.pdf\"}"
           },
           "editableFields": [
             {
@@ -120628,7 +120734,8 @@
             "button1Url": "https://files.agfinancial.org/Retirement/Plansummary.pdf",
             "button1PageRef": "",
             "button1Style": "blue",
-            "button1Tone": "atlantean"
+            "button1Tone": "atlantean",
+            "button1LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://files.agfinancial.org/Retirement/Plansummary.pdf\"}"
           },
           "editableFields": [
             {
@@ -122950,7 +123057,10 @@
             "card3Button2Url": "",
             "card3Button2PageRef": "",
             "card3Button2DocumentId": "",
-            "card3Button2ClassName": ""
+            "card3Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://files.agfinancial.org/retirement/403b-Enrollment-Form.pdf\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://sft.agfinancial.org/documents/Send.do\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://files.agfinancial.org/retirement/Payroll-Deduction-Form.pdf\"}"
           },
           "editableFields": [
             {
@@ -126091,7 +126201,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/403b\"}"
           },
           "editableFields": [
             {
@@ -127012,7 +127123,8 @@
             "button1Url": "/services/retirement/retirement-consultants",
             "button1PageRef": "/services/retirement/retirement-consultants",
             "button1Style": "dark",
-            "button1Tone": "super-grey"
+            "button1Tone": "super-grey",
+            "button1LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/retirement-consultants\"}"
           },
           "editableFields": [
             {
@@ -130373,7 +130485,9 @@
             "button2Url": "/services/retirement/iras#IRA-contribution-limits",
             "button2PageRef": "/services/retirement/iras#IRA-contribution-limits",
             "button2Style": "blue",
-            "button2Tone": "atlantean"
+            "button2Tone": "atlantean",
+            "button1LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/iras/fund-an-ira\"}",
+            "button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/iras#IRA-contribution-limits\"}"
           },
           "editableFields": [
             {
@@ -132294,7 +132408,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://secure.agfinancial.org/invest\"}"
           },
           "editableFields": [
             {
@@ -133666,7 +133781,8 @@
             "button2Style": "outline",
             "button2Tone": "super-grey",
             "anchorId": "",
-            "sectionClassName": "retirement-child-native-rollover"
+            "sectionClassName": "retirement-child-native-rollover",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/rollovers\"}"
           },
           "editableFields": [
             {
@@ -134141,7 +134257,8 @@
             "button2Style": "outline",
             "button2Tone": "super-grey",
             "anchorId": "",
-            "sectionClassName": "retirement-ira-native-cta"
+            "sectionClassName": "retirement-ira-native-cta",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/retirement-consultants\"}"
           },
           "editableFields": [
             {
@@ -142144,7 +142261,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/#stay-in-the-loop\"}"
           },
           "editableFields": [
             {
@@ -143665,7 +143783,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/contact-us\"}"
           },
           "editableFields": [
             {
@@ -144593,7 +144712,9 @@
             "button2Url": "/services",
             "button2PageRef": "/services",
             "button2Style": "dark",
-            "button2Tone": "super-grey"
+            "button2Tone": "super-grey",
+            "button1LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/contact-us\"}",
+            "button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services\"}"
           },
           "editableFields": [
             {
@@ -144878,7 +144999,8 @@
             "buttonUrl": "/contact-us",
             "buttonPageRef": "/contact-us",
             "buttonStyle": "blue",
-            "buttonTone": "atlantean"
+            "buttonTone": "atlantean",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/contact-us\"}"
           },
           "editableFields": [
             {
@@ -147448,7 +147570,8 @@
             "col4ButtonPageRef": "",
             "col4ButtonStyle": "blue",
             "col4ButtonTone": "atlantean",
-            "col4WidthShare": 1
+            "col4WidthShare": 1,
+            "col1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/iras\"}"
           },
           "editableFields": [
             {
@@ -149133,7 +149256,11 @@
             "card4Button2Url": "",
             "card4Button2PageRef": "",
             "card4Button2DocumentId": "",
-            "card4Button2ClassName": ""
+            "card4Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/investments\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/property-casualty-insurance\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving\"}",
+            "card4ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/loans\"}"
           },
           "editableFields": [
             {
@@ -151705,7 +151832,12 @@
             "card5Button2Url": "",
             "card5Button2PageRef": "",
             "card5Button2DocumentId": "",
-            "card5Button2ClassName": ""
+            "card5Button2ClassName": "",
+            "card1ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/loans\"}",
+            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/investments\"}",
+            "card3ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement\"}",
+            "card4ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving\"}",
+            "card5ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance\"}"
           },
           "editableFields": [
             {
@@ -153297,7 +153429,8 @@
             "tableValueAlignment": "",
             "tableChartId": "",
             "fineprint": "",
-            "fineprintDisclosureId": ""
+            "fineprintDisclosureId": "",
+            "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/contact-us\"}"
           },
           "editableFields": [
             {

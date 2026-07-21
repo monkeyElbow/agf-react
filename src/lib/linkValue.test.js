@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   coerceLinkValue,
   coerceLinkValueFromFields,
+  getCanonicalLinkJsonFieldId,
   linkValueToLinkProps,
   normalizeSplitLinkFieldSettings,
+  parseLinkValueJson,
+  serializeLinkValue,
   validateActionFieldGroup,
   validateLinkFieldGroups,
   validateLinkValue,
@@ -37,6 +40,8 @@ describe('link value helpers', () => {
   });
 
   it('coerces legacy split field groups through one shared field resolver', () => {
+    expect(getCanonicalLinkJsonFieldId('button')).toBe('buttonLinkJson');
+
     expect(coerceLinkValueFromFields({
       buttonPageRef: '/services/investments',
       buttonOpenInNewWindow: true,
@@ -67,6 +72,35 @@ describe('link value helpers', () => {
       kind: 'external',
       href: 'https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf',
       openInNewWindow: false,
+    });
+  });
+
+  it('prefers canonical link JSON over split compatibility fields when present', () => {
+    const linkJson = serializeLinkValue({
+      kind: 'internal',
+      to: '/services/loans',
+      openInNewWindow: true,
+    });
+
+    expect(parseLinkValueJson(linkJson)).toEqual({
+      kind: 'internal',
+      to: '/services/loans',
+      openInNewWindow: true,
+    });
+
+    expect(coerceLinkValueFromFields({
+      buttonLinkJson: linkJson,
+      buttonUrl: 'https://example.com',
+      buttonPageRef: '',
+      buttonOpenInNewWindow: false,
+    }, {
+      hrefKeys: ['buttonUrl'],
+      toKeys: ['buttonPageRef'],
+      openInNewWindowKeys: ['buttonOpenInNewWindow'],
+    })).toEqual({
+      kind: 'internal',
+      to: '/services/loans',
+      openInNewWindow: true,
     });
   });
 
@@ -156,13 +190,17 @@ describe('link value helpers', () => {
       buttonUrl: '/contact-us',
       buttonPageRef: '/contact-us',
       buttonOpenInNewWindow: false,
+      buttonLinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}',
       button2Url: '/services/loans',
       button2PageRef: '/services/loans',
       button2OpenInNewWindow: true,
+      button2LinkJson: '{"kind":"internal","openInNewWindow":true,"to":"/services/loans"}',
       button3Url: '#anchor',
       button3PageRef: '',
+      button3LinkJson: '{"kind":"anchor","openInNewWindow":false,"href":"#anchor"}',
       button4Url: '/current-page',
       button4PageRef: '/current-page',
+      button4LinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/current-page"}',
     });
   });
 });

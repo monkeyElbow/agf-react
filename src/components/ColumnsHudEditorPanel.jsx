@@ -11,6 +11,11 @@ import {
   getVisibleDynamicColumnSlots,
 } from '../lib/dynamicColumns';
 import {
+  coerceLinkValue,
+  getCanonicalLinkJsonFieldId,
+  serializeLinkValue,
+} from '../lib/linkValue';
+import {
   applySelectionColor,
   extractHeroLineColorToken,
   parseHeroRangeHighlights,
@@ -681,8 +686,13 @@ export default function ColumnsHudEditorPanel({
           mode: 'blur',
           commit: (nextValue) => {
             const routeRefValue = String(nextValue || '').trim().startsWith('/') ? nextValue : '';
+            const buttonLinkJsonFieldId = getCanonicalLinkJsonFieldId(`col${slot}Button`);
+            const buttonLinkValue = routeRefValue
+              ? coerceLinkValue({ to: routeRefValue })
+              : coerceLinkValue({ href: nextValue });
             onSettingChange(buttonPageRefFieldId, routeRefValue);
             onSettingChange(buttonUrlFieldId, nextValue);
+            onSettingChange(buttonLinkJsonFieldId, serializeLinkValue(buttonLinkValue));
           },
         },
       );

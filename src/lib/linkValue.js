@@ -9,6 +9,7 @@ export const LINK_VALUE_KIND_VALUES = Object.freeze([
 export const SPLIT_LINK_HREF_SUFFIXES = Object.freeze(['Url', 'Path', 'Href']);
 export const SPLIT_LINK_PAGE_REF_SUFFIX = 'PageRef';
 export const SPLIT_LINK_OPEN_IN_NEW_WINDOW_SUFFIX = 'OpenInNewWindow';
+export const CANONICAL_LINK_JSON_SUFFIX = 'LinkJson';
 
 export function isLinkValueKind(value) {
   return LINK_VALUE_KIND_VALUES.includes(String(value || '').trim());
@@ -213,6 +214,62 @@ function getSplitLinkHrefKeys(settings, baseKey) {
     .filter((key) => Object.prototype.hasOwnProperty.call(settings, key));
 }
 
+function inferSplitLinkBaseKey(fieldKey) {
+  const key = String(fieldKey || '').trim();
+  const suffix = [
+    SPLIT_LINK_PAGE_REF_SUFFIX,
+    SPLIT_LINK_OPEN_IN_NEW_WINDOW_SUFFIX,
+    ...SPLIT_LINK_HREF_SUFFIXES,
+  ].find((candidateSuffix) => key.endsWith(candidateSuffix));
+
+  return suffix ? key.slice(0, -suffix.length) : '';
+}
+
+export function getCanonicalLinkJsonFieldId(baseKey) {
+  const normalizedBaseKey = String(baseKey || '').trim();
+  return normalizedBaseKey ? `${normalizedBaseKey}${CANONICAL_LINK_JSON_SUFFIX}` : '';
+}
+
+function inferCanonicalLinkJsonKeys({
+  hrefKeys = [],
+  toKeys = [],
+  openInNewWindowKeys = [],
+} = {}) {
+  return Array.from(new Set([
+    ...normalizeFieldKeyList(toKeys),
+    ...normalizeFieldKeyList(hrefKeys),
+    ...normalizeFieldKeyList(openInNewWindowKeys),
+  ]
+    .map(inferSplitLinkBaseKey)
+    .filter(Boolean)
+    .map(getCanonicalLinkJsonFieldId)));
+}
+
+export function parseLinkValueJson(value) {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === 'object') {
+    return createLinkValue(value);
+  }
+
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  try {
+    return createLinkValue(JSON.parse(value));
+  } catch {
+    return null;
+  }
+}
+
+export function serializeLinkValue(link) {
+  const normalized = createLinkValue(link);
+  return normalized ? JSON.stringify(normalized) : '';
+}
+
 export function normalizeSplitLinkFieldSettings(settings) {
   if (!settings || typeof settings !== 'object') {
     return settings;
@@ -271,16 +328,56 @@ export function normalizeSplitLinkFieldSettings(settings) {
     });
   });
 
+  Object.keys(nextSettings).forEach((key) => {
+    if (!key.endsWith(SPLIT_LINK_PAGE_REF_SUFFIX)) {
+      return;
+    }
+
+    const baseKey = key.slice(0, -SPLIT_LINK_PAGE_REF_SUFFIX.length);
+    const hrefKeys = getSplitLinkHrefKeys(nextSettings, baseKey);
+    const linkValue = coerceLinkValueFromFields(nextSettings, {
+      hrefKeys,
+      toKeys: [key],
+      openInNewWindowKeys: [`${baseKey}${SPLIT_LINK_OPEN_IN_NEW_WINDOW_SUFFIX}`],
+      preferLinkJson: false,
+    });
+    const linkJsonKey = getCanonicalLinkJsonFieldId(baseKey);
+    const nextLinkJson = serializeLinkValue(linkValue);
+
+    if (nextLinkJson && nextSettings[linkJsonKey] !== nextLinkJson) {
+      nextSettings[linkJsonKey] = nextLinkJson;
+      changed = true;
+    } else if (!nextLinkJson && Object.prototype.hasOwnProperty.call(nextSettings, linkJsonKey)) {
+      delete nextSettings[linkJsonKey];
+      changed = true;
+    }
+  });
+
   return changed ? nextSettings : settings;
 }
 
 export function coerceLinkValueFromFields(source, {
+  linkJsonKeys = [],
+  preferLinkJson = true,
   kindKeys = ['kind'],
   documentIdKeys = ['documentId'],
   toKeys = ['to', 'pageRef'],
   hrefKeys = ['href', 'url'],
   openInNewWindowKeys = ['openInNewWindow'],
 } = {}) {
+  if (preferLinkJson) {
+    const canonicalKeys = Array.from(new Set([
+      ...normalizeFieldKeyList(linkJsonKeys),
+      ...inferCanonicalLinkJsonKeys({ hrefKeys, toKeys, openInNewWindowKeys }),
+    ]));
+    for (const key of canonicalKeys) {
+      const linkValue = parseLinkValueJson(readFirstFieldValue(source, [key]));
+      if (linkValue) {
+        return linkValue;
+      }
+    }
+  }
+
   const kind = readFirstStringField(source, kindKeys);
   const documentId = readFirstStringField(source, documentIdKeys);
   const to = readFirstStringField(source, toKeys);

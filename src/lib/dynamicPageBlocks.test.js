@@ -604,6 +604,27 @@ describe('buildDynamicBillboardFromBlock', () => {
     });
   });
 
+  it('prefers canonical billboard link JSON over stale split link fields', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      id: 'billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Choose a current path.',
+        buttonLabel: 'Current link',
+        buttonLinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/services/loans"}',
+        buttonUrl: '/old-path',
+        buttonPageRef: '/old-path',
+      },
+    });
+
+    expect(runtime?.action).toEqual(expect.objectContaining({
+      label: 'Current link',
+      to: '/services/loans',
+    }));
+    expect(runtime?.action?.href).toBeUndefined();
+  });
+
   it('defaults the planned giving joy billboard heading to Helv for older saved blocks', () => {
     const runtime = buildDynamicBillboardFromBlock({
       id: 'joy_billboard',

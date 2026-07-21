@@ -7,6 +7,13 @@ import {
   buildCtaFormSlotFields,
   parseCtaFormFieldsJson,
 } from '../src/blocks/foundation/forms.js';
+import {
+  coerceLinkValueFromFields,
+  getCanonicalLinkJsonFieldId,
+  parseLinkValueJson,
+  serializeLinkValue,
+  validateLinkValue,
+} from '../src/lib/linkValue.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +51,7 @@ const TARGET_BRIDGE_KEYS = new Set([
 ]);
 const SPLIT_LINK_HREF_SUFFIXES = Object.freeze(['Url', 'Path', 'Href']);
 const CTA_FORM_SLOT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
+const CANONICAL_LINK_JSON_PATTERN = /LinkJson$/;
 
 function trimSettingValue(value) {
   return String(value || '').trim();
@@ -201,6 +209,61 @@ function scanSplitLinkSettings({ settings, findings, location }) {
         }));
       }
     });
+
+    const linkValue = coerceLinkValueFromFields(settings, {
+      hrefKeys,
+      toKeys: [key],
+      openInNewWindowKeys: [`${baseKey}OpenInNewWindow`],
+      preferLinkJson: false,
+    });
+    const expectedLinkJson = serializeLinkValue(linkValue);
+    if (!expectedLinkJson) {
+      return;
+    }
+
+    const linkJsonKey = getCanonicalLinkJsonFieldId(baseKey);
+    const actualLinkJson = trimSettingValue(settings[linkJsonKey]);
+    if (!actualLinkJson) {
+      findings.push(createFinding('canonical-link-json-missing', 'Split link fields must also be represented by canonical link JSON.', {
+        ...location,
+        field: linkJsonKey,
+        companionField: key,
+      }));
+      return;
+    }
+
+    if (actualLinkJson !== expectedLinkJson) {
+      findings.push(createFinding('canonical-link-json-mismatch', 'Canonical link JSON must match its split compatibility fields.', {
+        ...location,
+        field: linkJsonKey,
+        companionField: key,
+      }));
+    }
+  });
+}
+
+function scanCanonicalLinkJsonSettings({ settings, findings, location }) {
+  Object.entries(settings).forEach(([key, value]) => {
+    if (!CANONICAL_LINK_JSON_PATTERN.test(key)) {
+      return;
+    }
+
+    const rawValue = typeof value === 'string' ? value.trim() : value;
+    if (!rawValue) {
+      findings.push(createFinding('canonical-link-json-empty', 'Canonical link JSON fields must be removed instead of persisted empty.', {
+        ...location,
+        field: key,
+      }));
+      return;
+    }
+
+    const linkValue = parseLinkValueJson(rawValue);
+    if (!linkValue || !validateLinkValue(linkValue).valid) {
+      findings.push(createFinding('canonical-link-json-invalid', 'Canonical link JSON must be parseable and valid.', {
+        ...location,
+        field: key,
+      }));
+    }
   });
 }
 
@@ -273,6 +336,7 @@ function scanBlocks({ recordLabel, rootName, pathname, blocks, findings }) {
     }
 
     scanSplitLinkSettings({ settings, findings, location });
+    scanCanonicalLinkJsonSettings({ settings, findings, location });
     scanCanonicalFormSettings({ block, settings, findings, location });
   });
 }

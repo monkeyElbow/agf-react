@@ -58,6 +58,11 @@ import {
   normalizeBillboardTitleSizeRem,
   normalizeIntroLineSpacing,
 } from '../../lib/dynamicSectionTypography';
+import {
+  coerceLinkValue,
+  getCanonicalLinkJsonFieldId,
+  serializeLinkValue,
+} from '../../lib/linkValue';
 import { getVisibleDynamicColumnSlots } from '../../lib/dynamicColumns';
 import {
   formatTestimonialAttribution,
@@ -831,20 +836,36 @@ function JustifyPillControl({ label, value, options, onChange, className = '' })
 }
 
 function commitSplitRouteLinkSettings(onSettingChange, hrefFieldId, routeRefFieldId, nextHrefValue, nextRouteRefValue) {
+  const baseFieldId = String(routeRefFieldId || hrefFieldId || '').replace(/(?:PageRef|Url|Path|Href)$/, '');
+  const linkJsonFieldId = getCanonicalLinkJsonFieldId(baseFieldId);
+  const routeRef = String(nextRouteRefValue || '').trim();
+  const linkValue = routeRef.startsWith('/')
+    ? coerceLinkValue({ to: routeRef })
+    : coerceLinkValue({ href: nextHrefValue });
+  const linkJsonValue = serializeLinkValue(linkValue);
+
   if (!routeRefFieldId) {
     onSettingChange(hrefFieldId, nextHrefValue);
+    if (linkJsonFieldId) {
+      onSettingChange(linkJsonFieldId, linkJsonValue);
+    }
     return;
   }
 
-  const routeRef = String(nextRouteRefValue || '').trim();
   if (routeRef.startsWith('/')) {
     onSettingChange(routeRefFieldId, routeRef);
     onSettingChange(hrefFieldId, nextHrefValue);
+    if (linkJsonFieldId) {
+      onSettingChange(linkJsonFieldId, linkJsonValue);
+    }
     return;
   }
 
   onSettingChange(routeRefFieldId, '');
   onSettingChange(hrefFieldId, nextHrefValue);
+  if (linkJsonFieldId) {
+    onSettingChange(linkJsonFieldId, linkJsonValue);
+  }
 }
 
 function RouteLinkField({

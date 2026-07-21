@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createDevContentAuthorityStore } from './contentAdminStore';
+import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue';
 
 function createActor(overrides = {}) {
   return {
@@ -831,7 +832,7 @@ describe('createDevContentAuthorityStore', () => {
     expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['strategy_enroll_cta']);
   });
 
-  it('leaves clean 403(b) snapshots unchanged without RMHA runtime rescue branches', () => {
+  it('leaves clean 403(b) snapshots structurally unchanged without RMHA runtime rescue branches', () => {
     const persistenceFile = makeTempFile();
     const cleanState = buildCleanRetirement403bState();
     const pathname = '/services/retirement/403b';
@@ -866,9 +867,13 @@ describe('createDevContentAuthorityStore', () => {
     const store = createStore(persistenceFile);
     const snapshot = store.getSnapshot();
     const history = store.getRevisionHistory(pathname);
+    const expectedBlocks = cleanState.blocksByPath[pathname].map((block) => ({
+      ...block,
+      settings: normalizeSplitLinkFieldSettings(block.settings),
+    }));
 
-    expect(snapshot.state.blocksByPath[pathname]).toEqual(cleanState.blocksByPath[pathname]);
-    expect(snapshot.baseSnapshot.blocksByPath[pathname]).toEqual(cleanState.blocksByPath[pathname]);
+    expect(snapshot.state.blocksByPath[pathname]).toEqual(expectedBlocks);
+    expect(snapshot.baseSnapshot.blocksByPath[pathname]).toEqual(expectedBlocks);
     expect(history[0].blocks.map((block) => block.id)).toEqual(cleanState.blocksByPath[pathname].map((block) => block.id));
   });
 
