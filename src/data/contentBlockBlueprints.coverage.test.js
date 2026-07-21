@@ -1404,7 +1404,7 @@ describe('content block blueprint coverage', () => {
       settings: {
         buttonLabel: 'Open IRA',
         paddingTopRem: 1.6,
-        paddingBottomRem: 1.6,
+        paddingBottomRem: 3.2,
       },
     });
     expectCanonicalLink(iraBlocks.find((block) => block?.id === 'open_ira')?.settings, 'buttonLinkJson', {

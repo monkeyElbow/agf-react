@@ -200,12 +200,32 @@ describe('service-native style ownership', () => {
 
     [
       '.native-info-page--retirement-iras .retirement-child-native-ira-types {',
+      'background: linear-gradient(145deg, #333335 0%, var(--ag-color-super-grey) 48%, #5f5e61 100%);',
       'padding-bottom: clamp(1.35rem, 2.9vw, 2.25rem);',
+      'box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26);',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {',
       'display: block;',
       'min-height: 0;',
       'margin: 0 0 0.95rem;',
       'padding-bottom: 0;',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+  });
+
+  it('keeps the IRA comparison section on the light card treatment', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--retirement-iras .retirement-child-native-comparison {',
+      'background: #fff;',
+      '.native-info-page--retirement-iras .retirement-child-native-comparison > .native-info-full-bleed > h2 {',
+      'color: var(--ag-color-super-grey);',
+      'filter: drop-shadow(0 18px 34px rgba(65, 64, 66, 0.18));',
+      '.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__card {',
+      'box-shadow: 0 16px 34px rgba(65, 64, 66, 0.16);',
+      '.native-info-page--retirement-iras .retirement-child-native-comparison .service-native-note {',
+      'color: rgba(65, 64, 66, 0.76);',
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
     });
