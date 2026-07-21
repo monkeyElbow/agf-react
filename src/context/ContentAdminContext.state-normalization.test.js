@@ -1085,6 +1085,8 @@ describe('ContentAdminContext state normalization', () => {
       '/accessibility',
       '/calculators/emergency-fund',
       '/calculators/increased-contribution',
+      '/calculators/ministers-housing-allowance-quick-check',
+      '/calculators/net-worth',
       '/contact-us',
     ];
 

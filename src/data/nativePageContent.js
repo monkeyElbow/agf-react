@@ -144,6 +144,11 @@ const directContent = {
     compact: true,
   },
 
+  '/calculators/ministers-housing-allowance-quick-check': {
+    pageClass: 'native-info-page--calculator-tool',
+    compact: true,
+  },
+
   '/calculators/net-worth': {
     pageClass: 'native-info-page--calculator-tool',
     compact: true,

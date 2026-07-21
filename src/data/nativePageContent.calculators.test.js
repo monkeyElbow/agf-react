@@ -12,7 +12,6 @@ describe('calculators native page content', () => {
     const content = getNativePageContent('/calculators', '');
     const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
     const cardsBlock = blocks.find((block) => block?.id === 'calculator_cards');
-    const quickCheckBlock = blocks.find((block) => block?.id === 'ministers_housing_quick_check');
     const billboardBlock = blocks.find((block) => block?.id === 'billboard');
     const ctaBlock = blocks.find((block) => block?.id === 'cta_form');
 
@@ -22,6 +21,7 @@ describe('calculators native page content', () => {
     expect(Array.isArray(content?.sections) ? content.sections : []).toEqual([]);
     expect(cardsBlock?.settings?.columns).toBe('two');
     expect(cardsBlock?.settings?.sectionClassName).toBe('calculators-native-collection calculators-native-collection--grid');
+    expect(cardsBlock?.settings?.showTitleDivider).toBe(false);
     expect(Array.from({ length: 8 }, (_, index) => cardsBlock?.settings?.[`card${index + 1}ButtonLabel`])).toEqual(Array(8).fill('Launch'));
     expect(Array.from({ length: 8 }, (_, index) => (
       readLinkTarget(cardsBlock?.settings, `card${index + 1}ButtonLinkJson`)
@@ -31,12 +31,11 @@ describe('calculators native page content', () => {
       '/services/retirement#retirement-savings-calculator',
       '/services/loans#run-some-numbers',
       '/calculators/emergency-fund',
-      '/calculators#ministers-housing-allowance-quick-check',
+      '/calculators/ministers-housing-allowance-quick-check',
       '/calculators/net-worth',
       '/services/investments#laddering-calculator',
     ]);
-    expect(quickCheckBlock?.settings?.widget).toBe('retirement-minister-housing-quick-check');
-    expect(quickCheckBlock?.settings?.anchorId).toBe('ministers-housing-allowance-quick-check');
+    expect(blocks.some((block) => block?.id === 'ministers_housing_quick_check')).toBe(false);
     expect(billboardBlock?.settings?.sectionClassName).toBe('calculators-native-billboard');
     expect(ctaBlock?.settings?.sectionClassName).toBe('calculators-native-cta');
     expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
@@ -46,6 +45,7 @@ describe('calculators native page content', () => {
     [
       ['/calculators/emergency-fund', 'emergency-fund-calculator'],
       ['/calculators/increased-contribution', 'increased-contribution-calculator'],
+      ['/calculators/ministers-housing-allowance-quick-check', 'retirement-minister-housing-quick-check'],
       ['/calculators/net-worth', 'net-worth-calculator'],
     ].forEach(([pathname, widget]) => {
       const content = getNativePageContent(pathname, '');

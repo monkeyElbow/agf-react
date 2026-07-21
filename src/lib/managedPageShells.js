@@ -10,6 +10,7 @@ const BLOCK_ONLY_MANAGED_PAGE_PATHS = new Set([
   '/calculators',
   '/calculators/emergency-fund',
   '/calculators/increased-contribution',
+  '/calculators/ministers-housing-allowance-quick-check',
   '/calculators/net-worth',
   '/contact-us',
   '/about-us/impact',

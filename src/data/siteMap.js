@@ -84,6 +84,7 @@ export const sitePages = [
   { path: '/forms', title: 'Forms', section: 'Resources', source: null },
   { path: '/calculators/emergency-fund', title: 'Emergency Fund Calculator', section: 'Resources', source: null, hideFromSitemap: true },
   { path: '/calculators/increased-contribution', title: 'Increased Contribution Calculator', section: 'Resources', source: null, hideFromSitemap: true },
+  { path: '/calculators/ministers-housing-allowance-quick-check', title: 'Ministers\' Housing Allowance Quick Check', section: 'Resources', source: null, hideFromSitemap: true },
   { path: '/calculators/net-worth', title: 'Net Worth Calculator', section: 'Resources', source: null, hideFromSitemap: true },
   { path: '/contact-us', title: 'Contact Us', section: 'Core', source: null },
   { path: '/online-contributions', title: 'Online Contributions', section: 'Core', source: null },

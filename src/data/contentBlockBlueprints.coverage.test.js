@@ -909,7 +909,6 @@ describe('content block blueprint coverage', () => {
     const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
     const heroBlock = blocks.find((block) => block?.id === 'hero');
     const cardsBlock = blocks.find((block) => block?.id === 'calculator_cards');
-    const quickCheckBlock = blocks.find((block) => block?.id === 'ministers_housing_quick_check');
     const billboardBlock = blocks.find((block) => block?.id === 'billboard');
     const ctaBlock = blocks.find((block) => block?.id === 'cta_form');
 
@@ -928,19 +927,16 @@ describe('content block blueprint coverage', () => {
       settings: {
         columns: 'two',
         sectionClassName: 'calculators-native-collection calculators-native-collection--grid',
+        showTitleDivider: false,
         card1Title: 'Retirement Savings',
         card8Title: 'Laddering',
       },
     });
-    expect(quickCheckBlock).toMatchObject({
-      kind: 'content',
-      mode: 'dynamic',
-      settings: {
-        widget: 'retirement-minister-housing-quick-check',
-        anchorId: 'ministers-housing-allowance-quick-check',
-        sectionClassName: 'calculator-tool-shell',
-      },
+    expectCanonicalLink(cardsBlock?.settings, 'card6ButtonLinkJson', {
+      kind: 'internal',
+      to: '/calculators/ministers-housing-allowance-quick-check',
     });
+    expect(blocks.some((block) => block?.id === 'ministers_housing_quick_check')).toBe(false);
     expect(billboardBlock).toMatchObject({
       kind: 'billboard',
       mode: 'dynamic',

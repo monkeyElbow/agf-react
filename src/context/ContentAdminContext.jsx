@@ -206,6 +206,7 @@ const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
   '/services/loans/loan-consultants',
   '/calculators/emergency-fund',
   '/calculators/increased-contribution',
+  '/calculators/ministers-housing-allowance-quick-check',
   '/calculators/net-worth',
   '/contact-us',
 ]);

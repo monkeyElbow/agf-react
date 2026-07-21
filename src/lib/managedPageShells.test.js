@@ -21,6 +21,7 @@ describe('managed page shells', () => {
     expect(isBlockOnlyManagedPagePath('/online-contributions')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/resources')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/calculators')).toBe(true);
+    expect(isBlockOnlyManagedPagePath('/calculators/ministers-housing-allowance-quick-check')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/contact-us')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/about-us/impact')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/services')).toBe(true);

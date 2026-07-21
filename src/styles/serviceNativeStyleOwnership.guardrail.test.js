@@ -6,7 +6,10 @@ import { describe, expect, it } from 'vitest';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS = Object.freeze({});
+const CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS = Object.freeze({
+  'native-info-page--calculator-tool': 'Calculator tool routes need route-specific intro/contact CTA spacing.',
+  'native-info-page--insurance': 'Insurance overview keeps route-specific dynamic section art direction.',
+});
 
 function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');

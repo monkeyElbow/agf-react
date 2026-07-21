@@ -779,7 +779,7 @@ export default function RetirementPage() {
     () => getRetirementBillboardCopyClassName(renderedBillboard, billboardCopyUsesScrollProgress),
     [billboardCopyUsesScrollProgress, renderedBillboard],
   );
-  const renderedBillboardJustify = 'right';
+  const renderedBillboardJustify = 'center';
   const renderedBillboardTitleStyle = renderedBillboard?.titleStyle || {};
   const rolloverBillboardCopyUsesScrollProgress = renderedRolloverBillboard?.scrollReveal === 'scale-up';
   const rolloverBillboardCopyClassName = useMemo(
@@ -2100,7 +2100,7 @@ export default function RetirementPage() {
           {renderHudAnchor('columns_math')}
           <div className="ag-panel-rail">
             <div
-              className={`native-info-section-copy ${retirementDoTheMathRuntime.copyClassName || RETIREMENT_SCALE_REVEAL_CLASS_NAME} is-justify-left`}
+              className={`native-info-section-copy ${retirementDoTheMathRuntime.copyClassName || RETIREMENT_SCALE_REVEAL_CLASS_NAME} is-justify-center`}
               data-fade-root-margin={retirementDoTheMathRuntime.copyFadeRootMargin || RETIREMENT_SCALE_REVEAL_ROOT_MARGIN}
             >
               <HomeDoTheMathBadge
