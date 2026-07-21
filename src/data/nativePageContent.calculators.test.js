@@ -63,9 +63,22 @@ describe('calculators native page content', () => {
       expect(heroBlock?.kind).toBe('hero');
       expect(introBlock?.kind).toBe('content');
       expect(introBlock?.settings?.sectionClassName).toBe('calculator-tool-shell');
-      expect(widgetBlock?.kind).toBe('content');
+      expect(widgetBlock?.name).toBe('Calculator Tool');
+      expect(widgetBlock?.kind).toBe('calculator_widget');
       expect(widgetBlock?.settings?.widget).toBe(widget);
       expect(widgetBlock?.settings?.sectionClassName).toBe('calculator-tool-shell calculator-tool-widget');
+      expect((widgetBlock?.editableFields || []).map((field) => field.id)).toEqual([
+        'widget',
+        'fullBleed',
+        'spaceBeforeRem',
+        'spaceAfterRem',
+        'paddingTopRem',
+        'paddingBottomRem',
+        'contentMaxWidthPx',
+        'anchorId',
+        'sectionClassName',
+      ]);
+      expect((widgetBlock?.editableFields || []).some((field) => field.id === 'html' || field.label === 'Page Content HTML')).toBe(false);
       expect(formBlock?.kind).toBe('cta_form');
       expect(formBlock?.settings?.title).toBe('Talk with our team.');
       expect(formBlock?.settings?.submitLabel).toBe('Submit');

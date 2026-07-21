@@ -294,6 +294,8 @@ describe('NativeContentPage functional routes', () => {
 
     expect(widgetSection).toBeTruthy();
     expect(widgetSection?.className).toContain('calculator-tool-widget');
+    expect(widgetSection?.className).toContain('native-dynamic-calculator-widget');
+    expect(widgetSection?.className).not.toContain('native-dynamic-page-content');
     expect(widgetSection?.querySelector('.net-worth-tool')).toBeTruthy();
     expect(widgetSection?.querySelector('.native-info-section-copy')).toBeNull();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();

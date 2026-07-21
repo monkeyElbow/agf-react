@@ -5975,6 +5975,22 @@ export function PageContentHudBlockEditor({ block, onSettingChange }) {
   );
 }
 
+export function CalculatorWidgetBlockEditor({ block, onSettingChange }) {
+  const settings = block.settings || {};
+  const fields = resolveEditorFields(block.kind, 'admin', block.editableFields);
+
+  return (
+    <div className="admin-intro-block-editor admin-calculator-widget-block-editor">
+      <FieldControlGrid
+        fields={fields}
+        settings={settings}
+        onSettingChange={onSettingChange}
+        className="admin-content-field-list--inline"
+      />
+    </div>
+  );
+}
+
 export function TopStripBlockEditor({ block, onSettingChange }) {
   const settings = block.settings || {};
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
@@ -6724,6 +6740,9 @@ export function getMigratedBlockEditorComponent(kind, surface = 'admin') {
   }
   if (token === 'calculator_cta') {
     return CalculatorCtaBlockEditor;
+  }
+  if (token === 'calculator_widget') {
+    return CalculatorWidgetBlockEditor;
   }
   if (token === 'cta_band') {
     return CtaBandBlockEditor;

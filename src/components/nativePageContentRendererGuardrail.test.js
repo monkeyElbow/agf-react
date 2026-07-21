@@ -16,9 +16,10 @@ describe('native page content renderer guardrail', () => {
 
     expect(source).toContain('buildDynamicPageContentFromBlock,');
     expect(source).toContain('const runtime = buildDynamicPageContentFromBlock(block);');
-    expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-page-content' : 'native-dynamic-page-content';");
+    expect(source).toContain('blockKind === CALCULATOR_WIDGET_KIND');
+    expect(source).toContain("'native-dynamic-calculator-widget'");
     expect(source).toContain('const pageContentSection = buildDynamicPageContentSection(block, activePath);');
-    expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'content') {");
+    expect(source).toContain("if (block.mode === 'dynamic' && (block.kind === 'content' || block.kind === CALCULATOR_WIDGET_KIND)) {");
     expect(source).toContain("const dynamicSectionPanel = dynamicSectionBlockId ? (hudPanelByBlockId[dynamicSectionBlockId] || null) : null;");
     expect(source).not.toContain("if (block.id === 'page_content') {");
   });

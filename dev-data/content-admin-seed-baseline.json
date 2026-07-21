@@ -13444,15 +13444,9 @@
         {
           "id": "calculator_tool",
           "name": "Calculator Tool",
-          "kind": "content",
+          "kind": "calculator_widget",
           "mode": "dynamic",
           "settings": {
-            "title": "",
-            "titleClassName": "",
-            "titleHighlightsJson": "",
-            "subtitle": "",
-            "body": "",
-            "html": "",
             "widget": "emergency-fund-calculator",
             "fullBleed": false,
             "spaceBeforeRem": 0,
@@ -13461,140 +13455,12 @@
             "paddingBottomRem": 2.4,
             "contentMaxWidthPx": 980,
             "anchorId": "",
-            "sectionClassName": "calculator-tool-shell calculator-tool-widget",
-            "copyWrap": false,
-            "buttonLabel": "",
-            "buttonDocumentId": "",
-            "addressClassName": "",
-            "addressTitle": "",
-            "addressLines": "",
-            "tableHeadersJson": "",
-            "tableRowsJson": "",
-            "tableValueAlignment": "",
-            "tableChartId": "",
-            "fineprint": "",
-            "fineprintDisclosureId": ""
+            "sectionClassName": "calculator-tool-shell calculator-tool-widget"
           },
           "editableFields": [
             {
-              "id": "title",
-              "label": "Section title",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Section title color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Section title highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Section subtitle",
-              "type": "text"
-            },
-            {
-              "id": "body",
-              "label": "Section body",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "html",
-              "label": "Page Content HTML",
-              "type": "html"
-            },
-            {
               "id": "widget",
               "label": "Widget key",
-              "type": "text"
-            },
-            {
-              "id": "logoImage",
-              "label": "Logo image URL",
-              "type": "text"
-            },
-            {
-              "id": "logoAlt",
-              "label": "Logo alt text",
-              "type": "text"
-            },
-            {
-              "id": "logoText",
-              "label": "Logo text fallback",
               "type": "text"
             },
             {
@@ -13650,110 +13516,6 @@
             {
               "id": "sectionClassName",
               "label": "Section class name",
-              "type": "text"
-            },
-            {
-              "id": "copyWrap",
-              "label": "Wrap section copy",
-              "type": "boolean"
-            },
-            {
-              "id": "buttonLabel",
-              "label": "Button label",
-              "type": "text"
-            },
-            {
-              "id": "buttonLinkJson",
-              "label": "Button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "buttonDocumentId",
-              "label": "Button document ID",
-              "type": "text"
-            },
-            {
-              "id": "addressClassName",
-              "label": "Address block class name",
-              "type": "text"
-            },
-            {
-              "id": "addressTitle",
-              "label": "Address title",
-              "type": "text"
-            },
-            {
-              "id": "addressLines",
-              "label": "Address lines",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "tableHeadersJson",
-              "label": "Table headers JSON",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "tableRowsJson",
-              "label": "Table rows JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "tableValueAlignment",
-              "label": "Table value alignment",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default"
-                },
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "tableChartId",
-              "label": "Managed chart ID",
-              "type": "text"
-            },
-            {
-              "id": "supportGroupsJson",
-              "label": "Support groups JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "supportGroupsExpanded",
-              "label": "Expand support items by default",
-              "type": "boolean"
-            },
-            {
-              "id": "supportGroupsCollapsible",
-              "label": "Support items are collapsible",
-              "type": "boolean"
-            },
-            {
-              "id": "fineprint",
-              "label": "Fineprint lines",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "fineprintDisclosureId",
-              "label": "Managed disclosure ID",
               "type": "text"
             }
           ]
@@ -14836,15 +14598,9 @@
         {
           "id": "calculator_tool",
           "name": "Calculator Tool",
-          "kind": "content",
+          "kind": "calculator_widget",
           "mode": "dynamic",
           "settings": {
-            "title": "",
-            "titleClassName": "",
-            "titleHighlightsJson": "",
-            "subtitle": "",
-            "body": "",
-            "html": "",
             "widget": "increased-contribution-calculator",
             "fullBleed": false,
             "spaceBeforeRem": 0,
@@ -14853,140 +14609,12 @@
             "paddingBottomRem": 2.4,
             "contentMaxWidthPx": 980,
             "anchorId": "",
-            "sectionClassName": "calculator-tool-shell calculator-tool-widget",
-            "copyWrap": false,
-            "buttonLabel": "",
-            "buttonDocumentId": "",
-            "addressClassName": "",
-            "addressTitle": "",
-            "addressLines": "",
-            "tableHeadersJson": "",
-            "tableRowsJson": "",
-            "tableValueAlignment": "",
-            "tableChartId": "",
-            "fineprint": "",
-            "fineprintDisclosureId": ""
+            "sectionClassName": "calculator-tool-shell calculator-tool-widget"
           },
           "editableFields": [
             {
-              "id": "title",
-              "label": "Section title",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Section title color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Section title highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Section subtitle",
-              "type": "text"
-            },
-            {
-              "id": "body",
-              "label": "Section body",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "html",
-              "label": "Page Content HTML",
-              "type": "html"
-            },
-            {
               "id": "widget",
               "label": "Widget key",
-              "type": "text"
-            },
-            {
-              "id": "logoImage",
-              "label": "Logo image URL",
-              "type": "text"
-            },
-            {
-              "id": "logoAlt",
-              "label": "Logo alt text",
-              "type": "text"
-            },
-            {
-              "id": "logoText",
-              "label": "Logo text fallback",
               "type": "text"
             },
             {
@@ -15042,110 +14670,6 @@
             {
               "id": "sectionClassName",
               "label": "Section class name",
-              "type": "text"
-            },
-            {
-              "id": "copyWrap",
-              "label": "Wrap section copy",
-              "type": "boolean"
-            },
-            {
-              "id": "buttonLabel",
-              "label": "Button label",
-              "type": "text"
-            },
-            {
-              "id": "buttonLinkJson",
-              "label": "Button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "buttonDocumentId",
-              "label": "Button document ID",
-              "type": "text"
-            },
-            {
-              "id": "addressClassName",
-              "label": "Address block class name",
-              "type": "text"
-            },
-            {
-              "id": "addressTitle",
-              "label": "Address title",
-              "type": "text"
-            },
-            {
-              "id": "addressLines",
-              "label": "Address lines",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "tableHeadersJson",
-              "label": "Table headers JSON",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "tableRowsJson",
-              "label": "Table rows JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "tableValueAlignment",
-              "label": "Table value alignment",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default"
-                },
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "tableChartId",
-              "label": "Managed chart ID",
-              "type": "text"
-            },
-            {
-              "id": "supportGroupsJson",
-              "label": "Support groups JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "supportGroupsExpanded",
-              "label": "Expand support items by default",
-              "type": "boolean"
-            },
-            {
-              "id": "supportGroupsCollapsible",
-              "label": "Support items are collapsible",
-              "type": "boolean"
-            },
-            {
-              "id": "fineprint",
-              "label": "Fineprint lines",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "fineprintDisclosureId",
-              "label": "Managed disclosure ID",
               "type": "text"
             }
           ]
@@ -16228,15 +15752,9 @@
         {
           "id": "calculator_tool",
           "name": "Calculator Tool",
-          "kind": "content",
+          "kind": "calculator_widget",
           "mode": "dynamic",
           "settings": {
-            "title": "",
-            "titleClassName": "",
-            "titleHighlightsJson": "",
-            "subtitle": "",
-            "body": "",
-            "html": "",
             "widget": "net-worth-calculator",
             "fullBleed": false,
             "spaceBeforeRem": 0,
@@ -16245,140 +15763,12 @@
             "paddingBottomRem": 2.4,
             "contentMaxWidthPx": 980,
             "anchorId": "",
-            "sectionClassName": "calculator-tool-shell calculator-tool-widget",
-            "copyWrap": false,
-            "buttonLabel": "",
-            "buttonDocumentId": "",
-            "addressClassName": "",
-            "addressTitle": "",
-            "addressLines": "",
-            "tableHeadersJson": "",
-            "tableRowsJson": "",
-            "tableValueAlignment": "",
-            "tableChartId": "",
-            "fineprint": "",
-            "fineprintDisclosureId": ""
+            "sectionClassName": "calculator-tool-shell calculator-tool-widget"
           },
           "editableFields": [
             {
-              "id": "title",
-              "label": "Section title",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Section title color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Section title highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Section subtitle",
-              "type": "text"
-            },
-            {
-              "id": "body",
-              "label": "Section body",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "html",
-              "label": "Page Content HTML",
-              "type": "html"
-            },
-            {
               "id": "widget",
               "label": "Widget key",
-              "type": "text"
-            },
-            {
-              "id": "logoImage",
-              "label": "Logo image URL",
-              "type": "text"
-            },
-            {
-              "id": "logoAlt",
-              "label": "Logo alt text",
-              "type": "text"
-            },
-            {
-              "id": "logoText",
-              "label": "Logo text fallback",
               "type": "text"
             },
             {
@@ -16434,110 +15824,6 @@
             {
               "id": "sectionClassName",
               "label": "Section class name",
-              "type": "text"
-            },
-            {
-              "id": "copyWrap",
-              "label": "Wrap section copy",
-              "type": "boolean"
-            },
-            {
-              "id": "buttonLabel",
-              "label": "Button label",
-              "type": "text"
-            },
-            {
-              "id": "buttonLinkJson",
-              "label": "Button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "buttonDocumentId",
-              "label": "Button document ID",
-              "type": "text"
-            },
-            {
-              "id": "addressClassName",
-              "label": "Address block class name",
-              "type": "text"
-            },
-            {
-              "id": "addressTitle",
-              "label": "Address title",
-              "type": "text"
-            },
-            {
-              "id": "addressLines",
-              "label": "Address lines",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "tableHeadersJson",
-              "label": "Table headers JSON",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "tableRowsJson",
-              "label": "Table rows JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "tableValueAlignment",
-              "label": "Table value alignment",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default"
-                },
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "tableChartId",
-              "label": "Managed chart ID",
-              "type": "text"
-            },
-            {
-              "id": "supportGroupsJson",
-              "label": "Support groups JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "supportGroupsExpanded",
-              "label": "Expand support items by default",
-              "type": "boolean"
-            },
-            {
-              "id": "supportGroupsCollapsible",
-              "label": "Support items are collapsible",
-              "type": "boolean"
-            },
-            {
-              "id": "fineprint",
-              "label": "Fineprint lines",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "fineprintDisclosureId",
-              "label": "Managed disclosure ID",
               "type": "text"
             }
           ]
@@ -146738,15 +146024,9 @@
         {
           "id": "calculator_tool",
           "name": "Calculator Tool",
-          "kind": "content",
+          "kind": "calculator_widget",
           "mode": "dynamic",
           "settings": {
-            "title": "",
-            "titleClassName": "",
-            "titleHighlightsJson": "",
-            "subtitle": "",
-            "body": "",
-            "html": "",
             "widget": "retirement-minister-housing-quick-check",
             "fullBleed": false,
             "spaceBeforeRem": 0,
@@ -146755,140 +146035,12 @@
             "paddingBottomRem": 2.4,
             "contentMaxWidthPx": 980,
             "anchorId": "",
-            "sectionClassName": "calculator-tool-shell calculator-tool-widget",
-            "copyWrap": false,
-            "buttonLabel": "",
-            "buttonDocumentId": "",
-            "addressClassName": "",
-            "addressTitle": "",
-            "addressLines": "",
-            "tableHeadersJson": "",
-            "tableRowsJson": "",
-            "tableValueAlignment": "",
-            "tableChartId": "",
-            "fineprint": "",
-            "fineprintDisclosureId": ""
+            "sectionClassName": "calculator-tool-shell calculator-tool-widget"
           },
           "editableFields": [
             {
-              "id": "title",
-              "label": "Section title",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Section title color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Section title highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Section subtitle",
-              "type": "text"
-            },
-            {
-              "id": "body",
-              "label": "Section body",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "html",
-              "label": "Page Content HTML",
-              "type": "html"
-            },
-            {
               "id": "widget",
               "label": "Widget key",
-              "type": "text"
-            },
-            {
-              "id": "logoImage",
-              "label": "Logo image URL",
-              "type": "text"
-            },
-            {
-              "id": "logoAlt",
-              "label": "Logo alt text",
-              "type": "text"
-            },
-            {
-              "id": "logoText",
-              "label": "Logo text fallback",
               "type": "text"
             },
             {
@@ -146944,110 +146096,6 @@
             {
               "id": "sectionClassName",
               "label": "Section class name",
-              "type": "text"
-            },
-            {
-              "id": "copyWrap",
-              "label": "Wrap section copy",
-              "type": "boolean"
-            },
-            {
-              "id": "buttonLabel",
-              "label": "Button label",
-              "type": "text"
-            },
-            {
-              "id": "buttonLinkJson",
-              "label": "Button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "buttonDocumentId",
-              "label": "Button document ID",
-              "type": "text"
-            },
-            {
-              "id": "addressClassName",
-              "label": "Address block class name",
-              "type": "text"
-            },
-            {
-              "id": "addressTitle",
-              "label": "Address title",
-              "type": "text"
-            },
-            {
-              "id": "addressLines",
-              "label": "Address lines",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "tableHeadersJson",
-              "label": "Table headers JSON",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "tableRowsJson",
-              "label": "Table rows JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "tableValueAlignment",
-              "label": "Table value alignment",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default"
-                },
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "tableChartId",
-              "label": "Managed chart ID",
-              "type": "text"
-            },
-            {
-              "id": "supportGroupsJson",
-              "label": "Support groups JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "supportGroupsExpanded",
-              "label": "Expand support items by default",
-              "type": "boolean"
-            },
-            {
-              "id": "supportGroupsCollapsible",
-              "label": "Support items are collapsible",
-              "type": "boolean"
-            },
-            {
-              "id": "fineprint",
-              "label": "Fineprint lines",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "fineprintDisclosureId",
-              "label": "Managed disclosure ID",
               "type": "text"
             }
           ]

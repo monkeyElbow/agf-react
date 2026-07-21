@@ -69,6 +69,7 @@ const SAMPLE_KIND_BY_EDITOR_TYPE = {
   hero: 'hero',
   hero_pie: 'hero_pie',
   calculator_cta: 'calculator_cta',
+  calculator_widget: 'calculator_widget',
   cta_band: 'cta_band',
   impact_stat: 'impact_stat',
   legal_copy: { __sample: 'legal_copy' },
@@ -375,6 +376,18 @@ const PARITY_ASSERTIONS = {
     },
   },
   fields: {
+    admin: (block) => {
+      sampleFieldLabels(block).forEach((label) => {
+        expect(screen.getAllByLabelText(label).length).toBeGreaterThan(0);
+      });
+    },
+    hud: (block) => {
+      sampleFieldLabels(block).forEach((label) => {
+        expect(screen.getAllByLabelText(label).length).toBeGreaterThan(0);
+      });
+    },
+  },
+  calculator_widget: {
     admin: (block) => {
       sampleFieldLabels(block).forEach((label) => {
         expect(screen.getAllByLabelText(label).length).toBeGreaterThan(0);

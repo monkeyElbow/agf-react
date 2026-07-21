@@ -34,7 +34,7 @@ function expectNoActionLikeSplitLinkSettings(settings = {}) {
 
 describe('canonical block registry', () => {
   it('registers the first migrated block kinds with required metadata', () => {
-    expect(getMigratedBlockKinds()).toEqual(['content', 'calculator_cta', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip']);
+    expect(getMigratedBlockKinds()).toEqual(['content', 'calculator_cta', 'calculator_widget', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip']);
     expect(BLOCK_KIND_VALUES).not.toContain('rates_table');
     expect(BLOCK_MODE_VALUES).toEqual(['dynamic']);
 

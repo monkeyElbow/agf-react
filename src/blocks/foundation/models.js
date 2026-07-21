@@ -4,6 +4,7 @@ import { normalizeSplitLinkFieldSettings } from '../../lib/linkValue';
 export const BLOCK_KIND_VALUES = Object.freeze([
   'billboard',
   'calculator_cta',
+  'calculator_widget',
   'card_grid',
   'columns',
   'content',

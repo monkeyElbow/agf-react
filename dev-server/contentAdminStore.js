@@ -9,6 +9,7 @@ import {
   serializeCtaFormFields,
   stripCtaFormSlotFieldSettings,
 } from '../src/blocks/foundation/forms.js';
+import { normalizeCalculatorWidgetBlock } from '../src/lib/calculatorWidgetIdentity.js';
 import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
@@ -711,7 +712,7 @@ function canonicalizeRouteLinkEditableFields(editableFields) {
 }
 
 function normalizePageBlockState(pathname, block) {
-  const nextBlock = cloneJson(block);
+  const nextBlock = normalizeCalculatorWidgetBlock(cloneJson(block));
   if (nextBlock?.settings && typeof nextBlock.settings === 'object') {
     nextBlock.settings = normalizeSplitLinkFieldSettings(stripRetiredTargetBridgeSettings(nextBlock.settings), {
       stripSplitFields: true,

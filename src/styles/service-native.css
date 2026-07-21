@@ -11885,7 +11885,9 @@
 }
 
 .service-native-section.native-dynamic-page-content,
-.service-native-section.test-dynamic-page-content {
+.service-native-section.test-dynamic-page-content,
+.service-native-section.native-dynamic-calculator-widget,
+.service-native-section.test-dynamic-calculator-widget {
   margin-top: var(--dyn-content-margin-top, 0);
   margin-bottom: var(--dyn-content-margin-bottom, 0);
   padding-top: var(--dyn-content-padding-top, clamp(2.4rem, 5.2vw, 3.8rem));
@@ -11893,7 +11895,9 @@
 }
 
 .service-native-section.native-dynamic-page-content .native-info-rich-html,
-.service-native-section.test-dynamic-page-content .native-info-rich-html {
+.service-native-section.test-dynamic-page-content .native-info-rich-html,
+.service-native-section.native-dynamic-calculator-widget .native-info-rich-html,
+.service-native-section.test-dynamic-calculator-widget .native-info-rich-html {
   width: min(var(--dyn-content-max-width, 980px), 100%);
   margin: 0 auto;
 }

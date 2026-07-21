@@ -42,6 +42,7 @@ import {
   resolveEditableHrefFromLinkFields,
 } from '../lib/linkValue';
 import { normalizePresetBearingBlocks } from '../lib/blockPresetIdentity';
+import { normalizeCalculatorWidgetBlocks } from '../lib/calculatorWidgetIdentity';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
@@ -1302,7 +1303,7 @@ function normalizeSplitLinkFieldsInBlocks(blocks) {
 function normalizePageBlocksState(blocks) {
   return canonicalizeRouteLinkEditableFieldsInBlocks(normalizeSplitLinkFieldsInBlocks(stripTargetBridgeFieldsFromBlocks(normalizePresetBearingBlocks(
     normalizeSplitLinkFieldsInBlocks(
-      normalizeCtaFormCanonicalFieldsInBlocks(normalizeSingletonKindBlocks(dedupeBlocksByIdPreferLatest(blocks))),
+      normalizeCalculatorWidgetBlocks(normalizeCtaFormCanonicalFieldsInBlocks(normalizeSingletonKindBlocks(dedupeBlocksByIdPreferLatest(blocks)))),
     ),
   ))));
 }

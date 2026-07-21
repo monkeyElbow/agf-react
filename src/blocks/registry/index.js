@@ -2,6 +2,7 @@ import { flattenEditorFields } from '../foundation/editorDescriptors';
 import { getDefinitionSections } from '../foundation/models';
 import { billboardBlockDefinition } from '../definitions/billboard.definition';
 import { calculatorCtaBlockDefinition } from '../definitions/calculatorCta.definition';
+import { calculatorWidgetBlockDefinition } from '../definitions/calculatorWidget.definition';
 import { cardGridBlockDefinition } from '../definitions/cardGrid.definition';
 import { columnsBlockDefinition } from '../definitions/columns.definition';
 import { ctaBandBlockDefinition } from '../definitions/ctaBand.definition';
@@ -26,6 +27,7 @@ import { topStripBlockDefinition } from '../definitions/topStrip.definition';
 const MIGRATED_BLOCK_DEFINITIONS = Object.freeze({
   content: pageContentBlockDefinition,
   calculator_cta: calculatorCtaBlockDefinition,
+  calculator_widget: calculatorWidgetBlockDefinition,
   cta_band: ctaBandBlockDefinition,
   cta_form: ctaFormBlockDefinition,
   request_form: requestFormBlockDefinition,

@@ -21,6 +21,7 @@ import { buildCardGridPresetSettings } from '../lib/cardGridPresets';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { buildColumnsPresetSettings } from '../lib/columnsPresets';
 import { buildCtaBandPresetSettings } from '../lib/ctaBandPresets';
+import { CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { getTokenSwatch } from '../lib/colorSystem';
 import { PAGE_CONTENT_IDENTITY } from '../lib/pageContentIdentity';
 import {
@@ -80,6 +81,7 @@ const requestFormTitleHighlightToneOptions = [
 
 const sharedDynamicPageContentEditableFields = getEditableFieldsForKind(PAGE_CONTENT_IDENTITY.kind);
 const calculatorCtaEditableFields = getEditableFieldsForKind('calculator_cta');
+const calculatorWidgetEditableFields = getEditableFieldsForKind('calculator_widget');
 const columnsEditableFields = getEditableFieldsForKind('columns');
 const ctaFormEditableFields = getEditableFieldsForKind('cta_form');
 const heroPieEditableFields = getEditableFieldsForKind('hero_pie');
@@ -566,15 +568,9 @@ function createCalculatorToolBlueprints({
     {
       id: 'calculator_tool',
       name: 'Calculator Tool',
-      kind: PAGE_CONTENT_IDENTITY.kind,
+      kind: CALCULATOR_WIDGET_KIND,
       mode: 'dynamic',
       settings: {
-        title: '',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        subtitle: '',
-        body: '',
-        html: '',
         widget,
         fullBleed: false,
         spaceBeforeRem: 0,
@@ -584,23 +580,8 @@ function createCalculatorToolBlueprints({
         contentMaxWidthPx: 980,
         anchorId: '',
         sectionClassName: 'calculator-tool-shell calculator-tool-widget',
-        copyWrap: false,
-        buttonLabel: '',
-        buttonUrl: '',
-        buttonPageRef: '',
-        buttonOpenInNewWindow: false,
-        buttonDocumentId: '',
-        addressClassName: '',
-        addressTitle: '',
-        addressLines: '',
-        tableHeadersJson: '',
-        tableRowsJson: '',
-        tableValueAlignment: '',
-        tableChartId: '',
-        fineprint: '',
-        fineprintDisclosureId: '',
       },
-      editableFields: sharedDynamicPageContentEditableFields,
+      editableFields: calculatorWidgetEditableFields,
     },
     {
       id: 'cta_form',

@@ -118,9 +118,9 @@ describe('page content identity contract', () => {
     const dynamicPageBlocksSource = readSource('./dynamicPageBlocks.js');
     const nativeContentPageSource = readSource('../components/NativeContentPage.jsx');
 
-    expect(dynamicPageBlocksSource).toContain("block.kind !== 'content'");
+    expect(dynamicPageBlocksSource).toContain("kind !== 'content' && kind !== CALCULATOR_WIDGET_KIND");
     expect(dynamicPageBlocksSource).not.toContain("block.kind !== 'page_content'");
-    expect(nativeContentPageSource).toContain("block.kind === 'content'");
+    expect(nativeContentPageSource).toContain("block.kind === 'content' || block.kind === CALCULATOR_WIDGET_KIND");
     expect(nativeContentPageSource).not.toContain("block.kind === 'page_content'");
   });
 });
