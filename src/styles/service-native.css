@@ -15079,8 +15079,8 @@
 
 .native-info-page--life-quote .life-quote-native-types {
   background: #ffffff;
-  padding-top: clamp(2.6rem, 5.4vw, 4rem);
-  padding-bottom: clamp(1.4rem, 3vw, 2rem);
+  padding-top: clamp(2.8rem, 5.6vw, 4.3rem);
+  padding-bottom: clamp(2.1rem, 4.2vw, 3rem);
 }
 
 .native-info-page--life-quote .life-quote-native-types > .ag-panel-rail,
@@ -15097,73 +15097,43 @@
 }
 
 .native-info-page--life-quote .life-quote-native-types .service-native-card {
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  transform: none;
-  padding: clamp(1rem, 2.2vw, 1.4rem);
+  min-height: 100%;
+  border-color: rgba(9, 66, 93, 0.08);
+  box-shadow: 0 14px 30px rgba(16, 43, 64, 0.06);
+  padding: clamp(1.45rem, 2.2vw, 1.95rem);
 }
 
 .native-info-page--life-quote .life-quote-native-types .service-native-card:hover {
-  box-shadow: none;
-  transform: none;
+  transform: translateY(-6px) scale(1.015);
 }
 
 .native-info-page--life-quote .life-quote-native-types .service-native-card h3 {
   margin: 0;
-  color: var(--ag-color-atlantean);
   text-align: center;
-  font-family: var(--ag-font-body);
-  font-size: clamp(1.45rem, 2.5vw, 2rem);
-  line-height: 1.06;
-  letter-spacing: 0;
+  font-family: var(--ag-font-heading);
+  font-size: clamp(1.2rem, 1.9vw, 1.5rem);
+  line-height: 1.05;
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
 }
 
 .native-info-page--life-quote .life-quote-native-types .service-native-card p {
   margin-top: 0.8rem;
   color: var(--ag-color-super-grey);
   text-align: center;
-  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  font-size: clamp(1.08rem, 1.65vw, 1.24rem);
   line-height: 1.5;
 }
 
-.native-info-page--life-quote .life-quote-native-bridge {
-  background: #ffffff;
-  padding-top: clamp(0.8rem, 2vw, 1.35rem);
-  padding-bottom: clamp(1.8rem, 4vw, 2.8rem);
-}
-
-.native-info-page--life-quote .life-quote-native-bridge > .ag-panel-rail {
-  width: min(var(--ag-panel-content-max), calc(100% - (var(--ag-panel-gutter) * 2)));
-}
-
-.native-info-page--life-quote .life-quote-native-bridge h2 {
-  margin: 0;
+.native-info-page--life-quote .life-quote-native-types .service-native-card:nth-child(1) h3 {
   color: var(--ag-color-atlantean);
-  text-align: center;
-  font-size: clamp(2.3rem, 5vw, 4rem);
-  line-height: 0.98;
-  letter-spacing: 0;
 }
 
-.native-info-page--life-quote .life-quote-native-bridge .native-info-section-subtitle {
-  margin-top: clamp(0.6rem, 1.5vw, 0.95rem);
-  color: var(--ag-color-super-grey);
-  text-align: center;
-  font-size: clamp(1.45rem, 2.8vw, 2.2rem);
-  font-weight: 700;
-  line-height: 1.08;
+.native-info-page--life-quote .life-quote-native-types .service-native-card:nth-child(2) h3 {
+  color: var(--ag-color-mango);
 }
 
-.native-info-page--life-quote .life-quote-native-bridge > .ag-panel-rail > p {
-  margin-top: clamp(0.85rem, 1.8vw, 1.2rem);
-  max-width: 42ch;
-  margin-left: auto;
-  margin-right: auto;
-  color: var(--ag-color-super-grey);
-  text-align: center;
-  font-size: clamp(1.12rem, 2vw, 1.5rem);
-  line-height: 1.4;
+.native-info-page--life-quote .life-quote-native-types .service-native-card:nth-child(3) h3 {
+  color: var(--ag-color-sand-dark);
 }
 
 .native-info-page.native-info-page--life-quote.is-compact .service-native-hero .ag-panel-rail {
@@ -15313,16 +15283,14 @@
 }
 
 .native-info-page--group-life-quote .group-life-native-benefits .service-native-card {
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  padding: clamp(1rem, 2.2vw, 1.4rem);
-  transform: none;
+  min-height: 100%;
+  border-color: rgba(9, 66, 93, 0.08);
+  box-shadow: 0 14px 30px rgba(16, 43, 64, 0.06);
+  padding: clamp(1.45rem, 2.2vw, 1.95rem);
 }
 
 .native-info-page--group-life-quote .group-life-native-benefits .service-native-card:hover {
-  transform: none;
-  box-shadow: none;
+  transform: translateY(-6px) scale(1.015);
 }
 
 .native-dynamic-request {
@@ -15567,20 +15535,31 @@
 
 .native-info-page--group-life-quote .group-life-native-benefits .service-native-card h3 {
   margin: 0;
-  color: var(--ag-color-atlantean);
-  text-align: left;
-  font-family: var(--ag-font-body);
-  font-size: clamp(1.45rem, 2.5vw, 2rem);
-  line-height: 1.06;
-  letter-spacing: 0;
+  text-align: center;
+  font-family: var(--ag-font-heading);
+  font-size: clamp(1.2rem, 1.9vw, 1.5rem);
+  line-height: 1.05;
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
 }
 
 .native-info-page--group-life-quote .group-life-native-benefits .service-native-card p {
   margin-top: 0.8rem;
   color: var(--ag-color-super-grey);
-  text-align: left;
-  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  text-align: center;
+  font-size: clamp(1.08rem, 1.65vw, 1.24rem);
   line-height: 1.5;
+}
+
+.native-info-page--group-life-quote .group-life-native-benefits .service-native-card:nth-child(1) h3 {
+  color: var(--ag-color-atlantean);
+}
+
+.native-info-page--group-life-quote .group-life-native-benefits .service-native-card:nth-child(2) h3 {
+  color: var(--ag-color-mango);
+}
+
+.native-info-page--group-life-quote .group-life-native-benefits .service-native-card:nth-child(3) h3 {
+  color: var(--ag-color-sand-dark);
 }
 
 .native-info-page--group-life-quote .group-life-native-benefits > :is(.ag-panel-rail, .native-info-full-bleed) > .service-native-action-row {
@@ -16075,7 +16054,7 @@
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-details > .ag-panel-rail > h2 {
   margin-inline: auto;
-  margin-bottom: clamp(0.45rem, 1vw, 0.8rem);
+  margin-bottom: clamp(0.35rem, 0.85vw, 0.65rem);
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-details > .ag-panel-rail > h2 {
@@ -16088,7 +16067,7 @@
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-details > .ag-panel-rail > p {
   color: #ffffff;
-  margin-bottom: clamp(2.3rem, 4.2vw, 3.2rem);
+  margin-bottom: clamp(2.8rem, 5vw, 3.8rem);
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll > .native-info-full-bleed > h2,
@@ -16135,7 +16114,7 @@
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-details .service-native-card {
   min-height: 0;
-  padding: clamp(1.5rem, 3vw, 2.2rem);
+  padding: clamp(1.25rem, 2.55vw, 1.9rem) clamp(1.5rem, 3vw, 2.2rem) clamp(1.45rem, 2.8vw, 2.1rem);
   display: grid;
   align-content: start;
   gap: 0.55rem;
@@ -16162,6 +16141,7 @@
   font-weight: 700;
   letter-spacing: var(--ag-letter-spacing-helv-heading);
   color: var(--ag-color-super-grey);
+  text-align: center;
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3 {
@@ -16258,7 +16238,7 @@
   grid-column: 2;
   margin: 0;
   color: var(--ag-color-super-grey);
-  font-size: clamp(1.18rem, 1.95vw, 1.42rem);
+  font-size: clamp(1.3rem, 2.1vw, 1.58rem);
   line-height: 1.42;
 }
 

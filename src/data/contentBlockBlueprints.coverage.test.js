@@ -416,7 +416,6 @@ describe('content block blueprint coverage', () => {
     const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
     const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
     const typesBlock = blocks.find((block) => block?.id === 'life_types');
-    const bridgeBlock = blocks.find((block) => block?.id === 'quote_bridge');
     const requestBlock = blocks.find((block) => block?.id === 'request_form');
 
     expect(heroBlock?.settings?.line1Text).toBe('Get a life quote.');
@@ -427,13 +426,14 @@ describe('content block blueprint coverage', () => {
     expect(introBlock?.settings?.textTone).toBe('white');
     expect(typesBlock?.kind).toBe('card_grid');
     expect(typesBlock?.settings?.sectionClassName).toBe('life-quote-native-types');
+    expect(typesBlock?.settings?.cardStyle).toBe('card2');
+    expect(typesBlock?.settings?.showTitleDivider).toBe(false);
     expect(typesBlock?.settings?.card1Title).toBe('Term Life');
     expect(typesBlock?.settings?.card2Title).toBe('Whole Life');
     expect(typesBlock?.settings?.card3Title).toBe('Universal Life');
-    expect(bridgeBlock?.kind).toBe('content');
-    expect(bridgeBlock?.settings?.sectionClassName).toBe('life-quote-native-bridge');
-    expect(bridgeBlock?.settings?.anchorId).toBe('quote');
+    expect(blocks.some((block) => block?.id === 'quote_bridge')).toBe(false);
     expect(requestBlock?.kind).toBe('request_form');
+    expect(requestBlock?.settings?.anchorId).toBe('quote');
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
     blocks.forEach((block) => {
       expect(String(block?.settings?.targetSectionKey || ''), block?.id).toBe('');
@@ -986,6 +986,8 @@ describe('content block blueprint coverage', () => {
     expect(groupLifeBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('group-life-native-quote');
     expect(groupLifeBlocks.find((block) => block?.id === 'honor')?.settings?.sectionClassName).toBe('group-life-native-honor');
     expect(groupLifeBlocks.find((block) => block?.id === 'benefits')?.settings?.sectionClassName).toBe('group-life-native-benefits');
+    expect(groupLifeBlocks.find((block) => block?.id === 'benefits')?.settings?.cardStyle).toBe('card2');
+    expect(groupLifeBlocks.find((block) => block?.id === 'benefits')?.settings?.showTitleDivider).toBe(false);
     expectCanonicalLink(groupLifeBlocks.find((block) => block?.id === 'benefits_cta')?.settings, 'buttonLinkJson', {
       kind: 'internal',
       to: '/services/insurance/ministers-group-life-plan',

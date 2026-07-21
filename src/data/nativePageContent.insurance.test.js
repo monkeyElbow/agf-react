@@ -40,7 +40,9 @@ describe('insurance native page content', () => {
       openInNewWindow: true,
     });
     expect(certificateProofBlock?.settings?.title).toBe('Need proof of insurance?');
-    expect(certificateProofBlock?.settings?.titleClassName).toBe('is-mango');
+    expect(certificateProofBlock?.settings?.titleClassName).toBe('');
+    expect(certificateProofBlock?.settings?.bgTone).toBe('grey');
+    expect(certificateProofBlock?.settings?.textTone).toBe('white');
     expectLink(certificateProofBlock?.settings, 'buttonLinkJson', {
       kind: 'internal',
       to: '/services/insurance/certificate-request',
@@ -71,6 +73,7 @@ describe('insurance native page content', () => {
     expect(content?.intro).toBeUndefined();
     expect(content?.sections).toBeUndefined();
     expect(requestBlock?.settings?.sectionClassName).toBe('insurance-pc-native-quote');
+    expect(requestBlock?.settings?.anchorId).toBe('quote');
     expect(requestBlock?.settings?.targetSectionKey).toBeUndefined();
     expect(resourcesBlock?.settings?.card1Title).toBe('Additional coverages available');
     expect(noticeBlock?.settings?.fineprintDisclosureId).toBe('insurance-property-casualty-coverage-notice');

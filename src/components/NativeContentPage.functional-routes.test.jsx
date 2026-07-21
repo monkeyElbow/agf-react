@@ -398,11 +398,11 @@ describe('NativeContentPage functional routes', () => {
 
     expect(document.querySelector('.service-native-hero h1')?.textContent).toBe('Get a life quote.');
     expect(document.querySelector('.life-quote-native-types.native-dynamic-grid')).toBeTruthy();
-    expect(document.querySelector('.life-quote-native-bridge.native-dynamic-page-content')).toBeTruthy();
+    expect(document.querySelector('.life-quote-native-bridge.native-dynamic-page-content')).toBeNull();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
-    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Which is best for you?' })).toBeTruthy();
-    expect(screen.getByText('Use the quote form below to get started.')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="request_form"]')?.getAttribute('id')).toBe('quote');
+    expect(screen.queryByRole('heading', { name: 'Which is best for you?' })).toBeNull();
+    expect(screen.queryByText('Use the quote form below to get started.')).toBeNull();
     expect(screen.getByRole('heading', { name: 'Request a Life Insurance Quote' })).toBeTruthy();
   });
 
@@ -436,7 +436,7 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.insurance-pc-native-fineprint.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="site_feature"]')).toBeNull();
-    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="request_form"]')?.getAttribute('id')).toBe('quote');
     expect(screen.getByRole('heading', { name: 'Request a P&C quote.' })).toBeTruthy();
     expect(screen.getByText('Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'AG Insurance Program' })).toBeTruthy();
