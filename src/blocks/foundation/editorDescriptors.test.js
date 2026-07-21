@@ -5,7 +5,7 @@ import {
 } from './editorDescriptors';
 
 describe('editor descriptor transitional link helpers', () => {
-  it('builds explicit link field groups for transitional split link storage', () => {
+  it('builds a canonical-aware route-link control with hidden split compatibility metadata', () => {
     expect(defineTransitionalLinkFields({
       hrefId: 'buttonUrl',
       hrefLabel: 'Button URL / Path',
@@ -17,12 +17,10 @@ describe('editor descriptor transitional link helpers', () => {
       expect.objectContaining({
         id: 'buttonUrl',
         label: 'Button URL / Path',
-        type: 'text',
-      }),
-      expect.objectContaining({
-        id: 'buttonPageRef',
-        label: 'Button internal page path',
-        type: 'text',
+        type: 'route_link',
+        routeRefFieldId: 'buttonPageRef',
+        linkJsonFieldId: 'buttonLinkJson',
+        openInNewWindowFieldId: 'buttonOpenInNewWindow',
       }),
       expect.objectContaining({
         id: 'buttonOpenInNewWindow',
@@ -52,11 +50,9 @@ describe('editor descriptor transitional link helpers', () => {
       }),
       expect.objectContaining({
         id: 'buttonUrl',
-        type: 'text',
-      }),
-      expect.objectContaining({
-        id: 'buttonPageRef',
-        type: 'text',
+        type: 'route_link',
+        routeRefFieldId: 'buttonPageRef',
+        linkJsonFieldId: 'buttonLinkJson',
       }),
       expect.objectContaining({
         id: 'buttonStyle',

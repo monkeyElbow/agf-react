@@ -71,6 +71,31 @@ function getSplitLinkFindings({ pathname, block }) {
 }
 
 describe('content block blueprint coverage', () => {
+  it('does not expose split page-ref fields as editable authoring controls', () => {
+    const offenders = [];
+    Object.entries(contentBlockBlueprintsByPath).forEach(([pathname, blocks]) => {
+      (Array.isArray(blocks) ? blocks : []).forEach((block) => {
+        (Array.isArray(block?.editableFields) ? block.editableFields : []).forEach((field) => {
+          const fieldId = String(field?.id || '').trim();
+          if (fieldId.endsWith('PageRef')) {
+            offenders.push(`${pathname}:${block?.id || 'block'}:${fieldId}`);
+          }
+        });
+      });
+    });
+
+    getAllBlockTemplateBlueprints().forEach((block) => {
+      (Array.isArray(block?.editableFields) ? block.editableFields : []).forEach((field) => {
+        const fieldId = String(field?.id || '').trim();
+        if (fieldId.endsWith('PageRef')) {
+          offenders.push(`template:${block?.id || block?.kind || 'block'}:${fieldId}`);
+        }
+      });
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
   it('keeps explicit blueprint coverage for every non-admin site route', () => {
     const missing = sitePages
       .map((page) => String(page?.path || '').trim())

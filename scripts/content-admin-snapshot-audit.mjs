@@ -340,6 +340,16 @@ function scanBlocks({ recordLabel, rootName, pathname, blocks, findings }) {
       findings.push(createFinding('retired-block', 'Block is a retired 403(b) or planned-giving structure.', location));
     }
 
+    (Array.isArray(block?.editableFields) ? block.editableFields : []).forEach((field) => {
+      const fieldId = String(field?.id || '').trim();
+      if (fieldId.endsWith('PageRef')) {
+        findings.push(createFinding('split-link-page-ref-editable-field', 'Split link PageRef compatibility fields must not be exposed as editable fields.', {
+          ...location,
+          field: fieldId,
+        }));
+      }
+    });
+
     scanSplitLinkSettings({ settings, findings, location });
     scanCanonicalLinkJsonSettings({ settings, findings, location });
     scanCanonicalFormSettings({ block, settings, findings, location });

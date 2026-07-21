@@ -203,8 +203,10 @@ describe('canonical block registry', () => {
 
   it('keeps site-feature canonical and intentionally code-owned', () => {
     const definition = getBlockDefinition('site_feature');
-    const editableFieldIds = getEditableFieldsForKind('site_feature').map((field) => field.id);
+    const editableFields = getEditableFieldsForKind('site_feature');
+    const editableFieldIds = editableFields.map((field) => field.id);
     const featureIdField = definition?.schema?.fields?.find((field) => field.id === 'featureId');
+    const buttonUrlField = editableFields.find((field) => field.id === 'buttonUrl');
 
     expect(definition?.editorType).toBe('site_feature');
     expect(definition?.label).toBe('Site Feature');
@@ -218,9 +220,13 @@ describe('canonical block registry', () => {
       'sectionClassName',
       'buttonLabel',
       'buttonUrl',
-      'buttonPageRef',
       'buttonOpenInNewWindow',
     ]);
+    expect(buttonUrlField).toEqual(expect.objectContaining({
+      type: 'route_link',
+      routeRefFieldId: 'buttonPageRef',
+      linkJsonFieldId: 'buttonLinkJson',
+    }));
     expect(editableFieldIds.some((fieldId) => /layout|animation|image/i.test(fieldId))).toBe(false);
   });
 });

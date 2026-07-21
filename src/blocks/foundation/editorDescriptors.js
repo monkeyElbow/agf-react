@@ -20,25 +20,20 @@ export function defineTransitionalLinkFields({
   hrefId,
   hrefLabel = 'URL / Path',
   toId,
-  toLabel = 'Internal page path',
   openInNewWindowId = '',
   openInNewWindowLabel = 'Open in new window',
 } = {}) {
   const fields = [];
 
   if (hrefId) {
+    const baseId = String(toId || hrefId || '').replace(/(?:PageRef|Url|Path|Href)$/, '');
     fields.push(defineEditorField({
       id: hrefId,
       label: hrefLabel,
-      type: 'text',
-    }));
-  }
-
-  if (toId) {
-    fields.push(defineEditorField({
-      id: toId,
-      label: toLabel,
-      type: 'text',
+      type: 'route_link',
+      routeRefFieldId: toId || '',
+      linkJsonFieldId: baseId ? `${baseId}LinkJson` : '',
+      openInNewWindowFieldId: openInNewWindowId || '',
     }));
   }
 

@@ -626,12 +626,22 @@ function normalizeCtaFormCanonicalFieldSettings(rawSettings) {
   };
 }
 
+function stripSplitLinkPageRefEditableFields(editableFields) {
+  if (!Array.isArray(editableFields)) {
+    return editableFields;
+  }
+  return editableFields.filter((field) => !String(field?.id || '').trim().endsWith('PageRef'));
+}
+
 function normalizePageBlockState(pathname, block) {
   const nextBlock = cloneJson(block);
   if (nextBlock?.settings && typeof nextBlock.settings === 'object') {
     nextBlock.settings = normalizeSplitLinkFieldSettings(stripRetiredTargetBridgeSettings(nextBlock.settings), {
       stripSplitFields: true,
     });
+  }
+  if (Array.isArray(nextBlock.editableFields)) {
+    nextBlock.editableFields = stripSplitLinkPageRefEditableFields(nextBlock.editableFields);
   }
   if (
     String(nextBlock?.kind || '').trim().toLowerCase() === 'cta_form'

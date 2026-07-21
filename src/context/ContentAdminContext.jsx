@@ -1196,6 +1196,21 @@ function normalizeCtaFormCanonicalFieldsInBlocks(blocks) {
   });
 }
 
+function stripSplitLinkPageRefEditableFieldsInBlocks(blocks) {
+  return (Array.isArray(blocks) ? blocks : []).map((block) => {
+    if (!Array.isArray(block?.editableFields)) {
+      return block;
+    }
+
+    const editableFields = block.editableFields.filter((field) => (
+      !String(field?.id || '').trim().endsWith('PageRef')
+    ));
+    return editableFields.length === block.editableFields.length
+      ? block
+      : { ...block, editableFields };
+  });
+}
+
 function normalizeSplitLinkFieldsInBlocks(blocks) {
   return (Array.isArray(blocks) ? blocks : []).map((block) => {
     const settings = block?.settings && typeof block.settings === 'object'
@@ -1209,11 +1224,11 @@ function normalizeSplitLinkFieldsInBlocks(blocks) {
 }
 
 function normalizePageBlocksState(blocks) {
-  return normalizeSplitLinkFieldsInBlocks(stripTargetBridgeFieldsFromBlocks(normalizePresetBearingBlocks(
+  return stripSplitLinkPageRefEditableFieldsInBlocks(normalizeSplitLinkFieldsInBlocks(stripTargetBridgeFieldsFromBlocks(normalizePresetBearingBlocks(
     normalizeSplitLinkFieldsInBlocks(
       normalizeCtaFormCanonicalFieldsInBlocks(normalizeSingletonKindBlocks(dedupeBlocksByIdPreferLatest(blocks))),
     ),
-  )));
+  ))));
 }
 
 const RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS = [
