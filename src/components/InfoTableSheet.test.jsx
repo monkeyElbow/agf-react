@@ -41,8 +41,11 @@ describe('InfoTableSheet', () => {
     expect(container.querySelector('.info-table-sheet')?.getAttribute('data-info-table-first-column-header')).toBe('false');
     expect(container.querySelectorAll('tbody th[scope="row"]')).toHaveLength(0);
     expect(container.querySelectorAll('tbody td')).toHaveLength(2);
+    expect(container.querySelectorAll('tbody .info-table-sheet__cell-kicker')).toHaveLength(2);
+    expect(container.querySelectorAll('.info-table-sheet__card-value .info-table-sheet__cell-kicker')).toHaveLength(2);
     expect(screen.queryByRole('heading', { name: /eligibility/i })).toBeNull();
     expect(screen.getAllByText('Traditional IRA').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Roth IRA').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Eligibility').length).toBeGreaterThan(0);
   });
 });

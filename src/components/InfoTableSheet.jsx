@@ -14,6 +14,23 @@ function normalizeRows(rows = [], columnCount = 0) {
     : [];
 }
 
+function renderCellContent(cell, splitInlineLabel = false) {
+  const value = String(cell || '');
+  if (!splitInlineLabel || !value.includes('\n')) {
+    return value;
+  }
+
+  const [label, ...bodyParts] = value.split('\n');
+  const body = bodyParts.join('\n').trim();
+
+  return (
+    <>
+      <span className="info-table-sheet__cell-kicker">{label.trim()}</span>
+      {body ? <span className="info-table-sheet__cell-body">{body}</span> : null}
+    </>
+  );
+}
+
 export default function InfoTableSheet({
   headers = [],
   rows = [],
@@ -55,11 +72,15 @@ export default function InfoTableSheet({
                     <>
                       <th scope="row">{row[0]}</th>
                       {row.slice(1).map((cell, cellIndex) => (
-                        <td key={`${row[0]}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}>{cell}</td>
+                        <td key={`${row[0]}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}>
+                          {renderCellContent(cell)}
+                        </td>
                       ))}
                     </>
                   ) : row.map((cell, cellIndex) => (
-                    <td key={`${rowIndex + 1}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}>{cell}</td>
+                    <td key={`${rowIndex + 1}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}>
+                      {renderCellContent(cell, true)}
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -86,7 +107,9 @@ export default function InfoTableSheet({
                   className="info-table-sheet__card-cell"
                 >
                   <span className="info-table-sheet__card-label">{metricHeaders[cellIndex]}</span>
-                  <span className="info-table-sheet__card-value">{cell}</span>
+                  <span className="info-table-sheet__card-value">
+                    {renderCellContent(cell, !useFirstColumnHeader)}
+                  </span>
                 </div>
               ))}
             </div>

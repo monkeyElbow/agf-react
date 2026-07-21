@@ -950,6 +950,58 @@ describe('createDevContentAuthorityStore', () => {
     expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['comparison_table']);
   });
 
+  it('normalizes stale IRA comparison tables from the old Key difference column shape', () => {
+    const persistenceFile = makeTempFile();
+    const pathname = '/services/retirement/iras';
+    const state = {
+      pageHierarchy: {
+        [pathname]: {
+          path: pathname,
+          title: 'IRAs',
+        },
+      },
+      blocksByPath: {
+        [pathname]: [
+          {
+            id: 'comparison_table',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              tableHeadersJson: ['Key difference', 'Traditional IRA', 'Roth IRA'],
+              tableRowsJson: [
+                ['Eligibility', 'Must have earned income.', 'Must meet Roth IRA limits.'],
+              ],
+            },
+          },
+        ],
+      },
+      pathAliases: {},
+      collaborationByPath: {
+        [pathname]: {
+          blocks: {},
+          history: [],
+        },
+      },
+    };
+
+    fs.writeFileSync(persistenceFile, JSON.stringify({
+      initialized: true,
+      version: 1,
+      updatedAt: 1710000005000,
+      state,
+      baseSnapshot: state,
+    }));
+
+    const store = createStore(persistenceFile);
+    const comparisonBlock = store.getSnapshot().state.blocksByPath[pathname][0];
+
+    expect(comparisonBlock.settings.tableHeadersJson).toEqual(['Traditional IRA', 'Roth IRA']);
+    expect(comparisonBlock.settings.tableFirstColumnHeader).toBe(false);
+    expect(comparisonBlock.settings.tableRowsJson).toEqual([
+      ['Eligibility\nMust have earned income.', 'Eligibility\nMust meet Roth IRA limits.'],
+    ]);
+  });
+
   it('resets the shared state back to seed', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);

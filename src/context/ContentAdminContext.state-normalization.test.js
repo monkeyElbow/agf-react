@@ -54,6 +54,7 @@ describe('ContentAdminContext state normalization', () => {
       'managed-path-aliases',
       'retirement-403b-snapshot-repairs',
       'planned-giving-retired-static-comparison',
+      'retirement-ira-comparison-table-shape',
       'loans-dynamic-block-upgrade',
       'property-casualty-request-repair',
     ]);
@@ -441,6 +442,34 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(introBlock?.settings?.bodyHtml).toBe(defaultIntroBlock?.settings?.bodyHtml);
     expect(introBlock?.settings?.body).toBe(defaultIntroBlock?.settings?.body);
+  });
+
+  it('normalizes stale IRA comparison tables from the old Key difference column shape', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/iras': [
+          {
+            id: 'comparison_table',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              tableHeadersJson: ['Key difference', 'Traditional IRA', 'Roth IRA'],
+              tableRowsJson: [
+                ['Eligibility', 'Must have earned income.', 'Must meet Roth IRA limits.'],
+              ],
+            },
+          },
+        ],
+      },
+    });
+    const comparisonBlock = (normalized.blocksByPath['/services/retirement/iras'] || [])
+      .find((block) => block?.id === 'comparison_table');
+
+    expect(comparisonBlock?.settings?.tableHeadersJson).toEqual(['Traditional IRA', 'Roth IRA']);
+    expect(comparisonBlock?.settings?.tableFirstColumnHeader).toBe(false);
+    expect(comparisonBlock?.settings?.tableRowsJson).toEqual([
+      ['Eligibility\nMust have earned income.', 'Eligibility\nMust meet Roth IRA limits.'],
+    ]);
   });
 
   it('seeds property and casualty with standalone managed blocks', () => {

@@ -101,6 +101,7 @@ const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-
 const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
 const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
+const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
 const RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH = '/services/retirement/403b/403b-individual-enrollment';
 const RETIREMENT_403B_GROUP_ENROLLMENT_PATH = '/services/retirement/403b/403b-group-enrollment';
 const RETIREMENT_403B_GROUP_ENROLLMENT_LEGACY_PATH = '/services/retirement/403b-for-groups/403b-group-enrollment';
@@ -159,6 +160,15 @@ const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
       'normalizeRetiredBlockCollaborationEntry',
     ]),
     retireWhen: 'Planned giving shared, seed, backup, and revision snapshots cannot contain the retired static comparison matrix.',
+  },
+  {
+    id: 'retirement-ira-comparison-table-shape',
+    paths: Object.freeze([RETIREMENT_IRAS_PATH]),
+    helpers: Object.freeze([
+      'normalizeRetirementIraComparisonTableSettings',
+      'normalizeRetirementIraBlockSet',
+    ]),
+    retireWhen: 'IRA comparison snapshots cannot contain the old Key difference three-column table shape.',
   },
   {
     id: 'loans-dynamic-block-upgrade',
@@ -378,6 +388,54 @@ function isRetiredPlannedGivingComparisonMatrixBlock(block) {
 function normalizePlannedGivingOverviewBlockSet(blocks) {
   const safeBlocks = Array.isArray(blocks) ? blocks : [];
   return safeBlocks.filter((block) => !isRetiredPlannedGivingComparisonMatrixBlock(block));
+}
+
+function normalizeRetirementIraComparisonTableSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? { ...rawSettings } : {};
+  const headers = Array.isArray(settings.tableHeadersJson) ? settings.tableHeadersJson : [];
+  const rows = Array.isArray(settings.tableRowsJson) ? settings.tableRowsJson : [];
+  const headerKey = headers.map((header) => String(header || '').trim()).join('|');
+  const hasLegacyHeaders = headerKey === 'Key difference|Traditional IRA|Roth IRA';
+  const hasLegacyRows = rows.some((row) => Array.isArray(row) && row.length >= 3);
+
+  if (!hasLegacyHeaders && !hasLegacyRows) {
+    return settings;
+  }
+
+  return {
+    ...settings,
+    tableHeadersJson: ['Traditional IRA', 'Roth IRA'],
+    tableRowsJson: rows.map((row) => {
+      if (!Array.isArray(row) || row.length < 3) {
+        return row;
+      }
+      const label = String(row[0] || '').trim();
+      const traditional = String(row[1] || '').trim();
+      const roth = String(row[2] || '').trim();
+      return [
+        [label, traditional].filter(Boolean).join('\n'),
+        [label, roth].filter(Boolean).join('\n'),
+      ];
+    }),
+    tableFirstColumnHeader: false,
+  };
+}
+
+function normalizeRetirementIraBlockSet(blocks) {
+  const safeBlocks = Array.isArray(blocks) ? blocks : [];
+  return safeBlocks.map((block) => {
+    if (
+      block?.id === 'comparison_table'
+      && String(block?.kind || '').trim().toLowerCase() === 'content'
+      && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
+    ) {
+      return {
+        ...block,
+        settings: normalizeRetirementIraComparisonTableSettings(block.settings),
+      };
+    }
+    return block;
+  });
 }
 
 function normalizeRetiredBlockCollaborationEntry(entry, retiredBlockIds) {
@@ -2968,7 +3026,9 @@ export function normalizeStoredConfig(payload) {
       ? normalizeRetirement403bBlockSet(mergedWithMissingDefaults)
       : (path === PLANNED_GIVING_OVERVIEW_PATH
           ? normalizePlannedGivingOverviewBlockSet(mergedWithMissingDefaults)
-          : mergedWithMissingDefaults);
+          : (path === RETIREMENT_IRAS_PATH
+              ? normalizeRetirementIraBlockSet(mergedWithMissingDefaults)
+              : mergedWithMissingDefaults));
     blocksByPath[path] = normalizePageBlocksState(normalizedMergedBlocks);
   });
 

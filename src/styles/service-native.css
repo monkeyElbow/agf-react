@@ -19964,89 +19964,101 @@ p.impact-proof-story-proof-body {
   margin: 0 auto;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table {
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet {
+  max-width: 68rem;
+}
+
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__desktop-shell {
+  border: 0;
+  background: transparent;
+}
+
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table {
   min-width: 760px;
   border-collapse: separate;
   border-spacing: clamp(0.55rem, 1.3vw, 0.9rem) 0;
-  table-layout: fixed;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  overflow: hidden;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table th,
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table td {
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table th,
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table td {
   border: 0;
   padding: 0.9rem 1rem;
   vertical-align: top;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table thead th {
-  border-bottom: 1px solid rgba(214, 220, 224, 0.9);
-  background: linear-gradient(180deg, rgba(250, 249, 247, 0.92) 0%, #ffffff 100%);
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: 0.72rem;
-  font-weight: 700;
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table thead th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-family: var(--ag-font-body);
+  font-size: clamp(1.18rem, 1.22vw, 1.28rem);
+  font-weight: 780;
   letter-spacing: 0;
-  line-height: 1.16;
+  line-height: 1.05;
   text-align: left;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table thead th:first-child {
-  width: 25%;
-}
-
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table thead th:nth-child(2) {
-  background: var(--ag-color-atlantean);
-  color: #ffffff;
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table thead th:nth-child(1) {
+  background: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
   text-align: center;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table thead th:nth-child(3) {
-  background: var(--ag-color-mango);
-  color: #ffffff;
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table thead th:nth-child(2) {
+  background: linear-gradient(135deg, #f7b229 0%, var(--ag-color-mango) 100%);
   text-align: center;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table thead th + th,
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table tbody td + td {
-  border-left: 0;
-}
-
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table tbody td {
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody td {
+  min-height: 5.75rem;
   border-bottom: 1px solid rgba(222, 225, 229, 0.9);
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-body);
-  font-size: clamp(0.95rem, 1vw, 1rem);
+  font-size: clamp(1rem, 1.06vw, 1.08rem);
   font-weight: 650;
-  letter-spacing: -0.012em;
-  line-height: 1.42;
+  letter-spacing: 0;
+  line-height: 1.38;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table tbody tr:last-child td {
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table tbody td:first-child {
-  background: linear-gradient(180deg, rgba(248, 249, 250, 0.98) 0%, rgba(244, 246, 247, 0.94) 100%);
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-body);
-  font-size: 0.94rem;
-  font-weight: 780;
-  letter-spacing: -0.024em;
-  line-height: 1.16;
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody td:nth-child(1) {
+  background: #eef8fa;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table tbody td:nth-child(2) {
-  background: rgba(var(--ag-color-atlantean-rgb), 0.05);
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody td:nth-child(2) {
+  background: #fff6e8;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table tbody td:nth-child(3) {
-  background: rgba(250, 163, 26, 0.08);
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody td:nth-child(1) .info-table-sheet__cell-kicker {
+  color: var(--ag-color-atlantean-dark);
+}
+
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody td:nth-child(2) .info-table-sheet__cell-kicker {
+  color: #9b5800;
+}
+
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__card {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__card-cell:nth-child(1) {
+  background: #eef8fa;
+}
+
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__card-cell:nth-child(2) {
+  background: #fff6e8;
+}
+
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__card-cell:nth-child(1) .info-table-sheet__card-label,
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__card-cell:nth-child(1) .info-table-sheet__cell-kicker {
+  color: var(--ag-color-atlantean-dark);
+}
+
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__card-cell:nth-child(2) .info-table-sheet__card-label,
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__card-cell:nth-child(2) .info-table-sheet__cell-kicker {
+  color: #9b5800;
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison .service-native-note {
@@ -20061,8 +20073,8 @@ p.impact-proof-story-proof-body {
     width: calc(100% - (var(--ag-panel-gutter) * 0.85));
   }
 
-  .native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table th,
-  .native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap .data-table td {
+  .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table th,
+  .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table td {
     padding: 0.82rem 0.88rem;
   }
 }

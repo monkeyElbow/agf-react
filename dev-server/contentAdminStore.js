@@ -16,6 +16,7 @@ const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
 const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
+const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
 const RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS = Object.freeze([
   'targetSectionKey',
   'targetFineprintSectionKey',
@@ -626,6 +627,37 @@ function normalizeCtaFormCanonicalFieldSettings(rawSettings) {
   };
 }
 
+function normalizeRetirementIraComparisonTableSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? cloneJson(rawSettings) : {};
+  const headers = Array.isArray(settings.tableHeadersJson) ? settings.tableHeadersJson : [];
+  const rows = Array.isArray(settings.tableRowsJson) ? settings.tableRowsJson : [];
+  const headerKey = headers.map((header) => String(header || '').trim()).join('|');
+  const hasLegacyHeaders = headerKey === 'Key difference|Traditional IRA|Roth IRA';
+  const hasLegacyRows = rows.some((row) => Array.isArray(row) && row.length >= 3);
+
+  if (!hasLegacyHeaders && !hasLegacyRows) {
+    return settings;
+  }
+
+  return {
+    ...settings,
+    tableHeadersJson: ['Traditional IRA', 'Roth IRA'],
+    tableRowsJson: rows.map((row) => {
+      if (!Array.isArray(row) || row.length < 3) {
+        return row;
+      }
+      const label = String(row[0] || '').trim();
+      const traditional = String(row[1] || '').trim();
+      const roth = String(row[2] || '').trim();
+      return [
+        [label, traditional].filter(Boolean).join('\n'),
+        [label, roth].filter(Boolean).join('\n'),
+      ];
+    }),
+    tableFirstColumnHeader: false,
+  };
+}
+
 function canonicalizeRouteLinkEditableFields(editableFields) {
   if (!Array.isArray(editableFields)) {
     return editableFields;
@@ -694,6 +726,14 @@ function normalizePageBlockState(pathname, block) {
     && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
   ) {
     nextBlock.settings = normalizeGenerosityFundJoyfulGivingBillboardSettings(nextBlock?.settings);
+  }
+  if (
+    pathname === RETIREMENT_IRAS_PATH
+    && String(nextBlock?.id || '').trim() === 'comparison_table'
+    && String(nextBlock?.kind || '').trim().toLowerCase() === 'content'
+    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+  ) {
+    nextBlock.settings = normalizeRetirementIraComparisonTableSettings(nextBlock?.settings);
   }
   return nextBlock;
 }
