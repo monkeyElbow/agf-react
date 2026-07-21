@@ -1402,6 +1402,7 @@ function buildDynamicFeaturePanelSection(block, pathname) {
     fullBleed: Boolean(runtime.fullBleed),
     feature: {
       title: runtime.title,
+      titleHighlights: runtime.titleHighlights?.length ? runtime.titleHighlights : [],
       body: runtime.body ? [runtime.body] : [],
       html: runtime.bodyHtml || '',
       image: runtime.imageUrl || '',
@@ -6067,7 +6068,7 @@ export default function NativeContentPage({ page }) {
                         />
                       ) : null}
                       {feature.title ? (
-                        <h3>
+                        <h3 aria-label={Array.isArray(feature.titleHighlights) && feature.titleHighlights.length ? feature.title : undefined}>
                           {Array.isArray(feature.titleHighlights) && feature.titleHighlights.length
                             ? renderHighlightedText(feature.title, feature.titleHighlights)
                             : feature.title}

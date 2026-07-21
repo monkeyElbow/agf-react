@@ -458,7 +458,10 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'insurance-native-coverage',
+        title: 'Coverage options',
         card1Title: 'Property & Casualty',
+        card2Button2Style: 'dark',
+        card2Button2Tone: 'super-grey',
       },
     });
     expectCanonicalLink(coverageBlock?.settings, 'card2Button2LinkJson', {
@@ -475,6 +478,12 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'insurance-native-quote',
+        button2Style: 'dark',
+        button2Tone: 'super-grey',
+        titleSizeRem: 4.625,
+        titleLetterSpacingEm: -0.034,
+        subtitleSizeRem: 2.8125,
+        subtitleLetterSpacingEm: -0.03,
       },
     });
     expectCanonicalLink(quoteBlock?.settings, 'buttonLinkJson', {
@@ -490,6 +499,10 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'insurance-native-certificate-proof',
+        bgTone: 'grey',
+        textTone: 'white',
+        buttonStyle: 'blue',
+        buttonTone: 'white',
       },
     });
     expectCanonicalLink(certificateBlock?.settings, 'buttonLinkJson', {
@@ -501,6 +514,7 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'insurance-native-risk',
+        titleHighlightsJson: '[{"text":"Risk","className":"is-melon"}]',
       },
     });
     expectCanonicalLink(riskBlock?.settings, 'buttonLinkJson', {

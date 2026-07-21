@@ -952,6 +952,8 @@ describe('NativeContentPage functional routes', () => {
     const heroHeading = screen.getByRole('heading', { name: 'Impressive coverage' });
     const heroHighlightHeading = screen.getByText('churches & ministries').closest('h1');
     const introHeading = screen.getByRole('heading', { name: 'Protect what matters most.' });
+    const coverageHeading = screen.getByRole('heading', { name: 'Coverage options' });
+    const riskHeading = screen.getByRole('heading', { name: 'Risk Management' });
     const missionAssureHeading = screen.getByRole('heading', { name: 'Full coverage for mission trips, retreats, and everything in between.' });
     const quoteFormHeading = screen.getByRole('heading', { name: 'What coverage is best for your ministry?' });
 
@@ -959,6 +961,10 @@ describe('NativeContentPage functional routes', () => {
     expect(heroHighlightHeading?.textContent).toBe('Built for churches & ministries.');
     expect(heroHighlightHeading?.closest('section')?.getAttribute('data-block-id')).toBe('hero');
     expect(introHeading.closest('section')?.getAttribute('data-block-id')).toBe('intro');
+    expect(introHeading.closest('section')?.className).toContain('is-bg-blue');
+    expect(introHeading.closest('section')?.className).toContain('is-text-white');
+    expect(coverageHeading.closest('section')?.getAttribute('data-block-id')).toBe('coverage_solutions');
+    expect(riskHeading.querySelector('mark.is-melon')?.textContent).toBe('Risk');
     expect(missionAssureHeading.closest('section')?.getAttribute('data-block-id')).toBe('mission_assure');
     expect(quoteFormHeading.closest('section')?.className).toContain('insurance-native-cta');
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();

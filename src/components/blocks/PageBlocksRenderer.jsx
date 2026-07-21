@@ -1525,7 +1525,13 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
               aria-label={runtime.imageAlt || undefined}
             />
             <div className="service-native-dark-feature-copy">
-              {runtime.title ? <h3>{runtime.title}</h3> : null}
+              {runtime.title ? (
+                <h3 aria-label={runtime.titleHighlights?.length ? runtime.title : undefined}>
+                  {runtime.titleHighlights?.length
+                    ? renderHighlightedText(runtime.title, runtime.titleHighlights)
+                    : runtime.title}
+                </h3>
+              ) : null}
               {runtime.body ? <p>{runtime.body}</p> : null}
               {action ? (
                 <div className="service-native-action-row">
@@ -1576,7 +1582,13 @@ function FeaturePanelBlock({ block, resolveTo, ownership, hudAnchor }) {
               aria-label={runtime.imageAlt || undefined}
             />
             <div className="service-native-dark-feature-copy">
-              {runtime.title ? <h3>{runtime.title}</h3> : null}
+              {runtime.title ? (
+                <h3 aria-label={runtime.titleHighlights?.length ? runtime.title : undefined}>
+                  {runtime.titleHighlights?.length
+                    ? renderHighlightedText(runtime.title, runtime.titleHighlights)
+                    : runtime.title}
+                </h3>
+              ) : null}
               {bodyHtml ? (
                 <div className="native-info-rich-html" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
               ) : runtime.body ? (

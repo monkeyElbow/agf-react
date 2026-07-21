@@ -26923,11 +26923,11 @@
             "lineSpacing": 1.04,
             "extraLine": "It's protection, security, and confidence.",
             "extraLineTone": "",
-            "bgTone": "sand",
-            "textTone": "dark",
+            "bgTone": "blue",
+            "textTone": "white",
             "button1Label": "Request a quote",
             "button1Style": "blue",
-            "button1Tone": "atlantean",
+            "button1Tone": "white",
             "button2Label": "",
             "button2Style": "dark",
             "button2Tone": "super-grey",
@@ -27182,7 +27182,7 @@
           "kind": "card_grid",
           "mode": "dynamic",
           "settings": {
-            "title": "Coverage solutions",
+            "title": "Coverage options",
             "subtitle": "",
             "titleClassName": "",
             "titleHighlightsJson": "",
@@ -27264,7 +27264,9 @@
             "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/life-insurance-quote\"}",
             "card2Button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/group-term-life-insurance\"}",
             "card3ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/mission-assure\"}",
-            "card4ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://www.orsurety.com/commercial-bonds\"}"
+            "card4ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://www.orsurety.com/commercial-bonds\"}",
+            "card2Button2Style": "dark",
+            "card2Button2Tone": "super-grey"
           },
           "editableFields": [
             {
@@ -28770,17 +28772,19 @@
             "lineSpacing": 1,
             "titleFontFamily": "helv",
             "titleFontWeight": 700,
-            "titleSizeRem": 3.05,
-            "titleLetterSpacingEm": 0,
+            "titleSizeRem": 4.625,
+            "titleLetterSpacingEm": -0.034,
             "sectionClassName": "insurance-native-quote",
             "buttonLabel": "Life Insurance",
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
             "button2Label": "Property & Casualty",
-            "button2Style": "outline",
+            "button2Style": "dark",
             "button2Tone": "super-grey",
             "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/life-insurance-quote\"}",
-            "button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/property-casualty-insurance\"}"
+            "button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/property-casualty-insurance\"}",
+            "subtitleSizeRem": 2.8125,
+            "subtitleLetterSpacingEm": -0.03
           },
           "editableFields": [
             {
@@ -29256,13 +29260,13 @@
           "mode": "dynamic",
           "settings": {
             "title": "Need proof of insurance?",
-            "titleClassName": "is-mango",
+            "titleClassName": "",
             "titleHighlightsJson": "",
             "subtitle": "",
             "bodyHtml": "",
             "body": "",
-            "bgTone": "white",
-            "textTone": "dark",
+            "bgTone": "grey",
+            "textTone": "white",
             "justify": "center",
             "lineSpacing": 1,
             "titleFontFamily": "helv",
@@ -29271,8 +29275,8 @@
             "titleLetterSpacingEm": 0,
             "sectionClassName": "insurance-native-certificate-proof",
             "buttonLabel": "Certificate request",
-            "buttonStyle": "outline",
-            "buttonTone": "super-grey",
+            "buttonStyle": "blue",
+            "buttonTone": "white",
             "button2Label": "",
             "button2Style": "outline",
             "button2Tone": "super-grey",
@@ -29760,7 +29764,8 @@
             "buttonLabel": "Download the guide",
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
-            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf\"}"
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf\"}",
+            "titleHighlightsJson": "[{\"text\":\"Risk\",\"className\":\"is-melon\"}]"
           },
           "editableFields": [
             {

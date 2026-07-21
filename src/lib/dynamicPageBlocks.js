@@ -497,6 +497,7 @@ function buildSingleActionPromoRuntime(source, {
 
   return {
     title,
+    titleHighlights: parseTextHighlights(settings.titleHighlightsJson),
     body,
     ...(includeBodyHtml ? { bodyHtml } : {}),
     ...(includeImage ? { imageUrl, imageAlt } : {}),
