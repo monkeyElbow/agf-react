@@ -20092,10 +20092,6 @@ p.impact-proof-story-proof-body {
   padding-top: clamp(5.6rem, 8.5vw, 7rem);
 }
 
-.native-info-page--retirement-iras .retirement-ira-native-rates > .ag-panel-rail {
-  max-width: 58rem;
-}
-
 .native-info-page--retirement-iras .retirement-ira-native-rates > .ag-panel-rail > h2 {
   color: var(--ag-color-super-grey);
   font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;

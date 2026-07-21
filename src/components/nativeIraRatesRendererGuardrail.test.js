@@ -22,10 +22,9 @@ describe('native ira rates renderer guardrail', () => {
     expect(source).not.toContain('function RetirementIraRateTableWidget({ iraRates, ratesMeta }) {\n  const rows = Array.isArray(iraRates) ? iraRates : [];');
     expect(cssSource).toContain('.native-info-page--retirement-iras .retirement-ira-native-rates {');
     expect(cssSource).toContain('padding-top: clamp(5.6rem, 8.5vw, 7rem);');
-    expect(cssSource).toContain('.native-info-page--retirement-iras .retirement-ira-native-rates > .ag-panel-rail {');
-    expect(cssSource).toContain('max-width: 58rem;');
     expect(cssSource).toContain('.native-info-page--retirement-iras .retirement-ira-native-rates .ira-rates-sheet {');
     expect(cssSource).toContain('max-width: 44rem;');
+    expect(cssSource).not.toContain('.native-info-page--retirement-iras .retirement-ira-native-rates > .ag-panel-rail {\n  max-width: 58rem;');
     expect(cssSource).not.toContain('.native-info-page--retirement-iras .retirement-ira-native-rates .retirement-ira-rate-widget .data-table {');
   });
 });
