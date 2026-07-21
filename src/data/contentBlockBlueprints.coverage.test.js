@@ -1336,6 +1336,7 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'legacy-child-native-endowments-big-cta',
+        titleFontFamily: 'helv',
       },
     });
     expect(endowmentBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-legacy-form');

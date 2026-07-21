@@ -5540,6 +5540,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         textTone: 'dark',
         justify: 'center',
         lineSpacing: 1,
+        titleFontFamily: 'helv',
         buttonLabel: '',
         buttonUrl: '',
         buttonPageRef: '',

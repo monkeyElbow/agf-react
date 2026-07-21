@@ -81827,7 +81827,8 @@
             "button2Label": "",
             "button2Style": "outline",
             "button2Tone": "super-grey",
-            "sectionClassName": "legacy-child-native-endowments-big-cta"
+            "sectionClassName": "legacy-child-native-endowments-big-cta",
+            "titleFontFamily": "helv"
           },
           "editableFields": [
             {
