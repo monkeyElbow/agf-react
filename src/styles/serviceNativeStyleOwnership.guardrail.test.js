@@ -199,6 +199,8 @@ describe('service-native style ownership', () => {
     const source = readSource('./service-native.css');
 
     [
+      '.native-info-page--retirement-iras .retirement-child-native-ira-types {',
+      'padding-bottom: clamp(1.35rem, 2.9vw, 2.25rem);',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {',
       'display: block;',
       'min-height: 0;',
