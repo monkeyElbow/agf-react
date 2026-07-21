@@ -69,6 +69,7 @@ const SAMPLE_KIND_BY_EDITOR_TYPE = {
   hero: 'hero',
   hero_pie: 'hero_pie',
   calculator_cta: 'calculator_cta',
+  calculator_intro: { __sample: 'calculator_intro' },
   calculator_widget: 'calculator_widget',
   cta_band: 'cta_band',
   impact_stat: 'impact_stat',
@@ -399,6 +400,18 @@ const PARITY_ASSERTIONS = {
       });
     },
   },
+  calculator_intro: {
+    admin: (block) => {
+      sampleFieldLabels(block).forEach((label) => {
+        expect(screen.getAllByLabelText(label).length).toBeGreaterThan(0);
+      });
+    },
+    hud: (block) => {
+      sampleFieldLabels(block).forEach((label) => {
+        expect(screen.getAllByLabelText(label).length).toBeGreaterThan(0);
+      });
+    },
+  },
 };
 
 function cloneBlock(block) {
@@ -460,6 +473,30 @@ function getDynamicBlock(kindOrSelector) {
       settings: {
         certificatesHtml: '<p>Certificates disclosure copy.</p>',
         iraHtml: '<p>IRA disclosure copy.</p>',
+      },
+    };
+  }
+  if (selector.__sample === 'calculator_intro') {
+    return {
+      id: 'intro',
+      name: 'Calculator Intro',
+      kind: 'calculator_intro',
+      mode: 'dynamic',
+      editableFields: getEditableFieldsForKind('calculator_intro'),
+      settings: {
+        title: 'Take inventory of your financial picture.',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        body: 'Estimate what your net worth could be in the future based on specified growth rates.',
+        fullBleed: false,
+        spaceBeforeRem: 0,
+        spaceAfterRem: 0,
+        paddingTopRem: 2.4,
+        paddingBottomRem: 2.4,
+        contentMaxWidthPx: 980,
+        anchorId: '',
+        sectionClassName: 'calculator-tool-shell',
+        copyWrap: true,
       },
     };
   }

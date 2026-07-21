@@ -6741,6 +6741,9 @@ export function getMigratedBlockEditorComponent(kind, surface = 'admin') {
   if (token === 'calculator_cta') {
     return CalculatorCtaBlockEditor;
   }
+  if (token === 'calculator_intro') {
+    return CalculatorWidgetBlockEditor;
+  }
   if (token === 'calculator_widget') {
     return CalculatorWidgetBlockEditor;
   }

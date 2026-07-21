@@ -69,7 +69,7 @@ import {
   renderTextWithHighlights,
   shouldUseUniversalOutlineButtonLink,
 } from '../lib/dynamicPageBlocks';
-import { CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
+import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { buildNativeHudPanels } from '../lib/nativeHudPanels';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import CharitableGivingTableWidget from './CharitableGivingTableWidget';
@@ -995,7 +995,9 @@ function buildDynamicPageContentSection(block, pathname) {
   const blockKind = String(block?.kind || '').trim();
   const sectionClassBase = blockKind === CALCULATOR_WIDGET_KIND
     ? (pathname === '/test' ? 'test-dynamic-calculator-widget' : 'native-dynamic-calculator-widget')
-    : (pathname === '/test' ? 'test-dynamic-page-content' : 'native-dynamic-page-content');
+    : (blockKind === CALCULATOR_INTRO_KIND
+      ? (pathname === '/test' ? 'test-dynamic-calculator-intro' : 'native-dynamic-calculator-intro')
+      : (pathname === '/test' ? 'test-dynamic-page-content' : 'native-dynamic-page-content'));
 
   return {
     id: `${pathname}-page-content-${blockId}`,
@@ -4490,7 +4492,7 @@ export default function NativeContentPage({ page }) {
     }
 
     const dynamicSections = visibleBlocks.reduce((acc, block) => {
-      if (block.mode === 'dynamic' && (block.kind === 'content' || block.kind === CALCULATOR_WIDGET_KIND)) {
+      if (block.mode === 'dynamic' && (block.kind === 'content' || block.kind === CALCULATOR_INTRO_KIND || block.kind === CALCULATOR_WIDGET_KIND)) {
         const pageContentSection = buildDynamicPageContentSection(block, activePath);
         if (pageContentSection) {
           acc.push(pageContentSection);

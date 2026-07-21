@@ -1,5 +1,5 @@
 import { coerceLinkValue, coerceLinkValueFromFields, linkValueToLinkProps } from './linkValue';
-import { CALCULATOR_WIDGET_KIND } from './calculatorWidgetIdentity';
+import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from './calculatorWidgetIdentity';
 import { resolveTestimonialsBlockData } from './testimonials';
 import {
   createCtaContactPreferenceField,
@@ -2267,7 +2267,7 @@ export function buildDynamicTestimonialsFromBlock(block, { library = [] } = {}) 
 
 export function buildDynamicPageContentFromBlock(block) {
   const kind = String(block?.kind || '').trim();
-  if (!block || block.mode !== 'dynamic' || (kind !== 'content' && kind !== CALCULATOR_WIDGET_KIND)) {
+  if (!block || block.mode !== 'dynamic' || (kind !== 'content' && kind !== CALCULATOR_INTRO_KIND && kind !== CALCULATOR_WIDGET_KIND)) {
     return null;
   }
 

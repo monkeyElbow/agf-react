@@ -11886,6 +11886,8 @@
 
 .service-native-section.native-dynamic-page-content,
 .service-native-section.test-dynamic-page-content,
+.service-native-section.native-dynamic-calculator-intro,
+.service-native-section.test-dynamic-calculator-intro,
 .service-native-section.native-dynamic-calculator-widget,
 .service-native-section.test-dynamic-calculator-widget {
   margin-top: var(--dyn-content-margin-top, 0);
@@ -11896,6 +11898,8 @@
 
 .service-native-section.native-dynamic-page-content .native-info-rich-html,
 .service-native-section.test-dynamic-page-content .native-info-rich-html,
+.service-native-section.native-dynamic-calculator-intro .native-info-rich-html,
+.service-native-section.test-dynamic-calculator-intro .native-info-rich-html,
 .service-native-section.native-dynamic-calculator-widget .native-info-rich-html,
 .service-native-section.test-dynamic-calculator-widget .native-info-rich-html {
   width: min(var(--dyn-content-max-width, 980px), 100%);

@@ -21,7 +21,7 @@ import { buildCardGridPresetSettings } from '../lib/cardGridPresets';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { buildColumnsPresetSettings } from '../lib/columnsPresets';
 import { buildCtaBandPresetSettings } from '../lib/ctaBandPresets';
-import { CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
+import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { getTokenSwatch } from '../lib/colorSystem';
 import { PAGE_CONTENT_IDENTITY } from '../lib/pageContentIdentity';
 import {
@@ -81,6 +81,7 @@ const requestFormTitleHighlightToneOptions = [
 
 const sharedDynamicPageContentEditableFields = getEditableFieldsForKind(PAGE_CONTENT_IDENTITY.kind);
 const calculatorCtaEditableFields = getEditableFieldsForKind('calculator_cta');
+const calculatorIntroEditableFields = getEditableFieldsForKind('calculator_intro');
 const calculatorWidgetEditableFields = getEditableFieldsForKind('calculator_widget');
 const columnsEditableFields = getEditableFieldsForKind('columns');
 const ctaFormEditableFields = getEditableFieldsForKind('cta_form');
@@ -528,17 +529,14 @@ function createCalculatorToolBlueprints({
     },
     {
       id: 'intro',
-      name: 'Intro',
-      kind: PAGE_CONTENT_IDENTITY.kind,
+      name: 'Calculator Intro',
+      kind: CALCULATOR_INTRO_KIND,
       mode: 'dynamic',
       settings: {
         title: introTitle,
         titleClassName: '',
         titleHighlightsJson: '',
-        subtitle: '',
         body: introBody,
-        html: '',
-        widget: '',
         fullBleed: false,
         spaceBeforeRem: 0,
         spaceAfterRem: 0,
@@ -548,22 +546,8 @@ function createCalculatorToolBlueprints({
         anchorId: '',
         sectionClassName: 'calculator-tool-shell',
         copyWrap: true,
-        buttonLabel: '',
-        buttonUrl: '',
-        buttonPageRef: '',
-        buttonOpenInNewWindow: false,
-        buttonDocumentId: '',
-        addressClassName: '',
-        addressTitle: '',
-        addressLines: '',
-        tableHeadersJson: '',
-        tableRowsJson: '',
-        tableValueAlignment: '',
-        tableChartId: '',
-        fineprint: '',
-        fineprintDisclosureId: '',
       },
-      editableFields: sharedDynamicPageContentEditableFields,
+      editableFields: calculatorIntroEditableFields,
     },
     {
       id: 'calculator_tool',

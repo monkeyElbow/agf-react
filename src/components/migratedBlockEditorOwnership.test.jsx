@@ -49,6 +49,8 @@ describe('migrated block editor ownership', () => {
     expect(getMigratedBlockEditorComponent('hero_pie', 'hud')).toBe(HeroPieBlockEditor);
     expect(getMigratedBlockEditorComponent('calculator_cta', 'admin')).toBe(CalculatorCtaBlockEditor);
     expect(getMigratedBlockEditorComponent('calculator_cta', 'hud')).toBe(CalculatorCtaBlockEditor);
+    expect(getMigratedBlockEditorComponent('calculator_intro', 'admin')).toBe(CalculatorWidgetBlockEditor);
+    expect(getMigratedBlockEditorComponent('calculator_intro', 'hud')).toBe(CalculatorWidgetBlockEditor);
     expect(getMigratedBlockEditorComponent('calculator_widget', 'admin')).toBe(CalculatorWidgetBlockEditor);
     expect(getMigratedBlockEditorComponent('calculator_widget', 'hud')).toBe(CalculatorWidgetBlockEditor);
     expect(getMigratedBlockEditorComponent('cta_band', 'admin')).toBe(CtaBandBlockEditor);
@@ -92,7 +94,7 @@ describe('migrated block editor ownership', () => {
   });
 
   it('keeps migrated editor sections sourced from one canonical registry path', () => {
-    ['content', 'calculator_cta', 'calculator_widget', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip'].forEach((kind) => {
+    ['content', 'calculator_cta', 'calculator_intro', 'calculator_widget', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip'].forEach((kind) => {
       expect(getBlockEditorSections(kind, 'admin').length).toBeGreaterThan(0);
       expect(getBlockEditorSections(kind, 'hud').length).toBeGreaterThan(0);
     });

@@ -291,7 +291,10 @@ describe('NativeContentPage functional routes', () => {
     );
 
     const widgetSection = document.querySelector('[data-block-id="calculator_tool"]');
+    const introSection = document.querySelector('[data-block-id="intro"]');
 
+    expect(introSection?.className).toContain('service-native-intro');
+    expect(introSection?.className).not.toContain('native-dynamic-page-content');
     expect(widgetSection).toBeTruthy();
     expect(widgetSection?.className).toContain('calculator-tool-widget');
     expect(widgetSection?.className).toContain('native-dynamic-calculator-widget');

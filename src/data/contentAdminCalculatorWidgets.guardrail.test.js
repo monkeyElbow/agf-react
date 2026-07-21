@@ -4,8 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import {
+  CALCULATOR_INTRO_BLOCK_ID,
+  CALCULATOR_INTRO_KIND,
   CALCULATOR_WIDGET_BLOCK_ID,
   CALCULATOR_WIDGET_KIND,
+  normalizeCalculatorIntroBlock,
   normalizeCalculatorWidgetBlock,
 } from '../lib/calculatorWidgetIdentity';
 
@@ -21,13 +24,28 @@ const STANDALONE_CALCULATOR_PATHS = Object.freeze([
 ]);
 
 const RETIRED_PAGE_CONTENT_SETTING_KEYS = Object.freeze([
-  'title',
-  'titleClassName',
-  'titleHighlightsJson',
   'subtitle',
-  'body',
   'html',
-  'copyWrap',
+  'buttonLabel',
+  'buttonUrl',
+  'buttonPageRef',
+  'buttonOpenInNewWindow',
+  'buttonDocumentId',
+  'addressClassName',
+  'addressTitle',
+  'addressLines',
+  'tableHeadersJson',
+  'tableRowsJson',
+  'tableValueAlignment',
+  'tableChartId',
+  'fineprint',
+  'fineprintDisclosureId',
+]);
+
+const RETIRED_INTRO_PAGE_CONTENT_SETTING_KEYS = Object.freeze([
+  'subtitle',
+  'html',
+  'widget',
   'buttonLabel',
   'buttonUrl',
   'buttonPageRef',
@@ -48,22 +66,62 @@ function readJson(relativePath) {
   return JSON.parse(readFileSync(path.resolve(repoRoot, relativePath), 'utf8'));
 }
 
-function collectCalculatorToolBlocksFromSnapshotRoot(root = {}) {
+function collectCalculatorBlocksFromSnapshotRoot(root = {}, blockId) {
   return [
     ...STANDALONE_CALCULATOR_PATHS.flatMap((pathname) => (
       (Array.isArray(root?.blocksByPath?.[pathname]) ? root.blocksByPath[pathname] : [])
-        .filter((block) => block?.id === CALCULATOR_WIDGET_BLOCK_ID)
+        .filter((block) => block?.id === blockId)
         .map((block) => ({ pathname, source: 'blocksByPath', block }))
     )),
     ...STANDALONE_CALCULATOR_PATHS.flatMap((pathname) => (
       (Array.isArray(root?.revisionsByPath?.[pathname]) ? root.revisionsByPath[pathname] : [])
         .flatMap((revision, revisionIndex) => (
           (Array.isArray(revision?.snapshot?.blocks) ? revision.snapshot.blocks : [])
-            .filter((block) => block?.id === CALCULATOR_WIDGET_BLOCK_ID)
+            .filter((block) => block?.id === blockId)
             .map((block) => ({ pathname, source: `revision:${revisionIndex}`, block }))
         ))
     )),
   ];
+}
+
+function expectCalculatorIntroShape(entries) {
+  expect(entries.length).toBeGreaterThan(0);
+  entries.forEach(({ pathname, source, block }) => {
+    expect(block?.kind, `${pathname} ${source} kind`).toBe(CALCULATOR_INTRO_KIND);
+    expect(block?.name, `${pathname} ${source} name`).toBe('Calculator Intro');
+    expect(Object.keys(block?.settings || {}).sort(), `${pathname} ${source} settings`).toEqual([
+      'anchorId',
+      'body',
+      'contentMaxWidthPx',
+      'copyWrap',
+      'fullBleed',
+      'paddingBottomRem',
+      'paddingTopRem',
+      'sectionClassName',
+      'spaceAfterRem',
+      'spaceBeforeRem',
+      'title',
+      'titleClassName',
+      'titleHighlightsJson',
+    ]);
+    expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual([
+      'title',
+      'titleClassName',
+      'titleHighlightsJson',
+      'body',
+      'fullBleed',
+      'spaceBeforeRem',
+      'spaceAfterRem',
+      'paddingTopRem',
+      'paddingBottomRem',
+      'contentMaxWidthPx',
+      'copyWrap',
+      'anchorId',
+      'sectionClassName',
+    ]);
+    expect((block?.editableFields || []).some((field) => field.label === 'Page Content HTML'), `${pathname} ${source} page content label`).toBe(false);
+    expect(RETIRED_INTRO_PAGE_CONTENT_SETTING_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(block?.settings || {}, key)), `${pathname} ${source} retired settings`).toEqual([]);
+  });
 }
 
 function expectCalculatorWidgetShape(entries) {
@@ -98,32 +156,63 @@ function expectCalculatorWidgetShape(entries) {
   });
 }
 
-describe('calculator widget page-content ghost guardrail', () => {
+describe('calculator page-content ghost guardrail', () => {
   it('keeps standalone calculator blueprints out of the Page Content block kind and fields', () => {
-    const entries = STANDALONE_CALCULATOR_PATHS.flatMap((pathname) => (
+    const introEntries = STANDALONE_CALCULATOR_PATHS.flatMap((pathname) => (
+      (contentBlockBlueprintsByPath[pathname] || [])
+        .filter((block) => block?.id === CALCULATOR_INTRO_BLOCK_ID)
+        .map((block) => ({ pathname, source: 'blueprint', block }))
+    ));
+    const widgetEntries = STANDALONE_CALCULATOR_PATHS.flatMap((pathname) => (
       (contentBlockBlueprintsByPath[pathname] || [])
         .filter((block) => block?.id === CALCULATOR_WIDGET_BLOCK_ID)
         .map((block) => ({ pathname, source: 'blueprint', block }))
     ));
 
-    expectCalculatorWidgetShape(entries);
+    expectCalculatorIntroShape(introEntries);
+    expectCalculatorWidgetShape(widgetEntries);
   });
 
-  it('keeps shared, base, revision, and seed calculator_tool snapshots scrubbed', () => {
+  it('keeps shared, base, revision, and seed standalone calculator snapshots scrubbed', () => {
     const shared = readJson('dev-data/content-admin-shared.json');
     const seed = readJson('dev-data/content-admin-seed-baseline.json');
-    const entries = [
-      ...collectCalculatorToolBlocksFromSnapshotRoot(shared.state),
-      ...collectCalculatorToolBlocksFromSnapshotRoot(shared.baseSnapshot),
-      ...collectCalculatorToolBlocksFromSnapshotRoot(shared),
-      ...collectCalculatorToolBlocksFromSnapshotRoot(seed.seedState),
+    const introEntries = [
+      ...collectCalculatorBlocksFromSnapshotRoot(shared.state, CALCULATOR_INTRO_BLOCK_ID),
+      ...collectCalculatorBlocksFromSnapshotRoot(shared.baseSnapshot, CALCULATOR_INTRO_BLOCK_ID),
+      ...collectCalculatorBlocksFromSnapshotRoot(shared, CALCULATOR_INTRO_BLOCK_ID),
+      ...collectCalculatorBlocksFromSnapshotRoot(seed.seedState, CALCULATOR_INTRO_BLOCK_ID),
+    ];
+    const widgetEntries = [
+      ...collectCalculatorBlocksFromSnapshotRoot(shared.state, CALCULATOR_WIDGET_BLOCK_ID),
+      ...collectCalculatorBlocksFromSnapshotRoot(shared.baseSnapshot, CALCULATOR_WIDGET_BLOCK_ID),
+      ...collectCalculatorBlocksFromSnapshotRoot(shared, CALCULATOR_WIDGET_BLOCK_ID),
+      ...collectCalculatorBlocksFromSnapshotRoot(seed.seedState, CALCULATOR_WIDGET_BLOCK_ID),
     ];
 
-    expectCalculatorWidgetShape(entries);
+    expectCalculatorIntroShape(introEntries);
+    expectCalculatorWidgetShape(widgetEntries);
   });
 
-  it('normalizes stale content-kind calculator tools before they can re-enter state', () => {
-    const staleBlock = {
+  it('normalizes stale content-kind standalone calculator blocks before they can re-enter state', () => {
+    const staleIntroBlock = {
+      id: CALCULATOR_INTRO_BLOCK_ID,
+      name: 'Page Content',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Take inventory of your financial picture.',
+        body: 'Estimate what your net worth could be in the future based on specified growth rates.',
+        html: '',
+        widget: '',
+        fullBleed: false,
+        paddingTopRem: 1.25,
+        sectionClassName: 'calculator-tool-shell',
+      },
+      editableFields: [
+        { id: 'html', label: 'Page Content HTML', type: 'html' },
+      ],
+    };
+    const staleWidgetBlock = {
       id: CALCULATOR_WIDGET_BLOCK_ID,
       name: 'Page Content',
       kind: 'content',
@@ -142,11 +231,18 @@ describe('calculator widget page-content ghost guardrail', () => {
       ],
     };
 
+    expectCalculatorIntroShape([
+      {
+        pathname: '/calculators/net-worth',
+        source: 'normalizer',
+        block: normalizeCalculatorIntroBlock(staleIntroBlock),
+      },
+    ]);
     expectCalculatorWidgetShape([
       {
         pathname: '/calculators/net-worth',
         source: 'normalizer',
-        block: normalizeCalculatorWidgetBlock(staleBlock),
+        block: normalizeCalculatorWidgetBlock(staleWidgetBlock),
       },
     ]);
   });
