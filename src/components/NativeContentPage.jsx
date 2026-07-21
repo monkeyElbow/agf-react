@@ -910,6 +910,33 @@ function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {
   };
 }
 
+function buildDynamicHeroShellSection(block) {
+  const runtime = buildDynamicHeroFromBlock(block);
+  if (!runtime) {
+    return null;
+  }
+
+  return {
+    id: 'dynamic-hero',
+    blockId: String(block?.id || '').trim() || undefined,
+    nativeHero: runtime,
+  };
+}
+
+function buildDynamicIntroShellSection(block, { includeTestClassName = false } = {}) {
+  const introConfig = buildNativeIntroConfig(block, { includeTestClassName });
+  if (!introConfig) {
+    return null;
+  }
+
+  return {
+    id: 'dynamic-intro',
+    blockId: String(block?.id || '').trim() || undefined,
+    nativeIntro: introConfig,
+    className: introConfig.className || '',
+  };
+}
+
 function buildNativeBillboardSection(block, { includeTestClassName = false } = {}) {
   const runtime = buildDynamicBillboardFromBlock(block);
   if (!runtime) {
@@ -4478,7 +4505,7 @@ export default function NativeContentPage({ page }) {
           intro: adminIntro,
         };
       }
-    } else {
+    } else if (!isBlockOnlyManagedPage) {
       const adminHero = buildDynamicHeroFromBlock(heroBlock);
       if (adminHero) {
         nextBaseContent = {
@@ -4492,6 +4519,22 @@ export default function NativeContentPage({ page }) {
     }
 
     const dynamicSections = visibleBlocks.reduce((acc, block) => {
+      if (isBlockOnlyManagedPage && block.mode === 'dynamic' && block.kind === 'hero') {
+        const heroSection = buildDynamicHeroShellSection(block);
+        if (heroSection) {
+          acc.push(heroSection);
+        }
+        return acc;
+      }
+
+      if (isBlockOnlyManagedPage && block.mode === 'dynamic' && block.kind === 'intro') {
+        const introSection = buildDynamicIntroShellSection(block);
+        if (introSection) {
+          acc.push(introSection);
+        }
+        return acc;
+      }
+
       if (block.mode === 'dynamic' && (block.kind === 'content' || block.kind === CALCULATOR_INTRO_KIND || block.kind === CALCULATOR_WIDGET_KIND)) {
         const pageContentSection = buildDynamicPageContentSection(block, activePath);
         if (pageContentSection) {
@@ -4592,7 +4635,9 @@ export default function NativeContentPage({ page }) {
     }
 
     const dynamicIntroBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'intro');
-    const adminIntro = buildNativeIntroConfig(dynamicIntroBlock, { includeTestClassName: isTestPage });
+    const adminIntro = !isBlockOnlyManagedPage
+      ? buildNativeIntroConfig(dynamicIntroBlock, { includeTestClassName: isTestPage })
+      : null;
     if (adminIntro) {
       const baseIntro = nextBaseContent?.intro;
       const baseIntroObj = baseIntro && typeof baseIntro === 'object'
@@ -4623,8 +4668,8 @@ export default function NativeContentPage({ page }) {
 
     return {
       ...nextBaseContent,
-      hideHero: Boolean(nextBaseContent.hideHero) || fullyHiddenBlockIds.has('hero'),
-      hideIntro: Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has('intro'),
+      hideHero: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideHero) || fullyHiddenBlockIds.has('hero')),
+      hideIntro: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has('intro')),
       sections: nextSections,
     };
   }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, templatePath, testimonialsLibrary]);
@@ -4731,7 +4776,8 @@ export default function NativeContentPage({ page }) {
   const compactClass = content.compact ? ' is-compact' : '';
   const hideHero = Boolean(content.hideHero);
   const hideIntro = Boolean(content.hideIntro);
-  const shouldRenderIntro = !hideIntro && hasIntroContent;
+  const shouldRenderHero = !isBlockOnlyManagedPage && !hideHero;
+  const shouldRenderIntro = !isBlockOnlyManagedPage && !hideIntro && hasIntroContent;
   const legalDoc = content?.legalDocument || null;
   const visibleEditablePageBlocks = useMemo(
     () => editablePageBlocks.filter((block) => !toBoolean(block?.hidden)),
@@ -4889,7 +4935,7 @@ export default function NativeContentPage({ page }) {
   }, [heroInspection]);
   const heroHudPanel = dynamicHeroBlock ? (hudPanelByBlockId[dynamicHeroBlock.id] || null) : null;
   const introHudPanel = dynamicIntroBlock ? (hudPanelByBlockId[dynamicIntroBlock.id] || null) : null;
-  const showHeroHud = showFrontHud && !hideHero && Boolean(heroHudPanel);
+  const showHeroHud = showFrontHud && shouldRenderHero && Boolean(heroHudPanel);
   const showIntroHud = showFrontHud && shouldRenderIntro && Boolean(introHudPanel);
   const getOwnershipVisualForBlockId = (blockId) => {
     if (!showFrontHud || !editableBlockPath || !blockId) {
@@ -5631,7 +5677,7 @@ export default function NativeContentPage({ page }) {
       {showFrontHud && hudDockPanels.length ? (
         <FrontHudPageWorkflow pathname={adminHudEditPath} reviewHref={adminHudEditHref} placement="bar" />
       ) : null}
-      {!hideHero ? (
+      {shouldRenderHero ? (
         <section
           ref={dynamicHeroBlock ? heroHudSectionRef : undefined}
           className={`service-native-hero is-bg-${renderedHeroBgTone} is-justify-${renderedHeroJustify}${showHeroHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isHeroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId(dynamicHeroBlock?.id).className || ''}`}
@@ -5934,12 +5980,12 @@ export default function NativeContentPage({ page }) {
           ? (firstDynamicSectionIndexByBlockId[dynamicSectionBlockId] ?? -1)
           : -1;
         const isDynamicSectionHudTarget = Boolean(dynamicSectionHudPanelId) && sectionIndex === firstDynamicSectionIndex;
-        const activePanelIsHeroOrIntro = hasOpenHudPanel && (
+        const activePanelIsShellHeroOrIntro = !isBlockOnlyManagedPage && hasOpenHudPanel && (
           activeHudPanelId === heroHudPanelId
           || activeHudPanelId === introHudPanelId
         );
         const activePanelUsesSectionFocus = hasOpenHudPanel && (
-          !activePanelIsHeroOrIntro
+          !activePanelIsShellHeroOrIntro
           && (firstDynamicSectionIndexByBlockId[activeHudBlockId] ?? -1) >= 0
         );
         const isSectionHudFocusTarget = hasOpenHudPanel && (
@@ -5955,6 +6001,209 @@ export default function NativeContentPage({ page }) {
         const showCtaSectionHud = isDynamicCtaSection && showSectionHud;
         const showPageContentSectionHud = isDynamicPageContentSection && showSectionHud;
         const showRequestSectionHud = isDynamicRequestSection && showSectionHud;
+
+        if (section.nativeHero) {
+          const sectionHero = dynamicSectionBlockId === String(dynamicHeroBlock?.id || '').trim()
+            ? (renderedHero || section.nativeHero)
+            : section.nativeHero;
+          const sectionHeroBgTone = normalizeHeroBgTone(sectionHero?.bgTone);
+          const sectionHeroJustify = normalizeHeroJustify(sectionHero?.justify);
+          const sectionHeroActions = Array.isArray(sectionHero?.actions)
+            ? sectionHero.actions.map((action) => toNativeActionItem(action)).filter(Boolean)
+            : [];
+          const sectionHeroActionJustify = normalizeHeroJustify(sectionHero?.actionJustify || 'center');
+          const sectionHeroActionRowClass = buildActionRowClassName(sectionHeroActionJustify, 'center');
+          const sectionHeroRailStyle = getHeroRailInlineStyle(sectionHero);
+          const isBlockHeroHudTarget = hasOpenHudPanel && activeHudBlockId === dynamicSectionBlockId && isDynamicSectionHudTarget;
+          const showBlockHeroInlineHudEditor = !isMobileFrontHud && shouldRenderHeroInlineEditor({
+            hudEnabled: showSectionHud,
+            hasDynamicHero: true,
+            activeHudPanelId: hasOpenHudPanel ? activeHudPanelId : '',
+            heroHudPanelId: dynamicSectionHudPanelId,
+          });
+
+          return (
+            <section
+              key={sectionKey}
+              id={section.anchorId || undefined}
+              ref={(node) => {
+                if (dynamicSectionBlockId && isDynamicSectionHudTarget) {
+                  dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;
+                }
+              }}
+              className={`service-native-hero is-bg-${sectionHeroBgTone} is-justify-${sectionHeroJustify}${showSectionHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBlockHeroHudTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${sectionOwnership.className || ''}`}
+              data-block-id={dynamicSectionBlockId || undefined}
+              data-mobile-front-hud-selectable={showSectionHud && isMobileFrontHud ? 'true' : undefined}
+              data-mobile-front-hud-selected={isMobileHudPanelSelected(dynamicSectionHudPanelId) ? 'true' : undefined}
+              data-mobile-front-hud-label={showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Hero') : undefined}
+            >
+              <BlockOwnershipOverlay ownership={sectionOwnership} />
+              <div className="ag-panel-rail" style={sectionHeroRailStyle}>
+                {showBlockHeroInlineHudEditor ? (
+                  <HeroInlineLiveEditor
+                    lines={heroHudEditableLines}
+                    activeLineKey={heroActiveLine}
+                    fontSize={heroHudTitleSize}
+                    lineHeight={heroHudLineHeight}
+                    lineGap={heroHudLineGap}
+                    letterSpacing={heroHudLetterSpacingEm}
+                    onLineTextChange={handleHeroHudLineTextChange}
+                    commitOnBlurOnly
+                    readOnly={isForeignOwnedBlockOwnership(sectionOwnership)}
+                    onLineInteract={(lineKey) => {
+                      openHudPanel(dynamicSectionHudPanelId);
+                      setHeroActiveLine(lineKey);
+                    }}
+                    setLineInputRef={(lineKey, node) => {
+                      heroLineInputRefs.current[lineKey] = node;
+                    }}
+                    renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}
+                    resolveLineClassName={(line, index) => (
+                      resolveHeroLineDisplayClassName(
+                        String(line.className || '').trim(),
+                        sectionHeroBgTone,
+                        `line${index + 1}`,
+                      )
+                    )}
+                  />
+                ) : (
+                  <HeroTitle hero={sectionHero || { title: page.title }} />
+                )}
+                {sectionHeroActions.length ? (
+                  <div className={sectionHeroActionRowClass}>
+                    {sectionHeroActions.map((item) => (
+                      <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              {showSectionHud && !isMobileFrontHud ? (
+                <FrontHudAnchorTag
+                  label={dynamicSectionPanel?.label || 'Hero'}
+                  isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
+                  onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
+                  layerClassName="is-hero"
+                  style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                />
+              ) : null}
+            </section>
+          );
+        }
+
+        if (section.nativeIntro) {
+          const sectionIntro = section.nativeIntro;
+          const sectionIntroParagraphs = Array.isArray(sectionIntro.body) ? sectionIntro.body : [];
+          const sectionIntroActions = Array.isArray(sectionIntro.actions) ? sectionIntro.actions : [];
+          const sectionIntroJustify = normalizeHeroJustify(sectionIntro.justify);
+          const sectionIntroLineSpacing = normalizeIntroLineSpacing(sectionIntro.lineSpacing);
+          const sectionIntroBodyHtml = normalizeHtmlContent(sectionIntro.bodyHtml);
+          const isBlockIntroHudTarget = hasOpenHudPanel && activeHudBlockId === dynamicSectionBlockId && isDynamicSectionHudTarget;
+          const sectionIntroImage = sectionIntro.image || '';
+          const sectionIntroSplit = Boolean(sectionIntroImage && sectionIntro.layout === 'split');
+
+          return (
+            <section
+              key={sectionKey}
+              id={section.anchorId || undefined}
+              ref={(node) => {
+                if (dynamicSectionBlockId && isDynamicSectionHudTarget) {
+                  dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;
+                }
+              }}
+              className={`service-native-intro${sectionIntroSplit ? ' is-split' : ''}${section.className ? ` ${section.className}` : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBlockIntroHudTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${sectionOwnership.className || ''}`}
+              data-block-id={dynamicSectionBlockId || undefined}
+              data-mobile-front-hud-selectable={showSectionHud && isMobileFrontHud ? 'true' : undefined}
+              data-mobile-front-hud-selected={isMobileHudPanelSelected(dynamicSectionHudPanelId) ? 'true' : undefined}
+              data-mobile-front-hud-label={showSectionHud && isMobileFrontHud ? (dynamicSectionPanel?.label || 'Intro') : undefined}
+            >
+              <BlockOwnershipOverlay ownership={sectionOwnership} />
+              <div className="ag-panel-rail">
+                <div className={`service-native-intro-shell${sectionIntroSplit ? ' has-media' : ''}`}>
+                  <div
+                    className={`service-native-intro-copy is-justify-${sectionIntroJustify}${sectionIntro.copyClassName ? ` ${sectionIntro.copyClassName}` : ''}`}
+                    style={{ '--intro-heading-line-height': String(sectionIntroLineSpacing) }}
+                  >
+                    {sectionIntro.heading ? (
+                      <h2
+                        className={`${sectionIntro.headingClassName || ''}${showSectionHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+                        onClick={showSectionHud && allowOnPageClickEdit ? (event) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, event) : undefined}
+                        onKeyDown={showSectionHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, (keyEvent) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, keyEvent)) : undefined}
+                        role={showSectionHud && allowOnPageClickEdit ? 'button' : undefined}
+                        tabIndex={showSectionHud && allowOnPageClickEdit ? 0 : undefined}
+                        aria-label={showSectionHud && allowOnPageClickEdit ? 'Edit intro heading' : undefined}
+                      >
+                        {Array.isArray(sectionIntro.headingHighlights) && sectionIntro.headingHighlights.length
+                          ? renderHighlightedText(sectionIntro.heading, sectionIntro.headingHighlights)
+                          : sectionIntro.heading}
+                      </h2>
+                    ) : null}
+                    {sectionIntroBodyHtml ? (
+                      <SafeRichText
+                        as="div"
+                        className={`native-info-rich-html${showSectionHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
+                        html={sectionIntroBodyHtml}
+                        onClick={showSectionHud && allowOnPageClickEdit ? (event) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, event) : undefined}
+                        onKeyDown={showSectionHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, (keyEvent) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, keyEvent)) : undefined}
+                        role={showSectionHud && allowOnPageClickEdit ? 'button' : undefined}
+                        tabIndex={showSectionHud && allowOnPageClickEdit ? 0 : undefined}
+                        aria-label={showSectionHud && allowOnPageClickEdit ? 'Edit intro body HTML' : undefined}
+                      />
+                    ) : (
+                      sectionIntroParagraphs.map((paragraph) => (
+                        <p
+                          key={paragraph}
+                          className={showSectionHud && allowOnPageClickEdit ? 'admin-front-hud-click-edit-target' : undefined}
+                          onClick={showSectionHud && allowOnPageClickEdit ? (event) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, event) : undefined}
+                          onKeyDown={showSectionHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, (keyEvent) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, keyEvent)) : undefined}
+                          role={showSectionHud && allowOnPageClickEdit ? 'button' : undefined}
+                          tabIndex={showSectionHud && allowOnPageClickEdit ? 0 : undefined}
+                          aria-label={showSectionHud && allowOnPageClickEdit ? 'Edit intro body HTML' : undefined}
+                        >
+                          {renderTextWithStrong(paragraph)}
+                        </p>
+                      ))
+                    )}
+                    {sectionIntro.emphasis ? (
+                      <p
+                        className={`native-info-intro-emphasis${sectionIntro.emphasisClassName ? ` ${sectionIntro.emphasisClassName}` : ''}${showSectionHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
+                        style={sectionIntro.emphasisStyle}
+                        onClick={showSectionHud && allowOnPageClickEdit ? (event) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, event) : undefined}
+                        onKeyDown={showSectionHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, (keyEvent) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, keyEvent)) : undefined}
+                        role={showSectionHud && allowOnPageClickEdit ? 'button' : undefined}
+                        tabIndex={showSectionHud && allowOnPageClickEdit ? 0 : undefined}
+                        aria-label={showSectionHud && allowOnPageClickEdit ? 'Edit intro extra line' : undefined}
+                      >
+                        {renderTextWithStrong(sectionIntro.emphasis)}
+                      </p>
+                    ) : null}
+                    {sectionIntroActions.length ? (
+                      <div className={buildActionRowClassName(sectionIntroJustify, 'center')}>
+                        {sectionIntroActions.map((item) => (
+                          <Action key={`${item.label}-${item.to || item.href || item.documentId}`} item={item} />
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  {sectionIntroSplit ? (
+                    <figure className="service-native-intro-media">
+                      <img src={sectionIntroImage} alt={sectionIntro.imageAlt || ''} loading="lazy" />
+                    </figure>
+                  ) : null}
+                </div>
+              </div>
+              {showSectionHud && !isMobileFrontHud ? (
+                <FrontHudAnchorTag
+                  label={dynamicSectionPanel?.label || 'Intro'}
+                  isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
+                  onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
+                  layerClassName="is-intro"
+                  anchorClassName="is-intro"
+                  style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                />
+              ) : null}
+            </section>
+          );
+        }
 
         if (section.siteFeatureRuntime?.runtimeKey === 'legacy_giving_stewardship_story') {
           const runtime = section.siteFeatureRuntime;

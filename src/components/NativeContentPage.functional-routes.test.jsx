@@ -699,7 +699,7 @@ describe('NativeContentPage functional routes', () => {
         contentBlockBlueprintsByPath['/about-us/impact'] || []
       ).map((block) => ({
         ...block,
-        hidden: false,
+        hidden: block.hidden,
       })),
     };
 

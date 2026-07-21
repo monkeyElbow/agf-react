@@ -123,6 +123,8 @@ export function toBlockOnlyManagedPageShell(content) {
     ...content,
     hero: null,
     intro: null,
+    hideHero: false,
+    hideIntro: false,
     preIntroSections: [],
     sections: [],
     actions: [],

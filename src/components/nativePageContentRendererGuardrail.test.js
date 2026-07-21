@@ -20,13 +20,31 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('blockKind === CALCULATOR_INTRO_KIND');
     expect(source).toContain("'native-dynamic-calculator-intro'");
     expect(source).toContain("'native-dynamic-calculator-widget'");
-    expect(source).toContain('const shouldRenderIntro = !hideIntro && hasIntroContent;');
+    expect(source).toContain('const shouldRenderIntro = !isBlockOnlyManagedPage && !hideIntro && hasIntroContent;');
     expect(source).toContain('const showIntroHud = showFrontHud && shouldRenderIntro && Boolean(introHudPanel);');
     expect(source).toContain('{shouldRenderIntro ? (');
     expect(source).toContain('const pageContentSection = buildDynamicPageContentSection(block, activePath);');
     expect(source).toContain("if (block.mode === 'dynamic' && (block.kind === 'content' || block.kind === CALCULATOR_INTRO_KIND || block.kind === CALCULATOR_WIDGET_KIND)) {");
     expect(source).toContain("const dynamicSectionPanel = dynamicSectionBlockId ? (hudPanelByBlockId[dynamicSectionBlockId] || null) : null;");
     expect(source).not.toContain("if (block.id === 'page_content') {");
+  });
+
+  it('keeps block-only hero and intro blocks on the ordered dynamic section path instead of shell slots', () => {
+    const source = readSource('./NativeContentPage.jsx');
+    const shellSource = readSource('../lib/managedPageShells.js');
+
+    expect(source).toContain('function buildDynamicHeroShellSection(block) {');
+    expect(source).toContain('function buildDynamicIntroShellSection(block, { includeTestClassName = false } = {}) {');
+    expect(source).toContain("if (isBlockOnlyManagedPage && block.mode === 'dynamic' && block.kind === 'hero') {");
+    expect(source).toContain("if (isBlockOnlyManagedPage && block.mode === 'dynamic' && block.kind === 'intro') {");
+    expect(source).toContain('const adminIntro = !isBlockOnlyManagedPage');
+    expect(source).toContain('const shouldRenderHero = !isBlockOnlyManagedPage && !hideHero;');
+    expect(source).toContain('hideHero: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideHero) || fullyHiddenBlockIds.has(\'hero\')),');
+    expect(source).toContain('hideIntro: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has(\'intro\')),');
+    expect(shellSource).toContain('hero: null,');
+    expect(shellSource).toContain('intro: null,');
+    expect(shellSource).toContain('hideHero: false,');
+    expect(shellSource).toContain('hideIntro: false,');
   });
 
   it('keeps site features on the shared dynamic section path instead of bespoke page ownership', () => {

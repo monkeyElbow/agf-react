@@ -124,6 +124,8 @@ describe('managed page shells', () => {
       compact: true,
       hero: null,
       intro: null,
+      hideHero: false,
+      hideIntro: false,
       preIntroSections: [],
       sections: [],
       actions: [],

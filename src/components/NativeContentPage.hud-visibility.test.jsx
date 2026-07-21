@@ -225,7 +225,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.queryByLabelText('Open in admin content editor (new window)')).toBeNull();
   });
 
-  it('does not emit native hero drift warnings for planned giving when no dynamic hero block exists', () => {
+  it('does not emit native hero drift warnings or fallback hero content for block-only pages without a hero block', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mockBlocksByPath = {
       '/services/planned-giving': [],
@@ -242,7 +242,8 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Planned Giving' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Planned Giving' })).toBeNull();
+    expect(document.querySelector('.service-native-hero')).toBeNull();
     expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('Native hero drift detected'));
 
     warnSpy.mockRestore();
@@ -462,7 +463,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     });
   });
 
-  it('shows hero and intro HUD controls on the impact page without surfacing an empty page-content panel', () => {
+  it('keeps hidden impact hero and intro blocks out of the HUD while showing block-owned sections', () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
       '/about-us/impact': [
@@ -471,7 +472,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           name: 'Hero',
           kind: 'hero',
           mode: 'dynamic',
-          hidden: false,
+          hidden: true,
           settings: {
             animationPreset: 'default',
             bgTone: 'white',
