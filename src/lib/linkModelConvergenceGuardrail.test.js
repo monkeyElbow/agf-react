@@ -45,6 +45,7 @@ describe('link model convergence guardrail', () => {
     expect(snapshotAuditSource).toContain('split-link-internal-target-drift');
     expect(snapshotAuditSource).toContain('split-link-page-ref-missing');
     expect(snapshotAuditSource).toContain('split-link-target-conflict');
+    expect(snapshotAuditSource).toContain('split-link-page-ref-persisted');
     expect(snapshotAuditSource).toContain('canonical-link-json-invalid');
     expect(snapshotAuditSource).toContain('canonical-link-json-missing');
     expect(snapshotAuditSource).toContain('canonical-link-json-mismatch');

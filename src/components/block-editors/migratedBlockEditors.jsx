@@ -61,6 +61,8 @@ import {
 import {
   coerceLinkValue,
   getCanonicalLinkJsonFieldId,
+  resolveEditableHrefFromLinkFields,
+  resolveRouteRefFromLinkFields,
   serializeLinkValue,
 } from '../../lib/linkValue';
 import { getVisibleDynamicColumnSlots } from '../../lib/dynamicColumns';
@@ -835,7 +837,7 @@ function JustifyPillControl({ label, value, options, onChange, className = '' })
   );
 }
 
-function commitSplitRouteLinkSettings(onSettingChange, hrefFieldId, routeRefFieldId, nextHrefValue, nextRouteRefValue) {
+function commitCanonicalRouteLinkWithSplitMirror(onSettingChange, hrefFieldId, routeRefFieldId, nextHrefValue, nextRouteRefValue) {
   const baseFieldId = String(routeRefFieldId || hrefFieldId || '').replace(/(?:PageRef|Url|Path|Href)$/, '');
   const linkJsonFieldId = getCanonicalLinkJsonFieldId(baseFieldId);
   const routeRef = String(nextRouteRefValue || '').trim();
@@ -866,6 +868,22 @@ function commitSplitRouteLinkSettings(onSettingChange, hrefFieldId, routeRefFiel
   if (linkJsonFieldId) {
     onSettingChange(linkJsonFieldId, linkJsonValue);
   }
+}
+
+function resolveSplitRouteLinkEditableHref(settings, hrefFieldId, routeRefFieldId) {
+  return resolveEditableHrefFromLinkFields(settings, {
+    hrefKeys: [hrefFieldId],
+    toKeys: routeRefFieldId ? [routeRefFieldId] : [],
+    openInNewWindowKeys: [String(hrefFieldId || '').replace(/(?:Url|Path|Href)$/, 'OpenInNewWindow')],
+  });
+}
+
+function resolveSplitRouteLinkRouteRef(settings, hrefFieldId, routeRefFieldId) {
+  return resolveRouteRefFromLinkFields(settings, {
+    hrefKeys: [hrefFieldId],
+    toKeys: routeRefFieldId ? [routeRefFieldId] : [],
+    openInNewWindowKeys: [String(hrefFieldId || '').replace(/(?:Url|Path|Href)$/, 'OpenInNewWindow')],
+  });
 }
 
 function RouteLinkField({
@@ -1477,14 +1495,20 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
 
   if (field.type === 'route_link') {
     const routeRefFieldId = String(field.routeRefFieldId || '').trim();
+    const resolvedValue = routeRefFieldId
+      ? resolveSplitRouteLinkEditableHref(settings, field.id, routeRefFieldId)
+      : value;
+    const resolvedRouteRefValue = routeRefFieldId
+      ? resolveSplitRouteLinkRouteRef(settings, field.id, routeRefFieldId)
+      : '';
     return (
       <RouteLinkField
-        value={value}
-        routeRefValue={routeRefFieldId ? settings?.[routeRefFieldId] : ''}
+        value={resolvedValue}
+        routeRefValue={resolvedRouteRefValue}
         onChange={onChange}
         onRouteRefChange={routeRefFieldId ? (nextValue) => onSettingChange(routeRefFieldId, nextValue) : undefined}
         onRouteLinkChange={routeRefFieldId ? (nextValue, nextRouteRefValue) => {
-          commitSplitRouteLinkSettings(onSettingChange, field.id, routeRefFieldId, nextValue, nextRouteRefValue);
+          commitCanonicalRouteLinkWithSplitMirror(onSettingChange, field.id, routeRefFieldId, nextValue, nextRouteRefValue);
         } : undefined}
         routeOptions={routeOptions}
       />
@@ -3713,8 +3737,8 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [] }) 
   const introDraftSettings = useMemo(() => ({
     ...settings,
     bodyHtml: toEditorHtml(settings.bodyHtml, settings.body),
-    button1Url: String(settings.button1PageRef || settings.button1Url || ''),
-    button2Url: String(settings.button2PageRef || settings.button2Url || ''),
+    button1Url: resolveSplitRouteLinkEditableHref(settings, 'button1Url', 'button1PageRef'),
+    button2Url: resolveSplitRouteLinkEditableHref(settings, 'button2Url', 'button2PageRef'),
   }), [settings]);
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
@@ -4090,8 +4114,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
   const settings = block.settings || {};
   const billboardDraftSettings = useMemo(() => ({
     ...settings,
-    buttonUrl: String(settings.buttonPageRef || settings.buttonUrl || ''),
-    button2Url: String(settings.button2PageRef || settings.button2Url || ''),
+    buttonUrl: resolveSplitRouteLinkEditableHref(settings, 'buttonUrl', 'buttonPageRef'),
+    button2Url: resolveSplitRouteLinkEditableHref(settings, 'button2Url', 'button2PageRef'),
   }), [settings]);
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
@@ -4297,16 +4321,19 @@ function resolvePresetFieldList(fieldById, presetFieldIds = [], fallbackFieldIds
   }).filter(Boolean);
 }
 
-function readEditorLocalDrafts(settings = {}, fieldIds = []) {
+function readEditorLocalDrafts(settings = {}, fieldIds = [], routeFieldIdByFieldId = {}) {
   return (Array.isArray(fieldIds) ? fieldIds : []).reduce((drafts, fieldId) => {
-    drafts[fieldId] = String(settings?.[fieldId] || '');
+    const routeRefFieldId = routeFieldIdByFieldId[fieldId];
+    drafts[fieldId] = routeRefFieldId
+      ? resolveSplitRouteLinkEditableHref(settings, fieldId, routeRefFieldId)
+      : String(settings?.[fieldId] || '');
     return drafts;
   }, {});
 }
 
 function readEditorRouteRefDrafts(settings = {}, routeFieldIdByFieldId = {}) {
   return Object.entries(routeFieldIdByFieldId || {}).reduce((drafts, [fieldId, routeRefFieldId]) => {
-    drafts[fieldId] = String(settings?.[routeRefFieldId] || '');
+    drafts[fieldId] = resolveSplitRouteLinkRouteRef(settings, fieldId, routeRefFieldId);
     return drafts;
   }, {});
 }
@@ -4336,15 +4363,15 @@ function useBufferedStringFieldDrafts({
     () => sortPages(Array.isArray(routeOptions) ? routeOptions : []),
     [routeOptions],
   );
-  const [draftValues, setDraftValues] = useState(() => readEditorLocalDrafts(settings, normalizedFieldIds));
+  const [draftValues, setDraftValues] = useState(() => readEditorLocalDrafts(settings, normalizedFieldIds, routeFieldIdByFieldId));
   const [routeRefDraftValues, setRouteRefDraftValues] = useState(() => (
     readEditorRouteRefDrafts(settings, routeFieldIdByFieldId)
   ));
   const [dirtyFieldIds, setDirtyFieldIds] = useState([]);
   const commitTimersRef = useRef(new Map());
   const externalDraftValues = useMemo(
-    () => readEditorLocalDrafts(settings, normalizedFieldIds),
-    [normalizedFieldIds, settings],
+    () => readEditorLocalDrafts(settings, normalizedFieldIds, routeFieldIdByFieldId),
+    [normalizedFieldIds, routeFieldIdByFieldId, settings],
   );
   const externalRouteRefValues = useMemo(
     () => readEditorRouteRefDrafts(settings, routeFieldIdByFieldId),
@@ -4500,7 +4527,7 @@ function useBufferedStringFieldDrafts({
         : { ...current, [fieldId]: nextRouteRefValue }
     ));
     setDirtyFieldIds((current) => (current.includes(fieldId) ? current : [...current, fieldId]));
-    commitSplitRouteLinkSettings(onSettingChange, fieldId, routeRefFieldId, nextValue, nextRouteRefValue);
+    commitCanonicalRouteLinkWithSplitMirror(onSettingChange, fieldId, routeRefFieldId, nextValue, nextRouteRefValue);
   };
 
   const commitRouteLinkHref = (fieldId, nextValue) => {
@@ -4840,7 +4867,7 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
         : { ...current, buttonUrl: nextValue }
     ));
     setDirtyFieldIds((current) => (current.includes('buttonUrl') ? current : [...current, 'buttonUrl']));
-    commitSplitRouteLinkSettings(onSettingChange, 'buttonUrl', 'buttonPageRef', nextValue, nextRouteRefValue);
+    commitCanonicalRouteLinkWithSplitMirror(onSettingChange, 'buttonUrl', 'buttonPageRef', nextValue, nextRouteRefValue);
   };
 
   const scheduleDraftCommit = (fieldId, nextValue, options = {}) => {

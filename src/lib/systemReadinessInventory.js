@@ -129,8 +129,8 @@ export const SYSTEM_2_0_READINESS_TARGETS = Object.freeze([
   {
     id: 'links-canonical-object',
     status: 'partially-complete',
-    currentAdapter: 'canonical runtime link value object with guarded transitional snapshot/editor field readers',
-    retireWhen: 'runtime, editor, and snapshots all store one canonical link object shape',
+    currentAdapter: 'canonical LinkJson snapshot storage with guarded split-field import/editor compatibility mirrors',
+    retireWhen: 'editable field schemas and editor controls no longer expose split URL/PageRef/OpenInNewWindow ids',
     pass: 'Pass 7',
   },
   {

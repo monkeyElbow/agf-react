@@ -166,6 +166,11 @@ function scanSplitLinkSettings({ settings, findings, location }) {
       return;
     }
 
+    findings.push(createFinding('split-link-page-ref-persisted', 'Split link PageRef compatibility fields must not persist after canonical LinkJson migration.', {
+      ...location,
+      field: key,
+    }));
+
     const pageRef = trimSettingValue(value);
     const baseKey = key.replace(/PageRef$/, '');
     const hrefKeys = getSplitLinkHrefKeys(settings, baseKey);

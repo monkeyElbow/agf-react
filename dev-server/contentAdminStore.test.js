@@ -3,7 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createDevContentAuthorityStore } from './contentAdminStore';
-import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue';
+import {
+  normalizeSplitLinkFieldSettings,
+  parseLinkValueJson,
+} from '../src/lib/linkValue';
 
 function createActor(overrides = {}) {
   return {
@@ -17,6 +20,16 @@ function createActor(overrides = {}) {
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function expectLinkJson(settings, fieldId, expectedLink) {
+  expect(parseLinkValueJson(settings?.[fieldId])).toEqual(expect.objectContaining(expectedLink));
+}
+
+function expectNoSplitSettings(settings, fieldIds) {
+  fieldIds.forEach((fieldId) => {
+    expect(Object.prototype.hasOwnProperty.call(settings || {}, fieldId), `${fieldId} should be stripped`).toBe(false);
+  });
 }
 
 function buildSeedState() {
@@ -561,9 +574,12 @@ describe('createDevContentAuthorityStore', () => {
     const persistedBlock = readPersistedRecord(persistenceFile).state.blocksByPath['/services/loans'][0];
 
     expect(saved.ok).toBe(true);
-    expect(persistedBlock.settings.buttonUrl).toBe('/contact-us');
-    expect(persistedBlock.settings.buttonPageRef).toBe('/contact-us');
-    expect(persistedBlock.settings.buttonOpenInNewWindow).toBe(false);
+    expectLinkJson(persistedBlock.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/contact-us',
+      openInNewWindow: false,
+    });
+    expectNoSplitSettings(persistedBlock.settings, ['buttonUrl', 'buttonPageRef', 'buttonOpenInNewWindow']);
   });
 
   it('persists the shared site announcement for other clients', () => {
@@ -826,7 +842,10 @@ describe('createDevContentAuthorityStore', () => {
     expect(restoredBlocks.some((block) => block.id === 'strategy_enroll_cta')).toBe(true);
     expect(restoredBlocks.some((block) => block.id === 'page_content')).toBe(false);
     expect(restoredLoanDetails.settings.title).toBe("Retired Ministers' Housing Allowance");
-    expect(restoredLoanDetails.settings.buttonPageRef).toBe('/calculators');
+    expectLinkJson(restoredLoanDetails.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/calculators',
+    });
     expect(restored.state.collaborationByPath[pathname].blocks.strategy_enroll_cta).toBeTruthy();
     expect(restored.state.collaborationByPath[pathname].blocks.page_content).toBeUndefined();
     expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['strategy_enroll_cta']);
@@ -869,7 +888,7 @@ describe('createDevContentAuthorityStore', () => {
     const history = store.getRevisionHistory(pathname);
     const expectedBlocks = cleanState.blocksByPath[pathname].map((block) => ({
       ...block,
-      settings: normalizeSplitLinkFieldSettings(block.settings),
+      settings: normalizeSplitLinkFieldSettings(block.settings, { stripSplitFields: true }),
     }));
 
     expect(snapshot.state.blocksByPath[pathname]).toEqual(expectedBlocks);
@@ -970,16 +989,18 @@ describe('createDevContentAuthorityStore', () => {
     store.resetFromSeed(buildGenerosityFundSeedState(), { actor: createActor() });
 
     const heroBlock = store.getSnapshot().state.blocksByPath['/services/planned-giving/generosity-fund'][0];
-    expect(heroBlock.settings.button1Url).toBe('https://secure.agfinancial.org/generosityfund/signup');
-    expect(heroBlock.settings.button2Url).toBe('');
-    expect(heroBlock.settings.button2PageRef).toBe('');
+    expectLinkJson(heroBlock.settings, 'button1LinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/generosityfund/signup',
+    });
+    expectNoSplitSettings(heroBlock.settings, ['button1Url', 'button2Url', 'button2PageRef']);
     expect(heroBlock.settings.button2Action).toBe('open_cta_form');
     expect(heroBlock.settings.button2TargetAnchorId).toBe('traditional-daf-inline-form');
     expect(heroBlock.settings.button2TargetBlockId).toBe('');
 
     const reloaded = createStore(persistenceFile);
     const reloadedHero = reloaded.getSnapshot().state.blocksByPath['/services/planned-giving/generosity-fund'][0];
-    expect(reloadedHero.settings.button2Url).toBe('');
+    expect(Object.prototype.hasOwnProperty.call(reloadedHero.settings, 'button2Url')).toBe(false);
     expect(reloadedHero.settings.button2Action).toBe('open_cta_form');
     expect(reloadedHero.settings.button2TargetAnchorId).toBe('traditional-daf-inline-form');
   });

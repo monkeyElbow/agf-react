@@ -37,7 +37,10 @@ import {
   normalizeHeroTitleLetterSpacingEm,
   normalizeHeroTitleSizeRem,
 } from '../lib/heroTitleSize';
-import { normalizeSplitLinkFieldSettings } from '../lib/linkValue';
+import {
+  normalizeSplitLinkFieldSettings,
+  resolveEditableHrefFromLinkFields,
+} from '../lib/linkValue';
 import { normalizePresetBearingBlocks } from '../lib/blockPresetIdentity';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
@@ -531,15 +534,23 @@ function shouldQuarantineRetirement403bStrategyOptionsBlock(block) {
 
 function needsRetirement403bStrategyHeadingProspectusRepair(settings, defaultSettings) {
   const canonicalButton2Label = String(defaultSettings?.button2Label || '').trim();
-  const canonicalButton2PageRef = String(defaultSettings?.button2PageRef || '').trim();
+  const canonicalButton2Target = resolveEditableHrefFromLinkFields(defaultSettings, {
+    hrefKeys: ['button2Url'],
+    toKeys: ['button2PageRef'],
+    openInNewWindowKeys: ['button2OpenInNewWindow'],
+  });
   const storedButton2Label = String(settings?.button2Label || '').trim();
-  const storedButton2PageRef = String(settings?.button2PageRef || '').trim();
+  const storedButton2Target = resolveEditableHrefFromLinkFields(settings, {
+    hrefKeys: ['button2Url'],
+    toKeys: ['button2PageRef'],
+    openInNewWindowKeys: ['button2OpenInNewWindow'],
+  });
 
-  if (!canonicalButton2Label || !canonicalButton2PageRef) {
+  if (!canonicalButton2Label || !canonicalButton2Target) {
     return false;
   }
 
-  return storedButton2Label !== canonicalButton2Label || storedButton2PageRef !== canonicalButton2PageRef;
+  return storedButton2Label !== canonicalButton2Label || storedButton2Target !== canonicalButton2Target;
 }
 
 function isRetiredRetirement403bIndividualEnrollmentBillboard(settings) {
@@ -574,10 +585,22 @@ function isRetiredRetirement403bStartEnrollmentSettings(settings, defaultSetting
 
   const title = String(settings.title || '').trim();
   const card1Title = String(settings.card1Title || '').trim();
-  const card1ButtonPageRef = String(settings.card1ButtonPageRef || '').trim();
-  const card2ButtonPageRef = String(settings.card2ButtonPageRef || '').trim();
-  const defaultCard1ButtonPageRef = String(defaultSettings?.card1ButtonPageRef || '').trim();
-  const defaultCard2ButtonPageRef = String(defaultSettings?.card2ButtonPageRef || '').trim();
+  const card1ButtonTarget = resolveEditableHrefFromLinkFields(settings, {
+    hrefKeys: ['card1ButtonUrl'],
+    toKeys: ['card1ButtonPageRef'],
+  });
+  const card2ButtonTarget = resolveEditableHrefFromLinkFields(settings, {
+    hrefKeys: ['card2ButtonUrl'],
+    toKeys: ['card2ButtonPageRef'],
+  });
+  const defaultCard1ButtonTarget = resolveEditableHrefFromLinkFields(defaultSettings, {
+    hrefKeys: ['card1ButtonUrl'],
+    toKeys: ['card1ButtonPageRef'],
+  });
+  const defaultCard2ButtonTarget = resolveEditableHrefFromLinkFields(defaultSettings, {
+    hrefKeys: ['card2ButtonUrl'],
+    toKeys: ['card2ButtonPageRef'],
+  });
   const dividerTone = String(settings.dividerTone || '').trim();
   const card1DividerTone = String(settings.card1DividerTone || '').trim();
   const card2DividerTone = String(settings.card2DividerTone || '').trim();
@@ -587,8 +610,8 @@ function isRetiredRetirement403bStartEnrollmentSettings(settings, defaultSetting
     || card1DividerTone === 'auto'
     || card2DividerTone === 'auto';
   const matchesCanonicalTargets = (
-    card1ButtonPageRef === defaultCard1ButtonPageRef
-    && card2ButtonPageRef === defaultCard2ButtonPageRef
+    card1ButtonTarget === defaultCard1ButtonTarget
+    && card2ButtonTarget === defaultCard2ButtonTarget
   );
 
   return title === 'Start enrollment' && matchesCanonicalTargets && (hasLegacyTitle || hasLegacyDivider);
@@ -1176,7 +1199,7 @@ function normalizeCtaFormCanonicalFieldsInBlocks(blocks) {
 function normalizeSplitLinkFieldsInBlocks(blocks) {
   return (Array.isArray(blocks) ? blocks : []).map((block) => {
     const settings = block?.settings && typeof block.settings === 'object'
-      ? normalizeSplitLinkFieldSettings(block.settings)
+      ? normalizeSplitLinkFieldSettings(block.settings, { stripSplitFields: true })
       : block?.settings;
 
     return settings === block?.settings
@@ -1186,11 +1209,11 @@ function normalizeSplitLinkFieldsInBlocks(blocks) {
 }
 
 function normalizePageBlocksState(blocks) {
-  return stripTargetBridgeFieldsFromBlocks(normalizePresetBearingBlocks(
+  return normalizeSplitLinkFieldsInBlocks(stripTargetBridgeFieldsFromBlocks(normalizePresetBearingBlocks(
     normalizeSplitLinkFieldsInBlocks(
       normalizeCtaFormCanonicalFieldsInBlocks(normalizeSingletonKindBlocks(dedupeBlocksByIdPreferLatest(blocks))),
     ),
-  ));
+  )));
 }
 
 const RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS = [
@@ -2257,7 +2280,9 @@ function getModeTemplateVariant({ pathname, blockId, blockKind, mode }) {
 
 export function normalizeStoredConfig(payload) {
   const defaultHierarchy = buildDefaultPageHierarchy();
-  const defaultBlocks = buildDefaultBlocks();
+  const defaultBlocks = Object.fromEntries(
+    Object.entries(buildDefaultBlocks()).map(([path, blocks]) => [path, normalizePageBlocksState(blocks)]),
+  );
 
   if (!payload || typeof payload !== 'object') {
     return {
@@ -2697,6 +2722,7 @@ export function normalizeStoredConfig(payload) {
           settings: {
             ...(nextStoredBlock?.settings || {}),
             button2Label: defaultBlock?.settings?.button2Label || '',
+            button2LinkJson: defaultBlock?.settings?.button2LinkJson || '',
             button2Url: defaultBlock?.settings?.button2Url || '',
             button2PageRef: defaultBlock?.settings?.button2PageRef || '',
             button2Style: defaultBlock?.settings?.button2Style || '',
@@ -3822,7 +3848,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         didUpdate = true;
         const nextBlock = {
           ...block,
-          settings: normalizeSplitLinkFieldSettings(nextSettings),
+          settings: normalizeSplitLinkFieldSettings(nextSettings, { stripSplitFields: true }),
         };
         if (
           String(nextBlock.kind || '').trim().toLowerCase() === 'cta_form'

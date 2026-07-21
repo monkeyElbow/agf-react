@@ -629,7 +629,9 @@ function normalizeCtaFormCanonicalFieldSettings(rawSettings) {
 function normalizePageBlockState(pathname, block) {
   const nextBlock = cloneJson(block);
   if (nextBlock?.settings && typeof nextBlock.settings === 'object') {
-    nextBlock.settings = normalizeSplitLinkFieldSettings(stripRetiredTargetBridgeSettings(nextBlock.settings));
+    nextBlock.settings = normalizeSplitLinkFieldSettings(stripRetiredTargetBridgeSettings(nextBlock.settings), {
+      stripSplitFields: true,
+    });
   }
   if (
     String(nextBlock?.kind || '').trim().toLowerCase() === 'cta_form'
@@ -668,7 +670,7 @@ function normalizePageBlocksState(pathname, blocks) {
       .filter((block) => !(pathname === RETIREMENT_403B_PATH && isRetiredRetirement403bPageContentBlock(block)))
       .filter((block) => !(pathname === PLANNED_GIVING_OVERVIEW_PATH && isRetiredPlannedGivingComparisonMatrixBlock(block)))
       .map((block) => normalizePageBlockState(pathname, block)),
-  );
+  ).map((block) => normalizePageBlockState(pathname, block));
 }
 
 function reconcileBlocksToCurrentInventory(pathname, blocks, currentBlocks) {

@@ -245,6 +245,11 @@ function inferCanonicalLinkJsonKeys({
     .map(getCanonicalLinkJsonFieldId)));
 }
 
+function isActionLikeSplitLinkBaseKey(baseKey) {
+  return /^(?:button\d*|button2?|cta|browse|card\d+(?:Button\d*)?|col\d+Button|leftButton|rightButton)$/i
+    .test(String(baseKey || '').trim());
+}
+
 export function parseLinkValueJson(value) {
   if (!value) {
     return null;
@@ -270,7 +275,38 @@ export function serializeLinkValue(link) {
   return normalized ? JSON.stringify(normalized) : '';
 }
 
-export function normalizeSplitLinkFieldSettings(settings) {
+export function linkValueToEditableHref(link) {
+  const normalized = createLinkValue(link);
+  if (!normalized) {
+    return '';
+  }
+
+  if (normalized.kind === 'internal') {
+    return normalized.to;
+  }
+  if (normalized.kind === 'document') {
+    return normalized.documentId;
+  }
+
+  return normalized.href;
+}
+
+export function linkValueToRouteRef(link) {
+  const normalized = createLinkValue(link);
+  return normalized?.kind === 'internal' ? normalized.to : '';
+}
+
+export function resolveEditableHrefFromLinkFields(source, options = {}) {
+  return linkValueToEditableHref(coerceLinkValueFromFields(source, options));
+}
+
+export function resolveRouteRefFromLinkFields(source, options = {}) {
+  return linkValueToRouteRef(coerceLinkValueFromFields(source, options));
+}
+
+export function normalizeSplitLinkFieldSettings(settings, {
+  stripSplitFields = false,
+} = {}) {
   if (!settings || typeof settings !== 'object') {
     return settings;
   }
@@ -328,21 +364,27 @@ export function normalizeSplitLinkFieldSettings(settings) {
     });
   });
 
-  Object.keys(nextSettings).forEach((key) => {
-    if (!key.endsWith(SPLIT_LINK_PAGE_REF_SUFFIX)) {
-      return;
-    }
+  const linkBaseKeys = Array.from(new Set([
+    ...Object.keys(nextSettings)
+      .filter((key) => key.endsWith(SPLIT_LINK_PAGE_REF_SUFFIX))
+      .map((key) => key.slice(0, -SPLIT_LINK_PAGE_REF_SUFFIX.length)),
+    ...Object.keys(nextSettings)
+      .map(inferSplitLinkBaseKey)
+      .filter(isActionLikeSplitLinkBaseKey),
+  ]));
 
-    const baseKey = key.slice(0, -SPLIT_LINK_PAGE_REF_SUFFIX.length);
+  linkBaseKeys.forEach((baseKey) => {
+    const pageRefKey = `${baseKey}${SPLIT_LINK_PAGE_REF_SUFFIX}`;
     const hrefKeys = getSplitLinkHrefKeys(nextSettings, baseKey);
     const linkValue = coerceLinkValueFromFields(nextSettings, {
       hrefKeys,
-      toKeys: [key],
+      toKeys: [pageRefKey],
       openInNewWindowKeys: [`${baseKey}${SPLIT_LINK_OPEN_IN_NEW_WINDOW_SUFFIX}`],
       preferLinkJson: false,
     });
     const linkJsonKey = getCanonicalLinkJsonFieldId(baseKey);
-    const nextLinkJson = serializeLinkValue(linkValue);
+    const existingLinkValue = parseLinkValueJson(nextSettings[linkJsonKey]);
+    const nextLinkJson = serializeLinkValue(linkValue || existingLinkValue);
 
     if (nextLinkJson && nextSettings[linkJsonKey] !== nextLinkJson) {
       nextSettings[linkJsonKey] = nextLinkJson;
@@ -350,6 +392,27 @@ export function normalizeSplitLinkFieldSettings(settings) {
     } else if (!nextLinkJson && Object.prototype.hasOwnProperty.call(nextSettings, linkJsonKey)) {
       delete nextSettings[linkJsonKey];
       changed = true;
+    }
+
+    const shouldStripSplitFields = stripSplitFields && (
+      nextLinkJson
+      || (
+        !readFirstStringField(nextSettings, [pageRefKey])
+        && hrefKeys.every((hrefKey) => !readFirstStringField(nextSettings, [hrefKey]))
+      )
+    );
+
+    if (shouldStripSplitFields) {
+      [
+        pageRefKey,
+        ...hrefKeys,
+        `${baseKey}${SPLIT_LINK_OPEN_IN_NEW_WINDOW_SUFFIX}`,
+      ].forEach((splitFieldKey) => {
+        if (Object.prototype.hasOwnProperty.call(nextSettings, splitFieldKey)) {
+          delete nextSettings[splitFieldKey];
+          changed = true;
+        }
+      });
     }
   });
 

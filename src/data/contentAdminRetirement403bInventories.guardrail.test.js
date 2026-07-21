@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { normalizeStoredConfig } from '../context/ContentAdminContext.jsx';
 import { BLOCK_ONLY_MANAGED_PAGE_PATHS } from '../lib/managedPageShells.js';
+import { parseLinkValueJson } from '../lib/linkValue.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -115,9 +116,13 @@ function summarizeContentBlocks(blocks) {
     .map((block) => ({
       id: block?.id,
       html: block?.settings?.html || '',
-      buttonPageRef: block?.settings?.buttonPageRef || '',
+      buttonLinkJson: block?.settings?.buttonLinkJson || '',
       sectionClassName: block?.settings?.sectionClassName || '',
     }));
+}
+
+function expectLinkJson(settings, fieldId, expectedLink) {
+  expect(parseLinkValueJson(settings?.[fieldId])).toEqual(expect.objectContaining(expectedLink));
 }
 
 function expectNoStale403bRmhaSnapshotStrings(blocks, label) {
@@ -246,7 +251,7 @@ describe('403(b) retirement inventory guardrail', () => {
     expect(expectedContentBlocks).toEqual([
       expect.objectContaining({
         id: 'core_definitions',
-        buttonPageRef: '/services/retirement/403b',
+        buttonLinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/services/retirement/403b"}',
         sectionClassName: 'retirement-403b-terms-definitions-core',
       }),
     ]);
@@ -311,7 +316,7 @@ describe('403(b) retirement inventory guardrail', () => {
     expect(expectedContentBlocks).toEqual([
       expect.objectContaining({
         id: 'stay_in_loop',
-        buttonPageRef: '/#stay-in-the-loop',
+        buttonLinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/#stay-in-the-loop"}',
         sectionClassName: 'subscribe-native-stay-in-loop',
       }),
     ]);
@@ -345,7 +350,7 @@ describe('403(b) retirement inventory guardrail', () => {
     expect(expectedContentBlocks).toEqual([
       expect.objectContaining({
         id: 'contact_cta',
-        buttonPageRef: '/contact-us',
+        buttonLinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}',
         sectionClassName: 'yourplan-native-contact-cta',
       }),
     ]);
@@ -373,23 +378,25 @@ describe('403(b) retirement inventory guardrail', () => {
       { id: 'intro', kind: 'intro', mode: 'dynamic' },
       { id: 'faith_money_cards', kind: 'card_grid', mode: 'dynamic' },
     ]);
-    expect(canonicalBlocks.find((block) => block?.id === 'faith_money_cards')?.settings).toMatchObject({
+    const canonicalFaithMoneySettings = canonicalBlocks.find((block) => block?.id === 'faith_money_cards')?.settings;
+    expect(canonicalFaithMoneySettings).toMatchObject({
       sectionClassName: 'vineyard-native-faith-money',
-      card1ButtonPageRef: '/services/investments',
-      card2ButtonPageRef: '/services/insurance/property-casualty-insurance',
-      card3ButtonPageRef: '/services/planned-giving',
-      card4ButtonPageRef: '/services/loans',
     });
+    expectLinkJson(canonicalFaithMoneySettings, 'card1ButtonLinkJson', { kind: 'internal', to: '/services/investments' });
+    expectLinkJson(canonicalFaithMoneySettings, 'card2ButtonLinkJson', { kind: 'internal', to: '/services/insurance/property-casualty-insurance' });
+    expectLinkJson(canonicalFaithMoneySettings, 'card3ButtonLinkJson', { kind: 'internal', to: '/services/planned-giving' });
+    expectLinkJson(canonicalFaithMoneySettings, 'card4ButtonLinkJson', { kind: 'internal', to: '/services/loans' });
 
     promotedSnapshots.forEach(([label, blocks]) => {
+      const faithMoneySettings = blocks.find((block) => block?.id === 'faith_money_cards')?.settings;
       expect(summarizeInventory(blocks), `${label} vineyard inventory drifted from canonical blueprints`).toEqual(canonicalInventory);
-      expect(blocks.find((block) => block?.id === 'faith_money_cards')?.settings, `${label} vineyard card settings drifted`).toMatchObject({
+      expect(faithMoneySettings, `${label} vineyard card settings drifted`).toMatchObject({
         sectionClassName: 'vineyard-native-faith-money',
-        card1ButtonPageRef: '/services/investments',
-        card2ButtonPageRef: '/services/insurance/property-casualty-insurance',
-        card3ButtonPageRef: '/services/planned-giving',
-        card4ButtonPageRef: '/services/loans',
       });
+      expectLinkJson(faithMoneySettings, 'card1ButtonLinkJson', { kind: 'internal', to: '/services/investments' });
+      expectLinkJson(faithMoneySettings, 'card2ButtonLinkJson', { kind: 'internal', to: '/services/insurance/property-casualty-insurance' });
+      expectLinkJson(faithMoneySettings, 'card3ButtonLinkJson', { kind: 'internal', to: '/services/planned-giving' });
+      expectLinkJson(faithMoneySettings, 'card4ButtonLinkJson', { kind: 'internal', to: '/services/loans' });
     });
   });
 
@@ -412,23 +419,25 @@ describe('403(b) retirement inventory guardrail', () => {
       { id: 'featured_resources', kind: 'card_grid', mode: 'dynamic' },
       { id: 'categories', kind: 'content', mode: 'dynamic' },
     ]);
-    expect(canonicalBlocks.find((block) => block?.id === 'featured_resources')?.settings).toMatchObject({
+    const canonicalFeaturedSettings = canonicalBlocks.find((block) => block?.id === 'featured_resources')?.settings;
+    expect(canonicalFeaturedSettings).toMatchObject({
       sectionClassName: 'resources-native-featured',
-      card1ButtonPageRef: '/resources',
-      card3ButtonPageRef: '/resources',
     });
+    expectLinkJson(canonicalFeaturedSettings, 'card1ButtonLinkJson', { kind: 'internal', to: '/resources' });
+    expectLinkJson(canonicalFeaturedSettings, 'card3ButtonLinkJson', { kind: 'internal', to: '/resources' });
     expect(expectedContentBlocks).toEqual([
       expect.objectContaining({ id: 'categories', sectionClassName: 'resources-native-categories' }),
     ]);
     expect(expectedContentBlocks[0]?.html).toContain('<a href="/calculators">Calculators</a>');
 
     promotedSnapshots.forEach(([label, blocks]) => {
+      const featuredSettings = blocks.find((block) => block?.id === 'featured_resources')?.settings;
       expect(summarizeInventory(blocks), `${label} resources inventory drifted from canonical blueprints`).toEqual(canonicalInventory);
-      expect(blocks.find((block) => block?.id === 'featured_resources')?.settings, `${label} resources card settings drifted`).toMatchObject({
+      expect(featuredSettings, `${label} resources card settings drifted`).toMatchObject({
         sectionClassName: 'resources-native-featured',
-        card1ButtonPageRef: '/resources',
-        card3ButtonPageRef: '/resources',
       });
+      expectLinkJson(featuredSettings, 'card1ButtonLinkJson', { kind: 'internal', to: '/resources' });
+      expectLinkJson(featuredSettings, 'card3ButtonLinkJson', { kind: 'internal', to: '/resources' });
       expect(summarizeContentBlocks(blocks), `${label} resources content settings drifted`).toEqual(expectedContentBlocks);
     });
   });
@@ -457,32 +466,36 @@ describe('403(b) retirement inventory guardrail', () => {
       expect.objectContaining({ id: 'setup_overview', sectionClassName: 'online-contrib-native-overview' }),
     ]);
     expect(expectedContentBlocks[0]?.html).toContain('clientservices@agfinancial.org');
-    expect(canonicalBlocks.find((block) => block?.id === 'setup_steps')?.settings).toMatchObject({
+    const canonicalSetupSettings = canonicalBlocks.find((block) => block?.id === 'setup_steps')?.settings;
+    expect(canonicalSetupSettings).toMatchObject({
       sectionClassName: 'online-contrib-native-steps',
-      card1ButtonUrl: 'https://secure.agfinancial.org/cp/do/user/login',
-      card3ButtonUrl: 'mailto:clientservices@agfinancial.org',
-      card3Button2Url: 'tel:18666211787',
     });
-    expect(canonicalBlocks.find((block) => block?.id === 'help_cta')?.settings).toMatchObject({
+    expectLinkJson(canonicalSetupSettings, 'card1ButtonLinkJson', { kind: 'external', href: 'https://secure.agfinancial.org/cp/do/user/login' });
+    expectLinkJson(canonicalSetupSettings, 'card3ButtonLinkJson', { kind: 'email', href: 'mailto:clientservices@agfinancial.org' });
+    expectLinkJson(canonicalSetupSettings, 'card3Button2LinkJson', { kind: 'phone', href: 'tel:18666211787' });
+    const canonicalHelpSettings = canonicalBlocks.find((block) => block?.id === 'help_cta')?.settings;
+    expect(canonicalHelpSettings).toMatchObject({
       sectionClassName: 'online-contrib-native-help',
-      buttonUrl: 'mailto:retirement@agfinancial.org',
-      button2Url: 'tel:18006227526',
     });
+    expectLinkJson(canonicalHelpSettings, 'buttonLinkJson', { kind: 'email', href: 'mailto:retirement@agfinancial.org' });
+    expectLinkJson(canonicalHelpSettings, 'button2LinkJson', { kind: 'phone', href: 'tel:18006227526' });
 
     promotedSnapshots.forEach(([label, blocks]) => {
+      const setupSettings = blocks.find((block) => block?.id === 'setup_steps')?.settings;
+      const helpSettings = blocks.find((block) => block?.id === 'help_cta')?.settings;
       expect(summarizeInventory(blocks), `${label} online contributions inventory drifted from canonical blueprints`).toEqual(canonicalInventory);
       expect(summarizeContentBlocks(blocks), `${label} online contributions content settings drifted`).toEqual(expectedContentBlocks);
-      expect(blocks.find((block) => block?.id === 'setup_steps')?.settings, `${label} online contributions card settings drifted`).toMatchObject({
+      expect(setupSettings, `${label} online contributions card settings drifted`).toMatchObject({
         sectionClassName: 'online-contrib-native-steps',
-        card1ButtonUrl: 'https://secure.agfinancial.org/cp/do/user/login',
-        card3ButtonUrl: 'mailto:clientservices@agfinancial.org',
-        card3Button2Url: 'tel:18666211787',
       });
-      expect(blocks.find((block) => block?.id === 'help_cta')?.settings, `${label} online contributions help settings drifted`).toMatchObject({
+      expectLinkJson(setupSettings, 'card1ButtonLinkJson', { kind: 'external', href: 'https://secure.agfinancial.org/cp/do/user/login' });
+      expectLinkJson(setupSettings, 'card3ButtonLinkJson', { kind: 'email', href: 'mailto:clientservices@agfinancial.org' });
+      expectLinkJson(setupSettings, 'card3Button2LinkJson', { kind: 'phone', href: 'tel:18666211787' });
+      expect(helpSettings, `${label} online contributions help settings drifted`).toMatchObject({
         sectionClassName: 'online-contrib-native-help',
-        buttonUrl: 'mailto:retirement@agfinancial.org',
-        button2Url: 'tel:18006227526',
       });
+      expectLinkJson(helpSettings, 'buttonLinkJson', { kind: 'email', href: 'mailto:retirement@agfinancial.org' });
+      expectLinkJson(helpSettings, 'button2LinkJson', { kind: 'phone', href: 'tel:18006227526' });
     });
   });
 
@@ -500,7 +513,7 @@ describe('403(b) retirement inventory guardrail', () => {
         ],
         {
           id: 'privacy_details',
-          buttonPageRef: '/contact-us',
+          buttonLinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}',
           sectionClassName: 'legal-native-privacy-details',
           htmlToken: 'Collection and Use of Personal Information',
         },
@@ -514,7 +527,7 @@ describe('403(b) retirement inventory guardrail', () => {
         ],
         {
           id: 'terms_details',
-          buttonPageRef: '/contact-us',
+          buttonLinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}',
           sectionClassName: 'legal-native-terms-details',
           htmlToken: 'Acceptance of Terms',
         },
@@ -535,7 +548,7 @@ describe('403(b) retirement inventory guardrail', () => {
       expect(expectedContentBlocks).toEqual([
         expect.objectContaining({
           id: expectedContent.id,
-          buttonPageRef: expectedContent.buttonPageRef,
+          buttonLinkJson: expectedContent.buttonLinkJson,
           sectionClassName: expectedContent.sectionClassName,
         }),
       ]);
@@ -572,7 +585,7 @@ describe('403(b) retirement inventory guardrail', () => {
       expect.objectContaining({ id: 'limitations', sectionClassName: 'accessibility-native-limitations' }),
       expect.objectContaining({
         id: 'feedback',
-        buttonPageRef: '/contact-us',
+        buttonLinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}',
         sectionClassName: 'accessibility-native-feedback',
       }),
     ]);
@@ -602,20 +615,20 @@ describe('403(b) retirement inventory guardrail', () => {
       { id: 'intro', kind: 'intro', mode: 'dynamic' },
       { id: 'claim_contacts', kind: 'card_grid', mode: 'dynamic' },
     ]);
-    expect(canonicalBlocks.find((block) => block?.id === 'claim_contacts')?.settings).toMatchObject({
+    const canonicalClaimSettings = canonicalBlocks.find((block) => block?.id === 'claim_contacts')?.settings;
+    expect(canonicalClaimSettings).toMatchObject({
       sectionClassName: 'mission-assure-claim-contacts',
-      card1ButtonUrl: 'mailto:ACEClaimsFirstNotice@acegroup.com',
-      card1ButtonPageRef: '',
     });
+    expectLinkJson(canonicalClaimSettings, 'card1ButtonLinkJson', { kind: 'email', href: 'mailto:ACEClaimsFirstNotice@acegroup.com' });
     expect(canonicalBlocks.find((block) => block?.id === 'claim_contacts')?.settings?.card4Body).toContain('Scranton, PA 18505-0554');
 
     promotedSnapshots.forEach(([label, blocks]) => {
+      const claimSettings = blocks.find((block) => block?.id === 'claim_contacts')?.settings;
       expect(summarizeInventory(blocks), `${label} claim inventory drifted from canonical blueprints`).toEqual(canonicalInventory);
-      expect(blocks.find((block) => block?.id === 'claim_contacts')?.settings, `${label} claim contact settings drifted`).toMatchObject({
+      expect(claimSettings, `${label} claim contact settings drifted`).toMatchObject({
         sectionClassName: 'mission-assure-claim-contacts',
-        card1ButtonUrl: 'mailto:ACEClaimsFirstNotice@acegroup.com',
-        card1ButtonPageRef: '',
       });
+      expectLinkJson(claimSettings, 'card1ButtonLinkJson', { kind: 'email', href: 'mailto:ACEClaimsFirstNotice@acegroup.com' });
     });
   });
 });

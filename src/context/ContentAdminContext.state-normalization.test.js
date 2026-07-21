@@ -8,6 +8,7 @@ import {
   BLOCKLESS_MANAGED_PAGE_PATHS,
 } from '../lib/managedPageShells';
 import { parseCtaFormFieldsJson } from '../blocks/foundation/forms';
+import { parseLinkValueJson } from '../lib/linkValue';
 
 const TARGET_BRIDGE_SETTING_KEYS = [
   'targetSectionKey',
@@ -29,6 +30,16 @@ function expectNoTargetBridgeSettings(block, label = block?.id || 'block') {
 
 function getCtaFields(block) {
   return parseCtaFormFieldsJson(block?.settings?.fieldsJson);
+}
+
+function expectLinkJson(settings, fieldId, expectedLink) {
+  expect(parseLinkValueJson(settings?.[fieldId])).toEqual(expect.objectContaining(expectedLink));
+}
+
+function expectNoSplitSettings(settings, fieldIds) {
+  fieldIds.forEach((fieldId) => {
+    expect(Object.prototype.hasOwnProperty.call(settings || {}, fieldId), `${fieldId} should be stripped`).toBe(false);
+  });
 }
 
 function cloneJson(value) {
@@ -279,7 +290,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(normalizedLoanDetails?.settings?.title || '').toBe(canonicalLoanDetails?.settings?.title || '');
     expect(normalizedLoanDetails?.settings?.body || '').toBe(canonicalLoanDetails?.settings?.body || '');
     expect(normalizedLoanDetails?.settings?.buttonLabel || '').toBe(canonicalLoanDetails?.settings?.buttonLabel || '');
-    expect(normalizedLoanDetails?.settings?.buttonPageRef || '').toBe(canonicalLoanDetails?.settings?.buttonPageRef || '');
+    expect(normalizedLoanDetails?.settings?.buttonLinkJson || '').toBe(canonicalLoanDetails?.settings?.buttonLinkJson || '');
     expect(normalizedLoanDetails?.settings?.anchorId || '').toBe(canonicalLoanDetails?.settings?.anchorId || '');
     expect(normalizedHousingFeature?.settings?.col2BodyHtml).toBe(canonicalHousingFeature?.settings?.col2BodyHtml);
     expect(normalizedHousingFeature?.settings?.col2BodyHtml).not.toContain('ret403b-housing-feature-bullet-intro');
@@ -452,7 +463,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.bgTone).toBe('grey');
     expect(introBlock?.settings?.textTone).toBe('white');
     expect(introBlock?.settings?.button1Label).toBe('More about AG Insurance');
-    expect(introBlock?.settings?.button1PageRef).toBe('/services/insurance/property-casualty-insurance#ag-program');
+    expectLinkJson(introBlock?.settings, 'button1LinkJson', {
+      kind: 'internal',
+      to: '/services/insurance/property-casualty-insurance#ag-program',
+    });
     expect(requestBlock?.settings?.sectionClassName).toBe('insurance-pc-native-quote');
     expectNoTargetBridgeSettings(requestBlock);
     expect(agProgramBlock?.settings?.sectionClassName).toBe('insurance-pc-native-ag-program');
@@ -926,7 +940,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(heroBlock).toBeTruthy();
     expect(heroBlock?.hidden).toBe(false);
     expect(heroBlock?.settings?.button1Label).toBe('');
-    expect(heroBlock?.settings?.button1Url).toBe('');
+    expectNoSplitSettings(heroBlock?.settings, ['button1Url']);
   });
 
   it('seeds calculators with a CTA block instead of a request-form block', () => {
@@ -1037,9 +1051,12 @@ describe('ContentAdminContext state normalization', () => {
 
     const heroBlock = normalized.blocksByPath['/services/loans']?.[0];
 
-    expect(heroBlock?.settings?.buttonUrl).toBe('/contact-us');
-    expect(heroBlock?.settings?.buttonPageRef).toBe('/contact-us');
-    expect(heroBlock?.settings?.buttonOpenInNewWindow).toBe(false);
+    expectLinkJson(heroBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/contact-us',
+      openInNewWindow: false,
+    });
+    expectNoSplitSettings(heroBlock?.settings, ['buttonUrl', 'buttonPageRef', 'buttonOpenInNewWindow']);
   });
 
   it('seeds about us with a CTA block instead of a request-form block', () => {
@@ -1268,9 +1285,15 @@ describe('ContentAdminContext state normalization', () => {
     expect(heroBlock?.settings?.button2Action || '').toBe('');
     expect(heroBlock?.settings?.button2TargetAnchorId || '').toBe('');
     expect(heroBlock?.settings?.button2TargetBlockId || '').toBe('');
-    expect(heroBlock?.settings?.button2Url).toBe('#traditional-daf-form');
-    expect(heroBlock?.settings?.button2PageRef).toBe('');
-    expect(heroBlock?.settings?.button1Url).toBe('https://secure.agfinancial.org/generosityfund/signup');
+    expectLinkJson(heroBlock?.settings, 'button2LinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
+    });
+    expectLinkJson(heroBlock?.settings, 'button1LinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/generosityfund/signup',
+    });
+    expectNoSplitSettings(heroBlock?.settings, ['button1Url', 'button2Url', 'button2PageRef']);
     expect(heroBlock?.editableFields?.map((field) => field?.id)).toEqual(expect.arrayContaining([
       'button2Action',
       'button2TargetAnchorId',
@@ -1657,7 +1680,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(loanDetailsBlock?.settings?.title || '').toBe("Retired Ministers' Housing Allowance");
     expect(loanDetailsBlock?.settings?.body || '').toContain('The unique benefit, which gives ministers');
     expect(loanDetailsBlock?.settings?.buttonLabel || '').toBe('Use the quick check calculator');
-    expect(loanDetailsBlock?.settings?.buttonPageRef || '').toBe('/calculators');
+    expectLinkJson(loanDetailsBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/calculators',
+    });
     expect(loanDetailsBlock?.settings?.anchorId || '').toBe('retired-ministers-housing-allowance');
     expect(String(loanDetailsBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
   });
@@ -2014,7 +2040,10 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(headingBlock?.settings?.buttonLabel).toBe('View monthly performance');
     expect(headingBlock?.settings?.button2Label).toBe('Prospectus');
-    expect(headingBlock?.settings?.button2PageRef).toBe('/prospectus');
+    expectLinkJson(headingBlock?.settings, 'button2LinkJson', {
+      kind: 'internal',
+      to: '/prospectus',
+    });
     expect(headingBlock?.settings?.button2Tone).toBe('super-grey');
   });
 
@@ -2061,8 +2090,7 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'investment_strategy_heading' && block?.kind === 'billboard');
 
     expect(headingBlock?.settings?.button2Label).toBe('');
-    expect(headingBlock?.settings?.button2Url).toBe('');
-    expect(headingBlock?.settings?.button2PageRef).toBe('');
+    expectNoSplitSettings(headingBlock?.settings, ['button2Url', 'button2PageRef']);
   });
 
   it('keeps customized 403(b) investment strategy feature html when it already uses the canonical wrapper', () => {
@@ -2251,7 +2279,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.heading).toBe('What’s one gotta do to get AGFinancial 403(b)?');
     expect(introBlock?.settings?.bodyHtml).toBe('<p>Custom explainer copy for a block-owned intro.</p>');
     expect(introBlock?.settings?.button1Label).toBe('Talk to my consultant');
-    expect(introBlock?.settings?.button1PageRef).toBe('/services/retirement/retirement-consultants');
+    expectLinkJson(introBlock?.settings, 'button1LinkJson', {
+      kind: 'internal',
+      to: '/services/retirement/retirement-consultants',
+    });
   });
 
   it('refreshes leaked loans intro copy on 403(b) individual enrollment back to the canonical intro block', () => {
@@ -2426,9 +2457,9 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.heading).toBe(defaultIntroBlock?.settings?.heading);
     expect(introBlock?.settings?.bodyHtml).toBe(defaultIntroBlock?.settings?.bodyHtml);
     expect(introBlock?.settings?.button1Label).toBe(defaultIntroBlock?.settings?.button1Label);
-    expect(introBlock?.settings?.button1Url).toBe(defaultIntroBlock?.settings?.button1Url);
+    expect(introBlock?.settings?.button1LinkJson).toBe(defaultIntroBlock?.settings?.button1LinkJson);
     expect(introBlock?.settings?.button2Label).toBe(defaultIntroBlock?.settings?.button2Label);
-    expect(introBlock?.settings?.button2Url).toBe(defaultIntroBlock?.settings?.button2Url);
+    expect(introBlock?.settings?.button2LinkJson).toBe(defaultIntroBlock?.settings?.button2LinkJson);
   });
 
   it('appends the seeded request form block to stored 403(b) group enrollment drafts', () => {
@@ -2551,10 +2582,15 @@ describe('ContentAdminContext state normalization', () => {
     const complianceBlock = (normalized.blocksByPath['/services/retirement/403b/403b-group-enrollment'] || [])
       .find((block) => block?.id === 'billboard');
 
-    expect(complianceBlock?.settings?.buttonUrl).toBe('https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf');
-    expect(complianceBlock?.settings?.buttonPageRef).toBe('');
-    expect(complianceBlock?.settings?.button2Url).toBe('https://files.agfinancial.org/retirement/NQCCO-Guidelines.pdf');
-    expect(complianceBlock?.settings?.button2PageRef).toBe('');
+    expectLinkJson(complianceBlock?.settings, 'buttonLinkJson', {
+      kind: 'external',
+      href: 'https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf',
+    });
+    expectLinkJson(complianceBlock?.settings, 'button2LinkJson', {
+      kind: 'external',
+      href: 'https://files.agfinancial.org/retirement/NQCCO-Guidelines.pdf',
+    });
+    expectNoSplitSettings(complianceBlock?.settings, ['buttonUrl', 'buttonPageRef', 'button2Url', 'button2PageRef']);
   });
 
   it('upgrades stale group term life request blocks back onto the standalone dynamic renderer path', () => {
@@ -2647,7 +2683,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(featurePanelBlock?.kind).toBe('feature_panel');
     expect(featurePanelBlock?.settings?.title).toBe('Old reserves block');
     expect(featurePanelBlock?.settings?.buttonLabel).toBe('Ready for the unexpected?');
-    expect(featurePanelBlock?.settings?.buttonPageRef).toBe('/resources/article/church-cash-reserves');
+    expectLinkJson(featurePanelBlock?.settings, 'buttonLinkJson', {
+      kind: 'internal',
+      to: '/resources/article/church-cash-reserves',
+    });
     expect(Array.isArray(featurePanelBlock?.editableFields) ? featurePanelBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
@@ -2776,7 +2815,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(growthFeatureBlock?.presetId).toBeUndefined();
     expect(growthFeatureBlock?.settings?.body).toBe('Already connected?');
     expect(growthFeatureBlock?.settings?.buttonLabel).toBe('Open dashboard');
-    expect(growthFeatureBlock?.settings?.buttonUrl).toBe('https://secure.agfinancial.org/');
+    expectLinkJson(growthFeatureBlock?.settings, 'buttonLinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/',
+    });
     expect(Array.isArray(growthFeatureBlock?.editableFields) ? growthFeatureBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
@@ -3226,7 +3268,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(splitPanelBlock?.mode).toBe('dynamic');
     expect(splitPanelBlock?.kind).toBe('split_panel');
     expect(splitPanelBlock?.settings?.leftTitle).toBe('Updated IRA heading');
-    expect(splitPanelBlock?.settings?.rightButtonPageRef).toBe('/services/retirement/409a');
+    expectLinkJson(splitPanelBlock?.settings, 'rightButtonLinkJson', {
+      kind: 'internal',
+      to: '/services/retirement/409a',
+    });
     expect(Array.isArray(splitPanelBlock?.editableFields) ? splitPanelBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
@@ -3293,7 +3338,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(servicesGridBlock?.kind).toBe('services_grid');
     expect(servicesGridBlock?.settings?.heading).toBe('Updated home services heading');
     expect(servicesGridBlock?.settings?.card1Title).toBe('Church Loans');
-    expect(servicesGridBlock?.settings?.browsePageRef).toBe('/services');
+    expectLinkJson(servicesGridBlock?.settings, 'browseLinkJson', {
+      kind: 'internal',
+      to: '/services',
+    });
     expect(Array.isArray(servicesGridBlock?.editableFields) ? servicesGridBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
@@ -3322,7 +3370,10 @@ describe('ContentAdminContext state normalization', () => {
     expect(impactStatBlock?.kind).toBe('impact_stat');
     expect(impactStatBlock?.settings?.titlePrefix).toBe('What happens here');
     expect(impactStatBlock?.settings?.stat1Value).toBe('$12 billion');
-    expect(impactStatBlock?.settings?.ctaPageRef).toBe('/about-us/impact');
+    expectLinkJson(impactStatBlock?.settings, 'ctaLinkJson', {
+      kind: 'internal',
+      to: '/about-us/impact',
+    });
     expect(Array.isArray(impactStatBlock?.editableFields) ? impactStatBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 

@@ -13,6 +13,7 @@ import {
 import {
   coerceLinkValue,
   getCanonicalLinkJsonFieldId,
+  resolveEditableHrefFromLinkFields,
   serializeLinkValue,
 } from '../lib/linkValue';
 import {
@@ -309,8 +310,11 @@ function ColumnSlotEditor({
   const buttonLabelValue = String(draftValues[buttonLabelFieldId] ?? settings[buttonLabelFieldId] ?? '');
   const buttonHrefValue = String(
     draftValues[buttonHrefFieldId]
-    ?? settings[`col${slot}ButtonPageRef`]
-    ?? settings[`col${slot}ButtonUrl`]
+    ?? resolveEditableHrefFromLinkFields(settings, {
+      hrefKeys: [`col${slot}ButtonUrl`],
+      toKeys: [`col${slot}ButtonPageRef`],
+      openInNewWindowKeys: [`col${slot}ButtonOpenInNewWindow`],
+    })
     ?? '',
   );
 
@@ -682,7 +686,11 @@ export default function ColumnsHudEditorPanel({
         },
         {
           id: getColumnButtonHrefDraftFieldId(slot),
-          value: String(settings[buttonPageRefFieldId] || settings[buttonUrlFieldId] || ''),
+          value: resolveEditableHrefFromLinkFields(settings, {
+            hrefKeys: [buttonUrlFieldId],
+            toKeys: [buttonPageRefFieldId],
+            openInNewWindowKeys: [`col${slot}ButtonOpenInNewWindow`],
+          }),
           mode: 'blur',
           commit: (nextValue) => {
             const routeRefValue = String(nextValue || '').trim().startsWith('/') ? nextValue : '';

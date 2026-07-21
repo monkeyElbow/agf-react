@@ -16,7 +16,7 @@ describe('migrated block editor route-link guardrail', () => {
 
     expect(source).toContain('function promoteRouteLinkDescriptor(field, routeRefFieldId) {');
     expect(source).toContain('function getPromotedRouteLinkField(fieldById, fieldId, routeRefFieldId) {');
-    expect(source).toContain('function commitSplitRouteLinkSettings(onSettingChange, hrefFieldId, routeRefFieldId, nextHrefValue, nextRouteRefValue) {');
+    expect(source).toContain('function commitCanonicalRouteLinkWithSplitMirror(onSettingChange, hrefFieldId, routeRefFieldId, nextHrefValue, nextRouteRefValue) {');
     expect(source).toContain('getCanonicalLinkJsonFieldId');
     expect(source).toContain('serializeLinkValue');
     expect(source).toContain('onRouteLinkChange');
@@ -25,6 +25,7 @@ describe('migrated block editor route-link guardrail', () => {
     expect(source).toContain("getPromotedRouteLinkField(fieldById, 'ctaPath', 'ctaPageRef')");
     expect(source).toContain("...buildInlineActionFields({");
     expect(source).not.toContain('syncRouteRefDraftField');
+    expect(source).not.toContain('commitSplitRouteLinkSettings');
     expect(source).not.toContain("buttonUrlField ? {");
     expect(source).not.toContain("pathField ? {");
   });

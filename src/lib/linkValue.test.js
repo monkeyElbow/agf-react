@@ -6,6 +6,8 @@ import {
   linkValueToLinkProps,
   normalizeSplitLinkFieldSettings,
   parseLinkValueJson,
+  resolveEditableHrefFromLinkFields,
+  resolveRouteRefFromLinkFields,
   serializeLinkValue,
   validateActionFieldGroup,
   validateLinkFieldGroups,
@@ -102,6 +104,24 @@ describe('link value helpers', () => {
       to: '/services/loans',
       openInNewWindow: true,
     });
+
+    expect(resolveEditableHrefFromLinkFields({
+      buttonLinkJson: linkJson,
+      buttonUrl: '/old-path',
+      buttonPageRef: '/old-path',
+    }, {
+      hrefKeys: ['buttonUrl'],
+      toKeys: ['buttonPageRef'],
+    })).toBe('/services/loans');
+
+    expect(resolveRouteRefFromLinkFields({
+      buttonLinkJson: '{"kind":"external","openInNewWindow":false,"href":"https://example.com"}',
+      buttonUrl: '/old-path',
+      buttonPageRef: '/old-path',
+    }, {
+      hrefKeys: ['buttonUrl'],
+      toKeys: ['buttonPageRef'],
+    })).toBe('');
   });
 
   it('keeps transitional action and link validators explicit and narrow', () => {
