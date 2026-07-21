@@ -179,6 +179,8 @@ describe('service-native style ownership', () => {
       'background: #eef8fa;',
       '.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody td:nth-child(2) {',
       'background: #fff6e8;',
+      '.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody tr:last-child td:nth-child(1),',
+      'border-radius: 0 0 14px 14px;',
       '.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__cell-list li + li {',
     ].forEach((ownedSelector) => {
       expect(source).toContain(ownedSelector);

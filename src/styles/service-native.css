@@ -20025,6 +20025,11 @@ p.impact-proof-story-proof-body {
   border-bottom: 0;
 }
 
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody tr:last-child td:nth-child(1),
+.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody tr:last-child td:nth-child(2) {
+  border-radius: 0 0 14px 14px;
+}
+
 .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table tbody td:nth-child(1) {
   background: #eef8fa;
 }
