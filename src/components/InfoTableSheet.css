@@ -152,7 +152,6 @@
   background: rgba(250, 163, 26, 0.09);
 }
 
-.info-table-sheet[data-info-table-first-column-header="false"] .info-table-sheet__table tbody td,
 .info-table-sheet[data-info-table-first-column-header="false"] .info-table-sheet__card-value {
   display: grid;
   gap: 0.28rem;

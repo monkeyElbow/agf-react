@@ -158,6 +158,7 @@ describe('service-native style ownership', () => {
 
   it('keeps the IRA comparison table on the live InfoTableSheet styling instead of retired data-table selectors', () => {
     const source = readSource('./service-native.css');
+    const infoTableSource = readSource('../components/InfoTableSheet.css');
 
     [
       '.retirement-child-native-comparison .native-info-table-wrap .data-table',
@@ -182,6 +183,14 @@ describe('service-native style ownership', () => {
     ].forEach((ownedSelector) => {
       expect(source).toContain(ownedSelector);
     });
+
+    expect(infoTableSource).not.toContain(
+      '.info-table-sheet[data-info-table-first-column-header="false"] .info-table-sheet__table tbody td,\n'
+        + '.info-table-sheet[data-info-table-first-column-header="false"] .info-table-sheet__card-value',
+    );
+    expect(infoTableSource).toContain(
+      '.info-table-sheet[data-info-table-first-column-header="false"] .info-table-sheet__card-value {',
+    );
   });
 
   it('keeps About one-off visual restorations on named section surfaces', () => {
