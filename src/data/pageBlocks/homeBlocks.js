@@ -4,6 +4,7 @@ import investIcon from '../../assets/service-icons/Invest.png';
 import loansIcon from '../../assets/service-icons/Loans.png';
 import retireIcon from '../../assets/service-icons/Retire.png';
 import ratesIcon from '../../assets/service-icons/chart.png';
+import { serializeLinkValue } from '../../lib/linkValue';
 
 export const homePageBlocks = [
   {
@@ -56,15 +57,15 @@ export const homePageBlocks = [
     cardTitleSizeRem: 2.1875,
     cardPaddingRem: 1.85,
     cards: [
-      { title: 'Loans', path: '/services/loans', image: loansIcon, action: 'Options' },
-      { title: 'Retirement', path: '/services/retirement', image: retireIcon, action: 'Explore' },
-      { title: 'Investments', path: '/services/investments', image: investIcon, action: 'Grow' },
-      { title: 'Planned Giving', path: '/services/planned-giving', image: charitableIcon, action: 'Plan' },
-      { title: 'Insurance', path: '/services/insurance', image: insureIcon, action: 'Protect' },
-      { title: 'View Rates', path: '/rates', image: ratesIcon, action: 'View Rates', featured: true },
+      { title: 'Loans', linkJson: serializeLinkValue({ kind: 'internal', to: '/services/loans' }), image: loansIcon, action: 'Options' },
+      { title: 'Retirement', linkJson: serializeLinkValue({ kind: 'internal', to: '/services/retirement' }), image: retireIcon, action: 'Explore' },
+      { title: 'Investments', linkJson: serializeLinkValue({ kind: 'internal', to: '/services/investments' }), image: investIcon, action: 'Grow' },
+      { title: 'Planned Giving', linkJson: serializeLinkValue({ kind: 'internal', to: '/services/planned-giving' }), image: charitableIcon, action: 'Plan' },
+      { title: 'Insurance', linkJson: serializeLinkValue({ kind: 'internal', to: '/services/insurance' }), image: insureIcon, action: 'Protect' },
+      { title: 'View Rates', linkJson: serializeLinkValue({ kind: 'internal', to: '/rates' }), image: ratesIcon, action: 'View Rates', featured: true },
     ],
     browseLabel: 'Browse all services',
-    browsePath: '/services',
+    browseLinkJson: serializeLinkValue({ kind: 'internal', to: '/services' }),
   },
   {
     id: 'home_impact_story',
@@ -73,8 +74,10 @@ export const homePageBlocks = [
     headline: 'What you do here matters.',
     body: 'Your financial decisions can strengthen more than just your future.',
     buttonLabel: "See what we're doing",
-    buttonUrl: '/about-us/impact',
-    buttonPageRef: '/about-us/impact',
+    buttonLinkJson: serializeLinkValue({
+      kind: 'internal',
+      to: '/about-us/impact',
+    }),
   },
   {
     id: 'home_ministry_allies',
@@ -97,11 +100,12 @@ export const homePageBlocks = [
       titleLetterSpacingEm: -0.04,
       contentMaxWidthPx: 1216,
       buttonLabel: "See what we're doing together",
-      buttonUrl: '/about-us/impact',
-      buttonPageRef: '/about-us/impact',
+      buttonLinkJson: serializeLinkValue({
+        kind: 'internal',
+        to: '/about-us/impact',
+      }),
       buttonStyle: 'dark',
       buttonTone: 'super-grey',
-      buttonOpenInNewWindow: false,
     },
   },
   {
@@ -143,11 +147,12 @@ export const homePageBlocks = [
       titleLetterSpacingEm: -0.03,
       contentMaxWidthPx: 1216,
       buttonLabel: 'Use the calculators',
-      buttonUrl: '/calculators',
-      buttonPageRef: '',
+      buttonLinkJson: serializeLinkValue({
+        kind: 'internal',
+        to: '/calculators',
+      }),
       buttonStyle: 'blue',
       buttonTone: 'atlantean',
-      buttonOpenInNewWindow: false,
       scrollReveal: 'scale-up',
     },
   },

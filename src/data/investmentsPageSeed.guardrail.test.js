@@ -8,7 +8,6 @@ import {
   defaultInvestmentsGrowthFeatureSettings,
 } from './investmentsPageSeed';
 import { parseCtaFormFieldsJson } from '../blocks/foundation/forms';
-import { normalizeSplitLinkFieldSettings } from '../lib/linkValue';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,9 +22,7 @@ describe('investments page seed guardrail', () => {
     const growthBlock = blocks.find((block) => block?.id === 'growth_feature' && block?.kind === 'site_feature');
     const ctaBlock = blocks.find((block) => block?.id === 'cta_form' && block?.kind === 'cta_form');
 
-    expect(growthBlock?.settings).toEqual(
-      normalizeSplitLinkFieldSettings(defaultInvestmentsGrowthFeatureSettings, { stripSplitFields: true }),
-    );
+    expect(growthBlock?.settings).toEqual(defaultInvestmentsGrowthFeatureSettings);
     expect(ctaBlock?.settings?.title).toBe(defaultInvestmentsCtaSettings.title);
     expect(ctaBlock?.settings?.bodyHtml).toBe(defaultInvestmentsCtaSettings.bodyHtml);
     expect(ctaBlock?.settings?.submitLabel).toBe(defaultInvestmentsCtaSettings.submitLabel);

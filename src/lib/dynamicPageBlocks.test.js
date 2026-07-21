@@ -30,6 +30,7 @@ import {
   normalizeUniversalOutlineButtonClassName,
   shouldUseUniversalOutlineButtonLink,
 } from './dynamicPageBlocks';
+import { serializeLinkValue } from './linkValue';
 
 const ctaFieldsJson = (fields) => serializeCtaFormFields(fields);
 
@@ -93,7 +94,10 @@ describe('buildDynamicColumnsFromBlock', () => {
         col1Title: 'Option one',
         col1Body: 'Primary copy',
         col1ButtonLabel: 'Learn more',
-        col1ButtonPageRef: '/services/retirement',
+        col1ButtonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services/retirement',
+        }),
         col1ButtonStyle: 'outline',
         col1ButtonTone: 'mango',
         col2Enabled: true,
@@ -468,9 +472,11 @@ describe('buildDynamicIntroFromBlock', () => {
         justify: 'left',
         lineSpacing: 1.1,
         button1Label: 'Learn more',
-        button1PageRef: '/services/retirement',
+        button1LinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services/retirement',
+        }),
         button1Style: 'outline',
-        button1OpenInNewWindow: false,
       },
     });
 
@@ -523,11 +529,17 @@ describe('buildDynamicBillboardFromBlock', () => {
         headlineMaxWidthPx: 980,
         contentMaxWidthPx: 1100,
         buttonLabel: 'Take the next step',
-        buttonPageRef: '/contact-us',
+        buttonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/contact-us',
+        }),
         buttonStyle: 'outline',
         buttonTone: 'mango',
         button2Label: 'Email us',
-        button2Url: 'mailto:info@example.com',
+        button2LinkJson: serializeLinkValue({
+          kind: 'email',
+          href: 'mailto:info@example.com',
+        }),
         button2Style: 'outline',
         button2Tone: 'white',
       },
@@ -719,7 +731,10 @@ describe('buildDynamicHeroFromBlock', () => {
         titleLetterSpacingEm: -0.11,
         lineHeight: 1.02,
         button1Label: 'Talk with us',
-        button1PageRef: '/contact-us',
+        button1LinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/contact-us',
+        }),
         button1Style: 'outline',
         button1Tone: 'mango',
       },
@@ -784,7 +799,10 @@ describe('buildDynamicPhotoColumnFromBlock', () => {
         imageUrl: '/mission-team.jpg',
         imageAlt: 'Mission team',
         buttonLabel: 'Learn more',
-        buttonPageRef: '/services/insurance/mission-assure',
+        buttonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services/insurance/mission-assure',
+        }),
         buttonStyle: 'outline',
         buttonTone: 'mango',
         widthShare: 1.25,
@@ -820,8 +838,10 @@ describe('buildDynamicImpactStatFromBlock', () => {
         body: 'Kingdom growth and support.',
         countUp: true,
         ctaLabel: 'Tell me more',
-        ctaPath: '/about-us/impact',
-        ctaPageRef: '/about-us/impact',
+        ctaLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/about-us/impact',
+        }),
         stat1Value: '$11 billion',
         stat1Label: 'assets under management',
         stat1Tone: 'mango',
@@ -893,8 +913,11 @@ describe('buildDynamicCtaBandFromBlock', () => {
         body: 'Log in to manage.',
         bgTone: 'white',
         buttonLabel: 'Go to my dashboard',
-        buttonUrl: 'https://secure.agfinancial.org/',
-        buttonOpenInNewWindow: true,
+        buttonLinkJson: serializeLinkValue({
+          kind: 'external',
+          href: 'https://secure.agfinancial.org/',
+          openInNewWindow: true,
+        }),
       },
     });
 
@@ -925,7 +948,10 @@ describe('buildDynamicCtaBandFromBlock', () => {
         title: 'Church Cash Reserves',
         bodyHtml: '<p>Build a practical reserve strategy.</p>',
         buttonLabel: 'Explore',
-        buttonPageRef: '/resources',
+        buttonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/resources',
+        }),
       },
     })?.presetId).toBeUndefined();
 
@@ -982,17 +1008,23 @@ describe('buildDynamicServicesGridFromBlock', () => {
         cardTitleSizeRem: 2.1875,
         cardPaddingRem: 1.85,
         browseLabel: 'Browse all services',
-        browsePath: '/services',
-        browsePageRef: '/services',
+        browseLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services',
+        }),
         card1Title: 'Loans',
-        card1Path: '/services/loans',
-        card1PageRef: '/services/loans',
+        card1LinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services/loans',
+        }),
         card1ImageUrl: '/icons/loans.png',
         card1ImageAlt: 'Loans icon',
         card1Action: 'Options',
         card2Title: 'View Rates',
-        card2Path: '/rates',
-        card2PageRef: '/rates',
+        card2LinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/rates',
+        }),
         card2ImageUrl: '/icons/rates.png',
         card2ImageAlt: 'Rates icon',
         card2Action: 'View rates',
@@ -1043,8 +1075,10 @@ describe('buildDynamicFeaturePanelFromBlock', () => {
         imageUrl: 'https://media.agfinancial.org/church-cash-reserves.jpg',
         imageAlt: 'Church Cash Reserves',
         buttonLabel: 'Ready for the unexpected?',
-        buttonPageRef: '/resources',
-        buttonOpenInNewWindow: false,
+        buttonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/resources',
+        }),
         targetSectionKey: 'class:cash-reserves',
       },
     });
@@ -1079,7 +1113,10 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         headline: 'Built for long-form moments',
         body: 'Keep layout and motion in code while allowing a small copy override.',
         buttonLabel: 'Contact AGFinancial',
-        buttonPageRef: '/contact',
+        buttonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/contact',
+        }),
       },
     });
 
@@ -1129,7 +1166,10 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         headline: 'What you do here matters.',
         body: 'Together, we improve financial health while fueling Kingdom growth and support.',
         buttonLabel: 'Tell me more',
-        buttonPageRef: '/about-us/impact',
+        buttonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/about-us/impact',
+        }),
       },
     });
 
@@ -1263,12 +1303,18 @@ describe('buildDynamicSplitPanelFromBlock', () => {
         leftTitle: 'Individual Retirement Accounts (IRAs)',
         leftBodyHtml: '<p>Traditional and Roth IRAs.</p>',
         leftButtonLabel: 'Explore IRAs',
-        leftButtonPageRef: '/services/retirement/iras',
+        leftButtonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services/retirement/iras',
+        }),
         rightTone: 'mango',
         rightTitle: 'Deferred Compensation Plan (409A)',
         rightBodyHtml: '<p>Contribution limits beyond standard retirement options.</p>',
         rightButtonLabel: 'Explore 409A',
-        rightButtonPageRef: '/services/retirement/409a',
+        rightButtonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services/retirement/409a',
+        }),
       },
     });
 
@@ -1525,7 +1571,10 @@ describe('buildDynamicGridFromBlock', () => {
         card1ListJson: '["First bullet","Second bullet"]',
         card1DividerTone: 'melon',
         card1ButtonLabel: 'Learn more',
-        card1ButtonPageRef: '/services/retirement',
+        card1ButtonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services/retirement',
+        }),
         card1ButtonClassName: 'custom-grid-action',
       },
     });
@@ -1688,7 +1737,10 @@ describe('buildDynamicGridFromBlock', () => {
         card1Title: '',
         card1Body: '',
         card1ButtonLabel: 'Learn more',
-        card1ButtonPageRef: '/services/retirement',
+        card1ButtonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services/retirement',
+        }),
       },
     });
 
@@ -1723,9 +1775,15 @@ describe('buildDynamicGridFromBlock', () => {
           },
         ]),
         card1ButtonLabel: 'Enroll now',
-        card1ButtonPageRef: '/services/retirement/403b/403b-individual-enrollment',
+        card1ButtonLinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/services/retirement/403b/403b-individual-enrollment',
+        }),
         card1Button2Label: 'Prospectus',
-        card1Button2PageRef: '/prospectus',
+        card1Button2LinkJson: serializeLinkValue({
+          kind: 'internal',
+          to: '/prospectus',
+        }),
       },
     });
 

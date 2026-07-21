@@ -17,7 +17,6 @@ import {
   DEFAULT_RETIREMENT_INTRO_HEADING,
   DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD_TITLE,
 } from './retirementOverviewSeed';
-import { normalizeSplitLinkFieldSettings } from '../lib/linkValue';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,14 +36,10 @@ describe('retirement overview seed guardrail', () => {
     const runtimeBillboard = buildDefaultRetirementBillboardRuntime();
     const runtimeRolloverBillboard = buildDefaultRetirementRolloverBillboardRuntime();
 
-    expect(introBlock?.settings).toEqual(
-      normalizeSplitLinkFieldSettings(defaultRetirementIntroSettings, { stripSplitFields: true }),
-    );
-    expect(billboardBlock?.settings).toEqual(
-      normalizeSplitLinkFieldSettings(defaultRetirementBillboardSettings, { stripSplitFields: true }),
-    );
+    expect(introBlock?.settings).toEqual(defaultRetirementIntroSettings);
+    expect(billboardBlock?.settings).toEqual(defaultRetirementBillboardSettings);
     expect(rolloverBlock?.settings).toEqual({
-      ...normalizeSplitLinkFieldSettings(defaultRetirementRolloverBillboardSettings, { stripSplitFields: true }),
+      ...defaultRetirementRolloverBillboardSettings,
       sectionClassName: 'retirement-rollover-billboard',
     });
     expect(nativeIntro).toBeUndefined();

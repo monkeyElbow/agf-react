@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
+import { serializeLinkValue } from '../../lib/linkValue';
 
 vi.mock('../../context/ContentAdminContext', async () => {
   const actual = await vi.importActual('../../context/ContentAdminContext.jsx');
@@ -40,17 +41,23 @@ describe('home services grid renderer guardrail', () => {
             settings: {
               heading: 'Bold, smart steps.',
               browseLabel: 'Browse all services',
-              browsePath: '/services',
-              browsePageRef: '/services',
+              browseLinkJson: serializeLinkValue({
+                kind: 'internal',
+                to: '/services',
+              }),
               card1Title: 'Loans',
-              card1Path: '/services/loans',
-              card1PageRef: '/services/loans',
+              card1LinkJson: serializeLinkValue({
+                kind: 'internal',
+                to: '/services/loans',
+              }),
               card1ImageUrl: '/icons/loans.png',
               card1ImageAlt: 'Loans icon',
               card1Action: 'Options',
               card2Title: 'View Rates',
-              card2Path: '/rates',
-              card2PageRef: '/rates',
+              card2LinkJson: serializeLinkValue({
+                kind: 'internal',
+                to: '/rates',
+              }),
               card2ImageUrl: '/icons/rates.png',
               card2ImageAlt: 'Rates icon',
               card2Action: 'View Rates',

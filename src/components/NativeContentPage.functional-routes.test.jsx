@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NativeContentPage from './NativeContentPage';
 import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
+import { serializeLinkValue } from '../lib/linkValue';
 
 let mockPageHierarchy = {};
 let mockBlocksByPath = {};
@@ -1395,10 +1396,15 @@ describe('NativeContentPage functional routes', () => {
             line1Text: 'Your giving.',
             line2Text: 'Managed.',
             button1Label: 'Open a Generosity Fund®',
-            button1Url: 'https://secure.agfinancial.org/generosityfund/signup',
+            button1LinkJson: serializeLinkValue({
+              kind: 'external',
+              href: 'https://secure.agfinancial.org/generosityfund/signup',
+            }),
             button2Label: 'Open a traditional DAF',
-            button2Url: '#traditional-daf-form',
-            button2PageRef: '',
+            button2LinkJson: serializeLinkValue({
+              kind: 'anchor',
+              href: '#traditional-daf-form',
+            }),
             button2Style: 'outline',
             button2Tone: 'super-grey',
           },

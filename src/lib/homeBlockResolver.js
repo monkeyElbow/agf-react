@@ -1,6 +1,7 @@
 import {
   normalizeFollowUpSubmitLabel,
 } from '../blocks/foundation/forms';
+import { serializeLinkValue } from './linkValue';
 
 const HOME_MINISTRY_ALLIES_BLOCK_ID = 'home_ministry_allies';
 const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
@@ -21,11 +22,9 @@ const HOME_BILLBOARD_FALLBACK_FIELDS = Object.freeze([
   'titleLetterSpacingEm',
   'contentMaxWidthPx',
   'buttonLabel',
-  'buttonUrl',
-  'buttonPageRef',
+  'buttonLinkJson',
   'buttonStyle',
   'buttonTone',
-  'buttonOpenInNewWindow',
   'scrollReveal',
 ]);
 export const HOME_COLUMNS_MATH_BILLBOARD_DEFAULTS = Object.freeze({
@@ -45,11 +44,12 @@ export const HOME_COLUMNS_MATH_BILLBOARD_DEFAULTS = Object.freeze({
   titleLetterSpacingEm: -0.03,
   contentMaxWidthPx: 1216,
   buttonLabel: 'Use the calculators',
-  buttonUrl: '/calculators',
-  buttonPageRef: '',
+  buttonLinkJson: serializeLinkValue({
+    kind: 'internal',
+    to: '/calculators',
+  }),
   buttonStyle: 'blue',
   buttonTone: 'atlantean',
-  buttonOpenInNewWindow: false,
   scrollReveal: 'scale-up',
 });
 const HOME_EXTRA_RENDERABLE_DYNAMIC_KINDS = new Set(['site_feature']);
@@ -179,7 +179,7 @@ function mergeHomeColumnsWithFallback(baseBlock, dynamicSettings) {
         column.imageUrl,
         column.imageAlt,
         column.buttonLabel,
-        column.buttonUrl,
+        column.buttonLinkJson,
       ].some((entry) => String(entry || '').trim());
     });
     if (!hasMeaningfulColumnsData) {
@@ -199,7 +199,7 @@ function mergeHomeColumnsWithFallback(baseBlock, dynamicSettings) {
     'col1TitleHighlightsJson',
     'col1Body',
     'col1ButtonLabel',
-    'col1ButtonUrl',
+    'col1ButtonLinkJson',
     'col2Type',
     'col2ImageUrl',
     'col2ImageAlt',
@@ -208,7 +208,7 @@ function mergeHomeColumnsWithFallback(baseBlock, dynamicSettings) {
     'col2TitleHighlightsJson',
     'col2Body',
     'col2ButtonLabel',
-    'col2ButtonUrl',
+    'col2ButtonLinkJson',
   ].forEach((field) => {
     const current = merged[field];
     if (current == null) {
@@ -398,9 +398,7 @@ function resolveHomeBlock(block, context) {
             headline: String(context.homeImpactStorySettings.headline ?? block.headline ?? '').trim(),
             body: String(context.homeImpactStorySettings.body ?? block.body ?? '').trim(),
             buttonLabel: String(context.homeImpactStorySettings.buttonLabel ?? block.buttonLabel ?? '').trim(),
-            buttonUrl: String(context.homeImpactStorySettings.buttonUrl ?? block.buttonUrl ?? '').trim(),
-            buttonPageRef: String(context.homeImpactStorySettings.buttonPageRef ?? block.buttonPageRef ?? '').trim(),
-            buttonOpenInNewWindow: Boolean(context.homeImpactStorySettings.buttonOpenInNewWindow ?? false),
+            buttonLinkJson: String(context.homeImpactStorySettings.buttonLinkJson ?? block.buttonLinkJson ?? '').trim(),
           }
         : undefined,
     };

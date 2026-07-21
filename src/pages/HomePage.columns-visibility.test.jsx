@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { serializeLinkValue } from '../lib/linkValue';
 
 let mockBlocksByPath = {};
 
@@ -115,7 +116,10 @@ describe('HomePage columns visibility', () => {
             titleHighlightsJson: '[{"text":"(let us)","className":"is-atlantean"}]',
             body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
             buttonLabel: 'Use the calculators',
-            buttonUrl: '/calculators',
+            buttonLinkJson: serializeLinkValue({
+              kind: 'internal',
+              to: '/calculators',
+            }),
           },
         },
       ],
@@ -146,7 +150,10 @@ describe('HomePage columns visibility', () => {
             line3ClassName: 'home-native-title line3 is-super-grey',
             line3HighlightsJson: '',
             button1Label: 'Review hero',
-            button1PageRef: '/services/investments',
+            button1LinkJson: serializeLinkValue({
+              kind: 'internal',
+              to: '/services/investments',
+            }),
           },
         },
       ],
@@ -211,7 +218,6 @@ describe('HomePage columns visibility', () => {
             titleHighlightsJson: '',
             body: '',
             buttonLabel: '',
-            buttonUrl: '',
           },
         },
       ],

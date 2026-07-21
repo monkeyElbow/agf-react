@@ -1,4 +1,5 @@
 import { buildDynamicBillboardFromBlock, buildDynamicIntroFromBlock } from '../lib/dynamicPageBlocks';
+import { serializeLinkValue } from '../lib/linkValue';
 
 export const DEFAULT_RETIREMENT_INTRO_HEADING = 'Invest in tomorrow. Start today.';
 export const DEFAULT_RETIREMENT_INTRO_BODY_TEXT = 'For decades, we\'ve helped build retirement strategies for ministers, ministry employees, churches, and organizations. Let\'s create yours.';
@@ -17,17 +18,11 @@ export const defaultRetirementIntroSettings = Object.freeze({
   bgTone: 'blue',
   textTone: 'white',
   button1Label: '',
-  button1Url: '',
-  button1PageRef: '',
   button1Style: 'dark',
   button1Tone: 'super-grey',
-  button1OpenInNewWindow: false,
   button2Label: '',
-  button2Url: '',
-  button2PageRef: '',
   button2Style: 'dark',
   button2Tone: 'super-grey',
-  button2OpenInNewWindow: false,
 });
 
 export function buildDefaultRetirementIntroRuntime() {
@@ -60,11 +55,12 @@ export const defaultRetirementBillboardSettings = Object.freeze({
   titleSizeRem: 5.25,
   titleLetterSpacingEm: -0.03,
   buttonLabel: 'Reach my consultant',
-  buttonUrl: '/services/retirement/retirement-consultants',
-  buttonPageRef: '/services/retirement/retirement-consultants',
+  buttonLinkJson: serializeLinkValue({
+    kind: 'internal',
+    to: '/services/retirement/retirement-consultants',
+  }),
   buttonStyle: 'blue',
   buttonTone: 'atlantean',
-  buttonOpenInNewWindow: false,
   contentMaxWidthPx: 1216,
   headlineMaxWidthPx: 560,
 });
@@ -101,11 +97,12 @@ export const defaultRetirementRolloverBillboardSettings = Object.freeze({
   titleLetterSpacingEm: -0.024,
   contentMaxWidthPx: 1080,
   buttonLabel: 'Start a rollover',
-  buttonUrl: '/services/retirement/rollovers',
-  buttonPageRef: '/services/retirement/rollovers',
+  buttonLinkJson: serializeLinkValue({
+    kind: 'internal',
+    to: '/services/retirement/rollovers',
+  }),
   buttonStyle: 'blue',
   buttonTone: 'atlantean',
-  buttonOpenInNewWindow: false,
 });
 
 export function buildDefaultRetirementRolloverBillboardRuntime() {

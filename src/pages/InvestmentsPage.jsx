@@ -63,6 +63,7 @@ import {
   heroTitleSizeRemToRuntimeCss,
   normalizeHeroTitleLetterSpacingEm,
 } from '../lib/heroTitleSize';
+import { serializeLinkValue } from '../lib/linkValue';
 
 const BlockHudPanelHost = lazy(() => import('../components/BlockHudPanelHost'));
 const FrontHudPanelShell = lazy(() => import('../components/FrontHudPanelShell'));
@@ -1079,9 +1080,10 @@ export default function InvestmentsPage() {
       imageUrl: CHURCH_CASH_RESERVES_ARTICLE_FEATURE.image,
       imageAlt: CHURCH_CASH_RESERVES_ARTICLE_FEATURE.imageAlt,
       buttonLabel: 'Ready for the unexpected?',
-      buttonUrl: CHURCH_CASH_RESERVES_ARTICLE_FEATURE.to,
-      buttonPageRef: CHURCH_CASH_RESERVES_ARTICLE_FEATURE.to,
-      buttonOpenInNewWindow: false,
+      buttonLinkJson: serializeLinkValue({
+        kind: 'internal',
+        to: CHURCH_CASH_RESERVES_ARTICLE_FEATURE.to,
+      }),
     };
     const sourceSettings = featurePanelBlock?.settings && typeof featurePanelBlock.settings === 'object'
       ? featurePanelBlock.settings
@@ -1090,19 +1092,18 @@ export default function InvestmentsPage() {
       ...articleDefaults,
       ...sourceSettings,
     };
-    const currentButtonUrl = String(normalizedSettings.buttonUrl || '').trim();
-    const currentButtonPageRef = String(normalizedSettings.buttonPageRef || '').trim();
+    const currentButtonLinkJson = String(normalizedSettings.buttonLinkJson || '').trim();
     if (!String(normalizedSettings.imageUrl || '').trim()) {
       normalizedSettings.imageUrl = CHURCH_CASH_RESERVES_ARTICLE_FEATURE.image;
     }
     if (!String(normalizedSettings.imageAlt || '').trim()) {
       normalizedSettings.imageAlt = CHURCH_CASH_RESERVES_ARTICLE_FEATURE.imageAlt;
     }
-    if (!currentButtonUrl || currentButtonUrl === '/resources') {
-      normalizedSettings.buttonUrl = CHURCH_CASH_RESERVES_ARTICLE_FEATURE.to;
-    }
-    if (!currentButtonPageRef || currentButtonPageRef === '/resources') {
-      normalizedSettings.buttonPageRef = CHURCH_CASH_RESERVES_ARTICLE_FEATURE.to;
+    if (!currentButtonLinkJson) {
+      normalizedSettings.buttonLinkJson = serializeLinkValue({
+        kind: 'internal',
+        to: CHURCH_CASH_RESERVES_ARTICLE_FEATURE.to,
+      });
     }
     return buildDynamicFeaturePanelFromBlock({
       ...featurePanelBlock,

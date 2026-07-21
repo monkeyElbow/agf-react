@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NativeContentPage from './NativeContentPage';
 import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
+import { serializeLinkValue } from '../lib/linkValue';
 
 void [MemoryRouter, NativeContentPage];
 
@@ -1014,7 +1015,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             justify: 'center',
             lineSpacing: 1,
             buttonLabel: 'Open a Generosity Fund®',
-            buttonUrl: 'https://secure.agfinancial.org/generosityfund/signup',
+            buttonLinkJson: serializeLinkValue({
+              kind: 'external',
+              href: 'https://secure.agfinancial.org/generosityfund/signup',
+            }),
             buttonStyle: 'solid',
             buttonTone: 'atlantean',
             button2Label: 'Terms and Conditions',
@@ -1075,7 +1079,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             textTone: 'white',
             justify: 'center',
             buttonLabel: 'Let’s simplify things',
-            buttonPageRef: '/services/retirement/rollovers',
+            buttonLinkJson: serializeLinkValue({
+              kind: 'internal',
+              to: '/services/retirement/rollovers',
+            }),
             sectionClassName: 'retirement-child-native-rollover',
           },
           editableFields: [],
@@ -1095,7 +1102,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             textTone: 'dark',
             justify: 'center',
             buttonLabel: 'Reach my consultant',
-            buttonPageRef: '/services/retirement/retirement-consultants',
+            buttonLinkJson: serializeLinkValue({
+              kind: 'internal',
+              to: '/services/retirement/retirement-consultants',
+            }),
             sectionClassName: 'retirement-ira-native-cta',
           },
           editableFields: [],
@@ -1151,7 +1161,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             textTone: 'white',
             justify: 'center',
             buttonLabel: 'Start a rollover',
-            buttonPageRef: '/services/retirement/rollovers',
+            buttonLinkJson: serializeLinkValue({
+              kind: 'internal',
+              to: '/services/retirement/rollovers',
+            }),
             sectionClassName: 'retirement-child-native-rollover retirement-403b-native-rollover retirement-everyday retirement-rollover-billboard',
           },
           editableFields: [],
@@ -1217,7 +1230,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             justify: 'center',
             contentMaxWidthPx: 1100,
             buttonLabel: 'Learn more',
-            buttonPageRef: '/contact-us',
+            buttonLinkJson: serializeLinkValue({
+              kind: 'internal',
+              to: '/contact-us',
+            }),
           },
           editableFields: [],
         },

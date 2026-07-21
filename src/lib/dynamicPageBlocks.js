@@ -256,6 +256,7 @@ function readFirstStringValue(source, keys = []) {
 
 function buildCanonicalActionLinkFromFields(source, {
   labelKeys = ['label'],
+  linkJsonKeys = [],
   hrefKeys = ['href', 'url'],
   toKeys = ['to', 'pageRef'],
   documentIdKeys = ['documentId'],
@@ -272,6 +273,7 @@ function buildCanonicalActionLinkFromFields(source, {
   const targetAnchorId = readFirstStringValue(source, targetAnchorIdKeys);
   const targetBlockId = readFirstStringValue(source, targetBlockIdKeys);
   const linkValue = coerceLinkValueFromFields(source, {
+    linkJsonKeys,
     hrefKeys,
     toKeys,
     documentIdKeys,
@@ -478,9 +480,10 @@ function buildSingleActionPromoRuntime(source, {
   const bodyHtml = includeBodyHtml ? normalizeOptionalHtmlContent(settings.bodyHtml) : '';
   const action = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
-    hrefKeys: ['buttonUrl'],
-    toKeys: ['buttonPageRef'],
-    openInNewWindowKeys: ['buttonOpenInNewWindow'],
+    linkJsonKeys: ['buttonLinkJson'],
+    hrefKeys: [],
+    toKeys: [],
+    openInNewWindowKeys: [],
   });
   const imageUrl = includeImage ? String(settings.imageUrl || '').trim() : '';
   const imageAlt = includeImage ? String(settings.imageAlt || '').trim() : '';
@@ -892,17 +895,19 @@ export function buildDynamicIntroFromBlock(block) {
   const actions = [
     buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['button1Label'],
-      hrefKeys: ['button1Url'],
-      toKeys: ['button1PageRef'],
+      linkJsonKeys: ['button1LinkJson'],
+      hrefKeys: [],
+      toKeys: [],
       styleKeys: ['button1Style'],
-      openInNewWindowKeys: ['button1OpenInNewWindow'],
+      openInNewWindowKeys: [],
     }),
     buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['button2Label'],
-      hrefKeys: ['button2Url'],
-      toKeys: ['button2PageRef'],
+      linkJsonKeys: ['button2LinkJson'],
+      hrefKeys: [],
+      toKeys: [],
       styleKeys: ['button2Style'],
-      openInNewWindowKeys: ['button2OpenInNewWindow'],
+      openInNewWindowKeys: [],
     }),
   ].filter(Boolean);
 
@@ -978,24 +983,26 @@ export function buildDynamicBillboardFromBlock(block) {
   const actions = [
     buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['buttonLabel'],
-      hrefKeys: ['buttonUrl'],
-      toKeys: ['buttonPageRef'],
+      linkJsonKeys: ['buttonLinkJson'],
+      hrefKeys: [],
+      toKeys: [],
       documentIdKeys: ['buttonDocumentId'],
       styleKeys: ['buttonStyle'],
       toneKeys: ['buttonTone'],
-      openInNewWindowKeys: ['buttonOpenInNewWindow'],
+      openInNewWindowKeys: [],
       actionKeys: ['buttonAction'],
       targetAnchorIdKeys: ['buttonTargetAnchorId'],
       targetBlockIdKeys: ['buttonTargetBlockId'],
     }),
     buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['button2Label'],
-      hrefKeys: ['button2Url'],
-      toKeys: ['button2PageRef'],
+      linkJsonKeys: ['button2LinkJson'],
+      hrefKeys: [],
+      toKeys: [],
       documentIdKeys: ['button2DocumentId'],
       styleKeys: ['button2Style'],
       toneKeys: ['button2Tone'],
-      openInNewWindowKeys: ['button2OpenInNewWindow'],
+      openInNewWindowKeys: [],
     }),
   ]
     .filter(Boolean)
@@ -1107,10 +1114,12 @@ export function buildDynamicColumnsFromBlock(block) {
           ? null
           : buildCanonicalActionLinkFromFields(settings, {
             labelKeys: [`col${slot}ButtonLabel`],
-            hrefKeys: [`col${slot}ButtonUrl`],
-            toKeys: [`col${slot}ButtonPageRef`],
+            linkJsonKeys: [`col${slot}ButtonLinkJson`],
+            hrefKeys: [],
+            toKeys: [],
             styleKeys: [`col${slot}ButtonStyle`],
             toneKeys: [`col${slot}ButtonTone`],
+            openInNewWindowKeys: [],
           }),
       };
 
@@ -1204,9 +1213,10 @@ export function buildDynamicSiteFeatureFromBlock(block) {
   const body = readFirstStringValue(settings, ['body']) || defaultBody;
   const action = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
-    hrefKeys: ['buttonUrl'],
-    toKeys: ['buttonPageRef'],
-    openInNewWindowKeys: ['buttonOpenInNewWindow'],
+    linkJsonKeys: ['buttonLinkJson'],
+    hrefKeys: [],
+    toKeys: [],
+    openInNewWindowKeys: [],
   }) || featureRuntime.action;
   const metrics = Array.isArray(featureRuntime.metrics)
     ? featureRuntime.metrics
@@ -1291,10 +1301,12 @@ export function buildDynamicPhotoColumnFromBlock(block) {
     : 1;
   const action = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
-    hrefKeys: ['buttonUrl'],
-    toKeys: ['buttonPageRef'],
+    linkJsonKeys: ['buttonLinkJson'],
+    hrefKeys: [],
+    toKeys: [],
     styleKeys: ['buttonStyle'],
     toneKeys: ['buttonTone'],
+    openInNewWindowKeys: [],
   });
 
   if (!title && !body && !imageUrl && !action) {
@@ -1339,9 +1351,10 @@ export function buildDynamicSplitPanelFromBlock(block) {
         body: String(settings?.[`${side}Body`] || '').trim(),
         action: buildCanonicalActionLinkFromFields(settings, {
           labelKeys: [`${side}ButtonLabel`],
-          hrefKeys: [`${side}ButtonUrl`],
-          toKeys: [`${side}ButtonPageRef`],
-          openInNewWindowKeys: [`${side}ButtonOpenInNewWindow`],
+          linkJsonKeys: [`${side}ButtonLinkJson`],
+          hrefKeys: [],
+          toKeys: [],
+          openInNewWindowKeys: [],
         }),
       };
 
@@ -1352,12 +1365,14 @@ export function buildDynamicSplitPanelFromBlock(block) {
   return items.length ? { presentation, items } : null;
 }
 
-function resolveLegacyLinkTarget(hrefValue, pageRefValue) {
+function resolveCanonicalLinkTarget(source, linkJsonKeys) {
   const link = coerceLinkValueFromFields(
-    { hrefValue, pageRefValue },
+    source,
     {
-      hrefKeys: ['hrefValue'],
-      toKeys: ['pageRefValue'],
+      linkJsonKeys,
+      hrefKeys: [],
+      toKeys: [],
+      openInNewWindowKeys: [],
     },
   );
 
@@ -1381,10 +1396,10 @@ export function buildDynamicServicesGridFromBlock(block) {
   const cards = Array.from({ length: 6 }, (_, index) => index + 1)
     .map((slot, index) => {
       const fallbackCard = fallbackCards[index] || {};
-      const path = resolveLegacyLinkTarget(
-        settings?.[`card${slot}Path`] ?? fallbackCard.path,
-        settings?.[`card${slot}PageRef`],
-      );
+      const path = resolveCanonicalLinkTarget({
+        ...settings,
+        [`__fallbackCard${slot}LinkJson`]: fallbackCard.linkJson,
+      }, [`card${slot}LinkJson`, `__fallbackCard${slot}LinkJson`]);
       const card = {
         slot,
         title: String(settings?.[`card${slot}Title`] ?? fallbackCard.title ?? '').trim(),
@@ -1404,10 +1419,10 @@ export function buildDynamicServicesGridFromBlock(block) {
   const cardTitleSizeRem = normalizePositiveRem(settings?.cardTitleSizeRem ?? block?.cardTitleSizeRem, 2.1875);
   const cardPaddingRem = normalizePositiveRem(settings?.cardPaddingRem ?? block?.cardPaddingRem, 1.85);
   const browseLabel = String(settings?.browseLabel ?? block?.browseLabel ?? '').trim();
-  const browsePath = resolveLegacyLinkTarget(
-    settings?.browsePath ?? block?.browsePath,
-    settings?.browsePageRef,
-  );
+  const browsePath = resolveCanonicalLinkTarget({
+    ...settings,
+    __fallbackBrowseLinkJson: block?.browseLinkJson,
+  }, ['browseLinkJson', '__fallbackBrowseLinkJson']);
 
   if (!heading && !cards.length && !browseLabel && !browsePath) {
     return null;
@@ -1453,14 +1468,13 @@ export function buildDynamicImpactStatFromBlock(block) {
     .filter(Boolean);
   const action = buildCanonicalActionLinkFromFields({
     ctaLabel: settings?.ctaLabel ?? block?.ctaLabel,
-    ctaPath: settings?.ctaPath ?? block?.ctaPath,
-    ctaPageRef: settings?.ctaPageRef,
-    ctaOpenInNewWindow: settings?.ctaOpenInNewWindow,
+    ctaLinkJson: settings?.ctaLinkJson ?? block?.ctaLinkJson,
   }, {
     labelKeys: ['ctaLabel'],
-    hrefKeys: ['ctaPath'],
-    toKeys: ['ctaPageRef'],
-    openInNewWindowKeys: ['ctaOpenInNewWindow'],
+    linkJsonKeys: ['ctaLinkJson'],
+    hrefKeys: [],
+    toKeys: [],
+    openInNewWindowKeys: [],
   });
   const titlePrefix = String(settings?.titlePrefix ?? block?.titlePrefix ?? '').trim();
   const highlight = String(settings?.highlight ?? block?.highlight ?? '').trim();
@@ -2068,10 +2082,11 @@ export function buildDynamicGridFromBlock(block) {
   const resolvedCardClass = cardStyle === 'none' ? 'card-none' : cardStyle;
   const sectionAction = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
-    hrefKeys: ['buttonUrl'],
-    toKeys: ['buttonPageRef'],
+    linkJsonKeys: ['buttonLinkJson'],
+    hrefKeys: [],
+    toKeys: [],
     documentIdKeys: ['buttonDocumentId'],
-    openInNewWindowKeys: ['buttonOpenInNewWindow'],
+    openInNewWindowKeys: [],
     styleKeys: ['buttonStyle'],
     toneKeys: ['buttonTone'],
   });
@@ -2089,10 +2104,11 @@ export function buildDynamicGridFromBlock(block) {
         [`__card${slot}PrimaryTone`]: String(settings[`card${slot}ButtonTone`] || 'atlantean').trim() || 'atlantean',
       }, {
         labelKeys: [`card${slot}ButtonLabel`],
-        hrefKeys: [`card${slot}ButtonUrl`],
-        toKeys: [`card${slot}ButtonPageRef`],
+        linkJsonKeys: [`card${slot}ButtonLinkJson`],
+        hrefKeys: [],
+        toKeys: [],
         documentIdKeys: [`card${slot}ButtonDocumentId`],
-        openInNewWindowKeys: [`card${slot}ButtonOpenInNewWindow`],
+        openInNewWindowKeys: [],
         styleKeys: [`__card${slot}PrimaryStyle`],
         toneKeys: [`__card${slot}PrimaryTone`],
         classNameKeys: [`card${slot}ButtonClassName`],
@@ -2103,10 +2119,11 @@ export function buildDynamicGridFromBlock(block) {
         [`__card${slot}SecondaryTone`]: String(settings[`card${slot}Button2Tone`] || 'super-grey').trim() || 'super-grey',
       }, {
         labelKeys: [`card${slot}Button2Label`],
-        hrefKeys: [`card${slot}Button2Url`],
-        toKeys: [`card${slot}Button2PageRef`],
+        linkJsonKeys: [`card${slot}Button2LinkJson`],
+        hrefKeys: [],
+        toKeys: [],
         documentIdKeys: [`card${slot}Button2DocumentId`],
-        openInNewWindowKeys: [`card${slot}Button2OpenInNewWindow`],
+        openInNewWindowKeys: [],
         styleKeys: [`__card${slot}SecondaryStyle`],
         toneKeys: [`__card${slot}SecondaryTone`],
         classNameKeys: [`card${slot}Button2ClassName`],
@@ -2279,10 +2296,11 @@ export function buildDynamicPageContentFromBlock(block) {
   const fineprint = parsePageContentTextLines(settings.fineprint);
   const action = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
-    hrefKeys: ['buttonUrl'],
-    toKeys: ['buttonPageRef'],
+    linkJsonKeys: ['buttonLinkJson'],
+    hrefKeys: [],
+    toKeys: [],
     documentIdKeys: ['buttonDocumentId'],
-    openInNewWindowKeys: ['buttonOpenInNewWindow'],
+    openInNewWindowKeys: [],
   });
   const addressTitle = String(settings.addressTitle || '').trim();
   const addressLines = String(settings.addressLines || '')
@@ -2402,11 +2420,12 @@ export function buildDynamicHeroFromBlock(block) {
       const targetBlockId = readFirstStringValue(settings, [`button${buttonNumber}TargetBlockId`]);
       const linkedAction = buildCanonicalActionLinkFromFields(settings, {
         labelKeys: [`button${buttonNumber}Label`],
-        hrefKeys: [`button${buttonNumber}Url`],
-        toKeys: [`button${buttonNumber}PageRef`],
+        linkJsonKeys: [`button${buttonNumber}LinkJson`],
+        hrefKeys: [],
+        toKeys: [],
         styleKeys: [`button${buttonNumber}Style`],
         toneKeys: [`button${buttonNumber}Tone`],
-        openInNewWindowKeys: [`button${buttonNumber}OpenInNewWindow`],
+        openInNewWindowKeys: [],
       });
 
       if (linkedAction) {

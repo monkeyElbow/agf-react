@@ -41,6 +41,7 @@ import {
   isManagedBlockVisible,
   summarizeHomeColumnsBlock,
 } from '../lib/homeBlockResolver';
+import { linkValueToEditableHref, parseLinkValueJson } from '../lib/linkValue';
 import { groupHomeRenderItems, planHomeRenderItems } from './homePageRenderPlan';
 
 const HOME_NEWSLETTER_FORM_ID = '34a993b6-d0fb-48fd-b3c4-faad7332770c';
@@ -802,9 +803,8 @@ export default function HomePage() {
   ).trim();
   const heroHudCtaLabel = String(heroHudSettings.button1Label || heroHudSettings.ctaLabel || '').trim();
   const heroHudCtaTarget = String(
-    heroHudSettings.button1PageRef
-    || heroHudSettings.button1Url
-    || heroHudSettings.ctaPath
+    linkValueToEditableHref(parseLinkValueJson(heroHudSettings.button1LinkJson))
+    || linkValueToEditableHref(parseLinkValueJson(heroHudSettings.ctaLinkJson))
     || '',
   ).trim();
   const heroHudLine3Value = String(heroHudSettings.line3Text || '').trim();
