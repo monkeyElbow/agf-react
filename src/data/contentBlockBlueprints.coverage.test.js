@@ -1438,7 +1438,12 @@ describe('content block blueprint coverage', () => {
         'Traditional IRAs may be converted to Roth IRAs',
       ].join('\n'),
     ]);
-    expect(iraBlocks.find((block) => block?.id === 'rate_table')?.settings?.fineprintDisclosureId).toBe('retirement-ira-rates-disclosure');
+    expect(iraBlocks.find((block) => block?.id === 'rate_table')).toMatchObject({
+      settings: {
+        paddingTopRem: 5.8,
+        fineprintDisclosureId: 'retirement-ira-rates-disclosure',
+      },
+    });
     expect(iraBlocks.find((block) => block?.id === 'contribution_limits')?.settings?.fineprintDisclosureId).toBe('retirement-ira-contribution-limits-disclosure');
     expect(iraBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });

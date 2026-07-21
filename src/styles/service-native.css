@@ -20087,10 +20087,11 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--retirement-iras .retirement-ira-native-rates {
   background: #fff;
+  padding-top: clamp(5.6rem, 8.5vw, 7rem);
 }
 
 .native-info-page--retirement-iras .retirement-ira-native-rates > .ag-panel-rail {
-  max-width: 72rem;
+  max-width: 58rem;
 }
 
 .native-info-page--retirement-iras .retirement-ira-native-rates > .ag-panel-rail > h2 {
@@ -20102,6 +20103,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-iras .retirement-ira-native-rates .ira-rates-sheet {
+  max-width: 44rem;
   margin-top: 1.15rem;
 }
 

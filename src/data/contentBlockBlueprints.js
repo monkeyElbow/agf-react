@@ -3631,7 +3631,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         fullBleed: false,
         spaceBeforeRem: 0,
         spaceAfterRem: 0,
-        paddingTopRem: 4.2,
+        paddingTopRem: 5.8,
         paddingBottomRem: 2.4,
         contentMaxWidthPx: 980,
         anchorId: '',
