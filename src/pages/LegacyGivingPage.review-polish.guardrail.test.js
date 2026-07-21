@@ -121,10 +121,10 @@ describe('planned giving review polish guardrail', () => {
     expect(blueprintSource).not.toContain("sectionClassName: 'legacy-giving-comparison-matrix'");
     expect(blueprintSource).not.toContain("widget: 'giving-comparison-matrix'");
     expect(blueprintSource).toContain("sectionClassName: 'legacy-giving-opportunity'");
-    expect(cssSource).toContain('margin-bottom: clamp(3rem, 5.4vw, 4.35rem);');
-    expect(cssSource).toContain('--legacy-stewardship-final-cta-gap: clamp(0.55rem, 1.1vw, 0.85rem);');
-    expect(cssSource).toContain('margin-top: clamp(1.15rem, 2.4vw, 1.85rem);');
-    expect(cssSource).toContain('font-family: var(--ag-font-helv);');
+    expect(cssSource).toContain('margin-bottom: clamp(4rem, 7vw, 5.25rem);');
+    expect(cssSource).toContain('--legacy-stewardship-final-cta-gap: clamp(0.35rem, 0.75vw, 0.6rem);');
+    expect(cssSource).toContain('margin-top: clamp(0.55rem, 1.25vw, 0.95rem);');
+    expect(cssSource).toContain('font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;');
   });
 
   it('keeps the endowments calculator heading and intro copy on the tighter centered rhythm', () => {

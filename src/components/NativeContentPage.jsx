@@ -6612,7 +6612,7 @@ export default function NativeContentPage({ page }) {
               <IncreasedContributionCalculatorWidget />
             ) : null}
 
-            {section.table ? (
+            {section.table && section.widget !== 'charitable-giving-table' ? (
               <div className="native-info-table-wrap">
                 <InfoTableSheet
                   headers={section.table.headers}

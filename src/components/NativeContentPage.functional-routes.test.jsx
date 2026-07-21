@@ -862,6 +862,8 @@ describe('NativeContentPage functional routes', () => {
     expect(comparisonSection?.id).toBe('charitable-giving-plan-comparison');
     expect(comparisonSection?.getAttribute('data-block-id')).toBe('comparison_table');
     expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
+    expect(comparisonSection?.querySelector('.cga-charitable-giving-table-widget')).toBeTruthy();
+    expect(comparisonSection?.querySelectorAll('table')).toHaveLength(1);
     expect(document.querySelector('[data-block-id="comparison_matrix"]')).toBeNull();
     expect(document.querySelector('.legacy-giving-comparison-matrix')).toBeNull();
   });
