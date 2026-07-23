@@ -21,6 +21,8 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card.fade-up[data-fade-state="pending"] {');
     expect(cssSource).toContain('opacity: 0.24;');
     expect(cssSource).toContain('translate: 0 16px;');
+    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .native-info-section-copy {');
+    expect(cssSource).toContain('margin-bottom: clamp(3.4rem, 6.6vw, 5.4rem);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card > div:first-child {');
     expect(cssSource).toContain('flex: 1 1 auto;');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card h3 {');
@@ -85,6 +87,9 @@ describe('planned giving review polish guardrail', () => {
     expect(blueprintSource).not.toContain("Endowments may be funded with:");
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo {');
     expect(cssSource).toContain('background: #faf7f1;');
+    expect(cssSource).toContain('padding: clamp(3.9rem, 7.4vw, 6.2rem) 0 clamp(2.15rem, 4.6vw, 3.4rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-info-section-copy > h2 {');
+    expect(cssSource).toContain('font-size: clamp(2.25rem, 4.25vw, 3.65rem);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-grid {');
     expect(cssSource).toContain('counter-reset: endowments-flow;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step::before {');
@@ -102,6 +107,19 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('grid-template-columns: repeat(3, max-content);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-asset-badges li:nth-child(4) {');
     expect(cssSource).toContain('text-align: left;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets {');
+    expect(cssSource).toContain('padding-top: clamp(1rem, 2.4vw, 1.75rem);');
+    expect(cssSource).toContain('background: #faf7f1;');
+    expect(cssSource).toContain('font-size: clamp(2.25rem, 4.25vw, 3.65rem);');
+    expect(cssSource).toContain('font-size: clamp(1.05rem, 1.55vw, 1.35rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .native-info-section-copy > h2 {');
+    expect(cssSource).toContain('font-size: clamp(3.15rem, 7.8vw, 6.1rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .native-info-section-subtitle {');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .billboard-scroll-reveal-scale-up {');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .billboard-scroll-reveal-scale-up[data-fade-state="pending"] {');
+    expect(cssSource).toContain('transform: scale(0.92);');
+    expect(cssSource).not.toContain('.legacy-child-native-endowments-big-cta > .ag-panel-rail > h2');
+    expect(cssSource).not.toContain('.legacy-child-native-endowments-duo > .native-info-full-bleed > h2');
     expect(cssSource).toContain('@media (max-width: 960px) {');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo .native-columns-item.is-flow-step {');
@@ -118,11 +136,14 @@ describe('planned giving review polish guardrail', () => {
     expect(blueprintSource).toContain("id: 'joy_billboard'");
     expect(blueprintSource).toContain("titleFontFamily: 'helv'");
     expect(blueprintSource).toContain("sectionClassName: 'legacy-giving-comparison'");
-    expect(blueprintSource).toContain("widget: 'charitable-giving-table'");
+    expect(blueprintSource).toContain("widget: 'giving-comparison-matrix'");
+    expect(blueprintSource).not.toContain("widget: 'charitable-giving-table'");
     expect(blueprintSource).not.toContain("sectionClassName: 'legacy-giving-comparison-matrix'");
-    expect(blueprintSource).not.toContain("widget: 'giving-comparison-matrix'");
     expect(blueprintSource).toContain("sectionClassName: 'legacy-giving-opportunity'");
-    expect(cssSource).toContain('margin-bottom: clamp(4rem, 7vw, 5.25rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .native-info-section-copy {');
+    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types > .ag-panel-rail-wide,');
+    expect(cssSource).toContain('width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-effective-gutter, var(--ag-panel-gutter)) * 2)));');
+    expect(cssSource).toContain('margin-bottom: clamp(3.4rem, 6.6vw, 5.4rem);');
     expect(cssSource).toContain('--legacy-stewardship-final-cta-gap: clamp(0.35rem, 0.75vw, 0.6rem);');
     expect(cssSource).toContain('margin-top: clamp(0.55rem, 1.25vw, 0.95rem);');
     expect(cssSource).toContain('font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;');
@@ -148,6 +169,9 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('margin-inline: auto;');
     expect(cssSource).toContain('padding-inline: 0;');
     expect(cssSource).toContain('text-align: center;');
+    expect(cssSource).toContain('.endowment-calculator-fineprint {');
+    expect(cssSource).toContain('justify-self: stretch;');
+    expect(cssSource).toContain('max-width: none;');
   });
 
   it('keeps the charitable trusts process trigger on the non-filling outline hover pattern', () => {

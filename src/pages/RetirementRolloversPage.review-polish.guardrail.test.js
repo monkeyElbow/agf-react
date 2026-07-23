@@ -75,8 +75,8 @@ describe('retirement rollovers review polish guardrail', () => {
     expect(blueprintSource).toContain("sectionClassName: 'retirement-rollovers-native-request'");
     expect(blueprintSource).not.toContain("targetSectionKey: ''");
     expect(blueprintSource).not.toContain("targetSectionClassName: ''");
-    expect(cssSource).toContain('.service-native-section.retirement-rollovers-native-request.native-dynamic-request {');
-    expect(cssSource).toContain('.retirement-rollovers-native-request.native-dynamic-request .dynamic-request-layout {');
+    expect(cssSource).toContain('.service-native-section.native-dynamic-request.is-request-form-preset-retirement-rollover {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-retirement-rollover .dynamic-request-layout {');
     expect(cssSource).toContain('width: min(100%, 56rem);');
     expect(cssSource).toContain('justify-content: center;');
     expect(cssSource).toContain('grid-template-columns: minmax(320px, 460px) minmax(280px, 24rem);');
@@ -89,7 +89,7 @@ describe('retirement rollovers review polish guardrail', () => {
     expect(appCssSource).toContain('--ag-panel-effective-gutter: calc(var(--ag-panel-gutter) * 0.275);');
     expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-options > .ag-panel-rail,');
     expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail,');
-    expect(cssSource).toContain('.retirement-rollovers-native-request.native-dynamic-request > .ag-panel-rail {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-retirement-rollover > .ag-panel-rail {');
     expect(cssSource).not.toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-request.native-dynamic-request');
     expect(cssSource).toContain('width: calc(100% - (var(--ag-panel-effective-gutter, var(--ag-panel-gutter)) * 2));');
     expect(cssSource).not.toContain('.native-info-page--retirement-rollovers .service-native-section.retirement-rollovers-native-cta {');

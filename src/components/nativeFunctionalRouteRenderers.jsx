@@ -51,17 +51,12 @@ function SitemapRouteSection() {
       .filter(([, pages]) => pages.length);
   }, [groups, query, sectionFilter]);
 
-  const totalFilteredCount = useMemo(
-    () => filteredGroups.reduce((sum, [, pages]) => sum + pages.length, 0),
-    [filteredGroups],
-  );
-
   return (
     <section className="service-native-section native-sitemap-section">
       <div className="ag-panel-rail">
         <div className="native-sitemap-tools">
           <label htmlFor={searchId}>
-            <span>Find page</span>
+            <span className="sr-only">Find page</span>
             <input
               id={searchId}
               type="search"
@@ -71,7 +66,7 @@ function SitemapRouteSection() {
             />
           </label>
           <label htmlFor={sectionId}>
-            <span>Section</span>
+            <span className="sr-only">Section</span>
             <select
               id={sectionId}
               value={sectionFilter}
@@ -87,10 +82,6 @@ function SitemapRouteSection() {
           </label>
         </div>
 
-        <p className="native-sitemap-results-count">
-          {totalFilteredCount} page{totalFilteredCount === 1 ? '' : 's'} shown
-        </p>
-
         {filteredGroups.length ? (
           <div className="native-sitemap-grid">
             {filteredGroups.map(([section, pages]) => (
@@ -99,7 +90,7 @@ function SitemapRouteSection() {
                 <ul className="native-info-link-list">
                   {pages.map((page) => (
                     <li key={page.path}>
-                      <Link to={page.path}>{page.title}</Link>
+                      <Link className="service-native-btn is-tone-atlantean" to={page.path}>{page.title}</Link>
                     </li>
                   ))}
                 </ul>
@@ -194,7 +185,9 @@ function ProspectusRouteSection({ sections, actions, ActionRenderer, NativeLinkR
 }
 
 function FormsLibraryRouteSection({ seedForms, NativeLinkRenderer }) {
+  const categoryId = useId();
   const [query, setQuery] = useState('');
+  const [topicFilter, setTopicFilter] = useState('all');
   const { documents } = useDocuments();
   const forms = useMemo(() => {
     const libraryDocs = Array.isArray(documents)
@@ -213,16 +206,26 @@ function FormsLibraryRouteSection({ seedForms, NativeLinkRenderer }) {
 
     return Array.isArray(seedForms) ? seedForms : [];
   }, [documents, seedForms]);
+
+  const formTopics = useMemo(() => (
+    Array.from(new Set(forms.map((item) => String(item.topic || 'Other').trim() || 'Other')))
+      .sort((a, b) => a.localeCompare(b))
+  ), [forms]);
+
   const filteredForms = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) {
-      return forms;
-    }
     return forms.filter((item) => {
-      const haystack = `${item.topic || ''} ${item.label || ''} ${item.href || ''}`.toLowerCase();
+      const topic = String(item.topic || 'Other').trim() || 'Other';
+      if (topicFilter !== 'all' && topic !== topicFilter) {
+        return false;
+      }
+      if (!needle) {
+        return true;
+      }
+      const haystack = `${topic} ${item.label || ''} ${item.href || ''}`.toLowerCase();
       return haystack.includes(needle);
     });
-  }, [forms, query]);
+  }, [forms, query, topicFilter]);
 
   const groups = useMemo(() => {
     const grouped = filteredForms.reduce((acc, item) => {
@@ -256,9 +259,21 @@ function FormsLibraryRouteSection({ seedForms, NativeLinkRenderer }) {
               placeholder="Start typing to search"
             />
           </label>
-          <p className="native-prospectus-count native-forms-count">
-            {filteredForms.length} of {forms.length} forms
-          </p>
+          <label htmlFor={categoryId} className="native-forms-category">
+            <span className="native-forms-search-label">Category</span>
+            <select
+              id={categoryId}
+              value={topicFilter}
+              onChange={(event) => setTopicFilter(event.target.value)}
+            >
+              <option value="all">All categories</option>
+              {formTopics.map((topic) => (
+                <option key={`forms-topic-${topic}`} value={topic}>
+                  {topic}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         {groups.length ? (
@@ -267,7 +282,6 @@ function FormsLibraryRouteSection({ seedForms, NativeLinkRenderer }) {
               <article key={topic} className="native-forms-group">
                 <div className="native-forms-group-head">
                   <h3>{topic}</h3>
-                  <p>{items.length} form{items.length === 1 ? '' : 's'}</p>
                 </div>
                 <ul className="native-forms-list">
                   {items.map((item) => (

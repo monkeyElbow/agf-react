@@ -31,6 +31,7 @@ const LEGACY_STORY_LIGHT_LEAK_PEAK_END = 0.62;
 const LEGACY_STORY_LIGHT_LEAK_FADE_START = 0.76;
 const LEGACY_STORY_LIGHT_LEAK_FADE_END = 0.96;
 const LEGACY_STORY_TONE_SEQUENCE = Object.freeze(['atlantean', 'super-grey', 'atlantean-dark']);
+const LEGACY_STORY_CTA_CLASS = 'service-native-btn is-tone-white legacy-stewardship-story-cta';
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -249,7 +250,7 @@ export function LegacyGivingStewardshipStoryStaticContent({
           >
             <h2 aria-label={finalBeat}>{renderLegacyBeatHeading(finalBeat, { final: true })}</h2>
             <div className="legacy-stewardship-story-cta-wrap">
-              <StoryAction action={action} resolveTo={resolveTo} className="service-native-btn is-outline is-tone-white legacy-stewardship-story-cta" />
+              <StoryAction action={action} resolveTo={resolveTo} className={LEGACY_STORY_CTA_CLASS} />
             </div>
           </div>
         ) : null}
@@ -448,7 +449,7 @@ export default function LegacyGivingStewardshipStoryFeature({
                 transform: `translate3d(0, ${ctaShift}px, 0)`,
               }}
             >
-              <StoryAction action={action} resolveTo={resolveTo} className="service-native-btn is-outline is-tone-white legacy-stewardship-story-cta" />
+              <StoryAction action={action} resolveTo={resolveTo} className={LEGACY_STORY_CTA_CLASS} />
             </div>
           </div>
         </div>

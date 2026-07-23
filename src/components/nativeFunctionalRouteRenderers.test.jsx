@@ -78,23 +78,25 @@ describe('native functional route renderers', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('3 pages shown')).toBeTruthy();
+    expect(screen.queryByText(/pages? shown/)).toBeNull();
+    expect(screen.getByRole('link', { name: 'About Us' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Rates' })).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText('Section'), { target: { value: 'Resources' } });
-    expect(screen.getByText('2 pages shown')).toBeTruthy();
+    expect(screen.queryByText(/pages? shown/)).toBeNull();
     expect(screen.queryByRole('link', { name: 'About Us' })).toBeNull();
 
     fireEvent.change(screen.getByLabelText('Find page'), { target: { value: 'contact' } });
-    expect(screen.getByText('1 page shown')).toBeTruthy();
+    expect(screen.queryByText(/pages? shown/)).toBeNull();
     expect(screen.getByRole('link', { name: 'Contact Us' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Rates' })).toBeNull();
 
     fireEvent.change(screen.getByLabelText('Find page'), { target: { value: 'no-match' } });
-    expect(screen.getByText('0 pages shown')).toBeTruthy();
+    expect(screen.queryByText(/pages? shown/)).toBeNull();
     expect(screen.getByText('No pages match your filter.')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }));
-    expect(screen.getByText('3 pages shown')).toBeTruthy();
+    expect(screen.queryByText(/pages? shown/)).toBeNull();
     expect(screen.getByRole('link', { name: 'About Us' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Rates' })).toBeTruthy();
   });
@@ -172,20 +174,28 @@ describe('native functional route renderers', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('2 of 2 forms')).toBeTruthy();
+    expect(screen.queryByText(/of \d+ forms/)).toBeNull();
     expect(screen.queryByText('Browse AGFinancial form links by topic.')).toBeNull();
     expect(screen.getByPlaceholderText('Start typing to search')).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Seed Fallback Form' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'Insurance' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Retirement' })).toBeTruthy();
+    expect(screen.getByLabelText('Category')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'Insurance' } });
+    expect(screen.queryByText(/of \d+ forms/)).toBeNull();
+    expect(screen.getByRole('link', { name: 'Life Enrollment and Change Form' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Beneficiary Change Form' })).toBeNull();
+
+    fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'all' } });
 
     fireEvent.change(screen.getByLabelText('Search forms'), { target: { value: 'beneficiary' } });
-    expect(screen.getByText('1 of 2 forms')).toBeTruthy();
+    expect(screen.queryByText(/of \d+ forms/)).toBeNull();
     expect(screen.getByRole('link', { name: 'Beneficiary Change Form' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Life Enrollment and Change Form' })).toBeNull();
 
     fireEvent.change(screen.getByLabelText('Search forms'), { target: { value: 'missing' } });
-    expect(screen.getByText('0 of 2 forms')).toBeTruthy();
+    expect(screen.queryByText(/of \d+ forms/)).toBeNull();
     expect(screen.getByText('No forms match your search.')).toBeTruthy();
   });
 

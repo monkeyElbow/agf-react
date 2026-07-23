@@ -52,9 +52,9 @@ Our church Risk Management Guide can help you recognize areas of risk and learn 
 
 ## Mission Assure feature copy
 
-Full coverage for mission trips, retreats, and everything in between.
+Full coverage for mission trips, retreats…
 
-With low per-person, per-day premiums, Mission Assure offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.
+…and everything in between. With low per-person, per-day premiums, Mission Assure offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.
 
 ## Fraud-prevention article teaser
 

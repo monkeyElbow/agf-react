@@ -28,5 +28,10 @@ describe('loans options heading styles', () => {
     expect(cssSource).toContain('.service-native-section.loans-native-options .loans-native-options-lead');
     expect(cssSource).toContain('--loans-native-options-title-size');
     expect(cssSource).toContain('--loans-native-options-subtitle-size');
+    expect(cssSource).toContain('grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));');
+    expect(cssSource).not.toContain('--loans-native-option-card-min-height');
+    expect(cssSource).not.toContain('min-height: var(--loans-native-option-card-min-height);');
+    expect(cssSource).not.toContain('.loans-native-options-grid > .service-native-card:nth-last-child(3):nth-child(4n + 1),');
+    expect(cssSource).not.toContain('grid-column: span 4;');
   });
 });

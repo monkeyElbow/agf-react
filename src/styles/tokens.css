@@ -35,6 +35,7 @@
   --ag-color-melon-dark: #d8423c;
   --ag-color-super-grey: #414042;
   --ag-color-super-grey-dark: #636265;
+  --ag-color-super-grey-hover: color-mix(in srgb, var(--ag-color-super-grey) 60%, #ffffff 40%);
   --ag-color-sandstone-soft: rgba(196, 190, 182, 0.1);
   --ag-color-border-main: #bebebe;
   /* Shared surface gradients */

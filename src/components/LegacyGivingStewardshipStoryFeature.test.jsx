@@ -6,8 +6,8 @@ import LegacyGivingStewardshipStoryFeature from './LegacyGivingStewardshipStoryF
 const DEFAULT_PROPS = {
   headline: 'Smart stewardship for today and tomorrow.',
   beats: [
-    'Receive payments for life.',
     'Transition out of appreciated assets.',
+    'Receive payments for life.',
     'Leave a legacy for family and ministry.',
     'Smart stewardship for today and tomorrow.',
   ],
@@ -92,7 +92,7 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
     expect(screen.getByText('Leave a legacy for family and ministry.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Smart stewardship for today and tomorrow.' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).getAttribute('href')).toBe('#charitable-giving-plan-comparison');
-    expect(container.querySelector('.legacy-stewardship-story-static-beats li[data-tone="atlantean"]')?.textContent).toBe('Receive payments for life.');
+    expect(container.querySelector('.legacy-stewardship-story-static-beats li[data-tone="atlantean"]')?.textContent).toBe('Transition out of appreciated assets.');
   });
 
   it('keeps the smaller-viewport path on the safe static fallback instead of requiring the pinned stage', () => {
@@ -123,7 +123,8 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
     expect(finalActor?.querySelector('.legacy-stewardship-story-final-primary')).toBeNull();
     expect(finalActor?.querySelector('.legacy-stewardship-story-final-secondary')).toBeNull();
     expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).getAttribute('href')).toBe('#charitable-giving-plan-comparison');
-    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).className).toContain('is-outline');
+    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).className).toContain('is-tone-white');
+    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).className).not.toContain('is-outline');
     expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).className).not.toContain('home-impact-story-cta');
   });
 
@@ -136,7 +137,7 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
       vi.advanceTimersByTime(100);
     });
 
-    const firstActor = screen.getByText('Receive payments for life.').closest('.legacy-stewardship-story-beat-actor');
+    const firstActor = screen.getByText('Transition out of appreciated assets.').closest('.legacy-stewardship-story-beat-actor');
     const firstCue = container.querySelector('.legacy-stewardship-story-first-cue');
     expect(firstActor?.getAttribute('data-motion-state')).toBe('entering');
     expect(getActorOpacity(firstActor)).toBeGreaterThanOrEqual(0.64);

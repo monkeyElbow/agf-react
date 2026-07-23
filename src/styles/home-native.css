@@ -124,8 +124,8 @@
 .home-native-strip-login-btn.is-tone-super-grey {
   --strip-btn-border: var(--ag-color-super-grey);
   --strip-btn-bg: var(--ag-color-super-grey);
-  --strip-btn-hover-bg: #3b3a3c;
-  --strip-btn-hover-border: #3b3a3c;
+  --strip-btn-hover-bg: var(--ag-color-super-grey-hover);
+  --strip-btn-hover-border: var(--ag-color-super-grey-hover);
 }
 
 .home-native-strip-login-btn.is-tone-mango {
@@ -209,6 +209,7 @@
 
 .home-native-strip-rates {
   --strip-rates-color: var(--ag-color-mango);
+  --strip-rates-hover-color: var(--strip-rates-color);
   display: inline-flex;
   align-items: center;
   min-height: 34px;
@@ -235,6 +236,7 @@
 
 .home-native-strip-rates.is-tone-super-grey {
   --strip-rates-color: var(--ag-color-super-grey);
+  --strip-rates-hover-color: var(--ag-color-super-grey-hover);
 }
 
 .home-native-strip-rates.is-tone-white {
@@ -262,9 +264,20 @@
 }
 
 .home-native-strip-rates:hover {
-  color: var(--strip-rates-color);
+  color: var(--strip-rates-hover-color);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.home-native-strip-rates.is-style-solid:hover {
+  border-color: var(--strip-rates-hover-color);
+  background: var(--strip-rates-hover-color);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.home-native-strip-rates.is-style-outline:hover {
+  border-color: var(--strip-rates-hover-color);
 }
 
 .home-native-strip-phone {
@@ -1408,7 +1421,7 @@ h3.home-services-feature-panel-title {
   font-weight: 800;
   font-synthesis: none;
   line-height: 0.92;
-  letter-spacing: -0.038em;
+  letter-spacing: -0.05em;
   text-shadow: none;
   filter: none;
   text-rendering: geometricPrecision;

@@ -55,6 +55,16 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).not.toContain('.retirement-native-hero-line + .retirement-native-hero-line {');
   });
 
+  it('keeps the retirement intro hidden block from falling back to default intro content', () => {
+    const source = readSource('./RetirementPage.jsx');
+
+    expect(source).toContain('function isHiddenManagedBlock(block) {');
+    expect(source).toContain('const introBlockRecord = useMemo(() => (');
+    expect(source).toContain('const introBlockIsHidden = isHiddenManagedBlock(introBlockRecord);');
+    expect(source).toContain('introBlockIsHidden ? null : dynamicIntro || DEFAULT_RETIREMENT_INTRO');
+    expect(source).toContain('{resolvedIntro ? (');
+  });
+
   it('keeps the rebuilt section on the shared investments reveal path with retirement dark-shell styling', () => {
     const cssSource = readSource('../styles/service-native.css');
     const shellRule = readRuleBlock(cssSource, '.investments-native-growth-feature.retirement-plan-feature {');
@@ -72,11 +82,14 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(leadRule).toContain('color: rgba(255, 255, 255, 0.9);');
     expect(cssSource).toContain('.retirement-plan-feature .investments-native-growth-card--investor .service-native-action-row {');
     expect(cssSource).toContain('.retirement-plan-feature-action {');
+    expect(cssSource).toContain('padding: clamp(0.95rem, 2vw, 1.2rem) clamp(2.4rem, 5.2vw, 3.1rem) clamp(3.2rem, 5.6vw, 4.4rem);');
     expect(cssSource).toContain('.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-tone-mango,');
   });
 
-  it('keeps the retirement do-the-math section on a retirement-specific render with billboard data and HUD coverage', () => {
+  it('keeps the retirement do-the-math section aligned with the centered home billboard pattern', () => {
     const source = readSource('./RetirementPage.jsx');
+    const cssSource = readSource('../styles/service-native.css');
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
     expect(source).not.toContain("contentBlockBlueprintsByPath['/services/retirement']");
     expect(source).not.toContain('function buildRetirementCanonicalBlocks(blocks) {');
@@ -93,14 +106,31 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).not.toContain('data-block-id="housing_feature"');
     expect(source).toContain('function buildRetirementDoTheMathRuntime(block) {');
     expect(source).toContain("const runtime = buildDynamicBillboardFromBlock(block);");
+    expect(source).not.toMatch(/function buildRetirementDoTheMathRuntime\(block\) \{[\s\S]*?justify: 'left',[\s\S]*?\n\}/);
     expect(source).toContain("const RETIREMENT_SCALE_REVEAL_CLASS_NAME = 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up';");
     expect(source).toContain("const RETIREMENT_SCALE_REVEAL_ROOT_MARGIN = '0px 0px -20% 0px';");
     expect(source).toContain('copyClassName: appendRetirementScaleRevealClassName(runtime.copyClassName),');
-    expect(source).toContain('data-fade-root-margin={retirementDoTheMathRuntime.copyFadeRootMargin || RETIREMENT_SCALE_REVEAL_ROOT_MARGIN}');
+    expect(source).toContain('function stripRetirementDoTheMathWrapperRevealClassName(className) {');
+    expect(source).toContain("const doTheMathJustify = retirementDoTheMathRuntime?.justify || 'center';");
+    expect(source).toContain('const doTheMathCopyClassName = stripRetirementDoTheMathWrapperRevealClassName(');
+    expect(source).toContain("className={`native-info-section-copy is-justify-${doTheMathJustify}${doTheMathCopyClassName ? ` ${doTheMathCopyClassName}` : ''}`}");
+    expect(source).toContain('style={buildRetirementBillboardActionRowStyle(doTheMathJustify)}');
+    expect(source).toContain('className="retirement-do-the-math-title fade-up fade-up-force-observe fade-up-repeat-observe"');
+    expect(source).toContain('className="retirement-do-the-math-support fade-up fade-up-force-observe fade-up-repeat-observe"');
+    expect(source).toContain('data-fade-root-margin="0px 0px 4% 0px"');
     expect(source).toContain('<HomeDoTheMathBadge');
     expect(source).not.toContain("id: 'home_do_the_math'");
     expect(source).toContain('className={`service-native-section retirement-do-the-math-billboard');
     expect(source).toContain("{renderHudAnchor('columns_math')}");
+
+    expect(blueprintSource).toMatch(/id: 'columns_math'[\s\S]*?kind: 'billboard'[\s\S]*?justify: 'center'[\s\S]*?lineSpacing: 0\.94[\s\S]*?contentMaxWidthPx: 1216,/);
+    expect(cssSource).toContain('.service-native-section.retirement-do-the-math-billboard .native-info-section-copy {');
+    expect(cssSource).toContain('margin: 0 auto;');
+    expect(cssSource).toContain('justify-items: center;');
+    expect(cssSource).toContain('text-align: center;');
+    expect(cssSource).toContain('.service-native-section.retirement-do-the-math-billboard .retirement-do-the-math-support {');
+    expect(cssSource).toContain('.service-native-section.retirement-do-the-math-billboard .service-native-action-row {');
+    expect(cssSource).toContain('justify-content: center;');
   });
 
   it('keeps the retirement everyday billboard reveal as an opt-in shared billboard feature', () => {
@@ -108,11 +138,16 @@ describe('retirement 403(b) review polish guardrail', () => {
     const seedSource = readSource('../data/retirementOverviewSeed.js');
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
     const nativePageSource = readSource('../components/NativeContentPage.jsx');
+    const cssSource = readSource('../styles/service-native.css');
 
     expect(seedSource).toContain("scrollReveal: 'scale-up'");
+    expect(seedSource).toContain('lineSpacing: 0.88');
+    expect(retirementSource).toContain("'--dynamic-billboard-padding-bottom': 'clamp(6rem, 12vw, 9rem)'");
     expect(retirementSource).toContain("const billboardCopyUsesScrollProgress = renderedBillboard?.scrollReveal === 'scale-up';");
     expect(retirementSource).toContain("'billboard-scroll-progress-copy'");
     expect(retirementSource).toContain('data-fade-root-margin={billboardCopyUsesScrollProgress ? undefined : (renderedBillboard.copyFadeRootMargin || undefined)}');
+    expect(cssSource).toContain('--retirement-billboard-starting-gap: clamp(0.6rem, 1.175vw, 0.85rem);');
+    expect(cssSource).toContain('padding-bottom: var(--dynamic-billboard-padding-bottom, clamp(6rem, 12vw, 9rem));');
     expect(runtimeSource).toContain('const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);');
     expect(runtimeSource).toContain("copyClassName: sanitizeClassName(settings.copyClassName || '')");
     expect(runtimeSource).toContain("|| (scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : '')");

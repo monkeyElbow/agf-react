@@ -10,6 +10,87 @@ function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
 }
 
+function splitSelectorList(selectorList) {
+  const selectors = [];
+  let current = '';
+  let depth = 0;
+
+  for (const char of selectorList) {
+    if (char === '(' || char === '[') {
+      depth += 1;
+    } else if ((char === ')' || char === ']') && depth > 0) {
+      depth -= 1;
+    }
+
+    if (char === ',' && depth === 0) {
+      selectors.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  if (current.trim()) {
+    selectors.push(current.trim());
+  }
+
+  return selectors;
+}
+
+function extractCssSelectors(source) {
+  const selectors = [];
+  const withoutComments = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  const rulePattern = /([^{}]+)\{/g;
+  let match;
+
+  while ((match = rulePattern.exec(withoutComments))) {
+    const selectorList = match[1].trim();
+    if (!selectorList || selectorList.startsWith('@')) {
+      continue;
+    }
+    selectors.push(...splitSelectorList(selectorList));
+  }
+
+  return selectors;
+}
+
+const REQUEST_FORM_INTERNAL_SELECTOR_PARTS = [
+  '.dynamic-request-layout',
+  '.dynamic-request-shell',
+  '.dynamic-request-copy',
+  '.dynamic-request-copy-shell',
+  '.dynamic-request-form',
+  '.dynamic-request-panel',
+  '.dynamic-request-grid',
+  '.dynamic-request-field',
+  '.dynamic-request-fieldset',
+  '.dynamic-request-choice-row',
+  '.dynamic-request-help',
+  '.dynamic-request-error',
+  '.dynamic-request-step-meta',
+  '.dynamic-request-progress',
+  '.native-info-inline-form',
+  '.native-info-inline-form-step-actions',
+  '.native-info-inline-form-progress',
+  '.native-info-inline-form-dot',
+  '.native-info-section-copy',
+];
+
+const REQUEST_FORM_ROUTE_SECTION_CLASSES = [
+  '.certificate-request-native-section',
+  '.certificate-request-form',
+  '.contact-us-request',
+  '.group-life-native-quote',
+  '.insurance-pc-native-quote',
+  '.legacy-child-native-cga-request',
+  '.legacy-child-native-endowments-legacy-form',
+  '.legacy-child-native-generosity-request',
+  '.legacy-child-native-request',
+  '.loans-consultant-native-contact',
+  '.loans-native-inquiry',
+  '.retirement-rollovers-native-request',
+];
+
 describe('request form renderer guardrail', () => {
   it('keeps the shared request-form renderer in the native page path', () => {
     const source = readSource('./NativeContentPage.jsx');
@@ -62,12 +143,25 @@ describe('request form renderer guardrail', () => {
     expect(source).toContain("'Go to next step'");
   });
 
-  it('keeps shared request shell selectors low-specificity so page-specific request layouts can override them', () => {
+  it('keeps shared request shell selectors low-specificity for static inline request shells', () => {
     const source = readSource('../styles/service-native.css');
 
     expect(source).toContain(':where(.native-info-page .service-native-section.has-inline-request-shell > .ag-panel-rail)');
     expect(source).toContain(':where(.native-info-page .service-native-section.has-inline-request-shell > .ag-panel-rail > .native-info-section-copy)');
     expect(source).toContain(':where(.native-info-page .service-native-section.has-inline-request-shell > .ag-panel-rail > .native-info-inline-form)');
+  });
+
+  it('prevents route section classes from owning shared request-form internals', () => {
+    const source = readSource('../styles/service-native.css');
+    const offenders = extractCssSelectors(source).filter((selector) => {
+      const targetsRequestInternal = REQUEST_FORM_INTERNAL_SELECTOR_PARTS.some((part) => selector.includes(part));
+      const usesRouteSectionClass = REQUEST_FORM_ROUTE_SECTION_CLASSES.some((className) => selector.includes(className));
+      const isStaticLegacyException = selector.includes(':not(.native-dynamic-request)');
+
+      return targetsRequestInternal && usesRouteSectionClass && !isStaticLegacyException;
+    });
+
+    expect(offenders).toEqual([]);
   });
 
   it('marks native CTA copy-plus-form sections with the shared inline CTA shell class', () => {
@@ -133,10 +227,13 @@ describe('request form renderer guardrail', () => {
   it('keeps the Group Life request heading on dark core copy with white highlighted words in the dynamic request path', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2,');
-    expect(cssSource).toContain('.group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2.is-white,');
-    expect(cssSource).toContain('.group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2.is-super-grey {');
-    expect(cssSource).toContain('.group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2 mark.is-white {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2,');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2.is-white,');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2.is-super-grey {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2 mark.is-white {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-panel {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-step-meta {');
+    expect(cssSource).toContain('border-bottom: 0;');
     expect(cssSource).not.toContain('.native-info-page--group-life-quote .group-life-native-quote.native-dynamic-request');
   });
 
@@ -155,13 +252,13 @@ describe('request form renderer guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.legacy-child-native-endowments-legacy-form:not(.native-dynamic-request) > .ag-panel-rail {');
-    expect(cssSource).toContain('.legacy-child-native-endowments-legacy-form.native-dynamic-request > .ag-panel-rail,');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-endowment > .ag-panel-rail,');
     expect(cssSource).toContain('display: block;');
-    expect(cssSource).toContain('.legacy-child-native-endowments-legacy-form.native-dynamic-request .dynamic-request-layout {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-layout {');
     expect(cssSource).toContain('grid-template-columns: minmax(360px, 460px) minmax(0, 1fr);');
-    expect(cssSource).toContain('.legacy-child-native-endowments-legacy-form.native-dynamic-request .dynamic-request-copy {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy {');
     expect(cssSource).toContain('justify-self: stretch;');
-    expect(cssSource).toContain('.legacy-child-native-endowments-legacy-form.native-dynamic-request .dynamic-request-copy > h2 {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy > h2 {');
     expect(cssSource).toContain('text-wrap: wrap;');
     expect(cssSource).not.toContain('.legacy-child-native-endowments-legacy-form > .ag-panel-rail {');
   });
@@ -170,11 +267,11 @@ describe('request form renderer guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.legacy-child-native-generosity-request:not(.native-dynamic-request) > .ag-panel-rail {');
-    expect(cssSource).toContain('.legacy-child-native-generosity-request.native-dynamic-request > .ag-panel-rail,');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-generosity > .ag-panel-rail,');
     expect(cssSource).toContain('display: block;');
-    expect(cssSource).toContain('.legacy-child-native-generosity-request.native-dynamic-request .dynamic-request-layout {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-generosity .dynamic-request-layout {');
     expect(cssSource).toContain('grid-template-columns: minmax(360px, 460px) minmax(0, 1fr);');
-    expect(cssSource).toContain('.legacy-child-native-generosity-request.native-dynamic-request .dynamic-request-copy {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-generosity .dynamic-request-copy {');
     expect(cssSource).toContain('justify-self: stretch;');
     expect(cssSource).not.toContain('.legacy-child-native-generosity-request > .ag-panel-rail {');
   });
@@ -183,22 +280,22 @@ describe('request form renderer guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.legacy-child-native-cga-request:not(.native-dynamic-request) > .ag-panel-rail {');
-    expect(cssSource).toContain('.legacy-child-native-cga-request.native-dynamic-request > .ag-panel-rail,');
-    expect(cssSource).toContain('.legacy-child-native-cga-request.native-dynamic-request .dynamic-request-layout {');
-    expect(cssSource).toContain('.legacy-child-native-cga-request.native-dynamic-request .dynamic-request-copy {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga > .ag-panel-rail,');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-layout {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy {');
     expect(cssSource).toContain('.legacy-child-native-cga-request:not(.native-dynamic-request) .native-info-inline-form h5,');
-    expect(cssSource).toContain('.legacy-child-native-cga-request.native-dynamic-request .dynamic-request-copy > h2 {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {');
   });
 
   it('forces the ministry-impact-fund dynamic request section back onto the shared layout contract instead of the retired static outer grid', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.legacy-child-native-request:not(.native-dynamic-request) > .ag-panel-rail {');
-    expect(cssSource).toContain('.legacy-child-native-request.native-dynamic-request > .ag-panel-rail,');
-    expect(cssSource).toContain('.legacy-child-native-request.native-dynamic-request .dynamic-request-layout {');
-    expect(cssSource).toContain('.legacy-child-native-request.native-dynamic-request .dynamic-request-copy {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-impact > .ag-panel-rail,');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-layout {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy {');
     expect(cssSource).toContain('.legacy-child-native-request:not(.native-dynamic-request) .native-info-inline-form h5 {');
-    expect(cssSource).toContain('.legacy-child-native-request.native-dynamic-request .dynamic-request-copy > h2 {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy > h2 {');
   });
 
   it('forces contact-us back onto the shared dynamic request rail instead of a rogue outer two-column grid', () => {
@@ -206,12 +303,13 @@ describe('request form renderer guardrail', () => {
 
     expect(cssSource).toContain('.contact-us-request > .ag-panel-rail {');
     expect(cssSource).toContain('display: block;');
-    expect(cssSource).toContain('.native-dynamic-request.contact-us-request .dynamic-request-layout {');
-    expect(cssSource).toContain('width: min(100%, 980px);');
-    expect(cssSource).toContain('grid-template-columns: minmax(360px, 460px) minmax(0, 1fr);');
-    expect(cssSource).toContain('.native-dynamic-request.contact-us-request .dynamic-request-copy {');
-    expect(cssSource).toContain('justify-self: stretch;');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-contact .dynamic-request-layout {');
+    expect(cssSource).toContain('max-width: 980px;');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-contact .dynamic-request-copy {');
+    expect(cssSource).toContain('align-self: stretch;');
     expect(cssSource).not.toContain('.native-info-page--contact-us .native-dynamic-request.contact-us-request');
+    expect(cssSource).not.toContain('.contact-us-request .native-info-section-copy {\n  grid-column: 2;');
+    expect(cssSource).not.toContain('.native-dynamic-request.contact-us-request .dynamic-request-layout {\n  width: min(100%, 980px);');
   });
 
   it('keeps a late shared mobile stack override so request blocks always place copy above form on small screens', () => {

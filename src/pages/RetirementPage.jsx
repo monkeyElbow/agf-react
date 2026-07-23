@@ -91,6 +91,15 @@ const DEFAULT_RETIREMENT_BILLBOARD = buildDefaultRetirementBillboardRuntime();
 const DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD = buildDefaultRetirementRolloverBillboardRuntime();
 const RETIREMENT_SCALE_REVEAL_CLASS_NAME = 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up';
 const RETIREMENT_SCALE_REVEAL_ROOT_MARGIN = '0px 0px -20% 0px';
+
+function isHiddenManagedBlock(block) {
+  return block?.hidden === true || block?.hidden === 'true';
+}
+
+function isVisibleDynamicBlock(block, kind) {
+  return block?.kind === kind && block?.mode === 'dynamic' && !isHiddenManagedBlock(block);
+}
+
 function normalizeRetirementCtaSettings(settings = {}) {
   const nextSettings = {
     ...defaultRetirementCtaSettings,
@@ -186,6 +195,20 @@ function appendRetirementScaleRevealClassName(className) {
   return [...new Set(classNames)].join(' ');
 }
 
+function stripRetirementDoTheMathWrapperRevealClassName(className) {
+  return String(className || '')
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .filter((token) => ![
+      'fade-up',
+      'fade-up-force-observe',
+      'fade-up-repeat-observe',
+      'billboard-scroll-reveal-scale-up',
+    ].includes(token))
+    .join(' ');
+}
+
 function buildRetirementDoTheMathRuntime(block) {
   if (!block || block.kind !== 'billboard' || block.mode !== 'dynamic') {
     return null;
@@ -198,7 +221,7 @@ function buildRetirementDoTheMathRuntime(block) {
 
   return {
     ...runtime,
-    justify: 'left',
+    justify: runtime.justify || 'center',
     scrollReveal: runtime.scrollReveal || 'scale-up',
     copyClassName: appendRetirementScaleRevealClassName(runtime.copyClassName),
     copyFadeRootMargin: runtime.copyFadeRootMargin || RETIREMENT_SCALE_REVEAL_ROOT_MARGIN,
@@ -575,15 +598,14 @@ export default function RetirementPage() {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const introBlock = useMemo(() => (
+  const introBlockRecord = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'intro'
       && block?.kind === 'intro'
-      && block?.mode === 'dynamic'
-      && block?.hidden !== true
-      && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
+  const introBlock = isVisibleDynamicBlock(introBlockRecord, 'intro') ? introBlockRecord : null;
+  const introBlockIsHidden = isHiddenManagedBlock(introBlockRecord);
   const billboardBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'billboard'
@@ -668,7 +690,10 @@ export default function RetirementPage() {
       settings: introHudSettings,
     });
   }, [introBlock, introHudSettings]);
-  const resolvedIntro = dynamicIntro || DEFAULT_RETIREMENT_INTRO;
+  const resolvedIntro = useMemo(
+    () => (introBlockIsHidden ? null : dynamicIntro || DEFAULT_RETIREMENT_INTRO),
+    [dynamicIntro, introBlockIsHidden],
+  );
   const billboardHudSettings = useMemo(
     () => ({
       ...defaultRetirementBillboardSettings,
@@ -708,7 +733,7 @@ export default function RetirementPage() {
     [retirementPlanFeatureBlock],
   );
   const billboardSectionStyle = renderedBillboard?.action
-    ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
+    ? { '--dynamic-billboard-padding-bottom': 'clamp(6rem, 12vw, 9rem)' }
     : undefined;
   const billboardRailWidthPx = Number.isFinite(Number(renderedBillboard?.contentMaxWidthPx))
     ? Math.max(Number(renderedBillboard.contentMaxWidthPx), 1480)
@@ -747,6 +772,16 @@ export default function RetirementPage() {
     () => buildRetirementDoTheMathRuntime(columnsMathBlock),
     [columnsMathBlock],
   );
+  const doTheMathJustify = retirementDoTheMathRuntime?.justify || 'center';
+  const doTheMathCopyClassName = stripRetirementDoTheMathWrapperRevealClassName(
+    retirementDoTheMathRuntime?.copyClassName,
+  );
+  const doTheMathSectionStyle = retirementDoTheMathRuntime?.action
+    ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
+    : undefined;
+  const doTheMathRailStyle = retirementDoTheMathRuntime?.contentMaxWidthPx
+    ? { '--dynamic-billboard-max-width': `${retirementDoTheMathRuntime.contentMaxWidthPx}px` }
+    : undefined;
   const heroHudLineHeight = Number.isFinite(Number(heroHudSettings.lineHeight))
     ? Number(heroHudSettings.lineHeight)
     : RETIREMENT_HERO_BASE_LINE_HEIGHT;
@@ -1759,71 +1794,73 @@ export default function RetirementPage() {
         </div>
       </section>
 
-      <section
-        ref={introSectionRef}
-        className={`service-native-intro retirement-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'white'} is-text-${resolvedIntro.textTone || 'dark'}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
-        data-block-id="intro"
-      >
-        <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
-        {renderHudAnchor('intro')}
-        <div className="ag-panel-rail">
-          <div
-            className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
-            style={{ '--intro-heading-line-height': resolvedIntro.lineSpacing || 1.04 }}
-          >
-            <h2
-              className={`${resolvedIntro.headingClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
-              onClick={showFrontHud && introBlock ? handleIntroHeadingEditIntent : undefined}
-              onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroHeadingEditIntent) : undefined}
-              role={showFrontHud && introBlock ? 'button' : undefined}
-              tabIndex={showFrontHud && introBlock ? 0 : undefined}
-              aria-label={showFrontHud && introBlock ? 'Edit intro heading' : undefined}
+      {resolvedIntro ? (
+        <section
+          ref={introSectionRef}
+          className={`service-native-intro retirement-native-intro dynamic-intro is-bg-${resolvedIntro.bgTone || 'white'} is-text-${resolvedIntro.textTone || 'dark'}${showFrontHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('intro').className || ''}`}
+          data-block-id="intro"
+        >
+          <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('intro')} />
+          {renderHudAnchor('intro')}
+          <div className="ag-panel-rail">
+            <div
+              className={`service-native-intro-copy is-justify-${resolvedIntro.justify || 'center'}`}
+              style={{ '--intro-heading-line-height': resolvedIntro.lineSpacing || 1.04 }}
             >
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: renderTextWithHighlights(resolvedIntro.heading, resolvedIntro.headingHighlights),
-                }}
-              />
-            </h2>
-            {resolvedIntro.bodyHtml ? (
-              <SafeRichText
-                as="div"
-                className={`native-info-rich-html${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`}
-                html={resolvedIntro.bodyHtml}
-                onClick={showFrontHud && introBlock ? handleIntroBodyEditIntent : undefined}
-                onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroBodyEditIntent) : undefined}
+              <h2
+                className={`${resolvedIntro.headingClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+                onClick={showFrontHud && introBlock ? handleIntroHeadingEditIntent : undefined}
+                onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroHeadingEditIntent) : undefined}
                 role={showFrontHud && introBlock ? 'button' : undefined}
                 tabIndex={showFrontHud && introBlock ? 0 : undefined}
-                aria-label={showFrontHud && introBlock ? 'Edit intro body HTML' : undefined}
-              />
-            ) : resolvedIntro.body ? (
-              <p
-                className={showFrontHud && introBlock ? 'admin-front-hud-click-edit-target' : undefined}
-                onClick={showFrontHud && introBlock ? handleIntroBodyEditIntent : undefined}
-                onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroBodyEditIntent) : undefined}
-                role={showFrontHud && introBlock ? 'button' : undefined}
-                tabIndex={showFrontHud && introBlock ? 0 : undefined}
-                aria-label={showFrontHud && introBlock ? 'Edit intro body HTML' : undefined}
+                aria-label={showFrontHud && introBlock ? 'Edit intro heading' : undefined}
               >
-                {resolvedIntro.body}
-              </p>
-            ) : null}
-            {resolvedIntro.extraLine ? (
-              <p
-                className={`${resolvedIntro.extraLineClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
-                style={resolvedIntro.extraLineStyle}
-                onClick={showFrontHud && introBlock ? handleIntroExtraLineEditIntent : undefined}
-                onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroExtraLineEditIntent) : undefined}
-                role={showFrontHud && introBlock ? 'button' : undefined}
-                tabIndex={showFrontHud && introBlock ? 0 : undefined}
-                aria-label={showFrontHud && introBlock ? 'Edit intro extra line' : undefined}
-              >
-                <strong>{resolvedIntro.extraLine}</strong>
-              </p>
-            ) : null}
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: renderTextWithHighlights(resolvedIntro.heading, resolvedIntro.headingHighlights),
+                  }}
+                />
+              </h2>
+              {resolvedIntro.bodyHtml ? (
+                <SafeRichText
+                  as="div"
+                  className={`native-info-rich-html${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`}
+                  html={resolvedIntro.bodyHtml}
+                  onClick={showFrontHud && introBlock ? handleIntroBodyEditIntent : undefined}
+                  onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroBodyEditIntent) : undefined}
+                  role={showFrontHud && introBlock ? 'button' : undefined}
+                  tabIndex={showFrontHud && introBlock ? 0 : undefined}
+                  aria-label={showFrontHud && introBlock ? 'Edit intro body HTML' : undefined}
+                />
+              ) : resolvedIntro.body ? (
+                <p
+                  className={showFrontHud && introBlock ? 'admin-front-hud-click-edit-target' : undefined}
+                  onClick={showFrontHud && introBlock ? handleIntroBodyEditIntent : undefined}
+                  onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroBodyEditIntent) : undefined}
+                  role={showFrontHud && introBlock ? 'button' : undefined}
+                  tabIndex={showFrontHud && introBlock ? 0 : undefined}
+                  aria-label={showFrontHud && introBlock ? 'Edit intro body HTML' : undefined}
+                >
+                  {resolvedIntro.body}
+                </p>
+              ) : null}
+              {resolvedIntro.extraLine ? (
+                <p
+                  className={`${resolvedIntro.extraLineClassName || ''}${showFrontHud && introBlock ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
+                  style={resolvedIntro.extraLineStyle}
+                  onClick={showFrontHud && introBlock ? handleIntroExtraLineEditIntent : undefined}
+                  onKeyDown={showFrontHud && introBlock ? (event) => handleBodyEditKeyDown(event, handleIntroExtraLineEditIntent) : undefined}
+                  role={showFrontHud && introBlock ? 'button' : undefined}
+                  tabIndex={showFrontHud && introBlock ? 0 : undefined}
+                  aria-label={showFrontHud && introBlock ? 'Edit intro extra line' : undefined}
+                >
+                  <strong>{resolvedIntro.extraLine}</strong>
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {retirementPlanFeatureRuntime ? (
         <InvestmentsGrowthFeature
@@ -2095,13 +2132,14 @@ export default function RetirementPage() {
         <section
           className={`service-native-section retirement-do-the-math-billboard${showFrontHud && columnsMathBlock ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isColumnsMathHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId('columns_math').className || ''}`}
           data-block-id="columns_math"
+          style={doTheMathSectionStyle}
         >
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('columns_math')} />
           {renderHudAnchor('columns_math')}
-          <div className="ag-panel-rail">
+          <div className="ag-panel-rail" style={doTheMathRailStyle}>
             <div
-              className={`native-info-section-copy ${retirementDoTheMathRuntime.copyClassName || RETIREMENT_SCALE_REVEAL_CLASS_NAME} is-justify-center`}
-              data-fade-root-margin={retirementDoTheMathRuntime.copyFadeRootMargin || RETIREMENT_SCALE_REVEAL_ROOT_MARGIN}
+              className={`native-info-section-copy is-justify-${doTheMathJustify}${doTheMathCopyClassName ? ` ${doTheMathCopyClassName}` : ''}`}
+              style={retirementDoTheMathRuntime.copyStyle || undefined}
             >
               <HomeDoTheMathBadge
                 linkTarget={
@@ -2111,7 +2149,10 @@ export default function RetirementPage() {
                 }
               />
               {retirementDoTheMathRuntime.title ? (
-                <h2>
+                <h2
+                  className="retirement-do-the-math-title fade-up fade-up-force-observe fade-up-repeat-observe"
+                  data-fade-root-margin="0px 0px 4% 0px"
+                >
                   <span
                     dangerouslySetInnerHTML={{
                       __html: renderTextWithHighlights(
@@ -2122,33 +2163,43 @@ export default function RetirementPage() {
                   />
                 </h2>
               ) : null}
-              {retirementDoTheMathRuntime.bodyHtml ? (
-                <SafeRichText as="div" className="native-info-rich-html" html={retirementDoTheMathRuntime.bodyHtml} />
-              ) : retirementDoTheMathRuntime.body ? (
-                <div className="native-info-rich-html">
-                  <p>{retirementDoTheMathRuntime.body}</p>
-                </div>
-              ) : null}
-              {retirementDoTheMathRuntime.action?.label && (retirementDoTheMathRuntime.action?.to || retirementDoTheMathRuntime.action?.href) ? (
-                <div className="service-native-action-row is-left">
-                  {(retirementDoTheMathRuntime.action.to
-                    || (retirementDoTheMathRuntime.action.href
-                    && !isExternalLinkHref(retirementDoTheMathRuntime.action.href)
-                    && retirementDoTheMathRuntime.action.href.startsWith('/'))) ? (
-                      <Link
-                        to={retirementDoTheMathRuntime.action.to || retirementDoTheMathRuntime.action.href}
-                        className={actionButtonClassName(retirementDoTheMathRuntime.action.style, retirementDoTheMathRuntime.action.tone)}
-                      >
-                        {retirementDoTheMathRuntime.action.label}
-                      </Link>
-                    ) : (
-                      <a
-                        href={retirementDoTheMathRuntime.action.href}
-                        className={actionButtonClassName(retirementDoTheMathRuntime.action.style, retirementDoTheMathRuntime.action.tone)}
-                      >
-                        {retirementDoTheMathRuntime.action.label}
-                      </a>
-                    )}
+              {(retirementDoTheMathRuntime.bodyHtml || retirementDoTheMathRuntime.body || retirementDoTheMathRuntime.action?.label) ? (
+                <div
+                  className="retirement-do-the-math-support fade-up fade-up-force-observe fade-up-repeat-observe"
+                  data-fade-root-margin="0px 0px 4% 0px"
+                >
+                  {retirementDoTheMathRuntime.bodyHtml ? (
+                    <SafeRichText as="div" className="native-info-rich-html" html={retirementDoTheMathRuntime.bodyHtml} />
+                  ) : retirementDoTheMathRuntime.body ? (
+                    <div className="native-info-rich-html">
+                      <p>{retirementDoTheMathRuntime.body}</p>
+                    </div>
+                  ) : null}
+                  {retirementDoTheMathRuntime.action?.label && (retirementDoTheMathRuntime.action?.to || retirementDoTheMathRuntime.action?.href) ? (
+                    <div
+                      className={`service-native-action-row${doTheMathJustify === 'center' ? ' is-centered' : ''}${doTheMathJustify === 'right' ? ' is-right' : ''}${doTheMathJustify === 'left' ? ' is-left' : ''}`}
+                      style={buildRetirementBillboardActionRowStyle(doTheMathJustify)}
+                    >
+                      {(retirementDoTheMathRuntime.action.to
+                        || (retirementDoTheMathRuntime.action.href
+                        && !isExternalLinkHref(retirementDoTheMathRuntime.action.href)
+                        && retirementDoTheMathRuntime.action.href.startsWith('/'))) ? (
+                          <Link
+                            to={retirementDoTheMathRuntime.action.to || retirementDoTheMathRuntime.action.href}
+                            className={actionButtonClassName(retirementDoTheMathRuntime.action.style, retirementDoTheMathRuntime.action.tone)}
+                          >
+                            {retirementDoTheMathRuntime.action.label}
+                          </Link>
+                        ) : (
+                          <a
+                            href={retirementDoTheMathRuntime.action.href}
+                            className={actionButtonClassName(retirementDoTheMathRuntime.action.style, retirementDoTheMathRuntime.action.tone)}
+                          >
+                            {retirementDoTheMathRuntime.action.label}
+                          </a>
+                        )}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>

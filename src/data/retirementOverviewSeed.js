@@ -49,7 +49,7 @@ export const defaultRetirementBillboardSettings = Object.freeze({
   textTone: 'dark',
   justify: 'right',
   scrollReveal: 'scale-up',
-  lineSpacing: 0.95,
+  lineSpacing: 0.88,
   titleFontFamily: 'helv',
   titleFontWeight: 700,
   titleSizeRem: 5.25,

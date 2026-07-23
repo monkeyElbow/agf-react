@@ -7,8 +7,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS = Object.freeze({
+  'native-info-page--about': 'About intro heading color needs to override dynamic intro text tone.',
   'native-info-page--calculator-tool': 'Calculator tool routes need route-specific intro/contact CTA spacing.',
+  'native-info-page--group-life-quote': 'Group term life benefit cards need route-specific dynamic grid card title sizing.',
   'native-info-page--insurance': 'Insurance overview keeps route-specific dynamic section art direction.',
+  'native-info-page--life-quote': 'Life quote product cards need route-specific dynamic grid card shell sizing.',
 });
 
 function readSource(relativePath) {
@@ -101,6 +104,62 @@ describe('service-native style ownership', () => {
     });
   });
 
+  it('keeps the contact page hero aligned to the Resources header treatment', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--contact-us .service-native-hero {',
+      '--service-native-hero-rail-min-height: 0;',
+      'padding: clamp(2.1rem, 4vw, 3rem) 0 clamp(1.2rem, 3.2vw, 2rem);',
+      '.native-info-page--contact-us .service-native-hero .ag-panel-rail {',
+      'min-height: 0;',
+      'justify-items: start;',
+      '.native-info-page--contact-us .service-native-hero h1 {',
+      'color: var(--ag-color-atlantean);',
+      'font-size: clamp(2.2rem, 6vw, 4rem) !important;',
+      'line-height: 0.95 !important;',
+      'letter-spacing: var(--ag-letter-spacing-avenir-heading) !important;',
+      'text-align: left;',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+
+    expect(source).not.toContain('.native-info-page--contact-us .service-native-hero .ag-panel-rail {\n  justify-items: end;');
+    expect(source).not.toContain('.native-info-page--contact-us .service-native-hero h1 {\n  color: var(--ag-color-atlantean);\n  text-align: right;');
+  });
+
+  it('keeps the contact details on a centered white address block with left-aligned dark copy', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--contact-us .contact-us-address {',
+      'background: #ffffff;',
+      'color: var(--ag-color-super-grey);',
+      '.native-info-page--contact-us .contact-us-address > .ag-panel-rail {',
+      'width: min(42rem, calc(100% - (var(--ag-panel-gutter) * 2)));',
+      'margin-inline: auto;',
+      '.native-info-page--contact-us .contact-us-address .native-info-section-copy {',
+      'width: fit-content;',
+      'max-width: min(100%, 32rem);',
+      'justify-items: start;',
+      '.native-info-page--contact-us .contact-us-address h2 {',
+      'color: var(--ag-color-atlantean);',
+      'text-align: left;',
+      '.native-info-page--contact-us .contact-us-address p {',
+      'text-align: left;',
+      '.native-info-page--contact-us .contact-us-address > .ag-panel-rail > :is(h2, p, .native-info-rich-html, .native-info-link-list) {',
+      'width: min(100%, 32rem);',
+      'margin-left: auto;',
+      'margin-right: auto;',
+      '.native-info-page--contact-us .contact-us-address p:nth-of-type(4) strong,',
+      'color: var(--ag-color-mango);',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+
+    expect(source).not.toContain('.native-info-page--contact-us .contact-us-address {\n  background: var(--ag-color-super-grey);');
+  });
+
   it('keeps migrated dynamic block style hooks block-owned instead of page-prefixed', () => {
     const source = readSource('./service-native.css');
 
@@ -129,10 +188,10 @@ describe('service-native style ownership', () => {
     });
 
     [
-      '.native-dynamic-request.contact-us-request .dynamic-request-layout {',
-      '.group-life-native-quote.native-dynamic-request .dynamic-request-copy > h2,',
-      '.native-dynamic-request.loans-consultant-native-contact .dynamic-request-layout {',
-      '.retirement-rollovers-native-request.native-dynamic-request .dynamic-request-layout {',
+      '.native-dynamic-request.is-request-form-preset-contact .dynamic-request-layout {',
+      '.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2,',
+      '.native-dynamic-request.is-request-form-preset-consultant-contact .dynamic-request-layout {',
+      '.native-dynamic-request.is-request-form-preset-retirement-rollover .dynamic-request-layout {',
       '.calculators-native-billboard.dynamic-billboard > .ag-panel-rail {',
       '.calculators-native-cta.native-dynamic-cta .dynamic-cta-form {',
       '.impact-native-stats .service-native-grid {',
@@ -140,10 +199,10 @@ describe('service-native style ownership', () => {
       '.legacy-giving-wills.dynamic-billboard .native-info-section-copy > h2 {',
       '.legacy-giving-cta .dynamic-cta-form-heading {',
       '.legacy-giving-cta .dynamic-cta-form-subtitle {',
-      '.legacy-child-native-cga-request.native-dynamic-request .dynamic-request-layout {',
-      '.legacy-child-native-generosity-request.native-dynamic-request .dynamic-request-layout {',
-      '.legacy-child-native-endowments-legacy-form.native-dynamic-request .dynamic-request-layout {',
-      '.legacy-child-native-request.native-dynamic-request .dynamic-request-layout {',
+      '.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-layout {',
+      '.native-dynamic-request.is-request-form-preset-legacy-generosity .dynamic-request-layout {',
+      '.native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-layout {',
+      '.native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-layout {',
       '.legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-grid {',
       '.tax-guide-content.native-dynamic-page-content .native-info-rich-html {',
       '.service-native-intro.test-dynamic-intro {',
@@ -151,6 +210,22 @@ describe('service-native style ownership', () => {
     ].forEach((ownedSelector) => {
       expect(source).toContain(ownedSelector);
     });
+  });
+
+  it('keeps CGA option-card titles centered without divider lines', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3 {',
+      'text-align: center;',
+      'justify-content: center;',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3::after {',
+      'display: none;',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+
+    expect(source).not.toContain('.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3::after {\n  content: \'\';');
   });
 
   it('keeps retired 403b section selectors out of service-native CSS', () => {
@@ -225,6 +300,7 @@ describe('service-native style ownership', () => {
 
     [
       '.native-info-page--retirement-iras .retirement-child-native-ira-types {',
+      '--dynamic-grid-body-color: var(--ag-color-super-grey);',
       'padding-bottom: clamp(1.35rem, 2.9vw, 2.25rem);',
       'box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26);',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {',
@@ -232,6 +308,8 @@ describe('service-native style ownership', () => {
       'min-height: 0;',
       'margin: 0 0 0.95rem;',
       'padding-bottom: 0;',
+      '.native-info-page--retirement-iras .retirement-child-native-ira-types > :is(.ag-panel-rail, .ag-panel-rail-wide, .native-info-full-bleed) > .service-native-action-row {',
+      'margin-top: clamp(2.5rem, 5.6vw, 4rem);',
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
     });

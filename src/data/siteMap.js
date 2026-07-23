@@ -67,6 +67,12 @@ export const sitePages = [
     source: null,
     linkRefAliases: ['/services/legacy-giving/ministry-impact-fund'],
   },
+  {
+    path: '/services/planned-giving/qualified-charitable-distribution',
+    title: 'Qualified Charitable Distribution',
+    section: 'Planned Giving',
+    source: null,
+  },
   { path: '/services/insurance', title: 'Insurance', section: 'Services', source: null },
   { path: '/services/insurance/certificate-request', title: 'Certificate Request', section: 'Insurance', source: null },
   { path: '/services/insurance/group-term-life-insurance', title: 'Group term life insurance', section: 'Insurance', source: null },

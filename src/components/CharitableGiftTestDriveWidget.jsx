@@ -107,7 +107,7 @@ export default function CharitableGiftTestDriveWidget() {
   const [name2, setName2] = useState('');
   const [age1Input, setAge1Input] = useState('70');
   const [age2Input, setAge2Input] = useState('68');
-  const [valueInput, setValueInput] = useState('1,000,000');
+  const [valueInput, setValueInput] = useState('100,000');
   const [basisInput, setBasisInput] = useState('300,000');
   const [taxRate, setTaxRate] = useState('22%');
   const [rate7520Input, setRate7520Input] = useState('5.0');

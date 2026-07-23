@@ -2741,6 +2741,10 @@ html.ag-browser-safari button.action-btn {
 }
 
 @media (max-width: 860px) {
+  :root {
+    --ag-panel-gutter: var(--ag-panel-mobile-gutter);
+  }
+
   .ag-page-shell {
     --ag-panel-effective-gutter: var(--ag-panel-mobile-gutter);
   }

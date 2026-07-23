@@ -142,6 +142,12 @@ export function resolveTestimonialsBlockData({
 
   if (selectionMode === 'manual') {
     selected = selectedIds.length ? sortBySelectedIdsOrder(libraryById, selectedIds) : [];
+    if (!selected.length && selectedIds.length && tagList.length) {
+      selected = normalizedLibrary.filter((item) => {
+        const tags = Array.isArray(item.tags) ? item.tags : [];
+        return tags.some((tag) => tagList.includes(toSlugToken(tag)));
+      });
+    }
   } else if (tagList.length) {
     selected = normalizedLibrary.filter((item) => {
       const tags = Array.isArray(item.tags) ? item.tags : [];

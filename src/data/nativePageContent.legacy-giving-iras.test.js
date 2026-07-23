@@ -62,7 +62,9 @@ describe('planned giving and IRA native page content', () => {
     expect(joyBlock?.settings?.sectionClassName).toContain('fade-out');
     expect(joyBlock?.settings?.copyClassName).toBe('fade-up');
     expect(comparisonBlock?.settings?.anchorId).toBe('charitable-giving-plan-comparison');
-    expect(comparisonBlock?.settings?.title).toBe('Which Charitable Giving plan is right for you?');
+    expect(comparisonBlock?.settings?.title).toBe('');
+    expect(comparisonBlock?.settings?.widget).toBe('giving-comparison-matrix');
+    expect(comparisonBlock?.settings?.tableRowsJson).toBe('');
     expect(endowmentsContent).toMatchObject({
       pageClass: 'native-info-page--legacy-child native-info-page--legacy-endowments',
       compact: true,
@@ -229,14 +231,18 @@ describe('planned giving and IRA native page content', () => {
     expect(Array.isArray(iraContent?.sections) ? iraContent.sections : []).toEqual([]);
     expect(iraTypes?.settings?.card1ButtonLabel).toBe('');
     expect(iraTypes?.settings?.card2ButtonLabel).toBe('');
-    expect(openIra?.settings).toMatchObject({
+    expect(iraTypes?.settings).toMatchObject({
+      bodyTone: 'super-grey',
       buttonLabel: 'Open IRA',
+      buttonStyle: 'dark',
+      buttonTone: 'white',
     });
-    expectLink(openIra?.settings, 'buttonLinkJson', {
+    expectLink(iraTypes?.settings, 'buttonLinkJson', {
       kind: 'external',
       href: 'https://secure.agfinancial.org/invest',
       openInNewWindow: true,
     });
+    expect(openIra).toBeUndefined();
     expect(rollover?.settings?.bodyHtml).toContain('single AGFinancial IRA');
     expect(rollover?.settings?.targetSectionKey).toBeUndefined();
   });

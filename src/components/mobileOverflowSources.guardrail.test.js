@@ -36,4 +36,12 @@ describe('mobile overflow source guardrails', () => {
     expect(serviceStylesSource).toContain('.service-native-page {');
     expect(serviceStylesSource).toContain('overflow-x: clip;');
   });
+
+  it('uses the mobile gutter token for shared content width on narrow screens', () => {
+    const stylesSource = readSource('../styles.css');
+
+    expect(stylesSource).toContain('@media (max-width: 860px) {');
+    expect(stylesSource).toContain('--ag-panel-gutter: var(--ag-panel-mobile-gutter);');
+    expect(stylesSource).toContain('--ag-panel-effective-gutter: var(--ag-panel-mobile-gutter);');
+  });
 });

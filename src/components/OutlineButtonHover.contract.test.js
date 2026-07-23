@@ -10,6 +10,10 @@ function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
 }
 
+function readRuleBlock(source, selectorPattern) {
+  return source.match(new RegExp(`${selectorPattern}\\s*\\{[\\s\\S]*?\\n\\}`))?.[0] || '';
+}
+
 describe('outline button hover contract', () => {
   it('keeps base button typography on zero tracking while routing Safari through its own heavier browser override', () => {
     const serviceCssSource = readSource('../styles/service-native.css');
@@ -62,7 +66,7 @@ describe('outline button hover contract', () => {
     expect(cssSource).toContain('inset:\n      calc(-1 * var(--btn-outline-expand-block))\n      calc(-1 * var(--btn-outline-expand-inline));');
     expect(cssSource).toContain('opacity: 1;');
     expect(cssSource).toContain('background: transparent;');
-    expect(cssSource).toContain('color: var(--btn-color);');
+    expect(cssSource).toContain('color: var(--btn-outline-hover-color);');
     expect(cssSource).toContain('box-shadow: none;');
     expect(cssSource).toContain('.service-native-btn.is-outline:focus-visible {');
     expect(cssSource).toContain('.service-native-btn.is-outline:focus-visible::after {');
@@ -71,6 +75,60 @@ describe('outline button hover contract', () => {
     expect(cssSource).not.toContain('scale(1.032)');
     expect(cssSource).not.toContain('scale(1.014)');
     expect(cssSource).not.toContain('--btn-outline-hover-shadow');
+  });
+
+  it('keeps super-grey service button hover color centralized as a lighter tone', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const homeCssSource = readSource('../styles/home-native.css');
+    const tokensSource = readSource('../styles/tokens.css');
+    const superGreyButtonBlock = cssSource.match(
+      /\.service-native-btn\.is-tone-super-grey,[\s\S]*?\.service-native-btn\.is-tone-super-grey:visited\s*\{[\s\S]*?\n\}/,
+    )?.[0] || '';
+    const darkButtonBlock = readRuleBlock(
+      cssSource,
+      String.raw`\.service-native-btn\.is-dark,[\s\S]*?\.service-native-btn\.is-dark:visited`,
+    );
+    const legacyGivingButtonBlock = readRuleBlock(
+      cssSource,
+      String.raw`\.native-info-page--legacy-giving \.legacy-giving-types \.service-native-card:first-child \.service-native-btn\.is-outline,[\s\S]*?\.native-info-page--legacy-giving \.legacy-giving-types \.service-native-card:first-child \.service-native-btn\.is-ghost`,
+    );
+    const loansIntroButtonHoverBlock = readRuleBlock(
+      cssSource,
+      String.raw`\.loans-native-intro \.service-native-btn:hover`,
+    );
+    const missionAssureButtonHoverBlock = readRuleBlock(
+      cssSource,
+      String.raw`\.native-info-page--mission-assure \.mission-assure-native-get-covered \.service-native-btn:hover`,
+    );
+    const homeStripLoginButtonBlock = readRuleBlock(
+      homeCssSource,
+      String.raw`\.home-native-strip-login-btn\.is-tone-super-grey`,
+    );
+    const homeStripRatesButtonBlock = readRuleBlock(
+      homeCssSource,
+      String.raw`\.home-native-strip-rates\.is-tone-super-grey`,
+    );
+
+    expect(tokensSource).toContain('--ag-color-super-grey-hover: color-mix(in srgb, var(--ag-color-super-grey) 60%, #ffffff 40%);');
+    expect(superGreyButtonBlock).toContain('--btn-color: var(--ag-color-super-grey);');
+    expect(superGreyButtonBlock).toContain('--btn-hover-color: var(--ag-color-super-grey-hover);');
+    expect(superGreyButtonBlock).toContain('--btn-outline-hover-color: var(--btn-hover-color);');
+    expect(superGreyButtonBlock).not.toContain('--btn-hover-color: #2d2f31;');
+    expect(darkButtonBlock).toContain('--btn-color: var(--ag-color-super-grey);');
+    expect(darkButtonBlock).toContain('--btn-hover-color: var(--ag-color-super-grey-hover);');
+    expect(darkButtonBlock).not.toContain('--btn-hover-color: #2d2f31;');
+    expect(legacyGivingButtonBlock).toContain('--btn-hover-color: var(--ag-color-super-grey-hover);');
+    expect(legacyGivingButtonBlock).toContain('--btn-outline-hover-color: var(--btn-hover-color);');
+    expect(loansIntroButtonHoverBlock).toContain('border-color: var(--ag-color-super-grey-hover);');
+    expect(loansIntroButtonHoverBlock).toContain('background: var(--ag-color-super-grey-hover);');
+    expect(missionAssureButtonHoverBlock).toContain('border-color: var(--ag-color-super-grey-hover);');
+    expect(missionAssureButtonHoverBlock).toContain('background: var(--ag-color-super-grey-hover);');
+    expect(homeStripLoginButtonBlock).toContain('--strip-btn-hover-bg: var(--ag-color-super-grey-hover);');
+    expect(homeStripLoginButtonBlock).toContain('--strip-btn-hover-border: var(--ag-color-super-grey-hover);');
+    expect(homeStripRatesButtonBlock).toContain('--strip-rates-hover-color: var(--ag-color-super-grey-hover);');
+    expect(cssSource).not.toContain('--btn-hover-color: #2d2f31;');
+    expect(homeCssSource).not.toContain('--strip-btn-hover-bg: #3b3a3c;');
+    expect(homeCssSource).not.toContain('--strip-btn-hover-border: #3b3a3c;');
   });
 
   it('keeps home outline variants aligned to the same non-scaling expansion contract', () => {

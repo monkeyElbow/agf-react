@@ -23,6 +23,7 @@ describe('home services feature alignment guardrail', () => {
     expect(cssSource).toContain('font-family: var(--ag-font-heading);');
     expect(cssSource).toContain('font-weight: 800;');
     expect(cssSource).toContain('font-synthesis: none;');
+    expect(cssSource).toContain('letter-spacing: -0.05em;');
     expect(cssSource).toContain('text-rendering: geometricPrecision;');
     expect(cssSource).toContain('p.home-services-feature-panel-body {');
     expect(cssSource).toContain('font-family: var(--ag-font-helv);');

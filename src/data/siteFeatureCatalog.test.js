@@ -153,6 +153,7 @@ describe('site feature catalog', () => {
     ]);
     expect(servicesBreakdownEntry?.buildRuntime?.({ settings: {} })?.rows).toHaveLength(5);
     expect(servicesMattersEntry?.buildRuntime?.({ settings: {} })?.action?.to).toBe('/about-us/impact');
+    expect(servicesMattersEntry?.buildRuntime?.({ settings: {} })?.action?.label).toBe("See what we're doing together");
   });
 
   it('falls back unknown ids to the default reviewed entry', () => {

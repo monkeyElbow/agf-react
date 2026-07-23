@@ -45,6 +45,8 @@ describe('ministers group life native page content', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll {');
+    expect(cssSource).toContain('--step-card-body-font-size: clamp(1.42rem, 2.35vw, 1.82rem);');
+    expect(cssSource).toContain('--step-card-body-line-height: 1.35;');
     expect(cssSource).toContain('background: #fff;');
     expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .native-info-section-subtitle {');
     expect(cssSource).toContain('margin-bottom: clamp(2.4rem, 4.4vw, 3.5rem);');
@@ -52,8 +54,20 @@ describe('ministers group life native page content', () => {
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
     expect(cssSource).toContain('width: 100%;');
     expect(cssSource).toContain('max-width: none;');
+    expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3 {');
+    expect(cssSource).toContain('display: flex;');
+    expect(cssSource).toContain('min-height: 0 !important;');
+    expect(cssSource).toContain('align-items: center;');
+    expect(cssSource).toContain('justify-content: center;');
+    expect(cssSource).toContain('padding-bottom: 0 !important;');
+    expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3::after {');
+    expect(cssSource).toContain('display: none !important;');
     expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card p {');
-    expect(cssSource).toContain('line-height: 1.42;');
+    expect(cssSource).toContain('font-size: clamp(1.42rem, 2.35vw, 1.82rem);');
+    expect(cssSource).toContain('line-height: 1.35;');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards .service-native-card p {');
+    expect(cssSource).toContain('font-size: var(--step-card-body-font-size, clamp(1.18rem, 1.95vw, 1.42rem));');
+    expect(cssSource).toContain('line-height: var(--step-card-body-line-height, 1.42);');
     expect(cssSource).toContain('border: 2px solid var(--ministers-group-life-step-accent);');
     expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:hover {');
     expect(cssSource).toContain('box-shadow: none;');
@@ -63,5 +77,22 @@ describe('ministers group life native page content', () => {
     expect(cssSource).toContain('margin-bottom: clamp(0.55rem, 1vw, 0.8rem);');
     expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-note {');
     expect(cssSource).toContain('margin-top: 0.6rem;');
+  });
+
+  it('keeps plan detail cards centered on the dynamic grid block instead of the page wrapper', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card {');
+    expect(cssSource).toContain('align-content: start;');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card h3 {');
+    expect(cssSource).toContain('min-height: 0 !important;');
+    expect(cssSource).toContain('display: block;');
+    expect(cssSource).toContain('padding-bottom: 0 !important;');
+    expect(cssSource).toContain('text-align: center;');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card h3::after {');
+    expect(cssSource).toContain('display: none !important;');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card .service-native-action-row:last-child {');
+    expect(cssSource).toContain('margin-bottom: clamp(0.85rem, 1.6vw, 1.25rem);');
+    expect(cssSource).not.toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-details .service-native-card {');
   });
 });

@@ -254,7 +254,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       title: 'What you do matters.',
       body: 'As an AGFinancial customer, your financial decisions fund real ministry work, transforming lives, including yours.',
       action: {
-        label: "See what you're part of",
+        label: "See what we're doing together",
         to: '/about-us/impact',
         openInNewWindow: false,
       },
@@ -313,8 +313,8 @@ const SITE_FEATURE_CATALOG = Object.freeze([
     buildRuntime: () => ({
       title: 'Smart stewardship for today and tomorrow.',
       beats: Object.freeze([
-        'Receive payments for life.',
         'Transition out of appreciated assets.',
+        'Receive payments for life.',
         'Leave a legacy for family and ministry.',
         'Smart stewardship for today and tomorrow.',
       ]),

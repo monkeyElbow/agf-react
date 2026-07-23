@@ -1273,7 +1273,7 @@ export default function LoansPage({ sectionsOnly = false }) {
       </section>
       ) : null}
 
-      <section className={`service-native-section loans-native-inquiry native-dynamic-request is-bg-blue is-text-white${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`} id="form" data-block-id="request_form">
+      <section className={`service-native-section loans-native-inquiry native-dynamic-request is-request-form-preset-loans-inquiry is-bg-blue is-text-white${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`} id="form" data-block-id="request_form">
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('request_form')} />
         {renderHudAnchor('request_form')}
         <div className="ag-panel-rail">

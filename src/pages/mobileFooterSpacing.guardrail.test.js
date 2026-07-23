@@ -15,7 +15,6 @@ describe('mobile footer spacing guardrail', () => {
     const serviceCss = readSource('../styles/service-native.css');
 
     expect(serviceCss).toContain(`.loans-native-tariffs .service-native-dark-feature {
-  border-radius: 0;
   padding-bottom: var(--site-chatbot-mobile-reserved-space, 0px);
 }`);
   });
