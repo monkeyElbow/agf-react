@@ -398,13 +398,83 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock.mode).toBe('dynamic');
     expect(ctaBlock.settings.sectionClassName).toBe('legacy-giving-cta');
     expect(ctaBlock.settings.targetSectionClassName).toBeUndefined();
+    expect(ctaBlock.settings.fineprint).toBe('* fields required');
     const fields = getCtaFields(ctaBlock);
-    expect(fields[3]).toMatchObject({
+    expect(fields.find((field) => field.id === 'name')).toMatchObject({
+      label: 'Name*',
+      type: 'text',
+      required: true,
+    });
+    expect(fields.find((field) => field.id === 'phone')).toMatchObject({
+      label: 'Phone*',
+      type: 'tel',
+      required: true,
+    });
+    expect(fields.find((field) => field.id === 'contact_preference')).toMatchObject({
+      label: 'Contact preference',
+      type: 'select',
+      options: [
+        { value: 'phone', label: 'Phone' },
+        { value: 'email', label: 'Email' },
+      ],
+    });
+    const productField = fields.find((field) => field.id === 'legacyproduct');
+    expect(productField).toMatchObject({
       label: 'Planned giving product of interest*',
       type: 'select',
       required: true,
     });
-    expect(fields[4]).toMatchObject({ label: 'Message', type: 'textarea' });
+    expect(productField?.options).toContainEqual({ value: 'not-sure', label: "I'm not sure." });
+    expect(fields.find((field) => field.id === 'message')).toMatchObject({ label: 'Message', type: 'textarea' });
+  });
+
+  it('repairs stale planned-giving CTA drafts missing required fields and product options', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/planned-giving': [
+          {
+            id: 'cta_form',
+            kind: 'cta_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'We help every step of the way. Always.',
+              sectionClassName: 'legacy-giving-cta',
+              fieldsJson: JSON.stringify([
+                { id: 'name', label: 'Name', type: 'text' },
+                { id: 'phone', label: 'Phone', type: 'tel' },
+                {
+                  id: 'legacyProduct',
+                  label: 'Planned giving product of interest*',
+                  type: 'select',
+                  required: true,
+                  options: [
+                    { value: 'donor-advised-fund', label: 'Donor Advised Fund' },
+                    { value: 'ministry-impact-fund', label: 'Ministry Impact Fund' },
+                  ],
+                },
+              ]),
+            },
+          },
+        ],
+      },
+    });
+    const ctaBlock = (normalized.blocksByPath['/services/planned-giving'] || [])
+      .find((block) => block?.id === 'cta_form');
+    const fields = getCtaFields(ctaBlock);
+
+    expect(ctaBlock?.settings?.fineprint).toBe('* fields required');
+    expect(fields.find((field) => field.id === 'name')).toMatchObject({ label: 'Name*', required: true });
+    expect(fields.find((field) => field.id === 'phone')).toMatchObject({ label: 'Phone*', required: true });
+    expect(fields.find((field) => field.id === 'contact_preference')).toMatchObject({
+      label: 'Contact preference',
+      type: 'select',
+      options: [
+        { value: 'phone', label: 'Phone' },
+        { value: 'email', label: 'Email' },
+      ],
+    });
+    expect(fields.find((field) => field.id === 'legacyproduct')?.options)
+      .toContainEqual({ value: 'not-sure', label: "I'm not sure." });
   });
 
   it('hydrates HTML-backed intro seeds with full body content before any admin edits', () => {
@@ -577,7 +647,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(legacyGivingBlocks.some((block) => block?.kind === 'cta_form')).toBe(true);
   });
 
-  it('drops the retired planned giving static comparison matrix while keeping the dynamic comparison table', () => {
+  it('normalizes stale planned giving static comparison tables to the dynamic comparison matrix', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/planned-giving': [
@@ -636,7 +706,15 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(legacyGivingBlocks.some((block) => block?.id === 'comparison_table')).toBe(true);
     expect(legacyGivingBlocks.some((block) => block?.id === 'comparison_matrix')).toBe(false);
-    expect(legacyGivingBlocks.some((block) => block?.settings?.widget === 'giving-comparison-matrix')).toBe(false);
+    expect(legacyGivingBlocks.some((block) => block?.settings?.widget === 'charitable-giving-table')).toBe(false);
+    expect(legacyGivingBlocks.find((block) => block?.id === 'comparison_table')?.settings).toMatchObject({
+      title: '',
+      widget: 'giving-comparison-matrix',
+      anchorId: 'charitable-giving-plan-comparison',
+      sectionClassName: 'legacy-giving-comparison',
+      tableHeadersJson: '',
+      tableRowsJson: '',
+    });
     expect(normalized.collaborationByPath['/services/planned-giving']?.blocks?.comparison_matrix).toBeUndefined();
     expect(normalized.collaborationByPath['/services/planned-giving']?.blocks?.comparison_table).toBeTruthy();
     expect(normalized.collaborationByPath['/services/planned-giving']?.history).toHaveLength(1);

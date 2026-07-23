@@ -11,15 +11,19 @@ const __dirname = path.dirname(__filename);
 const EXPLICIT_REQUEST_FORM_ROUTES = {
   '/services/planned-giving/charitable-gift-annuities': {
     sectionClassName: 'legacy-child-native-cga-request',
+    presetId: 'legacy-cga',
   },
   '/services/planned-giving/endowments': {
     sectionClassName: 'legacy-child-native-endowments-legacy-form',
+    presetId: 'legacy-endowment',
   },
   '/services/planned-giving/generosity-fund': {
     sectionClassName: 'legacy-child-native-generosity-request',
+    presetId: 'legacy-generosity',
   },
   '/services/planned-giving/ministry-impact-fund': {
     sectionClassName: 'legacy-child-native-request',
+    presetId: 'legacy-impact',
   },
   '/services/insurance/life-insurance-quote': {
     step1Signal: '"firstName"',
@@ -27,31 +31,37 @@ const EXPLICIT_REQUEST_FORM_ROUTES = {
   },
   '/contact-us': {
     sectionClassName: 'contact-us-request',
+    presetId: 'contact',
     step1Signal: '"firstName"',
     step2Signal: '"inquiryType"',
   },
   '/services/loans/loan-consultants': {
     sectionClassName: 'loans-consultant-native-contact',
+    presetId: 'consultant-contact',
     step1Signal: '"firstName"',
     step2Signal: '"ministry"',
   },
   '/services/retirement/retirement-consultants': {
     sectionClassName: 'loans-consultant-native-contact',
+    presetId: 'consultant-contact',
     step1Signal: '"firstName"',
     step2Signal: '"churchOrMinistry"',
   },
   '/services/insurance/certificate-request': {
     sectionClassName: 'certificate-request-native-section',
+    presetId: 'certificate-request',
     step1Signal: '"firstName"',
     step2Signal: '"address1"',
   },
   '/services/insurance/group-term-life-insurance': {
     sectionClassName: 'group-life-native-quote',
+    presetId: 'group-life-quote',
     step1Signal: '"contactFirstName"',
     step2Signal: '"organizationName"',
   },
   '/services/insurance/property-casualty-insurance': {
     sectionClassName: 'insurance-pc-native-quote',
+    presetId: 'insurance-quote',
     step1Signal: '"contactFirstName"',
     step2Signal: '"organizationName"',
   },
@@ -88,6 +98,9 @@ describe('request form seed guardrails', () => {
       expect(block.mode).toBe('dynamic');
       if (expected.sectionClassName) {
         expect(block.settings?.sectionClassName).toBe(expected.sectionClassName);
+      }
+      if (expected.presetId) {
+        expect(block.settings?.presetId).toBe(expected.presetId);
       }
       expectNoTargetBridgeSettings(block.settings, pathname);
       expect(JSON.parse(block.settings?.step1FieldsJson || '[]').length, pathname).toBeGreaterThan(0);
@@ -155,6 +168,7 @@ describe('request form seed guardrails', () => {
     expect(block).toBeTruthy();
     expect(block.mode).toBe('dynamic');
     expect(block.settings?.sectionClassName).toBe('insurance-pc-native-quote');
+    expect(block.settings?.presetId).toBe('insurance-quote');
     expectNoTargetBridgeSettings(block.settings, '/services/insurance/property-casualty-insurance normalized request');
     expect(block.settings?.title).toBe('Request a P&C quote.');
     expect(block.settings?.body).toBe('Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.');

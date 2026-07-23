@@ -620,6 +620,17 @@
         "section": "Resources",
         "source": null,
         "hideFromSitemap": true
+      },
+      "/services/planned-giving/qualified-charitable-distribution": {
+        "path": "/services/planned-giving/qualified-charitable-distribution",
+        "routeKey": "/services/planned-giving/qualified-charitable-distribution",
+        "linkRef": "/services/planned-giving/qualified-charitable-distribution",
+        "title": "Qualified Charitable Distribution",
+        "breadcrumbLabel": "Qualified Charitable Distribution",
+        "parentPath": "/services/planned-giving",
+        "section": "Planned Giving",
+        "source": null,
+        "hideFromSitemap": false
       }
     },
     "blocksByPath": {
@@ -3227,7 +3238,7 @@
           "mode": "dynamic",
           "settings": {
             "heading": "Where faith & finance grow together.",
-            "headingClassName": "",
+            "headingClassName": "is-atlantean",
             "headingHighlightsJson": "",
             "bodyHtml": "<p>Our culture is delivering the best financial products and experiences that align with biblical values.</p>",
             "body": "Our culture is delivering the best financial products and experiences that align with biblical values.",
@@ -15973,7 +15984,7 @@
             "contentMaxWidthPx": 980,
             "anchorId": "",
             "sectionClassName": "contact-us-address",
-            "copyWrap": false,
+            "copyWrap": true,
             "buttonLabel": "",
             "buttonDocumentId": "",
             "addressClassName": "",
@@ -16315,7 +16326,8 @@
             "step4NextLabel": "",
             "step4BackLabel": "",
             "step5NextLabel": "",
-            "step5BackLabel": ""
+            "step5BackLabel": "",
+            "presetId": "contact"
           },
           "editableFields": [
             {
@@ -24363,7 +24375,7 @@
           "settings": {
             "featureId": "services_matters_band",
             "body": "As an AGFinancial customer, your financial decisions fund real ministry work, transforming lives, including yours.",
-            "buttonLabel": "See what you're part of",
+            "buttonLabel": "See what we're doing together",
             "sectionClassName": "services-native-matters",
             "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/about-us/impact\"}"
           },
@@ -28334,8 +28346,8 @@
           "kind": "feature_panel",
           "mode": "dynamic",
           "settings": {
-            "title": "Full coverage for mission trips, retreats, and everything in between.",
-            "body": "With low per-person, per-day premiums, Mission Assure® offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.",
+            "title": "Full coverage for mission trips, retreats…",
+            "body": "…and everything in between. With low per-person, per-day premiums, Mission Assure® offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.",
             "bodyHtml": "",
             "imageUrl": "/src/assets/insurance-mission-assure.jpg",
             "imageAlt": "Mission Assure coverage",
@@ -29084,7 +29096,8 @@
             "step4FieldsJson": "[{\"id\":\"holderName\",\"label\":\"Certificate Holder Name *\",\"type\":\"text\",\"required\":true,\"placeholder\":\"John Doe\"},{\"id\":\"holderAddress\",\"label\":\"Certificate Holder Address *\",\"type\":\"text\",\"required\":true,\"placeholder\":\"Address\"},{\"id\":\"holderAddress2\",\"label\":\"Address Line 2\",\"type\":\"text\",\"full\":true},{\"id\":\"holderCity\",\"label\":\"Certificate Holder City *\",\"type\":\"text\",\"required\":true,\"placeholder\":\"City\"},{\"id\":\"holderState\",\"label\":\"State *\",\"type\":\"select\",\"required\":true,\"placeholder\":\"Select a State\",\"options\":[{\"value\":\"AL\",\"label\":\"Alabama\"},{\"value\":\"AK\",\"label\":\"Alaska\"},{\"value\":\"AZ\",\"label\":\"Arizona\"},{\"value\":\"AR\",\"label\":\"Arkansas\"},{\"value\":\"CA\",\"label\":\"California\"},{\"value\":\"CO\",\"label\":\"Colorado\"},{\"value\":\"CT\",\"label\":\"Connecticut\"},{\"value\":\"DE\",\"label\":\"Delaware\"},{\"value\":\"DC\",\"label\":\"District of Columbia\"},{\"value\":\"FL\",\"label\":\"Florida\"},{\"value\":\"GA\",\"label\":\"Georgia\"},{\"value\":\"HI\",\"label\":\"Hawaii\"},{\"value\":\"ID\",\"label\":\"Idaho\"},{\"value\":\"IL\",\"label\":\"Illinois\"},{\"value\":\"IN\",\"label\":\"Indiana\"},{\"value\":\"IA\",\"label\":\"Iowa\"},{\"value\":\"KS\",\"label\":\"Kansas\"},{\"value\":\"KY\",\"label\":\"Kentucky\"},{\"value\":\"LA\",\"label\":\"Louisiana\"},{\"value\":\"ME\",\"label\":\"Maine\"},{\"value\":\"MD\",\"label\":\"Maryland\"},{\"value\":\"MA\",\"label\":\"Massachusetts\"},{\"value\":\"MI\",\"label\":\"Michigan\"},{\"value\":\"MN\",\"label\":\"Minnesota\"},{\"value\":\"MS\",\"label\":\"Mississippi\"},{\"value\":\"MO\",\"label\":\"Missouri\"},{\"value\":\"MT\",\"label\":\"Montana\"},{\"value\":\"NE\",\"label\":\"Nebraska\"},{\"value\":\"NV\",\"label\":\"Nevada\"},{\"value\":\"NH\",\"label\":\"New Hampshire\"},{\"value\":\"NJ\",\"label\":\"New Jersey\"},{\"value\":\"NM\",\"label\":\"New Mexico\"},{\"value\":\"NY\",\"label\":\"New York\"},{\"value\":\"NC\",\"label\":\"North Carolina\"},{\"value\":\"ND\",\"label\":\"North Dakota\"},{\"value\":\"OH\",\"label\":\"Ohio\"},{\"value\":\"OK\",\"label\":\"Oklahoma\"},{\"value\":\"OR\",\"label\":\"Oregon\"},{\"value\":\"PA\",\"label\":\"Pennsylvania\"},{\"value\":\"RI\",\"label\":\"Rhode Island\"},{\"value\":\"SC\",\"label\":\"South Carolina\"},{\"value\":\"SD\",\"label\":\"South Dakota\"},{\"value\":\"TN\",\"label\":\"Tennessee\"},{\"value\":\"TX\",\"label\":\"Texas\"},{\"value\":\"UT\",\"label\":\"Utah\"},{\"value\":\"VT\",\"label\":\"Vermont\"},{\"value\":\"VA\",\"label\":\"Virginia\"},{\"value\":\"WA\",\"label\":\"Washington\"},{\"value\":\"WV\",\"label\":\"West Virginia\"},{\"value\":\"WI\",\"label\":\"Wisconsin\"},{\"value\":\"WY\",\"label\":\"Wyoming\"}]},{\"id\":\"holderZip\",\"label\":\"Certificate Holder Zip Code *\",\"type\":\"text\",\"required\":true,\"placeholder\":\"12345\",\"maxLength\":10,\"format\":\"zip\"},{\"id\":\"holderFax\",\"label\":\"Certificate Holder Fax Number\",\"type\":\"text\",\"placeholder\":\"555-555-5555\",\"format\":\"phone\"},{\"id\":\"holderEmail\",\"label\":\"Certificate Holder Email Address\",\"type\":\"email\",\"placeholder\":\"me@mail.com\",\"full\":true},{\"id\":\"deliveryMethod\",\"label\":\"Deliver to Certificate Holder By:\",\"type\":\"radio-group\",\"full\":true,\"options\":[{\"value\":\"mail\",\"label\":\"Mail\"},{\"value\":\"email\",\"label\":\"Email\"},{\"value\":\"fax\",\"label\":\"Fax\"}]}]",
             "step5FieldsJson": "[{\"id\":\"additionalInsuredRequired\",\"label\":\"Is Additional Insured a requirement of the certificate holder? *\",\"type\":\"radio-group\",\"required\":true,\"full\":true,\"help\":\"Only select Yes if required by the certificate holder/contract.\",\"options\":[{\"value\":\"yes\",\"label\":\"Yes\"},{\"value\":\"no\",\"label\":\"No\"}]},{\"id\":\"comments\",\"label\":\"Additional Comments or Remarks\",\"type\":\"textarea\",\"placeholder\":\"Additional instructions here.\",\"full\":true},{\"id\":\"attachment\",\"label\":\"Attach Contract or Other Documentation\",\"type\":\"file\",\"full\":true,\"help\":\"Upload any special wording/higher limit requirements, or send to cert@agfinancial.org.\"}]",
             "sectionClassName": "certificate-request-native-section",
-            "formClassName": "certificate-request-form"
+            "formClassName": "certificate-request-form",
+            "presetId": "certificate-request"
           },
           "editableFields": [
             {
@@ -30550,7 +30563,7 @@
             "successMessage": "Thanks. We will be in touch soon.",
             "salesforceUrl": "",
             "sectionClassName": "group-life-native-quote",
-            "step1Title": "Contact info",
+            "step1Title": "",
             "step1Note": "",
             "step1Alert": "",
             "step1FieldsJson": "[{\"id\":\"contactFirstName\",\"label\":\"Contact First Name\",\"type\":\"text\",\"required\":true},{\"id\":\"contactLastName\",\"label\":\"Contact Last Name\",\"type\":\"text\",\"required\":true},{\"id\":\"contactEmail\",\"label\":\"Contact Email Address\",\"type\":\"email\",\"required\":true},{\"id\":\"contactPhone\",\"label\":\"Contact Phone Number\",\"type\":\"tel\",\"placeholder\":\"555-555-5555\",\"required\":true}]",
@@ -30577,7 +30590,8 @@
             "step4NextLabel": "",
             "step4BackLabel": "",
             "step5NextLabel": "",
-            "step5BackLabel": ""
+            "step5BackLabel": "",
+            "presetId": "group-life-quote"
           },
           "editableFields": [
             {
@@ -32818,7 +32832,7 @@
             "copyWrap": false,
             "fullBleed": false,
             "paddingTopRem": 0,
-            "paddingBottomRem": 2.4,
+            "paddingBottomRem": 4.8,
             "buttonLabel": "Ministers' Group Life Plan details",
             "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/insurance/ministers-group-life-plan\"}"
           },
@@ -45919,7 +45933,8 @@
             "step3FieldsJson": "[{\"id\":\"organizationState\",\"label\":\"Organization State\",\"type\":\"text\",\"required\":true},{\"id\":\"organizationZip\",\"label\":\"Organization Zip Code\",\"type\":\"text\",\"placeholder\":\"5-digit zip code\",\"required\":true},{\"id\":\"isBroker\",\"label\":\"Are you an insurance broker?\",\"type\":\"radio-group\",\"required\":true,\"options\":[{\"value\":\"yes\",\"label\":\"Yes\"},{\"value\":\"no\",\"label\":\"No\"}]}]",
             "step4FieldsJson": "[]",
             "step5FieldsJson": "[]",
-            "anchorId": "quote"
+            "anchorId": "quote",
+            "presetId": "insurance-quote"
           },
           "editableFields": [
             {
@@ -54408,7 +54423,7 @@
             "card3TitleClassName": "",
             "card3TitleHighlightsJson": "",
             "card3ClassName": "",
-            "card3Body": "New construction or renovation, with interest-only payments during the project. After construction, there is a guaranteed conversion-at no cost-to permanent financing.",
+            "card3Body": "New construction or renovation financing, featuring interest-only payments during the project. After construction, a guaranteed, no-cost conversion to permanent financing.",
             "card3ListJson": "",
             "card3Fineprint": "",
             "card3LinksJson": "",
@@ -55996,7 +56011,7 @@
             "columnsStyle": "loans-value",
             "bgTone": "white",
             "contentWidth": "browser",
-            "columns": "three",
+            "columns": "four",
             "title": "There's more to every loan.",
             "leadLine": "",
             "followupLine": "",
@@ -56033,10 +56048,10 @@
             "col3ButtonStyle": "blue",
             "col3ButtonTone": "atlantean",
             "col3WidthShare": 1,
-            "col4Enabled": false,
+            "col4Enabled": true,
             "col4Type": "text",
-            "col4Title": "",
-            "col4Body": "",
+            "col4Title": "Loyalty.",
+            "col4Body": "A ministry returning to us for its next loan — and the next — really says something. Many of our borrowers are repeat clients. That's the best endorsement we could ask for.",
             "col4ImageUrl": "",
             "col4ImageAlt": "",
             "col4ButtonLabel": "",
@@ -59546,7 +59561,8 @@
             "step4NextLabel": "",
             "step4BackLabel": "",
             "step5NextLabel": "",
-            "step5BackLabel": ""
+            "step5BackLabel": "",
+            "presetId": "consultant-contact"
           },
           "editableFields": [
             {
@@ -60707,37 +60723,41 @@
             "cardBodyLineHeight": 1.58,
             "titleTone": "super-grey",
             "bodyTone": "super-grey",
-            "card1Title": "Donor Advised Funds / Generosity Fund®",
+            "sectionClassName": "legacy-giving-types",
+            "card1ButtonUrl": "",
+            "card1Title": "Donor Advised Funds",
             "card1TitleClassName": "",
             "card1TitleHighlightsJson": "",
             "card1ClassName": "",
-            "card1Body": "Our Generosity Fund® is a Donor Advised Fund that can be used to simplify your giving and increase your joy doing so. A Generosity Fund® is a giving tool available to anyone, regardless of income level.",
+            "card1Body": "A Donor Advised Fund lets you contribute assets, receive an immediate tax deduction, and recommend grants to the ministries and causes you care about. It’s a tax-smart, flexible way to give on your own timeline.",
             "card1ListJson": "",
             "card1Fineprint": "",
             "card1LinksJson": "",
             "card1AccordionsJson": "",
             "card1DividerTone": "",
-            "card1ButtonLabel": "Watch video",
+            "card1ButtonLabel": "",
             "card1ButtonDocumentId": "",
             "card1ButtonClassName": "",
             "card1Button2Label": "Learn more",
+            "card1Button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/generosity-fund\"}",
             "card1Button2DocumentId": "",
             "card1Button2ClassName": "",
             "card1ButtonStyle": "ghost",
             "card1ButtonTone": "super-grey",
             "card1Button2Style": "blue",
             "card1Button2Tone": "atlantean",
-            "card2Title": "Endowments",
+            "card2Title": "Charitable Trusts",
             "card2TitleClassName": "",
             "card2TitleHighlightsJson": "",
             "card2ClassName": "",
-            "card2Body": "This long-term, stable source of funding is designed to keep your gifted principal intact so it can grow over time. The annual investment income may be used for scholarships, ministries, or other purposes you specify.",
+            "card2Body": "Similar to a CGA, a Charitable Trust provides generous support for ministry while the donor receives potential tax benefits. You choose when to support the ministry: at the completion of the trust, or at its onset.",
             "card2ListJson": "",
             "card2Fineprint": "",
             "card2LinksJson": "",
             "card2AccordionsJson": "",
             "card2DividerTone": "",
             "card2ButtonLabel": "Learn more",
+            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/charitable-trusts\"}",
             "card2ButtonDocumentId": "",
             "card2ButtonClassName": "",
             "card2Button2Label": "",
@@ -60754,102 +60774,104 @@
             "card3AccordionsJson": "",
             "card3DividerTone": "",
             "card3ButtonLabel": "Learn more",
+            "card3ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/charitable-gift-annuities\"}",
             "card3ButtonDocumentId": "",
             "card3ButtonClassName": "",
             "card3Button2Label": "",
             "card3Button2DocumentId": "",
             "card3Button2ClassName": "",
-            "card4Title": "Customized Giving Plans",
+            "card4Title": "Endowments",
             "card4TitleClassName": "",
             "card4TitleHighlightsJson": "",
             "card4ClassName": "",
-            "card4Body": "Creating a giving plan is not only a smart financial choice—it’s also a way to provide for your loved ones, gain potential tax savings, and bless the ministries close to your heart.",
+            "card4Body": "This long-term, stable source of funding is designed to keep your gifted principal intact so it can grow over time. The annual investment income may be used for scholarships, ministries, or other purposes you specify.",
             "card4ListJson": "",
             "card4Fineprint": "",
             "card4LinksJson": "",
             "card4AccordionsJson": "",
             "card4DividerTone": "",
-            "card4ButtonLabel": "Gift options",
+            "card4ButtonLabel": "Learn more",
+            "card4ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/endowments\"}",
             "card4ButtonDocumentId": "",
             "card4ButtonClassName": "",
-            "card4Button2Label": "Create your plan",
+            "card4Button2Label": "",
             "card4Button2DocumentId": "",
             "card4Button2ClassName": "",
-            "card4Button2Style": "ghost",
-            "card4Button2Tone": "super-grey",
-            "card5Title": "Charitable Trusts",
+            "card5Title": "Ministry Impact Fund®",
             "card5TitleClassName": "",
             "card5TitleHighlightsJson": "",
             "card5ClassName": "",
-            "card5Body": "Similar to a CGA, a Charitable Trust provides generous support for ministry while the donor receives potential tax benefits. You choose when to support the ministry: at the completion of the trust, or at its onset.",
+            "card5Body": "Designed for churches to receive gifts of any type: cash, stock, real estate, and more, a Ministry Impact Fund removes giving barriers and delivers cash directly to your ministry.",
             "card5ListJson": "",
             "card5Fineprint": "",
             "card5LinksJson": "",
             "card5AccordionsJson": "",
             "card5DividerTone": "",
             "card5ButtonLabel": "Learn more",
+            "card5ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/ministry-impact-fund\"}",
             "card5ButtonDocumentId": "",
             "card5ButtonClassName": "",
             "card5Button2Label": "",
             "card5Button2DocumentId": "",
             "card5Button2ClassName": "",
-            "card6Title": "Ministry Impact Fund",
+            "card6Title": "Customized Giving Plans",
             "card6TitleClassName": "",
             "card6TitleHighlightsJson": "",
             "card6ClassName": "",
-            "card6Body": "Designed for churches to receive gifts of any type: cash, stock, real estate, and more, a Ministry Impact Fund removes giving barriers and delivers cash directly to your ministry.",
+            "card6Body": "Creating a giving plan is not only a smart financial choice—it’s also a way to provide for your loved ones, gain potential tax savings, and bless the ministries close to your heart.",
             "card6ListJson": "",
             "card6Fineprint": "",
             "card6LinksJson": "",
             "card6AccordionsJson": "",
             "card6DividerTone": "",
-            "card6ButtonLabel": "Learn more",
+            "card6ButtonLabel": "Gift options",
+            "card6ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://aggift.org/?pageID=123\"}",
             "card6ButtonDocumentId": "",
             "card6ButtonClassName": "",
-            "card6Button2Label": "",
+            "card6Button2Label": "Create your plan",
+            "card6Button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://aggift.org/?pageID=124\"}",
             "card6Button2DocumentId": "",
             "card6Button2ClassName": "",
-            "card7Title": "",
+            "card6Button2Style": "ghost",
+            "card6Button2Tone": "super-grey",
+            "card7Title": "Wills & Estates",
             "card7TitleClassName": "",
             "card7TitleHighlightsJson": "",
             "card7ClassName": "",
-            "card7Body": "",
+            "card7Body": "Simple and straightforward, a will ensures a distribution end-of-life plan for your assets. This service is provided free of charge when you designate a 10% gift to an Assemblies of God ministry.",
             "card7ListJson": "",
             "card7Fineprint": "",
             "card7LinksJson": "",
             "card7AccordionsJson": "",
             "card7DividerTone": "",
-            "card7ButtonLabel": "",
-            "card7ButtonDocumentId": "",
+            "card7ButtonLabel": "Download packet",
+            "card7ButtonDocumentId": "form-planned-giving-will-planning-document",
             "card7ButtonClassName": "",
-            "card7Button2Label": "",
+            "card7Button2Label": "Online form*",
+            "card7Button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://sft.agfinancial.org/documents/Send.do\"}",
             "card7Button2DocumentId": "",
             "card7Button2ClassName": "",
-            "card8Title": "",
+            "card7ButtonStyle": "outline",
+            "card7ButtonTone": "atlantean",
+            "card7Button2Style": "blue",
+            "card7Button2Tone": "atlantean",
+            "card8Title": "Qualified Charitable Distribution",
             "card8TitleClassName": "",
             "card8TitleHighlightsJson": "",
             "card8ClassName": "",
-            "card8Body": "",
+            "card8Body": "Your IRA can do more than fund your retirement. If you’re 70½ or older, a Qualified Charitable Distribution (QCD) lets you transfer up to $110,000 per year directly to your church or an eligible ministry tax-free, and straight from the source.",
             "card8ListJson": "",
             "card8Fineprint": "",
             "card8LinksJson": "",
             "card8AccordionsJson": "",
             "card8DividerTone": "",
-            "card8ButtonLabel": "",
+            "card8ButtonLabel": "Learn more",
+            "card8ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/qualified-charitable-distribution\"}",
             "card8ButtonDocumentId": "",
             "card8ButtonClassName": "",
             "card8Button2Label": "",
             "card8Button2DocumentId": "",
-            "card8Button2ClassName": "",
-            "sectionClassName": "legacy-giving-types",
-            "card1ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://media.agfinancial.org/2021_Generosity-Fund.mp4\"}",
-            "card1Button2LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/generosity-fund\"}",
-            "card2ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/endowments\"}",
-            "card3ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/charitable-gift-annuities\"}",
-            "card4ButtonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://aggift.org/?pageID=123\"}",
-            "card4Button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://aggift.org/?pageID=124\"}",
-            "card5ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/charitable-trusts\"}",
-            "card6ButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving/ministry-impact-fund\"}"
+            "card8Button2ClassName": ""
           },
           "editableFields": [
             {
@@ -63332,7 +63354,8 @@
             "successMessage": "Thanks. We received your request.",
             "salesforceUrl": "",
             "sectionClassName": "legacy-giving-cta",
-            "fieldsJson": "[{\"id\":\"name\",\"label\":\"Name\",\"type\":\"text\",\"required\":true},{\"id\":\"email\",\"label\":\"Email\",\"type\":\"email\",\"required\":true},{\"id\":\"phone\",\"label\":\"Phone\",\"type\":\"tel\",\"placeholder\":\"(555) 555-5555\"},{\"id\":\"legacyproduct\",\"label\":\"Planned giving product of interest*\",\"type\":\"select\",\"required\":true,\"placeholder\":\"Select one\",\"options\":[{\"value\":\"donor-advised-fund\",\"label\":\"Donor Advised Fund\"},{\"value\":\"endowment\",\"label\":\"Endowment\"},{\"value\":\"charitable-gift-annuity\",\"label\":\"Charitable Gift Annuity\"},{\"value\":\"charitable-remainder-trust\",\"label\":\"Charitable Remainder Trust\"},{\"value\":\"charitable-lead-trust\",\"label\":\"Charitable Lead Trust\"},{\"value\":\"ministry-impact-fund\",\"label\":\"Ministry Impact Fund\"}]},{\"id\":\"message\",\"label\":\"Message\",\"type\":\"textarea\",\"placeholder\":\"Tell us what you’d like to discuss\"}]"
+            "fieldsJson": "[{\"id\":\"name\",\"label\":\"Name*\",\"type\":\"text\",\"required\":true},{\"id\":\"email\",\"label\":\"Email*\",\"type\":\"email\",\"required\":true},{\"id\":\"phone\",\"label\":\"Phone*\",\"type\":\"tel\",\"placeholder\":\"(555) 555-5555\",\"required\":true},{\"id\":\"contact_preference\",\"label\":\"Contact preference\",\"type\":\"select\",\"required\":false,\"placeholder\":\"Select one\",\"options\":[{\"value\":\"phone\",\"label\":\"Phone\"},{\"value\":\"email\",\"label\":\"Email\"}]},{\"id\":\"legacyproduct\",\"label\":\"Planned giving product of interest*\",\"type\":\"select\",\"required\":true,\"placeholder\":\"Select one\",\"options\":[{\"value\":\"donor-advised-fund\",\"label\":\"Donor Advised Fund\"},{\"value\":\"endowment\",\"label\":\"Endowment\"},{\"value\":\"charitable-gift-annuity\",\"label\":\"Charitable Gift Annuity\"},{\"value\":\"charitable-remainder-trust\",\"label\":\"Charitable Remainder Trust\"},{\"value\":\"charitable-lead-trust\",\"label\":\"Charitable Lead Trust\"},{\"value\":\"ministry-impact-fund\",\"label\":\"Ministry Impact Fund\"},{\"value\":\"not-sure\",\"label\":\"I'm not sure.\"}]},{\"id\":\"message\",\"label\":\"Message\",\"type\":\"textarea\",\"placeholder\":\"Tell us what you’d like to discuss\"}]",
+            "fineprint": "* fields required"
           },
           "editableFields": [
             {
@@ -63485,22 +63508,22 @@
         },
         {
           "id": "comparison_table",
-          "name": "Charitable Giving Comparison Table",
+          "name": "Charitable Giving Comparison Matrix",
           "kind": "content",
           "mode": "dynamic",
           "settings": {
-            "title": "Which Charitable Giving plan is right for you?",
+            "title": "",
             "titleClassName": "",
-            "titleHighlightsJson": "[{\"text\":\"Charitable Giving\",\"className\":\"is-atlantean\"}]",
+            "titleHighlightsJson": "[]",
             "subtitle": "",
             "body": "",
             "html": "",
-            "widget": "charitable-giving-table",
+            "widget": "giving-comparison-matrix",
             "anchorId": "charitable-giving-plan-comparison",
             "sectionClassName": "legacy-giving-comparison",
             "fullBleed": false,
-            "tableHeadersJson": "[\"Type of Giving\",\"How it’s Funded\",\"Minimum Required\",\"Donor Benefits\",\"Ministry Benefits\",\"Potential Tax Benefits\"]",
-            "tableRowsJson": "[[\"Donor Advised Fund\",\"Cash, stocks, bonds or property\",\"$10K cash or securities, $100K real estate\",\"Tax benefit\",\"Full income tax deduction, savings on capital gains tax\",\"Full income tax deduction, savings on capital gains tax\"],[\"Endowment\",\"Cash, stocks, bonds or property\",\"$10K cash or securities, $100K real estate\",\"Tax benefit\",\"Full income tax deduction, savings on capital gains tax\",\"Full income tax deduction, savings on capital gains tax\"],[\"Charitable Gift Annuity\",\"Cash, stocks or bonds\",\"$10K\",\"Annuity payments for life\",\"After beneficiary death, actuarial value of annuity to ministry\",\"Partial income tax deduction, partial tax-free payment\"],[\"Charitable Remainder Trust\",\"Cash or appreciated property, stocks or bonds\",\"$50K cash or securities, $100K real estate\",\"Unitrust payment to donor or others\",\"After death of donor or trust termination\",\"Partial income tax deduction, savings on capital gains tax\"],[\"Deferred Charitable Gift Annuity\",\"Cash, stocks or bonds\",\"$10K\",\"Annuity payments for life\",\"After beneficiary death, actuarial value of annuity to ministry\",\"Partial income tax deduction, partial tax-free payment\"],[\"Charitable Remainder Annuity Trust\",\"Cash or appreciated stocks or bonds\",\"$50K cash or securities\",\"Annuity fixed payment to donor or others\",\"After death of donor\",\"Partial income tax deduction, minimal savings on capital gains tax\"],[\"Charitable Lead Trust\",\"Cash, property, or income-producing securities\",\"$50K cash or securities, $100K real estate\",\"After # of years, 100% of principal returned to donor or others\",\"Immediate, annuity or unitrust payment for stated term\",\"Partial income tax deduction, savings on capital gains tax\"]]",
+            "tableHeadersJson": "",
+            "tableRowsJson": "",
             "tableValueAlignment": "",
             "fineprint": "",
             "fineprintDisclosureId": ""
@@ -63795,7 +63818,7 @@
           "mode": "dynamic",
           "settings": {
             "selectionMode": "manual",
-            "selectedIdsCsv": "testimonial-8-1\ntestimonial-8-2\ntestimonial-8-3",
+            "selectedIdsCsv": "mike-daf-corporate-client\nbryan-jarrett-northplace-legacy\nandy-daf-client",
             "filterTagsCsv": "",
             "defaultTag": "legacy-giving",
             "limit": 3,
@@ -68485,7 +68508,7 @@
             "cardStyle": "card2",
             "titleTone": "super-grey",
             "bodyTone": "super-grey",
-            "showTitleDivider": true,
+            "showTitleDivider": false,
             "dividerTone": "auto",
             "cardPaddingRem": 1.35,
             "cardTitleSizeRem": 1.14,
@@ -70369,7 +70392,8 @@
             "step2FieldsJson": "[]",
             "step3FieldsJson": "[]",
             "step4FieldsJson": "[]",
-            "step5FieldsJson": "[]"
+            "step5FieldsJson": "[]",
+            "presetId": "legacy-cga"
           },
           "editableFields": [
             {
@@ -82145,7 +82169,11 @@
             "button2Style": "outline",
             "button2Tone": "super-grey",
             "sectionClassName": "legacy-child-native-endowments-big-cta",
-            "titleFontFamily": "helv"
+            "titleFontFamily": "helv",
+            "titleFontWeight": 700,
+            "titleSizeRem": 5.8,
+            "titleLetterSpacingEm": -0.035,
+            "scrollReveal": "scale-up"
           },
           "editableFields": [
             {
@@ -82643,7 +82671,8 @@
             "step2FieldsJson": "[]",
             "step3FieldsJson": "[]",
             "step4FieldsJson": "[]",
-            "step5FieldsJson": "[]"
+            "step5FieldsJson": "[]",
+            "presetId": "legacy-endowment"
           },
           "editableFields": [
             {
@@ -86923,7 +86952,8 @@
             "step2FieldsJson": "[]",
             "step3FieldsJson": "[]",
             "step4FieldsJson": "[]",
-            "step5FieldsJson": "[]"
+            "step5FieldsJson": "[]",
+            "presetId": "legacy-generosity"
           },
           "editableFields": [
             {
@@ -93629,7 +93659,8 @@
             "step2FieldsJson": "[]",
             "step3FieldsJson": "[]",
             "step4FieldsJson": "[]",
-            "step5FieldsJson": "[]"
+            "step5FieldsJson": "[]",
+            "presetId": "legacy-impact"
           },
           "editableFields": [
             {
@@ -93940,12 +93971,12 @@
             "heightMode": "default",
             "lineGap": 0,
             "lineHeight": 0.92,
-            "line1Text": "Your future.",
+            "line1Text": "Invest in tomorrow.",
             "line1ClassName": "retirement-native-hero-line line1",
-            "line1HighlightsJson": "[{\"text\":\"future\",\"className\":\"is-atlantean\"}]",
-            "line2Text": "Your plan.",
+            "line1HighlightsJson": "[{\"text\":\"tomorrow\",\"className\":\"is-atlantean\"}]",
+            "line2Text": "Start today.",
             "line2ClassName": "retirement-native-hero-line line2",
-            "line2HighlightsJson": "[{\"text\":\"plan\",\"className\":\"is-mango\"}]",
+            "line2HighlightsJson": "[{\"text\":\"today\",\"className\":\"is-mango\"}]",
             "button1Style": "dark",
             "button1Tone": "super-grey",
             "actionJustify": "center",
@@ -94520,6 +94551,7 @@
           "name": "Intro",
           "kind": "intro",
           "mode": "dynamic",
+          "hidden": true,
           "settings": {
             "heading": "Invest in tomorrow. Start today.",
             "headingClassName": "",
@@ -95473,7 +95505,7 @@
             "textTone": "dark",
             "justify": "right",
             "scrollReveal": "scale-up",
-            "lineSpacing": 0.95,
+            "lineSpacing": 0.88,
             "titleFontFamily": "helv",
             "titleFontWeight": 700,
             "titleSizeRem": 5.25,
@@ -95915,18 +95947,17 @@
             "body": "Retirement savings, compound interest, loan payments, net worth, and more.",
             "bgTone": "white",
             "textTone": "dark",
-            "justify": "left",
-            "lineSpacing": 1,
+            "justify": "center",
+            "lineSpacing": 0.94,
             "titleFontFamily": "helv",
             "titleFontWeight": 700,
             "titleSizeRem": 6.15,
             "titleLetterSpacingEm": -0.03,
-            "contentMaxWidthPx": 1080,
+            "contentMaxWidthPx": 1216,
             "scrollReveal": "scale-up",
             "buttonLabel": "Use the calculators",
             "buttonStyle": "blue",
             "buttonTone": "atlantean",
-            "headlineMaxWidthPx": 832,
             "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/calculators\"}"
           },
           "editableFields": [
@@ -97232,7 +97263,11 @@
             "extraLine": "",
             "extraLineTone": "",
             "bgTone": "grey",
-            "textTone": "white"
+            "textTone": "white",
+            "button1Label": "Find my consultant",
+            "button1LinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/retirement-consultants\"}",
+            "button1Style": "dark",
+            "button1Tone": "super-grey"
           },
           "editableFields": [
             {
@@ -122897,7 +122932,11 @@
             "card2ButtonClassName": "",
             "card2Button2Label": "",
             "card2Button2DocumentId": "",
-            "card2Button2ClassName": ""
+            "card2Button2ClassName": "",
+            "buttonLabel": "Open IRA",
+            "buttonStyle": "dark",
+            "buttonTone": "white",
+            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://secure.agfinancial.org/invest\"}"
           },
           "editableFields": [
             {
@@ -124379,322 +124418,6 @@
             {
               "id": "card8Button2ClassName",
               "label": "Card 8 button 2 class name",
-              "type": "text"
-            }
-          ]
-        },
-        {
-          "id": "open_ira",
-          "name": "Open IRA Action",
-          "kind": "content",
-          "mode": "dynamic",
-          "settings": {
-            "title": "",
-            "subtitle": "",
-            "body": "",
-            "html": "",
-            "widget": "",
-            "fullBleed": false,
-            "spaceBeforeRem": 0,
-            "spaceAfterRem": 0,
-            "paddingTopRem": 1.6,
-            "paddingBottomRem": 3.2,
-            "contentMaxWidthPx": 980,
-            "anchorId": "",
-            "sectionClassName": "retirement-child-native-ira-types-action",
-            "copyWrap": false,
-            "buttonLabel": "Open IRA",
-            "buttonDocumentId": "",
-            "addressClassName": "",
-            "addressTitle": "",
-            "addressLines": "",
-            "tableHeadersJson": "",
-            "tableRowsJson": "",
-            "tableValueAlignment": "",
-            "tableChartId": "",
-            "fineprint": "",
-            "fineprintDisclosureId": "",
-            "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://secure.agfinancial.org/invest\"}"
-          },
-          "editableFields": [
-            {
-              "id": "title",
-              "label": "Section title",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Section title color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Section title highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Section subtitle",
-              "type": "text"
-            },
-            {
-              "id": "body",
-              "label": "Section body",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "html",
-              "label": "Page Content HTML",
-              "type": "html"
-            },
-            {
-              "id": "widget",
-              "label": "Widget key",
-              "type": "text"
-            },
-            {
-              "id": "logoImage",
-              "label": "Logo image URL",
-              "type": "text"
-            },
-            {
-              "id": "logoAlt",
-              "label": "Logo alt text",
-              "type": "text"
-            },
-            {
-              "id": "logoText",
-              "label": "Logo text fallback",
-              "type": "text"
-            },
-            {
-              "id": "fullBleed",
-              "label": "Full bleed rail",
-              "type": "boolean"
-            },
-            {
-              "id": "spaceBeforeRem",
-              "label": "Space before (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "spaceAfterRem",
-              "label": "Space after (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "paddingTopRem",
-              "label": "Padding top (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "paddingBottomRem",
-              "label": "Padding bottom (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "contentMaxWidthPx",
-              "label": "Content max width (px)",
-              "type": "number",
-              "min": 560,
-              "max": 1440,
-              "step": 10
-            },
-            {
-              "id": "anchorId",
-              "label": "Anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "sectionClassName",
-              "label": "Section class name",
-              "type": "text"
-            },
-            {
-              "id": "copyWrap",
-              "label": "Wrap section copy",
-              "type": "boolean"
-            },
-            {
-              "id": "buttonLabel",
-              "label": "Button label",
-              "type": "text"
-            },
-            {
-              "id": "buttonLinkJson",
-              "label": "Button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "buttonDocumentId",
-              "label": "Button document ID",
-              "type": "text"
-            },
-            {
-              "id": "addressClassName",
-              "label": "Address block class name",
-              "type": "text"
-            },
-            {
-              "id": "addressTitle",
-              "label": "Address title",
-              "type": "text"
-            },
-            {
-              "id": "addressLines",
-              "label": "Address lines",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "tableHeadersJson",
-              "label": "Table headers JSON",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "tableRowsJson",
-              "label": "Table rows JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "tableValueAlignment",
-              "label": "Table value alignment",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default"
-                },
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "tableChartId",
-              "label": "Managed chart ID",
-              "type": "text"
-            },
-            {
-              "id": "supportGroupsJson",
-              "label": "Support groups JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "supportGroupsExpanded",
-              "label": "Expand support items by default",
-              "type": "boolean"
-            },
-            {
-              "id": "supportGroupsCollapsible",
-              "label": "Support items are collapsible",
-              "type": "boolean"
-            },
-            {
-              "id": "fineprint",
-              "label": "Fineprint lines",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "fineprintDisclosureId",
-              "label": "Managed disclosure ID",
               "type": "text"
             }
           ]
@@ -129642,7 +129365,8 @@
             "step2FieldsJson": "[{\"id\":\"churchOrMinistry\",\"label\":\"Church or ministry\",\"type\":\"text\"},{\"id\":\"state\",\"label\":\"State\",\"type\":\"text\",\"placeholder\":\"Enter state\"},{\"id\":\"message\",\"label\":\"Message\",\"type\":\"textarea\",\"rows\":4,\"placeholder\":\"How can we help?\"}]",
             "step3FieldsJson": "[]",
             "step4FieldsJson": "[]",
-            "step5FieldsJson": "[]"
+            "step5FieldsJson": "[]",
+            "presetId": "consultant-contact"
           },
           "editableFields": [
             {
@@ -132675,7 +132399,8 @@
             "step2FieldsJson": "[]",
             "step3FieldsJson": "[]",
             "step4FieldsJson": "[]",
-            "step5FieldsJson": "[]"
+            "step5FieldsJson": "[]",
+            "presetId": "retirement-rollover"
           },
           "editableFields": [
             {
@@ -145742,6 +145467,855 @@
           "templateLookupId": "cta_form",
           "templateId": "cta_form"
         }
+      ],
+      "/services/planned-giving/qualified-charitable-distribution": [
+        {
+          "id": "hero",
+          "name": "Hero",
+          "kind": "hero",
+          "mode": "dynamic",
+          "settings": {
+            "animationPreset": "default",
+            "bgTone": "white",
+            "justify": "center",
+            "actionJustify": "center",
+            "heightMode": "default",
+            "lineGap": 0,
+            "lineHeight": 0.9,
+            "line1Text": "Qualified Charitable",
+            "line1ClassName": "line1",
+            "line1HighlightsJson": "[{\"text\":\"Charitable\",\"className\":\"is-atlantean\"}]",
+            "line2Text": "Distribution",
+            "line2ClassName": "line2",
+            "line2HighlightsJson": "[{\"text\":\"Distribution\",\"className\":\"is-mango\"}]",
+            "line3Text": "",
+            "line3ClassName": "",
+            "line3HighlightsJson": ""
+          },
+          "editableFields": [
+            {
+              "id": "animationPreset",
+              "label": "Hero animation preset",
+              "type": "select",
+              "options": [
+                {
+                  "value": "default",
+                  "label": "Default"
+                },
+                {
+                  "value": "none",
+                  "label": "None"
+                },
+                {
+                  "value": "loans-unblur",
+                  "label": "Unblur + slide"
+                }
+              ]
+            },
+            {
+              "id": "justify",
+              "label": "Hero justify",
+              "type": "select",
+              "options": [
+                {
+                  "value": "center",
+                  "label": "Center"
+                },
+                {
+                  "value": "left",
+                  "label": "Left"
+                },
+                {
+                  "value": "right",
+                  "label": "Right"
+                }
+              ]
+            },
+            {
+              "id": "actionJustify",
+              "label": "Button row justify",
+              "type": "select",
+              "options": [
+                {
+                  "value": "left",
+                  "label": "Left"
+                },
+                {
+                  "value": "center",
+                  "label": "Center"
+                },
+                {
+                  "value": "right",
+                  "label": "Right"
+                }
+              ]
+            },
+            {
+              "id": "bgTone",
+              "label": "Hero background",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                },
+                {
+                  "value": "sand",
+                  "label": "Sand Gradient",
+                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
+                },
+                {
+                  "value": "blue",
+                  "label": "Blue Gradient",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "grey",
+                  "label": "Super Grey Gradient",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
+                }
+              ]
+            },
+            {
+              "id": "heightMode",
+              "label": "Hero height mode",
+              "type": "select",
+              "options": [
+                {
+                  "value": "default",
+                  "label": "Default"
+                },
+                {
+                  "value": "custom",
+                  "label": "Custom (% viewport)"
+                }
+              ]
+            },
+            {
+              "id": "heightSvh",
+              "label": "Hero height (% of viewport)",
+              "type": "number"
+            },
+            {
+              "id": "titleSizeRem",
+              "label": "Hero title size (rem)",
+              "type": "number"
+            },
+            {
+              "id": "titleLetterSpacingEm",
+              "label": "Hero title tracking (em)",
+              "type": "number"
+            },
+            {
+              "id": "lineHeight",
+              "label": "Hero text line height",
+              "type": "number"
+            },
+            {
+              "id": "lineGap",
+              "label": "Gap between hero lines",
+              "type": "number"
+            },
+            {
+              "id": "line1Text",
+              "label": "Line 1 text",
+              "type": "text"
+            },
+            {
+              "id": "line1ClassName",
+              "label": "Line 1 full-line color (optional)",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "line1HighlightsJson",
+              "label": "Line 1 highlighted phrases",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "line2Text",
+              "label": "Line 2 text",
+              "type": "text"
+            },
+            {
+              "id": "line2ClassName",
+              "label": "Line 2 full-line color (optional)",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "line2HighlightsJson",
+              "label": "Line 2 highlighted phrases",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "line3Text",
+              "label": "Line 3 text",
+              "type": "text"
+            },
+            {
+              "id": "line3ClassName",
+              "label": "Line 3 full-line color (optional)",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "line3HighlightsJson",
+              "label": "Line 3 highlighted phrases",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "button1Label",
+              "label": "Button 1 label",
+              "type": "text"
+            },
+            {
+              "id": "button1LinkJson",
+              "label": "Button 1 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "button1Style",
+              "label": "Button 1 style",
+              "type": "select",
+              "options": [
+                {
+                  "value": "blue",
+                  "label": "Blue"
+                },
+                {
+                  "value": "dark",
+                  "label": "Dark"
+                },
+                {
+                  "value": "outline",
+                  "label": "Outline"
+                }
+              ]
+            },
+            {
+              "id": "button1Tone",
+              "label": "Button 1 color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "sandstone",
+                  "label": "Sandstone",
+                  "swatch": "#c4beb6"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "button1Action",
+              "label": "Button 1 action type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Link action"
+                },
+                {
+                  "value": "open_cta_form",
+                  "label": "Reveal CTA form"
+                }
+              ]
+            },
+            {
+              "id": "button1TargetAnchorId",
+              "label": "Button 1 target anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "button1TargetBlockId",
+              "label": "Button 1 target block ID",
+              "type": "text"
+            },
+            {
+              "id": "button2Label",
+              "label": "Button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "button2LinkJson",
+              "label": "Button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "button2Style",
+              "label": "Button 2 style",
+              "type": "select",
+              "options": [
+                {
+                  "value": "blue",
+                  "label": "Blue"
+                },
+                {
+                  "value": "dark",
+                  "label": "Dark"
+                },
+                {
+                  "value": "outline",
+                  "label": "Outline"
+                }
+              ]
+            },
+            {
+              "id": "button2Tone",
+              "label": "Button 2 color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "sandstone",
+                  "label": "Sandstone",
+                  "swatch": "#c4beb6"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "button2Action",
+              "label": "Button 2 action type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Link action"
+                },
+                {
+                  "value": "open_cta_form",
+                  "label": "Reveal CTA form"
+                }
+              ]
+            },
+            {
+              "id": "button2TargetAnchorId",
+              "label": "Button 2 target anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "button2TargetBlockId",
+              "label": "Button 2 target block ID",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "id": "intro",
+          "name": "Intro",
+          "kind": "intro",
+          "mode": "dynamic",
+          "settings": {
+            "heading": "Your IRA can do more.",
+            "headingClassName": "",
+            "headingHighlightsJson": "",
+            "bodyHtml": "<p>If you’re 70½ or older, a Qualified Charitable Distribution (QCD) lets you transfer up to $110,000 per year directly to your church or an eligible ministry tax-free, and straight from the source.</p>",
+            "body": "",
+            "justify": "center",
+            "lineSpacing": 1.04,
+            "extraLine": "",
+            "extraLineTone": "",
+            "bgTone": "sand",
+            "textTone": "dark"
+          },
+          "editableFields": [
+            {
+              "id": "heading",
+              "label": "Heading text",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "headingClassName",
+              "label": "Heading color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "headingHighlightsJson",
+              "label": "Heading highlights",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "bodyHtml",
+              "label": "Body HTML",
+              "type": "html"
+            },
+            {
+              "id": "body",
+              "label": "Body text",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "justify",
+              "label": "Intro justify",
+              "type": "select",
+              "options": [
+                {
+                  "value": "left",
+                  "label": "Left"
+                },
+                {
+                  "value": "center",
+                  "label": "Center"
+                },
+                {
+                  "value": "right",
+                  "label": "Right"
+                }
+              ]
+            },
+            {
+              "id": "lineSpacing",
+              "label": "Intro heading line spacing",
+              "type": "number"
+            },
+            {
+              "id": "extraLine",
+              "label": "Accent line (optional)",
+              "type": "text"
+            },
+            {
+              "id": "extraLineTone",
+              "label": "Accent line color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                },
+                {
+                  "value": "blue",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "muted",
+                  "label": "Muted",
+                  "swatch": "#8c8b8e"
+                }
+              ]
+            },
+            {
+              "id": "bgTone",
+              "label": "Intro background",
+              "type": "swatch",
+              "layout": "half",
+              "options": [
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                },
+                {
+                  "value": "sand",
+                  "label": "Sand Gradient",
+                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
+                },
+                {
+                  "value": "blue",
+                  "label": "Blue Gradient",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "grey",
+                  "label": "Super Grey Gradient",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
+                }
+              ]
+            },
+            {
+              "id": "textTone",
+              "label": "Text color",
+              "type": "swatch",
+              "layout": "half",
+              "options": [
+                {
+                  "value": "dark",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5c5b5d 100%)"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                },
+                {
+                  "value": "blue",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                }
+              ]
+            },
+            {
+              "id": "sectionClassName",
+              "label": "Section class name",
+              "type": "text"
+            },
+            {
+              "id": "button1Label",
+              "label": "Button 1 label",
+              "type": "text"
+            },
+            {
+              "id": "button1LinkJson",
+              "label": "Button 1 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "button2Label",
+              "label": "Button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "button2LinkJson",
+              "label": "Button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            }
+          ]
+        }
       ]
     },
     "pathAliases": {
@@ -150399,20 +150973,10 @@
             "lockedAt": 0
           },
           "giving_options": {
-            "draftedBy": {
-              "userId": "dev-1775156049310-yf9neh3d",
-              "displayName": "Ok, ok.",
-              "initials": "OO",
-              "accentColor": "#00adbb"
-            },
-            "draftedAt": 1784575765678,
-            "savedBy": {
-              "userId": "dev-1775156049310-yf9neh3d",
-              "displayName": "Ok, ok.",
-              "initials": "OO",
-              "accentColor": "#00adbb"
-            },
-            "savedAt": 1784575765678,
+            "draftedBy": null,
+            "draftedAt": 0,
+            "savedBy": null,
+            "savedAt": 0,
             "lockedBy": null,
             "lockedAt": 0
           },
@@ -160181,6 +160745,27 @@
             "createdAt": 1784575765706
           }
         ]
+      },
+      "/services/planned-giving/qualified-charitable-distribution": {
+        "blocks": {
+          "hero": {
+            "draftedBy": null,
+            "draftedAt": 0,
+            "savedBy": null,
+            "savedAt": 0,
+            "lockedBy": null,
+            "lockedAt": 0
+          },
+          "intro": {
+            "draftedBy": null,
+            "draftedAt": 0,
+            "savedBy": null,
+            "savedAt": 0,
+            "lockedBy": null,
+            "lockedAt": 0
+          }
+        },
+        "history": []
       }
     }
   }

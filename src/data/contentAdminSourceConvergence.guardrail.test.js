@@ -66,7 +66,7 @@ const ROOT_PRODUCT_PAGE_CUSTOM_RENDERER_REQUIREMENTS = Object.freeze({
   ],
   '/services/retirement': [
     ['hero', 'hero'],
-    ['intro', 'intro'],
+    ['intro', 'intro', true],
     ['retirement_plan_feature', 'site_feature'],
     ['split_options', 'split_panel'],
     ['rollover_billboard', 'billboard'],
@@ -194,11 +194,11 @@ describe('content admin source convergence', () => {
 
   it('keeps root product custom-renderer block requirements explicit', () => {
     Object.entries(ROOT_PRODUCT_PAGE_CUSTOM_RENDERER_REQUIREMENTS).forEach(([pathname, requirements]) => {
-      const expected = requirements.map(([id, kind]) => ({
+      const expected = requirements.map(([id, kind, hidden = false]) => ({
         id,
         kind,
         mode: 'dynamic',
-        hidden: false,
+        hidden,
       }));
 
       expect(
@@ -368,7 +368,7 @@ describe('content admin source convergence', () => {
           pathname === '/services/planned-giving'
           && (
             blockId === 'comparison_matrix'
-            || block?.settings?.widget === 'giving-comparison-matrix'
+            || block?.settings?.widget === 'charitable-giving-table'
             || String(block?.settings?.sectionClassName || '').split(/\s+/).includes('legacy-giving-comparison-matrix')
           )
         )

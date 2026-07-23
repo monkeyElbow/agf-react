@@ -31,6 +31,7 @@ const BLOCK_ONLY_MANAGED_PAGE_PATHS = new Set([
   '/services/planned-giving/endowments',
   '/services/planned-giving/generosity-fund',
   '/services/planned-giving/ministry-impact-fund',
+  '/services/planned-giving/qualified-charitable-distribution',
   '/services/insurance',
   '/services/insurance/certificate-request',
   '/services/insurance/group-term-life-insurance',

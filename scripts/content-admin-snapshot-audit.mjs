@@ -137,8 +137,15 @@ function isRetiredBlock(pathname, block) {
   }
 
   if (pathname === '/services/planned-giving') {
+    const hasStaticComparisonTablePayload = Boolean(
+      block?.settings?.tableHeadersJson
+      || block?.settings?.tableRowsJson
+      || widget === 'charitable-giving-table'
+    );
+
     return blockId === 'comparison_matrix'
-      || widget === 'giving-comparison-matrix'
+      || widget === 'charitable-giving-table'
+      || (blockId === 'comparison_table' && hasStaticComparisonTablePayload)
       || sectionClassName.split(/\s+/).includes('legacy-giving-comparison-matrix');
   }
 

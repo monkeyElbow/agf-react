@@ -932,7 +932,15 @@ describe('createDevContentAuthorityStore', () => {
     const activeBlocks = store.getSnapshot().state.blocksByPath[pathname];
 
     expect(activeBlocks.map((block) => block.id)).toEqual(['comparison_table']);
-    expect(activeBlocks.some((block) => block.settings?.widget === 'giving-comparison-matrix')).toBe(false);
+    expect(activeBlocks.some((block) => block.settings?.widget === 'charitable-giving-table')).toBe(false);
+    expect(activeBlocks.find((block) => block.id === 'comparison_table')?.settings).toMatchObject({
+      title: '',
+      widget: 'giving-comparison-matrix',
+      anchorId: 'charitable-giving-plan-comparison',
+      sectionClassName: 'legacy-giving-comparison',
+      tableHeadersJson: '',
+      tableRowsJson: '',
+    });
     expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.comparison_matrix).toBeUndefined();
     expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.comparison_table).toBeTruthy();
     expect(store.getSnapshot().state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['comparison_table']);
@@ -945,6 +953,7 @@ describe('createDevContentAuthorityStore', () => {
 
     expect(restored.ok).toBe(true);
     expect(restoredBlocks.map((block) => block.id)).toEqual(['comparison_table']);
+    expect(restoredBlocks.find((block) => block.id === 'comparison_table')?.settings?.widget).toBe('giving-comparison-matrix');
     expect(restored.state.collaborationByPath[pathname].blocks.comparison_matrix).toBeUndefined();
     expect(restored.state.collaborationByPath[pathname].blocks.comparison_table).toBeTruthy();
     expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['comparison_table']);

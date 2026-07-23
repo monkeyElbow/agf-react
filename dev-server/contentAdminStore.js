@@ -608,7 +608,7 @@ function isRetiredRetirement403bPageContentBlock(block) {
   );
 }
 
-function isRetiredPlannedGivingComparisonMatrixBlock(block) {
+function isPlannedGivingComparisonBlock(block) {
   if (!block || typeof block !== 'object') {
     return false;
   }
@@ -618,8 +618,57 @@ function isRetiredPlannedGivingComparisonMatrixBlock(block) {
   const sectionClassName = String(block?.settings?.sectionClassName || '').trim();
 
   return blockId === 'comparison_matrix'
+    || blockId === 'comparison_table'
     || widget === 'giving-comparison-matrix'
+    || widget === 'charitable-giving-table'
+    || sectionClassName.split(/\s+/).includes('legacy-giving-comparison')
     || sectionClassName.split(/\s+/).includes('legacy-giving-comparison-matrix');
+}
+
+function normalizePlannedGivingComparisonMatrixSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? cloneJson(rawSettings) : {};
+  return {
+    ...settings,
+    title: '',
+    titleClassName: '',
+    titleHighlightsJson: '[]',
+    subtitle: '',
+    body: '',
+    html: '',
+    widget: 'giving-comparison-matrix',
+    anchorId: 'charitable-giving-plan-comparison',
+    sectionClassName: 'legacy-giving-comparison',
+    fullBleed: false,
+    tableHeadersJson: '',
+    tableRowsJson: '',
+    tableValueAlignment: '',
+  };
+}
+
+function normalizePlannedGivingOverviewBlockSet(blocks) {
+  let hasCanonicalComparison = false;
+
+  return (Array.isArray(blocks) ? blocks : []).reduce((nextBlocks, block) => {
+    if (!isPlannedGivingComparisonBlock(block)) {
+      nextBlocks.push(block);
+      return nextBlocks;
+    }
+
+    if (hasCanonicalComparison) {
+      return nextBlocks;
+    }
+
+    hasCanonicalComparison = true;
+    nextBlocks.push({
+      ...block,
+      id: 'comparison_table',
+      name: 'Charitable Giving Comparison Matrix',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: normalizePlannedGivingComparisonMatrixSettings(block?.settings),
+    });
+    return nextBlocks;
+  }, []);
 }
 
 function stripRetiredTargetBridgeSettings(rawSettings) {
@@ -761,10 +810,16 @@ function normalizePageBlockState(pathname, block) {
 }
 
 function normalizePageBlocksState(pathname, blocks) {
+  if (pathname === PLANNED_GIVING_OVERVIEW_PATH) {
+    return normalizePresetBearingBlocks(
+      normalizePlannedGivingOverviewBlockSet(blocks)
+        .map((block) => normalizePageBlockState(pathname, block)),
+    ).map((block) => normalizePageBlockState(pathname, block));
+  }
+
   return normalizePresetBearingBlocks(
     (Array.isArray(blocks) ? blocks : [])
       .filter((block) => !(pathname === RETIREMENT_403B_PATH && isRetiredRetirement403bPageContentBlock(block)))
-      .filter((block) => !(pathname === PLANNED_GIVING_OVERVIEW_PATH && isRetiredPlannedGivingComparisonMatrixBlock(block)))
       .map((block) => normalizePageBlockState(pathname, block)),
   ).map((block) => normalizePageBlockState(pathname, block));
 }

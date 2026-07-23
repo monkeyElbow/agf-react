@@ -156,11 +156,12 @@ const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
     id: 'planned-giving-retired-static-comparison',
     paths: Object.freeze([PLANNED_GIVING_OVERVIEW_PATH]),
     helpers: Object.freeze([
-      'isRetiredPlannedGivingComparisonMatrixBlock',
+      'isArchivedPlannedGivingComparisonTableBlock',
+      'normalizePlannedGivingComparisonMatrixSettings',
       'normalizePlannedGivingOverviewBlockSet',
       'normalizeRetiredBlockCollaborationEntry',
     ]),
-    retireWhen: 'Planned giving shared, seed, backup, and revision snapshots cannot contain the retired static comparison matrix.',
+    retireWhen: 'Planned giving shared, seed, backup, and revision snapshots cannot contain the retired static comparison table.',
   },
   {
     id: 'retirement-ira-comparison-table-shape',
@@ -399,7 +400,7 @@ function normalizeRetirement403bBlockSet(blocks) {
   });
 }
 
-function isRetiredPlannedGivingComparisonMatrixBlock(block) {
+function isPlannedGivingComparisonBlock(block) {
   if (!block || typeof block !== 'object') {
     return false;
   }
@@ -409,13 +410,71 @@ function isRetiredPlannedGivingComparisonMatrixBlock(block) {
   const sectionClassName = String(block?.settings?.sectionClassName || '').trim();
 
   return blockId === 'comparison_matrix'
+    || blockId === 'comparison_table'
     || widget === 'giving-comparison-matrix'
+    || widget === 'charitable-giving-table'
+    || sectionClassName.split(/\s+/).includes('legacy-giving-comparison')
     || sectionClassName.split(/\s+/).includes('legacy-giving-comparison-matrix');
+}
+
+function isArchivedPlannedGivingComparisonTableBlock(block) {
+  if (!block || typeof block !== 'object') {
+    return false;
+  }
+
+  const blockId = String(block?.id || '').trim();
+  const widget = String(block?.settings?.widget || '').trim();
+  const hasTablePayload = Boolean(block?.settings?.tableHeadersJson || block?.settings?.tableRowsJson);
+
+  return widget === 'charitable-giving-table'
+    || (blockId === 'comparison_table' && hasTablePayload);
+}
+
+function normalizePlannedGivingComparisonMatrixSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? { ...rawSettings } : {};
+  return {
+    ...settings,
+    title: '',
+    titleClassName: '',
+    titleHighlightsJson: '[]',
+    subtitle: '',
+    body: '',
+    html: '',
+    widget: 'giving-comparison-matrix',
+    anchorId: 'charitable-giving-plan-comparison',
+    sectionClassName: 'legacy-giving-comparison',
+    fullBleed: false,
+    tableHeadersJson: '',
+    tableRowsJson: '',
+    tableValueAlignment: '',
+  };
 }
 
 function normalizePlannedGivingOverviewBlockSet(blocks) {
   const safeBlocks = Array.isArray(blocks) ? blocks : [];
-  return safeBlocks.filter((block) => !isRetiredPlannedGivingComparisonMatrixBlock(block));
+  let hasCanonicalComparison = false;
+
+  return safeBlocks.reduce((nextBlocks, block) => {
+    if (!isArchivedPlannedGivingComparisonTableBlock(block) && !isPlannedGivingComparisonBlock(block)) {
+      nextBlocks.push(block);
+      return nextBlocks;
+    }
+
+    if (hasCanonicalComparison) {
+      return nextBlocks;
+    }
+
+    hasCanonicalComparison = true;
+    nextBlocks.push({
+      ...block,
+      id: 'comparison_table',
+      name: 'Charitable Giving Comparison Matrix',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: normalizePlannedGivingComparisonMatrixSettings(block.settings),
+    });
+    return nextBlocks;
+  }, []);
 }
 
 function normalizeRetirementIraComparisonTableSettings(rawSettings) {
@@ -1210,6 +1269,155 @@ function hasCtaFormSlotFieldPatch(settingsPatch) {
     .some((key) => CTA_FORM_SLOT_FIELD_PATTERN.test(String(key || '')));
 }
 
+const PLANNED_GIVING_CTA_FINEPRINT = '* fields required';
+const PLANNED_GIVING_CTA_UNSURE_OPTION = Object.freeze({ value: 'not-sure', label: "I'm not sure." });
+const PLANNED_GIVING_CTA_CONTACT_PREFERENCE_FIELD = Object.freeze({
+  id: 'contact_preference',
+  label: 'Contact preference',
+  type: 'select',
+  required: false,
+  placeholder: 'Select one',
+  options: Object.freeze([
+    Object.freeze({ value: 'phone', label: 'Phone' }),
+    Object.freeze({ value: 'email', label: 'Email' }),
+  ]),
+  optionsText: 'phone|Phone\nemail|Email',
+});
+
+function isPlannedGivingCtaSettings(settings) {
+  const sectionClassName = String(settings?.sectionClassName || '').trim();
+  return sectionClassName.split(/\s+/).includes('legacy-giving-cta');
+}
+
+function withRequiredAsterisk(label, fallbackLabel) {
+  const source = String(label || fallbackLabel || '').trim();
+  if (!source) {
+    return '';
+  }
+  return source.includes('*') ? source : `${source}*`;
+}
+
+function isPlannedGivingCtaContactPreferenceField(field) {
+  const fieldId = String(field?.id || '').trim().toLowerCase();
+  const fieldLabel = String(field?.label || '').trim().toLowerCase();
+  return fieldId === 'contact_preference'
+    || fieldId === 'contactpreference'
+    || fieldLabel.includes('contact preference')
+    || fieldLabel.includes('preferred contact');
+}
+
+function ensurePlannedGivingCtaSettings(settings) {
+  if (!settings || typeof settings !== 'object') {
+    return settings;
+  }
+  if (!isPlannedGivingCtaSettings(settings)) {
+    return settings;
+  }
+
+  const fields = parseCtaFormFieldsJson(settings.fieldsJson);
+  if (!fields.length) {
+    return String(settings.fineprint || '').trim()
+      ? settings
+      : { ...settings, fineprint: PLANNED_GIVING_CTA_FINEPRINT };
+  }
+
+  let changed = false;
+  let hasContactPreference = false;
+  const nextFields = fields.map((field) => {
+    const fieldId = String(field?.id || '').trim().toLowerCase();
+    const fieldLabel = String(field?.label || '').trim().toLowerCase();
+    const fieldPatch = {};
+
+    if (fieldId === 'name' || fieldLabel.replace(/\*/g, '').trim() === 'name') {
+      const nextLabel = withRequiredAsterisk(field?.label, 'Name');
+      if (field?.label !== nextLabel) {
+        fieldPatch.label = nextLabel;
+      }
+      if (field?.required !== true) {
+        fieldPatch.required = true;
+      }
+    }
+    if (field?.type === 'tel' || fieldId === 'phone' || fieldLabel.replace(/\*/g, '').trim() === 'phone') {
+      const nextLabel = withRequiredAsterisk(field?.label, 'Phone');
+      if (field?.label !== nextLabel) {
+        fieldPatch.label = nextLabel;
+      }
+      if (field?.required !== true) {
+        fieldPatch.required = true;
+      }
+    }
+    if (field?.type === 'email' || fieldId === 'email' || fieldLabel.replace(/\*/g, '').trim() === 'email') {
+      const nextLabel = withRequiredAsterisk(field?.label, 'Email');
+      if (field?.label !== nextLabel) {
+        fieldPatch.label = nextLabel;
+      }
+      if (field?.required !== true) {
+        fieldPatch.required = true;
+      }
+    }
+
+    if (isPlannedGivingCtaContactPreferenceField(field)) {
+      hasContactPreference = true;
+      const nextField = {
+        ...field,
+        ...PLANNED_GIVING_CTA_CONTACT_PREFERENCE_FIELD,
+        options: PLANNED_GIVING_CTA_CONTACT_PREFERENCE_FIELD.options.map((option) => ({ ...option })),
+      };
+      if (JSON.stringify(nextField) !== JSON.stringify(field)) {
+        changed = true;
+      }
+      return nextField;
+    }
+
+    if (
+      field?.type === 'select'
+      && (fieldId === 'legacyproduct' || fieldLabel.includes('planned giving product'))
+    ) {
+      const options = Array.isArray(field.options) ? field.options : [];
+      if (!options.some((option) => (
+        option?.value === PLANNED_GIVING_CTA_UNSURE_OPTION.value
+        || option?.label === PLANNED_GIVING_CTA_UNSURE_OPTION.label
+      ))) {
+        fieldPatch.options = [...options, PLANNED_GIVING_CTA_UNSURE_OPTION];
+      }
+    }
+
+    if (!Object.keys(fieldPatch).length) {
+      return field;
+    }
+
+    changed = true;
+    return { ...field, ...fieldPatch };
+  });
+
+  if (!hasContactPreference) {
+    const insertAfterIndex = nextFields.reduce((lastMatch, field, index) => {
+      const fieldId = String(field?.id || '').trim().toLowerCase();
+      const fieldLabel = String(field?.label || '').trim().toLowerCase();
+      return fieldId === 'phone' || fieldLabel.replace(/\*/g, '').trim() === 'phone' ? index : lastMatch;
+    }, -1);
+    const contactField = {
+      ...PLANNED_GIVING_CTA_CONTACT_PREFERENCE_FIELD,
+      options: PLANNED_GIVING_CTA_CONTACT_PREFERENCE_FIELD.options.map((option) => ({ ...option })),
+    };
+    changed = true;
+    if (insertAfterIndex < 0) {
+      nextFields.push(contactField);
+    } else {
+      nextFields.splice(insertAfterIndex + 1, 0, contactField);
+    }
+  }
+
+  const needsFineprint = !String(settings.fineprint || '').trim();
+  return (changed || needsFineprint)
+    ? {
+      ...settings,
+      fieldsJson: serializeCtaFormFields(nextFields),
+      fineprint: needsFineprint ? PLANNED_GIVING_CTA_FINEPRINT : settings.fineprint,
+    }
+    : settings;
+}
+
 function normalizeCtaFormCanonicalFieldSettings(settings, { preferSlotFields = false } = {}) {
   if (!settings || typeof settings !== 'object') {
     return settings;
@@ -1219,13 +1427,13 @@ function normalizeCtaFormCanonicalFieldSettings(settings, { preferSlotFields = f
   const canonicalFields = parseCtaFormFieldsJson(settings.fieldsJson);
   const normalizedSettings = stripCtaFormSlotFieldSettings(settings);
   if (!slotFields.length || (!preferSlotFields && canonicalFields.length)) {
-    return normalizedSettings;
+    return ensurePlannedGivingCtaSettings(normalizedSettings);
   }
 
-  return {
+  return ensurePlannedGivingCtaSettings({
     ...normalizedSettings,
     fieldsJson: serializeCtaFormFields(slotFields),
-  };
+  });
 }
 
 function normalizeCtaFormCanonicalFieldsInBlocks(blocks) {
@@ -1852,15 +2060,15 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
     next.lineGap = 0;
     next = withDefaultHeroLine(next, {
       line: 1,
-      defaultText: contract?.lines?.[0]?.text || 'Your future.',
+      defaultText: contract?.lines?.[0]?.text || 'Invest in tomorrow.',
       defaultClassName: contract?.lines?.[0]?.className || 'retirement-native-hero-line line1',
-      defaultHighlightsJson: contract?.lines?.[0]?.highlightsJson || '[{"text":"future","className":"is-atlantean"}]',
+      defaultHighlightsJson: contract?.lines?.[0]?.highlightsJson || '[{"text":"tomorrow","className":"is-atlantean"}]',
     });
     next = withDefaultHeroLine(next, {
       line: 2,
-      defaultText: contract?.lines?.[1]?.text || 'Your plan.',
+      defaultText: contract?.lines?.[1]?.text || 'Start today.',
       defaultClassName: contract?.lines?.[1]?.className || 'retirement-native-hero-line line2',
-      defaultHighlightsJson: contract?.lines?.[1]?.highlightsJson || '[{"text":"plan","className":"is-mango"}]',
+      defaultHighlightsJson: contract?.lines?.[1]?.highlightsJson || '[{"text":"today","className":"is-mango"}]',
     });
     next.line1ClassName = enforceHeroBaseClassName(next.line1ClassName, contract?.lines?.[0]?.className || 'retirement-native-hero-line line1', { preserveCustomTokens: false });
     next.line2ClassName = enforceHeroBaseClassName(next.line2ClassName, contract?.lines?.[1]?.className || 'retirement-native-hero-line line2', { preserveCustomTokens: false });
