@@ -1622,6 +1622,37 @@ function resolveCtaFormSetting(primarySource, fallbackSource, key) {
   return fallbackValue;
 }
 
+const REQUEST_FORM_PRESET_CLASS_BY_SECTION_CLASS = Object.freeze({
+  'certificate-request-native-section': 'certificate-request',
+  'contact-us-request': 'contact',
+  'group-life-native-quote': 'group-life-quote',
+  'insurance-pc-native-quote': 'insurance-quote',
+  'legacy-child-native-cga-request': 'legacy-cga',
+  'legacy-child-native-endowments-legacy-form': 'legacy-endowment',
+  'legacy-child-native-generosity-request': 'legacy-generosity',
+  'legacy-child-native-request': 'legacy-impact',
+  'loans-consultant-native-contact': 'consultant-contact',
+  'loans-native-inquiry': 'loans-inquiry',
+  'retirement-rollovers-native-request': 'retirement-rollover',
+});
+
+function normalizeRequestFormPresetId(value, sectionClassName = '') {
+  const explicitToken = String(value || '').trim().toLowerCase();
+  if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(explicitToken)) {
+    return explicitToken;
+  }
+
+  const sectionClasses = String(sectionClassName || '')
+    .split(/\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const inferredPreset = sectionClasses
+    .map((className) => REQUEST_FORM_PRESET_CLASS_BY_SECTION_CLASS[className])
+    .find(Boolean);
+
+  return inferredPreset || 'default';
+}
+
 function insertCtaContactPreferenceField(fields) {
   const baseFields = Array.isArray(fields) ? fields.filter(Boolean) : [];
   if (baseFields.some((field) => field?.id === 'contact_preference')) {
@@ -1658,6 +1689,137 @@ function insertCtaContactPreferenceField(fields) {
   ];
 }
 
+const PLANNED_GIVING_CTA_FINEPRINT = '* fields required';
+const PLANNED_GIVING_UNSURE_OPTION = Object.freeze({ value: 'not-sure', label: "I'm not sure." });
+const PLANNED_GIVING_CONTACT_PREFERENCE_FIELD = Object.freeze({
+  id: 'contact_preference',
+  label: 'Contact preference',
+  type: 'select',
+  required: false,
+  placeholder: 'Select one',
+  options: Object.freeze([
+    Object.freeze({ value: 'phone', label: 'Phone' }),
+    Object.freeze({ value: 'email', label: 'Email' }),
+  ]),
+  optionsText: 'phone|Phone\nemail|Email',
+});
+
+function isPlannedGivingCtaSource(source = {}) {
+  const sectionClassName = String(source?.sectionClassName || '').trim();
+  return sectionClassName.split(/\s+/).includes('legacy-giving-cta');
+}
+
+function withRequiredAsterisk(label, fallbackLabel) {
+  const source = String(label || fallbackLabel || '').trim();
+  if (!source) {
+    return '';
+  }
+  return source.includes('*') ? source : `${source}*`;
+}
+
+function isPlannedGivingContactPreferenceField(field) {
+  const fieldId = String(field?.id || '').trim().toLowerCase();
+  const fieldLabel = String(field?.label || '').trim().toLowerCase();
+  return fieldId === 'contact_preference'
+    || fieldId === 'contactpreference'
+    || fieldLabel.includes('contact preference')
+    || fieldLabel.includes('preferred contact');
+}
+
+function normalizePlannedGivingCtaFields(fields, source = {}) {
+  if (!isPlannedGivingCtaSource(source)) {
+    return fields;
+  }
+
+  let changed = false;
+  let hasContactPreference = false;
+  const nextFields = (Array.isArray(fields) ? fields : []).map((field) => {
+    const fieldId = String(field?.id || '').trim().toLowerCase();
+    const fieldLabel = String(field?.label || '').trim().toLowerCase();
+    const fieldPatch = {};
+    if (fieldId === 'name' || fieldLabel.replace(/\*/g, '').trim() === 'name') {
+      const nextLabel = withRequiredAsterisk(field?.label, 'Name');
+      if (field?.label !== nextLabel) {
+        fieldPatch.label = nextLabel;
+      }
+      if (field?.required !== true) {
+        fieldPatch.required = true;
+      }
+    }
+    if (field?.type === 'tel' || fieldId === 'phone' || fieldLabel.replace(/\*/g, '').trim() === 'phone') {
+      const nextLabel = withRequiredAsterisk(field?.label, 'Phone');
+      if (field?.label !== nextLabel) {
+        fieldPatch.label = nextLabel;
+      }
+      if (field?.required !== true) {
+        fieldPatch.required = true;
+      }
+    }
+    if (field?.type === 'email' || fieldId === 'email' || fieldLabel.replace(/\*/g, '').trim() === 'email') {
+      const nextLabel = withRequiredAsterisk(field?.label, 'Email');
+      if (field?.label !== nextLabel) {
+        fieldPatch.label = nextLabel;
+      }
+      if (field?.required !== true) {
+        fieldPatch.required = true;
+      }
+    }
+
+    if (isPlannedGivingContactPreferenceField(field)) {
+      hasContactPreference = true;
+      const nextField = {
+        ...field,
+        ...PLANNED_GIVING_CONTACT_PREFERENCE_FIELD,
+        options: PLANNED_GIVING_CONTACT_PREFERENCE_FIELD.options.map((option) => ({ ...option })),
+      };
+      if (JSON.stringify(nextField) !== JSON.stringify(field)) {
+        changed = true;
+      }
+      return nextField;
+    }
+
+    if (
+      field?.type === 'select'
+      && (fieldId === 'legacyproduct' || fieldLabel.includes('planned giving product'))
+    ) {
+      const options = Array.isArray(field.options) ? field.options : [];
+      if (!options.some((option) => (
+        option?.value === PLANNED_GIVING_UNSURE_OPTION.value
+        || option?.label === PLANNED_GIVING_UNSURE_OPTION.label
+      ))) {
+        fieldPatch.options = [...options, PLANNED_GIVING_UNSURE_OPTION];
+      }
+    }
+
+    if (!Object.keys(fieldPatch).length) {
+      return field;
+    }
+
+    changed = true;
+    return { ...field, ...fieldPatch };
+  });
+
+  if (!hasContactPreference) {
+    const insertAfterIndex = nextFields.reduce((lastMatch, field, index) => {
+      const fieldId = String(field?.id || '').trim().toLowerCase();
+      const fieldLabel = String(field?.label || '').trim().toLowerCase();
+      return fieldId === 'phone' || fieldLabel.replace(/\*/g, '').trim() === 'phone' ? index : lastMatch;
+    }, -1);
+    const contactField = {
+      ...PLANNED_GIVING_CONTACT_PREFERENCE_FIELD,
+      options: PLANNED_GIVING_CONTACT_PREFERENCE_FIELD.options.map((option) => ({ ...option })),
+    };
+    changed = true;
+    if (insertAfterIndex < 0) {
+      nextFields.push(contactField);
+    } else {
+      nextFields.splice(insertAfterIndex + 1, 0, contactField);
+    }
+  }
+
+  return changed ? nextFields : fields;
+}
+
 function buildDynamicCtaFieldsFromSource(primarySource, fallbackSource = null) {
   const baseFields = extractCtaFormFields(primarySource, fallbackSource, {
     allowSlotCompatibility: false,
@@ -1673,10 +1835,11 @@ function buildDynamicCtaFieldsFromSource(primarySource, fallbackSource = null) {
   const includeContactPreference = toBoolean(
     resolveCtaFormSetting(primarySource, fallbackSource, 'includeContactPreference'),
   );
+  const variantFields = normalizePlannedGivingCtaFields(baseFields, primarySource);
 
   return includeContactPreference
-    ? insertCtaContactPreferenceField(baseFields)
-    : baseFields;
+    ? insertCtaContactPreferenceField(variantFields)
+    : variantFields;
 }
 
 const CTA_DISPLAY_MODE_SET = new Set(['default', 'inline_reveal']);
@@ -1722,6 +1885,8 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     resolveCtaFormSetting(settings, fallbackSettings, 'titleHighlightsJson') || '',
   );
   const bodyHtml = normalizeHtmlContent(resolveCtaFormSetting(settings, fallbackSettings, 'bodyHtml'));
+  const fineprint = String(resolveCtaFormSetting(settings, fallbackSettings, 'fineprint') || '').trim()
+    || (isPlannedGivingCtaSource(settings) ? PLANNED_GIVING_CTA_FINEPRINT : '');
   const subtitle = String(resolveCtaFormSetting(settings, fallbackSettings, 'subtitle') || '').trim();
   const bgTone = normalizePanelBgTone(resolveCtaFormSetting(settings, fallbackSettings, 'bgTone') || 'white', 'white');
   const submissionSource = {
@@ -1763,6 +1928,7 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     displayMode,
     triggerMode,
     bodyHtml,
+    fineprint,
     subtitle,
     bgTone,
     submitLabel,
@@ -1837,6 +2003,8 @@ export function buildDynamicRequestFormFromBlock(block) {
   const textTone = normalizePanelTextTone(settings.textTone || 'dark', 'dark');
   const spaceBeforeRem = normalizePageContentSpaceRem(settings.spaceBeforeRem, 0, 0, 8);
   const spaceAfterRem = normalizePageContentSpaceRem(settings.spaceAfterRem, 0, 0, 8);
+  const baseSectionClassName = sanitizeClassName(settings.sectionClassName || '');
+  const presetId = normalizeRequestFormPresetId(settings.presetId || settings.requestFormPresetId, baseSectionClassName);
   const { submitLabel, successMessage, salesforceUrl } = normalizeFormSubmissionConfig(settings, {
     submitLabel: 'Submit request',
     successMessage: 'Thanks. We received your request.',
@@ -1858,8 +2026,9 @@ export function buildDynamicRequestFormFromBlock(block) {
   }
 
   const sectionClassName = Array.from(new Set([
-    sanitizeClassName(settings.sectionClassName || ''),
+    baseSectionClassName,
     'native-dynamic-request',
+    `is-request-form-preset-${presetId}`,
     `is-bg-${bgTone}`,
     `is-text-${textTone}`,
   ].filter(Boolean))).join(' ');
@@ -1873,6 +2042,7 @@ export function buildDynamicRequestFormFromBlock(block) {
     subtitle,
     bodyHtml,
     body,
+    presetId,
     bgTone,
     textTone,
     spaceBeforeRem,

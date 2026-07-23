@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NativeContentPage from './NativeContentPage';
 import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
+import { defaultTestimonialsLibrary } from '../data/testimonialsLibrarySeed';
 import { serializeLinkValue } from '../lib/linkValue';
 
 let mockPageHierarchy = {};
@@ -52,7 +53,7 @@ vi.mock('../context/ConsultantResponsesContext', () => ({
 
 vi.mock('../context/TestimonialsContext', () => ({
   useTestimonials: () => ({
-    testimonials: [],
+    testimonials: defaultTestimonialsLibrary,
   }),
 }));
 
@@ -122,6 +123,11 @@ describe('NativeContentPage functional routes', () => {
       '/services/planned-giving/ministry-impact-fund': {
         path: '/services/planned-giving/ministry-impact-fund',
         title: 'Ministry Impact Fund',
+        section: 'Services',
+      },
+      '/services/planned-giving/qualified-charitable-distribution': {
+        path: '/services/planned-giving/qualified-charitable-distribution',
+        title: 'Qualified Charitable Distribution',
         section: 'Services',
       },
       '/services/retirement/403b': {
@@ -334,12 +340,39 @@ describe('NativeContentPage functional routes', () => {
 
     expect(screen.getByText('Certificate Request')).toBeTruthy();
     expect(screen.getByText('Need proof of insurance?')).toBeTruthy();
-    expect(document.querySelector('.certificate-request-native-section')).toBeTruthy();
+    expect(document.querySelector('.certificate-request-native-section.native-dynamic-request.is-request-form-preset-certificate-request')).toBeTruthy();
     expect(document.querySelector('.certificate-request-native-section .certificate-request-form')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="site_feature"]')).toBeNull();
     expect(document.querySelector('[data-block-id="hero"]')).toBeTruthy();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+  });
+
+  it('renders contact from standalone request blocks with the contact request preset', () => {
+    mockBlocksByPath = {
+      '/contact-us': (
+        contentBlockBlueprintsByPath['/contact-us'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/contact-us',
+            title: 'Contact Us',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.contact-us-request.native-dynamic-request.is-request-form-preset-contact')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'How can we help?' })).toBeTruthy();
   });
 
   it('renders group term life from standalone blocks without fallback page content', () => {
@@ -366,13 +399,14 @@ describe('NativeContentPage functional routes', () => {
 
     expect(document.querySelector('.service-native-hero h1')?.textContent).toBe('Get a group quote.');
     expect(document.querySelector('.group-life-native-lead.native-dynamic-page-content')).toBeTruthy();
-    expect(document.querySelector('.group-life-native-quote.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('.group-life-native-quote.native-dynamic-request.is-request-form-preset-group-life-quote')).toBeTruthy();
     expect(document.querySelector('.group-life-native-honor.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('.group-life-native-benefits.native-dynamic-grid')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="site_feature"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
     expect(screen.getAllByText('Provide a few specifics, and we’ll contact you about a policy customized specifically for your team.')).toHaveLength(1);
+    expect(screen.queryByRole('heading', { name: 'Contact info' })).toBeNull();
     expect(screen.getByRole('link', { name: "Ministers' Group Life Plan details" }).getAttribute('href')).toBe('/services/insurance/ministers-group-life-plan');
   });
 
@@ -468,7 +502,7 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(document.querySelector('.insurance-pc-native-quote.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('.insurance-pc-native-quote.native-dynamic-request.is-request-form-preset-insurance-quote')).toBeTruthy();
     expect(document.querySelector('.insurance-pc-native-ag-program.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('.insurance-pc-native-partner.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('.insurance-pc-native-resources.native-dynamic-grid')).toBeTruthy();
@@ -485,6 +519,33 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Safe & sound')).toBeTruthy();
     expect(screen.getByText('CM0045 (04-2020)')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
+  });
+
+  it('renders loan consultants from the request-form block with the consultant request preset', () => {
+    mockBlocksByPath = {
+      '/services/loans/loan-consultants': (
+        contentBlockBlueprintsByPath['/services/loans/loan-consultants'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/loans/loan-consultants',
+            title: 'Loan Consultants',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.loans-consultant-native-contact.native-dynamic-request.is-request-form-preset-consultant-contact')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getByLabelText('Select your state')).toBeTruthy();
   });
 
   it('renders retirement consultants from the targeted request-form block without a fallback page-content section', () => {
@@ -510,7 +571,7 @@ describe('NativeContentPage functional routes', () => {
     );
 
     expect(document.querySelector('.service-native-hero h1')?.textContent).toBe('Retirement Consultants');
-    expect(document.querySelector('.loans-consultant-native-contact.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('.loans-consultant-native-contact.native-dynamic-request.is-request-form-preset-consultant-contact')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
     expect(screen.getByLabelText('Select your state')).toBeTruthy();
@@ -538,7 +599,7 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(document.querySelector('.retirement-rollovers-native-request.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('.retirement-rollovers-native-request.native-dynamic-request.is-request-form-preset-retirement-rollover')).toBeTruthy();
     expect(document.querySelector('.retirement-rollovers-native-request .dynamic-request-layout')).toBeTruthy();
     expect(document.querySelector('.retirement-rollovers-native-request .native-info-inline-form.dynamic-request-form')).toBeTruthy();
     expect(document.querySelector('.retirement-rollovers-native-cta')).toBeNull();
@@ -578,9 +639,64 @@ describe('NativeContentPage functional routes', () => {
 
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
-    expect(document.querySelector('.legacy-child-native-cga-request.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="annuity_options"].legacy-child-native-cga-options.is-divider-off')).toBeTruthy();
+    expect(document.querySelector('.legacy-child-native-cga-request.native-dynamic-request.is-request-form-preset-legacy-cga')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Generous.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Tax benefits\.\s+Ministry support\.\s+Payments for life\./ })).toBeTruthy();
+  });
+
+  it('renders endowments from explicit managed blocks with the endowment request preset', () => {
+    mockBlocksByPath = {
+      '/services/planned-giving/endowments': (
+        contentBlockBlueprintsByPath['/services/planned-giving/endowments'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/planned-giving/endowments',
+            title: 'Endowments',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('.legacy-child-native-endowments-legacy-form.native-dynamic-request.is-request-form-preset-legacy-endowment')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Begin the Endowment sign up process' })).toBeTruthy();
+  });
+
+  it('renders generosity fund from explicit managed blocks with the generosity request preset', () => {
+    mockBlocksByPath = {
+      '/services/planned-giving/generosity-fund': (
+        contentBlockBlueprintsByPath['/services/planned-giving/generosity-fund'] || []
+      ).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/planned-giving/generosity-fund',
+            title: 'Generosity Fund',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(document.querySelector('.legacy-child-native-generosity-request.native-dynamic-request.is-request-form-preset-legacy-generosity')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Make the most of your giving.' })).toBeTruthy();
   });
 
   it('renders ministry impact fund from explicit managed blocks without a fallback page-content section', () => {
@@ -607,7 +723,7 @@ describe('NativeContentPage functional routes', () => {
 
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
-    expect(document.querySelector('.legacy-child-native-request.native-dynamic-request')).toBeTruthy();
+    expect(document.querySelector('.legacy-child-native-request.native-dynamic-request.is-request-form-preset-legacy-impact')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Unlocked.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Most wealth isn’t cash.' })).toBeTruthy();
   });
@@ -637,7 +753,7 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.service-native-hero')).toBeNull();
     expect(document.querySelector('.service-native-intro.about-native-top-intro')).toBeTruthy();
     expect(document.querySelector('.service-native-intro.about-native-top-intro')?.className).not.toContain('careers-native-top-intro');
-    expect(screen.getByRole('heading', { name: 'Where faith & finance grow together.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Where faith & finance grow together.' }).className).toContain('is-atlantean');
     expect(screen.getByText('Our culture is delivering the best financial products and experiences that align with biblical values.')).toBeTruthy();
     expect(screen.getByText('Our mission is your financial health and ministry growth.')).toBeTruthy();
     expect(screen.queryByText('Connect your faith & finances.')).toBeNull();
@@ -893,9 +1009,23 @@ describe('NativeContentPage functional routes', () => {
     const willsSection = willsHeading.closest('section');
     const joySection = joyHeading.closest('section');
     const comparisonSection = document.querySelector('#charitable-giving-plan-comparison');
+    const testimonialsSection = document.querySelector('section.legacy-giving-testimonials');
+    const fineprintSection = document.querySelector('section.legacy-giving-fineprint');
 
+    expect(screen.getByLabelText('Name*').hasAttribute('required')).toBe(true);
+    expect(screen.getByLabelText('Phone*').hasAttribute('required')).toBe(true);
+    expect(screen.getByLabelText('Planned giving product of interest*')).toBeTruthy();
+    const contactPreferenceSelect = screen.getByLabelText('Contact preference');
+    expect(contactPreferenceSelect).toBeTruthy();
+    expect(within(contactPreferenceSelect).getByRole('option', { name: 'Phone' })).toBeTruthy();
+    expect(within(contactPreferenceSelect).getByRole('option', { name: 'Email' })).toBeTruthy();
+    expect(screen.getByRole('option', { name: "I'm not sure." })).toBeTruthy();
+    expect(screen.getByText('* fields required')).toBeTruthy();
     expect(screen.getByText('Receive payments for life.')).toBeTruthy();
-    expect(stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]')?.textContent).toBe('Compare charitable giving ideas');
+    const stewardshipCta = stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]');
+    expect(stewardshipCta?.textContent).toBe('Compare charitable giving ideas');
+    expect(stewardshipCta?.className).toContain('is-tone-white');
+    expect(stewardshipCta?.className).not.toContain('is-outline');
     expect(stewardshipSection?.getAttribute('data-block-id')).toBe('stewardship_story');
     expect(stewardshipSection?.className).toContain('legacy-giving-stewardship');
     expect(stewardshipSection?.className).toContain('legacy-stewardship-story');
@@ -910,10 +1040,29 @@ describe('NativeContentPage functional routes', () => {
     expect(comparisonSection?.id).toBe('charitable-giving-plan-comparison');
     expect(comparisonSection?.getAttribute('data-block-id')).toBe('comparison_table');
     expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
-    expect(comparisonSection?.querySelector('.cga-charitable-giving-table-widget')).toBeTruthy();
-    expect(comparisonSection?.querySelectorAll('table')).toHaveLength(1);
+    expect(comparisonSection?.textContent).toContain('Compare programs side by side. Filter first to narrow options, then review the details that matter most.');
+    expect(comparisonSection?.querySelector('.cga-charitable-giving-table-widget')).toBeNull();
+    expect(comparisonSection?.querySelector('.info-table-sheet')).toBeNull();
+    expect(comparisonSection?.querySelector('.giving-comparison-matrix')).toBeTruthy();
+    expect(comparisonSection?.textContent).toContain('I’m exploring this for');
+    expect(comparisonSection?.textContent).toContain('For me / my family');
+    expect(comparisonSection?.textContent).toContain('For a church or ministry');
+    expect(comparisonSection?.textContent).toContain('Start with a few good options.');
+    expect(comparisonSection?.textContent).toContain('Individual + Ministry');
+    expect(comparisonSection?.textContent).toContain('Ministry Impact Fund®');
+    expect(comparisonSection?.textContent).toContain('Details coming soon');
+    expect(comparisonSection?.textContent).toContain('Provides Donor Income?');
+    expect(comparisonSection?.textContent).toContain('How it’s Funded');
+    expect(comparisonSection?.textContent).toContain('Cash, stocks, bonds, or property');
+    expect(comparisonSection?.textContent).toContain('Show tax details and timing');
+    expect(comparisonSection?.querySelector('table[aria-label="Charitable giving plan comparison"]')).toBeTruthy();
     expect(document.querySelector('[data-block-id="comparison_matrix"]')).toBeNull();
     expect(document.querySelector('.legacy-giving-comparison-matrix')).toBeNull();
+    expect(testimonialsSection?.getAttribute('data-block-id')).toBe('testimonials');
+    expect(testimonialsSection?.textContent).toContain('Donor Advised Fund Corporate Client');
+    expect(testimonialsSection?.textContent).toContain('Northplace Church');
+    expect(testimonialsSection?.querySelectorAll('.carousel-frame')).toHaveLength(3);
+    expect(fineprintSection?.getAttribute('data-block-id')).toBe('testimonials_fineprint');
   });
 
   it('renders the planned giving joy section through a standalone billboard block while preserving the native motion classes', () => {
@@ -1002,7 +1151,7 @@ describe('NativeContentPage functional routes', () => {
     const introHeading = screen.getByRole('heading', { name: 'Protect what matters most.' });
     const coverageHeading = screen.getByRole('heading', { name: 'Coverage options' });
     const riskHeading = screen.getByRole('heading', { name: 'Risk Management' });
-    const missionAssureHeading = screen.getByRole('heading', { name: 'Full coverage for mission trips, retreats, and everything in between.' });
+    const missionAssureHeading = screen.getByRole('heading', { name: 'Full coverage for mission trips, retreats…' });
     const quoteFormHeading = screen.getByRole('heading', { name: 'What coverage is best for your ministry?' });
 
     expect(heroHeading.closest('section')?.getAttribute('data-block-id')).toBe('hero');
@@ -1014,6 +1163,7 @@ describe('NativeContentPage functional routes', () => {
     expect(coverageHeading.closest('section')?.getAttribute('data-block-id')).toBe('coverage_solutions');
     expect(riskHeading.querySelector('mark.is-melon')?.textContent).toBe('Risk');
     expect(missionAssureHeading.closest('section')?.getAttribute('data-block-id')).toBe('mission_assure');
+    expect(missionAssureHeading.closest('section')?.textContent).toContain('and everything in between.');
     expect(quoteFormHeading.closest('section')?.className).toContain('insurance-native-cta');
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
   });
@@ -1084,8 +1234,10 @@ describe('NativeContentPage functional routes', () => {
     );
 
     const givingOptionsSection = document.querySelector('section.legacy-giving-types');
-    const firstCard = givingOptionsSection?.querySelector('.service-native-card');
-    const watchVideoLink = within(firstCard).getByRole('link', { name: 'Watch video' });
+    const productCards = [...(givingOptionsSection?.querySelectorAll('.service-native-card') || [])];
+    const firstCard = productCards[0];
+    const willsCard = productCards[6];
+    const qcdCard = productCards[7];
     const learnMoreLink = within(firstCard).getByRole('link', { name: 'Learn more' });
     const createPlanLink = within(givingOptionsSection).getByRole('link', { name: 'Create your plan' });
 
@@ -1094,17 +1246,61 @@ describe('NativeContentPage functional routes', () => {
     expect(givingOptionsSection?.className).toContain('native-dynamic-grid');
     expect(givingOptionsSection?.textContent).toContain('This is legacy planning and charitable giving made easy.');
     expect(givingOptionsSection?.querySelector('mark.is-atlantean')?.textContent).toBe('made easy');
-    expect(givingOptionsSection?.querySelectorAll('.service-native-card')).toHaveLength(6);
+    expect(productCards).toHaveLength(8);
+    expect(productCards.map((card) => card.querySelector('h3')?.textContent)).toEqual([
+      'Donor Advised Funds',
+      'Charitable Trusts',
+      'Charitable Gift Annuities',
+      'Endowments',
+      'Ministry Impact Fund®',
+      'Customized Giving Plans',
+      'Wills & Estates',
+      'Qualified Charitable Distribution',
+    ]);
     expect(firstCard?.className).toContain('fade-up');
     expect(firstCard?.className).toContain('fade-up-force-observe');
-    expect(watchVideoLink.className).toContain('is-outline');
-    expect(watchVideoLink.className).not.toContain('is-ghost');
+    expect(within(firstCard).getByRole('heading', { name: 'Donor Advised Funds' })).toBeTruthy();
+    expect(firstCard?.textContent).toContain('A Donor Advised Fund lets you contribute assets, receive an immediate tax deduction, and recommend grants to the ministries and causes you care about. It’s a tax-smart, flexible way to give on your own timeline.');
+    expect(within(firstCard).queryByRole('heading', { name: 'Donor Advised Funds / Generosity Fund®' })).toBeNull();
+    expect(within(firstCard).queryByRole('link', { name: 'Watch video' })).toBeNull();
     expect(learnMoreLink.className).toContain('is-tone-atlantean');
     expect(learnMoreLink.className).not.toContain('is-outline');
     expect(learnMoreLink.className).not.toContain('is-ghost');
     expect(createPlanLink.className).toContain('is-outline');
     expect(createPlanLink.className).not.toContain('is-ghost');
+    expect(willsCard?.textContent).toContain('Simple and straightforward, a will ensures a distribution end-of-life plan for your assets. This service is provided free of charge when you designate a 10% gift to an Assemblies of God ministry.');
+    expect(within(willsCard).getByRole('link', { name: 'Download packet' })).toBeTruthy();
+    expect(within(willsCard).getByRole('link', { name: 'Online form*' }).getAttribute('href')).toBe('https://sft.agfinancial.org/documents/Send.do');
+    expect(qcdCard?.textContent).toContain('Your IRA can do more than fund your retirement. If you’re 70½ or older, a Qualified Charitable Distribution (QCD) lets you transfer up to $110,000 per year directly to your church or an eligible ministry tax-free, and straight from the source.');
+    expect(within(qcdCard).getByRole('link', { name: 'Learn more' }).getAttribute('href')).toBe('/services/planned-giving/qualified-charitable-distribution');
     expect(document.querySelectorAll('section[data-block-id="giving_options"]')).toHaveLength(1);
+  });
+
+  it('renders the qualified charitable distribution route through explicit planned giving blocks', () => {
+    mockBlocksByPath = {
+      '/services/planned-giving/qualified-charitable-distribution': (
+        contentBlockBlueprintsByPath['/services/planned-giving/qualified-charitable-distribution'] || []
+      ).filter((block) => block?.mode === 'dynamic'),
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/planned-giving/qualified-charitable-distribution',
+            title: 'Qualified Charitable Distribution',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: /Qualified\s*Charitable/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Distribution' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Your IRA can do more.' })).toBeTruthy();
+    expect(screen.getByText(/transfer up to \$110,000 per year directly/i)).toBeTruthy();
+    expect(container.querySelector('section[data-block-id="hero"]')).toBeTruthy();
+    expect(container.querySelector('section[data-block-id="intro"]')).toBeTruthy();
+    expect(container.querySelector('section[data-block-id="page_content"]')).toBeNull();
   });
 
   it('renders the planned giving wills section through a standalone billboard block while preserving the current action styles', () => {

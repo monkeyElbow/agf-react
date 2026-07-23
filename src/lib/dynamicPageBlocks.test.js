@@ -356,6 +356,47 @@ describe('buildDynamicCtaFormFromBlock', () => {
       }),
     ]);
   });
+
+  it('repairs stale planned-giving CTA drafts missing required fields and choices', () => {
+    const runtime = buildDynamicCtaFormFromBlock({
+      id: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'We help every step of the way. Always.',
+        sectionClassName: 'legacy-giving-cta',
+        fieldsJson: ctaFieldsJson([
+          { id: 'name', label: 'Name', type: 'text' },
+          { id: 'phone', label: 'Phone', type: 'tel' },
+          {
+            id: 'legacyProduct',
+            label: 'Planned giving product of interest*',
+            type: 'select',
+            required: true,
+            options: [
+              { value: 'donor-advised-fund', label: 'Donor Advised Fund' },
+              { value: 'ministry-impact-fund', label: 'Ministry Impact Fund' },
+            ],
+          },
+        ]),
+      },
+    });
+
+    expect(runtime?.fineprint).toBe('* fields required');
+    expect(runtime?.fields?.find((field) => field.id === 'name')).toMatchObject({ label: 'Name*', required: true });
+    expect(runtime?.fields?.find((field) => field.id === 'phone')).toMatchObject({ label: 'Phone*', required: true });
+    expect(runtime?.fields?.find((field) => field.id === 'contact_preference')).toMatchObject({
+      label: 'Contact preference',
+      type: 'select',
+      options: [
+        { value: 'phone', label: 'Phone' },
+        { value: 'email', label: 'Email' },
+      ],
+    });
+    const productField = runtime?.fields?.find((field) => field.id === 'legacyproduct');
+
+    expect(productField?.options).toContainEqual({ value: 'not-sure', label: "I'm not sure." });
+  });
 });
 
 describe('buildDynamicRequestFormFromBlock', () => {
@@ -449,8 +490,29 @@ describe('buildDynamicRequestFormFromBlock', () => {
     });
 
     expect(runtime?.formClassName).toBe('certificate-request-form');
+    expect(runtime?.presetId).toBe('certificate-request');
     expect(runtime?.sectionClassName).toContain('certificate-request-native-section');
+    expect(runtime?.sectionClassName).toContain('is-request-form-preset-certificate-request');
     expect(runtime?.transitionalAdapter).toBe('step-fields-json');
+  });
+
+  it('uses explicit request-form preset ids for block-owned visual variants', () => {
+    const runtime = buildDynamicRequestFormFromBlock({
+      id: 'request_form',
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'contact-us-request',
+        presetId: 'contact',
+        step1FieldsJson: JSON.stringify([
+          { id: 'firstName', label: 'First name', type: 'text', required: true },
+        ]),
+      },
+    });
+
+    expect(runtime?.presetId).toBe('contact');
+    expect(runtime?.sectionClassName).toContain('contact-us-request');
+    expect(runtime?.sectionClassName).toContain('is-request-form-preset-contact');
   });
 });
 
@@ -1208,8 +1270,8 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       runtimeKey: 'legacy_giving_stewardship_story',
       title: 'Smart stewardship for today and tomorrow.',
       beats: [
-        'Receive payments for life.',
         'Transition out of appreciated assets.',
+        'Receive payments for life.',
         'Leave a legacy for family and ministry.',
         'Smart stewardship for today and tomorrow.',
       ],
@@ -1974,6 +2036,49 @@ describe('buildDynamicTestimonialsFromBlock', () => {
     });
 
     expect(runtime).toBeNull();
+  });
+
+  it('falls back to the default testimonial tag when manual ids are stale', () => {
+    const runtime = buildDynamicTestimonialsFromBlock(
+      {
+        id: 'testimonials',
+        kind: 'testimonials',
+        mode: 'dynamic',
+        settings: {
+          selectionMode: 'manual',
+          selectedIdsCsv: 'testimonial-8-1\ntestimonial-8-2\ntestimonial-8-3',
+          defaultTag: 'legacy-giving',
+          limit: 2,
+        },
+      },
+      {
+        library: [
+          {
+            id: 'mike-daf-corporate-client',
+            quote: 'Legacy quote one',
+            author: 'Mike',
+            tags: ['legacy-giving'],
+          },
+          {
+            id: 'bryan-jarrett-northplace-legacy',
+            quote: 'Legacy quote two',
+            author: 'Bryan',
+            tags: ['legacy-giving'],
+          },
+          {
+            id: 'loan-match',
+            quote: 'Loan quote',
+            author: 'Loan Author',
+            tags: ['loans'],
+          },
+        ],
+      },
+    );
+
+    expect(runtime?.items.map((item) => item.id)).toEqual([
+      'mike-daf-corporate-client',
+      'bryan-jarrett-northplace-legacy',
+    ]);
   });
 
   it('uses a block-owned default testimonial tag instead of inferring one from the route', () => {

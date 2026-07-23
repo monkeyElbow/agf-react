@@ -663,6 +663,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(requestSection).toBeTruthy();
     expect(requestSection?.className).toContain('legacy-child-native-endowments-legacy-form');
     expect(requestSection?.className).toContain('native-dynamic-request');
+    expect(requestSection?.className).toContain('is-request-form-preset-legacy-endowment');
     expect(requestSection?.className).toContain('has-managed-request-shell');
     expect(requestSection?.querySelectorAll('.dynamic-request-layout')).toHaveLength(1);
     expect(requestSection?.querySelector('.native-info-section-copy.dynamic-request-copy')).toBeTruthy();
@@ -747,12 +748,13 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     );
 
     const requestSection = document.querySelector(
-      'section[data-block-id="request_form"].legacy-child-native-generosity-request.native-dynamic-request',
+      'section[data-block-id="request_form"].legacy-child-native-generosity-request.native-dynamic-request.is-request-form-preset-legacy-generosity',
     );
 
     expect(requestSection).toBeTruthy();
     expect(requestSection?.className).toContain('legacy-child-native-generosity-request');
     expect(requestSection?.className).toContain('native-dynamic-request');
+    expect(requestSection?.className).toContain('is-request-form-preset-legacy-generosity');
     expect(requestSection?.className).toContain('has-managed-request-shell');
     expect(within(requestSection).getByRole('heading', { name: /Make the most of your giving\./ })).toBeTruthy();
     expect(requestSection?.querySelectorAll('.dynamic-request-layout')).toHaveLength(1);
@@ -842,6 +844,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(requestSection).toBeTruthy();
     expect(requestSection?.className).toContain('legacy-child-native-cga-request');
     expect(requestSection?.className).toContain('native-dynamic-request');
+    expect(requestSection?.className).toContain('is-request-form-preset-legacy-cga');
     expect(requestSection?.className).toContain('has-managed-request-shell');
     expect(requestSection?.querySelectorAll('.dynamic-request-layout')).toHaveLength(1);
     expect(requestSection?.querySelector('.native-info-section-copy.dynamic-request-copy')).toBeTruthy();
@@ -930,6 +933,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(requestSection).toBeTruthy();
     expect(requestSection?.className).toContain('legacy-child-native-request');
     expect(requestSection?.className).toContain('native-dynamic-request');
+    expect(requestSection?.className).toContain('is-request-form-preset-legacy-impact');
     expect(requestSection?.className).toContain('has-managed-request-shell');
     expect(requestSection?.querySelectorAll('.dynamic-request-layout')).toHaveLength(1);
     expect(requestSection?.querySelector('.native-info-section-copy.dynamic-request-copy')).toBeTruthy();

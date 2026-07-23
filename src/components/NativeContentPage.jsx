@@ -72,7 +72,7 @@ import {
 import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { buildNativeHudPanels } from '../lib/nativeHudPanels';
 import useHudDockOrder from '../hooks/useHudDockOrder';
-import CharitableGivingTableWidget from './CharitableGivingTableWidget';
+import GivingComparisonMatrix from './GivingComparisonMatrix';
 import CharitableGiftTestDriveWidget from './CharitableGiftTestDriveWidget';
 import EmergencyFundCalculatorWidget from './EmergencyFundCalculatorWidget';
 import IncreasedContributionCalculatorWidget from './IncreasedContributionCalculatorWidget';
@@ -1334,6 +1334,7 @@ function buildDynamicCtaSection(block, pathname) {
       submitClassName: submitButtonConfig.className,
       successMessage: runtime.successMessage,
       salesforceUrl: runtime.salesforceUrl,
+      fineprint: runtime.fineprint,
       displayMode: runtime.displayMode,
       triggerMode: runtime.triggerMode,
       fields: runtime.fields,
@@ -2386,6 +2387,7 @@ function DynamicCtaForm({ config }) {
         })}
         {config?.subtitle ? <h6>{config.subtitle}</h6> : null}
         {errorMessage ? <p className="dynamic-cta-form-error" role="alert">{errorMessage}</p> : null}
+        {config?.fineprint ? <p className="dynamic-cta-form-fineprint">{config.fineprint}</p> : null}
         <button type="submit" className={submitButtonClassName}>{submitLabel}</button>
       </form>
     </div>
@@ -6854,8 +6856,8 @@ export default function NativeContentPage({ page }) {
               <EndowmentCalculatorWidget />
             ) : null}
 
-            {section.widget === 'charitable-giving-table' ? (
-              <CharitableGivingTableWidget />
+            {section.widget === 'giving-comparison-matrix' ? (
+              <GivingComparisonMatrix />
             ) : null}
 
             {section.widget === 'charitable-gift-test-drive' ? (
@@ -6878,7 +6880,7 @@ export default function NativeContentPage({ page }) {
               <IncreasedContributionCalculatorWidget />
             ) : null}
 
-            {section.table && section.widget !== 'charitable-giving-table' ? (
+            {section.table ? (
               <div className="native-info-table-wrap">
                 <InfoTableSheet
                   headers={section.table.headers}

@@ -104,6 +104,7 @@ export default function DynamicCtaSection({
   const titleClassName = String(runtime?.titleClassName || '').trim();
   const titleHighlights = Array.isArray(runtime?.titleHighlights) ? runtime.titleHighlights : [];
   const bodyHtml = String(runtime?.bodyHtml || '').trim();
+  const fineprint = String(runtime?.fineprint || '').trim();
   const subtitle = String(runtime?.subtitle || '').trim();
   const bgTone = String(runtime?.bgTone || 'white').trim().toLowerCase() || 'white';
   const submitLabel = normalizeFollowUpSubmitLabel(runtime?.submitLabel);
@@ -330,6 +331,7 @@ export default function DynamicCtaSection({
               {!renderTitleInsideShell && bodyHtml ? (
                 <div className="native-info-rich-html dynamic-cta-form-callout" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
               ) : null}
+              {fineprint ? <p className="dynamic-cta-form-fineprint">{fineprint}</p> : null}
               <button type="submit" className={resolvedSubmitButtonClassName}>{submitLabel}</button>
             </form>
           </div>

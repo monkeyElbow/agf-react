@@ -68,6 +68,7 @@ const CTA_FORM_SPECIFIC_FIELD_IDS = Object.freeze([
   'titleClassName',
   'titleHighlightsJson',
   'bodyHtml',
+  'fineprint',
   'fieldsJson',
   'includeContactPreference',
   'bgTone',

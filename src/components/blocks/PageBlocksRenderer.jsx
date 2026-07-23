@@ -672,6 +672,7 @@ export function HomeDoTheMathBadge({ linkTarget = '/calculators' }) {
         pressTimerRef.current = 0;
       }
     };
+    let positionFrameId = 0;
     const triggerPressCycle = () => {
       clearPressTimer();
       setIsPressing(false);
@@ -714,6 +715,15 @@ export function HomeDoTheMathBadge({ linkTarget = '/calculators' }) {
         triggerPressCycle();
       }
     };
+    const queueBadgePositionEvaluation = () => {
+      if (positionFrameId) {
+        return;
+      }
+      positionFrameId = window.requestAnimationFrame(() => {
+        positionFrameId = 0;
+        evaluateBadgePosition();
+      });
+    };
 
     const revealObserver = new window.IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -746,12 +756,17 @@ export function HomeDoTheMathBadge({ linkTarget = '/calculators' }) {
     revealObserver.observe(node);
     pressObserver.observe(node);
     evaluateBadgePosition();
-    window.addEventListener('resize', evaluateBadgePosition, { passive: true });
+    window.addEventListener('scroll', queueBadgePositionEvaluation, { passive: true });
+    window.addEventListener('resize', queueBadgePositionEvaluation, { passive: true });
 
     return () => {
       revealObserver.disconnect();
       pressObserver.disconnect();
-      window.removeEventListener('resize', evaluateBadgePosition);
+      window.removeEventListener('scroll', queueBadgePositionEvaluation);
+      window.removeEventListener('resize', queueBadgePositionEvaluation);
+      if (positionFrameId) {
+        window.cancelAnimationFrame(positionFrameId);
+      }
       clearPressTimer();
     };
   }, []);

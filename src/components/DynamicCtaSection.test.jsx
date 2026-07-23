@@ -194,6 +194,30 @@ describe('DynamicCtaSection', () => {
     expect(screen.getByLabelText('Message')).toBeTruthy();
   });
 
+  it('renders CTA form fineprint when configured', () => {
+    render(
+      <DynamicCtaSection
+        managedBlocks={[
+          {
+            id: 'cta_form',
+            kind: 'cta_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'We help every step of the way. Always.',
+              fineprint: '* fields required',
+              fieldsJson: ctaFieldsJson([
+                { id: 'name', label: 'Name*', type: 'text', required: true },
+              ]),
+            },
+          },
+        ]}
+        defaultSettings={{}}
+      />,
+    );
+
+    expect(screen.getByText('* fields required')).toBeTruthy();
+  });
+
   it('can render the CTA title inside the form shell when requested', () => {
     const { container } = render(
       <DynamicCtaSection

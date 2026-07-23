@@ -217,7 +217,7 @@ describe('PageBlocksRenderer columns', () => {
           columnsStyle: 'loans-value',
           bgTone: 'white',
           contentWidth: 'browser',
-          columns: 'three',
+          columns: 'four',
           col1Enabled: true,
           col1Type: 'text',
           col1Title: 'Smart consulting.',
@@ -230,7 +230,10 @@ describe('PageBlocksRenderer columns', () => {
           col3Type: 'text',
           col3Title: 'Roots with values.',
           col3Body: 'The partnership stays aligned with your ministry.',
-          col4Enabled: false,
+          col4Enabled: true,
+          col4Type: 'text',
+          col4Title: 'Loyalty.',
+          col4Body: "A ministry returning to us for its next loan — and the next — really says something. Many of our borrowers are repeat clients. That's the best endorsement we could ask for.",
         },
       },
       resolveTo: (pathRef, fallback = '/') => String(pathRef || '').trim() || fallback,
@@ -262,7 +265,9 @@ describe('PageBlocksRenderer columns', () => {
     const firstItem = screen.getByText('Smart consulting.').closest('.native-columns-item');
     const secondItem = screen.getByText('Teamwork.').closest('.native-columns-item');
     const thirdItem = screen.getByText('Roots with values.').closest('.native-columns-item');
+    const fourthItem = screen.getByText('Loyalty.').closest('.native-columns-item');
     expect(firstItem?.className).toContain('investments-native-growth-card');
+    expect(fourthItem?.className).toContain('investments-native-growth-card');
     expect(firstItem?.className).toContain('investments-growth-scroll-reveal');
     expect(firstItem?.getAttribute('data-investments-growth-reveal')).toBe('card');
     expect(firstItem?.getAttribute('data-investments-growth-background-panel')).toBe('blue');

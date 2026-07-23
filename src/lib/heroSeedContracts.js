@@ -91,14 +91,14 @@ export const HERO_SEED_CONTRACTS_BY_PATH = {
     lineHeight: 0.9,
     lines: [
       {
-        text: 'Your future.',
+        text: 'Invest in tomorrow.',
         className: 'retirement-native-hero-line line1',
-        highlightsJson: '[{"text":"future","className":"is-atlantean"}]',
+        highlightsJson: '[{"text":"tomorrow","className":"is-atlantean"}]',
       },
       {
-        text: 'Your plan.',
+        text: 'Start today.',
         className: 'retirement-native-hero-line line2',
-        highlightsJson: '[{"text":"plan","className":"is-mango"}]',
+        highlightsJson: '[{"text":"today","className":"is-mango"}]',
       },
     ],
     actions: [],
