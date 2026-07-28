@@ -22305,6 +22305,22 @@ p.impact-proof-story-proof-body {
   margin-top: clamp(0.95rem, 1.8vw, 1.25rem);
 }
 
+.native-info-page--legacy-child .legacy-child-native-ministry-impact-steps .planned-giving-step-icon {
+  display: grid;
+  align-items: end;
+  justify-items: start;
+}
+
+.native-info-page--legacy-child .legacy-child-native-ministry-impact-steps .planned-giving-step-icon svg {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+
+.native-info-page--legacy-child .legacy-child-native-ministry-impact-steps .native-columns-item.is-flow-step:nth-child(n + 2)::before {
+  margin-top: clamp(1.35rem, 2vw, 1.9rem);
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo {
   padding: clamp(3.9rem, 7.4vw, 6.2rem) 0 clamp(2.15rem, 4.6vw, 3.4rem);
   background: #faf7f1;

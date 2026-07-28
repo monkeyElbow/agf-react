@@ -223,4 +223,17 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('line-height: 1.02;');
     expect(cssSource).toContain('margin-bottom: clamp(0.8rem, 1.75vw, 1.1rem);');
   });
+
+  it('keeps Ministry Impact Fund step icons aligned on a shared rail', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--legacy-child .legacy-child-native-ministry-impact-steps .planned-giving-step-icon {');
+    expect(cssSource).toContain('align-items: end;');
+    expect(cssSource).toContain('justify-items: start;');
+    expect(cssSource).toContain('.native-info-page--legacy-child .legacy-child-native-ministry-impact-steps .planned-giving-step-icon svg {');
+    expect(cssSource).toContain('height: auto;');
+    expect(cssSource).toContain('max-height: 100%;');
+    expect(cssSource).toContain('.native-info-page--legacy-child .legacy-child-native-ministry-impact-steps .native-columns-item.is-flow-step:nth-child(n + 2)::before {');
+    expect(cssSource).toContain('margin-top: clamp(1.35rem, 2vw, 1.9rem);');
+  });
 });
