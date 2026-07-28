@@ -20107,6 +20107,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types {
   --dynamic-grid-body-color: var(--ag-color-super-grey);
+  --dynamic-grid-card-title-color: var(--ag-color-super-grey);
   padding-top: clamp(2.4rem, 5vw, 4rem);
   padding-bottom: clamp(1.35rem, 2.9vw, 2.25rem);
 }
@@ -20122,6 +20123,12 @@ p.impact-proof-story-proof-body {
   box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26);
   padding: clamp(1.9rem, 2.8vw, 2.7rem);
   min-height: 100%;
+}
+
+.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div {
+  display: grid;
+  justify-items: center;
+  text-align: center;
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {
@@ -20149,9 +20156,11 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div > p {
-  color: var(--ag-color-super-grey);
+  justify-self: stretch;
+  color: var(--ag-color-super-grey) !important;
   font-size: clamp(1.12rem, 1.75vw, 1.28rem);
   line-height: 1.48;
+  text-align: left;
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-action-row {
@@ -20161,6 +20170,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types > :is(.ag-panel-rail, .ag-panel-rail-wide, .native-info-full-bleed) > .service-native-action-row {
   margin-top: clamp(2.5rem, 5.6vw, 4rem);
+  justify-content: center !important;
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison {
@@ -20511,48 +20521,6 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .retirement-child-native-rollover .service-native-action-row {
   justify-content: center;
   margin-top: 1.15rem;
-}
-
-.native-info-page--retirement-iras .retirement-ira-native-cta > .ag-panel-rail {
-  display: block;
-  max-width: var(--ag-content-max);
-}
-
-.native-info-page--retirement-iras .service-native-section.retirement-child-native-cta.retirement-ira-native-cta {
-  background: #fff;
-  padding-top: clamp(2.6rem, 4.8vw, 3.8rem);
-  padding-bottom: clamp(2.8rem, 5vw, 4rem);
-}
-
-.native-info-page--retirement-iras .retirement-ira-native-cta > .ag-panel-rail > .native-info-section-copy {
-  justify-items: end;
-  text-align: right;
-  margin-bottom: 1rem;
-}
-
-.native-info-page--retirement-iras .retirement-ira-native-cta > .ag-panel-rail > .native-info-section-copy > h2 {
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-weight: 700;
-  font-size: clamp(2.5rem, 5vw, 4.8rem);
-  letter-spacing: clamp(-0.05em, -0.18vw, -0.02em);
-}
-
-.native-info-page--retirement-iras .retirement-ira-native-cta > .ag-panel-rail > .native-info-section-copy > h2 mark.is-mango {
-  color: var(--ag-color-mango);
-}
-
-.native-info-page--retirement-iras .retirement-ira-native-cta .native-info-section-subtitle {
-  text-align: right;
-  color: var(--ag-color-super-grey);
-  font-size: clamp(1.6rem, 2.6vw, 2.5rem);
-  line-height: 1.05;
-  font-weight: 700;
-}
-
-.native-info-page--retirement-iras .retirement-ira-native-cta .service-native-action-row {
-  justify-content: flex-end;
-  margin-top: 1.2rem;
 }
 
 .retirement-403b-native-enroll > .native-info-full-bleed > h2 {

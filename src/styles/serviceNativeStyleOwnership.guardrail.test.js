@@ -328,8 +328,14 @@ describe('service-native style ownership', () => {
     [
       '.native-info-page--retirement-iras .retirement-child-native-ira-types {',
       '--dynamic-grid-body-color: var(--ag-color-super-grey);',
+      '--dynamic-grid-card-title-color: var(--ag-color-super-grey);',
       'padding-bottom: clamp(1.35rem, 2.9vw, 2.25rem);',
       'box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26);',
+      '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div {',
+      'justify-items: center;',
+      '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div > p {',
+      'justify-self: stretch;',
+      'text-align: left;',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {',
       'display: block;',
       'min-height: 0;',
@@ -337,6 +343,7 @@ describe('service-native style ownership', () => {
       'padding-bottom: 0;',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types > :is(.ag-panel-rail, .ag-panel-rail-wide, .native-info-full-bleed) > .service-native-action-row {',
       'margin-top: clamp(2.5rem, 5.6vw, 4rem);',
+      'justify-content: center !important;',
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
     });
@@ -344,6 +351,25 @@ describe('service-native style ownership', () => {
     expect(source).toContain('.service-native-section.native-dynamic-grid.is-bg-grey,');
     expect(source).toContain('background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);');
     expect(source).not.toContain('background: linear-gradient(145deg, #333335 0%, var(--ag-color-super-grey) 48%, #5f5e61 100%);');
+  });
+
+  it('keeps the shared retirement daily billboard treatment available for IRA CTA reuse', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.retirement-daily-billboard .native-info-section-copy {',
+      'text-align: center;',
+      '.retirement-daily-billboard > .ag-panel-rail {',
+      'width: min(var(--dynamic-billboard-max-width, 1480px), calc(100% - (var(--ag-panel-gutter) * 2)));',
+      '.retirement-daily-billboard .native-info-section-copy > h2 {',
+      'line-height: 0.88;',
+      '.service-native-section.dynamic-billboard.retirement-daily-billboard .service-native-action-row,',
+      'justify-content: center;',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+
+    expect(source).not.toContain('.native-info-page--retirement-iras .retirement-ira-native-cta > .ag-panel-rail {');
   });
 
   it('keeps the IRA comparison section on the light card treatment', () => {

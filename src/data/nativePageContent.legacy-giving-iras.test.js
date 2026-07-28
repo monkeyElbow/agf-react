@@ -72,7 +72,7 @@ describe('planned giving and IRA native page content', () => {
     expect(endowmentsContent?.hero).toBeUndefined();
     expect(endowmentsContent?.intro).toBeUndefined();
     expect(endowmentsContent?.sections).toBeUndefined();
-    expect(endowmentBlocks.find((block) => block?.id === 'how_it_works')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-duo');
+    expect(endowmentBlocks.find((block) => block?.id === 'how_it_works')?.settings?.sectionClassName).toBe('legacy-child-native-flow-steps legacy-child-native-endowments-duo');
     expect(endowmentBlocks.find((block) => block?.id === 'how_it_works')?.settings?.col4Enabled).toBe(false);
     expect(endowmentBlocks.find((block) => block?.id === 'assets_you_may_give')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-assets');
     expect(endowmentBlocks.find((block) => block?.id === 'give_forever')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-big-cta');
@@ -102,9 +102,10 @@ describe('planned giving and IRA native page content', () => {
     });
     expect(generosityIntro?.settings?.heading).toBe('All your charitable giving in one place.');
     expect(generositySteps?.settings).toMatchObject({
-      sectionClassName: 'legacy-child-native-steps',
-      card1Title: '01',
-      card3Title: '03',
+      sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-generosity-steps',
+      columns: 'three',
+      col1Type: 'flow-step',
+      col3Type: 'flow-step',
     });
     expect(generosityAssets?.settings).toMatchObject({
       sectionClassName: 'legacy-child-native-assets legacy-child-native-generosity-assets',
@@ -146,8 +147,12 @@ describe('planned giving and IRA native page content', () => {
     expect(ministryImpactContent?.intro).toBeUndefined();
     expect(ministryImpactContent?.sections).toBeUndefined();
     expect(ministryImpactIntro?.settings?.heading).toBe('Most wealth isn’t cash.');
-    expect(ministryImpactSteps?.settings?.sectionClassName).toBe('legacy-child-native-steps');
-    expect(ministryImpactSteps?.settings?.card3Title).toBe('03');
+    expect(ministryImpactSteps?.settings).toMatchObject({
+      sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-ministry-impact-steps',
+      columns: 'three',
+      col1Type: 'flow-step',
+      col3Type: 'flow-step',
+    });
     expect(ministryImpactStockSection?.settings?.card1Title).toBe('Intent to Gift of Securities');
     expect(ministryImpactStockSection?.settings?.card1ButtonDocumentId).toBe('document-planned-giving-intent-to-gift-form');
     expectLink(ministryImpactStockSection?.settings, 'card1Button2LinkJson', {
@@ -233,6 +238,7 @@ describe('planned giving and IRA native page content', () => {
     expect(iraTypes?.settings?.card2ButtonLabel).toBe('');
     expect(iraTypes?.settings).toMatchObject({
       bodyTone: 'super-grey',
+      justify: 'center',
       buttonLabel: 'Open IRA',
       buttonStyle: 'dark',
       buttonTone: 'white',
@@ -245,5 +251,17 @@ describe('planned giving and IRA native page content', () => {
     expect(openIra).toBeUndefined();
     expect(rollover?.settings?.bodyHtml).toContain('single AGFinancial IRA');
     expect(rollover?.settings?.targetSectionKey).toBeUndefined();
+    expect(iraBlocks.find((block) => block?.id === 'daily_billboard')?.settings).toMatchObject({
+      bodyHtml: '<h3>Starting now.</h3>',
+      justify: 'right',
+      scrollReveal: 'scale-up',
+      lineSpacing: 0.88,
+      titleFontFamily: 'helv',
+      titleFontWeight: 700,
+      titleSizeRem: 5.25,
+      titleLetterSpacingEm: -0.03,
+      headlineMaxWidthPx: 560,
+      sectionClassName: 'retirement-ira-native-cta retirement-everyday retirement-daily-billboard',
+    });
   });
 });
