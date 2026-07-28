@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,18 +68,29 @@ describe('planned giving review polish guardrail', () => {
   it('keeps the endowments explainer as a three-step flow with assets on its own content rail', () => {
     const cssSource = readSource('../styles/service-native.css');
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');
+    const howItWorksBlock = contentBlockBlueprintsByPath['/services/planned-giving/endowments']
+      ?.find((block) => block?.id === 'how_it_works');
 
     expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-duo'");
+    expect(blueprintSource).toContain('createPlannedGivingHowItWorksColumnsBlueprint({');
     expect(blueprintSource).toContain("title: 'How it works'");
     expect(blueprintSource).toContain("columns: 'three'");
-    expect(blueprintSource).toContain("col1Type: 'flow-step'");
+    expect(howItWorksBlock).toMatchObject({
+      kind: 'columns',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-endowments-duo',
+        columns: 'three',
+        col1Type: 'flow-step',
+        col1Body: 'Designated assets are invested to ensure their protection and growth.',
+        col2Body: 'Payments are made from ongoing interest earned from the gifted asset(s).',
+        col3Body: 'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.',
+        col4Enabled: false,
+      },
+    });
     expect(blueprintSource).not.toContain("title: 'You give assets'");
     expect(blueprintSource).not.toContain("title: 'Principal stays invested'");
     expect(blueprintSource).not.toContain("title: 'Earnings support ministry'");
-    expect(blueprintSource).toContain("col1Body: 'Designated assets are invested to ensure their protection and growth.'");
-    expect(blueprintSource).toContain("col2Body: 'Payments are made from ongoing interest earned from the gifted asset(s).'");
-    expect(blueprintSource).toContain("col3Body: 'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.'");
-    expect(blueprintSource).toContain("col4Enabled: false");
     expect(blueprintSource).toContain("id: 'assets_you_may_give'");
     expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-assets'");
     expect(blueprintSource).toContain("contentMaxWidthPx: 1040");

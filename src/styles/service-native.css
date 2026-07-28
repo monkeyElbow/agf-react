@@ -22200,6 +22200,111 @@ p.impact-proof-story-proof-body {
   margin-top: 0.2rem;
 }
 
+.native-info-page--legacy-child .legacy-child-native-flow-steps {
+  padding: clamp(3.9rem, 7.4vw, 6.2rem) 0 clamp(2.15rem, 4.6vw, 3.4rem);
+  background: #faf7f1;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps > .native-info-full-bleed {
+  width: min(calc(100% - (var(--ag-panel-gutter) * 1.4)), 76rem);
+  margin-inline: auto;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-info-section-copy > h2 {
+  margin: 0;
+  text-align: center;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-size: clamp(2.25rem, 4.25vw, 3.65rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.038em;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-grid {
+  counter-reset: planned-giving-flow;
+  margin-top: clamp(2rem, 4vw, 3rem);
+  gap: clamp(1.6rem, 3vw, 2.4rem) clamp(1.2rem, 2.2vw, 1.8rem);
+  align-items: start;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item {
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  justify-self: center;
+  width: min(100%, 21rem);
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step::before {
+  order: 1;
+  counter-increment: planned-giving-flow;
+  content: '0' counter(planned-giving-flow);
+  display: inline-block;
+  margin-bottom: clamp(0.4rem, 0.9vw, 0.65rem);
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-heading);
+  font-size: clamp(3rem, 5.2vw, 4.55rem);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 0.82;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step:nth-child(2)::before {
+  color: var(--ag-color-atlantean);
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step:nth-child(3)::before {
+  color: var(--ag-color-mango);
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-copy {
+  padding: 0;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .planned-giving-step-icon {
+  order: 0;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .native-columns-copy {
+  order: 2;
+  padding-top: clamp(0.4rem, 0.9vw, 0.65rem);
+  border-top: 0;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-copy h3 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-size: clamp(1.55rem, 2.4vw, 2rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
+  text-wrap: balance;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .native-columns-copy p {
+  margin: 0;
+  max-width: 28ch;
+  color: rgba(65, 64, 66, 0.9);
+  font-size: clamp(1.16rem, 1.75vw, 1.32rem);
+  line-height: 1.68;
+}
+
+.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-actions {
+  margin-top: clamp(0.95rem, 1.8vw, 1.25rem);
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo {
   padding: clamp(3.9rem, 7.4vw, 6.2rem) 0 clamp(2.15rem, 4.6vw, 3.4rem);
   background: #faf7f1;
@@ -23346,6 +23451,28 @@ p.impact-proof-story-proof-body {
 }
 
 @media (max-width: 960px) {
+  .native-info-page--legacy-child .legacy-child-native-flow-steps > .native-info-full-bleed {
+    width: min(calc(100% - (var(--ag-panel-gutter) * 1.6)), 76rem);
+  }
+
+  .native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.4rem, 4vw, 2rem);
+  }
+
+  .native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step {
+    text-align: center;
+  }
+
+  .native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .native-columns-copy {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .native-columns-copy p {
+    margin-inline: auto;
+  }
+
   .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo > .native-info-full-bleed {
     width: min(calc(100% - (var(--ag-panel-gutter) * 1.6)), 76rem);
   }

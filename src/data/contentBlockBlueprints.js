@@ -431,6 +431,82 @@ function createDynamicColumnsBlueprint({ id, name, presetId = 'default', templat
   };
 }
 
+function seedBlueprintFlowStepColumnFields(columnNumber, {
+  body = '',
+  iconKey = '',
+  iconTone = '',
+  buttonLabel = '',
+  buttonHref = '',
+  buttonPageRef = inferInternalPageRefFromHref(buttonHref),
+  buttonStyle = 'blue',
+  buttonTone = 'atlantean',
+  buttonOpenInNewWindow = false,
+} = {}) {
+  return {
+    [`col${columnNumber}Enabled`]: true,
+    [`col${columnNumber}Type`]: 'flow-step',
+    [`col${columnNumber}Title`]: '',
+    [`col${columnNumber}Body`]: body,
+    [`col${columnNumber}BodyHtml`]: '',
+    [`col${columnNumber}IconKey`]: iconKey,
+    [`col${columnNumber}IconTone`]: iconTone,
+    [`col${columnNumber}ImageUrl`]: '',
+    [`col${columnNumber}ImageAlt`]: '',
+    [`col${columnNumber}WidthShare`]: 1,
+    ...seedBlueprintColumnButtonFields(columnNumber, {
+      label: buttonLabel,
+      href: buttonHref,
+      pageRef: buttonPageRef,
+      style: buttonStyle,
+      tone: buttonTone,
+      openInNewWindow: buttonOpenInNewWindow,
+    }),
+  };
+}
+
+function createPlannedGivingHowItWorksColumnsBlueprint({
+  id = 'how_it_works',
+  name = 'How It Works',
+  sectionClassName = '',
+  steps = [],
+}) {
+  const normalizedSectionClassName = ['legacy-child-native-flow-steps', sectionClassName]
+    .filter(Boolean)
+    .join(' ');
+
+  return createDynamicColumnsBlueprint({
+    id,
+    name,
+    settings: {
+      title: 'How it works',
+      titleClassName: '',
+      titleHighlightsJson: '',
+      bodyHtml: '',
+      leadLine: '',
+      followupLine: '',
+      columnsStyle: 'retirement',
+      bgTone: 'white',
+      contentWidth: 'browser',
+      columns: 'three',
+      justify: 'center',
+      sectionClassName: normalizedSectionClassName,
+      ...seedBlueprintFlowStepColumnFields(1, steps[0]),
+      ...seedBlueprintFlowStepColumnFields(2, steps[1]),
+      ...seedBlueprintFlowStepColumnFields(3, steps[2]),
+      col4Enabled: false,
+      col4Type: 'flow-step',
+      col4Title: '',
+      col4Body: '',
+      col4BodyHtml: '',
+      col4IconKey: '',
+      col4IconTone: '',
+      col4ImageUrl: '',
+      col4ImageAlt: '',
+      col4WidthShare: 1,
+    },
+  });
+}
+
 function createDynamicCtaBandBlueprint({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     id,
@@ -1543,41 +1619,27 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createDynamicCardGridBlueprint({
+    createPlannedGivingHowItWorksColumnsBlueprint({
       id: 'how_it_works',
-      name: 'How It Works Cards',
-      settings: {
-        title: 'How it works',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        bodyHtml: '',
-        body: '',
-        bgTone: 'white',
-        contentWidth: 'browser',
-        columns: 'three',
-        cardStyle: 'card2',
-        showTitleDivider: true,
-        sectionClassName: 'legacy-child-native-steps',
-        fullBleed: true,
-        ...seedBlueprintCardGridCardFields(1, {
-          title: 'Fund',
+      name: 'How It Works',
+      sectionClassName: 'legacy-child-native-cga-steps',
+      steps: [
+        {
           iconKey: 'daf-step-1',
           iconTone: 'super-grey',
           body: 'You fund the gift with cash or securities, and should receive an immediate charitable deduction.',
-        }),
-        ...seedBlueprintCardGridCardFields(2, {
-          title: 'Receive',
+        },
+        {
           iconKey: 'cga-step-2',
           iconTone: 'super-grey',
           body: 'AG Foundation invests those assets and pays you a fixed amount (according to your age) every year for the rest of your life.',
-        }),
-        ...seedBlueprintCardGridCardFields(3, {
-          title: 'Sustain',
+        },
+        {
           iconKey: 'cga-step-3',
           iconTone: 'super-grey',
           body: 'When you pass away, a portion of the remainder goes to support ministry.',
-        }),
-      },
+        },
+      ],
     }),
     createDynamicCardGridBlueprint({
       id: 'gift_assets',
@@ -1842,47 +1904,34 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createDynamicCardGridBlueprint({
+    createPlannedGivingHowItWorksColumnsBlueprint({
       id: 'how_it_works',
-      name: 'How It Works Cards',
-      settings: {
-        title: 'How it works',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        bodyHtml: '',
-        body: '',
-        bgTone: 'white',
-        contentWidth: 'browser',
-        columns: 'three',
-        cardStyle: 'card2',
-        showTitleDivider: true,
-        fullBleed: true,
-        sectionClassName: 'legacy-child-native-steps',
-        ...seedBlueprintCardGridCardFields(1, {
-          title: '01',
+      name: 'How It Works',
+      sectionClassName: 'legacy-child-native-ministry-impact-steps',
+      steps: [
+        {
           iconKey: 'daf-step-1',
           iconTone: 'sandstone',
           body: 'Your donor transfers cash or asset(s) to your Ministry Impact Fund®, potentially receiving a charitable deduction and minimized or eliminated capital gains.',
           buttonLabel: 'Open a Ministry Impact Fund®',
           buttonHref: '#ministry-impact-form',
-        }),
-        ...seedBlueprintCardGridCardFields(2, {
-          title: '02',
+        },
+        {
           iconKey: 'mif-step-2',
           iconTone: 'sandstone',
           body: 'AG Foundation liquidates the asset(s) for you, handling all administrative details.',
           buttonLabel: 'Secure message upload',
           buttonHref: 'https://uploads.agfinancial.org/',
-        }),
-        ...seedBlueprintCardGridCardFields(3, {
-          title: '03',
+          buttonOpenInNewWindow: true,
+        },
+        {
           iconKey: 'mif-step-3',
           iconTone: 'sandstone',
           body: 'Your ministry gains immediate access to the cash.',
           buttonLabel: 'Talk to planned giving',
           buttonHref: 'mailto:plannedgiving@agfinancial.org',
-        }),
-      },
+        },
+      ],
     }),
     createDynamicCardGridBlueprint({
       id: 'gift_types',
@@ -2686,41 +2735,27 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicBillboardEditableFields,
     },
-    createDynamicCardGridBlueprint({
+    createPlannedGivingHowItWorksColumnsBlueprint({
       id: 'remainder_trust_how_it_works',
-      name: 'Remainder Trust How It Works Cards',
-      settings: {
-        title: 'How it works',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        bodyHtml: '',
-        body: '',
-        bgTone: 'white',
-        contentWidth: 'browser',
-        columns: 'three',
-        cardStyle: 'card2',
-        showTitleDivider: true,
-        fullBleed: true,
-        sectionClassName: 'legacy-child-native-steps legacy-child-native-trusts-crt-steps',
-        ...seedBlueprintCardGridCardFields(1, {
-          title: '01',
+      name: 'Remainder Trust How It Works',
+      sectionClassName: 'legacy-child-native-trusts-crt-steps',
+      steps: [
+        {
           iconKey: 'daf-step-1',
           iconTone: 'mango',
           body: 'Placeholder: describe the first CRT step here.',
-        }),
-        ...seedBlueprintCardGridCardFields(2, {
-          title: '02',
+        },
+        {
           iconKey: 'daf-step-3',
           iconTone: 'mango',
           body: 'Placeholder: describe the second CRT step here.',
-        }),
-        ...seedBlueprintCardGridCardFields(3, {
-          title: '03',
+        },
+        {
           iconKey: 'crt-step-2',
           iconTone: 'mango',
           body: 'Placeholder: describe the third CRT step here.',
-        }),
-      },
+        },
+      ],
     }),
     {
       id: 'remainder_trust_type_cards',
@@ -5393,41 +5428,27 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createDynamicCardGridBlueprint({
+    createPlannedGivingHowItWorksColumnsBlueprint({
       id: 'how_it_works',
-      name: 'How It Works Cards',
-      settings: {
-        title: 'How it works',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        bodyHtml: '',
-        body: '',
-        bgTone: 'white',
-        contentWidth: 'browser',
-        columns: 'three',
-        cardStyle: 'card2',
-        showTitleDivider: true,
-        fullBleed: true,
-        sectionClassName: 'legacy-child-native-steps',
-        ...seedBlueprintCardGridCardFields(1, {
-          title: '01',
+      name: 'How It Works',
+      sectionClassName: 'legacy-child-native-qcd-steps',
+      steps: [
+        {
           iconKey: 'endowments-step-1',
           iconTone: 'atlantean',
           body: 'Placeholder: describe the first QCD step here.',
-        }),
-        ...seedBlueprintCardGridCardFields(2, {
-          title: '02',
+        },
+        {
           iconKey: 'daf-step-3',
           iconTone: 'atlantean',
           body: 'Placeholder: describe the second QCD step here.',
-        }),
-        ...seedBlueprintCardGridCardFields(3, {
-          title: '03',
+        },
+        {
           iconKey: 'qcd-step-3',
           iconTone: 'atlantean',
           body: 'Placeholder: describe the third QCD step here.',
-        }),
-      },
+        },
+      ],
     }),
   ],
   '/services/planned-giving/endowments': [
@@ -5476,63 +5497,27 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createDynamicColumnsBlueprint({
+    createPlannedGivingHowItWorksColumnsBlueprint({
       id: 'how_it_works',
       name: 'How It Works',
-      settings: {
-        title: 'How it works',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        bodyHtml: '',
-        leadLine: '',
-        followupLine: '',
-        columnsStyle: 'retirement',
-        bgTone: 'white',
-        contentWidth: 'browser',
-        columns: 'three',
-        justify: 'center',
-        sectionClassName: 'legacy-child-native-endowments-duo',
-        col1Enabled: true,
-        col1Type: 'flow-step',
-        col1Title: '',
-        col1Body: 'Designated assets are invested to ensure their protection and growth.',
-        col1BodyHtml: '',
-        col1IconKey: 'daf-step-1',
-        col1IconTone: 'atlantean',
-        col1ImageUrl: '',
-        col1ImageAlt: '',
-        col1WidthShare: 1,
-        col2Enabled: true,
-        col2Type: 'flow-step',
-        col2Title: '',
-        col2Body: 'Payments are made from ongoing interest earned from the gifted asset(s).',
-        col2BodyHtml: '',
-        col2IconKey: 'mif-step-3',
-        col2IconTone: 'atlantean',
-        col2ImageUrl: '',
-        col2ImageAlt: '',
-        col2WidthShare: 1,
-        col3Enabled: true,
-        col3Type: 'flow-step',
-        col3Title: '',
-        col3Body: 'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.',
-        col3BodyHtml: '',
-        col3IconKey: 'endowments-step-3',
-        col3IconTone: 'atlantean',
-        col3ImageUrl: '',
-        col3ImageAlt: '',
-        col3WidthShare: 1,
-        col4Enabled: false,
-        col4Type: 'support',
-        col4Title: '',
-        col4TitleClassName: '',
-        col4TitleHighlightsJson: '',
-        col4Body: '',
-        col4BodyHtml: '',
-        col4ImageUrl: '',
-        col4ImageAlt: '',
-        col4WidthShare: 1,
-      },
+      sectionClassName: 'legacy-child-native-endowments-duo',
+      steps: [
+        {
+          iconKey: 'daf-step-1',
+          iconTone: 'atlantean',
+          body: 'Designated assets are invested to ensure their protection and growth.',
+        },
+        {
+          iconKey: 'mif-step-3',
+          iconTone: 'atlantean',
+          body: 'Payments are made from ongoing interest earned from the gifted asset(s).',
+        },
+        {
+          iconKey: 'endowments-step-3',
+          iconTone: 'atlantean',
+          body: 'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.',
+        },
+      ],
     }),
     {
       id: 'assets_you_may_give',
@@ -5754,41 +5739,27 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicIntroEditableFields,
     },
-    createDynamicCardGridBlueprint({
+    createPlannedGivingHowItWorksColumnsBlueprint({
       id: 'how_it_works',
-      name: 'How It Works Cards',
-      settings: {
-        title: 'How it works',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        bodyHtml: '',
-        body: '',
-        bgTone: 'white',
-        contentWidth: 'browser',
-        columns: 'three',
-        cardStyle: 'card2',
-        showTitleDivider: true,
-        fullBleed: true,
-        sectionClassName: 'legacy-child-native-steps',
-        ...seedBlueprintCardGridCardFields(1, {
-          title: '01',
+      name: 'How It Works',
+      sectionClassName: 'legacy-child-native-generosity-steps',
+      steps: [
+        {
           iconKey: 'daf-step-1',
           iconTone: 'atlantean',
           body: 'Open a **Generosity Fund®** online, and fund it with cash or appreciated assets. You may receive immediate tax benefits.',
-        }),
-        ...seedBlueprintCardGridCardFields(2, {
-          title: '02',
+        },
+        {
           iconKey: 'daf-step-2',
           iconTone: 'atlantean',
           body: 'AG Foundation takes it from there, keeping track of your giving while handling the details.',
-        }),
-        ...seedBlueprintCardGridCardFields(3, {
-          title: '03',
+        },
+        {
           iconKey: 'daf-step-3',
           iconTone: 'atlantean',
           body: 'Continue giving when and to whom you want by accessing your **Generosity Fund®** online. You may even give anonymously.',
-        }),
-      },
+        },
+      ],
     }),
     createDynamicCardGridBlueprint({
       id: 'gift_assets',

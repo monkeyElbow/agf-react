@@ -668,7 +668,8 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
     expect(document.querySelector('[data-block-id="annuity_options"].legacy-child-native-cga-options.is-divider-off')).toBeTruthy();
     expect(document.querySelector('.legacy-child-native-cga-request.native-dynamic-request.is-request-form-preset-legacy-cga')).toBeTruthy();
-    expect([...document.querySelectorAll('.legacy-child-native-steps [data-planned-giving-step-icon]')]
+    expect(document.querySelector('.legacy-child-native-flow-steps.legacy-child-native-cga-steps.native-dynamic-columns')).toBeTruthy();
+    expect([...document.querySelectorAll('.legacy-child-native-cga-steps [data-planned-giving-step-icon]')]
       .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
       .toEqual(['daf-step-1', 'cga-step-2', 'cga-step-3']);
     expect(screen.getByRole('heading', { name: 'Generous.' })).toBeTruthy();
@@ -729,7 +730,8 @@ describe('NativeContentPage functional routes', () => {
 
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('.legacy-child-native-generosity-request.native-dynamic-request.is-request-form-preset-legacy-generosity')).toBeTruthy();
-    expect([...document.querySelectorAll('.legacy-child-native-steps [data-planned-giving-step-icon]')]
+    expect(document.querySelector('.legacy-child-native-flow-steps.legacy-child-native-generosity-steps.native-dynamic-columns')).toBeTruthy();
+    expect([...document.querySelectorAll('.legacy-child-native-generosity-steps [data-planned-giving-step-icon]')]
       .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
       .toEqual(['daf-step-1', 'daf-step-2', 'daf-step-3']);
     expect(screen.getByRole('heading', { name: 'Make the most of your giving.' })).toBeTruthy();
@@ -760,7 +762,8 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
     expect(document.querySelector('.legacy-child-native-request.native-dynamic-request.is-request-form-preset-legacy-impact')).toBeTruthy();
-    expect([...document.querySelectorAll('.legacy-child-native-steps [data-planned-giving-step-icon]')]
+    expect(document.querySelector('.legacy-child-native-flow-steps.legacy-child-native-ministry-impact-steps.native-dynamic-columns')).toBeTruthy();
+    expect([...document.querySelectorAll('.legacy-child-native-ministry-impact-steps [data-planned-giving-step-icon]')]
       .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
       .toEqual(['daf-step-1', 'mif-step-2', 'mif-step-3']);
     expect(screen.getByRole('heading', { name: 'Unlocked.' })).toBeTruthy();
@@ -1351,7 +1354,8 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByRole('heading', { name: 'Your IRA can do more.' })).toBeTruthy();
     expect(screen.getByText(/transfer up to \$110,000 per year directly/i)).toBeTruthy();
     expect(screen.getByText('Placeholder: describe the first QCD step here.')).toBeTruthy();
-    expect([...container.querySelectorAll('.legacy-child-native-steps [data-planned-giving-step-icon]')]
+    expect(container.querySelector('.legacy-child-native-flow-steps.legacy-child-native-qcd-steps.native-dynamic-columns')).toBeTruthy();
+    expect([...container.querySelectorAll('.legacy-child-native-qcd-steps [data-planned-giving-step-icon]')]
       .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
       .toEqual(['endowments-step-1', 'daf-step-3', 'qcd-step-3']);
     expect(container.querySelector('section[data-block-id="hero"]')).toBeTruthy();
@@ -1617,7 +1621,7 @@ describe('NativeContentPage functional routes', () => {
     const trustChoices = document.querySelector('.legacy-child-native-trust-choices--trusts.native-dynamic-grid');
     const trustDifferences = document.querySelector('.legacy-child-native-trusts-differences.native-dynamic-grid');
     const charitableRemainderTrust = document.querySelector('.legacy-child-native-trusts-crt.dynamic-billboard');
-    const charitableRemainderTrustSteps = document.querySelector('.legacy-child-native-trusts-crt-steps.native-dynamic-grid');
+    const charitableRemainderTrustSteps = document.querySelector('.legacy-child-native-flow-steps.legacy-child-native-trusts-crt-steps.native-dynamic-columns');
     const charitableRemainderTrustTypes = document.querySelector('.legacy-child-native-trusts-crt-types.native-dynamic-grid');
     const charitableLeadTrust = document.querySelector('.legacy-child-native-trusts-clt.dynamic-billboard');
     const charitableLeadTrustTypes = document.querySelector('.legacy-child-native-trusts-clt-types.native-dynamic-grid');

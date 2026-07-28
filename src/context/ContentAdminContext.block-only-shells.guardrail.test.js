@@ -169,4 +169,72 @@ describe('ContentAdminContext block-only shell guardrail', () => {
       });
     });
   });
+
+  it('keeps planned-giving saved snapshots on the flow-step How It Works block model', () => {
+    const expectedBlocksByPath = {
+      '/services/planned-giving/charitable-gift-annuities': {
+        id: 'how_it_works',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-cga-steps',
+        icons: ['daf-step-1', 'cga-step-2', 'cga-step-3'],
+      },
+      '/services/planned-giving/ministry-impact-fund': {
+        id: 'how_it_works',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-ministry-impact-steps',
+        icons: ['daf-step-1', 'mif-step-2', 'mif-step-3'],
+      },
+      '/services/planned-giving/generosity-fund': {
+        id: 'how_it_works',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-generosity-steps',
+        icons: ['daf-step-1', 'daf-step-2', 'daf-step-3'],
+      },
+      '/services/planned-giving/charitable-trusts': {
+        id: 'remainder_trust_how_it_works',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-trusts-crt-steps',
+        icons: ['daf-step-1', 'daf-step-3', 'crt-step-2'],
+      },
+      '/services/planned-giving/qualified-charitable-distribution': {
+        id: 'how_it_works',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-qcd-steps',
+        icons: ['endowments-step-1', 'daf-step-3', 'qcd-step-3'],
+      },
+      '/services/planned-giving/endowments': {
+        id: 'how_it_works',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-endowments-duo',
+        icons: ['daf-step-1', 'mif-step-3', 'endowments-step-3'],
+      },
+    };
+
+    [
+      '../../dev-data/content-admin-shared.json',
+      '../../dev-data/content-admin-seed-baseline.json',
+    ].forEach((relativePath) => {
+      const snapshot = readJson(relativePath);
+
+      ['state', 'baseSnapshot', 'seedState'].forEach((rootKey) => {
+        if (!snapshot?.[rootKey]) {
+          return;
+        }
+        const blocksByPath = snapshot?.[rootKey]?.blocksByPath || {};
+
+        Object.entries(expectedBlocksByPath).forEach(([pathname, expected]) => {
+          const block = (blocksByPath[pathname] || []).find((candidate) => candidate?.id === expected.id);
+
+          expect(block, `${relativePath} ${rootKey} ${pathname} should have ${expected.id}`).toMatchObject({
+            kind: 'columns',
+            mode: 'dynamic',
+            settings: {
+              columns: 'three',
+              sectionClassName: expected.sectionClassName,
+              col1Type: 'flow-step',
+              col2Type: 'flow-step',
+              col3Type: 'flow-step',
+              col1IconKey: expected.icons[0],
+              col2IconKey: expected.icons[1],
+              col3IconKey: expected.icons[2],
+            },
+          });
+        });
+      });
+    });
+  });
 });

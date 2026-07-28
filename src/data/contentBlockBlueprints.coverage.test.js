@@ -788,18 +788,22 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
-      kind: 'card_grid',
+      kind: 'columns',
       mode: 'dynamic',
       settings: {
-        sectionClassName: 'legacy-child-native-steps',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-cga-steps',
         columns: 'three',
-        card1Title: 'Fund',
-        card1IconKey: 'daf-step-1',
-        card1IconTone: 'super-grey',
-        card2IconKey: 'cga-step-2',
-        card2IconTone: 'super-grey',
-        card3IconKey: 'cga-step-3',
-        card3IconTone: 'super-grey',
+        col1Type: 'flow-step',
+        col1Title: '',
+        col1IconKey: 'daf-step-1',
+        col1IconTone: 'super-grey',
+        col2Type: 'flow-step',
+        col2IconKey: 'cga-step-2',
+        col2IconTone: 'super-grey',
+        col3Type: 'flow-step',
+        col3IconKey: 'cga-step-3',
+        col3IconTone: 'super-grey',
+        col4Enabled: false,
       },
     });
     expect(blocks.find((block) => block?.id === 'gift_assets')).toMatchObject({
@@ -857,20 +861,23 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
-      kind: 'card_grid',
+      kind: 'columns',
       mode: 'dynamic',
       settings: {
-        sectionClassName: 'legacy-child-native-steps',
-        card1Title: '01',
-        card1IconKey: 'daf-step-1',
-        card1IconTone: 'sandstone',
-        card2IconKey: 'mif-step-2',
-        card2IconTone: 'sandstone',
-        card3IconKey: 'mif-step-3',
-        card3IconTone: 'sandstone',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-ministry-impact-steps',
+        col1Type: 'flow-step',
+        col1IconKey: 'daf-step-1',
+        col1IconTone: 'sandstone',
+        col2Type: 'flow-step',
+        col2IconKey: 'mif-step-2',
+        col2IconTone: 'sandstone',
+        col3Type: 'flow-step',
+        col3IconKey: 'mif-step-3',
+        col3IconTone: 'sandstone',
+        col4Enabled: false,
       },
     });
-    expectCanonicalLink(blocks.find((block) => block?.id === 'how_it_works')?.settings, 'card2ButtonLinkJson', {
+    expectCanonicalLink(blocks.find((block) => block?.id === 'how_it_works')?.settings, 'col2ButtonLinkJson', {
       kind: 'external',
       href: 'https://uploads.agfinancial.org/',
     });
@@ -1267,18 +1274,22 @@ describe('content block blueprint coverage', () => {
     expect(qcdBlocks.find((block) => block?.id === 'intro')?.settings?.bodyHtml)
       .toContain('transfer up to $110,000 per year directly');
     expect(qcdBlocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
-      kind: 'card_grid',
+      kind: 'columns',
       mode: 'dynamic',
       settings: {
         title: 'How it works',
-        sectionClassName: 'legacy-child-native-steps',
-        card1IconKey: 'endowments-step-1',
-        card1IconTone: 'atlantean',
-        card1Body: 'Placeholder: describe the first QCD step here.',
-        card2IconKey: 'daf-step-3',
-        card2IconTone: 'atlantean',
-        card3IconKey: 'qcd-step-3',
-        card3IconTone: 'atlantean',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-qcd-steps',
+        col1Type: 'flow-step',
+        col1IconKey: 'endowments-step-1',
+        col1IconTone: 'atlantean',
+        col1Body: 'Placeholder: describe the first QCD step here.',
+        col2Type: 'flow-step',
+        col2IconKey: 'daf-step-3',
+        col2IconTone: 'atlantean',
+        col3Type: 'flow-step',
+        col3IconKey: 'qcd-step-3',
+        col3IconTone: 'atlantean',
+        col4Enabled: false,
       },
     });
     expect(sitePages.some((page) => page.path === '/services/planned-giving/qualified-charitable-distribution')).toBe(true);
@@ -1338,19 +1349,23 @@ describe('content block blueprint coverage', () => {
     });
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'remainder_trust_how_it_works'
-      && block?.kind === 'card_grid'
+      && block?.kind === 'columns'
       && block?.mode === 'dynamic'
     ))).toMatchObject({
       settings: {
         title: 'How it works',
-        sectionClassName: 'legacy-child-native-steps legacy-child-native-trusts-crt-steps',
-        card1IconKey: 'daf-step-1',
-        card1IconTone: 'mango',
-        card1Body: 'Placeholder: describe the first CRT step here.',
-        card2IconKey: 'daf-step-3',
-        card2IconTone: 'mango',
-        card3IconKey: 'crt-step-2',
-        card3IconTone: 'mango',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-trusts-crt-steps',
+        col1Type: 'flow-step',
+        col1IconKey: 'daf-step-1',
+        col1IconTone: 'mango',
+        col1Body: 'Placeholder: describe the first CRT step here.',
+        col2Type: 'flow-step',
+        col2IconKey: 'daf-step-3',
+        col2IconTone: 'mango',
+        col3Type: 'flow-step',
+        col3IconKey: 'crt-step-2',
+        col3IconTone: 'mango',
+        col4Enabled: false,
       },
     });
     expect(charitableTrustsBlocks.find((block) => (
@@ -1430,7 +1445,7 @@ describe('content block blueprint coverage', () => {
       kind: 'columns',
       mode: 'dynamic',
       settings: {
-        sectionClassName: 'legacy-child-native-endowments-duo',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-endowments-duo',
         columns: 'three',
         col1Type: 'flow-step',
         col1IconKey: 'daf-step-1',
@@ -1490,18 +1505,21 @@ describe('content block blueprint coverage', () => {
       href: '#traditional-daf-form',
     });
     expect(generosityBlocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
-      kind: 'card_grid',
+      kind: 'columns',
       mode: 'dynamic',
       settings: {
-        sectionClassName: 'legacy-child-native-steps',
-        card1Title: '01',
-        card1IconKey: 'daf-step-1',
-        card1IconTone: 'atlantean',
-        card2IconKey: 'daf-step-2',
-        card2IconTone: 'atlantean',
-        card3IconKey: 'daf-step-3',
-        card3IconTone: 'atlantean',
-        card3Title: '03',
+        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-generosity-steps',
+        col1Type: 'flow-step',
+        col1Title: '',
+        col1IconKey: 'daf-step-1',
+        col1IconTone: 'atlantean',
+        col2Type: 'flow-step',
+        col2IconKey: 'daf-step-2',
+        col2IconTone: 'atlantean',
+        col3Type: 'flow-step',
+        col3IconKey: 'daf-step-3',
+        col3IconTone: 'atlantean',
+        col4Enabled: false,
       },
     });
     expect(generosityBlocks.find((block) => block?.id === 'gift_assets')).toMatchObject({
