@@ -93,6 +93,8 @@ describe('buildDynamicColumnsFromBlock', () => {
         col1Type: 'text',
         col1Title: 'Option one',
         col1Body: 'Primary copy',
+        col1IconKey: 'daf-step-1',
+        col1IconTone: 'sandstone',
         col1ButtonLabel: 'Learn more',
         col1ButtonLinkJson: serializeLinkValue({
           kind: 'internal',
@@ -131,6 +133,8 @@ describe('buildDynamicColumnsFromBlock', () => {
       type: 'text',
       title: 'Option one',
       body: 'Primary copy',
+      iconKey: 'daf-step-1',
+      iconTone: 'sandstone',
       action: {
         label: 'Learn more',
         to: '/services/retirement',
@@ -1629,6 +1633,8 @@ describe('buildDynamicGridFromBlock', () => {
         cardBodyLineHeight: 1.8,
         card1Title: 'First option',
         card1Body: 'Primary copy',
+        card1IconKey: 'daf-step-1',
+        card1IconTone: 'atlantean',
         card1ListJson: '["First bullet","Second bullet"]',
         card1DividerTone: 'melon',
         card1ButtonLabel: 'Learn more',
@@ -1665,6 +1671,8 @@ describe('buildDynamicGridFromBlock', () => {
         title: 'First option',
         body: 'Primary copy',
         list: ['First bullet', 'Second bullet'],
+        iconKey: 'daf-step-1',
+        iconTone: 'atlantean',
         cardClass: 'card1',
         dividerTone: 'melon',
         action: expect.objectContaining({

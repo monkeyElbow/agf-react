@@ -189,6 +189,13 @@ const sections = [
         defineEditorField({ id: `card${slot}Title`, label: `Card ${slot} title`, type: 'text' }),
         defineEditorField({ id: `card${slot}TitleClassName`, label: `Card ${slot} title class name`, type: 'text' }),
         defineEditorField({ id: `card${slot}ClassName`, label: `Card ${slot} class name`, type: 'text' }),
+        defineEditorField({ id: `card${slot}IconKey`, label: `Card ${slot} icon key`, type: 'text' }),
+        defineEditorField({
+          id: `card${slot}IconTone`,
+          label: `Card ${slot} icon color`,
+          type: 'swatch',
+          options: GRID_TEXT_TONE_OPTIONS,
+        }),
         defineEditorField({ id: `card${slot}PanelTone`, label: `Card ${slot} panel tone`, type: 'text' }),
         defineEditorField({ id: `card${slot}Body`, label: `Card ${slot} body`, type: 'textarea', rows: 2 }),
         defineEditorField({ id: `card${slot}ListJson`, label: `Card ${slot} bullet list JSON`, type: 'textarea', rows: 5 }),

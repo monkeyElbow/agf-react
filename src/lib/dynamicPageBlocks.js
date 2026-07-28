@@ -1109,6 +1109,8 @@ export function buildDynamicColumnsFromBlock(block) {
         bodyHtml: normalizeOptionalHtmlContent(settings[`col${slot}BodyHtml`]),
         imageUrl: String(settings[`col${slot}ImageUrl`] || '').trim(),
         imageAlt: String(settings[`col${slot}ImageAlt`] || '').trim(),
+        iconKey: String(settings[`col${slot}IconKey`] || '').trim(),
+        iconTone: sanitizeClassName(settings[`col${slot}IconTone`] || ''),
         widthShare: Number.isFinite(Number(settings[`col${slot}WidthShare`]))
           ? Number(settings[`col${slot}WidthShare`])
           : 1,
@@ -2276,6 +2278,8 @@ export function buildDynamicGridFromBlock(block) {
       const cardTitleHighlights = parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
       const cardBody = String(settings[`card${slot}Body`] || '').trim();
       const cardClassName = sanitizeClassName(settings[`card${slot}ClassName`] || '');
+      const cardIconKey = String(settings[`card${slot}IconKey`] || '').trim();
+      const cardIconTone = sanitizeClassName(settings[`card${slot}IconTone`] || '');
       const cardPrimaryAction = buildCanonicalActionLinkFromFields({
         ...settings,
         [`__card${slot}PrimaryStyle`]: String(settings[`card${slot}ButtonStyle`] || 'blue').trim() || 'blue',
@@ -2324,6 +2328,8 @@ export function buildDynamicGridFromBlock(block) {
         body: cardBody,
         list: cardList,
         fineprint: cardFineprint.length ? cardFineprint : null,
+        iconKey: cardIconKey,
+        iconTone: cardIconTone,
         cardClass: [resolvedCardClass, cardClassName].filter(Boolean).join(' '),
         panelTone: String(settings[`card${slot}PanelTone`] || '').trim(),
         dividerTone: cardDividerTone || undefined,

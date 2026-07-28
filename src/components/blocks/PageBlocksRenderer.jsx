@@ -49,6 +49,7 @@ import ImpactProofStoryFeature from '../ImpactProofStoryFeature';
 import InvestmentsGrowthFeature from '../InvestmentsGrowthFeature';
 import LegacyGivingStewardshipStoryFeature from '../LegacyGivingStewardshipStoryFeature';
 import NewsletterSignupForm from '../NewsletterSignupForm';
+import PlannedGivingStepIcon from '../PlannedGivingStepIcon';
 import SafeRichText from '../SafeRichText';
 import { extractHeroLineColorToken } from '../../lib/heroHudRanges';
 import {
@@ -94,6 +95,14 @@ function SharedBlockHudAnchor({ hudAnchor }) {
 
 function normalizeToneClass(value) {
   return normalizeSemanticTextColorClass(value);
+}
+
+function sanitizeClassName(value) {
+  return String(value || '')
+    .trim()
+    .split(/\s+/)
+    .filter((token) => /^[a-zA-Z0-9_-]+$/.test(token))
+    .join(' ');
 }
 
 function normalizePanelBgTone(value) {
@@ -1721,6 +1730,8 @@ export function ColumnsBlock({
         const columnBodyHtml = String(dynamicBlock[`col${slot}BodyHtml`] || '').trim();
         const columnImage = String(dynamicBlock[`col${slot}ImageUrl`] || '').trim();
         const columnImageAlt = String(dynamicBlock[`col${slot}ImageAlt`] || '').trim();
+        const columnIconKey = String(dynamicBlock[`col${slot}IconKey`] || '').trim();
+        const columnIconTone = sanitizeClassName(dynamicBlock[`col${slot}IconTone`] || '');
         const columnAction = buildColumnsAction(
           dynamicBlock[`col${slot}ButtonLabel`],
           dynamicBlock[`col${slot}ButtonUrl`],
@@ -1750,6 +1761,8 @@ export function ColumnsBlock({
           bodyHtml: columnBodyHtml,
           image: columnImage,
           imageAlt: columnImageAlt,
+          iconKey: columnIconKey,
+          iconTone: columnIconTone,
           action: columnAction,
         };
       })
@@ -1861,6 +1874,9 @@ export function ColumnsBlock({
                         loading="lazy"
                       />
                     </div>
+                  ) : null}
+                  {column.iconKey ? (
+                    <PlannedGivingStepIcon iconKey={column.iconKey} tone={column.iconTone} />
                   ) : null}
                   <div className="native-columns-copy">
                     {column.title ? (

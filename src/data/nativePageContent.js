@@ -296,6 +296,10 @@ const legacyChildPages = {
     pageClass: 'native-info-page--legacy-child native-info-page--legacy-ministry-impact',
     compact: true,
   },
+  '/services/planned-giving/qualified-charitable-distribution': {
+    pageClass: 'native-info-page--legacy-child native-info-page--legacy-qcd',
+    compact: true,
+  },
 };
 
 const loansChildPages = {

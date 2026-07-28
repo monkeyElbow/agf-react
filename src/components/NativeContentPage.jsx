@@ -80,6 +80,7 @@ import NetWorthCalculatorWidget from './NetWorthCalculatorWidget';
 import FrontHudPanelShell from './FrontHudPanelShell';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from './HeroHudEditorShared';
 import LegacyGivingStewardshipStoryFeature from './LegacyGivingStewardshipStoryFeature';
+import PlannedGivingStepIcon from './PlannedGivingStepIcon';
 import ImpactProofStoryFeature from './ImpactProofStoryFeature';
 import DynamicRequestFormSection from './DynamicRequestFormSection';
 import FrontHudAnchorTag from './FrontHudAnchorTag';
@@ -1176,6 +1177,8 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       body: card.body,
       list: Array.isArray(card.list) ? card.list : undefined,
       fineprint: card.fineprint || undefined,
+      iconKey: card.iconKey || '',
+      iconTone: card.iconTone || '',
       cardClass: card.cardClass,
       panelTone: card.panelTone,
       dividerTone: card.dividerTone,
@@ -1257,6 +1260,8 @@ function buildDynamicColumnsSection(block, pathname) {
       html: !isLegacyHighlight ? (item.html || item.bodyHtml || '') : '',
       image: !isLegacyHighlight ? (item.imageUrl || '') : '',
       imageAlt: !isLegacyHighlight ? (item.imageAlt || '') : '',
+      iconKey: item.iconKey || '',
+      iconTone: item.iconTone || '',
       actions: !isLegacyHighlight && item.action ? [item.action] : [],
     }))
     .filter(Boolean);
@@ -6697,6 +6702,9 @@ export default function NativeContentPage({ page }) {
                         />
                       </div>
                     ) : null}
+                    {column.iconKey ? (
+                      <PlannedGivingStepIcon iconKey={column.iconKey} tone={column.iconTone} />
+                    ) : null}
                     <div className="native-columns-copy">
                       {column.title ? <h3>{renderTextWithStrong(column.title)}</h3> : null}
                       {!isLegacyHighlightColumns && Array.isArray(column.body) && column.body.length
@@ -6780,6 +6788,9 @@ export default function NativeContentPage({ page }) {
                   return (
                   <article key={card.title} className={`service-native-card ${shouldAnimateCard ? 'fade-up' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.dividerTone ? ` is-divider-tone-${card.dividerTone}` : ''}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}${stretchedLink ? ' has-stretched-link' : ''}`.trim()}>
                     <div className={card.messagePanel && resolvedMessageLayout === 'inline' ? 'consultant-card-details' : undefined}>
+                      {card.iconKey ? (
+                        <PlannedGivingStepIcon iconKey={card.iconKey} tone={card.iconTone} />
+                      ) : null}
                       <h3 className={card.titleClassName || undefined}>
                         {Array.isArray(card.titleHighlights) && card.titleHighlights.length
                           ? renderHighlightedText(card.title, card.titleHighlights)

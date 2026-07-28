@@ -137,6 +137,13 @@ const sections = [
         defineEditorField({ id: `col${slot}Title`, label: `Column ${slot} title`, type: 'text' }),
         defineEditorField({ id: `col${slot}Body`, label: `Column ${slot} body`, type: 'textarea', rows: 3 }),
         defineEditorField({ id: `col${slot}BodyHtml`, label: `Column ${slot} body HTML`, type: 'html' }),
+        defineEditorField({ id: `col${slot}IconKey`, label: `Column ${slot} icon key`, type: 'text' }),
+        defineEditorField({
+          id: `col${slot}IconTone`,
+          label: `Column ${slot} icon color`,
+          type: 'swatch',
+          options: COLUMNS_BUTTON_TONE_OPTIONS,
+        }),
         defineEditorField({ id: `col${slot}ImageUrl`, label: `Column ${slot} photo URL`, type: 'text' }),
         defineEditorField({ id: `col${slot}ImageAlt`, label: `Column ${slot} photo alt text`, type: 'text' }),
         ...defineTransitionalActionFields({
