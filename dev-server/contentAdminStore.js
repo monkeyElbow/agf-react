@@ -993,6 +993,72 @@ function replacePageSlice(targetState, sourceState, pathname, collaborationEntry
   return nextState;
 }
 
+function mutableSharedStateShell(state) {
+  const source = state && typeof state === 'object' ? cloneJson(state) : {};
+  return {
+    ...source,
+    pageHierarchy: source.pageHierarchy && typeof source.pageHierarchy === 'object'
+      ? source.pageHierarchy
+      : {},
+    blocksByPath: source.blocksByPath && typeof source.blocksByPath === 'object'
+      ? source.blocksByPath
+      : {},
+    pathAliases: source.pathAliases && typeof source.pathAliases === 'object'
+      ? source.pathAliases
+      : {},
+    collaborationByPath: source.collaborationByPath && typeof source.collaborationByPath === 'object'
+      ? source.collaborationByPath
+      : {},
+  };
+}
+
+function routeContentSignature(state, pathname) {
+  const source = state && typeof state === 'object' ? state : {};
+  return JSON.stringify({
+    page: cloneJson(source.pageHierarchy?.[pathname] || null),
+    blocks: normalizePageBlocksState(pathname, source.blocksByPath?.[pathname]),
+    pathAliases: aliasesForPath(source.pathAliases, pathname),
+  });
+}
+
+function routeMatchesSeed(state, seedState, pathname) {
+  return routeContentSignature(state, pathname) === routeContentSignature(seedState, pathname);
+}
+
+function copySeedRouteSlice(targetState, seedState, pathname, collaborationEntryOverride = undefined) {
+  const normalizedPath = String(pathname || '').trim();
+  const nextState = mutableSharedStateShell(targetState);
+  const normalizedSeed = normalizeSharedState(seedState);
+  if (!normalizedPath) {
+    return nextState;
+  }
+
+  const seedPage = normalizedSeed.pageHierarchy?.[normalizedPath] || null;
+  if (seedPage) {
+    nextState.pageHierarchy[normalizedPath] = cloneJson(seedPage);
+  } else {
+    delete nextState.pageHierarchy[normalizedPath];
+  }
+
+  nextState.blocksByPath[normalizedPath] = normalizePageBlocksState(
+    normalizedPath,
+    normalizedSeed.blocksByPath?.[normalizedPath],
+  );
+
+  Object.keys(nextState.pathAliases || {}).forEach((fromPath) => {
+    const toPath = nextState.pathAliases[fromPath];
+    if (String(fromPath || '').trim() === normalizedPath || String(toPath || '').trim() === normalizedPath) {
+      delete nextState.pathAliases[fromPath];
+    }
+  });
+  Object.assign(nextState.pathAliases, aliasesForPath(normalizedSeed.pathAliases, normalizedPath));
+
+  nextState.collaborationByPath[normalizedPath] = cloneJson(
+    collaborationEntryOverride || nextState.collaborationByPath?.[normalizedPath] || { blocks: {}, history: [] },
+  );
+  return nextState;
+}
+
 function buildRevisionSnapshot(state, pathname) {
   const normalizedState = normalizeSharedState(state);
   return {
@@ -1839,6 +1905,95 @@ export function createDevContentAuthorityStore({
           hasPageMetaChangesByPath: {
             [normalizedPath]: publishSummary.hasPageMetaChanges,
           },
+          updatedAt: timestamp,
+        },
+      };
+    },
+
+    publishSeedRouteSlices(seedState, pathnames, { actor, summary = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedPaths = [...new Set((Array.isArray(pathnames) ? pathnames : [pathnames])
+        .map((pathname) => String(pathname || '').trim())
+        .filter(Boolean))];
+      if (!normalizedActor || !normalizedPaths.length || !seedState?.blocksByPath) {
+        return { ok: false, error: 'invalid-seed-route-publish-request', ...publishSnapshot() };
+      }
+
+      const normalizedSeed = normalizeSharedState(seedState);
+      const missingPaths = normalizedPaths.filter((pathname) => !Array.isArray(normalizedSeed.blocksByPath?.[pathname]));
+      if (missingPaths.length) {
+        return {
+          ok: false,
+          error: 'seed-route-not-found',
+          missingPaths,
+          ...publishSnapshot(),
+        };
+      }
+
+      const changedPaths = normalizedPaths.filter((pathname) => (
+        !routeMatchesSeed(record.state, normalizedSeed, pathname)
+        || !routeMatchesSeed(record.baseSnapshot, normalizedSeed, pathname)
+      ));
+
+      if (!changedPaths.length) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          publishResult: {
+            didPublish: false,
+            changedPaths: [],
+            publishedPaths: [],
+            updatedAt: record.updatedAt,
+          },
+        };
+      }
+
+      const timestamp = now();
+      let nextState = mutableSharedStateShell(record.state);
+      let nextBaseSnapshot = mutableSharedStateShell(record.baseSnapshot);
+
+      changedPaths.forEach((pathname) => {
+        const currentEntry = ensureCollaborationEntry(nextState.collaborationByPath || {}, pathname);
+        const seedBlocks = normalizePageBlocksState(pathname, normalizedSeed.blocksByPath?.[pathname]);
+        const nextBlocksMeta = {};
+        seedBlocks.forEach((block) => {
+          const blockId = String(block?.id || '').trim();
+          if (!blockId) {
+            return;
+          }
+          nextBlocksMeta[blockId] = clearPublishedDraftOwnership(currentEntry.blocks?.[blockId]);
+        });
+        const nextCollaborationEntry = {
+          ...currentEntry,
+          blocks: nextBlocksMeta,
+          history: appendHistoryEntry(currentEntry.history, buildHistoryEntry({
+            action: 'seed-route-slice-published',
+            actor: normalizedActor,
+            details: String(summary || '').trim() || pathname,
+            now: timestamp,
+            createId,
+          })),
+        };
+
+        nextState = copySeedRouteSlice(nextState, normalizedSeed, pathname, nextCollaborationEntry);
+        nextBaseSnapshot = copySeedRouteSlice(nextBaseSnapshot, normalizedSeed, pathname, nextCollaborationEntry);
+      });
+
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: nextState,
+        baseSnapshot: nextBaseSnapshot,
+      };
+      persistRecord();
+      return {
+        ok: true,
+        ...publishSnapshot(),
+        publishResult: {
+          didPublish: true,
+          changedPaths,
+          publishedPaths: changedPaths,
           updatedAt: timestamp,
         },
       };

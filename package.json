@@ -12,6 +12,7 @@
     "scan:page-content": "node scripts/system-checks.mjs page-content",
     "scan:content-admin-snapshots": "node scripts/content-admin-snapshot-audit.mjs",
     "scan:content-admin-snapshots:backups": "node scripts/content-admin-snapshot-audit.mjs --include-backups",
+    "content-admin:publish-seed-routes": "node scripts/publish-content-admin-seed-routes.mjs",
     "scan:snapshot-schema": "node scripts/system-checks.mjs snapshot-schema",
     "scan:readability": "node scripts/system-checks.mjs readability",
     "scan:safety-nets": "node scripts/system-checks.mjs safety-nets",

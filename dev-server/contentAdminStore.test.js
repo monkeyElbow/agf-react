@@ -522,6 +522,114 @@ describe('createDevContentAuthorityStore', () => {
     expect(storeB.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Shared draft title');
   });
 
+  it('publishes seed route slices without touching unrelated drafts', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const seedState = buildSeedState();
+    seedState.pageHierarchy['/services/investments'] = {
+      path: '/services/investments',
+      title: 'Investments',
+    };
+    seedState.blocksByPath['/services/investments'] = [
+      {
+        id: 'intro',
+        kind: 'content',
+        mode: 'dynamic',
+        settings: {
+          body: 'Investment intro',
+        },
+      },
+    ];
+    seedState.collaborationByPath['/services/investments'] = {
+      blocks: {},
+      history: [],
+    };
+
+    store.resetFromSeed(seedState, { actor: createActor() });
+
+    const draftState = cloneJson(store.getSnapshot().state);
+    draftState.blocksByPath['/services/loans'] = [
+      {
+        id: 'hero',
+        kind: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Draft-only loans title',
+        },
+      },
+    ];
+    draftState.blocksByPath['/services/investments'][0].settings.body = 'Unrelated investment draft';
+    store.saveDraft(draftState, { actor: createActor(), summary: 'draft changes' });
+
+    const beforePublish = readPersistedRecord(persistenceFile);
+    const untouchedInvestmentState = cloneJson(beforePublish.state.blocksByPath['/services/investments']);
+    const untouchedInvestmentBase = cloneJson(beforePublish.baseSnapshot.blocksByPath['/services/investments']);
+    const untouchedInvestmentCollaboration = cloneJson(beforePublish.state.collaborationByPath['/services/investments']);
+
+    const nextSeedState = cloneJson(seedState);
+    nextSeedState.blocksByPath['/services/loans'] = [
+      {
+        id: 'cta_form',
+        kind: 'cta_form',
+        mode: 'dynamic',
+        settings: {
+          title: 'Seed CTA update',
+        },
+      },
+      {
+        id: 'hero',
+        kind: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Seed route title',
+        },
+      },
+    ];
+    nextSeedState.pathAliases = {
+      '/loans': '/services/loans',
+      '/invest': '/services/investments',
+    };
+
+    const published = store.publishSeedRouteSlices(nextSeedState, ['/services/loans'], {
+      actor: createActor(),
+      summary: 'publish loans seed slice',
+    });
+    const persisted = readPersistedRecord(persistenceFile);
+
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.didPublish).toBe(true);
+    expect(persisted.state.blocksByPath['/services/loans'].map((block) => block.id)).toEqual(['cta_form', 'hero']);
+    expect(persisted.baseSnapshot.blocksByPath['/services/loans'].map((block) => block.id)).toEqual(['cta_form', 'hero']);
+    expect(persisted.state.blocksByPath['/services/loans'][1].settings.line1Text).toBe('Seed route title');
+    expect(persisted.baseSnapshot.blocksByPath['/services/loans'][0].settings.title).toBe('Seed CTA update');
+    expect(persisted.state.pathAliases['/loans']).toBe('/services/loans');
+    expect(persisted.state.pathAliases['/invest']).toBeUndefined();
+    expect(persisted.state.blocksByPath['/services/investments']).toEqual(untouchedInvestmentState);
+    expect(persisted.baseSnapshot.blocksByPath['/services/investments']).toEqual(untouchedInvestmentBase);
+    expect(persisted.state.collaborationByPath['/services/investments']).toEqual(untouchedInvestmentCollaboration);
+  });
+
+  it('does not rewrite the shared content file when seed route slices are already live', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const seedState = buildSeedState();
+
+    store.resetFromSeed(seedState, { actor: createActor() });
+    const beforePublish = fs.readFileSync(persistenceFile, 'utf8');
+    const beforeUpdatedAt = readPersistedRecord(persistenceFile).updatedAt;
+
+    const published = store.publishSeedRouteSlices(seedState, ['/services/loans'], {
+      actor: createActor(),
+      summary: 'already live seed slice',
+    });
+    const afterPublish = fs.readFileSync(persistenceFile, 'utf8');
+
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.didPublish).toBe(false);
+    expect(readPersistedRecord(persistenceFile).updatedAt).toBe(beforeUpdatedAt);
+    expect(afterPublish).toBe(beforePublish);
+  });
+
   it('persists canonical CTA fieldsJson when incoming state only has slot fields', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);

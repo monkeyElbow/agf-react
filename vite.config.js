@@ -139,6 +139,15 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/publish-seed-routes') {
+            const result = store.publishSeedRouteSlices(body.seedState, body.pathnames, {
+              actor: body.actor,
+              summary: body.summary,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/blocks/sync-draft') {
             const result = store.syncBlockDraft(body.pathname, body.blockId, body.block, {
               actor: body.actor,
