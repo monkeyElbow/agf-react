@@ -180,6 +180,79 @@ describe('ContentAdminContext state normalization', () => {
     });
   });
 
+  it('treats saved managed route block arrays as authoritative after starter seeding', () => {
+    const seedState = normalizeStoredConfig(null);
+    const pathname = '/about-us';
+    const seededBlocks = cloneJson(seedState.blocksByPath[pathname] || []);
+    const withoutIntro = seededBlocks.filter((block) => block?.id !== 'intro');
+    const withoutCta = seededBlocks.filter((block) => block?.id !== 'cta_form');
+    const reordered = [
+      ...seededBlocks.slice(2, 4),
+      ...seededBlocks.slice(0, 2),
+      ...seededBlocks.slice(4),
+    ];
+
+    const normalizedWithoutIntro = normalizeStoredConfig({
+      pageHierarchy: seedState.pageHierarchy,
+      blocksByPath: {
+        [pathname]: withoutIntro,
+      },
+    });
+    const normalizedWithoutCta = normalizeStoredConfig({
+      pageHierarchy: seedState.pageHierarchy,
+      blocksByPath: {
+        [pathname]: withoutCta,
+      },
+    });
+    const normalizedReordered = normalizeStoredConfig({
+      pageHierarchy: seedState.pageHierarchy,
+      blocksByPath: {
+        [pathname]: reordered,
+      },
+    });
+
+    expect(seededBlocks.some((block) => block?.id === 'intro')).toBe(true);
+    expect(seededBlocks.some((block) => block?.id === 'cta_form')).toBe(true);
+    expect(normalizedWithoutIntro.blocksByPath[pathname].map((block) => block.id)).toEqual(withoutIntro.map((block) => block.id));
+    expect(normalizedWithoutIntro.blocksByPath[pathname].some((block) => block?.id === 'intro')).toBe(false);
+    expect(normalizedWithoutCta.blocksByPath[pathname].map((block) => block.id)).toEqual(withoutCta.map((block) => block.id));
+    expect(normalizedWithoutCta.blocksByPath[pathname].some((block) => block?.id === 'cta_form')).toBe(false);
+    expect(normalizedReordered.blocksByPath[pathname].map((block) => block.id)).toEqual(reordered.map((block) => block.id));
+  });
+
+  it('does not replace an admin-chosen block kind just because it reuses a starter block id', () => {
+    const seedState = normalizeStoredConfig(null);
+    const pathname = '/about-us';
+    const replacementIntro = {
+      id: 'intro',
+      name: 'Admin replacement billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Admin-owned replacement',
+      },
+      editableFields: [],
+    };
+
+    const normalized = normalizeStoredConfig({
+      pageHierarchy: seedState.pageHierarchy,
+      blocksByPath: {
+        [pathname]: [
+          replacementIntro,
+          ...cloneJson(seedState.blocksByPath[pathname] || []).filter((block) => block?.id !== 'intro'),
+        ],
+      },
+    });
+
+    expect(normalized.blocksByPath[pathname][0]).toMatchObject({
+      id: 'intro',
+      kind: 'billboard',
+      settings: {
+        title: 'Admin-owned replacement',
+      },
+    });
+  });
+
   it('backfills promoted 403(b) section class hooks on stored blocks that still use shared retirement-child classes', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
@@ -626,7 +699,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.button1Label).toBe('More about AG Insurance');
   });
 
-  it('drops stale legacy-giving request-form blocks from stored config and keeps the CTA block', () => {
+  it('drops stale legacy-giving request-form blocks without restoring a missing CTA block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/planned-giving': [
@@ -644,7 +717,7 @@ describe('ContentAdminContext state normalization', () => {
 
     const legacyGivingBlocks = normalized.blocksByPath['/services/planned-giving'] || [];
     expect(legacyGivingBlocks.some((block) => block?.kind === 'request_form')).toBe(false);
-    expect(legacyGivingBlocks.some((block) => block?.kind === 'cta_form')).toBe(true);
+    expect(legacyGivingBlocks.some((block) => block?.kind === 'cta_form')).toBe(false);
   });
 
   it('normalizes stale planned giving static comparison tables to the dynamic comparison matrix', () => {
@@ -930,7 +1003,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(fields[2]?.label).toBe('Phone*');
   });
 
-  it('drops stale 403(b) request-form blocks from stored config and keeps the CTA block', () => {
+  it('drops stale 403(b) request-form blocks without restoring a missing CTA block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -948,7 +1021,7 @@ describe('ContentAdminContext state normalization', () => {
 
     const retirement403bBlocks = normalized.blocksByPath['/services/retirement/403b'] || [];
     expect(retirement403bBlocks.some((block) => block?.kind === 'request_form')).toBe(false);
-    expect(retirement403bBlocks.some((block) => block?.kind === 'cta_form')).toBe(true);
+    expect(retirement403bBlocks.some((block) => block?.kind === 'cta_form')).toBe(false);
   });
 
   it('seeds charitable gift annuities with explicit managed blocks and no fallback page content', () => {
@@ -962,7 +1035,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(annuitiesBlocks.some((block) => block?.id === 'outro' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
   });
 
-  it('drops stale charitable gift annuities page-content blocks from stored config', () => {
+  it('drops stale charitable gift annuities page-content blocks without restoring missing starter blocks', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/planned-giving/charitable-gift-annuities': [
@@ -981,7 +1054,7 @@ describe('ContentAdminContext state normalization', () => {
     const annuitiesBlocks = normalized.blocksByPath['/services/planned-giving/charitable-gift-annuities'] || [];
 
     expect(annuitiesBlocks.some((block) => block?.id === 'page_content')).toBe(false);
-    expect(annuitiesBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+    expect(annuitiesBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(false);
   });
 
   it('restores the charitable gift annuities hero when a stored draft hides it', () => {
@@ -1020,7 +1093,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(ministryImpactBlocks.some((block) => block?.id === 'outro' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
   });
 
-  it('drops stale ministry impact fund page-content blocks from stored config', () => {
+  it('drops stale ministry impact fund page-content blocks without restoring missing starter blocks', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/planned-giving/ministry-impact-fund': [
@@ -1039,7 +1112,7 @@ describe('ContentAdminContext state normalization', () => {
     const ministryImpactBlocks = normalized.blocksByPath['/services/planned-giving/ministry-impact-fund'] || [];
 
     expect(ministryImpactBlocks.some((block) => block?.id === 'page_content')).toBe(false);
-    expect(ministryImpactBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+    expect(ministryImpactBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(false);
   });
 
   it('restores the ministry impact fund hero and clears stored hero buttons', () => {
@@ -1228,7 +1301,7 @@ describe('ContentAdminContext state normalization', () => {
     });
   });
 
-  it('drops stale about-us request-form blocks from stored config and keeps the CTA block', () => {
+  it('drops stale about-us request-form blocks without restoring a missing CTA block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/about-us': [
@@ -1245,12 +1318,9 @@ describe('ContentAdminContext state normalization', () => {
     });
 
     const aboutBlocks = normalized.blocksByPath['/about-us'] || [];
-    const ctaBlock = aboutBlocks.find((block) => block?.kind === 'cta_form');
 
     expect(aboutBlocks.some((block) => block?.kind === 'request_form')).toBe(false);
-    expect(ctaBlock).toBeTruthy();
-    expect(ctaBlock?.settings?.sectionClassName).toBe('about-native-cta-form');
-    expect(ctaBlock?.settings?.targetSectionClassName).toBeUndefined();
+    expect(aboutBlocks.some((block) => block?.kind === 'cta_form')).toBe(false);
   });
 
   it('seeds the other audited CTA-owned form routes with CTA blocks instead of request-form blocks', () => {
@@ -1347,13 +1417,13 @@ describe('ContentAdminContext state normalization', () => {
     expect(fallbackCtaBlock?.settings?.triggerMode).toBeUndefined();
   });
 
-  it('drops stale request-form blocks from the other audited CTA-owned form routes and restores the CTA block', () => {
+  it('drops stale request-form blocks from audited CTA-owned routes without restoring missing CTA blocks', () => {
     const auditedRoutes = [
       ['/services/insurance', { sectionClassName: 'insurance-native-cta' }],
       ['/services/retirement/409a', { sectionClassName: 'retirement-child-native-cta' }],
     ];
 
-    auditedRoutes.forEach(([pathname, expectation]) => {
+    auditedRoutes.forEach(([pathname]) => {
       const normalized = normalizeStoredConfig({
         blocksByPath: {
           [pathname]: [
@@ -1373,13 +1443,7 @@ describe('ContentAdminContext state normalization', () => {
       const ctaBlock = blocks.find((block) => block?.kind === 'cta_form');
 
       expect(blocks.some((block) => block?.kind === 'request_form'), pathname).toBe(false);
-      expect(ctaBlock, pathname).toBeTruthy();
-      if (expectation.targetSectionClassName) {
-        expect(ctaBlock?.settings?.targetSectionClassName, pathname).toBe(expectation.targetSectionClassName);
-      }
-      if (expectation.sectionClassName) {
-        expect(ctaBlock?.settings?.sectionClassName, pathname).toBe(expectation.sectionClassName);
-      }
+      expect(ctaBlock, pathname).toBeUndefined();
     });
   });
 
@@ -1466,7 +1530,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(billboardBlock?.settings?.buttonLabel).toBe('Open a Generosity Fund®');
   });
 
-  it('drops stale contact-us CTA blocks from stored config and keeps the request form', () => {
+  it('drops stale contact-us CTA blocks without restoring a missing request form', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/contact-us': [
@@ -1486,10 +1550,7 @@ describe('ContentAdminContext state normalization', () => {
     const requestBlock = contactBlocks.find((block) => block?.kind === 'request_form');
 
     expect(contactBlocks.some((block) => block?.kind === 'cta_form')).toBe(false);
-    expect(requestBlock).toBeTruthy();
-    expect(requestBlock?.settings?.sectionClassName).toBe('contact-us-request');
-    expectNoTargetBridgeSettings(requestBlock);
-    expect(requestBlock?.settings?.bgTone).toBe('sand');
+    expect(requestBlock).toBeUndefined();
   });
 
   it('seeds the remaining request-form routes from explicit canonical blocks', () => {
@@ -1711,12 +1772,10 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'loan_details' && block?.kind === 'content');
 
     expect((normalized.blocksByPath['/services/retirement/403b'] || []).some((block) => block?.id === 'page_content')).toBe(false);
-    expect(loanDetailsBlock).toBeTruthy();
-    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
-    expect(String(loanDetailsBlock?.settings?.html || '')).toContain('The requested 403(b) loan amount cannot be less than $1,500');
+    expect(loanDetailsBlock).toBeUndefined();
   });
 
-  it('drops stale generic 403(b) overview page-content blocks while preserving the canonical block-owned route structure', () => {
+  it('drops stale generic 403(b) overview page-content blocks without restoring missing starter blocks', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -1737,9 +1796,9 @@ describe('ContentAdminContext state normalization', () => {
     const routeBlocks = normalized.blocksByPath['/services/retirement/403b'] || [];
 
     expect(routeBlocks.some((block) => block?.id === 'page_content')).toBe(false);
-    expect(routeBlocks.some((block) => block?.id === 'benefits_cards' && block?.kind === 'card_grid')).toBe(true);
-    expect(routeBlocks.some((block) => block?.id === 'rollover_billboard' && block?.kind === 'billboard')).toBe(true);
-    expect(routeBlocks.some((block) => block?.id === 'loan_details' && block?.kind === 'content')).toBe(true);
+    expect(routeBlocks.some((block) => block?.id === 'benefits_cards' && block?.kind === 'card_grid')).toBe(false);
+    expect(routeBlocks.some((block) => block?.id === 'rollover_billboard' && block?.kind === 'billboard')).toBe(false);
+    expect(routeBlocks.some((block) => block?.id === 'loan_details' && block?.kind === 'content')).toBe(false);
   });
 
   it('does not silently replace stale legacy 403(b) loan-details HTML', () => {
@@ -2438,15 +2497,15 @@ describe('ContentAdminContext state normalization', () => {
 
     const blocks = normalized.blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [];
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
-    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'confirm_eligibility' && block?.kind === 'card_grid')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'enrollment_steps' && block?.kind === 'card_grid')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'return_forms' && block?.kind === 'content')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero')).toBe(false);
+    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro')).toBe(false);
+    expect(blocks.some((block) => block?.id === 'confirm_eligibility' && block?.kind === 'card_grid')).toBe(false);
+    expect(blocks.some((block) => block?.id === 'enrollment_steps' && block?.kind === 'card_grid')).toBe(false);
+    expect(blocks.some((block) => block?.id === 'return_forms' && block?.kind === 'content')).toBe(false);
+    expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(false);
   });
 
-  it('drops the stale enrollment-help billboard from 403(b) individual enrollment and restores the request form block', () => {
+  it('drops the stale enrollment-help billboard from 403(b) individual enrollment without restoring the request form block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b/403b-individual-enrollment': [
@@ -2464,15 +2523,9 @@ describe('ContentAdminContext state normalization', () => {
     });
 
     const blocks = normalized.blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [];
-    const requestBlock = blocks.find((block) => block?.id === 'request_form');
 
     expect(blocks.some((block) => block?.id === 'billboard')).toBe(false);
-    expect(requestBlock?.kind).toBe('request_form');
-    expect(requestBlock?.settings?.title).toBe('Need help with enrollment?');
-    expect(requestBlock?.settings?.titleHighlightsJson).toBe('[{"text":"help","className":"is-melon"}]');
-    expect(requestBlock?.settings?.subtitle).toBe('For assistance, contact 800.622.7526.');
-    expect(requestBlock?.settings?.bgTone).toBe('grey');
-    expect(requestBlock?.settings?.salesforceUrl).toBe('403bregs@agfinancial.org');
+    expect(blocks.some((block) => block?.id === 'request_form')).toBe(false);
   });
 
   it('keeps custom 403(b) individual enrollment billboards that are not the legacy help replacement', () => {
@@ -2500,7 +2553,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(billboardBlock?.settings?.bodyHtml).toBe('<p>Custom billboard copy that should persist on the block-owned route.</p>');
   });
 
-  it('appends the seeded hero block to stored 403(b) group enrollment drafts', () => {
+  it('migrates legacy 403(b) group enrollment paths without appending missing starter blocks', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b-for-groups/403b-group-enrollment': [
@@ -2519,13 +2572,9 @@ describe('ContentAdminContext state normalization', () => {
     const blocks = normalized.blocksByPath['/services/retirement/403b/403b-group-enrollment'] || [];
     const heroBlock = blocks.find((block) => block?.id === 'hero');
 
-    expect(heroBlock).toBeTruthy();
-    expect(heroBlock?.kind).toBe('hero');
-    expect(heroBlock?.mode).toBe('dynamic');
-    expect(heroBlock?.settings?.line1Text).toBe('AGFinancial 403(b)');
-    expect(heroBlock?.settings?.line2Text).toBe('Group Enrollment');
+    expect(heroBlock).toBeUndefined();
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
-    expect(blocks.some((block) => block?.id === 'confirm_eligibility')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'confirm_eligibility')).toBe(false);
     expect(normalized.blocksByPath['/services/retirement/403b-for-groups/403b-group-enrollment']).toBeUndefined();
     expect(normalized.pathAliases['/services/retirement/403b-for-groups/403b-group-enrollment']).toBe('/services/retirement/403b/403b-group-enrollment');
     expect(normalized.pathAliases['/services/retirement/403b-for-groups']).toBe('/services/retirement/403b/403b-group-enrollment');
@@ -2569,7 +2618,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.button2LinkJson).toBe(defaultIntroBlock?.settings?.button2LinkJson);
   });
 
-  it('appends the seeded request form block to stored 403(b) group enrollment drafts', () => {
+  it('keeps stored 403(b) group enrollment drafts without appending a missing request form block', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b-for-groups/403b-group-enrollment': [
@@ -2605,12 +2654,7 @@ describe('ContentAdminContext state normalization', () => {
     const blocks = normalized.blocksByPath['/services/retirement/403b/403b-group-enrollment'] || [];
     const requestBlock = blocks.find((block) => block?.id === 'request_form');
 
-    expect(requestBlock).toBeTruthy();
-    expect(requestBlock?.kind).toBe('request_form');
-    expect(requestBlock?.mode).toBe('dynamic');
-    expect(requestBlock?.settings?.title).toBe('Need help with enrollment?');
-    expect(requestBlock?.settings?.subtitle).toBe('For assistance, contact 800.622.7526.');
-    expect(requestBlock?.settings?.salesforceUrl).toBe('403bregs@agfinancial.org');
+    expect(requestBlock).toBeUndefined();
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
   });
 
@@ -3529,7 +3573,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(Array.isArray(columnsMathBlock?.editableFields) ? columnsMathBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
-  it('seeds impact hero and intro blocks while dropping an empty stale page-content block', () => {
+  it('drops an empty impact page-content block without appending missing starter blocks', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/about-us/impact': [
@@ -3548,12 +3592,12 @@ describe('ContentAdminContext state normalization', () => {
 
     const impactBlocks = normalized.blocksByPath['/about-us/impact'] || [];
 
-    expect(impactBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(impactBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(impactBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(false);
+    expect(impactBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(false);
     expect(impactBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
-  it('seeds invest-by-mail hero and intro blocks while dropping an empty stale page-content block', () => {
+  it('drops an empty invest-by-mail page-content block without appending missing starter blocks', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/investments/invest-by-mail': [
@@ -3572,8 +3616,8 @@ describe('ContentAdminContext state normalization', () => {
 
     const blocks = normalized.blocksByPath['/services/investments/invest-by-mail'] || [];
 
-    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
-    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(false);
+    expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(false);
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 

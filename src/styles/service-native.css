@@ -19143,7 +19143,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--about .about-native-values {
   --investments-growth-display-size: clamp(3.8rem, 8.2vw, 6.35rem);
   --investments-growth-display-letter-spacing: clamp(-0.058em, -0.038vw, -0.034em);
-  padding-top: clamp(4.1rem, 8vw, 6.6rem);
+  padding-top: clamp(2.35rem, 4.8vw, 3.9rem);
   padding-bottom: clamp(5rem, 9vw, 7.4rem);
 }
 

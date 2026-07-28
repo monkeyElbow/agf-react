@@ -724,7 +724,7 @@ describe('createDevContentAuthorityStore', () => {
     expect(history[0].blocks.map((block) => block.id)).toEqual(['hero', 'cta_form']);
   });
 
-  it('reconciles partial old page revisions to the current block inventory on restore', () => {
+  it('restores page revision block arrays without resurrecting missing current seed blocks', () => {
     const persistenceFile = makeTempFile();
     const currentState = buildSeedState();
     const pathname = '/services/loans';
@@ -815,15 +815,15 @@ describe('createDevContentAuthorityStore', () => {
 
     expect(restored.ok).toBe(true);
     expect(restoredBlocks.map((block) => `${block.id}:${block.kind}:${block.mode}`)).toEqual([
-      'hero:hero:dynamic',
       'cta_form:cta_form:dynamic',
+      'old_static_section:content:static',
     ]);
-    expect(restoredBlocks.find((block) => block.id === 'hero')?.settings.line1Text).toBe('Original title');
+    expect(restoredBlocks.some((block) => block.id === 'hero')).toBe(false);
     expect(restoredBlocks.find((block) => block.id === 'cta_form')?.settings.title).toBe('Revision CTA');
     expect(restoredBlocks.find((block) => block.id === 'cta_form')?.settings.targetSectionKey).toBeUndefined();
     expect(restoredCollaboration.blocks.cta_form).toBeTruthy();
-    expect(restoredCollaboration.blocks.old_static_section).toBeUndefined();
-    expect(restoredCollaboration.history.map((entry) => entry.blockId)).toEqual(['cta_form']);
+    expect(restoredCollaboration.blocks.old_static_section).toBeTruthy();
+    expect(restoredCollaboration.history.map((entry) => entry.blockId)).toEqual(['cta_form', 'old_static_section']);
   });
 
   it('does not silently repair retired 403(b) strategy CTAs or RMHA copy from persisted revision restores', () => {
@@ -1442,6 +1442,24 @@ describe('createDevContentAuthorityStore', () => {
     expect(backupPayload.meta.removedBlocksByPath['/services/loans']).toEqual(['cta_form']);
   });
 
+  it('keeps removed blocks removed and saved order authoritative after reload', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'] = [
+      nextState.blocksByPath['/services/loans'][1],
+    ];
+
+    const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'remove hero and keep cta order' });
+    const reloaded = createStore(persistenceFile);
+
+    expect(saved.ok).toBe(true);
+    expect(saved.state.blocksByPath['/services/loans'].map((block) => block.id)).toEqual(['cta_form']);
+    expect(reloaded.getSnapshot().state.blocksByPath['/services/loans'].map((block) => block.id)).toEqual(['cta_form']);
+  });
+
   it('aborts destructive shared writes when backup creation fails', () => {
     const persistenceFile = makeTempFile();
     const blockedBackupPath = path.join(path.dirname(persistenceFile), 'blocked-backups');
@@ -1486,7 +1504,7 @@ describe('createDevContentAuthorityStore', () => {
     expect(backups[1].reason).toBe('before-reset-from-seed');
   });
 
-  it('reconciles restored backup records to the current block inventory', () => {
+  it('restores backup records without forcing the current seed block inventory', () => {
     const persistenceFile = makeTempFile();
     const backupDir = path.join(path.dirname(persistenceFile), 'backups');
     const store = createStore(persistenceFile, { backupDir });
@@ -1598,20 +1616,20 @@ describe('createDevContentAuthorityStore', () => {
 
     expect(restored.ok).toBe(true);
     expect(restoredBlocks.map((block) => `${block.id}:${block.kind}:${block.mode}`)).toEqual([
-      'hero:hero:dynamic',
       'cta_form:cta_form:dynamic',
+      'old_static_section:content:static',
     ]);
-    expect(restoredBlocks.some((block) => block.id === 'old_static_section')).toBe(false);
+    expect(restoredBlocks.some((block) => block.id === 'hero')).toBe(false);
     expect(restoredCta.settings.title).toBe('Backup CTA');
     expect(restoredCta.settings.targetSectionClassName).toBeUndefined();
-    expect(restored.state.blocksByPath['/old-route']).toBeUndefined();
-    expect(restored.state.pageHierarchy['/old-route']).toBeUndefined();
-    expect(restored.state.pathAliases['/old-loans']).toBeUndefined();
-    expect(restored.state.collaborationByPath[pathname].blocks.old_static_section).toBeUndefined();
-    expect(restored.state.collaborationByPath[pathname].history).toEqual([]);
+    expect(restored.state.blocksByPath['/old-route']).toEqual(oldBackupState.blocksByPath['/old-route']);
+    expect(restored.state.pageHierarchy['/old-route']).toEqual(oldBackupState.pageHierarchy['/old-route']);
+    expect(restored.state.pathAliases['/old-loans']).toBe(pathname);
+    expect(restored.state.collaborationByPath[pathname].blocks.old_static_section).toBeTruthy();
+    expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['old_static_section']);
     expect(restoredRevisionBlocks.map((block) => `${block.id}:${block.kind}:${block.mode}`)).toEqual([
-      'hero:hero:dynamic',
       'cta_form:cta_form:dynamic',
+      'old_static_section:content:static',
     ]);
   });
 

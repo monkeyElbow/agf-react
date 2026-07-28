@@ -2666,7 +2666,11 @@ export function normalizeStoredConfig(payload) {
   delete storedBlocksByPathSource[RETIREMENT_403B_GROUP_OVERVIEW_LEGACY_PATH];
 
   const storedBlocksByPath = storedBlocksByPathSource;
-  const blocksByPath = { ...defaultBlocks };
+  const hasAuthoritativeStoredBlocks = (
+    payload.blocksByPath
+    && typeof payload.blocksByPath === 'object'
+  );
+  const blocksByPath = hasAuthoritativeStoredBlocks ? {} : { ...defaultBlocks };
 
   Object.entries(storedBlocksByPath).forEach(([path, storedBlocks]) => {
     if (!Array.isArray(storedBlocks)) {
@@ -2758,7 +2762,25 @@ export function normalizeStoredConfig(payload) {
         return;
       }
       seenIds.add(effectiveStoredBlockId);
-      const defaultBlock = defaultById.get(effectiveStoredBlockId);
+      const matchingDefaultBlock = defaultById.get(effectiveStoredBlockId);
+      const matchingDefaultKind = String(matchingDefaultBlock?.kind || '').trim().toLowerCase();
+      const isExplicitRetiredKindMigration = (
+        path === RETIREMENT_403B_PATH
+        && storedBlock.id === 'investment_strategy_options'
+        && storedKind === 'card_grid'
+        && matchingDefaultKind === 'content'
+      );
+      const defaultBlock = (
+        matchingDefaultBlock
+        && (
+          !storedKind
+          || !matchingDefaultKind
+          || storedKind === matchingDefaultKind
+          || isExplicitRetiredKindMigration
+        )
+      )
+        ? matchingDefaultBlock
+        : null;
       if (!defaultBlock) {
         mergedInStoredOrder.push(storedBlock);
         return;
@@ -3231,41 +3253,13 @@ export function normalizeStoredConfig(payload) {
       });
     });
 
-    // Insert newly introduced blueprint blocks at their blueprint positions.
-    const missingDefaults = defaultForPath.filter((defaultBlock) => !seenIds.has(defaultBlock.id));
-    const mergedWithMissingDefaults = [...mergedInStoredOrder];
-    missingDefaults.forEach((missingBlock) => {
-      const missingIndex = defaultForPath.findIndex((defaultBlock) => defaultBlock.id === missingBlock.id);
-      const laterDefaultIds = defaultForPath
-        .slice(missingIndex + 1)
-        .map((defaultBlock) => defaultBlock.id);
-      const insertBeforeIndex = mergedWithMissingDefaults.findIndex((candidateBlock) => (
-        laterDefaultIds.includes(candidateBlock?.id)
-      ));
-
-      if (insertBeforeIndex === -1) {
-        mergedWithMissingDefaults.push(
-          missingBlock?.id === 'intro' && missingBlock?.kind === 'intro' && missingBlock?.mode === 'dynamic'
-            ? { ...missingBlock, settings: normalizeIntroBodyMirror(missingBlock.settings) }
-            : missingBlock,
-        );
-      } else {
-        mergedWithMissingDefaults.splice(
-          insertBeforeIndex,
-          0,
-          missingBlock?.id === 'intro' && missingBlock?.kind === 'intro' && missingBlock?.mode === 'dynamic'
-            ? { ...missingBlock, settings: normalizeIntroBodyMirror(missingBlock.settings) }
-            : missingBlock,
-        );
-      }
-    });
     const normalizedMergedBlocks = path === RETIREMENT_403B_PATH
-      ? normalizeRetirement403bBlockSet(mergedWithMissingDefaults)
+      ? normalizeRetirement403bBlockSet(mergedInStoredOrder)
       : (path === PLANNED_GIVING_OVERVIEW_PATH
-          ? normalizePlannedGivingOverviewBlockSet(mergedWithMissingDefaults)
+          ? normalizePlannedGivingOverviewBlockSet(mergedInStoredOrder)
           : (path === RETIREMENT_IRAS_PATH
-              ? normalizeRetirementIraBlockSet(mergedWithMissingDefaults)
-              : mergedWithMissingDefaults));
+              ? normalizeRetirementIraBlockSet(mergedInStoredOrder)
+              : mergedInStoredOrder));
     blocksByPath[path] = normalizePageBlocksState(normalizedMergedBlocks);
   });
 

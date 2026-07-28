@@ -33,6 +33,9 @@ git diff --check
 
 - Do not add public content checks that rewrite copy.
 - Do not hide git working-tree checks inside normal npm scripts unless the script name clearly says it is a git check.
+- Treat `contentBlockBlueprints` as starter templates and explicit reset templates, not ongoing managed-page inventory contracts. After a route has saved admin state, the saved block list and order are authoritative.
+- Normal content-admin load, save, publish, restore, and render paths may migrate existing block schemas and clean invalid settings, but they must not restore missing starter blocks, require starter ids, force source order, or replace an admin-chosen block kind by id.
+- If a route needs required content for legal or compliance reasons, that requirement must be explicit, documented, and surfaced in admin as a validation warning, not silently repaired by resurrecting source blueprint blocks.
 - Keep the active content admin schema version in `src/lib/contentAdminSnapshotSchema.js`.
 - Keep large-file readability boundaries and 2.0 readiness targets in `src/lib/systemReadinessInventory.js`.
 - Keep special-route allowances sourced from `src/lib/managedPageShells.js` so block-only, blockless, and special routes do not drift apart.

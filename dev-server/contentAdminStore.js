@@ -839,128 +839,74 @@ function normalizePageBlocksState(pathname, blocks) {
   ).map((block) => normalizePageBlockState(pathname, block));
 }
 
-function reconcileBlocksToCurrentInventory(pathname, blocks, currentBlocks) {
-  const canonicalBlocks = normalizePageBlocksState(pathname, currentBlocks);
-  if (!canonicalBlocks.length) {
-    return normalizePageBlocksState(pathname, blocks);
-  }
-
-  const blocksById = new Map(
-    normalizePageBlocksState(pathname, blocks)
-      .map((block) => [String(block?.id || '').trim(), block])
-      .filter(([blockId]) => blockId),
-  );
-
-  return canonicalBlocks.map((canonicalBlock) => {
-    const blockId = String(canonicalBlock?.id || '').trim();
-    const candidate = blocksById.get(blockId);
-    if (
-      candidate
-      && String(candidate.kind || '').trim() === String(canonicalBlock.kind || '').trim()
-      && String(candidate.mode || '').trim() === 'dynamic'
-    ) {
-      return {
-        ...cloneJson(canonicalBlock),
-        ...cloneJson(candidate),
-        kind: canonicalBlock.kind,
-        mode: 'dynamic',
-        editableFields: Array.isArray(canonicalBlock.editableFields)
-          ? cloneJson(canonicalBlock.editableFields)
-          : [],
-      };
-    }
-    return cloneJson(canonicalBlock);
-  });
+function normalizeBlocksWithoutInventoryRepair(pathname, blocks) {
+  return normalizePageBlocksState(pathname, blocks);
 }
 
-function reconcileCollaborationToCurrentInventory(pathname, collaboration, currentBlocks) {
-  const canonicalBlockIds = new Set(
-    normalizePageBlocksState(pathname, currentBlocks)
+function normalizeCollaborationForExistingBlocks(pathname, collaboration, pageBlocks) {
+  const existingBlockIds = new Set(
+    normalizePageBlocksState(pathname, pageBlocks)
       .map((block) => String(block?.id || '').trim())
       .filter(Boolean),
   );
   const source = collaboration && typeof collaboration === 'object'
     ? collaboration
     : { blocks: {}, history: [] };
-  const blocks = {};
+  const blockMetaById = {};
 
   Object.entries(source.blocks || {}).forEach(([blockId, meta]) => {
-    if (canonicalBlockIds.has(String(blockId || '').trim())) {
-      blocks[blockId] = cloneJson(meta);
+    if (existingBlockIds.has(String(blockId || '').trim())) {
+      blockMetaById[blockId] = cloneJson(meta);
     }
   });
 
   return {
     ...cloneJson(source),
-    blocks,
+    blocks: blockMetaById,
     history: (Array.isArray(source.history) ? source.history : [])
       .filter((entry) => {
         const blockId = String(entry?.blockId || '').trim();
-        return !blockId || canonicalBlockIds.has(blockId);
+        return !blockId || existingBlockIds.has(blockId);
       })
       .map(cloneJson),
   };
 }
 
-function reconcileSharedStateToReferenceInventory(state, referenceState) {
+function normalizeSharedStateWithoutInventoryRepair(state) {
   const source = normalizeSharedState(state);
-  const reference = normalizeSharedState(referenceState);
-  const pageHierarchy = {};
-  const blocksByPath = {};
-  const collaborationByPath = {};
+  const collaborationByPath = { ...(source.collaborationByPath || {}) };
 
-  Object.entries(reference.blocksByPath || {}).forEach(([pathname, referenceBlocks]) => {
-    pageHierarchy[pathname] = {
-      ...(reference.pageHierarchy?.[pathname] || {}),
-      ...(source.pageHierarchy?.[pathname] || {}),
-      path: pathname,
-    };
-    blocksByPath[pathname] = reconcileBlocksToCurrentInventory(
-      pathname,
-      source.blocksByPath?.[pathname],
-      referenceBlocks,
-    );
-    collaborationByPath[pathname] = reconcileCollaborationToCurrentInventory(
+  Object.entries(source.blocksByPath || {}).forEach(([pathname, blocks]) => {
+    collaborationByPath[pathname] = normalizeCollaborationForExistingBlocks(
       pathname,
       source.collaborationByPath?.[pathname],
-      referenceBlocks,
+      blocks,
     );
   });
 
   return {
     ...source,
-    pageHierarchy,
-    blocksByPath,
-    pathAliases: cloneJson(reference.pathAliases || {}),
     collaborationByPath,
   };
 }
 
-function reconcileRecordToReferenceInventory(recordToReconcile, referenceRecord, maxRevisionsPerPage = DEFAULT_MAX_REVISIONS_PER_PAGE) {
+function normalizeRecordWithoutInventoryRepair(recordToReconcile, maxRevisionsPerPage = DEFAULT_MAX_REVISIONS_PER_PAGE) {
   const source = normalizeStoredRecord(recordToReconcile, maxRevisionsPerPage);
-  const referenceState = normalizeSharedState(referenceRecord?.state);
-  const referenceBaseSnapshot = normalizeSharedState(referenceRecord?.baseSnapshot || referenceState);
   const nextRevisionsByPath = {};
 
   Object.entries(source.revisionsByPath || {}).forEach(([pathname, revisions]) => {
-    const referenceBlocks = referenceState.blocksByPath?.[pathname];
-    if (!Array.isArray(referenceBlocks)) {
-      return;
-    }
-
     nextRevisionsByPath[pathname] = (Array.isArray(revisions) ? revisions : []).map((revision) => ({
       ...revision,
       snapshot: {
         ...(revision.snapshot || {}),
-        blocks: reconcileBlocksToCurrentInventory(
+        blocks: normalizeBlocksWithoutInventoryRepair(
           pathname,
           revision.snapshot?.blocks,
-          referenceBlocks,
         ),
-        collaboration: reconcileCollaborationToCurrentInventory(
+        collaboration: normalizeCollaborationForExistingBlocks(
           pathname,
           revision.snapshot?.collaboration,
-          referenceBlocks,
+          revision.snapshot?.blocks,
         ),
       },
     }));
@@ -968,8 +914,8 @@ function reconcileRecordToReferenceInventory(recordToReconcile, referenceRecord,
 
   return {
     ...source,
-    state: reconcileSharedStateToReferenceInventory(source.state, referenceState),
-    baseSnapshot: reconcileSharedStateToReferenceInventory(source.baseSnapshot, referenceBaseSnapshot),
+    state: normalizeSharedStateWithoutInventoryRepair(source.state),
+    baseSnapshot: normalizeSharedStateWithoutInventoryRepair(source.baseSnapshot),
     revisionsByPath: nextRevisionsByPath,
   };
 }
@@ -1539,19 +1485,17 @@ export function createDevContentAuthorityStore({
   const replacePageStateFromRevision = (pathname, revision) => {
     const nextState = normalizeSharedState(record.state);
     const pageSlice = resolveRevisionSnapshotPageSlice(revision?.snapshot, pathname);
-    const currentBlocks = nextState.blocksByPath[pathname];
     if (pageSlice.page) {
       nextState.pageHierarchy[pathname] = cloneJson(pageSlice.page);
     }
-    nextState.blocksByPath[pathname] = reconcileBlocksToCurrentInventory(
+    nextState.blocksByPath[pathname] = normalizeBlocksWithoutInventoryRepair(
       pathname,
       pageSlice.blocks,
-      currentBlocks,
     );
-    nextState.collaborationByPath[pathname] = reconcileCollaborationToCurrentInventory(
+    nextState.collaborationByPath[pathname] = normalizeCollaborationForExistingBlocks(
       pathname,
       pageSlice.collaboration || { blocks: {}, history: [] },
-      currentBlocks,
+      pageSlice.blocks,
     );
     Object.entries(pageSlice.pathAliases || {}).forEach(([fromPath, toPath]) => {
       nextState.pathAliases[fromPath] = toPath;
@@ -2194,9 +2138,8 @@ export function createDevContentAuthorityStore({
 
       try {
         const backupPayload = readBackupPayload(selectedBackup.filePath);
-        record = reconcileRecordToReferenceInventory(
+        record = normalizeRecordWithoutInventoryRepair(
           backupPayload.record,
-          record,
           maxRevisionsPerPage,
         );
         persistRecord();
