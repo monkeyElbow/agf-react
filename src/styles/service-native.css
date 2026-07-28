@@ -22977,8 +22977,10 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3 {
   display: block;
+  font-size: clamp(2.55rem, 4.8vw, 4rem);
+  line-height: 0.98;
   min-height: 0;
-  margin-bottom: 0.75rem;
+  margin-bottom: clamp(0.9rem, 1.6vw, 1.15rem);
   padding-bottom: 0;
 }
 

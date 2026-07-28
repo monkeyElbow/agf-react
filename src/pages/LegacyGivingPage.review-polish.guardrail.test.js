@@ -214,4 +214,13 @@ describe('planned giving review polish guardrail', () => {
     expect(blueprintSource).toContain("buttonStyle: 'outline'");
     expect(blueprintSource).toContain("buttonTone: 'white'");
   });
+
+  it('keeps charitable trusts CRT and CLT choice card titles at the large card-title scale', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3 {');
+    expect(cssSource).toContain('font-size: clamp(2.55rem, 4.8vw, 4rem);');
+    expect(cssSource).toContain('line-height: 0.98;');
+    expect(cssSource).toContain('margin-bottom: clamp(0.9rem, 1.6vw, 1.15rem);');
+  });
 });
