@@ -137,7 +137,8 @@ describe('investments ladder calculator', () => {
     expect(screen.getByRole('heading', { name: 'Already an investor?' })).toBeTruthy();
     expect(container.querySelector('.investments-native-growth-card--investor')).toBeTruthy();
     expect(container.querySelector('.service-native-section.dynamic-billboard.investments-native-dashboard-billboard')).toBeNull();
-    const dashboardLink = screen.getByRole('link', { name: 'Go to my dashboard' });
+    expect(screen.queryByText('Log in to manage.')).toBeNull();
+    const dashboardLink = screen.getByRole('link', { name: 'Log in to manage' });
     expect(dashboardLink.className).toContain('service-native-btn');
     expect(dashboardLink.className).toContain('is-outline');
     expect(dashboardLink.className).toContain('is-tone-atlantean');

@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { isExternalLinkHref } from '../lib/dynamicPageBlocks';
 
 const LEGACY_STORY_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const LEGACY_STORY_MIN_WIDTH_PX = 1100;
@@ -31,7 +29,6 @@ const LEGACY_STORY_LIGHT_LEAK_PEAK_END = 0.62;
 const LEGACY_STORY_LIGHT_LEAK_FADE_START = 0.76;
 const LEGACY_STORY_LIGHT_LEAK_FADE_END = 0.96;
 const LEGACY_STORY_TONE_SEQUENCE = Object.freeze(['atlantean', 'super-grey', 'atlantean-dark']);
-const LEGACY_STORY_CTA_CLASS = 'service-native-btn is-tone-white legacy-stewardship-story-cta';
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -122,43 +119,15 @@ function renderLegacyBeatHeading(text, { final = false } = {}) {
   );
 }
 
-function StoryAction({ action, resolveTo, className = 'service-native-btn is-outline is-tone-white' }) {
-  if (!action?.label) {
-    return null;
-  }
-
-  const actionTarget = String(action.to || '').trim();
-  const actionHref = String(action.href || actionTarget || '').trim();
-  if (!actionHref) {
-    return null;
-  }
-
-  if (actionHref.startsWith('#')) {
-    return <a href={actionHref} className={className}>{action.label}</a>;
-  }
-
-  if (isExternalLinkHref(actionHref)) {
-    return (
-      <a
-        href={actionHref}
-        className={className}
-        target={action.openInNewWindow ? '_blank' : undefined}
-        rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
-      >
-        {action.label}
-      </a>
-    );
-  }
-
+function StoryScrollCue({ className = '', style = undefined } = {}) {
   return (
-    <Link
-      to={resolveTo(actionTarget, actionHref)}
-      className={className}
-      target={action.openInNewWindow ? '_blank' : undefined}
-      rel={action.openInNewWindow ? 'noreferrer noopener' : undefined}
+    <div
+      className={`legacy-stewardship-story-scroll-cue${className ? ` ${className}` : ''}`}
+      aria-hidden="true"
+      style={style}
     >
-      {action.label}
-    </Link>
+      <span className="legacy-stewardship-story-scroll-cue-mark" />
+    </div>
   );
 }
 
@@ -219,8 +188,6 @@ function getStoryActors(beats, progress) {
 export function LegacyGivingStewardshipStoryStaticContent({
   headline,
   beats = [],
-  action,
-  resolveTo,
   reveal = false,
 }) {
   const normalizedBeats = normalizeBeats(beats, headline);
@@ -249,9 +216,7 @@ export function LegacyGivingStewardshipStoryStaticContent({
             data-tone={getStoryTone(normalizedBeats.length - 1, normalizedBeats.length)}
           >
             <h2 aria-label={finalBeat}>{renderLegacyBeatHeading(finalBeat, { final: true })}</h2>
-            <div className="legacy-stewardship-story-cta-wrap">
-              <StoryAction action={action} resolveTo={resolveTo} className={LEGACY_STORY_CTA_CLASS} />
-            </div>
+            <StoryScrollCue className="is-final-cue" />
           </div>
         ) : null}
       </div>
@@ -262,8 +227,6 @@ export function LegacyGivingStewardshipStoryStaticContent({
 export default function LegacyGivingStewardshipStoryFeature({
   headline,
   beats = [],
-  action,
-  resolveTo,
 }) {
   const shellRef = useRef(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -347,8 +310,6 @@ export default function LegacyGivingStewardshipStoryFeature({
       <LegacyGivingStewardshipStoryStaticContent
         headline={headline}
         beats={normalizedBeats}
-        action={action}
-        resolveTo={resolveTo}
         reveal={supportsRevealFallback}
       />
     );
@@ -431,26 +392,21 @@ export default function LegacyGivingStewardshipStoryFeature({
                   })()
                 ))}
               </div>
-              <div
-                className="legacy-stewardship-story-first-cue"
-                aria-hidden="true"
+              <StoryScrollCue
+                className="is-first-cue"
                 style={{
                   opacity: firstCueOpacity,
                   transform: `translate3d(0, ${firstCueShift}px, 0)`,
                 }}
-              >
-                <span className="legacy-stewardship-story-first-cue-mark" />
-              </div>
+              />
             </div>
-            <div
-              className="legacy-stewardship-story-stage-action"
+            <StoryScrollCue
+              className="is-final-cue legacy-stewardship-story-stage-action"
               style={{
                 opacity: ctaOpacity,
                 transform: `translate3d(0, ${ctaShift}px, 0)`,
               }}
-            >
-              <StoryAction action={action} resolveTo={resolveTo} className={LEGACY_STORY_CTA_CLASS} />
-            </div>
+            />
           </div>
         </div>
       </div>

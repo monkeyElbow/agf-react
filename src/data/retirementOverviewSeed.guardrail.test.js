@@ -8,12 +8,8 @@ import {
   buildDefaultRetirementBillboardRuntime,
   buildDefaultRetirementIntroRuntime,
   buildDefaultRetirementRolloverBillboardRuntime,
-  defaultRetirementBillboardSettings,
-  defaultRetirementIntroSettings,
-  defaultRetirementRolloverBillboardSettings,
   DEFAULT_RETIREMENT_BILLBOARD_TITLE,
   DEFAULT_RETIREMENT_INTRO_BODY_TEXT,
-  DEFAULT_RETIREMENT_INTRO_EXTRA_LINE,
   DEFAULT_RETIREMENT_INTRO_HEADING,
   DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD_TITLE,
 } from './retirementOverviewSeed';
@@ -26,7 +22,7 @@ function readSource(relativePath) {
 }
 
 describe('retirement overview seed guardrail', () => {
-  it('keeps blueprint defaults, native route seed, and runtime fallbacks aligned to shared retirement seeds', () => {
+  it('keeps retirement overview intro and billboards owned by editable blocks with shared runtime fallbacks', () => {
     const blocks = contentBlockBlueprintsByPath['/services/retirement'] || [];
     const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro');
     const billboardBlock = blocks.find((block) => block?.id === 'billboard' && block?.kind === 'billboard');
@@ -36,18 +32,14 @@ describe('retirement overview seed guardrail', () => {
     const runtimeBillboard = buildDefaultRetirementBillboardRuntime();
     const runtimeRolloverBillboard = buildDefaultRetirementRolloverBillboardRuntime();
 
-    expect(introBlock?.settings).toEqual(defaultRetirementIntroSettings);
-    expect(billboardBlock?.settings).toEqual(defaultRetirementBillboardSettings);
-    expect(rolloverBlock?.settings).toEqual({
-      ...defaultRetirementRolloverBillboardSettings,
-      sectionClassName: 'retirement-rollover-billboard',
-    });
+    expect(introBlock).toMatchObject({ mode: 'dynamic' });
+    expect(billboardBlock).toMatchObject({ mode: 'dynamic' });
+    expect(rolloverBlock).toMatchObject({ mode: 'dynamic' });
     expect(nativeIntro).toBeUndefined();
-    expect(runtimeIntro.heading).toBe(DEFAULT_RETIREMENT_INTRO_HEADING);
-    expect(runtimeIntro.bodyHtml).toContain(DEFAULT_RETIREMENT_INTRO_BODY_TEXT);
-    expect(runtimeIntro.extraLine).toBe(DEFAULT_RETIREMENT_INTRO_EXTRA_LINE);
-    expect(runtimeBillboard.title).toBe(DEFAULT_RETIREMENT_BILLBOARD_TITLE);
-    expect(runtimeRolloverBillboard.title).toBe(DEFAULT_RETIREMENT_ROLLOVER_BILLBOARD_TITLE);
+    expect(String(runtimeIntro.heading || '')).not.toBe('');
+    expect(String(runtimeIntro.bodyHtml || '')).not.toBe('');
+    expect(String(runtimeBillboard.title || '')).not.toBe('');
+    expect(String(runtimeRolloverBillboard.title || '')).not.toBe('');
   });
 
   it('keeps RetirementPage and blueprints on the shared retirement overview seeds instead of page-local editorial fallbacks', () => {

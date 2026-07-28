@@ -81,7 +81,7 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders the static-safe story fallback with all beats and the comparison CTA when reduced motion is preferred', () => {
+  it('renders the static-safe story fallback with all beats and the final scroll cue when reduced motion is preferred', () => {
     mockMatchMedia({ reducedMotion: true });
     const { container } = renderFeature();
 
@@ -91,7 +91,8 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
     expect(screen.getByText('Transition out of appreciated assets.')).toBeTruthy();
     expect(screen.getByText('Leave a legacy for family and ministry.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Smart stewardship for today and tomorrow.' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).getAttribute('href')).toBe('#charitable-giving-plan-comparison');
+    expect(screen.queryByRole('link', { name: 'Compare charitable giving ideas' })).toBeNull();
+    expect(container.querySelector('.legacy-stewardship-story-scroll-cue.is-final-cue')).toBeTruthy();
     expect(container.querySelector('.legacy-stewardship-story-static-beats li[data-tone="atlantean"]')?.textContent).toBe('Transition out of appreciated assets.');
   });
 
@@ -103,7 +104,7 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
     expect(container.querySelector('.legacy-stewardship-story-shell')).toBeNull();
   });
 
-  it('renders the enhanced desktop story and lands on the final held beat with the comparison CTA', () => {
+  it('renders the enhanced desktop story and lands on the final held beat with a scroll cue', () => {
     const { container } = renderFeature();
     const shell = setEnhancedShellProgress(container, 0.97);
 
@@ -122,10 +123,8 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
     expect(finalActor?.getAttribute('data-tone')).toBe('atlantean');
     expect(finalActor?.querySelector('.legacy-stewardship-story-final-primary')).toBeNull();
     expect(finalActor?.querySelector('.legacy-stewardship-story-final-secondary')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).getAttribute('href')).toBe('#charitable-giving-plan-comparison');
-    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).className).toContain('is-tone-white');
-    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).className).not.toContain('is-outline');
-    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).className).not.toContain('home-impact-story-cta');
+    expect(screen.queryByRole('link', { name: 'Compare charitable giving ideas' })).toBeNull();
+    expect(container.querySelector('.legacy-stewardship-story-stage-action.legacy-stewardship-story-scroll-cue.is-final-cue')).toBeTruthy();
   });
 
   it('makes the first beat readable from the start of the pinned sequence instead of waiting through a faint dead zone', () => {
@@ -138,7 +137,7 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
     });
 
     const firstActor = screen.getByText('Transition out of appreciated assets.').closest('.legacy-stewardship-story-beat-actor');
-    const firstCue = container.querySelector('.legacy-stewardship-story-first-cue');
+    const firstCue = container.querySelector('.legacy-stewardship-story-scroll-cue.is-first-cue');
     expect(firstActor?.getAttribute('data-motion-state')).toBe('entering');
     expect(getActorOpacity(firstActor)).toBeGreaterThanOrEqual(0.64);
     expect(firstActor?.getAttribute('style')).toContain('translate3d(0, 10px, 0)');
@@ -197,7 +196,7 @@ describe('LegacyGivingStewardshipStoryFeature', () => {
     });
 
     expect(Number.parseFloat(shell?.style.getPropertyValue('--legacy-light-leak-fade') || '0')).toBeLessThan(initialLeakFade);
-    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).className).toContain('legacy-stewardship-story-cta');
-    expect(screen.getByRole('link', { name: 'Compare charitable giving ideas' }).className).not.toContain('home-impact-story-cta');
+    expect(screen.queryByRole('link', { name: 'Compare charitable giving ideas' })).toBeNull();
+    expect(container.querySelector('.legacy-stewardship-story-stage-action.legacy-stewardship-story-scroll-cue.is-final-cue')).toBeTruthy();
   });
 });

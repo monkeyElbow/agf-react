@@ -304,7 +304,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Intro HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Card Grid · Flexible cards HUD panel' })).toBeTruthy();
-    expect(screen.getAllByRole('button', { name: 'Open Billboard HUD panel' })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Open Billboard HUD panel' })).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: 'Open Page Content HUD panel' })).toHaveLength(2);
   });
 

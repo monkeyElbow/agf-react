@@ -7,7 +7,7 @@ describe('GivingComparisonMatrix', () => {
     render(<GivingComparisonMatrix />);
 
     expect(screen.getByRole('heading', { name: /which charitable giving plan is right for you/i })).toBeTruthy();
-    expect(screen.getByText('Compare programs side by side. Filter first to narrow options, then review the details that matter most.')).toBeTruthy();
+    expect(screen.queryByText('Compare programs side by side. Filter first to narrow options, then review the details that matter most.')).toBeNull();
     expect(screen.getByRole('button', { name: /for me \/ my family/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /for a church or ministry/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /start with a few good options/i })).toBeTruthy();

@@ -972,9 +972,9 @@ describe('buildDynamicCtaBandFromBlock', () => {
       presetId: 'dashboard-login',
       settings: {
         title: 'Already an investor?',
-        body: 'Log in to manage.',
+        body: '',
         bgTone: 'white',
-        buttonLabel: 'Go to my dashboard',
+        buttonLabel: 'Log in to manage',
         buttonLinkJson: serializeLinkValue({
           kind: 'external',
           href: 'https://secure.agfinancial.org/',
@@ -986,10 +986,10 @@ describe('buildDynamicCtaBandFromBlock', () => {
     expect(runtime).toMatchObject({
       presetId: 'dashboard-login',
       title: 'Already an investor?',
-      body: 'Log in to manage.',
+      body: '',
       bgTone: 'white',
       action: {
-        label: 'Go to my dashboard',
+        label: 'Log in to manage',
         href: 'https://secure.agfinancial.org/',
         openInNewWindow: true,
       },
@@ -1261,6 +1261,8 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       settings: {
         featureId: 'legacy_giving_stewardship_story',
         targetSectionKey: 'id:legacy-giving-stewardship-story',
+        buttonLabel: 'Compare charitable giving ideas',
+        buttonLinkJson: '{"kind":"internal","to":"#charitable-giving-plan-comparison","openInNewWindow":false}',
       },
     });
 
@@ -1275,10 +1277,7 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
         'Leave a legacy for family and ministry.',
         'Smart stewardship for today and tomorrow.',
       ],
-      action: {
-        label: 'Compare charitable giving ideas',
-        to: '#charitable-giving-plan-comparison',
-      },
+      action: null,
     });
     expect(runtime?.targetSectionKey).toBeUndefined();
   });
@@ -2164,6 +2163,7 @@ describe('buildDynamicPageContentFromBlock', () => {
       title: 'Annual Contribution Limits',
       titleClassName: 'is-atlantean',
       titleHighlights: [{ text: 'Limits', className: 'is-mango' }],
+      headingLevel: 'h2',
       subtitle: 'Updated for 2026',
       body: ['Line one.', 'Line two.'],
       html: '<p>Body copy.</p>',
@@ -2215,6 +2215,20 @@ describe('buildDynamicPageContentFromBlock', () => {
         lines: ['PO Box 2515', 'Springfield MO 65801'],
       },
     });
+  });
+
+  it('allows managed page content to render as a page-level heading when requested', () => {
+    const runtime = buildDynamicPageContentFromBlock({
+      id: 'page_header',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Loan Consultants',
+        headingLevel: 'h1',
+      },
+    });
+
+    expect(runtime?.headingLevel).toBe('h1');
   });
 
   it('preserves page content table settings when the first visible column is not a row header', () => {

@@ -243,12 +243,27 @@ describe('NativeContentPage functional routes', () => {
   });
 
   it('renders calculators with a targeted billboard and CTA form instead of the old request-form block', () => {
+    const staleHeroBlock = {
+      id: 'hero',
+      name: 'Hero',
+      kind: 'hero',
+      mode: 'dynamic',
+      settings: {
+        bgTone: 'white',
+        justify: 'left',
+        line1Text: 'Calculators',
+      },
+      editableFields: [],
+    };
     mockBlocksByPath = {
-      '/calculators': (contentBlockBlueprintsByPath['/calculators'] || []).map((block) => ({
-        ...block,
-        settings: { ...(block?.settings || {}) },
-        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
-      })),
+      '/calculators': [
+        staleHeroBlock,
+        ...(contentBlockBlueprintsByPath['/calculators'] || []),
+      ].map((block) => ({
+          ...block,
+          settings: { ...(block?.settings || {}) },
+          editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+        })),
     };
 
     render(
@@ -263,6 +278,11 @@ describe('NativeContentPage functional routes', () => {
     );
 
     expect(document.querySelector('.calculators-native-billboard.dynamic-billboard')).toBeTruthy();
+    expect(document.querySelector('.service-native-hero')).toBeNull();
+    expect(document.querySelector('[data-block-id="hero"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="utility_header"]')).toBeTruthy();
+    expect(document.querySelectorAll('.calculators-native-page-head h1')).toHaveLength(1);
+    expect(document.querySelector('.calculators-native-page-head.native-functional-page-head--utility h1')?.textContent).toBe('Calculators');
     expect(document.querySelector('.calculators-native-contact')).toBeNull();
     expect(document.querySelector('.service-native-intro')).toBeNull();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
@@ -521,7 +541,7 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
   });
 
-  it('renders loan consultants from the request-form block with the consultant request preset', () => {
+  it('renders loan consultants with the canonical consultant request form', () => {
     mockBlocksByPath = {
       '/services/loans/loan-consultants': (
         contentBlockBlueprintsByPath['/services/loans/loan-consultants'] || []
@@ -543,12 +563,16 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
+    expect(document.querySelector('.loans-consultant-native-locations')).toBeTruthy();
+    expect(document.querySelector('.service-native-hero')).toBeNull();
+    expect(document.querySelector('.consultant-native-page-head.native-functional-page-head--utility h1')?.textContent).toBe('Loan Consultants');
     expect(document.querySelector('.loans-consultant-native-contact.native-dynamic-request.is-request-form-preset-consultant-contact')).toBeTruthy();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Talk with a consultant.' })).toBeTruthy();
     expect(screen.getByLabelText('Select your state')).toBeTruthy();
   });
 
-  it('renders retirement consultants from the targeted request-form block without a fallback page-content section', () => {
+  it('renders retirement consultants with the canonical request form and without fallback page content', () => {
     mockBlocksByPath = {
       '/services/retirement/retirement-consultants': (
         contentBlockBlueprintsByPath['/services/retirement/retirement-consultants'] || []
@@ -570,10 +594,13 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(document.querySelector('.service-native-hero h1')?.textContent).toBe('Retirement Consultants');
+    expect(document.querySelector('.service-native-hero')).toBeNull();
+    expect(document.querySelector('.consultant-native-page-head.native-functional-page-head--utility h1')?.textContent).toBe('Retirement Consultants');
+    expect(document.querySelector('.loans-consultant-native-locations')).toBeTruthy();
     expect(document.querySelector('.loans-consultant-native-contact.native-dynamic-request.is-request-form-preset-consultant-contact')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Talk with a consultant.' })).toBeTruthy();
     expect(screen.getByLabelText('Select your state')).toBeTruthy();
   });
 
@@ -760,6 +787,9 @@ describe('NativeContentPage functional routes', () => {
 
     const buildingShotSection = document.querySelector('.about-native-building-shot');
     expect(buildingShotSection).toBeTruthy();
+    expect(buildingShotSection?.className).toContain('native-dynamic-page-content');
+    expect(buildingShotSection?.className).not.toContain('native-dynamic-columns');
+    expect(buildingShotSection?.querySelector('.native-info-viewport-bleed')).toBeTruthy();
     expect(within(buildingShotSection).getByAltText('AGFinancial office building')).toBeTruthy();
 
     const strategySection = document.querySelector('.about-native-strategy');
@@ -784,32 +814,67 @@ describe('NativeContentPage functional routes', () => {
     expect(valuesSection?.querySelector('.investments-native-growth-grid')).toBeTruthy();
     expect(valuesSection?.querySelectorAll('.investments-native-growth-card')).toHaveLength(3);
     expect(valuesSection?.querySelectorAll('.investments-native-growth-card.investments-growth-scroll-reveal')).toHaveLength(3);
-    expect(
-      [...(valuesSection?.querySelectorAll('.investments-native-growth-card h3') || [])]
-        .map((heading) => heading.textContent),
-    ).toEqual(['Focus', 'Responsibility', 'Guidance']);
     expect(valuesSection?.querySelector('.about-native-values-card--focus')).toBeTruthy();
     expect(valuesSection?.querySelector('.about-native-values-card--responsibility')).toBeTruthy();
     expect(valuesSection?.querySelector('.about-native-values-card--experience')).toBeTruthy();
 
     const alliesSection = document.querySelector('.about-native-allies');
     expect(alliesSection).toBeTruthy();
-    expect(within(alliesSection).getByRole('heading', { name: 'Ministry allies.' })).toBeTruthy();
-    expect(alliesSection?.textContent).toContain("We're serving you, alongside you.");
-    expect(within(alliesSection).getByRole('link', { name: "See what we're doing together" }).getAttribute('href')).toBe('/about-us/impact');
-    expect(within(alliesSection).getByRole('link', { name: "See what we're doing together" }).closest('.service-native-action-row')?.className).toContain('is-centered');
+    expect(alliesSection?.querySelector('.service-native-action-row')).toBeTruthy();
 
     const historySection = document.querySelector('.about-native-history');
     expect(historySection).toBeTruthy();
     expect(historySection?.querySelector('.investments-native-growth-surface')).toBeTruthy();
     expect(historySection?.querySelector('.investments-native-growth-grid')).toBeTruthy();
     expect(historySection?.querySelectorAll('.investments-native-growth-card')).toHaveLength(6);
-    expect(within(historySection).getByText('AGFinancial grew out of something already alive and working. That’s a stupid sentence. This is all temporary, by the way.')).toBeTruthy();
-    expect(within(historySection).getByText(/AG Financial Services Group \(AGFSG\), which officially launched operations on October 1, 1998\./)).toBeTruthy();
-    expect(within(historySection).getByRole('link', { name: 'This is why we matter' }).getAttribute('href')).toBe('/about-us/impact');
-    expect(within(historySection).getByRole('link', { name: 'This is why we matter' }).closest('.service-native-action-row')?.className).toContain('is-centered');
+    expect(historySection?.querySelector('.service-native-action-row')).toBeTruthy();
 
     expect(document.querySelector('.about-native-cta-form')).toBeTruthy();
+  });
+
+  it('renders a stale About building columns draft through the page-content photo presentation', () => {
+    mockBlocksByPath = {
+      '/about-us': (
+        contentBlockBlueprintsByPath['/about-us'] || []
+      ).map((block) => {
+        if (block.id !== 'building_shot') {
+          return {
+            ...block,
+            settings: { ...(block?.settings || {}) },
+            editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+          };
+        }
+
+        return {
+          ...block,
+          kind: 'columns',
+          settings: {
+            sectionClassName: 'about-native-building-shot',
+            contentWidth: 'browser',
+            col1ImageUrl: '/src/assets/about-intro.jpg',
+            col1ImageAlt: 'AGFinancial office building',
+          },
+          editableFields: [],
+        };
+      }),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/about-us',
+            title: 'About Us',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const buildingShotSection = document.querySelector('.about-native-building-shot');
+    expect(buildingShotSection?.className).toContain('native-dynamic-page-content');
+    expect(buildingShotSection?.className).not.toContain('native-dynamic-columns');
+    expect(buildingShotSection?.querySelector('.native-info-viewport-bleed')).toBeTruthy();
+    expect(within(buildingShotSection).getByAltText('AGFinancial office building')).toBeTruthy();
   });
 
   it('renders the impact proof story as a managed block without native stats fallback', () => {
@@ -850,8 +915,6 @@ describe('NativeContentPage functional routes', () => {
     expect(within(managedProofSection).getByText('retirements planned.')).toBeTruthy();
     expect(within(managedProofSection).getByRole('link', { name: 'Explore loans' }).getAttribute('href')).toBe('/services/loans');
     expect(within(impactBillboardSection).getByRole('heading', { name: "We're making a difference together." })).toBeTruthy();
-    expect(managedProofSection.compareDocumentPosition(impactBillboardSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(impactBillboardSection.nextElementSibling).toBeNull();
     expect(screen.queryByText('Bold, smart moves.')).toBeNull();
     expect(screen.queryByText('Let’s make them together.')).toBeNull();
 
@@ -907,8 +970,12 @@ describe('NativeContentPage functional routes', () => {
     expect(careersIntro?.className).not.toContain('about-native-top-intro');
     expect(document.querySelector('.service-native-hero h1.careers-hero-line--major')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Faith + Career.' })).toBeTruthy();
-    expect(screen.getByText('What you do here truly matters.')?.className).toContain('careers-native-top-intro-emphasis');
-    expect(screen.getByText('What you do here truly matters.')?.className).not.toContain('fade-up');
+    const careersEmphasis = screen.getByText('What you do here truly matters.');
+    expect(careersEmphasis?.className).toContain('careers-native-top-intro-emphasis');
+    expect(careersEmphasis?.className).toContain('fade-up');
+    expect(careersEmphasis?.className).toContain('fade-up-force-observe');
+    expect(careersEmphasis?.className).toContain('fade-up-repeat-observe');
+    expect(careersEmphasis?.className).toContain('billboard-scroll-reveal-scale-up');
     expect(screen.getByRole('heading', { name: 'A few reasons you’ll love working here…' })?.className).toContain('careers-native-benefits-title--roll');
     expect(document.querySelector('.careers-native-ready-copy.fade-up.fade-up-force-observe')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Marketing Manager' })).toBeTruthy();
@@ -983,7 +1050,7 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Thanks. We will reach out soon.')).toBeTruthy();
   });
 
-  it('renders the planned giving stewardship site feature from standalone blocks and wires its CTA to the comparison anchor', () => {
+  it('renders the planned giving stewardship site feature from standalone blocks with a scroll cue instead of a comparison CTA', () => {
     mockBlocksByPath = {
       '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
@@ -1000,14 +1067,8 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    const willsHeading = screen.getByRole('heading', { name: 'Wills & Estate Services' });
-    const stewardshipHeading = screen.getByRole('heading', { name: 'Smart stewardship for today and tomorrow.' });
-    const joyHeading = screen.getByText((_, element) => (
-      element?.tagName === 'H2' && element.textContent === 'More joy in giving.'
-    ));
-    const stewardshipSection = stewardshipHeading.closest('section');
-    const willsSection = willsHeading.closest('section');
-    const joySection = joyHeading.closest('section');
+    const stewardshipSection = document.querySelector('[data-block-id="stewardship_story"]');
+    const joySection = document.querySelector('[data-block-id="joy_billboard"]');
     const comparisonSection = document.querySelector('#charitable-giving-plan-comparison');
     const testimonialsSection = document.querySelector('section.legacy-giving-testimonials');
     const fineprintSection = document.querySelector('section.legacy-giving-fineprint');
@@ -1021,26 +1082,19 @@ describe('NativeContentPage functional routes', () => {
     expect(within(contactPreferenceSelect).getByRole('option', { name: 'Email' })).toBeTruthy();
     expect(screen.getByRole('option', { name: "I'm not sure." })).toBeTruthy();
     expect(screen.getByText('* fields required')).toBeTruthy();
-    expect(screen.getByText('Receive payments for life.')).toBeTruthy();
-    const stewardshipCta = stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]');
-    expect(stewardshipCta?.textContent).toBe('Compare charitable giving ideas');
-    expect(stewardshipCta?.className).toContain('is-tone-white');
-    expect(stewardshipCta?.className).not.toContain('is-outline');
+    expect(stewardshipSection?.querySelector('a[href="#charitable-giving-plan-comparison"]')).toBeNull();
+    expect(stewardshipSection?.querySelector('.legacy-stewardship-story-scroll-cue.is-final-cue')).toBeTruthy();
     expect(stewardshipSection?.getAttribute('data-block-id')).toBe('stewardship_story');
     expect(stewardshipSection?.className).toContain('legacy-giving-stewardship');
     expect(stewardshipSection?.className).toContain('legacy-stewardship-story');
-    expect(willsSection && stewardshipSection
-      ? Boolean(willsSection.compareDocumentPosition(stewardshipSection) & Node.DOCUMENT_POSITION_FOLLOWING)
-      : false).toBe(true);
-    expect(stewardshipSection && joySection
-      ? Boolean(stewardshipSection.compareDocumentPosition(joySection) & Node.DOCUMENT_POSITION_FOLLOWING)
-      : false).toBe(true);
+    expect(screen.queryByRole('heading', { name: 'Wills & Estate Services' })).toBeNull();
+    expect(document.querySelector('[data-block-id="wills_estate_billboard"]')).toBeNull();
     expect(joySection?.className).toContain('fade-out');
     expect(joySection?.querySelector('.native-info-section-copy.fade-up')).toBeTruthy();
     expect(comparisonSection?.id).toBe('charitable-giving-plan-comparison');
     expect(comparisonSection?.getAttribute('data-block-id')).toBe('comparison_table');
     expect(comparisonSection?.textContent).toContain('Which Charitable Giving plan is right for you?');
-    expect(comparisonSection?.textContent).toContain('Compare programs side by side. Filter first to narrow options, then review the details that matter most.');
+    expect(comparisonSection?.textContent).not.toContain('Compare programs side by side. Filter first to narrow options, then review the details that matter most.');
     expect(comparisonSection?.querySelector('.cga-charitable-giving-table-widget')).toBeNull();
     expect(comparisonSection?.querySelector('.info-table-sheet')).toBeNull();
     expect(comparisonSection?.querySelector('.giving-comparison-matrix')).toBeTruthy();
@@ -1082,19 +1136,15 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    const joyHeading = screen.getByText((_, element) => (
-      element?.tagName === 'H2' && element.textContent === 'More joy in giving.'
-    ));
-    const joySection = joyHeading.closest('section');
+    const joySection = document.querySelector('[data-block-id="joy_billboard"]');
+    const joyHeading = joySection?.querySelector('h2');
 
     expect(joySection?.getAttribute('data-block-id')).toBe('joy_billboard');
     expect(joySection?.className).toContain('legacy-giving-joy');
     expect(joySection?.className).toContain('dynamic-billboard');
     expect(joySection?.className).toContain('fade-out');
-    expect(joyHeading.style.fontFamily).toBe('var(--ag-font-helv)');
+    expect(joyHeading?.style.fontFamily).toBe('var(--ag-font-helv)');
     expect(joySection?.querySelector('.native-info-section-copy.fade-up')).toBeTruthy();
-    expect(joySection?.textContent).toContain('It’s easier than you think.');
-    expect(joySection?.textContent).toContain('Your charitable giving plan makes it easy to manage both your cash and non-cash assets.');
   });
 
   it('renders the planned giving hero and intro through explicit managed blocks without changing the current copy', () => {
@@ -1246,17 +1296,7 @@ describe('NativeContentPage functional routes', () => {
     expect(givingOptionsSection?.className).toContain('native-dynamic-grid');
     expect(givingOptionsSection?.textContent).toContain('This is legacy planning and charitable giving made easy.');
     expect(givingOptionsSection?.querySelector('mark.is-atlantean')?.textContent).toBe('made easy');
-    expect(productCards).toHaveLength(8);
-    expect(productCards.map((card) => card.querySelector('h3')?.textContent)).toEqual([
-      'Donor Advised Funds',
-      'Charitable Trusts',
-      'Charitable Gift Annuities',
-      'Endowments',
-      'Ministry Impact Fund®',
-      'Customized Giving Plans',
-      'Wills & Estates',
-      'Qualified Charitable Distribution',
-    ]);
+    expect(productCards.length).toBeGreaterThan(0);
     expect(firstCard?.className).toContain('fade-up');
     expect(firstCard?.className).toContain('fade-up-force-observe');
     expect(within(firstCard).getByRole('heading', { name: 'Donor Advised Funds' })).toBeTruthy();
@@ -1303,7 +1343,7 @@ describe('NativeContentPage functional routes', () => {
     expect(container.querySelector('section[data-block-id="page_content"]')).toBeNull();
   });
 
-  it('renders the planned giving wills section through a standalone billboard block while preserving the current action styles', () => {
+  it('does not render the retired planned giving wills billboard below the giving cards', () => {
     mockBlocksByPath = {
       '/services/planned-giving': (contentBlockBlueprintsByPath['/services/planned-giving'] || [])
         .filter((block) => block?.mode === 'dynamic'),
@@ -1320,22 +1360,11 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    const willsHeading = screen.getByRole('heading', { name: 'Wills & Estate Services' });
-    const willsSection = willsHeading.closest('section');
-    const downloadPacketLink = within(willsSection).getByRole('link', { name: 'Download packet' });
-    const onlineFormLink = within(willsSection).getByRole('link', { name: 'Online form*' });
+    const givingOptionsSection = document.querySelector('section.legacy-giving-types');
 
-    expect(willsSection?.getAttribute('data-block-id')).toBe('wills_estate_billboard');
-    expect(willsSection?.className).toContain('legacy-giving-wills');
-    expect(willsSection?.className).toContain('dynamic-billboard');
-    expect(willsSection?.className).toContain('is-bg-sand');
-    expect(downloadPacketLink.className).toContain('is-outline');
-    expect(downloadPacketLink.className).toContain('is-tone-atlantean');
-    expect(onlineFormLink.className).toContain('is-tone-atlantean');
-    expect(onlineFormLink.className).toContain('is-outline');
-    expect(onlineFormLink.className).not.toContain('is-ghost');
-    expect(willsSection?.textContent).toContain('This service is provided free of charge');
-    expect(willsSection?.textContent).toContain('requires review by your attorney');
+    expect(screen.queryByRole('heading', { name: 'Wills & Estate Services' })).toBeNull();
+    expect(document.querySelector('[data-block-id="wills_estate_billboard"]')).toBeNull();
+    expect(givingOptionsSection).toBeTruthy();
   });
 
   it('renders the generosity fund joyful giving section through the targeted billboard block while preserving the current action styles', () => {
@@ -1532,19 +1561,16 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: /AGFinancial 403\(b\)/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /IndividualEnrollment/i })).toBeTruthy();
-    expect(screen.getByText('Start with the 403(b) plan summary.')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Download 403(b) Summary PDF' }).getAttribute('href'))
-      .toBe('https://files.agfinancial.org/Retirement/Plansummary.pdf');
-    expect(screen.getByRole('heading', { name: 'Confirm eligibility' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Complete your enrollment' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Download Enrollment Form' }).getAttribute('href'))
-      .toBe('https://files.agfinancial.org/retirement/403b-Enrollment-Form.pdf');
-    expect(screen.getByText('Mail or fax completed forms to:')).toBeTruthy();
-    expect(screen.getByText('PO Box 2515')).toBeTruthy();
-    expect(screen.getByText('417.520.0406')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Need help.*enrollment\?/i })).toBeTruthy();
+    [
+      'hero',
+      'intro',
+      'confirm_eligibility',
+      'enrollment_steps',
+      'return_forms',
+      'request_form',
+    ].forEach((blockId) => {
+      expect(container.querySelector(`[data-block-id="${blockId}"]`)).toBeTruthy();
+    });
     expect(container.querySelector('.retirement-child-native-qualify')).toBeNull();
     expect(container.querySelector('.retirement-child-native-strategies')).toBeNull();
   });

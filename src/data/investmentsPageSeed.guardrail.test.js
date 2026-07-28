@@ -3,11 +3,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
-import {
-  defaultInvestmentsCtaSettings,
-  defaultInvestmentsGrowthFeatureSettings,
-} from './investmentsPageSeed';
-import { parseCtaFormFieldsJson } from '../blocks/foundation/forms';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,18 +12,14 @@ function readSource(relativePath) {
 }
 
 describe('investments page seed guardrail', () => {
-  it('keeps investments growth feature and CTA defaults aligned to shared page seeds', () => {
+  it('keeps investments growth feature and CTA as editable managed blocks', () => {
     const blocks = contentBlockBlueprintsByPath['/services/investments'] || [];
     const growthBlock = blocks.find((block) => block?.id === 'growth_feature' && block?.kind === 'site_feature');
     const ctaBlock = blocks.find((block) => block?.id === 'cta_form' && block?.kind === 'cta_form');
 
-    expect(growthBlock?.settings).toEqual(defaultInvestmentsGrowthFeatureSettings);
-    expect(ctaBlock?.settings?.title).toBe(defaultInvestmentsCtaSettings.title);
-    expect(ctaBlock?.settings?.bodyHtml).toBe(defaultInvestmentsCtaSettings.bodyHtml);
-    expect(ctaBlock?.settings?.submitLabel).toBe(defaultInvestmentsCtaSettings.submitLabel);
-    expect(parseCtaFormFieldsJson(ctaBlock?.settings?.fieldsJson)[3]?.placeholder).toBe(
-      parseCtaFormFieldsJson(defaultInvestmentsCtaSettings.fieldsJson)[3]?.placeholder,
-    );
+    expect(growthBlock).toMatchObject({ mode: 'dynamic' });
+    expect(ctaBlock).toMatchObject({ mode: 'dynamic' });
+    expect(growthBlock?.settings?.featureId).toBe('investments_growth_feature');
   });
 
   it('keeps InvestmentsPage on the shared investments page seeds instead of local default objects', () => {

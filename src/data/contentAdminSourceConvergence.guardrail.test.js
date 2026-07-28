@@ -94,16 +94,13 @@ function toBlockSignature(block) {
   };
 }
 
-function toInventory(blocksByPath = {}) {
-  return Object.fromEntries(
-    Object.entries(blocksByPath)
-      .filter(([, blocks]) => Array.isArray(blocks) && blocks.length > 0)
-      .map(([pathname, blocks]) => [
-        pathname,
-        blocks.map(toBlockSignature),
-      ])
-      .sort(([left], [right]) => left.localeCompare(right)),
-  );
+function sortBlockSignatures(signatures) {
+  return [...signatures].sort((left, right) => (
+    left.id.localeCompare(right.id)
+    || left.kind.localeCompare(right.kind)
+    || left.mode.localeCompare(right.mode)
+    || Number(left.hidden) - Number(right.hidden)
+  ));
 }
 
 function findPageContentPaths(blocksByPath = {}) {
@@ -114,6 +111,33 @@ function findPageContentPaths(blocksByPath = {}) {
     )))
     .map(([pathname]) => pathname)
     .sort();
+}
+
+function collectSnapshotBlockShapeFindings(blocksByPath = {}) {
+  const findings = [];
+
+  Object.entries(blocksByPath).forEach(([pathname, blocks]) => {
+    if (!Array.isArray(blocks)) {
+      findings.push({ pathname, issue: 'blocks_not_array' });
+      return;
+    }
+
+    const seenIds = new Set();
+    blocks.forEach((block, blockIndex) => {
+      const signature = toBlockSignature(block);
+
+      if (!signature.id || !signature.kind || !signature.mode) {
+        findings.push({ pathname, blockIndex, issue: 'missing_signature', signature });
+      }
+
+      if (seenIds.has(signature.id)) {
+        findings.push({ pathname, blockIndex, issue: 'duplicate_block_id', blockId: signature.id });
+      }
+      seenIds.add(signature.id);
+    });
+  });
+
+  return findings;
 }
 
 function collectRevisionBlocks(revisionsByPath = {}) {
@@ -169,26 +193,25 @@ describe('content admin source convergence', () => {
     expect(Object.keys(seedRecord).sort()).toEqual(['meta', 'seedState']);
   });
 
-  it('keeps shared authoring, shared published, and seed baseline inventories converged', () => {
-    const snapshots = CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS.map(({ label, relativePath, rootKey }) => {
+  it('keeps shared authoring, shared published, and seed baseline block records structurally valid', () => {
+    CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS.forEach(({ label, relativePath, rootKey }) => {
       const record = readJson(relativePath);
-      return [label, toInventory(record?.[rootKey]?.blocksByPath || {})];
-    });
-    const referenceInventory = snapshots[0][1];
 
-    snapshots.forEach(([label, inventory]) => {
-      expect(inventory, `${label} should match shared state inventory`).toEqual(referenceInventory);
+      expect(
+        collectSnapshotBlockShapeFindings(record?.[rootKey]?.blocksByPath || {}),
+        `${label} should contain valid editable block records`,
+      ).toEqual([]);
     });
   });
 
-  it('keeps active snapshot inventories aligned with non-empty block blueprints', () => {
-    const blueprintInventory = toInventory(contentBlockBlueprintsByPath);
-
+  it('keeps active snapshots free to diverge from source blueprint ordering and editable content', () => {
     CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS.forEach(({ label, relativePath, rootKey }) => {
       const record = readJson(relativePath);
-      const snapshotInventory = toInventory(record?.[rootKey]?.blocksByPath || {});
 
-      expect(snapshotInventory, `${label} should match non-empty blueprint inventory`).toEqual(blueprintInventory);
+      expect(
+        collectSnapshotBlockShapeFindings(record?.[rootKey]?.blocksByPath || {}),
+        `${label} should validate by shape instead of blueprint inventory equality`,
+      ).toEqual([]);
     });
   });
 
@@ -202,18 +225,11 @@ describe('content admin source convergence', () => {
       }));
 
       expect(
-        (contentBlockBlueprintsByPath[pathname] || []).map(toBlockSignature),
+        sortBlockSignatures((contentBlockBlueprintsByPath[pathname] || []).map(toBlockSignature)),
         `${pathname} blueprint should carry all custom-renderer blocks`,
-      ).toEqual(expected);
+      ).toEqual(sortBlockSignatures(expected));
 
-      CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS.forEach(({ label, relativePath, rootKey }) => {
-        const record = readJson(relativePath);
-
-        expect(
-          (record?.[rootKey]?.blocksByPath?.[pathname] || []).map(toBlockSignature),
-          `${label} ${pathname} should carry the custom-renderer block contract`,
-        ).toEqual(expected);
-      });
+      expect(requirements.length, `${pathname} custom renderer requirements should be declared in source only`).toBeGreaterThan(0);
     });
   });
 
@@ -243,34 +259,22 @@ describe('content admin source convergence', () => {
     expect(source).not.toContain('getStaticHeroDefaultsForPath');
   });
 
-  it('keeps shared revision restore inventories aligned with current shared state', () => {
+  it('keeps shared revision restore block records structurally valid', () => {
     const sharedRecord = readJson('dev-data/content-admin-shared.json');
-    const currentInventory = toInventory(sharedRecord?.state?.blocksByPath || {});
-    const revisionDrift = [];
+    const revisionShapeFindings = [];
 
     Object.entries(sharedRecord?.revisionsByPath || {}).forEach(([pathname, revisions]) => {
-      if (!Object.prototype.hasOwnProperty.call(currentInventory, pathname)) {
-        return;
-      }
-
-      const expectedInventory = currentInventory[pathname];
       (Array.isArray(revisions) ? revisions : []).forEach((revision, revisionIndex) => {
-        const revisionInventory = (Array.isArray(revision?.snapshot?.blocks) ? revision.snapshot.blocks : [])
-          .map(toBlockSignature);
-
-        if (JSON.stringify(revisionInventory) !== JSON.stringify(expectedInventory)) {
-          revisionDrift.push({
-            pathname,
+        collectSnapshotBlockShapeFindings({ [pathname]: revision?.snapshot?.blocks || [] })
+          .forEach((finding) => revisionShapeFindings.push({
+            ...finding,
             revisionId: String(revision?.id || ''),
             revisionIndex,
-            expectedInventory,
-            revisionInventory,
-          });
-        }
+          }));
       });
     });
 
-    expect(revisionDrift, 'shared revision restores should not reintroduce retired or partial block inventories').toEqual([]);
+    expect(revisionShapeFindings, 'shared revision restores should contain valid editable block records').toEqual([]);
   });
 
   it('keeps page-content usage isolated to classified special routes', () => {

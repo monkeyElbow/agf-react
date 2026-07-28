@@ -29,9 +29,9 @@ const CTA_BAND_PRESET_DEFINITIONS = Object.freeze([
     templateIds: Object.freeze(['dashboard_login_cta']),
     defaults: Object.freeze({
       title: 'Already an investor?',
-      body: 'Log in to manage.',
+      body: '',
       bgTone: 'white',
-      buttonLabel: 'Go to my dashboard',
+      buttonLabel: 'Log in to manage',
       buttonLinkJson: serializeLinkValue({
         kind: 'external',
         href: 'https://secure.agfinancial.org/',

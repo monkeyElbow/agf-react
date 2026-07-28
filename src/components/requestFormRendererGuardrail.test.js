@@ -86,7 +86,6 @@ const REQUEST_FORM_ROUTE_SECTION_CLASSES = [
   '.legacy-child-native-endowments-legacy-form',
   '.legacy-child-native-generosity-request',
   '.legacy-child-native-request',
-  '.loans-consultant-native-contact',
   '.loans-native-inquiry',
   '.retirement-rollovers-native-request',
 ];

@@ -46,7 +46,7 @@ describe('content block blueprint seed convergence guardrail', () => {
     expect(source).toMatch(/createDynamicColumnsBlueprint\(\{[\s\S]*?id: 'columns'[\s\S]*?presetId: 'default'[\s\S]*?\}\)/);
     expect(source).toMatch(/id: 'growth_feature'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'investments_growth_feature'/);
     expect(source).toMatch(/id: 'dashboard_login_cta'[\s\S]*?templateId: 'cta_band'[\s\S]*?kind: 'cta_band'[\s\S]*?hidden: true[\s\S]*?buildCtaBandPresetSettings\('dashboard-login'\)/);
-    expect(source).toMatch(/id: 'cta_form'[\s\S]*?kind: 'cta_form'[\s\S]*?title: 'Talk with an investments consultant\.'/);
+    expect(source).toMatch(/id: 'cta_form'[\s\S]*?kind: 'cta_form'[\s\S]*?title: 'Talk with an investment consultant\.'/);
     expect(source).toMatch(/createDynamicCardGridBlueprint\(\{[\s\S]*?id: 'loan_options'[\s\S]*?title: 'Every loan, 100% customized\.'/);
     expect(source).toMatch(/id: 'services_cards'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_breakdown'/);
     expect(source).toMatch(/id: 'matters_band'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_matters_band'/);

@@ -77,9 +77,6 @@ describe('site feature catalog', () => {
     expect(legacyGivingEntry?.allowedEditableFieldIds).toEqual([
       'featureId',
       'headline',
-      'buttonLabel',
-      'buttonUrl',
-      'buttonPageRef',
     ]);
     expect(entry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);
     expect(homeServicesEntry?.allowedEditableFieldIds.some((fieldId) => /layout|animation|preset|template/i.test(fieldId))).toBe(false);

@@ -3495,74 +3495,54 @@
         },
         {
           "id": "building_shot",
-          "templateId": "columns",
-          "presetId": "default",
           "name": "Building Photo",
-          "kind": "columns",
+          "kind": "content",
           "mode": "dynamic",
           "settings": {
-            "columnsStyle": "retirement",
-            "bgTone": "white",
-            "contentWidth": "browser",
-            "columns": "two",
             "title": "",
-            "leadLine": "",
-            "followupLine": "",
             "titleClassName": "",
             "titleHighlightsJson": "",
-            "bodyHtml": "",
+            "subtitle": "",
+            "body": "",
+            "html": "",
+            "widget": "",
+            "logoImage": "/src/assets/about-intro.jpg",
+            "logoAlt": "AGFinancial office building",
+            "logoText": "",
+            "fullBleed": true,
+            "spaceBeforeRem": 0,
+            "spaceAfterRem": 0,
+            "paddingTopRem": 0,
+            "paddingBottomRem": 0,
+            "contentMaxWidthPx": 1440,
+            "anchorId": "",
             "sectionClassName": "about-native-building-shot",
-            "col1Enabled": true,
-            "col1Type": "photo",
-            "col1Title": "",
-            "col1Body": "",
-            "col1ImageUrl": "/src/assets/about-intro.jpg",
-            "col1ImageAlt": "AGFinancial office building",
-            "col1ButtonLabel": "",
-            "col1ButtonStyle": "blue",
-            "col1ButtonTone": "atlantean",
-            "col1WidthShare": 1,
-            "col2Enabled": false,
-            "col2Type": "text",
-            "col2Title": "",
-            "col2Body": "",
-            "col2ImageUrl": "",
-            "col2ImageAlt": "",
-            "col2ButtonLabel": "",
-            "col2ButtonStyle": "blue",
-            "col2ButtonTone": "atlantean",
-            "col2WidthShare": 1,
-            "col3Enabled": false,
-            "col3Type": "text",
-            "col3Title": "",
-            "col3Body": "",
-            "col3ImageUrl": "",
-            "col3ImageAlt": "",
-            "col3ButtonLabel": "",
-            "col3ButtonStyle": "blue",
-            "col3ButtonTone": "atlantean",
-            "col3WidthShare": 1,
-            "col4Enabled": false,
-            "col4Type": "text",
-            "col4Title": "",
-            "col4Body": "",
-            "col4ImageUrl": "",
-            "col4ImageAlt": "",
-            "col4ButtonLabel": "",
-            "col4ButtonStyle": "blue",
-            "col4ButtonTone": "atlantean",
-            "col4WidthShare": 1
+            "copyWrap": false,
+            "buttonLabel": "",
+            "buttonUrl": "",
+            "buttonPageRef": "",
+            "buttonOpenInNewWindow": false,
+            "buttonDocumentId": "",
+            "addressClassName": "",
+            "addressTitle": "",
+            "addressLines": "",
+            "tableHeadersJson": "",
+            "tableRowsJson": "",
+            "tableValueAlignment": "",
+            "tableChartId": "",
+            "fineprint": "",
+            "fineprintDisclosureId": ""
           },
           "editableFields": [
             {
               "id": "title",
-              "label": "Columns heading",
+              "label": "Section title",
               "type": "textarea",
               "rows": 2
             },
             {
               "id": "titleClassName",
-              "label": "Columns heading color",
+              "label": "Section title color",
               "type": "swatch",
               "options": [
                 {
@@ -3591,6 +3571,11 @@
                   "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
                 },
                 {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
                   "value": "is-white",
                   "label": "White",
                   "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
@@ -3599,7 +3584,7 @@
             },
             {
               "id": "titleHighlightsJson",
-              "label": "Columns heading highlights",
+              "label": "Section title highlights",
               "type": "highlight_list",
               "options": [
                 {
@@ -3623,6 +3608,11 @@
                   "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
                 },
                 {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
                   "value": "is-white",
                   "label": "White",
                   "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
@@ -3630,99 +3620,90 @@
               ]
             },
             {
-              "id": "bodyHtml",
-              "label": "Columns intro HTML",
+              "id": "subtitle",
+              "label": "Section subtitle",
+              "type": "text"
+            },
+            {
+              "id": "body",
+              "label": "Section body",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "html",
+              "label": "Page Content HTML",
               "type": "html"
             },
             {
-              "id": "leadLine",
-              "label": "Lead line",
+              "id": "widget",
+              "label": "Widget key",
               "type": "text"
             },
             {
-              "id": "followupLine",
-              "label": "Follow-up line",
+              "id": "logoImage",
+              "label": "Logo image URL",
               "type": "text"
             },
             {
-              "id": "columnsStyle",
-              "label": "Columns style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "retirement",
-                  "label": "Retirement split style"
-                },
-                {
-                  "value": "legacy-highlight",
-                  "label": "Legacy highlight style"
-                },
-                {
-                  "value": "loans-value",
-                  "label": "Loans value cards style"
-                }
-              ]
+              "id": "logoAlt",
+              "label": "Logo alt text",
+              "type": "text"
             },
             {
-              "id": "bgTone",
-              "label": "Columns background",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand Gradient",
-                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue Gradient",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Super Grey Gradient",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
-                }
-              ]
+              "id": "logoText",
+              "label": "Logo text fallback",
+              "type": "text"
             },
             {
-              "id": "contentWidth",
-              "label": "Content width",
-              "type": "select",
-              "options": [
-                {
-                  "value": "content",
-                  "label": "Content width"
-                },
-                {
-                  "value": "browser",
-                  "label": "Page/browser width"
-                }
-              ]
+              "id": "fullBleed",
+              "label": "Full bleed rail",
+              "type": "boolean"
             },
             {
-              "id": "columns",
-              "label": "Columns count",
-              "type": "select",
-              "options": [
-                {
-                  "value": "two",
-                  "label": "2 columns"
-                },
-                {
-                  "value": "three",
-                  "label": "3 columns"
-                },
-                {
-                  "value": "four",
-                  "label": "4 columns"
-                }
-              ]
+              "id": "spaceBeforeRem",
+              "label": "Space before (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "spaceAfterRem",
+              "label": "Space after (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingTopRem",
+              "label": "Padding top (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingBottomRem",
+              "label": "Padding bottom (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "contentMaxWidthPx",
+              "label": "Content max width (px)",
+              "type": "number",
+              "min": 560,
+              "max": 1440,
+              "step": 10
+            },
+            {
+              "id": "anchorId",
+              "label": "Anchor ID",
+              "type": "text"
             },
             {
               "id": "sectionClassName",
@@ -3730,500 +3711,108 @@
               "type": "text"
             },
             {
-              "id": "col1Enabled",
-              "label": "Column 1 enabled",
+              "id": "copyWrap",
+              "label": "Wrap section copy",
               "type": "boolean"
             },
             {
-              "id": "col1Type",
-              "label": "Column 1 type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "text",
-                  "label": "Text column"
-                },
-                {
-                  "value": "photo",
-                  "label": "Photo column"
-                },
-                {
-                  "value": "flow-step",
-                  "label": "Flow step"
-                },
-                {
-                  "value": "support",
-                  "label": "Support content"
-                }
-              ]
-            },
-            {
-              "id": "col1Title",
-              "label": "Column 1 title",
+              "id": "buttonLabel",
+              "label": "Button label",
               "type": "text"
             },
             {
-              "id": "col1Body",
-              "label": "Column 1 body",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "col1BodyHtml",
-              "label": "Column 1 body HTML",
-              "type": "html"
-            },
-            {
-              "id": "col1ImageUrl",
-              "label": "Column 1 photo URL",
-              "type": "text"
-            },
-            {
-              "id": "col1ImageAlt",
-              "label": "Column 1 photo alt text",
-              "type": "text"
-            },
-            {
-              "id": "col1ButtonLabel",
-              "label": "Column 1 button label",
-              "type": "text"
-            },
-            {
-              "id": "col1ButtonLinkJson",
-              "label": "Column 1 button URL",
+              "id": "buttonLinkJson",
+              "label": "Button URL",
               "type": "route_link",
               "openInNewWindowLabel": "Open in new window"
             },
             {
-              "id": "col1ButtonStyle",
-              "label": "Column 1 button style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Super Grey"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "col1ButtonTone",
-              "label": "Column 1 button color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "col1WidthShare",
-              "label": "Column 1 width share",
-              "type": "number",
-              "min": 0.5,
-              "max": 2.5,
-              "step": 0.05
-            },
-            {
-              "id": "col2Enabled",
-              "label": "Column 2 enabled",
-              "type": "boolean"
-            },
-            {
-              "id": "col2Type",
-              "label": "Column 2 type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "text",
-                  "label": "Text column"
-                },
-                {
-                  "value": "photo",
-                  "label": "Photo column"
-                },
-                {
-                  "value": "flow-step",
-                  "label": "Flow step"
-                },
-                {
-                  "value": "support",
-                  "label": "Support content"
-                }
-              ]
-            },
-            {
-              "id": "col2Title",
-              "label": "Column 2 title",
+              "id": "buttonDocumentId",
+              "label": "Button document ID",
               "type": "text"
             },
             {
-              "id": "col2Body",
-              "label": "Column 2 body",
+              "id": "addressClassName",
+              "label": "Address block class name",
+              "type": "text"
+            },
+            {
+              "id": "addressTitle",
+              "label": "Address title",
+              "type": "text"
+            },
+            {
+              "id": "addressLines",
+              "label": "Address lines",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "tableHeadersJson",
+              "label": "Table headers JSON",
               "type": "textarea",
               "rows": 3
             },
             {
-              "id": "col2BodyHtml",
-              "label": "Column 2 body HTML",
-              "type": "html"
+              "id": "tableRowsJson",
+              "label": "Table rows JSON",
+              "type": "textarea",
+              "rows": 8
             },
             {
-              "id": "col2ImageUrl",
-              "label": "Column 2 photo URL",
-              "type": "text"
-            },
-            {
-              "id": "col2ImageAlt",
-              "label": "Column 2 photo alt text",
-              "type": "text"
-            },
-            {
-              "id": "col2ButtonLabel",
-              "label": "Column 2 button label",
-              "type": "text"
-            },
-            {
-              "id": "col2ButtonLinkJson",
-              "label": "Column 2 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "col2ButtonStyle",
-              "label": "Column 2 button style",
+              "id": "tableValueAlignment",
+              "label": "Table value alignment",
               "type": "select",
               "options": [
                 {
-                  "value": "blue",
-                  "label": "Blue"
+                  "value": "",
+                  "label": "Default"
                 },
                 {
-                  "value": "dark",
-                  "label": "Super Grey"
+                  "value": "left",
+                  "label": "Left"
                 },
                 {
-                  "value": "outline",
-                  "label": "Outline"
+                  "value": "center",
+                  "label": "Center"
+                },
+                {
+                  "value": "right",
+                  "label": "Right"
                 }
               ]
             },
             {
-              "id": "col2ButtonTone",
-              "label": "Column 2 button color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
+              "id": "tableChartId",
+              "label": "Managed chart ID",
+              "type": "text"
             },
             {
-              "id": "col2WidthShare",
-              "label": "Column 2 width share",
-              "type": "number",
-              "min": 0.5,
-              "max": 2.5,
-              "step": 0.05
+              "id": "supportGroupsJson",
+              "label": "Support groups JSON",
+              "type": "textarea",
+              "rows": 8
             },
             {
-              "id": "col3Enabled",
-              "label": "Column 3 enabled",
+              "id": "supportGroupsExpanded",
+              "label": "Expand support items by default",
               "type": "boolean"
             },
             {
-              "id": "col3Type",
-              "label": "Column 3 type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "text",
-                  "label": "Text column"
-                },
-                {
-                  "value": "photo",
-                  "label": "Photo column"
-                },
-                {
-                  "value": "flow-step",
-                  "label": "Flow step"
-                },
-                {
-                  "value": "support",
-                  "label": "Support content"
-                }
-              ]
-            },
-            {
-              "id": "col3Title",
-              "label": "Column 3 title",
-              "type": "text"
-            },
-            {
-              "id": "col3Body",
-              "label": "Column 3 body",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "col3BodyHtml",
-              "label": "Column 3 body HTML",
-              "type": "html"
-            },
-            {
-              "id": "col3ImageUrl",
-              "label": "Column 3 photo URL",
-              "type": "text"
-            },
-            {
-              "id": "col3ImageAlt",
-              "label": "Column 3 photo alt text",
-              "type": "text"
-            },
-            {
-              "id": "col3ButtonLabel",
-              "label": "Column 3 button label",
-              "type": "text"
-            },
-            {
-              "id": "col3ButtonLinkJson",
-              "label": "Column 3 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "col3ButtonStyle",
-              "label": "Column 3 button style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Super Grey"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "col3ButtonTone",
-              "label": "Column 3 button color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "col3WidthShare",
-              "label": "Column 3 width share",
-              "type": "number",
-              "min": 0.5,
-              "max": 2.5,
-              "step": 0.05
-            },
-            {
-              "id": "col4Enabled",
-              "label": "Column 4 enabled",
+              "id": "supportGroupsCollapsible",
+              "label": "Support items are collapsible",
               "type": "boolean"
             },
             {
-              "id": "col4Type",
-              "label": "Column 4 type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "text",
-                  "label": "Text column"
-                },
-                {
-                  "value": "photo",
-                  "label": "Photo column"
-                },
-                {
-                  "value": "flow-step",
-                  "label": "Flow step"
-                },
-                {
-                  "value": "support",
-                  "label": "Support content"
-                }
-              ]
-            },
-            {
-              "id": "col4Title",
-              "label": "Column 4 title",
-              "type": "text"
-            },
-            {
-              "id": "col4Body",
-              "label": "Column 4 body",
+              "id": "fineprint",
+              "label": "Fineprint lines",
               "type": "textarea",
-              "rows": 3
+              "rows": 5
             },
             {
-              "id": "col4BodyHtml",
-              "label": "Column 4 body HTML",
-              "type": "html"
-            },
-            {
-              "id": "col4ImageUrl",
-              "label": "Column 4 photo URL",
+              "id": "fineprintDisclosureId",
+              "label": "Managed disclosure ID",
               "type": "text"
-            },
-            {
-              "id": "col4ImageAlt",
-              "label": "Column 4 photo alt text",
-              "type": "text"
-            },
-            {
-              "id": "col4ButtonLabel",
-              "label": "Column 4 button label",
-              "type": "text"
-            },
-            {
-              "id": "col4ButtonLinkJson",
-              "label": "Column 4 button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "col4ButtonStyle",
-              "label": "Column 4 button style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Super Grey"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "col4ButtonTone",
-              "label": "Column 4 button color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "col4WidthShare",
-              "label": "Column 4 width share",
-              "type": "number",
-              "min": 0.5,
-              "max": 2.5,
-              "step": 0.05
             }
           ]
         },
@@ -9713,62 +9302,286 @@
       ],
       "/calculators": [
         {
-          "id": "hero",
-          "name": "Hero",
-          "kind": "hero",
+          "id": "utility_header",
+          "name": "Utility Header",
+          "kind": "content",
           "mode": "dynamic",
           "settings": {
-            "animationPreset": "default",
-            "bgTone": "white",
-            "justify": "left",
-            "actionJustify": "left",
-            "heightMode": "default",
-            "lineGap": 0,
-            "lineHeight": 0.9,
-            "line1Text": "Calculators",
-            "line1ClassName": "",
-            "line1HighlightsJson": "",
-            "line2Text": "",
-            "line2ClassName": "",
-            "line2HighlightsJson": "",
-            "line3Text": "",
-            "line3ClassName": "",
-            "line3HighlightsJson": "",
-            "titleSizeRem": 4.5,
-            "titleLetterSpacingEm": -0.04
+            "title": "Calculators",
+            "titleClassName": "",
+            "titleHighlightsJson": "",
+            "headingLevel": "h1",
+            "subtitle": "",
+            "body": "",
+            "html": "",
+            "widget": "",
+            "fullBleed": false,
+            "spaceBeforeRem": 0,
+            "spaceAfterRem": 0,
+            "paddingTopRem": 0,
+            "paddingBottomRem": 0,
+            "contentMaxWidthPx": 1200,
+            "anchorId": "",
+            "sectionClassName": "calculators-native-page-head native-functional-page-head native-functional-page-head--utility",
+            "copyWrap": false,
+            "buttonLabel": "",
+            "buttonUrl": "",
+            "buttonPageRef": "",
+            "buttonOpenInNewWindow": false,
+            "buttonDocumentId": "",
+            "addressClassName": "",
+            "addressTitle": "",
+            "addressLines": "",
+            "tableHeadersJson": "",
+            "tableRowsJson": "",
+            "tableValueAlignment": "",
+            "tableChartId": "",
+            "fineprint": "",
+            "fineprintDisclosureId": "",
+            "justify": "left"
           },
           "editableFields": [
             {
-              "id": "animationPreset",
-              "label": "Hero animation preset",
-              "type": "select",
+              "id": "title",
+              "label": "Section title",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "titleClassName",
+              "label": "Section title color",
+              "type": "swatch",
               "options": [
                 {
-                  "value": "default",
-                  "label": "Default"
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
                 },
                 {
-                  "value": "none",
-                  "label": "None"
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
                 },
                 {
-                  "value": "loans-unblur",
-                  "label": "Unblur + slide"
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
                 }
               ]
             },
             {
-              "id": "justify",
-              "label": "Hero justify",
+              "id": "titleHighlightsJson",
+              "label": "Section title highlights",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "subtitle",
+              "label": "Section subtitle",
+              "type": "text"
+            },
+            {
+              "id": "body",
+              "label": "Section body",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "html",
+              "label": "Page Content HTML",
+              "type": "html"
+            },
+            {
+              "id": "widget",
+              "label": "Widget key",
+              "type": "text"
+            },
+            {
+              "id": "logoImage",
+              "label": "Logo image URL",
+              "type": "text"
+            },
+            {
+              "id": "logoAlt",
+              "label": "Logo alt text",
+              "type": "text"
+            },
+            {
+              "id": "logoText",
+              "label": "Logo text fallback",
+              "type": "text"
+            },
+            {
+              "id": "fullBleed",
+              "label": "Full bleed rail",
+              "type": "boolean"
+            },
+            {
+              "id": "spaceBeforeRem",
+              "label": "Space before (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "spaceAfterRem",
+              "label": "Space after (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingTopRem",
+              "label": "Padding top (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingBottomRem",
+              "label": "Padding bottom (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "contentMaxWidthPx",
+              "label": "Content max width (px)",
+              "type": "number",
+              "min": 560,
+              "max": 1440,
+              "step": 10
+            },
+            {
+              "id": "anchorId",
+              "label": "Anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "sectionClassName",
+              "label": "Section class name",
+              "type": "text"
+            },
+            {
+              "id": "copyWrap",
+              "label": "Wrap section copy",
+              "type": "boolean"
+            },
+            {
+              "id": "buttonLabel",
+              "label": "Button label",
+              "type": "text"
+            },
+            {
+              "id": "buttonLinkJson",
+              "label": "Button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "buttonDocumentId",
+              "label": "Button document ID",
+              "type": "text"
+            },
+            {
+              "id": "addressClassName",
+              "label": "Address block class name",
+              "type": "text"
+            },
+            {
+              "id": "addressTitle",
+              "label": "Address title",
+              "type": "text"
+            },
+            {
+              "id": "addressLines",
+              "label": "Address lines",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "tableHeadersJson",
+              "label": "Table headers JSON",
+              "type": "textarea",
+              "rows": 3
+            },
+            {
+              "id": "tableRowsJson",
+              "label": "Table rows JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "tableValueAlignment",
+              "label": "Table value alignment",
               "type": "select",
               "options": [
                 {
-                  "value": "center",
-                  "label": "Center"
+                  "value": "",
+                  "label": "Default"
                 },
                 {
                   "value": "left",
                   "label": "Left"
+                },
+                {
+                  "value": "center",
+                  "label": "Center"
                 },
                 {
                   "value": "right",
@@ -9777,525 +9590,35 @@
               ]
             },
             {
-              "id": "actionJustify",
-              "label": "Button row justify",
-              "type": "select",
-              "options": [
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "bgTone",
-              "label": "Hero background",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand Gradient",
-                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue Gradient",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Super Grey Gradient",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
-                }
-              ]
-            },
-            {
-              "id": "heightMode",
-              "label": "Hero height mode",
-              "type": "select",
-              "options": [
-                {
-                  "value": "default",
-                  "label": "Default"
-                },
-                {
-                  "value": "custom",
-                  "label": "Custom (% viewport)"
-                }
-              ]
-            },
-            {
-              "id": "heightSvh",
-              "label": "Hero height (% of viewport)",
-              "type": "number"
-            },
-            {
-              "id": "titleSizeRem",
-              "label": "Hero title size (rem)",
-              "type": "number"
-            },
-            {
-              "id": "titleLetterSpacingEm",
-              "label": "Hero title tracking (em)",
-              "type": "number"
-            },
-            {
-              "id": "lineHeight",
-              "label": "Hero text line height",
-              "type": "number"
-            },
-            {
-              "id": "lineGap",
-              "label": "Gap between hero lines",
-              "type": "number"
-            },
-            {
-              "id": "line1Text",
-              "label": "Line 1 text",
+              "id": "tableChartId",
+              "label": "Managed chart ID",
               "type": "text"
             },
             {
-              "id": "line1ClassName",
-              "label": "Line 1 full-line color (optional)",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
+              "id": "supportGroupsJson",
+              "label": "Support groups JSON",
+              "type": "textarea",
+              "rows": 8
             },
             {
-              "id": "line1HighlightsJson",
-              "label": "Line 1 highlighted phrases",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
+              "id": "supportGroupsExpanded",
+              "label": "Expand support items by default",
+              "type": "boolean"
             },
             {
-              "id": "line2Text",
-              "label": "Line 2 text",
-              "type": "text"
+              "id": "supportGroupsCollapsible",
+              "label": "Support items are collapsible",
+              "type": "boolean"
             },
             {
-              "id": "line2ClassName",
-              "label": "Line 2 full-line color (optional)",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
+              "id": "fineprint",
+              "label": "Fineprint lines",
+              "type": "textarea",
+              "rows": 5
             },
             {
-              "id": "line2HighlightsJson",
-              "label": "Line 2 highlighted phrases",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "line3Text",
-              "label": "Line 3 text",
-              "type": "text"
-            },
-            {
-              "id": "line3ClassName",
-              "label": "Line 3 full-line color (optional)",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "line3HighlightsJson",
-              "label": "Line 3 highlighted phrases",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "button1Label",
-              "label": "Button 1 label",
-              "type": "text"
-            },
-            {
-              "id": "button1LinkJson",
-              "label": "Button 1 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "button1Style",
-              "label": "Button 1 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "button1Tone",
-              "label": "Button 1 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "button1Action",
-              "label": "Button 1 action type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Link action"
-                },
-                {
-                  "value": "open_cta_form",
-                  "label": "Reveal CTA form"
-                }
-              ]
-            },
-            {
-              "id": "button1TargetAnchorId",
-              "label": "Button 1 target anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "button1TargetBlockId",
-              "label": "Button 1 target block ID",
-              "type": "text"
-            },
-            {
-              "id": "button2Label",
-              "label": "Button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "button2LinkJson",
-              "label": "Button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "button2Style",
-              "label": "Button 2 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "button2Tone",
-              "label": "Button 2 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "button2Action",
-              "label": "Button 2 action type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Link action"
-                },
-                {
-                  "value": "open_cta_form",
-                  "label": "Reveal CTA form"
-                }
-              ]
-            },
-            {
-              "id": "button2TargetAnchorId",
-              "label": "Button 2 target anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "button2TargetBlockId",
-              "label": "Button 2 target block ID",
+              "id": "fineprintDisclosureId",
+              "label": "Managed disclosure ID",
               "type": "text"
             }
           ]
@@ -49962,7 +49285,7 @@
             "card2TitleClassName": "",
             "card2TitleHighlightsJson": "",
             "card2ClassName": "",
-            "card2Body": "Term Certificates have fixed or variable interest rates over a predetermined amount of time, ranging from three months to ten years. Minimum investment $500.",
+            "card2Body": "Term Certificates are available with fixed or variable interest rates and terms, ranging from three months to ten years. Minimum investment $500.",
             "card2ListJson": "",
             "card2Fineprint": "",
             "card2LinksJson": "",
@@ -51470,8 +50793,8 @@
           "mode": "dynamic",
           "settings": {
             "featureId": "investments_growth_feature",
-            "body": "Log in to manage.",
-            "buttonLabel": "Go to my dashboard",
+            "body": "",
+            "buttonLabel": "Log in to manage",
             "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://secure.agfinancial.org/\"}"
           },
           "editableFields": [
@@ -51557,10 +50880,10 @@
           "kind": "cta_form",
           "mode": "dynamic",
           "settings": {
-            "title": "Talk with an investments consultant.",
+            "title": "Talk with an investment consultant.",
             "titleClassName": "",
             "titleHighlightsJson": "",
-            "bodyHtml": "<p>Share a few details and we’ll follow up with options that fit your goals.</p>",
+            "bodyHtml": "<p>Share a few details and we’ll get in touch with options for you.</p>",
             "subtitle": "",
             "bgTone": "white",
             "submitLabel": "Follow-up with me",
@@ -57411,60 +56734,286 @@
       ],
       "/services/loans/loan-consultants": [
         {
-          "id": "hero",
-          "name": "Hero",
-          "kind": "hero",
+          "id": "page_header",
+          "name": "Page Header",
+          "kind": "content",
           "mode": "dynamic",
           "settings": {
-            "animationPreset": "default",
-            "bgTone": "white",
-            "justify": "center",
-            "actionJustify": "center",
-            "heightMode": "default",
-            "lineGap": 0,
-            "lineHeight": 0.9,
-            "line1Text": "Loan Consultants",
-            "line1ClassName": "line1",
-            "line1HighlightsJson": "[{\"text\":\"Consultants\",\"className\":\"is-mango\"}]",
-            "line2Text": "",
-            "line2ClassName": "",
-            "line2HighlightsJson": "",
-            "line3Text": "",
-            "line3ClassName": "",
-            "line3HighlightsJson": ""
+            "title": "Loan Consultants",
+            "titleClassName": "",
+            "titleHighlightsJson": "",
+            "subtitle": "",
+            "body": "",
+            "html": "",
+            "widget": "",
+            "fullBleed": false,
+            "spaceBeforeRem": 0,
+            "spaceAfterRem": 0,
+            "paddingTopRem": 0,
+            "paddingBottomRem": 0,
+            "contentMaxWidthPx": 1200,
+            "anchorId": "",
+            "sectionClassName": "consultant-native-page-head native-functional-page-head native-functional-page-head--utility",
+            "copyWrap": true,
+            "justify": "left",
+            "headingLevel": "h1",
+            "buttonLabel": "",
+            "buttonUrl": "",
+            "buttonPageRef": "",
+            "buttonOpenInNewWindow": false,
+            "buttonDocumentId": "",
+            "addressClassName": "",
+            "addressTitle": "",
+            "addressLines": "",
+            "tableHeadersJson": "",
+            "tableRowsJson": "",
+            "tableValueAlignment": "",
+            "tableChartId": "",
+            "fineprint": "",
+            "fineprintDisclosureId": ""
           },
           "editableFields": [
             {
-              "id": "animationPreset",
-              "label": "Hero animation preset",
-              "type": "select",
+              "id": "title",
+              "label": "Section title",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "titleClassName",
+              "label": "Section title color",
+              "type": "swatch",
               "options": [
                 {
-                  "value": "default",
-                  "label": "Default"
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
                 },
                 {
-                  "value": "none",
-                  "label": "None"
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
                 },
                 {
-                  "value": "loans-unblur",
-                  "label": "Unblur + slide"
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
                 }
               ]
             },
             {
-              "id": "justify",
-              "label": "Hero justify",
+              "id": "titleHighlightsJson",
+              "label": "Section title highlights",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "subtitle",
+              "label": "Section subtitle",
+              "type": "text"
+            },
+            {
+              "id": "body",
+              "label": "Section body",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "html",
+              "label": "Page Content HTML",
+              "type": "html"
+            },
+            {
+              "id": "widget",
+              "label": "Widget key",
+              "type": "text"
+            },
+            {
+              "id": "logoImage",
+              "label": "Logo image URL",
+              "type": "text"
+            },
+            {
+              "id": "logoAlt",
+              "label": "Logo alt text",
+              "type": "text"
+            },
+            {
+              "id": "logoText",
+              "label": "Logo text fallback",
+              "type": "text"
+            },
+            {
+              "id": "fullBleed",
+              "label": "Full bleed rail",
+              "type": "boolean"
+            },
+            {
+              "id": "spaceBeforeRem",
+              "label": "Space before (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "spaceAfterRem",
+              "label": "Space after (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingTopRem",
+              "label": "Padding top (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingBottomRem",
+              "label": "Padding bottom (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "contentMaxWidthPx",
+              "label": "Content max width (px)",
+              "type": "number",
+              "min": 560,
+              "max": 1440,
+              "step": 10
+            },
+            {
+              "id": "anchorId",
+              "label": "Anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "sectionClassName",
+              "label": "Section class name",
+              "type": "text"
+            },
+            {
+              "id": "copyWrap",
+              "label": "Wrap section copy",
+              "type": "boolean"
+            },
+            {
+              "id": "buttonLabel",
+              "label": "Button label",
+              "type": "text"
+            },
+            {
+              "id": "buttonLinkJson",
+              "label": "Button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "buttonDocumentId",
+              "label": "Button document ID",
+              "type": "text"
+            },
+            {
+              "id": "addressClassName",
+              "label": "Address block class name",
+              "type": "text"
+            },
+            {
+              "id": "addressTitle",
+              "label": "Address title",
+              "type": "text"
+            },
+            {
+              "id": "addressLines",
+              "label": "Address lines",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "tableHeadersJson",
+              "label": "Table headers JSON",
+              "type": "textarea",
+              "rows": 3
+            },
+            {
+              "id": "tableRowsJson",
+              "label": "Table rows JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "tableValueAlignment",
+              "label": "Table value alignment",
               "type": "select",
               "options": [
                 {
-                  "value": "center",
-                  "label": "Center"
+                  "value": "",
+                  "label": "Default"
                 },
                 {
                   "value": "left",
                   "label": "Left"
+                },
+                {
+                  "value": "center",
+                  "label": "Center"
                 },
                 {
                   "value": "right",
@@ -57473,525 +57022,35 @@
               ]
             },
             {
-              "id": "actionJustify",
-              "label": "Button row justify",
-              "type": "select",
-              "options": [
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "bgTone",
-              "label": "Hero background",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand Gradient",
-                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue Gradient",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Super Grey Gradient",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
-                }
-              ]
-            },
-            {
-              "id": "heightMode",
-              "label": "Hero height mode",
-              "type": "select",
-              "options": [
-                {
-                  "value": "default",
-                  "label": "Default"
-                },
-                {
-                  "value": "custom",
-                  "label": "Custom (% viewport)"
-                }
-              ]
-            },
-            {
-              "id": "heightSvh",
-              "label": "Hero height (% of viewport)",
-              "type": "number"
-            },
-            {
-              "id": "titleSizeRem",
-              "label": "Hero title size (rem)",
-              "type": "number"
-            },
-            {
-              "id": "titleLetterSpacingEm",
-              "label": "Hero title tracking (em)",
-              "type": "number"
-            },
-            {
-              "id": "lineHeight",
-              "label": "Hero text line height",
-              "type": "number"
-            },
-            {
-              "id": "lineGap",
-              "label": "Gap between hero lines",
-              "type": "number"
-            },
-            {
-              "id": "line1Text",
-              "label": "Line 1 text",
+              "id": "tableChartId",
+              "label": "Managed chart ID",
               "type": "text"
             },
             {
-              "id": "line1ClassName",
-              "label": "Line 1 full-line color (optional)",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
+              "id": "supportGroupsJson",
+              "label": "Support groups JSON",
+              "type": "textarea",
+              "rows": 8
             },
             {
-              "id": "line1HighlightsJson",
-              "label": "Line 1 highlighted phrases",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
+              "id": "supportGroupsExpanded",
+              "label": "Expand support items by default",
+              "type": "boolean"
             },
             {
-              "id": "line2Text",
-              "label": "Line 2 text",
-              "type": "text"
+              "id": "supportGroupsCollapsible",
+              "label": "Support items are collapsible",
+              "type": "boolean"
             },
             {
-              "id": "line2ClassName",
-              "label": "Line 2 full-line color (optional)",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
+              "id": "fineprint",
+              "label": "Fineprint lines",
+              "type": "textarea",
+              "rows": 5
             },
             {
-              "id": "line2HighlightsJson",
-              "label": "Line 2 highlighted phrases",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "line3Text",
-              "label": "Line 3 text",
-              "type": "text"
-            },
-            {
-              "id": "line3ClassName",
-              "label": "Line 3 full-line color (optional)",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "line3HighlightsJson",
-              "label": "Line 3 highlighted phrases",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "button1Label",
-              "label": "Button 1 label",
-              "type": "text"
-            },
-            {
-              "id": "button1LinkJson",
-              "label": "Button 1 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "button1Style",
-              "label": "Button 1 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "button1Tone",
-              "label": "Button 1 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "button1Action",
-              "label": "Button 1 action type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Link action"
-                },
-                {
-                  "value": "open_cta_form",
-                  "label": "Reveal CTA form"
-                }
-              ]
-            },
-            {
-              "id": "button1TargetAnchorId",
-              "label": "Button 1 target anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "button1TargetBlockId",
-              "label": "Button 1 target block ID",
-              "type": "text"
-            },
-            {
-              "id": "button2Label",
-              "label": "Button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "button2LinkJson",
-              "label": "Button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "button2Style",
-              "label": "Button 2 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "button2Tone",
-              "label": "Button 2 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "button2Action",
-              "label": "Button 2 action type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Link action"
-                },
-                {
-                  "value": "open_cta_form",
-                  "label": "Reveal CTA form"
-                }
-              ]
-            },
-            {
-              "id": "button2TargetAnchorId",
-              "label": "Button 2 target anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "button2TargetBlockId",
-              "label": "Button 2 target block ID",
+              "id": "fineprintDisclosureId",
+              "label": "Managed disclosure ID",
               "type": "text"
             }
           ]
@@ -59512,340 +58571,6 @@
               "id": "card8Button2ClassName",
               "label": "Card 8 button 2 class name",
               "type": "text"
-            }
-          ]
-        },
-        {
-          "id": "request_form",
-          "name": "Request Form",
-          "kind": "request_form",
-          "mode": "dynamic",
-          "hidden": false,
-          "settings": {
-            "title": "Talk with a consultant.",
-            "titleClassName": "",
-            "titleHighlightsJson": "",
-            "subtitle": "",
-            "bodyHtml": "",
-            "body": "Share a few details below and our team will connect you with the right consultant.",
-            "bgTone": "blue",
-            "textTone": "white",
-            "spaceBeforeRem": 1.6,
-            "spaceAfterRem": 1.6,
-            "submitLabel": "Send message",
-            "successMessage": "Thanks. We received your request.",
-            "salesforceUrl": "",
-            "sectionClassName": "loans-consultant-native-contact",
-            "step1Title": "Step 1",
-            "step1Note": "",
-            "step1Alert": "",
-            "step2Title": "Step 2",
-            "step2Note": "",
-            "step2Alert": "",
-            "step3Title": "",
-            "step3Note": "",
-            "step3Alert": "",
-            "step4Title": "",
-            "step4Note": "",
-            "step4Alert": "",
-            "step5Title": "",
-            "step5Note": "",
-            "step5Alert": "",
-            "step1FieldsJson": "[{\"id\":\"firstName\",\"label\":\"First name*\",\"type\":\"text\",\"required\":true},{\"id\":\"lastName\",\"label\":\"Last name*\",\"type\":\"text\",\"required\":true},{\"id\":\"email\",\"label\":\"Email*\",\"type\":\"email\",\"required\":true},{\"id\":\"phone\",\"label\":\"Phone*\",\"type\":\"tel\",\"placeholder\":\"(555) 555-5555\",\"required\":true}]",
-            "step2FieldsJson": "[{\"id\":\"ministry\",\"label\":\"Ministry name\",\"type\":\"text\"},{\"id\":\"state\",\"label\":\"State\",\"type\":\"text\",\"placeholder\":\"Enter state\"},{\"id\":\"message\",\"label\":\"Message\",\"type\":\"textarea\",\"placeholder\":\"How can we help?\",\"rows\":4}]",
-            "step3FieldsJson": "[]",
-            "step4FieldsJson": "[]",
-            "step5FieldsJson": "[]",
-            "step1NextLabel": "Next",
-            "step2BackLabel": "Back",
-            "step4NextLabel": "",
-            "step4BackLabel": "",
-            "step5NextLabel": "",
-            "step5BackLabel": "",
-            "presetId": "consultant-contact"
-          },
-          "editableFields": [
-            {
-              "id": "title",
-              "label": "Form heading",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Form heading color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-mango) 0%, var(--ag-color-mango-dark) 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-melon) 0%, var(--ag-color-melon-dark) 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Form heading highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-mango) 0%, var(--ag-color-mango-dark) 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-melon) 0%, var(--ag-color-melon-dark) 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Lead copy",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "body",
-              "label": "Body text fallback",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "bgTone",
-              "label": "Background tone",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-sand) 0%, var(--ag-color-sand-dark) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Grey",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "textTone",
-              "label": "Text color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "dark",
-                  "label": "Dark",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "spaceBeforeRem",
-              "label": "Space before (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "spaceAfterRem",
-              "label": "Space after (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "submitLabel",
-              "label": "Submit button",
-              "type": "text"
-            },
-            {
-              "id": "successMessage",
-              "label": "Success message",
-              "type": "text"
-            },
-            {
-              "id": "salesforceUrl",
-              "label": "Salesforce endpoint (optional)",
-              "type": "text"
-            },
-            {
-              "id": "step1Title",
-              "label": "Step 1 title",
-              "type": "text"
-            },
-            {
-              "id": "step1Note",
-              "label": "Step 1 note",
-              "type": "text"
-            },
-            {
-              "id": "step1Alert",
-              "label": "Step 1 alert",
-              "type": "text"
-            },
-            {
-              "id": "step1FieldsJson",
-              "label": "Step 1 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "step2Title",
-              "label": "Step 2 title",
-              "type": "text"
-            },
-            {
-              "id": "step2Note",
-              "label": "Step 2 note",
-              "type": "text"
-            },
-            {
-              "id": "step2Alert",
-              "label": "Step 2 alert",
-              "type": "text"
-            },
-            {
-              "id": "step2FieldsJson",
-              "label": "Step 2 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "step3Title",
-              "label": "Step 3 title",
-              "type": "text"
-            },
-            {
-              "id": "step3Note",
-              "label": "Step 3 note",
-              "type": "text"
-            },
-            {
-              "id": "step3Alert",
-              "label": "Step 3 alert",
-              "type": "text"
-            },
-            {
-              "id": "step3FieldsJson",
-              "label": "Step 3 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "step4Title",
-              "label": "Step 4 title",
-              "type": "text"
-            },
-            {
-              "id": "step4Note",
-              "label": "Step 4 note",
-              "type": "text"
-            },
-            {
-              "id": "step4Alert",
-              "label": "Step 4 alert",
-              "type": "text"
-            },
-            {
-              "id": "step4FieldsJson",
-              "label": "Step 4 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "step5Title",
-              "label": "Step 5 title",
-              "type": "text"
-            },
-            {
-              "id": "step5Note",
-              "label": "Step 5 note",
-              "type": "text"
-            },
-            {
-              "id": "step5Alert",
-              "label": "Step 5 alert",
-              "type": "text"
-            },
-            {
-              "id": "step5FieldsJson",
-              "label": "Step 5 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
             }
           ]
         }
@@ -62360,452 +61085,6 @@
           "templateId": "card_grid"
         },
         {
-          "id": "wills_estate_billboard",
-          "name": "Billboard",
-          "kind": "billboard",
-          "mode": "dynamic",
-          "settings": {
-            "title": "Wills & Estate Services",
-            "titleClassName": "",
-            "titleHighlightsJson": "",
-            "subtitle": "",
-            "bodyHtml": "<p>Simple and straightforward, a will ensures a distribution end-of-life plan for your assets. This service is provided free of charge when you designate a 10% gift to an AG ministry of your choice.</p><p>*Form to be completed by you and requires review by your attorney. Then, if you prefer, we will be happy to act as trustee, so you can relax, knowing your estate is in good hands.</p>",
-            "body": "",
-            "bgTone": "sand",
-            "textTone": "dark",
-            "justify": "center",
-            "lineSpacing": 1.05,
-            "titleFontFamily": "heading",
-            "titleFontWeight": 800,
-            "titleSizeRem": 2,
-            "titleLetterSpacingEm": 0,
-            "buttonLabel": "Download packet",
-            "buttonStyle": "outline",
-            "buttonTone": "atlantean",
-            "buttonDocumentId": "form-planned-giving-will-planning-document",
-            "button2Label": "Online form*",
-            "button2Style": "blue",
-            "button2Tone": "atlantean",
-            "sectionClassName": "legacy-giving-wills",
-            "button2LinkJson": "{\"kind\":\"external\",\"openInNewWindow\":false,\"href\":\"https://sft.agfinancial.org/documents/Send.do\"}"
-          },
-          "editableFields": [
-            {
-              "id": "title",
-              "label": "Billboard title",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Billboard title color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Billboard title highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Subtitle",
-              "type": "text"
-            },
-            {
-              "id": "subtitleClassName",
-              "label": "Subtitle color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitleDisplay",
-              "label": "Subtitle style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "supporting",
-                  "label": "Supporting copy"
-                },
-                {
-                  "value": "headline",
-                  "label": "Headline"
-                }
-              ]
-            },
-            {
-              "id": "subtitleSizeRem",
-              "label": "Subtitle size (rem)",
-              "type": "number",
-              "min": 1,
-              "max": 8,
-              "step": 0.05
-            },
-            {
-              "id": "titleFontFamily",
-              "label": "Billboard title font",
-              "type": "select",
-              "options": [
-                {
-                  "value": "heading",
-                  "label": "Avenir"
-                },
-                {
-                  "value": "helv",
-                  "label": "Helvetica"
-                }
-              ]
-            },
-            {
-              "id": "titleFontWeight",
-              "label": "Billboard title font weight",
-              "type": "number",
-              "min": 400,
-              "max": 900,
-              "step": 100
-            },
-            {
-              "id": "titleSizeRem",
-              "label": "Billboard heading size (rem)",
-              "type": "number",
-              "min": 2.4,
-              "max": 8,
-              "step": 0.05
-            },
-            {
-              "id": "titleLetterSpacingEm",
-              "label": "Billboard heading letter spacing (em)",
-              "type": "number",
-              "min": -0.12,
-              "max": 0.04,
-              "step": 0.005
-            },
-            {
-              "id": "bodyHtml",
-              "label": "Billboard body HTML",
-              "type": "html"
-            },
-            {
-              "id": "body",
-              "label": "Fallback body text",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "bgTone",
-              "label": "Billboard background",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand Gradient",
-                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue Gradient",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Super Grey Gradient",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
-                }
-              ]
-            },
-            {
-              "id": "textTone",
-              "label": "Billboard text color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "dark",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5c5b5d 100%)"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "justify",
-              "label": "Billboard justify",
-              "type": "select",
-              "options": [
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "lineSpacing",
-              "label": "Billboard title line spacing",
-              "type": "number"
-            },
-            {
-              "id": "contentMaxWidthPx",
-              "label": "Billboard content max width (px)",
-              "type": "number",
-              "min": 560,
-              "max": 1440,
-              "step": 10
-            },
-            {
-              "id": "headlineMaxWidthPx",
-              "label": "Headline max width (px)",
-              "type": "number",
-              "min": 560,
-              "max": 1440,
-              "step": 10
-            },
-            {
-              "id": "buttonLabel",
-              "label": "Button 1 label",
-              "type": "text"
-            },
-            {
-              "id": "buttonLinkJson",
-              "label": "Button 1 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "buttonStyle",
-              "label": "Button 1 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "buttonTone",
-              "label": "Button 1 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "button2Label",
-              "label": "Button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "button2LinkJson",
-              "label": "Button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "button2Style",
-              "label": "Button 2 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "button2Tone",
-              "label": "Button 2 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            }
-          ]
-        },
-        {
           "id": "stewardship_story",
           "name": "Site Feature · Planned Giving stewardship story",
           "kind": "site_feature",
@@ -62893,6 +61172,479 @@
               "openInNewWindowLabel": "Open in new window"
             }
           ]
+        },
+        {
+          "id": "comparison_table",
+          "name": "Charitable Giving Comparison Matrix",
+          "kind": "content",
+          "mode": "dynamic",
+          "settings": {
+            "title": "",
+            "titleClassName": "",
+            "titleHighlightsJson": "[]",
+            "subtitle": "",
+            "body": "",
+            "html": "",
+            "widget": "giving-comparison-matrix",
+            "anchorId": "charitable-giving-plan-comparison",
+            "sectionClassName": "legacy-giving-comparison",
+            "fullBleed": false,
+            "tableHeadersJson": "",
+            "tableRowsJson": "",
+            "tableValueAlignment": "",
+            "fineprint": "",
+            "fineprintDisclosureId": ""
+          },
+          "editableFields": [
+            {
+              "id": "title",
+              "label": "Section title",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "titleClassName",
+              "label": "Section title color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "titleHighlightsJson",
+              "label": "Section title highlights",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "subtitle",
+              "label": "Section subtitle",
+              "type": "text"
+            },
+            {
+              "id": "body",
+              "label": "Section body",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "html",
+              "label": "Page Content HTML",
+              "type": "html"
+            },
+            {
+              "id": "widget",
+              "label": "Widget key",
+              "type": "text"
+            },
+            {
+              "id": "logoImage",
+              "label": "Logo image URL",
+              "type": "text"
+            },
+            {
+              "id": "logoAlt",
+              "label": "Logo alt text",
+              "type": "text"
+            },
+            {
+              "id": "logoText",
+              "label": "Logo text fallback",
+              "type": "text"
+            },
+            {
+              "id": "fullBleed",
+              "label": "Full bleed rail",
+              "type": "boolean"
+            },
+            {
+              "id": "spaceBeforeRem",
+              "label": "Space before (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "spaceAfterRem",
+              "label": "Space after (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingTopRem",
+              "label": "Padding top (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingBottomRem",
+              "label": "Padding bottom (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "contentMaxWidthPx",
+              "label": "Content max width (px)",
+              "type": "number",
+              "min": 560,
+              "max": 1440,
+              "step": 10
+            },
+            {
+              "id": "anchorId",
+              "label": "Anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "sectionClassName",
+              "label": "Section class name",
+              "type": "text"
+            },
+            {
+              "id": "copyWrap",
+              "label": "Wrap section copy",
+              "type": "boolean"
+            },
+            {
+              "id": "buttonLabel",
+              "label": "Button label",
+              "type": "text"
+            },
+            {
+              "id": "buttonLinkJson",
+              "label": "Button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "buttonDocumentId",
+              "label": "Button document ID",
+              "type": "text"
+            },
+            {
+              "id": "addressClassName",
+              "label": "Address block class name",
+              "type": "text"
+            },
+            {
+              "id": "addressTitle",
+              "label": "Address title",
+              "type": "text"
+            },
+            {
+              "id": "addressLines",
+              "label": "Address lines",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "tableHeadersJson",
+              "label": "Table headers JSON",
+              "type": "textarea",
+              "rows": 3
+            },
+            {
+              "id": "tableRowsJson",
+              "label": "Table rows JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "tableValueAlignment",
+              "label": "Table value alignment",
+              "type": "select",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default"
+                },
+                {
+                  "value": "left",
+                  "label": "Left"
+                },
+                {
+                  "value": "center",
+                  "label": "Center"
+                },
+                {
+                  "value": "right",
+                  "label": "Right"
+                }
+              ]
+            },
+            {
+              "id": "tableChartId",
+              "label": "Managed chart ID",
+              "type": "text"
+            },
+            {
+              "id": "supportGroupsJson",
+              "label": "Support groups JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "supportGroupsExpanded",
+              "label": "Expand support items by default",
+              "type": "boolean"
+            },
+            {
+              "id": "supportGroupsCollapsible",
+              "label": "Support items are collapsible",
+              "type": "boolean"
+            },
+            {
+              "id": "fineprint",
+              "label": "Fineprint lines",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "fineprintDisclosureId",
+              "label": "Managed disclosure ID",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "id": "cta_form",
+          "name": "CTA Form · We help every step of the way. Always.",
+          "kind": "cta_form",
+          "mode": "dynamic",
+          "settings": {
+            "title": "We help every step of the way. Always.",
+            "titleClassName": "is-atlantean",
+            "titleHighlightsJson": "[]",
+            "bodyHtml": "<p>Let’s map out the best strategy together.</p>",
+            "subtitle": "And we’re eager to help.",
+            "bgTone": "sand",
+            "submitLabel": "Follow-up with me",
+            "successMessage": "Thanks. We received your request.",
+            "salesforceUrl": "",
+            "sectionClassName": "legacy-giving-cta",
+            "fieldsJson": "[{\"id\":\"name\",\"label\":\"Name*\",\"type\":\"text\",\"required\":true},{\"id\":\"email\",\"label\":\"Email*\",\"type\":\"email\",\"required\":true},{\"id\":\"phone\",\"label\":\"Phone*\",\"type\":\"tel\",\"placeholder\":\"(555) 555-5555\",\"required\":true},{\"id\":\"contact_preference\",\"label\":\"Contact preference\",\"type\":\"select\",\"required\":false,\"placeholder\":\"Select one\",\"options\":[{\"value\":\"phone\",\"label\":\"Phone\"},{\"value\":\"email\",\"label\":\"Email\"}]},{\"id\":\"legacyproduct\",\"label\":\"Planned giving product of interest*\",\"type\":\"select\",\"required\":true,\"placeholder\":\"Select one\",\"options\":[{\"value\":\"donor-advised-fund\",\"label\":\"Donor Advised Fund\"},{\"value\":\"endowment\",\"label\":\"Endowment\"},{\"value\":\"charitable-gift-annuity\",\"label\":\"Charitable Gift Annuity\"},{\"value\":\"charitable-remainder-trust\",\"label\":\"Charitable Remainder Trust\"},{\"value\":\"charitable-lead-trust\",\"label\":\"Charitable Lead Trust\"},{\"value\":\"ministry-impact-fund\",\"label\":\"Ministry Impact Fund\"},{\"value\":\"not-sure\",\"label\":\"I'm not sure.\"}]},{\"id\":\"message\",\"label\":\"Message\",\"type\":\"textarea\",\"placeholder\":\"Tell us what you’d like to discuss\"}]",
+            "fineprint": "* fields required"
+          },
+          "editableFields": [
+            {
+              "id": "title",
+              "label": "CTA form heading",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "titleClassName",
+              "label": "CTA form heading color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "titleHighlightsJson",
+              "label": "CTA form heading highlights",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "bodyHtml",
+              "label": "Lead copy HTML",
+              "type": "html"
+            },
+            {
+              "id": "fieldsJson",
+              "label": "CTA field definitions JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "includeContactPreference",
+              "label": "Ask for contact preference",
+              "type": "boolean"
+            },
+            {
+              "id": "bgTone",
+              "label": "CTA background",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                },
+                {
+                  "value": "sand",
+                  "label": "Sand Gradient",
+                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
+                },
+                {
+                  "value": "blue",
+                  "label": "Blue Gradient",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "grey",
+                  "label": "Super Grey Gradient",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
+                }
+              ]
+            },
+            {
+              "id": "salesforceUrl",
+              "label": "Salesforce endpoint URL (placeholder)",
+              "type": "text"
+            },
+            {
+              "id": "submitLabel",
+              "label": "Submit button label",
+              "type": "text"
+            },
+            {
+              "id": "successMessage",
+              "label": "Success message",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "anchorId",
+              "label": "Anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "sectionClassName",
+              "label": "Section class name",
+              "type": "text"
+            }
+          ],
+          "templateLookupId": "cta_form",
+          "templateId": "cta_form"
         },
         {
           "id": "joy_billboard",
@@ -63335,479 +62087,6 @@
                   "swatch": "#ffffff"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "id": "cta_form",
-          "name": "CTA Form · We help every step of the way. Always.",
-          "kind": "cta_form",
-          "mode": "dynamic",
-          "settings": {
-            "title": "We help every step of the way. Always.",
-            "titleClassName": "is-atlantean",
-            "titleHighlightsJson": "[]",
-            "bodyHtml": "<p>Let’s map out the best strategy together.</p>",
-            "subtitle": "And we’re eager to help.",
-            "bgTone": "sand",
-            "submitLabel": "Follow-up with me",
-            "successMessage": "Thanks. We received your request.",
-            "salesforceUrl": "",
-            "sectionClassName": "legacy-giving-cta",
-            "fieldsJson": "[{\"id\":\"name\",\"label\":\"Name*\",\"type\":\"text\",\"required\":true},{\"id\":\"email\",\"label\":\"Email*\",\"type\":\"email\",\"required\":true},{\"id\":\"phone\",\"label\":\"Phone*\",\"type\":\"tel\",\"placeholder\":\"(555) 555-5555\",\"required\":true},{\"id\":\"contact_preference\",\"label\":\"Contact preference\",\"type\":\"select\",\"required\":false,\"placeholder\":\"Select one\",\"options\":[{\"value\":\"phone\",\"label\":\"Phone\"},{\"value\":\"email\",\"label\":\"Email\"}]},{\"id\":\"legacyproduct\",\"label\":\"Planned giving product of interest*\",\"type\":\"select\",\"required\":true,\"placeholder\":\"Select one\",\"options\":[{\"value\":\"donor-advised-fund\",\"label\":\"Donor Advised Fund\"},{\"value\":\"endowment\",\"label\":\"Endowment\"},{\"value\":\"charitable-gift-annuity\",\"label\":\"Charitable Gift Annuity\"},{\"value\":\"charitable-remainder-trust\",\"label\":\"Charitable Remainder Trust\"},{\"value\":\"charitable-lead-trust\",\"label\":\"Charitable Lead Trust\"},{\"value\":\"ministry-impact-fund\",\"label\":\"Ministry Impact Fund\"},{\"value\":\"not-sure\",\"label\":\"I'm not sure.\"}]},{\"id\":\"message\",\"label\":\"Message\",\"type\":\"textarea\",\"placeholder\":\"Tell us what you’d like to discuss\"}]",
-            "fineprint": "* fields required"
-          },
-          "editableFields": [
-            {
-              "id": "title",
-              "label": "CTA form heading",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "CTA form heading color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "CTA form heading highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "bodyHtml",
-              "label": "Lead copy HTML",
-              "type": "html"
-            },
-            {
-              "id": "fieldsJson",
-              "label": "CTA field definitions JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "includeContactPreference",
-              "label": "Ask for contact preference",
-              "type": "boolean"
-            },
-            {
-              "id": "bgTone",
-              "label": "CTA background",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand Gradient",
-                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue Gradient",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Super Grey Gradient",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
-                }
-              ]
-            },
-            {
-              "id": "salesforceUrl",
-              "label": "Salesforce endpoint URL (placeholder)",
-              "type": "text"
-            },
-            {
-              "id": "submitLabel",
-              "label": "Submit button label",
-              "type": "text"
-            },
-            {
-              "id": "successMessage",
-              "label": "Success message",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "anchorId",
-              "label": "Anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "sectionClassName",
-              "label": "Section class name",
-              "type": "text"
-            }
-          ],
-          "templateLookupId": "cta_form",
-          "templateId": "cta_form"
-        },
-        {
-          "id": "comparison_table",
-          "name": "Charitable Giving Comparison Matrix",
-          "kind": "content",
-          "mode": "dynamic",
-          "settings": {
-            "title": "",
-            "titleClassName": "",
-            "titleHighlightsJson": "[]",
-            "subtitle": "",
-            "body": "",
-            "html": "",
-            "widget": "giving-comparison-matrix",
-            "anchorId": "charitable-giving-plan-comparison",
-            "sectionClassName": "legacy-giving-comparison",
-            "fullBleed": false,
-            "tableHeadersJson": "",
-            "tableRowsJson": "",
-            "tableValueAlignment": "",
-            "fineprint": "",
-            "fineprintDisclosureId": ""
-          },
-          "editableFields": [
-            {
-              "id": "title",
-              "label": "Section title",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Section title color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Section title highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Section subtitle",
-              "type": "text"
-            },
-            {
-              "id": "body",
-              "label": "Section body",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "html",
-              "label": "Page Content HTML",
-              "type": "html"
-            },
-            {
-              "id": "widget",
-              "label": "Widget key",
-              "type": "text"
-            },
-            {
-              "id": "logoImage",
-              "label": "Logo image URL",
-              "type": "text"
-            },
-            {
-              "id": "logoAlt",
-              "label": "Logo alt text",
-              "type": "text"
-            },
-            {
-              "id": "logoText",
-              "label": "Logo text fallback",
-              "type": "text"
-            },
-            {
-              "id": "fullBleed",
-              "label": "Full bleed rail",
-              "type": "boolean"
-            },
-            {
-              "id": "spaceBeforeRem",
-              "label": "Space before (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "spaceAfterRem",
-              "label": "Space after (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "paddingTopRem",
-              "label": "Padding top (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "paddingBottomRem",
-              "label": "Padding bottom (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "contentMaxWidthPx",
-              "label": "Content max width (px)",
-              "type": "number",
-              "min": 560,
-              "max": 1440,
-              "step": 10
-            },
-            {
-              "id": "anchorId",
-              "label": "Anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "sectionClassName",
-              "label": "Section class name",
-              "type": "text"
-            },
-            {
-              "id": "copyWrap",
-              "label": "Wrap section copy",
-              "type": "boolean"
-            },
-            {
-              "id": "buttonLabel",
-              "label": "Button label",
-              "type": "text"
-            },
-            {
-              "id": "buttonLinkJson",
-              "label": "Button URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "buttonDocumentId",
-              "label": "Button document ID",
-              "type": "text"
-            },
-            {
-              "id": "addressClassName",
-              "label": "Address block class name",
-              "type": "text"
-            },
-            {
-              "id": "addressTitle",
-              "label": "Address title",
-              "type": "text"
-            },
-            {
-              "id": "addressLines",
-              "label": "Address lines",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "tableHeadersJson",
-              "label": "Table headers JSON",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "tableRowsJson",
-              "label": "Table rows JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "tableValueAlignment",
-              "label": "Table value alignment",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default"
-                },
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "tableChartId",
-              "label": "Managed chart ID",
-              "type": "text"
-            },
-            {
-              "id": "supportGroupsJson",
-              "label": "Support groups JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "supportGroupsExpanded",
-              "label": "Expand support items by default",
-              "type": "boolean"
-            },
-            {
-              "id": "supportGroupsCollapsible",
-              "label": "Support items are collapsible",
-              "type": "boolean"
-            },
-            {
-              "id": "fineprint",
-              "label": "Fineprint lines",
-              "type": "textarea",
-              "rows": 5
-            },
-            {
-              "id": "fineprintDisclosureId",
-              "label": "Managed disclosure ID",
-              "type": "text"
             }
           ]
         },
@@ -94917,7 +93196,7 @@
             "leftBody": "",
             "leftButtonLabel": "Explore IRAs",
             "rightTitle": "Deferred Compensation Plan (409A)",
-            "rightBodyHtml": "<p>Available exclusively to ministers, ministry employees, and Qualified Church-Controlled Organizations (QCCO), this 409A plan allows participants to defer compensation above and beyond standard retirement contribution limits.</p>",
+            "rightBodyHtml": "<p>Available exclusively to eligible ministers—and ministry employees—of participating churches and Qualified Church-Controlled Organizations (QCCO), this 409A plan allows participants to defer compensation beyond standard retirement contribution limits.</p>",
             "rightBody": "",
             "rightButtonLabel": "Explore 409A",
             "leftButtonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/retirement/iras\"}",
@@ -127214,60 +125493,286 @@
       ],
       "/services/retirement/retirement-consultants": [
         {
-          "id": "hero",
-          "name": "Hero",
-          "kind": "hero",
+          "id": "page_header",
+          "name": "Page Header",
+          "kind": "content",
           "mode": "dynamic",
           "settings": {
-            "animationPreset": "default",
-            "bgTone": "white",
-            "justify": "center",
-            "actionJustify": "center",
-            "heightMode": "default",
-            "lineGap": 0,
-            "lineHeight": 0.9,
-            "line1Text": "Retirement Consultants",
-            "line1ClassName": "line1",
-            "line1HighlightsJson": "[{\"text\":\"Consultants\",\"className\":\"is-mango\"}]",
-            "line2Text": "",
-            "line2ClassName": "",
-            "line2HighlightsJson": "",
-            "line3Text": "",
-            "line3ClassName": "",
-            "line3HighlightsJson": ""
+            "title": "Retirement Consultants",
+            "titleClassName": "",
+            "titleHighlightsJson": "",
+            "subtitle": "",
+            "body": "",
+            "html": "",
+            "widget": "",
+            "fullBleed": false,
+            "spaceBeforeRem": 0,
+            "spaceAfterRem": 0,
+            "paddingTopRem": 0,
+            "paddingBottomRem": 0,
+            "contentMaxWidthPx": 1200,
+            "anchorId": "",
+            "sectionClassName": "consultant-native-page-head native-functional-page-head native-functional-page-head--utility",
+            "copyWrap": true,
+            "justify": "left",
+            "headingLevel": "h1",
+            "buttonLabel": "",
+            "buttonUrl": "",
+            "buttonPageRef": "",
+            "buttonOpenInNewWindow": false,
+            "buttonDocumentId": "",
+            "addressClassName": "",
+            "addressTitle": "",
+            "addressLines": "",
+            "tableHeadersJson": "",
+            "tableRowsJson": "",
+            "tableValueAlignment": "",
+            "tableChartId": "",
+            "fineprint": "",
+            "fineprintDisclosureId": ""
           },
           "editableFields": [
             {
-              "id": "animationPreset",
-              "label": "Hero animation preset",
-              "type": "select",
+              "id": "title",
+              "label": "Section title",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "titleClassName",
+              "label": "Section title color",
+              "type": "swatch",
               "options": [
                 {
-                  "value": "default",
-                  "label": "Default"
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
                 },
                 {
-                  "value": "none",
-                  "label": "None"
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
                 },
                 {
-                  "value": "loans-unblur",
-                  "label": "Unblur + slide"
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
                 }
               ]
             },
             {
-              "id": "justify",
-              "label": "Hero justify",
+              "id": "titleHighlightsJson",
+              "label": "Section title highlights",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "subtitle",
+              "label": "Section subtitle",
+              "type": "text"
+            },
+            {
+              "id": "body",
+              "label": "Section body",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "html",
+              "label": "Page Content HTML",
+              "type": "html"
+            },
+            {
+              "id": "widget",
+              "label": "Widget key",
+              "type": "text"
+            },
+            {
+              "id": "logoImage",
+              "label": "Logo image URL",
+              "type": "text"
+            },
+            {
+              "id": "logoAlt",
+              "label": "Logo alt text",
+              "type": "text"
+            },
+            {
+              "id": "logoText",
+              "label": "Logo text fallback",
+              "type": "text"
+            },
+            {
+              "id": "fullBleed",
+              "label": "Full bleed rail",
+              "type": "boolean"
+            },
+            {
+              "id": "spaceBeforeRem",
+              "label": "Space before (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "spaceAfterRem",
+              "label": "Space after (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingTopRem",
+              "label": "Padding top (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingBottomRem",
+              "label": "Padding bottom (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "contentMaxWidthPx",
+              "label": "Content max width (px)",
+              "type": "number",
+              "min": 560,
+              "max": 1440,
+              "step": 10
+            },
+            {
+              "id": "anchorId",
+              "label": "Anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "sectionClassName",
+              "label": "Section class name",
+              "type": "text"
+            },
+            {
+              "id": "copyWrap",
+              "label": "Wrap section copy",
+              "type": "boolean"
+            },
+            {
+              "id": "buttonLabel",
+              "label": "Button label",
+              "type": "text"
+            },
+            {
+              "id": "buttonLinkJson",
+              "label": "Button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "buttonDocumentId",
+              "label": "Button document ID",
+              "type": "text"
+            },
+            {
+              "id": "addressClassName",
+              "label": "Address block class name",
+              "type": "text"
+            },
+            {
+              "id": "addressTitle",
+              "label": "Address title",
+              "type": "text"
+            },
+            {
+              "id": "addressLines",
+              "label": "Address lines",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "tableHeadersJson",
+              "label": "Table headers JSON",
+              "type": "textarea",
+              "rows": 3
+            },
+            {
+              "id": "tableRowsJson",
+              "label": "Table rows JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "tableValueAlignment",
+              "label": "Table value alignment",
               "type": "select",
               "options": [
                 {
-                  "value": "center",
-                  "label": "Center"
+                  "value": "",
+                  "label": "Default"
                 },
                 {
                   "value": "left",
                   "label": "Left"
+                },
+                {
+                  "value": "center",
+                  "label": "Center"
                 },
                 {
                   "value": "right",
@@ -127276,525 +125781,35 @@
               ]
             },
             {
-              "id": "actionJustify",
-              "label": "Button row justify",
-              "type": "select",
-              "options": [
-                {
-                  "value": "left",
-                  "label": "Left"
-                },
-                {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
-                }
-              ]
-            },
-            {
-              "id": "bgTone",
-              "label": "Hero background",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand Gradient",
-                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue Gradient",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Super Grey Gradient",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
-                }
-              ]
-            },
-            {
-              "id": "heightMode",
-              "label": "Hero height mode",
-              "type": "select",
-              "options": [
-                {
-                  "value": "default",
-                  "label": "Default"
-                },
-                {
-                  "value": "custom",
-                  "label": "Custom (% viewport)"
-                }
-              ]
-            },
-            {
-              "id": "heightSvh",
-              "label": "Hero height (% of viewport)",
-              "type": "number"
-            },
-            {
-              "id": "titleSizeRem",
-              "label": "Hero title size (rem)",
-              "type": "number"
-            },
-            {
-              "id": "titleLetterSpacingEm",
-              "label": "Hero title tracking (em)",
-              "type": "number"
-            },
-            {
-              "id": "lineHeight",
-              "label": "Hero text line height",
-              "type": "number"
-            },
-            {
-              "id": "lineGap",
-              "label": "Gap between hero lines",
-              "type": "number"
-            },
-            {
-              "id": "line1Text",
-              "label": "Line 1 text",
+              "id": "tableChartId",
+              "label": "Managed chart ID",
               "type": "text"
             },
             {
-              "id": "line1ClassName",
-              "label": "Line 1 full-line color (optional)",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
+              "id": "supportGroupsJson",
+              "label": "Support groups JSON",
+              "type": "textarea",
+              "rows": 8
             },
             {
-              "id": "line1HighlightsJson",
-              "label": "Line 1 highlighted phrases",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
+              "id": "supportGroupsExpanded",
+              "label": "Expand support items by default",
+              "type": "boolean"
             },
             {
-              "id": "line2Text",
-              "label": "Line 2 text",
-              "type": "text"
+              "id": "supportGroupsCollapsible",
+              "label": "Support items are collapsible",
+              "type": "boolean"
             },
             {
-              "id": "line2ClassName",
-              "label": "Line 2 full-line color (optional)",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
+              "id": "fineprint",
+              "label": "Fineprint lines",
+              "type": "textarea",
+              "rows": 5
             },
             {
-              "id": "line2HighlightsJson",
-              "label": "Line 2 highlighted phrases",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "line3Text",
-              "label": "Line 3 text",
-              "type": "text"
-            },
-            {
-              "id": "line3ClassName",
-              "label": "Line 3 full-line color (optional)",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "line3HighlightsJson",
-              "label": "Line 3 highlighted phrases",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
-                }
-              ]
-            },
-            {
-              "id": "button1Label",
-              "label": "Button 1 label",
-              "type": "text"
-            },
-            {
-              "id": "button1LinkJson",
-              "label": "Button 1 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "button1Style",
-              "label": "Button 1 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "button1Tone",
-              "label": "Button 1 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "button1Action",
-              "label": "Button 1 action type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Link action"
-                },
-                {
-                  "value": "open_cta_form",
-                  "label": "Reveal CTA form"
-                }
-              ]
-            },
-            {
-              "id": "button1TargetAnchorId",
-              "label": "Button 1 target anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "button1TargetBlockId",
-              "label": "Button 1 target block ID",
-              "type": "text"
-            },
-            {
-              "id": "button2Label",
-              "label": "Button 2 label",
-              "type": "text"
-            },
-            {
-              "id": "button2LinkJson",
-              "label": "Button 2 URL",
-              "type": "route_link",
-              "openInNewWindowLabel": "Open in new window"
-            },
-            {
-              "id": "button2Style",
-              "label": "Button 2 style",
-              "type": "select",
-              "options": [
-                {
-                  "value": "blue",
-                  "label": "Blue"
-                },
-                {
-                  "value": "dark",
-                  "label": "Dark"
-                },
-                {
-                  "value": "outline",
-                  "label": "Outline"
-                }
-              ]
-            },
-            {
-              "id": "button2Tone",
-              "label": "Button 2 color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "atlantean",
-                  "label": "Blue",
-                  "swatch": "#00adbb"
-                },
-                {
-                  "value": "super-grey",
-                  "label": "Super Grey",
-                  "swatch": "#414042"
-                },
-                {
-                  "value": "mango",
-                  "label": "Mango",
-                  "swatch": "#f6b146"
-                },
-                {
-                  "value": "melon",
-                  "label": "Melon",
-                  "swatch": "#f48f7a"
-                },
-                {
-                  "value": "sandstone",
-                  "label": "Sandstone",
-                  "swatch": "#c4beb6"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "#ffffff"
-                }
-              ]
-            },
-            {
-              "id": "button2Action",
-              "label": "Button 2 action type",
-              "type": "select",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Link action"
-                },
-                {
-                  "value": "open_cta_form",
-                  "label": "Reveal CTA form"
-                }
-              ]
-            },
-            {
-              "id": "button2TargetAnchorId",
-              "label": "Button 2 target anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "button2TargetBlockId",
-              "label": "Button 2 target block ID",
+              "id": "fineprintDisclosureId",
+              "label": "Managed disclosure ID",
               "type": "text"
             }
           ]
@@ -129315,351 +127330,6 @@
               "id": "card8Button2ClassName",
               "label": "Card 8 button 2 class name",
               "type": "text"
-            }
-          ]
-        },
-        {
-          "id": "request_form",
-          "name": "Request Form",
-          "kind": "request_form",
-          "mode": "dynamic",
-          "hidden": false,
-          "settings": {
-            "title": "Talk with a consultant.",
-            "titleClassName": "",
-            "titleHighlightsJson": "",
-            "subtitle": "",
-            "bodyHtml": "",
-            "body": "Share a few details below and our team will connect you with the right consultant.",
-            "bgTone": "blue",
-            "textTone": "white",
-            "spaceBeforeRem": 1.6,
-            "spaceAfterRem": 1.6,
-            "submitLabel": "Send message",
-            "successMessage": "Thanks. We received your request.",
-            "salesforceUrl": "",
-            "sectionClassName": "loans-consultant-native-contact",
-            "step1Title": "Step 1",
-            "step1Note": "",
-            "step1Alert": "",
-            "step1NextLabel": "Next",
-            "step2Title": "Step 2",
-            "step2Note": "",
-            "step2Alert": "",
-            "step2BackLabel": "Back",
-            "step3Title": "",
-            "step3Note": "",
-            "step3Alert": "",
-            "step3BackLabel": "",
-            "step4Title": "",
-            "step4Note": "",
-            "step4Alert": "",
-            "step4BackLabel": "",
-            "step4NextLabel": "",
-            "step5Title": "",
-            "step5Note": "",
-            "step5Alert": "",
-            "step5BackLabel": "",
-            "step5NextLabel": "",
-            "step1FieldsJson": "[{\"id\":\"firstName\",\"label\":\"First name*\",\"type\":\"text\",\"required\":true},{\"id\":\"lastName\",\"label\":\"Last name*\",\"type\":\"text\",\"required\":true},{\"id\":\"email\",\"label\":\"Email*\",\"type\":\"email\",\"required\":true},{\"id\":\"phone\",\"label\":\"Phone*\",\"type\":\"tel\",\"placeholder\":\"(555) 555-5555\",\"required\":true}]",
-            "step2FieldsJson": "[{\"id\":\"churchOrMinistry\",\"label\":\"Church or ministry\",\"type\":\"text\"},{\"id\":\"state\",\"label\":\"State\",\"type\":\"text\",\"placeholder\":\"Enter state\"},{\"id\":\"message\",\"label\":\"Message\",\"type\":\"textarea\",\"rows\":4,\"placeholder\":\"How can we help?\"}]",
-            "step3FieldsJson": "[]",
-            "step4FieldsJson": "[]",
-            "step5FieldsJson": "[]",
-            "presetId": "consultant-contact"
-          },
-          "editableFields": [
-            {
-              "id": "title",
-              "label": "Form heading",
-              "type": "textarea",
-              "rows": 2
-            },
-            {
-              "id": "titleClassName",
-              "label": "Form heading color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "",
-                  "label": "Default",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                },
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-mango) 0%, var(--ag-color-mango-dark) 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-melon) 0%, var(--ag-color-melon-dark) 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "titleHighlightsJson",
-              "label": "Form heading highlights",
-              "type": "highlight_list",
-              "options": [
-                {
-                  "value": "is-atlantean",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "is-mango",
-                  "label": "Mango",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-mango) 0%, var(--ag-color-mango-dark) 100%)"
-                },
-                {
-                  "value": "is-melon",
-                  "label": "Melon",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-melon) 0%, var(--ag-color-melon-dark) 100%)"
-                },
-                {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%)"
-                },
-                {
-                  "value": "is-super-grey",
-                  "label": "Super Grey",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)"
-                },
-                {
-                  "value": "is-white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "subtitle",
-              "label": "Lead copy",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "body",
-              "label": "Body text fallback",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "bgTone",
-              "label": "Background tone",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                },
-                {
-                  "value": "sand",
-                  "label": "Sand",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-sand) 0%, var(--ag-color-sand-dark) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                },
-                {
-                  "value": "grey",
-                  "label": "Grey",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "textTone",
-              "label": "Text color",
-              "type": "swatch",
-              "options": [
-                {
-                  "value": "dark",
-                  "label": "Dark",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)"
-                },
-                {
-                  "value": "white",
-                  "label": "White",
-                  "swatch": "linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)"
-                },
-                {
-                  "value": "blue",
-                  "label": "Blue",
-                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
-                }
-              ]
-            },
-            {
-              "id": "anchorId",
-              "label": "Anchor ID",
-              "type": "text"
-            },
-            {
-              "id": "sectionClassName",
-              "label": "Section class name",
-              "type": "text"
-            },
-            {
-              "id": "spaceBeforeRem",
-              "label": "Space before (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "spaceAfterRem",
-              "label": "Space after (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
-            },
-            {
-              "id": "submitLabel",
-              "label": "Submit button",
-              "type": "text"
-            },
-            {
-              "id": "successMessage",
-              "label": "Success message",
-              "type": "text"
-            },
-            {
-              "id": "salesforceUrl",
-              "label": "Salesforce endpoint (optional)",
-              "type": "text"
-            },
-            {
-              "id": "step1Title",
-              "label": "Step 1 title",
-              "type": "text"
-            },
-            {
-              "id": "step1Note",
-              "label": "Step 1 note",
-              "type": "text"
-            },
-            {
-              "id": "step1Alert",
-              "label": "Step 1 alert",
-              "type": "text"
-            },
-            {
-              "id": "step1FieldsJson",
-              "label": "Step 1 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "step2Title",
-              "label": "Step 2 title",
-              "type": "text"
-            },
-            {
-              "id": "step2Note",
-              "label": "Step 2 note",
-              "type": "text"
-            },
-            {
-              "id": "step2Alert",
-              "label": "Step 2 alert",
-              "type": "text"
-            },
-            {
-              "id": "step2FieldsJson",
-              "label": "Step 2 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "step3Title",
-              "label": "Step 3 title",
-              "type": "text"
-            },
-            {
-              "id": "step3Note",
-              "label": "Step 3 note",
-              "type": "text"
-            },
-            {
-              "id": "step3Alert",
-              "label": "Step 3 alert",
-              "type": "text"
-            },
-            {
-              "id": "step3FieldsJson",
-              "label": "Step 3 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "step4Title",
-              "label": "Step 4 title",
-              "type": "text"
-            },
-            {
-              "id": "step4Note",
-              "label": "Step 4 note",
-              "type": "text"
-            },
-            {
-              "id": "step4Alert",
-              "label": "Step 4 alert",
-              "type": "text"
-            },
-            {
-              "id": "step4FieldsJson",
-              "label": "Step 4 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "step5Title",
-              "label": "Step 5 title",
-              "type": "text"
-            },
-            {
-              "id": "step5Note",
-              "label": "Step 5 note",
-              "type": "text"
-            },
-            {
-              "id": "step5Alert",
-              "label": "Step 5 alert",
-              "type": "text"
-            },
-            {
-              "id": "step5FieldsJson",
-              "label": "Step 5 fields (JSON array)",
-              "type": "textarea",
-              "rows": 4
             }
           ]
         }
@@ -151428,24 +149098,6 @@
             "lockedBy": null,
             "lockedAt": 0
           },
-          "hero": {
-            "draftedBy": {
-              "userId": "dev-1775156049310-yf9neh3d",
-              "displayName": "Ok, ok.",
-              "initials": "OO",
-              "accentColor": "#00adbb"
-            },
-            "draftedAt": 1784575765704,
-            "savedBy": {
-              "userId": "dev-1775156049310-yf9neh3d",
-              "displayName": "Ok, ok.",
-              "initials": "OO",
-              "accentColor": "#00adbb"
-            },
-            "savedAt": 1784575765704,
-            "lockedBy": null,
-            "lockedAt": 0
-          },
           "calculator_cards": {
             "draftedBy": {
               "userId": "dev-1775156049310-yf9neh3d",
@@ -151508,20 +149160,6 @@
             "id": "1784575765704-5y80e5",
             "action": "block-draft-saved",
             "blockId": "calculator_cards",
-            "details": "",
-            "actor": {
-              "userId": "dev-1775156049310-yf9neh3d",
-              "displayName": "Ok, ok.",
-              "initials": "OO",
-              "accentColor": "#00adbb"
-            },
-            "previousActor": null,
-            "createdAt": 1784575765704
-          },
-          {
-            "id": "1784575765704-2n7m1l",
-            "action": "block-draft-saved",
-            "blockId": "hero",
             "details": "",
             "actor": {
               "userId": "dev-1775156049310-yf9neh3d",
@@ -158480,13 +156118,8 @@
             "lockedAt": 0
           },
           "building_shot": {
-            "draftedBy": {
-              "userId": "dev-1775156049310-yf9neh3d",
-              "displayName": "Ok, ok.",
-              "initials": "OO",
-              "accentColor": "#00adbb"
-            },
-            "draftedAt": 1784575765701,
+            "draftedBy": null,
+            "draftedAt": null,
             "savedBy": {
               "userId": "dev-1775156049310-yf9neh3d",
               "displayName": "Ok, ok.",
@@ -158495,7 +156128,7 @@
             },
             "savedAt": 1784575765701,
             "lockedBy": null,
-            "lockedAt": 0
+            "lockedAt": null
           },
           "strategy": {
             "draftedBy": {

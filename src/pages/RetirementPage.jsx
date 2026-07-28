@@ -274,7 +274,7 @@ const DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS = {
     openInNewWindow: false,
   }),
   rightTitle: 'Deferred Compensation Plan (409A)',
-  rightBodyHtml: '<p>Available exclusively to ministers, ministry employees, and Qualified Church-Controlled Organizations (QCCO), this 409A plan allows participants to defer compensation above and beyond standard retirement contribution limits.</p>',
+  rightBodyHtml: '<p>Available exclusively to eligible ministers—and ministry employees—of participating churches and Qualified Church-Controlled Organizations (QCCO), this 409A plan allows participants to defer compensation beyond standard retirement contribution limits.</p>',
   rightBody: '',
   rightButtonLabel: 'Learn more',
   rightButtonLinkJson: serializeLinkValue({

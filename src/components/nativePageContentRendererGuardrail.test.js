@@ -164,6 +164,43 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('letter-spacing: -0.035em;');
   });
 
+  it('keeps the About building photo as a true viewport-width image block', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const aboutBuildingCss = readCssBetween(
+      cssSource,
+      '.about-native-building-shot,',
+      '.native-info-page--about .about-native-strategy {',
+    );
+
+    expect(cssSource).toContain('.native-info-viewport-bleed {');
+    expect(aboutBuildingCss).toContain('inline-size: 100vw;');
+    expect(aboutBuildingCss).toContain('width: 100vw;');
+    expect(aboutBuildingCss).toContain('min-inline-size: 100vw;');
+    expect(aboutBuildingCss).toContain('min-width: 100vw;');
+    expect(aboutBuildingCss).toContain('margin-left: calc(50% - 50vw);');
+    expect(aboutBuildingCss).toContain('margin-right: calc(50% - 50vw);');
+    expect(aboutBuildingCss).toContain('.about-native-building-shot > .native-info-viewport-bleed,');
+    expect(aboutBuildingCss).toContain('.native-info-page--about .about-native-building-shot > :is(.ag-panel-rail-wide, .ag-panel-rail) {');
+    expect(aboutBuildingCss).toContain('inline-size: 100vw !important;');
+    expect(aboutBuildingCss).toContain('width: 100vw !important;');
+    expect(aboutBuildingCss).toContain('max-inline-size: 100vw !important;');
+    expect(aboutBuildingCss).toContain('max-width: 100vw !important;');
+    expect(aboutBuildingCss).toContain('.about-native-building-shot .native-info-section-logo,');
+    expect(aboutBuildingCss).toContain('.native-info-page--about .about-native-building-shot .native-info-section-logo {');
+    expect(aboutBuildingCss).toContain('inline-size: 100vw;');
+    expect(aboutBuildingCss).toContain('width: 100vw;');
+    expect(aboutBuildingCss).toContain('height: clamp(430px, 53vw, 760px);');
+    expect(aboutBuildingCss).toContain('scale(1.14);');
+    expect(aboutBuildingCss).not.toContain('width: min(1280px');
+    expect(aboutBuildingCss).not.toContain('calc(100% - (var(--ag-panel-gutter)');
+
+    const nativePageSource = readSource('./NativeContentPage.jsx');
+    expect(nativePageSource).toContain('function buildAboutBuildingPhotoSection(block, pathname)');
+    expect(nativePageSource).toContain("railClassName: 'native-info-viewport-bleed'");
+    expect(nativePageSource).toContain("section?.querySelector('.native-info-section-logo, .native-columns-media')");
+    expect(nativePageSource).toContain('const maxOffset = 52;');
+  });
+
   it('keeps life quote product cards on the active dynamic-grid card shell instead of shared title wells', () => {
     const cssSource = readSource('../styles/service-native.css');
 
@@ -205,7 +242,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('font-size: clamp(1.12rem, 1.75vw, 1.28rem);');
   });
 
-  it('keeps the 403(b) strategy heading close to the strategy cards on active sibling block classes', () => {
+  it('keeps the 403(b) strategy heading and action buttons separated from the strategy cards', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.service-native-section.dynamic-billboard.retirement-403b-native-strategy-heading {');
@@ -215,6 +252,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('margin-bottom: clamp(0.55rem, 1.25vw, 0.9rem);');
     expect(cssSource).toContain('.service-native-section.native-dynamic-page-content.retirement-403b-native-strategy-feature,');
     expect(cssSource).toContain('.service-native-section.test-dynamic-page-content.retirement-403b-native-strategy-feature {');
+    expect(cssSource).toContain('padding-top: clamp(1.35rem, 3vw, 2.25rem);');
     expect(cssSource).toContain('padding-bottom: clamp(0.7rem, 1.5vw, 1.05rem);');
     expect(cssSource).not.toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-heading');
   });

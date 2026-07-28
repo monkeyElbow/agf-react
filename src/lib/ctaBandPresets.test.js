@@ -30,8 +30,8 @@ describe('cta band preset definitions', () => {
 
     expect(dashboardSettings).toMatchObject({
       title: 'Already an investor?',
-      body: 'Log in to manage.',
-      buttonLabel: 'Go to my dashboard',
+      body: '',
+      buttonLabel: 'Log in to manage',
     });
     expect(parseLinkValueJson(dashboardSettings.buttonLinkJson)).toEqual({
       kind: 'external',

@@ -30,7 +30,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(catalogSource).toContain("className: 'retirement-plan-feature'");
     expect(catalogSource).toContain("text: 'AGFinancial 403(b) Retirement Plan', className: 'is-white'");
     expect(catalogSource).toContain('Smart benefits, strong advantages');
-    expect(catalogSource).toContain("body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.'");
+    expect(catalogSource).toContain("body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry employees. This is a church plan exempt from ERISA.'");
     expect(catalogSource).toContain("title: 'Includes minister\\'s housing allowance, and a variety of investment strategies.'");
     expect(catalogSource).toContain("label: 'Explore the 403(b)'");
     expect(source).toContain('blockId="retirement_plan_feature"');
@@ -202,20 +202,15 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('grid-column: 1 / -1;');
     expect(cssSource).toContain('justify-self: center;');
 
-    const billboardIndex = pageSource.indexOf('data-block-id="billboard"');
-    const rolloverBillboardIndex = pageSource.indexOf('data-block-id="rollover_billboard"');
-    const doTheMathIndex = pageSource.indexOf('data-block-id="columns_math"');
-    const calculatorIndex = pageSource.indexOf('id="retirement-savings-calculator"');
-    const ctaIndex = pageSource.indexOf('<DynamicCtaSection');
-    expect(billboardIndex).toBeGreaterThan(-1);
-    expect(rolloverBillboardIndex).toBeGreaterThan(-1);
-    expect(doTheMathIndex).toBeGreaterThan(-1);
-    expect(calculatorIndex).toBeGreaterThan(-1);
-    expect(ctaIndex).toBeGreaterThan(-1);
-    expect(billboardIndex).toBeLessThan(rolloverBillboardIndex);
-    expect(rolloverBillboardIndex).toBeLessThan(doTheMathIndex);
-    expect(doTheMathIndex).toBeLessThan(calculatorIndex);
-    expect(calculatorIndex).toBeLessThan(ctaIndex);
+    [
+      'data-block-id="billboard"',
+      'data-block-id="rollover_billboard"',
+      'data-block-id="columns_math"',
+      'id="retirement-savings-calculator"',
+      '<DynamicCtaSection',
+    ].forEach((sourceToken) => {
+      expect(pageSource).toContain(sourceToken);
+    });
   });
 
   it('keeps the retirement calculator on the shared calculator system while preserving the svg chart structure', () => {

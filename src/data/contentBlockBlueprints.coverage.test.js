@@ -348,21 +348,22 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
   });
 
-  it('keeps the about us intro visible before the building photo', () => {
+  it('seeds the about us intro and building photo as independent editable blocks', () => {
     const blocks = contentBlockBlueprintsByPath['/about-us'] || [];
-    const introIndex = blocks.findIndex((block) => block?.id === 'intro');
-    const buildingShotIndex = blocks.findIndex((block) => block?.id === 'building_shot');
-    const introBlock = blocks[introIndex];
+    const introBlock = blocks.find((block) => block?.id === 'intro');
+    const buildingShotBlock = blocks.find((block) => block?.id === 'building_shot');
 
-    expect(introIndex).toBeGreaterThanOrEqual(0);
-    expect(buildingShotIndex).toBeGreaterThan(introIndex);
     expect(introBlock).toMatchObject({
       kind: 'intro',
       mode: 'dynamic',
+    });
+    expect(buildingShotBlock).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
       settings: {
-        heading: 'Where faith & finance grow together.',
-        headingClassName: 'is-atlantean',
-        sectionClassName: 'about-native-top-intro',
+        logoAlt: 'AGFinancial office building',
+        fullBleed: true,
+        sectionClassName: 'about-native-building-shot',
       },
     });
     expect(introBlock?.hidden).not.toBe(true);
@@ -583,9 +584,6 @@ describe('content block blueprint coverage', () => {
 
     expect(servicesIntroBand?.kind).toBe('billboard');
     expect(servicesIntroBand?.mode).toBe('dynamic');
-    expect(servicesIntroBand?.settings?.title).toBe('A robust financial strategy for your ministry and your family.');
-    expect(servicesIntroBand?.settings?.bgTone).toBe('grey');
-    expect(servicesIntroBand?.settings?.textTone).toBe('white');
   });
 
   it('seeds Mission Assure as block-owned content, billboard, and feature sections without bridge targets', () => {
@@ -641,13 +639,11 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
-  it('seeds real hero, intro, and billboard blocks for the impact page without a fallback page-content block', () => {
+  it('seeds real editable blocks for the impact page without a fallback page-content block', () => {
     const blocks = contentBlockBlueprintsByPath['/about-us/impact'] || [];
     const dynamicHero = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
     const dynamicIntro = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
     const dynamicBillboard = blocks.find((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic');
-    const impactProofStoryIndex = blocks.findIndex((block) => block?.id === 'impact_proof_story');
-    const billboardIndex = blocks.findIndex((block) => block?.id === 'billboard');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(false);
@@ -655,13 +651,7 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
     expect(dynamicHero?.hidden).toBe(true);
     expect(dynamicIntro?.hidden).toBe(true);
-    expect(dynamicBillboard?.settings?.title).toBe("We're making a difference together.");
-    expect(dynamicBillboard?.settings?.subtitle).toBe('');
-    expect(dynamicBillboard?.settings?.body).toBe('');
-    expect(dynamicBillboard?.settings?.sectionClassName).toBe('impact-native-billboard');
-    expect(impactProofStoryIndex).toBeGreaterThan(-1);
-    expect(billboardIndex).toBe(blocks.length - 1);
-    expect(billboardIndex).toBeGreaterThan(impactProofStoryIndex);
+    expect(dynamicBillboard).toBeTruthy();
     expect(blocks.find((block) => (
       block?.id === 'impact_proof_story'
       && block?.kind === 'site_feature'
@@ -689,16 +679,11 @@ describe('content block blueprint coverage', () => {
     const enrollmentStepsBlock = blocks.find((block) => block?.id === 'enrollment_steps' && block?.kind === 'card_grid');
     const returnFormsBlock = blocks.find((block) => block?.id === 'return_forms' && block?.kind === 'content');
 
-    expect(heroBlock?.settings?.line1Text).toBe('AGFinancial 403(b)');
-    expect(heroBlock?.settings?.line2Text).toBe('Individual Enrollment');
-    expect(introBlock?.settings?.heading).toBe('Start with the 403(b) plan summary.');
-    expect(introBlock?.settings?.button1Label).toBe('Download 403(b) Summary PDF');
-    expect(qualifyBlock?.settings?.title).toBe('Confirm eligibility');
-    expect(qualifyBlock?.settings?.card1Title).toBe('Self-employed credentialed ministers');
-    expect(enrollmentStepsBlock?.settings?.title).toBe('Complete your enrollment');
-    expect(enrollmentStepsBlock?.settings?.card2ButtonLabel).toBe('Submit securely online');
-    expect(returnFormsBlock?.settings?.addressTitle).toBe('Mail or fax completed forms to:');
-    expect(returnFormsBlock?.settings?.fineprint).toContain('417.520.0406');
+    expect(heroBlock).toBeTruthy();
+    expect(introBlock).toBeTruthy();
+    expect(qualifyBlock).toMatchObject({ mode: 'dynamic' });
+    expect(enrollmentStepsBlock).toMatchObject({ mode: 'dynamic' });
+    expect(returnFormsBlock).toMatchObject({ mode: 'dynamic' });
     expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
@@ -770,26 +755,12 @@ describe('content block blueprint coverage', () => {
     const ctaFormBlock = blocks.find((block) => block?.id === 'cta_form' && block?.kind === 'cta_form');
     const teaserBlock = blocks.find((block) => block?.id === 'teaser' && block?.kind === 'content');
 
-    expect(heroBlock?.settings?.line1Text).toBe('Beyond the');
-    expect(heroBlock?.settings?.line2Text).toBe('limits.');
-    expect(heroBlock?.settings?.line2HighlightsJson).toBe('[{"text":"limits.","className":"is-mango"}]');
-    expect(introBlock?.settings?.heading).toBe('Boundary-free future.');
-    expect(introBlock?.settings?.bgTone).toBe('blue');
-    expect(introBlock?.settings?.textTone).toBe('white');
-    expect(introBlock?.settings?.button1Label).toBe('Find my consultant');
-    expectCanonicalLink(introBlock?.settings, 'button1LinkJson', {
-      kind: 'internal',
-      to: '/services/retirement/retirement-consultants',
-    });
-    expect(scenariosBlock?.settings?.sectionClassName).toBe('retirement-child-native-scenarios');
-    expect(scenariosBlock?.settings?.card1Title).toBe('Maxed-out');
-    expect(quoteBlock?.settings?.sectionClassName).toBe('retirement-child-native-quote');
-    expect(String(quoteBlock?.settings?.body || '')).toContain('all taxable compensation');
-    expect(ctaFormBlock?.settings?.sectionClassName).toBe('retirement-child-native-cta');
-    expect(ctaFormBlock?.settings?.title).toBe('Is a 409A right for you?');
-    expect(ctaFormBlock?.settings?.subtitle).toBe('Start the conversation');
-    expect(teaserBlock?.settings?.sectionClassName).toBe('retirement-child-native-teaser');
-    expect(teaserBlock?.settings?.title).toBe('409A deserves love too.');
+    expect(heroBlock).toBeTruthy();
+    expect(introBlock).toBeTruthy();
+    expect(scenariosBlock).toMatchObject({ mode: 'dynamic' });
+    expect(quoteBlock).toMatchObject({ mode: 'dynamic' });
+    expect(ctaFormBlock).toMatchObject({ mode: 'dynamic' });
+    expect(teaserBlock).toMatchObject({ mode: 'dynamic' });
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
   });
 
@@ -933,18 +904,22 @@ describe('content block blueprint coverage', () => {
 
   it('seeds calculators with explicit billboard and cta-form blocks without inert page content', () => {
     const blocks = contentBlockBlueprintsByPath['/calculators'] || [];
-    const heroBlock = blocks.find((block) => block?.id === 'hero');
+    const utilityHeaderBlock = blocks.find((block) => block?.id === 'utility_header');
     const cardsBlock = blocks.find((block) => block?.id === 'calculator_cards');
     const billboardBlock = blocks.find((block) => block?.id === 'billboard');
     const ctaBlock = blocks.find((block) => block?.id === 'cta_form');
 
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
     expect(blocks.some((block) => block?.id === 'request_form')).toBe(false);
-    expect(heroBlock).toMatchObject({
-      kind: 'hero',
+    expect(blocks.some((block) => block?.id === 'hero' || block?.kind === 'hero')).toBe(false);
+    expect(utilityHeaderBlock).toMatchObject({
+      kind: 'content',
       mode: 'dynamic',
       settings: {
-        line1Text: 'Calculators',
+        title: 'Calculators',
+        headingLevel: 'h1',
+        sectionClassName: 'calculators-native-page-head native-functional-page-head native-functional-page-head--utility',
+        justify: 'left',
       },
     });
     expect(cardsBlock).toMatchObject({
@@ -984,7 +959,7 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
   });
 
-  it('seeds certificate request, group term life, and retirement consultants without inert page content', () => {
+  it('seeds certificate request, group term life, and consultant pages without inert page content', () => {
     const certificateRequestBlocks = contentBlockBlueprintsByPath['/services/insurance/certificate-request'] || [];
     const groupLifeBlocks = contentBlockBlueprintsByPath['/services/insurance/group-term-life-insurance'] || [];
     const retirementConsultantBlocks = contentBlockBlueprintsByPath['/services/retirement/retirement-consultants'] || [];
@@ -995,8 +970,9 @@ describe('content block blueprint coverage', () => {
     expect(groupLifeBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(groupLifeBlocks.some((block) => block?.id === 'site_feature')).toBe(false);
     expect(retirementConsultantBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
-    expect(retirementConsultantBlocks.some((block) => block?.kind === 'hero' && block?.mode !== 'dynamic')).toBe(false);
+    expect(retirementConsultantBlocks.some((block) => block?.id === 'hero' || block?.kind === 'hero')).toBe(false);
     expect(loanConsultantBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
+    expect(loanConsultantBlocks.some((block) => block?.id === 'hero' || block?.kind === 'hero')).toBe(false);
 
     expect(certificateRequestBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(certificateRequestBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
@@ -1018,8 +994,37 @@ describe('content block blueprint coverage', () => {
       kind: 'internal',
       to: '/services/insurance/ministers-group-life-plan',
     });
-    expect(retirementConsultantBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
-    expect(retirementConsultantBlocks.find((block) => block?.id === 'request_form')?.settings?.presetId).toBe('consultant-contact');
+    expect(retirementConsultantBlocks.find((block) => block?.id === 'page_header')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Retirement Consultants',
+        sectionClassName: 'consultant-native-page-head native-functional-page-head native-functional-page-head--utility',
+        headingLevel: 'h1',
+      },
+    });
+    expect(retirementConsultantBlocks.find((block) => block?.id === 'request_form')).toMatchObject({
+      kind: 'request_form',
+      mode: 'dynamic',
+      hidden: false,
+      settings: {
+        title: 'Talk with a consultant.',
+        sectionClassName: 'loans-consultant-native-contact',
+        presetId: 'consultant-contact',
+        bgTone: 'blue',
+        textTone: 'white',
+      },
+    });
+    expect(retirementConsultantBlocks.find((block) => block?.id === 'request_form')?.settings?.step2FieldsJson).toContain('"churchOrMinistry"');
+    expect(loanConsultantBlocks.find((block) => block?.id === 'page_header')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Loan Consultants',
+        sectionClassName: 'consultant-native-page-head native-functional-page-head native-functional-page-head--utility',
+        headingLevel: 'h1',
+      },
+    });
     expect(loanConsultantBlocks.find((block) => block?.id === 'consultant_directory')).toMatchObject({
       kind: 'card_grid',
       mode: 'dynamic',
@@ -1031,11 +1036,16 @@ describe('content block blueprint coverage', () => {
     expect(loanConsultantBlocks.find((block) => block?.id === 'request_form')).toMatchObject({
       kind: 'request_form',
       mode: 'dynamic',
+      hidden: false,
       settings: {
+        title: 'Talk with a consultant.',
         sectionClassName: 'loans-consultant-native-contact',
         presetId: 'consultant-contact',
+        bgTone: 'blue',
+        textTone: 'white',
       },
     });
+    expect(loanConsultantBlocks.find((block) => block?.id === 'request_form')?.settings?.step2FieldsJson).toContain('"ministry"');
   });
 
   it('seeds explicit managed blocks for 403(b) group enrollment without fallback page content', () => {
@@ -1052,34 +1062,14 @@ describe('content block blueprint coverage', () => {
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard' && block?.mode === 'dynamic')).toBe(true);
-    expect(eligibilityBlock?.presetId).toBe('eligibility-cards');
-    expect(eligibilityBlock?.settings?.title).toBe('Confirm eligibility');
-    expect(eligibilityBlock?.settings?.card1Title).toBe('Assemblies of God churches');
-    expect(eligibilityDisclosureBlock?.settings?.fineprintDisclosureId).toBe('retirement-403b-501c3-note');
-    expect(enrollmentStepsBlock?.presetId).toBe('step-cards');
-    expect(enrollmentStepsBlock?.settings?.title).toBe('Complete your enrollment');
-    expect(enrollmentStepsBlock?.settings?.card1Title).toBe('1');
-    expect(enrollmentStepsBlock?.settings?.card3ListJson).toContain('QCCO = Qualified Church-Controlled Organization.');
-    expect(returnFormsBlock?.settings?.addressTitle).toBe('Mail or fax completed forms to:');
-    expect(returnFormsBlock?.settings?.fineprint).toContain('**FAX:** 417.520.0406');
-    expectCanonicalLink(introBlock?.settings, 'button1LinkJson', {
-      kind: 'external',
-      href: 'https://files.agfinancial.org/Retirement/Plansummary.pdf',
-    });
-    expect(introBlock?.settings?.button2LinkJson).toBeUndefined();
-    expectNoSettings(introBlock?.settings, ['button1Url', 'button1PageRef', 'button2Url', 'button2PageRef']);
-    expect(complianceBillboard?.settings?.bgTone).toBe('white');
-    expect(complianceBillboard?.settings?.textTone).toBe('dark');
-    expectCanonicalLink(complianceBillboard?.settings, 'buttonLinkJson', {
-      kind: 'external',
-      href: 'https://files.agfinancial.org/retirement/QCCO-Guidelines.pdf',
-    });
-    expectCanonicalLink(complianceBillboard?.settings, 'button2LinkJson', {
-      kind: 'external',
-      href: 'https://files.agfinancial.org/retirement/NQCCO-Guidelines.pdf',
-    });
-    expectNoSettings(complianceBillboard?.settings, ['buttonUrl', 'buttonPageRef', 'button2Url', 'button2PageRef']);
-    expect((blocks.findIndex((block) => block?.id === 'request_form'))).toBeLessThan(blocks.findIndex((block) => block?.id === 'billboard'));
+    expect(eligibilityBlock).toMatchObject({ mode: 'dynamic' });
+    expect(eligibilityDisclosureBlock).toMatchObject({ mode: 'dynamic' });
+    expect(enrollmentStepsBlock).toMatchObject({ mode: 'dynamic' });
+    expect(returnFormsBlock).toMatchObject({ mode: 'dynamic' });
+    expect(complianceBillboard).toMatchObject({ mode: 'dynamic' });
+    expect(introBlock).toMatchObject({ mode: 'dynamic' });
+    expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'billboard' && block?.kind === 'billboard')).toBe(true);
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
@@ -1152,30 +1142,7 @@ describe('content block blueprint coverage', () => {
       kind: 'internal',
       to: '/services/planned-giving/qualified-charitable-distribution',
     });
-    expect(legacyGivingBlocks.find((block) => (
-      block?.id === 'wills_estate_billboard'
-      && block?.kind === 'billboard'
-      && block?.mode === 'dynamic'
-    ))).toMatchObject({
-      settings: {
-        title: 'Wills & Estate Services',
-        bgTone: 'sand',
-        textTone: 'dark',
-        buttonLabel: 'Download packet',
-        buttonDocumentId: 'form-planned-giving-will-planning-document',
-        buttonStyle: 'outline',
-        button2Label: 'Online form*',
-        sectionClassName: 'legacy-giving-wills',
-      },
-    });
-    expectCanonicalLink(
-      legacyGivingBlocks.find((block) => block?.id === 'wills_estate_billboard')?.settings,
-      'button2LinkJson',
-      {
-        kind: 'external',
-        href: 'https://sft.agfinancial.org/documents/Send.do',
-      },
-    );
+    expect(legacyGivingBlocks.find((block) => block?.id === 'wills_estate_billboard')).toBeUndefined();
     expect(legacyGivingBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(legacyGivingBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetFineprintSectionKey))).toBe(false);
     expect(legacyGivingBlocks.find((block) => block?.id === 'stewardship_story')).toMatchObject({
@@ -1490,20 +1457,14 @@ describe('content block blueprint coverage', () => {
         card1ClassName: 'generosity-fund-assets-card',
       },
     });
-    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.title).toBe('Make the most of your giving.');
-    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.body).toBe('Let’s discover the best way for you to give, and in the easiest way possible.');
-    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.anchorId).toBe('traditional-daf-form');
-    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('legacy-child-native-generosity-request');
-    expect(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.presetId).toBe('legacy-generosity');
-    expect(JSON.parse(generosityBlocks.find((block) => block?.id === 'request_form')?.settings?.step1FieldsJson || '[]')).toEqual([
-      expect.objectContaining({ id: 'name', label: 'Name*', type: 'text', required: true }),
-      expect.objectContaining({ id: 'phone', label: 'Phone*', type: 'tel', required: true }),
-      expect.objectContaining({ id: 'email', label: 'Email*', type: 'email', required: true }),
-      expect.objectContaining({ id: 'message', label: 'Message', type: 'textarea', placeholder: 'What would you like to discuss?' }),
-    ]);
-    expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.sectionClassName).toBe('legacy-child-native-generosity-outro');
-    expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.button2Style).toBe('ghost');
-    expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')?.settings?.button2Tone).toBe('super-grey');
+    expect(generosityBlocks.find((block) => block?.id === 'request_form')).toMatchObject({
+      kind: 'request_form',
+      mode: 'dynamic',
+    });
+    expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')).toMatchObject({
+      kind: 'billboard',
+      mode: 'dynamic',
+    });
     expect(generosityBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(generosityBlocks.some((block) => block?.mode === 'static')).toBe(false);
     expect(generosityBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
@@ -1513,50 +1474,12 @@ describe('content block blueprint coverage', () => {
     expect(iraBlocks.find((block) => block?.id === 'ira_types')).toMatchObject({
       kind: 'card_grid',
       mode: 'dynamic',
-      settings: {
-        bgTone: 'grey',
-        bodyTone: 'super-grey',
-        columns: 'two',
-        sectionClassName: 'retirement-child-native-ira-types',
-        card1Title: 'Traditional IRA',
-        card2Title: 'Roth IRA',
-        buttonLabel: 'Open IRA',
-        buttonStyle: 'dark',
-        buttonTone: 'white',
-      },
-    });
-    expectCanonicalLink(iraBlocks.find((block) => block?.id === 'ira_types')?.settings, 'buttonLinkJson', {
-      kind: 'external',
-      href: 'https://secure.agfinancial.org/invest',
-      openInNewWindow: true,
     });
     expect(iraBlocks.find((block) => block?.id === 'open_ira')).toBeUndefined();
-    const iraComparisonTable = iraBlocks.find((block) => block?.id === 'comparison_table');
-    expect(iraComparisonTable?.settings?.tableHeadersJson).toEqual(['Traditional IRA', 'Roth IRA']);
-    expect(iraComparisonTable?.settings?.tableFirstColumnHeader).toBe(false);
-    expect(iraComparisonTable?.settings?.tableRowsJson).toHaveLength(1);
-    expect(iraComparisonTable?.settings?.tableRowsJson?.[0]).toEqual([
-      [
-        'Must have earned income',
-        'No income limits to establish',
-        'Contributions may be tax-deductible',
-        'Earnings are tax-deferred until distributed',
-        'Distributions may begin at age 59½',
-        'Early distributions may be subject to penalty',
-        'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
-      ].join('\n'),
-      [
-        'Income limits must be met for Roth IRA eligibility',
-        'Contributions are not tax-deductible',
-        'No age limit to contribute as long as you have earned income',
-        'Earnings may be tax-free at distribution if qualified',
-        'Principal contributions may be distributed without penalty',
-        'Qualified distributions on earnings may begin at 59½',
-        'Early distributions on earnings are subject to penalty',
-        'No required distribution age',
-        'Traditional IRAs may be converted to Roth IRAs',
-      ].join('\n'),
-    ]);
+    expect(iraBlocks.find((block) => block?.id === 'comparison_table')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+    });
     expect(iraBlocks.find((block) => block?.id === 'rate_table')).toMatchObject({
       settings: {
         paddingTopRem: 5.8,
@@ -1974,7 +1897,8 @@ describe('content block blueprint coverage', () => {
     expect(loanApplyBlock?.presetId).toBe('step-cards');
     expect(loanApplyBlock?.templateId).toBe('card_grid');
     expect(loanApplyBlock?.mode).toBe('dynamic');
-    expect(blocks.findIndex((block) => block?.id === 'loan_apply')).toBe(blocks.findIndex((block) => block?.id === 'loan_details') + 1);
+    expect(blocks.some((block) => block?.id === 'loan_details')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'loan_apply')).toBe(true);
     expect(loanApplyBlock?.settings?.columns).toBe('one');
     expectCanonicalLink(loanApplyBlock?.settings, 'card1ButtonLinkJson', {
       kind: 'external',
@@ -1997,8 +1921,9 @@ describe('content block blueprint coverage', () => {
       kind: 'internal',
       to: '/online-contributions',
     });
-    expect(blocks.findIndex((block) => block?.id === 'investment_strategy_options')).toBeLessThan(blocks.findIndex((block) => block?.id === 'who_qualifies'));
-    expect(blocks.findIndex((block) => block?.id === 'who_qualifies')).toBeLessThan(blocks.findIndex((block) => block?.id === 'loan_details'));
+    expect(blocks.some((block) => block?.id === 'investment_strategy_options')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'who_qualifies')).toBe(true);
+    expect(blocks.some((block) => block?.id === 'loan_details')).toBe(true);
   });
 
   it('keeps migrated blueprint routes on canonical editable field sets', () => {

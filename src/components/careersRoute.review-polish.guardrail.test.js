@@ -44,8 +44,9 @@ describe('careers route review polish guardrail', () => {
 
     expect(contentSource).toContain("copyClassName: 'careers-native-ready-copy fade-up fade-up-force-observe'");
     expect(contentSource).toContain("headingClassName: 'careers-native-top-intro-heading fade-up fade-up-force-observe fade-up-no-shift'");
-    expect(contentSource).toContain("emphasisClassName: 'careers-native-top-intro-emphasis'");
-    expect(contentSource).not.toContain("emphasisClassName: 'careers-native-top-intro-emphasis fade-up");
+    expect(contentSource).toContain("emphasisClassName: 'careers-native-top-intro-emphasis fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up'");
+    expect(cssSource).toContain('.native-info-page--careers .service-native-intro.careers-native-top-intro .native-info-intro-emphasis.billboard-scroll-reveal-scale-up {');
+    expect(cssSource).toContain('.native-info-page--careers .service-native-intro.careers-native-top-intro .native-info-intro-emphasis.billboard-scroll-reveal-scale-up[data-fade-state="pending"] {');
     expect(contentSource).toContain("title: 'A few reasons you’ll love working here…'");
     expect(contentSource).toContain("titleClassName: 'loans-native-display-heading careers-native-benefits-title careers-native-benefits-title--roll fade-up fade-up-force-observe'");
     expect(cssSource).toContain('--careers-benefits-ready-progress: 0;');
@@ -57,6 +58,7 @@ describe('careers route review polish guardrail', () => {
     expect(cssSource).toContain('color: #ffffff;');
     expect(pageSource).toContain("const benefitsHeading = benefitsSection?.querySelector('h2');");
     expect(pageSource).toContain("const readyHeading = readySection?.querySelector('h2');");
+    expect(pageSource).toContain('const endY = readyHeadingMid - (viewportHeight * 0.72);');
     expect(pageSource).toContain("root.style.setProperty('--careers-benefits-ready-progress', progress.toFixed(3));");
   });
 

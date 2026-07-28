@@ -1638,13 +1638,28 @@ export function ColumnsBlock({
     : block;
   const dynamicPresetClassToken = isDynamicColumnsBlock ? resolvePresetFamilyClassToken(dynamicBlock) : '';
   const shouldAnimateColumnsItems = dynamicPresetClassToken === 'value-cards';
+  const dynamicColumnsRevealKey = isDynamicColumnsBlock
+    ? [
+      dynamicBlock?.columns,
+      ...[1, 2, 3, 4].flatMap((slot) => [
+        dynamicBlock?.[`col${slot}Enabled`],
+        dynamicBlock?.[`col${slot}Type`],
+        dynamicBlock?.[`col${slot}Title`],
+        dynamicBlock?.[`col${slot}Body`],
+        dynamicBlock?.[`col${slot}BodyHtml`],
+        dynamicBlock?.[`col${slot}ImageUrl`],
+        dynamicBlock?.[`col${slot}ButtonLabel`],
+        dynamicBlock?.[`col${slot}ButtonUrl`],
+      ]),
+    ].map((value) => String(value ?? '')).join('|')
+    : '';
 
   useEffect(() => {
     if (!shouldAnimateColumnsItems) {
       return undefined;
     }
     return setupInvestmentsGrowthRevealMotion(sectionRef.current, { includeBackgroundMotion: false });
-  }, [shouldAnimateColumnsItems, dynamicBlock?.id]);
+  }, [shouldAnimateColumnsItems, dynamicBlock?.id, dynamicColumnsRevealKey]);
 
   if (isDynamicColumnsBlock) {
     const title = String(dynamicBlock.title || '').trim();

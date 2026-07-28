@@ -38,6 +38,10 @@ export const SITE_FEATURE_HEADLINE_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'buttonUrl',
   'buttonPageRef',
 ]);
+export const SITE_FEATURE_HEADLINE_ONLY_EDITABLE_FIELD_IDS = Object.freeze([
+  'featureId',
+  'headline',
+]);
 export const SITE_FEATURE_BODY_ONLY_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'featureId',
   'body',
@@ -284,7 +288,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
           title: 'Smart benefits, strong advantages',
           tone: 'mango',
           surfaceTone: 'blue',
-          body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry or organization employees. This is a plan exempt from ERISA.',
+          body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry employees. This is a church plan exempt from ERISA.',
         }),
         Object.freeze({
           kind: 'investor',
@@ -304,7 +308,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
     label: 'Planned Giving stewardship story',
     description: 'Premium Planned Giving story sequence with a static-safe fallback and a restrained desktop-only held stage.',
     runtimeKey: 'legacy_giving_stewardship_story',
-    allowedEditableFieldIds: SITE_FEATURE_HEADLINE_ACTION_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: SITE_FEATURE_HEADLINE_ONLY_EDITABLE_FIELD_IDS,
     routeAllowlist: Object.freeze(['/services/planned-giving']),
     previewLabel: 'Planned Giving stewardship story',
     previewThumbnail: '',
@@ -318,11 +322,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
         'Leave a legacy for family and ministry.',
         'Smart stewardship for today and tomorrow.',
       ]),
-      action: {
-        label: 'Compare charitable giving ideas',
-        to: '#charitable-giving-plan-comparison',
-        openInNewWindow: false,
-      },
+      action: null,
     }),
   }),
   Object.freeze({
@@ -421,10 +421,10 @@ const SITE_FEATURE_CATALOG = Object.freeze([
     internalOnly: false,
     buildRuntime: () => ({
       title: 'Build financial health.',
-      body: 'Log in to manage.',
+      body: '',
       billboardBodyHtml: '',
       action: {
-        label: 'Go to my dashboard',
+        label: 'Log in to manage',
         href: 'https://secure.agfinancial.org/',
         openInNewWindow: true,
       },

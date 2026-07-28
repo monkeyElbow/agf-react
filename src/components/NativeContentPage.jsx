@@ -990,6 +990,7 @@ function buildDynamicPageContentSection(block, pathname) {
     title,
     titleClassName,
     titleHighlights,
+    headingLevel,
     subtitle,
     body,
     html,
@@ -1036,6 +1037,7 @@ function buildDynamicPageContentSection(block, pathname) {
     title,
     titleClassName: titleClassName || undefined,
     titleHighlights: Array.isArray(titleHighlights) ? titleHighlights : [],
+    headingLevel: headingLevel === 'h1' ? 'h1' : 'h2',
     subtitle: subtitle || undefined,
     body: Array.isArray(body) ? body : [],
     copyWrap: Boolean(copyWrap),
@@ -1061,6 +1063,49 @@ function buildDynamicPageContentSection(block, pathname) {
       '--dyn-content-padding-top': `${paddingTopRem}rem`,
       '--dyn-content-padding-bottom': `${paddingBottomRem}rem`,
       '--dyn-content-max-width': `${contentMaxWidthPx}px`,
+    },
+  };
+}
+
+function buildAboutBuildingPhotoSection(block, pathname) {
+  if (pathname !== '/about-us' || String(block?.id || '').trim() !== 'building_shot') {
+    return null;
+  }
+
+  const settings = block?.settings && typeof block.settings === 'object' ? block.settings : {};
+  const logoImage = String(settings.logoImage || settings.col1ImageUrl || '/src/assets/about-intro.jpg').trim();
+  const logoAlt = String(settings.logoAlt || settings.col1ImageAlt || 'AGFinancial office building').trim();
+
+  return {
+    id: `${pathname}-page-content-building_shot`,
+    blockId: 'building_shot',
+    hideTitle: true,
+    className: 'native-dynamic-page-content about-native-building-shot',
+    fullBleed: true,
+    railClassName: 'native-info-viewport-bleed',
+    logoImage,
+    logoAlt,
+    copyWrap: false,
+    body: [],
+    actions: [],
+    sectionStyle: {
+      '--dyn-content-margin-top': '0rem',
+      '--dyn-content-margin-bottom': '0rem',
+      '--dyn-content-padding-top': '0rem',
+      '--dyn-content-padding-bottom': '0rem',
+      '--dyn-content-max-width': '1440px',
+      '--about-building-parallax-y': '0px',
+      width: '100vw',
+      maxWidth: 'none',
+      marginLeft: 'calc(50% - 50vw)',
+      marginRight: 'calc(50% - 50vw)',
+      overflow: 'clip',
+    },
+    railStyle: {
+      width: '100vw',
+      maxWidth: 'none',
+      margin: 0,
+      padding: 0,
     },
   };
 }
@@ -4488,7 +4533,15 @@ export default function NativeContentPage({ page }) {
     let nextBaseContent = baseContent;
     const pageBlocks = editablePageBlocks;
     const fullyHiddenBlockIds = collectFullyHiddenBlockIds(pageBlocks);
-    const visibleBlocks = pageBlocks.filter((block) => !toBoolean(block?.hidden));
+    const visibleBlocks = pageBlocks.filter((block) => {
+      if (toBoolean(block?.hidden)) {
+        return false;
+      }
+      if (resolvedPagePath === '/calculators' && (block?.id === 'hero' || block?.kind === 'hero')) {
+        return false;
+      }
+      return true;
+    });
     const heroBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'hero');
 
     if (isTestPage) {
@@ -4521,6 +4574,12 @@ export default function NativeContentPage({ page }) {
     }
 
     const dynamicSections = visibleBlocks.reduce((acc, block) => {
+      const aboutBuildingPhotoSection = buildAboutBuildingPhotoSection(block, activePath);
+      if (aboutBuildingPhotoSection) {
+        acc.push(aboutBuildingPhotoSection);
+        return acc;
+      }
+
       if (isBlockOnlyManagedPage && block.mode === 'dynamic' && block.kind === 'hero') {
         const heroSection = buildDynamicHeroShellSection(block);
         if (heroSection) {
@@ -4674,7 +4733,7 @@ export default function NativeContentPage({ page }) {
       hideIntro: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has('intro')),
       sections: nextSections,
     };
-  }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, templatePath, testimonialsLibrary]);
+  }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, resolvedPagePath, templatePath, testimonialsLibrary]);
   const contentWithManagedDisclosures = useMemo(() => ({
     ...content,
     preIntroSections: Array.isArray(content.preIntroSections)
@@ -4782,8 +4841,16 @@ export default function NativeContentPage({ page }) {
   const shouldRenderIntro = !isBlockOnlyManagedPage && !hideIntro && hasIntroContent;
   const legalDoc = content?.legalDocument || null;
   const visibleEditablePageBlocks = useMemo(
-    () => editablePageBlocks.filter((block) => !toBoolean(block?.hidden)),
-    [editablePageBlocks],
+    () => editablePageBlocks.filter((block) => {
+      if (toBoolean(block?.hidden)) {
+        return false;
+      }
+      if (resolvedPagePath === '/calculators' && (block?.id === 'hero' || block?.kind === 'hero')) {
+        return false;
+      }
+      return true;
+    }),
+    [editablePageBlocks, resolvedPagePath],
   );
   const hudDockPanels = useMemo(
     () => buildNativeHudPanels({ blocks: visibleEditablePageBlocks }),
@@ -4965,13 +5032,13 @@ export default function NativeContentPage({ page }) {
     }
 
     const section = pageRef.current?.querySelector('.about-native-building-shot');
-    const media = section?.querySelector('.native-columns-media');
+    const media = section?.querySelector('.native-info-section-logo, .native-columns-media');
     if (!(section instanceof HTMLElement) || !(media instanceof HTMLElement)) {
       return undefined;
     }
 
     let rafId = 0;
-    const maxOffset = 26;
+    const maxOffset = 52;
 
     const updateParallax = () => {
       rafId = 0;
@@ -5035,7 +5102,7 @@ export default function NativeContentPage({ page }) {
       const benefitsHeadingMid = benefitsHeadingRect.top + scrollY + (benefitsHeadingRect.height * 0.5);
       const readyHeadingMid = readyHeadingRect.top + scrollY + (readyHeadingRect.height * 0.5);
       const startY = benefitsHeadingMid - (viewportHeight * 0.5);
-      const endY = readyHeadingMid - (viewportHeight * 0.5);
+      const endY = readyHeadingMid - (viewportHeight * 0.72);
       const range = Math.max(endY - startY, 1);
       const progress = Math.max(0, Math.min(1, (scrollY - startY) / range));
 
@@ -5923,6 +5990,7 @@ export default function NativeContentPage({ page }) {
         const sectionClassName = String(section.className || '');
         const cardsPresetToken = String(section.cardsPreset || '').trim().toLowerCase();
         const formVariant = String(section?.form?.variant || '').trim().toLowerCase();
+        const SectionTitleTag = section.headingLevel === 'h1' ? 'h1' : 'h2';
         const SectionLogoComponent = typeof section.logoComponent === 'function' ? section.logoComponent : null;
         const isInlineCtaSection = isInlineCtaSectionShape(section);
         const resolvedFormConfig = isInlineCtaSection
@@ -6404,7 +6472,7 @@ export default function NativeContentPage({ page }) {
               </div>
             ) : null}
             <div
-              className={section.fullBleed ? 'ag-panel-rail-wide native-info-full-bleed' : (section.wide ? 'ag-panel-rail-wide' : 'ag-panel-rail')}
+              className={section.railClassName || (section.fullBleed ? 'ag-panel-rail-wide native-info-full-bleed' : (section.wide ? 'ag-panel-rail-wide' : 'ag-panel-rail'))}
               style={section.railStyle || undefined}
             >
             {SectionLogoComponent ? (
@@ -6432,7 +6500,7 @@ export default function NativeContentPage({ page }) {
                   data-fade-root-margin={section.copyFadeRootMargin || undefined}
                 >
                   {!section.hideTitle ? (
-                    <h2
+                    <SectionTitleTag
                       className={[
                         section.titleClassName || '',
                         shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
@@ -6448,7 +6516,7 @@ export default function NativeContentPage({ page }) {
                       data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
                     >
                       {renderHighlightedText(section.title, section.titleHighlights)}
-                    </h2>
+                    </SectionTitleTag>
                   ) : null}
                   {section.subtitle ? (
                     <h3
@@ -6505,7 +6573,7 @@ export default function NativeContentPage({ page }) {
               ) : (
                 <>
                   {!section.hideTitle ? (
-                    <h2
+                    <SectionTitleTag
                       className={[
                         section.titleClassName || '',
                         shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
@@ -6521,7 +6589,7 @@ export default function NativeContentPage({ page }) {
                       data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
                     >
                       {renderHighlightedText(section.title, section.titleHighlights)}
-                    </h2>
+                    </SectionTitleTag>
                   ) : null}
                   {section.subtitle ? (
                     <h3

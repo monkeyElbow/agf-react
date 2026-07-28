@@ -101,6 +101,9 @@ const LEGACY_GIVING_ENDOWMENTS_PATH = '/services/planned-giving/endowments';
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
 const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
 const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
+const RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS = Object.freeze([
+  'wills_estate_billboard',
+]);
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
 const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
 const RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH = '/services/retirement/403b/403b-individual-enrollment';
@@ -455,6 +458,10 @@ function normalizePlannedGivingOverviewBlockSet(blocks) {
   let hasCanonicalComparison = false;
 
   return safeBlocks.reduce((nextBlocks, block) => {
+    if (RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS.includes(String(block?.id || '').trim())) {
+      return nextBlocks;
+    }
+
     if (!isArchivedPlannedGivingComparisonTableBlock(block) && !isPlannedGivingComparisonBlock(block)) {
       nextBlocks.push(block);
       return nextBlocks;
@@ -3284,7 +3291,7 @@ export function normalizeStoredConfig(payload) {
   if (normalizedCollaborationByPathSource[PLANNED_GIVING_OVERVIEW_PATH]) {
     normalizedCollaborationByPathSource[PLANNED_GIVING_OVERVIEW_PATH] = normalizeRetiredBlockCollaborationEntry(
       normalizedCollaborationByPathSource[PLANNED_GIVING_OVERVIEW_PATH],
-      new Set(['comparison_matrix']),
+      new Set(['comparison_matrix', ...RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS]),
     );
   }
   const collaborationByPath = normalizeCollaborationState(normalizedCollaborationByPathSource);

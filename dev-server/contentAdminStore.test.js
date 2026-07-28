@@ -640,6 +640,53 @@ describe('createDevContentAuthorityStore', () => {
     expect(revision.snapshot.pathAliases).toEqual({});
   });
 
+  it('clears stale foreign draft ownership when stored blocks match the base snapshot', () => {
+    const persistenceFile = makeTempFile();
+    const seedState = buildSeedState();
+    const staleActor = createActor({
+      userId: 'dev-stale',
+      displayName: 'Stale Admin',
+    });
+    const staleMeta = {
+      draftedBy: staleActor,
+      draftedAt: 1710000000000,
+      savedBy: staleActor,
+      savedAt: 1710000000000,
+      lockedBy: staleActor,
+      lockedAt: 1710000000000,
+    };
+
+    fs.writeFileSync(persistenceFile, JSON.stringify({
+      initialized: true,
+      version: 1,
+      updatedAt: 1710000000000,
+      state: {
+        ...cloneJson(seedState),
+        collaborationByPath: {
+          '/services/loans': {
+            blocks: {
+              hero: staleMeta,
+              cta_form: staleMeta,
+            },
+            history: [],
+          },
+        },
+      },
+      baseSnapshot: cloneJson(seedState),
+      revisionsByPath: {},
+    }));
+
+    const store = createStore(persistenceFile);
+    const snapshot = store.getSnapshot();
+    const blocksMeta = snapshot.state.collaborationByPath['/services/loans'].blocks;
+
+    expect(blocksMeta.hero.draftedBy).toBe(null);
+    expect(blocksMeta.hero.lockedBy).toBe(null);
+    expect(blocksMeta.hero.savedBy.displayName).toBe('Stale Admin');
+    expect(blocksMeta.cta_form.draftedBy).toBe(null);
+    expect(blocksMeta.cta_form.lockedBy).toBe(null);
+  });
+
   it('loads legacy revisions with snapshot.state and still returns revision history', () => {
     const persistenceFile = makeTempFile();
     const legacyState = buildSeedState();

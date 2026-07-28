@@ -296,9 +296,9 @@ describe('BlockHudPanelHost', () => {
         mode: 'dynamic',
         settings: {
           title: 'Already an investor?',
-          body: 'Log in to manage.',
+          body: '',
           bgTone: 'white',
-          buttonLabel: 'Go to my dashboard',
+          buttonLabel: 'Log in to manage',
           buttonUrl: 'https://secure.agfinancial.org/',
           buttonPageRef: '',
           buttonOpenInNewWindow: true,

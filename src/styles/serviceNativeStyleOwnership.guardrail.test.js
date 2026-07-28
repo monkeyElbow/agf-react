@@ -8,6 +8,7 @@ const __dirname = path.dirname(__filename);
 
 const CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS = Object.freeze({
   'native-info-page--about': 'About intro heading color needs to override dynamic intro text tone.',
+  'native-info-page--calculators': 'Calculators overview cards need route-specific title, body, padding, and hover treatment.',
   'native-info-page--calculator-tool': 'Calculator tool routes need route-specific intro/contact CTA spacing.',
   'native-info-page--group-life-quote': 'Group term life benefit cards need route-specific dynamic grid card title sizing.',
   'native-info-page--insurance': 'Insurance overview keeps route-specific dynamic section art direction.',
@@ -102,6 +103,32 @@ describe('service-native style ownership', () => {
     ].forEach((weakSelector) => {
       expect(source).not.toContain(weakSelector);
     });
+  });
+
+  it('keeps consultant directory headers aligned with Forms headers and state filters rounded', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--loans-consultant .consultant-native-page-head.native-functional-page-head {',
+      'padding: clamp(2.1rem, 4vw, 3rem) 0 clamp(1.15rem, 3vw, 1.9rem);',
+      '.native-info-page--loans-consultant .consultant-native-page-head > .ag-panel-rail {',
+      'max-width: min(1200px, calc(100% - (var(--ag-panel-gutter) * 2)));',
+      '.native-info-page--loans-consultant .consultant-native-page-head .native-info-section-copy {',
+      '.native-info-page--loans-consultant .consultant-native-page-head h1 {',
+      '--ag-letter-spacing-avenir-heading: var(--ag-letter-spacing-avenir-hero);',
+      'font-size: clamp(2.2rem, 6vw, 4rem);',
+      'text-align: left;',
+      '.native-info-page--loans-consultant .consultant-native-page-head h1 mark {',
+      'color: inherit;',
+      '.native-info-page--loans-consultant .native-info-location-filter select {',
+      'border-radius: 999px;',
+      'appearance: none;',
+      '.native-info-page--loans-consultant .native-info-location-filter select:focus-visible {',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+
+    expect(source).not.toContain('.native-info-page--loans-consultant .service-native-hero {');
   });
 
   it('keeps the contact page hero aligned to the Resources header treatment', () => {
@@ -344,8 +371,22 @@ describe('service-native style ownership', () => {
     const source = readSource('./service-native.css');
 
     [
-      '.native-info-page--about .about-native-building-shot .native-columns-media-wrap {',
-      'min-height: clamp(430px, 53vw, 760px);',
+      '.native-info-viewport-bleed {',
+      '.about-native-building-shot,',
+      'inline-size: 100vw;',
+      'margin-left: calc(50% - 50vw);',
+      'margin-right: calc(50% - 50vw);',
+      '.about-native-building-shot > .native-info-viewport-bleed,',
+      '.native-info-page--about .about-native-building-shot > :is(.ag-panel-rail-wide, .ag-panel-rail) {',
+      'inline-size: 100vw !important;',
+      'width: 100vw;',
+      'max-inline-size: 100vw !important;',
+      '.about-native-building-shot .native-info-section-logo,',
+      '.native-info-page--about .about-native-building-shot .native-info-section-logo {',
+      'height: clamp(430px, 53vw, 760px);',
+      'transform: translate3d(0, var(--about-building-parallax-y), 0) scale(1.14);',
+      '.native-info-page--about .about-native-strategy {',
+      'padding-top: clamp(2.25rem, 4.6vw, 3.65rem);',
       '.native-info-page--about .about-native-values {',
       '--investments-growth-display-size: clamp(3.8rem, 8.2vw, 6.35rem);',
       '.native-info-page--about .about-native-values .investments-native-growth-grid {',

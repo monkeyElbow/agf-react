@@ -303,7 +303,7 @@ function buildLoanValueCardsRenderableBlock(block) {
       columnsStyle: 'loans-value',
       bgTone: 'white',
       contentWidth: 'browser',
-      columns: 'three',
+      columns: 'four',
     },
   };
 }

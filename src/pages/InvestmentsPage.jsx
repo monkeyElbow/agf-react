@@ -101,7 +101,7 @@ const DEFAULT_CERTIFICATES_BLOCK = {
     card1Tone: 'atlantean',
     card1ButtonTone: 'atlantean',
     card2Title: 'Term Certificates',
-    card2Body: 'Term Certificates have fixed or variable interest rates over a predetermined amount of time, ranging from three months to ten years. Minimum investment $500.',
+    card2Body: 'Term Certificates are available with fixed or variable interest rates and terms, ranging from three months to ten years. Minimum investment $500.',
     card2ButtonLabel: 'Start investing',
     card2ButtonLinkJson: serializeLinkValue({
       kind: 'external',

@@ -167,8 +167,8 @@ export const defaultLoansCtaSettings = buildNameEmailPhoneMessageCtaSettings({
 });
 
 export const defaultInvestmentsCtaSettings = buildNameEmailPhoneMessageCtaSettings({
-  title: 'Talk with an investments consultant.',
-  bodyHtml: '<p>Share a few details and we’ll follow up with options that fit your goals.</p>',
+  title: 'Talk with an investment consultant.',
+  bodyHtml: '<p>Share a few details and we’ll get in touch with options for you.</p>',
   submitStyle: 'outline',
   submitTone: 'atlantean',
 });

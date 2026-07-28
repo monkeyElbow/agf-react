@@ -1213,13 +1213,19 @@ export function buildDynamicSiteFeatureFromBlock(block) {
     ? defaultTitle
     : (readFirstStringValue(settings, ['headline']) || defaultTitle);
   const body = readFirstStringValue(settings, ['body']) || defaultBody;
-  const action = buildCanonicalActionLinkFromFields(settings, {
-    labelKeys: ['buttonLabel'],
-    linkJsonKeys: ['buttonLinkJson'],
-    hrefKeys: [],
-    toKeys: [],
-    openInNewWindowKeys: [],
-  }) || featureRuntime.action;
+  const allowedFieldIds = new Set(Array.isArray(featureEntry.allowedEditableFieldIds) ? featureEntry.allowedEditableFieldIds : []);
+  const allowsAction = ['buttonLabel', 'buttonUrl', 'buttonPageRef', 'buttonLinkJson']
+    .some((fieldId) => allowedFieldIds.has(fieldId));
+  const overrideAction = allowsAction
+    ? buildCanonicalActionLinkFromFields(settings, {
+      labelKeys: ['buttonLabel'],
+      linkJsonKeys: ['buttonLinkJson'],
+      hrefKeys: [],
+      toKeys: [],
+      openInNewWindowKeys: [],
+    })
+    : null;
+  const action = overrideAction || featureRuntime.action || null;
   const metrics = Array.isArray(featureRuntime.metrics)
     ? featureRuntime.metrics
       .filter((metric) => metric && typeof metric === 'object')
@@ -2445,6 +2451,7 @@ export function buildDynamicPageContentFromBlock(block) {
   const title = String(settings.title || '').trim();
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
+  const pageContentHeadingLevelToken = String(settings.headingLevel || '').trim().toLowerCase();
   const subtitle = String(settings.subtitle || '').trim();
   const body = parsePageContentTextLines(settings.body);
   const html = String(settings.html || '').trim();
@@ -2515,6 +2522,7 @@ export function buildDynamicPageContentFromBlock(block) {
     title,
     titleClassName,
     titleHighlights,
+    headingLevel: pageContentHeadingLevelToken === 'h1' ? 'h1' : 'h2',
     subtitle,
     body,
     html: normalizedHtml,

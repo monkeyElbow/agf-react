@@ -32,9 +32,9 @@ describe('planned giving stewardship story layout guardrail', () => {
     expect(cssSource).toContain('.legacy-stewardship-story-light-leak.is-a {');
     expect(cssSource).toContain('.legacy-stewardship-story-light-leak.is-b {');
     expect(cssSource).toContain('.legacy-stewardship-story-light-leak.is-c {');
-    expect(cssSource).toContain('.legacy-stewardship-story-first-cue {');
+    expect(cssSource).toContain('.legacy-stewardship-story-scroll-cue {');
     expect(cssSource).toContain('color: rgba(244, 251, 252, 0.88);');
-    expect(cssSource).toContain('.legacy-stewardship-story-first-cue-mark {');
+    expect(cssSource).toContain('.legacy-stewardship-story-scroll-cue-mark {');
     expect(cssSource).toContain('.legacy-stewardship-story-final-secondary {');
     expect(cssSource).toContain('color: rgba(255, 255, 255, 0.94);');
     expect(cssSource).toContain('rgba(0, 173, 187, 0.24)');
@@ -59,7 +59,7 @@ describe('planned giving stewardship story layout guardrail', () => {
     expect(cssSource).toContain('padding: clamp(0.7rem, 2.6vw, 1rem) 0;');
     expect(cssSource).toContain('font-size: clamp(1.75rem, 8.4vw, 2.35rem);');
     expect(cssSource).toContain('font-size: clamp(2.3rem, 11vw, 3.1rem);');
-    expect(componentSource).toContain("const LEGACY_STORY_CTA_CLASS = 'service-native-btn is-tone-white legacy-stewardship-story-cta';");
+    expect(componentSource).toContain('function StoryScrollCue');
     expect(cssSource).not.toContain('.legacy-stewardship-story .legacy-stewardship-story-cta.service-native-btn.is-outline {');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-wills {');
     expect(cssSource).toContain('padding-bottom: clamp(3.1rem, 6.2vw, 5.4rem);');

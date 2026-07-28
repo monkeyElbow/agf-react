@@ -440,7 +440,7 @@ export function NativeFormsRouteRenderer({
 
   return (
     <div ref={pageRef} className={`ag-page-shell service-native-page native-info-page${compactClass}${pageClass}`}>
-      <section className="native-functional-page-head native-functional-page-head--forms">
+      <section className="native-functional-page-head native-functional-page-head--utility native-functional-page-head--forms">
         <div className="ag-panel-rail">
           <h1>Forms</h1>
           {shouldShowIntro ? <p>{displayIntro}</p> : null}

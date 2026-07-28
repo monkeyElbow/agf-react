@@ -275,9 +275,6 @@ export default function GivingComparisonMatrix() {
         <h2 style={styles.heading}>
           Which <span style={{ color: AGF_COLORS.teal }}>Charitable Giving</span> plan is right for you?
         </h2>
-        <p style={styles.subheading}>
-          Compare programs side by side. Filter first to narrow options, then review the details that matter most.
-        </p>
       </div>
 
       <div style={styles.guidePanel} aria-label="Planned giving chooser">

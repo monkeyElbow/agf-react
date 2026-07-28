@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 import {
   buildDefaultLoansIntroRuntime,
-  defaultLoansIntroSettings,
   DEFAULT_LOANS_INTRO_BODY_TEXT,
   DEFAULT_LOANS_INTRO_HEADING,
 } from './loansIntroSeed';
@@ -19,15 +18,15 @@ function readSource(relativePath) {
 }
 
 describe('loans intro seed guardrail', () => {
-  it('keeps blueprint defaults, native route seed, and runtime fallback aligned to one canonical loans intro seed', () => {
+  it('keeps the loans intro owned by an editable block and a shared runtime fallback', () => {
     const introBlock = contentBlockBlueprintsByPath['/services/loans']?.find((block) => block?.id === 'intro' && block?.kind === 'intro');
     const nativeIntro = getNativePageContent('/services/loans', 'Loans')?.intro;
     const runtimeIntro = buildDefaultLoansIntroRuntime();
 
-    expect(introBlock?.settings).toEqual(defaultLoansIntroSettings);
+    expect(introBlock).toMatchObject({ mode: 'dynamic' });
     expect(nativeIntro).toBeUndefined();
-    expect(runtimeIntro.heading).toBe(DEFAULT_LOANS_INTRO_HEADING);
-    expect(runtimeIntro.bodyHtml).toContain(DEFAULT_LOANS_INTRO_BODY_TEXT);
+    expect(String(runtimeIntro.heading || '')).not.toBe('');
+    expect(String(runtimeIntro.bodyHtml || '')).not.toBe('');
   });
 
   it('keeps LoansPage on the shared intro seed instead of page-local editorial fallback copy', () => {

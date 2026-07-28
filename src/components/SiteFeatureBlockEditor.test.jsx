@@ -117,7 +117,7 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
   });
 
-  it('keeps the planned giving stewardship story editor surface limited to headline and CTA overrides', () => {
+  it('keeps the planned giving stewardship story editor surface limited to headline overrides', () => {
     render(
       createElement(SiteFeatureBlockEditor, {
         block: createBlock({
@@ -132,8 +132,8 @@ describe('SiteFeatureBlockEditor', () => {
 
     expect(screen.getByLabelText('Headline override')).toBeTruthy();
     expect(screen.queryByLabelText('Body override')).toBeNull();
-    expect(screen.getByLabelText('CTA label override')).toBeTruthy();
-    expect(screen.getByLabelText('CTA URL / Path override')).toBeTruthy();
+    expect(screen.queryByLabelText('CTA label override')).toBeNull();
+    expect(screen.queryByLabelText('CTA URL / Path override')).toBeNull();
     expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
   });
 

@@ -176,6 +176,7 @@ describe('native functional route renderers', () => {
 
     expect(screen.queryByText(/of \d+ forms/)).toBeNull();
     expect(screen.queryByText('Browse AGFinancial form links by topic.')).toBeNull();
+    expect(document.querySelector('.native-functional-page-head--utility.native-functional-page-head--forms h1')?.textContent).toBe('Forms');
     expect(screen.getByPlaceholderText('Start typing to search')).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Seed Fallback Form' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'Insurance' })).toBeTruthy();

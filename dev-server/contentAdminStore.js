@@ -15,6 +15,9 @@ import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue.js';
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
 const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
 const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
+const RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS = Object.freeze([
+  'wills_estate_billboard',
+]);
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
 const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
@@ -161,7 +164,10 @@ function normalizeCollaborationByPath(rawState) {
       }
       if (
         pathname === PLANNED_GIVING_OVERVIEW_PATH
-        && normalizedBlockId === 'comparison_matrix'
+        && (
+          normalizedBlockId === 'comparison_matrix'
+          || RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS.includes(normalizedBlockId)
+        )
       ) {
         return;
       }
@@ -179,7 +185,10 @@ function normalizeCollaborationByPath(rawState) {
               && historyEntry.blockId === 'page_content'
             ) || (
               pathname === PLANNED_GIVING_OVERVIEW_PATH
-              && historyEntry.blockId === 'comparison_matrix'
+              && (
+                historyEntry.blockId === 'comparison_matrix'
+                || RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS.includes(historyEntry.blockId)
+              )
             )
           )
         )),
@@ -205,6 +214,8 @@ function normalizeSharedState(rawState) {
 
 function normalizeStoredRecord(rawRecord, maxRevisionsPerPage) {
   const parsed = rawRecord && typeof rawRecord === 'object' ? rawRecord : {};
+  const state = normalizeSharedState(parsed?.state);
+  const baseSnapshot = normalizeSharedState(parsed?.baseSnapshot);
   return {
     initialized: Boolean(parsed?.initialized),
     version: 1,
@@ -213,8 +224,8 @@ function normalizeStoredRecord(rawRecord, maxRevisionsPerPage) {
       ? Number(parsed.announcementUpdatedAt)
       : 0,
     announcement: normalizeAnnouncement(parsed?.announcement),
-    state: normalizeSharedState(parsed?.state),
-    baseSnapshot: normalizeSharedState(parsed?.baseSnapshot),
+    state: clearUnchangedBlockDraftOwnership(state, baseSnapshot),
+    baseSnapshot: clearUnchangedBlockDraftOwnership(baseSnapshot, baseSnapshot),
     revisionsByPath: Object.fromEntries(
       Object.entries(parsed?.revisionsByPath || {}).map(([pathname, revisions]) => [
         pathname,
@@ -649,6 +660,10 @@ function normalizePlannedGivingOverviewBlockSet(blocks) {
   let hasCanonicalComparison = false;
 
   return (Array.isArray(blocks) ? blocks : []).reduce((nextBlocks, block) => {
+    if (RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS.includes(String(block?.id || '').trim())) {
+      return nextBlocks;
+    }
+
     if (!isPlannedGivingComparisonBlock(block)) {
       nextBlocks.push(block);
       return nextBlocks;
@@ -1135,6 +1150,37 @@ function clearPublishedDraftOwnership(meta) {
     lockedBy: null,
     lockedAt: null,
   };
+}
+
+function clearUnchangedBlockDraftOwnership(authoringState, baselineState) {
+  const nextState = cloneJson(normalizeSharedState(authoringState));
+  const baseline = normalizeSharedState(baselineState);
+
+  Object.entries(nextState.collaborationByPath || {}).forEach(([pathname, entry]) => {
+    const currentBlocksById = indexBlocksById(nextState.blocksByPath?.[pathname]);
+    const baselineBlocksById = indexBlocksById(baseline.blocksByPath?.[pathname]);
+    const nextBlocksMeta = {};
+
+    Object.entries(entry?.blocks || {}).forEach(([blockId, rawMeta]) => {
+      const normalizedBlockId = String(blockId || '').trim();
+      if (!normalizedBlockId) {
+        return;
+      }
+      const currentBlock = currentBlocksById.get(normalizedBlockId);
+      const baselineBlock = baselineBlocksById.get(normalizedBlockId);
+      const meta = normalizeBlockMeta(rawMeta);
+      nextBlocksMeta[normalizedBlockId] = areBlocksEquivalent(currentBlock, baselineBlock)
+        ? clearPublishedDraftOwnership(meta)
+        : meta;
+    });
+
+    nextState.collaborationByPath[pathname] = {
+      ...(entry || {}),
+      blocks: nextBlocksMeta,
+    };
+  });
+
+  return nextState;
 }
 
 function normalizeRevisionRecord(rawRevision) {
