@@ -72,6 +72,10 @@ describe('planned giving review polish guardrail', () => {
       ?.find((block) => block?.id === 'how_it_works');
 
     expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-duo'");
+    expect(blueprintSource).toContain("button1Label: 'Set up an endowment'");
+    expect(blueprintSource).toContain("button1LinkJson: JSON.stringify({ kind: 'anchor', href: '#endowment-request-form', openInNewWindow: false })");
+    expect(blueprintSource).toContain("anchorId: 'endowment-request-form'");
+    expect(blueprintSource).toContain('The annual earnings from your carefully-invested gift support your chosen ministry or cause.');
     expect(blueprintSource).toContain('createPlannedGivingHowItWorksColumnsBlueprint({');
     expect(blueprintSource).toContain("title: 'How it works'");
     expect(blueprintSource).toContain("columns: 'three'");
@@ -95,6 +99,7 @@ describe('planned giving review polish guardrail', () => {
     expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-assets'");
     expect(blueprintSource).toContain("contentMaxWidthPx: 1040");
     expect(blueprintSource).toContain("Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.");
+    expect(blueprintSource).toContain("class=\"endowments-assets-copy\"");
     expect(blueprintSource).toContain("class=\"endowments-asset-badges\"");
     expect(blueprintSource).not.toContain("Endowments may be funded with:");
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo {');
@@ -113,20 +118,22 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('border-top: 0;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets {');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .native-info-rich-html {');
-    expect(cssSource).toContain('grid-template-columns: minmax(24rem, 0.95fr) minmax(0, 1.05fr);');
+    expect(cssSource).toContain('grid-template-columns: minmax(19rem, 0.78fr) minmax(0, 1.22fr);');
     expect(cssSource).toContain('width: min(var(--dyn-content-max-width, 1040px), 100%);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-assets-copy {');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-asset-badges {');
-    expect(cssSource).toContain('grid-template-columns: repeat(3, max-content);');
+    expect(cssSource).toContain('grid-template-columns: repeat(3, minmax(7.2rem, max-content));');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-asset-badges li:nth-child(4) {');
     expect(cssSource).toContain('text-align: left;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets {');
-    expect(cssSource).toContain('padding-top: clamp(1rem, 2.4vw, 1.75rem);');
+    expect(cssSource).toContain('padding-top: clamp(1.4rem, 3vw, 2.35rem);');
     expect(cssSource).toContain('background: #faf7f1;');
-    expect(cssSource).toContain('font-size: clamp(2.25rem, 4.25vw, 3.65rem);');
-    expect(cssSource).toContain('font-size: clamp(1.05rem, 1.55vw, 1.35rem);');
+    expect(cssSource).toContain('font-size: clamp(2.25rem, 4vw, 3.45rem);');
+    expect(cssSource).toContain('font-size: clamp(1rem, 1.35vw, 1.2rem);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .native-info-section-copy > h2 {');
     expect(cssSource).toContain('font-size: clamp(3.15rem, 7.8vw, 6.1rem);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .native-info-section-subtitle {');
+    expect(cssSource).toContain('letter-spacing: -0.018em;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .billboard-scroll-reveal-scale-up {');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .billboard-scroll-reveal-scale-up[data-fade-state="pending"] {');
     expect(cssSource).toContain('transform: scale(0.92);');

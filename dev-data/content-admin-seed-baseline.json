@@ -78316,7 +78316,11 @@
             "line2HighlightsJson": "[{\"text\":\"lasts\",\"className\":\"is-mango\"}]",
             "line3Text": "",
             "line3ClassName": "",
-            "line3HighlightsJson": ""
+            "line3HighlightsJson": "",
+            "button1Label": "Set up an endowment",
+            "button1LinkJson": "{\"kind\":\"anchor\",\"openInNewWindow\":false,\"href\":\"#endowment-request-form\"}",
+            "button1Style": "blue",
+            "button1Tone": "atlantean"
           },
           "editableFields": [
             {
@@ -78890,8 +78894,8 @@
             "heading": "Create an enduring legacy.",
             "headingClassName": "",
             "headingHighlightsJson": "",
-            "bodyHtml": "<p>Your endowment is a gift that gives forever. The interest earnings from your carefully-invested donation support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.</p><p><strong>This generosity never runs out.</strong></p>",
-            "body": "Your endowment is a gift that gives forever. The interest earnings from your carefully-invested donation support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.\n\nThis generosity never runs out.",
+            "bodyHtml": "<p>Your endowment is a gift that gives forever. The annual earnings from your carefully-invested gift support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.</p><p><strong>This generosity never runs out.</strong></p>",
+            "body": "Your endowment is a gift that gives forever. The annual earnings from your carefully-invested gift support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.\n\nThis generosity never runs out.",
             "justify": "center",
             "lineSpacing": 1.04,
             "extraLine": "",
@@ -79904,7 +79908,7 @@
             "titleHighlightsJson": "",
             "subtitle": "",
             "body": "",
-            "html": "<h2 class=\"endowments-assets-title\">Assets you may give</h2><p class=\"endowments-assets-funding\">Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p><ul class=\"endowments-asset-badges\"><li>Cash</li><li>Real estate</li><li>Art</li><li>Securities (restricted and marketable)</li><li>Antiques</li><li>Business interests</li></ul>",
+            "html": "<div class=\"endowments-assets-copy\"><h2 class=\"endowments-assets-title\">Assets you may give</h2><p class=\"endowments-assets-funding\">Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p></div><ul class=\"endowments-asset-badges\"><li>Cash</li><li>Real estate</li><li>Art</li><li>Securities (restricted and marketable)</li><li>Antiques</li><li>Business interests</li></ul>",
             "widget": "",
             "fullBleed": false,
             "spaceBeforeRem": 0,
@@ -81053,7 +81057,8 @@
             "step3FieldsJson": "[]",
             "step4FieldsJson": "[]",
             "step5FieldsJson": "[]",
-            "presetId": "legacy-endowment"
+            "presetId": "legacy-endowment",
+            "anchorId": "endowment-request-form"
           },
           "editableFields": [
             {

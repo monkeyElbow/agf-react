@@ -1,7 +1,7 @@
 {
   "initialized": true,
   "version": 1,
-  "updatedAt": 1785170523637,
+  "updatedAt": 1785256735420,
   "announcementUpdatedAt": 0,
   "announcement": {
     "enabled": false,
@@ -78296,7 +78296,11 @@
             "line2HighlightsJson": "[{\"text\":\"lasts\",\"className\":\"is-mango\"}]",
             "line3Text": "",
             "line3ClassName": "",
-            "line3HighlightsJson": ""
+            "line3HighlightsJson": "",
+            "button1Label": "Set up an endowment",
+            "button1LinkJson": "{\"kind\":\"anchor\",\"openInNewWindow\":false,\"href\":\"#endowment-request-form\"}",
+            "button1Style": "blue",
+            "button1Tone": "atlantean"
           },
           "editableFields": [
             {
@@ -78870,8 +78874,8 @@
             "heading": "Create an enduring legacy.",
             "headingClassName": "",
             "headingHighlightsJson": "",
-            "bodyHtml": "<p>Your endowment is a gift that gives forever. The interest earnings from your carefully-invested donation support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.</p><p><strong>This generosity never runs out.</strong></p>",
-            "body": "Your endowment is a gift that gives forever. The interest earnings from your carefully-invested donation support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.\n\nThis generosity never runs out.",
+            "bodyHtml": "<p>Your endowment is a gift that gives forever. The annual earnings from your carefully-invested gift support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.</p><p><strong>This generosity never runs out.</strong></p>",
+            "body": "Your endowment is a gift that gives forever. The annual earnings from your carefully-invested gift support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.\n\nThis generosity never runs out.",
             "justify": "center",
             "lineSpacing": 1.04,
             "extraLine": "",
@@ -79884,7 +79888,7 @@
             "titleHighlightsJson": "",
             "subtitle": "",
             "body": "",
-            "html": "<h2 class=\"endowments-assets-title\">Assets you may give</h2><p class=\"endowments-assets-funding\">Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p><ul class=\"endowments-asset-badges\"><li>Cash</li><li>Real estate</li><li>Art</li><li>Securities (restricted and marketable)</li><li>Antiques</li><li>Business interests</li></ul>",
+            "html": "<div class=\"endowments-assets-copy\"><h2 class=\"endowments-assets-title\">Assets you may give</h2><p class=\"endowments-assets-funding\">Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p></div><ul class=\"endowments-asset-badges\"><li>Cash</li><li>Real estate</li><li>Art</li><li>Securities (restricted and marketable)</li><li>Antiques</li><li>Business interests</li></ul>",
             "widget": "",
             "fullBleed": false,
             "spaceBeforeRem": 0,
@@ -81032,7 +81036,8 @@
             "step3FieldsJson": "[]",
             "step4FieldsJson": "[]",
             "step5FieldsJson": "[]",
-            "presetId": "legacy-endowment"
+            "presetId": "legacy-endowment",
+            "anchorId": "endowment-request-form"
           },
           "editableFields": [
             {
@@ -144150,9 +144155,9 @@
       "/services/legacy-giving": "/services/planned-giving",
       "/services/legacy-giving/charitable-gift-annuities": "/services/planned-giving/charitable-gift-annuities",
       "/services/legacy-giving/charitable-trusts": "/services/planned-giving/charitable-trusts",
-      "/services/legacy-giving/endowments": "/services/planned-giving/endowments",
       "/services/legacy-giving/generosity-fund": "/services/planned-giving/generosity-fund",
-      "/services/legacy-giving/ministry-impact-fund": "/services/planned-giving/ministry-impact-fund"
+      "/services/legacy-giving/ministry-impact-fund": "/services/planned-giving/ministry-impact-fund",
+      "/services/legacy-giving/endowments": "/services/planned-giving/endowments"
     },
     "collaborationByPath": {
       "/services/retirement": {
@@ -153816,6 +153821,20 @@
           }
         },
         "history": [
+          {
+            "id": "1785256735420-9t3f6z",
+            "action": "seed-route-slice-published",
+            "blockId": "",
+            "details": "Apply seed route slices: /services/planned-giving/endowments",
+            "actor": {
+              "userId": "content-admin-seed-route-publisher",
+              "displayName": "Content Admin Seed Route Publisher",
+              "initials": "CP",
+              "accentColor": "#00adbb"
+            },
+            "previousActor": null,
+            "createdAt": 1785256735420
+          },
           {
             "id": "1784575765686-a7ae52",
             "action": "block-save-blocked",
@@ -235746,7 +235765,11 @@
             "line2HighlightsJson": "[{\"text\":\"lasts\",\"className\":\"is-mango\"}]",
             "line3Text": "",
             "line3ClassName": "",
-            "line3HighlightsJson": ""
+            "line3HighlightsJson": "",
+            "button1Label": "Set up an endowment",
+            "button1LinkJson": "{\"kind\":\"anchor\",\"openInNewWindow\":false,\"href\":\"#endowment-request-form\"}",
+            "button1Style": "blue",
+            "button1Tone": "atlantean"
           },
           "editableFields": [
             {
@@ -236320,8 +236343,8 @@
             "heading": "Create an enduring legacy.",
             "headingClassName": "",
             "headingHighlightsJson": "",
-            "bodyHtml": "<p>Your endowment is a gift that gives forever. The interest earnings from your carefully-invested donation support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.</p><p><strong>This generosity never runs out.</strong></p>",
-            "body": "Your endowment is a gift that gives forever. The interest earnings from your carefully-invested donation support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.\n\nThis generosity never runs out.",
+            "bodyHtml": "<p>Your endowment is a gift that gives forever. The annual earnings from your carefully-invested gift support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.</p><p><strong>This generosity never runs out.</strong></p>",
+            "body": "Your endowment is a gift that gives forever. The annual earnings from your carefully-invested gift support your chosen ministry or cause. Meanwhile, your original gift stays protected and continues to grow.\n\nThis generosity never runs out.",
             "justify": "center",
             "lineSpacing": 1.04,
             "extraLine": "",
@@ -237334,7 +237357,7 @@
             "titleHighlightsJson": "",
             "subtitle": "",
             "body": "",
-            "html": "<h2 class=\"endowments-assets-title\">Assets you may give</h2><p class=\"endowments-assets-funding\">Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p><ul class=\"endowments-asset-badges\"><li>Cash</li><li>Real estate</li><li>Art</li><li>Securities (restricted and marketable)</li><li>Antiques</li><li>Business interests</li></ul>",
+            "html": "<div class=\"endowments-assets-copy\"><h2 class=\"endowments-assets-title\">Assets you may give</h2><p class=\"endowments-assets-funding\">Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.</p></div><ul class=\"endowments-asset-badges\"><li>Cash</li><li>Real estate</li><li>Art</li><li>Securities (restricted and marketable)</li><li>Antiques</li><li>Business interests</li></ul>",
             "widget": "",
             "fullBleed": false,
             "spaceBeforeRem": 0,
@@ -238482,7 +238505,8 @@
             "step3FieldsJson": "[]",
             "step4FieldsJson": "[]",
             "step5FieldsJson": "[]",
-            "presetId": "legacy-endowment"
+            "presetId": "legacy-endowment",
+            "anchorId": "endowment-request-form"
           },
           "editableFields": [
             {
@@ -301600,9 +301624,9 @@
       "/services/legacy-giving": "/services/planned-giving",
       "/services/legacy-giving/charitable-gift-annuities": "/services/planned-giving/charitable-gift-annuities",
       "/services/legacy-giving/charitable-trusts": "/services/planned-giving/charitable-trusts",
-      "/services/legacy-giving/endowments": "/services/planned-giving/endowments",
       "/services/legacy-giving/generosity-fund": "/services/planned-giving/generosity-fund",
-      "/services/legacy-giving/ministry-impact-fund": "/services/planned-giving/ministry-impact-fund"
+      "/services/legacy-giving/ministry-impact-fund": "/services/planned-giving/ministry-impact-fund",
+      "/services/legacy-giving/endowments": "/services/planned-giving/endowments"
     },
     "collaborationByPath": {
       "/services/retirement": {
@@ -311216,6 +311240,14 @@
             "lockedBy": null,
             "lockedAt": null
           },
+          "assets_you_may_give": {
+            "draftedBy": null,
+            "draftedAt": null,
+            "savedBy": null,
+            "savedAt": 0,
+            "lockedBy": null,
+            "lockedAt": null
+          },
           "calculator": {
             "draftedBy": null,
             "draftedAt": null,
@@ -311252,6 +311284,20 @@
           }
         },
         "history": [
+          {
+            "id": "1785256735420-9t3f6z",
+            "action": "seed-route-slice-published",
+            "blockId": "",
+            "details": "Apply seed route slices: /services/planned-giving/endowments",
+            "actor": {
+              "userId": "content-admin-seed-route-publisher",
+              "displayName": "Content Admin Seed Route Publisher",
+              "initials": "CP",
+              "accentColor": "#00adbb"
+            },
+            "previousActor": null,
+            "createdAt": 1785256735420
+          },
           {
             "id": "1784575765686-a7ae52",
             "action": "block-save-blocked",

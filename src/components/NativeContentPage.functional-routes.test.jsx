@@ -699,6 +699,8 @@ describe('NativeContentPage functional routes', () => {
     );
 
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Set up an endowment' }).getAttribute('href')).toBe('#endowment-request-form');
+    expect(document.querySelector('#endowment-request-form')).toBeTruthy();
     expect(document.querySelector('.legacy-child-native-endowments-legacy-form.native-dynamic-request.is-request-form-preset-legacy-endowment')).toBeTruthy();
     expect([...document.querySelectorAll('.legacy-child-native-endowments-duo [data-planned-giving-step-icon]')]
       .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))

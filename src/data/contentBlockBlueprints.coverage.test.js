@@ -1440,6 +1440,16 @@ describe('content block blueprint coverage', () => {
     expect(charitableTrustsBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
 
     expect(endowmentBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
+    expect(endowmentBlocks.find((block) => block?.id === 'hero')?.settings).toMatchObject({
+      button1Label: 'Set up an endowment',
+      button1Style: 'blue',
+      button1Tone: 'atlantean',
+    });
+    expectCanonicalLink(endowmentBlocks.find((block) => block?.id === 'hero')?.settings, 'button1LinkJson', {
+      kind: 'anchor',
+      href: '#endowment-request-form',
+      openInNewWindow: false,
+    });
     expect(endowmentBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(endowmentBlocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
       kind: 'columns',
@@ -1467,6 +1477,7 @@ describe('content block blueprint coverage', () => {
       },
     });
     const endowmentAssetsHtml = endowmentAssetsBlock?.settings?.html || '';
+    expect(endowmentAssetsHtml).toContain('class="endowments-assets-copy"');
     expect(endowmentAssetsHtml).toContain('class="endowments-asset-badges"');
     expect(endowmentAssetsHtml).toContain('<li>Securities (restricted and marketable)</li>');
     expect(endowmentAssetsHtml).not.toContain('<button');
@@ -1490,8 +1501,11 @@ describe('content block blueprint coverage', () => {
         scrollReveal: 'scale-up',
       },
     });
-    expect(endowmentBlocks.find((block) => block?.id === 'request_form')?.settings?.sectionClassName).toBe('legacy-child-native-endowments-legacy-form');
-    expect(endowmentBlocks.find((block) => block?.id === 'request_form')?.settings?.presetId).toBe('legacy-endowment');
+    expect(endowmentBlocks.find((block) => block?.id === 'request_form')?.settings).toMatchObject({
+      sectionClassName: 'legacy-child-native-endowments-legacy-form',
+      presetId: 'legacy-endowment',
+      anchorId: 'endowment-request-form',
+    });
     expect(endowmentBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(endowmentBlocks.some((block) => block?.mode === 'static')).toBe(false);
     expect(endowmentBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
