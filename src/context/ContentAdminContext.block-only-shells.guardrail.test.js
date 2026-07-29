@@ -56,10 +56,19 @@ describe('ContentAdminContext block-only shell guardrail', () => {
       'targetFineprintSectionKey',
       'getSectionTargetKeys',
       'allowTargetedDynamicSections',
+      'shouldSuppressLegacyHeroBlock',
+      'buildFundIraUtilityHeaderFallbackSection',
     ];
 
     retiredAdapterNames.forEach((name) => {
       expect(source, `${name} should not re-enter NativeContentPage`).not.toContain(name);
+    });
+
+    [
+      '/calculators',
+      '/services/retirement/iras/fund-an-ira',
+    ].forEach((pathname) => {
+      expect(source, `${pathname} should not be special-cased in NativeContentPage`).not.toContain(pathname);
     });
 
     expect(source).toContain('const dynamicSections = visibleBlocks.reduce');
@@ -182,7 +191,7 @@ describe('ContentAdminContext block-only shell guardrail', () => {
         sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-ministry-impact-steps',
         icons: ['daf-step-1', 'mif-step-2', 'mif-step-3'],
       },
-      '/services/planned-giving/generosity-fund': {
+      '/services/planned-giving/donor-advised-fund': {
         id: 'how_it_works',
         sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-generosity-steps',
         icons: ['daf-step-1', 'daf-step-2', 'daf-step-3'],

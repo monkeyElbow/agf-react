@@ -35,8 +35,8 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain("style={buildActionRowStyle(sectionJustifyToken, 'left')}");
     expect(source).toContain("const introBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'intro');");
     expect(source).toContain("const adminIntro = buildNativeIntroConfig(introBlock, { includeTestClassName: true });");
-    expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'billboard') {");
-    expect(source).toContain("const billboardSection = buildNativeBillboardSection(block, { includeTestClassName: isTestPage });");
+    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'billboard') {");
+    expect(source).toContain("const billboardSection = buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });");
     expect(source).toContain('acc.push(billboardSection);');
     expect(source).not.toContain('routeScopedClassName');
     expect(source).not.toContain("pathname === '/services/retirement/403b'");

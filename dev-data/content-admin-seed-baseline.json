@@ -85961,7 +85961,8 @@
             "button2Tone": "super-grey",
             "sectionClassName": "legacy-child-native-billboard",
             "titleFontFamily": "helv",
-            "titleFontWeight": 700
+            "titleFontWeight": 700,
+            "titleSizeRem": 4.59375
           },
           "editableFields": [
             {
@@ -86438,13 +86439,13 @@
           "hidden": false,
           "settings": {
             "title": "A legacy of giving.",
-            "titleClassName": "is-super-grey",
-            "titleHighlightsJson": "[]",
+            "titleClassName": "",
+            "titleHighlightsJson": "[{\"text\":\"legacy\",\"className\":\"is-white\"}]",
             "subtitle": "Let’s map out the best next step.",
             "bodyHtml": "",
             "body": "We’re ready to help you explore how your gift can continue to give. And give. And give…",
             "bgTone": "blue",
-            "textTone": "dark",
+            "textTone": "white",
             "spaceBeforeRem": 3.6,
             "spaceAfterRem": 4.2,
             "submitLabel": "Contact planned giving",

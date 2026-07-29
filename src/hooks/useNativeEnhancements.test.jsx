@@ -44,6 +44,30 @@ function RepeatObserveHookHarness() {
   );
 }
 
+function ExplicitDelayHookHarness() {
+  const ref = useRef(null);
+  useNativeEnhancements(ref, 'fade-explicit-delay-test');
+
+  return (
+    <div ref={ref} className="service-native-page">
+      <div
+        data-testid="delay-fade-0"
+        className="fade-up fade-up-force-observe fade-up-repeat-observe"
+        data-fade-delay-ms="0"
+      >
+        First
+      </div>
+      <div
+        data-testid="delay-fade-1"
+        className="fade-up fade-up-force-observe fade-up-repeat-observe"
+        data-fade-delay-ms="240"
+      >
+        Second
+      </div>
+    </div>
+  );
+}
+
 function FadeOutHookHarness() {
   const ref = useRef(null);
   useNativeEnhancements(ref, 'fade-out-test');
@@ -309,6 +333,26 @@ describe('useNativeEnhancements fade-up reveal', () => {
 
     expect(repeatFade.classList.contains('is-visible')).toBe(true);
     expect(repeatFade.hasAttribute('data-fade-state')).toBe(false);
+  });
+
+  it('honors explicit fade delays for staggered elements that intersect together', () => {
+    const { getByTestId } = render(<ExplicitDelayHookHarness />);
+    const first = getByTestId('delay-fade-0');
+    const second = getByTestId('delay-fade-1');
+
+    observerCallback([
+      { target: first, isIntersecting: true },
+      { target: second, isIntersecting: true },
+    ]);
+
+    vi.advanceTimersByTime(50);
+
+    expect(first.classList.contains('is-visible')).toBe(true);
+    expect(second.classList.contains('is-visible')).toBe(false);
+
+    vi.advanceTimersByTime(240);
+
+    expect(second.classList.contains('is-visible')).toBe(true);
   });
 });
 

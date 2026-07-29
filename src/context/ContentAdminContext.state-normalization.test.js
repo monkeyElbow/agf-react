@@ -1234,6 +1234,7 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(outroBlock?.settings?.titleFontFamily).toBe('helv');
     expect(outroBlock?.settings?.titleFontWeight).toBe(700);
+    expect(outroBlock?.settings?.justify).toBe('center');
     expect(outroBlock?.settings?.actionsBeforeCards).toBe(true);
   });
 
@@ -1307,10 +1308,10 @@ describe('ContentAdminContext state normalization', () => {
     const requestBlock = ministryImpactBlocks.find((block) => block?.id === 'request_form');
 
     expect(requestBlock?.settings).toMatchObject({
-      titleClassName: 'is-super-grey',
-      titleHighlightsJson: '[]',
+      titleClassName: '',
+      titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
       bgTone: 'blue',
-      textTone: 'dark',
+      textTone: 'white',
       spaceBeforeRem: 3.6,
       spaceAfterRem: 4.2,
       hideStepTitles: true,

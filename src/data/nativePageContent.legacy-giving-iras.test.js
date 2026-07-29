@@ -191,9 +191,9 @@ describe('planned giving and IRA native page content', () => {
     expect(ministryImpactStockSection?.settings?.card2Title).toBe('Brokerage Letter of Authorization (LOA)');
     expect(ministryImpactStockSection?.settings?.card2ButtonDocumentId).toBe('document-planned-giving-brokerage-loa-form');
     expect(ministryImpactRequestSection?.settings).toMatchObject({
-      titleClassName: 'is-super-grey',
-      titleHighlightsJson: '[]',
-      textTone: 'dark',
+      titleClassName: '',
+      titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+      textTone: 'white',
       spaceAfterRem: 4.2,
       hideStepTitles: true,
       step1Title: '',

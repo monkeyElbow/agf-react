@@ -44,7 +44,7 @@ import {
 } from '../lib/linkValue';
 import { normalizePresetBearingBlocks } from '../lib/blockPresetIdentity';
 import { normalizeCalculatorWidgetBlocks } from '../lib/calculatorWidgetIdentity';
-import { normalizeRequestFormPresetSettings } from '../lib/requestFormPresetContracts';
+import { normalizeBlockPresentation } from '../lib/blockPresentationContracts';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
@@ -2077,17 +2077,6 @@ function normalizeGenerosityFundJoyfulGivingBillboardSettings(rawSettings) {
   return next;
 }
 
-function normalizeCharitableGiftAnnuitiesOutroSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
-  return {
-    ...settings,
-    titleFontFamily: 'helv',
-    titleFontWeight: 700,
-    justify: 'center',
-    actionsBeforeCards: true,
-  };
-}
-
 function withDefaultHeroLine(settings, config) {
   const next = { ...settings };
   const textKey = `line${config.line}Text`;
@@ -3188,47 +3177,6 @@ export function normalizeStoredConfig(payload) {
         };
       }
       if (
-        path === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
-        && storedBlock.id === 'outro'
-        && storedKind === 'billboard'
-        && defaultBlock
-      ) {
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          settings: {
-            ...(nextStoredBlock?.settings || storedBlock?.settings || {}),
-            titleFontFamily: 'helv',
-            titleFontWeight: 700,
-          },
-        };
-      }
-      if (
-        path === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
-        && storedBlock.id === 'request_form'
-        && storedKind === 'request_form'
-        && defaultBlock
-      ) {
-        storedMode = 'dynamic';
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: false,
-          settings: normalizeRequestFormPresetSettings(
-            {
-              ...(defaultBlock?.settings || {}),
-              ...(nextStoredBlock?.settings || storedBlock?.settings || {}),
-              sectionClassName: 'legacy-child-native-request',
-              presetId: 'legacy-impact',
-            },
-            'legacy-impact',
-          ),
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? [...defaultBlock.editableFields]
-            : nextStoredBlock.editableFields,
-        };
-      }
-      if (
         path === '/services/insurance/property-casualty-insurance'
         && storedBlock.id === 'request_form'
         && storedKind === 'request_form'
@@ -3496,17 +3444,6 @@ export function normalizeStoredConfig(payload) {
         };
       }
       if (
-        path === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
-        && storedBlock.id === 'outro'
-        && storedKind === 'billboard'
-        && storedMode === 'dynamic'
-      ) {
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          settings: normalizeCharitableGiftAnnuitiesOutroSettings(nextStoredBlock?.settings),
-        };
-      }
-      if (
         path === LEGACY_GIVING_GENEROSITY_FUND_PATH
         && storedBlock.id === 'joyful_giving_billboard'
         && storedKind === 'billboard'
@@ -3643,7 +3580,7 @@ export function normalizeStoredConfig(payload) {
             ...(modeVariant.settings || {}),
             ...(nextStoredBlock.settings || {}),
           };
-      mergedInStoredOrder.push({
+      const mergedBlock = {
         ...modeVariant,
         ...nextStoredBlock,
         name: normalizeBlockDisplayName(
@@ -3657,7 +3594,8 @@ export function normalizeStoredConfig(payload) {
         settings: normalizeRetirement403bSectionClassSettings(path, mergedSettings, modeVariant.settings),
         // Field schema should come from the current mode variant blueprint so admin UI upgrades appear automatically.
         editableFields: Array.isArray(modeVariant.editableFields) ? modeVariant.editableFields : [],
-      });
+      };
+      mergedInStoredOrder.push(normalizeBlockPresentation(mergedBlock));
     });
 
     const normalizedMergedBlocks = path === RETIREMENT_403B_PATH

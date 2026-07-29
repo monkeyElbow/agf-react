@@ -54,11 +54,14 @@ export const sitePages = [
     linkRefAliases: ['/services/legacy-giving/endowments'],
   },
   {
-    path: '/services/planned-giving/generosity-fund',
-    title: 'Generosity Fund',
+    path: '/services/planned-giving/donor-advised-fund',
+    title: 'Donor Advised Fund',
     section: 'Planned Giving',
     source: null,
-    linkRefAliases: ['/services/legacy-giving/generosity-fund'],
+    linkRefAliases: [
+      '/services/planned-giving/generosity-fund',
+      '/services/legacy-giving/generosity-fund',
+    ],
   },
   {
     path: '/services/planned-giving/ministry-impact-fund',

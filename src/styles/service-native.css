@@ -22087,13 +22087,13 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-request:not(.native-dynamic-request) .native-info-section-copy > h2 mark.is-white,
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy > h2 mark.is-white {
-  color: inherit;
+  color: #ffffff;
 }
 
 .legacy-child-native-request:not(.native-dynamic-request) .native-info-section-copy p,
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy .native-info-rich-html :is(p, li, a) {
-  color: var(--ag-color-super-grey);
+  color: #ffffff;
   font-size: clamp(1.2rem, 2.4vw, 1.55rem);
   line-height: 1.5;
   max-width: 30rem;

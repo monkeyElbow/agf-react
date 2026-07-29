@@ -11,7 +11,7 @@ import {
 } from '../src/blocks/foundation/forms.js';
 import { normalizeCalculatorIntroBlock, normalizeCalculatorWidgetBlock } from '../src/lib/calculatorWidgetIdentity.js';
 import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue.js';
-import { normalizeRequestFormPresetSettings } from '../src/lib/requestFormPresetContracts.js';
+import { normalizeBlockPresentation } from '../src/lib/blockPresentationContracts.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
 const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
@@ -657,26 +657,6 @@ function normalizeGenerosityFundJoyfulGivingBillboardSettings(rawSettings) {
   return next;
 }
 
-function normalizeCharitableGiftAnnuitiesOutroSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
-  return {
-    ...settings,
-    titleFontFamily: 'helv',
-    titleFontWeight: 700,
-    justify: 'center',
-    actionsBeforeCards: true,
-  };
-}
-
-function normalizeMinistryImpactOutroSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
-  return {
-    ...settings,
-    titleFontFamily: 'helv',
-    titleFontWeight: 700,
-  };
-}
-
 function normalizeGenerosityFundHowItWorksSettings(rawSettings) {
   const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
   return {
@@ -976,37 +956,6 @@ function normalizePageBlockState(pathname, block) {
     }
   }
   if (
-    pathname === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
-    && String(nextBlock?.id || '').trim() === 'outro'
-    && String(nextBlock?.kind || '').trim().toLowerCase() === 'billboard'
-    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
-  ) {
-    nextBlock.settings = normalizeCharitableGiftAnnuitiesOutroSettings(nextBlock?.settings);
-  }
-  if (
-    pathname === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
-    && String(nextBlock?.id || '').trim() === 'outro'
-    && String(nextBlock?.kind || '').trim().toLowerCase() === 'billboard'
-    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
-  ) {
-    nextBlock.settings = normalizeMinistryImpactOutroSettings(nextBlock?.settings);
-  }
-  if (
-    pathname === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
-    && String(nextBlock?.id || '').trim() === 'request_form'
-    && String(nextBlock?.kind || '').trim().toLowerCase() === 'request_form'
-    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
-  ) {
-    nextBlock.settings = normalizeRequestFormPresetSettings(
-      {
-        ...(nextBlock?.settings || {}),
-        sectionClassName: 'legacy-child-native-request',
-        presetId: 'legacy-impact',
-      },
-      'legacy-impact',
-    );
-  }
-  if (
     pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH
     && String(nextBlock?.id || '').trim() === 'hero'
     && String(nextBlock?.kind || '').trim().toLowerCase() === 'hero'
@@ -1057,7 +1006,7 @@ function normalizePageBlockState(pathname, block) {
   ) {
     nextBlock.settings = normalizeRetirementIraDailyBillboardSettings(nextBlock?.settings);
   }
-  return nextBlock;
+  return normalizeBlockPresentation(nextBlock);
 }
 
 function normalizePageBlocksState(pathname, blocks) {

@@ -76,7 +76,7 @@ describe('calculators native page content', () => {
     ].forEach(([pathname, widget]) => {
       const content = getNativePageContent(pathname, '');
       const blocks = contentBlockBlueprintsByPath[pathname] || [];
-      const heroBlock = blocks.find((block) => block?.id === 'hero');
+      const utilityHeaderBlock = blocks.find((block) => block?.id === 'utility_header');
       const introBlock = blocks.find((block) => block?.id === 'intro');
       const widgetBlock = blocks.find((block) => block?.id === 'calculator_tool');
       const formBlock = blocks.find((block) => block?.id === 'cta_form');
@@ -84,9 +84,18 @@ describe('calculators native page content', () => {
       expect(content?.hero).toBeUndefined();
       expect(Array.isArray(content?.sections) ? content.sections : []).toEqual([]);
       expect(Array.isArray(content?.actions) ? content.actions : []).toEqual([]);
-      expect(blocks.map((block) => block?.id)).toEqual(expect.arrayContaining(['hero', 'intro', 'calculator_tool', 'cta_form']));
+      expect(blocks.map((block) => block?.id)).toEqual(expect.arrayContaining(['utility_header', 'intro', 'calculator_tool', 'cta_form']));
+      expect(blocks.some((block) => block?.id === 'hero' || block?.kind === 'hero')).toBe(false);
       expect(blocks.some((block) => block?.id === 'page_content' || block?.kind === 'page_content')).toBe(false);
-      expect(heroBlock?.kind).toBe('hero');
+      expect(utilityHeaderBlock).toMatchObject({
+        kind: 'content',
+        mode: 'dynamic',
+        settings: {
+          headingLevel: 'h1',
+          sectionClassName: 'calculator-tool-native-page-head native-functional-page-head native-functional-page-head--utility',
+          justify: 'left',
+        },
+      });
       expect(introBlock?.kind).toBe('calculator_intro');
       expect((introBlock?.editableFields || []).some((field) => field.id === 'html' || field.label === 'Page Content HTML')).toBe(false);
       expect(widgetBlock?.kind).toBe('calculator_widget');
@@ -94,7 +103,13 @@ describe('calculators native page content', () => {
       expect((widgetBlock?.editableFields || []).map((field) => field.id)).toEqual(expect.arrayContaining(['widget']));
       expect((widgetBlock?.editableFields || []).some((field) => field.id === 'html' || field.label === 'Page Content HTML')).toBe(false);
       expect(formBlock?.kind).toBe('cta_form');
+      expect(formBlock?.settings?.bgTone).toBe(pathname === '/calculators/net-worth' ? 'white' : 'sand');
       expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
     });
+
+    const cssSource = readSource('../styles/service-native.css');
+    expect(cssSource).toContain('.native-functional-page-head--utility h1,');
+    expect(cssSource).toContain('.native-info-page--calculator-tool .calculator-tool-native-page-head + .service-native-section.calculator-tool-shell {');
+    expect(cssSource).not.toContain('.native-info-page--calculator-tool .service-native-hero');
   });
 });

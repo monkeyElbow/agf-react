@@ -69,6 +69,39 @@ describe('ContentAdminContext shared bootstrap', () => {
     expect(mockInitializeSharedContentFromSeed).not.toHaveBeenCalled();
   });
 
+  it('falls back to the code seed when shared bootstrap returns an empty uninitialized snapshot', async () => {
+    mockFetchSharedContentSnapshot.mockResolvedValueOnce({
+      initialized: false,
+      state: {
+        pageHierarchy: {},
+        blocksByPath: {},
+        pathAliases: {
+          '/services/planned-giving/generosity-fund': '/services/planned-giving/donor-advised-fund',
+        },
+        collaborationByPath: {},
+      },
+    });
+    mockInitializeSharedContentFromSeed.mockResolvedValueOnce({
+      initialized: false,
+      state: {
+        pageHierarchy: {},
+        blocksByPath: {},
+        pathAliases: {
+          '/services/planned-giving/generosity-fund': '/services/planned-giving/donor-advised-fund',
+        },
+        collaborationByPath: {},
+      },
+    });
+
+    const { bootstrapSharedContentAdminState } = await import('./ContentAdminContext.jsx');
+    const state = await bootstrapSharedContentAdminState();
+
+    expect(mockInitializeSharedContentFromSeed).toHaveBeenCalledTimes(1);
+    expect(Object.keys(state?.pageHierarchy || {}).length).toBeGreaterThan(0);
+    expect(Object.keys(state?.blocksByPath || {}).length).toBeGreaterThan(0);
+    expect(state?.blocksByPath?.['/services/planned-giving/donor-advised-fund']?.length).toBeGreaterThan(0);
+  });
+
   it('normalizes stale shared snapshots before exposing block-only authoring and published state', async () => {
     mockFetchSharedContentSnapshot.mockResolvedValueOnce({
       initialized: true,

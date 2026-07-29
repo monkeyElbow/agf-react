@@ -18,7 +18,7 @@ describe('native newsletter renderer guardrail', () => {
     expect(source).toContain('import NewsletterSignupForm from \'./NewsletterSignupForm\';');
     expect(source).toContain('const runtime = buildDynamicNewsletterFromBlock(block);');
     expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-newsletter' : 'native-dynamic-newsletter';");
-    expect(source).toContain('const newsletterSection = buildDynamicNewsletterSection(block, activePath);');
+    expect(source).toContain('const newsletterSection = buildDynamicNewsletterSection(renderBlock, activePath);');
     expect(source).toContain('<NewsletterSignupForm className="is-native-newsletter" />');
   });
 

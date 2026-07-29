@@ -19,8 +19,8 @@ describe('native testimonials renderer guardrail', () => {
     expect(source).toContain('library: testimonialsLibrary,');
     expect(source).not.toContain('const runtime = buildDynamicTestimonialsFromBlock(block, {\n    pathname,');
     expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-testimonials' : 'native-dynamic-testimonials';");
-    expect(source).toContain('const testimonialsSection = buildDynamicTestimonialsSection(block, activePath, testimonialsLibrary);');
-    expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'testimonials') {");
+    expect(source).toContain('const testimonialsSection = buildDynamicTestimonialsSection(renderBlock, activePath, testimonialsLibrary);');
+    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'testimonials') {");
     expect(source).toContain('acc.push(testimonialsSection);');
     expect(source).not.toContain('const targetedDynamicTestimonialsSections = new Map();');
     expect(source).not.toContain('const targetedDynamicTestimonialsFineprintSections = new Map();');

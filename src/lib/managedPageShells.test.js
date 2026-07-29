@@ -39,7 +39,7 @@ describe('managed page shells', () => {
     expect(isBlockOnlyManagedPagePath('/services/planned-giving/charitable-gift-annuities')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/services/planned-giving/charitable-trusts')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/services/planned-giving/endowments')).toBe(true);
-    expect(isBlockOnlyManagedPagePath('/services/planned-giving/generosity-fund')).toBe(true);
+    expect(isBlockOnlyManagedPagePath('/services/planned-giving/donor-advised-fund')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/services/planned-giving/ministry-impact-fund')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/services/planned-giving/qualified-charitable-distribution')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/services/insurance')).toBe(true);

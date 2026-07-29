@@ -70,6 +70,7 @@ import {
   shouldUseUniversalOutlineButtonLink,
 } from '../lib/dynamicPageBlocks';
 import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
+import { normalizeBlockForRender } from '../lib/blockPresentationContracts';
 import { buildNativeHudPanels } from '../lib/nativeHudPanels';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import GivingComparisonMatrix from './GivingComparisonMatrix';
@@ -947,8 +948,15 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
   const actions = Array.isArray(runtime.actions)
     ? runtime.actions.map((action) => toNativeActionItem(action)).filter(Boolean)
     : [];
+  const usesRetirementDailyBillboard = runtime.sectionClassName
+    .split(/\s+/)
+    .includes('retirement-daily-billboard');
   const sectionStyle = actions.length
-    ? { '--dynamic-billboard-padding-bottom': 'clamp(4.1rem, 8vw, 6.8rem)' }
+    ? {
+        '--dynamic-billboard-padding-bottom': usesRetirementDailyBillboard
+          ? 'clamp(6rem, 12vw, 9rem)'
+          : 'clamp(4.1rem, 8vw, 6.8rem)',
+      }
     : undefined;
   const railStyle = runtime.contentMaxWidthPx
     ? { '--dynamic-billboard-max-width': `${runtime.contentMaxWidthPx}px` }
@@ -1008,6 +1016,7 @@ function buildDynamicPageContentSection(block, pathname) {
     fineprint,
     fineprintDisclosureId,
     fullBleed,
+    railClassName,
     spaceBeforeRem,
     spaceAfterRem,
     paddingTopRem,
@@ -1035,6 +1044,7 @@ function buildDynamicPageContentSection(block, pathname) {
     anchorId: anchorId || undefined,
     className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}`,
     fullBleed: Boolean(fullBleed),
+    railClassName: railClassName || undefined,
     title,
     titleClassName: titleClassName || undefined,
     titleHighlights: Array.isArray(titleHighlights) ? titleHighlights : [],
@@ -1064,49 +1074,6 @@ function buildDynamicPageContentSection(block, pathname) {
       '--dyn-content-padding-top': `${paddingTopRem}rem`,
       '--dyn-content-padding-bottom': `${paddingBottomRem}rem`,
       '--dyn-content-max-width': `${contentMaxWidthPx}px`,
-    },
-  };
-}
-
-function buildAboutBuildingPhotoSection(block, pathname) {
-  if (pathname !== '/about-us' || String(block?.id || '').trim() !== 'building_shot') {
-    return null;
-  }
-
-  const settings = block?.settings && typeof block.settings === 'object' ? block.settings : {};
-  const logoImage = String(settings.logoImage || settings.col1ImageUrl || '/src/assets/about-intro.jpg').trim();
-  const logoAlt = String(settings.logoAlt || settings.col1ImageAlt || 'AGFinancial office building').trim();
-
-  return {
-    id: `${pathname}-page-content-building_shot`,
-    blockId: 'building_shot',
-    hideTitle: true,
-    className: 'native-dynamic-page-content about-native-building-shot',
-    fullBleed: true,
-    railClassName: 'native-info-viewport-bleed',
-    logoImage,
-    logoAlt,
-    copyWrap: false,
-    body: [],
-    actions: [],
-    sectionStyle: {
-      '--dyn-content-margin-top': '0rem',
-      '--dyn-content-margin-bottom': '0rem',
-      '--dyn-content-padding-top': '0rem',
-      '--dyn-content-padding-bottom': '0rem',
-      '--dyn-content-max-width': '1440px',
-      '--about-building-parallax-y': '0px',
-      width: '100vw',
-      maxWidth: 'none',
-      marginLeft: 'calc(50% - 50vw)',
-      marginRight: 'calc(50% - 50vw)',
-      overflow: 'clip',
-    },
-    railStyle: {
-      width: '100vw',
-      maxWidth: 'none',
-      margin: 0,
-      padding: 0,
     },
   };
 }
@@ -1245,6 +1212,7 @@ function buildDynamicColumnsSection(block, pathname) {
     columnsStyle,
     sectionClassName,
     items,
+    actions,
   } = runtime;
   const hasIntroCopy = Boolean(title || leadLine || bodyHtml || followupLine);
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-columns' : 'native-dynamic-columns';
@@ -1286,6 +1254,7 @@ function buildDynamicColumnsSection(block, pathname) {
     columns,
     columnsStyle,
     columnsItems,
+    actions: (Array.isArray(actions) ? actions : []).map((action) => toNativeActionItem(action)).filter(Boolean),
     className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-columns-style-${columnsStyle} ${presetRuntimeClassName}`,
   };
 }
@@ -3084,7 +3053,6 @@ function FundAnIraWidget() {
   return (
     <div className="fund-ira-widget">
       <div className="fund-ira-header">
-        <h2>Fund an IRA</h2>
         <p>Follow the four steps below. Each step unlocks the next one once complete.</p>
       </div>
 
@@ -4538,15 +4506,7 @@ export default function NativeContentPage({ page }) {
     let nextBaseContent = baseContent;
     const pageBlocks = editablePageBlocks;
     const fullyHiddenBlockIds = collectFullyHiddenBlockIds(pageBlocks);
-    const visibleBlocks = pageBlocks.filter((block) => {
-      if (toBoolean(block?.hidden)) {
-        return false;
-      }
-      if (resolvedPagePath === '/calculators' && (block?.id === 'hero' || block?.kind === 'hero')) {
-        return false;
-      }
-      return true;
-    });
+    const visibleBlocks = pageBlocks.filter((block) => !toBoolean(block?.hidden));
     const heroBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'hero');
 
     if (isTestPage) {
@@ -4579,102 +4539,98 @@ export default function NativeContentPage({ page }) {
     }
 
     const dynamicSections = visibleBlocks.reduce((acc, block) => {
-      const aboutBuildingPhotoSection = buildAboutBuildingPhotoSection(block, activePath);
-      if (aboutBuildingPhotoSection) {
-        acc.push(aboutBuildingPhotoSection);
-        return acc;
-      }
+      const renderBlock = normalizeBlockForRender(block);
 
-      if (isBlockOnlyManagedPage && block.mode === 'dynamic' && block.kind === 'hero') {
-        const heroSection = buildDynamicHeroShellSection(block);
+      if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'hero') {
+        const heroSection = buildDynamicHeroShellSection(renderBlock);
         if (heroSection) {
           acc.push(heroSection);
         }
         return acc;
       }
 
-      if (isBlockOnlyManagedPage && block.mode === 'dynamic' && block.kind === 'intro') {
-        const introSection = buildDynamicIntroShellSection(block);
+      if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'intro') {
+        const introSection = buildDynamicIntroShellSection(renderBlock);
         if (introSection) {
           acc.push(introSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && (block.kind === 'content' || block.kind === CALCULATOR_INTRO_KIND || block.kind === CALCULATOR_WIDGET_KIND)) {
-        const pageContentSection = buildDynamicPageContentSection(block, activePath);
+      if (renderBlock.mode === 'dynamic' && (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND)) {
+        const pageContentSection = buildDynamicPageContentSection(renderBlock, activePath);
         if (pageContentSection) {
           acc.push(pageContentSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && block.kind === 'card_grid') {
-        const gridSection = buildDynamicGridSection(block, activePath, { getConsultants });
+      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'card_grid') {
+        const gridSection = buildDynamicGridSection(renderBlock, activePath, { getConsultants });
         if (gridSection) {
           acc.push(gridSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && block.kind === 'columns') {
-        const columnsSection = buildDynamicColumnsSection(block, activePath);
+      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'columns') {
+        const columnsSection = buildDynamicColumnsSection(renderBlock, activePath);
         if (columnsSection) {
           acc.push(columnsSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && block.kind === 'newsletter') {
-        const newsletterSection = buildDynamicNewsletterSection(block, activePath);
+      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'newsletter') {
+        const newsletterSection = buildDynamicNewsletterSection(renderBlock, activePath);
         if (newsletterSection) {
           acc.push(newsletterSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && block.kind === 'feature_panel') {
-        const featurePanelSection = buildDynamicFeaturePanelSection(block, activePath);
+      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'feature_panel') {
+        const featurePanelSection = buildDynamicFeaturePanelSection(renderBlock, activePath);
         if (featurePanelSection) {
           acc.push(featurePanelSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && block.kind === 'site_feature') {
-        const siteFeatureSection = buildDynamicSiteFeatureSection(block, activePath);
+      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'site_feature') {
+        const siteFeatureSection = buildDynamicSiteFeatureSection(renderBlock, activePath);
         if (siteFeatureSection) {
           acc.push(siteFeatureSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && block.kind === 'cta_form') {
-        const ctaSection = buildDynamicCtaSection(block, activePath);
+      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'cta_form') {
+        const ctaSection = buildDynamicCtaSection(renderBlock, activePath);
         if (ctaSection) {
           acc.push(ctaSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && block.kind === 'request_form') {
-        const requestSection = buildDynamicRequestFormSection(block, activePath);
+      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'request_form') {
+        const requestSection = buildDynamicRequestFormSection(renderBlock, activePath);
         if (requestSection) {
           acc.push(requestSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && block.kind === 'testimonials') {
-        const testimonialsSection = buildDynamicTestimonialsSection(block, activePath, testimonialsLibrary);
+      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'testimonials') {
+        const testimonialsSection = buildDynamicTestimonialsSection(renderBlock, activePath, testimonialsLibrary);
         if (testimonialsSection) {
           acc.push(testimonialsSection);
         }
         return acc;
       }
 
-      if (block.mode === 'dynamic' && block.kind === 'billboard') {
-        const billboardSection = buildNativeBillboardSection(block, { includeTestClassName: isTestPage });
+      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'billboard') {
+        const billboardSection = buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });
         if (billboardSection) {
           acc.push(billboardSection);
         }
@@ -4691,12 +4647,10 @@ export default function NativeContentPage({ page }) {
       };
     }
 
-    let remainingDynamicSections = dynamicSections;
-
-    if (remainingDynamicSections.length) {
+    if (dynamicSections.length) {
       nextBaseContent = {
         ...nextBaseContent,
-        sections: [...(nextBaseContent.sections || []), ...remainingDynamicSections],
+        sections: [...(nextBaseContent.sections || []), ...dynamicSections],
       };
     }
 
@@ -4738,7 +4692,7 @@ export default function NativeContentPage({ page }) {
       hideIntro: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has('intro')),
       sections: nextSections,
     };
-  }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, resolvedPagePath, templatePath, testimonialsLibrary]);
+  }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, templatePath, testimonialsLibrary]);
   const contentWithManagedDisclosures = useMemo(() => ({
     ...content,
     preIntroSections: Array.isArray(content.preIntroSections)
@@ -4846,16 +4800,8 @@ export default function NativeContentPage({ page }) {
   const shouldRenderIntro = !isBlockOnlyManagedPage && !hideIntro && hasIntroContent;
   const legalDoc = content?.legalDocument || null;
   const visibleEditablePageBlocks = useMemo(
-    () => editablePageBlocks.filter((block) => {
-      if (toBoolean(block?.hidden)) {
-        return false;
-      }
-      if (resolvedPagePath === '/calculators' && (block?.id === 'hero' || block?.kind === 'hero')) {
-        return false;
-      }
-      return true;
-    }),
-    [editablePageBlocks, resolvedPagePath],
+    () => editablePageBlocks.filter((block) => !toBoolean(block?.hidden)),
+    [editablePageBlocks],
   );
   const hudDockPanels = useMemo(
     () => buildNativeHudPanels({ blocks: visibleEditablePageBlocks }),
@@ -6045,6 +5991,7 @@ export default function NativeContentPage({ page }) {
         const isDynamicPageContentSection = sectionClassName.includes('dynamic-page-content');
         const isDynamicRequestSection = sectionClassName.includes('native-dynamic-request');
         const dynamicSectionBlockId = String(section?.blockId || '').trim();
+        const shouldAnimatePlannedGivingStepIcons = sectionClassName.includes('legacy-child-native-flow-steps');
 
         if (isHiddenPendingInlineCtaReveal) {
           return null;
@@ -6703,7 +6650,13 @@ export default function NativeContentPage({ page }) {
                       </div>
                     ) : null}
                     {column.iconKey ? (
-                      <PlannedGivingStepIcon iconKey={column.iconKey} tone={column.iconTone} />
+                      <PlannedGivingStepIcon
+                        iconKey={column.iconKey}
+                        tone={column.iconTone}
+                        className={shouldAnimatePlannedGivingStepIcons ? 'planned-giving-step-icon--scroll-reveal fade-up fade-up-force-observe fade-up-repeat-observe fade-up-no-shift' : ''}
+                        fadeDelayMs={shouldAnimatePlannedGivingStepIcons ? columnIndex * 140 : undefined}
+                        fadeRootMargin={shouldAnimatePlannedGivingStepIcons ? '0px 0px -8% 0px' : ''}
+                      />
                     ) : null}
                     <div className="native-columns-copy">
                       {column.title ? <h3>{renderTextWithStrong(column.title)}</h3> : null}

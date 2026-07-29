@@ -45,8 +45,8 @@ import {
 } from './dynamicSectionTypography';
 import { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
 import {
-  normalizeRequestFormPresetSettings,
-} from './requestFormPresetContracts';
+  normalizeBlockForRender,
+} from './blockPresentationContracts';
 import { resolveSiteFeatureCatalogEntry } from '../data/siteFeatureCatalog';
 
 export { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
@@ -950,7 +950,8 @@ export function buildDynamicBillboardFromBlock(block) {
     return null;
   }
 
-  const settings = block.settings || {};
+  const normalizedBlock = normalizeBlockForRender(block);
+  const settings = normalizedBlock?.settings || {};
   const title = String(settings.title || '').trim();
   const titleClassName = sanitizeClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
@@ -962,24 +963,12 @@ export function buildDynamicBillboardFromBlock(block) {
   const fineprint = parsePageContentTextLines(settings.fineprint);
   const bgTone = String(settings.bgTone || 'blue').trim().toLowerCase() || 'blue';
   const textTone = String(settings.textTone || 'white').trim().toLowerCase() || 'white';
-  const sectionClassSet = new Set(sectionClassName.split(/\s+/).filter(Boolean));
-  const presentationContract = sectionClassSet.has('legacy-child-native-cga-outro')
-    ? {
-        actionsBeforeCards: true,
-        justify: 'center',
-        titleFontFamily: 'helv',
-        titleFontWeight: 700,
-      }
-    : null;
-  const justify = String(presentationContract?.justify || settings.justify || 'center').trim().toLowerCase() || 'center';
+  const justify = String(settings.justify || 'center').trim().toLowerCase() || 'center';
   const lineSpacing = Number.isFinite(Number(settings.lineSpacing)) ? Number(settings.lineSpacing) : 1;
   const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);
-  const titleFontFamily = presentationContract?.titleFontFamily
-    || (sectionClassSet.has('legacy-giving-joy')
-      ? 'helv'
-      : normalizeBillboardTitleFontFamily(settings.titleFontFamily));
+  const titleFontFamily = normalizeBillboardTitleFontFamily(settings.titleFontFamily);
   const titleFontWeight = normalizeBillboardTitleFontWeight(
-    presentationContract?.titleFontWeight ?? settings.titleFontWeight,
+    settings.titleFontWeight,
     titleFontFamily,
   );
   const titleSizeRem = normalizeBillboardTitleSizeRem(settings.titleSizeRem);
@@ -1082,7 +1071,7 @@ export function buildDynamicBillboardFromBlock(block) {
       : null,
     action: actions[0] || null,
     actions,
-    actionsBeforeCards: presentationContract?.actionsBeforeCards ?? toBoolean(settings.actionsBeforeCards),
+    actionsBeforeCards: toBoolean(settings.actionsBeforeCards),
   };
 }
 
@@ -2025,7 +2014,8 @@ function parseRequestFormStepFieldsJson(value) {
 }
 
 export function buildDynamicRequestFormFromBlock(block) {
-  const rawSettings = resolveRequestFormSource(block);
+  const normalizedBlock = normalizeBlockForRender(block);
+  const rawSettings = resolveRequestFormSource(normalizedBlock);
   if (!rawSettings) {
     return null;
   }
@@ -2035,7 +2025,7 @@ export function buildDynamicRequestFormFromBlock(block) {
     rawSettings.presetId || rawSettings.requestFormPresetId,
     baseSectionClassName,
   );
-  const settings = normalizeRequestFormPresetSettings(rawSettings, presetId);
+  const settings = rawSettings;
   const title = String(settings.title || '').trim();
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlightsJson = String(settings.titleHighlightsJson || '').trim();

@@ -29,7 +29,7 @@ const BLOCK_ONLY_MANAGED_PAGE_PATHS = new Set([
   '/services/planned-giving/charitable-gift-annuities',
   '/services/planned-giving/charitable-trusts',
   '/services/planned-giving/endowments',
-  '/services/planned-giving/generosity-fund',
+  '/services/planned-giving/donor-advised-fund',
   '/services/planned-giving/ministry-impact-fund',
   '/services/planned-giving/qualified-charitable-distribution',
   '/services/insurance',

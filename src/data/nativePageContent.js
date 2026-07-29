@@ -288,7 +288,7 @@ const legacyChildPages = {
     pageClass: 'native-info-page--legacy-child native-info-page--legacy-endowments',
     compact: true,
   },
-  '/services/planned-giving/generosity-fund': {
+  '/services/planned-giving/donor-advised-fund': {
     pageClass: 'native-info-page--legacy-child native-info-page--legacy-generosity-fund',
     compact: true,
   },

@@ -29,8 +29,8 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('const shouldRenderIntro = !isBlockOnlyManagedPage && !hideIntro && hasIntroContent;');
     expect(source).toContain('const showIntroHud = showFrontHud && shouldRenderIntro && Boolean(introHudPanel);');
     expect(source).toContain('{shouldRenderIntro ? (');
-    expect(source).toContain('const pageContentSection = buildDynamicPageContentSection(block, activePath);');
-    expect(source).toContain("if (block.mode === 'dynamic' && (block.kind === 'content' || block.kind === CALCULATOR_INTRO_KIND || block.kind === CALCULATOR_WIDGET_KIND)) {");
+    expect(source).toContain('const pageContentSection = buildDynamicPageContentSection(renderBlock, activePath);');
+    expect(source).toContain("if (renderBlock.mode === 'dynamic' && (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND)) {");
     expect(source).toContain("const dynamicSectionPanel = dynamicSectionBlockId ? (hudPanelByBlockId[dynamicSectionBlockId] || null) : null;");
     expect(source).not.toContain("if (block.id === 'page_content') {");
   });
@@ -41,8 +41,8 @@ describe('native page content renderer guardrail', () => {
 
     expect(source).toContain('function buildDynamicHeroShellSection(block) {');
     expect(source).toContain('function buildDynamicIntroShellSection(block, { includeTestClassName = false } = {}) {');
-    expect(source).toContain("if (isBlockOnlyManagedPage && block.mode === 'dynamic' && block.kind === 'hero') {");
-    expect(source).toContain("if (isBlockOnlyManagedPage && block.mode === 'dynamic' && block.kind === 'intro') {");
+    expect(source).toContain("if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'hero') {");
+    expect(source).toContain("if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'intro') {");
     expect(source).toContain('const adminIntro = !isBlockOnlyManagedPage');
     expect(source).toContain('const shouldRenderHero = !isBlockOnlyManagedPage && !hideHero;');
     expect(source).toContain('hideHero: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideHero) || fullyHiddenBlockIds.has(\'hero\')),');
@@ -59,8 +59,8 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('buildDynamicSiteFeatureFromBlock,');
     expect(source).toContain('const runtime = buildDynamicSiteFeatureFromBlock(block);');
     expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
-    expect(source).toContain('const siteFeatureSection = buildDynamicSiteFeatureSection(block, activePath);');
-    expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'site_feature') {");
+    expect(source).toContain('const siteFeatureSection = buildDynamicSiteFeatureSection(renderBlock, activePath);');
+    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'site_feature') {");
   });
 
   it('keeps feature panels on the shared dynamic section path without native-section targeting', () => {
@@ -69,8 +69,8 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('buildDynamicFeaturePanelFromBlock,');
     expect(source).toContain('const runtime = buildDynamicFeaturePanelFromBlock(block);');
     expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
-    expect(source).toContain('const featurePanelSection = buildDynamicFeaturePanelSection(block, activePath);');
-    expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'feature_panel') {");
+    expect(source).toContain('const featurePanelSection = buildDynamicFeaturePanelSection(renderBlock, activePath);');
+    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'feature_panel') {");
     expect(source).toContain('acc.push(featurePanelSection);');
     expect(source).not.toContain('const mappedSection = buildDynamicFeaturePanelSection(block, activePath);');
   });
@@ -195,8 +195,10 @@ describe('native page content renderer guardrail', () => {
     expect(aboutBuildingCss).not.toContain('calc(100% - (var(--ag-panel-gutter)');
 
     const nativePageSource = readSource('./NativeContentPage.jsx');
-    expect(nativePageSource).toContain('function buildAboutBuildingPhotoSection(block, pathname)');
-    expect(nativePageSource).toContain("railClassName: 'native-info-viewport-bleed'");
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
+    expect(nativePageSource).not.toContain('function buildAboutBuildingPhotoSection');
+    expect(nativePageSource).toContain('railClassName: railClassName || undefined');
+    expect(blueprintSource).toContain("railClassName: 'native-info-viewport-bleed'");
     expect(nativePageSource).toContain("section?.querySelector('.native-info-section-logo, .native-columns-media')");
     expect(nativePageSource).toContain('const maxOffset = 52;');
   });

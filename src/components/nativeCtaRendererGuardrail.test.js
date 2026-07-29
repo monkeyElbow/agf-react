@@ -25,8 +25,8 @@ describe('native CTA renderer guardrail', () => {
   it('renders dynamic CTA blocks directly instead of targeting native sections', () => {
     const source = readSource('./NativeContentPage.jsx');
 
-    expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'cta_form') {");
-    expect(source).toContain('const ctaSection = buildDynamicCtaSection(block, activePath);');
+    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'cta_form') {");
+    expect(source).toContain('const ctaSection = buildDynamicCtaSection(renderBlock, activePath);');
     expect(source).toContain('acc.push(ctaSection);');
     expect(source).not.toContain('const targetedDynamicCtaSections = new Map();');
     expect(source).not.toContain("const targetKey = String(mappedSection?.targetSectionKey || '').trim();");

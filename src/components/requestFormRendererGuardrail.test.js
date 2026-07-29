@@ -124,8 +124,9 @@ describe('request form renderer guardrail', () => {
   it('renders dynamic request blocks directly instead of targeting native sections', () => {
     const source = readSource('./NativeContentPage.jsx');
 
-    expect(source).toContain("if (block.mode === 'dynamic' && block.kind === 'request_form') {");
-    expect(source).toContain('const requestSection = buildDynamicRequestFormSection(block, activePath);');
+    expect(source).toContain('const renderBlock = normalizeBlockForRender(block);');
+    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'request_form') {");
+    expect(source).toContain('const requestSection = buildDynamicRequestFormSection(renderBlock, activePath);');
     expect(source).toContain('acc.push(requestSection);');
     expect(source).toContain('return <DynamicRequestFormSection config={config} />;');
     expect(source).not.toContain('const targetedDynamicRequestSections = new Map();');

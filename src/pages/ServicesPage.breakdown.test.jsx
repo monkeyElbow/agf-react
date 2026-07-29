@@ -129,7 +129,7 @@ describe('ServicesPage breakdown directory', () => {
       ['409A', '/services/retirement/409a'],
       ['Charitable Gift Annuities', '/services/planned-giving/charitable-gift-annuities'],
       ['Charitable Trusts', '/services/planned-giving/charitable-trusts'],
-      ['Donor Advised Funds / Generosity Fund', '/services/planned-giving/generosity-fund'],
+      ['Donor Advised Fund', '/services/planned-giving/donor-advised-fund'],
       ['Endowments', '/services/planned-giving/endowments'],
       ['Ministry Impact Fund®', '/services/planned-giving/ministry-impact-fund'],
       ['Wills & Estate Services', '/services/planned-giving'],

@@ -558,15 +558,15 @@ describe('buildDynamicRequestFormFromBlock', () => {
     });
 
     expect(runtime).toMatchObject({
-      titleClassName: 'is-super-grey',
-      titleHighlightsJson: '[]',
+      titleClassName: '',
+      titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
       bgTone: 'blue',
-      textTone: 'dark',
+      textTone: 'white',
       spaceBeforeRem: 3.6,
       spaceAfterRem: 4.2,
       hideStepTitles: true,
     });
-    expect(runtime?.sectionClassName).toContain('is-text-dark');
+    expect(runtime?.sectionClassName).toContain('is-text-white');
     expect(runtime?.steps?.[0]).toMatchObject({
       title: '',
       note: '',

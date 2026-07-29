@@ -222,7 +222,7 @@ const SITE_FEATURE_CATALOG = Object.freeze([
           links: Object.freeze([
             Object.freeze({ label: 'Charitable Gift Annuities', path: '/services/planned-giving/charitable-gift-annuities' }),
             Object.freeze({ label: 'Charitable Trusts', path: '/services/planned-giving/charitable-trusts' }),
-            Object.freeze({ label: 'Donor Advised Funds / Generosity Fund', path: '/services/planned-giving/generosity-fund' }),
+            Object.freeze({ label: 'Donor Advised Fund', path: '/services/planned-giving/donor-advised-fund' }),
             Object.freeze({ label: 'Endowments', path: '/services/planned-giving/endowments' }),
             Object.freeze({ label: 'Ministry Impact Fund®', path: '/services/planned-giving/ministry-impact-fund' }),
             Object.freeze({ label: 'Wills & Estate Services', path: '/services/planned-giving' }),

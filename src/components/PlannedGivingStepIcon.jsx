@@ -30,6 +30,8 @@ export default function PlannedGivingStepIcon({
   iconKey,
   tone = '',
   className = '',
+  fadeDelayMs,
+  fadeRootMargin = '',
 }) {
   const normalizedIconKey = String(iconKey || '').trim();
   const svgMarkup = STEP_ICON_SVG_BY_KEY[normalizedIconKey];
@@ -43,11 +45,18 @@ export default function PlannedGivingStepIcon({
   const extraClassName = String(className || '').trim()
     ? ` ${String(className || '').trim()}`
     : '';
+  const normalizedFadeDelayMs = Number(fadeDelayMs);
+  const fadeDelayAttribute = Number.isFinite(normalizedFadeDelayMs)
+    ? Math.max(0, normalizedFadeDelayMs)
+    : undefined;
+  const normalizedFadeRootMargin = String(fadeRootMargin || '').trim() || undefined;
 
   return (
     <span
       className={`planned-giving-step-icon${toneClassName}${extraClassName}`}
       data-planned-giving-step-icon={normalizedIconKey}
+      data-fade-delay-ms={fadeDelayAttribute}
+      data-fade-root-margin={normalizedFadeRootMargin}
       aria-hidden="true"
       dangerouslySetInnerHTML={{ __html: svgMarkup }}
     />

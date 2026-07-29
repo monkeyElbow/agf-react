@@ -62,6 +62,8 @@ const RETIRED_INTRO_PAGE_CONTENT_SETTING_KEYS = Object.freeze([
   'fineprintDisclosureId',
 ]);
 
+const CALCULATOR_TOOL_UTILITY_HEADER_CLASS = 'calculator-tool-native-page-head native-functional-page-head native-functional-page-head--utility';
+
 function readJson(relativePath) {
   return JSON.parse(readFileSync(path.resolve(repoRoot, relativePath), 'utf8'));
 }
@@ -78,6 +80,22 @@ function collectCalculatorBlocksFromSnapshotRoot(root = {}, blockId) {
         .flatMap((revision, revisionIndex) => (
           (Array.isArray(revision?.snapshot?.blocks) ? revision.snapshot.blocks : [])
             .filter((block) => block?.id === blockId)
+            .map((block) => ({ pathname, source: `revision:${revisionIndex}`, block }))
+        ))
+    )),
+  ];
+}
+
+function collectStandaloneCalculatorBlocks(root = {}) {
+  return [
+    ...STANDALONE_CALCULATOR_PATHS.flatMap((pathname) => (
+      (Array.isArray(root?.blocksByPath?.[pathname]) ? root.blocksByPath[pathname] : [])
+        .map((block) => ({ pathname, source: 'blocksByPath', block }))
+    )),
+    ...STANDALONE_CALCULATOR_PATHS.flatMap((pathname) => (
+      (Array.isArray(root?.revisionsByPath?.[pathname]) ? root.revisionsByPath[pathname] : [])
+        .flatMap((revision, revisionIndex) => (
+          (Array.isArray(revision?.snapshot?.blocks) ? revision.snapshot.blocks : [])
             .map((block) => ({ pathname, source: `revision:${revisionIndex}`, block }))
         ))
     )),
@@ -157,6 +175,24 @@ function expectCalculatorWidgetShape(entries) {
 }
 
 describe('calculator page-content ghost guardrail', () => {
+  it('keeps standalone calculator blueprints on utility headers instead of hero blocks', () => {
+    STANDALONE_CALCULATOR_PATHS.forEach((pathname) => {
+      const blocks = contentBlockBlueprintsByPath[pathname] || [];
+      const utilityHeader = blocks.find((block) => block?.id === 'utility_header');
+
+      expect(blocks.some((block) => block?.id === 'hero' || block?.kind === 'hero'), pathname).toBe(false);
+      expect(utilityHeader, pathname).toMatchObject({
+        kind: 'content',
+        mode: 'dynamic',
+        settings: {
+          headingLevel: 'h1',
+          sectionClassName: CALCULATOR_TOOL_UTILITY_HEADER_CLASS,
+          justify: 'left',
+        },
+      });
+    });
+  });
+
   it('keeps standalone calculator blueprints out of the Page Content block kind and fields', () => {
     const introEntries = STANDALONE_CALCULATOR_PATHS.flatMap((pathname) => (
       (contentBlockBlueprintsByPath[pathname] || [])
@@ -188,9 +224,30 @@ describe('calculator page-content ghost guardrail', () => {
       ...collectCalculatorBlocksFromSnapshotRoot(shared, CALCULATOR_WIDGET_BLOCK_ID),
       ...collectCalculatorBlocksFromSnapshotRoot(seed.seedState, CALCULATOR_WIDGET_BLOCK_ID),
     ];
+    const allStandaloneEntries = [
+      ...collectStandaloneCalculatorBlocks(shared.state),
+      ...collectStandaloneCalculatorBlocks(shared.baseSnapshot),
+      ...collectStandaloneCalculatorBlocks(shared),
+      ...collectStandaloneCalculatorBlocks(seed.seedState),
+    ];
 
     expectCalculatorIntroShape(introEntries);
     expectCalculatorWidgetShape(widgetEntries);
+    expect(
+      allStandaloneEntries.filter(({ block }) => block?.id === 'hero' || block?.kind === 'hero'),
+    ).toEqual([]);
+    STANDALONE_CALCULATOR_PATHS.forEach((pathname) => {
+      const utilityHeaders = allStandaloneEntries.filter(({ pathname: entryPath, block }) => (
+        entryPath === pathname && block?.id === 'utility_header'
+      ));
+      expect(utilityHeaders.length, pathname).toBeGreaterThan(0);
+      utilityHeaders.forEach(({ block, source }) => {
+        expect(block?.kind, `${pathname} ${source} utility kind`).toBe('content');
+        expect(block?.settings?.headingLevel, `${pathname} ${source} heading level`).toBe('h1');
+        expect(block?.settings?.sectionClassName, `${pathname} ${source} section class`).toBe(CALCULATOR_TOOL_UTILITY_HEADER_CLASS);
+        expect(block?.settings?.justify, `${pathname} ${source} justify`).toBe('left');
+      });
+    });
   });
 
   it('normalizes stale content-kind standalone calculator blocks before they can re-enter state', () => {

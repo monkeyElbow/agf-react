@@ -33,6 +33,7 @@ import {
   normalizeSemanticTextColorClass,
   normalizeSurfaceBgTone,
 } from '../../lib/colorSystem';
+import { normalizeBlockForRender } from '../../lib/blockPresentationContracts';
 import {
   buildPresetFamilyRuntimeClassName,
   resolvePresetFamilyClassToken,
@@ -2090,22 +2091,23 @@ export default function PageBlocksRenderer({
   return (
     <>
       {blocks.map((block, index) => {
-        const blockKind = String(block?.kind || block?.type || '').trim();
+        const renderBlock = normalizeBlockForRender(block);
+        const blockKind = String(renderBlock?.kind || renderBlock?.type || '').trim();
         const Renderer = blockRenderers[blockKind];
         if (!Renderer) {
           return null;
         }
-        const hudAnchor = resolveHudAnchor(block);
+        const hudAnchor = resolveHudAnchor(renderBlock);
         return (
           <Renderer
             key={`${blockKind || 'block'}-${index}`}
-            block={block}
+            block={renderBlock}
             resolveTo={resolveTo}
             heroHud={blockKind === 'hero' ? heroHud : null}
             hudAnchor={hudAnchor}
             ownership={ownershipEnabled
               ? getBlockOwnershipVisual(
-                getBlockCollaboration(ownershipPathname, block?.id),
+                getBlockCollaboration(ownershipPathname, renderBlock?.id),
                 devIdentity?.userId,
               )
               : EMPTY_OWNERSHIP}

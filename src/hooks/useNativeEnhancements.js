@@ -232,7 +232,10 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
           return;
         }
 
-        const delayMs = 90 + ((index % 8) * 90);
+        const explicitDelayMs = parseNumericAttribute(target.getAttribute('data-fade-delay-ms'), null);
+        const delayMs = explicitDelayMs !== null
+          ? Math.max(0, explicitDelayMs)
+          : 90 + ((index % 8) * 90);
         const timer = window.setTimeout(() => {
           requestAnimationFrame(() => {
             clearPendingState(target);

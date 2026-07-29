@@ -121,8 +121,10 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('grid-template-columns: minmax(19rem, 0.78fr) minmax(0, 1.22fr);');
     expect(cssSource).toContain('width: min(var(--dyn-content-max-width, 1040px), 100%);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-assets-copy {');
+    expect(cssSource).toContain('grid-column: 1;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-asset-badges {');
     expect(cssSource).toContain('grid-template-columns: repeat(3, minmax(7.2rem, max-content));');
+    expect(cssSource).toContain('grid-row: 1 / span 2;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-asset-badges li:nth-child(4) {');
     expect(cssSource).toContain('text-align: left;');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets {');
