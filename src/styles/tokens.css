@@ -17,6 +17,17 @@
   --ag-section-wide-max: var(--ag-panel-wide-max);
   --ag-form-content-max: 760px;
   --ag-section-gutter: var(--ag-panel-gutter);
+  --ag-field-min-height: 3.35rem;
+  --ag-field-border: rgba(65, 64, 66, 0.58);
+  --ag-field-border-focus: var(--ag-color-atlantean-dark);
+  --ag-field-radius: 999px;
+  --ag-field-text: var(--ag-color-super-grey);
+  --ag-field-bg: #ffffff;
+  --ag-field-placeholder: color-mix(in srgb, var(--ag-color-super-grey) 64%, #9ea7ac 36%);
+  --ag-field-focus-ring: 0 0 0 3px color-mix(in srgb, var(--ag-color-atlantean-dark) 18%, transparent);
+  --ag-field-select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'%3E%3Cpath d='M5 7L9 11L13 7' stroke='%23414042' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --ag-field-label-inline-offset: 1.15rem;
+  --ag-field-label-gap: 0.16rem;
 
   /* Brand palette tokens */
   --ag-color-white: #ffffff;

@@ -68193,8 +68193,6 @@
             "button2Style": "outline",
             "button2Tone": "super-grey",
             "sectionClassName": "legacy-child-native-cga-outro",
-            "fineprint": "Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.\n\nAdditional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.\n\nAdditional information for Oklahoma residents: A Charitable Gift Annuity is not regulated by the Oklahoma Insurance Department and is not protected by a guaranty association with the Oklahoma Insurance Department.\n\nAdditional information for South Dakota residents: Charitable Gift Annuities are not regulated by and are not under the jurisdiction of the South Dakota Division of Insurance.",
-            "fineprintDisclosureId": "planned-giving-cga-state-notices",
             "buttonLinkJson": "{\"kind\":\"internal\",\"openInNewWindow\":false,\"to\":\"/services/planned-giving\"}",
             "titleFontFamily": "helv",
             "titleFontWeight": 700,
@@ -68663,6 +68661,313 @@
             {
               "id": "copyClassName",
               "label": "Copy class name",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "id": "state_notices",
+          "name": "State Notices",
+          "kind": "content",
+          "mode": "dynamic",
+          "settings": {
+            "title": "",
+            "titleClassName": "",
+            "titleHighlightsJson": "",
+            "subtitle": "",
+            "body": "",
+            "html": "",
+            "bgTone": "white",
+            "textTone": "dark",
+            "justify": "left",
+            "contentMaxWidthPx": 1216,
+            "spaceBeforeRem": 0,
+            "spaceAfterRem": 0,
+            "paddingTopRem": 0,
+            "paddingBottomRem": 4.4,
+            "sectionClassName": "legacy-child-native-cga-state-notices",
+            "fineprint": "Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.\n\nAdditional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.\n\nAdditional information for Oklahoma residents: A Charitable Gift Annuity is not regulated by the Oklahoma Insurance Department and is not protected by a guaranty association with the Oklahoma Insurance Department.\n\nAdditional information for South Dakota residents: Charitable Gift Annuities are not regulated by and are not under the jurisdiction of the South Dakota Division of Insurance.",
+            "fineprintDisclosureId": "planned-giving-cga-state-notices"
+          },
+          "editableFields": [
+            {
+              "id": "title",
+              "label": "Section title",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "titleClassName",
+              "label": "Section title color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "titleHighlightsJson",
+              "label": "Section title highlights",
+              "type": "highlight_list",
+              "options": [
+                {
+                  "value": "is-atlantean",
+                  "label": "Blue",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "is-mango",
+                  "label": "Mango",
+                  "swatch": "linear-gradient(145deg, #f6b146 0%, #e8991f 100%)"
+                },
+                {
+                  "value": "is-melon",
+                  "label": "Melon",
+                  "swatch": "linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)"
+                },
+                {
+                  "value": "is-super-grey",
+                  "label": "Super Grey",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
+                },
+                {
+                  "value": "is-sandstone",
+                  "label": "Sandstone",
+                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
+                },
+                {
+                  "value": "is-white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                }
+              ]
+            },
+            {
+              "id": "subtitle",
+              "label": "Section subtitle",
+              "type": "text"
+            },
+            {
+              "id": "body",
+              "label": "Section body",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "html",
+              "label": "Page Content HTML",
+              "type": "html"
+            },
+            {
+              "id": "widget",
+              "label": "Widget key",
+              "type": "text"
+            },
+            {
+              "id": "logoImage",
+              "label": "Logo image URL",
+              "type": "text"
+            },
+            {
+              "id": "logoAlt",
+              "label": "Logo alt text",
+              "type": "text"
+            },
+            {
+              "id": "logoText",
+              "label": "Logo text fallback",
+              "type": "text"
+            },
+            {
+              "id": "fullBleed",
+              "label": "Full bleed rail",
+              "type": "boolean"
+            },
+            {
+              "id": "spaceBeforeRem",
+              "label": "Space before (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "spaceAfterRem",
+              "label": "Space after (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingTopRem",
+              "label": "Padding top (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "paddingBottomRem",
+              "label": "Padding bottom (rem)",
+              "type": "number",
+              "min": 0,
+              "max": 8,
+              "step": 0.25
+            },
+            {
+              "id": "contentMaxWidthPx",
+              "label": "Content max width (px)",
+              "type": "number",
+              "min": 560,
+              "max": 1440,
+              "step": 10
+            },
+            {
+              "id": "anchorId",
+              "label": "Anchor ID",
+              "type": "text"
+            },
+            {
+              "id": "sectionClassName",
+              "label": "Section class name",
+              "type": "text"
+            },
+            {
+              "id": "copyWrap",
+              "label": "Wrap section copy",
+              "type": "boolean"
+            },
+            {
+              "id": "buttonLabel",
+              "label": "Button label",
+              "type": "text"
+            },
+            {
+              "id": "buttonLinkJson",
+              "label": "Button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "buttonDocumentId",
+              "label": "Button document ID",
+              "type": "text"
+            },
+            {
+              "id": "addressClassName",
+              "label": "Address block class name",
+              "type": "text"
+            },
+            {
+              "id": "addressTitle",
+              "label": "Address title",
+              "type": "text"
+            },
+            {
+              "id": "addressLines",
+              "label": "Address lines",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "tableHeadersJson",
+              "label": "Table headers JSON",
+              "type": "textarea",
+              "rows": 3
+            },
+            {
+              "id": "tableRowsJson",
+              "label": "Table rows JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "tableValueAlignment",
+              "label": "Table value alignment",
+              "type": "select",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Default"
+                },
+                {
+                  "value": "left",
+                  "label": "Left"
+                },
+                {
+                  "value": "center",
+                  "label": "Center"
+                },
+                {
+                  "value": "right",
+                  "label": "Right"
+                }
+              ]
+            },
+            {
+              "id": "tableChartId",
+              "label": "Managed chart ID",
+              "type": "text"
+            },
+            {
+              "id": "supportGroupsJson",
+              "label": "Support groups JSON",
+              "type": "textarea",
+              "rows": 8
+            },
+            {
+              "id": "supportGroupsExpanded",
+              "label": "Expand support items by default",
+              "type": "boolean"
+            },
+            {
+              "id": "supportGroupsCollapsible",
+              "label": "Support items are collapsible",
+              "type": "boolean"
+            },
+            {
+              "id": "fineprint",
+              "label": "Fineprint lines",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "fineprintDisclosureId",
+              "label": "Managed disclosure ID",
               "type": "text"
             }
           ]

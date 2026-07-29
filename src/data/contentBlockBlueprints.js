@@ -107,6 +107,8 @@ const TAX_GUIDE_PAGE_CONTENT_HTML = `
   <p><em>Per our distribution agreement, we are able to offer the guide only to Assemblies of God ministers. If you are an AG minister and did not receive access to the guide via email, please contact us at <a href="mailto:info@agfinancial.org">info@agfinancial.org</a>.</em></p>
 `;
 
+const CGA_STATE_NOTICES_FINEPRINT = 'Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.\n\nAdditional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.\n\nAdditional information for Oklahoma residents: A Charitable Gift Annuity is not regulated by the Oklahoma Insurance Department and is not protected by a guaranty association with the Oklahoma Insurance Department.\n\nAdditional information for South Dakota residents: Charitable Gift Annuities are not regulated by and are not under the jurisdiction of the South Dakota Division of Insurance.';
+
 const sharedDynamicIntroEditableFields = getEditableFieldsForKind('intro');
 const sharedDynamicGridEditableFields = getEditableFieldsForKind('card_grid');
 const sharedDynamicBillboardEditableFields = getEditableFieldsForKind('billboard');
@@ -1888,10 +1890,34 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         button2Style: 'outline',
         button2Tone: 'super-grey',
         sectionClassName: 'legacy-child-native-cga-outro',
-        fineprint: 'Except for California, your Assemblies of God Charitable Gift Annuity will be issued by Assemblies of God Foundation (“AG Foundation”) and will be a general obligation of the organization. Charitable Gift Annuities are not available in Alabama, Hawaii, Montana, New Jersey, New York, or Washington.\n\nAdditional information for California residents: Annuities are subject to regulation by the State of California. Payments under this agreement, however, are not protected or otherwise guaranteed by any government agency or the California Life and Health Insurance Guarantee Association. AG Foundation does not practice law and no legal advice is provided. If you need legal advice, you should consult your own legal counsel. Your Assemblies of God Charitable Gift Annuity will be issued by the General Council of the Assemblies of God (“General Council”) and will be a general obligation of that organization. AG Foundation is responsible for the management of your gift annuity.\n\nAdditional information for Oklahoma residents: A Charitable Gift Annuity is not regulated by the Oklahoma Insurance Department and is not protected by a guaranty association with the Oklahoma Insurance Department.\n\nAdditional information for South Dakota residents: Charitable Gift Annuities are not regulated by and are not under the jurisdiction of the South Dakota Division of Insurance.',
-        fineprintDisclosureId: 'planned-giving-cga-state-notices',
       },
       editableFields: sharedDynamicBillboardEditableFields,
+    },
+    {
+      id: 'state_notices',
+      name: 'State Notices',
+      kind: PAGE_CONTENT_IDENTITY.kind,
+      mode: 'dynamic',
+      settings: {
+        title: '',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        subtitle: '',
+        body: '',
+        html: '',
+        bgTone: 'white',
+        textTone: 'dark',
+        justify: 'left',
+        contentMaxWidthPx: 1216,
+        spaceBeforeRem: 0,
+        spaceAfterRem: 0,
+        paddingTopRem: 0,
+        paddingBottomRem: 4.4,
+        sectionClassName: 'legacy-child-native-cga-state-notices',
+        fineprint: CGA_STATE_NOTICES_FINEPRINT,
+        fineprintDisclosureId: 'planned-giving-cga-state-notices',
+      },
+      editableFields: sharedDynamicPageContentEditableFields,
     },
   ],
   '/services/planned-giving/ministry-impact-fund': [

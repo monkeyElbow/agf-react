@@ -34,11 +34,15 @@ describe('block presentation contracts', () => {
       sectionClassName: 'legacy-child-native-cga-outro',
       justify: 'right',
       actionsBeforeCards: false,
+      fineprint: 'Old state notices',
+      fineprintDisclosureId: 'planned-giving-cga-state-notices',
     })).toMatchObject({
       justify: 'center',
       titleFontFamily: 'helv',
       titleFontWeight: 700,
       actionsBeforeCards: true,
+      fineprint: undefined,
+      fineprintDisclosureId: undefined,
     });
 
     expect(normalizeBillboardPresentationSettings({
@@ -85,6 +89,8 @@ describe('block presentation contracts', () => {
         { id: 'justify' },
         { id: 'titleFontFamily' },
         { id: 'actionsBeforeCards' },
+        { id: 'fineprint' },
+        { id: 'fineprintDisclosureId' },
       ],
     });
 

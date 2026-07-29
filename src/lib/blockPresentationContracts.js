@@ -93,12 +93,16 @@ const BILLBOARD_PRESENTATION_CONTRACTS = Object.freeze([
       titleFontWeight: 700,
       justify: 'center',
       actionsBeforeCards: true,
+      fineprint: undefined,
+      fineprintDisclosureId: undefined,
     }),
     lockedFieldIds: Object.freeze([
       'titleFontFamily',
       'titleFontWeight',
       'justify',
       'actionsBeforeCards',
+      'fineprint',
+      'fineprintDisclosureId',
     ]),
   }),
   Object.freeze({

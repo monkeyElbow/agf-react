@@ -990,6 +990,39 @@ function reconcileBlockOnlyManagedBlockInventory(pathname, defaultBlocks, blocks
   return [...canonicalBlocks, ...adminAddedBlocks];
 }
 
+function restoreMissingDefaultBlocksById(defaultBlocks, blocks, blockIds) {
+  if (!Array.isArray(defaultBlocks) || !Array.isArray(blocks) || !(blockIds instanceof Set) || blockIds.size === 0) {
+    return blocks;
+  }
+
+  const existingIds = new Set(
+    blocks
+      .map((block) => String(block?.id || '').trim())
+      .filter(Boolean),
+  );
+  const missingDefaults = defaultBlocks.filter((block) => {
+    const blockId = String(block?.id || '').trim();
+    return blockId && blockIds.has(blockId) && !existingIds.has(blockId);
+  });
+  if (!missingDefaults.length) {
+    return blocks;
+  }
+
+  const defaultOrderById = new Map(
+    defaultBlocks
+      .map((block, index) => [String(block?.id || '').trim(), index])
+      .filter(([blockId]) => blockId),
+  );
+  return [...blocks, ...missingDefaults.map((block) => cloneTemplateVariant(block))]
+    .sort((left, right) => {
+      const leftOrder = defaultOrderById.get(String(left?.id || '').trim());
+      const rightOrder = defaultOrderById.get(String(right?.id || '').trim());
+      const normalizedLeftOrder = Number.isFinite(leftOrder) ? leftOrder : Number.MAX_SAFE_INTEGER;
+      const normalizedRightOrder = Number.isFinite(rightOrder) ? rightOrder : Number.MAX_SAFE_INTEGER;
+      return normalizedLeftOrder - normalizedRightOrder;
+    });
+}
+
 function shouldUpgradeRetiredPageContentImageBridge(storedBlock, defaultBlock) {
   const storedKind = String(storedBlock?.kind || '').trim().toLowerCase();
   const defaultKind = String(defaultBlock?.kind || '').trim().toLowerCase();
@@ -3598,14 +3631,20 @@ export function normalizeStoredConfig(payload) {
       mergedInStoredOrder.push(normalizeBlockPresentation(mergedBlock));
     });
 
-    const normalizedMergedBlocks = path === RETIREMENT_403B_PATH
+    const normalizedMergedBlocksBase = path === RETIREMENT_403B_PATH
       ? normalizeRetirement403bBlockSet(mergedInStoredOrder)
       : (path === PLANNED_GIVING_OVERVIEW_PATH
           ? normalizePlannedGivingOverviewBlockSet(mergedInStoredOrder)
           : (path === RETIREMENT_IRAS_PATH
               ? normalizeRetirementIraBlockSet(mergedInStoredOrder)
               : mergedInStoredOrder));
-    const reconciledBlocks = (retiredBlockOnlyShellBlock || path === LEGACY_GIVING_GENEROSITY_FUND_PATH)
+    const normalizedMergedBlocks = path === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
+      ? restoreMissingDefaultBlocksById(defaultForPath, normalizedMergedBlocksBase, new Set(['state_notices']))
+      : normalizedMergedBlocksBase;
+    const reconciledBlocks = (
+      retiredBlockOnlyShellBlock
+      || path === LEGACY_GIVING_GENEROSITY_FUND_PATH
+    )
       ? reconcileBlockOnlyManagedBlockInventory(path, defaultForPath, normalizedMergedBlocks)
       : normalizedMergedBlocks;
     blocksByPath[path] = normalizePageBlocksState(reconciledBlocks);

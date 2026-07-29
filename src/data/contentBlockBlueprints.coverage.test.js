@@ -785,6 +785,7 @@ describe('content block blueprint coverage', () => {
     const blocks = contentBlockBlueprintsByPath['/services/planned-giving/charitable-gift-annuities'] || [];
     const requestBlock = blocks.find((block) => block?.id === 'request_form');
     const outroBlock = blocks.find((block) => block?.id === 'outro' && block?.mode === 'dynamic');
+    const stateNoticesBlock = blocks.find((block) => block?.id === 'state_notices' && block?.mode === 'dynamic');
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
@@ -853,9 +854,18 @@ describe('content block blueprint coverage', () => {
         justify: 'center',
         actionsBeforeCards: true,
         sectionClassName: 'legacy-child-native-cga-outro',
+      },
+    });
+    expect(outroBlock?.settings?.fineprint).toBeUndefined();
+    expect(outroBlock?.settings?.fineprintDisclosureId).toBeUndefined();
+    expect(stateNoticesBlock).toMatchObject({
+      kind: 'content',
+      settings: {
+        sectionClassName: 'legacy-child-native-cga-state-notices',
         fineprintDisclosureId: 'planned-giving-cga-state-notices',
       },
     });
+    expect(stateNoticesBlock?.settings?.fineprint).toContain('Additional information for California residents');
   });
 
   it('seeds ministry impact fund with explicit managed blocks instead of fallback page content', () => {

@@ -1231,11 +1231,17 @@ describe('ContentAdminContext state normalization', () => {
 
     const annuitiesBlocks = normalized.blocksByPath['/services/planned-giving/charitable-gift-annuities'] || [];
     const outroBlock = annuitiesBlocks.find((block) => block?.id === 'outro');
+    const stateNoticesBlock = annuitiesBlocks.find((block) => block?.id === 'state_notices');
 
     expect(outroBlock?.settings?.titleFontFamily).toBe('helv');
     expect(outroBlock?.settings?.titleFontWeight).toBe(700);
     expect(outroBlock?.settings?.justify).toBe('center');
     expect(outroBlock?.settings?.actionsBeforeCards).toBe(true);
+    expect(outroBlock?.settings?.fineprint).toBeUndefined();
+    expect(outroBlock?.settings?.fineprintDisclosureId).toBeUndefined();
+    expect(stateNoticesBlock?.kind).toBe('content');
+    expect(stateNoticesBlock?.settings?.sectionClassName).toBe('legacy-child-native-cga-state-notices');
+    expect(stateNoticesBlock?.settings?.fineprintDisclosureId).toBe('planned-giving-cga-state-notices');
   });
 
   it('seeds ministry impact fund with explicit managed blocks and no fallback page content', () => {

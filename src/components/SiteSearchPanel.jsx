@@ -1,5 +1,6 @@
 import { useDeferredValue, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useContentAdmin } from '../context/ContentAdminContext';
 import {
   buildSiteSearchIndex,
   groupSiteSearchMatches,
@@ -31,14 +32,15 @@ export default function SiteSearchPanel({
   const generatedInputId = useId();
   const inputId = `site-search-input-${generatedInputId}`;
   const inputRef = useRef(null);
+  const { blocksByPath } = useContentAdmin();
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
   const typedTerm = normalizeSiteSearchText(query);
   const deferredTerm = normalizeSiteSearchText(deferredQuery);
   const hasTypedTerm = Boolean(typedTerm);
   const searchableItems = useMemo(
-    () => buildSiteSearchIndex({ articles, documents }),
-    [articles, documents],
+    () => buildSiteSearchIndex({ articles, documents, blocksByPath }),
+    [articles, documents, blocksByPath],
   );
 
   useEffect(() => {

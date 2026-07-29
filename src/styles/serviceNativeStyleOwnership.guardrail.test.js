@@ -72,6 +72,64 @@ function getRouteScopedDynamicSelectorClasses(source) {
 }
 
 describe('service-native style ownership', () => {
+  it('keeps public form fields on the resource-library field standard', () => {
+    const tokensSource = readSource('./tokens.css');
+    const serviceSource = readSource('./service-native.css');
+    const appSource = readSource('../styles.css');
+    const homeSource = readSource('./home-native.css');
+
+    [
+      '--ag-field-min-height: 3.35rem;',
+      '--ag-field-border: rgba(65, 64, 66, 0.58);',
+      '--ag-field-radius: 999px;',
+      '--ag-field-placeholder:',
+      '--ag-field-focus-ring:',
+      '--ag-field-select-caret:',
+      '--ag-field-label-inline-offset: 1.15rem;',
+      '--ag-field-label-gap: 0.16rem;',
+    ].forEach((expectedToken) => {
+      expect(tokensSource).toContain(expectedToken);
+    });
+
+    [
+      '/* Site field standard: follows the resource-library search/dropdown treatment. */',
+      ".native-info-page .native-info-inline-form input:not([type='checkbox']):not([type='radio']):not([type='range']),",
+      '.native-info-page .native-info-inline-form select,',
+      '.native-info-page .native-dynamic-request .dynamic-request-field input,',
+      '.native-info-page .native-dynamic-request .dynamic-request-field select,',
+      '.financial-tool-input-row > input,',
+      '.retirement-calc-grid :is(input, select),',
+      '.loans-native-calculator-grid :is(input, select),',
+      '.native-info-page .native-info-inline-form label:not(.dynamic-cta-checkbox-field),',
+      'padding-inline-start: var(--ag-field-label-inline-offset);',
+      'margin-left: calc(var(--ag-field-label-inline-offset) * -1);',
+      'border-radius: var(--ag-field-radius);',
+      'box-shadow: var(--ag-field-focus-ring);',
+    ].forEach((expectedSelector) => {
+      expect(serviceSource).toContain(expectedSelector);
+    });
+
+    [
+      '.resources-native-filter-row input,',
+      '.resources-native-filter-row select {',
+      'min-height: var(--ag-field-min-height);',
+      'background-image: var(--ag-field-select-caret);',
+    ].forEach((expectedSelector) => {
+      expect(appSource).toContain(expectedSelector);
+    });
+
+    [
+      '.home-native-cta-form input {',
+      '.home-native-newsletter-embed .newsletter-signup-form-input {',
+      '.services-native-connect-form input,',
+      'padding-inline-start: var(--ag-field-label-inline-offset);',
+      'border-radius: var(--ag-field-radius);',
+      'box-shadow: var(--ag-field-focus-ring);',
+    ].forEach((expectedSelector) => {
+      expect(homeSource).toContain(expectedSelector);
+    });
+  });
+
   it('keeps route-scoped dynamic block styling explicitly classified', () => {
     const source = readSource('./service-native.css');
 
@@ -261,8 +319,9 @@ describe('service-native style ownership', () => {
       'text-align: left;',
       '.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),',
       'color: var(--ag-color-super-grey);',
-      '.native-info-page--legacy-cga .legacy-child-native-cga-outro .service-native-action-row + .service-native-note {',
-      'margin-top: clamp(2.4rem, 4vw, 3.2rem);',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-state-notices .service-native-note {',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-state-notices .service-native-note + .service-native-note {',
+      'margin-top: 1rem;',
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
     });

@@ -17,7 +17,8 @@ describe('native page disclosure wiring', () => {
     expect(propertyCasualtyBlocks.find((block) => block?.id === 'coverage_notice')?.settings?.fineprintDisclosureId).toBe('insurance-property-casualty-coverage-notice');
     expect(Array.isArray(charitableGiftAnnuities.sections) ? charitableGiftAnnuities.sections : []).toEqual([]);
     expect(charitableGiftAnnuitiesBlocks.find((block) => block?.id === 'qcd_fineprint')?.settings?.fineprintDisclosureId).toBe('planned-giving-cga-qcd-fineprint');
-    expect(charitableGiftAnnuitiesBlocks.find((block) => block?.id === 'outro')?.settings?.fineprintDisclosureId).toBe('planned-giving-cga-state-notices');
+    expect(charitableGiftAnnuitiesBlocks.find((block) => block?.id === 'outro')?.settings?.fineprintDisclosureId).toBeUndefined();
+    expect(charitableGiftAnnuitiesBlocks.find((block) => block?.id === 'state_notices')?.settings?.fineprintDisclosureId).toBe('planned-giving-cga-state-notices');
     expect(Array.isArray(retirement403b.sections) ? retirement403b.sections : []).toEqual([]);
     expect(Array.isArray(retirement403bGroup.sections) ? retirement403bGroup.sections : []).toEqual([]);
     expect(Array.isArray(retirementIras.sections) ? retirementIras.sections : []).toEqual([]);
