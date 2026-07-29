@@ -11,6 +11,7 @@ import {
 } from '../src/blocks/foundation/forms.js';
 import { normalizeCalculatorIntroBlock, normalizeCalculatorWidgetBlock } from '../src/lib/calculatorWidgetIdentity.js';
 import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue.js';
+import { normalizeRequestFormPresetSettings } from '../src/lib/requestFormPresetContracts.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
 const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
@@ -18,7 +19,12 @@ const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
 const RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS = Object.freeze([
   'wills_estate_billboard',
 ]);
-const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
+const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
+const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
+const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/donor-advised-fund';
+const RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
+const PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH = '/services/legacy-giving/generosity-fund';
+const GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE = 'Donor Advised Fund';
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
 const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
 const RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS = Object.freeze([
@@ -199,16 +205,59 @@ function normalizeCollaborationByPath(rawState) {
 
 function normalizeSharedState(rawState) {
   const source = rawState && typeof rawState === 'object' ? rawState : {};
+  const pageHierarchy = cloneJson(source.pageHierarchy || {});
+  if (
+    pageHierarchy[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH]
+    && !pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH]
+  ) {
+    pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH] = {
+      ...pageHierarchy[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH],
+      path: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+      routeKey: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+      linkRef: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+      parentPath: PLANNED_GIVING_OVERVIEW_PATH,
+    };
+  }
+  delete pageHierarchy[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
+  if (pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH]) {
+    pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH] = {
+      ...pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH],
+      path: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+      routeKey: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+      linkRef: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+      title: GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE,
+      breadcrumbLabel: GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE,
+    };
+  }
+  const blocksByPathSource = cloneJson(source.blocksByPath || {});
+  if (
+    Array.isArray(blocksByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH])
+    && !Array.isArray(blocksByPathSource[LEGACY_GIVING_GENEROSITY_FUND_PATH])
+  ) {
+    blocksByPathSource[LEGACY_GIVING_GENEROSITY_FUND_PATH] = blocksByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
+  }
+  delete blocksByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
+  const pathAliases = cloneJson(source.pathAliases || {});
+  pathAliases[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH] = LEGACY_GIVING_GENEROSITY_FUND_PATH;
+  pathAliases[PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH] = LEGACY_GIVING_GENEROSITY_FUND_PATH;
+  const collaborationByPath = cloneJson(source.collaborationByPath || {});
+  if (
+    collaborationByPath[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH]
+    && !collaborationByPath[LEGACY_GIVING_GENEROSITY_FUND_PATH]
+  ) {
+    collaborationByPath[LEGACY_GIVING_GENEROSITY_FUND_PATH] = collaborationByPath[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
+  }
+  delete collaborationByPath[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
   return {
-    pageHierarchy: cloneJson(source.pageHierarchy || {}),
+    pageHierarchy,
     blocksByPath: Object.fromEntries(
-      Object.entries(source.blocksByPath || {}).map(([pathname, blocks]) => [
+      Object.entries(blocksByPathSource || {}).map(([pathname, blocks]) => [
         pathname,
         normalizePageBlocksState(pathname, blocks),
       ]),
     ),
-    pathAliases: cloneJson(source.pathAliases || {}),
-    collaborationByPath: normalizeCollaborationByPath(source.collaborationByPath || {}),
+    pathAliases,
+    collaborationByPath: normalizeCollaborationByPath(collaborationByPath || {}),
   };
 }
 
@@ -563,36 +612,32 @@ function aliasesForPath(pathAliases, pathname) {
 
 function normalizeGenerosityFundHeroSettings(rawSettings) {
   const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
-  const next = { ...settings };
-  const button2Label = String(next.button2Label || '').trim();
-  const button2Url = String(next.button2Url || '').trim();
-  const button2PageRef = String(next.button2PageRef || '').trim();
-  const button2Action = String(next.button2Action || '').trim();
-  const button2TargetAnchorId = String(next.button2TargetAnchorId || '').trim();
-  const hasLegacyTraditionalDafHash = (
-    button2Label === 'Open a traditional DAF'
-    && (button2Url === '#traditional-daf-form' || button2PageRef === '#traditional-daf-form')
-  );
-
-  if (hasLegacyTraditionalDafHash || (
-    button2Label === 'Open a traditional DAF'
-    && !button2Action
-    && !button2TargetAnchorId
-  )) {
-    next.button2Action = 'open_cta_form';
-    next.button2TargetAnchorId = 'traditional-daf-inline-form';
-    next.button2TargetBlockId = '';
-    next.button2Url = '';
-    next.button2PageRef = '';
-    next.button2OpenInNewWindow = false;
-  }
-
-  return next;
+  return {
+    ...settings,
+    button1Label: 'Open a traditional DAF',
+    button1LinkJson: '{"kind":"anchor","openInNewWindow":false,"href":"#traditional-daf-form"}',
+    button1Style: 'outline',
+    button1Tone: 'super-grey',
+    button1Action: '',
+    button1TargetAnchorId: '',
+    button1TargetBlockId: '',
+    button2Label: 'Open a Generosity Fund®',
+    button2LinkJson: '{"kind":"external","openInNewWindow":false,"href":"https://secure.agfinancial.org/generosityfund/signup"}',
+    button2Style: 'blue',
+    button2Tone: 'atlantean',
+    button2Action: '',
+    button2TargetAnchorId: '',
+    button2TargetBlockId: '',
+  };
 }
 
 function normalizeGenerosityFundJoyfulGivingBillboardSettings(rawSettings) {
   const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
   const next = { ...settings };
+  next.titleFontFamily = 'helv';
+  next.titleFontWeight = 700;
+  next.titleSizeRem = 5.6;
+  next.titleLetterSpacingEm = -0.03;
   const button2Label = String(next.button2Label || '').trim();
   const button2DocumentId = String(next.button2DocumentId || '').trim();
   const button2Style = String(next.button2Style || '').trim().toLowerCase();
@@ -610,6 +655,129 @@ function normalizeGenerosityFundJoyfulGivingBillboardSettings(rawSettings) {
   }
 
   return next;
+}
+
+function normalizeCharitableGiftAnnuitiesOutroSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+  return {
+    ...settings,
+    titleFontFamily: 'helv',
+    titleFontWeight: 700,
+    justify: 'center',
+    actionsBeforeCards: true,
+  };
+}
+
+function normalizeMinistryImpactOutroSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+  return {
+    ...settings,
+    titleFontFamily: 'helv',
+    titleFontWeight: 700,
+  };
+}
+
+function normalizeGenerosityFundHowItWorksSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+  return {
+    ...settings,
+    buttonLabel: 'Open a traditional DAF',
+    buttonLinkJson: '{"kind":"anchor","openInNewWindow":false,"href":"#traditional-daf-form"}',
+    buttonStyle: 'outline',
+    buttonTone: 'super-grey',
+  };
+}
+
+function normalizeGenerosityFundGiftAssetsSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+  return {
+    ...settings,
+    card1Button2Label: 'Open a traditional DAF',
+    card1Button2LinkJson: '{"kind":"anchor","openInNewWindow":false,"href":"#traditional-daf-form"}',
+  };
+}
+
+function normalizeGenerosityFundRouteLabelInJsonString(value) {
+  const source = String(value || '').trim();
+  const retiredRouteRefs = [
+    RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH,
+    PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH,
+  ];
+  if (
+    !source
+    || (
+      !source.includes(LEGACY_GIVING_GENEROSITY_FUND_PATH)
+      && !retiredRouteRefs.some((routeRef) => source.includes(routeRef))
+    )
+  ) {
+    return value;
+  }
+
+  try {
+    const parsed = JSON.parse(source);
+    let changed = false;
+    const visit = (node) => {
+      if (Array.isArray(node)) {
+        node.forEach(visit);
+        return;
+      }
+      if (!node || typeof node !== 'object') {
+        return;
+      }
+      ['path', 'to', 'href'].forEach((key) => {
+        const pathValue = String(node[key] || '').trim();
+        if (retiredRouteRefs.includes(pathValue)) {
+          node[key] = LEGACY_GIVING_GENEROSITY_FUND_PATH;
+          changed = true;
+        }
+        if (
+          node[key] === LEGACY_GIVING_GENEROSITY_FUND_PATH
+          && typeof node.label === 'string'
+          && node.label !== GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE
+        ) {
+          node.label = GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE;
+          changed = true;
+        }
+      });
+      Object.values(node).forEach(visit);
+    };
+
+    visit(parsed);
+    return changed ? JSON.stringify(parsed, null, 2) : value;
+  } catch {
+    return value;
+  }
+}
+
+function normalizeGenerosityFundRouteLabelsInSettings(rawSettings) {
+  if (!rawSettings || typeof rawSettings !== 'object') {
+    return rawSettings;
+  }
+
+  let changed = false;
+  const next = { ...rawSettings };
+  Object.entries(next).forEach(([key, value]) => {
+    const retiredRouteRefs = [
+      RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH,
+      PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH,
+    ];
+    if (
+      typeof value !== 'string'
+      || (
+        !value.includes(LEGACY_GIVING_GENEROSITY_FUND_PATH)
+        && !retiredRouteRefs.some((routeRef) => value.includes(routeRef))
+      )
+    ) {
+      return;
+    }
+    const normalizedValue = normalizeGenerosityFundRouteLabelInJsonString(value);
+    if (normalizedValue !== value) {
+      next[key] = normalizedValue;
+      changed = true;
+    }
+  });
+
+  return changed ? next : rawSettings;
 }
 
 function isRetiredRetirement403bPageContentBlock(block) {
@@ -744,6 +912,16 @@ function normalizeRetirementIraComparisonTableSettings(rawSettings) {
   };
 }
 
+function normalizeRetirementIraDailyBillboardSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? cloneJson(rawSettings) : {};
+  return {
+    ...settings,
+    justify: 'center',
+    contentMaxWidthPx: 1480,
+    sectionClassName: 'retirement-everyday retirement-daily-billboard',
+  };
+}
+
 function canonicalizeRouteLinkEditableFields(editableFields) {
   if (!Array.isArray(editableFields)) {
     return editableFields;
@@ -798,6 +976,37 @@ function normalizePageBlockState(pathname, block) {
     }
   }
   if (
+    pathname === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
+    && String(nextBlock?.id || '').trim() === 'outro'
+    && String(nextBlock?.kind || '').trim().toLowerCase() === 'billboard'
+    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+  ) {
+    nextBlock.settings = normalizeCharitableGiftAnnuitiesOutroSettings(nextBlock?.settings);
+  }
+  if (
+    pathname === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
+    && String(nextBlock?.id || '').trim() === 'outro'
+    && String(nextBlock?.kind || '').trim().toLowerCase() === 'billboard'
+    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+  ) {
+    nextBlock.settings = normalizeMinistryImpactOutroSettings(nextBlock?.settings);
+  }
+  if (
+    pathname === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
+    && String(nextBlock?.id || '').trim() === 'request_form'
+    && String(nextBlock?.kind || '').trim().toLowerCase() === 'request_form'
+    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+  ) {
+    nextBlock.settings = normalizeRequestFormPresetSettings(
+      {
+        ...(nextBlock?.settings || {}),
+        sectionClassName: 'legacy-child-native-request',
+        presetId: 'legacy-impact',
+      },
+      'legacy-impact',
+    );
+  }
+  if (
     pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH
     && String(nextBlock?.id || '').trim() === 'hero'
     && String(nextBlock?.kind || '').trim().toLowerCase() === 'hero'
@@ -814,12 +1023,39 @@ function normalizePageBlockState(pathname, block) {
     nextBlock.settings = normalizeGenerosityFundJoyfulGivingBillboardSettings(nextBlock?.settings);
   }
   if (
+    pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH
+    && String(nextBlock?.id || '').trim() === 'how_it_works'
+    && String(nextBlock?.kind || '').trim().toLowerCase() === 'columns'
+    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+  ) {
+    nextBlock.settings = normalizeGenerosityFundHowItWorksSettings(nextBlock?.settings);
+  }
+  if (
+    pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH
+    && String(nextBlock?.id || '').trim() === 'gift_assets'
+    && String(nextBlock?.kind || '').trim().toLowerCase() === 'card_grid'
+    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+  ) {
+    nextBlock.settings = normalizeGenerosityFundGiftAssetsSettings(nextBlock?.settings);
+  }
+  if (nextBlock?.settings && typeof nextBlock.settings === 'object') {
+    nextBlock.settings = normalizeGenerosityFundRouteLabelsInSettings(nextBlock.settings);
+  }
+  if (
     pathname === RETIREMENT_IRAS_PATH
     && String(nextBlock?.id || '').trim() === 'comparison_table'
     && String(nextBlock?.kind || '').trim().toLowerCase() === 'content'
     && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
   ) {
     nextBlock.settings = normalizeRetirementIraComparisonTableSettings(nextBlock?.settings);
+  }
+  if (
+    pathname === RETIREMENT_IRAS_PATH
+    && String(nextBlock?.id || '').trim() === 'daily_billboard'
+    && String(nextBlock?.kind || '').trim().toLowerCase() === 'billboard'
+    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
+  ) {
+    nextBlock.settings = normalizeRetirementIraDailyBillboardSettings(nextBlock?.settings);
   }
   return nextBlock;
 }
@@ -835,6 +1071,7 @@ function normalizePageBlocksState(pathname, blocks) {
   return normalizePresetBearingBlocks(
     (Array.isArray(blocks) ? blocks : [])
       .filter((block) => !(pathname === RETIREMENT_403B_PATH && isRetiredRetirement403bPageContentBlock(block)))
+      .filter((block) => !(pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH && String(block?.id || '').trim() === 'traditional_daf_cta'))
       .map((block) => normalizePageBlockState(pathname, block)),
   ).map((block) => normalizePageBlockState(pathname, block));
 }

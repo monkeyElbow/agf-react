@@ -295,6 +295,9 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy {');
     expect(cssSource).toContain('.legacy-child-native-request:not(.native-dynamic-request) .native-info-inline-form h5 {');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy > h2 {');
+    expect(cssSource).toContain('color: var(--ag-color-super-grey);');
+    expect(cssSource).toContain('font-family: var(--ag-font-helv);');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-impact {\n  padding-top: clamp(3rem, 6vw, 4.8rem);\n  padding-bottom: clamp(3rem, 6vw, 4.8rem);\n}');
   });
 
   it('forces contact-us back onto the shared dynamic request rail instead of a rogue outer two-column grid', () => {

@@ -28,6 +28,7 @@ import {
 } from '../lib/devIdentity';
 import { getHeroSeedContract } from '../lib/heroSeedContracts';
 import {
+  BLOCK_ONLY_MANAGED_PAGE_PATHS,
   isBlockOnlyManagedPagePath,
   isBlocklessManagedPagePath,
 } from '../lib/managedPageShells';
@@ -43,6 +44,7 @@ import {
 } from '../lib/linkValue';
 import { normalizePresetBearingBlocks } from '../lib/blockPresetIdentity';
 import { normalizeCalculatorWidgetBlocks } from '../lib/calculatorWidgetIdentity';
+import { normalizeRequestFormPresetSettings } from '../lib/requestFormPresetContracts';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
@@ -98,7 +100,8 @@ const SHARED_BLOCK_DRAFT_SYNC_TEXT_DELAY_MS = 140;
 const SHARED_BLOCK_DRAFT_SYNC_DISCRETE_DELAY_MS = 90;
 const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
 const LEGACY_GIVING_ENDOWMENTS_PATH = '/services/planned-giving/endowments';
-const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
+const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/donor-advised-fund';
+const RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
 const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
 const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
 const RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS = Object.freeze([
@@ -124,6 +127,7 @@ const DEFAULT_MANAGED_PATH_ALIASES = {
   [PLANNED_GIVING_CHARITABLE_GIFT_ANNUITIES_LEGACY_PATH]: LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH,
   [PLANNED_GIVING_CHARITABLE_TRUSTS_LEGACY_PATH]: '/services/planned-giving/charitable-trusts',
   [PLANNED_GIVING_ENDOWMENTS_LEGACY_PATH]: LEGACY_GIVING_ENDOWMENTS_PATH,
+  [RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH]: LEGACY_GIVING_GENEROSITY_FUND_PATH,
   [PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH]: LEGACY_GIVING_GENEROSITY_FUND_PATH,
   [PLANNED_GIVING_MINISTRY_IMPACT_FUND_LEGACY_PATH]: LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH,
 };
@@ -133,6 +137,28 @@ const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
     paths: Object.freeze(Object.keys(DEFAULT_MANAGED_PATH_ALIASES)),
     helpers: Object.freeze(['DEFAULT_MANAGED_PATH_ALIASES']),
     retireWhen: 'No active shared, seed, backup, or revision snapshot can reference retired 403(b) or planned-giving paths.',
+  },
+  {
+    id: 'block-only-page-inventory-reconciliation',
+    paths: Object.freeze(Array.from(BLOCK_ONLY_MANAGED_PAGE_PATHS)),
+    helpers: Object.freeze([
+      'shouldRetireBlockOnlyShellBlock',
+      'reconcileBlockOnlyManagedBlockInventory',
+      'shouldUpgradeRetiredPageContentImageBridge',
+      'upgradeRetiredPageContentImageBridge',
+    ]),
+    retireWhen: 'Block-only page snapshots cannot contain retired shell-owned hero, intro, or image bridge block shapes.',
+  },
+  {
+    id: 'generosity-fund-donor-advised-fund-refresh',
+    paths: Object.freeze([LEGACY_GIVING_GENEROSITY_FUND_PATH, PLANNED_GIVING_OVERVIEW_PATH, '/services']),
+    helpers: Object.freeze([
+      'normalizeGenerosityFundPageHierarchyEntry',
+      'normalizeGenerosityFundManagedBlock',
+      'normalizeGenerosityFundJoyfulGivingBillboardSettings',
+      'normalizeGenerosityFundRouteLabelsInSettings',
+    ]),
+    retireWhen: 'Generosity Fund snapshots cannot contain the retired page title, hero order, missing DAF/online CTAs, or stale planned-giving link labels.',
   },
   {
     id: 'retirement-403b-snapshot-repairs',
@@ -167,13 +193,14 @@ const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
     retireWhen: 'Planned giving shared, seed, backup, and revision snapshots cannot contain the retired static comparison table.',
   },
   {
-    id: 'retirement-ira-comparison-table-shape',
+    id: 'retirement-ira-block-shape',
     paths: Object.freeze([RETIREMENT_IRAS_PATH]),
     helpers: Object.freeze([
       'normalizeRetirementIraComparisonTableSettings',
+      'normalizeRetirementIraDailyBillboardSettings',
       'normalizeRetirementIraBlockSet',
     ]),
-    retireWhen: 'IRA comparison snapshots cannot contain the old Key difference three-column table shape.',
+    retireWhen: 'IRA snapshots cannot contain the old Key difference comparison table shape or the right-aligned daily billboard CTA.',
   },
   {
     id: 'loans-dynamic-block-upgrade',
@@ -252,6 +279,7 @@ const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
   '/calculators/net-worth',
   '/contact-us',
 ]);
+const BLOCK_ONLY_RETIRED_SHELL_BLOCK_KINDS = new Set(['hero', 'intro']);
 
 export function getContentAdminMigrationAdapterInventory() {
   return CONTENT_ADMIN_MIGRATION_ADAPTERS;
@@ -509,6 +537,16 @@ function normalizeRetirementIraComparisonTableSettings(rawSettings) {
   };
 }
 
+function normalizeRetirementIraDailyBillboardSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? { ...rawSettings } : {};
+  return {
+    ...settings,
+    justify: 'center',
+    contentMaxWidthPx: 1480,
+    sectionClassName: 'retirement-everyday retirement-daily-billboard',
+  };
+}
+
 function normalizeRetirementIraBlockSet(blocks) {
   const safeBlocks = Array.isArray(blocks) ? blocks : [];
   return safeBlocks.map((block) => {
@@ -520,6 +558,16 @@ function normalizeRetirementIraBlockSet(blocks) {
       return {
         ...block,
         settings: normalizeRetirementIraComparisonTableSettings(block.settings),
+      };
+    }
+    if (
+      block?.id === 'daily_billboard'
+      && String(block?.kind || '').trim().toLowerCase() === 'billboard'
+      && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
+    ) {
+      return {
+        ...block,
+        settings: normalizeRetirementIraDailyBillboardSettings(block.settings),
       };
     }
     return block;
@@ -879,6 +927,118 @@ function upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock, options
     editableFields: Array.isArray(defaultBlock?.editableFields)
       ? [...defaultBlock.editableFields]
       : (Array.isArray(storedBlock?.editableFields) ? [...storedBlock.editableFields] : []),
+  };
+}
+
+function shouldRetireBlockOnlyShellBlock(pathname, storedBlock, defaultById) {
+  if (!isBlockOnlyManagedPagePath(pathname)) {
+    return false;
+  }
+
+  const storedBlockId = String(storedBlock?.id || '').trim();
+  const storedKind = String(storedBlock?.kind || '').trim().toLowerCase();
+  if (!storedBlockId) {
+    return false;
+  }
+
+  const defaultBlock = defaultById.get(storedBlockId);
+  const defaultKind = String(defaultBlock?.kind || '').trim().toLowerCase();
+  if (!BLOCK_ONLY_RETIRED_SHELL_BLOCK_KINDS.has(storedKind)) {
+    return false;
+  }
+
+  return !defaultBlock || (storedKind && defaultKind && storedKind !== defaultKind);
+}
+
+function reconcileBlockOnlyManagedBlockInventory(pathname, defaultBlocks, blocks) {
+  if (!isBlockOnlyManagedPagePath(pathname) || !Array.isArray(defaultBlocks) || defaultBlocks.length === 0) {
+    return blocks;
+  }
+
+  const normalizedBlocks = Array.isArray(blocks) ? blocks : [];
+  const storedById = new Map(
+    normalizedBlocks
+      .map((block) => [String(block?.id || '').trim(), block])
+      .filter(([blockId]) => blockId),
+  );
+  const defaultIds = new Set(
+    defaultBlocks
+      .map((block) => String(block?.id || '').trim())
+      .filter(Boolean),
+  );
+  const canonicalBlocks = defaultBlocks
+    .map((defaultBlock) => {
+      const blockId = String(defaultBlock?.id || '').trim();
+      if (!blockId) {
+        return null;
+      }
+
+      const storedBlock = storedById.get(blockId);
+      const storedKind = String(storedBlock?.kind || '').trim().toLowerCase();
+      const defaultKind = String(defaultBlock?.kind || '').trim().toLowerCase();
+      if (!storedBlock || (storedKind && defaultKind && storedKind !== defaultKind)) {
+        return cloneTemplateVariant(defaultBlock);
+      }
+      return storedBlock;
+    })
+    .filter(Boolean);
+  const adminAddedBlocks = normalizedBlocks.filter((block) => {
+    const blockId = String(block?.id || '').trim();
+    return blockId && !defaultIds.has(blockId);
+  });
+
+  return [...canonicalBlocks, ...adminAddedBlocks];
+}
+
+function shouldUpgradeRetiredPageContentImageBridge(storedBlock, defaultBlock) {
+  const storedKind = String(storedBlock?.kind || '').trim().toLowerCase();
+  const defaultKind = String(defaultBlock?.kind || '').trim().toLowerCase();
+  const defaultMode = String(defaultBlock?.mode || '').trim().toLowerCase();
+  const storedSettings = storedBlock?.settings && typeof storedBlock.settings === 'object'
+    ? storedBlock.settings
+    : {};
+
+  return (
+    storedKind === 'columns'
+    && defaultKind === 'content'
+    && defaultMode === 'dynamic'
+    && (
+      String(storedSettings.logoImage || '').trim()
+      || String(storedSettings.col1ImageUrl || '').trim()
+      || String(storedSettings.logoText || '').trim()
+    )
+  );
+}
+
+function upgradeRetiredPageContentImageBridge(defaultBlock, storedBlock) {
+  const defaultSettings = defaultBlock?.settings && typeof defaultBlock.settings === 'object'
+    ? defaultBlock.settings
+    : {};
+  const storedSettings = storedBlock?.settings && typeof storedBlock.settings === 'object'
+    ? storedBlock.settings
+    : {};
+  const nextSettings = {
+    ...defaultSettings,
+    logoImage: String(storedSettings.logoImage || storedSettings.col1ImageUrl || defaultSettings.logoImage || '').trim(),
+    logoAlt: String(storedSettings.logoAlt || storedSettings.col1ImageAlt || defaultSettings.logoAlt || '').trim(),
+    logoText: String(storedSettings.logoText || defaultSettings.logoText || '').trim(),
+    sectionClassName: String(storedSettings.sectionClassName || defaultSettings.sectionClassName || '').trim(),
+    railClassName: String(storedSettings.railClassName || defaultSettings.railClassName || '').trim(),
+  };
+
+  return {
+    ...cloneTemplateVariant(defaultBlock),
+    id: defaultBlock.id || storedBlock.id,
+    name: defaultBlock.name || storedBlock.name,
+    kind: defaultBlock.kind || 'content',
+    mode: 'dynamic',
+    hidden: Object.prototype.hasOwnProperty.call(defaultBlock || {}, 'hidden')
+      ? defaultBlock.hidden
+      : storedBlock.hidden,
+    settings: nextSettings,
+    editableFields: Array.isArray(defaultBlock?.editableFields)
+      ? [...defaultBlock.editableFields]
+      : [],
   };
 }
 
@@ -1894,6 +2054,10 @@ function withDefaultHeroActions(settings, defaults) {
 function normalizeGenerosityFundJoyfulGivingBillboardSettings(rawSettings) {
   const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
   const next = { ...settings };
+  next.titleFontFamily = 'helv';
+  next.titleFontWeight = 700;
+  next.titleSizeRem = 5.6;
+  next.titleLetterSpacingEm = -0.03;
   const button2Label = String(next.button2Label || '').trim();
   const button2DocumentId = String(next.button2DocumentId || '').trim();
   const button2Style = String(next.button2Style || '').trim().toLowerCase();
@@ -1911,6 +2075,17 @@ function normalizeGenerosityFundJoyfulGivingBillboardSettings(rawSettings) {
   }
 
   return next;
+}
+
+function normalizeCharitableGiftAnnuitiesOutroSettings(rawSettings) {
+  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+  return {
+    ...settings,
+    titleFontFamily: 'helv',
+    titleFontWeight: 700,
+    justify: 'center',
+    actionsBeforeCards: true,
+  };
 }
 
 function withDefaultHeroLine(settings, config) {
@@ -1939,6 +2114,134 @@ function withDefaultHeroLine(settings, config) {
   }
 
   return next;
+}
+
+const GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE = 'Donor Advised Fund';
+const GENEROSITY_FUND_RETIRED_ROUTE_REFS = Object.freeze([
+  RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH,
+  PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH,
+]);
+const GENEROSITY_FUND_CANONICAL_BLOCK_IDS = new Set([
+  'hero',
+  'how_it_works',
+  'generosity_fund_online',
+  'gift_assets',
+]);
+
+function normalizeGenerosityFundPageHierarchyEntry(pathname, rawPage) {
+  if (pathname !== LEGACY_GIVING_GENEROSITY_FUND_PATH || !rawPage || typeof rawPage !== 'object') {
+    return rawPage;
+  }
+
+  return {
+    ...rawPage,
+    path: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+    routeKey: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+    linkRef: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+    title: GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE,
+    breadcrumbLabel: GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE,
+  };
+}
+
+function normalizeGenerosityFundRouteLabelInJsonString(value) {
+  const source = String(value || '').trim();
+  if (
+    !source
+    || (
+      !source.includes(LEGACY_GIVING_GENEROSITY_FUND_PATH)
+      && !GENEROSITY_FUND_RETIRED_ROUTE_REFS.some((routeRef) => source.includes(routeRef))
+    )
+  ) {
+    return value;
+  }
+
+  try {
+    const parsed = JSON.parse(source);
+    let changed = false;
+    const visit = (node) => {
+      if (Array.isArray(node)) {
+        node.forEach(visit);
+        return;
+      }
+      if (!node || typeof node !== 'object') {
+        return;
+      }
+      ['path', 'to', 'href'].forEach((key) => {
+        const path = String(node[key] || '').trim();
+        if (GENEROSITY_FUND_RETIRED_ROUTE_REFS.includes(path)) {
+          node[key] = LEGACY_GIVING_GENEROSITY_FUND_PATH;
+          changed = true;
+        }
+        if (
+          node[key] === LEGACY_GIVING_GENEROSITY_FUND_PATH
+          && typeof node.label === 'string'
+          && node.label !== GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE
+        ) {
+          node.label = GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE;
+          changed = true;
+        }
+      });
+      Object.values(node).forEach(visit);
+    };
+
+    visit(parsed);
+    return changed ? JSON.stringify(parsed, null, 2) : value;
+  } catch {
+    return value;
+  }
+}
+
+function normalizeGenerosityFundRouteLabelsInSettings(rawSettings) {
+  if (!rawSettings || typeof rawSettings !== 'object') {
+    return rawSettings;
+  }
+
+  let changed = false;
+  const next = { ...rawSettings };
+  Object.entries(next).forEach(([key, value]) => {
+    if (
+      typeof value !== 'string'
+      || (
+        !value.includes(LEGACY_GIVING_GENEROSITY_FUND_PATH)
+        && !GENEROSITY_FUND_RETIRED_ROUTE_REFS.some((routeRef) => value.includes(routeRef))
+      )
+    ) {
+      return;
+    }
+    const normalizedValue = normalizeGenerosityFundRouteLabelInJsonString(value);
+    if (normalizedValue !== value) {
+      next[key] = normalizedValue;
+      changed = true;
+    }
+  });
+
+  return changed ? next : rawSettings;
+}
+
+function normalizeGenerosityFundManagedBlock(storedBlock, defaultBlock) {
+  const blockId = String(storedBlock?.id || '').trim();
+  if (!GENEROSITY_FUND_CANONICAL_BLOCK_IDS.has(blockId) || !defaultBlock) {
+    return storedBlock;
+  }
+
+  const canonicalBlock = cloneTemplateVariant(defaultBlock);
+  return {
+    ...storedBlock,
+    templateId: canonicalBlock.templateId || storedBlock?.templateId,
+    presetId: canonicalBlock.presetId || storedBlock?.presetId,
+    name: canonicalBlock.name || storedBlock?.name,
+    kind: canonicalBlock.kind || storedBlock?.kind,
+    mode: canonicalBlock.mode || storedBlock?.mode,
+    hidden: Object.prototype.hasOwnProperty.call(canonicalBlock, 'hidden')
+      ? canonicalBlock.hidden
+      : storedBlock?.hidden,
+    settings: {
+      ...(canonicalBlock.settings || {}),
+    },
+    editableFields: Array.isArray(canonicalBlock.editableFields)
+      ? [...canonicalBlock.editableFields]
+      : (Array.isArray(storedBlock?.editableFields) ? [...storedBlock.editableFields] : []),
+  };
 }
 
 function normalizeHeroSettingsByPath(pathname, rawSettings) {
@@ -2604,6 +2907,19 @@ export function normalizeStoredConfig(payload) {
     ? { ...payload.pageHierarchy }
     : {};
   if (
+    rawPageHierarchy[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH]
+    && !rawPageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH]
+  ) {
+    rawPageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH] = {
+      ...rawPageHierarchy[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH],
+      path: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+      routeKey: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+      linkRef: LEGACY_GIVING_GENEROSITY_FUND_PATH,
+      parentPath: PLANNED_GIVING_OVERVIEW_PATH,
+    };
+  }
+  delete rawPageHierarchy[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
+  if (
     rawPageHierarchy[RETIREMENT_403B_GROUP_ENROLLMENT_LEGACY_PATH]
     && !rawPageHierarchy[RETIREMENT_403B_GROUP_ENROLLMENT_PATH]
   ) {
@@ -2633,7 +2949,7 @@ export function normalizeStoredConfig(payload) {
       return;
     }
     const fallback = defaultHierarchy[path] || {};
-    pageHierarchy[path] = {
+    pageHierarchy[path] = normalizeGenerosityFundPageHierarchyEntry(path, {
       ...fallback,
       ...page,
       path,
@@ -2644,7 +2960,7 @@ export function normalizeStoredConfig(payload) {
       hideFromSitemap: Object.prototype.hasOwnProperty.call(page, 'hideFromSitemap')
         ? Boolean(page.hideFromSitemap)
         : Boolean(fallback.hideFromSitemap),
-    };
+    });
   });
 
   Object.values(pageHierarchy).forEach((page) => {
@@ -2656,6 +2972,13 @@ export function normalizeStoredConfig(payload) {
   const storedBlocksByPathSource = payload.blocksByPath && typeof payload.blocksByPath === 'object'
     ? { ...payload.blocksByPath }
     : {};
+  if (
+    Array.isArray(storedBlocksByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH])
+    && !Array.isArray(storedBlocksByPathSource[LEGACY_GIVING_GENEROSITY_FUND_PATH])
+  ) {
+    storedBlocksByPathSource[LEGACY_GIVING_GENEROSITY_FUND_PATH] = storedBlocksByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
+  }
+  delete storedBlocksByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
   if (
     Array.isArray(storedBlocksByPathSource[RETIREMENT_403B_GROUP_ENROLLMENT_LEGACY_PATH])
     && !Array.isArray(storedBlocksByPathSource[RETIREMENT_403B_GROUP_ENROLLMENT_PATH])
@@ -2688,6 +3011,7 @@ export function normalizeStoredConfig(payload) {
       && normalizedStoredBlocks.some((block) => shouldQuarantineRetirement403bStrategyOptionsBlock(block))
     );
     const canonicalFormOwner = inferCanonicalFormOwner(defaultForPath);
+    let retiredBlockOnlyShellBlock = false;
     const seenIds = new Set();
     const mergedInStoredOrder = [];
 
@@ -2714,6 +3038,12 @@ export function normalizeStoredConfig(payload) {
         return;
       }
       if (canonicalFormOwner === 'request_form' && storedKind === 'cta_form') {
+        return;
+      }
+      if (
+        path === LEGACY_GIVING_GENEROSITY_FUND_PATH
+        && storedBlockId === 'traditional_daf_cta'
+      ) {
         return;
       }
       if (
@@ -2750,6 +3080,10 @@ export function normalizeStoredConfig(payload) {
       ) {
         return;
       }
+      if (shouldRetireBlockOnlyShellBlock(path, storedBlock, defaultById)) {
+        retiredBlockOnlyShellBlock = true;
+        return;
+      }
       if (
         path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH
         && storedBlock.id === 'billboard'
@@ -2770,6 +3104,10 @@ export function normalizeStoredConfig(payload) {
         && storedKind === 'card_grid'
         && matchingDefaultKind === 'content'
       );
+      const isRetiredPageContentImageBridgeMigration = shouldUpgradeRetiredPageContentImageBridge(
+        storedBlock,
+        matchingDefaultBlock,
+      );
       const defaultBlock = (
         matchingDefaultBlock
         && (
@@ -2777,6 +3115,7 @@ export function normalizeStoredConfig(payload) {
           || !matchingDefaultKind
           || storedKind === matchingDefaultKind
           || isExplicitRetiredKindMigration
+          || isRetiredPageContentImageBridgeMigration
         )
       )
         ? matchingDefaultBlock
@@ -2794,6 +3133,10 @@ export function normalizeStoredConfig(payload) {
             name: defaultBlock?.name || storedBlock?.name || 'Loan Details',
           }
         : storedBlock;
+      if (isRetiredPageContentImageBridgeMigration) {
+        storedMode = 'dynamic';
+        nextStoredBlock = upgradeRetiredPageContentImageBridge(defaultBlock, storedBlock);
+      }
       if (
         isBlockOnlyManagedPagePath(path)
         && defaultBlock
@@ -2842,6 +3185,47 @@ export function normalizeStoredConfig(payload) {
             button2Url: '',
             button2PageRef: '',
           },
+        };
+      }
+      if (
+        path === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
+        && storedBlock.id === 'outro'
+        && storedKind === 'billboard'
+        && defaultBlock
+      ) {
+        nextStoredBlock = {
+          ...nextStoredBlock,
+          settings: {
+            ...(nextStoredBlock?.settings || storedBlock?.settings || {}),
+            titleFontFamily: 'helv',
+            titleFontWeight: 700,
+          },
+        };
+      }
+      if (
+        path === LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH
+        && storedBlock.id === 'request_form'
+        && storedKind === 'request_form'
+        && defaultBlock
+      ) {
+        storedMode = 'dynamic';
+        nextStoredBlock = {
+          ...nextStoredBlock,
+          kind: defaultBlock.kind || storedBlock.kind,
+          mode: 'dynamic',
+          hidden: false,
+          settings: normalizeRequestFormPresetSettings(
+            {
+              ...(defaultBlock?.settings || {}),
+              ...(nextStoredBlock?.settings || storedBlock?.settings || {}),
+              sectionClassName: 'legacy-child-native-request',
+              presetId: 'legacy-impact',
+            },
+            'legacy-impact',
+          ),
+          editableFields: Array.isArray(defaultBlock?.editableFields)
+            ? [...defaultBlock.editableFields]
+            : nextStoredBlock.editableFields,
         };
       }
       if (
@@ -3112,6 +3496,17 @@ export function normalizeStoredConfig(payload) {
         };
       }
       if (
+        path === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
+        && storedBlock.id === 'outro'
+        && storedKind === 'billboard'
+        && storedMode === 'dynamic'
+      ) {
+        nextStoredBlock = {
+          ...nextStoredBlock,
+          settings: normalizeCharitableGiftAnnuitiesOutroSettings(nextStoredBlock?.settings),
+        };
+      }
+      if (
         path === LEGACY_GIVING_GENEROSITY_FUND_PATH
         && storedBlock.id === 'joyful_giving_billboard'
         && storedKind === 'billboard'
@@ -3120,6 +3515,18 @@ export function normalizeStoredConfig(payload) {
         nextStoredBlock = {
           ...nextStoredBlock,
           settings: normalizeGenerosityFundJoyfulGivingBillboardSettings(nextStoredBlock?.settings),
+        };
+      }
+      if (
+        path === LEGACY_GIVING_GENEROSITY_FUND_PATH
+        && defaultBlock
+      ) {
+        nextStoredBlock = normalizeGenerosityFundManagedBlock(nextStoredBlock, defaultBlock);
+      }
+      if (nextStoredBlock?.settings && typeof nextStoredBlock.settings === 'object') {
+        nextStoredBlock = {
+          ...nextStoredBlock,
+          settings: normalizeGenerosityFundRouteLabelsInSettings(nextStoredBlock.settings),
         };
       }
       if (path === '/' && storedBlock.id === 'top_strip' && storedMode === 'dynamic') {
@@ -3260,7 +3667,10 @@ export function normalizeStoredConfig(payload) {
           : (path === RETIREMENT_IRAS_PATH
               ? normalizeRetirementIraBlockSet(mergedInStoredOrder)
               : mergedInStoredOrder));
-    blocksByPath[path] = normalizePageBlocksState(normalizedMergedBlocks);
+    const reconciledBlocks = (retiredBlockOnlyShellBlock || path === LEGACY_GIVING_GENEROSITY_FUND_PATH)
+      ? reconcileBlockOnlyManagedBlockInventory(path, defaultForPath, normalizedMergedBlocks)
+      : normalizedMergedBlocks;
+    blocksByPath[path] = normalizePageBlocksState(reconciledBlocks);
   });
 
   const pathAliases = normalizePathAliases(
@@ -3273,6 +3683,13 @@ export function normalizeStoredConfig(payload) {
   const collaborationByPathSource = payload.collaborationByPath && typeof payload.collaborationByPath === 'object'
     ? { ...payload.collaborationByPath }
     : {};
+  if (
+    collaborationByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH]
+    && !collaborationByPathSource[LEGACY_GIVING_GENEROSITY_FUND_PATH]
+  ) {
+    collaborationByPathSource[LEGACY_GIVING_GENEROSITY_FUND_PATH] = collaborationByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
+  }
+  delete collaborationByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
   if (
     collaborationByPathSource[RETIREMENT_403B_GROUP_ENROLLMENT_LEGACY_PATH]
     && !collaborationByPathSource[RETIREMENT_403B_GROUP_ENROLLMENT_PATH]
@@ -3308,6 +3725,17 @@ function readInitialState() {
   }
 }
 
+function hasContentAdminSnapshotStateContent(snapshot) {
+  const nextState = snapshot?.state || snapshot?.payload?.state;
+  if (!nextState || typeof nextState !== 'object') {
+    return false;
+  }
+  return (
+    Object.keys(nextState.pageHierarchy || {}).length > 0
+    || Object.keys(nextState.blocksByPath || {}).length > 0
+  );
+}
+
 export async function bootstrapSharedContentAdminState() {
   if (!isDevContentAuthorityEnabled()) {
     return null;
@@ -3319,6 +3747,9 @@ export async function bootstrapSharedContentAdminState() {
     let snapshot = await fetchSharedContentSnapshot();
     if (!snapshot?.initialized) {
       snapshot = await initializeSharedContentFromSeed(seedState, null);
+    }
+    if (!snapshot?.initialized || !hasContentAdminSnapshotStateContent(snapshot)) {
+      return seedState;
     }
     const nextState = snapshot?.state || snapshot?.payload?.state;
     if (!nextState) {
@@ -3693,7 +4124,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
     const mergeCollaborationOnlyWhenDirty = Boolean(options?.mergeCollaborationOnlyWhenDirty);
     applySharedSeedBaseline(snapshot);
     const nextState = snapshot?.state || snapshot?.payload?.state;
-    if (!nextState) {
+    if (!nextState || !hasContentAdminSnapshotStateContent(snapshot)) {
       return false;
     }
     updatePublishedSharedAuthoringState(snapshot);
@@ -3942,7 +4373,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         if (!snapshot?.initialized && allowBootstrap) {
           snapshot = await initializeSharedContentFromSeed(seedState, currentActor);
         }
-        if (!snapshot?.state || cancelled) {
+        if (!snapshot?.initialized || !hasContentAdminSnapshotStateContent(snapshot) || cancelled) {
           return;
         }
         const nextUpdatedAt = Number(snapshot.updatedAt) || 0;

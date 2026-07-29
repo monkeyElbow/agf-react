@@ -364,6 +364,7 @@ describe('content block blueprint coverage', () => {
         logoAlt: 'AGFinancial office building',
         fullBleed: true,
         sectionClassName: 'about-native-building-shot',
+        railClassName: 'native-info-viewport-bleed',
       },
     });
     expect(introBlock?.hidden).not.toBe(true);
@@ -847,6 +848,9 @@ describe('content block blueprint coverage', () => {
       kind: 'billboard',
       settings: {
         title: 'Plenty of options.',
+        titleFontFamily: 'helv',
+        titleFontWeight: 700,
+        actionsBeforeCards: true,
         sectionClassName: 'legacy-child-native-cga-outro',
         fineprintDisclosureId: 'planned-giving-cga-state-notices',
       },
@@ -910,12 +914,22 @@ describe('content block blueprint coverage', () => {
         title: 'A legacy of giving.',
         anchorId: 'ministry-impact-form',
         sectionClassName: 'legacy-child-native-request',
+        presetId: 'legacy-impact',
+        titleClassName: 'is-super-grey',
+        titleHighlightsJson: '[]',
+        textTone: 'dark',
+        spaceAfterRem: 4.2,
+        hideStepTitles: true,
+        step1Title: '',
+        step1Note: '',
       },
     });
     expect(outroBlock).toMatchObject({
       kind: 'billboard',
       settings: {
         title: 'More joy in receiving.',
+        titleFontFamily: 'helv',
+        titleFontWeight: 700,
         sectionClassName: 'legacy-child-native-billboard',
       },
     });
@@ -1097,7 +1111,7 @@ describe('content block blueprint coverage', () => {
     const charitableTrustsBlocks = contentBlockBlueprintsByPath['/services/planned-giving/charitable-trusts'] || [];
     const qcdBlocks = contentBlockBlueprintsByPath['/services/planned-giving/qualified-charitable-distribution'] || [];
     const endowmentBlocks = contentBlockBlueprintsByPath['/services/planned-giving/endowments'] || [];
-    const generosityBlocks = contentBlockBlueprintsByPath['/services/planned-giving/generosity-fund'] || [];
+    const generosityBlocks = contentBlockBlueprintsByPath['/services/planned-giving/donor-advised-fund'] || [];
     const iraBlocks = contentBlockBlueprintsByPath['/services/retirement/iras'] || [];
     const givingOptionsBlock = legacyGivingBlocks.find((block) => (
       block?.id === 'giving_options'
@@ -1151,7 +1165,7 @@ describe('content block blueprint coverage', () => {
     });
     expectCanonicalLink(givingOptionsBlock?.settings, 'card1Button2LinkJson', {
       kind: 'internal',
-      to: '/services/planned-giving/generosity-fund',
+      to: '/services/planned-giving/donor-advised-fund',
     });
     expectCanonicalLink(givingOptionsBlock?.settings, 'card2ButtonLinkJson', {
       kind: 'internal',
@@ -1512,17 +1526,24 @@ describe('content block blueprint coverage', () => {
 
     expect(generosityBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(generosityBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
-    expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button1Label).toBe('Open a Generosity Fund®');
-    expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Label).toBe('Open a traditional DAF');
-    expectCanonicalLink(generosityBlocks.find((block) => block?.id === 'hero')?.settings, 'button2LinkJson', {
+    expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button1Label).toBe('Open a traditional DAF');
+    expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Label).toBe('Open a Generosity Fund®');
+    expectCanonicalLink(generosityBlocks.find((block) => block?.id === 'hero')?.settings, 'button1LinkJson', {
       kind: 'anchor',
       href: '#traditional-daf-form',
+    });
+    expectCanonicalLink(generosityBlocks.find((block) => block?.id === 'hero')?.settings, 'button2LinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/generosityfund/signup',
     });
     expect(generosityBlocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
       kind: 'columns',
       mode: 'dynamic',
       settings: {
         sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-generosity-steps',
+        buttonLabel: 'Open a traditional DAF',
+        buttonStyle: 'outline',
+        buttonTone: 'super-grey',
         col1Type: 'flow-step',
         col1Title: '',
         col1IconKey: 'daf-step-1',
@@ -1536,6 +1557,21 @@ describe('content block blueprint coverage', () => {
         col4Enabled: false,
       },
     });
+    expectCanonicalLink(generosityBlocks.find((block) => block?.id === 'how_it_works')?.settings, 'buttonLinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
+    });
+    expect(generosityBlocks.find((block) => block?.id === 'traditional_daf_cta')).toBeUndefined();
+    expect(generosityBlocks.find((block) => block?.id === 'generosity_fund_online')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Generosity Fund®',
+        subtitle: 'Our fully online Donor Advised Fund simplifies your giving even more, letting you manage your giving anytime you want.',
+        sectionClassName: 'legacy-child-native-generosity-online',
+        buttonLabel: 'Open a Generosity Fund®',
+      },
+    });
     expect(generosityBlocks.find((block) => block?.id === 'gift_assets')).toMatchObject({
       kind: 'card_grid',
       mode: 'dynamic',
@@ -1543,6 +1579,7 @@ describe('content block blueprint coverage', () => {
         sectionClassName: 'legacy-child-native-assets legacy-child-native-generosity-assets',
         card1Title: 'What you give',
         card1ClassName: 'generosity-fund-assets-card',
+        card1Button2Label: 'Open a traditional DAF',
       },
     });
     expect(generosityBlocks.find((block) => block?.id === 'request_form')).toMatchObject({
@@ -1552,6 +1589,13 @@ describe('content block blueprint coverage', () => {
     expect(generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard')).toMatchObject({
       kind: 'billboard',
       mode: 'dynamic',
+      settings: {
+        title: 'Simple, joyful giving.',
+        titleFontFamily: 'helv',
+        titleFontWeight: 700,
+        titleSizeRem: 5.6,
+        titleLetterSpacingEm: -0.03,
+      },
     });
     expect(generosityBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(generosityBlocks.some((block) => block?.mode === 'static')).toBe(false);
@@ -1580,11 +1624,16 @@ describe('content block blueprint coverage', () => {
 
   it('seeds fund-an-IRA as a block-owned widget route without fallback page content', () => {
     const blocks = contentBlockBlueprintsByPath['/services/retirement/iras/fund-an-ira'] || [];
-    const heroBlock = blocks.find((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic');
+    const utilityHeaderBlock = blocks.find((block) => block?.id === 'utility_header' && block?.kind === 'content' && block?.mode === 'dynamic');
     const widgetBlock = blocks.find((block) => block?.id === 'fund_ira_widget' && block?.kind === 'content');
 
-    expect(heroBlock?.settings?.line1Text).toBe('Fund an IRA');
-    expect(heroBlock?.settings?.line1HighlightsJson).toBe('[{"text":"IRA","className":"is-mango"}]');
+    expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero')).toBe(false);
+    expect(utilityHeaderBlock?.settings).toMatchObject({
+      title: 'Fund an IRA',
+      titleHighlightsJson: '[{"text":"IRA","className":"is-mango"}]',
+      headingLevel: 'h1',
+      sectionClassName: 'fund-ira-native-page-head native-functional-page-head native-functional-page-head--utility',
+    });
     expect(widgetBlock).toMatchObject({
       mode: 'dynamic',
       settings: {

@@ -11,11 +11,11 @@ describe('planned giving and IRA native page content', () => {
     const legacyContent = getNativePageContent('/services/planned-giving', '');
     const legacyBlocks = contentBlockBlueprintsByPath['/services/planned-giving'] || [];
     const endowmentsContent = getNativePageContent('/services/planned-giving/endowments', '');
-    const generosityContent = getNativePageContent('/services/planned-giving/generosity-fund', '');
+    const generosityContent = getNativePageContent('/services/planned-giving/donor-advised-fund', '');
     const ministryImpactContent = getNativePageContent('/services/planned-giving/ministry-impact-fund', '');
     const charitableTrustsContent = getNativePageContent('/services/planned-giving/charitable-trusts', '');
     const endowmentBlocks = contentBlockBlueprintsByPath['/services/planned-giving/endowments'] || [];
-    const generosityBlocks = contentBlockBlueprintsByPath['/services/planned-giving/generosity-fund'] || [];
+    const generosityBlocks = contentBlockBlueprintsByPath['/services/planned-giving/donor-advised-fund'] || [];
     const ministryImpactBlocks = contentBlockBlueprintsByPath['/services/planned-giving/ministry-impact-fund'] || [];
 
     const givingOptionsBlock = legacyBlocks.find((block) => block?.id === 'giving_options');
@@ -25,6 +25,7 @@ describe('planned giving and IRA native page content', () => {
     const generosityHero = generosityBlocks.find((block) => block?.id === 'hero');
     const generosityIntro = generosityBlocks.find((block) => block?.id === 'intro');
     const generositySteps = generosityBlocks.find((block) => block?.id === 'how_it_works');
+    const generosityOnline = generosityBlocks.find((block) => block?.id === 'generosity_fund_online');
     const generosityAssets = generosityBlocks.find((block) => block?.id === 'gift_assets');
     const generosityRequest = generosityBlocks.find((block) => block?.id === 'request_form');
     const generosityOutro = generosityBlocks.find((block) => block?.id === 'joyful_giving_billboard');
@@ -89,31 +90,58 @@ describe('planned giving and IRA native page content', () => {
     expect(generosityHero?.settings).toMatchObject({
       line1Text: 'Your giving.',
       line2Text: 'Managed.',
-      button2Style: 'outline',
-      button2Tone: 'super-grey',
+      button1Label: 'Open a traditional DAF',
+      button1Style: 'outline',
+      button1Tone: 'super-grey',
+      button2Label: 'Open a Generosity Fund®',
+      button2Style: 'blue',
+      button2Tone: 'atlantean',
     });
     expectLink(generosityHero?.settings, 'button1LinkJson', {
-      kind: 'external',
-      href: 'https://secure.agfinancial.org/generosityfund/signup',
-    });
-    expectLink(generosityHero?.settings, 'button2LinkJson', {
       kind: 'anchor',
       href: '#traditional-daf-form',
+    });
+    expectLink(generosityHero?.settings, 'button2LinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/generosityfund/signup',
     });
     expect(generosityIntro?.settings?.heading).toBe('All your charitable giving in one place.');
     expect(generositySteps?.settings).toMatchObject({
       sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-generosity-steps',
       columns: 'three',
+      buttonLabel: 'Open a traditional DAF',
+      buttonStyle: 'outline',
+      buttonTone: 'super-grey',
       col1Type: 'flow-step',
       col3Type: 'flow-step',
+    });
+    expectLink(generositySteps?.settings, 'buttonLinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
+    });
+    expect(generosityBlocks.find((block) => block?.id === 'traditional_daf_cta')).toBeUndefined();
+    expect(generosityOnline?.settings).toMatchObject({
+      title: 'Generosity Fund®',
+      subtitle: 'Our fully online Donor Advised Fund simplifies your giving even more, letting you manage your giving anytime you want.',
+      sectionClassName: 'legacy-child-native-generosity-online',
+      buttonLabel: 'Open a Generosity Fund®',
+    });
+    expectLink(generosityOnline?.settings, 'buttonLinkJson', {
+      kind: 'external',
+      href: 'https://secure.agfinancial.org/generosityfund/signup',
     });
     expect(generosityAssets?.settings).toMatchObject({
       sectionClassName: 'legacy-child-native-assets legacy-child-native-generosity-assets',
       card1Title: 'What you give',
+      card1Button2Label: 'Open a traditional DAF',
     });
     expectLink(generosityAssets?.settings, 'card1ButtonLinkJson', {
       kind: 'external',
       href: 'https://secure.agfinancial.org/generosityfund/signup',
+    });
+    expectLink(generosityAssets?.settings, 'card1Button2LinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
     });
     expect(generosityRequest?.settings).toMatchObject({
       anchorId: 'traditional-daf-form',
@@ -137,7 +165,8 @@ describe('planned giving and IRA native page content', () => {
       href: 'https://secure.agfinancial.org/generosityfund/signup',
     });
     expect(generosityStepsIndex).toBeGreaterThan(generosityBlocks.findIndex((block) => block?.id === 'intro'));
-    expect(generosityRequestIndex).toBeGreaterThan(generosityStepsIndex);
+    expect(generosityBlocks.findIndex((block) => block?.id === 'generosity_fund_online')).toBeGreaterThan(generosityStepsIndex);
+    expect(generosityRequestIndex).toBeGreaterThan(generosityBlocks.findIndex((block) => block?.id === 'generosity_fund_online'));
     expect(generosityOutroIndex).toBeGreaterThan(generosityRequestIndex);
     expect(ministryImpactContent).toMatchObject({
       pageClass: 'native-info-page--legacy-child native-info-page--legacy-ministry-impact',
@@ -161,8 +190,15 @@ describe('planned giving and IRA native page content', () => {
     });
     expect(ministryImpactStockSection?.settings?.card2Title).toBe('Brokerage Letter of Authorization (LOA)');
     expect(ministryImpactStockSection?.settings?.card2ButtonDocumentId).toBe('document-planned-giving-brokerage-loa-form');
-    expect(ministryImpactRequestSection?.settings?.step1Title).toBe('Talk with planned giving');
-    expect(ministryImpactRequestSection?.settings?.step1Note).toBe('Let’s map out the best next step.');
+    expect(ministryImpactRequestSection?.settings).toMatchObject({
+      titleClassName: 'is-super-grey',
+      titleHighlightsJson: '[]',
+      textTone: 'dark',
+      spaceAfterRem: 4.2,
+      hideStepTitles: true,
+      step1Title: '',
+      step1Note: '',
+    });
     expect(ministryImpactRequestSection?.settings?.step1FieldsJson).toContain('"firstName"');
     expect(charitableTrustsContent).toMatchObject({
       pageClass: 'native-info-page--legacy-child native-info-page--legacy-trusts',
@@ -253,15 +289,16 @@ describe('planned giving and IRA native page content', () => {
     expect(rollover?.settings?.targetSectionKey).toBeUndefined();
     expect(iraBlocks.find((block) => block?.id === 'daily_billboard')?.settings).toMatchObject({
       bodyHtml: '<h3>Starting now.</h3>',
-      justify: 'right',
+      justify: 'center',
       scrollReveal: 'scale-up',
       lineSpacing: 0.88,
       titleFontFamily: 'helv',
       titleFontWeight: 700,
       titleSizeRem: 5.25,
       titleLetterSpacingEm: -0.03,
+      contentMaxWidthPx: 1480,
       headlineMaxWidthPx: 560,
-      sectionClassName: 'retirement-ira-native-cta retirement-everyday retirement-daily-billboard',
+      sectionClassName: 'retirement-everyday retirement-daily-billboard',
     });
   });
 });

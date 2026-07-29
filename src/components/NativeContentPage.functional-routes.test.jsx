@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NativeContentPage from './NativeContentPage';
+import { normalizeStoredConfig } from '../context/ContentAdminContext';
 import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { defaultTestimonialsLibrary } from '../data/testimonialsLibrarySeed';
 import { serializeLinkValue } from '../lib/linkValue';
@@ -115,9 +116,9 @@ describe('NativeContentPage functional routes', () => {
         title: 'Planned Giving',
         section: 'Services',
       },
-      '/services/planned-giving/generosity-fund': {
-        path: '/services/planned-giving/generosity-fund',
-        title: 'Generosity Fund',
+      '/services/planned-giving/donor-advised-fund': {
+        path: '/services/planned-giving/donor-advised-fund',
+        title: 'Donor Advised Fund',
         section: 'Services',
       },
       '/services/planned-giving/ministry-impact-fund': {
@@ -138,6 +139,11 @@ describe('NativeContentPage functional routes', () => {
       '/services/retirement/403b/403b-individual-enrollment': {
         path: '/services/retirement/403b/403b-individual-enrollment',
         title: '403b Individual Enrollment',
+        section: 'Retirement',
+      },
+      '/services/retirement/iras/fund-an-ira': {
+        path: '/services/retirement/iras/fund-an-ira',
+        title: 'Fund an IRA',
         section: 'Retirement',
       },
       '/prospectus': {
@@ -242,24 +248,38 @@ describe('NativeContentPage functional routes', () => {
     expect(formLink.className).toContain('is-outline');
   });
 
-  it('renders calculators with a targeted billboard and CTA form instead of the old request-form block', () => {
-    const staleHeroBlock = {
-      id: 'hero',
-      name: 'Hero',
-      kind: 'hero',
-      mode: 'dynamic',
-      settings: {
-        bgTone: 'white',
-        justify: 'left',
-        line1Text: 'Calculators',
-      },
-      editableFields: [],
-    };
+  it('renders Fund an IRA from explicit managed blocks without a duplicate widget title', () => {
     mockBlocksByPath = {
-      '/calculators': [
-        staleHeroBlock,
-        ...(contentBlockBlueprintsByPath['/calculators'] || []),
-      ].map((block) => ({
+      '/services/retirement/iras/fund-an-ira': (contentBlockBlueprintsByPath['/services/retirement/iras/fund-an-ira'] || []).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/iras/fund-an-ira',
+            title: 'Fund an IRA',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.service-native-hero')).toBeNull();
+    expect(document.querySelector('[data-block-id="hero"]')).toBeNull();
+    expect(document.querySelector('[data-block-id="utility_header"]')).toBeTruthy();
+    expect(document.querySelector('.fund-ira-native-page-head.native-functional-page-head--utility h1')?.textContent).toBe('Fund an IRA');
+    expect(document.querySelector('.fund-ira-widget')).toBeTruthy();
+    expect(document.querySelector('.fund-ira-header h2')).toBeNull();
+    expect(document.querySelectorAll('.fund-ira-native-page-head h1')).toHaveLength(1);
+  });
+
+  it('renders calculators with a targeted billboard and CTA form instead of the old request-form block', () => {
+    mockBlocksByPath = {
+      '/calculators': (contentBlockBlueprintsByPath['/calculators'] || []).map((block) => ({
           ...block,
           settings: { ...(block?.settings || {}) },
           editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
@@ -319,7 +339,14 @@ describe('NativeContentPage functional routes', () => {
 
     const widgetSection = document.querySelector('[data-block-id="calculator_tool"]');
     const introSection = document.querySelector('[data-block-id="intro"]');
+    const utilityHeader = document.querySelector('[data-block-id="utility_header"]');
 
+    expect(document.querySelector('.service-native-hero')).toBeNull();
+    expect(document.querySelector('[data-block-id="hero"]')).toBeNull();
+    expect(utilityHeader).toBeTruthy();
+    expect(utilityHeader?.className).toContain('calculator-tool-native-page-head');
+    expect(utilityHeader?.className).toContain('native-functional-page-head--utility');
+    expect(utilityHeader?.querySelector('h1')?.textContent).toBe('Net Worth Calculator');
     expect(document.querySelector('.service-native-intro')).toBeNull();
     expect(introSection?.className).toContain('native-dynamic-calculator-intro');
     expect(introSection?.className).not.toContain('service-native-intro');
@@ -669,9 +696,16 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('[data-block-id="annuity_options"].legacy-child-native-cga-options.is-divider-off')).toBeTruthy();
     expect(document.querySelector('.legacy-child-native-cga-request.native-dynamic-request.is-request-form-preset-legacy-cga')).toBeTruthy();
     expect(document.querySelector('.legacy-child-native-flow-steps.legacy-child-native-cga-steps.native-dynamic-columns')).toBeTruthy();
-    expect([...document.querySelectorAll('.legacy-child-native-cga-steps [data-planned-giving-step-icon]')]
-      .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
+    const stepIcons = [...document.querySelectorAll('.legacy-child-native-cga-steps [data-planned-giving-step-icon]')];
+    expect(stepIcons.map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
       .toEqual(['daf-step-1', 'cga-step-2', 'cga-step-3']);
+    expect(stepIcons.map((icon) => icon.getAttribute('data-fade-delay-ms'))).toEqual(['0', '140', '280']);
+    stepIcons.forEach((icon) => {
+      expect(icon.className).toContain('planned-giving-step-icon--scroll-reveal');
+      expect(icon.className).toContain('fade-up');
+      expect(icon.className).toContain('fade-up-repeat-observe');
+      expect(icon.className).toContain('fade-up-no-shift');
+    });
     expect(screen.getByRole('heading', { name: 'Generous.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Tax benefits\.\s+Ministry support\.\s+Payments for life\./ })).toBeTruthy();
   });
@@ -705,13 +739,17 @@ describe('NativeContentPage functional routes', () => {
     expect([...document.querySelectorAll('.legacy-child-native-endowments-duo [data-planned-giving-step-icon]')]
       .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
       .toEqual(['daf-step-1', 'mif-step-3', 'endowments-step-3']);
+    const assetsSection = document.querySelector('[data-block-id="assets_you_may_give"]');
+    expect(assetsSection?.querySelector('.endowments-assets-title')).toBeTruthy();
+    expect(assetsSection?.querySelector('.endowments-assets-funding')).toBeTruthy();
+    expect(assetsSection?.querySelector('.endowments-asset-badges')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Begin the Endowment sign up process' })).toBeTruthy();
   });
 
   it('renders generosity fund from explicit managed blocks with the generosity request preset', () => {
     mockBlocksByPath = {
-      '/services/planned-giving/generosity-fund': (
-        contentBlockBlueprintsByPath['/services/planned-giving/generosity-fund'] || []
+      '/services/planned-giving/donor-advised-fund': (
+        contentBlockBlueprintsByPath['/services/planned-giving/donor-advised-fund'] || []
       ).map((block) => ({
         ...block,
         settings: { ...(block?.settings || {}) },
@@ -723,8 +761,8 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/planned-giving/generosity-fund',
-            title: 'Generosity Fund',
+            path: '/services/planned-giving/donor-advised-fund',
+            title: 'Donor Advised Fund',
           }}
         />
       </MemoryRouter>,
@@ -736,6 +774,12 @@ describe('NativeContentPage functional routes', () => {
     expect([...document.querySelectorAll('.legacy-child-native-generosity-steps [data-planned-giving-step-icon]')]
       .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
       .toEqual(['daf-step-1', 'daf-step-2', 'daf-step-3']);
+    expect(document.querySelector('[data-block-id="traditional_daf_cta"]')).toBeNull();
+    expect(within(document.querySelector('[data-block-id="how_it_works"]')).getByRole('link', { name: 'Open a traditional DAF' })).toBeTruthy();
+    expect(document.querySelector('[data-block-id="generosity_fund_online"]')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Generosity Fund®' })).toBeTruthy();
+    expect(screen.getByText('Our fully online Donor Advised Fund simplifies your giving even more, letting you manage your giving anytime you want.')).toBeTruthy();
+    expect(within(document.querySelector('[data-block-id="gift_assets"]')).getByRole('link', { name: 'Open a traditional DAF' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Make the most of your giving.' })).toBeTruthy();
   });
 
@@ -849,31 +893,36 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.about-native-cta-form')).toBeTruthy();
   });
 
-  it('renders a stale About building columns draft through the page-content photo presentation', () => {
-    mockBlocksByPath = {
-      '/about-us': (
-        contentBlockBlueprintsByPath['/about-us'] || []
-      ).map((block) => {
-        if (block.id !== 'building_shot') {
+  it('renders a normalized stale About building columns draft through the page-content photo presentation', () => {
+    const normalizedState = normalizeStoredConfig({
+      blocksByPath: {
+        '/about-us': (
+          contentBlockBlueprintsByPath['/about-us'] || []
+        ).map((block) => {
+          if (block.id !== 'building_shot') {
+            return {
+              ...block,
+              settings: { ...(block?.settings || {}) },
+              editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+            };
+          }
+
           return {
             ...block,
-            settings: { ...(block?.settings || {}) },
-            editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+            kind: 'columns',
+            settings: {
+              sectionClassName: 'about-native-building-shot',
+              contentWidth: 'browser',
+              col1ImageUrl: '/src/assets/about-intro.jpg',
+              col1ImageAlt: 'AGFinancial office building',
+            },
+            editableFields: [],
           };
-        }
-
-        return {
-          ...block,
-          kind: 'columns',
-          settings: {
-            sectionClassName: 'about-native-building-shot',
-            contentWidth: 'browser',
-            col1ImageUrl: '/src/assets/about-intro.jpg',
-            col1ImageAlt: 'AGFinancial office building',
-          },
-          editableFields: [],
-        };
-      }),
+        }),
+      },
+    });
+    mockBlocksByPath = {
+      '/about-us': normalizedState.blocksByPath['/about-us'] || [],
     };
 
     render(
@@ -1401,7 +1450,7 @@ describe('NativeContentPage functional routes', () => {
       },
     ];
     mockBlocksByPath = {
-      '/services/planned-giving/generosity-fund': (contentBlockBlueprintsByPath['/services/planned-giving/generosity-fund'] || [])
+      '/services/planned-giving/donor-advised-fund': (contentBlockBlueprintsByPath['/services/planned-giving/donor-advised-fund'] || [])
         .filter((block) => block?.mode === 'dynamic'),
     };
 
@@ -1409,8 +1458,8 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/planned-giving/generosity-fund',
-            title: 'Generosity Fund',
+            path: '/services/planned-giving/donor-advised-fund',
+            title: 'Donor Advised Fund',
           }}
         />
       </MemoryRouter>,
@@ -1426,6 +1475,7 @@ describe('NativeContentPage functional routes', () => {
     expect(joyfulSection?.className).toContain('dynamic-billboard');
     expect(joyfulSection?.className).toContain('is-bg-white');
     expect(joyfulSection?.className).toContain('is-text-dark');
+    expect(joyfulHeading.getAttribute('style') || '').toContain('font-family: var(--ag-font-helv)');
     expect(openFundLink.className).toContain('is-tone-atlantean');
     expect(openFundLink.className).not.toContain('is-ghost');
     expect(termsLink.className).toContain('is-outline');
@@ -1694,7 +1744,7 @@ describe('NativeContentPage functional routes', () => {
 
   it('keeps the generosity fund traditional DAF hero CTA on the managed request-form anchor', () => {
     mockBlocksByPath = {
-      '/services/planned-giving/generosity-fund': [
+      '/services/planned-giving/donor-advised-fund': [
         {
           id: 'hero',
           kind: 'hero',
@@ -1702,18 +1752,20 @@ describe('NativeContentPage functional routes', () => {
           settings: {
             line1Text: 'Your giving.',
             line2Text: 'Managed.',
-            button1Label: 'Open a Generosity Fund®',
+            button1Label: 'Open a traditional DAF',
             button1LinkJson: serializeLinkValue({
-              kind: 'external',
-              href: 'https://secure.agfinancial.org/generosityfund/signup',
-            }),
-            button2Label: 'Open a traditional DAF',
-            button2LinkJson: serializeLinkValue({
               kind: 'anchor',
               href: '#traditional-daf-form',
             }),
-            button2Style: 'outline',
-            button2Tone: 'super-grey',
+            button1Style: 'outline',
+            button1Tone: 'super-grey',
+            button2Label: 'Open a Generosity Fund®',
+            button2LinkJson: serializeLinkValue({
+              kind: 'external',
+              href: 'https://secure.agfinancial.org/generosityfund/signup',
+            }),
+            button2Style: 'blue',
+            button2Tone: 'atlantean',
           },
         },
         {
@@ -1740,15 +1792,20 @@ describe('NativeContentPage functional routes', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/planned-giving/generosity-fund',
-            title: 'Generosity Fund',
+            path: '/services/planned-giving/donor-advised-fund',
+            title: 'Donor Advised Fund',
           }}
         />
       </MemoryRouter>,
     );
 
-    expect(screen.getAllByRole('link', { name: 'Open a Generosity Fund®' })[0].getAttribute('href')).toContain('secure.agfinancial.org/generosityfund/signup');
-    expect(screen.getByRole('link', { name: 'Open a traditional DAF' }).getAttribute('href')).toBe('#traditional-daf-form');
+    const heroSection = document.querySelector('[data-block-id="hero"]');
+    const heroLinks = within(heroSection).getAllByRole('link');
+
+    expect(heroLinks[0].textContent).toBe('Open a traditional DAF');
+    expect(heroLinks[0].getAttribute('href')).toBe('#traditional-daf-form');
+    expect(heroLinks[1].textContent).toBe('Open a Generosity Fund®');
+    expect(heroLinks[1].getAttribute('href')).toContain('secure.agfinancial.org/generosityfund/signup');
     expect(document.querySelector('#traditional-daf-form')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Submit' })).toHaveLength(1);
   });

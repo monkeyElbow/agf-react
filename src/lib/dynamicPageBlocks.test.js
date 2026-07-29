@@ -89,6 +89,13 @@ describe('buildDynamicColumnsFromBlock', () => {
         bgTone: 'sand',
         contentWidth: 'browser',
         columns: 'three',
+        buttonLabel: 'Open a traditional DAF',
+        buttonLinkJson: serializeLinkValue({
+          kind: 'anchor',
+          href: '#traditional-daf-form',
+        }),
+        buttonStyle: 'outline',
+        buttonTone: 'super-grey',
         col1Enabled: true,
         col1Type: 'text',
         col1Title: 'Option one',
@@ -127,6 +134,14 @@ describe('buildDynamicColumnsFromBlock', () => {
     expect(runtime.titleHighlights).toEqual([{ text: 'options', className: 'is-mango' }]);
     expect(runtime.leadLineHighlights).toEqual([{ text: 'Start', className: 'is-atlantean' }]);
     expect(runtime.followupLineHighlights).toEqual([{ text: 'choose', className: 'is-melon' }]);
+    expect(runtime.actions).toEqual([
+      expect.objectContaining({
+        label: 'Open a traditional DAF',
+        href: '#traditional-daf-form',
+        style: 'outline',
+        tone: 'super-grey',
+      }),
+    ]);
     expect(runtime.items).toHaveLength(2);
     expect(runtime.items[0]).toMatchObject({
       slot: 1,
@@ -518,6 +533,46 @@ describe('buildDynamicRequestFormFromBlock', () => {
     expect(runtime?.sectionClassName).toContain('contact-us-request');
     expect(runtime?.sectionClassName).toContain('is-request-form-preset-contact');
   });
+
+  it('locks legacy-impact request forms to the shared preset presentation contract', () => {
+    const runtime = buildDynamicRequestFormFromBlock({
+      id: 'request_form',
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-request',
+        presetId: 'legacy-impact',
+        title: 'A legacy of giving.',
+        titleClassName: 'is-atlantean',
+        titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+        bgTone: 'blue',
+        textTone: 'white',
+        spaceBeforeRem: 0,
+        spaceAfterRem: 0,
+        step1Title: 'Talk with planned giving',
+        step1Note: 'Let’s map out the best next step.',
+        step1FieldsJson: JSON.stringify([
+          { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+        ]),
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      titleClassName: 'is-super-grey',
+      titleHighlightsJson: '[]',
+      bgTone: 'blue',
+      textTone: 'dark',
+      spaceBeforeRem: 3.6,
+      spaceAfterRem: 4.2,
+      hideStepTitles: true,
+    });
+    expect(runtime?.sectionClassName).toContain('is-text-dark');
+    expect(runtime?.steps?.[0]).toMatchObject({
+      title: '',
+      note: '',
+      alert: '',
+    });
+  });
 });
 
 describe('buildDynamicIntroFromBlock', () => {
@@ -594,6 +649,7 @@ describe('buildDynamicBillboardFromBlock', () => {
         titleLetterSpacingEm: -0.015,
         headlineMaxWidthPx: 980,
         contentMaxWidthPx: 1100,
+        actionsBeforeCards: true,
         buttonLabel: 'Take the next step',
         buttonLinkJson: serializeLinkValue({
           kind: 'internal',
@@ -625,6 +681,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       copyClassName: '',
       copyFadeRootMargin: '',
       contentMaxWidthPx: 1100,
+      actionsBeforeCards: true,
       action: expect.objectContaining({
         label: 'Take the next step',
         to: '/contact-us',
@@ -721,6 +778,31 @@ describe('buildDynamicBillboardFromBlock', () => {
     }));
   });
 
+  it('locks the charitable gift annuities outro billboard to centered Helv presentation', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      id: 'outro',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Plenty of options.',
+        justify: 'right',
+        titleFontFamily: 'avenir',
+        titleFontWeight: 400,
+        actionsBeforeCards: false,
+        sectionClassName: 'legacy-child-native-cga-outro',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      justify: 'center',
+      actionsBeforeCards: true,
+    });
+    expect(runtime?.titleStyle).toEqual(expect.objectContaining({
+      fontFamily: 'var(--ag-font-helv)',
+      fontWeight: 700,
+    }));
+  });
+
   it('keeps supporting subtitle size overrides on the shared billboard subtitle sizing path', () => {
     const runtime = buildDynamicBillboardFromBlock({
       id: 'subtitle_size_billboard',
@@ -746,7 +828,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       mode: 'dynamic',
       settings: {
         title: 'Retire a little every day.',
-        targetSectionKey: 'class:retirement-ira-native-cta',
+        targetSectionKey: 'class:retirement-child-native-rollover',
       },
     });
 
@@ -2152,6 +2234,7 @@ describe('buildDynamicPageContentFromBlock', () => {
         contentMaxWidthPx: 1140,
         anchorId: 'section-anchor',
         sectionClassName: 'custom-shell',
+        railClassName: 'native-info-viewport-bleed',
         copyWrap: true,
         buttonLabel: 'Download form',
         buttonDocumentId: 'document-example',
@@ -2199,6 +2282,7 @@ describe('buildDynamicPageContentFromBlock', () => {
       contentMaxWidthPx: 1140,
       anchorId: 'section-anchor',
       sectionClassName: 'custom-shell',
+      railClassName: 'native-info-viewport-bleed',
       copyWrap: true,
       justify: 'center',
       actions: [

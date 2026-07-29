@@ -675,7 +675,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
   it('shows the request-form HUD control on the managed generosity-fund request section', () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
-      '/services/planned-giving/generosity-fund': [
+      '/services/planned-giving/donor-advised-fund': [
         {
           id: 'request_form',
           name: 'Generosity Request Form',
@@ -728,10 +728,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       ],
     };
     mockPageHierarchy = {
-      '/services/planned-giving/generosity-fund': {
-        path: '/services/planned-giving/generosity-fund',
-        title: 'Generosity Fund',
-        breadcrumbLabel: 'Generosity Fund',
+      '/services/planned-giving/donor-advised-fund': {
+        path: '/services/planned-giving/donor-advised-fund',
+        title: 'Donor Advised Fund',
+        breadcrumbLabel: 'Donor Advised Fund',
         parentPath: '/services/planned-giving',
       },
     };
@@ -740,8 +740,8 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/planned-giving/generosity-fund',
-            title: 'Generosity Fund',
+            path: '/services/planned-giving/donor-advised-fund',
+            title: 'Donor Advised Fund',
           }}
         />
       </MemoryRouter>,
@@ -864,19 +864,21 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           hidden: false,
           settings: {
             title: 'A legacy of giving.',
-            titleClassName: '',
-            titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+            titleClassName: 'is-super-grey',
+            titleHighlightsJson: '[]',
             subtitle: '',
             bodyHtml: '',
             body: 'We’re ready to help you explore how your gift can continue to give. And give. And give…',
-            bgTone: 'grey',
-            textTone: 'white',
-            spaceBeforeRem: 1.6,
-            spaceAfterRem: 1.6,
+            bgTone: 'blue',
+            textTone: 'dark',
+            spaceBeforeRem: 3.6,
+            spaceAfterRem: 4.2,
             submitLabel: 'Contact planned giving',
             successMessage: 'Thanks. We received your request.',
             salesforceUrl: '',
             sectionClassName: 'legacy-child-native-request',
+            presetId: 'legacy-impact',
+            hideStepTitles: true,
             step1Title: '',
             step1Note: '',
             step1Alert: '',
@@ -1001,7 +1003,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
         : null
     );
     mockBlocksByPath = {
-      '/services/planned-giving/generosity-fund': [
+      '/services/planned-giving/donor-advised-fund': [
         {
           id: 'joyful_giving_billboard',
           name: 'Joyful Giving Billboard',
@@ -1037,10 +1039,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       ],
     };
     mockPageHierarchy = {
-      '/services/planned-giving/generosity-fund': {
-        path: '/services/planned-giving/generosity-fund',
-        title: 'Generosity Fund',
-        breadcrumbLabel: 'Generosity Fund',
+      '/services/planned-giving/donor-advised-fund': {
+        path: '/services/planned-giving/donor-advised-fund',
+        title: 'Donor Advised Fund',
+        breadcrumbLabel: 'Donor Advised Fund',
         parentPath: '/services/planned-giving',
       },
     };
@@ -1049,8 +1051,8 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       <MemoryRouter>
         <NativeContentPage
           page={{
-            path: '/services/planned-giving/generosity-fund',
-            title: 'Generosity Fund',
+            path: '/services/planned-giving/donor-advised-fund',
+            title: 'Donor Advised Fund',
           }}
         />
       </MemoryRouter>,
@@ -1101,17 +1103,19 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           settings: {
             title: 'Retire a little every day.',
             titleHighlightsJson: '[{"text":"every day","className":"is-mango"}]',
-            subtitle: 'Starting now.',
-            bodyHtml: '',
+            subtitle: '',
+            bodyHtml: '<h3>Starting now.</h3>',
             bgTone: 'white',
             textTone: 'dark',
             justify: 'center',
+            contentMaxWidthPx: 1480,
+            headlineMaxWidthPx: 560,
             buttonLabel: 'Reach my consultant',
             buttonLinkJson: serializeLinkValue({
               kind: 'internal',
               to: '/services/retirement/retirement-consultants',
             }),
-            sectionClassName: 'retirement-ira-native-cta',
+            sectionClassName: 'retirement-everyday retirement-daily-billboard',
           },
           editableFields: [],
         },
@@ -1142,8 +1146,9 @@ describe('NativeContentPage HUD visibility boundaries', () => {
 
     expect(retireHeadings).toHaveLength(1);
     expect(rolloverHeadings).toHaveLength(1);
-    expect(retireHeadings[0]?.closest('section')?.className).toContain('retirement-ira-native-cta');
     expect(retireHeadings[0]?.closest('section')?.className).toContain('dynamic-billboard');
+    expect(retireHeadings[0]?.closest('section')?.className).toContain('retirement-everyday');
+    expect(retireHeadings[0]?.closest('section')?.className).toContain('retirement-daily-billboard');
     expect(rolloverHeadings[0]?.closest('section')?.className).toContain('retirement-child-native-rollover');
     expect(rolloverHeadings[0]?.closest('section')?.className).toContain('dynamic-billboard');
   });

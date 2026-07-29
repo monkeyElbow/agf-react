@@ -416,13 +416,13 @@ function buildPresetSeedState() {
 function buildGenerosityFundSeedState() {
   return {
     pageHierarchy: {
-      '/services/planned-giving/generosity-fund': {
-        path: '/services/planned-giving/generosity-fund',
+      '/services/planned-giving/donor-advised-fund': {
+        path: '/services/planned-giving/donor-advised-fund',
         title: 'Generosity Fund',
       },
     },
     blocksByPath: {
-      '/services/planned-giving/generosity-fund': [
+      '/services/planned-giving/donor-advised-fund': [
         {
           id: 'hero',
           kind: 'hero',
@@ -446,7 +446,7 @@ function buildGenerosityFundSeedState() {
     },
     pathAliases: {},
     collaborationByPath: {
-      '/services/planned-giving/generosity-fund': {
+      '/services/planned-giving/donor-advised-fund': {
         blocks: {},
         history: [],
       },
@@ -1220,27 +1220,31 @@ describe('createDevContentAuthorityStore', () => {
     expect(loanApply.presetId).toBe('step-cards');
   });
 
-  it('repairs the stale generosity fund hero CTA fields in shared snapshots', () => {
+  it('repairs the stale generosity fund hero order and CTA fields in shared snapshots', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);
 
     store.resetFromSeed(buildGenerosityFundSeedState(), { actor: createActor() });
 
-    const heroBlock = store.getSnapshot().state.blocksByPath['/services/planned-giving/generosity-fund'][0];
+    const heroBlock = store.getSnapshot().state.blocksByPath['/services/planned-giving/donor-advised-fund'][0];
     expectLinkJson(heroBlock.settings, 'button1LinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
+    });
+    expectLinkJson(heroBlock.settings, 'button2LinkJson', {
       kind: 'external',
       href: 'https://secure.agfinancial.org/generosityfund/signup',
     });
     expectNoSplitSettings(heroBlock.settings, ['button1Url', 'button2Url', 'button2PageRef']);
-    expect(heroBlock.settings.button2Action).toBe('open_cta_form');
-    expect(heroBlock.settings.button2TargetAnchorId).toBe('traditional-daf-inline-form');
+    expect(heroBlock.settings.button2Action).toBe('');
+    expect(heroBlock.settings.button2TargetAnchorId).toBe('');
     expect(heroBlock.settings.button2TargetBlockId).toBe('');
 
     const reloaded = createStore(persistenceFile);
-    const reloadedHero = reloaded.getSnapshot().state.blocksByPath['/services/planned-giving/generosity-fund'][0];
+    const reloadedHero = reloaded.getSnapshot().state.blocksByPath['/services/planned-giving/donor-advised-fund'][0];
     expect(Object.prototype.hasOwnProperty.call(reloadedHero.settings, 'button2Url')).toBe(false);
-    expect(reloadedHero.settings.button2Action).toBe('open_cta_form');
-    expect(reloadedHero.settings.button2TargetAnchorId).toBe('traditional-daf-inline-form');
+    expect(reloadedHero.settings.button2Action).toBe('');
+    expect(reloadedHero.settings.button2TargetAnchorId).toBe('');
   });
 
   it('restoring a page revision creates new current draft state without mutating the old revision', () => {

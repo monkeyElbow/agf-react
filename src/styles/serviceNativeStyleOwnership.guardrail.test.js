@@ -86,6 +86,7 @@ describe('service-native style ownership', () => {
     [
       '.native-info-page--calculator-tool .service-native-section.calculator-tool-shell {',
       'padding-block: clamp(0.7rem, 1.2vw, 1rem);',
+      '.native-info-page--calculator-tool .calculator-tool-native-page-head + .service-native-section.calculator-tool-shell {',
       '.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-shell {',
       'padding-top: 0;',
       '.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-contact.native-dynamic-cta {',
@@ -100,6 +101,8 @@ describe('service-native style ownership', () => {
       '.native-info-page--calculator-tool .calculator-tool-shell {',
       '.native-info-page--calculator-tool .calculator-tool-shell + .calculator-tool-shell {',
       '.native-info-page--calculator-increased-contribution .calculator-tool-shell {',
+      '.native-info-page--calculator-tool .service-native-hero',
+      '.native-info-page--calculator-increased-contribution .service-native-hero',
     ].forEach((weakSelector) => {
       expect(source).not.toContain(weakSelector);
     });
@@ -243,11 +246,23 @@ describe('service-native style ownership', () => {
     const source = readSource('./service-native.css');
 
     [
+      '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card {',
+      'padding: clamp(2.7rem, 5.2vw, 3.9rem);',
       '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3 {',
       'text-align: center;',
       'justify-content: center;',
+      'min-height: 0;',
+      'margin-top: 0;',
+      'margin-bottom: clamp(0.7rem, 1.4vw, 1.05rem);',
+      'padding-bottom: 0;',
       '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3::after {',
       'display: none;',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card > div > p {',
+      'text-align: left;',
+      '.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),',
+      'color: var(--ag-color-super-grey);',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-outro .service-native-action-row + .service-native-note {',
+      'margin-top: clamp(2.4rem, 4vw, 3.2rem);',
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
     });
@@ -329,20 +344,20 @@ describe('service-native style ownership', () => {
       '.native-info-page--retirement-iras .retirement-child-native-ira-types {',
       '--dynamic-grid-body-color: var(--ag-color-super-grey);',
       '--dynamic-grid-card-title-color: var(--ag-color-super-grey);',
-      'padding-bottom: clamp(1.35rem, 2.9vw, 2.25rem);',
-      'box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26);',
+      'padding-bottom: clamp(3.4rem, 6.4vw, 5rem);',
+      'box-shadow: 0 8px 18px rgba(16, 43, 64, 0.06);',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div {',
-      'justify-items: center;',
+      'display: flex;',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div > p {',
-      'justify-self: stretch;',
+      'flex: 1 1 auto;',
       'text-align: left;',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {',
       'display: block;',
       'min-height: 0;',
-      'margin: 0 0 0.95rem;',
-      'padding-bottom: 0;',
+      'margin: 0;',
+      'letter-spacing: var(--ag-letter-spacing-avenir-heading);',
       '.native-info-page--retirement-iras .retirement-child-native-ira-types > :is(.ag-panel-rail, .ag-panel-rail-wide, .native-info-full-bleed) > .service-native-action-row {',
-      'margin-top: clamp(2.5rem, 5.6vw, 4rem);',
+      'margin-top: clamp(2.6rem, 5.8vw, 4.2rem);',
       'justify-content: center !important;',
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
@@ -381,7 +396,7 @@ describe('service-native style ownership', () => {
       '.native-info-page--retirement-iras .retirement-child-native-comparison > .native-info-full-bleed > h2 {',
       'color: var(--ag-color-super-grey);',
       '.native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap {',
-      '--ira-comparison-shadow-gutter: clamp(1.1rem, 2.2vw, 1.6rem);',
+      '--ira-comparison-shadow-gutter: clamp(1.35rem, 2.7vw, 2rem);',
       'overflow: visible;',
       'filter: drop-shadow(0 18px 34px rgba(65, 64, 66, 0.18));',
       '.native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__card {',

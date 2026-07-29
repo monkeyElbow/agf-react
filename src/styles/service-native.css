@@ -490,28 +490,12 @@
   }
 }
 
-.native-info-page--calculator-tool .service-native-hero {
-  background: #ffffff;
-  padding: clamp(0.72rem, 1.3vw, 0.95rem) 0 clamp(0.28rem, 0.7vw, 0.45rem);
-  border-bottom: 0;
-}
-
-.native-info-page--calculator-tool .service-native-hero .ag-panel-rail {
-  min-height: 0;
-  display: block;
-}
-
-.native-info-page--calculator-tool .service-native-hero h1,
-.native-info-page.native-info-page--calculator-tool.is-compact .service-native-hero h1 {
-  font-family: var(--ag-font-helv);
-  font-size: clamp(1.55rem, 2.3vw, 1.95rem);
-  line-height: 1.04;
-  letter-spacing: -0.03em;
-  text-align: left;
-}
-
 .native-info-page--calculator-tool .service-native-section.calculator-tool-shell {
   padding-block: clamp(0.7rem, 1.2vw, 1rem);
+}
+
+.native-info-page--calculator-tool .calculator-tool-native-page-head + .service-native-section.calculator-tool-shell {
+  padding-top: 0;
 }
 
 .native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-shell {
@@ -542,16 +526,6 @@
 
 .native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-contact.native-dynamic-cta {
   padding-top: clamp(2.1rem, 4.4vw, 3.4rem);
-}
-
-.native-info-page--calculator-increased-contribution .service-native-hero {
-  padding: clamp(0.68rem, 1.15vw, 0.88rem) 0 clamp(0.24rem, 0.65vw, 0.4rem);
-}
-
-.native-info-page--calculator-increased-contribution .service-native-hero h1,
-.native-info-page.native-info-page--calculator-increased-contribution.is-compact .service-native-hero h1 {
-  font-size: clamp(1.48rem, 2vw, 1.82rem);
-  line-height: 1.03;
 }
 
 .native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell {
@@ -13385,6 +13359,10 @@
   max-width: 64ch;
 }
 
+.native-functional-page-head--utility h1 mark.is-mango {
+  color: var(--ag-color-mango);
+}
+
 .native-info-page--legal .native-functional-page-head--legal {
   padding-bottom: clamp(0.65rem, 1.2vw, 0.95rem);
 }
@@ -20108,8 +20086,8 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .retirement-child-native-ira-types {
   --dynamic-grid-body-color: var(--ag-color-super-grey);
   --dynamic-grid-card-title-color: var(--ag-color-super-grey);
-  padding-top: clamp(2.4rem, 5vw, 4rem);
-  padding-bottom: clamp(1.35rem, 2.9vw, 2.25rem);
+  padding-top: clamp(2.6rem, 5.2vw, 4.25rem);
+  padding-bottom: clamp(3.4rem, 6.4vw, 5rem);
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types > .native-info-full-bleed {
@@ -20117,29 +20095,37 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card {
-  background: #fff;
+  background: linear-gradient(142deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
   border: 0;
-  border-radius: 10px;
-  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26);
-  padding: clamp(1.9rem, 2.8vw, 2.7rem);
+  border-radius: 16px;
+  box-shadow: 0 8px 18px rgba(16, 43, 64, 0.06);
+  overflow: hidden;
+  padding: 0;
   min-height: 100%;
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div {
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   text-align: center;
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {
   display: block;
   min-height: 0;
-  margin: 0 0 0.95rem;
-  padding-bottom: 0;
-  font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  letter-spacing: 0;
+  margin: 0;
+  padding:
+    clamp(1.8rem, 3.4vw, 2.3rem)
+    clamp(2.4rem, 5.2vw, 3.1rem)
+    clamp(0.34rem, 0.85vw, 0.5rem);
+  background: transparent;
+  font-family: var(--ag-font-heading);
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
   text-align: center;
-  font-size: clamp(1.72rem, 2.7vw, 2.28rem);
+  font-size: clamp(1.9rem, 3.35vw, 2.45rem);
   line-height: 1.02;
 }
 
@@ -20147,19 +20133,27 @@ p.impact-proof-story-proof-body {
   display: none !important;
 }
 
+.native-info-page--retirement-iras .retirement-child-native-ira-types .retirement-ira-type-card--traditional h3,
 .native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card:nth-child(1) h3 {
   color: var(--ag-color-atlantean);
 }
 
+.native-info-page--retirement-iras .retirement-child-native-ira-types .retirement-ira-type-card--roth h3,
 .native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card:nth-child(2) h3 {
   color: var(--ag-color-mango);
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div > p {
-  justify-self: stretch;
+  flex: 1 1 auto;
+  margin: 0;
+  padding:
+    clamp(0.95rem, 2vw, 1.2rem)
+    clamp(2.4rem, 5.2vw, 3.1rem)
+    clamp(3.2rem, 5.6vw, 4.4rem);
+  background: transparent;
   color: var(--ag-color-super-grey) !important;
-  font-size: clamp(1.12rem, 1.75vw, 1.28rem);
-  line-height: 1.48;
+  font-size: clamp(1.1rem, 1.6vw, 1.22rem);
+  line-height: 1.6;
   text-align: left;
 }
 
@@ -20169,7 +20163,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-iras .retirement-child-native-ira-types > :is(.ag-panel-rail, .ag-panel-rail-wide, .native-info-full-bleed) > .service-native-action-row {
-  margin-top: clamp(2.5rem, 5.6vw, 4rem);
+  margin-top: clamp(2.6rem, 5.8vw, 4.2rem);
   justify-content: center !important;
 }
 
@@ -20205,16 +20199,16 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison .native-info-table-wrap {
-  --ira-comparison-shadow-gutter: clamp(1.1rem, 2.2vw, 1.6rem);
+  --ira-comparison-shadow-gutter: clamp(1.35rem, 2.7vw, 2rem);
   box-sizing: border-box;
-  max-width: calc(68rem + (var(--ira-comparison-shadow-gutter) * 2));
+  max-width: calc(72rem + (var(--ira-comparison-shadow-gutter) * 2));
   margin: 0 auto;
   padding: 0 var(--ira-comparison-shadow-gutter) clamp(1.6rem, 2.8vw, 2.2rem);
   overflow: visible;
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet {
-  max-width: 68rem;
+  max-width: 72rem;
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__desktop-shell {
@@ -20226,7 +20220,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table {
   min-width: 760px;
   border-collapse: separate;
-  border-spacing: clamp(0.55rem, 1.3vw, 0.9rem) 0;
+  border-spacing: clamp(1.05rem, 2.2vw, 1.6rem) 0;
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table th,
@@ -20237,15 +20231,16 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table thead th {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 0;
   color: #ffffff;
   font-family: var(--ag-font-body);
-  font-size: clamp(1.18rem, 1.22vw, 1.28rem);
+  font-size: clamp(1.18rem, 1.34vw, 1.42rem);
   font-weight: 780;
-  letter-spacing: 0;
+  letter-spacing: -0.025em;
   line-height: 1.05;
   text-align: left;
   text-transform: none;
+  padding: clamp(0.78rem, 1.4vw, 1rem) clamp(1rem, 1.9vw, 1.35rem);
 }
 
 .native-info-page--retirement-iras .retirement-child-native-comparison .info-table-sheet__table thead th:nth-child(1) {
@@ -20353,7 +20348,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .retirement-ira-native-rates .service-native-note {
   color: #666;
   line-height: 1.65;
-  margin-top: 1.35rem;
+  margin-top: 2.35rem;
 }
 
 .native-info-page--retirement-iras .retirement-ira-native-rates > .ag-panel-rail > .service-native-note:first-of-type {
@@ -20491,8 +20486,8 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--retirement-iras .retirement-child-native-rollover {
   background: var(--ag-color-super-grey);
-  padding-top: clamp(2.8rem, 5.4vw, 4.2rem);
-  padding-bottom: clamp(2.8rem, 5.4vw, 4.2rem);
+  padding-top: clamp(4rem, 7.2vw, 6rem);
+  padding-bottom: clamp(4rem, 7.2vw, 6rem);
 }
 
 .native-info-page--retirement-iras .retirement-child-native-rollover > .ag-panel-rail {
@@ -22070,7 +22065,7 @@ p.impact-proof-story-proof-body {
 .legacy-child-native-request {
   background: var(--ag-color-super-grey);
   padding-top: clamp(3rem, 6vw, 4.8rem);
-  padding-bottom: 0;
+  padding-bottom: clamp(3rem, 6vw, 4.8rem);
   color: #ffffff;
 }
 
@@ -22084,24 +22079,29 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-request:not(.native-dynamic-request) .native-info-section-copy > h2,
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy > h2 {
-  color: var(--ag-color-atlantean);
-  font-family: var(--ag-font-heading);
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
   font-size: clamp(2.2rem, 4.6vw, 3.4rem);
 }
 
 .legacy-child-native-request:not(.native-dynamic-request) .native-info-section-copy > h2 mark.is-white,
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy > h2 mark.is-white {
-  color: #ffffff;
+  color: inherit;
 }
 
 .legacy-child-native-request:not(.native-dynamic-request) .native-info-section-copy p,
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy .native-info-rich-html :is(p, li, a) {
-  color: #ffffff;
+  color: var(--ag-color-super-grey);
   font-size: clamp(1.2rem, 2.4vw, 1.55rem);
   line-height: 1.5;
   max-width: 30rem;
+}
+
+.native-dynamic-request.is-request-form-preset-legacy-impact {
+  padding-top: clamp(3rem, 6vw, 4.8rem);
+  padding-bottom: clamp(3rem, 6vw, 4.8rem);
 }
 
 .legacy-child-native-request:not(.native-dynamic-request) .native-info-inline-form {
@@ -22407,12 +22407,14 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-assets-copy {
+  grid-column: 1;
   display: grid;
   gap: clamp(0.75rem, 1.4vw, 1.1rem);
   align-content: center;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-assets-title {
+  grid-column: 1;
   margin: 0;
   max-width: 10.5ch;
   color: var(--ag-color-super-grey);
@@ -22425,6 +22427,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-assets-funding {
+  grid-column: 1;
   margin: 0;
   max-width: 31ch;
   color: rgba(65, 64, 66, 0.88);
@@ -22446,6 +22449,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-assets .endowments-asset-badges {
   grid-column: 2;
+  grid-row: 1 / span 2;
   align-self: center;
   justify-self: stretch;
   display: grid;
@@ -23567,7 +23571,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-generosity-fund .service-native-hero .service-native-action-row {
-  margin-top: 1.4rem;
+  margin-top: clamp(2rem, 4vw, 3.2rem);
 }
 
 .native-info-page--legacy-generosity-fund .service-native-intro {
@@ -23779,6 +23783,59 @@ p.impact-proof-story-proof-body {
   margin-top: clamp(1.4rem, 3vw, 2rem);
 }
 
+.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-traditional-cta {
+  background: #ffffff;
+  padding: 0 0 clamp(1.8rem, 3.8vw, 2.8rem);
+}
+
+.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-traditional-cta > .ag-panel-rail {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-online {
+  background: #ffffff;
+}
+
+.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-online > .ag-panel-rail {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-online .native-info-section-copy {
+  display: grid;
+  justify-items: center;
+  row-gap: var(--service-native-intro-content-gap);
+}
+
+.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-online .native-info-section-copy > h2 {
+  margin: 0;
+  text-align: center;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-size: clamp(3rem, 7vw, 5.2rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
+  text-wrap: balance;
+}
+
+.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-online .native-info-section-subtitle {
+  margin: 0 auto;
+  max-width: var(--service-native-intro-max-width);
+  color: var(--ag-color-super-grey);
+  text-align: center;
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+  line-height: 1.5;
+}
+
+.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-online .service-native-action-row {
+  justify-content: center;
+  margin-top: clamp(1.2rem, 2.6vw, 1.9rem);
+}
+
 .legacy-child-native-generosity-request {
   background: var(--ag-color-super-grey);
   padding: clamp(3rem, 6vw, 5rem) 0;
@@ -23836,7 +23893,7 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-generosity-request:not(.native-dynamic-request) .native-info-section-copy > h2,
 .native-dynamic-request.is-request-form-preset-legacy-generosity .dynamic-request-copy > h2 {
-  color: var(--ag-color-atlantean);
+  color: var(--ag-color-super-grey);
   font-family: var(--ag-font-heading);
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
   font-size: clamp(2.3rem, 4.8vw, 3.5rem);
@@ -23880,8 +23937,11 @@ p.impact-proof-story-proof-body {
 .native-info-page--legacy-generosity-fund .legacy-child-native-generosity-outro .native-info-section-copy > h2 {
   font-family: var(--ag-font-helv);
   letter-spacing: var(--ag-letter-spacing-helv-heading);
-  font-size: clamp(2.6rem, 6vw, 4.4rem);
+  font-size: clamp(3.2rem, 7.4vw, 5.6rem);
+  font-weight: 700;
+  line-height: 1.05;
   color: var(--ag-color-super-grey);
+  text-wrap: balance;
 }
 
 .native-info-page--legacy-generosity-fund .legacy-child-native-generosity-outro .native-info-section-subtitle {
@@ -24265,9 +24325,14 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--retirement-fund-ira .retirement-fund-ira-native-shell {
-  background: #f0eee8;
+  background: transparent;
   padding-top: clamp(2.8rem, 5.8vw, 4.6rem);
   padding-bottom: clamp(2.8rem, 5.8vw, 4.6rem);
+}
+
+.native-info-page--retirement-fund-ira .fund-ira-native-page-head {
+  --utility-header-padding-top: clamp(2rem, 3.8vw, 2.8rem);
+  --utility-header-padding-bottom: clamp(0.85rem, 2vw, 1.35rem);
 }
 
 .native-info-page--retirement-fund-ira .retirement-fund-ira-native-shell > .ag-panel-rail {
@@ -26040,10 +26105,10 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card {
   width: min(100%, 860px);
-  border: none;
+  border: 2px solid var(--ag-color-atlantean);
   border-radius: 12px;
-  background: var(--ag-color-atlantean);
-  color: #ffffff;
+  background: #ffffff;
+  color: var(--ag-color-super-grey);
   box-shadow: none;
   padding: clamp(1.5rem, 3vw, 2.25rem);
   transform: none;
@@ -26061,7 +26126,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-bullet-list {
   margin: 0;
   padding-left: 1.25rem;
-  color: #ffffff;
+  color: var(--ag-color-super-grey);
   font-size: clamp(1.02rem, 1.75vw, 1.18rem);
   line-height: 1.55;
 }
@@ -26070,9 +26135,12 @@ p.impact-proof-story-proof-body {
   margin-top: 0.65rem;
 }
 
-.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-bullet-list li::marker,
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-bullet-list li::marker {
+  color: var(--ag-color-atlantean);
+}
+
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-bullet-list strong {
-  color: #ffffff;
+  color: var(--ag-color-atlantean);
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-action-row {
@@ -26127,6 +26195,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card {
   background: #ffffff;
+  padding: clamp(2.7rem, 5.2vw, 3.9rem);
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3 {
@@ -26137,7 +26206,10 @@ p.impact-proof-story-proof-body {
   text-align: center;
   justify-content: center;
   position: relative;
-  margin-bottom: 0;
+  min-height: 0;
+  margin-top: 0;
+  margin-bottom: clamp(0.7rem, 1.4vw, 1.05rem);
+  padding-bottom: 0;
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3::after {
@@ -26178,7 +26250,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card > div > p {
-  text-align: center;
+  text-align: left;
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-action-row {
@@ -26538,7 +26610,7 @@ p.impact-proof-story-proof-body {
 .legacy-child-native-cga-request:not(.native-dynamic-request) .native-info-section-copy > p,
 .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
 .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy .native-info-rich-html :is(p, li, a) {
-  color: #ffffff;
+  color: var(--ag-color-super-grey);
   font-size: clamp(1.15rem, 2.2vw, 1.45rem);
   line-height: 1.55;
 }
@@ -26572,7 +26644,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--legacy-cga .legacy-child-native-cga-outro .service-native-action-row {
   justify-content: center;
   margin-top: 1.2rem;
-  margin-bottom: 1.8rem;
+  margin-bottom: 0;
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-outro .service-native-note {
@@ -26582,7 +26654,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-outro .service-native-action-row + .service-native-note {
-  margin-top: 1.8rem;
+  margin-top: clamp(2.4rem, 4vw, 3.2rem);
 }
 
 @media (max-width: 1180px) {

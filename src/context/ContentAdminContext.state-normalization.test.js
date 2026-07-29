@@ -7,6 +7,7 @@ import {
   BLOCK_ONLY_MANAGED_PAGE_PATHS,
   BLOCKLESS_MANAGED_PAGE_PATHS,
 } from '../lib/managedPageShells';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { parseCtaFormFieldsJson } from '../blocks/foundation/forms';
 import { parseLinkValueJson } from '../lib/linkValue';
 
@@ -52,9 +53,11 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(inventory.map((entry) => entry.id)).toEqual([
       'managed-path-aliases',
+      'block-only-page-inventory-reconciliation',
+      'generosity-fund-donor-advised-fund-refresh',
       'retirement-403b-snapshot-repairs',
       'planned-giving-retired-static-comparison',
-      'retirement-ira-comparison-table-shape',
+      'retirement-ira-block-shape',
       'loans-dynamic-block-upgrade',
       'property-casualty-request-repair',
     ]);
@@ -64,6 +67,36 @@ describe('ContentAdminContext state normalization', () => {
       expect(entry.paths.length, `${entry.id} paths`).toBeGreaterThan(0);
       expect(entry.helpers.length, `${entry.id} helpers`).toBeGreaterThan(0);
       expect(entry.retireWhen, `${entry.id} retirement criteria`).toMatch(/\w/);
+    });
+  });
+
+  it('repairs stale IRA daily billboard layout settings to match the retirement daily billboard', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/retirement/iras': [
+          {
+            id: 'daily_billboard',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: {
+              title: 'Retire a little every day.',
+              bodyHtml: '<h3>Starting now.</h3>',
+              justify: 'right',
+              contentMaxWidthPx: 1216,
+              sectionClassName: '',
+            },
+          },
+        ],
+      },
+    });
+
+    const dailyBillboard = (normalized.blocksByPath['/services/retirement/iras'] || [])
+      .find((block) => block?.id === 'daily_billboard');
+
+    expect(dailyBillboard?.settings).toMatchObject({
+      justify: 'center',
+      contentMaxWidthPx: 1480,
+      sectionClassName: 'retirement-everyday retirement-daily-billboard',
     });
   });
 
@@ -178,6 +211,100 @@ describe('ContentAdminContext state normalization', () => {
       expect(Array.isArray(block?.editableFields) ? block.editableFields.length : 0, `${pathname} ${blockId}`).toBeGreaterThan(0);
       expectNoTargetBridgeSettings(block, `${pathname} ${blockId}`);
     });
+  });
+
+  it('reconciles block-only managed pages from block blueprints instead of page render expectations', () => {
+    const staleBlocksByPath = {
+      '/calculators': [
+        {
+          id: 'hero',
+          name: 'Hero',
+          kind: 'hero',
+          mode: 'dynamic',
+          settings: { line1Text: 'Calculators' },
+          editableFields: [],
+        },
+        {
+          id: 'cta_form',
+          name: 'CTA Form',
+          kind: 'cta_form',
+          mode: 'dynamic',
+          settings: { title: 'Stored calculator CTA' },
+          editableFields: [],
+        },
+      ],
+      '/services/retirement/iras/fund-an-ira': [
+        {
+          id: 'hero',
+          name: 'Hero',
+          kind: 'hero',
+          mode: 'dynamic',
+          settings: { line1Text: 'Fund an IRA' },
+          editableFields: [],
+        },
+        {
+          id: 'fund_ira_widget',
+          name: 'Fund an IRA Widget',
+          kind: 'content',
+          mode: 'dynamic',
+          settings: { widget: 'retirement-fund-ira' },
+          editableFields: [],
+        },
+      ],
+    };
+
+    const normalized = normalizeStoredConfig({ blocksByPath: staleBlocksByPath });
+
+    Object.keys(staleBlocksByPath).forEach((pathname) => {
+      const normalizedBlocks = normalized.blocksByPath[pathname] || [];
+      const blueprintBlocks = contentBlockBlueprintsByPath[pathname] || [];
+
+      expect(normalizedBlocks.map((block) => block?.id)).toEqual(blueprintBlocks.map((block) => block?.id));
+      expect(normalizedBlocks.some((block) => block?.id === 'hero' || block?.kind === 'hero'), pathname).toBe(false);
+      expect(normalizedBlocks[0]?.id, pathname).toBe('utility_header');
+      expect(normalizedBlocks[0]?.mode, pathname).toBe('dynamic');
+      expect(normalizedBlocks[0]?.settings?.sectionClassName, pathname).toContain('native-functional-page-head--utility');
+    });
+  });
+
+  it('upgrades retired image-only columns bridges to current page-content image blocks before render', () => {
+    const aboutBlocks = cloneJson(contentBlockBlueprintsByPath['/about-us'] || []);
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/about-us': aboutBlocks.map((block) => {
+          if (block?.id !== 'building_shot') {
+            return block;
+          }
+
+          return {
+            ...block,
+            kind: 'columns',
+            settings: {
+              sectionClassName: 'about-native-building-shot',
+              contentWidth: 'browser',
+              col1ImageUrl: '/src/assets/about-intro.jpg',
+              col1ImageAlt: 'AGFinancial office building',
+            },
+            editableFields: [],
+          };
+        }),
+      },
+    });
+    const buildingShotBlock = (normalized.blocksByPath['/about-us'] || [])
+      .find((block) => block?.id === 'building_shot');
+
+    expect(buildingShotBlock).toMatchObject({
+      id: 'building_shot',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        logoImage: '/src/assets/about-intro.jpg',
+        logoAlt: 'AGFinancial office building',
+        sectionClassName: 'about-native-building-shot',
+        railClassName: 'native-info-viewport-bleed',
+      },
+    });
+    expect(Array.isArray(buildingShotBlock?.editableFields) ? buildingShotBlock.editableFields.length : 0).toBeGreaterThan(0);
   });
 
   it('treats saved managed route block arrays as authoritative after starter seeding', () => {
@@ -836,7 +963,7 @@ describe('ContentAdminContext state normalization', () => {
   it('drops duplicate generosity fund request-form blocks and keeps the canonical request target', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/planned-giving/generosity-fund': [
+        '/services/planned-giving/donor-advised-fund': [
           {
             id: 'request_form',
             kind: 'request_form',
@@ -861,7 +988,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const requestBlocks = (normalized.blocksByPath['/services/planned-giving/generosity-fund'] || [])
+    const requestBlocks = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
       .filter((block) => String(block?.kind || '').trim().toLowerCase() === 'request_form');
 
     expect(requestBlocks).toHaveLength(1);
@@ -880,7 +1007,7 @@ describe('ContentAdminContext state normalization', () => {
 
   it('seeds the generosity fund request-form block from the later fallback form instead of the inline CTA reveal shell', () => {
     const normalized = normalizeStoredConfig({});
-    const requestBlock = (normalized.blocksByPath['/services/planned-giving/generosity-fund'] || [])
+    const requestBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
       .find((block) => String(block?.kind || '').trim().toLowerCase() === 'request_form');
 
     expect(requestBlock?.id).toBe('request_form');
@@ -1082,6 +1209,34 @@ describe('ContentAdminContext state normalization', () => {
     expect(heroBlock?.hidden).toBe(false);
   });
 
+  it('repairs charitable gift annuities outro typography and button order on stale stored blocks', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/planned-giving/charitable-gift-annuities': [
+          {
+            id: 'outro',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: {
+              title: 'Plenty of options.',
+              subtitle: 'Explore other charitable and planned giving strategies.',
+              buttonLabel: 'Discover more',
+              buttonLinkJson: '{"kind":"internal","openInNewWindow":false,"to":"/services/planned-giving"}',
+              sectionClassName: 'legacy-child-native-cga-outro',
+            },
+          },
+        ],
+      },
+    });
+
+    const annuitiesBlocks = normalized.blocksByPath['/services/planned-giving/charitable-gift-annuities'] || [];
+    const outroBlock = annuitiesBlocks.find((block) => block?.id === 'outro');
+
+    expect(outroBlock?.settings?.titleFontFamily).toBe('helv');
+    expect(outroBlock?.settings?.titleFontWeight).toBe(700);
+    expect(outroBlock?.settings?.actionsBeforeCards).toBe(true);
+  });
+
   it('seeds ministry impact fund with explicit managed blocks and no fallback page content', () => {
     const normalized = normalizeStoredConfig({});
     const ministryImpactBlocks = normalized.blocksByPath['/services/planned-giving/ministry-impact-fund'] || [];
@@ -1113,6 +1268,55 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(ministryImpactBlocks.some((block) => block?.id === 'page_content')).toBe(false);
     expect(ministryImpactBlocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(false);
+  });
+
+  it('repairs stale ministry impact fund request-form presentation back to the legacy-impact preset contract', () => {
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/planned-giving/ministry-impact-fund': [
+          {
+            id: 'request_form',
+            kind: 'request_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'A legacy of giving.',
+              titleClassName: '',
+              titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+              bgTone: 'grey',
+              textTone: 'white',
+              spaceBeforeRem: 1.6,
+              spaceAfterRem: 1.6,
+              sectionClassName: 'legacy-child-native-request',
+              presetId: 'legacy-impact',
+              step1Title: 'Talk with planned giving',
+              step1Note: 'Let’s map out the best next step.',
+              step1FieldsJson: JSON.stringify([
+                { id: 'firstName', label: 'First Name*', type: 'text', required: true },
+              ]),
+              step2FieldsJson: '[]',
+              step3FieldsJson: '[]',
+              step4FieldsJson: '[]',
+              step5FieldsJson: '[]',
+            },
+          },
+        ],
+      },
+    });
+
+    const ministryImpactBlocks = normalized.blocksByPath['/services/planned-giving/ministry-impact-fund'] || [];
+    const requestBlock = ministryImpactBlocks.find((block) => block?.id === 'request_form');
+
+    expect(requestBlock?.settings).toMatchObject({
+      titleClassName: 'is-super-grey',
+      titleHighlightsJson: '[]',
+      bgTone: 'blue',
+      textTone: 'dark',
+      spaceBeforeRem: 3.6,
+      spaceAfterRem: 4.2,
+      hideStepTitles: true,
+      step1Title: '',
+      step1Note: '',
+    });
   });
 
   it('restores the ministry impact fund hero and clears stored hero buttons', () => {
@@ -1447,8 +1651,18 @@ describe('ContentAdminContext state normalization', () => {
     });
   });
 
-  it('repairs stale generosity fund hero hash actions into the inline CTA reveal trigger', () => {
+  it('repairs stale generosity fund naming, hero order, and retired CTA block', () => {
     const normalized = normalizeStoredConfig({
+      pageHierarchy: {
+        '/services/planned-giving/generosity-fund': {
+          path: '/services/planned-giving/generosity-fund',
+          routeKey: '/services/planned-giving/generosity-fund',
+          linkRef: '/services/planned-giving/generosity-fund',
+          title: 'Generosity Fund',
+          breadcrumbLabel: 'Generosity Fund',
+          parentPath: '/services/planned-giving',
+        },
+      },
       blocksByPath: {
         '/services/planned-giving/generosity-fund': [
           {
@@ -1460,46 +1674,106 @@ describe('ContentAdminContext state normalization', () => {
               line2Text: 'Managed.',
               button1Label: 'Open a Generosity Fund®',
               button1Url: 'https://secure.agfinancial.org/generosityfund/signup',
+              button1Style: 'blue',
+              button1Tone: 'atlantean',
               button2Label: 'Open a traditional DAF',
               button2Url: '#traditional-daf-form',
               button2PageRef: '',
-              button2Action: undefined,
-              button2TargetAnchorId: undefined,
-              button2TargetBlockId: undefined,
+              button2Action: 'open_cta_form',
+              button2TargetAnchorId: 'traditional-daf-inline-form',
+              button2TargetBlockId: '',
               button2Style: 'outline',
               button2Tone: 'super-grey',
+            },
+          },
+          {
+            id: 'how_it_works',
+            kind: 'columns',
+            mode: 'dynamic',
+            settings: {
+              title: 'How it works',
+              sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-generosity-steps',
+            },
+          },
+          {
+            id: 'traditional_daf_cta',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              sectionClassName: 'legacy-child-native-generosity-traditional-cta',
+              buttonLabel: 'Open a traditional DAF',
+            },
+          },
+          {
+            id: 'gift_assets',
+            kind: 'card_grid',
+            mode: 'dynamic',
+            settings: {
+              sectionClassName: 'legacy-child-native-assets legacy-child-native-generosity-assets',
+              card1ButtonLabel: 'Open a Generosity Fund®',
             },
           },
         ],
       },
     });
 
-    const heroBlock = (normalized.blocksByPath['/services/planned-giving/generosity-fund'] || [])
+    expect(normalized.pageHierarchy['/services/planned-giving/generosity-fund']).toBeUndefined();
+    expect(normalized.blocksByPath['/services/planned-giving/generosity-fund']).toBeUndefined();
+    expect(normalized.pathAliases['/services/planned-giving/generosity-fund'])
+      .toBe('/services/planned-giving/donor-advised-fund');
+    expect(normalized.pageHierarchy['/services/planned-giving/donor-advised-fund']).toMatchObject({
+      path: '/services/planned-giving/donor-advised-fund',
+      routeKey: '/services/planned-giving/donor-advised-fund',
+      linkRef: '/services/planned-giving/donor-advised-fund',
+      title: 'Donor Advised Fund',
+      breadcrumbLabel: 'Donor Advised Fund',
+    });
+    expect((normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || []).map((block) => block.id))
+      .not.toContain('traditional_daf_cta');
+    const heroBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
       .find((block) => block?.id === 'hero');
+    const howItWorksBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
+      .find((block) => block?.id === 'how_it_works');
+    const onlineBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
+      .find((block) => block?.id === 'generosity_fund_online');
+    const giftAssetsBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
+      .find((block) => block?.id === 'gift_assets');
 
+    expect(heroBlock?.settings?.button1Label).toBe('Open a traditional DAF');
+    expect(heroBlock?.settings?.button2Label).toBe('Open a Generosity Fund®');
     expect(heroBlock?.settings?.button2Action || '').toBe('');
     expect(heroBlock?.settings?.button2TargetAnchorId || '').toBe('');
     expect(heroBlock?.settings?.button2TargetBlockId || '').toBe('');
-    expectLinkJson(heroBlock?.settings, 'button2LinkJson', {
+    expectLinkJson(heroBlock?.settings, 'button1LinkJson', {
       kind: 'anchor',
       href: '#traditional-daf-form',
     });
-    expectLinkJson(heroBlock?.settings, 'button1LinkJson', {
+    expectLinkJson(heroBlock?.settings, 'button2LinkJson', {
       kind: 'external',
       href: 'https://secure.agfinancial.org/generosityfund/signup',
     });
     expectNoSplitSettings(heroBlock?.settings, ['button1Url', 'button2Url', 'button2PageRef']);
-    expect(heroBlock?.editableFields?.map((field) => field?.id)).toEqual(expect.arrayContaining([
-      'button2Action',
-      'button2TargetAnchorId',
-      'button2TargetBlockId',
-    ]));
+    expect(howItWorksBlock?.settings?.buttonLabel).toBe('Open a traditional DAF');
+    expectLinkJson(howItWorksBlock?.settings, 'buttonLinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
+    });
+    expect(onlineBlock?.settings).toMatchObject({
+      title: 'Generosity Fund®',
+      subtitle: 'Our fully online Donor Advised Fund simplifies your giving even more, letting you manage your giving anytime you want.',
+      buttonLabel: 'Open a Generosity Fund®',
+    });
+    expect(giftAssetsBlock?.settings?.card1Button2Label).toBe('Open a traditional DAF');
+    expectLinkJson(giftAssetsBlock?.settings, 'card1Button2LinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
+    });
   });
 
   it('repairs stale generosity fund joyful giving billboard secondary action styling back to the ghost treatment', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
-        '/services/planned-giving/generosity-fund': [
+        '/services/planned-giving/donor-advised-fund': [
           {
             id: 'joyful_giving_billboard',
             kind: 'billboard',
@@ -1521,13 +1795,17 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const billboardBlock = (normalized.blocksByPath['/services/planned-giving/generosity-fund'] || [])
+    const billboardBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
       .find((block) => block?.id === 'joyful_giving_billboard');
 
     expect(billboardBlock?.settings?.button2Style).toBe('ghost');
     expect(billboardBlock?.settings?.button2Tone).toBe('super-grey');
     expect(billboardBlock?.settings?.button2DocumentId).toBe('document-planned-giving-terms-and-conditions');
     expect(billboardBlock?.settings?.buttonLabel).toBe('Open a Generosity Fund®');
+    expect(billboardBlock?.settings?.titleFontFamily).toBe('helv');
+    expect(billboardBlock?.settings?.titleFontWeight).toBe(700);
+    expect(billboardBlock?.settings?.titleSizeRem).toBe(5.6);
+    expect(billboardBlock?.settings?.titleLetterSpacingEm).toBe(-0.03);
   });
 
   it('drops stale contact-us CTA blocks without restoring a missing request form', () => {

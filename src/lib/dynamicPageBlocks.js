@@ -44,6 +44,9 @@ import {
   normalizeBillboardTitleSizeRem,
 } from './dynamicSectionTypography';
 import { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
+import {
+  normalizeRequestFormPresetSettings,
+} from './requestFormPresetContracts';
 import { resolveSiteFeatureCatalogEntry } from '../data/siteFeatureCatalog';
 
 export { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
@@ -647,7 +650,7 @@ export const DEFAULT_SERVICE_HERO_PIE_SLICES = Object.freeze([
     links: Object.freeze([
       Object.freeze({ label: 'Charitable Gift Annuities', path: '/services/planned-giving/charitable-gift-annuities' }),
       Object.freeze({ label: 'Charitable Trusts', path: '/services/planned-giving/charitable-trusts' }),
-      Object.freeze({ label: 'Generosity Fund', path: '/services/planned-giving/generosity-fund' }),
+      Object.freeze({ label: 'Donor Advised Fund', path: '/services/planned-giving/donor-advised-fund' }),
     ]),
   }),
   Object.freeze({
@@ -959,13 +962,26 @@ export function buildDynamicBillboardFromBlock(block) {
   const fineprint = parsePageContentTextLines(settings.fineprint);
   const bgTone = String(settings.bgTone || 'blue').trim().toLowerCase() || 'blue';
   const textTone = String(settings.textTone || 'white').trim().toLowerCase() || 'white';
-  const justify = String(settings.justify || 'center').trim().toLowerCase() || 'center';
+  const sectionClassSet = new Set(sectionClassName.split(/\s+/).filter(Boolean));
+  const presentationContract = sectionClassSet.has('legacy-child-native-cga-outro')
+    ? {
+        actionsBeforeCards: true,
+        justify: 'center',
+        titleFontFamily: 'helv',
+        titleFontWeight: 700,
+      }
+    : null;
+  const justify = String(presentationContract?.justify || settings.justify || 'center').trim().toLowerCase() || 'center';
   const lineSpacing = Number.isFinite(Number(settings.lineSpacing)) ? Number(settings.lineSpacing) : 1;
   const scrollReveal = normalizeBillboardScrollReveal(settings.scrollReveal);
-  const titleFontFamily = sectionClassName.split(/\s+/).includes('legacy-giving-joy')
-    ? 'helv'
-    : normalizeBillboardTitleFontFamily(settings.titleFontFamily);
-  const titleFontWeight = normalizeBillboardTitleFontWeight(settings.titleFontWeight, titleFontFamily);
+  const titleFontFamily = presentationContract?.titleFontFamily
+    || (sectionClassSet.has('legacy-giving-joy')
+      ? 'helv'
+      : normalizeBillboardTitleFontFamily(settings.titleFontFamily));
+  const titleFontWeight = normalizeBillboardTitleFontWeight(
+    presentationContract?.titleFontWeight ?? settings.titleFontWeight,
+    titleFontFamily,
+  );
   const titleSizeRem = normalizeBillboardTitleSizeRem(settings.titleSizeRem);
   const titleLetterSpacingEm = normalizeBillboardTitleLetterSpacingEm(settings.titleLetterSpacingEm, titleFontFamily);
   const subtitleDisplay = normalizeBillboardSubtitleDisplay(settings.subtitleDisplay);
@@ -1066,6 +1082,7 @@ export function buildDynamicBillboardFromBlock(block) {
       : null,
     action: actions[0] || null,
     actions,
+    actionsBeforeCards: presentationContract?.actionsBeforeCards ?? toBoolean(settings.actionsBeforeCards),
   };
 }
 
@@ -1089,6 +1106,16 @@ export function buildDynamicColumnsFromBlock(block) {
   const justifyToken = String(settings.justify || 'center').trim().toLowerCase();
   const justify = justifyToken === 'left' || justifyToken === 'right' ? justifyToken : 'center';
   const normalizedBodyHtml = (!bodyHtml || bodyHtml === '<p></p>' || bodyHtml === '<p><br></p>') ? '' : bodyHtml;
+  const action = buildCanonicalActionLinkFromFields(settings, {
+    labelKeys: ['buttonLabel'],
+    linkJsonKeys: ['buttonLinkJson'],
+    hrefKeys: [],
+    toKeys: [],
+    styleKeys: ['buttonStyle'],
+    toneKeys: ['buttonTone'],
+    openInNewWindowKeys: [],
+  });
+  const actions = action ? [action] : [];
 
   const items = Array.from({ length: 4 }, (_, index) => index + 1)
     .map((slot) => {
@@ -1135,7 +1162,7 @@ export function buildDynamicColumnsFromBlock(block) {
     })
     .filter(Boolean);
 
-  if (!title && !leadLine && !followupLine && !bodyHtml && !items.length) {
+  if (!title && !leadLine && !followupLine && !bodyHtml && !items.length && !actions.length) {
     return null;
   }
 
@@ -1157,6 +1184,8 @@ export function buildDynamicColumnsFromBlock(block) {
     columnsStyle,
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     items,
+    action: action || null,
+    actions,
   };
 }
 
@@ -1996,11 +2025,17 @@ function parseRequestFormStepFieldsJson(value) {
 }
 
 export function buildDynamicRequestFormFromBlock(block) {
-  const settings = resolveRequestFormSource(block);
-  if (!settings) {
+  const rawSettings = resolveRequestFormSource(block);
+  if (!rawSettings) {
     return null;
   }
 
+  const baseSectionClassName = sanitizeClassName(rawSettings.sectionClassName || '');
+  const presetId = normalizeRequestFormPresetId(
+    rawSettings.presetId || rawSettings.requestFormPresetId,
+    baseSectionClassName,
+  );
+  const settings = normalizeRequestFormPresetSettings(rawSettings, presetId);
   const title = String(settings.title || '').trim();
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlightsJson = String(settings.titleHighlightsJson || '').trim();
@@ -2011,8 +2046,7 @@ export function buildDynamicRequestFormFromBlock(block) {
   const textTone = normalizePanelTextTone(settings.textTone || 'dark', 'dark');
   const spaceBeforeRem = normalizePageContentSpaceRem(settings.spaceBeforeRem, 0, 0, 8);
   const spaceAfterRem = normalizePageContentSpaceRem(settings.spaceAfterRem, 0, 0, 8);
-  const baseSectionClassName = sanitizeClassName(settings.sectionClassName || '');
-  const presetId = normalizeRequestFormPresetId(settings.presetId || settings.requestFormPresetId, baseSectionClassName);
+  const hideStepTitles = toBoolean(settings.hideStepTitles);
   const { submitLabel, successMessage, salesforceUrl } = normalizeFormSubmissionConfig(settings, {
     submitLabel: 'Submit request',
     successMessage: 'Thanks. We received your request.',
@@ -2055,6 +2089,7 @@ export function buildDynamicRequestFormFromBlock(block) {
     textTone,
     spaceBeforeRem,
     spaceAfterRem,
+    hideStepTitles,
     submitLabel,
     successMessage,
     salesforceUrl,
@@ -2468,6 +2503,7 @@ export function buildDynamicPageContentFromBlock(block) {
   const pricingEntries = parseMissionAssurePricingEntries(settings.pricingEntriesJson);
   const supportGroups = parsePageContentSupportGroups(settings.supportGroupsJson);
   const fullBleed = toBoolean(settings.fullBleed);
+  const railClassName = sanitizeClassName(settings.railClassName || '');
   const justifyToken = String(settings.justify || 'center').trim().toLowerCase();
   const justify = justifyToken === 'left' || justifyToken === 'right' ? justifyToken : 'center';
   const tableHeaders = parsePageContentTableHeaders(settings.tableHeadersJson);
@@ -2489,6 +2525,8 @@ export function buildDynamicPageContentFromBlock(block) {
     hrefKeys: [],
     toKeys: [],
     documentIdKeys: ['buttonDocumentId'],
+    styleKeys: ['buttonStyle'],
+    toneKeys: ['buttonTone'],
     openInNewWindowKeys: [],
   });
   const addressTitle = String(settings.addressTitle || '').trim();
@@ -2547,6 +2585,7 @@ export function buildDynamicPageContentFromBlock(block) {
     fineprint: fineprint.length ? fineprint : null,
     fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
     fullBleed,
+    railClassName,
     spaceBeforeRem: normalizePageContentSpaceRem(settings.spaceBeforeRem, 0, 0, 8),
     spaceAfterRem: normalizePageContentSpaceRem(settings.spaceAfterRem, 0, 0, 8),
     paddingTopRem: normalizePageContentSpaceRem(settings.paddingTopRem, 2.4, 0, 8),

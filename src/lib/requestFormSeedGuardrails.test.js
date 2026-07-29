@@ -17,7 +17,7 @@ const EXPLICIT_REQUEST_FORM_ROUTES = {
     sectionClassName: 'legacy-child-native-endowments-legacy-form',
     presetId: 'legacy-endowment',
   },
-  '/services/planned-giving/generosity-fund': {
+  '/services/planned-giving/donor-advised-fund': {
     sectionClassName: 'legacy-child-native-generosity-request',
     presetId: 'legacy-generosity',
   },
