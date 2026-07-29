@@ -202,6 +202,14 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.native-dynamic-request .dynamic-request-progress');
   });
 
+  it('keeps field label offset on the shared inline form instead of a page-shell-only selector', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-inline-form label {\n  display: block;\n  margin-top: 0.7rem;\n  padding-inline-start: var(--ag-field-label-inline-offset);');
+    expect(cssSource).toContain(".native-info-inline-form input:not([type='checkbox']):not([type='radio']) {\n  margin-top: 0.3rem;\n  margin-left: calc(var(--ag-field-label-inline-offset) * -1);");
+    expect(cssSource).toContain('.native-info-inline-form select,\n.native-info-inline-form textarea {\n  margin-top: 0.3rem;\n  margin-left: calc(var(--ag-field-label-inline-offset) * -1);');
+  });
+
   it('keeps the shared dynamic request shell on a simple wide rail plus a vanilla two-column grid contract', () => {
     const cssSource = readSource('../styles/service-native.css');
 

@@ -14,6 +14,17 @@ function readRuleBlock(source, selectorPattern) {
   return source.match(new RegExp(`${selectorPattern}\\s*\\{[\\s\\S]*?\\n\\}`))?.[0] || '';
 }
 
+function buttonStateSelectorLines(source) {
+  return source
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => (
+      line.includes('service-native-btn')
+      && /:(?:hover|focus-visible|active)/.test(line)
+      && !line.includes(':not(.service-native-btn)')
+    ));
+}
+
 describe('outline button hover contract', () => {
   it('keeps base button typography on zero tracking while routing Safari through its own heavier browser override', () => {
     const serviceCssSource = readSource('../styles/service-native.css');
@@ -70,7 +81,9 @@ describe('outline button hover contract', () => {
     expect(cssSource).toContain('box-shadow: none;');
     expect(cssSource).toContain('.service-native-btn.is-outline:focus-visible {');
     expect(cssSource).toContain('.service-native-btn.is-outline:focus-visible::after {');
-    expect(cssSource).toContain('box-shadow: 0 0 0 3px rgba(0, 138, 171, 0.28);');
+    expect(cssSource).toContain('--btn-focus-ring: 0 0 0 3px rgba(0, 138, 171, 0.28);');
+    expect(cssSource).toContain('box-shadow: var(--btn-focus-ring);');
+    expect(cssSource).not.toContain('.investments-native-cert-card .service-native-action-row .service-native-btn.is-outline:hover');
     expect(cssSource).not.toContain('transition:\n    margin 220ms cubic-bezier(0.22, 1, 0.36, 1),');
     expect(cssSource).not.toContain('scale(1.032)');
     expect(cssSource).not.toContain('scale(1.014)');
@@ -92,13 +105,13 @@ describe('outline button hover contract', () => {
       cssSource,
       String.raw`\.native-info-page--legacy-giving \.legacy-giving-types \.service-native-card:first-child \.service-native-btn\.is-outline,[\s\S]*?\.native-info-page--legacy-giving \.legacy-giving-types \.service-native-card:first-child \.service-native-btn\.is-ghost`,
     );
-    const loansIntroButtonHoverBlock = readRuleBlock(
+    const loansIntroButtonBlock = readRuleBlock(
       cssSource,
-      String.raw`\.loans-native-intro \.service-native-btn:hover`,
+      String.raw`\.loans-native-intro \.service-native-btn,[\s\S]*?\.loans-native-intro \.service-native-btn:visited`,
     );
-    const missionAssureButtonHoverBlock = readRuleBlock(
+    const missionAssureButtonBlock = readRuleBlock(
       cssSource,
-      String.raw`\.native-info-page--mission-assure \.mission-assure-native-get-covered \.service-native-btn:hover`,
+      String.raw`\.native-info-page--mission-assure \.mission-assure-native-get-covered \.service-native-btn`,
     );
     const homeStripLoginButtonBlock = readRuleBlock(
       homeCssSource,
@@ -119,10 +132,10 @@ describe('outline button hover contract', () => {
     expect(darkButtonBlock).not.toContain('--btn-hover-color: #2d2f31;');
     expect(legacyGivingButtonBlock).toContain('--btn-hover-color: var(--ag-color-super-grey-hover);');
     expect(legacyGivingButtonBlock).toContain('--btn-outline-hover-color: var(--btn-hover-color);');
-    expect(loansIntroButtonHoverBlock).toContain('border-color: var(--ag-color-super-grey-hover);');
-    expect(loansIntroButtonHoverBlock).toContain('background: var(--ag-color-super-grey-hover);');
-    expect(missionAssureButtonHoverBlock).toContain('border-color: var(--ag-color-super-grey-hover);');
-    expect(missionAssureButtonHoverBlock).toContain('background: var(--ag-color-super-grey-hover);');
+    expect(loansIntroButtonBlock).toContain('--btn-color: var(--ag-color-super-grey);');
+    expect(loansIntroButtonBlock).toContain('--btn-hover-color: var(--ag-color-super-grey-hover);');
+    expect(missionAssureButtonBlock).toContain('--btn-color: var(--ag-color-super-grey);');
+    expect(missionAssureButtonBlock).toContain('--btn-hover-color: var(--ag-color-super-grey-hover);');
     expect(homeStripLoginButtonBlock).toContain('--strip-btn-hover-bg: var(--ag-color-super-grey-hover);');
     expect(homeStripLoginButtonBlock).toContain('--strip-btn-hover-border: var(--ag-color-super-grey-hover);');
     expect(homeStripRatesButtonBlock).toContain('--strip-rates-hover-color: var(--ag-color-super-grey-hover);');
@@ -135,8 +148,11 @@ describe('outline button hover contract', () => {
     const cssSource = readSource('../styles/home-native.css');
 
     expect(cssSource).toContain('.home-services-feature .service-native-btn.is-outline.is-tone-white {');
-    expect(cssSource).toContain('.home-services-feature .service-native-btn.is-outline.is-tone-white:hover,');
-    expect(cssSource).toContain('.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:hover,');
+    expect(cssSource).toContain('--btn-color: rgba(255, 255, 255, 0.72);');
+    expect(cssSource).toContain('--btn-hover-color: rgba(255, 255, 255, 0.72);');
+    expect(cssSource).toContain('--btn-focus-ring:\n    0 0 0 2px rgba(255, 255, 255, 0.96),');
+    expect(cssSource).not.toContain('.home-services-feature .service-native-btn.is-outline.is-tone-white:hover,');
+    expect(cssSource).not.toContain('.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:hover,');
     expect(cssSource).toContain('.home-impact-story-proof-cta-block {');
     expect(cssSource).toContain('.home-impact-story-proof-intro {');
     expect(cssSource).not.toContain('.home-impact-story-cta {');
@@ -144,5 +160,28 @@ describe('outline button hover contract', () => {
     expect(cssSource).not.toContain('scale(1.032)');
     expect(cssSource).not.toContain('scale(1.014)');
     expect(cssSource).not.toContain('--home-impact-cta-hover-shadow');
+  });
+
+  it('keeps service button states owned by the shared button contract only', () => {
+    const serviceLines = buttonStateSelectorLines(readSource('../styles/service-native.css'));
+    const homeLines = buttonStateSelectorLines(readSource('../styles/home-native.css'));
+    const allowedServiceLines = new Set([
+      '.service-native-btn:hover,',
+      '.service-native-btn:focus-visible {',
+      '.service-native-btn.is-ghost:hover {',
+      '.service-native-btn.is-dark:hover {',
+      '.service-native-btn.is-outline:hover {',
+      '.service-native-btn.is-outline:hover::after {',
+      '.service-native-btn.is-outline:focus-visible {',
+      '.service-native-btn.is-outline:focus-visible::after {',
+      '.service-native-btn.is-outline:active {',
+      '.service-native-btn.is-outline:active::after {',
+      '.service-native-btn.is-outline:hover,',
+      '.service-native-btn.is-outline:focus-visible,',
+      '.service-native-btn.is-outline:active {',
+    ]);
+
+    expect(serviceLines.filter((line) => !allowedServiceLines.has(line))).toEqual([]);
+    expect(homeLines).toEqual([]);
   });
 });

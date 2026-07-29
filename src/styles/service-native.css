@@ -350,23 +350,11 @@
 }
 
 .calculators-native-collection .service-native-btn {
+  --btn-color: var(--ag-color-atlantean-dark);
+  --btn-hover-color: var(--ag-color-atlantean);
   min-width: 134px;
   justify-content: center;
-  border-color: var(--ag-color-atlantean-dark);
-  background: var(--ag-color-atlantean-dark);
-  color: #ffffff;
   box-shadow: none;
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease;
-}
-
-.calculators-native-collection .service-native-btn:hover,
-.calculators-native-collection .service-native-card:is(:hover, :focus-within) .service-native-btn.is-static {
-  border-color: var(--ag-color-atlantean);
-  background: var(--ag-color-atlantean);
-  color: #ffffff;
 }
 
 .calculators-native-billboard.dynamic-billboard {
@@ -1548,13 +1536,6 @@
 .retirement-account-card--certificate .service-native-action-row .service-native-btn.is-outline:visited {
   --btn-hover-bg: transparent;
   --btn-hover-text: var(--btn-hover-color);
-  background: transparent;
-}
-
-.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-outline:hover,
-.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-outline:focus-visible,
-.retirement-account-card--certificate .service-native-action-row .service-native-btn.is-outline:active {
-  background: transparent;
 }
 
 .retirement-calc-section {
@@ -2770,31 +2751,7 @@
 
 .service-native-card a.service-native-btn,
 .service-native-card a.service-native-btn:visited {
-  color: #ffffff;
   text-decoration: none;
-}
-
-.service-native-card a.service-native-btn:hover {
-  color: #ffffff;
-}
-
-.service-native-card a.service-native-btn.is-outline,
-.service-native-card a.service-native-btn.is-outline:visited {
-  color: var(--btn-text);
-}
-
-.service-native-card a.service-native-btn.is-outline:hover {
-  color: var(--btn-color);
-  text-decoration: none;
-}
-
-.service-native-card a.service-native-btn.is-ghost,
-.service-native-card a.service-native-btn.is-ghost:visited {
-  color: var(--ag-color-super-grey);
-}
-
-.service-native-card a.service-native-btn.is-ghost:hover {
-  color: var(--ag-color-atlantean-dark);
 }
 
 .service-native-card.has-stretched-link {
@@ -3022,20 +2979,9 @@
   --btn-hover-color: var(--ag-color-atlantean-dark);
   --btn-text: var(--ag-color-super-grey);
   --btn-hover-text: #ffffff;
-  border-color: #ffffff;
-  color: var(--ag-color-super-grey);
-  background: #ffffff;
   box-shadow: none;
   font-size: 1.08rem;
   font-weight: 500;
-}
-
-.investments-native-cert-fallout .service-native-btn:hover,
-.investments-native-cert-fallout .service-native-btn:focus-visible {
-  border-color: var(--ag-color-atlantean-dark);
-  color: #ffffff;
-  background: var(--ag-color-atlantean-dark);
-  box-shadow: none;
 }
 
 .investments-native-cert-card .service-native-action-row {
@@ -3055,15 +3001,6 @@
 .investments-native-cert-card .service-native-action-row .service-native-btn.is-outline:visited {
   --btn-hover-bg: transparent;
   --btn-hover-text: var(--btn-color);
-  background: transparent;
-  color: var(--btn-color);
-  box-shadow: none;
-}
-
-.investments-native-cert-card .service-native-action-row .service-native-btn.is-outline:hover,
-.investments-native-cert-card .service-native-action-row .service-native-btn.is-outline:focus-visible,
-.investments-native-cert-card .service-native-action-row .service-native-btn.is-outline:active {
-  border-color: var(--btn-color);
   background: transparent;
   color: var(--btn-color);
   box-shadow: none;
@@ -4867,13 +4804,8 @@
 
 .loans-native-intro .service-native-btn,
 .loans-native-intro .service-native-btn:visited {
-  border-color: var(--ag-color-super-grey);
-  background: var(--ag-color-super-grey);
-}
-
-.loans-native-intro .service-native-btn:hover {
-  border-color: var(--ag-color-super-grey-hover);
-  background: var(--ag-color-super-grey-hover);
+  --btn-color: var(--ag-color-super-grey);
+  --btn-hover-color: var(--ag-color-super-grey-hover);
 }
 
 /* Explicit Avenir display-heading contract for the loans page. */
@@ -5836,6 +5768,7 @@
   --btn-hover-text: #ffffff;
   --btn-bg: var(--btn-color);
   --btn-hover-bg: var(--btn-hover-color);
+  --btn-focus-ring: 0 0 0 3px rgba(0, 138, 171, 0.28);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -5856,10 +5789,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.service-native-btn:hover {
+.service-native-btn:hover,
+.service-native-btn:focus-visible {
   border-color: var(--btn-hover-color);
   background: var(--btn-hover-bg);
   color: var(--btn-hover-text);
+}
+
+.service-native-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--btn-focus-ring);
 }
 
 .service-native-btn.is-tone-atlantean,
@@ -6004,7 +5943,7 @@
   border-color: transparent;
   background: transparent;
   color: var(--btn-outline-hover-color);
-  box-shadow: 0 0 0 3px rgba(0, 138, 171, 0.28);
+  box-shadow: var(--btn-focus-ring);
 }
 
 .service-native-btn.is-outline:focus-visible::after {
@@ -13648,17 +13587,6 @@
   --btn-hover-bg: transparent;
   --btn-text: var(--ag-color-atlantean-dark);
   --btn-hover-text: var(--ag-color-atlantean-dark);
-  border-color: var(--ag-color-atlantean-dark);
-  background: transparent;
-  color: var(--ag-color-atlantean-dark);
-}
-
-.native-prospectus-tools .service-native-btn:hover,
-.native-prospectus-tools .service-native-btn:focus-visible,
-.native-prospectus-tools .service-native-btn:active {
-  border-color: var(--ag-color-atlantean-dark);
-  background: transparent;
-  color: var(--ag-color-atlantean-dark);
 }
 
 .native-prospectus-grid {
@@ -14039,13 +13967,15 @@
 .native-info-inline-form label {
   display: block;
   margin-top: 0.7rem;
+  padding-inline-start: var(--ag-field-label-inline-offset);
   color: #333333;
   font-weight: 600;
 }
 
 .native-info-inline-form input:not([type='checkbox']):not([type='radio']) {
-  width: 100%;
   margin-top: 0.3rem;
+  margin-left: calc(var(--ag-field-label-inline-offset) * -1);
+  width: calc(100% + var(--ag-field-label-inline-offset));
   min-height: var(--ag-field-min-height);
   padding: 0.72rem 1.2rem;
   border: 1px solid var(--ag-field-border);
@@ -14057,8 +13987,9 @@
 
 .native-info-inline-form select,
 .native-info-inline-form textarea {
-  width: 100%;
   margin-top: 0.3rem;
+  margin-left: calc(var(--ag-field-label-inline-offset) * -1);
+  width: calc(100% + var(--ag-field-label-inline-offset));
   min-height: var(--ag-field-min-height);
   padding: 0.72rem 1.2rem;
   border: 1px solid var(--ag-field-border);
@@ -14086,6 +14017,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding-inline-start: 0;
 }
 
 .dynamic-cta-checkbox-field > span {
@@ -14094,6 +14026,7 @@
 
 .native-info-inline-form .dynamic-cta-checkbox-field input {
   width: auto;
+  margin-left: 0;
   margin-top: 0;
   flex: 0 0 auto;
 }
@@ -14113,6 +14046,7 @@
 .native-info-inline-form label > small {
   display: block;
   margin-top: 0.35rem;
+  margin-left: calc(var(--ag-field-label-inline-offset) * -1);
   color: #5f6f7b;
   font-size: 0.82rem;
   font-weight: 500;
@@ -14127,7 +14061,7 @@
 .native-info-inline-form legend {
   color: #333333;
   font-weight: 600;
-  padding: 0;
+  padding-inline-start: var(--ag-field-label-inline-offset);
 }
 
 .native-info-inline-form-radio-row {
@@ -14142,6 +14076,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  padding-inline-start: 0;
   font-weight: 500;
 }
 
@@ -15871,13 +15806,6 @@
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline,
 .native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline:visited {
   --btn-hover-bg: transparent;
-  background: transparent;
-}
-
-.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline:hover,
-.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline:focus-visible,
-.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row .service-native-btn.is-outline:active {
-  background: transparent;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(1) h3 {
@@ -16946,15 +16874,8 @@
 }
 
 .native-info-page--mission-assure .mission-assure-native-get-covered .service-native-btn {
-  border-color: var(--ag-color-super-grey);
-  background: var(--ag-color-super-grey);
-  color: #ffffff;
-}
-
-.native-info-page--mission-assure .mission-assure-native-get-covered .service-native-btn:hover {
-  border-color: var(--ag-color-super-grey-hover);
-  background: var(--ag-color-super-grey-hover);
-  color: #ffffff;
+  --btn-color: var(--ag-color-super-grey);
+  --btn-hover-color: var(--ag-color-super-grey-hover);
 }
 
 .native-info-page--mission-assure .mission-assure-native-report-claim {
@@ -18450,16 +18371,12 @@ p.impact-proof-story-proof-body {
 }
 
 .impact-proof-story-proof .service-native-btn {
-  border-color: var(--impact-proof-panel-button-border);
-  color: var(--impact-proof-panel-button-text);
-  background: transparent;
-}
-
-.impact-proof-story-proof .service-native-btn:hover,
-.impact-proof-story-proof .service-native-btn:focus-visible {
-  background: var(--impact-proof-panel-button-hover-bg);
-  border-color: var(--impact-proof-panel-button-border);
-  color: var(--impact-proof-panel-button-text);
+  --btn-color: var(--impact-proof-panel-button-border);
+  --btn-hover-color: var(--impact-proof-panel-button-border);
+  --btn-bg: transparent;
+  --btn-hover-bg: var(--impact-proof-panel-button-hover-bg);
+  --btn-text: var(--impact-proof-panel-button-text);
+  --btn-hover-text: var(--impact-proof-panel-button-text);
 }
 
 .impact-proof-story-proof.is-tone-atlantean {
@@ -22043,9 +21960,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-btn,
-.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-btn:visited,
-.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-btn:hover,
-.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-btn:focus-visible {
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-btn:visited {
   text-decoration: none;
 }
 
@@ -23316,13 +23231,6 @@ p.impact-proof-story-proof-body {
 .legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:visited {
   --btn-hover-bg: transparent;
   --btn-hover-text: var(--btn-hover-color);
-  background: transparent;
-}
-
-.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:hover,
-.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:focus-visible,
-.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:active {
-  background: transparent;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .trusts-type-card {

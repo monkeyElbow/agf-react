@@ -1464,58 +1464,31 @@ p.home-services-feature-panel-body {
 }
 
 .home-services-feature .service-native-btn.is-outline.is-tone-white {
-  border-color: rgba(255, 255, 255, 0.72);
-  color: #ffffff;
-  background: transparent;
-}
-
-.home-services-feature .service-native-btn.is-outline.is-tone-white:hover,
-.home-services-feature .service-native-btn.is-outline.is-tone-white:focus-visible {
-  border-color: rgba(255, 255, 255, 0.72);
-  color: #ffffff;
-  background: transparent;
-}
-
-.home-services-feature .service-native-btn.is-outline.is-tone-white:active {
-  border-color: rgba(255, 255, 255, 0.72);
-  color: #ffffff;
-  background: transparent;
+  --btn-color: rgba(255, 255, 255, 0.72);
+  --btn-hover-color: rgba(255, 255, 255, 0.72);
+  --btn-text: #ffffff;
+  --btn-hover-text: #ffffff;
+  --btn-bg: transparent;
+  --btn-hover-bg: transparent;
 }
 
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white,
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:visited {
-  border-color: rgba(255, 255, 255, 0.88);
-  background: transparent;
-  color: var(--home-services-card-button-text);
-}
-
-.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:hover,
-.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:focus-visible,
-.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline.is-tone-white:active {
-  border-color: rgba(255, 255, 255, 0.88);
-  background: transparent;
-  color: var(--home-services-card-button-text);
-}
-
-.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn.is-outline:focus-visible {
-  box-shadow:
+  --btn-color: rgba(255, 255, 255, 0.88);
+  --btn-hover-color: rgba(255, 255, 255, 0.88);
+  --btn-text: var(--home-services-card-button-text);
+  --btn-hover-text: var(--home-services-card-button-text);
+  --btn-bg: transparent;
+  --btn-hover-bg: transparent;
+  --btn-focus-ring:
     0 0 0 2px rgba(255, 255, 255, 0.96),
     0 0 0 5px color-mix(in srgb, var(--home-services-card-accent) 34%, transparent);
 }
 
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn,
 .home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn:visited {
-  border-color: var(--ag-color-atlantean-dark);
-  background: var(--ag-color-atlantean-dark);
-  color: #ffffff;
-}
-
-.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn:hover,
-.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn:focus-visible,
-.home-services-feature-shell.is-preview-white-cards .home-services-feature-btn.service-native-btn:active {
-  border-color: var(--ag-color-atlantean);
-  background: var(--ag-color-atlantean);
-  color: #ffffff;
+  --btn-color: var(--ag-color-atlantean-dark);
+  --btn-hover-color: var(--ag-color-atlantean);
 }
 
 .home-native-impact {
@@ -2172,14 +2145,6 @@ p.home-services-feature-panel-body {
       background-color 140ms ease,
       color 140ms ease,
       box-shadow 140ms ease;
-  }
-
-  .home-services-feature .service-native-btn.is-outline.is-tone-white:hover,
-  .home-services-feature .service-native-btn.is-outline.is-tone-white:focus-visible,
-  .home-services-feature .service-native-btn.is-outline.is-tone-white:active {
-    border-color: rgba(255, 255, 255, 0.72);
-    background: transparent;
-    color: #ffffff;
   }
 }
 
@@ -3650,30 +3615,10 @@ p.home-services-feature-panel-body {
 }
 
 .services-pie-card .service-native-btn {
+  --btn-focus-ring: 0 0 0 3px rgba(var(--services-pie-active-rgb), 0.18);
   margin-top: 1.5rem;
   align-self: flex-start;
-  border-color: var(--btn-color);
-  background: var(--btn-color);
-  color: var(--btn-text);
   box-shadow: none;
-  transition:
-    border-color 0.28s ease,
-    background-color 0.28s ease,
-    color 0.28s ease,
-    filter 0.28s ease,
-    box-shadow 0.28s ease;
-}
-
-.services-pie-card .service-native-btn:hover,
-.services-pie-card .service-native-btn:focus-visible {
-  border-color: var(--btn-hover-color);
-  background: var(--btn-hover-color);
-  color: var(--btn-hover-text);
-  filter: brightness(0.985);
-}
-
-.services-pie-card .service-native-btn:focus-visible {
-  box-shadow: 0 0 0 3px rgba(var(--services-pie-active-rgb), 0.18);
 }
 
 .services-native-intro {
