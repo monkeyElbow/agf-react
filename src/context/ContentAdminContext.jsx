@@ -1708,7 +1708,7 @@ function normalizeSplitLinkFieldsInBlocks(blocks) {
   });
 }
 
-function normalizeLegacyOrStarterPageBlocksState(blocks) {
+function normalizeManagedBlockList(blocks) {
   const dedupedBlocks = dedupeBlocksByIdPreferLatest(blocks);
   const singletonBlocks = normalizeSingletonKindBlocks(dedupedBlocks);
   const ctaBlocks = normalizeCtaFormCanonicalFieldsInBlocks(singletonBlocks);
@@ -2897,7 +2897,7 @@ export function normalizeStoredConfig(payload) {
   }
   const defaultHierarchy = buildDefaultPageHierarchy();
   const defaultBlocks = Object.fromEntries(
-    Object.entries(buildDefaultBlocks()).map(([path, blocks]) => [path, normalizeLegacyOrStarterPageBlocksState(blocks)]),
+    Object.entries(buildDefaultBlocks()).map(([path, blocks]) => [path, normalizeManagedBlockList(blocks)]),
   );
 
   if (!payload || typeof payload !== 'object') {
@@ -3627,7 +3627,7 @@ export function normalizeStoredConfig(payload) {
     )
       ? reconcileBlockOnlyManagedBlockInventory(path, defaultForPath, normalizedMergedBlocks)
       : normalizedMergedBlocks;
-    blocksByPath[path] = normalizeLegacyOrStarterPageBlocksState(reconciledBlocks);
+    blocksByPath[path] = normalizeManagedBlockList(reconciledBlocks);
   });
 
   const pathAliases = normalizePathAliases(
