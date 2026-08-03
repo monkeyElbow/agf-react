@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
+import { stripRetiredTargetBridgeSettingsFromState } from '../src/lib/contentAdminSnapshotMigrations.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const defaultSharedFile = path.resolve(repoRoot, 'dev-data/content-admin-shared.json');
@@ -166,7 +167,7 @@ function normalizeStatePreservingCollaboration(rawState, normalizeContentAdminSt
     ...source,
     collaborationByPath: {},
   });
-  const next = stripEmptyCanonicalLinkFields(normalized);
+  const next = stripRetiredTargetBridgeSettingsFromState(stripEmptyCanonicalLinkFields(normalized));
   next.collaborationByPath = cloneJson(source.collaborationByPath || {});
   return next;
 }

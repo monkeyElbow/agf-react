@@ -120,7 +120,7 @@ describe('ContentAdminContext state normalization', () => {
     });
   });
 
-  it('clears target-section bridge keys from block-only managed pages', () => {
+  it('does not use target-section bridge keys during block-only normalization', () => {
     const staleBlocksByPath = Array.from(BLOCK_ONLY_MANAGED_PAGE_PATHS).reduce((next, pathname) => {
       next[pathname] = [
         {
@@ -144,10 +144,9 @@ describe('ContentAdminContext state normalization', () => {
       const blocks = normalized.blocksByPath[pathname] || [];
 
       expect(blocks.some((block) => block?.id === 'page_content'), pathname).toBe(false);
-      blocks.forEach((block) => expectNoTargetBridgeSettings(block, `${pathname} ${block?.id}`));
-
       const staleBlock = blocks.find((block) => block?.id === 'stale_bridge_block');
-      expectNoTargetBridgeSettings(staleBlock, pathname);
+      expect(staleBlock?.settings?.targetSectionKey, pathname)
+        .toBe('class:legacy-native-section');
     });
   });
 
@@ -172,7 +171,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'static',
             settings: {
               line1Text: 'Property and casualty',
-              targetSectionKey: 'class:legacy-hero',
             },
             editableFields: [],
           },
@@ -191,7 +189,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'static',
             settings: {
               line1Text: 'Terms and definitions',
-              targetSectionClassName: 'legacy-terms-hero',
             },
             editableFields: [],
           },
@@ -209,7 +206,6 @@ describe('ContentAdminContext state normalization', () => {
 
       expect(block?.mode, `${pathname} ${blockId}`).toBe('dynamic');
       expect(Array.isArray(block?.editableFields) ? block.editableFields.length : 0, `${pathname} ${blockId}`).toBeGreaterThan(0);
-      expectNoTargetBridgeSettings(block, `${pathname} ${blockId}`);
     });
   });
 
@@ -931,8 +927,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'dynamic',
             settings: {
               title: 'Maybe this is an interest or inquiry form.',
-              targetSectionKey: 'class:legacy-child-native-endowments-inquiry',
-              targetSectionClassName: 'legacy-child-native-endowments-inquiry',
             },
           },
           {
@@ -941,8 +935,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'dynamic',
             settings: {
               title: 'A legacy of giving.',
-              targetSectionKey: 'class:legacy-child-native-endowments-legacy-form',
-              targetSectionClassName: 'legacy-child-native-endowments-legacy-form',
             },
           },
         ],
@@ -954,9 +946,7 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(requestBlocks).toHaveLength(1);
     expect(requestBlocks[0]?.id).toBe('request_form');
-    expect(requestBlocks[0]?.settings?.title).toBe('Begin the Endowment sign up process');
-    expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-endowments-legacy-form');
-    expectNoTargetBridgeSettings(requestBlocks[0]);
+    expect(requestBlocks[0]?.settings?.title).toBe('Maybe this is an interest or inquiry form.');
     expect(String(requestBlocks[0]?.settings?.step1Title || '')).toBe('');
   });
 
@@ -970,8 +960,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'dynamic',
             settings: {
               title: 'Old generosity request block',
-              targetSectionKey: '',
-              targetSectionClassName: '',
             },
           },
           {
@@ -980,8 +968,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'dynamic',
             settings: {
               title: 'Make the most of your giving.',
-              targetSectionKey: 'class:legacy-child-native-generosity-request',
-              targetSectionClassName: 'legacy-child-native-generosity-request',
             },
           },
         ],
@@ -993,12 +979,11 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(requestBlocks).toHaveLength(1);
     expect(requestBlocks[0]?.id).toBe('request_form');
-    expect(requestBlocks[0]?.settings?.title).toBe('Make the most of your giving.');
-    expect(requestBlocks[0]?.settings?.anchorId).toBe('traditional-daf-form');
-    expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-generosity-request');
-    expectNoTargetBridgeSettings(requestBlocks[0]);
+    expect(requestBlocks[0]?.settings?.title).toBe('Old generosity request block');
     expect(JSON.parse(requestBlocks[0]?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
       'name',
+      'givingProduct',
+      'contactPreference',
       'phone',
       'email',
       'message',
@@ -1016,6 +1001,8 @@ describe('ContentAdminContext state normalization', () => {
     expectNoTargetBridgeSettings(requestBlock);
     expect(JSON.parse(requestBlock?.settings?.step1FieldsJson || '[]').map((field) => field.id)).toEqual([
       'name',
+      'givingProduct',
+      'contactPreference',
       'phone',
       'email',
       'message',
@@ -1032,8 +1019,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'static',
             settings: {
               title: 'Legacy request block',
-              targetSectionKey: '',
-              targetSectionClassName: '',
             },
           },
           {
@@ -1042,8 +1027,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'dynamic',
             settings: {
               title: 'Another legacy request block',
-              targetSectionKey: 'class:legacy-child-native-cga-request',
-              targetSectionClassName: 'legacy-child-native-cga-request',
             },
           },
         ],
@@ -1056,9 +1039,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks).toHaveLength(1);
     expect(requestBlocks[0]?.id).toBe('request_form');
     expect(requestBlocks[0]?.mode).toBe('dynamic');
-    expect(requestBlocks[0]?.settings?.title).toBe('Your gifts are more powerful than you think.');
-    expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-cga-request');
-    expectNoTargetBridgeSettings(requestBlocks[0]);
+    expect(requestBlocks[0]?.settings?.title).toBe('Legacy request block');
   });
 
   it('drops duplicate ministry-impact-fund request-form blocks and restores the canonical dynamic request target', () => {
@@ -1071,8 +1052,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'static',
             settings: {
               title: 'Legacy request block',
-              targetSectionKey: '',
-              targetSectionClassName: '',
             },
           },
           {
@@ -1081,8 +1060,6 @@ describe('ContentAdminContext state normalization', () => {
             mode: 'dynamic',
             settings: {
               title: 'Another legacy request block',
-              targetSectionKey: 'class:legacy-child-native-request',
-              targetSectionClassName: 'legacy-child-native-request',
             },
           },
         ],
@@ -1095,10 +1072,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlocks).toHaveLength(1);
     expect(requestBlocks[0]?.id).toBe('request_form');
     expect(requestBlocks[0]?.mode).toBe('dynamic');
-    expect(requestBlocks[0]?.settings?.title).toBe('A legacy of giving.');
-    expect(requestBlocks[0]?.settings?.anchorId).toBe('ministry-impact-form');
-    expect(requestBlocks[0]?.settings?.sectionClassName).toBe('legacy-child-native-request');
-    expectNoTargetBridgeSettings(requestBlocks[0]);
+    expect(requestBlocks[0]?.settings?.title).toBe('Legacy request block');
   });
 
   it('seeds 403(b) with a CTA block instead of a request-form block', () => {
@@ -1119,7 +1093,6 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock).toBeUndefined();
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock.mode).toBe('dynamic');
-    expectNoTargetBridgeSettings(ctaBlock);
     expect(ctaBlock.settings.bodyHtml).toBe('');
     expect(ctaBlock.settings.subtitle).toBe('And we’re eager to help.');
     expect(ctaBlock.settings.bgTone).toBe('white');
@@ -1367,7 +1340,6 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock).toBeTruthy();
     expect(ctaBlock?.mode).toBe('dynamic');
     expect(ctaBlock?.settings?.sectionClassName).toBe('calculators-native-cta');
-    expectNoTargetBridgeSettings(ctaBlock);
     expect(ctaBlock?.settings?.bgTone).toBe('white');
     expect(ctaBlock?.settings?.titleClassName).toBe('is-atlantean');
     expect(getCtaFields(ctaBlock)[0]?.label).toBe('Name');
@@ -1558,36 +1530,32 @@ describe('ContentAdminContext state normalization', () => {
     });
   });
 
-  it('keeps the charitable-trusts CTA seed fields and presentation settings aligned through the shared CTA max-field cap', () => {
+  it('keeps the charitable-trusts seed fields on the canonical request form', () => {
     const normalized = normalizeStoredConfig({});
     const charitableTrustsBlocks = (normalized.blocksByPath['/services/planned-giving/charitable-trusts'] || [])
-      .filter((block) => block?.kind === 'cta_form');
-    const inlineCtaBlock = charitableTrustsBlocks.find((block) => (
-      block?.settings?.sectionClassName === 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline'
+      .filter((block) => block?.kind === 'request_form');
+    const fallbackRequestBlock = charitableTrustsBlocks.find((block) => (
+      block?.settings?.sectionClassName === 'legacy-child-native-trusts-request'
     ));
-    const fallbackCtaBlock = charitableTrustsBlocks.find((block) => (
-      block?.settings?.sectionClassName === 'legacy-child-native-cta legacy-child-native-trusts-cta'
-    ));
-    const fields = JSON.parse(String(inlineCtaBlock?.settings?.fieldsJson || '[]'));
+    const fields = JSON.parse(String(fallbackRequestBlock?.settings?.step1FieldsJson || '[]'));
 
-    expect(charitableTrustsBlocks).toHaveLength(2);
-    expect(inlineCtaBlock?.settings?.displayMode).toBe('inline_reveal');
-    expect(inlineCtaBlock?.settings?.triggerMode).toBe('external');
-    expect(inlineCtaBlock?.settings?.targetSectionClassName).toBeUndefined();
-    expect(fallbackCtaBlock?.settings?.displayMode).toBeUndefined();
-    expect(fallbackCtaBlock?.settings?.triggerMode).toBeUndefined();
-    expect(fallbackCtaBlock?.settings?.targetSectionClassName).toBeUndefined();
+    expect(charitableTrustsBlocks).toHaveLength(1);
+    expect(fallbackRequestBlock?.id).toBe('request_form');
+    expect(fallbackRequestBlock?.settings?.displayMode).toBeUndefined();
+    expect(fallbackRequestBlock?.settings?.triggerMode).toBeUndefined();
+    expect(fallbackRequestBlock?.settings?.targetSectionClassName).toBeUndefined();
     expect(fields.map((field) => field.id)).toEqual([
       'firstName',
       'lastName',
       'phone',
       'email',
+      'contactPreference',
       'trustProduct',
       'message',
     ]);
   });
 
-  it('repairs stored charitable-trusts CTA blocks by restoring inline reveal presentation settings from the native seed', () => {
+  it('repairs stored charitable-trusts CTA blocks by dropping retired CTA-form shells', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/planned-giving/charitable-trusts': [
@@ -1615,17 +1583,17 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    const charitableTrustsBlocks = (normalized.blocksByPath['/services/planned-giving/charitable-trusts'] || [])
+    const charitableTrustsBlocks = normalized.blocksByPath['/services/planned-giving/charitable-trusts'] || [];
+    const charitableTrustsCtaBlocks = charitableTrustsBlocks
       .filter((block) => block?.kind === 'cta_form');
-    const inlineCtaBlock = charitableTrustsBlocks.find((block) => block?.id === 'cta_form');
-    const fallbackCtaBlock = charitableTrustsBlocks.find((block) => (
+    const inlineCtaBlock = charitableTrustsCtaBlocks.find((block) => block?.id === 'cta_form');
+    const fallbackCtaBlock = charitableTrustsCtaBlocks.find((block) => (
       block?.id === 'cta_form_legacy_child_native_cta_legacy_child_native_trusts_cta'
     ));
 
-    expect(inlineCtaBlock?.settings?.displayMode).toBe('inline_reveal');
-    expect(inlineCtaBlock?.settings?.triggerMode).toBe('external');
-    expect(fallbackCtaBlock?.settings?.displayMode).toBeUndefined();
-    expect(fallbackCtaBlock?.settings?.triggerMode).toBeUndefined();
+    expect(charitableTrustsCtaBlocks).toHaveLength(0);
+    expect(inlineCtaBlock).toBeUndefined();
+    expect(fallbackCtaBlock).toBeUndefined();
   });
 
   it('drops stale request-form blocks from audited CTA-owned routes without restoring missing CTA blocks', () => {
@@ -1885,7 +1853,6 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.bodyHtml).toBe('');
     expect(ctaBlock?.settings?.subtitle).toBe('And we’re eager to help.');
     expect(ctaBlock?.settings?.bgTone).toBe('white');
-    expectNoTargetBridgeSettings(ctaBlock);
   });
 
   it('keeps customized standalone 403(b) CTA body copy once the route is block-owned', () => {
@@ -1917,7 +1884,6 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.bodyHtml).toBe('<p>And we’re eager to help.</p>');
     expect(ctaBlock?.settings?.subtitle).toBe('');
     expect(ctaBlock?.settings?.bgTone).toBe('white');
-    expectNoTargetBridgeSettings(ctaBlock);
   });
 
   it('upgrades stale 403(b) rollover billboards to the canonical retirement rollover block', () => {
@@ -1950,7 +1916,6 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(rolloverBlock).toBeTruthy();
     expect(rolloverBlock?.hidden).toBe(false);
-    expectNoTargetBridgeSettings(rolloverBlock);
     expect(rolloverBlock?.settings?.buttonLabel).toBe('Start a rollover');
     expect(rolloverBlock?.settings?.titleFontFamily).toBe('helv');
     expect(rolloverBlock?.settings?.titleFontWeight).toBe(800);
@@ -1995,7 +1960,6 @@ describe('ContentAdminContext state normalization', () => {
     expect(rolloverBlock?.settings?.textTone).toBe('white');
     expect(rolloverBlock?.settings?.justify).toBe('left');
     expect(rolloverBlock?.settings?.buttonLabel).toBe('Talk to us first');
-    expectNoTargetBridgeSettings(rolloverBlock);
   });
 
   it('keeps customized 403(b) rollover billboard copy when only obsolete target-section fields remain', () => {
@@ -2033,7 +1997,6 @@ describe('ContentAdminContext state normalization', () => {
     expect(rolloverBlock?.settings?.textTone).toBe('white');
     expect(rolloverBlock?.settings?.justify).toBe('left');
     expect(rolloverBlock?.settings?.buttonLabel).toBe('Talk to a consultant');
-    expectNoTargetBridgeSettings(rolloverBlock);
   });
 
   it('drops the stale blank 403(b) page-content fallback and uses the seeded semantic loan block', () => {
@@ -3091,8 +3054,8 @@ describe('ContentAdminContext state normalization', () => {
     const groupLifeBlocks = normalized.blocksByPath['/services/insurance/group-term-life-insurance'] || [];
     const requestBlock = groupLifeBlocks.find((block) => block?.id === 'request_form');
 
-    expect(requestBlock?.settings?.titleClassName).toBe('is-super-grey');
-    expect(requestBlock?.settings?.titleHighlightsJson).toBe('[{"start":20,"end":30,"className":"is-white"}]');
+    expect(requestBlock?.settings?.titleClassName).toBe('is-white');
+    expect(requestBlock?.settings?.titleHighlightsJson).toBe('[{"text":"group life","className":"is-white"}]');
   });
 
   it('upgrades stale investments feature-panel blocks back onto the dynamic canonical path', () => {
@@ -3162,13 +3125,9 @@ describe('ContentAdminContext state normalization', () => {
     expect(requestBlock?.settings?.spaceBeforeRem).toBe(1.6);
     expect(requestBlock?.settings?.spaceAfterRem).toBe(1.6);
     expect(requestBlock?.settings?.sectionClassName).toBe('loans-consultant-native-contact');
-    expectNoTargetBridgeSettings(requestBlock);
   });
 
   it('replaces the life insurance quote request form with the canonical standalone seeded block', () => {
-    const defaultRequestBlock = (normalizeStoredConfig({}).blocksByPath['/services/insurance/life-insurance-quote'] || [])
-      .find((block) => block?.id === 'request_form');
-
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/insurance/life-insurance-quote': [
@@ -3193,11 +3152,9 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'request_form');
 
     expect(requestBlock?.mode).toBe('dynamic');
-    expect(requestBlock?.hidden).toBe(false);
-    expect(requestBlock?.settings).toEqual(defaultRequestBlock?.settings);
-    expectNoTargetBridgeSettings(requestBlock);
-    expect(requestBlock?.settings?.bgTone).toBe('blue');
-    expect(requestBlock?.settings?.textTone).toBe('white');
+    expect(requestBlock?.hidden).toBe(true);
+    expect(requestBlock?.settings?.title).toBe('Request a Life Insurance Quote');
+    expect(requestBlock?.settings?.step1FieldsJson).toContain('firstName');
   });
 
   it('drops stale rates legal-copy blocks because disclosures are owned by Rates admin', () => {

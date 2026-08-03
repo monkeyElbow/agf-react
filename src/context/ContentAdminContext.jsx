@@ -45,6 +45,8 @@ import {
 import { normalizePresetBearingBlocks } from '../lib/blockPresetIdentity';
 import { normalizeCalculatorWidgetBlocks } from '../lib/calculatorWidgetIdentity';
 import { normalizeBlockPresentation } from '../lib/blockPresentationContracts';
+import { normalizeCgaSecureActBlocks } from '../lib/cgaContentMigrations';
+import { normalizeContentAdminBlock, normalizeContentAdminState } from '../lib/contentAdminNormalization';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
@@ -99,6 +101,7 @@ export const LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS = 1200;
 const SHARED_BLOCK_DRAFT_SYNC_TEXT_DELAY_MS = 140;
 const SHARED_BLOCK_DRAFT_SYNC_DISCRETE_DELAY_MS = 90;
 const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
+const LEGACY_GIVING_CHARITABLE_TRUSTS_PATH = '/services/planned-giving/charitable-trusts';
 const LEGACY_GIVING_ENDOWMENTS_PATH = '/services/planned-giving/endowments';
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/donor-advised-fund';
 const RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
@@ -106,6 +109,11 @@ const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/minist
 const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
 const RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS = Object.freeze([
   'wills_estate_billboard',
+]);
+const RETIRED_CHARITABLE_TRUSTS_BLOCK_IDS = Object.freeze([
+  'remainder_trust_how_it_works',
+  'cta_trigger',
+  'cta_form',
 ]);
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
 const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
@@ -217,14 +225,6 @@ const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
 ]);
 const REQUEST_FORM_MODE_LOCKED_PATHS = new Set([
   '/services/insurance/group-term-life-insurance',
-  LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH,
-  LEGACY_GIVING_ENDOWMENTS_PATH,
-  LEGACY_GIVING_GENEROSITY_FUND_PATH,
-  LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH,
-]);
-const CANONICAL_REQUEST_FORM_RESTORE_PATHS = new Set([
-  '/services/insurance/group-term-life-insurance',
-  '/services/insurance/life-insurance-quote',
   LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH,
   LEGACY_GIVING_ENDOWMENTS_PATH,
   LEGACY_GIVING_GENEROSITY_FUND_PATH,
@@ -1708,48 +1708,21 @@ function normalizeSplitLinkFieldsInBlocks(blocks) {
   });
 }
 
+function normalizeLegacyOrStarterPageBlocksState(blocks) {
+  const dedupedBlocks = dedupeBlocksByIdPreferLatest(blocks);
+  const singletonBlocks = normalizeSingletonKindBlocks(dedupedBlocks);
+  const ctaBlocks = normalizeCtaFormCanonicalFieldsInBlocks(singletonBlocks);
+  const calculatorBlocks = normalizeCalculatorWidgetBlocks(ctaBlocks);
+  const splitBlocks = normalizeSplitLinkFieldsInBlocks(calculatorBlocks);
+  const presetBlocks = normalizePresetBearingBlocks(splitBlocks);
+  const canonicalBlocks = canonicalizeRouteLinkEditableFieldsInBlocks(
+    normalizeSplitLinkFieldsInBlocks(presetBlocks),
+  );
+  return normalizeCgaSecureActBlocks(canonicalBlocks);
+}
+
 function normalizePageBlocksState(blocks) {
-  return canonicalizeRouteLinkEditableFieldsInBlocks(normalizeSplitLinkFieldsInBlocks(stripTargetBridgeFieldsFromBlocks(normalizePresetBearingBlocks(
-    normalizeSplitLinkFieldsInBlocks(
-      normalizeCalculatorWidgetBlocks(normalizeCtaFormCanonicalFieldsInBlocks(normalizeSingletonKindBlocks(dedupeBlocksByIdPreferLatest(blocks)))),
-    ),
-  ))));
-}
-
-const RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS = [
-  ['target', 'Section', 'Key'].join(''),
-  ['target', 'Fineprint', 'Section', 'Key'].join(''),
-  ['target', 'Section', 'ClassName'].join(''),
-  ['target', 'Section', 'Index'].join(''),
-];
-
-function hasRetiredNativeSectionBridgeSettings(settings) {
-  if (!settings || typeof settings !== 'object') {
-    return false;
-  }
-  return RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS.some((key) => (
-    Object.prototype.hasOwnProperty.call(settings, key)
-  ));
-}
-
-function stripTargetBridgeFieldsFromBlocks(blocks) {
-  return (Array.isArray(blocks) ? blocks : []).map((block) => {
-    if (!block || typeof block !== 'object' || !block.settings || typeof block.settings !== 'object') {
-      return block;
-    }
-
-    const settings = { ...block.settings };
-    let changed = false;
-
-    RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS.forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(settings, key)) {
-        delete settings[key];
-        changed = true;
-      }
-    });
-
-    return changed ? { ...block, settings } : block;
-  });
+  return (Array.isArray(blocks) ? blocks : []).map(normalizeContentAdminBlock);
 }
 
 function normalizeBlockDisplayName(name, mode, fallbackName = '', blockKind = '') {
@@ -2911,9 +2884,20 @@ function getModeTemplateVariant({ pathname, blockId, blockKind, mode }) {
 }
 
 export function normalizeStoredConfig(payload) {
+  const hasStoredStateShape = Boolean(
+    payload
+    && typeof payload === 'object'
+    && payload.pageHierarchy
+    && payload.blocksByPath
+    && payload.pathAliases
+    && payload.collaborationByPath,
+  );
+  if (hasStoredStateShape) {
+    return normalizeContentAdminState(payload);
+  }
   const defaultHierarchy = buildDefaultPageHierarchy();
   const defaultBlocks = Object.fromEntries(
-    Object.entries(buildDefaultBlocks()).map(([path, blocks]) => [path, normalizePageBlocksState(blocks)]),
+    Object.entries(buildDefaultBlocks()).map(([path, blocks]) => [path, normalizeLegacyOrStarterPageBlocksState(blocks)]),
   );
 
   if (!payload || typeof payload !== 'object') {
@@ -3069,6 +3053,12 @@ export function normalizeStoredConfig(payload) {
         return;
       }
       if (
+        path === LEGACY_GIVING_CHARITABLE_TRUSTS_PATH
+        && RETIRED_CHARITABLE_TRUSTS_BLOCK_IDS.includes(storedBlockId)
+      ) {
+        return;
+      }
+      if (
         path === '/about-us/impact'
         && isPageContentBlock(storedBlock)
         && String(storedSettings.html || '').trim() === ''
@@ -3215,16 +3205,6 @@ export function normalizeStoredConfig(payload) {
         && storedKind === 'request_form'
         && defaultBlock
         && shouldQuarantinePropertyCasualtyRequestContent(storedSettings)
-      ) {
-        storedMode = 'dynamic';
-        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
-      }
-      if (
-        CANONICAL_REQUEST_FORM_RESTORE_PATHS.has(path)
-        && storedBlock.id === 'request_form'
-        && storedKind === 'request_form'
-        && defaultBlock
-        && hasRetiredNativeSectionBridgeSettings(storedSettings)
       ) {
         storedMode = 'dynamic';
         nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
@@ -3647,7 +3627,7 @@ export function normalizeStoredConfig(payload) {
     )
       ? reconcileBlockOnlyManagedBlockInventory(path, defaultForPath, normalizedMergedBlocks)
       : normalizedMergedBlocks;
-    blocksByPath[path] = normalizePageBlocksState(reconciledBlocks);
+    blocksByPath[path] = normalizeLegacyOrStarterPageBlocksState(reconciledBlocks);
   });
 
   const pathAliases = normalizePathAliases(

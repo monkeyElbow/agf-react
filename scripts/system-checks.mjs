@@ -40,6 +40,12 @@ const TARGET_BRIDGE_PATTERNS = Object.freeze([
   'targetedDynamic',
 ]);
 
+// Legacy target-field names may exist only in this explicit snapshot/restore
+// migration boundary. They are not permitted in normalizers or renderers.
+const TARGET_BRIDGE_MIGRATION_FILES = new Set([
+  'src/lib/contentAdminSnapshotMigrations.js',
+]);
+
 const STATIC_SOURCE_PATTERNS = Object.freeze([
   {
     label: 'createStatic compatibility helper',
@@ -224,6 +230,7 @@ function scanStatic() {
       ignoreFile: (relativePath) => (
         relativePath.includes('.test.')
         || relativePath.includes('.guardrail.')
+        || TARGET_BRIDGE_MIGRATION_FILES.has(relativePath)
       ),
     }),
     ...walkFiles('dev-data', {
@@ -292,6 +299,7 @@ function scanTargetBridge() {
       ignoreFile: (relativePath) => (
         relativePath.includes('.test.')
         || relativePath.includes('.guardrail.')
+        || TARGET_BRIDGE_MIGRATION_FILES.has(relativePath)
       ),
     }),
   ];

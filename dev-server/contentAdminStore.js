@@ -13,11 +13,21 @@ import { normalizeCalculatorIntroBlock, normalizeCalculatorWidgetBlock } from '.
 import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue.js';
 import { normalizeBlockPresentation } from '../src/lib/blockPresentationContracts.js';
 import { normalizeCgaSecureActBlocks } from '../src/lib/cgaContentMigrations.js';
+import {
+  normalizeContentAdminBlock,
+  normalizeContentAdminState,
+  normalizeContentAdminRecord,
+} from '../src/lib/contentAdminNormalization.js';
 import { validateContentAdminStateSchema } from '../src/lib/contentAdminSnapshotSchema.js';
 import {
   compareSeedRouteSlices,
   formatSeedRouteSliceDiffReport,
 } from './seedRouteSliceComparison.js';
+import {
+  stripRetiredTargetBridgeSettingsFromBlock,
+  stripRetiredTargetBridgeSettingsFromBlocks,
+  stripRetiredTargetBridgeSettingsFromState,
+} from '../src/lib/contentAdminSnapshotMigrations.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
 const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
@@ -34,12 +44,6 @@ const PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH = '/services/legacy-giving/gene
 const GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE = 'Donor Advised Fund';
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
 const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
-const RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS = Object.freeze([
-  'targetSectionKey',
-  'targetFineprintSectionKey',
-  'targetSectionClassName',
-  'targetSectionIndex',
-]);
 const RETIRED_CHARITABLE_TRUSTS_BLOCK_IDS = Object.freeze([
   'remainder_trust_how_it_works',
   'cta_trigger',
@@ -215,66 +219,23 @@ function normalizeCollaborationByPath(rawState) {
   return next;
 }
 
-function normalizeSharedState(rawState) {
-  const source = rawState && typeof rawState === 'object' ? rawState : {};
-  const pageHierarchy = cloneJson(source.pageHierarchy || {});
-  if (
-    pageHierarchy[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH]
-    && !pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH]
-  ) {
-    pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH] = {
-      ...pageHierarchy[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH],
-      path: LEGACY_GIVING_GENEROSITY_FUND_PATH,
-      routeKey: LEGACY_GIVING_GENEROSITY_FUND_PATH,
-      linkRef: LEGACY_GIVING_GENEROSITY_FUND_PATH,
-      parentPath: PLANNED_GIVING_OVERVIEW_PATH,
-    };
-  }
-  delete pageHierarchy[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
-  if (pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH]) {
-    pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH] = {
-      ...pageHierarchy[LEGACY_GIVING_GENEROSITY_FUND_PATH],
-      path: LEGACY_GIVING_GENEROSITY_FUND_PATH,
-      routeKey: LEGACY_GIVING_GENEROSITY_FUND_PATH,
-      linkRef: LEGACY_GIVING_GENEROSITY_FUND_PATH,
-      title: GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE,
-      breadcrumbLabel: GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE,
-    };
-  }
-  const blocksByPathSource = cloneJson(source.blocksByPath || {});
-  if (
-    Array.isArray(blocksByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH])
-    && !Array.isArray(blocksByPathSource[LEGACY_GIVING_GENEROSITY_FUND_PATH])
-  ) {
-    blocksByPathSource[LEGACY_GIVING_GENEROSITY_FUND_PATH] = blocksByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
-  }
-  delete blocksByPathSource[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
-  const pathAliases = cloneJson(source.pathAliases || {});
-  pathAliases[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH] = LEGACY_GIVING_GENEROSITY_FUND_PATH;
-  pathAliases[PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH] = LEGACY_GIVING_GENEROSITY_FUND_PATH;
-  const collaborationByPath = cloneJson(source.collaborationByPath || {});
-  if (
-    collaborationByPath[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH]
-    && !collaborationByPath[LEGACY_GIVING_GENEROSITY_FUND_PATH]
-  ) {
-    collaborationByPath[LEGACY_GIVING_GENEROSITY_FUND_PATH] = collaborationByPath[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
-  }
-  delete collaborationByPath[RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH];
+export function normalizeSharedState(rawState) {
+  const normalized = normalizeContentAdminState(rawState);
   return {
-    pageHierarchy,
+    pageHierarchy: normalized.pageHierarchy,
     blocksByPath: Object.fromEntries(
-      Object.entries(blocksByPathSource || {}).map(([pathname, blocks]) => [
+      Object.entries(normalized.blocksByPath || {}).map(([pathname, blocks]) => [
         pathname,
         normalizePageBlocksState(pathname, blocks),
       ]),
     ),
-    pathAliases,
-    collaborationByPath: normalizeCollaborationByPath(collaborationByPath || {}),
+    pathAliases: normalized.pathAliases,
+    collaborationByPath: normalized.collaborationByPath,
   };
 }
 
 function normalizeStoredRecord(rawRecord, maxRevisionsPerPage) {
-  const parsed = rawRecord && typeof rawRecord === 'object' ? rawRecord : {};
+  const parsed = normalizeContentAdminRecord(rawRecord);
   const state = normalizeSharedState(parsed?.state);
   const baseSnapshot = normalizeSharedState(parsed?.baseSnapshot);
   return {
@@ -846,24 +807,6 @@ function normalizePlannedGivingOverviewBlockSet(blocks) {
   }, []);
 }
 
-function stripRetiredTargetBridgeSettings(rawSettings) {
-  if (!rawSettings || typeof rawSettings !== 'object') {
-    return rawSettings;
-  }
-
-  const nextSettings = { ...rawSettings };
-  let changed = false;
-
-  RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS.forEach((key) => {
-    if (Object.prototype.hasOwnProperty.call(nextSettings, key)) {
-      delete nextSettings[key];
-      changed = true;
-    }
-  });
-
-  return changed ? nextSettings : rawSettings;
-}
-
 function normalizeCtaFormCanonicalFieldSettings(rawSettings) {
   const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
   const slotFields = buildCtaFormSlotFields(settings);
@@ -945,28 +888,8 @@ function canonicalizeRouteLinkEditableFields(editableFields) {
   });
 }
 
-function normalizePageBlockState(pathname, block) {
-  const nextBlock = normalizeCalculatorIntroBlock(normalizeCalculatorWidgetBlock(cloneJson(block)));
-  if (nextBlock?.settings && typeof nextBlock.settings === 'object') {
-    nextBlock.settings = normalizeSplitLinkFieldSettings(stripRetiredTargetBridgeSettings(nextBlock.settings), {
-      stripSplitFields: true,
-    });
-  }
-  if (Array.isArray(nextBlock.editableFields)) {
-    nextBlock.editableFields = canonicalizeRouteLinkEditableFields(nextBlock.editableFields);
-  }
-  if (
-    String(nextBlock?.kind || '').trim().toLowerCase() === 'cta_form'
-  ) {
-    if (nextBlock?.settings && typeof nextBlock.settings === 'object') {
-      nextBlock.settings = normalizeCtaFormCanonicalFieldSettings(nextBlock.settings);
-    }
-    if (Array.isArray(nextBlock.editableFields)) {
-      nextBlock.editableFields = nextBlock.editableFields.filter((field) => (
-        !CTA_FORM_SLOT_FIELD_PATTERN.test(String(field?.id || ''))
-      ));
-    }
-  }
+function normalizeLegacyPageBlockState(pathname, block) {
+  const nextBlock = normalizeContentAdminBlock(block);
   if (
     pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH
     && String(nextBlock?.id || '').trim() === 'hero'
@@ -1021,21 +944,12 @@ function normalizePageBlockState(pathname, block) {
   return normalizeBlockPresentation(nextBlock);
 }
 
-function normalizePageBlocksState(pathname, blocks) {
-  if (pathname === PLANNED_GIVING_OVERVIEW_PATH) {
-    return normalizeCgaSecureActBlocks(normalizePresetBearingBlocks(
-      normalizePlannedGivingOverviewBlockSet(blocks)
-        .map((block) => normalizePageBlockState(pathname, block)),
-    ).map((block) => normalizePageBlockState(pathname, block)));
-  }
+function normalizePageBlockState(_pathname, block) {
+  return normalizeContentAdminBlock(block);
+}
 
-  return normalizeCgaSecureActBlocks(normalizePresetBearingBlocks(
-    (Array.isArray(blocks) ? blocks : [])
-      .filter((block) => !(pathname === RETIREMENT_403B_PATH && isRetiredRetirement403bPageContentBlock(block)))
-      .filter((block) => !(pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH && String(block?.id || '').trim() === 'traditional_daf_cta'))
-      .filter((block) => !(pathname === LEGACY_GIVING_CHARITABLE_TRUSTS_PATH && RETIRED_CHARITABLE_TRUSTS_BLOCK_IDS.includes(String(block?.id || '').trim())))
-      .map((block) => normalizePageBlockState(pathname, block)),
-  ).map((block) => normalizePageBlockState(pathname, block)));
+function normalizePageBlocksState(pathname, blocks) {
+  return (Array.isArray(blocks) ? blocks : []).map((block) => normalizePageBlockState(pathname, block));
 }
 
 function normalizeBlocksWithoutInventoryRepair(pathname, blocks) {
@@ -1742,7 +1656,7 @@ export function createJsonContentStore({
     }
     nextState.blocksByPath[pathname] = normalizeBlocksWithoutInventoryRepair(
       pathname,
-      pageSlice.blocks,
+      stripRetiredTargetBridgeSettingsFromBlocks(pageSlice.blocks),
     );
     nextState.collaborationByPath[pathname] = normalizeCollaborationForExistingBlocks(
       pathname,
@@ -2358,9 +2272,9 @@ export function createJsonContentStore({
       const currentBlocks = Array.isArray(nextState.blocksByPath[normalizedPath]) ? nextState.blocksByPath[normalizedPath] : [];
       const existingIndex = currentBlocks.findIndex((entry) => String(entry?.id || '').trim() === normalizedBlockId);
       if (existingIndex === -1) {
-        currentBlocks.push(cloneJson(snapshotBlock));
+        currentBlocks.push(stripRetiredTargetBridgeSettingsFromBlock(snapshotBlock));
       } else {
-        currentBlocks.splice(existingIndex, 1, cloneJson(snapshotBlock));
+        currentBlocks.splice(existingIndex, 1, stripRetiredTargetBridgeSettingsFromBlock(snapshotBlock));
       }
       nextState.blocksByPath[normalizedPath] = currentBlocks;
       try {
@@ -2599,6 +2513,8 @@ export function createJsonContentStore({
           backupPayload.record,
           maxRevisionsPerPage,
         );
+        record.state = stripRetiredTargetBridgeSettingsFromState(record.state);
+        record.baseSnapshot = stripRetiredTargetBridgeSettingsFromState(record.baseSnapshot);
         persistRecord();
         return {
           ok: true,
