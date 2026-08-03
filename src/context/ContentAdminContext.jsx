@@ -1202,7 +1202,7 @@ export function applyBufferedBlockSettingEditsToBlocksByPath(blocksByPath, buffe
           settings: normalizeDynamicHeroSettings(pathname, nextBlock.settings),
         };
       }
-      return nextBlock;
+      return normalizeContentAdminBlock(nextBlock);
     });
 
     if (!didChangePath) {
@@ -1213,7 +1213,7 @@ export function applyBufferedBlockSettingEditsToBlocksByPath(blocksByPath, buffe
         ...(blocksByPath || {}),
       };
     }
-    nextBlocksByPath[pathname] = normalizePageBlocksState(nextBlocks);
+    nextBlocksByPath[pathname] = nextBlocks;
     changed = true;
   });
 

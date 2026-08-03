@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { normalizeContentAdminState } from '../lib/contentAdminNormalization';
 
 const mockFetchSharedContentSnapshot = vi.fn();
 const mockInitializeSharedContentFromSeed = vi.fn();
@@ -102,55 +103,58 @@ describe('ContentAdminContext shared bootstrap', () => {
     expect(state?.blocksByPath?.['/services/planned-giving/donor-advised-fund']?.length).toBeGreaterThan(0);
   });
 
-  it('normalizes stale shared snapshots before exposing block-only authoring and published state', async () => {
+  it('uses shared normalization without rewriting canonical managed inventory', async () => {
+    const sharedState = {
+      pageHierarchy: {},
+      blocksByPath: {
+        '/services/insurance/property-casualty-insurance': [
+          {
+            id: 'page_content',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {
+              html: '<p>Stale page content.</p>',
+            },
+          },
+          {
+            id: 'hero',
+            kind: 'hero',
+            mode: 'static',
+            settings: {
+              line1Text: 'Property and casualty',
+              targetSectionKey: 'class:legacy-hero',
+            },
+            editableFields: [],
+          },
+        ],
+      },
+      pathAliases: {},
+      collaborationByPath: {},
+    };
+    const baseSnapshot = {
+      pageHierarchy: {},
+      blocksByPath: {
+        '/services/insurance/property-casualty-insurance': [
+          {
+            id: 'intro',
+            kind: 'intro',
+            mode: 'static',
+            settings: {
+              targetSectionClassName: 'legacy-intro',
+            },
+            editableFields: [],
+          },
+        ],
+      },
+      pathAliases: {},
+      collaborationByPath: {},
+    };
+
     mockFetchSharedContentSnapshot.mockResolvedValueOnce({
       initialized: true,
       updatedAt: 1710000000000,
-      state: {
-        pageHierarchy: {},
-        blocksByPath: {
-          '/services/insurance/property-casualty-insurance': [
-            {
-              id: 'page_content',
-              kind: 'content',
-              mode: 'dynamic',
-              settings: {
-                html: '<p>Stale page content.</p>',
-              },
-            },
-            {
-              id: 'hero',
-              kind: 'hero',
-              mode: 'static',
-              settings: {
-                line1Text: 'Property and casualty',
-                targetSectionKey: 'class:legacy-hero',
-              },
-              editableFields: [],
-            },
-          ],
-        },
-        pathAliases: {},
-        collaborationByPath: {},
-      },
-      baseSnapshot: {
-        pageHierarchy: {},
-        blocksByPath: {
-          '/services/insurance/property-casualty-insurance': [
-            {
-              id: 'intro',
-              kind: 'intro',
-              mode: 'static',
-              settings: {
-                targetSectionClassName: 'legacy-intro',
-              },
-              editableFields: [],
-            },
-          ],
-        },
-        pathAliases: {},
-        collaborationByPath: {},
-      },
+      state: sharedState,
+      baseSnapshot,
     });
 
     const { bootstrapSharedContentAdminState } = await import('./ContentAdminContext.jsx');
@@ -160,13 +164,19 @@ describe('ContentAdminContext shared bootstrap', () => {
     const authoringHero = authoringBlocks.find((block) => block?.id === 'hero');
     const publishedIntro = publishedBlocks.find((block) => block?.id === 'intro');
 
-    expect(authoringBlocks.some((block) => block?.id === 'page_content')).toBe(false);
-    expect(authoringHero?.mode).toBe('dynamic');
-    expect(authoringHero?.settings?.targetSectionKey).toBeUndefined();
-    expect(Array.isArray(authoringHero?.editableFields) ? authoringHero.editableFields.length : 0).toBeGreaterThan(0);
-    expect(publishedIntro?.mode).toBe('dynamic');
-    expect(publishedIntro?.settings?.targetSectionClassName).toBeUndefined();
-    expect(Array.isArray(publishedIntro?.editableFields) ? publishedIntro.editableFields.length : 0).toBeGreaterThan(0);
+    expect(authoringBlocks).toEqual(
+      normalizeContentAdminState(sharedState).blocksByPath['/services/insurance/property-casualty-insurance'],
+    );
+    expect(publishedBlocks).toEqual(
+      normalizeContentAdminState(baseSnapshot).blocksByPath['/services/insurance/property-casualty-insurance'],
+    );
+    expect(authoringBlocks.some((block) => block?.id === 'page_content')).toBe(true);
+    expect(authoringHero?.mode).toBe('static');
+    expect(authoringHero?.settings?.targetSectionKey).toBe('class:legacy-hero');
+    expect(authoringHero?.editableFields).toEqual([]);
+    expect(publishedIntro?.mode).toBe('static');
+    expect(publishedIntro?.settings?.targetSectionClassName).toBe('legacy-intro');
+    expect(publishedIntro?.editableFields).toEqual([]);
   });
 
   it('returns a failed shared reset result when backup creation blocks the reset', async () => {
