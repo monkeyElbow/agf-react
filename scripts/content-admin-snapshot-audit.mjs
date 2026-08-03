@@ -97,15 +97,6 @@ function getStateRoots(record, recordType) {
   ];
 }
 
-function blockSignature(block) {
-  return {
-    id: String(block?.id || ''),
-    kind: String(block?.kind || ''),
-    mode: String(block?.mode || ''),
-    hidden: Boolean(block?.hidden),
-  };
-}
-
 function hasTargetBridgeSettings(block) {
   const settings = block?.settings && typeof block.settings === 'object'
     ? block.settings
@@ -412,7 +403,6 @@ function scanStateRoot({ recordLabel, rootName, stateRoot, findings }) {
 }
 
 function scanRevisionInventories({ recordLabel, record, findings }) {
-  const currentBlocksByPath = record?.state?.blocksByPath || {};
   Object.entries(record?.revisionsByPath || {}).forEach(([pathname, revisions]) => {
     if (RETIRED_CONTENT_PATHS.has(pathname)) {
       findings.push(createFinding('retired-revision-path', 'Retired path appears as a revision key.', {
@@ -423,17 +413,17 @@ function scanRevisionInventories({ recordLabel, record, findings }) {
       return;
     }
 
-    const currentInventory = (Array.isArray(currentBlocksByPath[pathname]) ? currentBlocksByPath[pathname] : [])
-      .map(blockSignature);
-    if (!currentInventory.length) {
-      return;
-    }
-
     (Array.isArray(revisions) ? revisions : []).forEach((revision, revisionIndex) => {
       const revisionBlocks = Array.isArray(revision?.snapshot?.blocks) ? revision.snapshot.blocks : [];
-      const revisionInventory = revisionBlocks.map(blockSignature);
-      if (JSON.stringify(revisionInventory) !== JSON.stringify(currentInventory)) {
-        findings.push(createFinding('revision-inventory-drift', 'Revision restore inventory differs from current state inventory.', {
+      const revisionIds = revisionBlocks.map((block) => String(block?.id || '').trim());
+      const hasInvalidInventory = revisionBlocks.some((block) => (
+        !String(block?.id || '').trim()
+        || !String(block?.kind || '').trim()
+        || !String(block?.mode || '').trim()
+      )) || new Set(revisionIds).size !== revisionIds.length;
+
+      if (hasInvalidInventory) {
+        findings.push(createFinding('revision-inventory-invalid', 'Revision inventory must describe its own historical block payload with unique block IDs and complete shape.', {
           record: recordLabel,
           root: 'revisionsByPath',
           pathname,
@@ -485,31 +475,43 @@ function summarize(findings) {
   }, {});
 }
 
-const outputJson = process.argv.includes('--json');
-const includeBackups = process.argv.includes('--include-backups');
-const records = [
-  ...ACTIVE_RECORDS,
-  ...(includeBackups ? listBackupRecords() : []),
-];
-const findings = records.flatMap(scanRecord);
-
-if (outputJson) {
-  console.log(JSON.stringify(findings, null, 2));
-} else {
-  console.log('Content admin snapshot audit');
-  console.log(`Records scanned: ${records.length}`);
-  console.log(`Findings: ${findings.length}`);
-  Object.entries(summarize(findings)).forEach(([code, count]) => {
-    console.log(`- ${code}: ${count}`);
-  });
-  findings.slice(0, 80).forEach((finding) => {
-    console.log(`- ${finding.record}:${finding.root}:${finding.pathname || '(n/a)'} ${finding.code} ${finding.blockId || ''}`.trim());
-  });
-  if (findings.length > 80) {
-    console.log(`- ... ${findings.length - 80} more`);
-  }
+export function runSnapshotAudit({ includeBackups = false } = {}) {
+  const records = [
+    ...ACTIVE_RECORDS,
+    ...(includeBackups ? listBackupRecords() : []),
+  ];
+  return {
+    records,
+    findings: records.flatMap(scanRecord),
+  };
 }
 
-if (findings.length) {
-  process.exitCode = 1;
+export { scanRecord, scanRevisionInventories, summarize };
+
+if (path.resolve(process.argv[1] || '') === __filename) {
+  const outputJson = process.argv.includes('--json');
+  const { records, findings } = runSnapshotAudit({
+    includeBackups: process.argv.includes('--include-backups'),
+  });
+
+  if (outputJson) {
+    console.log(JSON.stringify(findings, null, 2));
+  } else {
+    console.log('Content admin snapshot audit');
+    console.log(`Records scanned: ${records.length}`);
+    console.log(`Findings: ${findings.length}`);
+    Object.entries(summarize(findings)).forEach(([code, count]) => {
+      console.log(`- ${code}: ${count}`);
+    });
+    findings.slice(0, 80).forEach((finding) => {
+      console.log(`- ${finding.record}:${finding.root}:${finding.pathname || '(n/a)'} ${finding.code} ${finding.blockId || ''}`.trim());
+    });
+    if (findings.length > 80) {
+      console.log(`- ... ${findings.length - 80} more`);
+    }
+  }
+
+  if (findings.length) {
+    process.exitCode = 1;
+  }
 }
