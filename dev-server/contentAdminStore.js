@@ -12,6 +12,12 @@ import {
 import { normalizeCalculatorIntroBlock, normalizeCalculatorWidgetBlock } from '../src/lib/calculatorWidgetIdentity.js';
 import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue.js';
 import { normalizeBlockPresentation } from '../src/lib/blockPresentationContracts.js';
+import { normalizeCgaSecureActBlocks } from '../src/lib/cgaContentMigrations.js';
+import { validateContentAdminStateSchema } from '../src/lib/contentAdminSnapshotSchema.js';
+import {
+  compareSeedRouteSlices,
+  formatSeedRouteSliceDiffReport,
+} from './seedRouteSliceComparison.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
 const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
@@ -20,6 +26,7 @@ const RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS = Object.freeze([
   'wills_estate_billboard',
 ]);
 const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
+const LEGACY_GIVING_CHARITABLE_TRUSTS_PATH = '/services/planned-giving/charitable-trusts';
 const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
 const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/donor-advised-fund';
 const RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
@@ -32,6 +39,11 @@ const RETIRED_NATIVE_SECTION_BRIDGE_SETTING_KEYS = Object.freeze([
   'targetFineprintSectionKey',
   'targetSectionClassName',
   'targetSectionIndex',
+]);
+const RETIRED_CHARITABLE_TRUSTS_BLOCK_IDS = Object.freeze([
+  'remainder_trust_how_it_works',
+  'cta_trigger',
+  'cta_form',
 ]);
 const CTA_FORM_SLOT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
 const SHARED_CONTENT_BACKUP_FILE_PREFIX = 'content-admin-shared-';
@@ -1011,18 +1023,19 @@ function normalizePageBlockState(pathname, block) {
 
 function normalizePageBlocksState(pathname, blocks) {
   if (pathname === PLANNED_GIVING_OVERVIEW_PATH) {
-    return normalizePresetBearingBlocks(
+    return normalizeCgaSecureActBlocks(normalizePresetBearingBlocks(
       normalizePlannedGivingOverviewBlockSet(blocks)
         .map((block) => normalizePageBlockState(pathname, block)),
-    ).map((block) => normalizePageBlockState(pathname, block));
+    ).map((block) => normalizePageBlockState(pathname, block)));
   }
 
-  return normalizePresetBearingBlocks(
+  return normalizeCgaSecureActBlocks(normalizePresetBearingBlocks(
     (Array.isArray(blocks) ? blocks : [])
       .filter((block) => !(pathname === RETIREMENT_403B_PATH && isRetiredRetirement403bPageContentBlock(block)))
       .filter((block) => !(pathname === LEGACY_GIVING_GENEROSITY_FUND_PATH && String(block?.id || '').trim() === 'traditional_daf_cta'))
+      .filter((block) => !(pathname === LEGACY_GIVING_CHARITABLE_TRUSTS_PATH && RETIRED_CHARITABLE_TRUSTS_BLOCK_IDS.includes(String(block?.id || '').trim())))
       .map((block) => normalizePageBlockState(pathname, block)),
-  ).map((block) => normalizePageBlockState(pathname, block));
+  ).map((block) => normalizePageBlockState(pathname, block)));
 }
 
 function normalizeBlocksWithoutInventoryRepair(pathname, blocks) {
@@ -1196,19 +1209,6 @@ function mutableSharedStateShell(state) {
       ? source.collaborationByPath
       : {},
   };
-}
-
-function routeContentSignature(state, pathname) {
-  const source = state && typeof state === 'object' ? state : {};
-  return JSON.stringify({
-    page: cloneJson(source.pageHierarchy?.[pathname] || null),
-    blocks: normalizePageBlocksState(pathname, source.blocksByPath?.[pathname]),
-    pathAliases: aliasesForPath(source.pathAliases, pathname),
-  });
-}
-
-function routeMatchesSeed(state, seedState, pathname) {
-  return routeContentSignature(state, pathname) === routeContentSignature(seedState, pathname);
 }
 
 function copySeedRouteSlice(targetState, seedState, pathname, collaborationEntryOverride = undefined) {
@@ -1431,7 +1431,7 @@ function stringifyPersistedJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-export function createDevContentAuthorityStore({
+export function createJsonContentStore({
   persistenceFile,
   now = () => Date.now(),
   createId = (ts) => `${ts}-${Math.random().toString(36).slice(2, 8)}`,
@@ -1758,6 +1758,26 @@ export function createDevContentAuthorityStore({
   load();
 
   return {
+    readCurrentState() {
+      return cloneJson(record.state);
+    },
+
+    readPublishedSnapshot() {
+      return cloneJson(record.baseSnapshot);
+    },
+
+    validateSnapshot(snapshot, options = {}) {
+      const normalizedState = normalizeSharedState(snapshot);
+      const findings = validateContentAdminStateSchema(normalizedState, {
+        label: String(options?.label || 'content admin state'),
+      });
+      return {
+        ok: findings.length === 0,
+        findings,
+        state: cloneJson(normalizedState),
+      };
+    },
+
     getSnapshot() {
       return publishSnapshot();
     },
@@ -1896,6 +1916,10 @@ export function createDevContentAuthorityStore({
       };
     },
 
+    savePageDraft(nextState, options = {}) {
+      return this.saveDraft(nextState, options);
+    },
+
     syncBlockDraft(pathname, blockId, nextBlock, { actor, reason = 'block-draft-synced' } = {}) {
       const normalizedPath = String(pathname || '').trim();
       const normalizedBlockId = String(blockId || '').trim();
@@ -1964,6 +1988,10 @@ export function createDevContentAuthorityStore({
           trackRevisions: false,
         }),
       };
+    },
+
+    saveBlockDraft(pathname, blockId, nextBlock, options = {}) {
+      return this.syncBlockDraft(pathname, blockId, nextBlock, options);
     },
 
     publishPage(pathname, { actor, summary = '' } = {}) {
@@ -2096,13 +2124,38 @@ export function createDevContentAuthorityStore({
       };
     },
 
-    publishSeedRouteSlices(seedState, pathnames, { actor, summary = '' } = {}) {
+    publishPath(pathname, options = {}) {
+      return this.publishPage(pathname, options);
+    },
+
+    publishSeedRouteSlices(
+      seedState,
+      pathnames,
+      {
+        actor,
+        summary = '',
+        forceOverwriteAdminEdits = false,
+        reason = '',
+        operation = 'seed-to-active',
+      } = {},
+    ) {
       const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      const forceOverwrite = forceOverwriteAdminEdits === true;
+      if (String(operation || '').trim() !== 'seed-to-active') {
+        return { ok: false, error: 'conflicting-seed-route-publish-mode', ...publishSnapshot() };
+      }
       const normalizedPaths = [...new Set((Array.isArray(pathnames) ? pathnames : [pathnames])
         .map((pathname) => String(pathname || '').trim())
         .filter(Boolean))];
       if (!normalizedActor || !normalizedPaths.length || !seedState?.blocksByPath) {
         return { ok: false, error: 'invalid-seed-route-publish-request', ...publishSnapshot() };
+      }
+      if (forceOverwrite && !normalizedReason) {
+        return { ok: false, error: 'force-reason-required', ...publishSnapshot() };
+      }
+      if (normalizedReason && !forceOverwrite) {
+        return { ok: false, error: 'reason-requires-force', ...publishSnapshot() };
       }
 
       const normalizedSeed = normalizeSharedState(seedState);
@@ -2116,10 +2169,13 @@ export function createDevContentAuthorityStore({
         };
       }
 
-      const changedPaths = normalizedPaths.filter((pathname) => (
-        !routeMatchesSeed(record.state, normalizedSeed, pathname)
-        || !routeMatchesSeed(record.baseSnapshot, normalizedSeed, pathname)
-      ));
+      const comparison = compareSeedRouteSlices({
+        activeState: record.state,
+        baseSnapshot: record.baseSnapshot,
+        seedState: normalizedSeed,
+        pathnames: normalizedPaths,
+      });
+      const changedPaths = comparison.changedRoutes;
 
       if (!changedPaths.length) {
         return {
@@ -2127,6 +2183,7 @@ export function createDevContentAuthorityStore({
           ...publishSnapshot(),
           publishResult: {
             didPublish: false,
+            hasConflicts: false,
             changedPaths: [],
             publishedPaths: [],
             updatedAt: record.updatedAt,
@@ -2134,7 +2191,43 @@ export function createDevContentAuthorityStore({
         };
       }
 
+      if (!forceOverwrite) {
+        return {
+          ok: false,
+          error: 'seed-route-publish-conflict',
+          ...publishSnapshot(),
+          publishResult: {
+            didPublish: false,
+            hasConflicts: true,
+            changedPaths,
+            publishedPaths: [],
+            diffs: comparison.changes,
+            diffReport: formatSeedRouteSliceDiffReport(comparison),
+            updatedAt: record.updatedAt,
+          },
+        };
+      }
+
+      let backup;
+      try {
+        backup = createSharedContentBackup('before-forced-seed-route-overwrite', {
+          action: 'seed-route-slice-overwrite',
+          actor: normalizedActor,
+          operationReason: normalizedReason,
+          routes: changedPaths,
+          diffCount: comparison.changes.length,
+        });
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'backup-failed',
+          details: error instanceof Error ? error.message : 'backup-failed',
+          ...publishSnapshot(),
+        };
+      }
+
       const timestamp = now();
+      const previousState = record.state;
       let nextState = mutableSharedStateShell(record.state);
       let nextBaseSnapshot = mutableSharedStateShell(record.baseSnapshot);
 
@@ -2155,7 +2248,7 @@ export function createDevContentAuthorityStore({
           history: appendHistoryEntry(currentEntry.history, buildHistoryEntry({
             action: 'seed-route-slice-published',
             actor: normalizedActor,
-            details: String(summary || '').trim() || pathname,
+            details: `${normalizedReason}${String(summary || '').trim() ? `: ${String(summary).trim()}` : ''}`,
             now: timestamp,
             createId,
           })),
@@ -2172,14 +2265,25 @@ export function createDevContentAuthorityStore({
         state: nextState,
         baseSnapshot: nextBaseSnapshot,
       };
+      addRevisionsForChangedPaths(previousState, nextState, {
+        actor: normalizedActor,
+        reason: normalizedReason,
+        summary: String(summary || '').trim() || 'forced seed route overwrite',
+      });
       persistRecord();
       return {
         ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
         ...publishSnapshot(),
         publishResult: {
           didPublish: true,
+          forced: true,
+          hasConflicts: true,
           changedPaths,
           publishedPaths: changedPaths,
+          diffs: comparison.changes,
           updatedAt: timestamp,
         },
       };
@@ -2197,6 +2301,10 @@ export function createDevContentAuthorityStore({
         summary: revision.summary,
         blocks: summarizeRevisionBlocksForHistory(revision.snapshot),
       }));
+    },
+
+    listRevisions(pathname) {
+      return this.getRevisionHistory(pathname);
     },
 
     restorePageRevision(pathname, revisionId, { actor } = {}) {
@@ -2277,6 +2385,10 @@ export function createDevContentAuthorityStore({
           summary: `${normalizedPath}:${normalizedBlockId}:${normalizedRevisionId}`,
         }),
       };
+    },
+
+    restoreBlockRevision(pathname, revisionId, blockId, options = {}) {
+      return this.restoreBlockFromRevision(pathname, revisionId, blockId, options);
     },
 
     acquireBlockLock(pathname, blockId, actor, { force = false } = {}) {
@@ -2416,6 +2528,10 @@ export function createDevContentAuthorityStore({
       }));
     },
 
+    createBackup(reason = 'manual-backup', metadata = {}) {
+      return createSharedContentBackup(reason, metadata);
+    },
+
     promoteCurrentStateToSeed({ actor } = {}) {
       try {
         createSharedContentBackup('before-promote-to-seed-baseline', {
@@ -2506,5 +2622,13 @@ export function createDevContentAuthorityStore({
         };
       }
     },
+
+    restoreBackup(backupFileName = '', options = {}) {
+      return this.restoreFromBackup(backupFileName, options);
+    },
   };
+}
+
+export function createDevContentAuthorityStore(options = {}) {
+  return createJsonContentStore(options);
 }

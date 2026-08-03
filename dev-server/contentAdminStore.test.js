@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createDevContentAuthorityStore } from './contentAdminStore';
+import { createDevContentAuthorityStore, createJsonContentStore } from './contentAdminStore';
 import {
   normalizeSplitLinkFieldSettings,
   parseLinkValueJson,
@@ -475,6 +475,27 @@ function createStore(persistenceFile, options = {}) {
   });
 }
 
+function createJsonStore(persistenceFile, options = {}) {
+  return createJsonContentStore({
+    persistenceFile,
+    now: (() => {
+      let tick = 1710000000000;
+      return () => {
+        tick += 1000;
+        return tick;
+      };
+    })(),
+    createId: (() => {
+      let seq = 0;
+      return (timestamp) => {
+        seq += 1;
+        return `${timestamp}-${seq}`;
+      };
+    })(),
+    ...options,
+  });
+}
+
 const tempDirs = [];
 
 afterEach(() => {
@@ -507,6 +528,151 @@ function readSeedBaselineFile(filePath) {
 }
 
 describe('createDevContentAuthorityStore', () => {
+  it('round-trips current shared and seed snapshots through the JSON adapter without rewriting valid JSON', () => {
+    const persistenceFile = makeTempFile();
+    const sharedSourceFile = path.resolve(process.cwd(), 'dev-data/content-admin-shared.json');
+    const seedSourceFile = path.resolve(process.cwd(), 'dev-data/content-admin-seed-baseline.json');
+    const sharedSourceText = fs.readFileSync(sharedSourceFile, 'utf8');
+    fs.writeFileSync(persistenceFile, sharedSourceText);
+
+    const store = createJsonStore(persistenceFile);
+    const currentValidation = store.validateSnapshot(store.readCurrentState(), {
+      label: 'current shared state',
+    });
+    const publishedValidation = store.validateSnapshot(store.readPublishedSnapshot(), {
+      label: 'published shared snapshot',
+    });
+    const seedRecord = readSeedBaselineFile(seedSourceFile);
+    const seedValidation = store.validateSnapshot(seedRecord.seedState, {
+      label: 'seed baseline state',
+    });
+    const currentSecondPass = store.validateSnapshot(JSON.parse(JSON.stringify(currentValidation.state)), {
+      label: 'current shared state second pass',
+    });
+    const publishedSecondPass = store.validateSnapshot(JSON.parse(JSON.stringify(publishedValidation.state)), {
+      label: 'published shared snapshot second pass',
+    });
+    const seedSecondPass = store.validateSnapshot(JSON.parse(JSON.stringify(seedValidation.state)), {
+      label: 'seed baseline state second pass',
+    });
+
+    expect(currentValidation.ok).toBe(true);
+    expect(currentValidation.findings).toEqual([]);
+    expect(publishedValidation.ok).toBe(true);
+    expect(publishedValidation.findings).toEqual([]);
+    expect(seedValidation.ok).toBe(true);
+    expect(seedValidation.findings).toEqual([]);
+    expect(JSON.stringify(currentSecondPass.state)).toBe(JSON.stringify(currentValidation.state));
+    expect(JSON.stringify(publishedSecondPass.state)).toBe(JSON.stringify(publishedValidation.state));
+    expect(JSON.stringify(seedSecondPass.state)).toBe(JSON.stringify(seedValidation.state));
+    expect(fs.readFileSync(persistenceFile, 'utf8')).toBe(sharedSourceText);
+  });
+
+  it('returns clear validation findings for malformed blocks', () => {
+    const persistenceFile = makeTempFile();
+    const store = createJsonStore(persistenceFile);
+
+    const validation = store.validateSnapshot({
+      pageHierarchy: {
+        '/broken': {
+          path: '/broken',
+          title: 'Broken',
+        },
+      },
+      blocksByPath: {
+        '/broken': [
+          {
+            kind: 'content',
+            mode: 'dynamic',
+            settings: {},
+          },
+          {
+            id: 'bad_settings',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: 'not an object',
+          },
+        ],
+      },
+      pathAliases: {},
+      collaborationByPath: {},
+    }, {
+      label: 'malformed adapter state',
+    });
+    const codes = validation.findings.map((finding) => finding.code);
+    const messages = validation.findings.map((finding) => finding.message).join('\n');
+
+    expect(validation.ok).toBe(false);
+    expect(codes).toContain('block-id-missing');
+    expect(codes).toContain('block-settings-not-object');
+    expect(messages).toContain('malformed adapter state.blocksByPath[/broken][0] is missing id.');
+    expect(messages).toContain('malformed adapter state.blocksByPath[/broken][1].settings must be an object.');
+  });
+
+  it('exposes database-ready adapter operations while preserving JSON persistence shape', () => {
+    const persistenceFile = makeTempFile();
+    const store = createJsonStore(persistenceFile);
+    const actor = createActor();
+
+    store.resetFromSeed(buildSeedState(), { actor });
+    const draftState = cloneJson(store.readCurrentState());
+    draftState.blocksByPath['/services/loans'][0].settings.line1Text = 'Adapter draft title';
+
+    const savedDraft = store.savePageDraft(draftState, { actor, summary: 'adapter draft' });
+    const persistedAfterDraft = readPersistedRecord(persistenceFile);
+
+    expect(savedDraft.ok).toBe(true);
+    expect(store.readCurrentState().blocksByPath['/services/loans'][0].settings.line1Text).toBe('Adapter draft title');
+    expect(store.readPublishedSnapshot().blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+    expect(persistedAfterDraft.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Adapter draft title');
+    expect(persistedAfterDraft.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+
+    const published = store.publishPath('/services/loans', { actor, summary: 'adapter publish' });
+    const persistedAfterPublish = readPersistedRecord(persistenceFile);
+
+    expect(published.ok).toBe(true);
+    expect(store.readPublishedSnapshot().blocksByPath['/services/loans'][0].settings.line1Text).toBe('Adapter draft title');
+    expect(persistedAfterPublish.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Adapter draft title');
+    expect(persistedAfterPublish.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Adapter draft title');
+    expect(Object.keys(persistedAfterPublish)).toEqual(expect.arrayContaining([
+      'initialized',
+      'version',
+      'updatedAt',
+      'announcementUpdatedAt',
+      'announcement',
+      'state',
+      'baseSnapshot',
+      'revisionsByPath',
+    ]));
+  });
+
+  it('lets the JSON adapter validate state snapshots and create restorable backups', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createJsonStore(persistenceFile, { backupDir });
+    const actor = createActor();
+
+    store.resetFromSeed(buildSeedState(), { actor });
+    const validation = store.validateSnapshot(store.readCurrentState(), {
+      label: 'adapter state',
+    });
+    const backup = store.createBackup('adapter-contract-test', {
+      source: 'json-adapter',
+    });
+    const draftState = cloneJson(store.readCurrentState());
+    draftState.blocksByPath['/services/loans'][0].settings.line1Text = 'Temporary draft after backup';
+    store.savePageDraft(draftState, { actor, summary: 'temporary draft' });
+
+    const restored = store.restoreBackup(backup.fileName, { actor });
+
+    expect(validation.ok).toBe(true);
+    expect(validation.findings).toEqual([]);
+    expect(backup.fileName).toMatch(/^content-admin-shared-\d{8}-\d{6}\.json$/);
+    expect(store.listBackups().map((entry) => entry.fileName)).toContain(backup.fileName);
+    expect(restored.ok).toBe(true);
+    expect(store.readCurrentState().blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+  });
+
   it('lets multiple clients resolve the same shared page state through one persisted store', () => {
     const persistenceFile = makeTempFile();
     const storeA = createStore(persistenceFile);
@@ -593,6 +759,8 @@ describe('createDevContentAuthorityStore', () => {
     const published = store.publishSeedRouteSlices(nextSeedState, ['/services/loans'], {
       actor: createActor(),
       summary: 'publish loans seed slice',
+      forceOverwriteAdminEdits: true,
+      reason: 'Apply reviewed seed route update',
     });
     const persisted = readPersistedRecord(persistenceFile);
 

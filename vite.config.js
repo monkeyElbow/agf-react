@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { createDevContentAuthorityStore } from './dev-server/contentAdminStore';
+import { createJsonContentStore } from './dev-server/jsonContentStore';
 import { createSharedDisclosuresStore } from './dev-server/disclosuresStore';
 
 function sendJson(res, statusCode, payload) {
@@ -32,7 +32,7 @@ function readRequestBody(req) {
 }
 
 function contentAdminDevPlugin() {
-  const store = createDevContentAuthorityStore({
+  const store = createJsonContentStore({
     persistenceFile: path.resolve(process.cwd(), 'dev-data/content-admin-shared.json'),
   });
   const disclosuresStore = createSharedDisclosuresStore({
@@ -63,7 +63,7 @@ function contentAdminDevPlugin() {
           if (req.method === 'GET' && url.pathname === '/revisions') {
             const pathname = url.searchParams.get('path') || '';
             sendJson(res, 200, {
-              revisions: store.getRevisionHistory(pathname),
+              revisions: store.listRevisions(pathname),
             });
             return;
           }
@@ -96,7 +96,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/save-draft') {
-            sendJson(res, 200, store.saveDraft(body.state, {
+            sendJson(res, 200, store.savePageDraft(body.state, {
               actor: body.actor,
               summary: body.summary,
             }));
@@ -131,7 +131,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/publish-page') {
-            const result = store.publishPage(body.pathname, {
+            const result = store.publishPath(body.pathname, {
               actor: body.actor,
               summary: body.summary,
             });
@@ -143,13 +143,16 @@ function contentAdminDevPlugin() {
             const result = store.publishSeedRouteSlices(body.seedState, body.pathnames, {
               actor: body.actor,
               summary: body.summary,
+              forceOverwriteAdminEdits: body.forceOverwriteAdminEdits === true,
+              reason: body.reason,
+              operation: body.operation || 'seed-to-active',
             });
             sendJson(res, result.ok ? 200 : 409, result);
             return;
           }
 
           if (url.pathname === '/blocks/sync-draft') {
-            const result = store.syncBlockDraft(body.pathname, body.blockId, body.block, {
+            const result = store.saveBlockDraft(body.pathname, body.blockId, body.block, {
               actor: body.actor,
             });
             sendJson(res, result.ok ? 200 : 409, result);
@@ -165,7 +168,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/restore-block-revision') {
-            const result = store.restoreBlockFromRevision(body.pathname, body.revisionId, body.blockId, {
+            const result = store.restoreBlockRevision(body.pathname, body.revisionId, body.blockId, {
               actor: body.actor,
             });
             sendJson(res, result.ok ? 200 : 404, result);
@@ -202,7 +205,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/restore-backup') {
-            const result = store.restoreFromBackup(body.backupFileName, {
+            const result = store.restoreBackup(body.backupFileName, {
               actor: body.actor,
             });
             sendJson(res, result?.ok === false ? (result?.error === 'backup-not-found' ? 404 : 500) : 200, result);
