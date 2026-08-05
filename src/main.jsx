@@ -3,7 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './styles.css';
 import { RatesProvider } from './context/RatesContext';
-import { bootstrapSharedContentAdminState, ContentAdminProvider } from './context/ContentAdminContext';
+import ContentAdminProvider from './context/FastContentAdminProvider';
 import { AnnouncementProvider } from './context/AnnouncementContext';
 import { ConsultantsProvider } from './context/ConsultantsContext';
 import { CareersJobsProvider } from './context/CareersJobsContext';
@@ -14,12 +14,10 @@ import { TestimonialsProvider } from './context/TestimonialsContext';
 import { DisclosuresProvider } from './context/DisclosuresContext';
 import { ChartsProvider } from './context/ChartsContext';
 
-async function renderApp() {
-  const initialContentAdminState = await bootstrapSharedContentAdminState();
-
+function renderApp() {
   createRoot(document.getElementById('root')).render(
     <AnnouncementProvider>
-      <ContentAdminProvider initialState={initialContentAdminState}>
+      <ContentAdminProvider>
         <ConsultantsProvider>
           <ConsultantResponsesProvider>
             <CareersJobsProvider>
@@ -46,4 +44,4 @@ async function renderApp() {
   );
 }
 
-void renderApp();
+renderApp();

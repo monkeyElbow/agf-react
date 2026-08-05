@@ -41,6 +41,7 @@ function SharedBlockHudAnchor({ hudAnchor }) {
   return (
     <FrontHudAnchorTag
       label={hudAnchor.label}
+      icon={hudAnchor.icon}
       isActive={hudAnchor.isActive}
       onClick={hudAnchor.onClick}
       style={hudAnchor.style}

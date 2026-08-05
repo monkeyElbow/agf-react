@@ -1,4 +1,6 @@
 const DEV_CONTENT_AUTHORITY_BASE = '/__dev/content-admin';
+const SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS = 5000;
+const SHARED_DRAFT_SAVE_TIMEOUT_MS = 20_000;
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -20,18 +22,46 @@ async function parseJsonResponse(response) {
 }
 
 async function sendJson(pathname, options = {}) {
-  const response = await fetch(`${DEV_CONTENT_AUTHORITY_BASE}${pathname}`, {
-    ...options,
+  const { timeoutMs = 0, ...requestOptions } = options;
+  const controller = timeoutMs > 0 && typeof AbortController === 'function'
+    ? new AbortController()
+    : null;
+  const timeoutId = controller
+    ? setTimeout(() => controller.abort(), timeoutMs)
+    : null;
+  try {
+    const response = await fetch(`${DEV_CONTENT_AUTHORITY_BASE}${pathname}`, {
+    ...requestOptions,
+    ...(controller ? { signal: controller.signal } : {}),
     headers: {
       'Content-Type': 'application/json',
-      ...(options.headers || {}),
+      ...(requestOptions.headers || {}),
     },
-  });
-  return parseJsonResponse(response);
+    });
+    return parseJsonResponse(response);
+  } catch (error) {
+    if (controller?.signal.aborted) {
+      const timeoutError = new Error('Content draft save timed out');
+      timeoutError.code = 'content-admin-request-timeout';
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 export async function fetchSharedContentSnapshot() {
-  return sendJson('/state', { method: 'GET' });
+  return sendJson('/state', {
+    method: 'GET',
+    timeoutMs: SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS,
+  });
+}
+
+export async function fetchSharedContentAuthorityMetadata() {
+  return sendJson('/metadata', { method: 'GET' });
 }
 
 export async function fetchSharedDisclosuresSnapshot() {
@@ -55,8 +85,32 @@ export async function initializeSharedContentFromSeed(seedState, actor = null) {
 export async function saveSharedPageDraft(nextState, actor = null, summary = '') {
   return sendJson('/save-draft', {
     method: 'POST',
+    timeoutMs: SHARED_DRAFT_SAVE_TIMEOUT_MS,
     body: JSON.stringify({
       state: cloneJson(nextState),
+      actor: cloneJson(actor),
+      summary: String(summary || ''),
+    }),
+  });
+}
+
+export async function discardSharedPageDraft(pathname, actor = null, summary = '') {
+  return sendJson('/discard-draft', {
+    method: 'POST',
+    body: JSON.stringify({
+      pathname: String(pathname || ''),
+      actor: cloneJson(actor),
+      summary: String(summary || ''),
+    }),
+  });
+}
+
+export async function discardSharedBlockDraft(pathname, blockId, actor = null, summary = '') {
+  return sendJson('/discard-block-draft', {
+    method: 'POST',
+    body: JSON.stringify({
+      pathname: String(pathname || ''),
+      blockId: String(blockId || ''),
       actor: cloneJson(actor),
       summary: String(summary || ''),
     }),
@@ -117,6 +171,30 @@ export async function publishSharedPage(pathname, actor = null, summary = '') {
       pathname,
       actor: cloneJson(actor),
       summary: String(summary || ''),
+    }),
+  });
+}
+
+export async function migrateSharedGenerosityFundSnapshot(defaultState, actor = null, reason = '') {
+  return sendJson('/migrate-generosity-fund-snapshot', {
+    method: 'POST',
+    body: JSON.stringify({
+      defaultState: cloneJson(defaultState),
+      actor: cloneJson(actor),
+      reason: String(reason || ''),
+    }),
+  });
+}
+
+export async function publishSharedBlock(pathname, blockId, actor = null, summary = '', expectedBlock = null) {
+  return sendJson('/publish-block', {
+    method: 'POST',
+    body: JSON.stringify({
+      pathname,
+      blockId,
+      actor: cloneJson(actor),
+      summary: String(summary || ''),
+      expectedBlock: cloneJson(expectedBlock),
     }),
   });
 }
@@ -195,6 +273,18 @@ export async function releaseSharedBlockLock(pathname, blockId, actor = null) {
       pathname,
       blockId,
       actor: cloneJson(actor),
+    }),
+  });
+}
+
+export async function releaseSharedBlockDraft(pathname, blockId, actor = null, options = {}) {
+  return sendJson('/blocks/release-draft', {
+    method: 'POST',
+    body: JSON.stringify({
+      pathname,
+      blockId,
+      actor: cloneJson(actor),
+      force: Boolean(options?.force),
     }),
   });
 }

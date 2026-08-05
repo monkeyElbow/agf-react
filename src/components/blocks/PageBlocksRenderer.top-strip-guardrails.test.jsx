@@ -6,8 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../../context/ContentAdminContext.jsx');
+vi.mock('../../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../../context/ContentAdminContextCore');
   return {
     ...actual,
     useContentAdmin: () => ({
@@ -58,7 +58,9 @@ describe('home top strip renderer guardrail', () => {
 
     const strip = document.querySelector('.home-native-strip.is-bg-grey.is-text-white');
     expect(strip).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Secure Login' }).getAttribute('href')).toBe('https://secure.agfinancial.org/');
+    const loginLink = screen.getByRole('link', { name: 'Secure Login' });
+    expect(loginLink.getAttribute('href')).toBe('https://secure.agfinancial.org/');
+    expect(loginLink.getAttribute('aria-label')).toBe('Secure Login');
     expect(screen.getByRole('link', { name: 'See rates' }).getAttribute('href')).toBe('/rates');
   });
 

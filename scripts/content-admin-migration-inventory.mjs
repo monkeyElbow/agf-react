@@ -30,8 +30,6 @@ const TARGET_BRIDGE_KEYS = new Set([
   'targetedDynamic',
 ]);
 
-const CTA_SLOT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
-
 const BLOCK_ONLY_PATHS = new Set([
   '/services/planned-giving/charitable-gift-annuities',
   '/services/planned-giving/charitable-trusts',
@@ -54,7 +52,6 @@ const SOURCE_FILES = Object.freeze({
   normalization: 'src/lib/contentAdminNormalization.js',
   links: 'src/lib/linkValue.js',
   forms: 'src/blocks/foundation/forms.js',
-  cga: 'src/lib/cgaContentMigrations.js',
 });
 
 function finding(adapter, descriptor, layer, location, detail) {
@@ -204,83 +201,6 @@ function detectGenerosityRefresh({ adapter, descriptor, record }) {
   return detectRetiredPathReferences({ adapter, descriptor, record });
 }
 
-function detectRetirement403bRepair({ adapter, descriptor, record }) {
-  const findings = [];
-  const predicate = ({ pathname, block }) => (
-    RETIREMENT_403B_PATHS.has(pathname)
-    && (
-      block?.id === 'strategy_enroll_cta'
-      || block?.id === 'page_content'
-      || block?.kind === 'page_content'
-      || (block?.id === 'investment_strategy_options' && block?.kind === 'card_grid')
-    )
-  );
-  stateRoots(record, descriptor).forEach(({ layer, state }) => {
-    detectAcrossBlocks(adapter, descriptor, layer, state, predicate)
-      .forEach((entry) => findings.push({ ...entry, detail: 'retired 403(b) block shape' }));
-  });
-  findings.push(...detectAcrossRevisions(adapter, { ...descriptor, record }, predicate));
-  return findings;
-}
-
-function detectPlannedGivingComparison({ adapter, descriptor, record }) {
-  const predicate = ({ pathname, block }) => {
-    if (pathname !== '/services/planned-giving') {
-      return false;
-    }
-    const settings = block?.settings || {};
-    return block?.id === 'comparison_matrix'
-      || settings.widget === 'charitable-giving-table'
-      || String(settings.sectionClassName || '').split(/\s+/).includes('legacy-giving-comparison-matrix')
-      || (block?.id === 'comparison_table' && (settings.tableHeadersJson || settings.tableRowsJson));
-  };
-  return stateRoots(record, descriptor).flatMap(({ layer, state }) => (
-    detectAcrossBlocks(adapter, descriptor, layer, state, predicate)
-  )).concat(detectAcrossRevisions(adapter, { ...descriptor, record }, predicate));
-}
-
-function detectIraShape({ adapter, descriptor, record }) {
-  const predicate = ({ pathname, block }) => {
-    if (pathname !== '/services/retirement/iras') {
-      return false;
-    }
-    const settings = block?.settings || {};
-    const headers = Array.isArray(settings.tableHeadersJson) ? settings.tableHeadersJson : [];
-    return headers.join('|') === 'Key difference|Traditional IRA|Roth IRA'
-      || (block?.id === 'daily_billboard' && settings.justify === 'right');
-  };
-  return stateRoots(record, descriptor).flatMap(({ layer, state }) => (
-    detectAcrossBlocks(adapter, descriptor, layer, state, predicate)
-  )).concat(detectAcrossRevisions(adapter, { ...descriptor, record }, predicate));
-}
-
-function detectLoansUpgrade({ adapter, descriptor, record }) {
-  const retiredIds = new Set(['request_form', 'value_cards', 'vision_fuel', 'cta_form', 'testimonials']);
-  const predicate = ({ pathname, block }) => (
-    pathname === '/services/loans'
-    && retiredIds.has(String(block?.id || '').trim())
-    && String(block?.mode || '').trim().toLowerCase() !== 'dynamic'
-  );
-  return stateRoots(record, descriptor).flatMap(({ layer, state }) => (
-    detectAcrossBlocks(adapter, descriptor, layer, state, predicate)
-  )).concat(detectAcrossRevisions(adapter, { ...descriptor, record }, predicate));
-}
-
-function detectPropertyCasualtyRepair({ adapter, descriptor, record }) {
-  const predicate = ({ pathname, block }) => {
-    if (pathname !== '/services/insurance/property-casualty-insurance') {
-      return false;
-    }
-    const text = JSON.stringify(block?.settings || {});
-    return text.includes('Property & Casualty Insurance Quote')
-      || text.includes('Share a few details and we’ll help you explore broader coverage')
-      || text.includes('Go to next step');
-  };
-  return stateRoots(record, descriptor).flatMap(({ layer, state }) => (
-    detectAcrossBlocks(adapter, descriptor, layer, state, predicate)
-  )).concat(detectAcrossRevisions(adapter, { ...descriptor, record }, predicate));
-}
-
 function detectSplitLinkCompatibility({ adapter, descriptor, record }) {
   const predicate = ({ block }) => {
     const keys = Object.keys(block?.settings || {});
@@ -290,31 +210,6 @@ function detectSplitLinkCompatibility({ adapter, descriptor, record }) {
         && keys.includes(`${key.slice(0, -'OpenInNewWindow'.length)}PageRef`)
       ));
   };
-  return stateRoots(record, descriptor).flatMap(({ layer, state }) => (
-    detectAcrossBlocks(adapter, descriptor, layer, state, predicate)
-  )).concat(detectAcrossRevisions(adapter, { ...descriptor, record }, predicate));
-}
-
-function detectCtaSlotCompatibility({ adapter, descriptor, record }) {
-  const predicate = ({ block }) => (
-    block?.kind === 'cta_form'
-    && (
-      Object.keys(block?.settings || {}).some((key) => CTA_SLOT_FIELD_PATTERN.test(key))
-      || (Array.isArray(block?.editableFields) && block.editableFields.some((field) => CTA_SLOT_FIELD_PATTERN.test(String(field?.id || ''))))
-    )
-  );
-  return stateRoots(record, descriptor).flatMap(({ layer, state }) => (
-    detectAcrossBlocks(adapter, descriptor, layer, state, predicate)
-  )).concat(detectAcrossRevisions(adapter, { ...descriptor, record }, predicate));
-}
-
-function detectCgaCompatibility({ adapter, descriptor, record }) {
-  const predicate = ({ pathname, block }) => (
-    pathname === '/services/planned-giving/charitable-gift-annuities'
-    && block?.id === 'qcd'
-    && typeof block?.settings?.html === 'string'
-    && block.settings.html.includes('SECURE 2.0')
-  );
   return stateRoots(record, descriptor).flatMap(({ layer, state }) => (
     detectAcrossBlocks(adapter, descriptor, layer, state, predicate)
   )).concat(detectAcrossRevisions(adapter, { ...descriptor, record }, predicate));
@@ -365,69 +260,67 @@ const RETIREMENT_ADAPTERS = Object.freeze([
   {
     id: 'retirement-403b-snapshot-repairs',
     category: 'snapshot-migration',
-    status: 'active',
+    status: 'retired',
     paths: Object.freeze([...RETIREMENT_403B_PATHS]),
-    helpers: Object.freeze(['normalizeRetirement403bBlockSet', 'isRetiredRetirement403bCta']),
+    helpers: Object.freeze([]),
     sourceFiles: Object.freeze([SOURCE_FILES.context]),
-    sourceSymbols: Object.freeze(['normalizeRetirement403bBlockSet', 'isRetiredRetirement403bCta']),
-    detect: detectRetirement403bRepair,
-    retireWhen: (report) => report.totalFindings === 0,
-    retireWhenDescription: '403(b) and rollover snapshots are versioned past the repair and old backups are archived outside active restore flows.',
+    sourceSymbols: Object.freeze([]),
+    detect: () => [],
+    retireWhen: () => true,
+    retireWhenDescription: 'Retired after the final zero-finding scan and current-schema restore proof; receipt: docs/content-admin-adapter-retirements/retirement-403b-snapshot-repairs.json.',
+    retirementReceipt: 'docs/content-admin-adapter-retirements/retirement-403b-snapshot-repairs.json',
   },
   {
     id: 'planned-giving-retired-static-comparison',
     category: 'snapshot-migration',
-    status: 'active',
+    status: 'retired',
     paths: Object.freeze(['/services/planned-giving']),
-    helpers: Object.freeze(['normalizePlannedGivingOverviewBlockSet', 'normalizeRetiredBlockCollaborationEntry']),
-    sourceFiles: Object.freeze([SOURCE_FILES.context, SOURCE_FILES.store]),
-    sourceSymbols: Object.freeze(['normalizePlannedGivingOverviewBlockSet']),
-    sourceRefs: Object.freeze([
-      { file: SOURCE_FILES.context, symbols: Object.freeze(['normalizePlannedGivingOverviewBlockSet', 'normalizeRetiredBlockCollaborationEntry']) },
-    ]),
-    detect: detectPlannedGivingComparison,
-    retireWhen: (report) => report.totalFindings === 0,
-    retireWhenDescription: 'No planned-giving active, seed, revision, or backup snapshot contains the retired static comparison table.',
+    helpers: Object.freeze([]),
+    sourceFiles: Object.freeze([]),
+    sourceSymbols: Object.freeze([]),
+    detect: () => [],
+    retireWhen: () => true,
+    retireWhenDescription: 'Retired after the final zero-finding scan; receipt: docs/content-admin-adapter-retirements/planned-giving-retired-static-comparison.json.',
+    retirementReceipt: 'docs/content-admin-adapter-retirements/planned-giving-retired-static-comparison.json',
   },
   {
     id: 'retirement-ira-block-shape',
     category: 'snapshot-migration',
-    status: 'active',
+    status: 'retired',
     paths: Object.freeze(['/services/retirement/iras']),
-    helpers: Object.freeze(['normalizeRetirementIraComparisonTableSettings', 'normalizeRetirementIraBlockSet']),
-    sourceFiles: Object.freeze([SOURCE_FILES.context, SOURCE_FILES.store]),
-    sourceSymbols: Object.freeze(['normalizeRetirementIraComparisonTableSettings']),
-    sourceRefs: Object.freeze([
-      { file: SOURCE_FILES.context, symbols: Object.freeze(['normalizeRetirementIraComparisonTableSettings', 'normalizeRetirementIraBlockSet']) },
-      { file: SOURCE_FILES.store, symbols: Object.freeze(['normalizeRetirementIraComparisonTableSettings']) },
-    ]),
-    detect: detectIraShape,
-    retireWhen: (report) => report.totalFindings === 0,
-    retireWhenDescription: 'IRA snapshots no longer contain the old comparison-table shape or right-aligned daily billboard contract.',
+    helpers: Object.freeze([]),
+    sourceFiles: Object.freeze([]),
+    sourceSymbols: Object.freeze([]),
+    detect: () => [],
+    retireWhen: () => true,
+    retireWhenDescription: 'Retired after the final zero-finding scan; receipt: docs/content-admin-adapter-retirements/retirement-ira-block-shape.json.',
+    retirementReceipt: 'docs/content-admin-adapter-retirements/retirement-ira-block-shape.json',
   },
   {
     id: 'loans-dynamic-block-upgrade',
     category: 'snapshot-migration',
-    status: 'active',
+    status: 'retired',
     paths: Object.freeze(['/services/loans']),
-    helpers: Object.freeze(['LOANS_RETIRED_DYNAMIC_BLOCK_IDS', 'shouldUpgradeRetiredLoansDynamicBlock']),
+    helpers: Object.freeze([]),
     sourceFiles: Object.freeze([SOURCE_FILES.context]),
-    sourceSymbols: Object.freeze(['LOANS_RETIRED_DYNAMIC_BLOCK_IDS', 'shouldUpgradeRetiredLoansDynamicBlock']),
-    detect: detectLoansUpgrade,
-    retireWhen: (report) => report.totalFindings === 0,
-    retireWhenDescription: 'Loan snapshots no longer contain pre-dynamic block records.',
+    sourceSymbols: Object.freeze([]),
+    detect: () => [],
+    retireWhen: () => true,
+    retireWhenDescription: 'Retired after the final zero-finding scan; receipt: docs/content-admin-adapter-retirements/loans-dynamic-block-upgrade.json.',
+    retirementReceipt: 'docs/content-admin-adapter-retirements/loans-dynamic-block-upgrade.json',
   },
   {
     id: 'property-casualty-request-repair',
     category: 'snapshot-migration',
-    status: 'active',
+    status: 'retired',
     paths: Object.freeze(['/services/insurance/property-casualty-insurance']),
-    helpers: Object.freeze(['shouldQuarantinePropertyCasualtyRequestContent']),
+    helpers: Object.freeze([]),
     sourceFiles: Object.freeze([SOURCE_FILES.context]),
-    sourceSymbols: Object.freeze(['shouldQuarantinePropertyCasualtyRequestContent']),
-    detect: detectPropertyCasualtyRepair,
-    retireWhen: (report) => report.totalFindings === 0,
-    retireWhenDescription: 'Property/casualty request-form snapshots are versioned and old backups are archived outside active restore flows.',
+    sourceSymbols: Object.freeze([]),
+    detect: () => [],
+    retireWhen: () => true,
+    retireWhenDescription: 'Retired after the final zero-finding scan; receipt: docs/content-admin-adapter-retirements/property-casualty-request-repair.json.',
+    retirementReceipt: 'docs/content-admin-adapter-retirements/property-casualty-request-repair.json',
   },
   {
     id: 'target-bridge-snapshot-cleanup',
@@ -460,31 +353,28 @@ const RETIREMENT_ADAPTERS = Object.freeze([
   {
     id: 'cta-form-slot-compatibility',
     category: 'compatibility-boundary',
-    status: 'active',
+    status: 'retired',
     paths: Object.freeze(['all cta_form blocks']),
-    helpers: Object.freeze(['buildCtaFormSlotFields', 'stripCtaFormSlotFieldSettings']),
-    sourceFiles: Object.freeze([SOURCE_FILES.normalization, SOURCE_FILES.forms]),
-    sourceSymbols: Object.freeze(['buildCtaFormSlotFields', 'stripCtaFormSlotFieldSettings']),
-    detect: detectCtaSlotCompatibility,
-    retireWhen: (report) => report.totalFindings === 0,
-    retireWhenDescription: 'No persisted CTA form settings or editable fields use legacy slot fields.',
+    helpers: Object.freeze([]),
+    sourceFiles: Object.freeze([SOURCE_FILES.context, SOURCE_FILES.normalization, SOURCE_FILES.forms]),
+    sourceSymbols: Object.freeze([]),
+    detect: () => [],
+    retireWhen: () => true,
+    retireWhenDescription: 'Retired after the final zero-finding scan; receipt: docs/content-admin-adapter-retirements/cta-form-slot-compatibility.json.',
+    retirementReceipt: 'docs/content-admin-adapter-retirements/cta-form-slot-compatibility.json',
   },
   {
     id: 'cga-secure-act-content-compatibility',
     category: 'content-migration',
-    status: 'active',
+    status: 'retired',
     paths: Object.freeze(['/services/planned-giving/charitable-gift-annuities']),
-    helpers: Object.freeze(['normalizeCgaSecureActBlocks']),
-    sourceFiles: Object.freeze([SOURCE_FILES.context, SOURCE_FILES.store, SOURCE_FILES.cga]),
-    sourceSymbols: Object.freeze(['normalizeCgaSecureActBlocks']),
-    sourceRefs: Object.freeze([
-      { file: SOURCE_FILES.context, symbols: Object.freeze(['normalizeCgaSecureActBlocks']) },
-      { file: SOURCE_FILES.store, symbols: Object.freeze(['normalizeCgaSecureActBlocks']) },
-      { file: SOURCE_FILES.cga, symbols: Object.freeze(['normalizeCgaSecureActBlocks']) },
-    ]),
-    detect: detectCgaCompatibility,
-    retireWhen: (report) => report.totalFindings === 0,
-    retireWhenDescription: 'CGA content is on the canonical block schema and no legacy secure-act compatibility shape remains in restorable snapshots.',
+    helpers: Object.freeze([]),
+    sourceFiles: Object.freeze([]),
+    sourceSymbols: Object.freeze([]),
+    detect: () => [],
+    retireWhen: () => true,
+    retireWhenDescription: 'Retired after the final zero-finding scan; receipt: docs/content-admin-adapter-retirements/cga-secure-act-content-compatibility.json.',
+    retirementReceipt: 'docs/content-admin-adapter-retirements/cga-secure-act-content-compatibility.json',
   },
 ]);
 

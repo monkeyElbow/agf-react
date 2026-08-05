@@ -34,12 +34,7 @@ describe('admin block insert choices', () => {
       createTemplateId: 'dynamic:columns:value-cards',
       isCompatibility: false,
     });
-    expect(choices.find((choice) => choice.kind === 'site_feature' && choice.createTemplateId === 'site_feature')).toMatchObject({
-      name: 'Site Feature · Editorial spotlight',
-      createTemplateId: 'site_feature',
-      description: 'Code-managed editorial placeholder for future art-directed storytelling moments.',
-      isCompatibility: false,
-    });
+    expect(choices.some((choice) => choice.kind === 'site_feature')).toBe(false);
     expect(choices.find((choice) => choice.kind === 'cta_band' && choice.presetId === 'default')).toMatchObject({
       name: 'CTA Band · General CTA',
       createTemplateId: 'dynamic:cta_band:default',
@@ -78,5 +73,29 @@ describe('admin block insert choices', () => {
 
     expect(templates.some((template) => template?.mode === 'static')).toBe(false);
     expect(templates.some((template) => template?.templateId === 'rates_table')).toBe(false);
+  });
+
+  it('keeps internal, hidden, and migration-only kinds out of the catalog', () => {
+    const choices = buildAdminBlockInsertChoices(getAllBlockTemplateBlueprints(), { mode: 'dynamic' });
+
+    expect(choices.some((choice) => ['hero', 'hero_pie', 'rates', 'top_strip', 'content'].includes(choice.kind))).toBe(false);
+    choices.forEach((choice) => {
+      expect(['standard', 'contextual']).toContain(choice.catalog?.catalogVisibility);
+    });
+  });
+
+  it('limits contextual forms to compatible page families', () => {
+    const templates = getAllBlockTemplateBlueprints();
+    const loansChoices = buildAdminBlockInsertChoices(templates, {
+      mode: 'dynamic',
+      pathname: '/services/loans',
+    });
+    const aboutChoices = buildAdminBlockInsertChoices(templates, {
+      mode: 'dynamic',
+      pathname: '/about-us',
+    });
+
+    expect(loansChoices.some((choice) => choice.kind === 'request_form')).toBe(true);
+    expect(aboutChoices.some((choice) => choice.kind === 'request_form')).toBe(false);
   });
 });

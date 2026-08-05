@@ -1,0 +1,39 @@
+{
+  "receiptVersion": 1,
+  "adapterId": "cga-secure-act-content-compatibility",
+  "status": "retired",
+  "retirementBasis": "The current charitable gift annuity blueprint already stores the SECURE Act disclosure as its own canonical block; all active, published, seed, retained backup, and revision records had zero legacy combined-copy findings.",
+  "removedBehavior": {
+    "sources": [
+      "src/context/ContentAdminContext.jsx",
+      "dev-server/contentAdminStore.js",
+      "src/lib/cgaContentMigrations.js"
+    ],
+    "productionCallSitesRemoved": 1,
+    "detector": "scripts/content-admin-migration-inventory.mjs"
+  },
+  "preservedBehavior": [
+    "Canonical qcd_fineprint and secure_act block rendering",
+    "Current CGA admin editing and persistence",
+    "Current CGA blueprint content and ordering",
+    "Snapshot diagnostics for unsupported historical records"
+  ],
+  "finalScan": {
+    "commands": [
+      "npm run scan:migration-inventory -- --include-backups",
+      "npm run scan:content-admin-snapshots:backups",
+      "npm run scan:content-admin-storage"
+    ],
+    "requiredTotalFindings": 0,
+    "migrationFindings": 0,
+    "backupInclusiveSnapshotFindings": 0,
+    "activePublishedSeedFindings": 0,
+    "retainedRecoveryBackups": 14,
+    "retainedRevisions": 165,
+    "restoreProof": "pending post-change validation"
+  },
+  "runtimeCallSiteDisposition": "The canonical separated blocks remain supported; the legacy combined-copy load rewrite is no longer supported.",
+  "storedContentMutation": false,
+  "adapterRemovalCommit": null,
+  "notes": "No stored content was changed. Historical unsupported combined-copy records are not silently repaired during ordinary load/save."
+}

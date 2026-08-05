@@ -89,12 +89,11 @@ describe('custom page front HUD coverage audit', () => {
     });
   });
 
-  it('keeps the Home workflow bar mounted only behind the front HUD toggle', () => {
+  it('keeps the Home workflow bar mounted for an animated HUD exit', () => {
     const homeSource = readPageSource('./HomePage.jsx');
 
     expect(homeSource).toContain('const showFrontHud = frontHudEnabled && hudPanels.length > 0;');
-    expect(homeSource).toContain('{showFrontHud ? (');
-    expect(homeSource).toContain('<FrontHudPageWorkflow pathname="/" reviewHref="/admin/content?page=%2F" placement="bar" />');
+    expect(homeSource).toContain('<FrontHudPageWorkflow pathname="/" reviewHref="/admin/content?page=%2F" placement="bar" isVisible={showFrontHud} />');
   });
 
   it('keeps Home hero selection capture on a no-op guard so repeated key interactions do not churn page state', () => {

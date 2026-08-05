@@ -646,6 +646,31 @@ describe('createDevContentAuthorityStore', () => {
     ]));
   });
 
+  it('keeps draft, published, and seed layers distinct until explicit promotion', () => {
+    const persistenceFile = makeTempFile();
+    const seedBaselineFile = path.join(path.dirname(persistenceFile), 'content-admin-seed-baseline.json');
+    const seedState = buildSeedState();
+    fs.writeFileSync(seedBaselineFile, JSON.stringify({ seedState }, null, 2));
+    const store = createStore(persistenceFile, { seedBaselineFile });
+    const actor = createActor();
+
+    store.resetFromSeed(seedState, { actor });
+    const draftState = cloneJson(store.readCurrentState());
+    draftState.blocksByPath['/services/loans'][0].settings.line1Text = 'Lifecycle draft';
+    store.savePageDraft(draftState, { actor, summary: 'lifecycle draft' });
+
+    expect(store.readCurrentState().blocksByPath['/services/loans'][0].settings.line1Text).toBe('Lifecycle draft');
+    expect(store.readPublishedSnapshot().blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+    expect(readSeedBaselineFile(seedBaselineFile).seedState.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+
+    store.publishPath('/services/loans', { actor, summary: 'lifecycle publish' });
+    expect(store.readPublishedSnapshot().blocksByPath['/services/loans'][0].settings.line1Text).toBe('Lifecycle draft');
+    expect(readSeedBaselineFile(seedBaselineFile).seedState.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+
+    store.promoteCurrentStateToSeed({ actor });
+    expect(readSeedBaselineFile(seedBaselineFile).seedState.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Lifecycle draft');
+  });
+
   it('lets the JSON adapter validate state snapshots and create restorable backups', () => {
     const persistenceFile = makeTempFile();
     const backupDir = path.join(path.dirname(persistenceFile), 'backups');
@@ -686,6 +711,32 @@ describe('createDevContentAuthorityStore', () => {
 
     const storeB = createStore(persistenceFile);
     expect(storeB.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Shared draft title');
+  });
+
+  it('refreshes an already-running client when another client persists a newer snapshot', () => {
+    const persistenceFile = makeTempFile();
+    const writer = createStore(persistenceFile);
+    writer.resetFromSeed(buildSeedState(), { actor: createActor() });
+    const reader = createStore(persistenceFile);
+    const nextState = cloneJson(writer.readCurrentState());
+    nextState.blocksByPath['/services/loans'][0].settings.line1Text = 'External draft visible';
+
+    writer.saveDraft(nextState, { actor: createActor(), summary: 'external draft' });
+
+    expect(reader.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('External draft visible');
+  });
+
+  it('exposes authority metadata for stale-store diagnosis', () => {
+    const persistenceFile = makeTempFile();
+    const store = createJsonStore(persistenceFile);
+    const metadata = store.getSnapshot().authority;
+
+    expect(metadata.persistenceFile).toBe(path.resolve(persistenceFile));
+    expect(metadata.persistenceMtimeMs === null || Number(metadata.persistenceMtimeMs) > 0).toBe(true);
+    expect(Number(metadata.loadedAt)).toBeGreaterThan(0);
+    expect(metadata.recordRevision).toBe(0);
+    expect(metadata.draftRevision).toBe(0);
+    expect(metadata.publishedRevision).toMatch(/^[a-f0-9]{12}$/);
   });
 
   it('publishes seed route slices without touching unrelated drafts', () => {
@@ -798,41 +849,6 @@ describe('createDevContentAuthorityStore', () => {
     expect(afterPublish).toBe(beforePublish);
   });
 
-  it('persists canonical CTA fieldsJson when incoming state only has slot fields', () => {
-    const persistenceFile = makeTempFile();
-    const store = createStore(persistenceFile);
-
-    store.resetFromSeed(buildSeedState(), { actor: createActor() });
-    const nextState = buildSeedState();
-    nextState.blocksByPath['/services/loans'][1].settings = {
-      title: 'Slot-only CTA',
-      fieldsJson: '',
-      field1Enabled: true,
-      field1Type: 'text',
-      field1Label: 'Full name',
-      field1Placeholder: '',
-      field1Options: '',
-      field1Required: true,
-      field2Enabled: true,
-      field2Type: 'email',
-      field2Label: 'Email',
-      field2Placeholder: '',
-      field2Options: '',
-      field2Required: true,
-    };
-
-    const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'slot-only cta' });
-    const persistedCta = readPersistedRecord(persistenceFile).state.blocksByPath['/services/loans'][1];
-    const fields = JSON.parse(persistedCta.settings.fieldsJson);
-
-    expect(saved.ok).toBe(true);
-    expect(fields).toEqual([
-      expect.objectContaining({ id: 'field1', label: 'Full name', type: 'text', required: true }),
-      expect.objectContaining({ id: 'field2', label: 'Email', type: 'email', required: true }),
-    ]);
-    expect(Object.keys(persistedCta.settings).filter((key) => /^field[1-5]/.test(key))).toEqual([]);
-  });
-
   it('normalizes split link targets before saving shared snapshots', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);
@@ -914,6 +930,24 @@ describe('createDevContentAuthorityStore', () => {
     expect(revision.snapshot.collaboration.blocks.cta_form?.draftedBy?.displayName).toBe('Taylor QA');
     expect(revision.snapshot.collaboration.history[0]?.action).toBe('block-draft-saved');
     expect(revision.snapshot.pathAliases).toEqual({});
+  });
+
+  it('keeps revision history in cold route files when configured', () => {
+    const persistenceFile = makeTempFile();
+    const revisionDirectory = path.join(path.dirname(persistenceFile), 'revisions');
+    const store = createJsonStore(persistenceFile, { revisionDirectory });
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'][1].settings.title = 'Updated CTA';
+    store.saveDraft(nextState, { actor: createActor(), summary: 'cold history' });
+
+    const hotRecord = readPersistedRecord(persistenceFile);
+    expect(hotRecord.revisionsByPath).toBeUndefined();
+    expect(fs.readdirSync(revisionDirectory)).toContain(`${encodeURIComponent('/services/loans')}.json`);
+
+    const reloaded = createJsonStore(persistenceFile, { revisionDirectory });
+    expect(reloaded.getRevisionHistory('/services/loans')[0].summary).toBe('cold history');
   });
 
   it('clears stale foreign draft ownership when stored blocks match the base snapshot', () => {
@@ -998,6 +1032,42 @@ describe('createDevContentAuthorityStore', () => {
     expect(history).toHaveLength(1);
     expect(history[0].summary).toBe('legacy revision');
     expect(history[0].blocks.map((block) => block.id)).toEqual(['hero', 'cta_form']);
+  });
+
+  it('keeps ordinary startup and reads non-mutating when legacy revision migration is pending', () => {
+    const persistenceFile = makeTempFile();
+    const revisionDirectory = path.join(path.dirname(persistenceFile), 'revisions');
+    const legacyState = buildSeedState();
+    const legacyRecord = {
+      initialized: true,
+      version: 1,
+      updatedAt: 1710000005000,
+      state: buildSeedState(),
+      baseSnapshot: buildSeedState(),
+      revisionsByPath: {
+        '/services/loans': [{
+          id: '1710000005000-legacy',
+          pathname: '/services/loans',
+          createdAt: 1710000005000,
+          actor: createActor(),
+          reason: 'draft-saved',
+          summary: 'legacy revision',
+          snapshot: {
+            pathname: '/services/loans',
+            state: legacyState,
+          },
+        }],
+      },
+    };
+    fs.writeFileSync(persistenceFile, `${JSON.stringify(legacyRecord, null, 2)}\n`);
+    const before = fs.readFileSync(persistenceFile);
+
+    const store = createJsonStore(persistenceFile, { revisionDirectory });
+
+    expect(fs.readFileSync(persistenceFile)).toEqual(before);
+    expect(fs.existsSync(revisionDirectory)).toBe(false);
+    expect(store.getRevisionHistory('/services/loans')[0].summary).toBe('legacy revision');
+    expect(fs.readFileSync(persistenceFile)).toEqual(before);
   });
 
   it('restores page revision block arrays without resurrecting missing current seed blocks', () => {
@@ -1139,20 +1209,21 @@ describe('createDevContentAuthorityStore', () => {
     const activeLoanDetails = activeBlocks.find((block) => block.id === 'loan_details');
 
     expect(activeBlocks.some((block) => block.id === 'strategy_enroll_cta')).toBe(true);
-    expect(activeBlocks.some((block) => block.id === 'page_content')).toBe(false);
+    expect(activeBlocks.some((block) => block.id === 'page_content')).toBe(true);
     expect(activeLoanDetails.settings.title).toBe("Retired Ministers' Housing Allowance");
     expect(activeLoanDetails.settings.body).toContain('The unique benefit, which gives ministers');
     expect(activeLoanDetails.settings.anchorId).toBe('retired-ministers-housing-allowance');
     expect(activeBlocks.find((block) => block.id === 'housing_feature')?.settings.col2Title).toBe("Retired Ministers' Housing Allowance");
     expect(activeBlocks.find((block) => block.id === 'housing_feature')?.settings.col2BodyHtml).toContain('ret403b-housing-feature-bullet-intro');
     expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.strategy_enroll_cta).toBeTruthy();
-    expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.page_content).toBeUndefined();
-    expect(store.getSnapshot().state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['strategy_enroll_cta']);
+    expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.page_content).toBeTruthy();
+    expect(store.getSnapshot().state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['strategy_enroll_cta', 'page_content']);
 
     const history = store.getRevisionHistory(pathname);
     expect(history[0].blocks.map((block) => block.id)).toEqual([
       'investment_strategy_options',
       'strategy_enroll_cta',
+      'page_content',
       'loan_details',
       'housing_feature',
     ]);
@@ -1163,15 +1234,15 @@ describe('createDevContentAuthorityStore', () => {
 
     expect(restored.ok).toBe(true);
     expect(restoredBlocks.some((block) => block.id === 'strategy_enroll_cta')).toBe(true);
-    expect(restoredBlocks.some((block) => block.id === 'page_content')).toBe(false);
+    expect(restoredBlocks.some((block) => block.id === 'page_content')).toBe(true);
     expect(restoredLoanDetails.settings.title).toBe("Retired Ministers' Housing Allowance");
     expectLinkJson(restoredLoanDetails.settings, 'buttonLinkJson', {
       kind: 'internal',
       to: '/calculators',
     });
     expect(restored.state.collaborationByPath[pathname].blocks.strategy_enroll_cta).toBeTruthy();
-    expect(restored.state.collaborationByPath[pathname].blocks.page_content).toBeUndefined();
-    expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['strategy_enroll_cta']);
+    expect(restored.state.collaborationByPath[pathname].blocks.page_content).toBeTruthy();
+    expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['strategy_enroll_cta', 'page_content']);
   });
 
   it('leaves clean 403(b) snapshots structurally unchanged without RMHA runtime rescue branches', () => {
@@ -1219,7 +1290,7 @@ describe('createDevContentAuthorityStore', () => {
     expect(history[0].blocks.map((block) => block.id)).toEqual(cleanState.blocksByPath[pathname].map((block) => block.id));
   });
 
-  it('sanitizes the retired planned giving static comparison matrix from persisted snapshots and revision restores', () => {
+  it('preserves unsupported planned giving comparison shapes during load and revision restore', () => {
     const persistenceFile = makeTempFile();
     const ghostState = buildPlannedGivingStateWithRetiredComparisonMatrix();
     const pathname = '/services/planned-giving';
@@ -1254,32 +1325,29 @@ describe('createDevContentAuthorityStore', () => {
     const store = createStore(persistenceFile);
     const activeBlocks = store.getSnapshot().state.blocksByPath[pathname];
 
-    expect(activeBlocks.map((block) => block.id)).toEqual(['comparison_table']);
-    expect(activeBlocks.some((block) => block.settings?.widget === 'charitable-giving-table')).toBe(false);
+    expect(activeBlocks.map((block) => block.id)).toEqual(['comparison_table', 'comparison_matrix']);
+    expect(activeBlocks.some((block) => block.settings?.widget === 'charitable-giving-table')).toBe(true);
     expect(activeBlocks.find((block) => block.id === 'comparison_table')?.settings).toMatchObject({
-      title: '',
-      widget: 'giving-comparison-matrix',
+      widget: 'charitable-giving-table',
       anchorId: 'charitable-giving-plan-comparison',
       sectionClassName: 'legacy-giving-comparison',
-      tableHeadersJson: '',
-      tableRowsJson: '',
     });
-    expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.comparison_matrix).toBeUndefined();
+    expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.comparison_matrix).toBeTruthy();
     expect(store.getSnapshot().state.collaborationByPath[pathname].blocks.comparison_table).toBeTruthy();
-    expect(store.getSnapshot().state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['comparison_table']);
+    expect(store.getSnapshot().state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['comparison_matrix', 'comparison_table']);
 
     const history = store.getRevisionHistory(pathname);
-    expect(history[0].blocks.map((block) => block.id)).toEqual(['comparison_table']);
+    expect(history[0].blocks.map((block) => block.id)).toEqual(['comparison_table', 'comparison_matrix']);
 
     const restored = store.restorePageRevision(pathname, '1710000005000-comparison', { actor: createActor() });
     const restoredBlocks = restored.state.blocksByPath[pathname];
 
     expect(restored.ok).toBe(true);
-    expect(restoredBlocks.map((block) => block.id)).toEqual(['comparison_table']);
-    expect(restoredBlocks.find((block) => block.id === 'comparison_table')?.settings?.widget).toBe('giving-comparison-matrix');
-    expect(restored.state.collaborationByPath[pathname].blocks.comparison_matrix).toBeUndefined();
+    expect(restoredBlocks.map((block) => block.id)).toEqual(['comparison_table', 'comparison_matrix']);
+    expect(restoredBlocks.find((block) => block.id === 'comparison_table')?.settings?.widget).toBe('charitable-giving-table');
+    expect(restored.state.collaborationByPath[pathname].blocks.comparison_matrix).toBeTruthy();
     expect(restored.state.collaborationByPath[pathname].blocks.comparison_table).toBeTruthy();
-    expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['comparison_table']);
+    expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['comparison_matrix', 'comparison_table']);
   });
 
   it('normalizes stale IRA comparison tables from the old Key difference column shape', () => {
@@ -1327,32 +1395,9 @@ describe('createDevContentAuthorityStore', () => {
     const store = createStore(persistenceFile);
     const comparisonBlock = store.getSnapshot().state.blocksByPath[pathname][0];
 
-    expect(comparisonBlock.settings.tableHeadersJson).toEqual(['Traditional IRA', 'Roth IRA']);
-    expect(comparisonBlock.settings.tableFirstColumnHeader).toBe(false);
-    expect(comparisonBlock.settings.tableRowsJson).toHaveLength(1);
+    expect(comparisonBlock.settings.tableHeadersJson).toEqual(['Key difference', 'Traditional IRA', 'Roth IRA']);
     expect(comparisonBlock.settings.tableRowsJson).toEqual([
-      [
-        [
-          'Must have earned income',
-          'No income limits to establish',
-          'Contributions may be tax-deductible',
-          'Earnings are tax-deferred until distributed',
-          'Distributions may begin at age 59½',
-          'Early distributions may be subject to penalty',
-          'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
-        ].join('\n'),
-        [
-          'Income limits must be met for Roth IRA eligibility',
-          'Contributions are not tax-deductible',
-          'No age limit to contribute as long as you have earned income',
-          'Earnings may be tax-free at distribution if qualified',
-          'Principal contributions may be distributed without penalty',
-          'Qualified distributions on earnings may begin at 59½',
-          'Early distributions on earnings are subject to penalty',
-          'No required distribution age',
-          'Traditional IRAs may be converted to Roth IRAs',
-        ].join('\n'),
-      ],
+      ['Eligibility', 'Must have earned income.', 'Must meet Roth IRA limits.'],
     ]);
   });
 
@@ -1368,6 +1413,83 @@ describe('createDevContentAuthorityStore', () => {
     store.resetFromSeed(seedState, { actor: createActor() });
 
     expect(store.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+  });
+
+  it('discards only one route draft back to published content and creates a recovery backup', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    const seedState = buildSeedState();
+    store.resetFromSeed(seedState, { actor });
+
+    const draftState = buildSeedState();
+    draftState.blocksByPath['/services/loans'][0].settings.line1Text = 'Unwanted draft';
+    draftState.blocksByPath['/services/investments'] = [
+      {
+        ...JSON.parse(JSON.stringify(draftState.blocksByPath['/services/loans'][1])),
+        id: 'unrelated-cta',
+        settings: {
+          ...JSON.parse(JSON.stringify(draftState.blocksByPath['/services/loans'][1].settings)),
+          title: 'Keep unrelated draft',
+        },
+      },
+    ];
+    store.saveDraft(draftState, { actor, summary: 'draft before discard' });
+    const baseBeforeDiscard = store.readPublishedSnapshot();
+
+    const discarded = store.discardPageDraft('/services/loans', {
+      actor,
+      summary: 'admin changed mind',
+    });
+
+    expect(discarded.ok).toBe(true);
+    expect(discarded.discardResult.status).toBe('discarded');
+    expect(store.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text)
+      .toBe(baseBeforeDiscard.blocksByPath['/services/loans'][0].settings.line1Text);
+    expect(store.getSnapshot().state.blocksByPath['/services/investments'][0].settings.title)
+      .toBe('Keep unrelated draft');
+    expect(store.readPublishedSnapshot()).toEqual(baseBeforeDiscard);
+    expect(store.listBackups()[0].reason).toBe('before-page-draft-discard');
+    expect(store.getSnapshot().state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
+  });
+
+  it('does not create a backup for a clean route draft discard', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+
+    const discarded = store.discardPageDraft('/services/loans', { actor: createActor() });
+
+    expect(discarded.ok).toBe(true);
+    expect(discarded.discardResult.status).toBe('no-op');
+    expect(store.listBackups()).toEqual([]);
+  });
+
+  it('discards one block draft while preserving other unpublished blocks on the same page', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    const seedState = buildSeedState();
+    store.resetFromSeed(seedState, { actor });
+
+    const draftState = buildSeedState();
+    draftState.blocksByPath['/services/loans'][0].settings.line1Text = 'Discard this block';
+    draftState.blocksByPath['/services/loans'][1].settings.title = 'Keep this block draft';
+    store.saveDraft(draftState, { actor, summary: 'two block drafts' });
+    const publishedBeforeDiscard = store.readPublishedSnapshot();
+
+    const discarded = store.discardBlockDraft('/services/loans', 'hero', {
+      actor,
+      summary: 'admin changed mind on hero',
+    });
+
+    expect(discarded.ok).toBe(true);
+    expect(discarded.discardResult).toMatchObject({ status: 'discarded', scope: 'block', changedBlockIds: ['hero'] });
+    const currentBlocks = store.getSnapshot().state.blocksByPath['/services/loans'];
+    expect(currentBlocks[0].settings.line1Text).toBe(publishedBeforeDiscard.blocksByPath['/services/loans'][0].settings.line1Text);
+    expect(currentBlocks[1].settings.title).toBe('Keep this block draft');
+    expect(store.readPublishedSnapshot()).toEqual(publishedBeforeDiscard);
+    expect(store.listBackups()[0].reason).toBe('before-block-draft-discard');
   });
 
   it('normalizes preset-bearing family identity before persisting shared state', () => {
@@ -1396,23 +1518,79 @@ describe('createDevContentAuthorityStore', () => {
 
     const heroBlock = store.getSnapshot().state.blocksByPath['/services/planned-giving/donor-advised-fund'][0];
     expectLinkJson(heroBlock.settings, 'button1LinkJson', {
-      kind: 'anchor',
-      href: '#traditional-daf-form',
-    });
-    expectLinkJson(heroBlock.settings, 'button2LinkJson', {
       kind: 'external',
       href: 'https://secure.agfinancial.org/generosityfund/signup',
     });
+    expectLinkJson(heroBlock.settings, 'button2LinkJson', {
+      kind: 'anchor',
+      href: '#traditional-daf-form',
+    });
     expectNoSplitSettings(heroBlock.settings, ['button1Url', 'button2Url', 'button2PageRef']);
-    expect(heroBlock.settings.button2Action).toBe('');
-    expect(heroBlock.settings.button2TargetAnchorId).toBe('');
-    expect(heroBlock.settings.button2TargetBlockId).toBe('');
+    expect(heroBlock.settings.button2Action).toBeUndefined();
+    expect(heroBlock.settings.button2TargetAnchorId).toBeUndefined();
+    expect(heroBlock.settings.button2TargetBlockId).toBeUndefined();
 
     const reloaded = createStore(persistenceFile);
     const reloadedHero = reloaded.getSnapshot().state.blocksByPath['/services/planned-giving/donor-advised-fund'][0];
     expect(Object.prototype.hasOwnProperty.call(reloadedHero.settings, 'button2Url')).toBe(false);
-    expect(reloadedHero.settings.button2Action).toBe('');
-    expect(reloadedHero.settings.button2TargetAnchorId).toBe('');
+    expect(reloadedHero.settings.button2Action).toBeUndefined();
+    expect(reloadedHero.settings.button2TargetAnchorId).toBeUndefined();
+  });
+
+  it('keeps the current Generosity Fund block through load/save and migrates it only explicitly', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+    const actor = createActor();
+    const legacyState = buildGenerosityFundSeedState();
+    const referenceState = cloneJson(legacyState);
+    referenceState.blocksByPath['/services/planned-giving/donor-advised-fund'][0].settings = {
+      title: 'Canonical title',
+      canonicalMarker: 'reference-state',
+    };
+    referenceState.blocksByPath['/services/planned-giving/donor-advised-fund'][0].editableFields = [{ id: 'title' }];
+
+    store.resetFromSeed(legacyState, { actor });
+    const beforeSave = cloneJson(store.readCurrentState());
+    expect(beforeSave.blocksByPath['/services/planned-giving/donor-advised-fund'][0].settings.line1Text)
+      .toBe('Your giving.');
+
+    store.saveDraft(cloneJson(beforeSave), { actor, summary: 'ordinary no-op save' });
+    const reloaded = createStore(persistenceFile, { backupDir });
+    expect(reloaded.getSnapshot().state.blocksByPath['/services/planned-giving/donor-advised-fund'][0].settings.line1Text)
+      .toBe('Your giving.');
+    expect(reloaded.listBackups()).toEqual([]);
+
+    const migrated = reloaded.migrateGenerosityFundSnapshot({
+      defaultState: referenceState,
+      actor,
+      reason: 'one-time migration of retired Generosity Fund block shape',
+    });
+    const migratedBlock = migrated.state.blocksByPath['/services/planned-giving/donor-advised-fund'][0];
+
+    expect(migrated.ok).toBe(true);
+    expect(migrated.migration).toMatchObject({
+      id: 'generosity-fund-daf-refresh',
+      version: 1,
+      didMigrate: true,
+    });
+    expect(migratedBlock.settings).toEqual({
+      title: 'Canonical title',
+      canonicalMarker: 'reference-state',
+    });
+    expect(migrated.baseSnapshot.blocksByPath['/services/planned-giving/donor-advised-fund'][0].settings)
+      .toEqual(migratedBlock.settings);
+    expect(migrated.backup.reason).toBe('before-generosity-fund-snapshot-migration');
+    expect(migrated.snapshotMigrations['generosity-fund-daf-refresh']).toBe(1);
+
+    const reloadedAfterMigration = createStore(persistenceFile, { backupDir });
+    expect(reloadedAfterMigration.getSnapshot().snapshotMigrations['generosity-fund-daf-refresh']).toBe(1);
+    const secondPass = reloadedAfterMigration.migrateGenerosityFundSnapshot({
+      defaultState: referenceState,
+      actor,
+      reason: 'repeat should be a no-op',
+    });
+    expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
   });
 
   it('restoring a page revision creates new current draft state without mutating the old revision', () => {
@@ -1585,7 +1763,69 @@ describe('createDevContentAuthorityStore', () => {
     const claimed = store.acquireBlockLock('/services/loans', 'hero', createActor(), { force: true });
     expect(claimed.ok).toBe(true);
     expect(claimed.state.collaborationByPath['/services/loans'].blocks.hero.lockedBy.displayName).toBe('Taylor QA');
+    expect(claimed.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy.displayName).toBe('Taylor QA');
     expect(claimed.state.collaborationByPath['/services/loans'].history[0].action).toBe('block-draft-claimed');
+  });
+
+  it('releases a foreign draft only through an explicit forced release', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    store.resetFromSeed(buildSeedStateWithOtherDraft(), { actor: createActor() });
+
+    const blocked = store.releaseBlockDraft('/services/loans', 'hero', createActor());
+    expect(blocked.ok).toBe(false);
+    expect(blocked.error).toBe('drafted-by-other');
+
+    const released = store.releaseBlockDraft('/services/loans', 'hero', createActor(), { force: true });
+    expect(released.ok).toBe(true);
+    expect(released.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
+    expect(released.state.collaborationByPath['/services/loans'].history[0].action).toBe('block-draft-released');
+  });
+
+  it('publishes one changed block without publishing unrelated page blocks', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    store.resetFromSeed(buildSeedState(), { actor });
+    const nextState = cloneJson(store.readCurrentState());
+    nextState.blocksByPath['/services/loans'][0].settings.line1Text = 'Block live title';
+    nextState.blocksByPath['/services/loans'][1].settings.title = 'Still draft';
+    store.saveDraft(nextState, { actor, summary: 'block publish setup' });
+
+    const published = store.publishBlock('/services/loans', 'hero', { actor, summary: 'publish hero only' });
+
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.receipt).toMatchObject({
+      route: '/services/loans',
+      scope: 'block',
+      actor: { userId: 'dev-taylor' },
+      publishedBlockIds: ['hero'],
+    });
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Block live title');
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][1].settings.title).toBe('Request help');
+    expect(published.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
+    expect(published.state.collaborationByPath['/services/loans'].blocks.cta_form.draftedBy.displayName).toBe('Taylor QA');
+  });
+
+  it('rejects block publish when the expected draft is stale', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    store.resetFromSeed(buildSeedState(), { actor });
+    const nextState = cloneJson(store.readCurrentState());
+    nextState.blocksByPath['/services/loans'][0].settings.line1Text = 'Current draft title';
+    store.saveDraft(nextState, { actor, summary: 'stale publish setup' });
+
+    const staleExpectedBlock = cloneJson(nextState.blocksByPath['/services/loans'][0]);
+    staleExpectedBlock.settings.line1Text = 'Older draft title';
+    const published = store.publishBlock('/services/loans', 'hero', {
+      actor,
+      expectedBlock: staleExpectedBlock,
+    });
+
+    expect(published.ok).toBe(false);
+    expect(published.error).toBe('block-publish-stale-draft');
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
   });
 
   it('blocks conflicting blocks from being overwritten while still saving allowed blocks', () => {
@@ -1600,6 +1840,7 @@ describe('createDevContentAuthorityStore', () => {
     const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'partial save attempt' });
 
     expect(saved.ok).toBe(true);
+    expect(saved.saveResult.status).toBe('partially-saved');
     expect(saved.saveResult.hasConflicts).toBe(true);
     expect(saved.saveResult.savedBlockIdsByPath['/services/loans']).toContain('cta_form');
     expect(saved.saveResult.blockedBlockIdsByPath['/services/loans']).toContain('hero');
@@ -1647,7 +1888,13 @@ describe('createDevContentAuthorityStore', () => {
 
     expect(published.ok).toBe(true);
     expect(published.publishResult.didPublish).toBe(true);
+    expect(published.publishResult.status).toBe('published');
     expect(published.publishResult.publishedBlockIdsByPath['/services/loans']).toContain('hero');
+    expect(published.publishResult.receipt).toMatchObject({
+      route: '/services/loans',
+      scope: 'page',
+      actor: { userId: 'dev-taylor' },
+    });
     expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Published hero title');
     expect(published.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
     expect(published.state.collaborationByPath['/services/loans'].blocks.hero.lockedBy).toBe(null);
@@ -1978,7 +2225,7 @@ describe('createDevContentAuthorityStore', () => {
     expect(listBackupFiles(backupDir)).toHaveLength(0);
   });
 
-  it('blocks publishing when another admin still owns a draft on that page', () => {
+  it('publishes changed blocks when an unrelated stale foreign draft exists on the same page', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);
     store.resetFromSeed(buildSeedStateWithOtherDraft(), { actor: createActor() });
@@ -1989,10 +2236,9 @@ describe('createDevContentAuthorityStore', () => {
 
     const published = store.publishPage('/services/loans', { actor: createActor() });
 
-    expect(published.ok).toBe(false);
-    expect(published.error).toBe('publish-blocked-by-other-draft');
-    expect(published.publishResult.hasConflicts).toBe(true);
-    expect(published.publishResult.blockedBlockIdsByPath['/services/loans']).toContain('hero');
-    expect(published.baseSnapshot.blocksByPath['/services/loans'][1].settings.title).toBe('Request help');
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.hasConflicts).toBe(false);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][1].settings.title).toBe('Ready to publish CTA');
   });
 });

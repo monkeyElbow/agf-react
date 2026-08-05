@@ -4,6 +4,7 @@ import {
   fetchSharedContentBackups,
   fetchSharedAnnouncement,
   initializeSharedContentFromSeed,
+  migrateSharedGenerosityFundSnapshot,
   promoteSharedContentToSeed,
   releaseSharedBlockLock,
   resetSharedContentFromSeed,
@@ -168,6 +169,31 @@ describe('devContentAuthorityClient', () => {
 
     expect(url).toContain('/promote-seed');
     expect(request.method).toBe('POST');
+    expect(payload.actor.userId).toBe('dev-jordan');
+  });
+
+  it('uses the explicit versioned Generosity Fund snapshot migration endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await migrateSharedGenerosityFundSnapshot(
+      { blocksByPath: { '/services/planned-giving/donor-advised-fund': [] } },
+      {
+        userId: 'dev-jordan',
+        displayName: 'Jordan QA',
+      },
+      'one-time snapshot migration',
+    );
+
+    const [url, request] = fetchMock.mock.calls[0];
+    const payload = JSON.parse(request.body);
+    expect(url).toContain('/migrate-generosity-fund-snapshot');
+    expect(request.method).toBe('POST');
+    expect(payload.defaultState.blocksByPath['/services/planned-giving/donor-advised-fund']).toEqual([]);
+    expect(payload.reason).toBe('one-time snapshot migration');
     expect(payload.actor.userId).toBe('dev-jordan');
   });
 });

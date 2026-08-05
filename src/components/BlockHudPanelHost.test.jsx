@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { ContentAdminContext } from '../context/ContentAdminContext';
 import BlockHudPanelHost from './BlockHudPanelHost';
 
 describe('BlockHudPanelHost', () => {
@@ -26,6 +27,7 @@ describe('BlockHudPanelHost', () => {
 
   it('surfaces passive foreign drafts inside the HUD with handoff language', () => {
     const onOwnershipAction = vi.fn();
+    const onReleaseDraft = vi.fn();
 
     render(createElement(BlockHudPanelHost, {
       block: {
@@ -49,14 +51,116 @@ describe('BlockHudPanelHost', () => {
         overlayDetail: 'Draft saved 2 min ago',
       },
       onOwnershipAction,
+      onReleaseDraft,
       onSettingChange: vi.fn(),
     }));
 
     expect(screen.getByText('Unpublished draft by Sarah MacBook')).toBeTruthy();
     expect(screen.getByText('Draft saved 2 min ago. This draft is not live yet.')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Continue draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Take over draft' }));
     expect(onOwnershipAction).toHaveBeenCalledTimes(1);
+
+    expect(screen.getByRole('button', { name: 'Release draft' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Release draft' }));
+    expect(onReleaseDraft).toHaveBeenCalledWith(true);
+  });
+
+  it('provides explicit block release and publish actions for an owned draft', () => {
+    const onReleaseDraft = vi.fn();
+    const onPublishBlock = vi.fn();
+
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'hero',
+        kind: 'custom_notice',
+        mode: 'dynamic',
+        editableFields: [],
+        settings: { line1Text: 'Owned draft' },
+      },
+      pathname: '/services/loans',
+      ownership: { state: 'owned-self' },
+      onReleaseDraft,
+      onPublishBlock,
+      onSettingChange: vi.fn(),
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Release draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Make block live' }));
+
+    expect(onReleaseDraft).toHaveBeenCalledWith(false);
+    expect(onPublishBlock).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps takeover available when another admin is the last saver but no active lock is present', async () => {
+    const onOwnershipAction = vi.fn().mockResolvedValue({ ok: true });
+
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'intro',
+        kind: 'intro',
+        mode: 'dynamic',
+        settings: { heading: 'Endowments' },
+      },
+      ownership: {
+        state: 'saved-other',
+        isOwnedByOther: true,
+        overlayLabel: 'Last saved by another admin',
+      },
+      onOwnershipAction,
+      onSettingChange: vi.fn(),
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Take over edit' }));
+
+    expect(onOwnershipAction).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('Draft takeover complete.')).toBeTruthy();
+  });
+
+  it('provides add, discard, and delete actions inside block options', async () => {
+    const addBlock = vi.fn();
+    const removeBlock = vi.fn();
+    const block = {
+      id: 'hero',
+      kind: 'custom_notice',
+      mode: 'dynamic',
+      editableFields: [],
+      settings: { line1Text: 'Owned draft' },
+    };
+
+    render(
+      <ContentAdminContext.Provider value={{
+        availableBlockTemplates: [{
+          templateId: 'intro',
+          kind: 'intro',
+          mode: 'dynamic',
+          name: 'Intro',
+          settings: {},
+        }],
+        authoringBlocksByPath: { '/services/loans': [block] },
+        getPageChangeSummary: () => ({ changedBlockIds: ['hero'] }),
+        getPagePublishSummary: () => ({ changedBlockIds: ['hero'] }),
+        addBlock,
+        removeBlock,
+      }}>
+        <BlockHudPanelHost
+          block={block}
+          pathname="/services/loans"
+          onSettingChange={vi.fn()}
+        />
+      </ContentAdminContext.Provider>,
+    );
+
+    const options = screen.getByRole('region', { name: 'Block options' });
+    expect(within(options).getByRole('button', { name: 'Add block' })).toBeTruthy();
+    expect(within(options).getByRole('button', { name: 'Delete block' })).toBeTruthy();
+
+    fireEvent.click(within(options).getByRole('button', { name: 'Add block' }));
+    expect(addBlock).toHaveBeenCalledWith('/services/loans', 'intro', 1);
+
+    fireEvent.click(within(options).getByRole('button', { name: 'Delete block' }));
+    fireEvent.click(within(options).getByRole('button', { name: 'Confirm delete block' }));
+    expect(removeBlock).toHaveBeenCalledWith('/services/loans', 'hero');
   });
 
   it('blocks HUD field edits while another admin owns the block', () => {

@@ -10,7 +10,7 @@ let mockPathname = '/services';
 
 const mockUseContentAdmin = vi.fn();
 
-vi.mock('../context/ContentAdminContext', () => ({
+vi.mock('../context/ContentAdminContextCore', () => ({
   useContentAdmin: () => mockUseContentAdmin(),
 }));
 

@@ -55,7 +55,7 @@ describe('link model convergence guardrail', () => {
     expect(snapshotAuditSource).toContain('canonical-link-json-missing');
     expect(snapshotAuditSource).toContain('canonical-link-json-mismatch');
     expect(contentAdminContextSource).toContain('normalizeSplitLinkFieldSettings');
-    expect(contentAdminStoreSource).toContain('normalizeSplitLinkFieldSettings');
+    expect(contentAdminStoreSource).not.toContain('normalizeSplitLinkFieldSettings');
     expect(runtimeSource).not.toMatch(
       /(hrefKeys|toKeys|openInNewWindowKeys): \[[^\]]*(?:button\d*|button2?|cta|browse|card\d+(?:Button\d*)?|col\d+Button|leftButton|rightButton)(?:Url|Path|PageRef|OpenInNewWindow)/,
     );

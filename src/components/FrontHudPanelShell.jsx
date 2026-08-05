@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import '../styles/front-hud.css';
 
 const FRONT_HUD_PANEL_OFFSET_STORAGE_KEY = 'agf-front-hud-panel-offset-y-v2';
 const FRONT_HUD_PANEL_RECOVERY_HANDLE_PX = 56;
@@ -23,6 +24,10 @@ export default function FrontHudPanelShell({
   draggable = true,
   isMobileSheet = false,
   closeButtonText = null,
+  blockId = '',
+  pathname = '',
+  ownership = null,
+  onOwnershipAction = null,
 }) {
   const shellRef = useRef(null);
   const [hasStoredOffset] = useState(() => {
@@ -49,7 +54,6 @@ export default function FrontHudPanelShell({
   const dragStateRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragBounds, setDragBounds] = useState({ min: 0, max: 0 });
-
   useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined;

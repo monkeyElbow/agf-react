@@ -3,10 +3,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  buildCtaFormSlotFields,
-  parseCtaFormFieldsJson,
-} from '../src/blocks/foundation/forms.js';
+import { parseCtaFormFieldsJson } from '../src/blocks/foundation/forms.js';
 import {
   coerceLinkValueFromFields,
   getCanonicalLinkJsonFieldId,
@@ -280,7 +277,6 @@ function scanCanonicalFormSettings({ block, settings, findings, location }) {
     .filter((fieldId) => CTA_FORM_SLOT_FIELD_PATTERN.test(fieldId));
   const rawFieldsJson = trimSettingValue(settings.fieldsJson);
   const canonicalFields = parseCtaFormFieldsJson(rawFieldsJson);
-  const slotFields = buildCtaFormSlotFields(settings);
   const slotSettingKeys = Object.keys(settings)
     .filter((fieldId) => CTA_FORM_SLOT_FIELD_PATTERN.test(fieldId));
 
@@ -303,9 +299,6 @@ function scanCanonicalFormSettings({ block, settings, findings, location }) {
     return;
   }
 
-  if (slotFields.length && !canonicalFields.length) {
-    findings.push(createFinding('cta-form-fields-json-missing', 'CTA form slot fields must also be represented in canonical fieldsJson.', location));
-  }
 }
 
 function scanBlocks({ recordLabel, rootName, pathname, blocks, findings }) {

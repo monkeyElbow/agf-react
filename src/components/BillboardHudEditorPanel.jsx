@@ -125,10 +125,6 @@ export default function BillboardHudEditorPanel({
   return (
     <div className="admin-billboard-hud-editor">
       <section className="admin-front-hud-card admin-billboard-hud-card admin-billboard-hud-card--title">
-        <div className="admin-front-hud-card-head">
-          <h4>Title</h4>
-          <p>Copy, color, and type</p>
-        </div>
         <div className="admin-billboard-hud-title-layout">
           <div className="admin-billboard-hud-title-column">
             <label className="admin-front-hud-field admin-billboard-hud-field is-tight">
@@ -253,10 +249,6 @@ export default function BillboardHudEditorPanel({
       </section>
 
       <section className="admin-front-hud-card admin-billboard-hud-card admin-billboard-hud-card--body">
-        <div className="admin-front-hud-card-head">
-          <h4>Body</h4>
-          <p>Copy and section color</p>
-        </div>
         <label className="admin-front-hud-field admin-billboard-hud-field is-tight">
           <span>Subtitle</span>
           <input
@@ -294,6 +286,7 @@ export default function BillboardHudEditorPanel({
             </div>
           </div>
         </div>
+        <p className="admin-front-hud-note">Supporting uses the shared intro body scale. Headline uses the large title type scale.</p>
         <label className="admin-front-hud-range">
           <span>Subtitle Size {Number(subtitleSizeRem || 0).toFixed(2)}rem</span>
           <input
@@ -350,10 +343,6 @@ export default function BillboardHudEditorPanel({
       </section>
 
       <section className="admin-front-hud-card admin-billboard-hud-card admin-billboard-hud-card--button">
-        <div className="admin-front-hud-card-head">
-          <h4>Buttons</h4>
-          <p>Labels, links, and styles</p>
-        </div>
         <div className="admin-billboard-hud-button-grid">
           <div className="admin-billboard-hud-button-fields">
             <span className="admin-front-hud-hero-line-label">Button 1</span>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { navSections } from '../data/siteMap';
-import { useContentAdmin } from '../context/ContentAdminContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { FrontHudContext } from '../context/FrontHudContext';
 import { isApplePlatformNavigator, isSafariBrowserNavigator } from '../lib/browserFlags';
 import SiteFooter from './SiteFooter';
@@ -73,7 +73,10 @@ function isTypingTarget(target) {
 export default function SiteLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { resolveManagedPathFromRef } = useContentAdmin();
+  const {
+    resolveManagedPathFromRef,
+    activateAdminProvider = () => {},
+  } = useContentAdmin();
   const isAdminRoute = location.pathname.startsWith('/admin/');
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -81,6 +84,7 @@ export default function SiteLayout({ children }) {
     typeof window !== 'undefined' ? window.matchMedia(DESKTOP_NAV_QUERY).matches : false,
   );
   const [forceCompactNav, setForceCompactNav] = useState(false);
+
   const [contentWidthOverlayEnabled, setContentWidthOverlayEnabled] = useState(() => {
     if (typeof window === 'undefined') {
       return false;
@@ -125,6 +129,12 @@ export default function SiteLayout({ children }) {
       return 42;
     }
   });
+
+  useEffect(() => {
+    if (isAdminRoute || frontHudEnabled) {
+      activateAdminProvider();
+    }
+  }, [activateAdminProvider, frontHudEnabled, isAdminRoute]);
   const [isApplePlatform] = useState(() => {
     if (typeof window === 'undefined') {
       return false;
@@ -448,6 +458,9 @@ export default function SiteLayout({ children }) {
 
     const setHudEnabledImmediate = (nextEnabled) => {
       frontHudEnabledRef.current = Boolean(nextEnabled);
+      if (nextEnabled) {
+        activateAdminProvider();
+      }
       setFrontHudEnabled(Boolean(nextEnabled));
     };
 
@@ -511,7 +524,7 @@ export default function SiteLayout({ children }) {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [activateAdminProvider]);
 
   function toggleDropdown(title) {
     setOpenDropdown((current) => (current === title ? null : title));
@@ -519,6 +532,13 @@ export default function SiteLayout({ children }) {
 
   const handleNavItemSelect = () => {
     closeNavMenus();
+  };
+
+  const setFrontHudEnabledWithActivation = (nextEnabled) => {
+    if (nextEnabled) {
+      activateAdminProvider();
+    }
+    setFrontHudEnabled(Boolean(nextEnabled));
   };
 
   const handleGroupFocus = (title) => {
@@ -570,7 +590,7 @@ export default function SiteLayout({ children }) {
         enabled: frontHudEnabled,
         opacity: clampFrontHudOpacity(frontHudOpacity),
         revealToken: frontHudRevealToken,
-        setEnabled: setFrontHudEnabled,
+        setEnabled: setFrontHudEnabledWithActivation,
         setOpacity: setFrontHudOpacity,
       }}
     >
@@ -689,6 +709,7 @@ export default function SiteLayout({ children }) {
                     target="_blank"
                     rel="noreferrer noopener"
                     className="site-nav-link nav-login-link"
+                    aria-label="Secure Login"
                   >
                     <span className="nav-icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
@@ -809,7 +830,7 @@ export default function SiteLayout({ children }) {
                               role="radio"
                               aria-checked={!frontHudEnabled}
                               className={`site-nav-admin-overlay-option${!frontHudEnabled ? ' is-active' : ''}`}
-                              onClick={() => setFrontHudEnabled(false)}
+                              onClick={() => setFrontHudEnabledWithActivation(false)}
                             >
                               Off
                             </button>
@@ -818,7 +839,7 @@ export default function SiteLayout({ children }) {
                               role="radio"
                               aria-checked={frontHudEnabled}
                               className={`site-nav-admin-overlay-option${frontHudEnabled ? ' is-active' : ''}`}
-                              onClick={() => setFrontHudEnabled(true)}
+                              onClick={() => setFrontHudEnabledWithActivation(true)}
                             >
                               On
                             </button>

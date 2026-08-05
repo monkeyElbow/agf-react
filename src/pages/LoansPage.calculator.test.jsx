@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LoansPage, { calculateLoanSchedule } from './LoansPage';
 
-vi.mock('../context/ContentAdminContext', () => ({
+vi.mock('../context/ContentAdminContextCore', () => ({
   useContentAdmin: () => ({
     blocksByPath: {},
     pageHierarchy: {},

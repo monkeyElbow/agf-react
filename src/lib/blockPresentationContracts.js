@@ -109,7 +109,6 @@ const BILLBOARD_PRESENTATION_CONTRACTS = Object.freeze([
     id: 'legacy-ministry-impact-outro',
     matches: (settings) => (
       hasClassName(settings, 'legacy-child-native-billboard')
-      && String(settings?.title || '').trim() === 'More joy in receiving.'
     ),
     settings: Object.freeze({
       titleFontFamily: 'helv',

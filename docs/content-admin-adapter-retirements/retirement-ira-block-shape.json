@@ -1,0 +1,31 @@
+{
+  "receiptVersion": 1,
+  "adapterId": "retirement-ira-block-shape",
+  "status": "retired",
+  "retirementBasis": "Current active, published, seed, retained backup, and revision records contain the canonical IRA comparison-table and daily-billboard shapes; the historical repair found zero persisted findings.",
+  "removedBehavior": {
+    "sources": [
+      "src/context/ContentAdminContext.jsx",
+      "dev-server/contentAdminStore.js"
+    ],
+    "productionCallSitesRemoved": 3,
+    "detector": "scripts/content-admin-migration-inventory.mjs"
+  },
+  "preservedBehavior": [
+    "Current IRA blueprint content and rendering",
+    "Current IRA rates and contribution-limit routes",
+    "Canonical IRA comparison table and billboard styling",
+    "Explicit snapshot diagnostics for unsupported historical shapes"
+  ],
+  "finalScan": {
+    "commands": [
+      "npm run scan:migration-inventory -- --include-backups",
+      "npm run scan:content-admin-snapshots:backups",
+      "npm run scan:content-admin-storage"
+    ],
+    "requiredTotalFindings": 0,
+    "restoreProof": "pending post-change validation"
+  },
+  "storedContentMutation": false,
+  "adapterRemovalCommit": null
+}

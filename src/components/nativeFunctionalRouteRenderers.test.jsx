@@ -13,7 +13,7 @@ import {
 let mockPageHierarchy = {};
 let mockDocuments = [];
 
-vi.mock('../context/ContentAdminContext', () => ({
+vi.mock('../context/ContentAdminContextCore', () => ({
   useContentAdmin: () => ({
     pageHierarchy: mockPageHierarchy,
   }),

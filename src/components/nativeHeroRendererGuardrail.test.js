@@ -21,12 +21,9 @@ describe('native hero renderer guardrail', () => {
     expect(source).toContain('renderTextWithHighlights,');
     expect(source).toContain("from '../lib/dynamicPageBlocks';");
     expect(source).toContain('resolveHeroLineDisplayClassName,');
-    expect(source).toContain('if (isTestPage) {');
     expect(source).toContain('const adminHero = buildDynamicHeroFromBlock(heroBlock);');
-    expect(source).toContain('function buildTestDynamicHero(block) {');
-    expect(source).toContain('const runtime = buildDynamicHeroFromBlock(block);');
     expect(source).toContain('const heroBlock = findVisibleDynamicBlockByKind(visibleBlocks, \'hero\');');
-    expect(source).toContain('const adminHero = buildTestDynamicHero(heroBlock);');
+    expect(source).not.toContain('buildTestDynamicHero');
     expect(source).toContain('const renderedHero = dynamicHeroBlock');
     expect(source).toContain('const renderedDynamicHero = useMemo(');
     expect(source).toContain('buildDynamicHeroFromBlock({');

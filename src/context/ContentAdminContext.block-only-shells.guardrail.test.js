@@ -15,7 +15,7 @@ function readJson(relativePath) {
   return JSON.parse(readSource(relativePath));
 }
 
-describe('ContentAdminContext block-only shell guardrail', () => {
+describe('migration-temporary.block-only shell guardrail', () => {
   it('keeps native-section seeding out of the block-only admin contract', () => {
     const contextSource = readSource('./ContentAdminContext.jsx');
     const shellSource = readSource('../lib/managedPageShells.js');
@@ -195,11 +195,6 @@ describe('ContentAdminContext block-only shell guardrail', () => {
         id: 'how_it_works',
         sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-generosity-steps',
         icons: ['daf-step-1', 'daf-step-2', 'daf-step-3'],
-      },
-      '/services/planned-giving/charitable-trusts': {
-        id: 'remainder_trust_how_it_works',
-        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-trusts-crt-steps',
-        icons: ['daf-step-1', 'daf-step-3', 'crt-step-2'],
       },
       '/services/planned-giving/qualified-charitable-distribution': {
         id: 'how_it_works',

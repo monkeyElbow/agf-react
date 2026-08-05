@@ -10,7 +10,9 @@ function readSource(relativePath) {
   return readFileSync(path.resolve(__dirname, relativePath), 'utf8');
 }
 
-describe('content block blueprint seed convergence guardrail', () => {
+// Source-default only. These checks protect blueprint construction rules, not
+// persisted content or editable marketing copy.
+describe('source-default content block blueprint construction', () => {
   it('keeps migrated link/action blueprint seeding on narrow shared helpers', () => {
     const source = readSource('./contentBlockBlueprints.js');
 
@@ -46,11 +48,11 @@ describe('content block blueprint seed convergence guardrail', () => {
     expect(source).toMatch(/createDynamicColumnsBlueprint\(\{[\s\S]*?id: 'columns'[\s\S]*?presetId: 'default'[\s\S]*?\}\)/);
     expect(source).toMatch(/id: 'growth_feature'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'investments_growth_feature'/);
     expect(source).toMatch(/id: 'dashboard_login_cta'[\s\S]*?templateId: 'cta_band'[\s\S]*?kind: 'cta_band'[\s\S]*?hidden: true[\s\S]*?buildCtaBandPresetSettings\('dashboard-login'\)/);
-    expect(source).toMatch(/id: 'cta_form'[\s\S]*?kind: 'cta_form'[\s\S]*?title: 'Talk with an investment consultant\.'/);
-    expect(source).toMatch(/createDynamicCardGridBlueprint\(\{[\s\S]*?id: 'loan_options'[\s\S]*?title: 'Every loan, 100% customized\.'/);
+    expect(source).toMatch(/id: 'cta_form'[\s\S]*?kind: 'cta_form'[\s\S]*?editableFields:/);
+    expect(source).toMatch(/createDynamicCardGridBlueprint\(\{[\s\S]*?id: 'loan_options'[\s\S]*?presetId:/);
     expect(source).toMatch(/id: 'services_cards'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_breakdown'/);
     expect(source).toMatch(/id: 'matters_band'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_matters_band'/);
-    expect(source).toMatch(/createDynamicCtaBandBlueprint\(\{[\s\S]*?id: 'cta_band'[\s\S]*?title: 'Which loan is right for me\?'/);
+    expect(source).toMatch(/createDynamicCtaBandBlueprint\(\{[\s\S]*?id: 'cta_band'[\s\S]*?presetId:/);
     expect(source).toMatch(/id: 'billboard'[\s\S]*?name: 'Retire Every Day Billboard'[\s\S]*?editableFields: sharedDynamicBillboardEditableFields,/);
 
     expect(source).not.toContain("id: 'legacy_removed_block'");

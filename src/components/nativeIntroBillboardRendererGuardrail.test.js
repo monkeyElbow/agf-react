@@ -33,8 +33,6 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain('className={buildActionRowClassName(introJustify, \'center\')}');
     expect(source).toContain("className={buildActionRowClassName(sectionJustifyToken, 'left')}");
     expect(source).toContain("style={buildActionRowStyle(sectionJustifyToken, 'left')}");
-    expect(source).toContain("const introBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'intro');");
-    expect(source).toContain("const adminIntro = buildNativeIntroConfig(introBlock, { includeTestClassName: true });");
     expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'billboard') {");
     expect(source).toContain("const billboardSection = buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });");
     expect(source).toContain('acc.push(billboardSection);');
@@ -72,7 +70,7 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(cssSource).toContain('.service-native-intro.dynamic-intro .service-native-intro-copy > h2 mark.is-sandstone,');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro.is-text-blue,');
     expect(cssSource).toContain('.service-native-intro.dynamic-intro.is-text-blue .service-native-intro-copy > h2,');
-    expect(cssSource).toContain('.service-native-intro.dynamic-intro.is-text-blue .native-info-rich-html a,');
+    expect(cssSource).toContain('.service-native-intro.dynamic-intro.is-text-blue .native-info-rich-html a:not(.service-native-btn),');
     expect(cssSource).toContain('.native-info-rich-html .is-atlantean {');
     expect(cssSource).toContain('.native-info-rich-html .is-white {');
     expect(cssSource).toContain('.service-native-section.test-dynamic-billboard .native-info-section-copy > h2.is-sandstone,');

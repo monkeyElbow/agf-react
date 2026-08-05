@@ -433,11 +433,17 @@ export function coerceLinkValueFromFields(source, {
       ...normalizeFieldKeyList(linkJsonKeys),
       ...inferCanonicalLinkJsonKeys({ hrefKeys, toKeys, openInNewWindowKeys }),
     ]));
+    const hasCanonicalLinkField = canonicalKeys.some((key) => (
+      Object.prototype.hasOwnProperty.call(source || {}, key)
+    ));
     for (const key of canonicalKeys) {
       const linkValue = parseLinkValueJson(readFirstFieldValue(source, [key]));
       if (linkValue) {
         return linkValue;
       }
+    }
+    if (hasCanonicalLinkField) {
+      return null;
     }
   }
 

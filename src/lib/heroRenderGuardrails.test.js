@@ -7,8 +7,8 @@ import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { normalizeDynamicHeroSettings } from '../context/ContentAdminContext';
 import { inspectHeroRender } from './heroRenderGuardrails';
 
-vi.mock('../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../context/ContentAdminContext.jsx');
+vi.mock('../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../context/ContentAdminContextCore');
   return {
     ...actual,
     useContentAdmin: () => ({

@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import useLocalBlockDrafts from './useLocalBlockDrafts';
-import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../context/ContentAdminContext';
+import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
 
 function LocalBlockDraftsProbe({
   blocks,

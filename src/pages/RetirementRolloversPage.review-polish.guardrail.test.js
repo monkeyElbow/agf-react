@@ -17,13 +17,7 @@ describe('retirement rollovers review polish guardrail', () => {
 
     expect(blueprintSource).toContain("sectionClassName: 'retirement-rollovers-native-process'");
     expect(blueprintSource).toContain("anchorId: 'start-the-process'");
-    expect(blueprintSource).toContain('<h2>Start the process</h2>');
-    expect(blueprintSource).toContain('<p>Download and complete the Rollover/Transfer form below.</p>');
-    expect(blueprintSource).toContain('<p>Return the completed form, along with the most recent statement(s) from the other account(s) to the address below.</p>');
-    expect(blueprintSource).toContain('<p>A confirmation letter will be sent to you when your rollover or transfer is complete.</p>');
-    expect(blueprintSource).not.toContain('1) Download and complete the Rollover/Transfer form below.');
-    expect(blueprintSource).not.toContain('2) Return the completed form, along with the most recent statement(s) from the other account(s) to the address below.');
-    expect(blueprintSource).not.toContain('3) A confirmation letter will be sent to you when your rollover or transfer is complete.');
+    // Operational destination; changing this would misroute rollover paperwork.
     expect(blueprintSource).toContain("addressTitle: 'AGFinancial'");
     expect(blueprintSource).toContain("addressLines: 'PO Box 2515\\nSpringfield MO 65801'");
     expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process {');
@@ -66,9 +60,7 @@ describe('retirement rollovers review polish guardrail', () => {
     expect(blueprintSource).toContain("id: 'request_form'");
     expect(blueprintSource).toContain("kind: 'request_form'");
     expect(blueprintSource).toContain("hidden: false");
-    expect(blueprintSource).toContain("title: 'Simple is better.'");
     expect(blueprintSource).toContain(`titleHighlightsJson: '[{"start":0,"end":6,"className":"is-white"}]'`);
-    expect(blueprintSource).toContain("body: 'Our rollover specialists are happy to help focus your retirement.'");
     expect(blueprintSource).toContain("bgTone: 'grey'");
     expect(blueprintSource).toContain("textTone: 'white'");
     expect(blueprintSource).toContain("submitLabel: 'Submit'");

@@ -57,6 +57,7 @@ describe('managed page shells', () => {
     expect(isBlockOnlyManagedPagePath('/vineyard')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/yourplan')).toBe(true);
     expect(isBlockOnlyManagedPagePath('/services/investments/invest-by-mail')).toBe(true);
+    expect(isBlockOnlyManagedPagePath('/test')).toBe(true);
   });
 
   it('keeps functional routes blockless instead of seeding empty page-content fallbacks', () => {
@@ -79,7 +80,6 @@ describe('managed page shells', () => {
       '/brand': 'functional-brand-kit',
       '/rates': 'functional-rates-admin',
       '/taxguide': 'legacy-page-content',
-      '/test': 'development-sandbox',
     });
 
     Object.keys(SPECIAL_MANAGED_PAGE_CLASSIFICATIONS).forEach((pathname) => {

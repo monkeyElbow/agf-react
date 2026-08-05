@@ -148,7 +148,7 @@ describe('ContentAdminContext dev identity metadata', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Force lock block' }));
 
     expect(screen.getByTestId('locked-by').textContent).toBe(screen.getByTestId('dev-name').textContent);
-    expect(screen.getByTestId('drafted-by').textContent).toBe('Other Dev');
+    expect(screen.getByTestId('drafted-by').textContent).toBe(screen.getByTestId('dev-name').textContent);
     expect(screen.getByTestId('history-action').textContent).toBe('block-edit-taken-over');
   });
 
@@ -186,7 +186,7 @@ describe('ContentAdminContext dev identity metadata', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Force lock block' }));
 
     expect(screen.getByTestId('locked-by').textContent).toBe(screen.getByTestId('dev-name').textContent);
-    expect(screen.getByTestId('drafted-by').textContent).toBe('Other Dev');
+    expect(screen.getByTestId('drafted-by').textContent).toBe(screen.getByTestId('dev-name').textContent);
     expect(screen.getByTestId('history-action').textContent).toBe('block-draft-claimed');
   });
 

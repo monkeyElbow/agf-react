@@ -9,7 +9,7 @@ import PageBreadcrumbs from './PageBreadcrumbs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-vi.mock('../context/ContentAdminContext', () => ({
+vi.mock('../context/ContentAdminContextCore', () => ({
   useContentAdmin: () => ({
     getBreadcrumbTrail: (pathname) => {
       if (pathname === '/services/insurance') {

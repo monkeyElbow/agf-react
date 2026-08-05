@@ -29,9 +29,22 @@ describe('block presentation contract guardrails', () => {
     const devServerSource = readSource('../../dev-server/contentAdminStore.js');
 
     expect(nativePageSource).toContain('const renderBlock = normalizeBlockForRender(block);');
-    expect(blockRendererSource).toContain('const renderBlock = normalizeBlockForRender(block);');
+    expect(blockRendererSource).toContain('const renderBlock = toRendererBlock(normalizeBlockForRender(block));');
     expect(dynamicBlocksSource).toContain('const normalizedBlock = normalizeBlockForRender(block);');
     expect(clientAdminSource).toContain('normalizeBlockPresentation(mergedBlock)');
     expect(devServerSource).toContain('return normalizeBlockPresentation(nextBlock);');
+  });
+
+  it('keeps generic managed renderers independent from seed, blueprint, and copy selectors', () => {
+    const pageRendererSource = readSource('../components/blocks/PageBlocksRenderer.jsx');
+    const nativeRendererSource = readSource('../components/NativeContentPage.jsx');
+    const contractSource = readSource('./blockPresentationContracts.js');
+
+    [pageRendererSource, nativeRendererSource].forEach((source) => {
+      expect(source).not.toMatch(/from ['"].*blueprint/i);
+      expect(source).not.toMatch(/from ['"].*seed/i);
+    });
+    expect(contractSource).not.toContain("settings?.title || '').trim() ===");
+    expect(pageRendererSource).toContain('const renderBlock = toRendererBlock(normalizeBlockForRender(block));');
   });
 });

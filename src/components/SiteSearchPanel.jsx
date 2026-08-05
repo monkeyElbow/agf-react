@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useContentAdmin } from '../context/ContentAdminContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import {
   buildSiteSearchIndex,
   groupSiteSearchMatches,

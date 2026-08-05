@@ -65,6 +65,7 @@ describe('DynamicCtaSection', () => {
             { id: 'email', label: 'Email', type: 'email', required: true },
           ]),
         }}
+        renderDefaultWhenMissing
       />,
     );
 

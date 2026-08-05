@@ -6,9 +6,9 @@ import {
   BUTTON_TONE_OPTIONS,
   SEMANTIC_TEXT_COLOR_OPTIONS,
   SURFACE_BG_TONE_OPTIONS,
-  normalizeButtonTone,
 } from '../lib/colorSystem';
 import { parseHeroRangeHighlights, resolveSelectionRangeColor } from '../lib/heroHudRanges';
+import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import { CTA_FORM_DYNAMIC_FIELD_TYPE_OPTIONS, CTA_FORM_MAX_FIELDS } from '../blocks/foundation/forms';
 
 const CTA_HUD_SUBMIT_STYLE_OPTIONS = [
@@ -20,19 +20,7 @@ const CTA_FIELD_TYPE_LABELS = new Map(
   CTA_FORM_DYNAMIC_FIELD_TYPE_OPTIONS.map((option) => [option.value, option.label]),
 );
 
-const CTA_SUBMIT_STYLE_SET = new Set(['blue', 'dark', 'outline']);
-
-export function normalizeCtaHudSubmitStyle(value) {
-  const token = String(value || '').trim().toLowerCase();
-  return CTA_SUBMIT_STYLE_SET.has(token) ? token : 'blue';
-}
-
-export function normalizeCtaHudSubmitTone(value, submitStyle = 'blue') {
-  if (normalizeCtaHudSubmitStyle(submitStyle) === 'outline') {
-    return normalizeButtonTone(value, 'atlantean');
-  }
-  return submitStyle === 'dark' ? 'super-grey' : 'atlantean';
-}
+export { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 
 function toPreviewButtonClassName(submitStyle, submitTone) {
   const classes = ['service-native-btn', `is-tone-${normalizeCtaHudSubmitTone(submitTone, submitStyle)}`];

@@ -1,20 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import '../styles/home-service-public.css';
 import { Link, useLocation } from 'react-router-dom';
-import BlockHudPanelHost from '../components/BlockHudPanelHost';
 import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
-import SiteSearchPanel from '../components/SiteSearchPanel';
-import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../components/CtaHudEditorPanel';
-import FrontHudPanelShell from '../components/FrontHudPanelShell';
-import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
-import MobileFrontHudActionTray from '../components/MobileFrontHudActionTray';
+import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import PageBlocksRenderer from '../components/blocks/PageBlocksRenderer';
-import { useDocuments } from '../context/DocumentsContext';
-import { ResourcesProvider, useResources } from '../context/ResourcesContext';
 import { homePageBlocks } from '../data/pageBlocks/homeBlocks';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
-import { inspectDynamicHeroSettings, normalizeDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
 import {
@@ -43,6 +37,8 @@ import {
 } from '../lib/homeBlockResolver';
 import { linkValueToEditableHref, parseLinkValueJson } from '../lib/linkValue';
 import { groupHomeRenderItems, planHomeRenderItems } from './homePageRenderPlan';
+import { inspectDynamicHeroSettings, normalizeDynamicHeroSettings } from '../lib/dynamicHeroSettings';
+import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
 
 const HOME_NEWSLETTER_FORM_ID = '34a993b6-d0fb-48fd-b3c4-faad7332770c';
 const HOME_TOP_STRIP_HUD_PANEL_ID = 'home-top-strip';
@@ -57,7 +53,13 @@ const HOME_COLUMNS_MHA_HUD_PANEL_ID = 'home-columns-mha';
 const HOME_COLUMNS_MATH_HUD_PANEL_ID = 'home-columns-math';
 const HOME_MINISTRY_ALLIES_BLOCK_ID = 'home_ministry_allies';
 const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
-const HOME_HERO_TEMPORARILY_HIDDEN = true;
+// Keep the first useful Home content in the initial viewport so the LCP is not a later scroll-driven feature.
+const HOME_HERO_TEMPORARILY_HIDDEN = false;
+const BlockHudPanelHost = lazy(() => import('../components/BlockHudPanelHost'));
+const FrontHudPanelShell = lazy(() => import('../components/FrontHudPanelShell'));
+const FrontHudPageWorkflow = lazy(() => import('../components/FrontHudPageWorkflow'));
+const MobileFrontHudActionTray = lazy(() => import('../components/MobileFrontHudActionTray'));
+const HomeReturnAssist = lazy(() => import('../components/HomeReturnAssist'));
 const HOME_HUD_PANEL_ID_BY_BLOCK_ID = {
   top_strip: HOME_TOP_STRIP_HUD_PANEL_ID,
   hero: HOME_HERO_HUD_PANEL_ID,
@@ -129,22 +131,6 @@ function isMobileHudSelectionBlocked(target) {
     && Boolean(target.closest('a, button, input, select, textarea, summary, label, [role="button"], [role="link"], [data-admin-mobile-hud-ignore]'));
 }
 
-function HomeReturnAssistSearchPanel() {
-  const { documents } = useDocuments();
-  const { articles } = useResources();
-
-  return (
-    <SiteSearchPanel
-      variant="return-assist"
-      documents={documents}
-      articles={articles}
-      placeholder="What can we help you find?"
-      label="What can we help you find?"
-      autoFocus
-    />
-  );
-}
-
 export default function HomePage() {
   const location = useLocation();
   const pageRef = useRef(null);
@@ -169,8 +155,17 @@ export default function HomePage() {
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
-  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
-  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
+  const {
+    blocksByPath: managedBlocksByPath,
+    pageHierarchy: managedPageHierarchy,
+  } = selectFrontHudContentSource({
+    enabled: frontHudEnabled,
+    pathname: '/',
+    authoringBlocksByPath,
+    blocksByPath,
+    authoringPageHierarchy,
+    pageHierarchy,
+  });
   const [showReturnAssist, setShowReturnAssist] = useState(false);
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
@@ -1097,7 +1092,7 @@ export default function HomePage() {
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-visually-hidden">{panel.label}</span>
+                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
               </button>
             ))}
           </div>
@@ -1116,23 +1111,16 @@ export default function HomePage() {
           </div>
         </aside>
       ) : null}
-      {showFrontHud ? (
-        <FrontHudPageWorkflow pathname="/" reviewHref="/admin/content?page=%2F" placement="bar" />
-      ) : null}
+      <Suspense fallback={null}>
+        <FrontHudPageWorkflow pathname="/" reviewHref="/admin/content?page=%2F" placement="bar" isVisible={showFrontHud} />
+      </Suspense>
 
       {hasOpenHudPanel && activeHudPanel ? (
-        <FrontHudPanelShell
-          title={activeHudPanel.label}
-          onClose={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
-          className={isMobileFrontHud ? 'is-mobile-sheet' : ''}
-          draggable={!isMobileFrontHud}
-          isMobileSheet={isMobileFrontHud}
-          style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
-        >
-          <BlockHudPanelHost
-            block={activeHudPanel.block}
+        <Suspense fallback={null}>
+          <FrontHudPanelShell
+            title={activeHudPanel.label}
+            blockId={activeHudPanel.block.id}
             pathname="/"
-            routeOptions={routeLinkOptions}
             ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
             onOwnershipAction={() => {
               if (!activeHudPanel?.block?.id) {
@@ -1140,9 +1128,39 @@ export default function HomePage() {
               }
               setActiveBlockLock('/', activeHudPanel.block.id, { force: true });
             }}
-            onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
-          />
-        </FrontHudPanelShell>
+            onClose={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
+            className={isMobileFrontHud ? 'is-mobile-sheet' : ''}
+            draggable={!isMobileFrontHud}
+            isMobileSheet={isMobileFrontHud}
+            style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+          >
+            <FrontHudPageWorkflow
+              pathname="/"
+              reviewHref="/admin/content?page=%2F"
+              placement="dock-inline"
+              showBlockPublishAction={false}
+              showBlockDiscardAction
+              blockId={activeHudPanel.block.id}
+              blockLabel={activeHudPanel.label}
+              onDoneEditing={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
+            />
+            <Suspense fallback={null}>
+              <BlockHudPanelHost
+                block={activeHudPanel.block}
+                pathname="/"
+                routeOptions={routeLinkOptions}
+                ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+                onOwnershipAction={() => {
+                  if (!activeHudPanel?.block?.id) {
+                    return;
+                  }
+                  setActiveBlockLock('/', activeHudPanel.block.id, { force: true });
+                }}
+                onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
+              />
+            </Suspense>
+          </FrontHudPanelShell>
+        </Suspense>
       ) : null}
 
       {homeRenderItems.map((item, index) => {
@@ -1164,47 +1182,35 @@ export default function HomePage() {
 
         if (item?.type === 'slot' && item.slot === 'return_assist') {
           return (
-            <section key={`slot-${item.slot}-${index}`} className="home-return-assist" aria-label="Return assist">
-              <ResourcesProvider>
-                <div className="home-return-assist-panel">
-                  <div className="home-return-assist-search-shell">
-                    <HomeReturnAssistSearchPanel />
-                  </div>
-                  <button
-                    type="button"
-                    className="home-return-assist-dismiss"
-                    onClick={handleDismissReturnAssist}
-                    aria-label="Dismiss return assist"
-                  >
-                    ×
-                  </button>
-                </div>
-              </ResourcesProvider>
-            </section>
+            <Suspense key={`slot-${item.slot}-${index}`} fallback={null}>
+              <HomeReturnAssist onDismiss={handleDismissReturnAssist} />
+            </Suspense>
           );
         }
 
         return null;
       })}
       {isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? (
-        <MobileFrontHudActionTray
-          blockLabel={mobileSelectedHudPanel.label}
-          isHidden={mobileSelectedHudBlock?.hidden === true || mobileSelectedHudBlock?.hidden === 'true'}
-          canMoveUp={canMoveMobileSelectedHudBlockUp}
-          canMoveDown={canMoveMobileSelectedHudBlockDown}
-          isMoreOpen={mobileHudMoreOpen}
-          isDeleteConfirming={mobileHudDeleteConfirmBlockId === mobileSelectedHudBlockId}
-          onEdit={handleMobileHudEdit}
-          onMoveUp={() => handleMobileHudMove('up')}
-          onMoveDown={() => handleMobileHudMove('down')}
-          onToggleMore={() => {
-            setMobileHudMoreOpen((current) => !current);
-            setMobileHudDeleteConfirmBlockId('');
-          }}
-          onToggleVisibility={handleMobileHudToggleVisibility}
-          onDelete={handleMobileHudDelete}
-          onDismiss={clearMobileHudSelection}
-        />
+        <Suspense fallback={null}>
+          <MobileFrontHudActionTray
+            blockLabel={mobileSelectedHudPanel.label}
+            isHidden={mobileSelectedHudBlock?.hidden === true || mobileSelectedHudBlock?.hidden === 'true'}
+            canMoveUp={canMoveMobileSelectedHudBlockUp}
+            canMoveDown={canMoveMobileSelectedHudBlockDown}
+            isMoreOpen={mobileHudMoreOpen}
+            isDeleteConfirming={mobileHudDeleteConfirmBlockId === mobileSelectedHudBlockId}
+            onEdit={handleMobileHudEdit}
+            onMoveUp={() => handleMobileHudMove('up')}
+            onMoveDown={() => handleMobileHudMove('down')}
+            onToggleMore={() => {
+              setMobileHudMoreOpen((current) => !current);
+              setMobileHudDeleteConfirmBlockId('');
+            }}
+            onToggleVisibility={handleMobileHudToggleVisibility}
+            onDelete={handleMobileHudDelete}
+            onDismiss={clearMobileHudSelection}
+          />
+        </Suspense>
       ) : null}
     </div>
   );

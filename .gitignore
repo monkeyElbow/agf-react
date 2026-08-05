@@ -29,3 +29,5 @@ public/wp-content/
 
 # Local admin content safety backups
 dev-data/backups/
+dev-data/content-admin-revisions/
+dev-data/content-admin-authority.lock

@@ -210,9 +210,9 @@ function OperatorProbe() {
   );
 }
 
-function renderOperatorProvider(initialState) {
+function renderOperatorProvider(initialState, publishedState = initialState) {
   return render(
-    <ContentAdminProvider initialState={buildBootstrapState(initialState)}>
+    <ContentAdminProvider initialState={buildBootstrapState(initialState, publishedState)}>
       <OperatorProbe />
     </ContentAdminProvider>,
   );
@@ -302,6 +302,7 @@ describe('ContentAdminContext operator smoke and recovery', () => {
           },
         },
       }),
+      baseSnapshot: buildState({ heroText: 'Published hero' }),
       updatedAt: 1710000006000,
     }));
     authorityMocks.releaseSharedBlockLock.mockResolvedValue({
@@ -473,7 +474,7 @@ describe('ContentAdminContext operator smoke and recovery', () => {
           history: [],
         },
       },
-    }));
+    }), buildState({ heroText: 'Published hero' }));
 
     expect(screen.getByTestId('workflow-current').textContent).toBe('0');
     expect(screen.getByTestId('workflow-other').textContent).toBe('1');
@@ -518,6 +519,36 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     expect(screen.getByTestId('action-result').textContent).toBe('save-failed');
     expect(screen.getByTestId('save-result').textContent).toBe('save-failed');
     expect(screen.getByTestId('hero-text').textContent).toBe('Edited hero');
+    expect(screen.getByTestId('dirty').textContent).toBe('true');
+  });
+
+  it('keeps the save operation partial when the authority skips a conflicting block', async () => {
+    authorityMocks.saveSharedPageDraft.mockImplementation(() => Promise.resolve({
+      ok: true,
+      state: buildState(),
+      baseSnapshot: buildState(),
+      updatedAt: 1710000012000,
+      saveResult: {
+        didSave: true,
+        hasConflicts: true,
+        changedPaths: [PAGE_PATH],
+        savedPaths: [PAGE_PATH],
+        savedBlockIdsByPath: { [PAGE_PATH]: ['cta_form'] },
+        blockedBlockIdsByPath: { [PAGE_PATH]: ['hero'] },
+        blockedBlocks: [{ pathname: PAGE_PATH, blockId: 'hero', reason: 'drafted-by-other' }],
+      },
+    }));
+
+    renderOperatorProvider(buildState());
+    fireEvent.click(screen.getByRole('button', { name: 'Edit hero' }));
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('action-result').textContent).toBe('partially-saved');
+    });
     expect(screen.getByTestId('dirty').textContent).toBe('true');
   });
 });

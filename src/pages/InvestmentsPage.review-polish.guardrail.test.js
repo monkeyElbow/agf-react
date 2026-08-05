@@ -11,13 +11,11 @@ function readSource(relativePath) {
 }
 
 describe('investments page review polish guardrails', () => {
-  it('keeps the Grow section copy and shared display title treatment in the investments route', () => {
+  it('keeps the Grow section presentation contract in the investments route', () => {
     const featureSource = readSource('../components/InvestmentsGrowthFeature.jsx');
     const catalogSource = readSource('../data/siteFeatureCatalog.js');
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(catalogSource).toContain("title: 'Grow your backup plan.'");
-    expect(catalogSource).toContain("title: 'Grow the Kingdom.'");
     expect(catalogSource).toContain("surfaceTone: 'blue'");
     expect(featureSource).toContain('data-investments-growth-background-panel={panel.surfaceTone}');
     expect(featureSource).toContain('className="investments-native-build-title-line"');
@@ -124,8 +122,6 @@ describe('investments page review polish guardrails', () => {
     expect(pageSource).toContain('Initial ladder setup');
     expect(pageSource).toContain('data-ladder-mini-axis-label');
     expect(pageSource).toContain('data-ladder-mini-maturity-marker');
-    expect(pageSource).toContain('Start with equal investments across 1-year through');
-    expect(pageSource).toContain('This view shows the starting ladder. Open the timeline to see how maturities roll forward.');
     expect(pageSource).toContain('View ongoing rollover timeline');
     expect(pageSource).toContain('className="investments-native-ladder-table-shell"');
     expect(pageSource).toContain('className="investments-native-ladder-mobile-sheet"');

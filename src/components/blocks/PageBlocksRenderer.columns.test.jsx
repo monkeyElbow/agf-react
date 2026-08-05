@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../../context/ContentAdminContext.jsx');
+vi.mock('../../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../../context/ContentAdminContextCore');
   return {
     ...actual,
     useContentAdmin: () => ({
@@ -89,7 +89,7 @@ describe('PageBlocksRenderer columns', () => {
     expect(action.className).toContain('is-tone-melon');
   });
 
-  it('forces external document column actions onto the shared outline contract even when authored as solid buttons', () => {
+  it('preserves an explicit solid style for external document column actions', () => {
     renderColumnsBlock({
       id: 'columns_docs',
       type: 'columns',
@@ -110,8 +110,8 @@ describe('PageBlocksRenderer columns', () => {
 
     const action = screen.getByRole('link', { name: 'Open PDF' });
     expect(action.className).toContain('service-native-btn');
-    expect(action.className).toContain('is-outline');
-    expect(action.className).toContain('is-tone-mango');
+    expect(action.className).not.toContain('is-outline');
+    expect(action.className).toContain('is-tone-atlantean');
     expect(action.className).not.toContain('is-ghost');
     expect(action.className).not.toContain('is-dark');
   });

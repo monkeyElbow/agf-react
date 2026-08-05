@@ -12,6 +12,8 @@ const mockSaveSharedDraftNow = vi.fn();
 const mockUpdateBlock = vi.fn();
 const mockMoveBlock = vi.fn();
 const mockRemoveBlock = vi.fn();
+const mockSetActiveBlockLock = vi.fn(() => ({ ok: true }));
+const mockGetBlockCollaboration = vi.fn(() => ({}));
 let mockBlocksByPath = {};
 let mockPageHierarchy = {};
 let mockResolveDocumentLink = () => '';
@@ -66,8 +68,8 @@ vi.mock('../context/FrontHudContext', () => ({
   }),
 }));
 
-vi.mock('../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../context/ContentAdminContext.jsx');
+vi.mock('../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../context/ContentAdminContextCore');
   return {
     ...actual,
     useContentAdmin: () => ({
@@ -78,8 +80,8 @@ vi.mock('../context/ContentAdminContext', async () => {
       updateBlock: mockUpdateBlock,
       moveBlock: mockMoveBlock,
       removeBlock: mockRemoveBlock,
-      setActiveBlockLock: vi.fn(() => ({ ok: true })),
-      getBlockCollaboration: vi.fn(() => ({})),
+      setActiveBlockLock: mockSetActiveBlockLock,
+      getBlockCollaboration: mockGetBlockCollaboration,
       isPageDirty: (pathname) => pathname === '/services/insurance/ministers-group-life-plan',
       getPageChangeSummary: () => ({
         changedBlockCount: 2,
@@ -116,6 +118,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     mockUpdateBlock.mockReset();
     mockMoveBlock.mockReset();
     mockRemoveBlock.mockReset();
+    mockSetActiveBlockLock.mockReset();
+    mockSetActiveBlockLock.mockReturnValue({ ok: true });
+    mockGetBlockCollaboration.mockReset();
+    mockGetBlockCollaboration.mockReturnValue({});
     mockResolveDocumentLink = () => '';
     window.matchMedia = vi.fn().mockImplementation((query) => ({
       matches: query === '(max-width: 760px)' ? mockMobileFrontHud : false,
@@ -672,6 +678,50 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.queryByText('Contact details')).toBeNull();
   });
 
+  it('wires endowments intro takeover to the active editable route', () => {
+    mockFrontHudEnabled = true;
+    mockBlocksByPath = {
+      '/services/planned-giving/endowments': (contentBlockBlueprintsByPath['/services/planned-giving/endowments'] || [])
+        .filter((block) => block?.mode === 'dynamic'),
+    };
+    mockPageHierarchy = {
+      '/services/planned-giving/endowments': {
+        path: '/services/planned-giving/endowments',
+        title: 'Endowments',
+        breadcrumbLabel: 'Endowments',
+        parentPath: '/services/planned-giving',
+      },
+    };
+    mockGetBlockCollaboration.mockImplementation((pathname, blockId) => (
+      pathname === '/services/planned-giving/endowments' && blockId === 'intro'
+        ? {
+          draftedBy: { userId: 'dev-other', displayName: 'Other admin' },
+          draftedAt: Date.now() - 120000,
+        }
+        : {}
+    ));
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/planned-giving/endowments',
+            title: 'Endowments',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Intro HUD panel' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Take over draft' })[0]);
+
+    expect(mockSetActiveBlockLock).toHaveBeenCalledWith(
+      '/services/planned-giving/endowments',
+      'intro',
+      { force: true },
+    );
+  });
+
   it('shows the request-form HUD control on the managed generosity-fund request section', () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
@@ -982,6 +1032,9 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(ctaSection?.className).toContain('is-bg-white');
 
     fireEvent.click(screen.getByRole('button', { name: 'Open CTA Form HUD panel' }));
+    await waitFor(() => {
+      expect(screen.getByRole('radiogroup', { name: 'CTA background' })).toBeTruthy();
+    });
     fireEvent.click(within(screen.getByRole('radiogroup', { name: 'CTA background' })).getByRole('radio', { name: 'Blue' }));
 
     await waitFor(() => {
@@ -1267,5 +1320,26 @@ describe('NativeContentPage HUD visibility boundaries', () => {
 
     expect(billboardSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-bottom: clamp(4.1rem, 8vw, 6.8rem)');
     expect(billboardRail?.getAttribute('style') || '').toContain('--dynamic-billboard-max-width: 1100px');
+  });
+
+  it('treats /test as an active-block page instead of rendering native starter content', () => {
+    mockBlocksByPath = {
+      '/test': [],
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/test',
+            title: 'Test',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(document.querySelector('.service-native-hero')).toBeNull();
+    expect(document.querySelector('.service-native-intro')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Dynamic Panels.' })).toBeNull();
   });
 });

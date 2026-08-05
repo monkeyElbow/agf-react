@@ -41,13 +41,13 @@ describe('native CTA renderer guardrail', () => {
     expect(source).toContain('const isInlineCtaSection = isInlineCtaSectionShape(section);');
     expect(source).toContain('title: String(section.form.title || section.title || \'\').trim()');
     expect(source).toContain('subtitle: String(section.form.subtitle || section.subtitle || \'\').trim()');
-    expect(source).toContain('const showSectionCopy = !section.hideCopy && !isInlineCtaSection;');
-    expect(source).toContain('&& !isInlineCtaSection');
+    expect(source).toContain('const showSectionCopy = !section.hideCopy && (!isInlineCtaSection || !ctaPresentation.isExternalInlineReveal);');
+    expect(source).toContain('&& (!isInlineCtaSection || !ctaPresentation.isExternalInlineReveal)');
     expect(source).toContain('const hasInlineCtaShell = isInlineCtaSection;');
   });
 
   it('keeps CTA sandstone heading support aligned between HUD preview and runtime CSS', () => {
-    const cssSource = readSource('../styles/service-native.css');
+    const cssSource = `${readSource('../styles/service-native.css')}\n${readSource('../styles/front-hud.css')}`;
 
     expect(cssSource).toContain('.admin-cta-hud-live-heading.is-sandstone,');
     expect(cssSource).toContain('.admin-cta-hud-live-heading mark.is-sandstone {');

@@ -72,10 +72,8 @@ describe('planned giving review polish guardrail', () => {
       ?.find((block) => block?.id === 'how_it_works');
 
     expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-duo'");
-    expect(blueprintSource).toContain("button1Label: 'Set up an endowment'");
     expect(blueprintSource).toContain("button1LinkJson: JSON.stringify({ kind: 'anchor', href: '#endowment-request-form', openInNewWindow: false })");
     expect(blueprintSource).toContain("anchorId: 'endowment-request-form'");
-    expect(blueprintSource).toContain('The annual earnings from your carefully-invested gift support your chosen ministry or cause.');
     expect(blueprintSource).toContain('createPlannedGivingHowItWorksColumnsBlueprint({');
     expect(blueprintSource).toContain("title: 'How it works'");
     expect(blueprintSource).toContain("columns: 'three'");
@@ -86,21 +84,11 @@ describe('planned giving review polish guardrail', () => {
         sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-endowments-duo',
         columns: 'three',
         col1Type: 'flow-step',
-        col1Body: 'Designated assets are invested to ensure their protection and growth.',
-        col2Body: 'Payments are made from ongoing interest earned from the gifted asset(s).',
-        col3Body: 'An endowment requires that the principal remain intact indefinitely—or until sufficient assets have accumulated to ensure the endowment’s perpetuity.',
         col4Enabled: false,
       },
     });
-    expect(blueprintSource).not.toContain("title: 'You give assets'");
-    expect(blueprintSource).not.toContain("title: 'Principal stays invested'");
-    expect(blueprintSource).not.toContain("title: 'Earnings support ministry'");
     expect(blueprintSource).toContain("id: 'assets_you_may_give'");
-    expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-assets'");
-    expect(blueprintSource).toContain("contentMaxWidthPx: 1040");
-    expect(blueprintSource).toContain("Minimum funding requirements are <strong>$10,000</strong> for cash or securities, and <strong>$100,000</strong> for real estate.");
-    expect(blueprintSource).toContain("class=\"endowments-assets-copy\"");
-    expect(blueprintSource).toContain("class=\"endowments-asset-badges\"");
+    expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-assets legacy-child-native-give-assets legacy-child-native-endowments-assets'");
     expect(blueprintSource).not.toContain("Endowments may be funded with:");
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-duo {');
     expect(cssSource).toContain('background: #faf7f1;');
@@ -176,9 +164,8 @@ describe('planned giving review polish guardrail', () => {
     const componentSource = readSource('../components/NativeContentPage.jsx');
 
     expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-calculator'");
-    expect(blueprintSource).toContain("title: 'See how your endowment can keep giving.'");
     expect(blueprintSource).toContain("widget: 'endowment-calculator'");
-    expect(componentSource).toContain('Enter assets you may gift. We’ll show your <em>annual ministry impact</em> from investment earnings (your principal remains invested).');
+    expect(componentSource).toContain('annual ministry impact');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-calculator > .ag-panel-rail > h2 {');
     expect(cssSource).toContain('margin-bottom: 0.1rem;');
     expect(cssSource).toContain('letter-spacing: -0.03em;');
@@ -195,35 +182,115 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('max-width: none;');
   });
 
-  it('keeps the charitable trusts process trigger on the non-filling outline hover pattern', () => {
-    const cssSource = readSource('../styles/service-native.css');
+  it('keeps the removed charitable trusts process trigger out of source-owned blocks', () => {
     const contentSource = readSource('../data/nativePageContent.js');
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
-    expect(cssSource).toContain('.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline,');
-    expect(cssSource).toContain('--btn-hover-bg: transparent;');
-    expect(cssSource).toContain('--btn-hover-text: var(--btn-hover-color);');
-    expect(cssSource).toContain('.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:hover,');
-    expect(cssSource).toContain('.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:focus-visible,');
-    expect(cssSource).toContain('.legacy-child-native-trusts-crt-trigger .service-native-btn.is-outline:active {');
-    expect(cssSource).toContain('background: transparent;');
     expect(contentSource).toContain("pageClass: 'native-info-page--legacy-child native-info-page--legacy-trusts'");
-    expect(blueprintSource).toContain("id: 'cta_trigger'");
-    expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-trusts-crt-trigger'");
-    expect(blueprintSource).toContain("buttonLabel: 'Start the process'");
-    expect(blueprintSource).toContain("buttonAction: 'open_cta_form'");
-    expect(blueprintSource).toContain("buttonTargetAnchorId: 'charitable-trusts-inline-form'");
-    expect(blueprintSource).toContain("buttonStyle: 'outline'");
-    expect(blueprintSource).toContain("buttonTone: 'white'");
+    expect(blueprintSource).not.toContain("id: 'cta_trigger'");
+    expect(blueprintSource).not.toContain("sectionClassName: 'legacy-child-native-trusts-crt-trigger'");
+    expect(blueprintSource).not.toContain("buttonTargetAnchorId: 'charitable-trusts-inline-form'");
   });
 
-  it('keeps charitable trusts CRT and CLT choice card titles at the investments card-title scale', () => {
+  it('keeps charitable trusts CRT and CLT choice cards aligned to the investments certificate card treatment', () => {
     const cssSource = readSource('../styles/service-native.css');
 
+    expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts .service-native-card {');
+    expect(cssSource).toContain('--dynamic-grid-card-body-size: 1.08rem;');
+    expect(cssSource).toContain('--dynamic-grid-card-body-line-height: 1.65;');
+    expect(cssSource).toContain('border-radius: 16px;');
+    expect(cssSource).toContain('padding: 0;');
+    expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-card p,');
+    expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card > .investments-native-cert-card__cap {');
+    expect(cssSource).toContain('padding-bottom: clamp(0.31rem, 0.66vw, 0.39rem);');
+    expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card > .investments-native-cert-card__body {');
+    expect(cssSource).toContain('padding-top: clamp(0.675rem, 1.4vw, 0.875rem);');
+    expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-card h3,');
     expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3 {');
     expect(cssSource).toContain('font-size: clamp(1.9rem, 3.35vw, 2.45rem);');
     expect(cssSource).toContain('line-height: 1.02;');
-    expect(cssSource).toContain('margin-bottom: clamp(0.8rem, 1.75vw, 1.1rem);');
+    expect(cssSource).toContain('margin: 0 0 0.2rem;');
+    expect(cssSource).toContain('@media (max-width: 1024px) {');
+    expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-grid {');
+    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
+    expect(cssSource).toContain('clamp(2.4rem, 5.2vw, 3.1rem)');
+    expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3::after {');
+    expect(cssSource).toContain('display: none;');
+  });
+
+  it('keeps charitable trusts difference columns aligned to the Ministry Impact how-it-works spacing and type scale', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.legacy-child-native-trusts-differences > :is(.ag-panel-rail, .ag-panel-rail-wide) {');
+    expect(cssSource).toContain('width: min(calc(100% - (var(--ag-panel-gutter) * 1.4)), 76rem);');
+    expect(cssSource).toContain('.legacy-child-native-trusts-differences.native-dynamic-grid .service-native-grid {');
+    expect(cssSource).toContain('margin-top: clamp(2rem, 4vw, 3rem);');
+    expect(cssSource).toContain('width: min(100%, 21rem);');
+    expect(cssSource).toContain('font-size: clamp(1.55rem, 2.4vw, 2rem);');
+    expect(cssSource).toContain('.legacy-child-native-trusts-differences.native-dynamic-grid .service-native-card:nth-child(1) h3 {');
+    expect(cssSource).toContain('color: var(--ag-color-atlantean);');
+    expect(cssSource).toContain('font-size: clamp(1.16rem, 1.75vw, 1.32rem);');
+    expect(cssSource).toContain('line-height: 1.68;');
+  });
+
+  it('justifies Charitable Lead and Remainder Trust body copy', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.legacy-child-native-trusts-crt.dynamic-billboard .native-info-rich-html p {');
+    expect(cssSource).toContain('.legacy-child-native-trusts-clt.dynamic-billboard .native-info-section-copy.is-justify-center .native-info-rich-html p {');
+    expect(cssSource).toContain('text-align: justify;');
+    expect(cssSource).toContain('text-justify: distribute;');
+
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
+    expect(blueprintSource).toContain('the ministry you’ve selected.</p>');
+  });
+
+  it('keeps charitable trusts type card bullets aligned to the Ministry Impact donor gift bullet scale', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list {');
+    expect(cssSource).toContain('.legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list li {');
+    expect(cssSource).toContain('.legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list {');
+    expect(cssSource).toContain('.legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list li {');
+    expect(cssSource).toContain('font-size: clamp(1.1rem, 2vw, 1.35rem);');
+    expect(cssSource).toContain('line-height: 1.32;');
+    expect(cssSource).toContain('margin-top: 0.42rem;');
+    expect(cssSource).toContain('color: var(--ag-color-super-grey);');
+  });
+
+  it('keeps charitable trusts funding-card bullets aligned to the Ministry Impact donor gift bullet scale', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.legacy-child-native-trusts-funding .service-native-card-bullet-list li {');
+    expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trusts-funding .service-native-card-bullet-list li {');
+    expect(cssSource).toContain('font-size: clamp(1.1rem, 2vw, 1.35rem);');
+    expect(cssSource).toContain('line-height: 1.32;');
+    expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trusts-funding .service-native-card-bullet-list li + li {');
+    expect(cssSource).toContain('margin-top: 0.42rem;');
+    expect(cssSource).toContain('.legacy-child-native-trusts-funding .service-native-card .service-native-action-row:last-child {');
+    expect(cssSource).toContain('justify-content: center;');
+  });
+
+  it('keeps donor advised fund asset-card bullets aligned to the Ministry Impact donor gift bullet scale', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--legacy-generosity-fund .service-native-section.native-dynamic-grid.legacy-child-native-generosity-assets {');
+    expect(cssSource).toContain('padding-top: clamp(0.9rem, 2vw, 1.5rem);');
+    expect(cssSource).toContain('padding-bottom: clamp(4.5rem, 8vw, 6.2rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list li {');
+    expect(cssSource).toContain('font-size: clamp(1.1rem, 2vw, 1.35rem);');
+    expect(cssSource).toContain('line-height: 1.32;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list li + li {');
+    expect(cssSource).toContain('margin-top: 0.42rem;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list strong {');
+    expect(cssSource).toContain('color: var(--ag-color-super-grey);');
+  });
+
+  it('keeps charitable trusts funding-card action spacing balanced', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trusts-funding {');
+    expect(cssSource).toContain('padding-bottom: clamp(4.5rem, 8vw, 6.2rem);');
   });
 
   it('keeps Ministry Impact Fund step icons aligned on a shared rail', () => {

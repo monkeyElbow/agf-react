@@ -7,7 +7,7 @@ import {
   normalizeFollowUpSubmitLabel,
   validateRequiredFormFields,
 } from '../../blocks/foundation/forms';
-import { useContentAdmin } from '../../context/ContentAdminContext';
+import { useContentAdmin } from '../../context/ContentAdminContextCore';
 import {
   getDynamicColumnWidthShare,
   getVisibleDynamicColumnSlots,
@@ -87,6 +87,7 @@ function SharedBlockHudAnchor({ hudAnchor }) {
   return (
     <FrontHudAnchorTag
       label={hudAnchor.label}
+      icon={hudAnchor.icon}
       isActive={hudAnchor.isActive}
       onClick={hudAnchor.onClick}
       style={hudAnchor.style}
@@ -112,6 +113,49 @@ function normalizePanelBgTone(value) {
 
 function normalizePanelTextTone(value, fallback = 'dark') {
   return normalizeSharedPanelTextTone(value, fallback);
+}
+
+function isObject(value) {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function getBlockSettingsSource(block) {
+  return isObject(block?.settings) ? block.settings : block;
+}
+
+function readCanonicalBlockString(block, canonicalKey, legacyKeys = []) {
+  const source = getBlockSettingsSource(block);
+  const keys = [canonicalKey, ...(Array.isArray(legacyKeys) ? legacyKeys : [legacyKeys])].filter(Boolean);
+  const presentKey = keys.find((key) => Object.prototype.hasOwnProperty.call(source || {}, key));
+  if (presentKey) {
+    return String(source?.[presentKey] ?? '').trim();
+  }
+  return '';
+}
+
+function hasCanonicalBlockField(block, keys = []) {
+  const source = getBlockSettingsSource(block);
+  return (Array.isArray(keys) ? keys : [keys]).some((key) => (
+    key && Object.prototype.hasOwnProperty.call(source || {}, key)
+  ));
+}
+
+function toRendererBlock(block) {
+  if (!isObject(block) || !isObject(block.settings)) {
+    return block;
+  }
+
+  const settings = block.settings;
+  return {
+    id: block.id,
+    kind: block.kind,
+    type: block.type,
+    mode: block.mode,
+    presetId: block.presetId,
+    templateId: block.templateId,
+    settings,
+    ...settings,
+  };
 }
 
 function normalizeRemNumber(value, fallback) {
@@ -330,6 +374,7 @@ function TopStripBlock({ block, resolveTo, ownership, hudAnchor }) {
   const ratesTarget = runtime.ratesOpenInNewWindow ? '_blank' : undefined;
   const rateRel = ratesTarget ? 'noreferrer noopener' : undefined;
   const loginRel = loginTarget ? 'noreferrer noopener' : undefined;
+  const loginLabel = String(runtime.loginLabel || '').trim() || 'Secure Login';
   const stripClassName = `home-native-strip is-bg-${runtime.bgTone} is-text-${runtime.textTone}`;
   const loginClassName = `home-native-strip-login-btn is-style-${runtime.loginStyle} is-tone-${runtime.loginTone}`;
   const ratesClassName = `home-native-strip-rates is-style-${runtime.ratesStyle} is-tone-${runtime.ratesTone}`;
@@ -344,7 +389,13 @@ function TopStripBlock({ block, resolveTo, ownership, hudAnchor }) {
       <SharedBlockHudAnchor hudAnchor={hudAnchor} />
       <div className="home-native-strip-fluid">
         {runtime.showLogin ? (
-          <a href={runtime.loginHref} target={loginTarget} rel={loginRel} className={loginClassName}>
+          <a
+            href={runtime.loginHref}
+            target={loginTarget}
+            rel={loginRel}
+            className={loginClassName}
+            aria-label={loginLabel}
+          >
             {runtime.loginLabel}
           </a>
         ) : null}
@@ -364,28 +415,29 @@ function TopStripBlock({ block, resolveTo, ownership, hudAnchor }) {
 }
 
 function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
-  const legacyLine1Text = [String(block.eyebrowPrefix || '').trim(), String(block.highlight || '').trim()]
+  const source = getBlockSettingsSource(block);
+  const legacyLine1Text = [String(source.eyebrowPrefix || '').trim(), String(source.highlight || '').trim()]
     .filter(Boolean)
     .join(' ')
     .trim();
-  const legacyLine2Text = [String(block.titlePrefix || '').trim(), String(block.accentWord || '').trim()]
+  const legacyLine2Text = [String(source.titlePrefix || '').trim(), String(source.accentWord || '').trim()]
     .filter(Boolean)
     .join(' ')
     .trim();
   const line1Text = String(
-    block.line1Text
-    || block.eyebrow
+    readCanonicalBlockString(block, 'line1Text', ['eyebrow'])
+    || (Object.prototype.hasOwnProperty.call(source || {}, 'line1Text') ? '' : source.eyebrow)
     || (legacyLine1Text ? `${legacyLine1Text}.` : ''),
   ).trim();
   const line2Text = String(
-    block.line2Text
-    || block.title
+    readCanonicalBlockString(block, 'line2Text', ['title'])
+    || (Object.prototype.hasOwnProperty.call(source || {}, 'line2Text') ? '' : source.title)
     || (legacyLine2Text ? `${legacyLine2Text}.` : ''),
   ).trim();
-  const legacyLine1Highlight = String(block.highlight || '').trim() || 'investment';
-  const legacyLine2Highlight = String(block.accentWord || '').trim() || 'church';
-  let line1Highlights = parseHighlightsJson(block.line1HighlightsJson, line1Text);
-  let line2Highlights = parseHighlightsJson(block.line2HighlightsJson, line2Text);
+  const legacyLine1Highlight = String(source.highlight || '').trim() || 'investment';
+  const legacyLine2Highlight = String(source.accentWord || '').trim() || 'church';
+  let line1Highlights = parseHighlightsJson(source.line1HighlightsJson, line1Text);
+  let line2Highlights = parseHighlightsJson(source.line2HighlightsJson, line2Text);
   if (!line1Highlights.length && line1Text && legacyLine1Highlight) {
     line1Highlights = parseHighlightsJson(
       JSON.stringify([{ text: legacyLine1Highlight, className: 'is-atlantean' }]),
@@ -398,18 +450,18 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
       line2Text,
     );
   }
-  const line3Text = String(block.line3Text || '').trim();
-  const line3Highlights = parseHighlightsJson(block.line3HighlightsJson, line3Text);
-  const line1ClassName = String(block.line1ClassName || 'home-native-eyebrow').trim() || 'home-native-eyebrow';
-  const line2ClassName = String(block.line2ClassName || 'home-native-title line1 line2').trim() || 'home-native-title line1 line2';
-  const line3ClassName = String(block.line3ClassName || 'home-native-title line3').trim() || 'home-native-title line3';
-  const lineHeight = Number.isFinite(Number(block.lineHeight)) ? Number(block.lineHeight) : 0.9;
-  const lineGap = normalizeHeroLineGapEm(block.lineGap);
-  const heroTitleSize = heroTitleSizeRemToRuntimeCss(normalizeHeroTitleSizeRem(block.titleSizeRem));
-  const heroTitleLetterSpacing = `${normalizeHeroTitleLetterSpacingEm(block.titleLetterSpacingEm)}em`;
-  const bgTone = normalizePanelBgTone(block.bgTone || 'white');
-  const justify = ['left', 'center', 'right'].includes(String(block.justify || '').trim().toLowerCase())
-    ? String(block.justify || '').trim().toLowerCase()
+  const line3Text = String(source.line3Text || '').trim();
+  const line3Highlights = parseHighlightsJson(source.line3HighlightsJson, line3Text);
+  const line1ClassName = String(source.line1ClassName || 'home-native-eyebrow').trim() || 'home-native-eyebrow';
+  const line2ClassName = String(source.line2ClassName || 'home-native-title line1 line2').trim() || 'home-native-title line1 line2';
+  const line3ClassName = String(source.line3ClassName || 'home-native-title line3').trim() || 'home-native-title line3';
+  const lineHeight = Number.isFinite(Number(source.lineHeight)) ? Number(source.lineHeight) : 0.9;
+  const lineGap = normalizeHeroLineGapEm(source.lineGap);
+  const heroTitleSize = heroTitleSizeRemToRuntimeCss(normalizeHeroTitleSizeRem(source.titleSizeRem));
+  const heroTitleLetterSpacing = `${normalizeHeroTitleLetterSpacingEm(source.titleLetterSpacingEm)}em`;
+  const bgTone = normalizePanelBgTone(source.bgTone || 'white');
+  const justify = ['left', 'center', 'right'].includes(String(source.justify || '').trim().toLowerCase())
+    ? String(source.justify || '').trim().toLowerCase()
     : 'left';
   const heroClassName = `home-native-hero is-bg-${bgTone} is-justify-${justify}`;
   const liveLines = [
@@ -444,16 +496,28 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
   const visibleLiveLines = heroHud?.isEditing
     ? liveLines
     : liveLines.filter((line) => String(line.text || '').trim());
-  const ctaLabel = String(block.button1Label || block.ctaLabel || 'Contact us').trim();
-  const rawCtaTarget = String(
-    block.button1Url
-    || block.button1PageRef
-    || block.ctaPath
-    || '/contact-us',
-  ).trim();
-  const openInNewWindow = Boolean(block.button1OpenInNewWindow);
+  const hasCtaLabel = isObject(block?.settings) || hasCanonicalBlockField(block, ['button1Label', 'ctaLabel']);
+  const ctaLabel = hasCtaLabel
+    ? readCanonicalBlockString(block, 'button1Label', ['ctaLabel'])
+    : 'Contact us';
+  const ctaLink = coerceLinkValueFromFields(source, {
+    linkJsonKeys: ['button1LinkJson'],
+    hrefKeys: ['button1Url'],
+    toKeys: ['button1PageRef', 'ctaPath'],
+    openInNewWindowKeys: ['button1OpenInNewWindow'],
+  });
+  const hasCtaLink = hasCanonicalBlockField(block, [
+    'button1LinkJson',
+    'button1Url',
+    'button1PageRef',
+    'ctaPath',
+  ]);
+  const rawCtaTarget = String(ctaLink?.to || ctaLink?.href || '').trim() || (hasCtaLink ? '' : '/contact-us');
+  const openInNewWindow = Boolean(ctaLink?.openInNewWindow);
   const isExternal = /^(https?:|mailto:|tel:)/i.test(rawCtaTarget);
-  const ctaTarget = isExternal ? rawCtaTarget : resolveTo(rawCtaTarget, '/contact-us');
+  const ctaTarget = rawCtaTarget
+    ? (isExternal ? rawCtaTarget : resolveTo(rawCtaTarget, '/contact-us'))
+    : '';
 
   return (
     <section
@@ -521,7 +585,7 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
             ) : null}
           </>
         )}
-        {ctaLabel ? (
+        {ctaLabel && ctaTarget ? (
           isExternal ? (
             <a
               href={ctaTarget}
@@ -1019,6 +1083,7 @@ function buildBillboardAction(action, resolveTo) {
   const className = shouldUseUniversalOutlineButtonLink({
     href: rawTarget,
     external: isExternal,
+    buttonStyle: action?.style,
   })
     ? normalizeUniversalOutlineButtonClassName(baseClassName, action?.tone || 'atlantean')
     : baseClassName;
@@ -1095,6 +1160,7 @@ function buildColumnsAction(label, url, style, tone, pageRef, resolveTo, useFami
   const className = !useFamilyPresetCtaStyle && shouldUseUniversalOutlineButtonLink({
     href: nextUrl,
     external: isExternal,
+    buttonStyle: style,
   })
     ? normalizeUniversalOutlineButtonClassName(baseClassName, tone || 'atlantean')
     : baseClassName;
@@ -1176,7 +1242,8 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const explicitTitle = String(block.title || '').trim();
+  const hasCanonicalSettings = isObject(block?.settings);
+  const explicitTitle = readCanonicalBlockString(block, 'title', ['heading']);
   const legacyTitle = [
     String(block.headingPrefix || '').trim(),
     String(block.headingHighlight || '').trim(),
@@ -1188,13 +1255,17 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
         ...block,
         kind: block.kind || block.type || 'cta_form',
         mode: block.mode || 'dynamic',
-        title: explicitTitle || legacyTitle,
-        bodyHtml: String(block.bodyHtml || '').trim()
-          || (String(block.note || '').trim() ? `<p>${String(block.note || '').trim()}</p>` : ''),
-        submitLabel: String(block.submitLabel || '').trim() || String(block.buttonLabel || '').trim(),
+        title: explicitTitle || (hasCanonicalSettings ? '' : legacyTitle),
+        bodyHtml: hasCanonicalSettings
+          ? String(block.bodyHtml || '').trim()
+          : (String(block.bodyHtml || '').trim()
+            || (String(block.note || '').trim() ? `<p>${String(block.note || '').trim()}</p>` : '')),
+        submitLabel: hasCanonicalSettings
+          ? String(block.submitLabel || '').trim()
+          : (String(block.submitLabel || '').trim() || String(block.buttonLabel || '').trim()),
       },
       {
-        fallbackFields: buildLegacyHomeCtaFields(block),
+        fallbackFields: hasCanonicalSettings ? [] : buildLegacyHomeCtaFields(block),
       },
     )
   ), [block, explicitTitle, legacyTitle]);
@@ -1213,6 +1284,9 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
   const resolvedTitle = String(runtime.title || '').trim();
   const bodyHtml = String(runtime.bodyHtml || '').trim();
   const subtitle = String(runtime.subtitle || '').trim();
+  const sectionClassName = String(runtime.sectionClassName || '').trim();
+  const isLegacyGivingCta = sectionClassName.split(/\s+/).includes('legacy-giving-cta');
+  const renderBodyInSectionCopy = isLegacyGivingCta && Boolean(bodyHtml);
   const bgTone = normalizePanelBgTone(runtime.bgTone || 'white');
   const submitLabel = normalizeFollowUpSubmitLabel(runtime.submitLabel);
   const successMessage = String(runtime.successMessage || '').trim() || 'Thanks. We will reach out soon.';
@@ -1253,7 +1327,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
 
   return (
     <section
-      className={`service-native-section native-dynamic-cta is-bg-${bgTone}${presentationClassName ? ` ${presentationClassName}` : ''}${ownership?.className || ''}`}
+      className={`service-native-section native-dynamic-cta is-bg-${bgTone}${sectionClassName ? ` ${sectionClassName}` : ''}${presentationClassName ? ` ${presentationClassName}` : ''}${ownership?.className || ''}`}
       data-block-id={block?.id || undefined}
       data-cta-display-mode={runtime?.displayMode || 'default'}
       data-cta-trigger-mode={runtime?.triggerMode || 'default'}
@@ -1269,6 +1343,9 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
               </h2>
             ) : null}
             {subtitle ? <p className="native-info-section-subtitle">{subtitle}</p> : null}
+            {renderBodyInSectionCopy ? (
+              <div className="native-info-rich-html dynamic-cta-form-callout" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+            ) : null}
           </div>
         ) : null}
 
@@ -1390,9 +1467,10 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
                 );
               })}
               {errorMessage ? <p className="dynamic-cta-form-error" role="alert">{errorMessage}</p> : null}
-              {bodyHtml ? (
+              {!renderBodyInSectionCopy && bodyHtml ? (
                 <div className="native-info-rich-html dynamic-cta-form-callout" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
               ) : null}
+              {runtime.fineprint ? <p className="dynamic-cta-form-fineprint">{runtime.fineprint}</p> : null}
               <button type="submit" className={submitButtonClassName}>{submitLabel}</button>
             </form>
           </div>
@@ -1403,21 +1481,20 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
 }
 
 function NewsletterBlock({ block, ownership, hudAnchor }) {
-  const bgTone = normalizePanelBgTone(block.bgTone);
+  const source = getBlockSettingsSource(block);
+  const bgTone = normalizePanelBgTone(source.bgTone);
   const textTone = normalizePanelTextTone(
-    block.textTone,
+    source.textTone,
     bgTone === 'white' || bgTone === 'sand' ? 'dark' : 'white',
   );
-  const legacyHeadingPrefix = String(block.headingPrefix || block.heading || '').trim();
-  const legacyHeadingHighlight = String(block.headingHighlight || '').trim();
-  const title = String(block.title || '').trim() || [legacyHeadingPrefix, legacyHeadingHighlight].filter(Boolean).join(' ').trim();
-  const titleClassName = normalizeToneClass(block.titleClassName || '');
+  const title = readCanonicalBlockString(block, 'title', ['heading']);
+  const titleClassName = normalizeToneClass(source.titleClassName || '');
   const titleHighlights = parseHighlightsJson(
-    block.titleHighlightsJson,
+    source.titleHighlightsJson,
     title,
   );
-  const bodyHtml = String(block.bodyHtml || '').trim();
-  const body = String(block.body || '').trim();
+  const bodyHtml = String(source.bodyHtml || '').trim();
+  const body = String(source.body || '').trim();
 
   return (
     <section className={`home-native-newsletter is-bg-${bgTone} is-text-${textTone}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
@@ -1643,8 +1720,17 @@ export function ColumnsBlock({
   const sectionRef = useRef(null);
   const valueCardsPanelTones = ['blue', 'mango', 'sand'];
   const isDynamicColumnsBlock = String(block?.mode || '').trim().toLowerCase() === 'dynamic';
-  const dynamicBlock = isDynamicColumnsBlock && block?.settings
-    ? { ...block, ...(block.settings || {}) }
+  const dynamicBlock = isDynamicColumnsBlock && isObject(block?.settings)
+    ? {
+      id: block.id,
+      kind: block.kind,
+      type: block.type,
+      mode: block.mode,
+      presetId: block.presetId,
+      templateId: block.templateId,
+      settings: block.settings,
+      ...block.settings,
+    }
     : block;
   const dynamicPresetClassToken = isDynamicColumnsBlock ? resolvePresetFamilyClassToken(dynamicBlock) : '';
   const shouldAnimateColumnsItems = dynamicPresetClassToken === 'value-cards';
@@ -1733,12 +1819,18 @@ export function ColumnsBlock({
         const columnImageAlt = String(dynamicBlock[`col${slot}ImageAlt`] || '').trim();
         const columnIconKey = String(dynamicBlock[`col${slot}IconKey`] || '').trim();
         const columnIconTone = sanitizeClassName(dynamicBlock[`col${slot}IconTone`] || '');
+        const columnLink = coerceLinkValueFromFields(dynamicBlock, {
+          linkJsonKeys: [`col${slot}ButtonLinkJson`],
+          hrefKeys: [`col${slot}ButtonUrl`],
+          toKeys: [`col${slot}ButtonPageRef`],
+          openInNewWindowKeys: [`col${slot}ButtonOpenInNewWindow`],
+        });
         const columnAction = buildColumnsAction(
-          dynamicBlock[`col${slot}ButtonLabel`],
-          dynamicBlock[`col${slot}ButtonUrl`],
+          readCanonicalBlockString(dynamicBlock, `col${slot}ButtonLabel`),
+          linkValueToEditableHref(columnLink),
           dynamicBlock[`col${slot}ButtonStyle`],
           dynamicBlock[`col${slot}ButtonTone`],
-          dynamicBlock[`col${slot}ButtonPageRef`],
+          undefined,
           resolveTo,
           useFamilyPresetCtaStyle,
         );
@@ -2091,7 +2183,7 @@ export default function PageBlocksRenderer({
   return (
     <>
       {blocks.map((block, index) => {
-        const renderBlock = normalizeBlockForRender(block);
+        const renderBlock = toRendererBlock(normalizeBlockForRender(block));
         const blockKind = String(renderBlock?.kind || renderBlock?.type || '').trim();
         const Renderer = blockRenderers[blockKind];
         if (!Renderer) {

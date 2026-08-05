@@ -53,7 +53,7 @@ vi.mock('./pages/AdminDocumentsPage', () => ({
   default: () => <div>Admin Documents</div>,
 }));
 
-vi.mock('./context/ContentAdminContext', () => ({
+vi.mock('./context/ContentAdminContextCore', () => ({
   useContentAdmin: () => ({
     pageHierarchy: {
       '/services/planned-giving': {

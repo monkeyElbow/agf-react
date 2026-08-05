@@ -10,6 +10,7 @@ import {
 import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { parseCtaFormFieldsJson } from '../blocks/foundation/forms';
 import { parseLinkValueJson } from '../lib/linkValue';
+import { migrateGenerosityFundSnapshot } from '../lib/contentAdminSnapshotMigrations';
 
 const TARGET_BRIDGE_SETTING_KEYS = [
   'targetSectionKey',
@@ -60,17 +61,59 @@ describe('ContentAdminContext state normalization', () => {
       'retirement-ira-block-shape',
       'loans-dynamic-block-upgrade',
       'property-casualty-request-repair',
+      'target-bridge-snapshot-cleanup',
+      'split-link-compatibility',
+      'cta-form-slot-compatibility',
+      'cga-secure-act-content-compatibility',
     ]);
 
     inventory.forEach((entry) => {
       expect(entry.id).toMatch(/^[a-z0-9-]+$/);
       expect(entry.paths.length, `${entry.id} paths`).toBeGreaterThan(0);
-      expect(entry.helpers.length, `${entry.id} helpers`).toBeGreaterThan(0);
+      if (entry.status === 'retired') {
+        expect(entry.retirementReceipt).toMatch(/^docs\//);
+        expect(entry.helpers).toEqual([]);
+      } else {
+        expect(entry.helpers.length, `${entry.id} helpers`).toBeGreaterThan(0);
+      }
       expect(entry.retireWhen, `${entry.id} retirement criteria`).toMatch(/\w/);
     });
+
+    expect(inventory.find((entry) => entry.id === 'loans-dynamic-block-upgrade')).toEqual(expect.objectContaining({
+      status: 'retired',
+      helpers: [],
+      retirementReceipt: 'docs/content-admin-adapter-retirements/loans-dynamic-block-upgrade.json',
+    }));
   });
 
-  it('repairs stale IRA daily billboard layout settings to match the retirement daily billboard', () => {
+  it('does not silently upgrade unsupported retired loans blocks during normalization', () => {
+    const legacyBlock = {
+      id: 'request_form',
+      kind: 'retired_request_form',
+      mode: 'static',
+      settings: {},
+      editableFields: [],
+    };
+    const normalized = normalizeStoredConfig({
+      blocksByPath: {
+        '/services/loans': [legacyBlock],
+      },
+    });
+
+    expect(normalized.blocksByPath['/services/loans']).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'request_form',
+          kind: 'retired_request_form',
+          mode: 'static',
+          settings: {},
+          editableFields: [],
+        }),
+      ]),
+    );
+  });
+
+  it('preserves unsupported IRA daily billboard legacy settings during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/iras': [
@@ -94,9 +137,9 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'daily_billboard');
 
     expect(dailyBillboard?.settings).toMatchObject({
-      justify: 'center',
-      contentMaxWidthPx: 1480,
-      sectionClassName: 'retirement-everyday retirement-daily-billboard',
+      justify: 'right',
+      contentMaxWidthPx: 1216,
+      sectionClassName: '',
     });
   });
 
@@ -710,7 +753,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.body).toBe(defaultIntroBlock?.settings?.body);
   });
 
-  it('normalizes stale IRA comparison tables from the old Key difference column shape', () => {
+  it('preserves unsupported IRA comparison-table legacy settings during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/iras': [
@@ -731,32 +774,9 @@ describe('ContentAdminContext state normalization', () => {
     const comparisonBlock = (normalized.blocksByPath['/services/retirement/iras'] || [])
       .find((block) => block?.id === 'comparison_table');
 
-    expect(comparisonBlock?.settings?.tableHeadersJson).toEqual(['Traditional IRA', 'Roth IRA']);
-    expect(comparisonBlock?.settings?.tableFirstColumnHeader).toBe(false);
-    expect(comparisonBlock?.settings?.tableRowsJson).toHaveLength(1);
+    expect(comparisonBlock?.settings?.tableHeadersJson).toEqual(['Key difference', 'Traditional IRA', 'Roth IRA']);
     expect(comparisonBlock?.settings?.tableRowsJson).toEqual([
-      [
-        [
-          'Must have earned income',
-          'No income limits to establish',
-          'Contributions may be tax-deductible',
-          'Earnings are tax-deferred until distributed',
-          'Distributions may begin at age 59½',
-          'Early distributions may be subject to penalty',
-          'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
-        ].join('\n'),
-        [
-          'Income limits must be met for Roth IRA eligibility',
-          'Contributions are not tax-deductible',
-          'No age limit to contribute as long as you have earned income',
-          'Earnings may be tax-free at distribution if qualified',
-          'Principal contributions may be distributed without penalty',
-          'Qualified distributions on earnings may begin at 59½',
-          'Early distributions on earnings are subject to penalty',
-          'No required distribution age',
-          'Traditional IRAs may be converted to Roth IRAs',
-        ].join('\n'),
-      ],
+      ['Eligibility', 'Must have earned income.', 'Must meet Roth IRA limits.'],
     ]);
   });
 
@@ -792,7 +812,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
   });
 
-  it('refreshes stale property and casualty intro tones back to the dark gradient treatment', () => {
+  it('preserves unsupported property and casualty intro settings during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/insurance/property-casualty-insurance': [
@@ -817,9 +837,9 @@ describe('ContentAdminContext state normalization', () => {
     const introBlock = (normalized.blocksByPath['/services/insurance/property-casualty-insurance'] || [])
       .find((block) => block?.id === 'intro' && block?.kind === 'intro');
 
-    expect(introBlock?.settings?.bgTone).toBe('grey');
-    expect(introBlock?.settings?.textTone).toBe('white');
-    expect(introBlock?.settings?.button1Label).toBe('More about AG Insurance');
+    expect(introBlock?.settings?.bgTone).toBe('white');
+    expect(introBlock?.settings?.textTone).toBe('dark');
+    expect(introBlock?.settings?.button1Label).toBe('Jump to the AG program');
   });
 
   it('drops stale legacy-giving request-form blocks without restoring a missing CTA block', () => {
@@ -843,7 +863,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(legacyGivingBlocks.some((block) => block?.kind === 'cta_form')).toBe(false);
   });
 
-  it('normalizes stale planned giving static comparison tables to the dynamic comparison matrix', () => {
+  it('preserves unsupported planned giving comparison shapes during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/planned-giving': [
@@ -900,21 +920,12 @@ describe('ContentAdminContext state normalization', () => {
 
     const legacyGivingBlocks = normalized.blocksByPath['/services/planned-giving'] || [];
 
-    expect(legacyGivingBlocks.some((block) => block?.id === 'comparison_table')).toBe(true);
-    expect(legacyGivingBlocks.some((block) => block?.id === 'comparison_matrix')).toBe(false);
-    expect(legacyGivingBlocks.some((block) => block?.settings?.widget === 'charitable-giving-table')).toBe(false);
-    expect(legacyGivingBlocks.find((block) => block?.id === 'comparison_table')?.settings).toMatchObject({
-      title: '',
-      widget: 'giving-comparison-matrix',
-      anchorId: 'charitable-giving-plan-comparison',
-      sectionClassName: 'legacy-giving-comparison',
-      tableHeadersJson: '',
-      tableRowsJson: '',
-    });
-    expect(normalized.collaborationByPath['/services/planned-giving']?.blocks?.comparison_matrix).toBeUndefined();
+    expect(legacyGivingBlocks.map((block) => block?.id)).toEqual(['comparison_table', 'comparison_matrix']);
+    expect(legacyGivingBlocks.find((block) => block?.id === 'comparison_table')?.settings?.widget).toBe('charitable-giving-table');
+    expect(legacyGivingBlocks.find((block) => block?.id === 'comparison_matrix')?.settings?.widget).toBe('giving-comparison-matrix');
+    expect(normalized.collaborationByPath['/services/planned-giving']?.blocks?.comparison_matrix).toBeTruthy();
     expect(normalized.collaborationByPath['/services/planned-giving']?.blocks?.comparison_table).toBeTruthy();
-    expect(normalized.collaborationByPath['/services/planned-giving']?.history).toHaveLength(1);
-    expect(normalized.collaborationByPath['/services/planned-giving']?.history?.[0]?.blockId).toBe('comparison_table');
+    expect(normalized.collaborationByPath['/services/planned-giving']?.history).toHaveLength(2);
   });
 
   it('drops duplicate endowments request-form blocks and keeps the canonical legacy-form section class', () => {
@@ -1372,49 +1383,6 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.bgTone).toBe('white');
   });
 
-  it('backfills canonical CTA fieldsJson from slot fields during state normalization', () => {
-    const normalized = normalizeStoredConfig({
-      blocksByPath: {
-        '/services/loans': [
-          {
-            id: 'cta_form',
-            kind: 'cta_form',
-            mode: 'dynamic',
-            settings: {
-              title: 'Slot-only CTA',
-              fieldsJson: '',
-              field1Enabled: true,
-              field1Type: 'text',
-              field1Label: 'Full name',
-              field1Placeholder: '',
-              field1Options: '',
-              field1Required: true,
-              field2Enabled: true,
-              field2Type: 'email',
-              field2Label: 'Email',
-              field2Placeholder: '',
-              field2Options: '',
-              field2Required: true,
-              field3Enabled: false,
-              field4Enabled: false,
-              field5Enabled: false,
-            },
-          },
-        ],
-      },
-    });
-
-    const loansBlocks = normalized.blocksByPath['/services/loans'] || [];
-    const ctaBlock = loansBlocks.find((block) => block?.kind === 'cta_form');
-    const fields = parseCtaFormFieldsJson(ctaBlock?.settings?.fieldsJson);
-
-    expect(fields).toEqual([
-      expect.objectContaining({ id: 'field1', label: 'Full name', type: 'text', required: true }),
-      expect.objectContaining({ id: 'field2', label: 'Email', type: 'email', required: true }),
-    ]);
-    expect(Object.keys(ctaBlock?.settings || {}).filter((key) => /^field[1-5]/.test(key))).toEqual([]);
-  });
-
   it('normalizes split link target drift during state normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
@@ -1705,13 +1673,22 @@ describe('ContentAdminContext state normalization', () => {
     });
     expect((normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || []).map((block) => block.id))
       .not.toContain('traditional_daf_cta');
-    const heroBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
+    const loadedHero = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
       .find((block) => block?.id === 'hero');
-    const howItWorksBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
+    expect(loadedHero?.settings?.button1Label).toBe('Open a Generosity Fund®');
+    const migrated = migrateGenerosityFundSnapshot(normalized, {
+      defaultState: normalizeStoredConfig(null),
+      fromVersion: 0,
+    });
+    expect(migrated.changed).toBe(true);
+    const migratedState = migrated.state;
+    const heroBlock = (migratedState.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
+      .find((block) => block?.id === 'hero');
+    const howItWorksBlock = (migratedState.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
       .find((block) => block?.id === 'how_it_works');
-    const onlineBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
+    const onlineBlock = (migratedState.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
       .find((block) => block?.id === 'generosity_fund_online');
-    const giftAssetsBlock = (normalized.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
+    const giftAssetsBlock = (migratedState.blocksByPath['/services/planned-giving/donor-advised-fund'] || [])
       .find((block) => block?.id === 'gift_assets');
 
     expect(heroBlock?.settings?.button1Label).toBe('Open a traditional DAF');
@@ -1825,7 +1802,7 @@ describe('ContentAdminContext state normalization', () => {
     });
   });
 
-  it('repairs the legacy targeted 403(b) CTA seed into the standalone white CTA block', () => {
+  it('preserves unsupported legacy 403(b) CTA settings during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -1850,9 +1827,8 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.kind === 'cta_form');
 
     expect(ctaBlock).toBeTruthy();
-    expect(ctaBlock?.settings?.bodyHtml).toBe('');
-    expect(ctaBlock?.settings?.subtitle).toBe('And we’re eager to help.');
-    expect(ctaBlock?.settings?.bgTone).toBe('white');
+    expect(ctaBlock?.settings?.bodyHtml).toBe('<p>And we’re eager to help.</p>');
+    expect(ctaBlock?.settings?.bgTone).toBe('sand');
   });
 
   it('keeps customized standalone 403(b) CTA body copy once the route is block-owned', () => {
@@ -1886,7 +1862,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(ctaBlock?.settings?.bgTone).toBe('white');
   });
 
-  it('upgrades stale 403(b) rollover billboards to the canonical retirement rollover block', () => {
+  it('preserves unsupported legacy 403(b) rollover billboard settings during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -1916,7 +1892,7 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(rolloverBlock).toBeTruthy();
     expect(rolloverBlock?.hidden).toBe(false);
-    expect(rolloverBlock?.settings?.buttonLabel).toBe('Start a rollover');
+    expect(rolloverBlock?.settings?.buttonLabel).toBe('Let’s simplify things');
     expect(rolloverBlock?.settings?.titleFontFamily).toBe('helv');
     expect(rolloverBlock?.settings?.titleFontWeight).toBe(800);
     expect(rolloverBlock?.settings?.titleSizeRem).toBe(4.4);
@@ -2270,7 +2246,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.textTone).toBe('dark');
   });
 
-  it('drops the transitional 403(b) benefits copy block so the route stays block-owned', () => {
+  it('preserves an unsupported 403(b) benefits copy block during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2297,7 +2273,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    expect((normalized.blocksByPath['/services/retirement/403b'] || []).some((block) => block?.id === 'benefits_copy')).toBe(false);
+    expect((normalized.blocksByPath['/services/retirement/403b'] || []).some((block) => block?.id === 'benefits_copy')).toBe(true);
   });
 
   it('preserves the full 403(b) benefits card set after normalization', () => {
@@ -2333,8 +2309,8 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'benefits_cards' && block?.kind === 'card_grid');
 
     expect(benefitsCardsBlock?.settings?.card1Title).toBe('MBA Income Fund');
-    expect(String(benefitsCardsBlock?.settings?.card3Title || '')).toBe("Ministers' Housing Allowance");
-    expect(String(benefitsCardsBlock?.settings?.card3TitleHighlightsJson || '')).toContain("Ministers' Housing Allowance");
+    expect(String(benefitsCardsBlock?.settings?.card3Title || '')).toBe('Minister’s Housing Allowance');
+    expect(String(benefitsCardsBlock?.settings?.card3TitleHighlightsJson || '')).toContain('Minister’s Housing Allowance');
     expect(String(benefitsCardsBlock?.settings?.card5Title || '')).toBe('Rollovers');
     expect(String(benefitsCardsBlock?.settings?.card6Title || '')).toBe('Variety');
     expect(String(benefitsCardsBlock?.settings?.card7Title || '')).toBe('Your Own Consultant');
@@ -2343,7 +2319,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(String(benefitsCardsBlock?.settings?.card8Body || '')).toContain('Onsite education');
   });
 
-  it('replaces stale 403(b) investment strategy card-grid html with the canonical feature rows', () => {
+  it('preserves unsupported 403(b) investment strategy html during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2377,16 +2353,13 @@ describe('ContentAdminContext state normalization', () => {
     const strategyBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
       .find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'content');
 
-    expect(String(strategyBlock?.settings?.html || '')).toContain('ret403b-strategy-feature');
-    expect(String(strategyBlock?.settings?.html || '')).toContain('service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link');
     expect(String(strategyBlock?.settings?.html || '')).toContain('MBA Income Fund');
-    expect(String(strategyBlock?.settings?.html || '')).not.toContain('MBA Income Fund PDF');
-    expect(String(strategyBlock?.settings?.html || '')).not.toContain('Rollovers');
-    expect(String(strategyBlock?.settings?.html || '')).not.toContain('Education');
-    expect(String(strategyBlock?.settings?.html || '')).not.toContain('Prospectus');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('Rollovers');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('Education');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('Prospectus');
   });
 
-  it('replaces stale 403(b) investment strategy card-grid blocks so prospectus buttons cannot persist inside cards', () => {
+  it('preserves unsupported 403(b) investment strategy card-grid blocks during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2412,12 +2385,11 @@ describe('ContentAdminContext state normalization', () => {
     const strategyBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
       .find((block) => block?.id === 'investment_strategy_options');
 
-    expect(strategyBlock?.kind).toBe('content');
-    expect(String(strategyBlock?.settings?.html || '')).toContain('ret403b-strategy-feature');
-    expect(String(strategyBlock?.settings?.html || '')).not.toContain('Prospectus');
+    expect(strategyBlock?.kind).toBe('card_grid');
+    expect(strategyBlock?.settings?.card1Button2Label).toBe('Prospectus');
   });
 
-  it('restores the 403(b) investment strategy prospectus action to the section header', () => {
+  it('does not infer 403(b) section actions from unsupported strategy content', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2453,12 +2425,8 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'investment_strategy_heading' && block?.kind === 'billboard');
 
     expect(headingBlock?.settings?.buttonLabel).toBe('View monthly performance');
-    expect(headingBlock?.settings?.button2Label).toBe('Prospectus');
-    expectLinkJson(headingBlock?.settings, 'button2LinkJson', {
-      kind: 'internal',
-      to: '/prospectus',
-    });
-    expect(headingBlock?.settings?.button2Tone).toBe('super-grey');
+    expect(headingBlock?.settings?.button2Label).toBe('');
+    expect(headingBlock?.settings?.button2LinkJson).toContain('/prospectus');
   });
 
   it('keeps customized 403(b) investment strategy heading actions once stale strategy content is gone', () => {
@@ -2541,7 +2509,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(String(strategyBlock?.settings?.html || '')).toContain('service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link');
   });
 
-  it('refreshes wrapper-only 403(b) strategy html to the canonical services-row structure', () => {
+  it('preserves wrapper-only 403(b) strategy html during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -2569,11 +2537,8 @@ describe('ContentAdminContext state normalization', () => {
     const strategyBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
       .find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'content');
 
-    expect(String(strategyBlock?.settings?.html || '')).toContain('services-breakdown-panel');
-    expect(String(strategyBlock?.settings?.html || '')).toContain('services-breakdown-description');
-    expect(String(strategyBlock?.settings?.html || '')).toContain('ret403b-strategy-feature-links');
-    expect(String(strategyBlock?.settings?.html || '')).toContain('service-native-btn is-outline is-tone-atlantean');
-    expect(String(strategyBlock?.settings?.html || '')).not.toContain('Old wrapper-only structure.');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('ret403b-strategy-feature');
+    expect(String(strategyBlock?.settings?.html || '')).toContain('Old wrapper-only structure.');
   });
 
   it('keeps customized 403(b) investment strategy html when it no longer matches the old leaked-card signature', () => {
@@ -2640,7 +2605,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(introBlock?.settings?.button1Label).toBe('Get started');
   });
 
-  it('keeps the 403(b) individual enrollment intro now that the route is block-owned', () => {
+  it('preserves the 403(b) individual enrollment intro now that the route is block-owned', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b/403b-individual-enrollment': [
@@ -2663,7 +2628,7 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'intro');
 
     expect(introBlock?.kind).toBe('intro');
-    expect(introBlock?.settings?.heading).toBe('Start with the 403(b) plan summary.');
+    expect(introBlock?.settings?.heading).toBe('What’s one gotta do to get AGFinancial 403(b)?');
   });
 
   it('keeps customized 403(b) individual enrollment intros once the stale seed signature is gone', () => {
@@ -2699,7 +2664,7 @@ describe('ContentAdminContext state normalization', () => {
     });
   });
 
-  it('refreshes leaked loans intro copy on 403(b) individual enrollment back to the canonical intro block', () => {
+  it('preserves unsupported leaked loans intro copy on 403(b) individual enrollment', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b/403b-individual-enrollment': [
@@ -2723,8 +2688,8 @@ describe('ContentAdminContext state normalization', () => {
       .find((block) => block?.id === 'intro');
 
     expect(introBlock?.kind).toBe('intro');
-    expect(introBlock?.settings?.heading).toBe('Start with the 403(b) plan summary.');
-    expect(introBlock?.settings?.button1Label).toBe('Download 403(b) Summary PDF');
+    expect(introBlock?.settings?.heading).toBe('The right loan can change everything.');
+    expect(introBlock?.settings?.button1Label).toBe('');
   });
 
   it('drops stale generic page-content blocks from 403(b) individual enrollment while preserving the seeded block-only route structure', () => {
@@ -2753,7 +2718,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(blocks.some((block) => block?.id === 'request_form' && block?.kind === 'request_form')).toBe(false);
   });
 
-  it('drops the stale enrollment-help billboard from 403(b) individual enrollment without restoring the request form block', () => {
+  it('preserves the unsupported enrollment-help billboard during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b/403b-individual-enrollment': [
@@ -2772,7 +2737,7 @@ describe('ContentAdminContext state normalization', () => {
 
     const blocks = normalized.blocksByPath['/services/retirement/403b/403b-individual-enrollment'] || [];
 
-    expect(blocks.some((block) => block?.id === 'billboard')).toBe(false);
+    expect(blocks.some((block) => block?.id === 'billboard')).toBe(true);
     expect(blocks.some((block) => block?.id === 'request_form')).toBe(false);
   });
 
@@ -2830,10 +2795,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(normalized.pageHierarchy['/services/retirement/403b-for-groups']).toBeUndefined();
   });
 
-  it('replaces the leaked loans intro seed on 403(b) group enrollment with the route-native intro', () => {
-    const defaultIntroBlock = (normalizeStoredConfig({}).blocksByPath['/services/retirement/403b/403b-group-enrollment'] || [])
-      .find((block) => block?.id === 'intro');
-
+  it('preserves unsupported leaked loans intro seed on 403(b) group enrollment', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b-for-groups/403b-group-enrollment': [
@@ -2858,12 +2820,10 @@ describe('ContentAdminContext state normalization', () => {
     const introBlock = (normalized.blocksByPath['/services/retirement/403b/403b-group-enrollment'] || [])
       .find((block) => block?.id === 'intro');
 
-    expect(introBlock?.settings?.heading).toBe(defaultIntroBlock?.settings?.heading);
-    expect(introBlock?.settings?.bodyHtml).toBe(defaultIntroBlock?.settings?.bodyHtml);
-    expect(introBlock?.settings?.button1Label).toBe(defaultIntroBlock?.settings?.button1Label);
-    expect(introBlock?.settings?.button1LinkJson).toBe(defaultIntroBlock?.settings?.button1LinkJson);
-    expect(introBlock?.settings?.button2Label).toBe(defaultIntroBlock?.settings?.button2Label);
-    expect(introBlock?.settings?.button2LinkJson).toBe(defaultIntroBlock?.settings?.button2LinkJson);
+    expect(introBlock?.settings?.heading).toBe('The right loan can change everything.');
+    expect(introBlock?.settings?.bodyHtml).toContain('What’s one gotta do to get AGFinancial 403(b)?');
+    expect(introBlock?.settings?.button1Label).toBe('');
+    expect(introBlock?.settings?.button2Label).toBe('');
   });
 
   it('keeps stored 403(b) group enrollment drafts without appending a missing request form block', () => {
@@ -2906,7 +2866,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(blocks.some((block) => block?.id === 'page_content')).toBe(false);
   });
 
-  it('refreshes the stored 403(b) group enrollment compliance billboard to the white treatment', () => {
+  it('preserves stored 403(b) group enrollment compliance billboard tones during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b/403b-group-enrollment': [
@@ -2927,8 +2887,8 @@ describe('ContentAdminContext state normalization', () => {
     const complianceBlock = (normalized.blocksByPath['/services/retirement/403b/403b-group-enrollment'] || [])
           .find((block) => block?.id === 'billboard');
 
-    expect(complianceBlock?.settings?.bgTone).toBe('white');
-    expect(complianceBlock?.settings?.textTone).toBe('dark');
+    expect(complianceBlock?.settings?.bgTone).toBe('grey');
+    expect(complianceBlock?.settings?.textTone).toBe('white');
   });
 
   it('keeps customized 403(b) group enrollment compliance billboard tones once the route is block-owned', () => {
@@ -3243,7 +3203,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(loanApplyBlock?.settings?.columns).toBe('one');
   });
 
-  it('normalizes stale 403(b) loan-apply step cards back to the canonical six-step layout', () => {
+  it('preserves unsupported 403(b) loan-apply step cards during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -3270,18 +3230,13 @@ describe('ContentAdminContext state normalization', () => {
     const retirementBlocks = normalized.blocksByPath['/services/retirement/403b'] || [];
     const loanApplyBlock = retirementBlocks.find((block) => block?.id === 'loan_apply');
 
-    expect(loanApplyBlock?.settings?.card1Title).toBe('1');
-    expect(loanApplyBlock?.settings?.card1Body).toBe('Review the loan rules.');
-    expect(loanApplyBlock?.settings?.card2Title).toBe('2');
-    expect(loanApplyBlock?.settings?.card2Body).toBe('Log in.');
-    expect(loanApplyBlock?.settings?.card3Title).toBe('3');
-    expect(loanApplyBlock?.settings?.card3Body).toBe('Select your 403(b) account.');
-    expect(loanApplyBlock?.settings?.card4Title).toBe('4');
-    expect(loanApplyBlock?.settings?.card5Title).toBe('5');
-    expect(loanApplyBlock?.settings?.card6Title).toBe('6');
+    expect(loanApplyBlock?.settings?.card1Title).toBe('1) Review and understand the loan rules');
+    expect(loanApplyBlock?.settings?.card2Title).toBe('2) Log in to your profile');
+    expect(loanApplyBlock?.settings?.card3Title).toBe('3) Submit your application');
+    expect(loanApplyBlock?.settings?.card3Body).toContain('MANAGE MY RETIREMENT');
   });
 
-  it('reorders 403(b) loan-apply directly below the semantic loans block on migrated pages', () => {
+  it('preserves 403(b) loan-apply order during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -3325,8 +3280,8 @@ describe('ContentAdminContext state normalization', () => {
     });
 
     const retirementBlocks = normalized.blocksByPath['/services/retirement/403b'] || [];
-    expect(retirementBlocks.findIndex((block) => block?.id === 'loan_apply')).toBe(
-      retirementBlocks.findIndex((block) => block?.id === 'loan_details') + 1,
+    expect(retirementBlocks.findIndex((block) => block?.id === 'loan_apply')).toBeGreaterThan(
+      retirementBlocks.findIndex((block) => block?.id === 'loan_details'),
     );
   });
 
@@ -3397,7 +3352,7 @@ describe('ContentAdminContext state normalization', () => {
     expect(String(loanDetailsBlock?.settings?.html || '')).not.toContain('Contact your AGFinancial retirement consultant for more information.');
   });
 
-  it('replaces stale 403(b) start enrollment settings when the old individual label and title divider persist', () => {
+  it('preserves unsupported 403(b) start enrollment settings during ordinary normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/retirement/403b': [
@@ -3426,9 +3381,9 @@ describe('ContentAdminContext state normalization', () => {
     const enrollmentBlock = (normalized.blocksByPath['/services/retirement/403b'] || [])
       .find((block) => block?.id === 'start_enrollment' && block?.kind === 'card_grid');
 
-    expect(enrollmentBlock?.settings?.showTitleDivider).toBe(false);
-    expect(enrollmentBlock?.settings?.dividerTone).toBe('');
-    expect(enrollmentBlock?.settings?.card1Title).toBe('Establish an individual plan');
+    expect(enrollmentBlock?.settings?.showTitleDivider).toBe(true);
+    expect(enrollmentBlock?.settings?.dividerTone).toBe('auto');
+    expect(enrollmentBlock?.settings?.card1Title).toBe('Enrollment for individuals.');
   });
 
   it('does not silently replace stale 403(b) housing feature settings when rogue copy persists', () => {

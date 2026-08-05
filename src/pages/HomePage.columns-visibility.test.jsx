@@ -5,7 +5,7 @@ import { serializeLinkValue } from '../lib/linkValue';
 
 let mockBlocksByPath = {};
 
-vi.mock('../context/ContentAdminContext', () => ({
+vi.mock('../context/ContentAdminContextCore', () => ({
   inspectDynamicHeroSettings: () => ({ hasDrift: false, issues: [], normalizedSettings: {} }),
   normalizeDynamicHeroSettings: (_pathname, settings) => settings || {},
   useContentAdmin: () => ({
@@ -91,7 +91,7 @@ describe('HomePage columns visibility', () => {
     expect(screen.getByText('distributed to ministries through AG Foundation')).toBeTruthy();
     expect(heroBlock).toBeTruthy();
     expect(homePage?.className).toContain('ag-page-shell');
-    expect(homePage?.className).toContain('is-home-hero-temporarily-hidden');
+    expect(homePage?.className).not.toContain('is-home-hero-temporarily-hidden');
     expect(impactBlock?.compareDocumentPosition(featureBlock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 

@@ -14,7 +14,11 @@
     "scan:content-admin-snapshots:backups": "node scripts/content-admin-snapshot-audit.mjs --include-backups",
     "repair:content-admin-snapshots": "node scripts/repair-content-admin-snapshot-hygiene.mjs",
     "scan:content-admin-storage": "node scripts/validate-content-admin-storage-roundtrip.mjs",
+    "scan:content-admin-retention": "node scripts/content-admin-retention.mjs --plan-cleanup",
+    "review:content-admin-retention-v5": "node scripts/generate-content-admin-retention-review-v5.mjs",
+    "execute:content-admin-retention-v6": "node scripts/execute-content-admin-v6-backup-deletion.mjs",
     "content-admin:publish-seed-routes": "node scripts/publish-content-admin-seed-routes.mjs",
+    "content:update": "node scripts/content-admin-update.mjs",
     "scan:snapshot-schema": "node scripts/system-checks.mjs snapshot-schema",
     "scan:readability": "node scripts/system-checks.mjs readability",
     "scan:safety-nets": "node scripts/system-checks.mjs safety-nets",
@@ -28,7 +32,8 @@
     "test": "vitest run && node --test src/utils/ratesPdfImportCore.test.js",
     "build": "vite build",
     "preview": "vite preview",
-    "preview:prod": "vite preview --port 4173 --strictPort"
+    "preview:prod": "vite preview --port 4173 --strictPort",
+    "measure:dev": "node scripts/measure-vite-dev.mjs"
   },
   "dependencies": {
     "openai": "^6.34.0",

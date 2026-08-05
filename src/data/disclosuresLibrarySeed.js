@@ -121,6 +121,8 @@ export const defaultDisclosuresLibrarySeed = Object.freeze([
     usage: 'Shown under the SECURE 2.0 / QCD note on the charitable gift annuities page.',
     value: [
       '*Indexed annually for inflation',
+      '**Also available for Charitable Remainder Unitrust (CRUT) or Charitable Remainder Annuity Trust (CRAT)',
+      'This is a one-time, lifetime opportunity; not available on an annual basis',
       'Restrictions apply.',
     ],
   },

@@ -9,6 +9,13 @@ export const SYSTEM_READABILITY_BOUNDARIES = Object.freeze([
     pass: 'Pass 5',
   },
   {
+    file: 'src/styles/front-hud.css',
+    owner: 'front HUD ownership overlays, workflow controls, and editor presentation styles',
+    currentBoundary: 'shared HUD stylesheet loaded by front HUD components',
+    nextSplit: 'split shared HUD shell styles from editor-family styles after the HUD component boundary stabilizes',
+    pass: 'Pass 5',
+  },
+  {
     file: 'src/styles.css',
     owner: 'global application styles, admin styles, and shared base styles',
     currentBoundary: 'single global stylesheet imported by the app',

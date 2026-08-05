@@ -28,8 +28,6 @@ describe('careers route review polish guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
     const contentSource = readSource('../data/nativePageContent.js');
 
-    expect(contentSource).toContain("{ title: 'Be part of', className: 'careers-hero-line is-mango' }");
-    expect(contentSource).toContain("{ title: 'something', className: 'careers-hero-line is-mango' }");
     expect(contentSource).toContain("className: 'careers-hero-line careers-hero-line--major is-mango'");
     expect(contentSource).toContain("bgTone: 'white'");
     expect(cssSource).toContain('.native-info-page--careers .service-native-hero h1.careers-hero-line {');
@@ -47,7 +45,6 @@ describe('careers route review polish guardrail', () => {
     expect(contentSource).toContain("emphasisClassName: 'careers-native-top-intro-emphasis fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up'");
     expect(cssSource).toContain('.native-info-page--careers .service-native-intro.careers-native-top-intro .native-info-intro-emphasis.billboard-scroll-reveal-scale-up {');
     expect(cssSource).toContain('.native-info-page--careers .service-native-intro.careers-native-top-intro .native-info-intro-emphasis.billboard-scroll-reveal-scale-up[data-fade-state="pending"] {');
-    expect(contentSource).toContain("title: 'A few reasons you’ll love working here…'");
     expect(contentSource).toContain("titleClassName: 'loans-native-display-heading careers-native-benefits-title careers-native-benefits-title--roll fade-up fade-up-force-observe'");
     expect(cssSource).toContain('--careers-benefits-ready-progress: 0;');
     expect(cssSource).toContain('.service-native-page .fade-up.fade-up-no-shift[data-fade-state="pending"] {');

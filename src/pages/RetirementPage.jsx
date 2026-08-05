@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
 import BlockHudPanelHost from '../components/BlockHudPanelHost';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
@@ -27,7 +28,9 @@ import {
   defaultRetirementIntroSettings,
   defaultRetirementRolloverBillboardSettings,
 } from '../data/retirementOverviewSeed';
-import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
+import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
+import { inspectDynamicHeroSettings } from '../lib/dynamicHeroSettings';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
 import { useTestimonials } from '../context/TestimonialsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
@@ -530,8 +533,17 @@ export default function RetirementPage() {
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
-  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
-  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
+  const {
+    blocksByPath: managedBlocksByPath,
+    pageHierarchy: managedPageHierarchy,
+  } = selectFrontHudContentSource({
+    enabled: frontHudEnabled,
+    pathname: '/services/retirement',
+    authoringBlocksByPath,
+    blocksByPath,
+    authoringPageHierarchy,
+    pageHierarchy,
+  });
   const { testimonials: testimonialsLibrary } = useTestimonials();
   useNativeEnhancements(pageRef);
   const [calc, setCalc] = useState({
@@ -1122,6 +1134,7 @@ export default function RetirementPage() {
     return (
       <FrontHudAnchorTag
         label={panel.label}
+        icon={panel.icon}
         isActive={!hudDockCollapsed && activeHudPanelId === panel.id}
         onClick={() => openHudPanel(panel.id, panel.anchorSelector)}
         style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
@@ -1690,7 +1703,7 @@ export default function RetirementPage() {
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-visually-hidden">{panel.label}</span>
+                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
               </button>
             ))}
           </div>
@@ -1707,15 +1720,32 @@ export default function RetirementPage() {
           </div>
         </aside>
       ) : null}
-      {showFrontHud ? (
-        <FrontHudPageWorkflow pathname="/services/retirement" reviewHref="/admin/content?page=%2Fservices%2Fretirement" placement="bar" />
-      ) : null}
+      <FrontHudPageWorkflow pathname="/services/retirement" reviewHref="/admin/content?page=%2Fservices%2Fretirement" placement="bar" isVisible={showFrontHud} />
       {hasOpenHudPanel && activeHudPanel ? (
         <FrontHudPanelShell
           title={activeHudPanel.label}
+          blockId={activeHudPanel.block.id}
+          pathname="/services/retirement"
+          ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+          onOwnershipAction={() => {
+            if (!activeHudPanel?.block?.id) {
+              return;
+            }
+            setActiveBlockLock('/services/retirement', activeHudPanel.block.id, { force: true });
+          }}
           onClose={closeHudDock}
           style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
         >
+          <FrontHudPageWorkflow
+            pathname="/services/retirement"
+            reviewHref="/admin/content?page=%2Fservices%2Fretirement"
+            placement="dock-inline"
+            showBlockPublishAction={false}
+            showBlockDiscardAction
+            blockId={activeHudPanel.block.id}
+            blockLabel={activeHudPanel.label}
+            onDoneEditing={closeHudDock}
+          />
           <BlockHudPanelHost
             block={activeHudPanel.block}
             pathname="/services/retirement"

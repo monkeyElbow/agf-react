@@ -2,8 +2,8 @@ import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../context/ContentAdminContext.jsx');
+vi.mock('../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../context/ContentAdminContextCore');
   return {
     ...actual,
     useContentAdmin: () => ({

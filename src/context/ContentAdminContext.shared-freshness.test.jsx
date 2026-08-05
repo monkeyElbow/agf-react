@@ -11,9 +11,9 @@ import {
 
 describe('ContentAdminContext shared freshness helpers', () => {
   it('uses restrained visible vs hidden polling intervals for shared dev freshness', () => {
-    expect(getSharedContentPollDelay(false)).toBe(1800);
+    expect(getSharedContentPollDelay(false)).toBe(5000);
     expect(getSharedContentPollDelay(true)).toBe(10000);
-    expect(getSharedContentPollDelayForActivity(false, true)).toBe(650);
+    expect(getSharedContentPollDelayForActivity(false, true)).toBe(1800);
   });
 
   it('classifies text-like block edits more conservatively than discrete toggle-style changes', () => {

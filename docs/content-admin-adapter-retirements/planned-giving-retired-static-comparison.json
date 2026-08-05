@@ -1,0 +1,30 @@
+{
+  "receiptVersion": 1,
+  "adapterId": "planned-giving-retired-static-comparison",
+  "status": "retired",
+  "retirementBasis": "Current active, published, seed, retained backup, and revision records contain the canonical planned-giving comparison block; the historical static-comparison repair found zero persisted findings.",
+  "removedBehavior": {
+    "sources": [
+      "src/context/ContentAdminContext.jsx",
+      "dev-server/contentAdminStore.js"
+    ],
+    "productionCallSitesRemoved": 2,
+    "detector": "scripts/content-admin-migration-inventory.mjs"
+  },
+  "preservedBehavior": [
+    "Current planned-giving overview blueprint and rendering",
+    "Current admin block editing and collaboration metadata",
+    "Explicit snapshot diagnostics for unsupported historical comparison shapes"
+  ],
+  "finalScan": {
+    "commands": [
+      "npm run scan:migration-inventory -- --include-backups",
+      "npm run scan:content-admin-snapshots:backups",
+      "npm run scan:content-admin-storage"
+    ],
+    "requiredTotalFindings": 0,
+    "restoreProof": "pending post-change validation"
+  },
+  "storedContentMutation": false,
+  "adapterRemovalCommit": null
+}

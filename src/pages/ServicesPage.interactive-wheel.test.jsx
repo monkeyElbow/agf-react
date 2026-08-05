@@ -37,8 +37,8 @@ vi.mock('../context/TestimonialsContext', () => ({
   useTestimonials: () => ({ testimonials: [] }),
 }));
 
-vi.mock('../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../context/ContentAdminContext.jsx');
+vi.mock('../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../context/ContentAdminContextCore');
   return {
     ...actual,
     useContentAdmin: () => ({

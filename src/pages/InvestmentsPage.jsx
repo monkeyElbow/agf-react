@@ -1,9 +1,11 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import PageBlocksRenderer from '../components/blocks/PageBlocksRenderer';
-import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
+import { inspectDynamicHeroSettings } from '../lib/dynamicHeroSettings';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useDisclosures } from '../context/DisclosuresContext';
 import { useFrontHud } from '../context/FrontHudContext';
 import { useRates } from '../context/RatesContext';
@@ -24,6 +26,7 @@ import {
   defaultInvestmentsCtaSettings,
   defaultInvestmentsGrowthFeatureSettings,
 } from '../data/investmentsPageSeed';
+import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import {
   formatTestimonialAttribution,
@@ -202,21 +205,6 @@ function splitCertificateTitle(title) {
   };
 }
 
-function splitCertificateBody(body) {
-  const normalized = String(body || '').trim().replace(/\s+/g, ' ');
-  const minimumMatch = normalized.match(/\bMinimum investment\b.*$/i);
-  if (!minimumMatch) {
-    return {
-      description: normalized,
-      minimum: '',
-    };
-  }
-  return {
-    description: normalized.slice(0, minimumMatch.index).trim(),
-    minimum: minimumMatch[0].trim(),
-  };
-}
-
 function resolveInvestmentCertificateCards(block) {
   const sourceBlock = block?.mode === 'dynamic' && block?.kind === 'card_grid'
     ? block
@@ -227,7 +215,7 @@ function resolveInvestmentCertificateCards(block) {
   return (runtime?.cards || []).map((card, index) => {
     const slot = Number(card.slot || index + 1);
     const { titleTop, titleBottom } = splitCertificateTitle(card.title);
-    const { description, minimum } = splitCertificateBody(card.body);
+    const { description, minimum } = card.bodySegments || { description: card.body || '', minimum: '' };
     const action = card.action || {};
     return {
       titleTop,
@@ -869,8 +857,17 @@ export default function InvestmentsPage() {
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
-  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
-  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
+  const {
+    blocksByPath: managedBlocksByPath,
+    pageHierarchy: managedPageHierarchy,
+  } = selectFrontHudContentSource({
+    enabled: frontHudEnabled,
+    pathname: '/services/investments',
+    authoringBlocksByPath,
+    blocksByPath,
+    authoringPageHierarchy,
+    pageHierarchy,
+  });
   const { testimonials: testimonialsLibrary } = useTestimonials();
   const { getDisclosureValue } = useDisclosures();
   const { rates, ratesMeta } = useRates();
@@ -1378,6 +1375,7 @@ export default function InvestmentsPage() {
     return (
       <FrontHudAnchorTag
         label={panel.label}
+        icon={panel.icon}
         isActive={!hudDockCollapsed && activeHudPanelId === panel.id}
         onClick={() => toggleHudPanel(panel.id, panel.sectionRef)}
         style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
@@ -1939,7 +1937,7 @@ export default function InvestmentsPage() {
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-visually-hidden">{panel.label}</span>
+                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
               </button>
             ))}
           </div>
@@ -1956,18 +1954,35 @@ export default function InvestmentsPage() {
           </div>
         </aside>
       ) : null}
-      {showFrontHud ? (
-        <Suspense fallback={null}>
-          <FrontHudPageWorkflow pathname="/services/investments" reviewHref="/admin/content?page=%2Fservices%2Finvestments" placement="bar" />
-        </Suspense>
-      ) : null}
+      <Suspense fallback={null}>
+        <FrontHudPageWorkflow pathname="/services/investments" reviewHref="/admin/content?page=%2Fservices%2Finvestments" placement="bar" isVisible={showFrontHud} />
+      </Suspense>
       {hasOpenHudPanel && activeHudPanel ? (
         <Suspense fallback={null}>
           <FrontHudPanelShell
             title={activeHudPanel.label}
+            blockId={activeHudPanel.block.id}
+            pathname="/services/investments"
+            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+            onOwnershipAction={() => {
+              if (!activeHudPanel?.block?.id) {
+                return;
+              }
+              setActiveBlockLock('/services/investments', activeHudPanel.block.id, { force: true });
+            }}
             onClose={closeHudDock}
             style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
           >
+            <FrontHudPageWorkflow
+              pathname="/services/investments"
+              reviewHref="/admin/content?page=%2Fservices%2Finvestments"
+            placement="dock-inline"
+            showBlockPublishAction={false}
+            showBlockDiscardAction
+              blockId={activeHudPanel.block.id}
+              blockLabel={activeHudPanel.label}
+              onDoneEditing={closeHudDock}
+            />
             <BlockHudPanelHost
               block={activeHudPanel.block}
               pathname="/services/investments"

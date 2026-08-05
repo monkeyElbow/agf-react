@@ -197,12 +197,37 @@ export function isPdfLinkHref(href) {
   return /\.pdf(?:[?#].*)?$/i.test(String(href || '').trim());
 }
 
-export function shouldUseUniversalOutlineButtonLink({ href, to, external, documentUrl } = {}) {
+/**
+ * Legacy compatibility for native action records that predate explicit button styles.
+ * Retire this path when every native action descriptor carries a canonical style field.
+ */
+export function shouldUseUniversalOutlineButtonLink({ href, to, external, documentUrl, buttonStyle } = {}) {
+  if (String(buttonStyle || '').trim()) {
+    return false;
+  }
   const target = String(href || documentUrl || to || '').trim();
   if (!target) {
     return false;
   }
   return Boolean(external) || isExternalLinkHref(target) || isPdfLinkHref(target);
+}
+
+export function splitCertificateCardBody(body) {
+  const normalized = String(body || '').trim().replace(/\s+/g, ' ');
+  const minimumMatch = normalized.match(/(?:\*\*)?\bMinimum (?:investment|requirements):?\b(?:\*\*)?.*$/i);
+  if (!minimumMatch) {
+    return {
+      description: normalized,
+      minimum: '',
+    };
+  }
+
+  return {
+    description: normalized.slice(0, minimumMatch.index).trim(),
+    minimum: minimumMatch[0]
+      .replace(/\*\*(Minimum (?:investment|requirements):?)\*\*/i, '$1')
+      .trim(),
+  };
 }
 
 export function normalizeUniversalOutlineButtonClassName(className, fallbackTone = 'atlantean') {
@@ -258,6 +283,19 @@ function readFirstStringValue(source, keys = []) {
   return '';
 }
 
+// Canonical fields win even when an editor intentionally clears them. Legacy
+// aliases are consulted only when the canonical field is absent.
+function readCanonicalStringValue(source, keys = []) {
+  const fieldKeys = Array.isArray(keys) ? keys : [keys];
+  const record = source && typeof source === 'object' ? source : {};
+  const presentKey = fieldKeys.find((key) => key && Object.prototype.hasOwnProperty.call(record, key));
+  if (presentKey) {
+    const value = record[presentKey];
+    return value === undefined || value === null ? '' : String(value).trim();
+  }
+  return readFirstStringValue(record, fieldKeys);
+}
+
 function buildCanonicalActionLinkFromFields(source, {
   labelKeys = ['label'],
   linkJsonKeys = [],
@@ -272,10 +310,10 @@ function buildCanonicalActionLinkFromFields(source, {
   targetAnchorIdKeys = ['targetAnchorId'],
   targetBlockIdKeys = ['targetBlockId'],
 } = {}) {
-  const label = readFirstStringValue(source, labelKeys);
-  const action = readFirstStringValue(source, actionKeys);
-  const targetAnchorId = readFirstStringValue(source, targetAnchorIdKeys);
-  const targetBlockId = readFirstStringValue(source, targetBlockIdKeys);
+  const label = readCanonicalStringValue(source, labelKeys);
+  const action = readCanonicalStringValue(source, actionKeys);
+  const targetAnchorId = readCanonicalStringValue(source, targetAnchorIdKeys);
+  const targetBlockId = readCanonicalStringValue(source, targetBlockIdKeys);
   const linkValue = coerceLinkValueFromFields(source, {
     linkJsonKeys,
     hrefKeys,
@@ -294,10 +332,10 @@ function buildCanonicalActionLinkFromFields(source, {
       action,
       targetAnchorId,
       targetBlockId,
-      style: readFirstStringValue(source, styleKeys),
-      tone: readFirstStringValue(source, toneKeys),
-      ...(readFirstStringValue(source, classNameKeys)
-        ? { className: readFirstStringValue(source, classNameKeys) }
+      style: readCanonicalStringValue(source, styleKeys),
+      tone: readCanonicalStringValue(source, toneKeys),
+      ...(readCanonicalStringValue(source, classNameKeys)
+        ? { className: readCanonicalStringValue(source, classNameKeys) }
         : {}),
       openInNewWindow: false,
     };
@@ -310,10 +348,10 @@ function buildCanonicalActionLinkFromFields(source, {
   return {
     label,
     link: linkValue,
-    style: readFirstStringValue(source, styleKeys),
-    tone: readFirstStringValue(source, toneKeys),
-    ...(readFirstStringValue(source, classNameKeys)
-      ? { className: readFirstStringValue(source, classNameKeys) }
+    style: readCanonicalStringValue(source, styleKeys),
+    tone: readCanonicalStringValue(source, toneKeys),
+    ...(readCanonicalStringValue(source, classNameKeys)
+      ? { className: readCanonicalStringValue(source, classNameKeys) }
       : {}),
     openInNewWindow: Boolean(linkValue.openInNewWindow),
     ...linkValueToLinkProps(linkValue),
@@ -921,8 +959,7 @@ export function buildDynamicIntroFromBlock(block) {
     return null;
   }
 
-  const isPlaceholder = bodyHtml.includes('saved-page copy restoration')
-    || heading.includes('Test the panel system');
+  const isPlaceholder = bodyHtml.includes('saved-page copy restoration');
   if (isPlaceholder) {
     return null;
   }
@@ -1219,6 +1256,7 @@ export function buildDynamicSiteFeatureFromBlock(block) {
     return null;
   }
   const featureId = String(featureEntry.featureId || '').trim();
+  const allowedFieldIds = new Set(Array.isArray(featureEntry.allowedEditableFieldIds) ? featureEntry.allowedEditableFieldIds : []);
   const featureDefinition = featureEntry.buildRuntime({ settings });
   const featureRuntime = featureDefinition && typeof featureDefinition === 'object'
     ? featureDefinition
@@ -1227,13 +1265,20 @@ export function buildDynamicSiteFeatureFromBlock(block) {
   const defaultBody = String(featureRuntime.body || '').trim();
   const defaultImageUrl = String(featureRuntime.imageUrl || '').trim();
   const defaultImageAlt = String(featureRuntime.imageAlt || '').trim();
-  const featureIntro = parseSiteFeatureIntroJson(settings.featureIntroJson || featureRuntime.featureIntro);
+  const featureIntro = parseSiteFeatureIntroJson(
+    Object.prototype.hasOwnProperty.call(settings, 'featureIntroJson')
+      ? settings.featureIntroJson
+      : featureRuntime.featureIntro,
+  );
 
-  const headline = featureId === 'impact_proof_story'
-    ? defaultTitle
-    : (readFirstStringValue(settings, ['headline']) || defaultTitle);
-  const body = readFirstStringValue(settings, ['body']) || defaultBody;
-  const allowedFieldIds = new Set(Array.isArray(featureEntry.allowedEditableFieldIds) ? featureEntry.allowedEditableFieldIds : []);
+  // Catalog defaults are code-managed feature structure. Declared editable
+  // fields still own the visible value, including an intentional empty value.
+  const headline = allowedFieldIds.has('headline') && Object.prototype.hasOwnProperty.call(settings, 'headline')
+    ? String(settings.headline || '').trim()
+    : defaultTitle;
+  const body = allowedFieldIds.has('body') && Object.prototype.hasOwnProperty.call(settings, 'body')
+    ? String(settings.body || '').trim()
+    : defaultBody;
   const allowsAction = ['buttonLabel', 'buttonUrl', 'buttonPageRef', 'buttonLinkJson']
     .some((fieldId) => allowedFieldIds.has(fieldId));
   const overrideAction = allowsAction
@@ -1420,14 +1465,15 @@ export function buildDynamicServicesGridFromBlock(block) {
   const settings = block?.settings && typeof block.settings === 'object'
     ? block.settings
     : block;
-  const fallbackCards = Array.isArray(block?.cards) ? block.cards : [];
+  const hasCanonicalSettings = Boolean(block?.settings && typeof block.settings === 'object');
+  const fallbackCards = hasCanonicalSettings || !Array.isArray(block?.cards) ? [] : block.cards;
   const cards = Array.from({ length: 6 }, (_, index) => index + 1)
     .map((slot, index) => {
       const fallbackCard = fallbackCards[index] || {};
       const path = resolveCanonicalLinkTarget({
         ...settings,
-        [`__fallbackCard${slot}LinkJson`]: fallbackCard.linkJson,
-      }, [`card${slot}LinkJson`, `__fallbackCard${slot}LinkJson`]);
+        ...(hasCanonicalSettings ? {} : { [`__fallbackCard${slot}LinkJson`]: fallbackCard.linkJson }),
+      }, [`card${slot}LinkJson`, ...(hasCanonicalSettings ? [] : [`__fallbackCard${slot}LinkJson`])]);
       const card = {
         slot,
         title: String(settings?.[`card${slot}Title`] ?? fallbackCard.title ?? '').trim(),
@@ -1442,15 +1488,15 @@ export function buildDynamicServicesGridFromBlock(block) {
     })
     .filter(Boolean);
 
-  const heading = String(settings?.heading ?? block?.heading ?? '').trim();
-  const headingSizeRem = normalizePositiveRem(settings?.headingSizeRem ?? block?.headingSizeRem, 4.5625);
-  const cardTitleSizeRem = normalizePositiveRem(settings?.cardTitleSizeRem ?? block?.cardTitleSizeRem, 2.1875);
-  const cardPaddingRem = normalizePositiveRem(settings?.cardPaddingRem ?? block?.cardPaddingRem, 1.85);
-  const browseLabel = String(settings?.browseLabel ?? block?.browseLabel ?? '').trim();
+  const heading = String(settings?.heading ?? '').trim();
+  const headingSizeRem = normalizePositiveRem(settings?.headingSizeRem, 4.5625);
+  const cardTitleSizeRem = normalizePositiveRem(settings?.cardTitleSizeRem, 2.1875);
+  const cardPaddingRem = normalizePositiveRem(settings?.cardPaddingRem, 1.85);
+  const browseLabel = String(settings?.browseLabel ?? '').trim();
   const browsePath = resolveCanonicalLinkTarget({
     ...settings,
-    __fallbackBrowseLinkJson: block?.browseLinkJson,
-  }, ['browseLinkJson', '__fallbackBrowseLinkJson']);
+    ...(hasCanonicalSettings ? {} : { __fallbackBrowseLinkJson: block?.browseLinkJson }),
+  }, ['browseLinkJson', ...(hasCanonicalSettings ? [] : ['__fallbackBrowseLinkJson'])]);
 
   if (!heading && !cards.length && !browseLabel && !browsePath) {
     return null;
@@ -1480,7 +1526,8 @@ export function buildDynamicImpactStatFromBlock(block) {
   const settings = block?.settings && typeof block.settings === 'object'
     ? block.settings
     : block;
-  const fallbackStats = Array.isArray(block?.stats) ? block.stats : [];
+  const hasCanonicalSettings = Boolean(block?.settings && typeof block.settings === 'object');
+  const fallbackStats = hasCanonicalSettings || !Array.isArray(block?.stats) ? [] : block.stats;
   const stats = Array.from({ length: 3 }, (_, index) => index + 1)
     .map((slot, index) => {
       const fallbackStat = fallbackStats[index] || {};
@@ -1494,7 +1541,7 @@ export function buildDynamicImpactStatFromBlock(block) {
       } : null;
     })
     .filter(Boolean);
-  const action = buildCanonicalActionLinkFromFields({
+  const action = buildCanonicalActionLinkFromFields(hasCanonicalSettings ? settings : {
     ctaLabel: settings?.ctaLabel ?? block?.ctaLabel,
     ctaLinkJson: settings?.ctaLinkJson ?? block?.ctaLinkJson,
   }, {
@@ -1504,10 +1551,10 @@ export function buildDynamicImpactStatFromBlock(block) {
     toKeys: [],
     openInNewWindowKeys: [],
   });
-  const titlePrefix = String(settings?.titlePrefix ?? block?.titlePrefix ?? '').trim();
-  const highlight = String(settings?.highlight ?? block?.highlight ?? '').trim();
-  const body = String(settings?.body ?? block?.body ?? '').trim();
-  const countUp = toBoolean(settings?.countUp ?? block?.countUp ?? true);
+  const titlePrefix = String(settings?.titlePrefix ?? '').trim();
+  const highlight = String(settings?.highlight ?? '').trim();
+  const body = String(settings?.body ?? '').trim();
+  const countUp = toBoolean(settings?.countUp ?? true);
 
   if (!titlePrefix && !highlight && !body && !action && !stats.length) {
     return null;
@@ -1631,13 +1678,11 @@ function resolveCtaFormSource(block) {
 }
 
 function resolveCtaFormSetting(primarySource, fallbackSource, key) {
-  const primaryValue = primarySource?.[key];
-  if (typeof primaryValue === 'string') {
-    const trimmed = primaryValue.trim();
-    if (trimmed) {
-      return trimmed;
+  if (primarySource && Object.prototype.hasOwnProperty.call(primarySource, key)) {
+    const primaryValue = primarySource[key];
+    if (typeof primaryValue === 'string') {
+      return primaryValue.trim();
     }
-  } else if (primaryValue !== undefined && primaryValue !== null) {
     return primaryValue;
   }
 
@@ -1656,6 +1701,7 @@ const REQUEST_FORM_PRESET_CLASS_BY_SECTION_CLASS = Object.freeze({
   'legacy-child-native-cga-request': 'legacy-cga',
   'legacy-child-native-endowments-legacy-form': 'legacy-endowment',
   'legacy-child-native-generosity-request': 'legacy-generosity',
+  'legacy-child-native-trusts-request': 'legacy-trusts',
   'legacy-child-native-request': 'legacy-impact',
   'loans-consultant-native-contact': 'consultant-contact',
   'loans-native-inquiry': 'loans-inquiry',
@@ -2351,6 +2397,7 @@ export function buildDynamicGridFromBlock(block) {
         titleClassName: cardTitleClassName,
         titleHighlights: cardTitleHighlights,
         body: cardBody,
+        bodySegments: splitCertificateCardBody(cardBody),
         list: cardList,
         fineprint: cardFineprint.length ? cardFineprint : null,
         iconKey: cardIconKey,
@@ -2480,6 +2527,7 @@ export function buildDynamicPageContentFromBlock(block) {
 
   const settings = block.settings || {};
   const title = String(settings.title || '').trim();
+  const titleHtml = String(settings.titleHtml || '').trim();
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
   const pageContentHeadingLevelToken = String(settings.headingLevel || '').trim().toLowerCase();
@@ -2537,6 +2585,7 @@ export function buildDynamicPageContentFromBlock(block) {
 
   if (
     !title
+    && !titleHtml
     && !subtitle
     && !body.length
     && !normalizedHtml
@@ -2554,6 +2603,7 @@ export function buildDynamicPageContentFromBlock(block) {
 
   return {
     title,
+    titleHtml,
     titleClassName,
     titleHighlights,
     headingLevel: pageContentHeadingLevelToken === 'h1' ? 'h1' : 'h2',

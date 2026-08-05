@@ -1,0 +1,32 @@
+{
+  "receiptVersion": 1,
+  "adapterId": "property-casualty-request-repair",
+  "status": "retired",
+  "primarySymbol": "shouldQuarantinePropertyCasualtyRequestContent",
+  "retirementBasis": "The current property/casualty page is block-owned and all retained persisted layers are current-schema with zero findings; the quarantine repair was not required by current content.",
+  "removedBehavior": {
+    "source": "src/context/ContentAdminContext.jsx",
+    "productionCallSites": 1,
+    "detector": "scripts/content-admin-migration-inventory.mjs"
+  },
+  "preservedBehavior": [
+    "Current property/casualty blueprint blocks and native route shell",
+    "Current request-form editing and rendering",
+    "Generic snapshot schema and target-field validation"
+  ],
+  "finalScan": {
+    "command": "npm run scan:migration-inventory -- --include-backups",
+    "requiredTotalFindings": 0,
+    "verifiedAt": "2026-08-05T21:37:32Z",
+    "migrationFindings": 0,
+    "backupInclusiveSnapshotFindings": 0,
+    "activePublishedSeedFindings": 0,
+    "retainedRecoveryBackups": 14,
+    "retainedRevisions": 164,
+    "restoreProof": "passed",
+    "verification": "post-change validation passed"
+  },
+  "storedContentMutation": false,
+  "adapterRemovalCommit": null,
+  "notes": "The adapter is explicitly retained in the executable inventory as retired; no other adapter is retired in this pass."
+}

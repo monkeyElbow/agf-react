@@ -44,7 +44,7 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain("if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'hero') {");
     expect(source).toContain("if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'intro') {");
     expect(source).toContain('const adminIntro = !isBlockOnlyManagedPage');
-    expect(source).toContain('const shouldRenderHero = !isBlockOnlyManagedPage && !hideHero;');
+    expect(source).toContain('const shouldRenderHero = !isBlockOnlyManagedPage && !hideHero && Boolean(heroBase);');
     expect(source).toContain('hideHero: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideHero) || fullyHiddenBlockIds.has(\'hero\')),');
     expect(source).toContain('hideIntro: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has(\'intro\')),');
     expect(shellSource).toContain('hero: null,');
@@ -421,8 +421,13 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain("toBlockOnlyManagedPageShell,");
     expect(source).toContain("const isBlockOnlyManagedPage = isBlockOnlyManagedPagePath(activePath || templatePath);");
     expect(source).toContain('const baseNativeContent = getNativePageContent(templatePath, page.title);');
-    expect(source).toContain('const baseContent = isBlockOnlyManagedPage');
+    expect(source).toContain('const shouldUseBlockOnlyShell = isBlockOnlyManagedPage');
+    expect(source).toContain('const baseContent = shouldUseBlockOnlyShell');
     expect(source).toContain('? toBlockOnlyManagedPageShell(baseNativeContent)');
+    expect(source).toContain('const hasManagedBlockSource = Boolean(editableBlockPath);');
+    expect(source).toContain('preIntroSections: [],');
+    expect(source).toContain('sections: [],');
+    expect(source).toContain(': (hasManagedBlockSource ? null : heroBase);');
     expect(source).toContain('const dynamicSections = visibleBlocks.reduce');
     expect(source).not.toContain('const allowTargetedDynamicSections = !isBlockOnlyManagedPage;');
     expect(source).not.toContain('targetedDynamicCtaSections');

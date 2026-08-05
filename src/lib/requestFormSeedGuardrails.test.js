@@ -139,7 +139,7 @@ describe('request form seed guardrails', () => {
     });
   });
 
-  it('repairs stale property and casualty request-form browser state back to the standalone canonical block', () => {
+  it('does not silently replace historical property and casualty request-form content during normalization', () => {
     const normalized = normalizeStoredConfig({
       blocksByPath: {
         '/services/insurance/property-casualty-insurance': [
@@ -167,15 +167,10 @@ describe('request form seed guardrails', () => {
 
     expect(block).toBeTruthy();
     expect(block.mode).toBe('dynamic');
-    expect(block.settings?.sectionClassName).toBe('insurance-pc-native-quote');
+    expect(block.settings?.title).toBe('Request a Property & Casualty Insurance Quote');
+    expect(block.settings?.body).toContain('Share a few details and we’ll help you explore broader coverage');
     expect(block.settings?.presetId).toBe('insurance-quote');
-    expectNoTargetBridgeSettings(block.settings, '/services/insurance/property-casualty-insurance normalized request');
-    expect(block.settings?.title).toBe('Request a P&C quote.');
-    expect(block.settings?.body).toBe('Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.');
-    expect(block.settings?.step1FieldsJson).toContain('"contactFirstName"');
-    expect(block.settings?.step2FieldsJson).toContain('"organizationName"');
-    expect(String(block.settings?.step1NextLabel || '')).toBe('Next');
-    expect(String(block.settings?.step2BackLabel || '')).toBe('Back');
-    expect(String(block.settings?.step2NextLabel || '')).toBe('Next');
+    expect(block.settings?.targetSectionKey).toBe('class:insurance-pc-native-quote');
+    expect(String(block.settings?.step1NextLabel || '')).toBe('Go to next step');
   });
 });

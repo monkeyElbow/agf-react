@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useContentAdmin } from '../context/ContentAdminContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useDocuments } from '../context/DocumentsContext';
 import { isPageHiddenFromSitemap } from '../data/siteMap';
 

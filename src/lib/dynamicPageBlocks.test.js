@@ -55,6 +55,8 @@ describe('shared external button link helpers', () => {
     expect(shouldUseUniversalOutlineButtonLink({ href: 'https://www.example.com' })).toBe(true);
     expect(shouldUseUniversalOutlineButtonLink({ to: '/docs/reference-packet.pdf' })).toBe(true);
     expect(shouldUseUniversalOutlineButtonLink({ to: '/services/loans' })).toBe(false);
+    expect(shouldUseUniversalOutlineButtonLink({ href: 'https://www.example.com', buttonStyle: 'blue' })).toBe(false);
+    expect(shouldUseUniversalOutlineButtonLink({ to: '#traditional-daf-form', buttonStyle: 'outline' })).toBe(false);
   });
 
   it('normalizes forced external button links onto the shared outline classes without losing tone', () => {
@@ -303,6 +305,33 @@ describe('buildDynamicCtaFormFromBlock', () => {
         type: 'email',
         required: true,
       }),
+    ]);
+  });
+
+  it('keeps intentionally empty canonical CTA fields from inheriting fallback copy', () => {
+    const runtime = buildDynamicCtaFormFromBlock(
+      {
+        id: 'cta_form',
+        kind: 'cta_form',
+        mode: 'dynamic',
+        settings: {
+          title: '',
+          fieldsJson: '',
+        },
+      },
+      {
+        fallbackSettings: {
+          title: 'Blueprint title',
+          fieldsJson: ctaFieldsJson([
+            { id: 'email', label: 'Email', type: 'email' },
+          ]),
+        },
+      },
+    );
+
+    expect(runtime?.title).toBe('');
+    expect(runtime?.fields).toEqual([
+      expect.objectContaining({ id: 'email', label: 'Email' }),
     ]);
   });
 
@@ -1208,6 +1237,25 @@ describe('buildDynamicServicesGridFromBlock', () => {
         featured: true,
       }),
     ]);
+  });
+
+  it('does not merge legacy card inventory into a canonical settings record', () => {
+    const runtime = buildDynamicServicesGridFromBlock({
+      id: 'services_grid',
+      kind: 'services_grid',
+      mode: 'dynamic',
+      heading: 'Legacy heading',
+      cards: [{ title: 'Legacy card', linkJson: serializeLinkValue({ kind: 'internal', to: '/legacy' }) }],
+      settings: {
+        heading: '',
+        card1Title: '',
+        card1LinkJson: '',
+        browseLabel: '',
+        browseLinkJson: '',
+      },
+    });
+
+    expect(runtime).toBeNull();
   });
 });
 
@@ -2252,6 +2300,7 @@ describe('buildDynamicPageContentFromBlock', () => {
 
     expect(runtime).toEqual({
       title: 'Annual Contribution Limits',
+      titleHtml: '',
       titleClassName: 'is-atlantean',
       titleHighlights: [{ text: 'Limits', className: 'is-mango' }],
       headingLevel: 'h2',

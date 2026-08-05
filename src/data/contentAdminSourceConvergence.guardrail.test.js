@@ -76,6 +76,7 @@ const ROOT_PRODUCT_PAGE_CUSTOM_RENDERER_REQUIREMENTS = Object.freeze({
     ['testimonials', 'testimonials'],
   ],
 });
+const CHARITABLE_TRUSTS_PATH = '/services/planned-giving/charitable-trusts';
 
 function readJson(relativePath) {
   return JSON.parse(readFileSync(path.resolve(repoRoot, relativePath), 'utf8'));
@@ -140,6 +141,11 @@ function collectSnapshotBlockShapeFindings(blocksByPath = {}) {
   return findings;
 }
 
+function getRouteBlock(blocksByPath = {}, pathname, blockId) {
+  return (Array.isArray(blocksByPath?.[pathname]) ? blocksByPath[pathname] : [])
+    .find((block) => String(block?.id || '') === blockId);
+}
+
 function collectRevisionBlocks(revisionsByPath = {}) {
   return Object.entries(revisionsByPath).flatMap(([pathname, revisions]) => (
     (Array.isArray(revisions) ? revisions : []).flatMap((revision, revisionIndex) => (
@@ -186,7 +192,7 @@ function collectRetiredContentPathKeys(stateRoot = {}) {
   return findings;
 }
 
-describe('content admin source convergence', () => {
+describe('architecture.content-admin active-state hygiene', () => {
   it('keeps the seed baseline file to one content source', () => {
     const seedRecord = readJson('dev-data/content-admin-seed-baseline.json');
 
@@ -212,6 +218,37 @@ describe('content admin source convergence', () => {
         collectSnapshotBlockShapeFindings(record?.[rootKey]?.blocksByPath || {}),
         `${label} should validate by shape instead of blueprint inventory equality`,
       ).toEqual([]);
+    });
+  });
+
+  it('keeps charitable trusts operational block flow and anchor behavior valid', () => {
+    CONTENT_ADMIN_ACTIVE_SNAPSHOT_ROOTS.forEach(({ label, relativePath, rootKey }) => {
+      const record = readJson(relativePath);
+      const blocks = record?.[rootKey]?.blocksByPath?.[CHARITABLE_TRUSTS_PATH] || [];
+      const blockIds = blocks.map((block) => String(block?.id || ''));
+      const differencesBlock = getRouteBlock(record?.[rootKey]?.blocksByPath, CHARITABLE_TRUSTS_PATH, 'trust_differences');
+      const fundingBlock = getRouteBlock(record?.[rootKey]?.blocksByPath, CHARITABLE_TRUSTS_PATH, 'trust_funding');
+
+      // Retained order contract: the funding CTA must remain immediately after
+      // comparison cards so its anchor flow is not separated from the choice.
+      expect(blockIds.indexOf('trust_funding'), `${label} trust_funding should follow trust_differences`).toBe(blockIds.indexOf('trust_differences') + 1);
+      expect(differencesBlock, `${label} trust_differences should remain a managed block`).toMatchObject({
+        id: 'trust_differences',
+        kind: 'card_grid',
+        mode: 'dynamic',
+      });
+      expect(fundingBlock, `${label} trust_funding should remain a managed block`).toMatchObject({
+        id: 'trust_funding',
+        kind: 'card_grid',
+        mode: 'dynamic',
+      });
+      expect(differencesBlock?.settings?.columns).toBe('two');
+      expect(fundingBlock?.settings?.columns).toBe('one');
+      expect(JSON.parse(fundingBlock?.settings?.card1ButtonLinkJson || '{}')).toEqual(expect.objectContaining({
+        kind: 'anchor',
+        href: '#charitable-trusts-form',
+        openInNewWindow: false,
+      }));
     });
   });
 

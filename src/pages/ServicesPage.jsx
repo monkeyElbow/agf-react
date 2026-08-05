@@ -1,13 +1,13 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
-import BlockHudPanelHost from '../components/BlockHudPanelHost';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import FrontHudPanelShell from '../components/FrontHudPanelShell';
 import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import SafeRichText from '../components/SafeRichText';
-import { useContentAdmin } from '../context/ContentAdminContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
 import { useTestimonials } from '../context/TestimonialsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
@@ -33,6 +33,7 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { defaultServicesCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultServicesIntroRuntime } from '../data/servicesOverviewSeed';
+import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
 
 const SERVICES_HERO_PIE_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const DEFAULT_SERVICES_INTRO = buildDefaultServicesIntroRuntime();
@@ -56,6 +57,7 @@ const SERVICES_HUD_SECTION_KEY_BY_BLOCK_ID = {
   cta_form: 'cta',
   testimonials: 'testimonials',
 };
+const BlockHudPanelHost = lazy(() => import('../components/BlockHudPanelHost'));
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -144,8 +146,17 @@ export default function ServicesPage() {
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
-  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
-  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
+  const {
+    blocksByPath: managedBlocksByPath,
+    pageHierarchy: managedPageHierarchy,
+  } = selectFrontHudContentSource({
+    enabled: frontHudEnabled,
+    pathname: '/services',
+    authoringBlocksByPath,
+    blocksByPath,
+    authoringPageHierarchy,
+    pageHierarchy,
+  });
   const { testimonials: testimonialsLibrary } = useTestimonials();
   useNativeEnhancements(pageRef);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -559,6 +570,7 @@ export default function ServicesPage() {
     return (
       <FrontHudAnchorTag
         label={panel.label}
+        icon={panel.icon}
         isActive={!hudDockCollapsed && activeHudPanelId === panel.id}
         onClick={() => openHudPanel(panel.id, panel.sectionKey)}
         style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
@@ -636,7 +648,7 @@ export default function ServicesPage() {
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-visually-hidden">{panel.label}</span>
+                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
               </button>
             ))}
           </div>
@@ -653,29 +665,48 @@ export default function ServicesPage() {
           </div>
         </aside>
       ) : null}
-      {showFrontHud ? (
-        <FrontHudPageWorkflow pathname="/services" reviewHref="/admin/content?page=%2Fservices" placement="bar" />
-      ) : null}
+      <FrontHudPageWorkflow pathname="/services" reviewHref="/admin/content?page=%2Fservices" placement="bar" isVisible={showFrontHud} />
       {hasOpenHudPanel && activeHudPanel ? (
         <FrontHudPanelShell
           title={activeHudPanel.label}
+          blockId={activeHudPanel.block.id}
+          pathname="/services"
+          ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+          onOwnershipAction={() => {
+            if (!activeHudPanel?.block?.id) {
+              return;
+            }
+            setActiveBlockLock('/services', activeHudPanel.block.id, { force: true });
+          }}
           onClose={closeHudDock}
           style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
         >
-          <BlockHudPanelHost
-            block={activeHudPanel.block}
+          <FrontHudPageWorkflow
             pathname="/services"
-            routeOptions={routeLinkOptions}
-            testimonialsLibrary={testimonialsLibrary}
-            ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
-            onOwnershipAction={() => {
-              if (!activeHudPanel?.block?.id) {
-                return;
-              }
-              setActiveBlockLock('/services', activeHudPanel.block.id, { force: true });
-            }}
-            onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
+            reviewHref="/admin/content?page=%2Fservices"
+            placement="dock-inline"
+            showBlockPublishAction={false}
+            showBlockDiscardAction
+            blockId={activeHudPanel.block.id}
+            blockLabel={activeHudPanel.label}
+            onDoneEditing={closeHudDock}
           />
+          <Suspense fallback={null}>
+            <BlockHudPanelHost
+              block={activeHudPanel.block}
+              pathname="/services"
+              routeOptions={routeLinkOptions}
+              testimonialsLibrary={testimonialsLibrary}
+              ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+              onOwnershipAction={() => {
+                if (!activeHudPanel?.block?.id) {
+                  return;
+                }
+                setActiveBlockLock('/services', activeHudPanel.block.id, { force: true });
+              }}
+              onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(activeHudPanel.block.id, settingKey, nextValue)}
+            />
+          </Suspense>
         </FrontHudPanelShell>
       ) : null}
       <section

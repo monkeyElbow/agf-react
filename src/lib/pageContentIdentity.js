@@ -5,6 +5,7 @@ const PAGE_CONTENT_BLOCK_ID = 'page_content';
 export const PAGE_CONTENT_IDENTITY = Object.freeze({
   decision: 'permanent-explicit-split',
   label: 'Page Content',
+  architectureReason: 'General rich editorial compatibility content; specialized interaction belongs in a standard block or site feature.',
   kind: PAGE_CONTENT_KIND,
   editorType: PAGE_CONTENT_EDITOR_TYPE,
   templateId: PAGE_CONTENT_EDITOR_TYPE,

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   CONTENT_ADMIN_MIGRATION_AFFECTED_LAYERS,
@@ -38,12 +39,37 @@ describe('content-admin migration inventory', () => {
       expect(entry.id).toMatch(/^[a-z0-9-]+$/);
       expect(entry.category).toBeTruthy();
       expect(entry.affectedLayers).toEqual(CONTENT_ADMIN_MIGRATION_AFFECTED_LAYERS);
-      expect(entry.sourceFiles.length).toBeGreaterThan(0);
-      expect(entry.sourceSymbols.length).toBeGreaterThan(0);
-      expect(entry.detect).toEqual(expect.any(Function));
-      expect(entry.retireWhen).toEqual(expect.any(Function));
+      if (entry.status === 'retired') {
+        expect(entry.retirementReceipt).toMatch(/^docs\//);
+        expect(entry.sourceSymbols).toEqual([]);
+      } else {
+        expect(entry.sourceFiles.length).toBeGreaterThan(0);
+        expect(entry.sourceSymbols.length).toBeGreaterThan(0);
+        expect(entry.detect).toEqual(expect.any(Function));
+        expect(entry.retireWhen).toEqual(expect.any(Function));
+      }
       expect(entry.retireWhenDescription).toMatch(/\w/);
     });
+  });
+
+  it('records the loans dynamic block upgrade as retired rather than active', () => {
+    const adapter = CONTENT_ADMIN_MIGRATION_ADAPTERS.find((entry) => entry.id === 'loans-dynamic-block-upgrade');
+
+    expect(adapter).toEqual(expect.objectContaining({
+      status: 'retired',
+      helpers: [],
+      sourceSymbols: [],
+      retirementReceipt: 'docs/content-admin-adapter-retirements/loans-dynamic-block-upgrade.json',
+    }));
+    expect(adapter.detect({ adapter: adapter.id, descriptor: {}, record: {} })).toEqual([]);
+    expect(adapter.retireWhen({ totalFindings: 0 })).toBe(true);
+  });
+
+  it('does not leave the retired loans adapter symbols in the production normalizer', () => {
+    const source = readFileSync('src/context/ContentAdminContext.jsx', 'utf8');
+
+    expect(source).not.toContain('LOANS_RETIRED_DYNAMIC_BLOCK_IDS');
+    expect(source).not.toContain('shouldUpgradeRetiredLoansDynamicBlock');
   });
 
   it('detects a persisted target bridge finding by route and block', () => {

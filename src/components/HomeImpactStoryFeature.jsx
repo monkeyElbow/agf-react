@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 const HOME_IMPACT_STORY_PINNED_ENABLED = true;
 const HOME_IMPACT_STORY_MIN_WIDTH_PX = 1040;
@@ -128,8 +128,6 @@ const HOME_IMPACT_STORY_GRADIENT_PROFILES = Object.freeze({
     angle: 166,
   }),
 });
-const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
-
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
@@ -738,7 +736,7 @@ export default function HomeImpactStoryFeature({
     && viewportWidth >= HOME_IMPACT_STORY_MIN_WIDTH_PX;
   const supportsFallbackReveal = !prefersReducedMotion && !supportsPinnedStory;
 
-  useClientLayoutEffect(() => {
+  useEffect(() => {
     if (!supportsPinnedStory || typeof window === 'undefined') {
       setProgress(0);
       return undefined;

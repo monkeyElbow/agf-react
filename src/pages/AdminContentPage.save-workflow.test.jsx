@@ -1,12 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
 import AdminContentPage from './AdminContentPage';
 
 void [MemoryRouter, AdminContentPage];
 
 const mockSaveSharedDraftNow = vi.fn();
 const mockPublishSharedPageNow = vi.fn();
+const mockPublishSharedBlockNow = vi.fn();
 const mockGetPageRevisionHistory = vi.fn();
 const mockGetSharedContentBackups = vi.fn();
 const mockPromoteContentAdminToSeed = vi.fn();
@@ -141,6 +142,7 @@ vi.mock('../context/ContentAdminContext', async () => {
       getPageWorkflowActivity: () => mockPageWorkflowActivity,
       saveSharedDraftNow: mockSaveSharedDraftNow,
       publishSharedPageNow: mockPublishSharedPageNow,
+      publishSharedBlockNow: mockPublishSharedBlockNow,
       getPageRevisionHistory: mockGetPageRevisionHistory,
       getSharedContentBackups: mockGetSharedContentBackups,
       promoteContentAdminToSeed: mockPromoteContentAdminToSeed,
@@ -158,8 +160,10 @@ vi.mock('../context/ContentAdminContext', async () => {
 
 describe('AdminContentPage shared save workflow', () => {
   beforeEach(() => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     mockSaveSharedDraftNow.mockReset();
     mockPublishSharedPageNow.mockReset();
+    mockPublishSharedBlockNow.mockReset();
     mockGetPageRevisionHistory.mockReset();
     mockGetSharedContentBackups.mockReset();
     mockPromoteContentAdminToSeed.mockReset();
@@ -200,6 +204,7 @@ describe('AdminContentPage shared save workflow', () => {
 
     mockSaveSharedDraftNow.mockResolvedValue({ ok: true });
     mockPublishSharedPageNow.mockResolvedValue({ ok: true });
+    mockPublishSharedBlockNow.mockResolvedValue({ ok: true });
     mockGetPageRevisionHistory.mockResolvedValue([
       {
         id: 'rev-1',
@@ -245,6 +250,10 @@ describe('AdminContentPage shared save workflow', () => {
     mockResetContentAdmin.mockResolvedValue({ ok: true });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('shows the page save bar and revision drawer actions for shared drafting', async () => {
     render(
       <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
@@ -253,7 +262,7 @@ describe('AdminContentPage shared save workflow', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save draft and preview' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
     expect(screen.getByRole('button', { name: 'History' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Promote content to seed' })).toBeTruthy();
@@ -439,7 +448,7 @@ describe('AdminContentPage shared save workflow', () => {
     expect(mockMoveBlock).toHaveBeenCalledWith('/services/loans', 'hero', 'down');
 
     fireEvent.click(screen.getAllByText('Hero')[0]);
-    expect(screen.getByRole('button', { name: 'Remove block' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Delete block' })).toBeTruthy();
     expect(screen.queryByLabelText('Block mode')).toBeNull();
   });
 
@@ -516,7 +525,7 @@ describe('AdminContentPage shared save workflow', () => {
     expect(screen.queryByText(/Active edit:/i)).toBeNull();
   });
 
-  it('keeps passive foreign draft markers out of inspect mode while preserving continue-draft action', () => {
+  it('keeps passive foreign draft markers out of inspect mode while preserving a takeover option', () => {
     mockDirtyPaths = [];
     mockBlockCollaborationById = {
       hero: {
@@ -538,11 +547,11 @@ describe('AdminContentPage shared save workflow', () => {
 
     expect(screen.queryByText(/Unpublished draft by Sarah MacBook/)).toBeNull();
     expect(view.container.querySelector('.admin-selected-block-lock-banner')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Continue draft' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Take over draft' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Take over edit' })).toBeNull();
     expect(screen.queryByText(/owns the latest saved draft/i)).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Continue draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Take over draft' }));
 
     expect(mockSetActiveBlockLock).toHaveBeenCalledWith('/services/loans', 'hero', { force: true });
   });
@@ -569,7 +578,7 @@ describe('AdminContentPage shared save workflow', () => {
 
     expect(screen.queryByText(/Last saved by Sarah MacBook/)).toBeNull();
     expect(screen.queryByText(/Unpublished draft by Sarah MacBook/)).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Continue draft' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Take over draft' })).toBeNull();
     expect(view.container.querySelector('.admin-selected-block-lock-banner')).toBeNull();
   });
 
@@ -611,6 +620,64 @@ describe('AdminContentPage shared save workflow', () => {
 
     await waitFor(() => {
       expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/services/loans', '');
+    });
+  });
+
+  it('reports a partial draft save without clearing the admin workflow', async () => {
+    mockSaveSharedDraftNow.mockResolvedValue({
+      ok: false,
+      reason: 'partially-saved',
+      saveResult: {
+        status: 'partially-saved',
+        changedPaths: ['/services/loans'],
+        savedBlockIdsByPath: { '/services/loans': ['cta_form'] },
+        blockedBlocks: [{ pathname: '/services/loans', blockId: 'hero', reason: 'drafted-by-other' }],
+        updatedAt: Date.now(),
+      },
+    });
+
+    const view = render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    mockLastSharedSaveResult = {
+      status: 'partially-saved',
+      changedPaths: ['/services/loans'],
+      savedBlockIdsByPath: { '/services/loans': ['cta_form'] },
+      blockedBlocks: [{ pathname: '/services/loans', blockId: 'hero', reason: 'drafted-by-other' }],
+      updatedAt: Date.now(),
+    };
+    view.rerender(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Saved 1 block; 1 conflicting block skipped/)).toBeTruthy();
+    });
+    expect(screen.getByText('Partially saved')).toBeTruthy();
+  });
+
+  it('publishes an individual changed block from its block editor options', async () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit Hero' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Make block live' }));
+
+    await waitFor(() => {
+      expect(mockPublishSharedBlockNow).toHaveBeenCalledWith(
+        '/services/loans',
+        'hero',
+        'Page Admin block publish',
+      );
     });
   });
 });

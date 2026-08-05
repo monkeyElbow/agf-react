@@ -17,10 +17,8 @@ import {
 } from '../data/contentBlockBlueprints';
 import { getSingletonBlockKinds } from '../blocks/registry';
 import {
-  buildCtaFormSlotFields,
   parseCtaFormFieldsJson,
   serializeCtaFormFields,
-  stripCtaFormSlotFieldSettings,
 } from '../blocks/foundation/forms';
 import {
   DEV_IDENTITY_STORAGE_KEY,
@@ -47,7 +45,6 @@ import {
 import { normalizePresetBearingBlocks } from '../lib/blockPresetIdentity';
 import { normalizeCalculatorWidgetBlocks } from '../lib/calculatorWidgetIdentity';
 import { normalizeBlockPresentation } from '../lib/blockPresentationContracts';
-import { normalizeCgaSecureActBlocks } from '../lib/cgaContentMigrations';
 import { normalizeContentAdminBlock, normalizeContentAdminState } from '../lib/contentAdminNormalization';
 import { CONTENT_ADMIN_MIGRATION_ADAPTERS } from '../lib/contentAdminMigrationInventory';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
@@ -113,21 +110,16 @@ const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/donor-advis
 const RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
 const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
 const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
-const RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS = Object.freeze([
-  'wills_estate_billboard',
-]);
 const RETIRED_CHARITABLE_TRUSTS_BLOCK_IDS = Object.freeze([
   'remainder_trust_how_it_works',
   'cta_trigger',
   'cta_form',
 ]);
 const RETIREMENT_403B_PATH = '/services/retirement/403b';
-const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
 const RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH = '/services/retirement/403b/403b-individual-enrollment';
 const RETIREMENT_403B_GROUP_ENROLLMENT_PATH = '/services/retirement/403b/403b-group-enrollment';
 const RETIREMENT_403B_GROUP_ENROLLMENT_LEGACY_PATH = '/services/retirement/403b-for-groups/403b-group-enrollment';
 const RETIREMENT_403B_GROUP_OVERVIEW_LEGACY_PATH = '/services/retirement/403b-for-groups';
-const RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID = 'loan_details';
 const PLANNED_GIVING_OVERVIEW_LEGACY_PATH = '/services/legacy-giving';
 const PLANNED_GIVING_CHARITABLE_GIFT_ANNUITIES_LEGACY_PATH = '/services/legacy-giving/charitable-gift-annuities';
 const PLANNED_GIVING_CHARITABLE_TRUSTS_LEGACY_PATH = '/services/legacy-giving/charitable-trusts';
@@ -158,33 +150,6 @@ const REQUEST_FORM_SINGLETON_IDS_BY_PATH = Object.freeze({
   [LEGACY_GIVING_GENEROSITY_FUND_PATH]: new Set(['request_form']),
   [LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH]: new Set(['request_form']),
 });
-const RETIREMENT_IRA_COMPARISON_TABLE_HEADERS = Object.freeze(['Traditional IRA', 'Roth IRA']);
-const RETIREMENT_IRA_COMPARISON_TRADITIONAL_ITEMS = Object.freeze([
-  'Must have earned income',
-  'No income limits to establish',
-  'Contributions may be tax-deductible',
-  'Earnings are tax-deferred until distributed',
-  'Distributions may begin at age 59½',
-  'Early distributions may be subject to penalty',
-  'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
-]);
-const RETIREMENT_IRA_COMPARISON_ROTH_ITEMS = Object.freeze([
-  'Income limits must be met for Roth IRA eligibility',
-  'Contributions are not tax-deductible',
-  'No age limit to contribute as long as you have earned income',
-  'Earnings may be tax-free at distribution if qualified',
-  'Principal contributions may be distributed without penalty',
-  'Qualified distributions on earnings may begin at 59½',
-  'Early distributions on earnings are subject to penalty',
-  'No required distribution age',
-  'Traditional IRAs may be converted to Roth IRAs',
-]);
-const RETIREMENT_IRA_COMPARISON_TABLE_ROWS = Object.freeze([
-  Object.freeze([
-    RETIREMENT_IRA_COMPARISON_TRADITIONAL_ITEMS.join('\n'),
-    RETIREMENT_IRA_COMPARISON_ROTH_ITEMS.join('\n'),
-  ]),
-]);
 const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
   '/services/investments/invest-by-mail',
   '/services/loans/loan-consultants',
@@ -213,473 +178,6 @@ function stripSimpleHtmlToText(value) {
     .replace(/&nbsp;/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-}
-
-const RETIREMENT_403B_HOUSING_ALLOWANCE_CANONICAL_TITLE = "Ministers' Housing Allowance";
-const RETIREMENT_403B_HOUSING_ALLOWANCE_LEGACY_TITLES = [
-  'Minister’s Housing Allowance',
-  "Minister's Housing Allowance",
-];
-
-function normalizeRetirement403bBenefitsCopySettings(settings, benefitsCardsTitle) {
-  const nextSettings = {
-    ...(settings && typeof settings === 'object' ? settings : {}),
-  };
-  const title = String(nextSettings.title || '').trim();
-  const subtitle = String(nextSettings.subtitle || '').trim();
-  const body = String(nextSettings.body || '').trim();
-  const html = String(nextSettings.html || '').trim();
-  const normalizedBenefitsCardsTitle = String(benefitsCardsTitle || '').trim();
-  const hasOnlyDuplicateTitle = Boolean(
-    title
-    && normalizedBenefitsCardsTitle
-    && title === normalizedBenefitsCardsTitle
-    && !subtitle
-    && !body
-    && (!html || html === '<p></p>' || html === '<p><br></p>')
-  );
-
-  if (hasOnlyDuplicateTitle) {
-    nextSettings.title = '';
-  }
-
-  return nextSettings;
-}
-
-function normalizeRetirement403bBenefitsCardsSettings(settings) {
-  const nextSettings = {
-    ...(settings && typeof settings === 'object' ? settings : {}),
-  };
-  const card3Title = String(nextSettings.card3Title || '').trim();
-  const card3TitleHighlightsJson = String(nextSettings.card3TitleHighlightsJson || '').trim();
-  const hasLegacyHousingAllowanceTitle = RETIREMENT_403B_HOUSING_ALLOWANCE_LEGACY_TITLES.includes(card3Title);
-  const hasLegacyHousingAllowanceHighlights = RETIREMENT_403B_HOUSING_ALLOWANCE_LEGACY_TITLES.some((title) => (
-    card3TitleHighlightsJson.includes(title)
-  ));
-
-  if (hasLegacyHousingAllowanceTitle) {
-    nextSettings.card3Title = RETIREMENT_403B_HOUSING_ALLOWANCE_CANONICAL_TITLE;
-  }
-
-  if (hasLegacyHousingAllowanceHighlights) {
-    let normalizedHighlightsJson = card3TitleHighlightsJson;
-    RETIREMENT_403B_HOUSING_ALLOWANCE_LEGACY_TITLES.forEach((title) => {
-      normalizedHighlightsJson = normalizedHighlightsJson.split(title).join(RETIREMENT_403B_HOUSING_ALLOWANCE_CANONICAL_TITLE);
-    });
-    nextSettings.card3TitleHighlightsJson = normalizedHighlightsJson;
-  }
-
-  return nextSettings;
-}
-
-function normalizeRetirement403bQualifySettings(settings) {
-  return {
-    ...(settings && typeof settings === 'object' ? settings : {}),
-    showTitleDivider: false,
-  };
-}
-
-function normalizeRetirement403bBlockSet(blocks) {
-  const safeBlocks = Array.isArray(blocks) ? blocks : [];
-  const filteredBlocks = safeBlocks.filter((block) => !(
-    block?.id === 'benefits_copy'
-    && String(block?.kind || '').trim().toLowerCase() === 'content'
-    && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
-  ));
-  const loansIndex = filteredBlocks.findIndex((block) => String(block?.id || '').trim() === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID);
-  const loanApplyIndex = filteredBlocks.findIndex((block) => String(block?.id || '').trim() === 'loan_apply');
-  const reorderedBlocks = [...filteredBlocks];
-
-  if (loansIndex !== -1 && loanApplyIndex !== -1 && loanApplyIndex !== loansIndex + 1) {
-    const [loanApplyBlock] = reorderedBlocks.splice(loanApplyIndex, 1);
-    const nextLoansIndex = reorderedBlocks.findIndex((block) => String(block?.id || '').trim() === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID);
-    reorderedBlocks.splice(nextLoansIndex + 1, 0, loanApplyBlock);
-  }
-
-  return reorderedBlocks.map((block) => {
-    if (!block || typeof block !== 'object') {
-      return block;
-    }
-
-    if (
-      block.id === 'benefits_cards'
-      && String(block.kind || '').trim().toLowerCase() === 'card_grid'
-      && String(block.mode || '').trim().toLowerCase() === 'dynamic'
-    ) {
-      return {
-        ...block,
-        settings: normalizeRetirement403bBenefitsCardsSettings(block.settings),
-      };
-    }
-
-    if (
-      block.id === 'who_qualifies'
-      && String(block.kind || '').trim().toLowerCase() === 'card_grid'
-      && String(block.mode || '').trim().toLowerCase() === 'dynamic'
-    ) {
-      return {
-        ...block,
-        settings: normalizeRetirement403bQualifySettings(block.settings),
-      };
-    }
-
-    return block;
-  });
-}
-
-function isPlannedGivingComparisonBlock(block) {
-  if (!block || typeof block !== 'object') {
-    return false;
-  }
-
-  const blockId = String(block?.id || '').trim();
-  const widget = String(block?.settings?.widget || '').trim();
-  const sectionClassName = String(block?.settings?.sectionClassName || '').trim();
-
-  return blockId === 'comparison_matrix'
-    || blockId === 'comparison_table'
-    || widget === 'giving-comparison-matrix'
-    || widget === 'charitable-giving-table'
-    || sectionClassName.split(/\s+/).includes('legacy-giving-comparison')
-    || sectionClassName.split(/\s+/).includes('legacy-giving-comparison-matrix');
-}
-
-function isArchivedPlannedGivingComparisonTableBlock(block) {
-  if (!block || typeof block !== 'object') {
-    return false;
-  }
-
-  const blockId = String(block?.id || '').trim();
-  const widget = String(block?.settings?.widget || '').trim();
-  const hasTablePayload = Boolean(block?.settings?.tableHeadersJson || block?.settings?.tableRowsJson);
-
-  return widget === 'charitable-giving-table'
-    || (blockId === 'comparison_table' && hasTablePayload);
-}
-
-function normalizePlannedGivingComparisonMatrixSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? { ...rawSettings } : {};
-  return {
-    ...settings,
-    title: '',
-    titleClassName: '',
-    titleHighlightsJson: '[]',
-    subtitle: '',
-    body: '',
-    html: '',
-    widget: 'giving-comparison-matrix',
-    anchorId: 'charitable-giving-plan-comparison',
-    sectionClassName: 'legacy-giving-comparison',
-    fullBleed: false,
-    tableHeadersJson: '',
-    tableRowsJson: '',
-    tableValueAlignment: '',
-  };
-}
-
-function normalizePlannedGivingOverviewBlockSet(blocks) {
-  const safeBlocks = Array.isArray(blocks) ? blocks : [];
-  let hasCanonicalComparison = false;
-
-  return safeBlocks.reduce((nextBlocks, block) => {
-    if (RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS.includes(String(block?.id || '').trim())) {
-      return nextBlocks;
-    }
-
-    if (!isArchivedPlannedGivingComparisonTableBlock(block) && !isPlannedGivingComparisonBlock(block)) {
-      nextBlocks.push(block);
-      return nextBlocks;
-    }
-
-    if (hasCanonicalComparison) {
-      return nextBlocks;
-    }
-
-    hasCanonicalComparison = true;
-    nextBlocks.push({
-      ...block,
-      id: 'comparison_table',
-      name: 'Charitable Giving Comparison Matrix',
-      kind: 'content',
-      mode: 'dynamic',
-      settings: normalizePlannedGivingComparisonMatrixSettings(block.settings),
-    });
-    return nextBlocks;
-  }, []);
-}
-
-function normalizeRetirementIraComparisonTableSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? { ...rawSettings } : {};
-  const headers = Array.isArray(settings.tableHeadersJson) ? settings.tableHeadersJson : [];
-  const rows = Array.isArray(settings.tableRowsJson) ? settings.tableRowsJson : [];
-  const headerKey = headers.map((header) => String(header || '').trim()).join('|');
-  const hasLegacyHeaders = headerKey === 'Key difference|Traditional IRA|Roth IRA';
-  const hasLegacyRows = rows.some((row) => Array.isArray(row) && row.length >= 3);
-  const hasPreviousPairedRows = rows.length > 1 && rows.every((row) => (
-    Array.isArray(row)
-    && row.length === 2
-    && row.every((cell) => String(cell || '').includes('\n'))
-  ));
-
-  if (!hasLegacyHeaders && !hasLegacyRows && !hasPreviousPairedRows) {
-    return settings;
-  }
-
-  return {
-    ...settings,
-    tableHeadersJson: [...RETIREMENT_IRA_COMPARISON_TABLE_HEADERS],
-    tableRowsJson: RETIREMENT_IRA_COMPARISON_TABLE_ROWS.map((row) => [...row]),
-    tableFirstColumnHeader: false,
-  };
-}
-
-function normalizeRetirementIraDailyBillboardSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? { ...rawSettings } : {};
-  return {
-    ...settings,
-    justify: 'center',
-    contentMaxWidthPx: 1480,
-    sectionClassName: 'retirement-everyday retirement-daily-billboard',
-  };
-}
-
-function normalizeRetirementIraBlockSet(blocks) {
-  const safeBlocks = Array.isArray(blocks) ? blocks : [];
-  return safeBlocks.map((block) => {
-    if (
-      block?.id === 'comparison_table'
-      && String(block?.kind || '').trim().toLowerCase() === 'content'
-      && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
-    ) {
-      return {
-        ...block,
-        settings: normalizeRetirementIraComparisonTableSettings(block.settings),
-      };
-    }
-    if (
-      block?.id === 'daily_billboard'
-      && String(block?.kind || '').trim().toLowerCase() === 'billboard'
-      && String(block?.mode || '').trim().toLowerCase() === 'dynamic'
-    ) {
-      return {
-        ...block,
-        settings: normalizeRetirementIraDailyBillboardSettings(block.settings),
-      };
-    }
-    return block;
-  });
-}
-
-function normalizeRetiredBlockCollaborationEntry(entry, retiredBlockIds) {
-  const safeEntry = entry && typeof entry === 'object' ? entry : {};
-  const blocks = safeEntry.blocks && typeof safeEntry.blocks === 'object' ? safeEntry.blocks : {};
-  const nextBlocks = {};
-
-  Object.entries(blocks).forEach(([blockId, meta]) => {
-    if (!retiredBlockIds.has(String(blockId || '').trim())) {
-      nextBlocks[blockId] = meta;
-    }
-  });
-
-  return {
-    ...safeEntry,
-    blocks: nextBlocks,
-    history: (Array.isArray(safeEntry.history) ? safeEntry.history : [])
-      .filter((historyEntry) => !retiredBlockIds.has(String(historyEntry?.blockId || '').trim())),
-  };
-}
-
-function isRetiredRetirement403bLoanApplySettings(settings) {
-  if (!settings || typeof settings !== 'object') {
-    return false;
-  }
-
-  const card1Title = String(settings.card1Title || '').trim().toLowerCase();
-  const card2Title = String(settings.card2Title || '').trim().toLowerCase();
-  const card3Title = String(settings.card3Title || '').trim().toLowerCase();
-  const card3Body = String(settings.card3Body || '').trim().toLowerCase();
-  const card4Title = String(settings.card4Title || '').trim();
-  const card5Title = String(settings.card5Title || '').trim();
-  const card6Title = String(settings.card6Title || '').trim();
-
-  const hasLegacyTitles = (
-    card1Title.includes('review and understand the loan rules')
-    || card2Title.includes('log in to your profile')
-    || card3Title.includes('submit your application')
-    || /^1\)\s+/.test(card1Title)
-    || /^2\)\s+/.test(card2Title)
-    || /^3\)\s+/.test(card3Title)
-  );
-  const hasLegacyApplicationBody = (
-    card3Body.includes('manage my retirement')
-    || card3Body.includes('loan services')
-    || card3Body.includes('loan modeling/request')
-  );
-  const hasLegacyThreeStepShape = !card4Title && !card5Title && !card6Title;
-
-  return hasLegacyThreeStepShape && (hasLegacyTitles || hasLegacyApplicationBody);
-}
-
-function isBlankRetiredHtmlFragment(html) {
-  const normalizedHtml = String(html || '').trim();
-  return !normalizedHtml || normalizedHtml === '<p></p>' || normalizedHtml === '<p><br></p>';
-}
-
-function shouldQuarantineRetirement403bStrategyOptionsHtml(html) {
-  const normalizedHtml = String(html || '').trim();
-
-  if (isBlankRetiredHtmlFragment(normalizedHtml)) {
-    return true;
-  }
-
-  const hasCanonicalFeatureWrapper = normalizedHtml.includes('ret403b-strategy-feature');
-  const hasCanonicalSectionTitles = [
-    'MBA Income Fund',
-    'Risk-Based Strategies',
-    'Target-Date Strategies',
-    'Individual Investment Options',
-  ].every((title) => normalizedHtml.includes(title));
-  const hasCanonicalStrategyActions = (
-    normalizedHtml.includes('ret403b-strategy-feature-links')
-    && normalizedHtml.includes('service-native-btn')
-    && normalizedHtml.includes('is-outline')
-    && normalizedHtml.includes('is-tone-atlantean')
-  );
-  const hasCanonicalServicesStructure = (
-    normalizedHtml.includes('services-breakdown-panel')
-    && normalizedHtml.includes('services-breakdown-description')
-    && hasCanonicalStrategyActions
-  );
-  const hasLegacyPdfLabels = [
-    'MBA Income Fund PDF',
-    'Screened strategies PDF',
-    'Target-date strategies PDF',
-    'Fund PDF',
-  ].some((label) => normalizedHtml.includes(label));
-  if (hasCanonicalFeatureWrapper) {
-    return (
-      !hasCanonicalServicesStructure
-      || (hasCanonicalSectionTitles && hasLegacyPdfLabels)
-    );
-  }
-
-  const hasLegacyProspectus = normalizedHtml.includes('Prospectus');
-  const legacySignalCount = [
-    normalizedHtml.includes('Rollovers'),
-    normalizedHtml.includes('Variety'),
-    normalizedHtml.includes('Your Own Consultant'),
-    normalizedHtml.includes('Education'),
-    normalizedHtml.includes('Minister’s Housing Allowance'),
-    normalizedHtml.includes("Ministers' Housing Allowance."),
-  ].filter(Boolean).length;
-
-  return (hasLegacyProspectus && legacySignalCount >= 1) || legacySignalCount >= 3;
-}
-
-function shouldQuarantineRetirement403bStrategyOptionsBlock(block) {
-  if (!block || typeof block !== 'object') {
-    return false;
-  }
-
-  if (String(block?.id || '').trim() !== 'investment_strategy_options') {
-    return false;
-  }
-
-  const blockKind = String(block?.kind || '').trim().toLowerCase();
-  if (blockKind === 'card_grid') {
-    return true;
-  }
-
-  if (blockKind !== 'content') {
-    return false;
-  }
-
-  return shouldQuarantineRetirement403bStrategyOptionsHtml(block?.settings?.html);
-}
-
-function needsRetirement403bStrategyHeadingProspectusRepair(settings, defaultSettings) {
-  const canonicalButton2Label = String(defaultSettings?.button2Label || '').trim();
-  const canonicalButton2Target = resolveEditableHrefFromLinkFields(defaultSettings, {
-    hrefKeys: ['button2Url'],
-    toKeys: ['button2PageRef'],
-    openInNewWindowKeys: ['button2OpenInNewWindow'],
-  });
-  const storedButton2Label = String(settings?.button2Label || '').trim();
-  const storedButton2Target = resolveEditableHrefFromLinkFields(settings, {
-    hrefKeys: ['button2Url'],
-    toKeys: ['button2PageRef'],
-    openInNewWindowKeys: ['button2OpenInNewWindow'],
-  });
-
-  if (!canonicalButton2Label || !canonicalButton2Target) {
-    return false;
-  }
-
-  return storedButton2Label !== canonicalButton2Label || storedButton2Target !== canonicalButton2Target;
-}
-
-function isRetiredRetirement403bIndividualEnrollmentBillboard(settings) {
-  if (!settings || typeof settings !== 'object') {
-    return false;
-  }
-
-  const title = String(settings.title || '').trim();
-  return title === 'Need help with enrollment?';
-}
-
-function isRetiredRetirement403bRolloverBillboard(settings, defaultSettings) {
-  if (!settings || typeof settings !== 'object') {
-    return false;
-  }
-
-  const title = String(settings.title || '').trim();
-  const bodyHtml = String(settings.bodyHtml || '').trim();
-  const buttonLabel = String(settings.buttonLabel || '').trim();
-  const canonicalTitle = String(defaultSettings?.title || '').trim();
-  const hasLegacyLabel = buttonLabel === 'Let’s simplify things' || buttonLabel === "Let's simplify things";
-  const hasLegacyAsciiBody = bodyHtml.includes('surprisingly simple...and undeniably smart');
-  const titleMatchesCanonical = Boolean(canonicalTitle) && title === canonicalTitle;
-
-  return hasLegacyLabel || (titleMatchesCanonical && hasLegacyAsciiBody);
-}
-
-function isRetiredRetirement403bStartEnrollmentSettings(settings, defaultSettings) {
-  if (!settings || typeof settings !== 'object') {
-    return false;
-  }
-
-  const title = String(settings.title || '').trim();
-  const card1Title = String(settings.card1Title || '').trim();
-  const card1ButtonTarget = resolveEditableHrefFromLinkFields(settings, {
-    hrefKeys: ['card1ButtonUrl'],
-    toKeys: ['card1ButtonPageRef'],
-  });
-  const card2ButtonTarget = resolveEditableHrefFromLinkFields(settings, {
-    hrefKeys: ['card2ButtonUrl'],
-    toKeys: ['card2ButtonPageRef'],
-  });
-  const defaultCard1ButtonTarget = resolveEditableHrefFromLinkFields(defaultSettings, {
-    hrefKeys: ['card1ButtonUrl'],
-    toKeys: ['card1ButtonPageRef'],
-  });
-  const defaultCard2ButtonTarget = resolveEditableHrefFromLinkFields(defaultSettings, {
-    hrefKeys: ['card2ButtonUrl'],
-    toKeys: ['card2ButtonPageRef'],
-  });
-  const dividerTone = String(settings.dividerTone || '').trim();
-  const card1DividerTone = String(settings.card1DividerTone || '').trim();
-  const card2DividerTone = String(settings.card2DividerTone || '').trim();
-  const hasLegacyTitle = card1Title === 'Enrollment for individuals.';
-  const hasLegacyDivider = settings.showTitleDivider === true
-    || dividerTone === 'auto'
-    || card1DividerTone === 'auto'
-    || card2DividerTone === 'auto';
-  const matchesCanonicalTargets = (
-    card1ButtonTarget === defaultCard1ButtonTarget
-    && card2ButtonTarget === defaultCard2ButtonTarget
-  );
-
-  return title === 'Start enrollment' && matchesCanonicalTargets && (hasLegacyTitle || hasLegacyDivider);
 }
 
 function appendClassNameTokens(value, requiredValue) {
@@ -727,17 +225,6 @@ function normalizeRetirement403bSectionClassSettings(pathname, settings, default
     ...(settings && typeof settings === 'object' ? settings : {}),
     sectionClassName: nextSectionClassName,
   };
-}
-
-function isRetiredRetirement403bCta(settings) {
-  if (!settings || typeof settings !== 'object') {
-    return false;
-  }
-
-  const bodyHtml = String(settings.bodyHtml || '').trim();
-  const bgTone = String(settings.bgTone || '').trim();
-
-  return bodyHtml === '<p>And we’re eager to help.</p>' && bgTone === 'sand';
 }
 
 function normalizeRetirementLandingCtaSettings(settings, defaultSettings = {}) {
@@ -1295,13 +782,6 @@ function normalizeSingletonKindBlocks(blocks) {
   return list;
 }
 
-const CTA_FORM_SLOT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
-
-function hasCtaFormSlotFieldPatch(settingsPatch) {
-  return Object.keys(settingsPatch && typeof settingsPatch === 'object' ? settingsPatch : {})
-    .some((key) => CTA_FORM_SLOT_FIELD_PATTERN.test(String(key || '')));
-}
-
 const PLANNED_GIVING_CTA_FINEPRINT = '* fields required';
 const PLANNED_GIVING_CTA_UNSURE_OPTION = Object.freeze({ value: 'not-sure', label: "I'm not sure." });
 const PLANNED_GIVING_CTA_CONTACT_PREFERENCE_FIELD = Object.freeze({
@@ -1451,22 +931,12 @@ function ensurePlannedGivingCtaSettings(settings) {
     : settings;
 }
 
-function normalizeCtaFormCanonicalFieldSettings(settings, { preferSlotFields = false } = {}) {
+function normalizeCtaFormCanonicalFieldSettings(settings) {
   if (!settings || typeof settings !== 'object') {
     return settings;
   }
 
-  const slotFields = buildCtaFormSlotFields(settings);
-  const canonicalFields = parseCtaFormFieldsJson(settings.fieldsJson);
-  const normalizedSettings = stripCtaFormSlotFieldSettings(settings);
-  if (!slotFields.length || (!preferSlotFields && canonicalFields.length)) {
-    return ensurePlannedGivingCtaSettings(normalizedSettings);
-  }
-
-  return ensurePlannedGivingCtaSettings({
-    ...normalizedSettings,
-    fieldsJson: serializeCtaFormFields(slotFields),
-  });
+  return ensurePlannedGivingCtaSettings(settings);
 }
 
 function normalizeCtaFormCanonicalFieldsInBlocks(blocks) {
@@ -1480,15 +950,11 @@ function normalizeCtaFormCanonicalFieldsInBlocks(blocks) {
     const settings = block.settings && typeof block.settings === 'object'
       ? normalizeCtaFormCanonicalFieldSettings(block.settings)
       : block.settings;
-    const editableFields = Array.isArray(block.editableFields)
-      ? block.editableFields.filter((field) => !CTA_FORM_SLOT_FIELD_PATTERN.test(String(field?.id || '')))
-      : block.editableFields;
     const changedSettings = settings !== block.settings;
-    const changedEditableFields = editableFields !== block.editableFields;
 
-    return !changedSettings && !changedEditableFields
+    return !changedSettings
       ? block
-      : { ...block, settings, editableFields };
+      : { ...block, settings };
   });
 }
 
@@ -1551,7 +1017,7 @@ function normalizeManagedBlockList(blocks) {
   const canonicalBlocks = canonicalizeRouteLinkEditableFieldsInBlocks(
     normalizeSplitLinkFieldsInBlocks(presetBlocks),
   );
-  return normalizeCgaSecureActBlocks(canonicalBlocks);
+  return canonicalBlocks;
 }
 
 function normalizePageBlocksState(blocks) {
@@ -2207,97 +1673,6 @@ function isPlaceholderIntroSettings(settings) {
   return false;
 }
 
-function shouldRefreshStoredIntroFromNative(pathname, settings) {
-  const path = String(pathname || '').trim();
-  if (
-    path !== RETIREMENT_403B_PATH
-    && path !== RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH
-    && path !== RETIREMENT_403B_GROUP_ENROLLMENT_PATH
-    && path !== '/services/insurance/property-casualty-insurance'
-  ) {
-    return false;
-  }
-  if (!settings || typeof settings !== 'object') {
-    return false;
-  }
-
-  const heading = String(settings.heading || '').trim();
-  const body = String(settings.body || '').trim();
-  const bodyHtml = String(settings.bodyHtml || '').trim();
-  const button1Label = String(settings.button1Label || '').trim();
-  const bgTone = String(settings.bgTone || '').trim();
-  const textTone = String(settings.textTone || '').trim();
-
-  if (path === '/services/insurance/property-casualty-insurance') {
-    const matchesCanonicalPropertyCasualtyIntro = (
-      body.includes('You focus on people. We\'ll handle the protection-powered confidence')
-      || bodyHtml.includes('You focus on people. We\'ll handle the protection-powered confidence')
-    );
-    return matchesCanonicalPropertyCasualtyIntro
-      && (
-        bgTone !== 'grey'
-        || textTone !== 'white'
-        || button1Label === 'Jump to the AG program'
-      );
-  }
-
-  if (path === RETIREMENT_403B_PATH) {
-    return false;
-  }
-
-  if (heading === 'The right loan can change everything.') {
-    return true;
-  }
-
-  if (path === RETIREMENT_403B_GROUP_ENROLLMENT_PATH) {
-    if (
-      button1Label === ''
-      && (
-        body.includes('What’s one gotta do to get AGFinancial 403(b)?')
-        || bodyHtml.includes('What’s one gotta do to get AGFinancial 403(b)?')
-        || body.includes('You’re in luck. We guide you through the process')
-        || bodyHtml.includes('You’re in luck. We guide you through the process')
-      )
-    ) {
-      return true;
-    }
-    return false;
-  }
-
-  const hasLegacyIndividualEnrollmentHeading = heading === 'What’s one gotta do to get AGFinancial 403(b)?';
-  const hasLegacyIndividualEnrollmentBody = (
-    body.includes('What’s one gotta do to get AGFinancial 403(b)?')
-    || bodyHtml.includes('What’s one gotta do to get AGFinancial 403(b)?')
-    || body.includes('You’re in luck. We guide you through the process')
-    || bodyHtml.includes('You’re in luck. We guide you through the process')
-  );
-  const hasLegacyIndividualEnrollmentButton = button1Label === '' || button1Label === 'Download Plan Summary';
-
-  if (hasLegacyIndividualEnrollmentHeading && (hasLegacyIndividualEnrollmentBody || hasLegacyIndividualEnrollmentButton)) {
-    return true;
-  }
-
-  if (
-    button1Label === ''
-    && (
-      body.includes('What’s one gotta do to get AGFinancial 403(b)?')
-      || bodyHtml.includes('What’s one gotta do to get AGFinancial 403(b)?')
-    )
-  ) {
-    return true;
-  }
-
-  if (!heading && !body && !bodyHtml && button1Label === 'Download Plan Summary') {
-    return true;
-  }
-
-  if (heading === 'Start with the 403(b) plan summary.' && button1Label === 'Download Plan Summary') {
-    return true;
-  }
-
-  return false;
-}
-
 function inferCanonicalFormOwner(defaultBlocks) {
   const blocks = Array.isArray(defaultBlocks) ? defaultBlocks : [];
   const hasCtaForm = blocks.some((block) => String(block?.kind || '').trim().toLowerCase() === 'cta_form');
@@ -2575,10 +1950,6 @@ export function normalizeStoredConfig(payload) {
     const defaultForPath = Array.isArray(defaultBlocks[path]) ? defaultBlocks[path] : [];
     const defaultById = new Map(defaultForPath.map((block) => [block.id, block]));
     const normalizedStoredBlocks = dedupeBlocksByIdPreferLatest(storedBlocks);
-    const hasStaleRetirement403bStrategyOptions = (
-      path === RETIREMENT_403B_PATH
-      && normalizedStoredBlocks.some((block) => shouldQuarantineRetirement403bStrategyOptionsBlock(block))
-    );
     const canonicalFormOwner = inferCanonicalFormOwner(defaultForPath);
     let retiredBlockOnlyShellBlock = false;
     const seenIds = new Set();
@@ -2659,26 +2030,12 @@ export function normalizeStoredConfig(payload) {
         retiredBlockOnlyShellBlock = true;
         return;
       }
-      if (
-        path === RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH
-        && storedBlock.id === 'billboard'
-        && storedKind === 'billboard'
-        && isRetiredRetirement403bIndividualEnrollmentBillboard(storedSettings)
-      ) {
-        return;
-      }
       if (path === '/rates' && storedBlock.id === 'disclaimer' && storedKind === 'legal_copy') {
         return;
       }
       seenIds.add(effectiveStoredBlockId);
       const matchingDefaultBlock = defaultById.get(effectiveStoredBlockId);
       const matchingDefaultKind = String(matchingDefaultBlock?.kind || '').trim().toLowerCase();
-      const isExplicitRetiredKindMigration = (
-        path === RETIREMENT_403B_PATH
-        && storedBlock.id === 'investment_strategy_options'
-        && storedKind === 'card_grid'
-        && matchingDefaultKind === 'content'
-      );
       const isRetiredPageContentImageBridgeMigration = shouldUpgradeRetiredPageContentImageBridge(
         storedBlock,
         matchingDefaultBlock,
@@ -2689,7 +2046,6 @@ export function normalizeStoredConfig(payload) {
           !storedKind
           || !matchingDefaultKind
           || storedKind === matchingDefaultKind
-          || isExplicitRetiredKindMigration
           || isRetiredPageContentImageBridgeMigration
         )
       )
@@ -2785,90 +2141,6 @@ export function normalizeStoredConfig(payload) {
         };
       }
       if (
-        path === RETIREMENT_403B_GROUP_ENROLLMENT_PATH
-        && storedBlock.id === 'billboard'
-        && storedKind === 'billboard'
-        && storedMode === 'dynamic'
-      ) {
-        const billboardSettings = nextStoredBlock?.settings || {};
-        const bgTone = String(billboardSettings.bgTone || '').trim();
-        const textTone = String(billboardSettings.textTone || '').trim();
-        const buttonUrl = String(billboardSettings.buttonUrl || '').trim();
-        const buttonPageRef = String(billboardSettings.buttonPageRef || '').trim();
-        const button2Url = String(billboardSettings.button2Url || '').trim();
-        const button2PageRef = String(billboardSettings.button2PageRef || '').trim();
-        const needsLegacyBillboardToneRepair = bgTone === 'grey' && textTone === 'white';
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          settings: {
-            ...billboardSettings,
-            ...(needsLegacyBillboardToneRepair ? { bgTone: 'white', textTone: 'dark' } : {}),
-            buttonPageRef: /^https?:\/\/files\.agfinancial\.org\/.+\.pdf$/i.test(buttonUrl) && buttonPageRef === buttonUrl
-              ? ''
-              : buttonPageRef,
-            button2PageRef: /^https?:\/\/files\.agfinancial\.org\/.+\.pdf$/i.test(button2Url) && button2PageRef === button2Url
-              ? ''
-              : button2PageRef,
-          },
-        };
-      }
-      if (
-        path === '/services/retirement/403b'
-        && storedBlock.id === 'cta_form'
-        && storedKind === 'cta_form'
-        && storedMode === 'dynamic'
-      ) {
-        const ctaSettings = nextStoredBlock?.settings || {};
-        const subtitle = String(ctaSettings.subtitle || '').trim();
-
-        if (isRetiredRetirement403bCta(ctaSettings)) {
-          nextStoredBlock = {
-            ...nextStoredBlock,
-            settings: {
-              ...ctaSettings,
-              bodyHtml: '',
-              subtitle: subtitle || 'And we’re eager to help.',
-              bgTone: 'white',
-            },
-          };
-        }
-      }
-      if (
-        path === RETIREMENT_403B_PATH
-        && storedBlock.id === 'rollover_billboard'
-        && storedKind === 'billboard'
-        && storedMode === 'dynamic'
-        && defaultBlock
-      ) {
-        const canonicalRolloverDefaultBlock = defaultForPath.find(
-          (block) => block?.id === 'rollover_billboard'
-            && String(block?.kind || '').trim().toLowerCase() === 'billboard'
-            && String(block?.mode || '').trim().toLowerCase() === 'dynamic',
-        ) || defaultBlock;
-        const rolloverSettings = nextStoredBlock?.settings || {};
-        const isRetired403bRolloverBillboard = isRetiredRetirement403bRolloverBillboard(
-          rolloverSettings,
-          canonicalRolloverDefaultBlock?.settings,
-        );
-
-        if (isRetired403bRolloverBillboard) {
-          nextStoredBlock = {
-            ...cloneTemplateVariant(canonicalRolloverDefaultBlock),
-            id: canonicalRolloverDefaultBlock.id || storedBlock.id,
-            name: canonicalRolloverDefaultBlock.name || storedBlock.name,
-            kind: canonicalRolloverDefaultBlock.kind || storedBlock.kind,
-            mode: 'dynamic',
-            hidden: false,
-            settings: {
-              ...(canonicalRolloverDefaultBlock?.settings || {}),
-            },
-            editableFields: Array.isArray(canonicalRolloverDefaultBlock?.editableFields)
-              ? [...canonicalRolloverDefaultBlock.editableFields]
-              : [],
-          };
-        }
-      }
-      if (
         storedKind === 'cta_form'
         && storedMode === 'dynamic'
         && defaultBlock
@@ -2890,108 +2162,6 @@ export function normalizeStoredConfig(payload) {
             },
           };
         }
-      }
-      if (
-        path === '/services/retirement/403b'
-        && storedBlock.id === RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID
-        && storedKind === 'content'
-        && defaultBlock
-      ) {
-        if (String(nextStoredBlock?.id || '').trim() !== RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID) {
-          nextStoredBlock = {
-            ...nextStoredBlock,
-            id: RETIREMENT_403B_LOAN_DETAILS_BLOCK_ID,
-            name: defaultBlock?.name || nextStoredBlock?.name || 'Loan Details',
-          };
-        }
-      }
-      if (
-        path === RETIREMENT_403B_PATH
-        && storedBlock.id === 'investment_strategy_options'
-        && (storedKind === 'content' || storedKind === 'card_grid')
-        && storedMode === 'dynamic'
-        && defaultBlock
-        && (
-          storedKind === 'card_grid'
-          || shouldQuarantineRetirement403bStrategyOptionsHtml(nextStoredBlock?.settings?.html)
-        )
-      ) {
-        nextStoredBlock = {
-          ...cloneTemplateVariant(defaultBlock),
-          id: defaultBlock.id || storedBlock.id,
-          name: defaultBlock.name || storedBlock.name,
-          kind: defaultBlock.kind || storedBlock.kind,
-          mode: 'dynamic',
-          hidden: false,
-          settings: {
-            ...(defaultBlock?.settings || {}),
-          },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? [...defaultBlock.editableFields]
-            : [],
-        };
-      }
-      if (
-        path === RETIREMENT_403B_PATH
-        && storedBlock.id === 'investment_strategy_heading'
-        && storedKind === 'billboard'
-        && storedMode === 'dynamic'
-        && defaultBlock
-        && hasStaleRetirement403bStrategyOptions
-        && needsRetirement403bStrategyHeadingProspectusRepair(nextStoredBlock?.settings, defaultBlock?.settings)
-      ) {
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          settings: {
-            ...(nextStoredBlock?.settings || {}),
-            button2Label: defaultBlock?.settings?.button2Label || '',
-            button2LinkJson: defaultBlock?.settings?.button2LinkJson || '',
-            button2Url: defaultBlock?.settings?.button2Url || '',
-            button2PageRef: defaultBlock?.settings?.button2PageRef || '',
-            button2Style: defaultBlock?.settings?.button2Style || '',
-            button2Tone: defaultBlock?.settings?.button2Tone || '',
-          },
-        };
-      }
-      if (
-        path === '/services/retirement/403b'
-        && storedBlock.id === 'loan_apply'
-        && storedKind === 'card_grid'
-        && storedMode === 'dynamic'
-        && defaultBlock
-        && isRetiredRetirement403bLoanApplySettings(nextStoredBlock?.settings)
-      ) {
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          templateId: defaultBlock.templateId || nextStoredBlock.templateId || 'card_grid',
-          presetId: defaultBlock.presetId || nextStoredBlock.presetId || 'step-cards',
-          settings: {
-            ...(defaultBlock?.settings || {}),
-          },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? [...defaultBlock.editableFields]
-            : (Array.isArray(nextStoredBlock?.editableFields) ? [...nextStoredBlock.editableFields] : []),
-        };
-      }
-      if (
-        path === RETIREMENT_403B_PATH
-        && storedBlock.id === 'start_enrollment'
-        && storedKind === 'card_grid'
-        && storedMode === 'dynamic'
-        && defaultBlock
-        && isRetiredRetirement403bStartEnrollmentSettings(nextStoredBlock?.settings, defaultBlock?.settings)
-      ) {
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          templateId: defaultBlock.templateId || nextStoredBlock.templateId || 'card_grid',
-          presetId: defaultBlock.presetId || nextStoredBlock.presetId || '',
-          settings: {
-            ...(defaultBlock?.settings || {}),
-          },
-          editableFields: Array.isArray(defaultBlock?.editableFields)
-            ? [...defaultBlock.editableFields]
-            : (Array.isArray(nextStoredBlock?.editableFields) ? [...nextStoredBlock.editableFields] : []),
-        };
       }
       if (path === '/services/loans' && storedBlock.id === 'hero' && storedMode === 'dynamic') {
         nextStoredBlock = {
@@ -3121,12 +2291,6 @@ export function normalizeStoredConfig(payload) {
           settings: { ...(defaultBlock?.settings || {}) },
         };
       }
-      if (storedBlock.id === 'intro' && storedMode === 'dynamic' && shouldRefreshStoredIntroFromNative(path, nextStoredBlock?.settings)) {
-        nextStoredBlock = {
-          ...nextStoredBlock,
-          settings: { ...(defaultBlock?.settings || {}) },
-        };
-      }
       const mergedSettings = storedBlock.id === 'intro' && storedMode === 'dynamic'
         ? normalizeIntroBodyMirror({
           ...(modeVariant.settings || {}),
@@ -3154,13 +2318,7 @@ export function normalizeStoredConfig(payload) {
       mergedInStoredOrder.push(normalizeBlockPresentation(mergedBlock));
     });
 
-    const normalizedMergedBlocksBase = path === RETIREMENT_403B_PATH
-      ? normalizeRetirement403bBlockSet(mergedInStoredOrder)
-      : (path === PLANNED_GIVING_OVERVIEW_PATH
-          ? normalizePlannedGivingOverviewBlockSet(mergedInStoredOrder)
-          : (path === RETIREMENT_IRAS_PATH
-              ? normalizeRetirementIraBlockSet(mergedInStoredOrder)
-              : mergedInStoredOrder));
+    const normalizedMergedBlocksBase = mergedInStoredOrder;
     const normalizedMergedBlocks = path === LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH
       ? restoreMissingDefaultBlocksById(defaultForPath, normalizedMergedBlocksBase, new Set(['state_notices']))
       : normalizedMergedBlocksBase;
@@ -3199,12 +2357,6 @@ export function normalizeStoredConfig(payload) {
   delete collaborationByPathSource[RETIREMENT_403B_GROUP_ENROLLMENT_LEGACY_PATH];
   delete collaborationByPathSource[RETIREMENT_403B_GROUP_OVERVIEW_LEGACY_PATH];
   const normalizedCollaborationByPathSource = { ...collaborationByPathSource };
-  if (normalizedCollaborationByPathSource[PLANNED_GIVING_OVERVIEW_PATH]) {
-    normalizedCollaborationByPathSource[PLANNED_GIVING_OVERVIEW_PATH] = normalizeRetiredBlockCollaborationEntry(
-      normalizedCollaborationByPathSource[PLANNED_GIVING_OVERVIEW_PATH],
-      new Set(['comparison_matrix', ...RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS]),
-    );
-  }
   const collaborationByPath = normalizeCollaborationState(normalizedCollaborationByPathSource);
 
   return { pageHierarchy, blocksByPath, pathAliases, collaborationByPath };
@@ -4242,16 +3394,6 @@ export function ContentAdminProvider({ children, initialState = null }) {
           ...block,
           settings: normalizeSplitLinkFieldSettings(nextSettings, { stripSplitFields: true }),
         };
-        if (
-          String(nextBlock.kind || '').trim().toLowerCase() === 'cta_form'
-          && hasCtaFormSlotFieldPatch(settingsPatch)
-          && !Object.prototype.hasOwnProperty.call(settingsPatch, 'fieldsJson')
-        ) {
-          return {
-            ...nextBlock,
-            settings: normalizeCtaFormCanonicalFieldSettings(nextBlock.settings, { preferSlotFields: true }),
-          };
-        }
         if (
           String(nextBlock.id || '').trim() === 'hero'
           && String(nextBlock.mode || '').trim().toLowerCase() === 'dynamic'

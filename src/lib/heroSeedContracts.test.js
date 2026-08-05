@@ -19,9 +19,7 @@ function getDynamicHeroSettings(pathname) {
 }
 
 function parseLinkJson(value) {
-  if (!value) {
-    return null;
-  }
+  if (!value) return null;
   try {
     return JSON.parse(value);
   } catch {
@@ -59,8 +57,6 @@ function expectActionLinkSettings(settings, buttonNumber, action) {
         href: expectedUrl,
         openInNewWindow: Boolean(action.openInNewWindow),
       }));
-    } else {
-      expect(linkValue).toBeNull();
     }
     return;
   }
@@ -75,11 +71,8 @@ function expectHeroSettingsToMatchContract(settings, contract) {
   expect(settings.bgTone).toBe(contract.bgTone);
   expect(settings.justify).toBe(contract.justify);
   expect(settings.actionJustify || '').toBe(contract.actionJustify || '');
-  if (Number.isFinite(Number(contract.titleSizeRem))) {
-    expect(Number(settings.titleSizeRem)).toBe(Number(contract.titleSizeRem));
-  }
-  expect(settings.lineGap).toBe(contract.lineGap);
-  expect(settings.lineHeight).toBe(contract.lineHeight);
+  expect(Number(settings.lineGap)).toBe(Number(contract.lineGap));
+  expect(Number(settings.lineHeight)).toBe(Number(contract.lineHeight));
 
   contract.lines.forEach((line, index) => {
     const lineNumber = index + 1;
@@ -97,136 +90,52 @@ function expectHeroSettingsToMatchContract(settings, contract) {
   });
 }
 
-describe('hero seed guardrails', () => {
-  it('keeps live hero seeds aligned to their static counterparts', () => {
+describe('hero seed contracts', () => {
+  it('keeps live hero seeds aligned to their reviewed contracts', () => {
     Object.entries(HERO_SEED_CONTRACTS_BY_PATH).forEach(([pathname, contract]) => {
       expectHeroSettingsToMatchContract(getDynamicHeroSettings(pathname), contract);
     });
   });
 
-  it('restores locked hero defaults when stored settings are sparse or blanked', () => {
-    Object.entries(HERO_SEED_CONTRACTS_BY_PATH).forEach(([pathname, contract]) => {
-      const normalized = normalizeDynamicHeroSettings(pathname, {
-        line1Text: contract.lines[0]?.text || '',
-        line1ClassName: '',
-        line1HighlightsJson: '[]',
-        line2Text: contract.lines[1]?.text || '',
-        line2ClassName: '',
-        line2HighlightsJson: '[]',
-        line3Text: contract.lines[2]?.text || '',
-        line3ClassName: '',
-        line3HighlightsJson: '[]',
-        button1Label: '',
-        button1PageRef: '',
-        button1Url: '',
-        button1Style: '',
-        button1Tone: '',
-      });
-
-      expectHeroSettingsToMatchContract(normalized, contract);
-    });
-  });
-
-  it('reports repaired hero fields when defaults have to be restored', () => {
+  it('preserves explicit editable values and reports no runtime drift', () => {
     const report = inspectDynamicHeroSettings('/', {
-      line1Text: 'Convenient.',
-      line1ClassName: '',
-      line1HighlightsJson: '[]',
-      line2Text: 'Tax-efficient.',
-      line2ClassName: 'home-native-title',
+      animationPreset: 'none',
+      justify: 'right',
+      actionJustify: 'right',
+      titleSizeRem: 6.1,
+      lineGap: 0.22,
+      line1Text: 'Admin headline.',
+      line1ClassName: 'home-native-eyebrow custom-class is-melon',
+      line1HighlightsJson: '',
+      line2Text: '',
+      line2ClassName: '',
       line2HighlightsJson: '',
       button1Label: '',
-      button1PageRef: '',
-      button1Style: '',
-      button1Tone: '',
     });
 
-    expect(report.hasDrift).toBe(true);
-    expect(report.repairedFields.map((entry) => entry.field)).toEqual(expect.arrayContaining([
-      'line1ClassName',
-      'line1HighlightsJson',
-      'line2ClassName',
-      'line3Text',
-      'line3ClassName',
-      'titleSizeRem',
-      'button1Label',
-      'button1PageRef',
-      'button1Style',
-      'button1Tone',
-    ]));
+    expect(report.hasDrift).toBe(false);
+    expect(report.repairedFields).toEqual([]);
+    expect(report.normalizedSettings).toMatchObject({
+      animationPreset: 'none',
+      justify: 'right',
+      actionJustify: 'right',
+      titleSizeRem: 6.1,
+      lineGap: 0.22,
+      line1Text: 'Admin headline.',
+      line1ClassName: 'home-native-eyebrow custom-class is-melon',
+      line1HighlightsJson: '',
+      line2Text: '',
+      line2ClassName: '',
+      line2HighlightsJson: '',
+      button1Label: '',
+    });
   });
 
-  it('preserves intentional hero styling edits on default text while still repairing missing default highlights', () => {
+  it('preserves explicit empty values instead of restoring starter content', () => {
     const normalized = normalizeDynamicHeroSettings('/', {
       line1Text: 'Convenient.',
       line1ClassName: 'home-native-eyebrow is-atlantean',
       line1HighlightsJson: '',
-      line2Text: 'Tax-efficient.',
-      line2ClassName: 'home-native-title line1 line2 is-mango',
-      line2HighlightsJson: '',
-    });
-
-    expect(String(normalized.line1ClassName || '')).toBe('home-native-eyebrow is-atlantean');
-    expect(String(normalized.line1HighlightsJson || '')).toBe('');
-    expect(String(normalized.line2ClassName || '')).toBe('home-native-title line1 line2 is-mango');
-    expect(String(normalized.line2HighlightsJson || '')).toBe('');
-  });
-
-  it('repairs non-empty but degraded hero highlight settings when expected highlight tokens are missing', () => {
-    const normalized = normalizeDynamicHeroSettings('/services/investments', {
-      line1Text: 'Your investments.',
-      line1ClassName: 'line1',
-      line1HighlightsJson: '[]',
-      line2Text: 'Your faith.',
-      line2ClassName: 'line2',
-      line2HighlightsJson: '[]',
-      line3Text: 'Better together.',
-      line3ClassName: 'line3',
-      line3HighlightsJson: '[]',
-    });
-
-    expect(String(normalized.line1HighlightsJson || '')).toBe(
-      '[{"text":"investments","className":"is-atlantean"}]',
-    );
-    expect(String(normalized.line2HighlightsJson || '')).toBe(
-      '[{"text":"faith","className":"is-mango"}]',
-    );
-    expect(String(normalized.line3HighlightsJson || '')).toBe(
-      '[{"text":"together","className":"is-sandstone"}]',
-    );
-
-    const report = inspectDynamicHeroSettings('/services/investments', {
-      line1Text: 'Your investments.',
-      line1ClassName: 'line1',
-      line1HighlightsJson: '[]',
-      line2Text: 'Your faith.',
-      line2ClassName: 'line2',
-      line2HighlightsJson: '[]',
-      line3Text: 'Better together.',
-      line3ClassName: 'line3',
-      line3HighlightsJson: '[]',
-    });
-
-    expect(report.hasDrift).toBe(true);
-    expect(report.repairedFields.map((entry) => entry.field)).toEqual(expect.arrayContaining([
-      'line1HighlightsJson',
-      'line2HighlightsJson',
-      'line3HighlightsJson',
-    ]));
-  });
-
-  it('upgrades legacy hero animation presets from none to the managed preset for each page', () => {
-    expect(normalizeDynamicHeroSettings('/', { animationPreset: 'none' }).animationPreset).toBe('default');
-    expect(normalizeDynamicHeroSettings('/services/investments', { animationPreset: 'none' }).animationPreset).toBe('default');
-    expect(normalizeDynamicHeroSettings('/services/retirement', { animationPreset: 'none' }).animationPreset).toBe('default');
-  });
-
-  it('upgrades the legacy one-line investments hero into three managed lines', () => {
-    const normalized = normalizeDynamicHeroSettings('/services/investments', {
-      animationPreset: 'none',
-      line1Text: 'Your investments. Your faith. Better together.',
-      line1ClassName: 'line1 line2',
-      line1HighlightsJson: '[{"text":"investments","className":"is-atlantean"},{"text":"faith","className":"is-mango"},{"text":"together","className":"is-sandstone"}]',
       line2Text: '',
       line2ClassName: '',
       line2HighlightsJson: '',
@@ -235,19 +144,47 @@ describe('hero seed guardrails', () => {
       line3HighlightsJson: '',
     });
 
-    expect(normalized.animationPreset).toBe('default');
-    expect(normalized.line1Text).toBe('Your investments.');
-    expect(normalized.line1ClassName).toBe('line1');
-    expect(normalized.line1HighlightsJson).toBe('[{"text":"investments","className":"is-atlantean"}]');
-    expect(normalized.line2Text).toBe('Your faith.');
-    expect(normalized.line2ClassName).toBe('line2');
-    expect(normalized.line2HighlightsJson).toBe('[{"text":"faith","className":"is-mango"}]');
-    expect(normalized.line3Text).toBe('Better together.');
-    expect(normalized.line3ClassName).toBe('line3');
-    expect(normalized.line3HighlightsJson).toBe('[{"text":"together","className":"is-sandstone"}]');
+    expect(normalized.line1Text).toBe('Convenient.');
+    expect(normalized.line1HighlightsJson).toBe('');
+    expect(normalized.line2Text).toBe('');
+    expect(normalized.line3Text).toBe('');
   });
 
-  it('keeps the loans hero contract on the unblur animation while investments stays on default', () => {
+  it('does not use marketing copy to select or rewrite an investments hero shape', () => {
+    const settings = {
+      animationPreset: 'none',
+      line1Text: 'Your investments. Your faith. Better together.',
+      line1ClassName: 'line1 line2 custom-class',
+      line1HighlightsJson: '[]',
+      line2Text: '',
+      line2ClassName: '',
+      line2HighlightsJson: '',
+      line3Text: '',
+      line3ClassName: '',
+      line3HighlightsJson: '',
+    };
+    const normalized = normalizeDynamicHeroSettings('/services/investments', settings);
+    const report = inspectDynamicHeroSettings('/services/investments', settings);
+
+    expect(normalized.animationPreset).toBe('none');
+    expect(normalized.line1Text).toBe(settings.line1Text);
+    expect(normalized.line1HighlightsJson).toBe('[]');
+    expect(normalized.line2Text).toBe('');
+    expect(normalized.line3Text).toBe('');
+    expect(report.hasDrift).toBe(false);
+    expect(report.repairedFields).toEqual([]);
+  });
+
+  it('uses starter defaults only for missing fields and keeps inspection read-only', () => {
+    const normalized = normalizeDynamicHeroSettings('/', {});
+    const report = inspectDynamicHeroSettings('/', {});
+
+    expect(normalized.line1Text).toBe(HERO_SEED_CONTRACTS_BY_PATH['/'].lines[0].text);
+    expect(report.hasDrift).toBe(false);
+    expect(report.repairedFields).toEqual([]);
+  });
+
+  it('keeps the reviewed loans and investments animation contracts distinct', () => {
     expect(HERO_SEED_CONTRACTS_BY_PATH['/services/loans']?.animationPreset).toBe('loans-unblur');
     expect(HERO_SEED_CONTRACTS_BY_PATH['/services/investments']?.animationPreset).toBe('default');
   });

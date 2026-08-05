@@ -64,7 +64,7 @@ export default function DynamicCtaSection({
   fieldIdPrefix = 'dynamic-cta',
   onSubmitData = null,
   titlePlacement = 'outside',
-  renderDefaultWhenMissing = true,
+  renderDefaultWhenMissing = false,
 }) {
   const [values, setValues] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -85,9 +85,7 @@ export default function DynamicCtaSection({
 
   const runtime = useMemo(() => {
     if (dynamicCtaBlock) {
-      return buildDynamicCtaFormFromBlock(dynamicCtaBlock, {
-        fallbackSettings: defaultSettings,
-      });
+      return buildDynamicCtaFormFromBlock(dynamicCtaBlock);
     }
     if (!renderDefaultWhenMissing) {
       return null;

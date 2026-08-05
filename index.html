@@ -2,7 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://use.typekit.net/nmy3epc.css"
+    media="print"
+    onload="this.media='all'"
+  />
+  <noscript><link rel="stylesheet" href="https://use.typekit.net/nmy3epc.css" /></noscript>
     <meta
       name="description"
       content="Faith-driven financial services for churches, ministries, and individuals."
@@ -10,7 +18,11 @@
     <title>AGFinancial React Rebuild</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="min-height:100vh;display:grid;place-items:center;background:#ffffff;color:#414042;font:600 16px/1.4 Arial,sans-serif;">
+        Loading AGFinancial...
+      </div>
+    </div>
     <script>
       (() => {
         const RECOVERY_STATE_KEY = 'agf:module-load-recovery';

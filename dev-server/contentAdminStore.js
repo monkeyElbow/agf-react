@@ -1,40 +1,39 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { normalizePresetBearingBlocks } from '../src/lib/blockPresetIdentity.js';
 import { defaultAnnouncement, normalizeAnnouncement } from '../src/lib/announcementConfig.js';
-import {
-  buildCtaFormSlotFields,
-  parseCtaFormFieldsJson,
-  serializeCtaFormFields,
-  stripCtaFormSlotFieldSettings,
-} from '../src/blocks/foundation/forms.js';
 import { normalizeCalculatorIntroBlock, normalizeCalculatorWidgetBlock } from '../src/lib/calculatorWidgetIdentity.js';
-import { normalizeSplitLinkFieldSettings } from '../src/lib/linkValue.js';
 import { normalizeBlockPresentation } from '../src/lib/blockPresentationContracts.js';
-import { normalizeCgaSecureActBlocks } from '../src/lib/cgaContentMigrations.js';
 import {
   normalizeContentAdminBlock,
   normalizeContentAdminState,
   normalizeContentAdminRecord,
 } from '../src/lib/contentAdminNormalization.js';
+import { normalizeSharedOperationStatus } from '../src/lib/contentAdminCollaboration.js';
 import { validateContentAdminStateSchema } from '../src/lib/contentAdminSnapshotSchema.js';
 import {
   compareSeedRouteSlices,
   formatSeedRouteSliceDiffReport,
 } from './seedRouteSliceComparison.js';
 import {
+  GENEROSITY_FUND_SNAPSHOT_MIGRATION_ID,
+  GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
+  migrateGenerosityFundSnapshot,
   stripRetiredTargetBridgeSettingsFromBlock,
   stripRetiredTargetBridgeSettingsFromBlocks,
   stripRetiredTargetBridgeSettingsFromState,
 } from '../src/lib/contentAdminSnapshotMigrations.js';
+import {
+  DEFAULT_CONTENT_ADMIN_RETENTION_POLICY,
+  isAutomaticRetentionDeletionAllowed,
+  normalizeContentAdminRetentionPolicy,
+} from '../src/lib/contentAdminRetentionPolicy.js';
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
 const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
-const PLANNED_GIVING_OVERVIEW_PATH = '/services/planned-giving';
-const RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS = Object.freeze([
-  'wills_estate_billboard',
-]);
 const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
 const LEGACY_GIVING_CHARITABLE_TRUSTS_PATH = '/services/planned-giving/charitable-trusts';
 const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
@@ -42,44 +41,14 @@ const LEGACY_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/donor-advis
 const RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH = '/services/planned-giving/generosity-fund';
 const PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH = '/services/legacy-giving/generosity-fund';
 const GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE = 'Donor Advised Fund';
-const RETIREMENT_403B_PATH = '/services/retirement/403b';
-const RETIREMENT_IRAS_PATH = '/services/retirement/iras';
 const RETIRED_CHARITABLE_TRUSTS_BLOCK_IDS = Object.freeze([
   'remainder_trust_how_it_works',
   'cta_trigger',
   'cta_form',
 ]);
-const CTA_FORM_SLOT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
 const SHARED_CONTENT_BACKUP_FILE_PREFIX = 'content-admin-shared-';
 const SHARED_CONTENT_BACKUP_FILE_SUFFIX = '.json';
 const SHARED_CONTENT_SEED_BASELINE_FILE_NAME = 'content-admin-seed-baseline.json';
-const RETIREMENT_IRA_COMPARISON_TABLE_HEADERS = Object.freeze(['Traditional IRA', 'Roth IRA']);
-const RETIREMENT_IRA_COMPARISON_TRADITIONAL_ITEMS = Object.freeze([
-  'Must have earned income',
-  'No income limits to establish',
-  'Contributions may be tax-deductible',
-  'Earnings are tax-deferred until distributed',
-  'Distributions may begin at age 59½',
-  'Early distributions may be subject to penalty',
-  'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
-]);
-const RETIREMENT_IRA_COMPARISON_ROTH_ITEMS = Object.freeze([
-  'Income limits must be met for Roth IRA eligibility',
-  'Contributions are not tax-deductible',
-  'No age limit to contribute as long as you have earned income',
-  'Earnings may be tax-free at distribution if qualified',
-  'Principal contributions may be distributed without penalty',
-  'Qualified distributions on earnings may begin at 59½',
-  'Early distributions on earnings are subject to penalty',
-  'No required distribution age',
-  'Traditional IRAs may be converted to Roth IRAs',
-]);
-const RETIREMENT_IRA_COMPARISON_TABLE_ROWS = Object.freeze([
-  Object.freeze([
-    RETIREMENT_IRA_COMPARISON_TRADITIONAL_ITEMS.join('\n'),
-    RETIREMENT_IRA_COMPARISON_ROTH_ITEMS.join('\n'),
-  ]),
-]);
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -138,13 +107,20 @@ function normalizeActor(rawActor) {
 
 function normalizeBlockMeta(rawMeta) {
   const source = rawMeta && typeof rawMeta === 'object' ? rawMeta : {};
+  const normalizeTimestamp = (value) => (
+    value == null || value === ''
+      ? null
+      : Number.isFinite(Number(value))
+        ? Number(value)
+        : null
+  );
   return {
     draftedBy: normalizeActor(source.draftedBy),
-    draftedAt: Number.isFinite(Number(source.draftedAt)) ? Number(source.draftedAt) : null,
+    draftedAt: normalizeTimestamp(source.draftedAt),
     savedBy: normalizeActor(source.savedBy),
-    savedAt: Number.isFinite(Number(source.savedAt)) ? Number(source.savedAt) : null,
+    savedAt: normalizeTimestamp(source.savedAt),
     lockedBy: normalizeActor(source.lockedBy),
-    lockedAt: Number.isFinite(Number(source.lockedAt)) ? Number(source.lockedAt) : null,
+    lockedAt: normalizeTimestamp(source.lockedAt),
   };
 }
 
@@ -178,42 +154,13 @@ function normalizeCollaborationByPath(rawState) {
       if (!normalizedBlockId) {
         return;
       }
-      if (
-        pathname === RETIREMENT_403B_PATH
-        && normalizedBlockId === 'page_content'
-      ) {
-        return;
-      }
-      if (
-        pathname === PLANNED_GIVING_OVERVIEW_PATH
-        && (
-          normalizedBlockId === 'comparison_matrix'
-          || RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS.includes(normalizedBlockId)
-        )
-      ) {
-        return;
-      }
       blocks[normalizedBlockId] = normalizeBlockMeta(rawMeta);
     });
     next[pathname] = {
       blocks,
       history: (Array.isArray(entry.history) ? entry.history : [])
         .map(normalizeHistoryEntry)
-        .filter((historyEntry) => (
-          historyEntry
-          && !(
-            (
-              pathname === RETIREMENT_403B_PATH
-              && historyEntry.blockId === 'page_content'
-            ) || (
-              pathname === PLANNED_GIVING_OVERVIEW_PATH
-              && (
-                historyEntry.blockId === 'comparison_matrix'
-                || RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS.includes(historyEntry.blockId)
-              )
-            )
-          )
-        )),
+        .filter(Boolean),
     };
   });
   return next;
@@ -238,6 +185,9 @@ function normalizeStoredRecord(rawRecord, maxRevisionsPerPage) {
   const parsed = normalizeContentAdminRecord(rawRecord);
   const state = normalizeSharedState(parsed?.state);
   const baseSnapshot = normalizeSharedState(parsed?.baseSnapshot);
+  const snapshotMigrations = parsed?.snapshotMigrations && typeof parsed.snapshotMigrations === 'object'
+    ? cloneJson(parsed.snapshotMigrations)
+    : null;
   return {
     initialized: Boolean(parsed?.initialized),
     version: 1,
@@ -246,8 +196,11 @@ function normalizeStoredRecord(rawRecord, maxRevisionsPerPage) {
       ? Number(parsed.announcementUpdatedAt)
       : 0,
     announcement: normalizeAnnouncement(parsed?.announcement),
-    state: clearUnchangedBlockDraftOwnership(state, baseSnapshot),
-    baseSnapshot: clearUnchangedBlockDraftOwnership(baseSnapshot, baseSnapshot),
+    // Preserve persisted ownership metadata on load. The browser derives stale
+    // draft presentation from active/base equivalence; loading must not rewrite
+    // an otherwise valid record or silently erase its audit trail.
+    state,
+    baseSnapshot,
     revisionsByPath: Object.fromEntries(
       Object.entries(parsed?.revisionsByPath || {}).map(([pathname, revisions]) => [
         pathname,
@@ -257,6 +210,7 @@ function normalizeStoredRecord(rawRecord, maxRevisionsPerPage) {
           .slice(0, maxRevisionsPerPage),
       ]),
     ),
+    ...(snapshotMigrations ? { snapshotMigrations } : {}),
   };
 }
 
@@ -733,130 +687,6 @@ function normalizeGenerosityFundRouteLabelsInSettings(rawSettings) {
   return changed ? next : rawSettings;
 }
 
-function isRetiredRetirement403bPageContentBlock(block) {
-  return (
-    String(block?.id || '').trim() === 'page_content'
-    || String(block?.kind || '').trim() === 'page_content'
-  );
-}
-
-function isPlannedGivingComparisonBlock(block) {
-  if (!block || typeof block !== 'object') {
-    return false;
-  }
-
-  const blockId = String(block?.id || '').trim();
-  const widget = String(block?.settings?.widget || '').trim();
-  const sectionClassName = String(block?.settings?.sectionClassName || '').trim();
-
-  return blockId === 'comparison_matrix'
-    || blockId === 'comparison_table'
-    || widget === 'giving-comparison-matrix'
-    || widget === 'charitable-giving-table'
-    || sectionClassName.split(/\s+/).includes('legacy-giving-comparison')
-    || sectionClassName.split(/\s+/).includes('legacy-giving-comparison-matrix');
-}
-
-function normalizePlannedGivingComparisonMatrixSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? cloneJson(rawSettings) : {};
-  return {
-    ...settings,
-    title: '',
-    titleClassName: '',
-    titleHighlightsJson: '[]',
-    subtitle: '',
-    body: '',
-    html: '',
-    widget: 'giving-comparison-matrix',
-    anchorId: 'charitable-giving-plan-comparison',
-    sectionClassName: 'legacy-giving-comparison',
-    fullBleed: false,
-    tableHeadersJson: '',
-    tableRowsJson: '',
-    tableValueAlignment: '',
-  };
-}
-
-function normalizePlannedGivingOverviewBlockSet(blocks) {
-  let hasCanonicalComparison = false;
-
-  return (Array.isArray(blocks) ? blocks : []).reduce((nextBlocks, block) => {
-    if (RETIRED_PLANNED_GIVING_OVERVIEW_BLOCK_IDS.includes(String(block?.id || '').trim())) {
-      return nextBlocks;
-    }
-
-    if (!isPlannedGivingComparisonBlock(block)) {
-      nextBlocks.push(block);
-      return nextBlocks;
-    }
-
-    if (hasCanonicalComparison) {
-      return nextBlocks;
-    }
-
-    hasCanonicalComparison = true;
-    nextBlocks.push({
-      ...block,
-      id: 'comparison_table',
-      name: 'Charitable Giving Comparison Matrix',
-      kind: 'content',
-      mode: 'dynamic',
-      settings: normalizePlannedGivingComparisonMatrixSettings(block?.settings),
-    });
-    return nextBlocks;
-  }, []);
-}
-
-function normalizeCtaFormCanonicalFieldSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
-  const slotFields = buildCtaFormSlotFields(settings);
-  const canonicalFields = parseCtaFormFieldsJson(settings.fieldsJson);
-  const normalizedSettings = stripCtaFormSlotFieldSettings(settings);
-  if (!slotFields.length || canonicalFields.length) {
-    return normalizedSettings;
-  }
-
-  return {
-    ...normalizedSettings,
-    fieldsJson: serializeCtaFormFields(slotFields),
-  };
-}
-
-function normalizeRetirementIraComparisonTableSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? cloneJson(rawSettings) : {};
-  const headers = Array.isArray(settings.tableHeadersJson) ? settings.tableHeadersJson : [];
-  const rows = Array.isArray(settings.tableRowsJson) ? settings.tableRowsJson : [];
-  const headerKey = headers.map((header) => String(header || '').trim()).join('|');
-  const hasLegacyHeaders = headerKey === 'Key difference|Traditional IRA|Roth IRA';
-  const hasLegacyRows = rows.some((row) => Array.isArray(row) && row.length >= 3);
-  const hasPreviousPairedRows = rows.length > 1 && rows.every((row) => (
-    Array.isArray(row)
-    && row.length === 2
-    && row.every((cell) => String(cell || '').includes('\n'))
-  ));
-
-  if (!hasLegacyHeaders && !hasLegacyRows && !hasPreviousPairedRows) {
-    return settings;
-  }
-
-  return {
-    ...settings,
-    tableHeadersJson: [...RETIREMENT_IRA_COMPARISON_TABLE_HEADERS],
-    tableRowsJson: RETIREMENT_IRA_COMPARISON_TABLE_ROWS.map((row) => [...row]),
-    tableFirstColumnHeader: false,
-  };
-}
-
-function normalizeRetirementIraDailyBillboardSettings(rawSettings) {
-  const settings = rawSettings && typeof rawSettings === 'object' ? cloneJson(rawSettings) : {};
-  return {
-    ...settings,
-    justify: 'center',
-    contentMaxWidthPx: 1480,
-    sectionClassName: 'retirement-everyday retirement-daily-billboard',
-  };
-}
-
 function canonicalizeRouteLinkEditableFields(editableFields) {
   if (!Array.isArray(editableFields)) {
     return editableFields;
@@ -924,22 +754,6 @@ function normalizeLegacyPageBlockState(pathname, block) {
   }
   if (nextBlock?.settings && typeof nextBlock.settings === 'object') {
     nextBlock.settings = normalizeGenerosityFundRouteLabelsInSettings(nextBlock.settings);
-  }
-  if (
-    pathname === RETIREMENT_IRAS_PATH
-    && String(nextBlock?.id || '').trim() === 'comparison_table'
-    && String(nextBlock?.kind || '').trim().toLowerCase() === 'content'
-    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
-  ) {
-    nextBlock.settings = normalizeRetirementIraComparisonTableSettings(nextBlock?.settings);
-  }
-  if (
-    pathname === RETIREMENT_IRAS_PATH
-    && String(nextBlock?.id || '').trim() === 'daily_billboard'
-    && String(nextBlock?.kind || '').trim().toLowerCase() === 'billboard'
-    && String(nextBlock?.mode || '').trim().toLowerCase() === 'dynamic'
-  ) {
-    nextBlock.settings = normalizeRetirementIraDailyBillboardSettings(nextBlock?.settings);
   }
   return normalizeBlockPresentation(nextBlock);
 }
@@ -1100,6 +914,37 @@ function replacePageSlice(targetState, sourceState, pathname, collaborationEntry
   });
   Object.assign(nextState.pathAliases, aliasesForPath(normalizedSource.pathAliases, normalizedPath));
 
+  nextState.collaborationByPath[normalizedPath] = cloneJson(
+    collaborationEntryOverride || normalizedSource.collaborationByPath?.[normalizedPath] || { blocks: {}, history: [] },
+  );
+  return nextState;
+}
+
+function replaceBlockInPageSlice(targetState, sourceState, pathname, blockId, collaborationEntryOverride = undefined) {
+  const normalizedPath = String(pathname || '').trim();
+  const normalizedBlockId = String(blockId || '').trim();
+  const nextState = normalizeSharedState(targetState);
+  const normalizedSource = normalizeSharedState(sourceState);
+  if (!normalizedPath || !normalizedBlockId) {
+    return nextState;
+  }
+
+  const sourceBlocks = Array.isArray(normalizedSource.blocksByPath?.[normalizedPath])
+    ? normalizedSource.blocksByPath[normalizedPath]
+    : [];
+  const sourceBlock = sourceBlocks.find((block) => String(block?.id || '').trim() === normalizedBlockId);
+  const targetBlocks = Array.isArray(nextState.blocksByPath?.[normalizedPath])
+    ? nextState.blocksByPath[normalizedPath]
+    : [];
+  const targetIndex = targetBlocks.findIndex((block) => String(block?.id || '').trim() === normalizedBlockId);
+  if (sourceBlock && targetIndex >= 0) {
+    targetBlocks.splice(targetIndex, 1, cloneJson(sourceBlock));
+  } else if (sourceBlock) {
+    targetBlocks.push(cloneJson(sourceBlock));
+  } else if (targetIndex >= 0) {
+    targetBlocks.splice(targetIndex, 1);
+  }
+  nextState.blocksByPath[normalizedPath] = targetBlocks;
   nextState.collaborationByPath[normalizedPath] = cloneJson(
     collaborationEntryOverride || normalizedSource.collaborationByPath?.[normalizedPath] || { blocks: {}, history: [] },
   );
@@ -1281,9 +1126,16 @@ function clearUnchangedBlockDraftOwnership(authoringState, baselineState) {
       const currentBlock = currentBlocksById.get(normalizedBlockId);
       const baselineBlock = baselineBlocksById.get(normalizedBlockId);
       const meta = normalizeBlockMeta(rawMeta);
-      nextBlocksMeta[normalizedBlockId] = areBlocksEquivalent(currentBlock, baselineBlock)
-        ? clearPublishedDraftOwnership(meta)
-        : meta;
+      if (areBlocksEquivalent(currentBlock, baselineBlock)) {
+        const clearedMeta = clearPublishedDraftOwnership(meta);
+        nextBlocksMeta[normalizedBlockId] = {
+          ...clearedMeta,
+          draftedAt: meta.draftedAt,
+          lockedAt: meta.lockedAt,
+        };
+      } else {
+        nextBlocksMeta[normalizedBlockId] = meta;
+      }
     });
 
     nextState.collaborationByPath[pathname] = {
@@ -1351,20 +1203,127 @@ export function createJsonContentStore({
   createId = (ts) => `${ts}-${Math.random().toString(36).slice(2, 8)}`,
   maxRevisionsPerPage = DEFAULT_MAX_REVISIONS_PER_PAGE,
   backupDir = path.resolve(path.dirname(persistenceFile), 'backups'),
+  revisionDirectory = '',
   seedBaselineFile = path.resolve(path.dirname(persistenceFile), SHARED_CONTENT_SEED_BASELINE_FILE_NAME),
   maxAutomaticBackups = DEFAULT_MAX_AUTOMATIC_BACKUPS,
+  retentionPolicy = DEFAULT_CONTENT_ADMIN_RETENTION_POLICY,
   getGitCommitHash = defaultGitCommitHashResolver,
+  authorityLease = null,
+  onDiagnostic = null,
 } = {}) {
   if (!persistenceFile) {
     throw new Error('persistenceFile is required');
   }
 
   let record = defaultRecord();
+  let persistenceMtimeMs = null;
+  let loadedAt = 0;
+  let exposeLoadedStaleOwnership = false;
+  let publishedRevisionSource = null;
+  let publishedRevisionValue = '';
+  let legacyRevisionsByPath = {};
+  const externalRevisionStorageEnabled = Boolean(String(revisionDirectory || '').trim());
+  const normalizedRetentionPolicy = normalizeContentAdminRetentionPolicy(retentionPolicy);
+
+  const reportDiagnostic = (operation, startedAt, details = {}) => {
+    if (typeof onDiagnostic !== 'function') {
+      return;
+    }
+    onDiagnostic({
+      operation,
+      durationMs: performance.now() - startedAt,
+      details,
+    });
+  };
+
+  const revisionFilePath = (pathname) => path.resolve(
+    revisionDirectory,
+    `${encodeURIComponent(String(pathname || '').trim()) || 'root'}.json`,
+  );
+
+  const readExternalRevisions = (pathname) => {
+    if (!externalRevisionStorageEnabled) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(fs.readFileSync(revisionFilePath(pathname), 'utf8'));
+      return (Array.isArray(parsed) ? parsed : [])
+        .map(normalizeRevisionRecord)
+        .filter(Boolean)
+        .slice(0, maxRevisionsPerPage);
+    } catch {
+      return [];
+    }
+  };
+
+  const readAllExternalRevisions = () => {
+    if (!externalRevisionStorageEnabled || !fs.existsSync(revisionDirectory)) {
+      return {};
+    }
+    return Object.fromEntries(
+      fs.readdirSync(revisionDirectory)
+        .filter((fileName) => fileName.endsWith('.json'))
+        .map((fileName) => {
+          try {
+            const pathname = decodeURIComponent(fileName.slice(0, -5));
+            return [pathname, readExternalRevisions(pathname)];
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean),
+    );
+  };
+
+  const writeExternalRevisions = (pathname, revisions) => {
+    if (!externalRevisionStorageEnabled) {
+      return;
+    }
+    fs.mkdirSync(revisionDirectory, { recursive: true });
+    fs.writeFileSync(
+      revisionFilePath(pathname),
+      stringifyPersistedJson((Array.isArray(revisions) ? revisions : []).slice(0, maxRevisionsPerPage)),
+    );
+  };
+
+  const clearExternalRevisions = () => {
+    if (externalRevisionStorageEnabled && fs.existsSync(revisionDirectory)) {
+      fs.rmSync(revisionDirectory, { recursive: true, force: true });
+    }
+  };
+
+  const getRevisionsForPath = (pathname) => (
+    externalRevisionStorageEnabled
+      ? (readExternalRevisions(pathname).length
+        ? readExternalRevisions(pathname)
+        : (Array.isArray(legacyRevisionsByPath?.[pathname]) ? legacyRevisionsByPath[pathname] : []))
+      : (Array.isArray(record.revisionsByPath?.[pathname]) ? record.revisionsByPath[pathname] : [])
+  );
+
+  const readPersistenceMtimeMs = () => {
+    try {
+      return fs.statSync(persistenceFile).mtimeMs;
+    } catch {
+      return null;
+    }
+  };
 
   const persistRecord = (nextRecord = record) => {
+    authorityLease?.assertOwned();
     const dir = path.dirname(persistenceFile);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(persistenceFile, stringifyPersistedJson(nextRecord));
+    if (externalRevisionStorageEnabled) {
+      Object.entries(nextRecord.revisionsByPath || {}).forEach(([pathname, revisions]) => {
+        writeExternalRevisions(pathname, revisions);
+      });
+      const hotRecord = { ...nextRecord };
+      delete hotRecord.revisionsByPath;
+      fs.writeFileSync(persistenceFile, stringifyPersistedJson(hotRecord));
+    } else {
+      fs.writeFileSync(persistenceFile, stringifyPersistedJson(nextRecord));
+    }
+    persistenceMtimeMs = readPersistenceMtimeMs();
+    exposeLoadedStaleOwnership = false;
   };
 
   const readSeedBaselinePayload = (filePath = seedBaselineFile) => {
@@ -1408,6 +1367,7 @@ export function createJsonContentStore({
   };
 
   const writeSeedBaselinePayload = (seedState, { actor, reason = 'promote-to-seed-baseline' } = {}) => {
+    authorityLease?.assertOwned();
     const createdAt = now();
     const dir = path.dirname(seedBaselineFile);
     const normalizedActor = normalizeActor(actor);
@@ -1511,17 +1471,37 @@ export function createJsonContentStore({
   };
 
   const pruneBackups = () => {
+    if (!isAutomaticRetentionDeletionAllowed(normalizedRetentionPolicy)) {
+      reportDiagnostic('backup-prune-skipped', performance.now(), {
+        reason: 'retention-policy-unapproved',
+        retentionPolicyStatus: normalizedRetentionPolicy.retentionPolicyStatus,
+        automaticDeletionEnabled: normalizedRetentionPolicy.automaticDeletionEnabled,
+      });
+      return { deleted: [], skipped: 'retention-policy-unapproved' };
+    }
     const backups = listBackups();
-    backups.slice(maxAutomaticBackups).forEach((backup) => {
+    const protectedCount = normalizedRetentionPolicy.protectedReleaseCount || 1;
+    const protectedFileNames = new Set(backups.slice(0, protectedCount).map((backup) => backup.fileName));
+    const retentionCutoff = now() - (normalizedRetentionPolicy.backupRetentionDays * 86400000);
+    const deleted = [];
+    backups.slice(maxAutomaticBackups).filter((backup) => (
+      !protectedFileNames.has(backup.fileName)
+      && Number(backup.createdAt || 0) < retentionCutoff
+      && !backup.metadata?.protectedRelease
+      && Number(backup.metadata?.protectedUntil || 0) <= now()
+    )).forEach((backup) => {
       try {
         fs.unlinkSync(backup.filePath);
+        deleted.push(backup.fileName);
       } catch {
         // Ignore backup prune failures so current work can continue.
       }
     });
+    return { deleted, skipped: null };
   };
 
   const createSharedContentBackup = (reason, metadata = {}) => {
+    authorityLease?.assertOwned();
     const createdAt = now();
     fs.mkdirSync(backupDir, { recursive: true });
     const timestampToken = formatBackupTimestampToken(createdAt);
@@ -1537,6 +1517,7 @@ export function createJsonContentStore({
       suffix += 1;
     }
 
+    const backupMetadata = safeBackupMetadata(metadata);
     const payload = {
       meta: {
         createdAt,
@@ -1546,13 +1527,24 @@ export function createJsonContentStore({
         persistenceFile: path.basename(persistenceFile),
         initialized: Boolean(record?.initialized),
         updatedAt: Number.isFinite(Number(record?.updatedAt)) ? Number(record.updatedAt) : 0,
-        ...safeBackupMetadata(metadata),
+        ...backupMetadata,
+        actor: normalizeActor(backupMetadata.actor),
+        schemaVersion: Number(record?.version || 0) || null,
+        migrationVersions: cloneJson(record?.snapshotMigrations || {}),
+        routeScope: Array.isArray(backupMetadata.routeScope)
+          ? [...backupMetadata.routeScope]
+          : Object.keys(record?.state?.blocksByPath || {}).sort(),
+        retentionClass: 'backup',
       },
-      record: cloneJson(record),
+      record: cloneJson(
+        externalRevisionStorageEnabled
+          ? { ...record, revisionsByPath: readAllExternalRevisions() }
+          : record,
+      ),
     };
 
     fs.writeFileSync(filePath, stringifyPersistedJson(payload));
-    pruneBackups();
+    const pruneResult = pruneBackups();
     return {
       fileName,
       filePath,
@@ -1561,49 +1553,130 @@ export function createJsonContentStore({
       reason: payload.meta.reason,
       gitCommitHash,
       metadata: safeBackupMetadata(payload.meta),
+      pruneResult,
     };
   };
 
   const safelyReplaceRecord = (nextRecord, { backupReason = '', backupMetadata = null } = {}) => {
+    authorityLease?.assertOwned();
     const createdBackup = backupReason
       ? createSharedContentBackup(backupReason, backupMetadata || {})
       : null;
+    if (externalRevisionStorageEnabled) {
+      clearExternalRevisions();
+    }
     record = nextRecord;
     persistRecord(record);
     return createdBackup;
   };
 
   const load = () => {
+    const startedAt = performance.now();
     if (!fs.existsSync(persistenceFile)) {
       record = defaultRecord();
+      legacyRevisionsByPath = {};
+      persistenceMtimeMs = null;
+      loadedAt = now();
+      reportDiagnostic('load', startedAt, { found: false, persistenceFile });
       return;
     }
     try {
       const parsed = JSON.parse(fs.readFileSync(persistenceFile, 'utf8'));
-      record = normalizeStoredRecord(parsed, maxRevisionsPerPage);
-      if (JSON.stringify(parsed) !== JSON.stringify(record)) {
-        try {
-          createSharedContentBackup('before-normalization-writeback', {
-            source: 'content-admin-store-load',
-          });
-          persistRecord(record);
-        } catch {
-          // Keep the normalized in-memory record without rewriting the source file if backup creation fails.
-        }
+      const legacyRevisions = parsed?.revisionsByPath && typeof parsed.revisionsByPath === 'object'
+        ? parsed.revisionsByPath
+        : {};
+      legacyRevisionsByPath = Object.fromEntries(Object.entries(legacyRevisions).map(([pathname, revisions]) => [
+        pathname,
+        (Array.isArray(revisions) ? revisions : []).map(normalizeRevisionRecord).filter(Boolean),
+      ]));
+      record = normalizeStoredRecord(
+        externalRevisionStorageEnabled ? { ...parsed, revisionsByPath: {} } : parsed,
+        maxRevisionsPerPage,
+      );
+      const parsedHotRecord = { ...parsed };
+      if (externalRevisionStorageEnabled) {
+        delete parsedHotRecord.revisionsByPath;
       }
+      const normalizedHotRecord = { ...record };
+      if (externalRevisionStorageEnabled) {
+        delete normalizedHotRecord.revisionsByPath;
+      } else if (!Object.prototype.hasOwnProperty.call(parsed, 'revisionsByPath')
+        && Object.keys(normalizedHotRecord.revisionsByPath || {}).length === 0) {
+        delete normalizedHotRecord.revisionsByPath;
+      }
+      const normalizationChanged = JSON.stringify(parsedHotRecord) !== JSON.stringify(normalizedHotRecord);
+      if (normalizationChanged) {
+        reportDiagnostic('load-normalization-pending', startedAt, {
+          persistenceFile,
+          writeSuppressed: true,
+          reason: 'ordinary startup and reads are non-mutating',
+        });
+      }
+      persistenceMtimeMs = readPersistenceMtimeMs();
     } catch {
       record = defaultRecord();
+      legacyRevisionsByPath = {};
+      persistenceMtimeMs = readPersistenceMtimeMs();
     }
+    loadedAt = now();
+    exposeLoadedStaleOwnership = true;
+    reportDiagnostic('load', startedAt, {
+      found: true,
+      persistenceFile,
+      externalRevisionStorageEnabled,
+    });
   };
+
+  const reloadIfPersistenceChanged = () => {
+    const nextMtimeMs = readPersistenceMtimeMs();
+    if (nextMtimeMs === null || nextMtimeMs === persistenceMtimeMs) {
+      return false;
+    }
+    load();
+    return true;
+  };
+
+  const publishedRevision = () => createHash('sha1')
+    .update(JSON.stringify(record.baseSnapshot || {}))
+    .digest('hex')
+    .slice(0, 12);
+
+  const getPublishedRevision = () => {
+    if (publishedRevisionSource !== record.baseSnapshot) {
+      publishedRevisionSource = record.baseSnapshot;
+      publishedRevisionValue = publishedRevision();
+    }
+    return publishedRevisionValue;
+  };
+
+  const publishAuthoritySnapshot = () => ({
+    persistenceFile: path.resolve(persistenceFile),
+    persistenceMtimeMs,
+    loadedAt,
+    recordRevision: Number(record.updatedAt) || 0,
+    draftRevision: Number(record.updatedAt) || 0,
+    publishedRevision: getPublishedRevision(),
+  });
 
   const publishSnapshot = () => ({
     initialized: record.initialized,
     updatedAt: record.updatedAt,
     announcementUpdatedAt: record.announcementUpdatedAt,
     announcement: cloneJson(record.announcement),
-    state: cloneJson(record.state),
+    // Stale ownership is a derived operational marker. Hide it from clients
+    // when the active block is already equal to the published block, while
+    // retaining the original audit metadata in the persisted record.
+    state: cloneJson(
+      exposeLoadedStaleOwnership
+        ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
+        : record.state,
+    ),
     baseSnapshot: cloneJson(record.baseSnapshot),
+    ...(record.snapshotMigrations
+      ? { snapshotMigrations: cloneJson(record.snapshotMigrations) }
+      : {}),
     seedBaseline: getSeedBaselineInfo(),
+    authority: publishAuthoritySnapshot(),
   });
 
   const publishAnnouncementSnapshot = () => ({
@@ -1627,7 +1700,9 @@ export function createJsonContentStore({
         summary: String(summary || '').trim(),
         snapshot: buildRevisionSnapshot(nextState, pathname),
       };
-      const previous = Array.isArray(record.revisionsByPath[pathname]) ? record.revisionsByPath[pathname] : [];
+      const previous = externalRevisionStorageEnabled
+        ? readExternalRevisions(pathname)
+        : (Array.isArray(record.revisionsByPath[pathname]) ? record.revisionsByPath[pathname] : []);
       record.revisionsByPath[pathname] = [nextRevision, ...previous].slice(0, maxRevisionsPerPage);
     });
   };
@@ -1673,10 +1748,12 @@ export function createJsonContentStore({
 
   return {
     readCurrentState() {
+      reloadIfPersistenceChanged();
       return cloneJson(record.state);
     },
 
     readPublishedSnapshot() {
+      reloadIfPersistenceChanged();
       return cloneJson(record.baseSnapshot);
     },
 
@@ -1693,6 +1770,17 @@ export function createJsonContentStore({
     },
 
     getSnapshot() {
+      reloadIfPersistenceChanged();
+      return publishSnapshot();
+    },
+
+    getAuthoritySnapshot() {
+      reloadIfPersistenceChanged();
+      return publishAuthoritySnapshot();
+    },
+
+    refreshFromDisk() {
+      reloadIfPersistenceChanged();
       return publishSnapshot();
     },
 
@@ -1760,7 +1848,9 @@ export function createJsonContentStore({
 
     saveDraft(nextState, { actor, reason = 'draft-saved', summary = '' } = {}) {
       const normalizedIncomingState = normalizeSharedState(nextState);
-      const currentState = normalizeSharedState(record.state);
+      const currentState = exposeLoadedStaleOwnership
+        ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
+        : normalizeSharedState(record.state);
       const destructiveChangeSummary = summarizeDestructiveSharedStateChanges(currentState, normalizedIncomingState);
       const nextMergedState = {
         ...normalizeSharedState(currentState),
@@ -1803,6 +1893,12 @@ export function createJsonContentStore({
       saveResult.didSave = actualChangedPaths.length > 0;
       saveResult.savedPaths = actualChangedPaths;
       saveResult.hasConflicts = saveResult.blockedBlocks.length > 0;
+      saveResult.status = normalizeSharedOperationStatus(saveResult.status, {
+        kind: 'save',
+        didChange: saveResult.didSave,
+        hasConflicts: saveResult.hasConflicts,
+        hasError: false,
+      });
 
       if (destructiveChangeSummary.hasDestructiveChanges && actualChangedPaths.length > 0) {
         try {
@@ -1832,6 +1928,247 @@ export function createJsonContentStore({
 
     savePageDraft(nextState, options = {}) {
       return this.saveDraft(nextState, options);
+    },
+
+    discardPageDraft(pathname, { actor, summary = '' } = {}) {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedActor = normalizeActor(actor);
+      if (!normalizedPath || !normalizedActor) {
+        return { ok: false, error: 'invalid-discard-request', ...publishSnapshot() };
+      }
+
+      const currentState = exposeLoadedStaleOwnership
+        ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
+        : normalizeSharedState(record.state);
+      const currentEntry = ensureCollaborationEntry(currentState.collaborationByPath || {}, normalizedPath);
+      const discardSummary = summarizePageAuthoringDiff(currentState, record.baseSnapshot, normalizedPath);
+      if (!discardSummary.hasChanges) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          discardResult: {
+            status: 'no-op',
+            didDiscard: false,
+            changedPaths: [],
+            updatedAt: now(),
+          },
+        };
+      }
+
+      const discardConflictBlockIds = new Set(
+        discardSummary.hasOrderChanges
+          ? (currentState.blocksByPath?.[normalizedPath] || [])
+            .map((block) => String(block?.id || '').trim())
+            .filter(Boolean)
+          : discardSummary.changedBlockIds,
+      );
+      const blockedBlocks = [];
+      Object.entries(currentEntry.blocks || {}).forEach(([blockId, rawMeta]) => {
+        if (!discardConflictBlockIds.has(String(blockId || '').trim())) {
+          return;
+        }
+        const conflict = getOtherActorConflict(rawMeta, normalizedActor);
+        if (!conflict) {
+          return;
+        }
+        blockedBlocks.push({
+          pathname: normalizedPath,
+          blockId: String(blockId || '').trim(),
+          reason: conflict.reason,
+          owner: cloneJson(conflict.owner),
+          state: conflict.state,
+        });
+      });
+
+      if (blockedBlocks.length) {
+        return {
+          ok: false,
+          error: 'discard-blocked-by-other-draft',
+          ...publishSnapshot(),
+          discardResult: {
+            status: 'blocked',
+            didDiscard: false,
+            hasConflicts: true,
+            changedPaths: [normalizedPath],
+            blockedBlocks,
+            updatedAt: now(),
+          },
+        };
+      }
+
+      const baselineBlocks = record.baseSnapshot.blocksByPath?.[normalizedPath] || [];
+      const nextBlocksMeta = {};
+      baselineBlocks.forEach((block) => {
+        const blockId = String(block?.id || '').trim();
+        if (blockId) {
+          nextBlocksMeta[blockId] = clearPublishedDraftOwnership(currentEntry.blocks?.[blockId]);
+        }
+      });
+      const timestamp = now();
+      const nextCollaborationEntry = {
+        ...currentEntry,
+        blocks: nextBlocksMeta,
+        history: appendHistoryEntry(currentEntry.history, buildHistoryEntry({
+          action: 'page-draft-discarded',
+          actor: normalizedActor,
+          details: String(summary || '').trim(),
+          now: timestamp,
+          createId,
+        })),
+      };
+      const nextState = replacePageSlice(
+        currentState,
+        record.baseSnapshot,
+        normalizedPath,
+        nextCollaborationEntry,
+      );
+
+      try {
+        createSharedContentBackup('before-page-draft-discard', {
+          pathname: normalizedPath,
+          actor: normalizedActor,
+          summary: String(summary || '').trim(),
+        });
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'backup-failed',
+          details: error instanceof Error ? error.message : 'backup-failed',
+          ...publishSnapshot(),
+        };
+      }
+
+      const snapshot = commitState(nextState, {
+        actor: normalizedActor,
+        reason: 'draft-discarded',
+        summary: String(summary || '').trim() || normalizedPath,
+      });
+      return {
+        ok: true,
+        ...snapshot,
+        discardResult: {
+          status: 'discarded',
+          didDiscard: true,
+          changedPaths: [normalizedPath],
+          blockedBlocks: [],
+          updatedAt: snapshot.updatedAt,
+        },
+      };
+    },
+
+    discardBlockDraft(pathname, blockId, { actor, summary = '' } = {}) {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
+      const normalizedActor = normalizeActor(actor);
+      if (!normalizedPath || !normalizedBlockId || !normalizedActor) {
+        return { ok: false, error: 'invalid-discard-block-request', ...publishSnapshot() };
+      }
+
+      const currentState = exposeLoadedStaleOwnership
+        ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
+        : normalizeSharedState(record.state);
+      const currentEntry = ensureCollaborationEntry(currentState.collaborationByPath || {}, normalizedPath);
+      const currentBlocks = Array.isArray(currentState.blocksByPath?.[normalizedPath])
+        ? currentState.blocksByPath[normalizedPath]
+        : [];
+      const baselineBlocks = Array.isArray(record.baseSnapshot.blocksByPath?.[normalizedPath])
+        ? record.baseSnapshot.blocksByPath[normalizedPath]
+        : [];
+      const currentIndex = currentBlocks.findIndex((block) => String(block?.id || '').trim() === normalizedBlockId);
+      const baselineIndex = baselineBlocks.findIndex((block) => String(block?.id || '').trim() === normalizedBlockId);
+      const currentBlock = currentIndex >= 0 ? currentBlocks[currentIndex] : null;
+      const baselineBlock = baselineIndex >= 0 ? baselineBlocks[baselineIndex] : null;
+
+      if (!currentBlock && !baselineBlock) {
+        return { ok: false, error: 'block-not-found', ...publishSnapshot() };
+      }
+      if (JSON.stringify(currentBlock) === JSON.stringify(baselineBlock)) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          discardResult: {
+            status: 'no-op',
+            didDiscard: false,
+            scope: 'block',
+            changedPaths: [],
+            updatedAt: now(),
+          },
+        };
+      }
+
+      const currentMeta = normalizeBlockMeta(currentEntry.blocks?.[normalizedBlockId]);
+      const conflict = getOtherActorConflict(currentMeta, normalizedActor);
+      if (conflict) {
+        return {
+          ok: false,
+          error: 'discard-blocked-by-other-draft',
+          blockedBlocks: [{ pathname: normalizedPath, blockId: normalizedBlockId, ...conflict }],
+          ...publishSnapshot(),
+        };
+      }
+
+      const restoredBlocks = currentBlocks.filter((block) => String(block?.id || '').trim() !== normalizedBlockId);
+      if (baselineBlock) {
+        const insertIndex = currentIndex >= 0
+          ? currentIndex
+          : Math.min(Math.max(baselineIndex, 0), restoredBlocks.length);
+        restoredBlocks.splice(insertIndex, 0, cloneJson(baselineBlock));
+      }
+
+      const timestamp = now();
+      const nextCollaborationEntry = {
+        ...currentEntry,
+        blocks: {
+          ...(currentEntry.blocks || {}),
+          [normalizedBlockId]: clearPublishedDraftOwnership(currentMeta),
+        },
+        history: appendHistoryEntry(currentEntry.history, buildHistoryEntry({
+          action: 'block-draft-discarded',
+          blockId: normalizedBlockId,
+          actor: normalizedActor,
+          details: String(summary || '').trim(),
+          now: timestamp,
+          createId,
+        })),
+      };
+      const nextState = normalizeSharedState(currentState);
+      nextState.blocksByPath[normalizedPath] = restoredBlocks;
+      nextState.collaborationByPath[normalizedPath] = nextCollaborationEntry;
+
+      try {
+        createSharedContentBackup('before-block-draft-discard', {
+          pathname: normalizedPath,
+          blockId: normalizedBlockId,
+          actor: normalizedActor,
+          summary: String(summary || '').trim(),
+        });
+      } catch (error) {
+        return {
+          ok: false,
+          error: 'backup-failed',
+          details: error instanceof Error ? error.message : 'backup-failed',
+          ...publishSnapshot(),
+        };
+      }
+
+      const snapshot = commitState(nextState, {
+        actor: normalizedActor,
+        reason: 'block-draft-discarded',
+        summary: String(summary || '').trim() || `${normalizedPath}#${normalizedBlockId}`,
+      });
+      return {
+        ok: true,
+        ...snapshot,
+        discardResult: {
+          status: 'discarded',
+          didDiscard: true,
+          scope: 'block',
+          changedPaths: [normalizedPath],
+          changedBlockIds: [normalizedBlockId],
+          blockedBlocks: [],
+          updatedAt: snapshot.updatedAt,
+        },
+      };
     },
 
     syncBlockDraft(pathname, blockId, nextBlock, { actor, reason = 'block-draft-synced' } = {}) {
@@ -1915,12 +2252,19 @@ export function createJsonContentStore({
         return { ok: false, error: 'invalid-publish-request', ...publishSnapshot() };
       }
 
-      const currentState = normalizeSharedState(record.state);
+      const currentState = exposeLoadedStaleOwnership
+        ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
+        : normalizeSharedState(record.state);
       const currentEntry = ensureCollaborationEntry(currentState.collaborationByPath || {}, normalizedPath);
       const currentBlocks = Array.isArray(currentState.blocksByPath?.[normalizedPath])
         ? currentState.blocksByPath[normalizedPath]
         : [];
       const publishSummary = summarizePageAuthoringDiff(currentState, record.baseSnapshot, normalizedPath);
+      const publishConflictBlockIds = new Set(
+        publishSummary.hasOrderChanges
+          ? currentBlocks.map((block) => String(block?.id || '').trim()).filter(Boolean)
+          : publishSummary.changedBlockIds,
+      );
 
       if (!publishSummary.hasChanges) {
         return {
@@ -1928,6 +2272,7 @@ export function createJsonContentStore({
           error: 'already-live',
           ...publishSnapshot(),
           publishResult: {
+            status: 'already-live',
             didPublish: false,
             hasConflicts: false,
             changedPaths: [],
@@ -1944,6 +2289,9 @@ export function createJsonContentStore({
 
       const blockedBlocks = [];
       Object.entries(currentEntry.blocks || {}).forEach(([blockId, rawMeta]) => {
+        if (!publishConflictBlockIds.has(String(blockId || '').trim())) {
+          return;
+        }
         const conflict = getOtherActorConflict(rawMeta, normalizedActor);
         if (!conflict) {
           return;
@@ -1963,6 +2311,7 @@ export function createJsonContentStore({
           error: 'publish-blocked-by-other-draft',
           ...publishSnapshot(),
           publishResult: {
+            status: 'blocked',
             didPublish: false,
             hasConflicts: true,
             changedPaths: [normalizedPath],
@@ -2018,6 +2367,13 @@ export function createJsonContentStore({
         ok: true,
         ...publishSnapshot(),
         publishResult: {
+          receipt: {
+            route: normalizedPath,
+            scope: 'page',
+            actor: normalizedActor,
+            publishedBlockIds: publishSummary.changedBlockIds,
+          },
+          status: 'published',
           didPublish: true,
           hasConflicts: false,
           changedPaths: [normalizedPath],
@@ -2033,6 +2389,95 @@ export function createJsonContentStore({
           hasPageMetaChangesByPath: {
             [normalizedPath]: publishSummary.hasPageMetaChanges,
           },
+          updatedAt: timestamp,
+        },
+      };
+    },
+
+    publishBlock(pathname, blockId, { actor, summary = '', expectedBlock = null } = {}) {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
+      const normalizedActor = normalizeActor(actor);
+      if (!normalizedPath || !normalizedBlockId || !normalizedActor) {
+        return { ok: false, error: 'invalid-block-publish-request', ...publishSnapshot() };
+      }
+
+      const currentState = exposeLoadedStaleOwnership
+        ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
+        : normalizeSharedState(record.state);
+      const currentEntry = ensureCollaborationEntry(currentState.collaborationByPath || {}, normalizedPath);
+      const currentBlock = currentState.blocksByPath?.[normalizedPath]
+        ?.find((block) => String(block?.id || '').trim() === normalizedBlockId);
+      const publishedBlock = record.baseSnapshot.blocksByPath?.[normalizedPath]
+        ?.find((block) => String(block?.id || '').trim() === normalizedBlockId);
+      if (!currentBlock) {
+        return { ok: false, error: 'block-not-found', ...publishSnapshot() };
+      }
+      if (expectedBlock && JSON.stringify(currentBlock) !== JSON.stringify(normalizeContentAdminBlock(expectedBlock))) {
+        return { ok: false, error: 'block-publish-stale-draft', ...publishSnapshot() };
+      }
+      if (JSON.stringify(currentBlock) === JSON.stringify(publishedBlock || null)) {
+        return { ok: false, error: 'already-live', ...publishSnapshot() };
+      }
+
+      const currentMeta = normalizeBlockMeta(currentEntry.blocks?.[normalizedBlockId]);
+      const conflict = getOtherActorConflict(currentMeta, normalizedActor);
+      if (conflict) {
+        return {
+          ok: false,
+          error: 'publish-blocked-by-other-draft',
+          blockedBlocks: [{ pathname: normalizedPath, blockId: normalizedBlockId, ...conflict }],
+          ...publishSnapshot(),
+        };
+      }
+
+      const timestamp = now();
+      const nextEntry = {
+        ...currentEntry,
+        blocks: {
+          ...(currentEntry.blocks || {}),
+          [normalizedBlockId]: clearPublishedDraftOwnership(currentMeta),
+        },
+        history: appendHistoryEntry(currentEntry.history, buildHistoryEntry({
+          action: 'block-published',
+          blockId: normalizedBlockId,
+          actor: normalizedActor,
+          details: String(summary || '').trim(),
+          now: timestamp,
+          createId,
+        })),
+      };
+      const nextState = replaceBlockInPageSlice(currentState, currentState, normalizedPath, normalizedBlockId, nextEntry);
+      const nextBaseSnapshot = replaceBlockInPageSlice(record.baseSnapshot, nextState, normalizedPath, normalizedBlockId, nextEntry);
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: nextState,
+        baseSnapshot: nextBaseSnapshot,
+      };
+      persistRecord();
+      const publishedBlockSnapshot = record.baseSnapshot.blocksByPath?.[normalizedPath]
+        ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
+      return {
+        ok: true,
+        ...publishSnapshot(),
+        publishedBlock: cloneJson(publishedBlockSnapshot),
+        publishResult: {
+          receipt: {
+            route: normalizedPath,
+            scope: 'block',
+            actor: normalizedActor,
+            publishedBlockIds: [normalizedBlockId],
+          },
+          status: 'published',
+          didPublish: true,
+          hasConflicts: false,
+          changedPaths: [normalizedPath],
+          publishedPaths: [normalizedPath],
+          publishedBlockIdsByPath: { [normalizedPath]: [normalizedBlockId] },
+          blockedBlockIdsByPath: {},
+          blockedBlocks: [],
           updatedAt: timestamp,
         },
       };
@@ -2203,9 +2648,106 @@ export function createJsonContentStore({
       };
     },
 
+    migrateGenerosityFundSnapshot({ defaultState, actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[GENEROSITY_FUND_SNAPSHOT_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: GENEROSITY_FUND_SNAPSHOT_MIGRATION_ID,
+            version: GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const referenceState = normalizeSharedState(defaultState);
+      const stateMigration = migrateGenerosityFundSnapshot(record.state, {
+        defaultState: referenceState,
+        fromVersion: currentVersion,
+      });
+      const baseMigration = migrateGenerosityFundSnapshot(record.baseSnapshot, {
+        defaultState: referenceState,
+        fromVersion: currentVersion,
+      });
+      if (stateMigration.migration.skipped || baseMigration.migration.skipped) {
+        return {
+          ok: false,
+          error: 'migration-reference-state-missing',
+          ...publishSnapshot(),
+        };
+      }
+
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-generosity-fund-snapshot-migration', {
+            action: 'generosity-fund-snapshot-migration',
+            migrationId: GENEROSITY_FUND_SNAPSHOT_MIGRATION_ID,
+            migrationVersion: GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [GENEROSITY_FUND_SNAPSHOT_MIGRATION_ID]: GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Generosity Fund snapshot migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: GENEROSITY_FUND_SNAPSHOT_MIGRATION_ID,
+          version: GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
     getRevisionHistory(pathname) {
       const normalizedPath = String(pathname || '').trim();
-      const revisions = Array.isArray(record.revisionsByPath[normalizedPath]) ? record.revisionsByPath[normalizedPath] : [];
+      const revisions = getRevisionsForPath(normalizedPath);
       return revisions.map((revision) => ({
         id: revision.id,
         pathname: revision.pathname,
@@ -2224,7 +2766,7 @@ export function createJsonContentStore({
     restorePageRevision(pathname, revisionId, { actor } = {}) {
       const normalizedPath = String(pathname || '').trim();
       const normalizedRevisionId = String(revisionId || '').trim();
-      const revisions = Array.isArray(record.revisionsByPath[normalizedPath]) ? record.revisionsByPath[normalizedPath] : [];
+      const revisions = getRevisionsForPath(normalizedPath);
       const revision = revisions.find((entry) => entry.id === normalizedRevisionId);
       if (!revision) {
         return { ok: false, error: 'revision-not-found', snapshot: publishSnapshot() };
@@ -2257,7 +2799,7 @@ export function createJsonContentStore({
       const normalizedPath = String(pathname || '').trim();
       const normalizedRevisionId = String(revisionId || '').trim();
       const normalizedBlockId = String(blockId || '').trim();
-      const revisions = Array.isArray(record.revisionsByPath[normalizedPath]) ? record.revisionsByPath[normalizedPath] : [];
+      const revisions = getRevisionsForPath(normalizedPath);
       const revision = revisions.find((entry) => entry.id === normalizedRevisionId);
       if (!revision) {
         return { ok: false, error: 'revision-not-found', snapshot: publishSnapshot() };
@@ -2334,6 +2876,7 @@ export function createJsonContentStore({
         };
       }
       const timestamp = now();
+      const claimsForeignDraft = Boolean(force && draftedByOther);
       const released = releaseUserLocks(currentCollaboration, normalizedActor.userId, {
         keepPath: normalizedPath,
         keepBlockId: normalizedBlockId,
@@ -2351,8 +2894,8 @@ export function createJsonContentStore({
             ...(nextEntry.blocks || {}),
             [normalizedBlockId]: {
               ...currentMeta,
-              draftedBy: currentMeta.draftedBy,
-              draftedAt: currentMeta.draftedAt,
+              draftedBy: claimsForeignDraft ? normalizedActor : currentMeta.draftedBy,
+              draftedAt: claimsForeignDraft ? timestamp : currentMeta.draftedAt,
               savedBy: currentMeta.savedBy,
               savedAt: currentMeta.savedAt,
               lockedBy: normalizedActor,
@@ -2425,6 +2968,67 @@ export function createJsonContentStore({
         ...commitState(nextState, {
           actor: normalizedActor,
           reason: 'block-lock-updated',
+          summary: `${normalizedPath}:${normalizedBlockId}`,
+          trackRevisions: false,
+        }),
+      };
+    },
+
+    releaseBlockDraft(pathname, blockId, actor, { force = false } = {}) {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
+      const normalizedActor = normalizeActor(actor);
+      if (!normalizedPath || !normalizedBlockId || !normalizedActor) {
+        return { ok: false, error: 'invalid-draft-release-request', ...publishSnapshot() };
+      }
+
+      const nextState = normalizeSharedState(record.state);
+      const entry = ensureCollaborationEntry(nextState.collaborationByPath || {}, normalizedPath);
+      const currentMeta = normalizeBlockMeta(entry.blocks?.[normalizedBlockId]);
+      const { lockedByOther, draftedByOther } = getForeignOwnershipMeta(currentMeta, normalizedActor);
+      if (!force && (lockedByOther || draftedByOther)) {
+        return {
+          ok: false,
+          error: lockedByOther ? 'locked-by-other' : 'drafted-by-other',
+          lockedBy: lockedByOther,
+          draftedBy: draftedByOther,
+          ...publishSnapshot(),
+        };
+      }
+
+      const timestamp = now();
+      const shouldClearLock = force
+        || currentMeta.lockedBy?.userId === normalizedActor.userId;
+      nextState.collaborationByPath = {
+        ...(nextState.collaborationByPath || {}),
+        [normalizedPath]: {
+          ...entry,
+          blocks: {
+            ...(entry.blocks || {}),
+            [normalizedBlockId]: {
+              ...currentMeta,
+              draftedBy: null,
+              draftedAt: null,
+              lockedBy: shouldClearLock ? null : currentMeta.lockedBy,
+              lockedAt: shouldClearLock ? null : currentMeta.lockedAt,
+            },
+          },
+          history: appendHistoryEntry(entry.history, buildHistoryEntry({
+            action: 'block-draft-released',
+            blockId: normalizedBlockId,
+            actor: normalizedActor,
+            previousActor: currentMeta.draftedBy || currentMeta.lockedBy,
+            details: force ? 'forced' : '',
+            now: timestamp,
+            createId,
+          })),
+        },
+      };
+      return {
+        ok: true,
+        ...commitState(nextState, {
+          actor: normalizedActor,
+          reason: 'block-draft-released',
           summary: `${normalizedPath}:${normalizedBlockId}`,
           trackRevisions: false,
         }),
@@ -2515,6 +3119,9 @@ export function createJsonContentStore({
         );
         record.state = stripRetiredTargetBridgeSettingsFromState(record.state);
         record.baseSnapshot = stripRetiredTargetBridgeSettingsFromState(record.baseSnapshot);
+        if (externalRevisionStorageEnabled) {
+          clearExternalRevisions();
+        }
         persistRecord();
         return {
           ok: true,

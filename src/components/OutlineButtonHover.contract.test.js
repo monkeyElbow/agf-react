@@ -25,6 +25,19 @@ function buttonStateSelectorLines(source) {
     ));
 }
 
+function textToneAnchorSelectorLines(source) {
+  return source
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => (
+      /is-text-(?:dark|white|blue)/.test(line)
+      && (
+        line.includes('native-info-rich-html a')
+        || /:is\([^)]*\ba\b/.test(line)
+      )
+    ));
+}
+
 describe('outline button hover contract', () => {
   it('keeps base button typography on zero tracking while routing Safari through its own heavier browser override', () => {
     const serviceCssSource = readSource('../styles/service-native.css');
@@ -183,5 +196,23 @@ describe('outline button hover contract', () => {
 
     expect(serviceLines.filter((line) => !allowedServiceLines.has(line))).toEqual([]);
     expect(homeLines).toEqual([]);
+  });
+
+  it('keeps text-tone content selectors from overriding service button text colors', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const atlanteanButtonBlock = readRuleBlock(
+      cssSource,
+      String.raw`\.service-native-btn\.is-tone-atlantean,[\s\S]*?\.service-native-btn\.is-tone-atlantean:visited`,
+    );
+    const unsafeTextToneAnchorLines = textToneAnchorSelectorLines(cssSource)
+      .filter((line) => !line.includes('a:not(.service-native-btn)'));
+
+    expect(atlanteanButtonBlock).toContain('--btn-text: #ffffff;');
+    expect(atlanteanButtonBlock).toContain('--btn-hover-text: #ffffff;');
+    expect(unsafeTextToneAnchorLines).toEqual([]);
+    expect(cssSource).toContain('.service-native-card a:not(.service-native-btn) {');
+    expect(cssSource).toContain('.service-native-card a:not(.service-native-btn):hover {');
+    expect(cssSource).not.toContain('\n.service-native-card a {\n');
+    expect(cssSource).not.toContain('\n.service-native-card a:hover {\n');
   });
 });

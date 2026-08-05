@@ -39,7 +39,7 @@ export function isForeignOwnedBlockOwnership(ownership) {
 export function getBlockOwnershipVisual(meta, currentUserId, now = Date.now()) {
   const normalizedCurrentUserId = String(currentUserId || '').trim();
   const lockedBy = meta?.lockedBy || null;
-  const draftedBy = meta?.draftedBy || null;
+  const draftedBy = meta?.isPublishedEquivalent ? null : (meta?.draftedBy || null);
   const savedBy = meta?.savedBy || null;
   const lockedByOther = lockedBy?.userId && lockedBy.userId !== normalizedCurrentUserId;
   const draftedByOther = draftedBy?.userId && draftedBy.userId !== normalizedCurrentUserId;

@@ -2135,6 +2135,16 @@ function serializeRequestFormStepFields(fields) {
   );
 }
 
+export function resolveRequestFormLeadCopyFieldId(settings = {}) {
+  if (String(settings?.subtitle || '').trim()) {
+    return 'subtitle';
+  }
+  if (String(settings?.body || '').trim()) {
+    return 'body';
+  }
+  return 'subtitle';
+}
+
 function RequestFormStepEditor({ stepNumber, settings, onSettingChange, expanded, onToggle }) {
   const fieldsKey = `step${stepNumber}FieldsJson`;
   const titleKey = `step${stepNumber}Title`;
@@ -2454,6 +2464,7 @@ export function RequestFormBlockEditor({ block, onSettingChange }) {
   const requestTitleColorOptions = Array.isArray(titleColorField?.options) && titleColorField.options.length
     ? titleColorField.options
     : HERO_SWATCH_OPTIONS;
+  const leadCopyFieldId = resolveRequestFormLeadCopyFieldId(settings);
   const {
     draftValues: requestFormDraftValues,
     updateDraftField: updateRequestFormDraftField,
@@ -2461,7 +2472,7 @@ export function RequestFormBlockEditor({ block, onSettingChange }) {
   } = useBufferedStringFieldDrafts({
     settings,
     onSettingChange,
-    fieldIds: ['subtitle'],
+    fieldIds: [leadCopyFieldId],
   });
   const requestFormDraftSettings = useMemo(() => ({
     ...settings,
@@ -2514,9 +2525,9 @@ export function RequestFormBlockEditor({ block, onSettingChange }) {
             <span>Lead Copy</span>
             <textarea
               rows={3}
-              value={String(requestFormDraftSettings.subtitle || '')}
-              onChange={(event) => updateRequestFormDraftField('subtitle', event.target.value)}
-              onBlur={() => commitRequestFormDraftOnBlur('subtitle')}
+              value={String(requestFormDraftSettings[leadCopyFieldId] || '')}
+              onChange={(event) => updateRequestFormDraftField(leadCopyFieldId, event.target.value)}
+              onBlur={() => commitRequestFormDraftOnBlur(leadCopyFieldId)}
             />
           </label>
         </div>
@@ -4162,10 +4173,6 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [] }) {
       allowWhiteBackground
       actionsSlot={actionFields.length ? (
         <section className="admin-front-hud-card admin-intro-hud-card admin-intro-hud-card--actions">
-          <div className="admin-front-hud-card-head">
-            <h4>Actions</h4>
-            <p>Buttons and destinations</p>
-          </div>
           <EditorButtonPreview
             buttons={[
               {
@@ -4290,7 +4297,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       subtitleDisplay={billboardSubtitleDisplay}
       onSubtitleDisplayChange={(nextValue) => onSettingChange('subtitleDisplay', nextValue)}
       subtitleDisplayOptions={[
-        { value: 'supporting', label: 'Supporting' },
+        { value: 'supporting', label: 'Supporting (default)' },
         { value: 'headline', label: 'Headline' },
       ]}
       subtitleSizeRem={billboardSubtitleSizeRem}
@@ -4454,6 +4461,7 @@ function useBufferedStringFieldDrafts({
   ));
   const [dirtyFieldIds, setDirtyFieldIds] = useState([]);
   const commitTimersRef = useRef(new Map());
+  const protectedDraftValuesRef = useRef(new Map());
   const externalDraftValues = useMemo(
     () => readEditorLocalDrafts(settings, normalizedFieldIds, routeFieldIdByFieldId, routeLinkFieldByFieldId),
     [normalizedFieldIds, routeFieldIdByFieldId, routeLinkFieldByFieldId, settings],
@@ -4469,11 +4477,20 @@ function useBufferedStringFieldDrafts({
   }, []);
 
   useEffect(() => {
+    const activeFieldIds = new Set(normalizedFieldIds);
+    protectedDraftValuesRef.current.forEach((_, fieldId) => {
+      if (!activeFieldIds.has(fieldId)) {
+        protectedDraftValuesRef.current.delete(fieldId);
+      }
+    });
+  }, [normalizedFieldIds]);
+
+  useEffect(() => {
     setDraftValues((current) => {
       let changed = false;
       const next = { ...current };
       normalizedFieldIds.forEach((fieldId) => {
-        if (dirtyFieldIds.includes(fieldId)) {
+        if (dirtyFieldIds.includes(fieldId) || protectedDraftValuesRef.current.has(fieldId)) {
           return;
         }
         const externalValue = externalDraftValues[fieldId];
@@ -4520,6 +4537,7 @@ function useBufferedStringFieldDrafts({
       commitTimersRef.current.delete(fieldId);
     }
 
+    protectedDraftValuesRef.current.set(fieldId, nextValue);
     onSettingChange(fieldId, nextValue);
 
     const routeRefFieldId = routeFieldIdByFieldId[fieldId];
@@ -4548,6 +4566,7 @@ function useBufferedStringFieldDrafts({
   };
 
   const updateDraftField = (fieldId, nextValue, { commitImmediately = false, skipRouteRefSync = false } = {}) => {
+    protectedDraftValuesRef.current.set(fieldId, nextValue);
     setDraftValues((current) => (
       current[fieldId] === nextValue
         ? current
@@ -4578,6 +4597,7 @@ function useBufferedStringFieldDrafts({
     onSettingChange(routeRefFieldId, nextValue);
     const matchedPage = normalizedRouteOptions.find((page) => toManagedPageLinkRef(page) === String(nextValue || '').trim());
     if (matchedPage?.path) {
+      protectedDraftValuesRef.current.set(fieldId, matchedPage.path);
       setDraftValues((current) => (
         current[fieldId] === matchedPage.path
           ? current
@@ -4597,6 +4617,7 @@ function useBufferedStringFieldDrafts({
       commitTimersRef.current.delete(fieldId);
     }
 
+    protectedDraftValuesRef.current.set(fieldId, nextValue);
     setDraftValues((current) => (
       current[fieldId] === nextValue
         ? current

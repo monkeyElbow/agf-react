@@ -1,11 +1,5 @@
 import { normalizePresetBearingBlockIdentity } from './blockPresetIdentity.js';
 import { normalizeBlockPresentation } from './blockPresentationContracts.js';
-import {
-  buildCtaFormSlotFields,
-  parseCtaFormFieldsJson,
-  serializeCtaFormFields,
-  stripCtaFormSlotFieldSettings,
-} from '../blocks/foundation/forms.js';
 import { normalizeSplitLinkFieldSettings } from './linkValue.js';
 import { normalizeCollaborationState } from './contentAdminCollaboration.js';
 
@@ -17,8 +11,6 @@ const RETIRED_DAF_PATH = '/services/planned-giving/generosity-fund';
 const DAF_PATH = '/services/planned-giving/donor-advised-fund';
 const LEGACY_DAF_PATH = '/services/legacy-giving/generosity-fund';
 const PLANNED_GIVING_PATH = '/services/planned-giving';
-const CTA_SLOT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
-
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
 }
@@ -149,19 +141,6 @@ export function normalizeContentAdminBlock(rawBlock) {
 
   if (Array.isArray(nextBlock.editableFields)) {
     nextBlock.editableFields = canonicalizeRouteLinkEditableFields(nextBlock.editableFields);
-  }
-  if (String(nextBlock.kind || '').trim().toLowerCase() === 'cta_form' && Array.isArray(nextBlock.editableFields)) {
-    nextBlock.editableFields = nextBlock.editableFields.filter((field) => (
-      !CTA_SLOT_FIELD_PATTERN.test(String(field?.id || ''))
-    ));
-  }
-  if (String(nextBlock.kind || '').trim().toLowerCase() === 'cta_form') {
-    const slotFields = buildCtaFormSlotFields(nextBlock.settings);
-    const canonicalFields = parseCtaFormFieldsJson(nextBlock.settings.fieldsJson);
-    const normalizedSettings = stripCtaFormSlotFieldSettings(nextBlock.settings);
-    nextBlock.settings = slotFields.length && !canonicalFields.length
-      ? { ...normalizedSettings, fieldsJson: serializeCtaFormFields(slotFields) }
-      : normalizedSettings;
   }
   return nextBlock;
 }

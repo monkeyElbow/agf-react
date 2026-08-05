@@ -4,6 +4,10 @@ import {
 } from '../blocks/registry';
 import { buildBlockTemplateCreateId } from './blockTemplateIdentity';
 import { PRESET_FAMILY_KINDS } from './presetFamilyContract';
+import {
+  getBlockCatalogMetadata,
+  isBlockCatalogChoiceAllowed,
+} from '../data/blockCatalog';
 
 function normalizeToken(value) {
   return String(value || '').trim().toLowerCase();
@@ -133,6 +137,7 @@ function buildPresetBearingChoices(templatesByKind, targetMode) {
           : `Canonical family preset via compatibility template: ${representative.name}`,
         mode: targetMode,
         isCompatibility: false,
+        catalog: getBlockCatalogMetadata(representative),
       });
     });
 
@@ -144,8 +149,13 @@ function buildPresetBearingChoices(templatesByKind, targetMode) {
 export function buildAdminBlockInsertChoices(availableBlockTemplates, options = {}) {
   const targetMode = normalizeToken(options?.mode || 'dynamic') || 'dynamic';
   const needle = normalizeToken(options?.search || '');
+  const catalogOptions = {
+    pathname: options?.pathname || '',
+    pageFamily: options?.pageFamily || '',
+  };
   const sourceTemplates = (Array.isArray(availableBlockTemplates) ? availableBlockTemplates : [])
-    .filter((template) => normalizeToken(template?.mode) === targetMode);
+    .filter((template) => normalizeToken(template?.mode) === targetMode)
+    .filter((template) => isBlockCatalogChoiceAllowed(template, catalogOptions));
   const templatesByKind = new Map();
 
   sourceTemplates.forEach((template) => {
@@ -180,6 +190,7 @@ export function buildAdminBlockInsertChoices(availableBlockTemplates, options = 
         description: String(template?.description || template?.kind || '').trim(),
         mode: targetMode,
         isCompatibility: false,
+        catalog: getBlockCatalogMetadata(template),
       };
     });
 

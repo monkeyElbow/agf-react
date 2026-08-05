@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {
   contentBlockBlueprintsByPath,
   defaultInvestmentsIntroSettings,
@@ -1361,6 +1362,73 @@ describe('dynamic block control wiring', () => {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
     }
+  });
+
+  it('keeps the billboard body caret stable when the committed snapshot catches up', () => {
+    vi.useFakeTimers();
+    const onSettingChange = vi.fn();
+    const initialBlock = getDynamicBlock('billboard');
+    initialBlock.settings.bodyHtml = '<p>Alpha bravo</p>';
+
+    try {
+      const { rerender } = render(
+        <BillboardBlockEditor
+          block={initialBlock}
+          onSettingChange={onSettingChange}
+        />,
+      );
+
+      const bodyInput = screen.getByLabelText('Body HTML (optional rich copy)');
+      bodyInput.focus();
+      bodyInput.setSelectionRange(8, 8);
+      fireEvent.change(bodyInput, { target: { value: '<p>Alpha ravo</p>' } });
+
+      expect(bodyInput.value).toBe('<p>Alpha ravo</p>');
+      bodyInput.setSelectionRange(8, 8);
+
+      act(() => {
+        vi.advanceTimersByTime(350);
+      });
+
+      const committedBlock = structuredClone(initialBlock);
+      committedBlock.settings.bodyHtml = '<p>Alpha ravo</p>';
+      rerender(
+        <BillboardBlockEditor
+          block={committedBlock}
+          onSettingChange={onSettingChange}
+        />,
+      );
+
+      expect(screen.getByLabelText('Body HTML (optional rich copy)').selectionStart).toBe(8);
+
+      rerender(
+        <BillboardBlockEditor
+          block={initialBlock}
+          onSettingChange={onSettingChange}
+        />,
+      );
+
+      expect(screen.getByLabelText('Body HTML (optional rich copy)').value).toBe('<p>Alpha ravo</p>');
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not move the billboard body caret to the end during a real delete', async () => {
+    const user = userEvent.setup();
+    const block = getDynamicBlock('billboard');
+    block.settings.bodyHtml = '<p>Alpha bravo</p>';
+
+    render(<BillboardBlockEditor block={block} onSettingChange={vi.fn()} />);
+
+    const bodyInput = screen.getByLabelText('Body HTML (optional rich copy)');
+    bodyInput.focus();
+    bodyInput.setSelectionRange(8, 8);
+    await user.keyboard('{Backspace}');
+
+    expect(bodyInput.value).toBe('<p>Alph bravo</p>');
+    expect(bodyInput.selectionStart).toBe(7);
   });
 
   it('commits billboard body drafts on blur without waiting for debounce', () => {

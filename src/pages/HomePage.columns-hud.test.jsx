@@ -9,8 +9,8 @@ let mockMoveBlock = vi.fn();
 let mockRemoveBlock = vi.fn();
 let mockMobileFrontHud = false;
 
-vi.mock('../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../context/ContentAdminContext');
+vi.mock('../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../context/ContentAdminContextCore');
   return {
     ...actual,
     inspectDynamicHeroSettings: () => ({ hasDrift: false, issues: [], normalizedSettings: {} }),
@@ -95,7 +95,7 @@ describe('HomePage columns HUD', () => {
     }));
   });
 
-  it('loads and updates the housing section intro separately from the column copy', () => {
+  it('loads and updates the housing section intro separately from the column copy', async () => {
     mockBlocksByPath = {
       '/': [
         {
@@ -118,11 +118,13 @@ describe('HomePage columns HUD', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Open Housing HUD panel' }));
 
-    expect(screen.getByLabelText('Title').value).toBe('Housing intro heading');
-    expect(screen.getByLabelText('Body HTML (optional rich copy)').value).toContain('Housing intro body');
-    expect(screen.getByLabelText('Lead Copy').value).toBe('');
-    expect(screen.queryByLabelText('Line 1')).toBeNull();
-    expect(screen.queryByLabelText('Line 2')).toBeNull();
+    await waitFor(() => {
+      expect(screen.getByLabelText('Title').value).toBe('Housing intro heading');
+      expect(screen.getByLabelText('Body HTML (optional rich copy)').value).toContain('Housing intro body');
+      expect(screen.getByLabelText('Lead Copy').value).toBe('');
+      expect(screen.queryByLabelText('Line 1')).toBeNull();
+      expect(screen.queryByLabelText('Line 2')).toBeNull();
+    });
 
     fireEvent.change(screen.getByLabelText('Title'), {
       target: { value: 'Updated intro heading' },

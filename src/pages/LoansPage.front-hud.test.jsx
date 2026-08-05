@@ -8,7 +8,8 @@ let mockPageHierarchy = {};
 let mockUpdateBlockSetting = vi.fn();
 let mockTestimonials = [];
 
-vi.mock('../context/ContentAdminContext', () => ({
+vi.mock('../context/ContentAdminContextCore', () => ({
+  useOptionalContentAdmin: () => null,
   inspectDynamicHeroSettings: () => ({ hasDrift: false, issues: [], normalizedSettings: {} }),
   normalizeDynamicHeroSettings: (_pathname, settings) => settings || {},
   useContentAdmin: () => ({

@@ -12,8 +12,8 @@ import { normalizeDynamicHeroSettings } from '../../context/ContentAdminContext'
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-vi.mock('../../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../../context/ContentAdminContext.jsx');
+vi.mock('../../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../../context/ContentAdminContextCore');
   return {
     ...actual,
     useContentAdmin: () => ({
@@ -82,7 +82,7 @@ describe('home hero render guardrails', () => {
     expect(source).toContain("fontSize: heroTitleSize,");
   });
 
-  it('still renders the seeded line classes when hero settings are sparse', () => {
+  it('does not restore starter classes when an active hero explicitly clears them', () => {
     const seeded = getHomeHeroSeedSettings();
     const sparse = {
       line1Text: seeded.line1Text,
@@ -103,9 +103,12 @@ describe('home hero render guardrails', () => {
 
     const { container } = renderHomeHero(normalizeDynamicHeroSettings('/', sparse));
 
-    expect(container.querySelector('.home-native-hero .home-native-eyebrow.is-atlantean')?.textContent).toBe('Convenient.');
-    expect(container.querySelector('.home-native-hero .home-native-title.line1.line2.is-mango')?.textContent).toBe('Tax-efficient.');
-    expect(container.querySelector('.home-native-hero .home-native-title.line3.is-super-grey')?.textContent).toBe('Frictionless.');
+    const lineTexts = Array.from(container.querySelectorAll('.home-native-hero p, .home-native-hero h1'))
+      .map((node) => node.textContent);
+    expect(lineTexts).toEqual(expect.arrayContaining(['Convenient.', 'Tax-efficient.']));
+    expect(container.querySelector('.home-native-hero .home-native-eyebrow.is-atlantean')).toBeNull();
+    expect(container.querySelector('.home-native-hero .home-native-title.line1.line2.is-mango')).toBeNull();
+    expect(container.querySelector('.home-native-hero .home-native-title.line3.is-super-grey')).toBeNull();
   });
 
   it('preserves home hero tag structure, line classes, and per-line sizing in HUD edit mode', () => {
@@ -155,7 +158,7 @@ describe('home hero render guardrails', () => {
     const rendererSource = readSource('./PageBlocksRenderer.jsx');
 
     expect(rendererSource).toContain("import {\n  buildHeroLineStyle,\n  normalizeHeroLineGapEm,\n} from '../../lib/heroLineStyle';");
-    expect(rendererSource).toContain('const lineGap = normalizeHeroLineGapEm(block.lineGap);');
+    expect(rendererSource).toContain('const lineGap = normalizeHeroLineGapEm(source.lineGap);');
     expect(rendererSource).toContain('lineGap={lineGap}');
     expect(rendererSource).toContain('style={buildHeroLineStyle({');
     expect(rendererSource).toContain('lineIndex: 1,');

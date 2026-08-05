@@ -10,7 +10,6 @@ import {
 import { BLOCK_ONLY_MANAGED_PAGE_PATHS } from '../lib/managedPageShells';
 import { getEditableFieldsForKind } from '../blocks/registry';
 import {
-  CTA_FORM_SLOT_COMPAT_FIELD_PATTERN,
   parseCtaFormFieldsJson,
 } from '../blocks/foundation/forms';
 
@@ -23,6 +22,7 @@ const TARGET_BRIDGE_SETTING_KEYS = [
 const SPLIT_LINK_HREF_SUFFIXES = ['Url', 'Path', 'Href'];
 const SPLIT_LINK_SETTING_SUFFIX_PATTERN = /(?:Url|Path|Href|PageRef|OpenInNewWindow)$/;
 const ACTION_LIKE_SPLIT_LINK_BASE_PATTERN = /^(?:button\d*|button2?|cta|browse|card\d+(?:Button\d*)?|col\d+Button|leftButton|rightButton)$/i;
+const RETIRED_CTA_FORM_SLOT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
 
 function getTargetBridgeSettingKeys(block) {
   const settings = block?.settings && typeof block.settings === 'object'
@@ -86,7 +86,9 @@ function expectNoSettings(settings, fieldIds) {
   });
 }
 
-describe('content block blueprint coverage', () => {
+// Source-default only. This suite documents starter blueprints and contracts;
+// it must never be used as an active-state or admin-copy convergence test.
+describe('source-default content block blueprint coverage', () => {
   it('exports canonical link settings without action-like split link settings', () => {
     const offenders = [];
     const inspectBlock = (scope, block) => {
@@ -290,7 +292,7 @@ describe('content block blueprint coverage', () => {
       .map(({ pathname, block }) => ({
         id: `${pathname}:${block?.id || 'cta_form'}`,
         slotKeys: Object.keys(block?.settings || {})
-          .filter((key) => CTA_FORM_SLOT_COMPAT_FIELD_PATTERN.test(String(key || ''))),
+          .filter((key) => RETIRED_CTA_FORM_SLOT_FIELD_PATTERN.test(String(key || ''))),
       }))
       .filter(({ slotKeys }) => slotKeys.length);
 
@@ -817,6 +819,24 @@ describe('content block blueprint coverage', () => {
         card1Fineprint: '*as of 2025',
       },
     });
+    expect(blocks.find((block) => block?.id === 'hero')?.settings).toMatchObject({
+      button1Label: 'Try the CGA estimator',
+    });
+    expectCanonicalLink(blocks.find((block) => block?.id === 'hero')?.settings, 'button1LinkJson', {
+      kind: 'anchor',
+      href: '#demo',
+    });
+    expect(JSON.parse(blocks.find((block) => block?.id === 'gift_assets')?.settings?.card1ListJson || '[]'))
+      .not.toContain(expect.stringContaining('SECURE 2.0 Act'));
+    expect(blocks.find((block) => block?.id === 'secure_act')).toMatchObject({
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-cga-secure-act',
+      },
+    });
+    expect(blocks.find((block) => block?.id === 'secure_act')?.settings?.html)
+      .toContain('The SECURE 2.0 Act');
     expect(blocks.find((block) => block?.id === 'qcd_fineprint')).toMatchObject({
       kind: 'content',
       mode: 'dynamic',
@@ -825,6 +845,10 @@ describe('content block blueprint coverage', () => {
         fineprintDisclosureId: 'planned-giving-cga-qcd-fineprint',
       },
     });
+    expect(blocks.find((block) => block?.id === 'qcd_fineprint')?.settings?.html)
+      .toContain('Also available');
+    expect(blocks.find((block) => block?.id === 'qcd_fineprint')?.settings?.html)
+      .not.toContain('The SECURE 2.0 Act');
     expect(blocks.find((block) => block?.id === 'annuity_options')).toMatchObject({
       kind: 'card_grid',
       mode: 'dynamic',
@@ -845,6 +869,12 @@ describe('content block blueprint coverage', () => {
         sectionClassName: 'legacy-child-native-cga-request',
       },
     });
+    const requestFields = JSON.parse(requestBlock?.settings?.step1FieldsJson || '[]');
+    expect(requestFields.find((field) => field.id === 'givingProduct')?.options)
+      .toEqual([
+        { value: 'cga-immediate', label: 'CGA (immediate)' },
+        { value: 'cga-deferred', label: 'CGA (deferred)' },
+      ]);
     expect(outroBlock).toMatchObject({
       kind: 'billboard',
       settings: {
@@ -1351,14 +1381,40 @@ describe('content block blueprint coverage', () => {
     ))).toMatchObject({
       settings: {
         title: 'The differences. At a glance.',
-        columns: 'three',
+        columns: 'two',
         cardStyle: 'none',
         showTitleDivider: false,
         sectionClassName: 'legacy-child-native-trusts-differences',
-        card1ListJson: '["Cash","Securities (stocks, bonds, mutual funds)","Real estate","Other marketable assets"]',
-        card2Title: 'CRTs & taxes',
-        card3Title: 'CLTs & taxes',
+        card1Title: 'CRTs & taxes',
+        card2Title: 'CLTs & taxes',
       },
+    });
+    expect(charitableTrustsBlocks.find((block) => (
+      block?.id === 'trust_funding'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'dynamic'
+    ))).toMatchObject({
+      settings: {
+        title: 'Fund both CRTs and CLTs:',
+        columns: 'one',
+        cardStyle: 'card2',
+        showTitleDivider: true,
+        sectionClassName: 'legacy-child-native-assets legacy-child-native-trusts-funding',
+        card1Title: 'Funding',
+        card1Body: '',
+        card1ListJson: '["Cash","Securities (stocks, bonds, mutual funds)","Real estate","Other marketable assets"]',
+        card1ButtonLabel: 'Start here',
+        card1ButtonStyle: 'blue',
+        card1ButtonTone: 'atlantean',
+      },
+    });
+    expectCanonicalLink(charitableTrustsBlocks.find((block) => (
+      block?.id === 'trust_funding'
+      && block?.kind === 'card_grid'
+      && block?.mode === 'dynamic'
+    ))?.settings, 'card1ButtonLinkJson', {
+      kind: 'anchor',
+      href: '#charitable-trusts-form',
     });
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'remainder_trust_billboard'
@@ -1373,27 +1429,7 @@ describe('content block blueprint coverage', () => {
         sectionClassName: 'legacy-child-native-trusts-crt',
       },
     });
-    expect(charitableTrustsBlocks.find((block) => (
-      block?.id === 'remainder_trust_how_it_works'
-      && block?.kind === 'columns'
-      && block?.mode === 'dynamic'
-    ))).toMatchObject({
-      settings: {
-        title: 'How it works',
-        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-trusts-crt-steps',
-        col1Type: 'flow-step',
-        col1IconKey: 'daf-step-1',
-        col1IconTone: 'mango',
-        col1Body: 'Placeholder: describe the first CRT step here.',
-        col2Type: 'flow-step',
-        col2IconKey: 'daf-step-3',
-        col2IconTone: 'mango',
-        col3Type: 'flow-step',
-        col3IconKey: 'crt-step-2',
-        col3IconTone: 'mango',
-        col4Enabled: false,
-      },
-    });
+    expect(charitableTrustsBlocks.find((block) => block?.id === 'remainder_trust_how_it_works')).toBeUndefined();
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'remainder_trust_type_cards'
       && block?.kind === 'card_grid'
@@ -1407,26 +1443,8 @@ describe('content block blueprint coverage', () => {
         card2Title: 'Charitable Remainder Annuity (CRAT)',
       },
     });
-    expect(charitableTrustsBlocks.find((block) => block?.id === 'cta_trigger')).toMatchObject({
-      kind: 'billboard',
-      mode: 'dynamic',
-      settings: {
-        sectionClassName: 'legacy-child-native-trusts-crt-trigger',
-        buttonLabel: 'Start the process',
-        buttonAction: 'open_cta_form',
-        buttonTargetAnchorId: 'charitable-trusts-inline-form',
-      },
-    });
-    expect(charitableTrustsBlocks.find((block) => block?.id === 'cta_form')).toMatchObject({
-      kind: 'cta_form',
-      mode: 'dynamic',
-      settings: {
-        anchorId: 'charitable-trusts-inline-form',
-        sectionClassName: 'legacy-child-native-cta legacy-child-native-trusts-cta legacy-child-native-trusts-cta-inline',
-        displayMode: 'inline_reveal',
-        triggerMode: 'external',
-      },
-    });
+    expect(charitableTrustsBlocks.find((block) => block?.id === 'cta_trigger')).toBeUndefined();
+    expect(charitableTrustsBlocks.find((block) => block?.id === 'cta_form')).toBeUndefined();
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'lead_trust_billboard'
       && block?.kind === 'billboard'
@@ -1453,12 +1471,17 @@ describe('content block blueprint coverage', () => {
         card2Title: 'Non-Grantor Lead Trust',
       },
     });
-    expect(charitableTrustsBlocks.find((block) => block?.id === 'cta_form_legacy_child_native_cta_legacy_child_native_trusts_cta')).toMatchObject({
-      kind: 'cta_form',
+    expect(charitableTrustsBlocks.find((block) => block?.id === 'request_form')).toMatchObject({
+      kind: 'request_form',
       mode: 'dynamic',
       settings: {
         anchorId: 'charitable-trusts-form',
-        sectionClassName: 'legacy-child-native-cta legacy-child-native-trusts-cta',
+        sectionClassName: 'legacy-child-native-trusts-request',
+        presetId: 'legacy-trusts',
+        bgTone: 'blue',
+        textTone: 'white',
+        subtitle: '',
+        bodyHtml: '<p>Use this form to start the Charitable Trust process. Let’s transform your generosity into a tax-saving, ministry-supporting win.</p>',
       },
     });
     expect(charitableTrustsBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
@@ -1495,19 +1518,17 @@ describe('content block blueprint coverage', () => {
     });
     const endowmentAssetsBlock = endowmentBlocks.find((block) => block?.id === 'assets_you_may_give');
     expect(endowmentAssetsBlock).toMatchObject({
-      kind: 'content',
+      kind: 'card_grid',
       mode: 'dynamic',
       settings: {
-        sectionClassName: 'legacy-child-native-endowments-assets',
-        contentMaxWidthPx: 1040,
+        sectionClassName: 'legacy-child-native-assets legacy-child-native-give-assets legacy-child-native-endowments-assets',
+        title: 'It starts with what you give.',
+        card1Title: 'What you give',
+        card1Fineprint: 'Minimum funding requirements are $10,000 for cash or securities, and $100,000 for real estate.',
       },
     });
-    const endowmentAssetsHtml = endowmentAssetsBlock?.settings?.html || '';
-    expect(endowmentAssetsHtml).toContain('class="endowments-assets-copy"');
-    expect(endowmentAssetsHtml).toContain('class="endowments-asset-badges"');
-    expect(endowmentAssetsHtml).toContain('<li>Securities (restricted and marketable)</li>');
-    expect(endowmentAssetsHtml).not.toContain('<button');
-    expect(endowmentAssetsHtml).not.toContain('Other assets');
+    expect(JSON.parse(endowmentAssetsBlock?.settings?.card1ListJson || '[]'))
+      .toEqual(['Cash', 'Real estate', 'Art', 'Securities (restricted and marketable)', 'Antiques', 'Business interests']);
     expect(endowmentBlocks.find((block) => block?.id === 'calculator')).toMatchObject({
       kind: 'content',
       mode: 'dynamic',
@@ -1532,6 +1553,9 @@ describe('content block blueprint coverage', () => {
       presetId: 'legacy-endowment',
       anchorId: 'endowment-request-form',
     });
+    const endowmentRequestFields = JSON.parse(endowmentBlocks.find((block) => block?.id === 'request_form')?.settings?.step1FieldsJson || '[]');
+    expect(endowmentRequestFields.find((field) => field.id === 'givingProduct')?.options)
+      .toEqual([{ value: 'endowments', label: 'Endowments' }]);
     expect(endowmentBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(endowmentBlocks.some((block) => block?.mode === 'static')).toBe(false);
     expect(endowmentBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
@@ -1539,6 +1563,8 @@ describe('content block blueprint coverage', () => {
     expect(generosityBlocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(generosityBlocks.some((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic')).toBe(true);
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button1Label).toBe('Open a traditional DAF');
+    expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button1Style).toBe('outline');
+    expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button1Tone).toBe('super-grey');
     expect(generosityBlocks.find((block) => block?.id === 'hero')?.settings?.button2Label).toBe('Open a Generosity Fund®');
     expectCanonicalLink(generosityBlocks.find((block) => block?.id === 'hero')?.settings, 'button1LinkJson', {
       kind: 'anchor',
@@ -1579,6 +1605,7 @@ describe('content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         title: 'Generosity Fund®',
+        titleHtml: 'Generosity Fund<sup>®</sup>',
         subtitle: 'Our fully online Donor Advised Fund simplifies your giving even more, letting you manage your giving anytime you want.',
         sectionClassName: 'legacy-child-native-generosity-online',
         buttonLabel: 'Open a Generosity Fund®',
@@ -1588,10 +1615,21 @@ describe('content block blueprint coverage', () => {
       kind: 'card_grid',
       mode: 'dynamic',
       settings: {
-        sectionClassName: 'legacy-child-native-assets legacy-child-native-generosity-assets',
+        sectionClassName: 'legacy-child-native-assets legacy-child-native-give-assets legacy-child-native-generosity-assets',
         card1Title: 'What you give',
         card1ClassName: 'generosity-fund-assets-card',
+        card1ListJson: JSON.stringify([
+          '**Cash**',
+          '**Household income**',
+          '**Proceeds from selling a home or business**',
+          '**Securities** (stocks, bonds, mutual funds, etc.)',
+          '**A variety of other funding sources**',
+          '**$10,000 minimum**',
+          'Additional funding can be made with as little as $100, as often as you like.',
+        ]),
         card1Button2Label: 'Open a traditional DAF',
+        card1Button2Style: 'blue',
+        card1Button2Tone: 'atlantean',
       },
     });
     expect(generosityBlocks.find((block) => block?.id === 'request_form')).toMatchObject({
@@ -2338,7 +2376,7 @@ describe('content block blueprint coverage', () => {
     expect(growthFeatureBlock?.kind).toBe('site_feature');
     expect(growthFeatureBlock?.settings?.featureId).toBe('investments_growth_feature');
     expect(ctaFormBlock?.kind).toBe('cta_form');
-    expect(ctaFormBlock?.settings?.submitStyle).toBe('outline');
+    expect(ctaFormBlock?.settings?.submitStyle).toBe('blue');
     expect(ctaFormBlock?.settings?.targetSectionKey).toBeUndefined();
     expect(ctaFormBlock?.settings?.targetSectionClassName).toBeUndefined();
     expect(ctaFormBlock?.settings?.targetSectionIndex).toBeUndefined();

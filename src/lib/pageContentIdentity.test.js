@@ -35,6 +35,7 @@ describe('page content identity contract', () => {
     expect(PAGE_CONTENT_IDENTITY.editorType).toBe('page_content');
     expect(PAGE_CONTENT_IDENTITY.templateId).toBe('page_content');
     expect(PAGE_CONTENT_IDENTITY.blockId).toBe('page_content');
+    expect(PAGE_CONTENT_IDENTITY.architectureReason).toBeTruthy();
     expect(PAGE_CONTENT_IDENTITY_SURFACES).toMatchObject({
       definitionKind: 'content',
       registryKind: 'content',
@@ -95,14 +96,7 @@ describe('page content identity contract', () => {
       && candidate?.createTemplateId === PAGE_CONTENT_IDENTITY.templateId
       && candidate?.templateId === PAGE_CONTENT_IDENTITY.templateId
     ));
-    expect(choice).toMatchObject({
-      kind: PAGE_CONTENT_IDENTITY.kind,
-      editorType: PAGE_CONTENT_IDENTITY.editorType,
-      canonicalLabel: PAGE_CONTENT_IDENTITY.label,
-      createTemplateId: PAGE_CONTENT_IDENTITY.templateId,
-      templateId: PAGE_CONTENT_IDENTITY.templateId,
-      isCompatibility: false,
-    });
+    expect(choice).toBeUndefined();
 
     const hudDefinition = getBlockHudDefinition({
       id: PAGE_CONTENT_IDENTITY.blockId,

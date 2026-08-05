@@ -12,6 +12,10 @@ const CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS = Object.freeze({
   'native-info-page--calculator-tool': 'Calculator tool routes need route-specific intro/contact CTA spacing.',
   'native-info-page--group-life-quote': 'Group term life benefit cards need route-specific dynamic grid card title sizing.',
   'native-info-page--insurance': 'Insurance overview keeps route-specific dynamic section art direction.',
+  'native-info-page--legacy-cga': 'Charitable gift annuity sections need route-specific hero clearance and card/form presentation.',
+  'native-info-page--legacy-child': 'Planned-giving child routes share a declared compatibility shell for their managed dynamic sections.',
+  'native-info-page--legacy-generosity-fund': 'Donor-advised fund assets and online-giving sections need route-specific dynamic grid spacing and typography.',
+  'native-info-page--legacy-giving': 'The planned-giving overview uses declared dynamic billboard and CTA presentation contracts for its product parade and legacy-giving sections.',
   'native-info-page--life-quote': 'Life quote product cards need route-specific dynamic grid card shell sizing.',
 });
 
@@ -71,7 +75,7 @@ function getRouteScopedDynamicSelectorClasses(source) {
   return [...routeClasses].sort();
 }
 
-describe('service-native style ownership', () => {
+describe('implementation-ownership.service-native style ownership', () => {
   it('keeps public form fields on the resource-library field standard', () => {
     const tokensSource = readSource('./tokens.css');
     const serviceSource = readSource('./service-native.css');
@@ -136,6 +140,13 @@ describe('service-native style ownership', () => {
     expect(getRouteScopedDynamicSelectorClasses(source)).toEqual(
       Object.keys(CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS).sort(),
     );
+  });
+
+  it('balances planned-giving product parade card content vertically', () => {
+    const source = readSource('./service-native.css');
+
+    expect(source).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card {');
+    expect(source).toContain('padding: clamp(1.2rem, 2.2vw, 2rem) clamp(2.2rem, 4vw, 3rem) clamp(2.8rem, 4.8vw, 3.8rem);');
   });
 
   it('keeps calculator tool content shells from inheriting default blank content-block spacing', () => {
@@ -288,6 +299,9 @@ describe('service-native style ownership', () => {
       '.legacy-giving-cta .dynamic-cta-form-heading {',
       '.legacy-giving-cta .dynamic-cta-form-subtitle {',
       '.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-layout {',
+      '.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {',
+      'color: #ffffff;',
+      '.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),',
       '.native-dynamic-request.is-request-form-preset-legacy-generosity .dynamic-request-layout {',
       '.native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-layout {',
       '.native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-layout {',
@@ -300,33 +314,72 @@ describe('service-native style ownership', () => {
     });
   });
 
-  it('keeps CGA option-card titles centered without divider lines', () => {
+  it('keeps CGA option cards on the Investments certificate-card shell without buttons', () => {
     const source = readSource('./service-native.css');
 
     [
-      '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card {',
-      'padding: clamp(2.7rem, 5.2vw, 3.9rem);',
-      '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3 {',
-      'text-align: center;',
-      'justify-content: center;',
-      'min-height: 0;',
-      'margin-top: 0;',
-      'margin-bottom: clamp(0.7rem, 1.4vw, 1.05rem);',
-      'padding-bottom: 0;',
-      '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3::after {',
-      'display: none;',
-      '.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card > div > p {',
-      'text-align: left;',
+      '.investments-native-cert-card {',
+      '.investments-native-cert-card__cap {',
+      '.investments-native-cert-card__body {',
+      '--investments-cert-cap-padding-top: clamp(1.8rem, 3.3vw, 2.2rem);',
+      'background: linear-gradient(160deg, rgba(241, 250, 251, 0.98) 0%, rgba(229, 247, 249, 0.96) 100%);',
+      'padding: var(--investments-cert-body-padding-top) var(--investments-cert-body-padding-inline) var(--investments-cert-body-padding-bottom);',
+      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card),',
+      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card) h3,',
+      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card) :is(p, li, a:not(.service-native-btn)),',
+      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card) .service-native-action-row:last-child,',
+      '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card h3,',
+      '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card h3::after {',
+      '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card .service-native-card-bullet-list li,',
+      '.native-info-page--legacy-child .legacy-child-native-options .service-native-card:not(.investments-native-cert-card),',
+      '.native-info-page--legacy-child .legacy-child-native-options .service-native-card:not(.investments-native-cert-card) h3,',
+      '.native-info-page--legacy-child .legacy-child-native-options .service-native-card:not(.investments-native-cert-card):hover,',
+      '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card .service-native-card-bullet-list li,',
+      '.service-native-section.native-dynamic-grid.legacy-child-native-cga-assets .service-native-card .service-native-card-bullet-list li {',
+      'font-size: clamp(1.1rem, 2vw, 1.35rem);',
       '.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),',
       'color: var(--ag-color-super-grey);',
       '.native-info-page--legacy-cga .legacy-child-native-cga-state-notices .service-native-note {',
       '.native-info-page--legacy-cga .legacy-child-native-cga-state-notices .service-native-note + .service-native-note {',
       'margin-top: 1rem;',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-qcd-fineprint > .ag-panel-rail {',
+      'width: min(100%, 520px);',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-qcd-fineprint .native-info-rich-html p {',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-secure-act > .ag-panel-rail {',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-secure-act .native-info-rich-html p {',
+      'font-size: clamp(1.1rem, 1.6vw, 1.22rem);',
+      'text-align: left;',
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
     });
 
-    expect(source).not.toContain('.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card h3::after {\n  content: \'\';');
+    expect(source).not.toContain('.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card {');
+    expect(source).not.toContain('.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-card > .investments-native-cert-card__cap {');
+    expect(source).not.toContain('.native-info-page--legacy-child .legacy-child-native-options .service-native-card,');
+
+  });
+
+  it('keeps the CGA hero CTA clear of sticky navigation and anchor jumps', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--legacy-cga .service-native-hero {',
+      '.native-info-page--legacy-cga .service-native-hero .service-native-action-row {',
+      'margin-top: clamp(2rem, 4vw, 3.2rem);',
+      '.native-info-page--legacy-cga .legacy-child-native-cga-comparison {',
+      'scroll-margin-top: calc(var(--ag-site-nav-height, 0px) + 1rem);',
+      '.native-info-page--legacy-cga .service-native-section.native-dynamic-grid.legacy-child-native-cga-assets {',
+      'padding-top: clamp(0.25rem, 0.6vw, 0.5rem);',
+    ].forEach((expectedSelector) => {
+      expect(source).toContain(expectedSelector);
+    });
+  });
+
+  it('keeps the DAF asset bullet card padded for the shared body-size bullets', () => {
+    const source = readSource('./service-native.css');
+
+    expect(source).toContain('.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card {');
+    expect(source).toContain('padding: clamp(2rem, 4vw, 3rem);');
   });
 
   it('keeps retired 403b section selectors out of service-native CSS', () => {

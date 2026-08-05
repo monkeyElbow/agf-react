@@ -54,7 +54,7 @@ export const SITE_FEATURE_FEATURE_ONLY_EDITABLE_FIELD_IDS = Object.freeze([
   'featureId',
 ]);
 
-const SITE_FEATURE_CATALOG = Object.freeze([
+const SITE_FEATURE_CATALOG_DEFINITIONS = [
   Object.freeze({
     featureId: 'editorial_spotlight',
     label: 'Editorial spotlight',
@@ -461,7 +461,49 @@ const SITE_FEATURE_CATALOG = Object.freeze([
       ]),
     }),
   }),
-]);
+];
+
+const SITE_FEATURE_OWNER_BY_ID = Object.freeze({
+  editorial_spotlight: 'Editorial feature renderer',
+  home_services_feature_animation: 'Home page renderer',
+  home_impact_story: 'Home page renderer',
+  services_breakdown: 'Services page renderer',
+  services_matters_band: 'Services page renderer',
+  retirement_plan_feature: 'Retirement page renderer',
+  legacy_giving_stewardship_story: 'Planned giving page renderer',
+  impact_proof_story: 'Impact page renderer',
+  about_history_feature: 'About page renderer',
+  investments_growth_feature: 'Investments page renderer',
+});
+
+function featureRouteFamily(pathname) {
+  const path = String(pathname || '').trim().toLowerCase();
+  if (path === '/') return 'home';
+  if (path.startsWith('/services/investments')) return 'investments';
+  if (path.startsWith('/services/retirement')) return 'retirement';
+  if (path.startsWith('/services/planned-giving')) return 'planned-giving';
+  if (path.startsWith('/services')) return 'services';
+  if (path.startsWith('/about-us/impact')) return 'impact';
+  if (path.startsWith('/about-us')) return 'about';
+  return 'editorial';
+}
+
+const SITE_FEATURE_CATALOG = Object.freeze(SITE_FEATURE_CATALOG_DEFINITIONS.map((entry) => Object.freeze({
+  ...entry,
+  owner: String(entry.owner || SITE_FEATURE_OWNER_BY_ID[entry.featureId] || '').trim(),
+  architectureType: 'site-feature',
+  catalogVisibility: entry.catalogVisibility || (entry.internalOnly ? 'internal' : (entry.routeAllowlist?.length ? 'contextual' : 'hidden')),
+  allowedRoutes: Object.freeze(Array.isArray(entry.routeAllowlist) ? [...entry.routeAllowlist] : []),
+  allowedPageFamilies: Object.freeze(Array.from(new Set(
+    (Array.isArray(entry.routeAllowlist) ? entry.routeAllowlist : []).map(featureRouteFamily),
+  ))),
+  editableFieldIds: Object.freeze([...entry.allowedEditableFieldIds]),
+  reasonCannotUseStandardBlock: String(
+    entry.reasonCannotUseStandardBlock
+      || 'Requires specialized interaction, layout, or code-owned data not represented by a standard block.',
+  ).trim(),
+  retirementNote: String(entry.retirementNote || 'Review when the specialized renderer is replaced or its route is retired.').trim(),
+})));
 
 const SITE_FEATURE_CATALOG_BY_ID = Object.freeze(
   Object.fromEntries(SITE_FEATURE_CATALOG.map((entry) => [entry.featureId, entry])),

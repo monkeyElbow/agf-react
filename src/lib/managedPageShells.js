@@ -47,6 +47,7 @@ const BLOCK_ONLY_MANAGED_PAGE_PATHS = new Set([
   '/vineyard',
   '/yourplan',
   '/services/investments/invest-by-mail',
+  '/test',
 ]);
 
 const BLOCKLESS_MANAGED_PAGE_PATHS = new Set([
@@ -62,7 +63,6 @@ const SPECIAL_MANAGED_PAGE_CLASSIFICATIONS = Object.freeze({
   '/brand': 'functional-brand-kit',
   '/rates': 'functional-rates-admin',
   '/taxguide': 'legacy-page-content',
-  '/test': 'development-sandbox',
 });
 
 function normalizeManagedPagePath(pathname) {

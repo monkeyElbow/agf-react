@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useContentAdmin } from '../context/ContentAdminContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import agfLogo from '../assets/agf-logo-footer.svg';
 
 const footerCols = [

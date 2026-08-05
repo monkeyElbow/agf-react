@@ -1,5 +1,6 @@
 export default function FrontHudAnchorTag({
   label = '',
+  icon = null,
   isActive = false,
   onClick = null,
   layerClassName = '',
@@ -27,7 +28,12 @@ export default function FrontHudAnchorTag({
           aria-label={resolvedAriaLabel}
           title={nextLabel}
         >
-          <span aria-hidden="true">{nextLabel}</span>
+          {icon ? (
+            <span className="admin-front-hud-anchor-icon" aria-hidden="true">
+              <img src={icon} alt="" className="admin-front-hud-anchor-icon-image" />
+            </span>
+          ) : null}
+          <span className="admin-front-hud-anchor-name">{nextLabel}</span>
         </button>
       </div>
     </div>

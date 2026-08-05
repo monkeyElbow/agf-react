@@ -50,7 +50,7 @@ vi.mock('./pages/AdminDocumentsPage', () => ({
   default: () => <div>Admin Documents</div>,
 }));
 
-vi.mock('./context/ContentAdminContext', () => ({
+vi.mock('./context/ContentAdminContextCore', () => ({
   useContentAdmin: () => ({
     pageHierarchy: {
       '/': {
@@ -108,6 +108,6 @@ describe('App breadcrumb shell placement', () => {
 
     expect(layout.children[0]).toBe(announcement);
     expect(screen.queryByTestId('breadcrumbs')).toBeNull();
-    expect(screen.getByText('Home')).toBeTruthy();
+    expect(await screen.findByText('Home')).toBeTruthy();
   });
 });

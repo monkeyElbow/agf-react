@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getBufferedStringDraftBlockKinds,
   getColorTextSelectionDraftBlockKinds,
+  resolveRequestFormLeadCopyFieldId,
 } from './block-editors/migratedBlockEditors';
 
 describe('migrated block editor buffered draft coverage', () => {
@@ -33,5 +34,11 @@ describe('migrated block editor buffered draft coverage', () => {
       'newsletter',
       'columns',
     ]);
+  });
+
+  it('uses populated request-form lead-copy storage without changing canonical precedence', () => {
+    expect(resolveRequestFormLeadCopyFieldId({ subtitle: 'Canonical lead copy', body: 'Fallback copy' })).toBe('subtitle');
+    expect(resolveRequestFormLeadCopyFieldId({ subtitle: '', body: 'Existing fallback copy' })).toBe('body');
+    expect(resolveRequestFormLeadCopyFieldId({ subtitle: '', body: '' })).toBe('subtitle');
   });
 });

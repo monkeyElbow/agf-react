@@ -39,21 +39,6 @@ const REQUEST_FORM_STEP_FIELD_TYPE_SET = new Set(
 );
 
 export const CTA_FORM_MAX_FIELDS = 8;
-export const CTA_FORM_SLOT_COMPAT_FIELD_COUNT = 5;
-export const CTA_FORM_SLOT_COMPAT_FIELD_IDS = Object.freeze(
-  Array.from({ length: CTA_FORM_SLOT_COMPAT_FIELD_COUNT }, (_, index) => {
-    const slot = index + 1;
-    return [
-      `field${slot}Enabled`,
-      `field${slot}Type`,
-      `field${slot}Label`,
-      `field${slot}Placeholder`,
-      `field${slot}Options`,
-      `field${slot}Required`,
-    ];
-  }).flat(),
-);
-export const CTA_FORM_SLOT_COMPAT_FIELD_PATTERN = /^field[1-5](?:Enabled|Type|Label|Placeholder|Options|Required|Key)$/;
 export const CTA_FORM_CONTACT_PREFERENCE_FIELD_ID = 'contact_preference';
 export const CTA_FORM_CONTACT_PREFERENCE_OPTIONS = Object.freeze([
   Object.freeze({ value: 'email', label: 'Email' }),
@@ -130,8 +115,6 @@ export const CANONICAL_FORM_BLOCK_BOUNDARIES = Object.freeze({
     exclusiveFieldIds: CTA_FORM_EXCLUSIVE_FIELD_IDS,
     runtimeIdentity: 'cta_form',
     editorOwner: 'CtaFormBlockEditor',
-    compatibilityFieldIds: CTA_FORM_SLOT_COMPAT_FIELD_IDS,
-    transitionalAdapters: Object.freeze(['slot-settings']),
   }),
   request_form: Object.freeze({
     kind: 'request_form',
@@ -140,7 +123,6 @@ export const CANONICAL_FORM_BLOCK_BOUNDARIES = Object.freeze({
     exclusiveFieldIds: REQUEST_FORM_EXCLUSIVE_FIELD_IDS,
     runtimeIdentity: 'request_form',
     editorOwner: 'RequestFormBlockEditor',
-    compatibilityFieldIds: Object.freeze([]),
     transitionalAdapters: Object.freeze(['step-fields-json']),
   }),
 });
@@ -171,10 +153,6 @@ export function getFormBlockSpecificFieldIds(kind) {
 
 export function getFormBlockExclusiveFieldIds(kind) {
   return Array.from(getCanonicalFormBlockBoundary(kind)?.exclusiveFieldIds || []);
-}
-
-export function getFormBlockCompatibilityFieldIds(kind) {
-  return Array.from(getCanonicalFormBlockBoundary(kind)?.compatibilityFieldIds || []);
 }
 
 export function getFormBlockAllowedFieldIds(kind) {
@@ -345,20 +323,6 @@ function normalizeCtaFormFieldRecord(field, index = 0) {
   };
 }
 
-function readBooleanField(value, fallback = false) {
-  if (value === undefined) {
-    return fallback;
-  }
-  if (typeof value === 'string') {
-    const token = value.trim().toLowerCase();
-    if (!token) {
-      return false;
-    }
-    return token !== 'false' && token !== '0' && token !== 'off' && token !== 'no';
-  }
-  return Boolean(value);
-}
-
 export function createCtaFormFieldDraft(fieldNumber = 1) {
   return {
     id: normalizeCtaFormFieldKey(`field_${fieldNumber}`, fieldNumber - 1),
@@ -386,76 +350,20 @@ export function parseCtaFormFieldsJson(value) {
   }
 }
 
-export function buildCtaFormSlotFields(source) {
-  return Array.from({ length: CTA_FORM_SLOT_COMPAT_FIELD_COUNT }, (_, index) => index + 1)
-    .map((slotNumber, index) => {
-      const enabledValue = source?.[`field${slotNumber}Enabled`];
-      const isEnabled = readBooleanField(enabledValue, slotNumber <= 4);
-      if (!isEnabled) {
-        return null;
-      }
-
-      const label = String(source?.[`field${slotNumber}Label`] || '').trim();
-      if (!label) {
-        return null;
-      }
-
-      return normalizeCtaFormFieldRecord({
-        id: source?.[`field${slotNumber}Key`] || `field${slotNumber}`,
-        label,
-        type: source?.[`field${slotNumber}Type`],
-        placeholder: source?.[`field${slotNumber}Placeholder`],
-        required: readBooleanField(source?.[`field${slotNumber}Required`]),
-        optionsText: source?.[`field${slotNumber}Options`],
-      }, index);
-    })
-    .filter(Boolean);
-}
-
-export function stripCtaFormSlotFieldSettings(settings) {
-  if (!settings || typeof settings !== 'object') {
-    return settings;
-  }
-
-  let changed = false;
-  const nextSettings = { ...settings };
-  Object.keys(nextSettings).forEach((key) => {
-    if (CTA_FORM_SLOT_COMPAT_FIELD_PATTERN.test(String(key || ''))) {
-      delete nextSettings[key];
-      changed = true;
-    }
-  });
-
-  return changed ? nextSettings : settings;
-}
-
-export function extractCtaFormFields(source, fallbackSource = null, options = {}) {
-  const {
-    allowSlotCompatibility = true,
-    preferFallbackSourceBeforeSlotCompatibility = false,
-  } = options && typeof options === 'object' ? options : {};
+export function extractCtaFormFields(source, fallbackSource = null) {
   const configuredFields = parseCtaFormFieldsJson(source?.fieldsJson);
   if (configuredFields.length) {
     return configuredFields;
   }
 
-  if (
-    preferFallbackSourceBeforeSlotCompatibility
-    && fallbackSource
-    && fallbackSource !== source
-  ) {
+  if (fallbackSource && fallbackSource !== source) {
     const fallbackConfiguredFields = parseCtaFormFieldsJson(fallbackSource?.fieldsJson);
     if (fallbackConfiguredFields.length) {
       return fallbackConfiguredFields;
     }
   }
 
-  const slotFields = allowSlotCompatibility ? buildCtaFormSlotFields(source) : [];
-  if (slotFields.length || !fallbackSource || fallbackSource === source) {
-    return slotFields;
-  }
-
-  return extractCtaFormFields(fallbackSource, null, { allowSlotCompatibility });
+  return [];
 }
 
 export function serializeCtaFormFields(fields = []) {
@@ -484,38 +392,9 @@ export function serializeCtaFormFields(fields = []) {
   );
 }
 
-export function buildCtaFormSlotFieldSettings(fields = []) {
-  const normalizedFields = (Array.isArray(fields) ? fields : [])
-    .map((field, index) => normalizeCtaFormFieldRecord(field, index))
-    .filter(Boolean);
-  const settings = {};
-
-  for (let slot = 1; slot <= CTA_FORM_SLOT_COMPAT_FIELD_COUNT; slot += 1) {
-    settings[`field${slot}Enabled`] = false;
-    settings[`field${slot}Type`] = 'text';
-    settings[`field${slot}Label`] = '';
-    settings[`field${slot}Placeholder`] = '';
-    settings[`field${slot}Options`] = '';
-    settings[`field${slot}Required`] = false;
-  }
-
-  normalizedFields.slice(0, CTA_FORM_SLOT_COMPAT_FIELD_COUNT).forEach((field, index) => {
-    const slot = index + 1;
-    settings[`field${slot}Enabled`] = true;
-    settings[`field${slot}Type`] = field.type;
-    settings[`field${slot}Label`] = field.label;
-    settings[`field${slot}Placeholder`] = field.placeholder;
-    settings[`field${slot}Options`] = field.optionsText;
-    settings[`field${slot}Required`] = field.required;
-  });
-
-  return settings;
-}
-
 export function buildCtaFormSettingsPatch({
   fields = [],
   includeContactPreference,
-  includeSlotCompatibility = false,
 } = {}) {
   const normalizedFields = (Array.isArray(fields) ? fields : [])
     .map((field, index) => normalizeCtaFormFieldRecord(field, index))
@@ -524,10 +403,6 @@ export function buildCtaFormSettingsPatch({
   const patch = {
     fieldsJson: serializeCtaFormFields(normalizedFields),
   };
-
-  if (includeSlotCompatibility) {
-    Object.assign(patch, buildCtaFormSlotFieldSettings(normalizedFields));
-  }
 
   if (includeContactPreference !== undefined) {
     patch.includeContactPreference = Boolean(includeContactPreference);

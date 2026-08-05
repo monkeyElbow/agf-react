@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useContentAdmin } from '../context/ContentAdminContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 
 export default function PageBreadcrumbs({ path }) {
   const { getBreadcrumbTrail } = useContentAdmin();

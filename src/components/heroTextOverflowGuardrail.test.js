@@ -13,7 +13,7 @@ function readSource(relativePath) {
 describe('hero text overflow guardrails', () => {
   it('keeps long-token wrapping scoped to home hero, native hero, and shared HUD hero selectors', () => {
     const homeStyles = readSource('../styles/home-native.css');
-    const serviceStyles = readSource('../styles/service-native.css');
+    const serviceStyles = `${readSource('../styles/service-native.css')}\n${readSource('../styles/front-hud.css')}`;
 
     expect(homeStyles).toContain('.home-native-hero .ag-panel-rail {\n  min-width: 0;\n}');
     expect(homeStyles).toContain('.home-native-hero :is(.home-native-eyebrow, .home-native-title) {\n  max-width: 100%;\n  min-width: 0;\n  overflow-wrap: anywhere;\n  word-break: normal;\n}');

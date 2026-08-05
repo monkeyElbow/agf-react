@@ -1,8 +1,8 @@
 import { toDevIdentitySummary } from './devIdentity';
 
 const MAX_CONTENT_HISTORY_ENTRIES = 40;
-const SHARED_ACTIVE_CONTENT_POLL_DELAY_MS = 650;
-const SHARED_VISIBLE_CONTENT_POLL_DELAY_MS = 1800;
+const SHARED_ACTIVE_CONTENT_POLL_DELAY_MS = 1800;
+const SHARED_VISIBLE_CONTENT_POLL_DELAY_MS = 5000;
 
 export function normalizeContentActor(rawActor) {
   const source = rawActor && typeof rawActor === 'object' ? rawActor : null;
@@ -14,13 +14,20 @@ export function normalizeContentActor(rawActor) {
 
 export function normalizeContentBlockMeta(rawMeta) {
   const source = rawMeta && typeof rawMeta === 'object' ? rawMeta : {};
+  const normalizeTimestamp = (value) => (
+    value == null || value === ''
+      ? null
+      : Number.isFinite(Number(value))
+        ? Number(value)
+        : null
+  );
   return {
     draftedBy: normalizeContentActor(source.draftedBy),
-    draftedAt: Number.isFinite(Number(source.draftedAt)) ? Number(source.draftedAt) : null,
+    draftedAt: normalizeTimestamp(source.draftedAt),
     savedBy: normalizeContentActor(source.savedBy),
-    savedAt: Number.isFinite(Number(source.savedAt)) ? Number(source.savedAt) : null,
+    savedAt: normalizeTimestamp(source.savedAt),
     lockedBy: normalizeContentActor(source.lockedBy),
-    lockedAt: Number.isFinite(Number(source.lockedAt)) ? Number(source.lockedAt) : null,
+    lockedAt: normalizeTimestamp(source.lockedAt),
   };
 }
 
@@ -44,7 +51,7 @@ export function normalizeContentHistoryEntry(rawEntry) {
   };
 }
 
-export function normalizeCollaborationState(rawState) {
+export function normalizeCollaborationState(rawState, { maxHistoryEntries = MAX_CONTENT_HISTORY_ENTRIES } = {}) {
   const source = rawState && typeof rawState === 'object' ? rawState : {};
   const next = {};
 
@@ -60,10 +67,12 @@ export function normalizeCollaborationState(rawState) {
       normalizedBlocks[normalizedBlockId] = normalizeContentBlockMeta(blockMeta);
     });
 
-    const history = (Array.isArray(entry.history) ? entry.history : [])
+    const normalizedHistory = (Array.isArray(entry.history) ? entry.history : [])
       .map(normalizeContentHistoryEntry)
-      .filter(Boolean)
-      .slice(0, MAX_CONTENT_HISTORY_ENTRIES);
+      .filter(Boolean);
+    const history = Number.isFinite(maxHistoryEntries)
+      ? normalizedHistory.slice(0, maxHistoryEntries)
+      : normalizedHistory;
 
     next[pathname] = {
       blocks: normalizedBlocks,
@@ -76,10 +85,27 @@ export function normalizeCollaborationState(rawState) {
 
 export function normalizeSharedSaveResult(rawResult) {
   const source = rawResult && typeof rawResult === 'object' ? rawResult : {};
+  const blockedBlocks = (Array.isArray(source.blockedBlocks) ? source.blockedBlocks : [])
+    .map((entry) => ({
+      pathname: String(entry?.pathname || '').trim(),
+      blockId: String(entry?.blockId || '').trim(),
+      reason: String(entry?.reason || '').trim(),
+      state: String(entry?.state || '').trim(),
+      owner: normalizeContentActor(entry?.owner),
+    }))
+    .filter((entry) => entry.pathname && entry.blockId);
+  const didSave = Boolean(source.didSave);
+  const hasConflicts = Boolean(source.hasConflicts || blockedBlocks.length);
   return {
     error: String(source.error || '').trim(),
-    didSave: Boolean(source.didSave),
-    hasConflicts: Boolean(source.hasConflicts),
+    status: normalizeSharedOperationStatus(source.status || source.error, {
+      kind: 'save',
+      didChange: didSave,
+      hasConflicts,
+      hasError: Boolean(source.error),
+    }),
+    didSave,
+    hasConflicts,
     changedPaths: Array.isArray(source.changedPaths) ? source.changedPaths.map((value) => String(value || '').trim()).filter(Boolean) : [],
     savedPaths: Array.isArray(source.savedPaths) ? source.savedPaths.map((value) => String(value || '').trim()).filter(Boolean) : [],
     savedBlockIdsByPath: Object.fromEntries(
@@ -94,25 +120,35 @@ export function normalizeSharedSaveResult(rawResult) {
         (Array.isArray(blockIds) ? blockIds : []).map((value) => String(value || '').trim()).filter(Boolean),
       ]),
     ),
-    blockedBlocks: (Array.isArray(source.blockedBlocks) ? source.blockedBlocks : [])
-      .map((entry) => ({
-        pathname: String(entry?.pathname || '').trim(),
-        blockId: String(entry?.blockId || '').trim(),
-        reason: String(entry?.reason || '').trim(),
-        state: String(entry?.state || '').trim(),
-        owner: normalizeContentActor(entry?.owner),
-      }))
-      .filter((entry) => entry.pathname && entry.blockId),
+    blockedBlocks,
     updatedAt: Number.isFinite(Number(source.updatedAt)) ? Number(source.updatedAt) : Date.now(),
   };
 }
 
 export function normalizeSharedPublishResult(rawResult) {
   const source = rawResult && typeof rawResult === 'object' ? rawResult : {};
+  const blockedBlocks = (Array.isArray(source.blockedBlocks) ? source.blockedBlocks : [])
+    .map((entry) => ({
+      pathname: String(entry?.pathname || '').trim(),
+      blockId: String(entry?.blockId || '').trim(),
+      reason: String(entry?.reason || '').trim(),
+      state: String(entry?.state || '').trim(),
+      owner: normalizeContentActor(entry?.owner),
+    }))
+    .filter((entry) => entry.pathname && entry.blockId);
+  const didPublish = Boolean(source.didPublish);
+  const hasConflicts = Boolean(source.hasConflicts || blockedBlocks.length);
+  const rawReceipt = source.receipt && typeof source.receipt === 'object' ? source.receipt : null;
   return {
     error: String(source.error || '').trim(),
-    didPublish: Boolean(source.didPublish),
-    hasConflicts: Boolean(source.hasConflicts),
+    status: normalizeSharedOperationStatus(source.status || source.error, {
+      kind: 'publish',
+      didChange: didPublish,
+      hasConflicts,
+      hasError: Boolean(source.error),
+    }),
+    didPublish,
+    hasConflicts,
     changedPaths: Array.isArray(source.changedPaths) ? source.changedPaths.map((value) => String(value || '').trim()).filter(Boolean) : [],
     publishedPaths: Array.isArray(source.publishedPaths) ? source.publishedPaths.map((value) => String(value || '').trim()).filter(Boolean) : [],
     publishedBlockIdsByPath: Object.fromEntries(
@@ -127,15 +163,7 @@ export function normalizeSharedPublishResult(rawResult) {
         (Array.isArray(blockIds) ? blockIds : []).map((value) => String(value || '').trim()).filter(Boolean),
       ]),
     ),
-    blockedBlocks: (Array.isArray(source.blockedBlocks) ? source.blockedBlocks : [])
-      .map((entry) => ({
-        pathname: String(entry?.pathname || '').trim(),
-        blockId: String(entry?.blockId || '').trim(),
-        reason: String(entry?.reason || '').trim(),
-        state: String(entry?.state || '').trim(),
-        owner: normalizeContentActor(entry?.owner),
-      }))
-      .filter((entry) => entry.pathname && entry.blockId),
+    blockedBlocks,
     hasOrderChangesByPath: Object.fromEntries(
       Object.entries(source.hasOrderChangesByPath || {}).map(([pathname, hasChanges]) => [
         String(pathname || '').trim(),
@@ -148,8 +176,51 @@ export function normalizeSharedPublishResult(rawResult) {
         Boolean(hasChanges),
       ]),
     ),
+    receipt: rawReceipt
+      ? {
+        route: String(rawReceipt.route || '').trim(),
+        scope: String(rawReceipt.scope || '').trim(),
+        actor: normalizeContentActor(rawReceipt.actor),
+        publishedBlockIds: Array.isArray(rawReceipt.publishedBlockIds)
+          ? rawReceipt.publishedBlockIds.map((value) => String(value || '').trim()).filter(Boolean)
+          : [],
+      }
+      : null,
     updatedAt: Number.isFinite(Number(source.updatedAt)) ? Number(source.updatedAt) : Date.now(),
   };
+}
+
+export function normalizeSharedOperationStatus(value, {
+  kind = 'save',
+  didChange = false,
+  hasConflicts = false,
+  hasError = false,
+} = {}) {
+  const allowed = kind === 'publish'
+    ? new Set(['published', 'already-live', 'partially-published', 'blocked', 'failed'])
+    : new Set(['saved', 'discarded', 'no-op', 'partially-saved', 'blocked', 'failed']);
+  const requested = String(value || '').trim();
+  if (allowed.has(requested)) {
+    return requested;
+  }
+  if (kind === 'publish' && String(value || '').trim() === 'already-live') {
+    return 'already-live';
+  }
+  if (kind === 'publish' && String(value || '').trim() === 'publish-blocked-by-other-draft') {
+    return 'blocked';
+  }
+  if (hasError) {
+    return 'failed';
+  }
+  if (hasConflicts) {
+    return didChange
+      ? (kind === 'publish' ? 'partially-published' : 'partially-saved')
+      : 'blocked';
+  }
+  if (didChange) {
+    return kind === 'publish' ? 'published' : 'saved';
+  }
+  return kind === 'publish' ? 'already-live' : 'no-op';
 }
 
 export function getSharedContentPollDelay(isDocumentHidden) {

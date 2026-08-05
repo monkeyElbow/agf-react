@@ -1,0 +1,25 @@
+{
+  "adapterId": "retirement-403b-snapshot-repairs",
+  "retiredAt": "2026-08-05",
+  "status": "retired",
+  "reason": "The current-schema-only retention review found zero findings across active state, published state, seed, retained recovery backups, and retained revisions; current-schema restore proof passed.",
+  "removedBehavior": [
+    "historical 403(b) block inventory reconciliation",
+    "historical 403(b) CTA, billboard, strategy, loan, and enrollment repair branches"
+  ],
+  "preservedBehavior": [
+    "current 403(b) route aliases",
+    "current 403(b) presentation class contract",
+    "current route rendering and admin editing"
+  ],
+  "verification": {
+    "activeFindings": 0,
+    "publishedFindings": 0,
+    "seedFindings": 0,
+    "retainedBackupFindings": 0,
+    "retainedRevisionFindings": 0,
+    "currentSchemaRestoreProof": "passed",
+    "storedContentMutated": false
+  },
+  "retirementCondition": "Do not restore this adapter unless a newly approved historical restore requirement is introduced."
+}

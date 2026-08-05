@@ -1,8 +1,5 @@
-@import url('https://use.typekit.net/nmy3epc.css');
-
 @import './styles/tokens.css';
 @import './styles/home-native.css';
-@import './styles/service-native.css';
 @import './styles/site-chatbot.css';
 
 *,
@@ -74,18 +71,9 @@ html.ag-browser-safari button.action-btn {
   background: #fff;
   border-bottom: 1px solid var(--ag-color-border-main);
   position: sticky;
-  margin-top: var(--ag-front-hud-page-workflow-height, 0px);
-  top: calc(env(safe-area-inset-top, 0px) + var(--ag-front-hud-page-workflow-height, 0px));
+  top: env(safe-area-inset-top, 0px);
   z-index: 90;
   overflow-x: clip;
-  transition:
-    margin-top 620ms cubic-bezier(0.22, 0.61, 0.36, 1),
-    top 620ms cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.site-nav.is-front-hud-revealing {
-  will-change: margin-top, top, transform;
-  animation: site-nav-front-hud-reveal 620ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 .site-nav-inner {
@@ -215,16 +203,6 @@ html.ag-browser-safari button.action-btn {
     transform: translateX(0) translateY(0);
   }
 }
-
-@keyframes site-nav-front-hud-reveal {
-  0% {
-    transform: translateY(-4px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
 
 .site-nav-toggle {
   margin-left: auto;
@@ -2448,7 +2426,8 @@ html.ag-browser-safari button.action-btn {
 
 
 .route-page-loading {
-  min-height: 40vh;
+  min-height: 100svh;
+  contain: layout paint;
 }
 
 .site-announcement-bar {
@@ -2969,6 +2948,33 @@ html.ag-browser-safari button.action-btn {
   font-size: 0.82rem;
 }
 
+.admin-page-save-bar-details {
+  display: inline-flex;
+  align-items: baseline;
+  margin-left: 0.15rem;
+  color: #667582;
+  font-size: 0.78rem;
+}
+
+.admin-page-save-bar-details > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.admin-page-save-bar-details-copy {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-left: 0.55rem;
+}
+
+.admin-page-save-bar-ownership-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-left: 0.55rem;
+}
+
 .admin-page-save-bar-actions {
   display: grid;
   gap: 0.55rem;
@@ -3030,6 +3036,32 @@ html.ag-browser-safari button.action-btn {
 .admin-page-save-bar-warning-meta .is-error {
   color: #b42318;
   font-weight: 700;
+}
+
+.admin-page-save-bar-advanced {
+  margin-top: 0.7rem;
+  border: 1px solid #d7e2e8;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.admin-page-save-bar-advanced > summary {
+  cursor: pointer;
+  padding: 0.55rem 0.75rem;
+  color: #4f6575;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-page-save-bar-advanced-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0 0.75rem 0.7rem;
+}
+
+.admin-page-save-bar-advanced .admin-page-save-bar-warning {
+  margin: 0 0.75rem 0.75rem;
 }
 
 @media (max-width: 1180px) {
@@ -5230,6 +5262,23 @@ html.ag-browser-safari button.action-btn {
   gap: 0.45rem 0.8rem;
   font-size: 0.8rem;
   color: #586875;
+}
+
+.admin-selected-block-action-message {
+  margin: 0 0 0.75rem;
+  color: #0c6653;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-block-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.admin-block-row-actions .action-btn {
+  white-space: nowrap;
 }
 
 .admin-selected-block-save-banner {
@@ -8051,9 +8100,30 @@ html.ag-browser-safari button.action-btn {
   gap: 0.75rem;
 }
 
+@media (min-width: 981px) {
+  .admin-request-form-step-card .admin-request-form-step-field > .admin-content-field-list {
+    max-width: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-request-form-step-card .admin-request-form-step-field > .admin-content-field-list > label {
+    grid-column: span 1;
+  }
+
+  .admin-request-form-step-card .admin-request-form-step-field > .admin-content-field-list > label.is-full,
+  .admin-request-form-step-card .admin-request-form-step-field > .admin-content-field-list > .admin-request-form-step-field-behavior {
+    grid-column: 1 / -1;
+  }
+}
+
 .admin-request-form-step-field {
   display: grid;
   gap: 0.6rem;
+}
+
+.admin-request-form-step-card .admin-request-form-step-field > .admin-cta-slot-remove {
+  justify-self: start;
+  width: fit-content;
 }
 
 .admin-request-form-step-field-behavior {

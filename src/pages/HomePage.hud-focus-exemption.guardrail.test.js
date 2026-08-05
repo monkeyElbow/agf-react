@@ -12,7 +12,7 @@ function readSource(relativePath) {
 
 describe('home page HUD focus exemption guardrail', () => {
   it('keeps managed home services and impact blocks exempt from the shared dim overlay when their HUD is active', () => {
-    const source = readSource('../styles/service-native.css');
+    const source = readSource('../styles/front-hud.css');
 
     expect(source).toContain('.home-native-page.has-active-front-hud-panel :is(');
     expect(source).toContain('.home-services-feature,');

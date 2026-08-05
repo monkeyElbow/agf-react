@@ -4,8 +4,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { serializeCtaFormFields } from '../../blocks/foundation/forms';
 
-vi.mock('../../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../../context/ContentAdminContext.jsx');
+vi.mock('../../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../../context/ContentAdminContextCore');
   return {
     ...actual,
     useContentAdmin: () => ({
@@ -90,6 +90,38 @@ describe('PageBlocksRenderer CTA form', () => {
     expect(form?.contains(callout)).toBe(true);
     expect(copy?.textContent).not.toContain('It starts with a conversation. We’re happy to reach out.');
     expect(screen.getByRole('button', { name: 'Follow up with me' })).toBeTruthy();
+  });
+
+  it('preserves the planned-giving CTA presentation contract and places copy beside the form', () => {
+    const { container } = renderCtaBlock({
+      id: 'cta_form',
+      type: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'We help every step of the way. Always.',
+        bodyHtml: '<p>Let’s map out the best strategy together.</p>',
+        fineprint: '* fields required',
+        subtitle: '',
+        sectionClassName: 'legacy-giving-cta',
+        submitLabel: 'Follow-up with me',
+        fieldsJson: ctaFieldsJson([
+          { id: 'name', label: 'Name*', type: 'text', required: true },
+          { id: 'message', label: 'Message', type: 'textarea' },
+        ]),
+      },
+    });
+
+    const section = container.querySelector('section.native-dynamic-cta');
+    const copy = container.querySelector('.native-info-section-copy');
+    const form = container.querySelector('.dynamic-cta-form form');
+    const callout = container.querySelector('.dynamic-cta-form-callout');
+
+    expect(section?.className).toContain('legacy-giving-cta');
+    expect(copy?.contains(callout)).toBe(true);
+    expect(form?.contains(callout)).toBe(false);
+    expect(form?.querySelector('.dynamic-cta-form-fineprint')?.textContent).toBe('* fields required');
+    expect(copy?.textContent).not.toContain('And we’re eager to help.');
   });
 
   it('renders CTA subtitle in the section copy above the form', () => {

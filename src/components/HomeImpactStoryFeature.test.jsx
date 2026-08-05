@@ -5,8 +5,8 @@ import { act, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../context/ContentAdminContext', async () => {
-  const actual = await vi.importActual('../context/ContentAdminContext.jsx');
+vi.mock('../context/ContentAdminContextCore', async () => {
+  const actual = await vi.importActual('../context/ContentAdminContextCore');
   return {
     ...actual,
     useContentAdmin: () => ({
@@ -179,6 +179,12 @@ describe('HomeImpactStoryFeature', () => {
     expect(stageQueries.queryByText('ministries served by loans')).toBeNull();
     expect(getMetricNode(getVisualStage(container), 'retirements planned')).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Because your mission is ours, too.' })).toBeNull();
+  });
+
+  it('keeps pinned-story measurement out of the pre-paint path', () => {
+    const source = readSource('./HomeImpactStoryFeature.jsx');
+    expect(source).not.toContain('useLayoutEffect');
+    expect(source).toContain('  useEffect(() => {');
   });
 
   it('measures the pinned story on mount before the first scroll event so the correct metric is ready immediately', () => {

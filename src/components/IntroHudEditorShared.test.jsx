@@ -60,6 +60,8 @@ describe('IntroHudEditorPanel', () => {
     const { container } = renderPanel({ bgTone: 'blue', textTone: 'white', justify: 'left' });
 
     expect(container.querySelector('.admin-intro-hud-heading-preview.is-bg-blue.is-text-white.is-justify-left')).toBeTruthy();
+    expect(container.querySelector('.admin-front-hud-intro-body-editor.is-bg-blue.is-text-white')).toBeTruthy();
+    expect(container.querySelector('.admin-intro-hud-card--body')?.className).not.toContain('is-bg-blue');
   });
 
   it('matches the preview heading color to the selected intro text tone when no swatch override is set', () => {
@@ -80,5 +82,40 @@ describe('IntroHudEditorPanel', () => {
     const previewHeading = container.querySelector('.admin-intro-hud-live-heading');
     expect(previewHeading.className).toContain('is-atlantean');
     expect(previewHeading.className).not.toContain('is-white');
+  });
+
+  it('keeps the pilot compact by removing redundant section headers and notes', () => {
+    renderPanel();
+
+    expect(screen.queryByText('Heading', { exact: true })).toBeNull();
+    expect(screen.queryByText('Body', { exact: true })).toBeNull();
+    expect(screen.queryByText('Layout', { exact: true })).toBeNull();
+    expect(screen.queryByText('Actions', { exact: true })).toBeNull();
+    expect(screen.queryByText('Click body copy on page to jump here.')).toBeNull();
+    expect(screen.queryByText('Optional line beneath the heading.')).toBeNull();
+    expect(document.querySelector('.admin-intro-hud-heading-group')?.parentElement?.className).toContain('admin-hud-editor-main');
+    expect(document.querySelector('.admin-intro-hud-accent-group')?.parentElement?.className).toContain('admin-hud-editor-main');
+  });
+
+  it('keeps highlight guidance inline with the highlight swatches', () => {
+    const { container } = renderPanel();
+    const inlineControl = container.querySelector('.admin-front-hud-text-highlight-inline');
+
+    expect(inlineControl).toBeTruthy();
+    expect(inlineControl?.querySelector('.admin-front-hud-note')?.textContent).toContain('Highlight text first');
+    expect(container.querySelectorAll('.admin-front-hud-note')).toHaveLength(1);
+  });
+
+  it('places layout controls above heading text and keeps actions in the settings rail', () => {
+    const { container } = renderPanel({ actionsSlot: <div data-testid="intro-actions-slot" /> });
+    const actions = screen.getByTestId('intro-actions-slot');
+    const layout = container.querySelector('.admin-intro-hud-layout-control-grid');
+    const heading = container.querySelector('.admin-intro-hud-heading-group');
+
+    expect(actions.parentElement?.className).toContain('admin-hud-editor-settings-rail');
+    expect(layout?.parentElement?.parentElement?.className).toContain('admin-hud-editor-main');
+    expect(layout?.compareDocumentPosition(heading)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
   });
 });

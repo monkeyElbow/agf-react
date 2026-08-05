@@ -12,7 +12,7 @@ function readSource(relativePath) {
 
 describe('block ownership overlay guardrail', () => {
   it('keeps the shared blue ownership overlay system wired into the page editor surfaces', () => {
-    const cssSource = readSource('../styles/service-native.css');
+    const cssSource = readSource('../styles/front-hud.css');
     const nativePageSource = readSource('./NativeContentPage.jsx');
     const homeRendererSource = readSource('./blocks/PageBlocksRenderer.jsx');
     const loansSource = readSource('../pages/LoansPage.jsx');

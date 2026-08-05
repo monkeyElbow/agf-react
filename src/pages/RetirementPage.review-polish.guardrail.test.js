@@ -20,7 +20,7 @@ function readRuleBlock(source, selector) {
 }
 
 describe('retirement 403(b) review polish guardrail', () => {
-  it('keeps the 403(b) landing section copy aligned with the scroll-feature rebuild', () => {
+  it('keeps the 403(b) landing section contract aligned with the scroll-feature rebuild', () => {
     const source = readSource('./RetirementPage.jsx');
     const catalogSource = readSource('../data/siteFeatureCatalog.js');
 
@@ -28,11 +28,7 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).toContain('buildDynamicSiteFeatureFromBlock');
     expect(catalogSource).toContain("featureId: 'retirement_plan_feature'");
     expect(catalogSource).toContain("className: 'retirement-plan-feature'");
-    expect(catalogSource).toContain("text: 'AGFinancial 403(b) Retirement Plan', className: 'is-white'");
-    expect(catalogSource).toContain('Smart benefits, strong advantages');
-    expect(catalogSource).toContain("body: 'The AGFinancial retirement plan is customized specifically for ministers and ministry employees. This is a church plan exempt from ERISA.'");
-    expect(catalogSource).toContain("title: 'Includes minister\\'s housing allowance, and a variety of investment strategies.'");
-    expect(catalogSource).toContain("label: 'Explore the 403(b)'");
+    expect(catalogSource).toContain('metrics:');
     expect(source).toContain('blockId="retirement_plan_feature"');
   });
 

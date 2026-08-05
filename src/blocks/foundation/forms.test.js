@@ -14,7 +14,6 @@ import {
   createInitialFormValues,
   formatFormPhoneInput,
   getCanonicalFormBlockBoundary,
-  getFormBlockCompatibilityFieldIds,
   getSharedFormConfigFieldIds,
   isFieldAllowedForFormBlock,
   normalizeFormSubmissionConfig,
@@ -44,7 +43,6 @@ describe('canonical form foundation', () => {
   it('keeps shared form primitives from collapsing block-specific field boundaries', () => {
     expect(getCanonicalFormBlockBoundary('cta_form')?.specificFieldIds).toContain('fieldsJson');
     expect(getCanonicalFormBlockBoundary('cta_form')?.specificFieldIds).not.toContain('field1Type');
-    expect(getFormBlockCompatibilityFieldIds('cta_form')).toContain('field1Type');
     expect(isFieldAllowedForFormBlock('cta_form', 'field1Type')).toBe(false);
     expect(isFieldAllowedForFormBlock('cta_form', 'step1FieldsJson')).toBe(false);
     expect(isFieldAllowedForFormBlock('request_form', 'step1FieldsJson')).toBe(true);
@@ -110,7 +108,7 @@ describe('canonical form foundation', () => {
     })).toBe('Missing Consent');
   });
 
-  it('supports structured CTA field definitions with slot compatibility syncing', () => {
+  it('supports structured CTA field definitions through canonical fieldsJson', () => {
     const fields = parseCtaFormFieldsJson(JSON.stringify([
       {
         id: 'full_name',
@@ -149,14 +147,8 @@ describe('canonical form foundation', () => {
       fieldsJson: serializeCtaFormFields(fields),
     })).toEqual(fields);
 
-    expect(extractCtaFormFields({
-      field1Enabled: true,
-      field1Label: 'Legacy slot field',
-      field1Type: 'text',
-    }, {
+    expect(extractCtaFormFields({}, {
       fieldsJson: serializeCtaFormFields(fields),
-    }, {
-      preferFallbackSourceBeforeSlotCompatibility: true,
     })).toEqual(fields);
 
     expect(buildCtaFormSettingsPatch({ fields, includeContactPreference: true })).toEqual({
@@ -164,24 +156,28 @@ describe('canonical form foundation', () => {
       fieldsJson: serializeCtaFormFields(fields),
     });
 
-    expect(buildCtaFormSettingsPatch({
-      fields,
-      includeContactPreference: true,
-      includeSlotCompatibility: true,
-    })).toMatchObject({
-      includeContactPreference: true,
-      fieldsJson: serializeCtaFormFields(fields),
-      field1Enabled: true,
-      field1Label: 'Full name',
-      field2Type: 'select',
-      field2Options: 'planning|Planning\ngiving|Giving',
-    });
-
     expect(createCtaContactPreferenceField()).toMatchObject({
       id: 'contact_preference',
       label: 'Preferred contact method',
       type: 'select',
     });
+  });
+
+  it('requires canonical CTA fieldsJson and does not read retired slot fields', () => {
+    const canonicalFields = [{
+      id: 'approved_interest',
+      label: 'Product of interest',
+      type: 'select',
+      options: [{ value: 'cga', label: 'CGA' }],
+    }];
+    const settings = { fieldsJson: serializeCtaFormFields(canonicalFields) };
+
+    expect(extractCtaFormFields(settings)).toEqual(parseCtaFormFieldsJson(settings.fieldsJson));
+    expect(extractCtaFormFields({
+      field1Enabled: true,
+      field1Label: 'Retired slot field',
+      field1Type: 'text',
+    })).toEqual([]);
   });
 
   it('keeps common CTA seed presets authored with canonical fieldsJson', () => {

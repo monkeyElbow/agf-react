@@ -1,11 +1,14 @@
 /* eslint-disable react-hooks/static-components */
-import { useRef, useState } from 'react';
+import { createContext, useContext, useRef, useState } from 'react';
+import * as ContentAdminContextModule from '../context/ContentAdminContext';
 import { isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
+import HudBlockOptions from './HudBlockOptions';
 import {
   FieldControlGrid,
 } from '../pages/AdminContentPage';
 import { getMigratedBlockEditorComponent } from './block-editors/migratedBlockEditors';
-import CtaHudEditorPanel, { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from './CtaHudEditorPanel';
+import CtaHudEditorPanel from './CtaHudEditorPanel';
+import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import { getBlockHudDefinition } from '../lib/blockHudRegistry';
 import {
   applySelectionColor,
@@ -18,6 +21,16 @@ import {
   extractCtaFormFields,
 } from '../blocks/foundation/forms';
 
+const EmptyContentAdminContext = createContext(null);
+
+function readOptionalModuleExport(module, exportName) {
+  try {
+    return module?.[exportName] || null;
+  } catch {
+    return null;
+  }
+}
+
 export default function BlockHudPanelHost({
   block,
   pathname = '',
@@ -26,10 +39,17 @@ export default function BlockHudPanelHost({
   ratesContext = null,
   ownership = null,
   onOwnershipAction = null,
+  onReleaseDraft = null,
+  onPublishBlock = null,
+  showWorkflowActions = true,
+  showPublishAction = true,
   onSettingChange,
 }) {
   const ctaTitleInputRef = useRef(null);
   const [ctaTitleSelection, setCtaTitleSelection] = useState({ start: 0, end: 0, text: '' });
+  const contentAdmin = useContext(
+    readOptionalModuleExport(ContentAdminContextModule, 'ContentAdminContext') || EmptyContentAdminContext,
+  );
 
   if (!block || typeof onSettingChange !== 'function') {
     return null;
@@ -41,6 +61,16 @@ export default function BlockHudPanelHost({
   const settings = block.settings || {};
   const ctaFields = extractCtaFormFields(settings);
   const isForeignOwned = isForeignOwnedBlockOwnership(ownership);
+  const releaseDraft = onReleaseDraft || (
+    typeof contentAdmin?.releaseActiveBlockDraft === 'function'
+      ? (force = false) => contentAdmin.releaseActiveBlockDraft(pathname, block.id, { force })
+      : null
+  );
+  const publishBlock = onPublishBlock || (
+    typeof contentAdmin?.publishSharedBlockNow === 'function'
+      ? () => contentAdmin.publishSharedBlockNow(pathname, block.id, 'HUD block publish')
+      : null
+  );
   const blockedOnSettingChange = isForeignOwned
     ? () => {}
     : onSettingChange;
@@ -49,7 +79,7 @@ export default function BlockHudPanelHost({
       state: ownership.state,
       label: ownership.overlayLabel || 'Unpublished draft by another admin',
       detail: `${ownership.overlayDetail ? `${ownership.overlayDetail}. ` : ''}This draft is not live yet.`,
-      actionLabel: typeof onOwnershipAction === 'function' ? 'Continue draft' : '',
+      actionLabel: typeof onOwnershipAction === 'function' ? 'Take over draft' : '',
     }
     : ownership?.state === 'editing-other'
       ? {
@@ -86,17 +116,22 @@ export default function BlockHudPanelHost({
         <strong>{hudOwnershipNotice.label}</strong>
         <span>{hudOwnershipNotice.detail}</span>
       </div>
-      {hudOwnershipNotice.actionLabel ? (
-        <button
-          type="button"
-          className="action-btn action-btn-outline"
-          onClick={onOwnershipAction}
-        >
-          {hudOwnershipNotice.actionLabel}
-        </button>
-      ) : null}
     </div>
   ) : null;
+
+  const blockOptionsMarkup = (
+    <HudBlockOptions
+      block={block}
+      pathname={pathname}
+      ownership={ownership}
+      contentAdmin={contentAdmin}
+      showWorkflowActions={showWorkflowActions}
+      showPublishAction={showPublishAction}
+      onOwnershipAction={onOwnershipAction}
+      onReleaseDraft={releaseDraft}
+      onPublishBlock={publishBlock}
+    />
+  );
 
   const renderReadOnlyShell = (content) => (
     <fieldset
@@ -119,6 +154,7 @@ export default function BlockHudPanelHost({
         {ownershipNoticeMarkup}
         {renderReadOnlyShell(
           <MigratedHudEditor
+            key={block.id}
             block={block}
             pathname={pathname}
             routeOptions={routeOptions}
@@ -127,6 +163,7 @@ export default function BlockHudPanelHost({
             onSettingChange={blockedOnSettingChange}
           />,
         )}
+        {blockOptionsMarkup}
       </>
     );
   }
@@ -134,9 +171,9 @@ export default function BlockHudPanelHost({
   switch (definition.editorType) {
     case 'cta_form':
       return (
-        <>
-          {ownershipNoticeMarkup}
-          {renderReadOnlyShell(
+      <>
+        {ownershipNoticeMarkup}
+        {renderReadOnlyShell(
             <CtaHudEditorPanel
               settings={settings}
               bgTone={String(settings.bgTone || 'white')}
@@ -198,6 +235,7 @@ export default function BlockHudPanelHost({
               }}
             />,
           )}
+          {blockOptionsMarkup}
         </>
       );
     default:
@@ -206,6 +244,7 @@ export default function BlockHudPanelHost({
           <>
             {ownershipNoticeMarkup}
             <p className="admin-front-hud-note">This dynamic block does not have HUD-editable fields yet.</p>
+            {blockOptionsMarkup}
           </>
         );
       }
@@ -220,6 +259,7 @@ export default function BlockHudPanelHost({
               routeOptions={routeOptions}
             />,
           )}
+          {blockOptionsMarkup}
         </>
       );
   }

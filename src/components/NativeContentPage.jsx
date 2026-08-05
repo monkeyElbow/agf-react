@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createContext, lazy, Suspense, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
-import BlockHudPanelHost from './BlockHudPanelHost';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import FrontHudPageWorkflow from './FrontHudPageWorkflow';
 import MobileFrontHudActionTray from './MobileFrontHudActionTray';
@@ -18,7 +18,8 @@ import { useCareersJobs } from '../context/CareersJobsContext';
 import { useCharts } from '../context/ChartsContext';
 import { useDisclosures } from '../context/DisclosuresContext';
 import { useRates } from '../context/RatesContext';
-import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentAdminContext';
+import { inspectDynamicHeroSettings } from '../lib/dynamicHeroSettings';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useDocuments } from '../context/DocumentsContext';
 import { useConsultantResponses } from '../context/ConsultantResponsesContext';
 import { useFrontHud } from '../context/FrontHudContext';
@@ -72,6 +73,7 @@ import {
 import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { normalizeBlockForRender } from '../lib/blockPresentationContracts';
 import { buildNativeHudPanels } from '../lib/nativeHudPanels';
+import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import GivingComparisonMatrix from './GivingComparisonMatrix';
 import CharitableGiftTestDriveWidget from './CharitableGiftTestDriveWidget';
@@ -189,6 +191,7 @@ const US_STATE_LABELS = {
 };
 
 const MOBILE_FRONT_HUD_MEDIA_QUERY = '(max-width: 760px)';
+const BlockHudPanelHost = lazy(() => import('./BlockHudPanelHost'));
 
 function stateOptionLabel(code) {
   return `${US_STATE_LABELS[code] || code} (${code})`;
@@ -314,9 +317,13 @@ function resolveInlineCtaRevealAction(item, lookup) {
 
   const source = item && typeof item === 'object' ? item : {};
   const hasExplicitRevealAction = String(source.action || '').trim().toLowerCase() === CTA_REVEAL_ACTION_TYPE;
+  if (!hasExplicitRevealAction) {
+    return null;
+  }
+
   const targetKeys = collectInlineCtaTargetKeys(source);
 
-  if (!hasExplicitRevealAction && !targetKeys.length) {
+  if (!targetKeys.length) {
     return null;
   }
 
@@ -330,6 +337,53 @@ function resolveInlineCtaRevealAction(item, lookup) {
         targetEntry,
       }
     : null;
+}
+
+function getSamePageAnchorHref(resolved) {
+  const href = String(resolved?.href || '').trim();
+  if (href.startsWith('#') && href.length > 1) {
+    return href;
+  }
+
+  const to = String(resolved?.to || '').trim();
+  return to.startsWith('#') && to.length > 1 ? to : '';
+}
+
+function scrollToSamePageAnchor(event, href) {
+  if (
+    event?.defaultPrevented
+    || event?.button !== undefined && event.button !== 0
+    || event?.metaKey
+    || event?.ctrlKey
+    || event?.shiftKey
+    || event?.altKey
+    || typeof window === 'undefined'
+    || typeof document === 'undefined'
+  ) {
+    return;
+  }
+
+  const anchorId = String(href || '').slice(1);
+  let target = null;
+  try {
+    target = document.getElementById(decodeURIComponent(anchorId));
+  } catch {
+    return;
+  }
+  if (!target) {
+    return;
+  }
+
+  event.preventDefault();
+  const nav = document.querySelector('.site-nav');
+  const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  const top = target.getBoundingClientRect().top + window.scrollY - navHeight - 8;
+  window.scrollTo({
+    top: Math.max(0, top),
+    behavior: prefersReducedMotion ? 'auto' : 'smooth',
+  });
+  window.history?.replaceState?.(null, '', href);
 }
 
 function isInlineCtaSectionShape(section) {
@@ -376,17 +430,21 @@ function Action({ item }) {
     to: resolved?.to,
     external: resolved?.external,
     documentUrl: resolved?.document?.url,
+    buttonStyle: item?.style,
   })
     ? normalizeUniversalOutlineButtonClassName(baseButtonClass, item?.tone || 'atlantean')
     : baseButtonClass;
   const revealAction = resolveInlineCtaRevealAction(item, inlineCtaReveal?.lookup);
   const targetBlank = Boolean(resolved && (resolved.external || resolved.openInNewWindow));
   const relAttr = targetBlank ? 'noreferrer noopener' : undefined;
+  const samePageAnchorHref = getSamePageAnchorHref(resolved);
   const onClick = revealAction
     ? (event) => {
         event.preventDefault();
         inlineCtaReveal?.onReveal?.(revealAction.targetEntry);
       }
+    : samePageAnchorHref
+      ? (event) => scrollToSamePageAnchor(event, samePageAnchorHref)
     : undefined;
 
   if (revealAction && !resolved?.href && !resolved?.to && !item?.to) {
@@ -519,6 +577,7 @@ function NativeLink({ item, className, children }) {
     to: resolved?.to,
     external: resolved?.external,
     documentUrl: resolved?.document?.url,
+    buttonStyle: item?.style,
   })
     ? normalizeUniversalOutlineButtonClassName(baseClassName, item?.tone || 'atlantean')
     : (baseClassName || undefined);
@@ -526,11 +585,14 @@ function NativeLink({ item, className, children }) {
   const label = children ?? resolved.label ?? item?.label;
   const targetBlank = Boolean(resolved && (resolved.external || resolved.openInNewWindow));
   const relAttr = targetBlank ? 'noreferrer noopener' : undefined;
+  const samePageAnchorHref = getSamePageAnchorHref(resolved);
   const onClick = revealAction
     ? (event) => {
         event.preventDefault();
         inlineCtaReveal?.onReveal?.(revealAction.targetEntry);
       }
+    : samePageAnchorHref
+      ? (event) => scrollToSamePageAnchor(event, samePageAnchorHref)
     : undefined;
 
   if (revealAction && !resolved?.href && !resolved?.to && !item?.to) {
@@ -811,42 +873,6 @@ function getHeroRailInlineStyle(hero) {
   };
 }
 
-function buildTestDynamicHero(block) {
-  const runtime = buildDynamicHeroFromBlock(block);
-  if (!runtime) {
-    return null;
-  }
-
-  const settings = block.settings || {};
-  const heightMode = normalizeHeroHeightMode(settings.heightMode);
-  const heightSvh = normalizeHeroHeightSvh(settings.heightSvh);
-  const lines = runtime.lines.map((line) => {
-    const lineKey = `line${line.id}`;
-    return {
-      title: line.text,
-      className: String(line.className || NATIVE_HERO_LINE_CLASS_FALLBACKS[lineKey] || lineKey).trim() || lineKey,
-      highlights: Array.isArray(line.highlights) ? line.highlights : [],
-    };
-  });
-  const actions = Array.isArray(runtime.actions)
-    ? runtime.actions.map((action) => toNativeActionItem(action)).filter(Boolean)
-    : [];
-
-  return {
-    lines,
-    animationPreset: normalizeHeroAnimationPreset(runtime.animationPreset),
-    bgTone: normalizeHeroBgTone(runtime.bgTone),
-    justify: normalizeHeroJustify(runtime.justify),
-    titleSizeRem: normalizeHeroTitleSizeRem(runtime.titleSizeRem),
-    heightMode,
-    heightSvh,
-    lineGap: normalizeHeroLineGapEm(runtime.lineGap),
-    lineHeight: normalizeHeroLineHeightEm(runtime.lineHeight),
-    actions,
-    actionJustify: normalizeHeroJustify(runtime.actionJustify || runtime.justify || 'left'),
-  };
-}
-
 function toActionLinkConfig(label, url, style, tone, pageRef, resolvePathFromRef, forceExternal = false) {
   const nextLabel = String(label || '').trim();
   const nextUrl = String(url || '').trim();
@@ -997,6 +1023,7 @@ function buildDynamicPageContentSection(block, pathname) {
 
   const {
     title,
+    titleHtml,
     titleClassName,
     titleHighlights,
     headingLevel,
@@ -1040,12 +1067,13 @@ function buildDynamicPageContentSection(block, pathname) {
   return {
     id: `${pathname}-page-content-${blockId}`,
     blockId: String(block?.id || '').trim() || undefined,
-    hideTitle: !title,
+    hideTitle: !title && !titleHtml,
     anchorId: anchorId || undefined,
     className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}`,
     fullBleed: Boolean(fullBleed),
     railClassName: railClassName || undefined,
     title,
+    titleHtml,
     titleClassName: titleClassName || undefined,
     titleHighlights: Array.isArray(titleHighlights) ? titleHighlights : [],
     headingLevel: headingLevel === 'h1' ? 'h1' : 'h2',
@@ -1116,6 +1144,14 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
   } = runtime;
   const hasIntroCopy = Boolean(title || body || bodyHtml);
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-grid' : 'native-dynamic-grid';
+  const sectionClassTokens = sectionClassName.split(/\s+/).filter(Boolean);
+  const isLegacyAssetGrid = sectionClassTokens.includes('legacy-child-native-assets');
+  const cardLayout = (
+    sectionClassTokens.includes('legacy-child-native-trust-choices--trusts')
+    || sectionClassTokens.includes('legacy-child-native-cga-options')
+  )
+    ? 'certificate'
+    : '';
   const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('card_grid', presetId);
   const consultantCards = consultantService
     ? buildConsultantCards({
@@ -1142,6 +1178,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       pagePath: card.pagePath,
       inquiryLabel: card.inquiryLabel,
       body: card.body,
+      bodySegments: card.bodySegments,
       list: Array.isArray(card.list) ? card.list : undefined,
       fineprint: card.fineprint || undefined,
       iconKey: card.iconKey || '',
@@ -1177,6 +1214,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     actions: (Array.isArray(actions) ? actions : []).map((action) => toNativeActionItem(action)).filter(Boolean),
     locationFilter: locationFilter || undefined,
     focusMessageCard: Boolean(locationFilter?.focusMessageCard),
+    cardLayout,
     cards,
     sectionStyle: {
       '--dynamic-grid-card-padding': `${cardPaddingRem}rem`,
@@ -1184,7 +1222,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
     },
-    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-divider-tone-${dividerTone} ${presetRuntimeClassName}${cardStyle === 'none' ? ' is-card-none' : ''}${showTitleDivider ? ' is-divider-on' : ' is-divider-off'}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-divider-tone-${dividerTone} ${presetRuntimeClassName}${cardStyle === 'none' ? ' is-card-none' : ''}${showTitleDivider && !isLegacyAssetGrid ? ' is-divider-on' : ' is-divider-off'}`,
   };
 }
 
@@ -4464,18 +4502,42 @@ export default function NativeContentPage({ page }) {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
-  const managedBlocksByPath = authoringBlocksByPath || blocksByPath;
-  const managedPageHierarchy = authoringPageHierarchy || pageHierarchy;
-  const managedResolveManagedPathFromRef = resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef;
+  const {
+    blocksByPath: managedBlocksByPath,
+    pageHierarchy: managedPageHierarchy,
+    hasAuthoringBlocksForPath,
+  } = selectFrontHudContentSource({
+    enabled: frontHudEnabled,
+    pathname: activePath,
+    fallbackPathname: templatePath,
+    authoringBlocksByPath,
+    blocksByPath,
+    authoringPageHierarchy,
+    pageHierarchy,
+  });
+  const managedResolveManagedPathFromRef = frontHudEnabled && hasAuthoringBlocksForPath
+    ? (resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef)
+    : resolveManagedPathFromRef;
   const { addResponse } = useConsultantResponses();
   const { testimonials: testimonialsLibrary } = useTestimonials();
   const baseNativeContent = getNativePageContent(templatePath, page.title);
-  const baseContent = isBlockOnlyManagedPage
-    ? toBlockOnlyManagedPageShell(baseNativeContent)
-    : baseNativeContent;
   const editableBlockPath = managedBlocksByPath[activePath]
     ? activePath
     : (managedBlocksByPath[templatePath] ? templatePath : '');
+  const hasManagedBlockSource = Boolean(editableBlockPath);
+  const shouldUseBlockOnlyShell = isBlockOnlyManagedPage
+    && (!frontHudEnabled || hasAuthoringBlocksForPath || hasManagedBlockSource);
+  const baseContent = shouldUseBlockOnlyShell
+    ? toBlockOnlyManagedPageShell(baseNativeContent)
+    : hasManagedBlockSource
+      ? {
+        ...baseNativeContent,
+        hero: null,
+        intro: null,
+        preIntroSections: [],
+        sections: [],
+      }
+      : baseNativeContent;
   const editablePageBlocksSource = editableBlockPath ? (managedBlocksByPath[editableBlockPath] || []) : [];
   const { blocks: editablePageBlocks, stageLocalBlockSetting, stageLocalBlockSettings } = useLocalBlockDrafts({
     pathname: editableBlockPath,
@@ -4509,23 +4571,7 @@ export default function NativeContentPage({ page }) {
     const visibleBlocks = pageBlocks.filter((block) => !toBoolean(block?.hidden));
     const heroBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'hero');
 
-    if (isTestPage) {
-      const introBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'intro');
-      const adminHero = buildTestDynamicHero(heroBlock);
-      const adminIntro = buildNativeIntroConfig(introBlock, { includeTestClassName: true });
-      if (adminHero) {
-        nextBaseContent = {
-          ...nextBaseContent,
-          hero: adminHero,
-        };
-      }
-      if (adminIntro) {
-        nextBaseContent = {
-          ...nextBaseContent,
-          intro: adminIntro,
-        };
-      }
-    } else if (!isBlockOnlyManagedPage) {
+    if (!isBlockOnlyManagedPage) {
       const adminHero = buildDynamicHeroFromBlock(heroBlock);
       if (adminHero) {
         nextBaseContent = {
@@ -4796,7 +4842,7 @@ export default function NativeContentPage({ page }) {
   const compactClass = content.compact ? ' is-compact' : '';
   const hideHero = Boolean(content.hideHero);
   const hideIntro = Boolean(content.hideIntro);
-  const shouldRenderHero = !isBlockOnlyManagedPage && !hideHero;
+  const shouldRenderHero = !isBlockOnlyManagedPage && !hideHero && Boolean(heroBase);
   const shouldRenderIntro = !isBlockOnlyManagedPage && !hideIntro && hasIntroContent;
   const legalDoc = content?.legalDocument || null;
   const visibleEditablePageBlocks = useMemo(
@@ -4832,6 +4878,7 @@ export default function NativeContentPage({ page }) {
   const showFrontHud = frontHudEnabled && hudDockPanels.length > 0;
   const isMobileFrontHud = showFrontHud && isMobileFrontHudViewport;
   const adminHudEditPath = resolvedPagePath;
+  const hudContentPath = editableBlockPath || adminHudEditPath;
   const adminHudEditHref = `/admin/content?page=${encodeURIComponent(adminHudEditPath)}`;
   const heroInspection = useMemo(
     () => (dynamicHeroBlock ? inspectDynamicHeroSettings(adminHudEditPath, dynamicHeroBlock.settings) : null),
@@ -4851,11 +4898,14 @@ export default function NativeContentPage({ page }) {
   );
   const renderedHero = dynamicHeroBlock
     ? {
-      ...(heroBase || {}),
+      ...(hasManagedBlockSource ? {} : (heroBase || {})),
       ...(renderedDynamicHero || {}),
       bgTone: renderedDynamicHero?.bgTone || heroHudSettings.bgTone,
       justify: renderedDynamicHero?.justify || heroHudSettings.justify,
-      actionJustify: renderedDynamicHero?.actionJustify || heroHudSettings.actionJustify || heroBase?.actionJustify || heroHudSettings.justify,
+      actionJustify: renderedDynamicHero?.actionJustify
+        || heroHudSettings.actionJustify
+        || (hasManagedBlockSource ? undefined : heroBase?.actionJustify)
+        || heroHudSettings.justify,
       titleSizeRem: renderedDynamicHero?.titleSizeRem || heroHudSettings.titleSizeRem,
       titleLetterSpacingEm: renderedDynamicHero?.titleLetterSpacingEm ?? heroHudSettings.titleLetterSpacingEm,
       lineHeight: renderedDynamicHero?.lineHeight || heroHudSettings.lineHeight,
@@ -4863,9 +4913,9 @@ export default function NativeContentPage({ page }) {
       heightSvh: heroHudSettings.heightSvh,
       actions: Array.isArray(renderedDynamicHero?.actions)
         ? renderedDynamicHero.actions.map((action) => toNativeActionItem(action)).filter(Boolean)
-        : (Array.isArray(heroBase?.actions) ? heroBase.actions : []),
+        : (hasManagedBlockSource ? [] : (Array.isArray(heroBase?.actions) ? heroBase.actions : [])),
     }
-    : heroBase;
+    : (hasManagedBlockSource ? null : heroBase);
   const renderedHeroBgTone = normalizeHeroBgTone(renderedHero?.bgTone);
   const renderedHeroJustify = normalizeHeroJustify(renderedHero?.justify);
   const heroActions = Array.isArray(renderedHero?.actions) ? renderedHero.actions : [];
@@ -5675,7 +5725,7 @@ export default function NativeContentPage({ page }) {
                 ) : (
                   <span className="admin-front-hud-dock-tab-fallback" aria-hidden="true">{panel.label.slice(0, 1)}</span>
                 )}
-                <span className="admin-front-hud-visually-hidden">{panel.label}</span>
+                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
               </button>
             ))}
           </div>
@@ -5694,9 +5744,7 @@ export default function NativeContentPage({ page }) {
           </div>
         </aside>
       ) : null}
-      {showFrontHud && hudDockPanels.length ? (
-        <FrontHudPageWorkflow pathname={adminHudEditPath} reviewHref={adminHudEditHref} placement="bar" />
-      ) : null}
+      <FrontHudPageWorkflow pathname={adminHudEditPath} reviewHref={adminHudEditHref} placement="bar" isVisible={showFrontHud && hudDockPanels.length > 0} />
       {shouldRenderHero ? (
         <section
           ref={dynamicHeroBlock ? heroHudSectionRef : undefined}
@@ -5749,6 +5797,7 @@ export default function NativeContentPage({ page }) {
           {showHeroHud && !isMobileFrontHud ? (
             <FrontHudAnchorTag
               label={heroHudPanel?.label || 'Hero'}
+              icon={heroHudPanel?.icon}
               isActive={isHudPanelVisible(heroHudPanelId)}
               onClick={() => toggleHudPanel(heroHudPanelId, { scrollToTarget: true })}
               style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
@@ -5894,6 +5943,7 @@ export default function NativeContentPage({ page }) {
           {showIntroHud && !isMobileFrontHud ? (
             <FrontHudAnchorTag
               label={introHudPanel?.label || 'Intro'}
+              icon={introHudPanel?.icon}
               isActive={isHudPanelVisible(introHudPanelId)}
               onClick={() => toggleHudPanel(introHudPanelId, { scrollToTarget: true })}
               layerClassName="is-intro"
@@ -5939,16 +5989,30 @@ export default function NativeContentPage({ page }) {
           ? filteredCards.filter((card) => card.title === activeMessageCard)
           : filteredCards;
         const sectionClassName = String(section.className || '');
+        const productParadeCardStyle = sectionClassName.includes('legacy-giving-types')
+            ? {
+              paddingTop: '1rem',
+              paddingRight: '3rem',
+              paddingBottom: '4rem',
+              paddingLeft: '3rem',
+            }
+          : undefined;
         const cardsPresetToken = String(section.cardsPreset || '').trim().toLowerCase();
         const formVariant = String(section?.form?.variant || '').trim().toLowerCase();
         const SectionTitleTag = section.headingLevel === 'h1' ? 'h1' : 'h2';
         const SectionLogoComponent = typeof section.logoComponent === 'function' ? section.logoComponent : null;
         const isInlineCtaSection = isInlineCtaSectionShape(section);
+        const initialCtaPresentation = getInlineCtaPresentationRuntime(section);
+        const inlineCtaShouldOwnCopy = initialCtaPresentation.isExternalInlineReveal;
         const resolvedFormConfig = isInlineCtaSection
           ? {
               ...section.form,
-              title: String(section.form.title || section.title || '').trim(),
-              subtitle: String(section.form.subtitle || section.subtitle || '').trim(),
+              title: inlineCtaShouldOwnCopy
+                ? String(section.form.title || section.title || '').trim()
+                : String(section.form.title || '').trim(),
+              subtitle: inlineCtaShouldOwnCopy
+                ? String(section.form.subtitle || section.subtitle || '').trim()
+                : String(section.form.subtitle || '').trim(),
             }
           : section.form;
         const ctaPresentation = getInlineCtaPresentationRuntime({
@@ -5956,7 +6020,7 @@ export default function NativeContentPage({ page }) {
           form: resolvedFormConfig,
         });
         const isLegacyHighlightColumns = section.columnsStyle === 'legacy-highlight';
-        const showSectionCopy = !section.hideCopy && !isInlineCtaSection;
+        const showSectionCopy = !section.hideCopy && (!isInlineCtaSection || !ctaPresentation.isExternalInlineReveal);
         const isValueCardsFeatureSection = cardsPresetToken === 'value-cards';
         const shouldShowValueCardsSurface = isValueCardsFeatureSection && section.cardsPresetSurface !== false;
         const shouldAnimateValueCardsTitle = isValueCardsFeatureSection && section.cardsPresetAnimateTitle !== false;
@@ -6023,6 +6087,7 @@ export default function NativeContentPage({ page }) {
         const showCtaSectionHud = isDynamicCtaSection && showSectionHud;
         const showPageContentSectionHud = isDynamicPageContentSection && showSectionHud;
         const showRequestSectionHud = isDynamicRequestSection && showSectionHud;
+        const useCertificateCardLayout = section.cardLayout === 'certificate';
 
         if (section.nativeHero) {
           const sectionHero = dynamicSectionBlockId === String(dynamicHeroBlock?.id || '').trim()
@@ -6102,6 +6167,7 @@ export default function NativeContentPage({ page }) {
               {showSectionHud && !isMobileFrontHud ? (
                 <FrontHudAnchorTag
                   label={dynamicSectionPanel?.label || 'Hero'}
+                  icon={dynamicSectionPanel?.icon}
                   isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
                   onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                   layerClassName="is-hero"
@@ -6216,6 +6282,7 @@ export default function NativeContentPage({ page }) {
               {showSectionHud && !isMobileFrontHud ? (
                 <FrontHudAnchorTag
                   label={dynamicSectionPanel?.label || 'Intro'}
+                  icon={dynamicSectionPanel?.icon}
                   isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
                   onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                   layerClassName="is-intro"
@@ -6256,6 +6323,7 @@ export default function NativeContentPage({ page }) {
               {showSectionHud && !isMobileFrontHud ? (
                 <FrontHudAnchorTag
                   label={dynamicSectionPanel?.label || 'Section'}
+                  icon={dynamicSectionPanel?.icon}
                   isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
                   onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                   style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
@@ -6296,6 +6364,7 @@ export default function NativeContentPage({ page }) {
               {showSectionHud && !isMobileFrontHud ? (
                 <FrontHudAnchorTag
                   label={dynamicSectionPanel?.label || 'Section'}
+                  icon={dynamicSectionPanel?.icon}
                   isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
                   onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                   style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
@@ -6377,6 +6446,7 @@ export default function NativeContentPage({ page }) {
               {showSectionHud && !isMobileFrontHud ? (
                 <FrontHudAnchorTag
                   label={dynamicSectionPanel?.label || 'Section'}
+                  icon={dynamicSectionPanel?.icon}
                   isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
                   onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                   style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
@@ -6452,23 +6522,43 @@ export default function NativeContentPage({ page }) {
                   data-fade-root-margin={section.copyFadeRootMargin || undefined}
                 >
                   {!section.hideTitle ? (
-                    <SectionTitleTag
-                      className={[
-                        section.titleClassName || '',
-                        shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
-                      ].filter(Boolean).join(' ') || undefined}
-                      style={section.titleStyle || undefined}
-                      data-investments-growth-reveal={shouldAnimateValueCardsTitle ? 'title' : undefined}
-                      data-investments-growth-start-vh={shouldAnimateValueCardsTitle ? '0.98' : undefined}
-                      data-investments-growth-end-vh={shouldAnimateValueCardsTitle ? '0.48' : undefined}
-                      data-investments-growth-anchor-ratio={shouldAnimateValueCardsTitle ? '0.22' : undefined}
-                      data-investments-growth-anchor-max-px={shouldAnimateValueCardsTitle ? '120' : undefined}
-                      data-investments-growth-min-opacity={shouldAnimateValueCardsTitle ? '0.24' : undefined}
-                      data-investments-growth-base-scale={shouldAnimateValueCardsTitle ? '0.945' : undefined}
-                      data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
-                    >
-                      {renderHighlightedText(section.title, section.titleHighlights)}
-                    </SectionTitleTag>
+                    section.titleHtml ? (
+                      <SafeRichText
+                        as={SectionTitleTag}
+                        html={section.titleHtml}
+                        className={[
+                          section.titleClassName || '',
+                          shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
+                        ].filter(Boolean).join(' ') || undefined}
+                        style={section.titleStyle || undefined}
+                        data-investments-growth-reveal={shouldAnimateValueCardsTitle ? 'title' : undefined}
+                        data-investments-growth-start-vh={shouldAnimateValueCardsTitle ? '0.98' : undefined}
+                        data-investments-growth-end-vh={shouldAnimateValueCardsTitle ? '0.48' : undefined}
+                        data-investments-growth-anchor-ratio={shouldAnimateValueCardsTitle ? '0.22' : undefined}
+                        data-investments-growth-anchor-max-px={shouldAnimateValueCardsTitle ? '120' : undefined}
+                        data-investments-growth-min-opacity={shouldAnimateValueCardsTitle ? '0.24' : undefined}
+                        data-investments-growth-base-scale={shouldAnimateValueCardsTitle ? '0.945' : undefined}
+                        data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
+                      />
+                    ) : (
+                      <SectionTitleTag
+                        className={[
+                          section.titleClassName || '',
+                          shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
+                        ].filter(Boolean).join(' ') || undefined}
+                        style={section.titleStyle || undefined}
+                        data-investments-growth-reveal={shouldAnimateValueCardsTitle ? 'title' : undefined}
+                        data-investments-growth-start-vh={shouldAnimateValueCardsTitle ? '0.98' : undefined}
+                        data-investments-growth-end-vh={shouldAnimateValueCardsTitle ? '0.48' : undefined}
+                        data-investments-growth-anchor-ratio={shouldAnimateValueCardsTitle ? '0.22' : undefined}
+                        data-investments-growth-anchor-max-px={shouldAnimateValueCardsTitle ? '120' : undefined}
+                        data-investments-growth-min-opacity={shouldAnimateValueCardsTitle ? '0.24' : undefined}
+                        data-investments-growth-base-scale={shouldAnimateValueCardsTitle ? '0.945' : undefined}
+                        data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
+                      >
+                        {renderHighlightedText(section.title, section.titleHighlights)}
+                      </SectionTitleTag>
+                    )
                   ) : null}
                   {section.subtitle ? (
                     <h3
@@ -6525,23 +6615,43 @@ export default function NativeContentPage({ page }) {
               ) : (
                 <>
                   {!section.hideTitle ? (
-                    <SectionTitleTag
-                      className={[
-                        section.titleClassName || '',
-                        shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
-                      ].filter(Boolean).join(' ') || undefined}
-                      style={section.titleStyle || undefined}
-                      data-investments-growth-reveal={shouldAnimateValueCardsTitle ? 'title' : undefined}
-                      data-investments-growth-start-vh={shouldAnimateValueCardsTitle ? '0.98' : undefined}
-                      data-investments-growth-end-vh={shouldAnimateValueCardsTitle ? '0.48' : undefined}
-                      data-investments-growth-anchor-ratio={shouldAnimateValueCardsTitle ? '0.22' : undefined}
-                      data-investments-growth-anchor-max-px={shouldAnimateValueCardsTitle ? '120' : undefined}
-                      data-investments-growth-min-opacity={shouldAnimateValueCardsTitle ? '0.24' : undefined}
-                      data-investments-growth-base-scale={shouldAnimateValueCardsTitle ? '0.945' : undefined}
-                      data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
-                    >
-                      {renderHighlightedText(section.title, section.titleHighlights)}
-                    </SectionTitleTag>
+                    section.titleHtml ? (
+                      <SafeRichText
+                        as={SectionTitleTag}
+                        html={section.titleHtml}
+                        className={[
+                          section.titleClassName || '',
+                          shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
+                        ].filter(Boolean).join(' ') || undefined}
+                        style={section.titleStyle || undefined}
+                        data-investments-growth-reveal={shouldAnimateValueCardsTitle ? 'title' : undefined}
+                        data-investments-growth-start-vh={shouldAnimateValueCardsTitle ? '0.98' : undefined}
+                        data-investments-growth-end-vh={shouldAnimateValueCardsTitle ? '0.48' : undefined}
+                        data-investments-growth-anchor-ratio={shouldAnimateValueCardsTitle ? '0.22' : undefined}
+                        data-investments-growth-anchor-max-px={shouldAnimateValueCardsTitle ? '120' : undefined}
+                        data-investments-growth-min-opacity={shouldAnimateValueCardsTitle ? '0.24' : undefined}
+                        data-investments-growth-base-scale={shouldAnimateValueCardsTitle ? '0.945' : undefined}
+                        data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
+                      />
+                    ) : (
+                      <SectionTitleTag
+                        className={[
+                          section.titleClassName || '',
+                          shouldAnimateValueCardsTitle ? 'investments-native-build-title investments-growth-scroll-reveal investments-growth-scroll-reveal-title' : '',
+                        ].filter(Boolean).join(' ') || undefined}
+                        style={section.titleStyle || undefined}
+                        data-investments-growth-reveal={shouldAnimateValueCardsTitle ? 'title' : undefined}
+                        data-investments-growth-start-vh={shouldAnimateValueCardsTitle ? '0.98' : undefined}
+                        data-investments-growth-end-vh={shouldAnimateValueCardsTitle ? '0.48' : undefined}
+                        data-investments-growth-anchor-ratio={shouldAnimateValueCardsTitle ? '0.22' : undefined}
+                        data-investments-growth-anchor-max-px={shouldAnimateValueCardsTitle ? '120' : undefined}
+                        data-investments-growth-min-opacity={shouldAnimateValueCardsTitle ? '0.24' : undefined}
+                        data-investments-growth-base-scale={shouldAnimateValueCardsTitle ? '0.945' : undefined}
+                        data-investments-growth-shift-y={shouldAnimateValueCardsTitle ? '34' : undefined}
+                      >
+                        {renderHighlightedText(section.title, section.titleHighlights)}
+                      </SectionTitleTag>
+                    )
                   ) : null}
                   {section.subtitle ? (
                     <h3
@@ -6727,7 +6837,65 @@ export default function NativeContentPage({ page }) {
               </div>
             ) : null}
 
-            {cards.length && visibleCards.length && !isValueCardsFeatureSection ? (
+            {cards.length && visibleCards.length && useCertificateCardLayout ? (
+              <div className="service-native-grid is-two investments-native-cert-grid charitable-trusts-native-choice-grid">
+                {visibleCards.map((card, cardIndex) => {
+                  const cardTone = cardIndex === 1 ? 'mango' : 'atlantean';
+                  const { description, minimum } = card.bodySegments || { description: card.body || '', minimum: '' };
+                  const primaryAction = Array.isArray(card.actions) && card.actions.length ? card.actions[0] : null;
+                  const certificateAction = primaryAction
+                    ? {
+                        ...primaryAction,
+                        style: 'blue',
+                        tone: cardTone,
+                        className: `is-tone-${cardTone}`,
+                      }
+                    : null;
+
+                  return (
+                    <article
+                      key={card.title}
+                      className={`service-native-card investments-native-cert-card charitable-trusts-native-choice-card investments-native-cert-card--${cardTone} fade-up`}
+                    >
+                      <div className="investments-native-cert-card__cap">
+                        <h3
+                          className={card.titleClassName || undefined}
+                          aria-label={Array.isArray(card.titleHighlights) && card.titleHighlights.length ? card.title : undefined}
+                        >
+                          {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                            ? renderHighlightedText(card.title, card.titleHighlights)
+                            : card.title}
+                        </h3>
+                      </div>
+                      <div className="investments-native-cert-card__body">
+                        {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
+                        {description || minimum ? (
+                          <p>
+                            {description ? renderTextWithStrong(description) : null}
+                            {description && minimum ? ' ' : null}
+                            {minimum ? <strong>{minimum}</strong> : null}
+                          </p>
+                        ) : null}
+                        {Array.isArray(card.list) && card.list.length ? (
+                          <ul className="service-native-card-bullet-list">
+                            {card.list.map((item) => (
+                              <li key={`${card.title}-${item}`}>{renderTextWithStrong(item)}</li>
+                            ))}
+                          </ul>
+                        ) : null}
+                        {certificateAction ? (
+                          <div className="service-native-action-row">
+                            <Action item={certificateAction} />
+                          </div>
+                        ) : null}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {cards.length && visibleCards.length && !isValueCardsFeatureSection && !useCertificateCardLayout ? (
               <div className={`service-native-grid${section.columns ? ` is-${section.columns}` : ''}${focusMessageCard && activeMessageCard ? ' is-focus-open' : ''}`}>
                 {visibleCards.map((card) => {
                   const isActiveMessageCard = focusMessageCard && activeMessageCard === card.title;
@@ -6739,7 +6907,7 @@ export default function NativeContentPage({ page }) {
                   const forceScrollRevealCard = shouldAnimateCard && sectionClassName.includes('legacy-giving-types');
 
                   return (
-                  <article key={card.title} className={`service-native-card ${shouldAnimateCard ? 'fade-up' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.dividerTone ? ` is-divider-tone-${card.dividerTone}` : ''}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}${stretchedLink ? ' has-stretched-link' : ''}`.trim()}>
+                  <article key={card.title} className={`service-native-card ${shouldAnimateCard ? 'fade-up' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.dividerTone ? ` is-divider-tone-${card.dividerTone}` : ''}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}${stretchedLink ? ' has-stretched-link' : ''}`.trim()} style={productParadeCardStyle}>
                     <div className={card.messagePanel && resolvedMessageLayout === 'inline' ? 'consultant-card-details' : undefined}>
                       {card.iconKey ? (
                         <PlannedGivingStepIcon iconKey={card.iconKey} tone={card.iconTone} />
@@ -6980,6 +7148,7 @@ export default function NativeContentPage({ page }) {
             {showSectionHud && !isMobileFrontHud ? (
               <FrontHudAnchorTag
                 label={dynamicSectionPanel?.label || ''}
+                icon={dynamicSectionPanel?.icon}
                 isActive={isHudPanelVisible(dynamicSectionHudPanelId)}
                 onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                 layerClassName={`is-section${showCtaSectionHud || showRequestSectionHud ? ' is-cta' : ''}`}
@@ -6993,31 +7162,53 @@ export default function NativeContentPage({ page }) {
       {hasOpenHudPanel && activeHudPanel?.block ? (
         <FrontHudPanelShell
           title={activeHudPanel.label}
+          blockId={activeHudPanel.block.id}
+          pathname={hudContentPath}
+          ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+          onOwnershipAction={() => {
+            if (!editableBlockPath || !activeHudPanel?.block?.id) {
+              return { ok: false, reason: 'missing-target' };
+            }
+            return setActiveBlockLock(editableBlockPath, activeHudPanel.block.id, { force: true });
+          }}
           onClose={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
           className={isMobileFrontHud ? 'is-mobile-sheet' : ''}
           draggable={!isMobileFrontHud}
           isMobileSheet={isMobileFrontHud}
         >
           <FrontHudPageWorkflow
-            pathname={adminHudEditPath}
+            pathname={hudContentPath}
             reviewHref={adminHudEditHref}
             placement="dock-inline"
-            onDoneEditing={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
-          />
-          <BlockHudPanelHost
-            block={activeHudPanel.block}
-            pathname={adminHudEditPath}
-            routeOptions={heroLinkOptions}
-            testimonialsLibrary={testimonialsHudLibrary}
+            showBlockDiscardAction
+            blockId={activeHudPanel.block.id}
+            blockLabel={activeHudPanel.label}
             ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
             onOwnershipAction={() => {
               if (!editableBlockPath || !activeHudPanel?.block?.id) {
-                return;
+                return { ok: false, reason: 'missing-target' };
               }
-              setActiveBlockLock(editableBlockPath, activeHudPanel.block.id, { force: true });
+              return setActiveBlockLock(editableBlockPath, activeHudPanel.block.id, { force: true });
             }}
-            onSettingChange={(settingKey, nextValue) => handleHudSetting(activeHudPanel.block, settingKey, nextValue)}
+            onDoneEditing={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
           />
+          <Suspense fallback={null}>
+            <BlockHudPanelHost
+              block={activeHudPanel.block}
+              pathname={hudContentPath}
+              routeOptions={heroLinkOptions}
+              testimonialsLibrary={testimonialsHudLibrary}
+              ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+              onOwnershipAction={() => {
+                if (!editableBlockPath || !activeHudPanel?.block?.id) {
+                  return { ok: false, reason: 'missing-target' };
+                }
+                return setActiveBlockLock(editableBlockPath, activeHudPanel.block.id, { force: true });
+              }}
+              showPublishAction={false}
+              onSettingChange={(settingKey, nextValue) => handleHudSetting(activeHudPanel.block, settingKey, nextValue)}
+            />
+          </Suspense>
         </FrontHudPanelShell>
       ) : null}
 

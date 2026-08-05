@@ -1,8 +1,10 @@
 import path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { createJsonContentStore } from './dev-server/jsonContentStore';
 import { createSharedDisclosuresStore } from './dev-server/disclosuresStore';
+import { createContentAdminAuthorityLease } from './dev-server/contentAdminAuthority.js';
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
@@ -32,45 +34,137 @@ function readRequestBody(req) {
 }
 
 function contentAdminDevPlugin() {
-  const store = createJsonContentStore({
-    persistenceFile: path.resolve(process.cwd(), 'dev-data/content-admin-shared.json'),
-  });
-  const disclosuresStore = createSharedDisclosuresStore({
-    persistenceFile: path.resolve(process.cwd(), 'dev-data/disclosures-shared.json'),
-  });
+  const repoRoot = process.cwd();
+  const persistenceFile = path.resolve(repoRoot, 'dev-data/content-admin-shared.json');
+  const revisionDirectory = path.resolve(repoRoot, 'dev-data/content-admin-revisions');
+  const authorityLockFile = path.resolve(repoRoot, 'dev-data/content-admin-authority.lock');
+  const disclosuresFile = path.resolve(repoRoot, 'dev-data/disclosures-shared.json');
+  const perfDebugEnabled = process.env.VITE_PERF_DEBUG === '1';
+  const pluginCreatedAt = Date.now();
+  const pluginCreatedPerf = performance.now();
+  const serverInstanceId = `${process.pid}-${pluginCreatedAt}-${Math.random().toString(36).slice(2, 8)}`;
+  const diagnostics = {
+    serverInstanceId,
+    processId: process.pid,
+    repoRoot,
+    persistenceFile,
+    revisionDirectory,
+    authorityLockFile,
+    startupAt: new Date(pluginCreatedAt).toISOString(),
+    pluginCreatedMs: 0,
+    serverReadyAt: '',
+    serverReadyMs: 0,
+    storeReadyAt: '',
+    storeReadyMs: 0,
+    requestCount: 0,
+    slowRequests: [],
+  };
+  let store = null;
+  let disclosuresStore = null;
+  let authorityLease = null;
+
+  const logPerf = (label, durationMs, details = {}) => {
+    const roundedDuration = Math.round(Number(durationMs) * 100) / 100;
+    if (!perfDebugEnabled || roundedDuration < 25) {
+      return;
+    }
+    console.info(`[vite-perf] ${label} ${roundedDuration}ms`, details);
+  };
+
+  const getStore = () => {
+    if (store) {
+      return store;
+    }
+    const startedAt = performance.now();
+    store = createJsonContentStore({
+      persistenceFile,
+      revisionDirectory,
+      authorityLease,
+      onDiagnostic: (entry) => {
+        if (perfDebugEnabled) {
+          logPerf(`content-store.${entry.operation}`, entry.durationMs, entry.details);
+        }
+      },
+    });
+    const durationMs = performance.now() - startedAt;
+    diagnostics.storeReadyAt = new Date().toISOString();
+    diagnostics.storeReadyMs = Math.round(durationMs * 100) / 100;
+    logPerf('content-store.create', durationMs, { persistenceFile, revisionDirectory });
+    return store;
+  };
+
+  const getDisclosuresStore = () => {
+    if (!disclosuresStore) {
+      disclosuresStore = createSharedDisclosuresStore({ persistenceFile: disclosuresFile });
+    }
+    return disclosuresStore;
+  };
 
   return {
     name: 'agf-dev-content-authority',
     configureServer(server) {
+      authorityLease = createContentAdminAuthorityLease({
+        lockFile: authorityLockFile,
+        host: server.config.server.host || 'localhost',
+        port: server.config.server.port || null,
+        projectRoot: repoRoot,
+        authorityInstanceId: serverInstanceId,
+      });
+      authorityLease.acquire();
       server.middlewares.use('/__dev/content-admin', async (req, res) => {
+        const requestStartedAt = performance.now();
+        diagnostics.requestCount += 1;
         const url = new URL(req.url || '/', 'http://localhost');
         try {
+          if (req.method === 'GET' && url.pathname === '/diagnostics') {
+            sendJson(res, 200, {
+              ...diagnostics,
+              authority: authorityLease.getDiagnostics(),
+              port: server.httpServer?.address?.()?.port || server.config.server.port || null,
+              now: new Date().toISOString(),
+              elapsedSincePluginCreateMs: Math.round((Date.now() - pluginCreatedAt) * 100) / 100,
+            });
+            return;
+          }
+
+          if (req.method === 'POST') {
+            authorityLease.assertOwned();
+          }
+          const isDisclosureRequest = url.pathname.startsWith('/disclosures/');
+          const contentStore = isDisclosureRequest ? null : getStore();
+          const sharedDisclosuresStore = isDisclosureRequest ? getDisclosuresStore() : null;
+          contentStore?.refreshFromDisk();
           if (req.method === 'GET' && url.pathname === '/state') {
-            sendJson(res, 200, store.getSnapshot());
+            sendJson(res, 200, contentStore.getSnapshot());
+            return;
+          }
+
+          if (req.method === 'GET' && url.pathname === '/metadata') {
+            sendJson(res, 200, contentStore.getAuthoritySnapshot());
             return;
           }
 
           if (req.method === 'GET' && url.pathname === '/announcement') {
-            sendJson(res, 200, store.getAnnouncementSnapshot());
+            sendJson(res, 200, contentStore.getAnnouncementSnapshot());
             return;
           }
 
           if (req.method === 'GET' && url.pathname === '/disclosures/state') {
-            sendJson(res, 200, disclosuresStore.getSnapshot());
+            sendJson(res, 200, sharedDisclosuresStore.getSnapshot());
             return;
           }
 
           if (req.method === 'GET' && url.pathname === '/revisions') {
             const pathname = url.searchParams.get('path') || '';
             sendJson(res, 200, {
-              revisions: store.listRevisions(pathname),
+              revisions: contentStore.listRevisions(pathname),
             });
             return;
           }
 
           if (req.method === 'GET' && url.pathname === '/backups') {
             sendJson(res, 200, {
-              backups: store.listBackups(),
+              backups: contentStore.listBackups(),
             });
             return;
           }
@@ -83,12 +177,12 @@ function contentAdminDevPlugin() {
           const body = await readRequestBody(req);
 
           if (url.pathname === '/initialize') {
-            const snapshot = store.getSnapshot();
+            const snapshot = contentStore.getSnapshot();
             if (snapshot.initialized) {
               sendJson(res, 200, snapshot);
               return;
             }
-            sendJson(res, 200, store.resetFromSeed(body.seedState, {
+            sendJson(res, 200, contentStore.resetFromSeed(body.seedState, {
               actor: body.actor,
               reason: 'seed-bootstrap',
             }));
@@ -96,42 +190,15 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/save-draft') {
-            sendJson(res, 200, store.savePageDraft(body.state, {
+            sendJson(res, 200, contentStore.savePageDraft(body.state, {
               actor: body.actor,
               summary: body.summary,
             }));
             return;
           }
 
-          if (url.pathname === '/announcement/save') {
-            sendJson(res, 200, store.saveAnnouncement(body.announcement, {
-              actor: body.actor,
-            }));
-            return;
-          }
-
-          if (url.pathname === '/disclosures/save') {
-            sendJson(res, 200, disclosuresStore.saveDraftPatch(body.patch, body.actor));
-            return;
-          }
-
-          if (url.pathname === '/disclosures/reset') {
-            sendJson(res, 200, disclosuresStore.resetDraftToDefaults(body.actor));
-            return;
-          }
-
-          if (url.pathname === '/disclosures/restore-live') {
-            sendJson(res, 200, disclosuresStore.restoreDraftFromPublished(body.actor));
-            return;
-          }
-
-          if (url.pathname === '/disclosures/publish') {
-            sendJson(res, 200, disclosuresStore.publishDraft(body.actor));
-            return;
-          }
-
-          if (url.pathname === '/publish-page') {
-            const result = store.publishPath(body.pathname, {
+          if (url.pathname === '/discard-draft') {
+            const result = contentStore.discardPageDraft(body.pathname, {
               actor: body.actor,
               summary: body.summary,
             });
@@ -139,8 +206,63 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/discard-block-draft') {
+            const result = contentStore.discardBlockDraft(body.pathname, body.blockId, {
+              actor: body.actor,
+              summary: body.summary,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/announcement/save') {
+            sendJson(res, 200, contentStore.saveAnnouncement(body.announcement, {
+              actor: body.actor,
+            }));
+            return;
+          }
+
+          if (url.pathname === '/disclosures/save') {
+            sendJson(res, 200, sharedDisclosuresStore.saveDraftPatch(body.patch, body.actor));
+            return;
+          }
+
+          if (url.pathname === '/disclosures/reset') {
+            sendJson(res, 200, sharedDisclosuresStore.resetDraftToDefaults(body.actor));
+            return;
+          }
+
+          if (url.pathname === '/disclosures/restore-live') {
+            sendJson(res, 200, sharedDisclosuresStore.restoreDraftFromPublished(body.actor));
+            return;
+          }
+
+          if (url.pathname === '/disclosures/publish') {
+            sendJson(res, 200, sharedDisclosuresStore.publishDraft(body.actor));
+            return;
+          }
+
+          if (url.pathname === '/publish-page') {
+            const result = contentStore.publishPath(body.pathname, {
+              actor: body.actor,
+              summary: body.summary,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/publish-block') {
+            const result = contentStore.publishBlock(body.pathname, body.blockId, {
+              actor: body.actor,
+              summary: body.summary,
+              expectedBlock: body.expectedBlock,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/publish-seed-routes') {
-            const result = store.publishSeedRouteSlices(body.seedState, body.pathnames, {
+            const result = contentStore.publishSeedRouteSlices(body.seedState, body.pathnames, {
               actor: body.actor,
               summary: body.summary,
               forceOverwriteAdminEdits: body.forceOverwriteAdminEdits === true,
@@ -151,8 +273,18 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/migrate-generosity-fund-snapshot') {
+            const result = contentStore.migrateGenerosityFundSnapshot({
+              defaultState: body.defaultState,
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/blocks/sync-draft') {
-            const result = store.saveBlockDraft(body.pathname, body.blockId, body.block, {
+            const result = contentStore.saveBlockDraft(body.pathname, body.blockId, body.block, {
               actor: body.actor,
             });
             sendJson(res, result.ok ? 200 : 409, result);
@@ -160,7 +292,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/restore-page-revision') {
-            const result = store.restorePageRevision(body.pathname, body.revisionId, {
+            const result = contentStore.restorePageRevision(body.pathname, body.revisionId, {
               actor: body.actor,
             });
             sendJson(res, result.ok ? 200 : 404, result);
@@ -168,7 +300,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/restore-block-revision') {
-            const result = store.restoreBlockRevision(body.pathname, body.revisionId, body.blockId, {
+            const result = contentStore.restoreBlockRevision(body.pathname, body.revisionId, body.blockId, {
               actor: body.actor,
             });
             sendJson(res, result.ok ? 200 : 404, result);
@@ -176,7 +308,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/locks/acquire') {
-            const result = store.acquireBlockLock(body.pathname, body.blockId, body.actor, {
+            const result = contentStore.acquireBlockLock(body.pathname, body.blockId, body.actor, {
               force: body.force,
             });
             sendJson(res, result.ok ? 200 : 409, result);
@@ -184,19 +316,27 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/locks/refresh') {
-            const result = store.refreshBlockLock(body.pathname, body.blockId, body.actor);
+            const result = contentStore.refreshBlockLock(body.pathname, body.blockId, body.actor);
             sendJson(res, result.ok ? 200 : 409, result);
             return;
           }
 
           if (url.pathname === '/locks/release') {
-            const result = store.releaseBlockLock(body.pathname, body.blockId, body.actor);
+            const result = contentStore.releaseBlockLock(body.pathname, body.blockId, body.actor);
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/blocks/release-draft') {
+            const result = contentStore.releaseBlockDraft(body.pathname, body.blockId, body.actor, {
+              force: body.force === true,
+            });
             sendJson(res, result.ok ? 200 : 409, result);
             return;
           }
 
           if (url.pathname === '/reset') {
-            const result = store.resetFromSeed(body.seedState, {
+            const result = contentStore.resetFromSeed(body.seedState, {
               actor: body.actor,
               reason: 'seed-reset',
             });
@@ -205,7 +345,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/restore-backup') {
-            const result = store.restoreBackup(body.backupFileName, {
+            const result = contentStore.restoreBackup(body.backupFileName, {
               actor: body.actor,
             });
             sendJson(res, result?.ok === false ? (result?.error === 'backup-not-found' ? 404 : 500) : 200, result);
@@ -213,7 +353,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/promote-seed') {
-            const result = store.promoteCurrentStateToSeed({
+            const result = contentStore.promoteCurrentStateToSeed({
               actor: body.actor,
             });
             sendJson(res, result?.ok === false ? 500 : 200, result);
@@ -226,7 +366,39 @@ function contentAdminDevPlugin() {
             error: 'content-admin-dev-server-error',
             details: error instanceof Error ? error.message : 'unknown-error',
           });
+        } finally {
+          const durationMs = performance.now() - requestStartedAt;
+          if (durationMs >= 25) {
+            diagnostics.slowRequests = [
+              ...diagnostics.slowRequests.slice(-19),
+              {
+                method: req.method,
+                path: url.pathname,
+                durationMs: Math.round(durationMs * 100) / 100,
+              },
+            ];
+          }
+          logPerf(`request ${req.method} ${url.pathname}`, durationMs);
         }
+      });
+
+      const configureServerDurationMs = performance.now() - pluginCreatedPerf;
+      diagnostics.pluginCreatedMs = Math.round(configureServerDurationMs * 100) / 100;
+      logPerf('plugin.configureServer', configureServerDurationMs, { serverInstanceId });
+      server.httpServer?.once('listening', () => {
+        const durationMs = performance.now() - pluginCreatedPerf;
+        diagnostics.serverReadyAt = new Date().toISOString();
+        diagnostics.serverReadyMs = Math.round(durationMs * 100) / 100;
+        logPerf('server.ready', durationMs, {
+          port: server.httpServer?.address?.()?.port || server.config.server.port || null,
+          serverInstanceId,
+        });
+      });
+      server.httpServer?.once('close', () => {
+        authorityLease?.release();
+      });
+      server.httpServer?.once('error', () => {
+        authorityLease?.release();
       });
     },
   };
@@ -234,4 +406,19 @@ function contentAdminDevPlugin() {
 
 export default defineConfig({
   plugins: [react(), contentAdminDevPlugin()],
+  server: {
+    strictPort: true,
+    watch: {
+      ignored: [
+        '**/dev-data/backups/**',
+        '**/dev-data/content-admin-revisions/**',
+        '**/coverage/**',
+        '**/dist/**',
+        '**/test-results/**',
+        '**/screenshots/**',
+        '**/*.trace.json',
+        '**/*.json.gz',
+      ],
+    },
+  },
 });

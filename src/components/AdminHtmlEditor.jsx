@@ -183,7 +183,10 @@ export default function AdminHtmlEditor({
     if (sourceMode || !editorRef.current) {
       return;
     }
-    if (typeof document !== 'undefined' && document.activeElement === editorRef.current) {
+    if (
+      typeof document !== 'undefined'
+      && (document.activeElement === editorRef.current || editorRef.current.contains(document.activeElement))
+    ) {
       return;
     }
 
@@ -195,14 +198,6 @@ export default function AdminHtmlEditor({
 
   function emitChange(nextHtml) {
     const normalizedHtml = ensureHtml(normalizeHtmlEditorSemanticColors(nextHtml));
-    if (
-      !sourceMode
-      && editorRef.current
-      && editorRef.current.innerHTML !== normalizedHtml
-      && (typeof document === 'undefined' || document.activeElement !== editorRef.current)
-    ) {
-      editorRef.current.innerHTML = normalizedHtml;
-    }
     if (typeof onChange === 'function') {
       onChange(normalizedHtml);
     }

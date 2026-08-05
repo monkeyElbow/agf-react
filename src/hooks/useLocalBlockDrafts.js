@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../context/ContentAdminContext';
+import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
 
 function settingsValueEquals(left, right) {
   if (Object.is(left, right)) {

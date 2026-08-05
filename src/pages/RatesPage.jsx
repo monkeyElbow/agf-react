@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import '../styles/service-native.css';
 import BlockHudPanelHost from '../components/BlockHudPanelHost';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import PageShell from '../components/PageShell';
@@ -9,12 +10,13 @@ import CertificateRatesSheet from '../components/CertificateRatesSheet';
 import IraRatesSheet from '../components/IraRatesSheet';
 import { pageByPath } from '../data/siteMap';
 import { useRates } from '../context/RatesContext';
-import { useContentAdmin } from '../context/ContentAdminContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
 import { buildDynamicLegalCopyFromBlock, buildDynamicRatesFromBlock } from '../lib/dynamicPageBlocks';
+import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -44,7 +46,12 @@ export default function RatesPage() {
     clearActiveBlockLock = () => ({ ok: false }),
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
-  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
+  const { blocksByPath: managedBlocksByPath } = selectFrontHudContentSource({
+    enabled: frontHudEnabled,
+    pathname: '/rates',
+    authoringBlocksByPath,
+    blocksByPath,
+  });
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
   useNativeEnhancements(pageRef);
@@ -171,6 +178,7 @@ export default function RatesPage() {
     return (
       <FrontHudAnchorTag
         label={panel.label}
+        icon={panel.icon}
         isActive={!hudDockCollapsed && activeHudPanelId === panel.id}
         onClick={() => openRatesHudPanel(panel.id)}
         layerClassName={layerClassName}
@@ -198,7 +206,7 @@ export default function RatesPage() {
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-visually-hidden">{panel.label}</span>
+                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
               </button>
             ))}
           </div>
@@ -215,15 +223,26 @@ export default function RatesPage() {
           </div>
         </aside>
       ) : null}
-      {showFrontHud ? (
-        <FrontHudPageWorkflow pathname="/rates" reviewHref="/admin/rates" reviewLabel="Open rates admin" placement="bar" />
-      ) : null}
+      <FrontHudPageWorkflow pathname="/rates" reviewHref="/admin/rates" reviewLabel="Open rates admin" placement="bar" isVisible={showFrontHud} />
       {hasOpenHudPanel && activeHudPanel ? (
         <FrontHudPanelShell
           title={activeHudPanel.label}
+          blockId={activeHudPanel.block.id}
+          pathname="/rates"
           onClose={closeHudDock}
           style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
         >
+          <FrontHudPageWorkflow
+            pathname="/rates"
+            reviewHref="/admin/rates"
+            reviewLabel="Open rates admin"
+            placement="dock-inline"
+            showBlockPublishAction={false}
+            showBlockDiscardAction
+            blockId={activeHudPanel.block.id}
+            blockLabel={activeHudPanel.label}
+            onDoneEditing={closeHudDock}
+          />
           <BlockHudPanelHost
             block={activeHudPanel.block}
             pathname="/rates"

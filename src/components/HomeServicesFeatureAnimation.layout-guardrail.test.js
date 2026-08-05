@@ -17,7 +17,8 @@ describe('home services feature alignment guardrail', () => {
     const appStylesSource = readSource('../styles.css');
 
     expect(tokenSource).toContain("--ag-font-heading: 'avenir-next-world', 'Avenir Next', 'Helvetica Neue', Helvetica, Arial, sans-serif;");
-    expect(appStylesSource).toContain("@import url('https://use.typekit.net/nmy3epc.css');");
+    expect(appStylesSource).not.toContain("@import url('https://use.typekit.net/nmy3epc.css');");
+    expect(readSource('../../index.html')).toContain('https://use.typekit.net/nmy3epc.css');
     expect(cssSource).toContain('h3.home-services-feature-panel-title {');
     expect(cssSource).toContain('font-size: clamp(4.1rem, 9.45vw, 8.9rem);');
     expect(cssSource).toContain('font-family: var(--ag-font-heading);');
@@ -115,7 +116,7 @@ describe('home services feature alignment guardrail', () => {
     const pageSource = readSource('../pages/HomePage.jsx');
     const resolverSource = readSource('../lib/homeBlockResolver.js');
 
-    expect(pageSource).toContain("const HOME_HERO_TEMPORARILY_HIDDEN = true;");
+    expect(pageSource).toContain("const HOME_HERO_TEMPORARILY_HIDDEN = false;");
     expect(resolverSource).toContain('return reorderHomeTopBlocks(resolvedBlocks.concat(extraRenderableManagedBlocks));');
     expect(cssSource).toContain('.home-native-page.is-home-hero-temporarily-hidden [data-block-id="hero"] {');
     expect(cssSource).toContain('display: none;');

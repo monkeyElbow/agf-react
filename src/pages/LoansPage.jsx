@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
 import BlockHudPanelHost from '../components/BlockHudPanelHost';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
@@ -12,7 +13,7 @@ import { ColumnsBlock, renderHighlightedText } from '../components/blocks/PageBl
 import { useDisclosures } from '../context/DisclosuresContext';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import { useFrontHud } from '../context/FrontHudContext';
-import { useContentAdmin } from '../context/ContentAdminContext';
+import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useTestimonials } from '../context/TestimonialsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
@@ -33,6 +34,7 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { defaultLoansCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultLoansIntroRuntime } from '../data/loansIntroSeed';
+import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
 
 const LOANS_TARIFFS_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   slug: 'tariffs-timing-truth-keep-building-through-the-chaos',
@@ -534,8 +536,17 @@ export default function LoansPage({ sectionsOnly = false }) {
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
   const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
-  const managedBlocksByPath = frontHudEnabled ? (authoringBlocksByPath || blocksByPath) : blocksByPath;
-  const managedPageHierarchy = frontHudEnabled ? (authoringPageHierarchy || pageHierarchy) : pageHierarchy;
+  const {
+    blocksByPath: managedBlocksByPath,
+    pageHierarchy: managedPageHierarchy,
+  } = selectFrontHudContentSource({
+    enabled: frontHudEnabled,
+    pathname: '/services/loans',
+    authoringBlocksByPath,
+    blocksByPath,
+    authoringPageHierarchy,
+    pageHierarchy,
+  });
   const managedResolveManagedPathFromRef = frontHudEnabled
     ? (resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef)
     : resolveManagedPathFromRef;
@@ -958,6 +969,7 @@ export default function LoansPage({ sectionsOnly = false }) {
     return (
       <FrontHudAnchorTag
         label={hudAnchor.label}
+        icon={hudAnchor.icon}
         isActive={hudAnchor.isActive}
         onClick={hudAnchor.onClick}
         style={hudAnchor.style}
@@ -1007,7 +1019,7 @@ export default function LoansPage({ sectionsOnly = false }) {
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
-                <span className="admin-front-hud-visually-hidden">{panel.label}</span>
+                <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
               </button>
             ))}
           </div>
@@ -1024,15 +1036,32 @@ export default function LoansPage({ sectionsOnly = false }) {
           </div>
         </aside>
       ) : null}
-      {showFrontHud ? (
-        <FrontHudPageWorkflow pathname="/services/loans" reviewHref="/admin/content?page=%2Fservices%2Floans" placement="bar" />
-      ) : null}
+      <FrontHudPageWorkflow pathname="/services/loans" reviewHref="/admin/content?page=%2Fservices%2Floans" placement="bar" isVisible={showFrontHud} />
       {hasOpenHudPanel && activeHudPanel ? (
         <FrontHudPanelShell
           title={activeHudPanel.label}
+          blockId={activeHudPanel.block.id}
+          pathname="/services/loans"
+          ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
+          onOwnershipAction={() => {
+            if (!activeHudPanel?.block?.id) {
+              return;
+            }
+            setActiveBlockLock('/services/loans', activeHudPanel.block.id, { force: true });
+          }}
           onClose={closeHudDock}
           style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
         >
+          <FrontHudPageWorkflow
+            pathname="/services/loans"
+            reviewHref="/admin/content?page=%2Fservices%2Floans"
+            placement="dock-inline"
+            showBlockPublishAction={false}
+            showBlockDiscardAction
+            blockId={activeHudPanel.block.id}
+            blockLabel={activeHudPanel.label}
+            onDoneEditing={closeHudDock}
+          />
           <BlockHudPanelHost
             block={activeHudPanel.block}
             pathname="/services/loans"

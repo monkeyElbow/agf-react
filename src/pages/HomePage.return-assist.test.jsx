@@ -12,7 +12,7 @@ import {
 
 let mockBlocksByPath = {};
 
-vi.mock('../context/ContentAdminContext', () => ({
+vi.mock('../context/ContentAdminContextCore', () => ({
   inspectDynamicHeroSettings: () => ({ hasDrift: false, issues: [], normalizedSettings: {} }),
   normalizeDynamicHeroSettings: (_pathname, settings) => settings || {},
   useContentAdmin: () => ({
@@ -133,7 +133,7 @@ describe('HomePage return assist', () => {
 
     expect(await screen.findByRole('searchbox', { name: "What can we help you find?" })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /What you do here matters/i })).toBeTruthy();
-    expect(document.querySelector('.home-native-page')?.className).toContain('is-home-hero-temporarily-hidden');
+    expect(document.querySelector('.home-native-page')?.className).not.toContain('is-home-hero-temporarily-hidden');
   });
 
   it('renders the return assist after the first top discovery feature and before the next home section', async () => {

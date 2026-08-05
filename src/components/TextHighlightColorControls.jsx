@@ -12,6 +12,7 @@ export default function TextHighlightColorControls({
   onRemoveSpan,
   onClearSpans,
   layout = 'row',
+  notePlacement = 'below',
   paletteVariant = 'hud',
   paletteClassName = 'is-field-linked',
   swatchClassName = '',
@@ -37,13 +38,19 @@ export default function TextHighlightColorControls({
           <span className="admin-front-hud-control-label">{label}</span>
           {palette}
         </div>
+      ) : note && notePlacement === 'inline' ? (
+        <div className="admin-front-hud-row admin-front-hud-text-highlight-inline">
+          <span>{label}</span>
+          {palette}
+          <span className="admin-front-hud-note">{note}</span>
+        </div>
       ) : (
         <div className="admin-front-hud-row">
           <span>{label}</span>
           {palette}
         </div>
       )}
-      {note ? (
+      {note && notePlacement !== 'inline' ? (
         <p className="admin-front-hud-note">{note}</p>
       ) : null}
       {safeRanges.length ? (

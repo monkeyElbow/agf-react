@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import AnimatedBrandLogo from './AnimatedBrandLogo';
 import SiteFooter from './SiteFooter';
 
-vi.mock('../context/ContentAdminContext', () => ({
+vi.mock('../context/ContentAdminContextCore', () => ({
   useContentAdmin: () => ({
     resolveManagedPathFromRef: (pathRef, fallback) => fallback || pathRef || '/',
   }),

@@ -153,6 +153,19 @@ describe('site feature catalog', () => {
     expect(servicesMattersEntry?.buildRuntime?.({ settings: {} })?.action?.label).toBe("See what we're doing together");
   });
 
+  it('requires explicit ownership and catalog metadata for every specialized feature', () => {
+    getSiteFeatureCatalog().forEach((entry) => {
+      expect(entry.featureId).toBeTruthy();
+      expect(entry.owner).toBeTruthy();
+      expect(entry.architectureType).toBe('site-feature');
+      expect(['standard', 'contextual', 'internal', 'hidden']).toContain(entry.catalogVisibility);
+      expect(entry.editableFieldIds.length).toBeGreaterThan(0);
+      expect(entry.reasonCannotUseStandardBlock).toBeTruthy();
+      expect(entry.retirementNote).toBeTruthy();
+      expect(entry.allowedRoutes).toEqual(entry.routeAllowlist);
+    });
+  });
+
   it('falls back unknown ids to the default reviewed entry', () => {
     expect(resolveSiteFeatureCatalogEntry('unknown-feature')?.featureId).toBe('editorial_spotlight');
   });

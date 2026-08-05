@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentAdminProvider } from '../context/ContentAdminContext';
 import AdminContentPage from './AdminContentPage';
 
@@ -16,6 +16,11 @@ vi.mock('../context/TestimonialsContext', () => ({
 describe('AdminContentPage dev identity surfaces', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('keeps active foreign edit markers out of the main admin view while preserving takeover action', () => {
@@ -71,7 +76,7 @@ describe('AdminContentPage dev identity surfaces', () => {
     expect(within(historyRegion).getByText(/block edit taken over/i)).toBeTruthy();
   });
 
-  it('keeps passive foreign draft markers out of the main admin view while preserving continue-draft action', () => {
+  it('keeps stale foreign draft markers and actions out of the main admin view', () => {
     window.localStorage.setItem(DEV_IDENTITY_STORAGE_KEY, JSON.stringify({
       userId: 'dev-current',
       displayName: 'Taylor QA',
@@ -111,15 +116,8 @@ describe('AdminContentPage dev identity surfaces', () => {
 
     expect(screen.queryByText(/Unpublished draft by Other Dev/)).toBeNull();
     expect(view.container.querySelector('.admin-selected-block-lock-banner')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Continue draft' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Continue draft' })).toBeNull();
     expect(screen.queryByText(/owns the latest saved draft/i)).toBeNull();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Continue draft' }));
-
-    expect(screen.queryByLabelText('Block mode')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Done editing' })).toBeTruthy();
-    expect(screen.queryByText(/Active edit:/)).toBeNull();
-    const historyRegion = screen.getByRole('heading', { name: 'Recent page activity' }).closest('.admin-block-history');
-    expect(within(historyRegion).getByText(/block draft claimed/i)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Take over draft' })).toBeNull();
   });
 });

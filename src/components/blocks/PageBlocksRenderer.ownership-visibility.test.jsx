@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import PageBlocksRenderer from './PageBlocksRenderer';
 
-vi.mock('../../context/ContentAdminContext', () => ({
+vi.mock('../../context/ContentAdminContextCore', () => ({
   useContentAdmin: () => ({
     resolveManagedPathFromRef: (pathRef, fallback = '/') => String(pathRef || '').trim() || fallback,
     getBlockCollaboration: () => ({

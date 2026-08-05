@@ -9,7 +9,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const mockSaveSharedDraftNow = vi.fn();
+const mockDiscardSharedPageDraft = vi.fn();
+const mockDiscardSharedBlockDraft = vi.fn();
 const mockPublishSharedPageNow = vi.fn();
+const mockPublishSharedBlockNow = vi.fn();
 let mockDirty = true;
 let mockChangeSummary = {
   changedBlockCount: 2,
@@ -19,6 +22,7 @@ let mockChangeSummary = {
 };
 let mockPublishSummary = {
   changedBlockCount: 2,
+  changedBlockIds: ['hero', 'cta_form'],
   hasOrderChanges: false,
   hasPageMetaChanges: true,
   hasUnsavedChanges: true,
@@ -47,7 +51,7 @@ let mockWorkflowActivity = {
 };
 let mockFrontHudRevealToken = 0;
 
-vi.mock('../context/ContentAdminContext', () => ({
+vi.mock('../context/ContentAdminContextCore', () => ({
   useContentAdmin: () => ({
     isPageDirty: () => mockDirty,
     getPageChangeSummary: () => mockChangeSummary,
@@ -58,7 +62,10 @@ vi.mock('../context/ContentAdminContext', () => ({
     sharedSyncStatus: mockSharedSyncStatus,
     hasPendingExternalDrafts: () => mockHasPendingExternalDrafts,
     saveSharedDraftNow: mockSaveSharedDraftNow,
+    discardSharedPageDraft: mockDiscardSharedPageDraft,
+    discardSharedBlockDraft: mockDiscardSharedBlockDraft,
     publishSharedPageNow: mockPublishSharedPageNow,
+    publishSharedBlockNow: mockPublishSharedBlockNow,
   }),
 }));
 
@@ -83,6 +90,7 @@ describe('FrontHudPageWorkflow', () => {
     };
     mockPublishSummary = {
       changedBlockCount: 2,
+      changedBlockIds: ['hero', 'cta_form'],
       hasOrderChanges: false,
       hasPageMetaChanges: true,
       hasUnsavedChanges: true,
@@ -111,9 +119,15 @@ describe('FrontHudPageWorkflow', () => {
     };
     mockFrontHudRevealToken = 0;
     mockSaveSharedDraftNow.mockReset();
+    mockDiscardSharedPageDraft.mockReset();
+    mockDiscardSharedBlockDraft.mockReset();
     mockPublishSharedPageNow.mockReset();
+    mockPublishSharedBlockNow.mockReset();
     mockSaveSharedDraftNow.mockResolvedValue({ ok: true });
+    mockDiscardSharedPageDraft.mockResolvedValue({ ok: true });
+    mockDiscardSharedBlockDraft.mockResolvedValue({ ok: true });
     mockPublishSharedPageNow.mockResolvedValue({ ok: true });
+    mockPublishSharedBlockNow.mockResolvedValue({ ok: true });
   });
 
   it('surfaces save draft, compact page status, review actions, and a working make-live control', async () => {
@@ -150,6 +164,82 @@ describe('FrontHudPageWorkflow', () => {
     await waitFor(() => {
       expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/services/loans', '');
     });
+  });
+
+  it('shows an explicit saved acknowledgment after the draft request completes', async () => {
+    mockSaveSharedDraftNow.mockResolvedValue({
+      ok: true,
+      saveResult: {
+        status: 'saved',
+        updatedAt: Date.now(),
+      },
+    });
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        reviewHref="/admin/content?page=%2Fservices%2Floans"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Draft saved/)).toBeTruthy();
+    });
+    expect(screen.getByRole('button', { name: 'Save draft' }).textContent).toBe('Save draft');
+  });
+
+  it('confirms and discards the current page draft without publishing it', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    try {
+      render(
+        <FrontHudPageWorkflow
+          pathname="/services/loans"
+          reviewHref="/admin/content?page=%2Fservices%2Floans"
+        />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Discard all page drafts' }));
+
+      await waitFor(() => {
+        expect(mockDiscardSharedPageDraft).toHaveBeenCalledWith('/services/loans', 'HUD page draft discard');
+      });
+      expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Discard unpublished changes'));
+      expect(mockPublishSharedPageNow).not.toHaveBeenCalled();
+    } finally {
+      confirmSpy.mockRestore();
+    }
+  });
+
+  it('discards only the active block draft from an inline block workflow', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mockPublishSummary = {
+      ...mockPublishSummary,
+      changedBlockIds: ['hero'],
+    };
+
+    try {
+      render(
+        <FrontHudPageWorkflow
+          pathname="/services/loans"
+          blockId="hero"
+          blockLabel="Hero"
+          placement="dock-inline"
+        />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Discard Block Draft' }));
+
+      await waitFor(() => {
+        expect(mockDiscardSharedBlockDraft).toHaveBeenCalledWith('/services/loans', 'hero', 'HUD block draft discard');
+      });
+      expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('only Hero'));
+      expect(mockDiscardSharedPageDraft).not.toHaveBeenCalled();
+    } finally {
+      confirmSpy.mockRestore();
+    }
   });
 
   it('disables save when the page is already clean while preserving review access', () => {
@@ -339,8 +429,10 @@ describe('FrontHudPageWorkflow', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Done editing' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'View live' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
+    expect(screen.getByText('Open admin in new window')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Open page admin' })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Done editing' }));
@@ -356,6 +448,60 @@ describe('FrontHudPageWorkflow', () => {
 
     await waitFor(() => {
       expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/services/loans', '');
+    });
+  });
+
+  it('publishes only the active block when the HUD workflow is scoped to a block', async () => {
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="hero"
+        reviewHref="/admin/content?page=%2Fservices%2Floans"
+        placement="dock-inline"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Make live' }));
+
+    await waitFor(() => {
+      expect(mockPublishSharedBlockNow).toHaveBeenCalledWith('/services/loans', 'hero', 'HUD block publish');
+    });
+    expect(mockPublishSharedPageNow).not.toHaveBeenCalled();
+  });
+
+  it('keeps a saved block publishable when ownership metadata is incomplete and another draft is unrelated', async () => {
+    mockDirty = false;
+    mockPublishSummary = {
+      changedBlockCount: 1,
+      changedBlockIds: ['intro'],
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: true,
+    };
+    mockWorkflowActivity = {
+      hasCurrentActorDraft: false,
+      hasOtherActorDraft: true,
+      otherActorBlockCount: 1,
+      currentActorBlockIds: [],
+      otherActorBlocks: [{ blockId: 'hero' }],
+    };
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/test"
+        blockId="intro"
+        blockLabel="Intro"
+        placement="dock-inline"
+      />,
+    );
+
+    const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
+    expect(makeLiveButton.disabled).toBe(false);
+
+    fireEvent.click(makeLiveButton);
+
+    await waitFor(() => {
+      expect(mockPublishSharedBlockNow).toHaveBeenCalledWith('/test', 'intro', 'HUD block publish');
     });
   });
 
@@ -375,44 +521,43 @@ describe('FrontHudPageWorkflow', () => {
     });
   });
 
-  it('preserves workflow height across quick bar remounts during route changes', () => {
-    vi.useFakeTimers();
-    try {
-      const { rerender } = render(
-        <FrontHudPageWorkflow
-          pathname="/services/loans"
-          reviewHref="/admin/content?page=%2Fservices%2Floans"
-          placement="bar"
-        />,
-      );
+  it('keeps the bar mounted for a visible slide-out when the HUD is disabled', () => {
+    const { container, rerender } = render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        reviewHref="/admin/content?page=%2Fservices%2Floans"
+        placement="bar"
+        isVisible
+      />,
+    );
 
-      expect(document.documentElement.style.getPropertyValue('--ag-front-hud-page-workflow-height')).not.toBe('');
+    const workflow = screen.getByRole('region', { name: 'Page workflow' });
+    expect(workflow.className).not.toContain('is-hidden');
 
-      rerender(
-        <FrontHudPageWorkflow
-          pathname="/services/investments"
-          reviewHref="/admin/content?page=%2Fservices%2Finvestments"
-          placement="bar"
-        />,
-      );
+    rerender(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        reviewHref="/admin/content?page=%2Fservices%2Floans"
+        placement="bar"
+        isVisible={false}
+      />,
+    );
 
-      vi.advanceTimersByTime(181);
-
-      expect(document.documentElement.style.getPropertyValue('--ag-front-hud-page-workflow-height')).not.toBe('');
-    } finally {
-      vi.runOnlyPendingTimers();
-      vi.useRealTimers();
-      document.documentElement.style.removeProperty('--ag-front-hud-page-workflow-height');
-    }
+    expect(container.querySelector('[aria-label="Page workflow"]').className).toContain('is-hidden');
   });
 
   it('keeps the mobile workflow bar edge-to-edge and preserves the right-side live sync column', () => {
-    const cssSource = readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8');
+    const cssSource = readFileSync(path.resolve(__dirname, '../styles/front-hud.css'), 'utf8');
 
     expect(cssSource).toContain('@media (max-width: 720px) {');
     expect(cssSource).toContain('@media (max-width: 980px) {');
     expect(cssSource).toContain('@media (min-width: 981px) and (max-width: 1100px) {');
     expect(cssSource).toContain('.admin-front-hud-page-workflow.is-bar {');
+    expect(cssSource).toContain('bottom: 0;');
+    expect(cssSource).toContain('background: var(--ag-color-super-grey);');
+    expect(cssSource).toContain('transform: translateY(calc(100% + env(safe-area-inset-bottom, 0px)));');
+    expect(cssSource).toContain('.admin-front-hud-page-workflow.is-bar.is-hidden {');
+    expect(cssSource).not.toContain('top: env(safe-area-inset-top, 0px);');
     expect(cssSource).toContain('left: 0;');
     expect(cssSource).toContain('right: 0;');
     expect(cssSource).toContain('margin-left: 0;');

@@ -311,16 +311,6 @@ function formatBlockModeLabel(mode) {
   return String(mode || '').trim().toLowerCase() === 'dynamic' ? 'Dynamic' : 'Legacy snapshot';
 }
 
-function getEditEntryLabel(ownershipState, defaultLabel = 'Edit') {
-  if (ownershipState === 'editing-other') {
-    return 'Take over edit';
-  }
-  if (ownershipState === 'drafted-other') {
-    return 'Continue draft';
-  }
-  return defaultLabel;
-}
-
 function summarizeSharedSaveResultForPath(saveResult, pathname) {
   const normalizedPath = String(pathname || '').trim();
   if (!saveResult || !normalizedPath) {
@@ -339,6 +329,7 @@ function summarizeSharedSaveResultForPath(saveResult, pathname) {
   }
   return {
     error: String(saveResult?.error || '').trim(),
+    status: String(saveResult?.status || '').trim(),
     updatedAt: Number(saveResult?.updatedAt) || 0,
     savedBlockIds,
     blockedBlocks,
@@ -366,9 +357,11 @@ function summarizeSharedPublishResultForPath(publishResult, pathname) {
   }
   return {
     error: String(publishResult?.error || '').trim(),
+    status: String(publishResult?.status || '').trim(),
     updatedAt: Number(publishResult?.updatedAt) || 0,
     publishedBlockIds,
     blockedBlocks,
+    receipt: publishResult.receipt || null,
     hasOrderChanges: Boolean(publishResult?.hasOrderChangesByPath?.[normalizedPath]),
     hasPageMetaChanges: Boolean(publishResult?.hasPageMetaChangesByPath?.[normalizedPath]),
   };
@@ -1453,6 +1446,12 @@ export default function AdminContentPage() {
   const [sharedBackupMessage, setSharedBackupMessage] = useState('');
   const [sharedBackupError, setSharedBackupError] = useState('');
   const [sharedBackupActionBusy, setSharedBackupActionBusy] = useState('');
+  const [draftDiscardBusy, setDraftDiscardBusy] = useState(false);
+  const [draftDiscardMessage, setDraftDiscardMessage] = useState('');
+  const [blockPublishBusyId, setBlockPublishBusyId] = useState('');
+  const [blockPublishMessage, setBlockPublishMessage] = useState('');
+  const [ownershipActionBusy, setOwnershipActionBusy] = useState(false);
+  const [ownershipMessage, setOwnershipMessage] = useState('');
   const routeEditorRef = useRef(null);
 
   const {
@@ -1481,8 +1480,12 @@ export default function AdminContentPage() {
     getPageChangeSummary,
     getPagePublishSummary,
     getPageWorkflowActivity,
+    hasPendingExternalDrafts = () => false,
     saveSharedDraftNow,
+    discardSharedPageDraft = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
+    discardSharedBlockDraft = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
     publishSharedPageNow,
+    publishSharedBlockNow = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
     getPageRevisionHistory,
     getSharedContentBackups = async () => [],
     promoteContentAdminToSeed = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
@@ -1491,6 +1494,7 @@ export default function AdminContentPage() {
     restoreLatestSharedContentBackup = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
     setActiveBlockLock,
     clearActiveBlockLock = () => ({ ok: false }),
+    releaseActiveBlockDraft = async () => ({ ok: false }),
     resetContentAdmin,
     claimBufferedBlockEdit = () => false,
     commitBlockSettingsPatch = () => false,
@@ -1589,7 +1593,8 @@ export default function AdminContentPage() {
   const filteredInsertChoices = useMemo(() => buildAdminBlockInsertChoices(availableBlockTemplates, {
     mode: 'dynamic',
     search: insertTemplateSearch,
-  }), [availableBlockTemplates, insertTemplateSearch]);
+    pathname: selectedPath,
+  }), [availableBlockTemplates, insertTemplateSearch, selectedPath]);
 
   const applySelectedPath = useCallback((nextPath, options = {}) => {
     const normalizedPath = String(nextPath || '').trim();
@@ -1851,11 +1856,23 @@ export default function AdminContentPage() {
   const latestRevisionEntry = revisionEntries[0] || null;
   const pageSaveFeedback = selectedPathSaveResult?.error
     ? `Last save failed${selectedPathSaveResult.updatedAt ? ` ${formatRelativeTime(selectedPathSaveResult.updatedAt)}` : ''}`
+    : selectedPathSaveResult?.status === 'failed'
+      ? 'Draft save failed; local changes are still here'
+    : selectedPathSaveResult?.status === 'partially-saved'
+      ? `Saved ${selectedPathSaveResult.savedBlockIds.length} block${selectedPathSaveResult.savedBlockIds.length === 1 ? '' : 's'}; ${selectedPathSaveResult.blockedBlocks.length} conflicting block${selectedPathSaveResult.blockedBlocks.length === 1 ? '' : 's'} skipped`
+      : selectedPathSaveResult?.status === 'blocked'
+        ? 'Draft save blocked; resolve ownership to continue'
     : selectedPathSaveResult
       ? `Last save: ${selectedPathSaveResult.savedBlockIds.length} block${selectedPathSaveResult.savedBlockIds.length === 1 ? '' : 's'} saved${selectedPathSaveResult.blockedBlocks.length ? `, ${selectedPathSaveResult.blockedBlocks.length} conflicting block${selectedPathSaveResult.blockedBlocks.length === 1 ? '' : 's'} skipped` : ''}${selectedPathSaveResult.updatedAt ? ` ${formatRelativeTime(selectedPathSaveResult.updatedAt)}` : ''}`
       : '';
   const pagePublishFeedback = selectedPathPublishResult?.error === 'publish-blocked-by-other-draft'
     ? `Last publish blocked${selectedPathPublishResult.updatedAt ? ` ${formatRelativeTime(selectedPathPublishResult.updatedAt)}` : ''}`
+    : selectedPathPublishResult?.status === 'failed'
+      ? 'Live publish failed; draft content was preserved'
+    : selectedPathPublishResult?.status === 'partially-published'
+      ? `Published ${selectedPathPublishResult.publishedBlockIds.length} block${selectedPathPublishResult.publishedBlockIds.length === 1 ? '' : 's'}; ${selectedPathPublishResult.blockedBlocks.length} blocked`
+      : selectedPathPublishResult?.status === 'blocked'
+        ? 'Live publish blocked; resolve ownership to continue'
     : selectedPathPublishResult?.error === 'already-live'
       ? 'Already live'
       : selectedPathPublishResult?.error
@@ -1868,6 +1885,15 @@ export default function AdminContentPage() {
   const publishBlockedByOtherDraft = Boolean(selectedPathWorkflowActivity?.hasOtherActorDraft);
   const canMakeLive = !publishBlockedByOtherDraft
     && (selectedPathDirty || Boolean(selectedPathPublishSummary?.hasUnsavedChanges));
+  const canDiscardPageDraft = !draftDiscardBusy
+    && (selectedPathDirty
+      || Boolean(selectedPathPublishSummary?.hasUnsavedChanges)
+      || hasPendingExternalDrafts(selectedPath));
+  const canDiscardSelectedBlockDraft = Boolean(
+    selectedBlock
+    && !draftDiscardBusy
+    && selectedPathPublishSummary?.changedBlockIds?.includes(selectedBlock.id),
+  );
   const makeLiveTitle = publishBlockedByOtherDraft
     ? `${selectedPathWorkflowActivity?.otherActorBlockCount || 1} other-admin block${selectedPathWorkflowActivity?.otherActorBlockCount === 1 ? '' : 's'} must be resolved before publishing live.`
     : selectedPathPublishSummary?.hasUnsavedChanges || selectedPathDirty
@@ -1875,13 +1901,27 @@ export default function AdminContentPage() {
       : 'This page is already live.';
   const selectedBlockTakeoverLabel = selectedBlockOwnership.state === 'editing-other'
     ? 'Take over edit'
-    : 'Continue draft';
+    : 'Take over draft';
   const changedBlockCount = Number(selectedPathChangeSummary?.changedBlockCount) || 0;
   const changedBlockLabel = changedBlockCount
     ? `${changedBlockCount} block${changedBlockCount === 1 ? '' : 's'} changed`
     : '';
-  const pageStateLabel = selectedPathDirty ? 'In progress' : 'Saved';
-  const pageStateHeadline = selectedPathDirty ? 'Unsaved changes' : 'Draft saved';
+  const pageStateLabel = selectedPathSaveResult?.status === 'partially-saved'
+    || selectedPathSaveResult?.status === 'blocked'
+    || selectedPathSaveResult?.status === 'failed'
+    ? 'Needs attention'
+    : selectedPathDirty
+      ? 'In progress'
+      : 'Saved';
+  const pageStateHeadline = selectedPathSaveResult?.status === 'partially-saved'
+    ? 'Partially saved'
+    : selectedPathSaveResult?.status === 'blocked'
+      ? 'Unpublished changes'
+      : selectedPathSaveResult?.status === 'failed'
+        ? 'Save failed'
+      : selectedPathDirty
+        ? 'Unsaved changes'
+        : 'Draft saved';
   const latestSharedBackupEntry = sharedBackupEntries[0] || null;
 
   const beginEditingBlock = (blockId, lockOptions = undefined) => {
@@ -1950,6 +1990,22 @@ export default function AdminContentPage() {
   };
 
   const handleMakeLive = async () => {
+    const changedBlockIds = Array.isArray(selectedPathPublishSummary?.changedBlockIds)
+      ? selectedPathPublishSummary.changedBlockIds
+      : [];
+    const changedLabels = changedBlockIds
+      .map((blockId) => getAdminBlockLabel(selectedBlocks.find((block) => block.id === blockId) || { id: blockId }))
+      .filter(Boolean);
+    const scope = [
+      changedLabels.length ? changedLabels.join(', ') : '',
+      selectedPathPublishSummary?.hasOrderChanges ? 'block order' : '',
+      selectedPathPublishSummary?.hasPageMetaChanges ? 'page details' : '',
+    ].filter(Boolean).join('; ');
+    if (typeof window !== 'undefined' && !window.confirm(
+      `Make this page live? This publishes ${scope || 'the selected page changes'} for ${selectedPath}.`,
+    )) {
+      return;
+    }
     const result = await publishSharedPageNow(selectedPath, draftSaveNote);
     if (result?.ok) {
       if (selectedPath && activeEditorBlockId) {
@@ -1960,6 +2016,68 @@ export default function AdminContentPage() {
     }
   };
 
+  const handleDiscardPageDraft = async () => {
+    if (!selectedPath || !canDiscardPageDraft) {
+      return;
+    }
+    if (typeof window !== 'undefined' && !window.confirm(
+      `Discard unpublished changes for ${selectedPath}? This restores the page to its current published content and leaves live content unchanged.`,
+    )) {
+      return;
+    }
+    setDraftDiscardBusy(true);
+    setDraftDiscardMessage('');
+    try {
+      const result = await discardSharedPageDraft(selectedPath, 'Page Admin draft discard');
+      if (result?.ok === false) {
+        setDraftDiscardMessage(result?.reason === 'discard-blocked-by-other-draft'
+          ? 'Discard blocked by another admin draft. Take over that draft first.'
+          : 'Draft discard failed. The current draft was preserved.');
+        return;
+      }
+      setActiveEditorBlockId(null);
+      setDraftSaveNote('');
+      setDraftDiscardMessage(result?.discardResult?.status === 'no-op'
+        ? 'No unpublished changes needed clearing.'
+        : 'Unpublished changes discarded. Published content was not changed.');
+    } finally {
+      setDraftDiscardBusy(false);
+    }
+  };
+
+  const handleDiscardSelectedBlockDraft = async () => {
+    if (!selectedPath || !selectedBlock?.id || !canDiscardSelectedBlockDraft) {
+      return;
+    }
+    const blockLabel = getAdminBlockLabel(selectedBlock);
+    if (typeof window !== 'undefined' && !window.confirm(
+      `Discard unpublished changes for ${blockLabel}? This restores only this block. Other drafts on ${selectedPath} remain unchanged.`,
+    )) {
+      return;
+    }
+    setDraftDiscardBusy(true);
+    setDraftDiscardMessage('');
+    try {
+      const result = await discardSharedBlockDraft(
+        selectedPath,
+        selectedBlock.id,
+        'Page Admin block draft discard',
+      );
+      if (result?.ok === false) {
+        setDraftDiscardMessage(result?.reason === 'discard-blocked-by-other-draft'
+          ? 'Block discard blocked by another admin draft. Take over that draft first.'
+          : 'Block draft discard failed. The current block draft was preserved.');
+        return;
+      }
+      setActiveEditorBlockId(null);
+      setDraftDiscardMessage(result?.discardResult?.status === 'no-op'
+        ? 'No unpublished changes needed clearing for this block.'
+        : `${blockLabel} draft discarded. Other page drafts were not changed.`);
+    } finally {
+      setDraftDiscardBusy(false);
+    }
+  };
+
   const handlePreviewDraft = async () => {
     if (selectedPathDirty) {
       await handleSaveDraft();
@@ -1967,7 +2085,114 @@ export default function AdminContentPage() {
     window.open(selectedPagePreviewHref, '_blank', 'noopener,noreferrer');
   };
 
+  const handleMakeBlockLive = async (block) => {
+    const normalizedBlockId = String(block?.id || '').trim();
+    if (!selectedPath || !normalizedBlockId || blockPublishBusyId) {
+      return;
+    }
+    setBlockPublishBusyId(normalizedBlockId);
+    setBlockPublishMessage('');
+    try {
+      if (typeof window !== 'undefined' && !window.confirm(
+        `Make only ${getAdminBlockLabel(block)} live on ${selectedPath}?`,
+      )) {
+        return;
+      }
+      const result = await publishSharedBlockNow(selectedPath, normalizedBlockId, 'Page Admin block publish');
+      if (result?.ok) {
+        setBlockPublishMessage(`${getAdminBlockLabel(block)} is live.`);
+      } else {
+        setBlockPublishMessage(getActionFailureMessage(result, `Unable to publish ${getAdminBlockLabel(block)}.`));
+      }
+    } finally {
+      setBlockPublishBusyId('');
+    }
+  };
+
+  const handleUndoLatestDraftChange = async () => {
+    const previousRevision = revisionEntries[1] || null;
+    if (!previousRevision || revisionActionBusy) {
+      return;
+    }
+    if (typeof window !== 'undefined' && !window.confirm(
+      `Revert this page to the previous saved draft from ${formatActorName(previousRevision.actor)}? It will remain a draft until published.`,
+    )) {
+      return;
+    }
+    setRevisionActionBusy(`undo:${previousRevision.id}`);
+    setRevisionError('');
+    try {
+      const result = await restorePageRevision(selectedPath, previousRevision.id);
+      if (result?.ok === false) {
+        setRevisionError(getActionFailureMessage(result, 'Unable to revert the latest draft change right now.'));
+      }
+    } finally {
+      setRevisionActionBusy('');
+    }
+  };
+
+  const handleTakeOverOtherDrafts = async () => {
+    const entries = Array.isArray(selectedPathWorkflowActivity?.otherActorBlocks)
+      ? selectedPathWorkflowActivity.otherActorBlocks
+      : [];
+    if (!entries.length || ownershipActionBusy) {
+      return;
+    }
+    if (typeof window !== 'undefined' && !window.confirm(
+      `Take over ${entries.length} draft${entries.length === 1 ? '' : 's'} on this page? The current owners will remain in history.`,
+    )) {
+      return;
+    }
+    setOwnershipActionBusy(true);
+    setOwnershipMessage('');
+    try {
+      for (const entry of entries) {
+        const result = setActiveBlockLock(selectedPath, entry.blockId, { force: true });
+        if (result?.ok === false) {
+          setOwnershipMessage(`Could not take over ${entry.blockId}.`);
+          return;
+        }
+      }
+      setOwnershipMessage(`Took over ${entries.length} draft${entries.length === 1 ? '' : 's'}.`);
+    } finally {
+      setOwnershipActionBusy(false);
+    }
+  };
+
+  const handleReleaseMyDrafts = async () => {
+    const blockIds = Array.isArray(selectedPathWorkflowActivity?.currentActorBlockIds)
+      ? selectedPathWorkflowActivity.currentActorBlockIds
+      : [];
+    if (!blockIds.length || ownershipActionBusy) {
+      return;
+    }
+    if (typeof window !== 'undefined' && !window.confirm(
+      `Release your draft ownership for ${blockIds.length} block${blockIds.length === 1 ? '' : 's'} on this page? Their current content will remain in the shared draft.`,
+    )) {
+      return;
+    }
+    setOwnershipActionBusy(true);
+    setOwnershipMessage('');
+    try {
+      for (const blockId of blockIds) {
+        const result = await releaseActiveBlockDraft(selectedPath, blockId);
+        if (result?.ok === false) {
+          setOwnershipMessage(`Could not release ${blockId}.`);
+          return;
+        }
+      }
+      setOwnershipMessage(`Released ${blockIds.length} draft${blockIds.length === 1 ? '' : 's'}.`);
+    } finally {
+      setOwnershipActionBusy(false);
+    }
+  };
+
   const handleRestorePageRevision = async (revisionId) => {
+    if (typeof window !== 'undefined' && !window.confirm(
+      'Restore this entire page revision into the active draft? It will not be live until you publish the page.',
+    )) {
+      return;
+    }
     setRevisionActionBusy(`page:${revisionId}`);
     setRevisionError('');
     try {
@@ -1985,6 +2210,11 @@ export default function AdminContentPage() {
       ? revisionBlockSelectionById[revisionId]
       : [];
     if (!selectedBlockIds.length) {
+      return;
+    }
+    if (typeof window !== 'undefined' && !window.confirm(
+      `Restore ${selectedBlockIds.length} selected block${selectedBlockIds.length === 1 ? '' : 's'} into the active draft?`,
+    )) {
       return;
     }
     setRevisionActionBusy(`blocks:${revisionId}`);
@@ -2005,6 +2235,11 @@ export default function AdminContentPage() {
   };
 
   const handleResetContentAdmin = async () => {
+    if (typeof window !== 'undefined' && !window.confirm(
+      'Reset the active admin content from the seed baseline? A backup will be created first, but current draft content will be replaced.',
+    )) {
+      return;
+    }
     setSharedBackupActionBusy('reset');
     setSharedBackupError('');
     setSharedBackupMessage('');
@@ -2022,6 +2257,11 @@ export default function AdminContentPage() {
   };
 
   const handleRestoreLastBackup = async () => {
+    if (typeof window !== 'undefined' && !window.confirm(
+      'Restore the most recent shared content backup into the active admin content? This changes the current draft and published snapshot authority.',
+    )) {
+      return;
+    }
     setSharedBackupActionBusy('restore-last-backup');
     setSharedBackupError('');
     setSharedBackupMessage('');
@@ -2045,6 +2285,11 @@ export default function AdminContentPage() {
   };
 
   const handlePromoteContentToSeed = async () => {
+    if (typeof window !== 'undefined' && !window.confirm(
+      'Promote the current shared admin content to the seed baseline? Future resets will use this content.',
+    )) {
+      return;
+    }
     setSharedBackupActionBusy('promote-seed');
     setSharedBackupError('');
     setSharedBackupMessage('');
@@ -2340,9 +2585,62 @@ export default function AdminContentPage() {
                 {selectedPathChangeSummary?.hasPageMetaChanges ? (
                   <span>Page details changed</span>
                 ) : null}
+                {selectedPathPublishSummary?.hasUnsavedChanges ? (
+                  <details className="admin-page-save-bar-details admin-page-save-bar-review-details">
+                    <summary>Review changes</summary>
+                    <div className="admin-page-save-bar-details-copy">
+                      {selectedPathPublishSummary.changedBlockIds?.map((blockId) => {
+                        const changedBlock = selectedBlocks.find((block) => block.id === blockId);
+                        return <span key={blockId}>Changed: {getAdminBlockLabel(changedBlock || { id: blockId })}</span>;
+                      })}
+                      {selectedPathPublishSummary.hasOrderChanges ? <span>Block order</span> : null}
+                      {selectedPathPublishSummary.hasPageMetaChanges ? <span>Page details</span> : null}
+                    </div>
+                  </details>
+                ) : null}
                 {selectedPathWorkflowActivity?.otherActorBlockCount ? (
                   <span>{selectedPathWorkflowActivity.otherActorBlockCount} other-admin block{selectedPathWorkflowActivity.otherActorBlockCount === 1 ? '' : 's'}</span>
                 ) : null}
+                {selectedPathWorkflowActivity?.otherActorBlocks?.length
+                  || selectedPathWorkflowActivity?.currentActorBlockIds?.length ? (
+                  <details className="admin-page-save-bar-details admin-page-save-bar-ownership-details">
+                    <summary>Ownership</summary>
+                    <div className="admin-page-save-bar-details-copy">
+                      {selectedPathWorkflowActivity.otherActorBlocks.map((entry) => {
+                        const ownedBlock = selectedBlocks.find((block) => block.id === entry.blockId);
+                        const ownerName = formatActorName(entry.owner, 'Another admin');
+                        return (
+                          <span key={`${entry.blockId}:${entry.state}`}>
+                            {getAdminBlockLabel(ownedBlock || { id: entry.blockId })}: {ownerName}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <div className="admin-page-save-bar-ownership-actions">
+                      {selectedPathWorkflowActivity.otherActorBlocks.length ? (
+                        <button
+                          type="button"
+                          className="action-btn action-btn-outline"
+                          onClick={handleTakeOverOtherDrafts}
+                          disabled={ownershipActionBusy}
+                        >
+                          {ownershipActionBusy ? 'Working...' : 'Take over all drafts'}
+                        </button>
+                      ) : null}
+                      {selectedPathWorkflowActivity.currentActorBlockIds?.length ? (
+                        <button
+                          type="button"
+                          className="action-btn action-btn-outline"
+                          onClick={handleReleaseMyDrafts}
+                          disabled={ownershipActionBusy}
+                        >
+                          {ownershipActionBusy ? 'Working...' : 'Release my drafts'}
+                        </button>
+                      ) : null}
+                    </div>
+                  </details>
+                ) : null}
+                {ownershipMessage ? <span role="status">{ownershipMessage}</span> : null}
                 {selectedPathSaveResult?.blockedBlocks.length ? (
                   <span>{selectedPathSaveResult.blockedBlocks.length} conflict{selectedPathSaveResult.blockedBlocks.length === 1 ? '' : 's'}</span>
                 ) : null}
@@ -2355,17 +2653,33 @@ export default function AdminContentPage() {
                 {pagePublishFeedback ? (
                   <span>{pagePublishFeedback}</span>
                 ) : null}
-                {latestRevisionEntry?.actor?.displayName ? (
-                  <span>
-                    Last saved by {formatActorName(latestRevisionEntry.actor)}
-                    {latestRevisionEntry?.createdAt ? ` ${formatRelativeTime(latestRevisionEntry.createdAt)}` : ''}
-                  </span>
-                ) : (
-                  <span>No shared revision saved yet for this page.</span>
-                )}
-                {latestRevisionEntry?.summary ? (
-                  <span>Note: {latestRevisionEntry.summary}</span>
-                ) : null}
+                <details className="admin-page-save-bar-details">
+                  <summary>Details</summary>
+                  <div className="admin-page-save-bar-details-copy">
+                    {latestRevisionEntry?.actor?.displayName ? (
+                      <span>
+                        Last saved by {formatActorName(latestRevisionEntry.actor)}
+                        {latestRevisionEntry?.createdAt ? ` ${formatRelativeTime(latestRevisionEntry.createdAt)}` : ''}
+                      </span>
+                    ) : (
+                      <span>No shared revision saved yet for this page.</span>
+                    )}
+                    {latestRevisionEntry?.summary ? (
+                      <span>Note: {latestRevisionEntry.summary}</span>
+                    ) : null}
+                    {selectedPathPublishResult?.receipt ? (
+                      <span>
+                        Receipt: {selectedPathPublishResult.receipt.scope === 'block' ? 'block' : 'page'} publish
+                        {selectedPathPublishResult.receipt.actor?.displayName
+                          ? ` by ${formatActorName(selectedPathPublishResult.receipt.actor)}`
+                          : ''}
+                        {selectedPathPublishResult.updatedAt
+                          ? ` ${formatAdminTimestamp(selectedPathPublishResult.updatedAt)}`
+                          : ''}
+                      </span>
+                    ) : null}
+                  </div>
+                </details>
               </div>
             </div>
             <div className="admin-page-save-bar-actions">
@@ -2392,8 +2706,11 @@ export default function AdminContentPage() {
                   type="button"
                   className="action-btn action-btn-outline"
                   onClick={handlePreviewDraft}
+                  title={selectedPathDirty
+                    ? 'Save the current draft, then open a preview.'
+                    : 'Open the current draft preview.'}
                 >
-                  Preview
+                  {selectedPathDirty ? 'Save draft and preview' : 'Preview'}
                 </button>
                 <button
                   type="button"
@@ -2414,58 +2731,73 @@ export default function AdminContentPage() {
                 </button>
                 <button
                   type="button"
-                  className="action-btn action-btn-outline"
-                  onClick={handlePromoteContentToSeed}
-                  disabled={sharedBackupActionBusy !== ''}
-                  title="Save the current shared admin content as the reset baseline."
-                >
-                  Promote content to seed
-                </button>
-                <button
-                  type="button"
-                  className="action-btn action-btn-outline"
-                  onClick={handleRestoreLastBackup}
-                  disabled={!latestSharedBackupEntry || sharedBackupActionBusy !== ''}
-                  title={latestSharedBackupEntry
-                    ? `Restore backup from ${formatAdminTimestamp(latestSharedBackupEntry.createdAt) || 'the latest saved backup'}`
-                    : 'No shared backup is available yet.'}
-                >
-                  Restore last backup
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResetContentAdmin}
                   className="action-btn action-btn-danger"
-                  disabled={sharedBackupActionBusy !== ''}
+                  onClick={handleDiscardPageDraft}
+                  disabled={!canDiscardPageDraft}
+                  title="Discard all unpublished changes on this page; live content remains unchanged."
                 >
-                  Reset from seed
+                  {draftDiscardBusy ? 'Discarding…' : 'Discard all page drafts'}
                 </button>
               </div>
             </div>
           </div>
-          <div className="admin-page-save-bar-warning">
-            <p>
-              Reset from seed replaces saved admin content with code defaults. A backup will be created automatically before reset.
-            </p>
-            <p>
-              Promote content to seed updates that reset baseline to the current shared admin content after it has been approved.
-            </p>
-            <div className="admin-page-save-bar-warning-meta">
-              {sharedBackupsLoading ? <span>Loading backups…</span> : null}
-              {!sharedBackupsLoading && sharedSeedBaseline?.createdAt ? (
-                <span>
-                  Current promoted seed: {formatAdminTimestamp(sharedSeedBaseline.createdAt) || sharedSeedBaseline.timestamp}
-                </span>
-              ) : null}
-              {!sharedBackupsLoading && latestSharedBackupEntry ? (
-                <span>
-                  Latest backup: {formatAdminTimestamp(latestSharedBackupEntry.createdAt) || latestSharedBackupEntry.timestamp}
-                </span>
-              ) : null}
-              {sharedBackupMessage ? <span>{sharedBackupMessage}</span> : null}
-              {sharedBackupError ? <span className="is-error">{sharedBackupError}</span> : null}
+          <details className="admin-page-save-bar-advanced">
+            <summary>Advanced / recovery</summary>
+            <div className="admin-page-save-bar-advanced-actions">
+              <button
+                type="button"
+                className="action-btn action-btn-outline"
+                onClick={handlePromoteContentToSeed}
+                disabled={sharedBackupActionBusy !== ''}
+                title="Save the current shared admin content as the reset baseline."
+              >
+                Promote content to seed
+              </button>
+              <button
+                type="button"
+                className="action-btn action-btn-outline"
+                onClick={handleRestoreLastBackup}
+                disabled={!latestSharedBackupEntry || sharedBackupActionBusy !== ''}
+                title={latestSharedBackupEntry
+                  ? `Restore backup from ${formatAdminTimestamp(latestSharedBackupEntry.createdAt) || 'the latest saved backup'}`
+                  : 'No shared backup is available yet.'}
+              >
+                Restore last backup
+              </button>
+              <button
+                type="button"
+                onClick={handleResetContentAdmin}
+                className="action-btn action-btn-danger"
+                disabled={sharedBackupActionBusy !== ''}
+              >
+                Reset from seed
+              </button>
             </div>
-          </div>
+            <div className="admin-page-save-bar-warning">
+              <p>
+                Reset from seed replaces saved admin content with code defaults. A backup will be created automatically before reset.
+              </p>
+              <p>
+                Promote content to seed updates that reset baseline to the current shared admin content after it has been approved.
+              </p>
+              <div className="admin-page-save-bar-warning-meta">
+                {sharedBackupsLoading ? <span>Loading backups…</span> : null}
+                {!sharedBackupsLoading && sharedSeedBaseline?.createdAt ? (
+                  <span>
+                    Current promoted seed: {formatAdminTimestamp(sharedSeedBaseline.createdAt) || sharedSeedBaseline.timestamp}
+                  </span>
+                ) : null}
+                {!sharedBackupsLoading && latestSharedBackupEntry ? (
+                  <span>
+                    Latest backup: {formatAdminTimestamp(latestSharedBackupEntry.createdAt) || latestSharedBackupEntry.timestamp}
+                  </span>
+                ) : null}
+                {sharedBackupMessage ? <span>{sharedBackupMessage}</span> : null}
+                {sharedBackupError ? <span className="is-error">{sharedBackupError}</span> : null}
+                {draftDiscardMessage ? <span>{draftDiscardMessage}</span> : null}
+              </div>
+            </div>
+          </details>
           {historyDrawerOpen ? (
             <div className="admin-page-history-drawer">
               <div className="admin-page-history-drawer-head">
@@ -2473,6 +2805,16 @@ export default function AdminContentPage() {
                   <h3>Revision history</h3>
                   <p>Restore the whole page or copy selected blocks from a prior save into the current draft.</p>
                 </div>
+                {revisionEntries.length > 1 ? (
+                  <button
+                    type="button"
+                    className="action-btn action-btn-outline"
+                    onClick={handleUndoLatestDraftChange}
+                    disabled={Boolean(revisionActionBusy)}
+                  >
+                    {revisionActionBusy?.startsWith('undo:') ? 'Reverting…' : 'Undo latest draft change'}
+                  </button>
+                ) : null}
               </div>
               {revisionLoading ? (
                 <p className="blank-state-note">Loading revision history…</p>
@@ -2695,9 +3037,6 @@ export default function AdminContentPage() {
                       const block = selectedBlocks[insertIndex];
                       const blockIndex = insertIndex;
                       const blockLabel = getAdminBlockLabel(block);
-                      const blockMeta = getBlockCollaboration(selectedPath, block.id);
-                      const blockOwnership = getBlockOwnershipVisual(blockMeta, devIdentity?.userId);
-                      const blockEditEntryLabel = getEditEntryLabel(blockOwnership.state, 'Edit');
                       return (
                         <tr
                           key={block.id}
@@ -2802,23 +3141,20 @@ export default function AdminContentPage() {
                             </div>
                           </td>
                           <td>
-                            <button
-                              type="button"
-                              className="action-btn action-btn-outline admin-block-edit-entry-btn"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                beginEditingBlock(
-                                  block.id,
-                                  blockOwnership.state === 'editing-other' || blockOwnership.state === 'drafted-other'
-                                    ? { force: true }
-                                    : undefined,
-                                );
-                              }}
-                              disabled={!canBlockOpenEditor(block, getMigratedBlockEditorComponent(block.kind, 'admin'))}
-                              aria-label={`${blockEditEntryLabel} ${blockLabel}`}
-                            >
-                              {blockEditEntryLabel}
-                            </button>
+                            <div className="admin-block-row-actions">
+                              <button
+                                type="button"
+                                className="action-btn action-btn-outline admin-block-edit-entry-btn"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  beginEditingBlock(block.id);
+                                }}
+                                disabled={!canBlockOpenEditor(block, getMigratedBlockEditorComponent(block.kind, 'admin'))}
+                                aria-label={`Edit ${blockLabel}`}
+                              >
+                                Edit
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -2888,12 +3224,44 @@ export default function AdminContentPage() {
                   >
                     Done editing
                   </button>
+                  <button
+                    type="button"
+                    className="action-btn action-btn-outline"
+                    onClick={() => handleMakeBlockLive(selectedBlock)}
+                    disabled={selectedBlockLockedByOther
+                      || selectedBlockDraftedByOther
+                      || !selectedPathPublishSummary?.changedBlockIds?.includes(selectedBlock.id)
+                      || Boolean(blockPublishBusyId)}
+                    title="Publish only this block without publishing the rest of the page."
+                  >
+                    {blockPublishBusyId === selectedBlock.id ? 'Publishing...' : 'Make block live'}
+                  </button>
+                  <button
+                    type="button"
+                    className="action-btn action-btn-danger"
+                    onClick={handleDiscardSelectedBlockDraft}
+                    disabled={!canDiscardSelectedBlockDraft}
+                    title="Discard this block's unpublished changes only."
+                  >
+                    {draftDiscardBusy ? 'Discarding…' : 'Discard block draft'}
+                  </button>
+                  <button
+                    type="button"
+                    className={`action-btn action-btn-danger admin-selected-block-remove-btn${pendingRemoveBlockId === selectedBlock.id ? ' is-confirm' : ''}`}
+                    onClick={() => handleRemoveBlockAction(selectedBlock)}
+                  >
+                    {pendingRemoveBlockId === selectedBlock.id ? 'Confirm delete block' : 'Delete block'}
+                  </button>
                 </div>
+              ) : null}
+              {blockPublishMessage ? (
+                <p className="admin-selected-block-action-message" role="status">{blockPublishMessage}</p>
               ) : null}
               {selectedBlockIsEditing && canEditSelectedBlock ? (
                 <div className="admin-block-fields-editor">
                   {selectedBlock.mode === 'dynamic' && MigratedSelectedBlockEditor ? (
                     <MigratedSelectedBlockEditor
+                      key={selectedBlock.id}
                       block={selectedBlock}
                       pathname={selectedPath}
                       routeOptions={routeLinkOptions}
@@ -2929,13 +3297,19 @@ export default function AdminContentPage() {
                     <button
                       type="button"
                       className="action-btn"
-                      onClick={() => beginEditingBlock(
-                        selectedBlock.id,
-                        selectedBlockLockedByOther || selectedBlockDraftedByOther ? { force: true } : undefined,
-                      )}
+                      onClick={() => beginEditingBlock(selectedBlock.id)}
                     >
-                      {getEditEntryLabel(selectedBlockOwnership.state, 'Edit block')}
+                      Edit block
                     </button>
+                    {selectedBlockLockedByOther || selectedBlockDraftedByOther ? (
+                      <button
+                        type="button"
+                        className="action-btn action-btn-outline"
+                        onClick={() => beginEditingBlock(selectedBlock.id, { force: true })}
+                      >
+                        {selectedBlockTakeoverLabel}
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       className="action-btn action-btn-outline"
@@ -2948,7 +3322,7 @@ export default function AdminContentPage() {
                       className={`action-btn action-btn-outline admin-selected-block-remove-btn${pendingRemoveBlockId === selectedBlock.id ? ' is-confirm' : ''}`}
                       onClick={() => handleRemoveBlockAction(selectedBlock)}
                     >
-                      {pendingRemoveBlockId === selectedBlock.id ? 'Confirm remove' : 'Remove block'}
+                      {pendingRemoveBlockId === selectedBlock.id ? 'Confirm delete block' : 'Delete block'}
                     </button>
                     <button
                       type="button"
@@ -2956,6 +3330,15 @@ export default function AdminContentPage() {
                       onClick={() => setHistoryDrawerOpen(true)}
                     >
                       History
+                    </button>
+                    <button
+                      type="button"
+                      className="action-btn action-btn-danger"
+                      onClick={handleDiscardSelectedBlockDraft}
+                      disabled={!canDiscardSelectedBlockDraft}
+                      title="Discard this block's unpublished changes only."
+                    >
+                      {draftDiscardBusy ? 'Discarding…' : 'Discard block draft'}
                     </button>
                   </div>
                 </div>

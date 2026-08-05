@@ -47,12 +47,21 @@ describe('block presentation contracts', () => {
 
     expect(normalizeBillboardPresentationSettings({
       sectionClassName: 'legacy-child-native-billboard',
-      title: 'More joy in receiving.',
+      title: 'Admin edited title',
     })).toMatchObject({
       titleFontFamily: 'helv',
       titleFontWeight: 700,
       titleSizeRem: 4.59375,
     });
+
+    expect(normalizeBillboardPresentationSettings({
+      sectionClassName: 'legacy-child-native-billboard',
+      title: 'Another admin title',
+    }).title).toBe('Another admin title');
+
+    expect(normalizeBillboardPresentationSettings({
+      title: 'More joy in receiving.',
+    })).toEqual({ title: 'More joy in receiving.' });
   });
 
   it('removes preset-owned request form fields from editable field schemas', () => {
@@ -95,5 +104,26 @@ describe('block presentation contracts', () => {
     });
 
     expect(normalized.editableFields.map((field) => field.id)).toEqual(['title', 'body']);
+  });
+
+  it('keeps presentation normalization idempotent and editable copy stable', () => {
+    const block = {
+      id: 'outro',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-billboard',
+        title: 'Edited title',
+        body: 'Edited body',
+      },
+      editableFields: [{ id: 'title' }, { id: 'body' }],
+    };
+
+    const once = normalizeBlockPresentation(block);
+    const twice = normalizeBlockPresentation(once);
+
+    expect(twice).toEqual(once);
+    expect(twice.settings.title).toBe('Edited title');
+    expect(twice.settings.body).toBe('Edited body');
   });
 });

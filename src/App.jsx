@@ -2,17 +2,17 @@ import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'rea
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import SiteLayout from './components/SiteLayout';
-import NativeContentPage from './components/NativeContentPage';
-import HomePage from './pages/HomePage';
-import ServicesPage from './pages/ServicesPage';
-import BrandPage from './pages/BrandPage';
-import AdminContentPage from './pages/AdminContentPage';
-import AdminRedirectsPage from './pages/AdminRedirectsPage';
-import AdminDocumentsPage from './pages/AdminDocumentsPage';
+const NativeContentPage = lazy(() => import('./components/NativeContentPage'));
+const HomePage = lazy(() => import('./pages/HomePage'));
+const ServicesPage = lazy(() => import('./pages/ServicesPage'));
+const BrandPage = lazy(() => import('./pages/BrandPage'));
+const AdminContentPage = lazy(() => import('./pages/AdminContentPage'));
+const AdminRedirectsPage = lazy(() => import('./pages/AdminRedirectsPage'));
+const AdminDocumentsPage = lazy(() => import('./pages/AdminDocumentsPage'));
 import PageBreadcrumbs from './components/PageBreadcrumbs';
 import SiteAnnouncementBar from './components/SiteAnnouncementBar';
 import { pageByPath, sitePages } from './data/siteMap';
-import { useContentAdmin } from './context/ContentAdminContext';
+import { useContentAdmin } from './context/ContentAdminContextCore';
 import { useRedirects } from './context/RedirectsContext';
 import { recordHomeReturnAssistNavigation } from './lib/homeReturnAssist';
 
@@ -59,17 +59,20 @@ function PageRoute({ page }) {
       {node}
     </>
   );
+  const withPageSuspense = (node) => withTopBands(
+    <Suspense fallback={<div className="route-page-loading" />}>{node}</Suspense>,
+  );
 
   if (routeKey === '/') {
-    return withTopBands(<HomePage />);
+    return withPageSuspense(<HomePage />);
   }
 
   if (routeKey === '/services') {
-    return withTopBands(<ServicesPage />);
+    return withPageSuspense(<ServicesPage />);
   }
 
   if (routeKey === '/brand') {
-    return withTopBands(<BrandPage />);
+    return withPageSuspense(<BrandPage />);
   }
 
   if (routeKey === '/services/investments') {
@@ -105,15 +108,15 @@ function PageRoute({ page }) {
   }
 
   if (routeKey === '/admin/content') {
-    return withTopBands(<AdminContentPage />);
+    return withPageSuspense(<AdminContentPage />);
   }
 
   if (routeKey === '/admin/redirects') {
-    return withTopBands(<AdminRedirectsPage />);
+    return withPageSuspense(<AdminRedirectsPage />);
   }
 
   if (routeKey === '/admin/documents') {
-    return withTopBands(<AdminDocumentsPage />);
+    return withPageSuspense(<AdminDocumentsPage />);
   }
 
   if (routeKey === '/admin/resources') {
@@ -216,7 +219,7 @@ function PageRoute({ page }) {
     return <Navigate to="/" replace />;
   }
 
-  return withTopBands(<NativeContentPage page={page} />);
+  return withPageSuspense(<NativeContentPage page={page} />);
 }
 
 export default function App() {

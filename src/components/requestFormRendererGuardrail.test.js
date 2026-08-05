@@ -267,6 +267,7 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy {');
     expect(cssSource).toContain('justify-self: stretch;');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy > h2 {');
+    expect(cssSource).toContain('font-family: var(--ag-font-helv);');
     expect(cssSource).toContain('text-wrap: wrap;');
     expect(cssSource).not.toContain('.legacy-child-native-endowments-legacy-form > .ag-panel-rail {');
   });
@@ -292,7 +293,10 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-layout {');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy {');
     expect(cssSource).toContain('.legacy-child-native-cga-request:not(.native-dynamic-request) .native-info-inline-form h5,');
-    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2,');
+    expect(cssSource).toContain('.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {');
+    expect(cssSource).toContain('.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 mark.is-mango {');
+    expect(cssSource).toContain('.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),');
   });
 
   it('forces the ministry-impact-fund dynamic request section back onto the shared layout contract instead of the retired static outer grid', () => {
