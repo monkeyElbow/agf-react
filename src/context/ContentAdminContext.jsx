@@ -1,11 +1,13 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
+import {
+  ContentAdminContext,
+} from './ContentAdminContextCore';
+export { ContentAdminContext, useContentAdmin, useOptionalContentAdmin } from './ContentAdminContextCore';
 import { sitePages } from '../data/siteMap';
 import {
   contentBlockBlueprintsByPath,
@@ -51,6 +53,7 @@ import { CONTENT_ADMIN_MIGRATION_ADAPTERS } from '../lib/contentAdminMigrationIn
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
+import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
 import {
   appendHistoryEntry,
   blockSnapshotEquals,
@@ -72,13 +75,17 @@ import {
 } from '../lib/contentAdminCollaboration';
 import {
   acquireSharedBlockLock,
+  discardSharedBlockDraft,
+  discardSharedPageDraft,
   fetchSharedContentBackups,
   fetchSharedContentSnapshot,
   fetchSharedPageRevisionHistory,
   initializeSharedContentFromSeed,
   isDevContentAuthorityEnabled,
+  publishSharedBlock,
   publishSharedPage,
   promoteSharedContentToSeed as promoteSharedContentToSeedRequest,
+  releaseSharedBlockDraft,
   releaseSharedBlockLock,
   resetSharedContentFromSeed,
   restoreLatestSharedContentBackup as restoreLatestSharedContentBackupRequest,
@@ -96,9 +103,7 @@ export {
 } from '../lib/contentAdminCollaboration';
 
 const STORAGE_KEY = 'agf-content-admin-v1';
-const ContentAdminContext = createContext(null);
 const LOCAL_BUFFERED_BLOCK_SETTING_COMMIT_DELAY_MS = 1600;
-export const LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS = 1200;
 const SHARED_BLOCK_DRAFT_SYNC_TEXT_DELAY_MS = 140;
 const SHARED_BLOCK_DRAFT_SYNC_DISCRETE_DELAY_MS = 90;
 const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
@@ -180,13 +185,6 @@ const RETIREMENT_IRA_COMPARISON_TABLE_ROWS = Object.freeze([
     RETIREMENT_IRA_COMPARISON_ROTH_ITEMS.join('\n'),
   ]),
 ]);
-const LOANS_RETIRED_DYNAMIC_BLOCK_IDS = new Set([
-  'request_form',
-  'value_cards',
-  'vision_fuel',
-  'cta_form',
-  'testimonials',
-]);
 const EMPTY_PAGE_CONTENT_SEED_DISABLED_PATHS = new Set([
   '/services/investments/invest-by-mail',
   '/services/loans/loan-consultants',
@@ -207,25 +205,6 @@ function isBlankSettingsObject(settings) {
     return true;
   }
   return Object.keys(settings).length === 0;
-}
-
-function shouldQuarantinePropertyCasualtyRequestContent(settings) {
-  if (!settings || typeof settings !== 'object') {
-    return false;
-  }
-
-  const title = String(settings.title || '').trim();
-  const subtitle = String(settings.subtitle || '').trim();
-  const body = String(settings.body || '').trim();
-  const step1NextLabel = String(settings.step1NextLabel || '').trim();
-
-  return (
-    title.includes('Property & Casualty Insurance Quote')
-    || subtitle.includes('We’re passionate about protecting your ministry.')
-    || body.includes('We’re passionate about protecting your ministry.')
-    || body.includes('Share a few details and we’ll help you explore broader coverage')
-    || step1NextLabel === 'Go to next step'
-  );
 }
 
 function stripSimpleHtmlToText(value) {
@@ -808,23 +787,6 @@ function normalizeRetirementLandingCtaSettings(settings, defaultSettings = {}) {
   return nextSettings;
 }
 
-function cloneCanonicalRequestFormBlock(defaultBlock, storedBlock) {
-  return {
-    ...cloneTemplateVariant(defaultBlock),
-    id: defaultBlock.id || storedBlock.id,
-    name: defaultBlock.name || storedBlock.name,
-    kind: defaultBlock.kind || storedBlock.kind,
-    mode: 'dynamic',
-    hidden: false,
-    settings: {
-      ...(defaultBlock?.settings || {}),
-    },
-    editableFields: Array.isArray(defaultBlock?.editableFields)
-      ? [...defaultBlock.editableFields]
-      : [],
-  };
-}
-
 function upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock, options = {}) {
   return {
     ...storedBlock,
@@ -1152,30 +1114,6 @@ function readInitialDevIdentity() {
   return getOrCreateDevIdentity();
 }
 
-function shouldUpgradeRetiredLoansDynamicBlock(pathname, storedBlock, defaultBlock) {
-  if (pathname !== '/services/loans') {
-    return false;
-  }
-
-  const blockId = String(storedBlock?.id || '').trim();
-  if (!LOANS_RETIRED_DYNAMIC_BLOCK_IDS.has(blockId)) {
-    return false;
-  }
-
-  const defaultMode = String(defaultBlock?.mode || '').trim().toLowerCase();
-  const storedMode = String(storedBlock?.mode || '').trim().toLowerCase();
-  if (defaultMode !== 'dynamic' || storedMode === 'dynamic') {
-    return false;
-  }
-
-  const hasEditableFields = Array.isArray(storedBlock?.editableFields) && storedBlock.editableFields.length > 0;
-  const hasSettings = !isBlankSettingsObject(storedBlock?.settings);
-  const storedKind = String(storedBlock?.kind || '').trim().toLowerCase();
-  const defaultKind = String(defaultBlock?.kind || '').trim().toLowerCase();
-
-  return !hasEditableFields && (!hasSettings || storedKind !== defaultKind);
-}
-
 function normalizeManagedPathInput(value) {
   const source = String(value || '').trim();
   if (!source) {
@@ -1286,28 +1224,6 @@ function buildDefaultPageHierarchy() {
   });
 
   return byPath;
-}
-
-function orderDefaultBlocksForPath(pathname, blueprintBlocks) {
-  const blocks = Array.isArray(blueprintBlocks) ? [...blueprintBlocks] : [];
-  if (pathname !== '/test') {
-    return blocks;
-  }
-
-  const ctaBlocks = [];
-  const nonCtaBlocks = [];
-
-  blocks.forEach((block) => {
-    const blockId = String(block?.id || '').trim().toLowerCase();
-    const blockKind = String(block?.kind || '').trim().toLowerCase();
-    if (blockId === 'cta_form' || blockKind === 'cta_form') {
-      ctaBlocks.push(block);
-      return;
-    }
-    nonCtaBlocks.push(block);
-  });
-
-  return [...nonCtaBlocks, ...ctaBlocks];
 }
 
 function dedupeBlocksById(blocks) {
@@ -1721,7 +1637,8 @@ function enforceHeroBaseClassName(value, requiredClassName, options = {}) {
   const requiredTokens = String(requiredClassName || '')
     .trim()
     .split(/\s+/)
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((token) => !HERO_COLOR_CLASS_TOKENS.has(token.toLowerCase()));
   if (!requiredTokens.length) {
     return String(value || '').trim();
   }
@@ -1755,35 +1672,36 @@ function enforceHeroBaseClassName(value, requiredClassName, options = {}) {
   }) : [];
 
   const nextTokens = [...requiredTokens, ...extraTokens];
-  if (colorToken && !nextTokens.some((token) => token.toLowerCase() === colorToken)) {
-    nextTokens.push(colorToken);
+  const requiredColorToken = extractHeroColorClassTokenFromClassName(requiredClassName);
+  const resolvedColorToken = colorToken || requiredColorToken;
+  if (resolvedColorToken && !nextTokens.some((token) => token.toLowerCase() === resolvedColorToken)) {
+    nextTokens.push(resolvedColorToken);
   }
   return nextTokens.join(' ').trim();
+}
+
+function enforceHeroClassNameField(settings, field, requiredClassName, options = {}) {
+  if (
+    Object.prototype.hasOwnProperty.call(settings, field)
+    && !String(settings[field] || '').trim()
+  ) {
+    return;
+  }
+  settings[field] = enforceHeroBaseClassName(settings[field], requiredClassName, options);
 }
 
 function normalizeLoansHeroSettings(rawSettings) {
   const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
   const contract = getHeroSeedContract('/services/loans');
-  const animationPresetToken = String(settings.animationPreset || '').trim().toLowerCase();
-  const line1Raw = String(settings.line1ClassName || '').trim().toLowerCase();
-  const line2Raw = String(settings.line2ClassName || '').trim().toLowerCase();
-  const hasLegacyAnimationTokens = line1Raw.includes('lineblur')
-    || line2Raw.includes('lineb')
-    || line1Raw.includes('loans-native-hero-line')
-    || line2Raw.includes('loans-native-hero-line');
-  const animationPreset = hasLegacyAnimationTokens && (!animationPresetToken || animationPresetToken === 'none')
-    ? (contract?.animationPreset || 'loans-unblur')
-    : (String(settings.animationPreset || '').trim() || contract?.animationPreset || 'loans-unblur');
-
   let next = {
     ...settings,
-    animationPreset,
+    animationPreset: String(settings.animationPreset || '').trim() || contract?.animationPreset || 'loans-unblur',
     bgTone: String(settings.bgTone || '').trim() || contract?.bgTone || 'white',
     justify: String(settings.justify || '').trim() || contract?.justify || 'center',
     actionJustify: String(settings.actionJustify || '').trim() || contract?.actionJustify || 'center',
     heightMode: String(settings.heightMode || '').trim() || 'default',
     lineHeight: Number.isFinite(Number(settings.lineHeight)) ? Number(settings.lineHeight) : contract?.lineHeight || 0.9,
-    lineGap: 0,
+    lineGap: Number.isFinite(Number(settings.lineGap)) ? Number(settings.lineGap) : contract?.lineGap || 0,
   };
 
   next = withDefaultHeroLine(next, {
@@ -1798,131 +1716,20 @@ function normalizeLoansHeroSettings(rawSettings) {
     defaultClassName: contract?.lines?.[1]?.className || 'loans-native-hero-line is-purpose',
     defaultHighlightsJson: contract?.lines?.[1]?.highlightsJson || '[{"text":"Our","className":"is-super-grey"},{"text":".","className":"is-super-grey"}]',
   });
-  next.line1ClassName = enforceHeroBaseClassName(
-    next.line1ClassName,
+  enforceHeroClassNameField(
+    next,
+    'line1ClassName',
     contract?.lines?.[0]?.className || 'loans-native-hero-line is-vision',
-    { dropTokens: ['lineblur'], preserveCustomTokens: false },
+    { dropTokens: ['lineblur'] },
   );
-  next.line2ClassName = enforceHeroBaseClassName(
-    next.line2ClassName,
+  enforceHeroClassNameField(
+    next,
+    'line2ClassName',
     contract?.lines?.[1]?.className || 'loans-native-hero-line is-purpose',
-    { dropTokens: ['lineb'], preserveCustomTokens: false },
+    { dropTokens: ['lineb'] },
   );
 
   return next;
-}
-
-function hasNonEmptyHeroHighlights(value, lineText = '') {
-  const raw = String(value || '').trim();
-  if (!raw) {
-    return false;
-  }
-  const sourceText = String(lineText || '');
-  const sourceLower = sourceText.toLowerCase();
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || !parsed.length) {
-      return false;
-    }
-    return parsed.some((item) => {
-      const className = normalizeHeroColorClassToken(item?.className);
-      if (!className) {
-        return false;
-      }
-      const hasRange = Number.isFinite(Number(item?.start))
-        && Number.isFinite(Number(item?.end))
-        && Number(item.end) > Number(item.start);
-      if (hasRange) {
-        if (!sourceText) {
-          return true;
-        }
-        const safeStart = Math.max(0, Math.min(sourceText.length, Math.floor(Number(item.start))));
-        const safeEnd = Math.max(0, Math.min(sourceText.length, Math.floor(Number(item.end))));
-        return safeEnd > safeStart;
-      }
-      const text = String(item?.text || '').trim();
-      if (!text) {
-        return false;
-      }
-      if (!sourceLower) {
-        return true;
-      }
-      return sourceLower.includes(text.toLowerCase());
-    });
-  } catch {
-    return false;
-  }
-}
-
-function canApplyDefaultHeroHighlights(textValue, defaultTextValue, defaultHighlightsJson) {
-  const text = String(textValue || '').trim().toLowerCase();
-  const defaultText = String(defaultTextValue || '').trim().toLowerCase();
-  if (!text) {
-    return false;
-  }
-  if (text === defaultText) {
-    return true;
-  }
-  try {
-    const parsed = JSON.parse(String(defaultHighlightsJson || '[]'));
-    const tokens = Array.isArray(parsed)
-      ? parsed
-        .map((item) => String(item?.text || '').trim().toLowerCase())
-        .filter(Boolean)
-      : [];
-    return tokens.length > 0 && tokens.every((token) => text.includes(token));
-  } catch {
-    return false;
-  }
-}
-
-function shouldRestoreDefaultHeroHighlights(currentValue, textValue, defaultTextValue, defaultHighlightsJson) {
-  const raw = String(currentValue || '').trim();
-  const defaultRaw = String(defaultHighlightsJson || '').trim();
-  if (!defaultRaw) {
-    return false;
-  }
-  if (!canApplyDefaultHeroHighlights(textValue, defaultTextValue, defaultHighlightsJson)) {
-    return false;
-  }
-  if (!raw || raw === '[]') {
-    return true;
-  }
-
-  try {
-    const currentParsed = JSON.parse(raw);
-    const expectedParsed = JSON.parse(defaultRaw);
-    if (!Array.isArray(currentParsed) || !Array.isArray(expectedParsed) || !expectedParsed.length) {
-      return false;
-    }
-
-    const currentTokens = currentParsed.map((item) => ({
-      text: String(item?.text || '').trim().toLowerCase(),
-      className: normalizeHeroColorClassToken(item?.className),
-    }));
-    const expectedTokens = expectedParsed.map((item) => ({
-      text: String(item?.text || '').trim().toLowerCase(),
-      className: normalizeHeroColorClassToken(item?.className),
-    })).filter((item) => item.text && item.className);
-
-    if (!expectedTokens.length) {
-      return false;
-    }
-
-    const currentTextSet = new Set(currentTokens.map((item) => item.text).filter(Boolean));
-    const expectedTextSet = new Set(expectedTokens.map((item) => item.text));
-    const hasUnexpectedTexts = Array.from(currentTextSet).some((token) => !expectedTextSet.has(token));
-    if (hasUnexpectedTexts) {
-      return false;
-    }
-
-    return expectedTokens.some((expectedToken) => {
-      const currentToken = currentTokens.find((item) => item.text === expectedToken.text);
-      return !currentToken || !currentToken.className;
-    });
-  } catch {
-    return false;
-  }
 }
 
 function withDefaultHeroActions(settings, defaults) {
@@ -1941,29 +1748,32 @@ function withDefaultHeroActions(settings, defaults) {
     const toneKey = `button${buttonNumber}Tone`;
     const openKey = `button${buttonNumber}OpenInNewWindow`;
 
-    if (!String(next[labelKey] || '').trim()) {
+    if (!Object.prototype.hasOwnProperty.call(next, labelKey)) {
       next[labelKey] = action.label;
     }
-    if (!String(next[pageRefKey] || '').trim() && !String(next[urlKey] || '').trim()) {
+    if (
+      !Object.prototype.hasOwnProperty.call(next, pageRefKey)
+      && !Object.prototype.hasOwnProperty.call(next, urlKey)
+    ) {
       if (action.pageRef) {
         next[pageRefKey] = action.pageRef;
       } else if (action.url) {
         next[urlKey] = action.url;
       }
     }
-    if (!String(next[actionKey] || '').trim() && action.action) {
+    if (!Object.prototype.hasOwnProperty.call(next, actionKey) && action.action) {
       next[actionKey] = action.action;
     }
-    if (!String(next[targetAnchorIdKey] || '').trim() && action.targetAnchorId) {
+    if (!Object.prototype.hasOwnProperty.call(next, targetAnchorIdKey) && action.targetAnchorId) {
       next[targetAnchorIdKey] = action.targetAnchorId;
     }
-    if (!String(next[targetBlockIdKey] || '').trim() && action.targetBlockId) {
+    if (!Object.prototype.hasOwnProperty.call(next, targetBlockIdKey) && action.targetBlockId) {
       next[targetBlockIdKey] = action.targetBlockId;
     }
-    if (!String(next[styleKey] || '').trim() && action.style) {
+    if (!Object.prototype.hasOwnProperty.call(next, styleKey) && action.style) {
       next[styleKey] = action.style;
     }
-    if (!String(next[toneKey] || '').trim() && action.tone) {
+    if (!Object.prototype.hasOwnProperty.call(next, toneKey) && action.tone) {
       next[toneKey] = action.tone;
     }
     if (!Object.prototype.hasOwnProperty.call(next, openKey) || next[openKey] == null) {
@@ -2006,22 +1816,18 @@ function withDefaultHeroLine(settings, config) {
   const classKey = `line${config.line}ClassName`;
   const highlightsKey = `line${config.line}HighlightsJson`;
 
-  const currentText = String(next[textKey] || '').trim();
-  const currentClassName = String(next[classKey] || '').trim();
-  const currentHighlights = next[highlightsKey];
+  const hasText = Object.prototype.hasOwnProperty.call(next, textKey);
+  const hasClassName = Object.prototype.hasOwnProperty.call(next, classKey);
 
-  if (!currentText) {
+  if (!hasText) {
     next[textKey] = config.defaultText;
   }
-  if (!currentClassName && config.defaultClassName) {
+  if (!hasClassName && config.defaultClassName) {
     next[classKey] = config.defaultClassName;
   }
-  if (shouldRestoreDefaultHeroHighlights(currentHighlights, next[textKey], config.defaultText, config.defaultHighlightsJson)) {
+  if (!Object.prototype.hasOwnProperty.call(next, highlightsKey) && config.defaultHighlightsJson) {
     next[highlightsKey] = config.defaultHighlightsJson;
-  } else if (
-    !hasNonEmptyHeroHighlights(currentHighlights, next[textKey])
-    && !String(config.defaultHighlightsJson || '').trim()
-  ) {
+  } else if (!String(config.defaultHighlightsJson || '').trim() && !Object.prototype.hasOwnProperty.call(next, highlightsKey)) {
     next[highlightsKey] = '';
   }
 
@@ -2032,12 +1838,6 @@ const GENEROSITY_FUND_DONOR_ADVISED_FUND_TITLE = 'Donor Advised Fund';
 const GENEROSITY_FUND_RETIRED_ROUTE_REFS = Object.freeze([
   RETIRED_PLANNED_GIVING_GENEROSITY_FUND_PATH,
   PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH,
-]);
-const GENEROSITY_FUND_CANONICAL_BLOCK_IDS = new Set([
-  'hero',
-  'how_it_works',
-  'generosity_fund_online',
-  'gift_assets',
 ]);
 
 function normalizeGenerosityFundPageHierarchyEntry(pathname, rawPage) {
@@ -2130,59 +1930,30 @@ function normalizeGenerosityFundRouteLabelsInSettings(rawSettings) {
   return changed ? next : rawSettings;
 }
 
-function normalizeGenerosityFundManagedBlock(storedBlock, defaultBlock) {
-  const blockId = String(storedBlock?.id || '').trim();
-  if (!GENEROSITY_FUND_CANONICAL_BLOCK_IDS.has(blockId) || !defaultBlock) {
-    return storedBlock;
-  }
-
-  const canonicalBlock = cloneTemplateVariant(defaultBlock);
-  return {
-    ...storedBlock,
-    templateId: canonicalBlock.templateId || storedBlock?.templateId,
-    presetId: canonicalBlock.presetId || storedBlock?.presetId,
-    name: canonicalBlock.name || storedBlock?.name,
-    kind: canonicalBlock.kind || storedBlock?.kind,
-    mode: canonicalBlock.mode || storedBlock?.mode,
-    hidden: Object.prototype.hasOwnProperty.call(canonicalBlock, 'hidden')
-      ? canonicalBlock.hidden
-      : storedBlock?.hidden,
-    settings: {
-      ...(canonicalBlock.settings || {}),
-    },
-    editableFields: Array.isArray(canonicalBlock.editableFields)
-      ? [...canonicalBlock.editableFields]
-      : (Array.isArray(storedBlock?.editableFields) ? [...storedBlock.editableFields] : []),
-  };
-}
-
 function normalizeHeroSettingsByPath(pathname, rawSettings) {
   const settings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
-  const hasLegacyNoneAnimationPreset = String(settings.animationPreset || '').trim() === 'none';
-  const hasLegacyInvestmentsSingleLineHero = (
-    pathname === '/services/investments'
-    && String(settings.line1Text || '').trim() === 'Your investments. Your faith. Better together.'
-    && !String(settings.line2Text || '').trim()
-    && !String(settings.line3Text || '').trim()
-  );
 
   if (pathname === '/') {
     const contract = getHeroSeedContract(pathname);
     let next = { ...settings };
-    if (!String(next.animationPreset || '').trim() || hasLegacyNoneAnimationPreset) {
+    if (!String(next.animationPreset || '').trim()) {
       next.animationPreset = contract?.animationPreset || 'default';
     }
     if (!String(next.bgTone || '').trim()) {
       next.bgTone = contract?.bgTone || 'white';
     }
-    next.justify = contract?.justify || 'left';
+    if (!String(next.justify || '').trim()) {
+      next.justify = contract?.justify || 'left';
+    }
     if (!Number.isFinite(Number(next.titleSizeRem)) && Number.isFinite(Number(contract?.titleSizeRem))) {
       next.titleSizeRem = Number(contract.titleSizeRem);
     }
     if (!Number.isFinite(Number(next.lineHeight))) {
       next.lineHeight = contract?.lineHeight || 0.9;
     }
-    next.lineGap = 0;
+    if (!Number.isFinite(Number(next.lineGap))) {
+      next.lineGap = contract?.lineGap || 0;
+    }
     if (!String(next.line3ClassName || '').trim()) {
       next.line3ClassName = contract?.lines?.[2]?.className || 'home-native-title line3';
     }
@@ -2204,9 +1975,9 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
       defaultClassName: contract?.lines?.[2]?.className || 'home-native-title line3',
       defaultHighlightsJson: contract?.lines?.[2]?.highlightsJson ?? '',
     });
-    next.line1ClassName = enforceHeroBaseClassName(next.line1ClassName, contract?.lines?.[0]?.className || 'home-native-eyebrow', { preserveCustomTokens: false });
-    next.line2ClassName = enforceHeroBaseClassName(next.line2ClassName, contract?.lines?.[1]?.className || 'home-native-title line1 line2', { preserveCustomTokens: false });
-    next.line3ClassName = enforceHeroBaseClassName(next.line3ClassName, contract?.lines?.[2]?.className || 'home-native-title line3', { preserveCustomTokens: false });
+    enforceHeroClassNameField(next, 'line1ClassName', contract?.lines?.[0]?.className || 'home-native-eyebrow');
+    enforceHeroClassNameField(next, 'line2ClassName', contract?.lines?.[1]?.className || 'home-native-title line1 line2');
+    enforceHeroClassNameField(next, 'line3ClassName', contract?.lines?.[2]?.className || 'home-native-title line3');
     if (!String(next.actionJustify || '').trim()) {
       next.actionJustify = contract?.actionJustify || 'left';
     }
@@ -2217,27 +1988,20 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
   if (pathname === '/services/investments') {
     const contract = getHeroSeedContract(pathname);
     let next = { ...settings };
-    if (!String(next.animationPreset || '').trim() || hasLegacyNoneAnimationPreset) {
+    if (!String(next.animationPreset || '').trim()) {
       next.animationPreset = contract?.animationPreset || 'default';
     }
     if (!String(next.bgTone || '').trim()) {
       next.bgTone = contract?.bgTone || 'white';
     }
-    next.justify = contract?.justify || 'left';
+    if (!String(next.justify || '').trim()) {
+      next.justify = contract?.justify || 'left';
+    }
     if (!Number.isFinite(Number(next.lineHeight))) {
       next.lineHeight = contract?.lineHeight || 0.9;
     }
-    next.lineGap = 0;
-    if (hasLegacyInvestmentsSingleLineHero) {
-      next.line1Text = contract?.lines?.[0]?.text || 'Your investments.';
-      next.line1ClassName = contract?.lines?.[0]?.className || 'line1';
-      next.line1HighlightsJson = contract?.lines?.[0]?.highlightsJson || '[{"text":"investments","className":"is-atlantean"}]';
-      next.line2Text = contract?.lines?.[1]?.text || 'Your faith.';
-      next.line2ClassName = contract?.lines?.[1]?.className || 'line2';
-      next.line2HighlightsJson = contract?.lines?.[1]?.highlightsJson || '[{"text":"faith","className":"is-mango"}]';
-      next.line3Text = contract?.lines?.[2]?.text || 'Better together.';
-      next.line3ClassName = contract?.lines?.[2]?.className || 'line3';
-      next.line3HighlightsJson = contract?.lines?.[2]?.highlightsJson || '[{"text":"together","className":"is-sandstone"}]';
+    if (!Number.isFinite(Number(next.lineGap))) {
+      next.lineGap = contract?.lineGap || 0;
     }
     next = withDefaultHeroLine(next, {
       line: 1,
@@ -2257,9 +2021,9 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
       defaultClassName: contract?.lines?.[2]?.className || 'line3',
       defaultHighlightsJson: contract?.lines?.[2]?.highlightsJson || '[{"text":"together","className":"is-sandstone"}]',
     });
-    next.line1ClassName = enforceHeroBaseClassName(next.line1ClassName, contract?.lines?.[0]?.className || 'line1', { preserveCustomTokens: false });
-    next.line2ClassName = enforceHeroBaseClassName(next.line2ClassName, contract?.lines?.[1]?.className || 'line2', { preserveCustomTokens: false });
-    next.line3ClassName = enforceHeroBaseClassName(next.line3ClassName, contract?.lines?.[2]?.className || 'line3', { preserveCustomTokens: false });
+    enforceHeroClassNameField(next, 'line1ClassName', contract?.lines?.[0]?.className || 'line1');
+    enforceHeroClassNameField(next, 'line2ClassName', contract?.lines?.[1]?.className || 'line2');
+    enforceHeroClassNameField(next, 'line3ClassName', contract?.lines?.[2]?.className || 'line3');
     if (!String(next.actionJustify || '').trim()) {
       next.actionJustify = contract?.actionJustify || 'left';
     }
@@ -2269,17 +2033,21 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
   if (pathname === '/services/retirement') {
     const contract = getHeroSeedContract(pathname);
     let next = { ...settings };
-    if (!String(next.animationPreset || '').trim() || hasLegacyNoneAnimationPreset) {
+    if (!String(next.animationPreset || '').trim()) {
       next.animationPreset = contract?.animationPreset || 'default';
     }
     if (!String(next.bgTone || '').trim()) {
       next.bgTone = contract?.bgTone || 'white';
     }
-    next.justify = contract?.justify || 'center';
+    if (!String(next.justify || '').trim()) {
+      next.justify = contract?.justify || 'center';
+    }
     if (!Number.isFinite(Number(next.lineHeight))) {
       next.lineHeight = contract?.lineHeight || 0.9;
     }
-    next.lineGap = 0;
+    if (!Number.isFinite(Number(next.lineGap))) {
+      next.lineGap = contract?.lineGap || 0;
+    }
     next = withDefaultHeroLine(next, {
       line: 1,
       defaultText: contract?.lines?.[0]?.text || 'Invest in tomorrow.',
@@ -2292,8 +2060,8 @@ function normalizeHeroSettingsByPath(pathname, rawSettings) {
       defaultClassName: contract?.lines?.[1]?.className || 'retirement-native-hero-line line2',
       defaultHighlightsJson: contract?.lines?.[1]?.highlightsJson || '[{"text":"today","className":"is-mango"}]',
     });
-    next.line1ClassName = enforceHeroBaseClassName(next.line1ClassName, contract?.lines?.[0]?.className || 'retirement-native-hero-line line1', { preserveCustomTokens: false });
-    next.line2ClassName = enforceHeroBaseClassName(next.line2ClassName, contract?.lines?.[1]?.className || 'retirement-native-hero-line line2', { preserveCustomTokens: false });
+    enforceHeroClassNameField(next, 'line1ClassName', contract?.lines?.[0]?.className || 'retirement-native-hero-line line1');
+    enforceHeroClassNameField(next, 'line2ClassName', contract?.lines?.[1]?.className || 'retirement-native-hero-line line2');
     if (!String(next.actionJustify || '').trim()) {
       next.actionJustify = contract?.actionJustify || 'center';
     }
@@ -2321,129 +2089,13 @@ export function normalizeDynamicHeroSettings(pathname, rawSettings) {
   };
 }
 
-function isBlankHeroString(value) {
-  return !String(value || '').trim();
-}
-
-function recordHeroRepair(repairs, field, label, reason = 'restored') {
-  repairs.push({ field, label, reason });
-}
-
-function recordHeroStringRepair(repairs, normalizedSettings, rawSettings, field, label) {
-  if (!isBlankHeroString(rawSettings?.[field])) {
-    return;
-  }
-  if (isBlankHeroString(normalizedSettings?.[field])) {
-    return;
-  }
-  recordHeroRepair(repairs, field, label, 'restored');
-}
-
-function recordHeroNumberRepair(repairs, normalizedSettings, rawSettings, field, label) {
-  if (Number.isFinite(Number(rawSettings?.[field]))) {
-    return;
-  }
-  if (!Number.isFinite(Number(normalizedSettings?.[field]))) {
-    return;
-  }
-  recordHeroRepair(repairs, field, label, 'restored');
-}
-
-function recordHeroClassRepair(repairs, normalizedSettings, rawSettings, field, label) {
-  const rawValue = String(rawSettings?.[field] || '').trim();
-  const normalizedValue = String(normalizedSettings?.[field] || '').trim();
-  if (!normalizedValue || rawValue === normalizedValue) {
-    return;
-  }
-  recordHeroRepair(repairs, field, label, 'standardized');
-}
-
-function recordHeroHighlightsRepair(repairs, normalizedSettings, rawSettings, field, textField, label) {
-  const rawValue = String(rawSettings?.[field] || '').trim();
-  const normalizedValue = String(normalizedSettings?.[field] || '').trim();
-  if (rawValue === normalizedValue) {
-    return;
-  }
-  recordHeroRepair(repairs, field, label, normalizedValue ? 'restored' : 'cleaned');
-}
-
 export function inspectDynamicHeroSettings(pathname, rawSettings) {
   const sourceSettings = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
   const normalizedSettings = normalizeDynamicHeroSettings(pathname, sourceSettings);
+  // This inspection is intentionally read-only. Missing optional defaults are
+  // resolved for rendering, but saved admin settings are never reported as
+  // drift and never repaired toward a route contract here.
   const repairedFields = [];
-
-  recordHeroStringRepair(repairedFields, normalizedSettings, sourceSettings, 'animationPreset', 'Animation preset');
-  recordHeroStringRepair(repairedFields, normalizedSettings, sourceSettings, 'bgTone', 'Background tone');
-  recordHeroStringRepair(repairedFields, normalizedSettings, sourceSettings, 'actionJustify', 'Button alignment');
-  recordHeroNumberRepair(repairedFields, normalizedSettings, sourceSettings, 'titleSizeRem', 'Headline size');
-  recordHeroNumberRepair(repairedFields, normalizedSettings, sourceSettings, 'titleLetterSpacingEm', 'Headline tracking');
-  recordHeroNumberRepair(repairedFields, normalizedSettings, sourceSettings, 'lineHeight', 'Line height');
-  recordHeroStringRepair(repairedFields, normalizedSettings, sourceSettings, 'heightMode', 'Height mode');
-  recordHeroNumberRepair(repairedFields, normalizedSettings, sourceSettings, 'heightSvh', 'Custom height');
-
-  [1, 2, 3].forEach((lineNumber) => {
-    const lineKey = `line${lineNumber}`;
-    recordHeroStringRepair(
-      repairedFields,
-      normalizedSettings,
-      sourceSettings,
-      `${lineKey}Text`,
-      `Line ${lineNumber} text`,
-    );
-    recordHeroClassRepair(
-      repairedFields,
-      normalizedSettings,
-      sourceSettings,
-      `${lineKey}ClassName`,
-      `Line ${lineNumber} classes`,
-    );
-    recordHeroHighlightsRepair(
-      repairedFields,
-      normalizedSettings,
-      sourceSettings,
-      `${lineKey}HighlightsJson`,
-      `${lineKey}Text`,
-      `Line ${lineNumber} highlights`,
-    );
-  });
-
-  [1, 2].forEach((buttonNumber) => {
-    recordHeroStringRepair(
-      repairedFields,
-      normalizedSettings,
-      sourceSettings,
-      `button${buttonNumber}Label`,
-      `Button ${buttonNumber} label`,
-    );
-    recordHeroStringRepair(
-      repairedFields,
-      normalizedSettings,
-      sourceSettings,
-      `button${buttonNumber}PageRef`,
-      `Button ${buttonNumber} page`,
-    );
-    recordHeroStringRepair(
-      repairedFields,
-      normalizedSettings,
-      sourceSettings,
-      `button${buttonNumber}Url`,
-      `Button ${buttonNumber} URL`,
-    );
-    recordHeroStringRepair(
-      repairedFields,
-      normalizedSettings,
-      sourceSettings,
-      `button${buttonNumber}Style`,
-      `Button ${buttonNumber} style`,
-    );
-    recordHeroStringRepair(
-      repairedFields,
-      normalizedSettings,
-      sourceSettings,
-      `button${buttonNumber}Tone`,
-      `Button ${buttonNumber} tone`,
-    );
-  });
 
   return {
     pathname,
@@ -2547,9 +2199,6 @@ function isPlaceholderIntroSettings(settings) {
   const bodyHtml = String(settings.bodyHtml || '').trim();
   const body = String(settings.body || '').trim();
   if (!heading && !body && !bodyHtml) {
-    return true;
-  }
-  if (heading.includes('Test the panel system')) {
     return true;
   }
   if (bodyHtml.includes('native React with saved-page copy restoration')) {
@@ -2674,10 +2323,7 @@ function buildDefaultBlocks() {
       return;
     }
 
-    const orderedBlueprint = orderDefaultBlocksForPath(
-      page.path,
-      contentBlockBlueprintsByPath[page.path] || genericPageFallbackBlueprint(),
-    );
+    const orderedBlueprint = contentBlockBlueprintsByPath[page.path] || genericPageFallbackBlueprint();
     const blueprint = dedupeBlocksById(orderedBlueprint);
 
     const seededBlocks = blueprint.map((block) => {
@@ -3117,16 +2763,6 @@ export function normalizeStoredConfig(payload) {
         };
       }
       if (
-        path === '/services/insurance/property-casualty-insurance'
-        && storedBlock.id === 'request_form'
-        && storedKind === 'request_form'
-        && defaultBlock
-        && shouldQuarantinePropertyCasualtyRequestContent(storedSettings)
-      ) {
-        storedMode = 'dynamic';
-        nextStoredBlock = cloneCanonicalRequestFormBlock(defaultBlock, storedBlock);
-      }
-      if (
         path === '/services/retirement/retirement-consultants'
         && storedBlock.id === 'request_form'
         && storedKind === 'request_form'
@@ -3147,10 +2783,6 @@ export function normalizeStoredConfig(payload) {
             ? [...defaultBlock.editableFields]
             : [],
         };
-      }
-      if (shouldUpgradeRetiredLoansDynamicBlock(path, storedBlock, defaultBlock)) {
-        storedMode = 'dynamic';
-        nextStoredBlock = upgradeStoredBlockToDynamicBlueprint(defaultBlock, storedBlock);
       }
       if (
         path === RETIREMENT_403B_GROUP_ENROLLMENT_PATH
@@ -3384,12 +3016,6 @@ export function normalizeStoredConfig(payload) {
           settings: normalizeGenerosityFundJoyfulGivingBillboardSettings(nextStoredBlock?.settings),
         };
       }
-      if (
-        path === LEGACY_GIVING_GENEROSITY_FUND_PATH
-        && defaultBlock
-      ) {
-        nextStoredBlock = normalizeGenerosityFundManagedBlock(nextStoredBlock, defaultBlock);
-      }
       if (nextStoredBlock?.settings && typeof nextStoredBlock.settings === 'object') {
         nextStoredBlock = {
           ...nextStoredBlock,
@@ -3586,7 +3212,7 @@ export function normalizeStoredConfig(payload) {
 
 function readInitialState() {
   if (isDevContentAuthorityEnabled()) {
-    return normalizeStoredConfig(null);
+    return buildFastInitialContentAdminState();
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -3597,6 +3223,46 @@ function readInitialState() {
   } catch {
     return normalizeStoredConfig(null);
   }
+}
+
+// The public renderer can use native page content while the shared admin state
+// hydrates. Keep first paint independent of the multi-megabyte admin snapshot.
+export function buildFastInitialContentAdminState() {
+  const pageHierarchy = Object.fromEntries(
+    sitePages.map((page) => [page.path, { ...page }]),
+  );
+  const pathSet = new Set(Object.keys(pageHierarchy));
+  Object.values(pageHierarchy).forEach((page) => {
+    if (page.parentPath || page.path === '/') {
+      return;
+    }
+    const segments = String(page.path || '').split('/').filter(Boolean);
+    while (segments.length > 1) {
+      segments.pop();
+      const candidate = `/${segments.join('/')}`;
+      if (pathSet.has(candidate)) {
+        page.parentPath = candidate;
+        break;
+      }
+    }
+  });
+
+  const pathAliases = { ...DEFAULT_MANAGED_PATH_ALIASES };
+  sitePages.forEach((page) => {
+    (Array.isArray(page.linkRefAliases) ? page.linkRefAliases : []).forEach((alias) => {
+      const normalizedAlias = String(alias || '').trim();
+      if (normalizedAlias && normalizedAlias !== page.path) {
+        pathAliases[normalizedAlias] = page.path;
+      }
+    });
+  });
+
+  return {
+    pageHierarchy,
+    blocksByPath: {},
+    pathAliases,
+    collaborationByPath: {},
+  };
 }
 
 function hasContentAdminSnapshotStateContent(snapshot) {
@@ -3869,7 +3535,76 @@ function collectDirtyAuthoringPaths(currentState, persistedState) {
   return collectDirtyComparableAuthoringPaths(current, persisted);
 }
 
-function summarizePageWorkflowActivity(collaborationByPath, pathname, actor) {
+function preserveBlockedDraftContent(sharedState, localState, blockedBlocks) {
+  const blockedByPath = new Map();
+  (Array.isArray(blockedBlocks) ? blockedBlocks : []).forEach((entry) => {
+    const pathname = String(entry?.pathname || '').trim();
+    const blockId = String(entry?.blockId || '').trim();
+    if (!pathname || !blockId) {
+      return;
+    }
+    const pathEntries = blockedByPath.get(pathname) || new Set();
+    pathEntries.add(blockId);
+    blockedByPath.set(pathname, pathEntries);
+  });
+  if (!blockedByPath.size) {
+    return sharedState;
+  }
+
+  let blocksByPath = sharedState?.blocksByPath || {};
+  let collaborationByPath = sharedState?.collaborationByPath || {};
+  blockedByPath.forEach((blockedIds, pathname) => {
+    const localBlocks = Array.isArray(localState?.blocksByPath?.[pathname])
+      ? localState.blocksByPath[pathname]
+      : [];
+    const sharedBlocks = Array.isArray(sharedState?.blocksByPath?.[pathname])
+      ? sharedState.blocksByPath[pathname]
+      : [];
+    const localById = new Map(localBlocks.map((block) => [String(block?.id || '').trim(), block]));
+    const sharedById = new Map(sharedBlocks.map((block) => [String(block?.id || '').trim(), block]));
+    const mergedBlocks = localBlocks.map((localBlock) => {
+      const blockId = String(localBlock?.id || '').trim();
+      return blockedIds.has(blockId) ? localBlock : (sharedById.get(blockId) || localBlock);
+    });
+    const localIds = new Set(mergedBlocks.map((block) => String(block?.id || '').trim()));
+    sharedBlocks.forEach((sharedBlock) => {
+      const blockId = String(sharedBlock?.id || '').trim();
+      if (blockId && !localIds.has(blockId) && !localById.has(blockId)) {
+        mergedBlocks.push(sharedBlock);
+      }
+    });
+    blocksByPath = blocksByPath === sharedState.blocksByPath
+      ? { ...(sharedState.blocksByPath || {}) }
+      : blocksByPath;
+    blocksByPath[pathname] = mergedBlocks;
+
+    const localCollaboration = localState?.collaborationByPath?.[pathname];
+    const sharedCollaboration = sharedState?.collaborationByPath?.[pathname] || { blocks: {}, history: [] };
+    if (localCollaboration) {
+      const nextBlocks = { ...(sharedCollaboration.blocks || {}) };
+      blockedIds.forEach((blockId) => {
+        if (localCollaboration.blocks?.[blockId]) {
+          nextBlocks[blockId] = localCollaboration.blocks[blockId];
+        }
+      });
+      collaborationByPath = collaborationByPath === sharedState.collaborationByPath
+        ? { ...(sharedState.collaborationByPath || {}) }
+        : collaborationByPath;
+      collaborationByPath[pathname] = {
+        ...sharedCollaboration,
+        blocks: nextBlocks,
+      };
+    }
+  });
+
+  return {
+    ...sharedState,
+    blocksByPath,
+    collaborationByPath,
+  };
+}
+
+function summarizePageWorkflowActivity(collaborationByPath, pathname, actor, currentState, publishedState) {
   const normalizedPath = String(pathname || '').trim();
   const currentUserId = String(actor?.userId || '').trim();
   if (!normalizedPath || !currentUserId) {
@@ -3878,14 +3613,28 @@ function summarizePageWorkflowActivity(collaborationByPath, pathname, actor) {
       otherActorBlockCount: 0,
       hasCurrentActorDraft: false,
       hasOtherActorDraft: false,
+      currentActorBlockIds: [],
+      otherActorBlocks: [],
     };
   }
+
+  const publishSummary = summarizeComparableAuthoringPageChanges(
+    toComparableAuthoringState(currentState),
+    toComparableAuthoringState(publishedState),
+    normalizedPath,
+  );
+  const changedBlockIds = new Set(publishSummary.changedBlockIds);
 
   const blocks = collaborationByPath?.[normalizedPath]?.blocks || {};
   let currentActorBlockCount = 0;
   let otherActorBlockCount = 0;
+  const currentActorBlockIds = [];
+  const otherActorBlocks = [];
 
-  Object.values(blocks).forEach((meta) => {
+  Object.entries(blocks).forEach(([blockId, meta]) => {
+    if (!changedBlockIds.has(String(blockId || '').trim())) {
+      return;
+    }
     const normalizedMeta = normalizeContentBlockMeta(meta);
     const currentActorOwnsBlock = (
       normalizedMeta.lockedBy?.userId === currentUserId
@@ -3898,8 +3647,16 @@ function summarizePageWorkflowActivity(collaborationByPath, pathname, actor) {
 
     if (currentActorOwnsBlock) {
       currentActorBlockCount += 1;
+      currentActorBlockIds.push(String(blockId || '').trim());
     } else if (otherActorOwnsBlock) {
       otherActorBlockCount += 1;
+      otherActorBlocks.push({
+        blockId: String(blockId || '').trim(),
+        owner: normalizeContentActor(normalizedMeta.draftedBy || normalizedMeta.lockedBy),
+        state: normalizedMeta.lockedBy?.userId && normalizedMeta.lockedBy.userId !== currentUserId
+          ? 'editing-other'
+          : 'drafted-other',
+      });
     }
   });
 
@@ -3908,6 +3665,8 @@ function summarizePageWorkflowActivity(collaborationByPath, pathname, actor) {
     otherActorBlockCount,
     hasCurrentActorDraft: currentActorBlockCount > 0,
     hasOtherActorDraft: otherActorBlockCount > 0,
+    currentActorBlockIds,
+    otherActorBlocks,
   };
 }
 
@@ -4054,6 +3813,32 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
     });
     pendingEntries.clear();
+    refreshSharedSyncState(
+      pendingSharedMutationCountRef.current > 0
+        ? {}
+        : { lastSettledAt: Date.now() },
+    );
+  };
+
+  const awaitPendingBlockDraftSyncs = async () => {
+    const pendingPromises = [...pendingBlockDraftSyncEntriesRef.current.values()]
+      .map((entry) => entry?.inFlightPromise)
+      .filter((promise) => promise && typeof promise.then === 'function');
+    if (pendingPromises.length) {
+      await Promise.allSettled(pendingPromises);
+    }
+  };
+
+  const clearPendingBlockDraftSyncTimer = (pathname, blockId) => {
+    const normalizedPath = String(pathname || '').trim();
+    const normalizedBlockId = String(blockId || '').trim();
+    const syncKey = `${normalizedPath}::${normalizedBlockId}`;
+    const pendingEntries = pendingBlockDraftSyncEntriesRef.current;
+    const pendingEntry = pendingEntries.get(syncKey);
+    if (typeof window !== 'undefined' && pendingEntry?.timeoutId) {
+      window.clearTimeout(pendingEntry.timeoutId);
+    }
+    pendingEntries.delete(syncKey);
     refreshSharedSyncState(
       pendingSharedMutationCountRef.current > 0
         ? {}
@@ -4225,7 +4010,6 @@ export function ContentAdminProvider({ children, initialState = null }) {
     const shouldSchedulePolling = import.meta.env.MODE !== 'test';
     let cancelled = false;
     let timeoutId = null;
-    const seedState = normalizeStoredConfig(null);
     const currentActor = normalizeContentActor(devIdentity);
     const getPollingDelay = () => {
       if (typeof document === 'undefined') {
@@ -4245,7 +4029,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       try {
         let snapshot = await fetchSharedContentSnapshot();
         if (!snapshot?.initialized && allowBootstrap) {
-          snapshot = await initializeSharedContentFromSeed(seedState, currentActor);
+          snapshot = await initializeSharedContentFromSeed(normalizeStoredConfig(null), currentActor);
         }
         if (!snapshot?.initialized || !hasContentAdminSnapshotStateContent(snapshot) || cancelled) {
           return;
@@ -4763,7 +4547,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       latestSharedMutationIdRef.current = mutationId;
       bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
 
-      Promise.resolve()
+      const syncPromise = Promise.resolve()
         .then(() => syncSharedBlockDraft(normalizedPath, normalizedBlockId, latestBlock, currentActor))
         .then((snapshot) => {
           if (snapshot?.state) {
@@ -4808,6 +4592,8 @@ export function ContentAdminProvider({ children, initialState = null }) {
           pendingEntries.delete(syncKey);
           refreshSharedSyncState({ lastSettledAt: Date.now() });
         });
+      pendingEntry.inFlightPromise = syncPromise;
+      pendingEntries.set(syncKey, pendingEntry);
     };
 
     const scheduleSharedBlockDraftSync = (pathname, blockId, options = {}) => {
@@ -5336,7 +5122,22 @@ export function ContentAdminProvider({ children, initialState = null }) {
       if (!normalizedPath || !normalizedBlockId) {
         return normalizeContentBlockMeta(null);
       }
-      return normalizeContentBlockMeta(collaborationByPath?.[normalizedPath]?.blocks?.[normalizedBlockId]);
+      const meta = normalizeContentBlockMeta(collaborationByPath?.[normalizedPath]?.blocks?.[normalizedBlockId]);
+      const authoringBlock = authoringBlocksByPath?.[normalizedPath]
+        ?.find((block) => String(block?.id || '').trim() === normalizedBlockId);
+      const publishedBlock = publishedState.blocksByPath?.[normalizedPath]
+        ?.find((block) => String(block?.id || '').trim() === normalizedBlockId);
+      if (
+        authoringBlock
+        && publishedBlock
+        && JSON.stringify(authoringBlock) === JSON.stringify(publishedBlock)
+      ) {
+        return {
+          ...meta,
+          isPublishedEquivalent: true,
+        };
+      }
+      return meta;
     };
 
     const getPageHistory = (pathname) => {
@@ -5397,8 +5198,8 @@ export function ContentAdminProvider({ children, initialState = null }) {
             ...existingMeta,
             lockedBy: currentActor,
             lockedAt: now,
-            draftedBy: existingMeta.draftedBy,
-            draftedAt: existingMeta.draftedAt,
+            draftedBy: force && existingDraftedByOther ? currentActor : existingMeta.draftedBy,
+            draftedAt: force && existingDraftedByOther ? now : existingMeta.draftedAt,
             savedBy: existingMeta.savedBy,
             savedAt: existingMeta.savedAt,
           },
@@ -5495,34 +5296,81 @@ export function ContentAdminProvider({ children, initialState = null }) {
       return { ok: true };
     };
 
+    const releaseActiveBlockDraft = async (pathname, blockId, options = {}) => {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
+      const force = Boolean(options?.force);
+      if (!normalizedPath || !normalizedBlockId || !currentActor) {
+        return { ok: false, reason: 'missing-target' };
+      }
+
+      if (!sharedAuthorityEnabled) {
+        return { ok: false, reason: 'shared-authority-disabled' };
+      }
+
+      try {
+        const snapshot = await releaseSharedBlockDraft(
+          normalizedPath,
+          normalizedBlockId,
+          currentActor,
+          { force },
+        );
+        if (snapshot?.state) {
+          applySharedSnapshotState(snapshot, { mergeCollaborationOnlyWhenDirty: false });
+        }
+        return snapshot;
+      } catch (error) {
+        return error?.payload || { ok: false, reason: 'draft-release-failed' };
+      }
+    };
+
     const saveSharedDraftNow = async (summary = '') => {
       if (!sharedAuthorityEnabled) {
         return { ok: false, reason: 'shared-authority-disabled' };
       }
       flushExternalDraftBuffers();
       flushAllBufferedBlockSettings();
+      await awaitPendingBlockDraftSyncs();
       clearPendingBlockDraftSyncTimers();
       const mutationId = latestSharedMutationIdRef.current + 1;
       latestSharedMutationIdRef.current = mutationId;
       bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
       try {
-        const snapshot = await saveSharedPageDraft(stateRef.current, currentActor, summary);
-        if (snapshot?.state) {
-          applySharedSnapshotState(snapshot);
-        }
+        const draftState = applyBufferedBlockSettingEditsToState(
+          stateRef.current,
+          bufferedBlockSettingEditsRef.current,
+        );
+        const snapshot = await saveSharedPageDraft(draftState, currentActor, summary);
         const normalizedSaveResult = normalizeSharedSaveResult({
           ...(snapshot?.saveResult || {}),
+          error: snapshot?.error || snapshot?.saveResult?.error,
           updatedAt: snapshot?.updatedAt,
         });
+        if (snapshot?.state) {
+          applySharedSnapshotState(snapshot);
+          if (normalizedSaveResult.status === 'partially-saved' || normalizedSaveResult.status === 'blocked') {
+            const preservedState = preserveBlockedDraftContent(
+              normalizeStoredConfig(snapshot.state),
+              draftState,
+              normalizedSaveResult.blockedBlocks,
+            );
+            stateRef.current = preservedState;
+            setState(preservedState);
+          }
+        }
         setLastSharedSaveResult(normalizedSaveResult);
+        const saveCompleted = normalizedSaveResult.status === 'saved'
+          || normalizedSaveResult.status === 'no-op';
         return {
-          ok: true,
+          ok: saveCompleted,
+          reason: saveCompleted ? '' : normalizedSaveResult.status,
           snapshot,
           saveResult: normalizedSaveResult,
         };
       } catch {
         const failed = {
           error: 'save-failed',
+          status: 'failed',
           didSave: false,
           hasConflicts: false,
           changedPaths: [],
@@ -5537,6 +5385,120 @@ export function ContentAdminProvider({ children, initialState = null }) {
           ok: false,
           reason: 'save-failed',
           saveResult: failed,
+        };
+      } finally {
+        bumpPendingSharedMutationCount(-1, { lastSettledAt: Date.now() });
+      }
+    };
+
+    const discardSharedPageDraftNow = async (pathname, summary = '') => {
+      const normalizedPath = String(pathname || '').trim();
+      if (!sharedAuthorityEnabled) {
+        return { ok: false, reason: 'shared-authority-disabled' };
+      }
+      if (!normalizedPath) {
+        return { ok: false, reason: 'invalid-path' };
+      }
+
+      clearBufferedBlockSettingCommitTimers();
+      updateBufferedBlockSettingDrafts({});
+      clearPendingBlockDraftSyncTimers();
+      const mutationId = latestSharedMutationIdRef.current + 1;
+      latestSharedMutationIdRef.current = mutationId;
+      bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
+      try {
+        const snapshot = await discardSharedPageDraft(normalizedPath, currentActor, summary);
+        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+          applySharedSnapshotState(snapshot);
+        }
+        setLastSharedSaveResult(normalizeSharedSaveResult({
+          status: snapshot?.discardResult?.status === 'discarded' ? 'discarded' : 'no-op',
+          didSave: false,
+          changedPaths: snapshot?.discardResult?.changedPaths || [],
+          updatedAt: snapshot?.discardResult?.updatedAt || snapshot?.updatedAt,
+        }));
+        return {
+          ok: snapshot?.ok !== false,
+          snapshot,
+          discardResult: snapshot?.discardResult || null,
+        };
+      } catch (error) {
+        const snapshot = error?.payload || null;
+        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+          applySharedSnapshotState(snapshot);
+        }
+        return {
+          ok: false,
+          reason: snapshot?.error || 'discard-draft-failed',
+          details: snapshot?.details || (error instanceof Error ? error.message : 'discard-draft-failed'),
+          snapshot,
+        };
+      } finally {
+        bumpPendingSharedMutationCount(-1, { lastSettledAt: Date.now() });
+      }
+    };
+
+    const discardSharedBlockDraftNow = async (pathname, blockId, summary = '') => {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
+      if (!sharedAuthorityEnabled) {
+        return { ok: false, reason: 'shared-authority-disabled' };
+      }
+      if (!normalizedPath || !normalizedBlockId) {
+        return { ok: false, reason: 'invalid-block-target' };
+      }
+
+      clearBufferedBlockSettingCommitTimer(normalizedPath, normalizedBlockId);
+      clearPendingBlockDraftSyncTimer(normalizedPath, normalizedBlockId);
+      updateBufferedBlockSettingDrafts((previous) => {
+        const previousPathEntry = previous?.[normalizedPath];
+        if (!previousPathEntry?.[normalizedBlockId]) {
+          return previous;
+        }
+        const nextPathEntry = { ...previousPathEntry };
+        delete nextPathEntry[normalizedBlockId];
+        if (!Object.keys(nextPathEntry).length) {
+          const nextValue = { ...previous };
+          delete nextValue[normalizedPath];
+          return nextValue;
+        }
+        return { ...previous, [normalizedPath]: nextPathEntry };
+      });
+      const mutationId = latestSharedMutationIdRef.current + 1;
+      latestSharedMutationIdRef.current = mutationId;
+      bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
+      try {
+        const snapshot = await discardSharedBlockDraft(
+          normalizedPath,
+          normalizedBlockId,
+          currentActor,
+          summary,
+        );
+        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+          applySharedSnapshotState(snapshot);
+        }
+        setLastSharedSaveResult(normalizeSharedSaveResult({
+          status: snapshot?.discardResult?.status === 'discarded' ? 'discarded' : 'no-op',
+          didSave: false,
+          changedPaths: snapshot?.discardResult?.changedPaths || [],
+          savedBlockIdsByPath: {},
+          updatedAt: snapshot?.discardResult?.updatedAt || snapshot?.updatedAt,
+        }));
+        return {
+          ok: snapshot?.ok !== false,
+          snapshot,
+          discardResult: snapshot?.discardResult || null,
+        };
+      } catch (error) {
+        const snapshot = error?.payload || null;
+        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+          applySharedSnapshotState(snapshot);
+        }
+        return {
+          ok: false,
+          reason: snapshot?.error || 'discard-block-draft-failed',
+          details: snapshot?.details || (error instanceof Error ? error.message : 'discard-block-draft-failed'),
+          snapshot,
         };
       } finally {
         bumpPendingSharedMutationCount(-1, { lastSettledAt: Date.now() });
@@ -5563,7 +5525,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         if (!saveResult?.ok) {
           return {
             ok: false,
-            reason: 'save-before-publish-failed',
+            reason: saveResult?.reason || 'save-before-publish-failed',
             saveResult: saveResult?.saveResult || null,
           };
         }
@@ -5571,6 +5533,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
 
       flushExternalDraftBuffers();
       flushAllBufferedBlockSettings();
+      await awaitPendingBlockDraftSyncs();
       clearPendingBlockDraftSyncTimers();
       const mutationId = latestSharedMutationIdRef.current + 1;
       latestSharedMutationIdRef.current = mutationId;
@@ -5612,6 +5575,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         }
         const failed = {
           error: 'publish-failed',
+          status: 'failed',
           didPublish: false,
           hasConflicts: false,
           changedPaths: [],
@@ -5634,6 +5598,133 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
     };
 
+    const publishSharedBlockNow = async (pathname, blockId, summary = '') => {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
+      if (!sharedAuthorityEnabled) {
+        return { ok: false, reason: 'shared-authority-disabled' };
+      }
+      if (!normalizedPath || !normalizedBlockId) {
+        return { ok: false, reason: 'invalid-block-target' };
+      }
+
+      flushExternalDraftBuffers();
+      flushAllBufferedBlockSettings();
+      await awaitPendingBlockDraftSyncs();
+      clearPendingBlockDraftSyncTimers();
+      const currentAuthoringState = applyBufferedBlockSettingEditsToState(
+        stateRef.current,
+        bufferedBlockSettingEditsRef.current,
+      );
+      const pageSaveSummary = summarizeAuthoringPageChanges(
+        currentAuthoringState,
+        persistedSharedAuthoringStateRef.current,
+        normalizedPath,
+      );
+      let expectedBlock = currentAuthoringState.blocksByPath?.[normalizedPath]
+        ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
+      if (pageSaveSummary.hasUnsavedChanges || hasPendingExternalDrafts(normalizedPath)) {
+        const saveResult = await saveSharedDraftNow(summary);
+        if (!saveResult?.ok) {
+          return {
+            ok: false,
+            reason: saveResult?.reason || 'save-before-block-publish-failed',
+            saveResult: saveResult?.saveResult || null,
+          };
+        }
+        expectedBlock = saveResult.snapshot?.state?.blocksByPath?.[normalizedPath]
+          ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || expectedBlock;
+        if (!expectedBlock || JSON.stringify(expectedBlock) !== JSON.stringify(
+          currentAuthoringState.blocksByPath?.[normalizedPath]
+            ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null,
+        )) {
+          return {
+            ok: false,
+            reason: 'block-draft-not-saved',
+            saveResult: saveResult?.saveResult || null,
+          };
+        }
+      }
+      const mutationId = latestSharedMutationIdRef.current + 1;
+      latestSharedMutationIdRef.current = mutationId;
+      bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
+      try {
+        const snapshot = await publishSharedBlock(
+          normalizedPath,
+          normalizedBlockId,
+          currentActor,
+          summary,
+          expectedBlock,
+        );
+        const publishedBlock = snapshot?.publishedBlock
+          || snapshot?.baseSnapshot?.blocksByPath?.[normalizedPath]
+            ?.find((block) => String(block?.id || '').trim() === normalizedBlockId)
+          || null;
+        if (snapshot?.ok !== false && expectedBlock && publishedBlock
+          && JSON.stringify(publishedBlock) !== JSON.stringify(normalizeContentAdminBlock(expectedBlock))) {
+          if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+            applySharedSnapshotState(snapshot);
+          }
+          const verificationFailure = normalizeSharedPublishResult({
+            ...(snapshot?.publishResult || {}),
+            error: 'block-publish-verification-failed',
+            didPublish: false,
+            updatedAt: snapshot?.updatedAt,
+          });
+          setLastSharedPublishResult(verificationFailure);
+          return {
+            ok: false,
+            reason: 'block-publish-verification-failed',
+            snapshot,
+            publishResult: verificationFailure,
+          };
+        }
+        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+          applySharedSnapshotState(snapshot);
+        }
+        const normalizedPublishResult = normalizeSharedPublishResult({
+          ...(snapshot?.publishResult || {}),
+          error: snapshot?.ok === false ? snapshot?.error : '',
+          updatedAt: snapshot?.updatedAt,
+        });
+        setLastSharedPublishResult(normalizedPublishResult);
+        return {
+          ok: snapshot?.ok !== false,
+          snapshot,
+          publishResult: normalizedPublishResult,
+        };
+      } catch (error) {
+        const snapshot = error?.payload || null;
+        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+          applySharedSnapshotState(snapshot);
+        }
+        if (snapshot?.publishResult || snapshot?.error) {
+          const normalizedPublishResult = normalizeSharedPublishResult({
+            ...(snapshot?.publishResult || {}),
+            error: snapshot?.error || '',
+            updatedAt: snapshot?.updatedAt,
+          });
+          setLastSharedPublishResult(normalizedPublishResult);
+          return {
+            ok: false,
+            reason: snapshot?.error || 'block-publish-failed',
+            snapshot,
+            publishResult: normalizedPublishResult,
+          };
+        }
+        const failed = normalizeSharedPublishResult({
+          error: 'block-publish-failed',
+          status: 'failed',
+          didPublish: false,
+          updatedAt: Date.now(),
+        });
+        setLastSharedPublishResult(failed);
+        return { ok: false, reason: 'block-publish-failed', publishResult: failed };
+      } finally {
+        bumpPendingSharedMutationCount(-1, { lastSettledAt: Date.now() });
+      }
+    };
+
     const getSharedContentBackups = async () => {
       if (!sharedAuthorityEnabled) {
         return [];
@@ -5648,6 +5739,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
       flushExternalDraftBuffers();
       flushAllBufferedBlockSettings();
+      await awaitPendingBlockDraftSyncs();
       clearPendingBlockDraftSyncTimers();
       const currentComparableAuthoringState = toComparableAuthoringState(stateRef.current);
       const hasUnsavedChanges = collectDirtyComparableAuthoringPaths(
@@ -5989,9 +6081,14 @@ export function ContentAdminProvider({ children, initialState = null }) {
         collaborationByPath,
         pathname,
         currentActor,
+        state,
+        publishedState,
       ),
       saveSharedDraftNow,
+      discardSharedPageDraft: discardSharedPageDraftNow,
+      discardSharedBlockDraft: discardSharedBlockDraftNow,
       publishSharedPageNow,
+      publishSharedBlockNow,
       registerExternalDraftFlushHandler,
       registerExternalDraftStatusHandler,
       hasPendingExternalDrafts,
@@ -6000,6 +6097,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       promoteContentAdminToSeed,
       setActiveBlockLock,
       clearActiveBlockLock,
+      releaseActiveBlockDraft,
       restorePageRevision,
       restoreBlockRevision,
       restoreLatestSharedContentBackup,
@@ -6024,12 +6122,4 @@ export function ContentAdminProvider({ children, initialState = null }) {
   ]);
 
   return <ContentAdminContext.Provider value={value}>{children}</ContentAdminContext.Provider>;
-}
-
-export function useContentAdmin() {
-  const context = useContext(ContentAdminContext);
-  if (!context) {
-    throw new Error('useContentAdmin must be used within ContentAdminProvider');
-  }
-  return context;
 }

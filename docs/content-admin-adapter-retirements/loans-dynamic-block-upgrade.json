@@ -1,0 +1,42 @@
+{
+  "receiptVersion": 1,
+  "adapterId": "loans-dynamic-block-upgrade",
+  "status": "retired",
+  "retiredSymbols": [
+    "LOANS_RETIRED_DYNAMIC_BLOCK_IDS",
+    "shouldUpgradeRetiredLoansDynamicBlock"
+  ],
+  "retirementBasis": "The current loans route and all retained persisted layers use the current block schema with zero findings; the historical dynamic-block upgrade was not required by current content.",
+  "removedBehavior": {
+    "source": "src/context/ContentAdminContext.jsx",
+    "productionCallSites": 1,
+    "detector": "scripts/content-admin-migration-inventory.mjs"
+  },
+  "preservedBehavior": [
+    "Current loans route composition and native calculator behavior",
+    "Current loans block rendering and admin editing",
+    "Current-schema snapshot normalization and persistence"
+  ],
+  "finalScan": {
+    "command": "npm run scan:migration-inventory -- --include-backups",
+    "requiredTotalFindings": 0,
+    "verifiedAt": "2026-08-05T22:05:56Z",
+    "migrationFindings": 0,
+    "backupInclusiveSnapshotFindings": 0,
+    "activePublishedSeedFindings": 0,
+    "retainedRecoveryBackups": 14,
+    "retainedRevisions": 165,
+    "restoreProof": "passed",
+    "verification": "post-change focused validation and zero-finding persisted-layer scans passed"
+  },
+  "runtimeCallSiteDisposition": "Removed historical normalization call; current loans route has no dependency on retired shapes.",
+  "storedContentMutation": false,
+  "adapterRemovalCommit": null,
+  "testsRun": [
+    "focused loans route and block tests",
+    "focused migration inventory tests",
+    "current-schema normalization tests",
+    "current-schema restore proof"
+  ],
+  "notes": "The adapter remains represented as retired in the executable inventory; no other adapter is retired in this pass."
+}
