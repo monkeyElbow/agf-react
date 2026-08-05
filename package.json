@@ -19,6 +19,7 @@
     "scan:readability": "node scripts/system-checks.mjs readability",
     "scan:safety-nets": "node scripts/system-checks.mjs safety-nets",
     "scan:legacy-adapters": "node scripts/system-checks.mjs legacy-adapters",
+    "scan:migration-inventory": "node scripts/content-admin-migration-inventory.mjs",
     "scan:legacy-ghosts:403b": "node scripts/legacy-ghost-audit.mjs retirement-403b-rmha",
     "scan:legacy-ghosts:403b:backups": "node scripts/legacy-ghost-audit.mjs retirement-403b-rmha --include-backups",
     "scan:system": "node scripts/system-checks.mjs all",

@@ -21,6 +21,10 @@ import {
   SYSTEM_VISUAL_ACCESSIBILITY_GATES,
   getReadabilityBoundaryForFile,
 } from '../src/lib/systemReadinessInventory.js';
+import {
+  CONTENT_ADMIN_MIGRATION_ADAPTERS,
+  runContentAdminMigrationInventory,
+} from './content-admin-migration-inventory.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -98,9 +102,6 @@ const RETIRED_LEGACY_SOURCE_PATTERNS = Object.freeze([
     ],
     pattern: /\b(?:build[A-Za-z0-9_]*FallbackBlock|[A-Za-z0-9_]*FallbackBlock|fallbackBlock|fallbackItems|fallbackFineprint|fallbackSettings|fallbackVisionFuel)\b/g,
   },
-]);
-
-const LEGACY_ADAPTER_INVENTORY = Object.freeze([
 ]);
 
 function readText(relativePath) {
@@ -508,34 +509,48 @@ function scanSafetyNets() {
 }
 
 function scanLegacyAdapters() {
+  const includeBackups = process.argv.includes('--include-backups');
+  const inventory = runContentAdminMigrationInventory({ includeBackups });
+  const invalidEntries = CONTENT_ADMIN_MIGRATION_ADAPTERS.filter((entry) => (
+    !entry.id
+    || !entry.category
+    || !Array.isArray(entry.affectedLayers || [])
+    || !entry.detect
+    || !entry.retireWhen
+    || !entry.retireWhenDescription
+    || !Array.isArray(entry.sourceFiles)
+    || !Array.isArray(entry.sourceSymbols)
+  ));
+
   console.log('Legacy adapter inventory:');
-
-  LEGACY_ADAPTER_INVENTORY.forEach((entry) => {
-    const matches = collectPatternMatches(
-      entry.files.filter((relativePath) => {
-        try {
-          statSync(path.resolve(repoRoot, relativePath));
-          return true;
-        } catch {
-          return false;
-        }
-      }),
-      [{ label: entry.label, pattern: entry.pattern }],
-    );
-
-    console.log(`\n${entry.label}: ${matches.length} match${matches.length === 1 ? '' : 'es'}`);
-    matches.slice(0, 20).forEach((match) => {
-      console.log(`- ${match.file}:${match.line} ${match.text}`);
-    });
-    if (matches.length > 20) {
-      console.log(`- ... ${matches.length - 20} more`);
-    }
-    if (entry.retireWhen) {
-      console.log(`Retire when: ${entry.retireWhen}`);
-    }
+  inventory.reports.forEach((entry) => {
+    console.log(`- ${entry.adapter}: ${entry.category}; status=${entry.status}; findings=${entry.totalFindings}; retirementEligible=${entry.eligibleForRetirement}`);
+    console.log(`  retire when: ${entry.retireWhen}`);
   });
 
-  console.log('\nLegacy adapter inventory scan passed.');
+  const failures = [
+    ...invalidEntries.map((entry) => ({
+      type: 'invalid-inventory-entry',
+      adapter: entry.id || '(missing id)',
+    })),
+    ...inventory.sourceFindings,
+    ...inventory.reports
+      .filter((entry) => entry.status === 'retired' && entry.totalFindings > 0)
+      .flatMap((entry) => entry.findings.map((finding) => ({
+        type: 'retired-adapter-has-persisted-finding',
+        adapter: entry.adapter,
+        finding,
+      }))),
+  ];
+
+  if (failures.length) {
+    console.error('\nLegacy adapter inventory scan failed.');
+    failures.forEach((failure) => console.error(`- ${JSON.stringify(failure)}`));
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(`Legacy adapter inventory scan passed. Entries: ${CONTENT_ADMIN_MIGRATION_ADAPTERS.length}.`);
 }
 
 function scanAll() {

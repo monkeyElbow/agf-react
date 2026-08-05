@@ -11,10 +11,13 @@ System Checks are the repeatable safety gate for the block-first site. They are 
 - `npm run scan:snapshot-schema`: validates active shared/seed snapshot records against the current content admin schema version and state-root shape.
 - `npm run scan:readability`: fails if large mixed-ownership source files are not documented with ownership and next split boundaries.
 - `npm run scan:safety-nets`: prints and validates the visual/accessibility gate inventory and 2.0 readiness targets.
-- `npm run scan:legacy-adapters`: prints the known legacy and migration-adapter inventory so cleanup work stays visible.
+- `npm run scan:legacy-adapters`: validates the executable legacy and migration-adapter inventory against source symbols and persisted active layers.
+- `npm run scan:migration-inventory`: prints adapter findings and snapshot-file manifest; add `-- --include-backups` to include backup files.
 - `npm run scan:system`: runs all system scans.
 - `npm run test:system-guardrails`: runs focused guardrails for source convergence, snapshot schema, route classification, readiness inventory, block-only shells, state normalization, admin operator smoke/recovery, style ownership, insert choices, link-model convergence, editor/runtime parity, and block registry contracts.
 - `npm run check:system`: runs lint, all system scans, focused guardrails, the full test suite, and the production build.
+
+`npm run scan:system` is the scan-only gate: it does not run Vitest, Node tests, lint, or the production build. `npm test` runs the full automated test suite, including the Node rates-import tests. `npm run check:system` is the combined release gate because it runs lint, scans, focused guardrails, `npm test`, and the production build; a passing scan alone is not a passing test or release result.
 
 ## Release Gate
 

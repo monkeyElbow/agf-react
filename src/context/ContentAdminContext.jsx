@@ -47,6 +47,7 @@ import { normalizeCalculatorWidgetBlocks } from '../lib/calculatorWidgetIdentity
 import { normalizeBlockPresentation } from '../lib/blockPresentationContracts';
 import { normalizeCgaSecureActBlocks } from '../lib/cgaContentMigrations';
 import { normalizeContentAdminBlock, normalizeContentAdminState } from '../lib/contentAdminNormalization';
+import { CONTENT_ADMIN_MIGRATION_ADAPTERS } from '../lib/contentAdminMigrationInventory';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
@@ -139,90 +140,6 @@ const DEFAULT_MANAGED_PATH_ALIASES = {
   [PLANNED_GIVING_GENEROSITY_FUND_LEGACY_PATH]: LEGACY_GIVING_GENEROSITY_FUND_PATH,
   [PLANNED_GIVING_MINISTRY_IMPACT_FUND_LEGACY_PATH]: LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH,
 };
-const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
-  {
-    id: 'managed-path-aliases',
-    paths: Object.freeze(Object.keys(DEFAULT_MANAGED_PATH_ALIASES)),
-    helpers: Object.freeze(['DEFAULT_MANAGED_PATH_ALIASES']),
-    retireWhen: 'No active shared, seed, backup, or revision snapshot can reference retired 403(b) or planned-giving paths.',
-  },
-  {
-    id: 'block-only-page-inventory-reconciliation',
-    paths: Object.freeze(Array.from(BLOCK_ONLY_MANAGED_PAGE_PATHS)),
-    helpers: Object.freeze([
-      'shouldRetireBlockOnlyShellBlock',
-      'reconcileBlockOnlyManagedBlockInventory',
-      'shouldUpgradeRetiredPageContentImageBridge',
-      'upgradeRetiredPageContentImageBridge',
-    ]),
-    retireWhen: 'Block-only page snapshots cannot contain retired shell-owned hero, intro, or image bridge block shapes.',
-  },
-  {
-    id: 'generosity-fund-donor-advised-fund-refresh',
-    paths: Object.freeze([LEGACY_GIVING_GENEROSITY_FUND_PATH, PLANNED_GIVING_OVERVIEW_PATH, '/services']),
-    helpers: Object.freeze([
-      'normalizeGenerosityFundPageHierarchyEntry',
-      'normalizeGenerosityFundManagedBlock',
-      'normalizeGenerosityFundJoyfulGivingBillboardSettings',
-      'normalizeGenerosityFundRouteLabelsInSettings',
-    ]),
-    retireWhen: 'Generosity Fund snapshots cannot contain the retired page title, hero order, missing DAF/online CTAs, or stale planned-giving link labels.',
-  },
-  {
-    id: 'retirement-403b-snapshot-repairs',
-    paths: Object.freeze([
-      RETIREMENT_403B_PATH,
-      RETIREMENT_403B_INDIVIDUAL_ENROLLMENT_PATH,
-      RETIREMENT_403B_GROUP_ENROLLMENT_PATH,
-      '/services/retirement/rollovers',
-    ]),
-    helpers: Object.freeze([
-      'isRetiredRetirement403bLoanApplySettings',
-      'isBlankRetiredHtmlFragment',
-      'shouldQuarantineRetirement403bStrategyOptionsHtml',
-      'shouldQuarantineRetirement403bStrategyOptionsBlock',
-      'isRetiredRetirement403bIndividualEnrollmentBillboard',
-      'isRetiredRetirement403bRolloverBillboard',
-      'isRetiredRetirement403bStartEnrollmentSettings',
-      'normalizeRetirement403bBlockSet',
-      'isRetiredRetirement403bCta',
-    ]),
-    retireWhen: '403(b) and rollover snapshots have been schema-versioned past the migration and old backups are archived outside active restore flows.',
-  },
-  {
-    id: 'planned-giving-retired-static-comparison',
-    paths: Object.freeze([PLANNED_GIVING_OVERVIEW_PATH]),
-    helpers: Object.freeze([
-      'isArchivedPlannedGivingComparisonTableBlock',
-      'normalizePlannedGivingComparisonMatrixSettings',
-      'normalizePlannedGivingOverviewBlockSet',
-      'normalizeRetiredBlockCollaborationEntry',
-    ]),
-    retireWhen: 'Planned giving shared, seed, backup, and revision snapshots cannot contain the retired static comparison table.',
-  },
-  {
-    id: 'retirement-ira-block-shape',
-    paths: Object.freeze([RETIREMENT_IRAS_PATH]),
-    helpers: Object.freeze([
-      'normalizeRetirementIraComparisonTableSettings',
-      'normalizeRetirementIraDailyBillboardSettings',
-      'normalizeRetirementIraBlockSet',
-    ]),
-    retireWhen: 'IRA snapshots cannot contain the old Key difference comparison table shape or the right-aligned daily billboard CTA.',
-  },
-  {
-    id: 'loans-dynamic-block-upgrade',
-    paths: Object.freeze(['/services/loans']),
-    helpers: Object.freeze(['LOANS_RETIRED_DYNAMIC_BLOCK_IDS', 'shouldUpgradeRetiredLoansDynamicBlock']),
-    retireWhen: 'Loan page snapshots cannot contain pre-dynamic block records after versioned migration.',
-  },
-  {
-    id: 'property-casualty-request-repair',
-    paths: Object.freeze(['/services/insurance/property-casualty-insurance']),
-    helpers: Object.freeze(['shouldQuarantinePropertyCasualtyRequestContent']),
-    retireWhen: 'Property and casualty request-form snapshots have been versioned and old backups are archived outside active restore flows.',
-  },
-]);
 const REQUEST_FORM_MODE_LOCKED_PATHS = new Set([
   '/services/insurance/group-term-life-insurance',
   LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH,
