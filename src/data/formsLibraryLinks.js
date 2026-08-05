@@ -235,15 +235,3 @@ export const formsLibraryLinks = [
     "href": "http://files.agfinancial.org/IRA/AGFS-IRA-Withdrawal-Authorization.pdf"
   }
 ];
-
-export const formsLibraryMeta = {
-  total: 47,
-  topicCounts: {
-    "Loans": 3,
-    "Insurance": 6,
-    "Investments": 11,
-    "Planned Giving": 11,
-    "Retirement": 16
-  },
-  source: 'dev-notes/WP-pages/form library/Resource Library _ AGFinancial.html',
-};
