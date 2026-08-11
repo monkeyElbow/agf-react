@@ -405,10 +405,40 @@ describe('HeroHudEditorPanel', () => {
       onTitleLetterSpacingChange,
     }));
 
-    expect(screen.getByText('Headline Tracking 0.040em')).toBeTruthy();
+    expect(screen.getByText('Headline Tracking')).toBeTruthy();
+    expect(screen.getByText('0.040em')).toBeTruthy();
+    expect(document.querySelectorAll('.admin-billboard-editor-slider strong')).toHaveLength(3);
+    expect(document.querySelectorAll('.admin-front-hud-range-controls > input:not([type="range"])')).toHaveLength(0);
 
     const range = screen.getAllByRole('slider')[2];
     fireEvent.change(range, { target: { value: '-0.03' } });
     expect(onTitleLetterSpacingChange).toHaveBeenCalledWith(-0.03);
+  });
+
+  it('keeps line span controls in a side rail beside the swatches', () => {
+    render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Plan ahead',
+        lineColor: 'is-atlantean',
+        highlights: [{ start: 0, end: 4, className: 'is-mango' }],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      driftReport: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+    }));
+
+    const lineColorControls = document.querySelector('.admin-hero-hud-line-color-controls');
+    expect(lineColorControls).toBeTruthy();
+    const showSpanDetails = screen.getByRole('button', { name: 'Show span details' });
+    expect(showSpanDetails).toBeTruthy();
+    fireEvent.click(showSpanDetails);
+    expect(lineColorControls?.querySelector('.admin-front-hud-hero-span-chip-list')).toBeTruthy();
   });
 });

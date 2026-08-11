@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import {
   contentBlockBlueprintsByPath,
   defaultInvestmentsIntroSettings,
@@ -1307,15 +1306,8 @@ describe('dynamic block control wiring', () => {
 
     expect(onSettingChange).toHaveBeenCalledWith('lineSpacing', 1.15);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Advanced layout' }));
-    fireEvent.click(
-      within(screen.getByRole('group', { name: 'Billboard width presets' }))
-        .getByRole('button', { name: 'Wide' }),
-    );
-
-    expect(onSettingChange).toHaveBeenCalledWith('contentMaxWidthPx', 1120);
-
-    fireEvent.change(screen.getByLabelText('Content max width (px)'), {
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    fireEvent.change(screen.getByLabelText('Content width'), {
       target: { value: '1040' },
     });
 
@@ -1364,7 +1356,7 @@ describe('dynamic block control wiring', () => {
     }
   });
 
-  it('keeps the billboard body caret stable when the committed snapshot catches up', () => {
+  it('keeps the billboard rich body draft stable when the committed snapshot catches up', () => {
     vi.useFakeTimers();
     const onSettingChange = vi.fn();
     const initialBlock = getDynamicBlock('billboard');
@@ -1378,13 +1370,12 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
-      const bodyInput = screen.getByLabelText('Body HTML (optional rich copy)');
-      bodyInput.focus();
-      bodyInput.setSelectionRange(8, 8);
-      fireEvent.change(bodyInput, { target: { value: '<p>Alpha ravo</p>' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+      const bodyInput = screen.getByRole('textbox', { name: 'Body HTML' });
+      bodyInput.innerHTML = '<p>Alpha ravo</p>';
+      fireEvent.input(bodyInput);
 
-      expect(bodyInput.value).toBe('<p>Alpha ravo</p>');
-      bodyInput.setSelectionRange(8, 8);
+      expect(bodyInput.innerHTML).toBe('<p>Alpha ravo</p>');
 
       act(() => {
         vi.advanceTimersByTime(350);
@@ -1399,7 +1390,7 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
-      expect(screen.getByLabelText('Body HTML (optional rich copy)').selectionStart).toBe(8);
+      expect(screen.getByRole('textbox', { name: 'Body HTML' }).innerHTML).toBe('<p>Alpha ravo</p>');
 
       rerender(
         <BillboardBlockEditor
@@ -1408,27 +1399,28 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
-      expect(screen.getByLabelText('Body HTML (optional rich copy)').value).toBe('<p>Alpha ravo</p>');
+      expect(screen.getByRole('textbox', { name: 'Body HTML' }).innerHTML).toBe('<p>Alpha ravo</p>');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
     }
   });
 
-  it('does not move the billboard body caret to the end during a real delete', async () => {
-    const user = userEvent.setup();
+  it('edits billboard body HTML through the rich editor surface', () => {
+    const onSettingChange = vi.fn();
     const block = getDynamicBlock('billboard');
     block.settings.bodyHtml = '<p>Alpha bravo</p>';
 
-    render(<BillboardBlockEditor block={block} onSettingChange={vi.fn()} />);
+    render(<BillboardBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    const bodyInput = screen.getByLabelText('Body HTML (optional rich copy)');
-    bodyInput.focus();
-    bodyInput.setSelectionRange(8, 8);
-    await user.keyboard('{Backspace}');
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    const bodyInput = screen.getByRole('textbox', { name: 'Body HTML' });
+    bodyInput.innerHTML = '<p>Alph bravo</p>';
+    fireEvent.input(bodyInput);
+    fireEvent.blur(bodyInput);
 
-    expect(bodyInput.value).toBe('<p>Alph bravo</p>');
-    expect(bodyInput.selectionStart).toBe(7);
+    expect(bodyInput.innerHTML).toBe('<p>Alph bravo</p>');
+    expect(onSettingChange).toHaveBeenCalledWith('bodyHtml', '<p>Alph bravo</p>');
   });
 
   it('commits billboard body drafts on blur without waiting for debounce', () => {
@@ -1438,7 +1430,8 @@ describe('dynamic block control wiring', () => {
     try {
       render(<BillboardBlockEditor block={getDynamicBlock('billboard')} onSettingChange={onSettingChange} />);
 
-      const bodyInput = screen.getByLabelText('Lead Copy');
+      fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+      const bodyInput = screen.getByLabelText('Lead copy');
       fireEvent.change(bodyInput, {
         target: { value: 'Draft billboard lead copy' },
       });
@@ -1464,6 +1457,7 @@ describe('dynamic block control wiring', () => {
       within(screen.getByRole('radiogroup', { name: 'Billboard title color' }))
         .getByRole('radio', { name: 'Super Grey' }),
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
     fireEvent.click(
       within(screen.getByRole('radiogroup', { name: 'Billboard text color' }))
         .getByRole('radio', { name: 'Super Grey' }),
@@ -1511,6 +1505,7 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
+      fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
       fireEvent.change(screen.getByLabelText('Button URL/path'), {
         target: { value: '/contact-us' },
       });
@@ -1706,17 +1701,14 @@ describe('dynamic block control wiring', () => {
 
   it('wires grid block controls', () => {
     const block = getDynamicBlock('card_grid');
-    block.settings.dividerTone = 'auto';
-    block.settings.card1DividerTone = 'mango';
     const onSettingChange = vi.fn();
 
     render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
     onSettingChange.mockClear();
 
     fireEvent.click(screen.getByText('Card 1').closest('button'));
-    fireEvent.click(screen.getByRole('button', { name: 'Clear Card 1 line color override' }));
-
-    expect(onSettingChange).toHaveBeenCalledWith('card1DividerTone', '');
+    expect(screen.queryByRole('button', { name: 'Clear Card 1 line color override' })).toBeNull();
+    expect(screen.getByLabelText('Card 1 title')).toBeTruthy();
   });
 
   it('shows grid heading spans inline with a clear-spans action and keeps intro body under the heading editor', () => {
@@ -2743,14 +2735,15 @@ describe('dynamic block control wiring', () => {
 
       expect(screen.queryByText('Body HTML')).toBeNull();
       expect(screen.getByRole('button', { name: /step 1/i }).getAttribute('aria-expanded')).toBe('true');
-      expect(screen.getByRole('button', { name: /step 2/i }).getAttribute('aria-expanded')).toBe('true');
-      expect(screen.getByRole('button', { name: /step 3/i }).getAttribute('aria-expanded')).toBe('true');
+      expect(screen.getByRole('button', { name: /step 2/i }).getAttribute('aria-expanded')).toBe('false');
+      expect(screen.getByRole('button', { name: /step 3/i }).getAttribute('aria-expanded')).toBe('false');
       expect(screen.queryByRole('button', { name: /^step 4$/i })).toBeNull();
       expect(screen.queryByRole('button', { name: /^step 5$/i })).toBeNull();
       expect(screen.getByRole('button', { name: 'Add step 4' })).toBeTruthy();
-      expect(screen.queryByLabelText('Step 1 title')).toBeNull();
-      expect(screen.queryByLabelText('Step 1 note')).toBeNull();
-      expect(screen.queryByLabelText('Step 1 alert')).toBeNull();
+      expect(screen.getByLabelText('Step 1 title')).toBeTruthy();
+      expect(screen.getByLabelText('Step 1 note')).toBeTruthy();
+      expect(screen.getByLabelText('Step 1 alert')).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /step 2/i }));
       expect(screen.getByLabelText('Step 2 field 1 label')).toBeTruthy();
 
       fireEvent.change(screen.getByLabelText('Step 1 field 1 label'), {

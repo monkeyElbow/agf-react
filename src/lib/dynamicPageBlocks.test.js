@@ -709,6 +709,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       justify: 'right',
       copyClassName: '',
       copyFadeRootMargin: '',
+      copyStyle: { '--dynamic-billboard-copy-max-width': '1100px' },
       contentMaxWidthPx: 1100,
       actionsBeforeCards: true,
       action: expect.objectContaining({
@@ -738,7 +739,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       fontFamily: 'var(--ag-font-helv)',
     }));
     expect(runtime?.copyStyle).toEqual({
-      '--dynamic-billboard-copy-max-width': '980px',
+      '--dynamic-billboard-copy-max-width': '1100px',
     });
     expect(runtime?.subtitleStyle).toEqual(expect.objectContaining({
       color: 'var(--ag-color-mango)',
@@ -748,6 +749,23 @@ describe('buildDynamicBillboardFromBlock', () => {
       lineHeight: 1.05,
       letterSpacing: '-0.015em',
     }));
+  });
+
+  it('uses the content rail as the billboard title boundary for legacy narrow settings', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Plenty of options.',
+        headlineMaxWidthPx: 560,
+        contentMaxWidthPx: 1216,
+      },
+    });
+
+    expect(runtime?.contentMaxWidthPx).toBe(1216);
+    expect(runtime?.copyStyle).toEqual({
+      '--dynamic-billboard-copy-max-width': '1216px',
+    });
   });
 
   it('marks scale-up billboards as repeat-observe fade reveals', () => {
@@ -1756,8 +1774,7 @@ describe('buildDynamicGridFromBlock', () => {
         cardStyle: 'card2',
         titleTone: 'white',
         bodyTone: 'white',
-        dividerTone: 'mango',
-        cardPaddingRem: 2.2,
+      cardPaddingRem: 2.2,
         cardTitleSizeRem: 1.5,
         cardBodySizeRem: 1.2,
         cardBodyLineHeight: 1.8,
@@ -1766,7 +1783,6 @@ describe('buildDynamicGridFromBlock', () => {
         card1IconKey: 'daf-step-1',
         card1IconTone: 'atlantean',
         card1ListJson: '["First bullet","Second bullet"]',
-        card1DividerTone: 'melon',
         card1ButtonLabel: 'Learn more',
         card1ButtonLinkJson: serializeLinkValue({
           kind: 'internal',
@@ -1787,8 +1803,6 @@ describe('buildDynamicGridFromBlock', () => {
       cardStyle: 'card1',
       titleTone: 'white',
       bodyTone: 'white',
-      dividerTone: 'mango',
-      showTitleDivider: true,
       cardPaddingRem: 2.2,
       cardTitleSizeRem: 1.5,
       cardBodySizeRem: 1.2,
@@ -1804,7 +1818,6 @@ describe('buildDynamicGridFromBlock', () => {
         iconKey: 'daf-step-1',
         iconTone: 'atlantean',
         cardClass: 'card1',
-        dividerTone: 'melon',
         action: expect.objectContaining({
           label: 'Learn more',
           to: '/services/retirement',

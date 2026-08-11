@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../BlockOwnershipOverlay';
 import FrontHudAnchorTag from '../FrontHudAnchorTag';
+import FrontHudStructureControls from '../FrontHudStructureControls';
 import {
   createInitialFormValues,
   normalizeFollowUpSubmitLabel,
@@ -91,6 +92,7 @@ function SharedBlockHudAnchor({ hudAnchor }) {
       isActive={hudAnchor.isActive}
       onClick={hudAnchor.onClick}
       style={hudAnchor.style}
+      structureControls={hudAnchor.structureControls}
     />
   );
 }
@@ -692,15 +694,11 @@ function ImpactStatBlock({ block, resolveTo, ownership, hudAnchor }) {
     <section className={`home-native-impact${ownership?.className || ''}`} data-block-id={block.id || 'impact_stat'}>
       <BlockOwnershipOverlay ownership={ownership} />
       <SharedBlockHudAnchor hudAnchor={hudAnchor} />
-      <HomeImpactStoryStaticContent
+      <HomeImpactStoryFeature
         headline={`${runtime.titlePrefix} ${runtime.highlight}.`}
         highlightedWord={runtime.highlight}
         body={runtime.body}
-        action={runtime.action}
         metrics={runtime.stats}
-        resolveTo={resolveTo}
-        countUp={runtime.countUp}
-        reveal
       />
     </section>
   );
@@ -979,12 +977,17 @@ export function BillboardBlock({
     'home-native-billboard',
     `is-bg-${normalizePanelBgTone(runtime.bgTone || 'grey')}`,
     `is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
+    runtime.sectionClassName || '',
     extraSectionClassName,
     ownership?.className || '',
   ].filter(Boolean).join(' ');
   const blockId = String(block?.id || '').trim();
   const blockPresetId = String(block?.presetId || '').trim();
-  const isHomeDoTheMath = blockId === HOME_DO_THE_MATH_BLOCK_ID || blockPresetId === 'do-the-math';
+  const isDoTheMathBillboard = (
+    blockId === HOME_DO_THE_MATH_BLOCK_ID
+    || blockPresetId === 'do-the-math'
+    || String(runtime.sectionClassName || '').split(/\s+/).includes('retirement-do-the-math-billboard')
+  );
   const effectiveJustify = runtime.justify || 'center';
   const copyClassName = [
     'native-info-section-copy',
@@ -1003,7 +1006,7 @@ export function BillboardBlock({
       <SharedBlockHudAnchor hudAnchor={hudAnchor} />
       <div className="ag-panel-rail" style={railStyle}>
         <div className={copyClassName} style={runtime.copyStyle || undefined} data-fade-root-margin={runtime.copyFadeRootMargin || undefined}>
-          {isHomeDoTheMath ? <HomeDoTheMathBadge linkTarget={mathBadgeLinkTarget} /> : null}
+          {isDoTheMathBillboard ? <HomeDoTheMathBadge linkTarget={mathBadgeLinkTarget} /> : null}
           {runtime.title ? (
             <h2 className={runtime.titleClassName || undefined} style={runtime.titleStyle}>
               {runtime.titleHighlights?.length
@@ -2177,6 +2180,13 @@ export default function PageBlocksRenderer({
       isActive: !hudDockCollapsed && activeHudPanelId === panel.panelId,
       onClick: () => onHudAnchorClick(panel.panelId, panel.anchorSelector),
       style: { '--ag-admin-front-hud-opacity': String(hudOpacityRatio) },
+      structureControls: (
+        <FrontHudStructureControls
+          pathname={ownershipPathname}
+          blockId={blockId}
+          placement="anchor"
+        />
+      ),
     };
   };
 

@@ -7,6 +7,7 @@ export default function FrontHudAnchorTag({
   anchorClassName = '',
   style = undefined,
   buttonAriaLabel = '',
+  structureControls = null,
 }) {
   const nextLabel = String(label || '').trim();
   if (!nextLabel || typeof onClick !== 'function') {
@@ -35,6 +36,11 @@ export default function FrontHudAnchorTag({
           ) : null}
           <span className="admin-front-hud-anchor-name">{nextLabel}</span>
         </button>
+        {structureControls ? (
+          <div className="admin-front-hud-anchor-structure-controls">
+            {structureControls}
+          </div>
+        ) : null}
       </div>
     </div>
   );

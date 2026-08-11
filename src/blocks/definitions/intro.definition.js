@@ -16,7 +16,7 @@ const SHARED_HEADING_TONE_OPTIONS = [
 
 const INTRO_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-  { value: 'sand', label: 'Sand Gradient', swatch: 'linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)' },
+  { value: 'sand', label: 'Sand Gradient', swatch: getTokenSwatch('sand') },
   { value: 'blue', label: 'Blue Gradient', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
 ];
@@ -36,6 +36,22 @@ const INTRO_EXTRA_LINE_TONE_OPTIONS = [
   { value: 'white', label: 'White', swatch: '#ffffff' },
   { value: 'blue', label: 'Blue', swatch: '#00adbb' },
   { value: 'muted', label: 'Muted', swatch: '#8c8b8e' },
+];
+
+const INTRO_BUTTON_STYLE_OPTIONS = [
+  { value: 'blue', label: 'Blue' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'outline', label: 'Outline' },
+  { value: 'ghost', label: 'Ghost' },
+];
+
+const INTRO_BUTTON_TONE_OPTIONS = [
+  { value: 'atlantean', label: 'Blue', swatch: getTokenSwatch('atlantean') },
+  { value: 'super-grey', label: 'Super Grey', swatch: getTokenSwatch('super-grey') },
+  { value: 'mango', label: 'Mango', swatch: getTokenSwatch('mango') },
+  { value: 'melon', label: 'Melon', swatch: getTokenSwatch('melon') },
+  { value: 'sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
+  { value: 'white', label: 'White', swatch: '#ffffff' },
 ];
 
 function validateIntroLinks(block) {
@@ -74,6 +90,7 @@ const sections = [
         options: SHARED_HEADING_TONE_OPTIONS.filter((option) => option.value),
       }),
       defineEditorField({ id: 'bodyHtml', label: 'Body HTML', type: 'html' }),
+      defineEditorField({ id: 'bodyColorClassName', label: 'Body color', type: 'swatch', options: SHARED_HEADING_TONE_OPTIONS }),
       defineEditorField({ id: 'body', label: 'Body text', type: 'textarea', rows: 4 }),
       defineEditorField({
         id: 'justify',
@@ -124,6 +141,12 @@ const sections = [
         toLabel: 'Button 1 internal page path',
         openInNewWindowId: 'button1OpenInNewWindow',
         openInNewWindowLabel: 'Button 1 opens in new window',
+        styleId: 'button1Style',
+        styleLabel: 'Button 1 style',
+        styleOptions: INTRO_BUTTON_STYLE_OPTIONS,
+        toneId: 'button1Tone',
+        toneLabel: 'Button 1 color',
+        toneOptions: INTRO_BUTTON_TONE_OPTIONS,
       }),
       ...defineTransitionalActionFields({
         labelId: 'button2Label',
@@ -134,6 +157,12 @@ const sections = [
         toLabel: 'Button 2 internal page path',
         openInNewWindowId: 'button2OpenInNewWindow',
         openInNewWindowLabel: 'Button 2 opens in new window',
+        styleId: 'button2Style',
+        styleLabel: 'Button 2 style',
+        styleOptions: INTRO_BUTTON_STYLE_OPTIONS,
+        toneId: 'button2Tone',
+        toneLabel: 'Button 2 color',
+        toneOptions: INTRO_BUTTON_TONE_OPTIONS,
       }),
     ],
   },
@@ -148,10 +177,15 @@ export const introBlockDefinition = createBlockDefinition({
   allowedVariants: ['default', 'split'],
   supportedModes: ['dynamic'],
   defaults: {
+    bodyColorClassName: '',
     justify: 'center',
     lineSpacing: 1.04,
     bgTone: 'sand',
     textTone: 'dark',
+    button1Style: 'blue',
+    button1Tone: 'atlantean',
+    button2Style: 'blue',
+    button2Tone: 'atlantean',
     sectionClassName: '',
   },
   schema: {

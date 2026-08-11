@@ -30,7 +30,6 @@ describe('card grid preset definitions', () => {
     expect(buildCardGridPresetSettings('investment-options')).toMatchObject({
       contentWidth: 'browser',
       columns: 'two',
-      showTitleDivider: false,
     });
     expect(getCardGridPresetDefinition('eligibility-cards')?.editor).toMatchObject({
       maxCards: 3,

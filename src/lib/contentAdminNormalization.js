@@ -1,11 +1,42 @@
 import { normalizePresetBearingBlockIdentity } from './blockPresetIdentity.js';
 import { normalizeBlockPresentation } from './blockPresentationContracts.js';
+import { normalizeAdminBlockName } from './blockDisplayName.js';
 import { normalizeSplitLinkFieldSettings } from './linkValue.js';
 import { normalizeCollaborationState } from './contentAdminCollaboration.js';
 
 // This version describes the record transformations below, not the renderer schema.
 // Increment it when a new, non-destructive stored-record migration is introduced.
 export const CONTENT_ADMIN_NORMALIZATION_VERSION = 1;
+
+// Migrated editors resolve their field catalog from the block registry. Keeping
+// the same catalog on every stored block makes the shared snapshot needlessly
+// large, so only legacy/unknown kinds retain an inline fallback catalog.
+const REGISTRY_BACKED_DYNAMIC_BLOCK_KINDS = new Set([
+  'content',
+  'calculator_cta',
+  'calculator_intro',
+  'calculator_widget',
+  'cta_band',
+  'cta_form',
+  'request_form',
+  'hero',
+  'hero_pie',
+  'impact_stat',
+  'intro',
+  'legal_copy',
+  'billboard',
+  'columns',
+  'feature_panel',
+  'photo_column',
+  'card_grid',
+  'newsletter',
+  'rates',
+  'services_grid',
+  'site_feature',
+  'split_panel',
+  'testimonials',
+  'top_strip',
+]);
 
 const RETIRED_DAF_PATH = '/services/planned-giving/generosity-fund';
 const DAF_PATH = '/services/planned-giving/donor-advised-fund';
@@ -125,6 +156,11 @@ function normalizeBlockSettings(settings) {
   return next;
 }
 
+export function isRetiredNonDynamicContentAdminBlock(block) {
+  return isObject(block)
+    && String(block.mode || '').trim().toLowerCase() === 'static';
+}
+
 /** Schema normalization plus declared presentation contracts. Inventory is untouched. */
 export function normalizeContentAdminBlock(rawBlock) {
   if (!isObject(rawBlock)) {
@@ -132,6 +168,9 @@ export function normalizeContentAdminBlock(rawBlock) {
   }
 
   let nextBlock = cloneJson(rawBlock);
+  if (Object.prototype.hasOwnProperty.call(nextBlock, 'adminName')) {
+    nextBlock.adminName = normalizeAdminBlockName(nextBlock.adminName);
+  }
   if (!isObject(nextBlock.settings)) {
     return nextBlock;
   }
@@ -199,7 +238,9 @@ export function normalizeContentAdminState(rawState, options = {}) {
   const blocksByPath = Object.fromEntries(
     Object.entries(blocksByPathSource).map(([rawPath, rawBlocks]) => {
       const pathname = normalizeManagedContentPath(rawPath);
-      return [pathname || rawPath, (Array.isArray(rawBlocks) ? rawBlocks : []).map(normalizeContentAdminBlock)];
+      return [pathname || rawPath, (Array.isArray(rawBlocks) ? rawBlocks : [])
+        .filter((block) => !isRetiredNonDynamicContentAdminBlock(block))
+        .map(normalizeContentAdminBlock)];
     }),
   );
 
@@ -218,6 +259,59 @@ export function normalizeContentAdminRecord(rawRecord) {
     state: normalizeContentAdminState(source.state),
     baseSnapshot: normalizeContentAdminState(source.baseSnapshot),
   };
+}
+
+export function compactContentAdminBlock(rawBlock) {
+  if (!isObject(rawBlock)) {
+    return cloneJson(rawBlock);
+  }
+  const nextBlock = cloneJson(rawBlock);
+  const kind = String(nextBlock.kind || '').trim();
+  const mode = String(nextBlock.mode || '').trim().toLowerCase();
+  if (mode !== 'static' && REGISTRY_BACKED_DYNAMIC_BLOCK_KINDS.has(kind)) {
+    delete nextBlock.editableFields;
+  }
+  return nextBlock;
+}
+
+export function compactContentAdminState(rawState) {
+  if (!isObject(rawState)) {
+    return cloneJson(rawState);
+  }
+  const nextState = cloneJson(rawState);
+  nextState.blocksByPath = Object.fromEntries(
+    Object.entries(nextState.blocksByPath || {}).map(([pathname, blocks]) => [
+      pathname,
+      (Array.isArray(blocks) ? blocks : []).map(compactContentAdminBlock),
+    ]),
+  );
+  return nextState;
+}
+
+export function compactContentAdminRecord(rawRecord) {
+  if (!isObject(rawRecord)) {
+    return cloneJson(rawRecord);
+  }
+  const nextRecord = cloneJson(rawRecord);
+  nextRecord.state = compactContentAdminState(nextRecord.state);
+  nextRecord.baseSnapshot = compactContentAdminState(nextRecord.baseSnapshot);
+  nextRecord.revisionsByPath = Object.fromEntries(
+    Object.entries(nextRecord.revisionsByPath || {}).map(([pathname, revisions]) => [
+      pathname,
+      (Array.isArray(revisions) ? revisions : []).map((revision) => ({
+        ...revision,
+        snapshot: revision?.snapshot
+          ? {
+            ...revision.snapshot,
+            page: revision.snapshot.page,
+            blocks: (Array.isArray(revision.snapshot.blocks) ? revision.snapshot.blocks : [])
+              .map(compactContentAdminBlock),
+          }
+          : revision?.snapshot,
+      })),
+    ]),
+  );
+  return nextRecord;
 }
 
 /** Starter/reset initialization is explicit and only normalizes supplied starter data. */

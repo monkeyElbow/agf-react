@@ -68,6 +68,8 @@ describe('color system helpers', () => {
     expect(getTokenSwatch('blue')).toContain('var(--ag-color-atlantean)');
     expect(getTokenSwatch('blue')).toContain('var(--ag-surface-blue-angle)');
     expect(getTokenSwatch('sand')).toContain('var(--ag-color-sand)');
+    expect(getTokenSwatch('sand')).toBe('linear-gradient(147deg, var(--ag-color-sand) 62%, var(--ag-color-sand-dark) 100%)');
+    expect(getTokenSwatch('sandstone')).toBe('linear-gradient(145deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%)');
     expect(getTokenSwatch('super-grey')).toContain('var(--ag-color-super-grey)');
   });
 });

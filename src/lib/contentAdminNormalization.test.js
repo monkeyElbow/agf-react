@@ -3,6 +3,8 @@ import { normalizeStoredConfig } from '../context/ContentAdminContext';
 import { normalizeSharedState } from '../../dev-server/contentAdminStore';
 import {
   CONTENT_ADMIN_NORMALIZATION_VERSION,
+  compactContentAdminBlock,
+  compactContentAdminRecord,
   normalizeContentAdminState,
   normalizeContentAdminRecord,
 } from './contentAdminNormalization';
@@ -83,6 +85,19 @@ describe('content-admin normalization parity', () => {
     expect(normalized.blocksByPath['/test'][1].settings.titleFontFamily).toBe('helv');
   });
 
+  it('normalizes optional admin block names as metadata without moving them into settings', () => {
+    const normalized = normalizeInBoth(state([
+      block('named', {
+        kind: 'billboard',
+        adminName: `  Pricing   ${'x'.repeat(60)} `,
+      }),
+    ]));
+
+    expect(normalized.blocksByPath['/test'][0].adminName).toHaveLength(40);
+    expect(normalized.blocksByPath['/test'][0].adminName).toMatch(/^Pricing x/);
+    expect(normalized.blocksByPath['/test'][0].settings).not.toHaveProperty('adminName');
+  });
+
   it('does not throw or invent inventory for malformed records', () => {
     const normalized = normalizeInBoth({
       pageHierarchy: {},
@@ -92,6 +107,46 @@ describe('content-admin normalization parity', () => {
     });
     expect(normalized.blocksByPath['/test']).toHaveLength(3);
     expect(normalized.blocksByPath['/test'][2]).toMatchObject({ id: 'kept', settings: null });
+  });
+
+  it('removes retired static block records without restoring a replacement', () => {
+    const normalized = normalizeInBoth(state([
+      block('dynamic', { settings: { bodyHtml: '<p>Keep this copy.</p>' } }),
+      block('retired-static', {
+        mode: 'static',
+        settings: { bodyHtml: '<p>Never render this fallback.</p>' },
+      }),
+    ]));
+
+    expect(normalized.blocksByPath['/test'].map(({ id }) => id)).toEqual(['dynamic']);
+    expect(normalized.blocksByPath['/test'][0].settings.bodyHtml).toBe('<p>Keep this copy.</p>');
+  });
+
+  it('removes registry-backed editor catalogs without touching unknown legacy blocks', () => {
+    const known = compactContentAdminBlock(block('known', {
+      editableFields: [{ id: 'title' }],
+    }));
+    const legacy = compactContentAdminBlock(block('legacy', {
+      kind: 'legacy_custom',
+      editableFields: [{ id: 'custom' }],
+    }));
+
+    expect(known).not.toHaveProperty('editableFields');
+    expect(legacy.editableFields).toEqual([{ id: 'custom' }]);
+  });
+
+  it('compacts state and base snapshots while preserving record metadata', () => {
+    const input = {
+      initialized: true,
+      updatedAt: 123,
+      state: state([block('state', { editableFields: [{ id: 'title' }] })]),
+      baseSnapshot: state([block('published', { editableFields: [{ id: 'title' }] })]),
+    };
+    const compacted = compactContentAdminRecord(input);
+
+    expect(compacted.updatedAt).toBe(123);
+    expect(compacted.state.blocksByPath['/test'][0]).not.toHaveProperty('editableFields');
+    expect(compacted.baseSnapshot.blocksByPath['/test'][0]).not.toHaveProperty('editableFields');
   });
 });
 

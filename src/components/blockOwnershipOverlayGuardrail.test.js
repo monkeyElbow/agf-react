@@ -25,6 +25,15 @@ describe('block ownership overlay guardrail', () => {
     expect(cssSource).toContain('.is-admin-owned-editing-other::after');
     expect(cssSource).toContain('.admin-block-ownership-overlay');
     expect(cssSource).toContain('.admin-block-ownership-overlay-card');
+    expect(cssSource).toContain('.admin-block-ownership-overlay-item');
+    expect(cssSource).toMatch(/\.admin-block-ownership-overlay-item\s*\{[\s\S]*?border-radius: 999px;[\s\S]*?backdrop-filter: blur\(10px\);/);
+    expect(cssSource).toMatch(/\.admin-front-hud-anchor-label\s*\{[\s\S]*?border-radius: 999px;[\s\S]*?backdrop-filter: blur\(10px\);/);
+    expect(cssSource).toMatch(/\.admin-front-hud-anchor-icon\s*\{[\s\S]*?border-radius: 999px;[\s\S]*?backdrop-filter: blur\(8px\);/);
+    expect(cssSource).toMatch(/\.admin-front-hud-dock-tab-icon\s*\{[\s\S]*?border-radius: 999px;[\s\S]*?backdrop-filter: blur\(8px\);/);
+    expect(cssSource).toContain('padding: 2px 0.5rem 2px 0.16rem;');
+    expect(cssSource).toContain('margin-left: 0.3rem;');
+    expect(cssSource).toContain('var(--admin-block-ownership-accent');
+    expect(cssSource).toContain('.admin-block-ownership-overlay-item + .admin-block-ownership-overlay-item');
 
     expect(nativePageSource).toContain('BlockOwnershipOverlay');
     expect(nativePageSource).toContain('getOwnershipVisualForBlockId');
@@ -49,5 +58,14 @@ describe('block ownership overlay guardrail', () => {
     expect(servicesSource).toContain('if (!showFrontHud || !blockId) {');
     expect(investmentsSource).toContain('if (!showFrontHud || !blockId) {');
     expect(retirementSource).toContain('if (!showFrontHud || !blockId) {');
+  });
+
+  it('keeps the HUD selector inside the viewport at tablet widths', () => {
+    const cssSource = readSource('../styles/front-hud.css');
+
+    expect(cssSource).toMatch(/\.admin-front-hud-dock\s*\{[\s\S]*?width: min\(220px, calc\(100vw - 24px\)\);[\s\S]*?max-width: calc\(100vw - 24px\);/);
+    expect(cssSource).toMatch(/@media \(max-width: 1100px\) \{[\s\S]*?\.admin-front-hud-dock\s*\{[\s\S]*?overflow: visible;[\s\S]*?\}[\s\S]*?\.admin-front-hud-dock-tabs\s*\{[\s\S]*?overflow-x: hidden;/);
+    expect(cssSource).toContain('/* The desktop hover lift can leave the scrollport at tablet widths. */');
+    expect(cssSource).toMatch(/\.admin-front-hud-dock-tab:hover[\s\S]*?\.admin-front-hud-dock-tab\.is-drag-over\s*\{[\s\S]*?transform: none;/);
   });
 });

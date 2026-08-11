@@ -25,6 +25,7 @@ import {
   getOrCreateDevIdentity,
   normalizeDevIdentity,
   renameStoredDevIdentity,
+  setStoredDevIdentityAccentColor,
 } from '../lib/devIdentity';
 import { getHeroSeedContract } from '../lib/heroSeedContracts';
 import {
@@ -45,12 +46,19 @@ import {
 import { normalizePresetBearingBlocks } from '../lib/blockPresetIdentity';
 import { normalizeCalculatorWidgetBlocks } from '../lib/calculatorWidgetIdentity';
 import { normalizeBlockPresentation } from '../lib/blockPresentationContracts';
-import { normalizeContentAdminBlock, normalizeContentAdminState } from '../lib/contentAdminNormalization';
+import {
+  isRetiredNonDynamicContentAdminBlock,
+  normalizeContentAdminBlock,
+  normalizeContentAdminState,
+} from '../lib/contentAdminNormalization';
 import { CONTENT_ADMIN_MIGRATION_ADAPTERS } from '../lib/contentAdminMigrationInventory';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { isPageContentBlock } from '../lib/pageContentIdentity';
 import { normalizeTestimonialRecord } from '../lib/testimonials';
-import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
+import {
+  EDITOR_DRAFT_FLUSH_EVENT,
+  LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS,
+} from '../lib/contentAdminTiming';
 import {
   appendHistoryEntry,
   blockSnapshotEquals,
@@ -71,11 +79,20 @@ import {
   releaseUserLocks,
 } from '../lib/contentAdminCollaboration';
 import {
+  classifyPublishVerification,
+  createPublishOperationId,
+  isPublishOperationResponseCurrent,
+  PUBLISH_STATUS,
+  validatePublishResponse,
+} from '../lib/contentAdminPublishing';
+import {
   acquireSharedBlockLock,
   discardSharedBlockDraft,
   discardSharedPageDraft,
   fetchSharedContentBackups,
   fetchSharedContentSnapshot,
+  fetchSharedContentRouteSnapshot,
+  fetchSharedPublishStatus,
   fetchSharedPageRevisionHistory,
   initializeSharedContentFromSeed,
   isDevContentAuthorityEnabled,
@@ -88,7 +105,9 @@ import {
   restoreLatestSharedContentBackup as restoreLatestSharedContentBackupRequest,
   restoreSharedBlockRevision,
   restoreSharedPageRevision,
+  saveSharedBlockDraft,
   saveSharedPageDraft,
+  saveSharedRouteDraft,
   syncSharedBlockDraft,
 } from '../lib/devContentAuthorityClient';
 
@@ -103,6 +122,7 @@ const STORAGE_KEY = 'agf-content-admin-v1';
 const LOCAL_BUFFERED_BLOCK_SETTING_COMMIT_DELAY_MS = 1600;
 const SHARED_BLOCK_DRAFT_SYNC_TEXT_DELAY_MS = 140;
 const SHARED_BLOCK_DRAFT_SYNC_DISCRETE_DELAY_MS = 90;
+const SHARED_PENDING_BLOCK_DRAFT_WAIT_TIMEOUT_MS = 2500;
 const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
 const LEGACY_GIVING_CHARITABLE_TRUSTS_PATH = '/services/planned-giving/charitable-trusts';
 const LEGACY_GIVING_ENDOWMENTS_PATH = '/services/planned-giving/endowments';
@@ -1008,7 +1028,9 @@ function normalizeSplitLinkFieldsInBlocks(blocks) {
 }
 
 function normalizeManagedBlockList(blocks) {
-  const dedupedBlocks = dedupeBlocksByIdPreferLatest(blocks);
+  const dynamicBlocks = (Array.isArray(blocks) ? blocks : [])
+    .filter((block) => !isRetiredNonDynamicContentAdminBlock(block));
+  const dedupedBlocks = dedupeBlocksByIdPreferLatest(dynamicBlocks);
   const singletonBlocks = normalizeSingletonKindBlocks(dedupedBlocks);
   const ctaBlocks = normalizeCtaFormCanonicalFieldsInBlocks(singletonBlocks);
   const calculatorBlocks = normalizeCalculatorWidgetBlocks(ctaBlocks);
@@ -1021,7 +1043,9 @@ function normalizeManagedBlockList(blocks) {
 }
 
 function normalizePageBlocksState(blocks) {
-  return (Array.isArray(blocks) ? blocks : []).map(normalizeContentAdminBlock);
+  return (Array.isArray(blocks) ? blocks : [])
+    .filter((block) => !isRetiredNonDynamicContentAdminBlock(block))
+    .map(normalizeContentAdminBlock);
 }
 
 function normalizeBlockDisplayName(name, mode, fallbackName = '', blockKind = '') {
@@ -2601,6 +2625,8 @@ function summarizeComparableAuthoringPageChanges(current, persisted, pathname) {
       changedBlockIds: [],
       changedBlockCount: 0,
       hasOrderChanges: false,
+      isDeletionOnlyOrderChange: false,
+      removedBlockIds: [],
       hasPageMetaChanges: false,
       hasUnsavedChanges: false,
     };
@@ -2619,11 +2645,25 @@ function summarizeComparableAuthoringPageChanges(current, persisted, pathname) {
     .map((block) => String(block?.id || '').trim())
     .filter(Boolean);
   const orderedBlockIds = [...new Set([...currentBlockIds, ...persistedBlockIds])];
+  const currentBlockIdSet = new Set(currentBlockIds);
+  const persistedBlockIdSet = new Set(persistedBlockIds);
+  const removedBlockIds = persistedBlockIds.filter((blockId) => !currentBlockIdSet.has(blockId));
+  const addedBlockIds = currentBlockIds.filter((blockId) => !persistedBlockIdSet.has(blockId));
+  const persistedWithoutRemovedBlocks = persistedBlockIds.filter((blockId) => currentBlockIdSet.has(blockId));
   const currentBlockById = new Map(currentBlocks.map((block) => [String(block?.id || '').trim(), block]));
   const persistedBlockById = new Map(persistedBlocks.map((block) => [String(block?.id || '').trim(), block]));
+  const currentIndexById = new Map(currentBlockIds.map((blockId, index) => [blockId, index]));
+  const persistedIndexById = new Map(persistedBlockIds.map((blockId, index) => [blockId, index]));
   const hasOrderChanges = JSON.stringify(currentBlockIds) !== JSON.stringify(persistedBlockIds);
+  const isDeletionOnlyOrderChange = hasOrderChanges
+    && removedBlockIds.length > 0
+    && addedBlockIds.length === 0
+    && JSON.stringify(currentBlockIds) === JSON.stringify(persistedWithoutRemovedBlocks);
   const changedBlockIds = orderedBlockIds.filter((blockId) => (
     JSON.stringify(currentBlockById.get(blockId) || null) !== JSON.stringify(persistedBlockById.get(blockId) || null)
+  ));
+  const orderChangedBlockIds = orderedBlockIds.filter((blockId) => (
+    currentIndexById.get(blockId) !== persistedIndexById.get(blockId)
   ));
   const currentAliases = Object.fromEntries(
     Object.entries(current.pathAliases || {}).filter(([fromPath, toPath]) => (
@@ -2645,8 +2685,11 @@ function summarizeComparableAuthoringPageChanges(current, persisted, pathname) {
 
   return {
     changedBlockIds,
+    orderChangedBlockIds,
     changedBlockCount: changedBlockIds.length,
     hasOrderChanges,
+    isDeletionOnlyOrderChange,
+    removedBlockIds,
     hasPageMetaChanges,
     hasUnsavedChanges: Boolean(changedBlockIds.length || hasOrderChanges || hasPageMetaChanges),
   };
@@ -2657,6 +2700,7 @@ function summarizeAuthoringPageChanges(currentState, persistedState, pathname) {
   if (!normalizedPath) {
     return {
       changedBlockIds: [],
+      orderChangedBlockIds: [],
       changedBlockCount: 0,
       hasOrderChanges: false,
       hasPageMetaChanges: false,
@@ -2764,8 +2808,10 @@ function summarizePageWorkflowActivity(collaborationByPath, pathname, actor, cur
       currentActorBlockCount: 0,
       otherActorBlockCount: 0,
       hasCurrentActorDraft: false,
+      hasCurrentActorUnsavedSave: false,
       hasOtherActorDraft: false,
       currentActorBlockIds: [],
+      currentActorUnsavedSaveBlockIds: [],
       otherActorBlocks: [],
     };
   }
@@ -2780,7 +2826,9 @@ function summarizePageWorkflowActivity(collaborationByPath, pathname, actor, cur
   const blocks = collaborationByPath?.[normalizedPath]?.blocks || {};
   let currentActorBlockCount = 0;
   let otherActorBlockCount = 0;
+  let currentActorUnsavedSaveBlockCount = 0;
   const currentActorBlockIds = [];
+  const currentActorUnsavedSaveBlockIds = [];
   const otherActorBlocks = [];
 
   Object.entries(blocks).forEach(([blockId, meta]) => {
@@ -2800,6 +2848,16 @@ function summarizePageWorkflowActivity(collaborationByPath, pathname, actor, cur
     if (currentActorOwnsBlock) {
       currentActorBlockCount += 1;
       currentActorBlockIds.push(String(blockId || '').trim());
+      if (
+        normalizedMeta.draftedBy?.userId === currentUserId
+        && (
+          normalizedMeta.savedBy?.userId !== currentUserId
+          || normalizedMeta.savedAt !== normalizedMeta.draftedAt
+        )
+      ) {
+        currentActorUnsavedSaveBlockCount += 1;
+        currentActorUnsavedSaveBlockIds.push(String(blockId || '').trim());
+      }
     } else if (otherActorOwnsBlock) {
       otherActorBlockCount += 1;
       otherActorBlocks.push({
@@ -2816,8 +2874,10 @@ function summarizePageWorkflowActivity(collaborationByPath, pathname, actor, cur
     currentActorBlockCount,
     otherActorBlockCount,
     hasCurrentActorDraft: currentActorBlockCount > 0,
+    hasCurrentActorUnsavedSave: currentActorUnsavedSaveBlockCount > 0,
     hasOtherActorDraft: otherActorBlockCount > 0,
     currentActorBlockIds,
+    currentActorUnsavedSaveBlockIds,
     otherActorBlocks,
   };
 }
@@ -2830,6 +2890,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
   const [devIdentity, setDevIdentity] = useState(readInitialDevIdentity);
   const [lastSharedSaveResult, setLastSharedSaveResult] = useState(null);
   const [lastSharedPublishResult, setLastSharedPublishResult] = useState(null);
+  const [sharedPublishStatus, setSharedPublishStatus] = useState(PUBLISH_STATUS.DRAFT_SYNCED);
   const [bufferedBlockSettingEdits, setBufferedBlockSettingEdits] = useState({});
   const [sharedSnapshotUpdatedAt, setSharedSnapshotUpdatedAt] = useState(initialBootstrapState.updatedAt);
   const [sharedSeedBaseline, setSharedSeedBaseline] = useState(initialBootstrapState.seedBaseline);
@@ -2845,13 +2906,16 @@ export function ContentAdminProvider({ children, initialState = null }) {
   const bufferedBlockSettingEditsRef = useRef(bufferedBlockSettingEdits);
   const persistedSharedAuthoringStateRef = useRef(toComparableAuthoringState(initialBootstrapState.authoringState));
   const publishedSharedAuthoringStateRef = useRef(toComparableAuthoringState(initialBootstrapState.publishedState));
+  const publishedStateRef = useRef(initialBootstrapState.publishedState);
   const pendingSharedMutationCountRef = useRef(0);
   const pendingBlockDraftSyncEntriesRef = useRef(new Map());
+  const routeDraftSaveChainRef = useRef(Promise.resolve());
   const bufferedBlockSettingCommitTimersRef = useRef(new Map());
   const externalDraftFlushHandlersRef = useRef(new Map());
   const externalDraftStatusHandlersRef = useRef(new Map());
   const latestSharedMutationIdRef = useRef(0);
   const latestSharedUpdatedAtRef = useRef(0);
+  const latestPublishOperationByTargetRef = useRef(new Map());
 
   useEffect(() => {
     if (sharedAuthorityEnabled || hasPersistedNormalizedInitialStateRef.current) {
@@ -2879,23 +2943,63 @@ export function ContentAdminProvider({ children, initialState = null }) {
     refreshSharedSyncState(patch);
   };
 
-  const updatePublishedSharedAuthoringState = (snapshot) => {
-    const nextPublishedState = snapshot?.baseSnapshot || snapshot?.payload?.baseSnapshot || snapshot?.state || snapshot?.payload?.state;
+  const updatePublishedSharedAuthoringState = (snapshot, scopedPath = '') => {
+    const nextPublishedState = snapshot?.baseSnapshot || snapshot?.payload?.baseSnapshot;
     if (!nextPublishedState) {
       return false;
     }
     const normalizedPublishedState = normalizeStoredConfig(nextPublishedState);
-    const nextComparablePublishedState = toComparableAuthoringState(normalizedPublishedState);
+    const normalizedScopedPath = String(scopedPath || '').trim();
     const currentComparablePublishedState = publishedSharedAuthoringStateRef.current;
+    const currentPublishedState = publishedStateRef.current;
+    const mergedPublishedState = normalizedScopedPath
+      ? {
+        ...currentPublishedState,
+        pageHierarchy: Object.prototype.hasOwnProperty.call(normalizedPublishedState.pageHierarchy || {}, normalizedScopedPath)
+          ? {
+            ...currentPublishedState.pageHierarchy,
+            [normalizedScopedPath]: normalizedPublishedState.pageHierarchy[normalizedScopedPath],
+          }
+          : currentPublishedState.pageHierarchy,
+        blocksByPath: Object.prototype.hasOwnProperty.call(normalizedPublishedState.blocksByPath || {}, normalizedScopedPath)
+          ? {
+            ...currentPublishedState.blocksByPath,
+            [normalizedScopedPath]: normalizedPublishedState.blocksByPath[normalizedScopedPath],
+          }
+          : currentPublishedState.blocksByPath,
+        pathAliases: {
+          ...currentPublishedState.pathAliases,
+          ...normalizedPublishedState.pathAliases,
+        },
+      }
+      : normalizedPublishedState;
+    const nextComparablePublishedState = toComparableAuthoringState(mergedPublishedState);
     const didChange = (
       collectDirtyComparableAuthoringPaths(currentComparablePublishedState, nextComparablePublishedState).length > 0
       || JSON.stringify(currentComparablePublishedState.pathAliases || {}) !== JSON.stringify(nextComparablePublishedState.pathAliases || {})
     );
     publishedSharedAuthoringStateRef.current = nextComparablePublishedState;
+    publishedStateRef.current = mergedPublishedState;
     if (didChange) {
-      setPublishedState(normalizedPublishedState);
+      setPublishedState(mergedPublishedState);
     }
     return didChange;
+  };
+
+  const reconcilePublishedPublishResponse = (response, request) => {
+    const validation = validatePublishResponse(response, request);
+    if (!validation.ok) {
+      return validation;
+    }
+    const targetKey = request.scope === 'block'
+      ? `${request.pathname}::${request.blockId}`
+      : request.pathname;
+    const latestOperationId = latestPublishOperationByTargetRef.current.get(targetKey);
+    if (!isPublishOperationResponseCurrent(response, latestOperationId)) {
+      return { ok: false, reason: 'stale-publish-response', stale: true };
+    }
+    updatePublishedSharedAuthoringState(response, request.pathname);
+    return { ok: true };
   };
 
   const applySharedSeedBaseline = (snapshot) => {
@@ -2977,7 +3081,19 @@ export function ContentAdminProvider({ children, initialState = null }) {
       .map((entry) => entry?.inFlightPromise)
       .filter((promise) => promise && typeof promise.then === 'function');
     if (pendingPromises.length) {
-      await Promise.allSettled(pendingPromises);
+      let timeoutId = null;
+      try {
+        await Promise.race([
+          Promise.allSettled(pendingPromises),
+          new Promise((resolve) => {
+            timeoutId = setTimeout(resolve, SHARED_PENDING_BLOCK_DRAFT_WAIT_TIMEOUT_MS);
+          }),
+        ]);
+      } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      }
     }
   };
 
@@ -2999,11 +3115,16 @@ export function ContentAdminProvider({ children, initialState = null }) {
   };
 
   const updateBufferedBlockSettingDrafts = (updater) => {
-    setBufferedBlockSettingEdits((previous) => {
-      const nextValue = typeof updater === 'function' ? updater(previous) : updater;
-      bufferedBlockSettingEditsRef.current = nextValue;
-      return nextValue;
-    });
+    // Keep the imperative buffer current before the next React render. Save and
+    // publish actions flush this buffer synchronously after an editor blur/change.
+    // Waiting for the state updater to run can otherwise make those actions read
+    // the previous setting value and race the delayed draft sync.
+    const previousValue = bufferedBlockSettingEditsRef.current;
+    const nextValue = typeof updater === 'function' ? updater(previousValue) : updater;
+    bufferedBlockSettingEditsRef.current = nextValue;
+    setBufferedBlockSettingEdits((currentValue) => (
+      currentValue === nextValue ? currentValue : nextValue
+    ));
   };
 
   const clearBufferedBlockSettingCommitTimer = (pathname, blockId) => {
@@ -3048,13 +3169,14 @@ export function ContentAdminProvider({ children, initialState = null }) {
     return didFlushAny;
   };
 
-  const applySharedBlockDraftSnapshot = (snapshot, pathname) => {
+  const applySharedBlockDraftSnapshot = (snapshot, pathname, options = {}) => {
+    const mergeCollaborationOnlyWhenDirty = Boolean(options?.mergeCollaborationOnlyWhenDirty);
     const nextState = snapshot?.state || snapshot?.payload?.state;
     const normalizedPath = String(pathname || '').trim();
     if (!nextState || !normalizedPath) {
       return false;
     }
-    updatePublishedSharedAuthoringState(snapshot);
+    updatePublishedSharedAuthoringState(snapshot, normalizedPath);
 
     const nextUpdatedAt = Number(snapshot.updatedAt) || 0;
     latestSharedUpdatedAtRef.current = nextUpdatedAt;
@@ -3065,7 +3187,30 @@ export function ContentAdminProvider({ children, initialState = null }) {
 
     const normalizedSnapshotState = normalizeStoredConfig(nextState);
     const currentComparableAuthoringState = toComparableAuthoringState(stateRef.current);
+    const persistedComparableAuthoringState = persistedSharedAuthoringStateRef.current;
     const normalizedSnapshotComparableAuthoringState = toComparableAuthoringState(normalizedSnapshotState);
+    const shouldApplyCollaborationPath = collectChangedCollaborationPaths(stateRef.current, normalizedSnapshotState)
+      .includes(normalizedPath);
+    const hasDirtyAuthoringPath = !compareComparableAuthoringPageSnapshot(
+      currentComparableAuthoringState,
+      persistedComparableAuthoringState,
+      normalizedPath,
+    );
+    if (mergeCollaborationOnlyWhenDirty && hasDirtyAuthoringPath) {
+      if (!shouldApplyCollaborationPath) {
+        return false;
+      }
+      const mergedState = mergeSharedAuthoringSnapshot(stateRef.current, normalizedSnapshotState, {
+        authoringPaths: [],
+        collaborationPaths: [normalizedPath],
+      });
+      if (mergedState === stateRef.current) {
+        return false;
+      }
+      stateRef.current = mergedState;
+      setState(mergedState);
+      return true;
+    }
     persistedSharedAuthoringStateRef.current = {
       ...persistedSharedAuthoringStateRef.current,
       pageHierarchy: {
@@ -3086,8 +3231,6 @@ export function ContentAdminProvider({ children, initialState = null }) {
       normalizedSnapshotComparableAuthoringState,
       normalizedPath,
     );
-    const shouldApplyCollaborationPath = collectChangedCollaborationPaths(stateRef.current, normalizedSnapshotState)
-      .includes(normalizedPath);
     if (!shouldApplyAuthoringPath && !shouldApplyCollaborationPath) {
       return false;
     }
@@ -3163,6 +3306,14 @@ export function ContentAdminProvider({ children, initialState = null }) {
     let cancelled = false;
     let timeoutId = null;
     const currentActor = normalizeContentActor(devIdentity);
+    const isAdminContentRoute = typeof window !== 'undefined'
+      && window.location.pathname === '/admin/content';
+    const getAdminContentPath = () => {
+      if (!isAdminContentRoute || typeof window === 'undefined') {
+        return '';
+      }
+      return String(new URLSearchParams(window.location.search).get('page') || '/').trim() || '/';
+    };
     const getPollingDelay = () => {
       if (typeof document === 'undefined') {
         return getSharedContentPollDelayForActivity(false, hasActiveSharedEditing(stateRef.current, currentActor));
@@ -3179,6 +3330,25 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
 
       try {
+        if (allowBootstrap && isAdminContentRoute && typeof fetchSharedContentRouteSnapshot === 'function') {
+          const scopedPath = getAdminContentPath();
+          try {
+            const routeSnapshot = await fetchSharedContentRouteSnapshot(scopedPath);
+            if (
+              routeSnapshot?.initialized
+              && hasContentAdminSnapshotStateContent(routeSnapshot)
+              && !cancelled
+            ) {
+              applySharedBlockDraftSnapshot(routeSnapshot, scopedPath, {
+                mergeCollaborationOnlyWhenDirty: false,
+              });
+              // Give React a paint opportunity before loading the full shared snapshot.
+              await new Promise((resolve) => setTimeout(resolve, 0));
+            }
+          } catch {
+            // The full snapshot below remains the fallback for route hydration.
+          }
+        }
         let snapshot = await fetchSharedContentSnapshot();
         if (!snapshot?.initialized && allowBootstrap) {
           snapshot = await initializeSharedContentFromSeed(normalizeStoredConfig(null), currentActor);
@@ -3261,9 +3431,14 @@ export function ContentAdminProvider({ children, initialState = null }) {
       pathAliases,
     } = publishedState;
     const availableBlockTemplates = getAllBlockTemplateBlueprints();
-    const blockTemplateById = new Map(
-      availableBlockTemplates.map((template) => [buildBlockTemplateCreateId(template), template]),
-    );
+    const blockTemplateById = new Map();
+    availableBlockTemplates.forEach((template) => {
+      const createId = buildBlockTemplateCreateId(template);
+      const existing = blockTemplateById.get(createId);
+      if (!existing || template?.isAddBlockDefault) {
+        blockTemplateById.set(createId, template);
+      }
+    });
     const currentActor = normalizeContentActor(devIdentity);
     const authoringStateForDirtyChecks = sharedAuthorityEnabled
       ? applyBufferedBlockSettingEditsToState(stateRef.current, bufferedBlockSettingEditsRef.current)
@@ -3333,6 +3508,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
       if (!sharedAuthorityEnabled) {
         publishedSharedAuthoringStateRef.current = toComparableAuthoringState(computedState);
+        publishedStateRef.current = computedState;
         setPublishedState(computedState);
       }
       if (!sharedAuthorityEnabled) {
@@ -3352,6 +3528,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
     setState(nextState);
     if (!sharedAuthorityEnabled && nextState) {
       publishedSharedAuthoringStateRef.current = toComparableAuthoringState(nextState);
+      publishedStateRef.current = nextState;
       setPublishedState(nextState);
     }
   };
@@ -3464,7 +3641,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       if (shouldSyncLock) {
         syncSharedSnapshot(
           () => acquireSharedBlockLock(normalizedPath, normalizedBlockId, currentActor),
-          { mergeCollaborationOnlyWhenDirty: true },
+          { mergeCollaborationOnlyWhenDirty: true, scopedPath: normalizedPath },
         );
       }
       scheduleSharedBlockDraftSync(normalizedPath, normalizedBlockId, {
@@ -3488,7 +3665,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       ) {
         syncSharedSnapshot(
           () => acquireSharedBlockLock(normalizedPath, normalizedBlockId, currentActor),
-          { mergeCollaborationOnlyWhenDirty: true },
+          { mergeCollaborationOnlyWhenDirty: true, scopedPath: normalizedPath },
         );
       }
       return didClaimLock;
@@ -3609,29 +3786,51 @@ export function ContentAdminProvider({ children, initialState = null }) {
 
     const syncSharedSnapshot = (operation, options = {}) => {
       const mergeCollaborationOnlyWhenDirty = Boolean(options?.mergeCollaborationOnlyWhenDirty);
+      const scopedPath = String(options?.scopedPath || '').trim();
       if (!sharedAuthorityEnabled) {
-        return;
+        return Promise.resolve(null);
       }
       const mutationId = latestSharedMutationIdRef.current + 1;
       latestSharedMutationIdRef.current = mutationId;
       bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
-      Promise.resolve()
+      return Promise.resolve()
         .then(operation)
         .then((snapshot) => {
           const nextState = snapshot?.state || snapshot?.payload?.state;
           if (!nextState || latestSharedMutationIdRef.current !== mutationId) {
-            return;
+            return snapshot;
           }
-          applySharedSnapshotState(snapshot, { mergeCollaborationOnlyWhenDirty });
+          if (scopedPath) {
+            applySharedBlockDraftSnapshot(snapshot, scopedPath, { mergeCollaborationOnlyWhenDirty });
+          } else {
+            applySharedSnapshotState(snapshot, { mergeCollaborationOnlyWhenDirty });
+          }
+          return snapshot;
         })
         .catch(async () => {
           try {
-            const snapshot = await fetchSharedContentSnapshot();
-            if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
-              applySharedSnapshotState(snapshot, { mergeCollaborationOnlyWhenDirty });
+            let snapshot;
+            try {
+              snapshot = scopedPath
+                ? await fetchSharedContentRouteSnapshot(scopedPath)
+                : await fetchSharedContentSnapshot();
+            } catch (routeError) {
+              if (!scopedPath || !String(routeError?.message || '').includes('No "fetchSharedContentRouteSnapshot" export')) {
+                throw routeError;
+              }
+              snapshot = await fetchSharedContentSnapshot();
             }
+            if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+              if (scopedPath) {
+                applySharedBlockDraftSnapshot(snapshot, scopedPath, { mergeCollaborationOnlyWhenDirty });
+              } else {
+                applySharedSnapshotState(snapshot, { mergeCollaborationOnlyWhenDirty });
+              }
+            }
+            return snapshot;
           } catch {
             // ignore follow-up sync failures
+            return null;
           }
         })
         .finally(() => {
@@ -3701,9 +3900,17 @@ export function ContentAdminProvider({ children, initialState = null }) {
         })
         .catch(async () => {
           try {
-            const snapshot = await fetchSharedContentSnapshot();
+            let snapshot;
+            try {
+              snapshot = await fetchSharedContentRouteSnapshot(normalizedPath);
+            } catch (routeError) {
+              if (!String(routeError?.message || '').includes('No "fetchSharedContentRouteSnapshot" export')) {
+                throw routeError;
+              }
+              snapshot = await fetchSharedContentSnapshot();
+            }
             if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
-              applySharedSnapshotState(snapshot, { mergeCollaborationOnlyWhenDirty: true });
+              applySharedBlockDraftSnapshot(snapshot, normalizedPath, { mergeCollaborationOnlyWhenDirty: true });
             }
           } catch {
             // ignore follow-up sync failures
@@ -4028,7 +4235,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       if (shouldSyncLock) {
         syncSharedSnapshot(
           () => acquireSharedBlockLock(pathname, blockId, currentActor),
-          { mergeCollaborationOnlyWhenDirty: true },
+          { mergeCollaborationOnlyWhenDirty: true, scopedPath: pathname },
         );
       }
       scheduleSharedBlockDraftSync(pathname, blockId, {
@@ -4046,7 +4253,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         if (shouldSyncLock) {
           syncSharedSnapshot(
             () => acquireSharedBlockLock(pathname, blockId, currentActor),
-            { mergeCollaborationOnlyWhenDirty: true },
+            { mergeCollaborationOnlyWhenDirty: true, scopedPath: pathname },
           );
         }
         queueBufferedBlockSettingCommit(pathname, blockId, settingKey, settingValue);
@@ -4105,7 +4312,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       if (shouldSyncLock) {
         syncSharedSnapshot(
           () => acquireSharedBlockLock(pathname, blockId, currentActor),
-          { mergeCollaborationOnlyWhenDirty: true },
+          { mergeCollaborationOnlyWhenDirty: true, scopedPath: pathname },
         );
       }
     };
@@ -4160,29 +4367,36 @@ export function ContentAdminProvider({ children, initialState = null }) {
       if (shouldSyncLock) {
         syncSharedSnapshot(
           () => acquireSharedBlockLock(pathname, blockId, currentActor),
-          { mergeCollaborationOnlyWhenDirty: true },
+          { mergeCollaborationOnlyWhenDirty: true, scopedPath: pathname },
         );
       }
     };
 
-    const addBlock = (pathname, templateId, insertIndex) => {
+  const addBlock = (pathname, templateId, insertIndex) => {
       const template = blockTemplateById.get(String(templateId || '').trim());
       if (!template) {
         return;
       }
 
-      let createdBlockId = '';
       saveState((prevState) => {
         const prevBlocksByPath = prevState.blocksByPath || {};
         const pageBlocks = prevBlocksByPath[pathname] || [];
+        const templateContent = Object.fromEntries(
+          Object.entries(template).filter(([key]) => ![
+            'templateLookupId',
+            'createTemplateId',
+            'isReusableTemplate',
+            'isAddBlockDefault',
+            'excludeFromInsertCatalog',
+          ].includes(key)),
+        );
         const nextBlock = {
-          ...template,
-          id: toUniqueBlockId(template.templateId || template.id, pageBlocks),
-          name: normalizeBlockDisplayName(template.name, template.mode, template.name, template.kind),
-          settings: JSON.parse(JSON.stringify(template.settings || {})),
-          editableFields: JSON.parse(JSON.stringify(Array.isArray(template.editableFields) ? template.editableFields : [])),
+          ...templateContent,
+          id: toUniqueBlockId(templateContent.templateId || templateContent.id, pageBlocks),
+          name: normalizeBlockDisplayName(templateContent.name, templateContent.mode, templateContent.name, templateContent.kind),
+          settings: JSON.parse(JSON.stringify(templateContent.settings || {})),
+          editableFields: JSON.parse(JSON.stringify(Array.isArray(templateContent.editableFields) ? templateContent.editableFields : [])),
         };
-        createdBlockId = nextBlock.id;
         const nextBlocks = [...pageBlocks];
         const targetIndex = Number.isInteger(insertIndex)
           ? Math.max(0, Math.min(pageBlocks.length, insertIndex))
@@ -4209,31 +4423,51 @@ export function ContentAdminProvider({ children, initialState = null }) {
           collaborationByPath: nextCollaborationByPath,
         };
       });
-      if (sharedAuthorityEnabled && currentActor && createdBlockId) {
-        syncSharedSnapshot(
-          () => acquireSharedBlockLock(pathname, createdBlockId, currentActor),
-          { mergeCollaborationOnlyWhenDirty: true },
-        );
+      if (sharedAuthorityEnabled && currentActor) {
+        void queueSharedRouteDraftSave('Add block to page draft', pathname);
       }
     };
 
     const removeBlock = (pathname, blockId) => {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
+      if (!normalizedPath || !normalizedBlockId) {
+        return;
+      }
+      let didRemoveBlock = false;
+      clearBufferedBlockSettingCommitTimer(normalizedPath, normalizedBlockId);
+      clearPendingBlockDraftSyncTimer(normalizedPath, normalizedBlockId);
+      updateBufferedBlockSettingDrafts((previous) => {
+        const previousPathEntry = previous?.[normalizedPath];
+        if (!previousPathEntry?.[normalizedBlockId]) {
+          return previous;
+        }
+        const nextPathEntry = { ...previousPathEntry };
+        delete nextPathEntry[normalizedBlockId];
+        if (!Object.keys(nextPathEntry).length) {
+          const nextValue = { ...previous };
+          delete nextValue[normalizedPath];
+          return nextValue;
+        }
+        return { ...previous, [normalizedPath]: nextPathEntry };
+      });
       saveState((prevState) => {
         const prevBlocksByPath = prevState.blocksByPath || {};
-        const pageBlocks = prevBlocksByPath[pathname] || [];
-        const nextBlocks = pageBlocks.filter((block) => block.id !== blockId);
+        const pageBlocks = prevBlocksByPath[normalizedPath] || [];
+        const nextBlocks = pageBlocks.filter((block) => String(block?.id || '').trim() !== normalizedBlockId);
         if (nextBlocks.length === pageBlocks.length) {
           return prevState;
         }
-        const nextCollaborationByPath = updateCollaborationForPath(prevState, pathname, (entry) => {
+        didRemoveBlock = true;
+        const nextCollaborationByPath = updateCollaborationForPath(prevState, normalizedPath, (entry) => {
           const nextBlocksMeta = { ...(entry.blocks || {}) };
-          delete nextBlocksMeta[blockId];
+          delete nextBlocksMeta[normalizedBlockId];
           return {
             ...entry,
             blocks: nextBlocksMeta,
             history: appendHistoryEntry(entry.history, buildHistoryEntry({
               action: 'block-removed',
-              blockId,
+              blockId: normalizedBlockId,
               actor: currentActor,
             })),
           };
@@ -4243,15 +4477,26 @@ export function ContentAdminProvider({ children, initialState = null }) {
           ...prevState,
           blocksByPath: {
             ...prevBlocksByPath,
-            [pathname]: normalizePageBlocksState(nextBlocks),
+            [normalizedPath]: normalizePageBlocksState(nextBlocks),
           },
           collaborationByPath: nextCollaborationByPath,
         };
       });
+      if (didRemoveBlock && sharedAuthorityEnabled && currentActor) {
+        void queueSharedRouteDraftSave('Remove block from page draft', normalizedPath);
+      }
     };
 
     const renameDevIdentity = (nextDisplayName) => {
       const nextIdentity = renameStoredDevIdentity(nextDisplayName);
+      if (nextIdentity) {
+        setDevIdentity(nextIdentity);
+      }
+      return nextIdentity;
+    };
+
+    const setDevIdentityAccentColor = (nextAccentColor) => {
+      const nextIdentity = setStoredDevIdentityAccentColor(nextAccentColor);
       if (nextIdentity) {
         setDevIdentity(nextIdentity);
       }
@@ -4369,10 +4614,11 @@ export function ContentAdminProvider({ children, initialState = null }) {
 
       if (sharedAuthorityEnabled) {
         setOptimisticState(applyLockLocally);
-        syncSharedSnapshot(
+        const pending = syncSharedSnapshot(
           () => acquireSharedBlockLock(normalizedPath, normalizedBlockId, currentActor, { force }),
-          { mergeCollaborationOnlyWhenDirty: true },
+          { mergeCollaborationOnlyWhenDirty: true, scopedPath: normalizedPath },
         );
+        return { ok: true, pending };
       } else {
         saveState(applyLockLocally);
       }
@@ -4429,7 +4675,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         setOptimisticState(clearLockLocally);
         syncSharedSnapshot(
           () => releaseSharedBlockLock(normalizedPath, normalizedBlockId, currentActor),
-          { mergeCollaborationOnlyWhenDirty: true },
+          { mergeCollaborationOnlyWhenDirty: true, scopedPath: normalizedPath },
         );
       } else {
         saveState(clearLockLocally);
@@ -4458,7 +4704,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
           { force },
         );
         if (snapshot?.state) {
-          applySharedSnapshotState(snapshot, { mergeCollaborationOnlyWhenDirty: false });
+          applySharedBlockDraftSnapshot(snapshot, normalizedPath);
         }
         return snapshot;
       } catch (error) {
@@ -4466,10 +4712,11 @@ export function ContentAdminProvider({ children, initialState = null }) {
       }
     };
 
-    const saveSharedDraftNow = async (summary = '') => {
+    const saveSharedDraftNow = async (summary = '', scopedPathname = '') => {
       if (!sharedAuthorityEnabled) {
         return { ok: false, reason: 'shared-authority-disabled' };
       }
+      setSharedPublishStatus(PUBLISH_STATUS.SAVING_DRAFT);
       flushExternalDraftBuffers();
       flushAllBufferedBlockSettings();
       await awaitPendingBlockDraftSyncs();
@@ -4482,36 +4729,107 @@ export function ContentAdminProvider({ children, initialState = null }) {
           stateRef.current,
           bufferedBlockSettingEditsRef.current,
         );
-        const snapshot = await saveSharedPageDraft(draftState, currentActor, summary);
+        const normalizedScopedPath = String(scopedPathname || '').trim()
+          || (() => {
+            const dirtyPaths = collectDirtyAuthoringPaths(
+              draftState,
+              persistedSharedAuthoringStateRef.current,
+            );
+            const ownedCollaborationPaths = Object.entries(draftState.collaborationByPath || {})
+              .filter(([, entry]) => Object.values(entry?.blocks || {}).some((meta) => (
+                [meta?.draftedBy, meta?.savedBy, meta?.lockedBy]
+                  .some((owner) => owner?.userId && owner.userId === currentActor?.userId)
+              )))
+              .map(([pathname]) => pathname);
+            const scopedCandidates = [...new Set([...dirtyPaths, ...ownedCollaborationPaths])];
+            return scopedCandidates.length === 1 ? scopedCandidates[0] : '';
+          })();
+        const routeState = normalizedScopedPath
+          ? {
+            pageHierarchy: {
+              ...(draftState.pageHierarchy?.[normalizedScopedPath]
+                ? { [normalizedScopedPath]: draftState.pageHierarchy[normalizedScopedPath] }
+                : {}),
+            },
+            blocksByPath: {
+              ...(Object.prototype.hasOwnProperty.call(draftState.blocksByPath || {}, normalizedScopedPath)
+                ? { [normalizedScopedPath]: draftState.blocksByPath[normalizedScopedPath] }
+                : {}),
+            },
+            collaborationByPath: {
+              ...(Object.prototype.hasOwnProperty.call(draftState.collaborationByPath || {}, normalizedScopedPath)
+                ? { [normalizedScopedPath]: draftState.collaborationByPath[normalizedScopedPath] }
+                : {}),
+            },
+            pathAliases: draftState.pathAliases || {},
+          }
+          : null;
+        let snapshot = null;
+        if (normalizedScopedPath) {
+          try {
+            snapshot = await saveSharedRouteDraft(normalizedScopedPath, routeState, currentActor, summary);
+          } catch (routeError) {
+            if (!String(routeError?.message || '').includes('No "saveSharedRouteDraft" export')) {
+              throw routeError;
+            }
+          }
+        }
+        if (!snapshot) {
+          snapshot = await saveSharedPageDraft(draftState, currentActor, summary);
+        }
+        // Older test/dev authorities may not expose the route endpoint yet.
+        // Falling back keeps the save operation compatible while the server is
+        // being upgraded, without changing the route-scoped path once present.
+        if (!snapshot && normalizedScopedPath) {
+          snapshot = await saveSharedPageDraft(draftState, currentActor, summary);
+        }
+        const shouldApplyReturnedSnapshot = !normalizedScopedPath
+          || compareAuthoringPageSnapshot(stateRef.current, draftState, normalizedScopedPath);
         const normalizedSaveResult = normalizeSharedSaveResult({
           ...(snapshot?.saveResult || {}),
           error: snapshot?.error || snapshot?.saveResult?.error,
           updatedAt: snapshot?.updatedAt,
         });
-        if (snapshot?.state) {
-          applySharedSnapshotState(snapshot);
+        if (snapshot?.state && shouldApplyReturnedSnapshot) {
+          if (normalizedScopedPath) {
+            applySharedBlockDraftSnapshot(snapshot, normalizedScopedPath);
+          } else {
+            applySharedSnapshotState(snapshot);
+          }
           if (normalizedSaveResult.status === 'partially-saved' || normalizedSaveResult.status === 'blocked') {
             const preservedState = preserveBlockedDraftContent(
               normalizeStoredConfig(snapshot.state),
               draftState,
               normalizedSaveResult.blockedBlocks,
             );
-            stateRef.current = preservedState;
-            setState(preservedState);
+            if (normalizedScopedPath) {
+              const mergedPreservedState = mergeSharedAuthoringSnapshot(
+                stateRef.current,
+                preservedState,
+                { authoringPaths: [normalizedScopedPath], collaborationPaths: [normalizedScopedPath] },
+              );
+              stateRef.current = mergedPreservedState;
+              setState(mergedPreservedState);
+            } else {
+              stateRef.current = preservedState;
+              setState(preservedState);
+            }
           }
         }
-        setLastSharedSaveResult(normalizedSaveResult);
         const saveCompleted = normalizedSaveResult.status === 'saved'
           || normalizedSaveResult.status === 'no-op';
+        setLastSharedSaveResult(normalizedSaveResult);
+        setSharedPublishStatus(saveCompleted ? PUBLISH_STATUS.DRAFT_SYNCED : PUBLISH_STATUS.PUBLISH_FAILED);
         return {
           ok: saveCompleted,
           reason: saveCompleted ? '' : normalizedSaveResult.status,
           snapshot,
           saveResult: normalizedSaveResult,
         };
-      } catch {
+      } catch (error) {
+        const reason = error?.code || 'save-failed';
         const failed = {
-          error: 'save-failed',
+          error: reason,
           status: 'failed',
           didSave: false,
           hasConflicts: false,
@@ -4523,13 +4841,110 @@ export function ContentAdminProvider({ children, initialState = null }) {
           updatedAt: Date.now(),
         };
         setLastSharedSaveResult(failed);
+        setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
         return {
           ok: false,
-          reason: 'save-failed',
+          reason,
           saveResult: failed,
         };
       } finally {
         bumpPendingSharedMutationCount(-1, { lastSettledAt: Date.now() });
+      }
+    };
+
+    const queueSharedRouteDraftSave = (summary = '', scopedPathname = '') => {
+      const nextSave = routeDraftSaveChainRef.current
+        .catch(() => null)
+        .then(() => saveSharedDraftNow(summary, scopedPathname));
+      routeDraftSaveChainRef.current = nextSave.catch(() => null);
+      return nextSave;
+    };
+
+    const saveSharedBlockDraftNow = async (pathname, blockId, summary = '') => {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
+      if (!sharedAuthorityEnabled) {
+        return { ok: false, reason: 'shared-authority-disabled' };
+      }
+      if (!normalizedPath || !normalizedBlockId) {
+        return { ok: false, reason: 'invalid-block-target' };
+      }
+
+      setSharedPublishStatus(PUBLISH_STATUS.SAVING_DRAFT);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(EDITOR_DRAFT_FLUSH_EVENT));
+      }
+      flushExternalDraftBuffers();
+      flushBufferedBlockSettings(normalizedPath, normalizedBlockId);
+      clearPendingBlockDraftSyncTimer(normalizedPath, normalizedBlockId);
+      await awaitPendingBlockDraftSyncs();
+      await awaitQueuedRouteDraftSaves();
+
+      const currentState = applyBufferedBlockSettingEditsToState(
+        stateRef.current,
+        bufferedBlockSettingEditsRef.current,
+      );
+      const currentBlock = currentState.blocksByPath?.[normalizedPath]
+        ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
+      if (!currentBlock) {
+        return { ok: false, reason: 'block-not-found' };
+      }
+
+      const mutationId = latestSharedMutationIdRef.current + 1;
+      latestSharedMutationIdRef.current = mutationId;
+      bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
+      try {
+        const snapshot = await saveSharedBlockDraft(
+          normalizedPath,
+          normalizedBlockId,
+          currentBlock,
+          currentActor,
+          summary,
+        );
+        const normalizedSaveResult = normalizeSharedSaveResult({
+          ...(snapshot?.saveResult || {}),
+          error: snapshot?.error || snapshot?.saveResult?.error,
+          updatedAt: snapshot?.updatedAt,
+        });
+        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
+          applySharedBlockDraftSnapshot(snapshot, normalizedPath);
+        }
+        const saveCompleted = normalizedSaveResult.status === 'saved'
+          || normalizedSaveResult.status === 'no-op';
+        setLastSharedSaveResult(normalizedSaveResult);
+        setSharedPublishStatus(saveCompleted ? PUBLISH_STATUS.DRAFT_SYNCED : PUBLISH_STATUS.PUBLISH_FAILED);
+        return {
+          ok: saveCompleted,
+          reason: saveCompleted ? '' : normalizedSaveResult.status,
+          snapshot,
+          saveResult: normalizedSaveResult,
+        };
+      } catch (error) {
+        const reason = error?.code || 'block-save-failed';
+        const failed = {
+          error: reason,
+          status: 'failed',
+          didSave: false,
+          hasConflicts: false,
+          changedPaths: [],
+          savedPaths: [],
+          savedBlockIdsByPath: {},
+          blockedBlockIdsByPath: {},
+          blockedBlocks: [],
+          updatedAt: Date.now(),
+        };
+        setLastSharedSaveResult(failed);
+        setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
+        return { ok: false, reason, saveResult: failed };
+      } finally {
+        bumpPendingSharedMutationCount(-1, { lastSettledAt: Date.now() });
+      }
+    };
+
+    const awaitQueuedRouteDraftSaves = async () => {
+      const pendingRouteSave = routeDraftSaveChainRef.current;
+      if (pendingRouteSave && typeof pendingRouteSave.then === 'function') {
+        await pendingRouteSave.catch(() => null);
       }
     };
 
@@ -4656,34 +5071,70 @@ export function ContentAdminProvider({ children, initialState = null }) {
         return { ok: false, reason: 'invalid-path' };
       }
 
+      // Publish may first flush a local editor buffer, wait for its queued
+      // route save, and then publish. Keep the UI honest during that work.
+      setSharedPublishStatus(PUBLISH_STATUS.SAVING_DRAFT);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(EDITOR_DRAFT_FLUSH_EVENT));
+      }
+      flushExternalDraftBuffers();
+      flushAllBufferedBlockSettings();
+      await awaitPendingBlockDraftSyncs();
+      clearPendingBlockDraftSyncTimers();
+      await awaitQueuedRouteDraftSaves();
       const currentAuthoringState = applyBufferedBlockSettingEditsToState(stateRef.current, bufferedBlockSettingEditsRef.current);
       const pageSaveSummary = summarizeAuthoringPageChanges(
         currentAuthoringState,
         persistedSharedAuthoringStateRef.current,
         normalizedPath,
       );
-      if (pageSaveSummary.hasUnsavedChanges) {
-        const saveResult = await saveSharedDraftNow(summary);
-        if (!saveResult?.ok) {
+      let expectedDraftRevision = '';
+      if (pageSaveSummary.hasUnsavedChanges || hasPendingExternalDrafts(normalizedPath)) {
+        setSharedPublishStatus(PUBLISH_STATUS.SAVING_DRAFT);
+        const saveResult = await saveSharedDraftNow(summary, normalizedPath);
+        const partialSaveCanContinue = saveResult?.reason === 'partially-saved'
+          && !pageSaveSummary.hasOrderChanges
+          && !pageSaveSummary.hasPageMetaChanges
+          && Boolean(
+            saveResult?.saveResult?.savedBlockIdsByPath?.[normalizedPath]?.length,
+          );
+        if (!saveResult?.ok && !partialSaveCanContinue) {
           return {
             ok: false,
             reason: saveResult?.reason || 'save-before-publish-failed',
             saveResult: saveResult?.saveResult || null,
           };
         }
+        expectedDraftRevision = String(saveResult.snapshot?.draftRevision || '').trim();
       }
 
-      flushExternalDraftBuffers();
-      flushAllBufferedBlockSettings();
-      await awaitPendingBlockDraftSyncs();
-      clearPendingBlockDraftSyncTimers();
+      const operationId = createPublishOperationId('page');
+      const publishRequest = {
+        operationId,
+        pathname: normalizedPath,
+        scope: 'page',
+        expectedDraftRevision,
+      };
+      latestPublishOperationByTargetRef.current.set(normalizedPath, operationId);
+      setSharedPublishStatus(PUBLISH_STATUS.PUBLISHING);
       const mutationId = latestSharedMutationIdRef.current + 1;
       latestSharedMutationIdRef.current = mutationId;
       bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
       try {
-        const snapshot = await publishSharedPage(normalizedPath, currentActor, summary);
+        const snapshot = await publishSharedPage(normalizedPath, currentActor, summary, {
+          operationId,
+          expectedDraftRevision,
+        });
+        const reconciliation = reconcilePublishedPublishResponse(snapshot, publishRequest);
+        if (reconciliation.stale) {
+          return { ok: false, reason: 'stale-publish-response', snapshot, stale: true };
+        }
+        if (!reconciliation.ok && !reconciliation.stale) {
+          setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
+          throw Object.assign(new Error(reconciliation.reason), { code: reconciliation.reason, payload: snapshot });
+        }
         if (snapshot?.state) {
-          applySharedSnapshotState(snapshot);
+          applySharedBlockDraftSnapshot(snapshot, normalizedPath);
         }
         const normalizedPublishResult = normalizeSharedPublishResult({
           ...(snapshot?.publishResult || {}),
@@ -4691,6 +5142,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
           updatedAt: snapshot?.updatedAt,
         });
         setLastSharedPublishResult(normalizedPublishResult);
+        setSharedPublishStatus(snapshot?.ok === false
+          ? PUBLISH_STATUS.PUBLISH_FAILED
+          : PUBLISH_STATUS.LIVE_CONFIRMED);
         return {
           ok: snapshot?.ok !== false,
           snapshot,
@@ -4698,8 +5152,47 @@ export function ContentAdminProvider({ children, initialState = null }) {
         };
       } catch (error) {
         const snapshot = error?.payload || null;
-        if (snapshot?.state) {
-          applySharedSnapshotState(snapshot);
+        const isTimeout = error?.code === 'content-admin-request-timeout';
+        if (isTimeout) {
+          setSharedPublishStatus(PUBLISH_STATUS.STATUS_UNKNOWN);
+          setSharedPublishStatus(PUBLISH_STATUS.VERIFYING);
+          try {
+            const verification = await fetchSharedPublishStatus(operationId);
+            const verificationState = classifyPublishVerification(verification);
+            if (verificationState === 'COMMITTED') {
+              const reconciliation = reconcilePublishedPublishResponse(verification, publishRequest);
+              if (reconciliation.stale) {
+                return { ok: false, reason: 'stale-publish-response', snapshot: verification, stale: true };
+              }
+              setSharedPublishStatus(PUBLISH_STATUS.LIVE_CONFIRMED);
+              const normalizedPublishResult = normalizeSharedPublishResult(verification.publishResult || {
+                status: 'published',
+                didPublish: true,
+                updatedAt: verification.publishedAt,
+              });
+              setLastSharedPublishResult(normalizedPublishResult);
+              return { ok: true, snapshot: verification, publishResult: normalizedPublishResult };
+            }
+            if (verificationState === 'NOT_COMMITTED') {
+              setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
+              return { ok: false, reason: 'publish-not-committed', snapshot: verification };
+            }
+            setSharedPublishStatus(PUBLISH_STATUS.STATUS_UNKNOWN);
+            return {
+              ok: false,
+              reason: 'publish-status-unknown',
+              status: PUBLISH_STATUS.STATUS_UNKNOWN,
+              operationId,
+            };
+          } catch {
+            setSharedPublishStatus(PUBLISH_STATUS.STATUS_UNKNOWN);
+            return {
+              ok: false,
+              reason: 'publish-status-unknown',
+              status: PUBLISH_STATUS.STATUS_UNKNOWN,
+              operationId,
+            };
+          }
         }
         if (snapshot?.publishResult || snapshot?.error) {
           const normalizedPublishResult = normalizeSharedPublishResult({
@@ -4708,6 +5201,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
             updatedAt: snapshot?.updatedAt,
           });
           setLastSharedPublishResult(normalizedPublishResult);
+          setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
           return {
             ok: false,
             reason: snapshot?.error || 'publish-failed',
@@ -4730,9 +5224,10 @@ export function ContentAdminProvider({ children, initialState = null }) {
           updatedAt: Date.now(),
         };
         setLastSharedPublishResult(failed);
+        setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
         return {
           ok: false,
-          reason: 'publish-failed',
+          reason: error?.code || 'publish-failed',
           publishResult: failed,
         };
       } finally {
@@ -4750,23 +5245,29 @@ export function ContentAdminProvider({ children, initialState = null }) {
         return { ok: false, reason: 'invalid-block-target' };
       }
 
+      setSharedPublishStatus(PUBLISH_STATUS.SAVING_DRAFT);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(EDITOR_DRAFT_FLUSH_EVENT));
+      }
       flushExternalDraftBuffers();
-      flushAllBufferedBlockSettings();
+      flushBufferedBlockSettings(normalizedPath, normalizedBlockId);
       await awaitPendingBlockDraftSyncs();
-      clearPendingBlockDraftSyncTimers();
-      const currentAuthoringState = applyBufferedBlockSettingEditsToState(
+      clearPendingBlockDraftSyncTimer(normalizedPath, normalizedBlockId);
+      await awaitQueuedRouteDraftSaves();
+      let currentAuthoringState = applyBufferedBlockSettingEditsToState(
         stateRef.current,
         bufferedBlockSettingEditsRef.current,
       );
-      const pageSaveSummary = summarizeAuthoringPageChanges(
-        currentAuthoringState,
-        persistedSharedAuthoringStateRef.current,
-        normalizedPath,
-      );
       let expectedBlock = currentAuthoringState.blocksByPath?.[normalizedPath]
         ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
-      if (pageSaveSummary.hasUnsavedChanges || hasPendingExternalDrafts(normalizedPath)) {
-        const saveResult = await saveSharedDraftNow(summary);
+      let expectedDraftRevision = '';
+      const persistedBlock = persistedSharedAuthoringStateRef.current.blocksByPath?.[normalizedPath]
+        ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
+      const blockHasUnsavedChanges = JSON.stringify(expectedBlock) !== JSON.stringify(persistedBlock)
+        || hasPendingExternalDrafts(normalizedPath, normalizedBlockId);
+      if (blockHasUnsavedChanges) {
+        setSharedPublishStatus(PUBLISH_STATUS.SAVING_DRAFT);
+        const saveResult = await saveSharedBlockDraftNow(normalizedPath, normalizedBlockId, summary);
         if (!saveResult?.ok) {
           return {
             ok: false,
@@ -4774,6 +5275,11 @@ export function ContentAdminProvider({ children, initialState = null }) {
             saveResult: saveResult?.saveResult || null,
           };
         }
+        expectedDraftRevision = String(saveResult.snapshot?.draftRevision || '').trim();
+        currentAuthoringState = applyBufferedBlockSettingEditsToState(
+          stateRef.current,
+          bufferedBlockSettingEditsRef.current,
+        );
         expectedBlock = saveResult.snapshot?.state?.blocksByPath?.[normalizedPath]
           ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || expectedBlock;
         if (!expectedBlock || JSON.stringify(expectedBlock) !== JSON.stringify(
@@ -4787,6 +5293,16 @@ export function ContentAdminProvider({ children, initialState = null }) {
           };
         }
       }
+      const operationId = createPublishOperationId('block');
+      const publishRequest = {
+        operationId,
+        pathname: normalizedPath,
+        scope: 'block',
+        blockId: normalizedBlockId,
+        expectedDraftRevision,
+      };
+      latestPublishOperationByTargetRef.current.set(`${normalizedPath}::${normalizedBlockId}`, operationId);
+      setSharedPublishStatus(PUBLISH_STATUS.PUBLISHING);
       const mutationId = latestSharedMutationIdRef.current + 1;
       latestSharedMutationIdRef.current = mutationId;
       bumpPendingSharedMutationCount(1, { lastQueuedAt: Date.now() });
@@ -4797,6 +5313,10 @@ export function ContentAdminProvider({ children, initialState = null }) {
           currentActor,
           summary,
           expectedBlock,
+          {
+            operationId,
+            expectedDraftRevision,
+          },
         );
         const publishedBlock = snapshot?.publishedBlock
           || snapshot?.baseSnapshot?.blocksByPath?.[normalizedPath]
@@ -4804,9 +5324,6 @@ export function ContentAdminProvider({ children, initialState = null }) {
           || null;
         if (snapshot?.ok !== false && expectedBlock && publishedBlock
           && JSON.stringify(publishedBlock) !== JSON.stringify(normalizeContentAdminBlock(expectedBlock))) {
-          if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
-            applySharedSnapshotState(snapshot);
-          }
           const verificationFailure = normalizeSharedPublishResult({
             ...(snapshot?.publishResult || {}),
             error: 'block-publish-verification-failed',
@@ -4821,8 +5338,16 @@ export function ContentAdminProvider({ children, initialState = null }) {
             publishResult: verificationFailure,
           };
         }
-        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
-          applySharedSnapshotState(snapshot);
+        const reconciliation = reconcilePublishedPublishResponse(snapshot, publishRequest);
+        if (reconciliation.stale) {
+          return { ok: false, reason: 'stale-publish-response', snapshot, stale: true };
+        }
+        if (!reconciliation.ok && !reconciliation.stale) {
+          setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
+          throw Object.assign(new Error(reconciliation.reason), { code: reconciliation.reason, payload: snapshot });
+        }
+        if (snapshot?.state) {
+          applySharedBlockDraftSnapshot(snapshot, normalizedPath);
         }
         const normalizedPublishResult = normalizeSharedPublishResult({
           ...(snapshot?.publishResult || {}),
@@ -4830,6 +5355,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
           updatedAt: snapshot?.updatedAt,
         });
         setLastSharedPublishResult(normalizedPublishResult);
+        setSharedPublishStatus(snapshot?.ok === false
+          ? PUBLISH_STATUS.PUBLISH_FAILED
+          : PUBLISH_STATUS.LIVE_CONFIRMED);
         return {
           ok: snapshot?.ok !== false,
           snapshot,
@@ -4837,8 +5365,47 @@ export function ContentAdminProvider({ children, initialState = null }) {
         };
       } catch (error) {
         const snapshot = error?.payload || null;
-        if (snapshot?.state && latestSharedMutationIdRef.current === mutationId) {
-          applySharedSnapshotState(snapshot);
+        const isTimeout = error?.code === 'content-admin-request-timeout';
+        if (isTimeout) {
+          setSharedPublishStatus(PUBLISH_STATUS.STATUS_UNKNOWN);
+          setSharedPublishStatus(PUBLISH_STATUS.VERIFYING);
+          try {
+            const verification = await fetchSharedPublishStatus(operationId);
+            const verificationState = classifyPublishVerification(verification);
+            if (verificationState === 'COMMITTED') {
+              const reconciliation = reconcilePublishedPublishResponse(verification, publishRequest);
+              if (reconciliation.stale) {
+                return { ok: false, reason: 'stale-publish-response', snapshot: verification, stale: true };
+              }
+              setSharedPublishStatus(PUBLISH_STATUS.LIVE_CONFIRMED);
+              const normalizedPublishResult = normalizeSharedPublishResult(verification.publishResult || {
+                status: 'published',
+                didPublish: true,
+                updatedAt: verification.publishedAt,
+              });
+              setLastSharedPublishResult(normalizedPublishResult);
+              return { ok: true, snapshot: verification, publishResult: normalizedPublishResult };
+            }
+            if (verificationState === 'NOT_COMMITTED') {
+              setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
+              return { ok: false, reason: 'publish-not-committed', snapshot: verification };
+            }
+            setSharedPublishStatus(PUBLISH_STATUS.STATUS_UNKNOWN);
+            return {
+              ok: false,
+              reason: 'publish-status-unknown',
+              status: PUBLISH_STATUS.STATUS_UNKNOWN,
+              operationId,
+            };
+          } catch {
+            setSharedPublishStatus(PUBLISH_STATUS.STATUS_UNKNOWN);
+            return {
+              ok: false,
+              reason: 'publish-status-unknown',
+              status: PUBLISH_STATUS.STATUS_UNKNOWN,
+              operationId,
+            };
+          }
         }
         if (snapshot?.publishResult || snapshot?.error) {
           const normalizedPublishResult = normalizeSharedPublishResult({
@@ -4847,6 +5414,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
             updatedAt: snapshot?.updatedAt,
           });
           setLastSharedPublishResult(normalizedPublishResult);
+          setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
           return {
             ok: false,
             reason: snapshot?.error || 'block-publish-failed',
@@ -4854,14 +5422,16 @@ export function ContentAdminProvider({ children, initialState = null }) {
             publishResult: normalizedPublishResult,
           };
         }
+        const reason = error?.code || 'block-publish-failed';
         const failed = normalizeSharedPublishResult({
-          error: 'block-publish-failed',
+          error: reason,
           status: 'failed',
           didPublish: false,
           updatedAt: Date.now(),
         });
         setLastSharedPublishResult(failed);
-        return { ok: false, reason: 'block-publish-failed', publishResult: failed };
+        setSharedPublishStatus(PUBLISH_STATUS.PUBLISH_FAILED);
+        return { ok: false, reason, publishResult: failed };
       } finally {
         bumpPendingSharedMutationCount(-1, { lastSettledAt: Date.now() });
       }
@@ -5078,8 +5648,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
       };
     };
 
-    const hasPendingExternalDrafts = (pathname) => {
+    const hasPendingExternalDrafts = (pathname, blockId = '') => {
       const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
       if (!normalizedPath) {
         return false;
       }
@@ -5088,7 +5659,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
           const status = getStatus();
           if (
             String(status?.pathname || '').trim() === normalizedPath
-            && Boolean(status?.hasPendingDrafts)
+            && Boolean(normalizedBlockId
+              ? status?.pendingBlockIds?.includes(normalizedBlockId)
+              : status?.hasPendingDrafts)
           ) {
             return true;
           }
@@ -5177,6 +5750,8 @@ export function ContentAdminProvider({ children, initialState = null }) {
       devIdentity,
       pageHierarchy,
       blocksByPath,
+      publishedPageHierarchy: publishedState.pageHierarchy,
+      publishedBlocksByPath: publishedState.blocksByPath,
       pathAliases,
       authoringPageHierarchy,
       authoringBlocksByPath,
@@ -5193,10 +5768,12 @@ export function ContentAdminProvider({ children, initialState = null }) {
       removeBlock,
       availableBlockTemplates,
       renameDevIdentity,
+      setDevIdentityAccentColor,
       getBlockCollaboration,
       getPageHistory,
       lastSharedSaveResult,
       lastSharedPublishResult,
+      sharedPublishStatus,
       sharedSnapshotUpdatedAt,
       sharedSeedBaseline,
       sharedSyncStatus: {
@@ -5227,6 +5804,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         publishedState,
       ),
       saveSharedDraftNow,
+      saveSharedBlockDraftNow,
       discardSharedPageDraft: discardSharedPageDraftNow,
       discardSharedBlockDraft: discardSharedBlockDraftNow,
       publishSharedPageNow,
@@ -5257,6 +5835,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
     sharedAuthorityEnabled,
     lastSharedSaveResult,
     lastSharedPublishResult,
+    sharedPublishStatus,
     sharedSnapshotUpdatedAt,
     sharedSeedBaseline,
     sharedSyncState,

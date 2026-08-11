@@ -69,6 +69,7 @@ describe('home impact stat renderer guardrail', () => {
     expect(source).toContain('const runtime = buildDynamicImpactStatFromBlock(block);');
     expect(source).not.toContain("kind: 'impact_stat',");
     expect(source).toContain('function ImpactStatBlock({ block, resolveTo, ownership, hudAnchor }) {');
+    expect(source).toContain('<HomeImpactStoryFeature');
     expect(source).toContain("className={`home-native-impact${ownership?.className || ''}`}");
     expect(source).toContain('<BlockOwnershipOverlay ownership={ownership} />');
     expect(source).not.toContain('feature_split: FeatureSplitBlock,');

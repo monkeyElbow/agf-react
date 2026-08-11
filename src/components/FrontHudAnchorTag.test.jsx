@@ -28,6 +28,19 @@ describe('FrontHudAnchorTag', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
+  it('renders structure controls below the block name badge', () => {
+    render(
+      <FrontHudAnchorTag
+        label="Billboard"
+        onClick={() => {}}
+        structureControls={<div data-testid="block-structure-controls">controls</div>}
+      />,
+    );
+
+    const anchor = screen.getByRole('button', { name: 'Open Billboard HUD panel' }).parentElement;
+    expect(anchor?.querySelector('[data-testid="block-structure-controls"]')).not.toBeNull();
+  });
+
   it('keeps block name badges above ownership and dimming overlays', () => {
     expect(serviceNativeCss).toContain('/* Keep block names visible and clickable above every block overlay. */');
     expect(serviceNativeCss).toMatch(/\.admin-front-hud-layer\s*\{[\s\S]*?z-index: 1000;/);

@@ -11,12 +11,11 @@ function readSource(relativePath) {
 }
 
 describe('home page mobile overflow guardrail', () => {
-  it('keeps the dev-only columns diagnostics overlay layout-viewport safe on mobile', () => {
+  it('keeps columns diagnostics out of the rendered page surface', () => {
     const source = readSource('./HomePage.jsx');
 
-    expect(source).toContain('width: \'min(560px, calc(100% - 24px))\'');
-    expect(source).toContain('maxWidth: \'calc(100% - 24px)\'');
-    expect(source).toContain('boxSizing: \'border-box\'');
-    expect(source).not.toContain('maxWidth: \'min(560px, calc(100vw - 24px))\'');
+    expect(source).toContain('window.__agfHomeColumnsDebug = homeColumnsDiagnostics;');
+    expect(source).not.toContain('JSON.stringify(homeColumnsDiagnostics, null, 2)');
+    expect(source).not.toContain('position: \'fixed\'');
   });
 });

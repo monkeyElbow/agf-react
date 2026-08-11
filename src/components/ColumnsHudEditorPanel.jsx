@@ -2,6 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ColorPalette from './ColorPalette';
 import TextHighlightColorControls from './TextHighlightColorControls';
 import {
+  HudEditorBlockOptionsPage,
+  HudEditorModelLayout,
+  appendHudBlockOptionsSection,
+} from './HudEditorShell';
+import {
   BUTTON_TONE_OPTIONS as SHARED_BUTTON_TONE_OPTIONS,
   SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT,
   SURFACE_BG_TONE_OPTIONS,
@@ -585,9 +590,11 @@ function ColumnSlotEditor({
 export default function ColumnsHudEditorPanel({
   settings = {},
   onSettingChange,
+  sourceRevision = 0,
   bgOptions = COLUMNS_HUD_BG_OPTIONS,
   justifyOptions = COLUMNS_HUD_JUSTIFY_OPTIONS,
   textColorOptions = COLUMNS_HUD_TEXT_COLOR_OPTIONS,
+  blockOptions = null,
 }) {
   const titleInputRef = useRef(null);
   const [titleSelection, setTitleSelection] = useState({ start: 0, end: 0, text: '' });
@@ -719,6 +726,7 @@ export default function ColumnsHudEditorPanel({
     commitDraftValue,
   } = useBufferedFieldDrafts({
     fields: bufferedFields,
+    sourceRevision,
   });
 
   useEffect(() => {
@@ -779,8 +787,21 @@ export default function ColumnsHudEditorPanel({
     setActiveColumnSlot(Math.max(1, nextSlot - 1));
   };
 
+  const [activeEditorSection, setActiveEditorSection] = useState('content');
+
+  const editorSections = appendHudBlockOptionsSection([
+    { id: 'content', label: 'Content', icon: 'Aa' },
+    { id: 'columns', label: 'Columns', icon: '▦' },
+  ], blockOptions);
+
   return (
-    <div className="admin-front-hud-columns-editor">
+    <HudEditorModelLayout
+      className="admin-front-hud-columns-editor"
+      sections={editorSections}
+      activeSection={activeEditorSection}
+      onSectionChange={setActiveEditorSection}
+      label="Columns editor sections"
+    >
       <section className="admin-front-hud-card admin-front-hud-columns-main-card">
         <div className="admin-front-hud-card-head">
           <strong>Header + Body</strong>
@@ -944,6 +965,7 @@ export default function ColumnsHudEditorPanel({
           className="admin-front-hud-columns-slot-card"
         />
       </section>
-    </div>
+      <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+    </HudEditorModelLayout>
   );
 }

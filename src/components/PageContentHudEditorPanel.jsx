@@ -1,5 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
+import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
+import {
+  HudEditorBlockOptionsPage,
+  HudEditorModelLayout,
+  appendHudBlockOptionsSection,
+} from './HudEditorShell';
 
 export const PAGE_CONTENT_WIDTH_PRESETS = Object.freeze([
   { id: 'narrow', label: 'Narrow', maxWidthPx: 720 },
@@ -239,16 +245,42 @@ export function PageContentLayoutControls({
 export default function PageContentHudEditorPanel({
   block,
   onSettingChange,
+  blockOptions = null,
+  sourceRevision = 0,
 }) {
   const [miniEditorEnabled, setMiniEditorEnabled] = useState(true);
+  const [activeEditorSection, setActiveEditorSection] = useState('content');
   const settings = block?.settings || {};
+  const htmlDraftFields = useMemo(() => ([
+    {
+      id: 'html',
+      value: settings.html,
+      commit: (nextValue) => onSettingChange?.('html', nextValue),
+    },
+  ]), [onSettingChange, settings.html]);
+  const {
+    draftValues,
+    updateDraftValue,
+    commitDraftValue,
+  } = useBufferedFieldDrafts({ fields: htmlDraftFields, sourceRevision });
+  const editorSections = appendHudBlockOptionsSection([
+    { id: 'content', label: 'Content', icon: 'Aa' },
+    { id: 'layout', label: 'Layout', icon: '▦' },
+  ], blockOptions);
 
   if (!block || typeof onSettingChange !== 'function') {
     return null;
   }
 
   return (
-    <div className="admin-front-hud-page-content-editor">
+    <HudEditorModelLayout
+      className="admin-front-hud-page-content-editor"
+      sections={editorSections}
+      activeSection={activeEditorSection}
+      onSectionChange={setActiveEditorSection}
+      label="Page content editor sections"
+    >
+      <section className="admin-hud-editor-panel admin-front-hud-page-content-content-panel">
       <div className="admin-front-hud-field-group admin-front-hud-page-content-mode-group">
         <span className="admin-front-hud-control-label">Editor Type</span>
         <div className="admin-front-hud-page-content-mode-toggle" role="group" aria-label="Page content editor type">
@@ -277,8 +309,12 @@ export default function PageContentHudEditorPanel({
             <AdminHtmlEditor
               compact
               showFooterToggle={false}
-              value={String(settings.html || '')}
-              onChange={(nextValue) => onSettingChange('html', nextValue)}
+              paletteVariant="hud"
+              value={draftValues.html ?? String(settings.html || '')}
+              onChange={(nextValue) => updateDraftValue('html', nextValue)}
+              onBlur={() => commitDraftValue('html')}
+              baseColorClassName={String(settings.bodyColorClassName || 'is-super-grey')}
+              onBaseColorChange={(nextValue) => onSettingChange('bodyColorClassName', nextValue)}
               placeholder="Start page content..."
             />
           </div>
@@ -286,18 +322,23 @@ export default function PageContentHudEditorPanel({
           <label className="admin-front-hud-field admin-front-hud-page-content-html-field">
             <span>Body HTML</span>
             <textarea
-              value={String(settings.html || '')}
-              onChange={(event) => onSettingChange('html', event.target.value)}
+              value={draftValues.html ?? String(settings.html || '')}
+              onChange={(event) => updateDraftValue('html', event.target.value)}
+              onBlur={() => commitDraftValue('html')}
             />
           </label>
         )}
       </div>
+      </section>
 
-      <PageContentLayoutControls
-        settings={settings}
-        onSettingChange={onSettingChange}
-        className="admin-front-hud-page-content-settings"
-      />
-    </div>
+      <section className="admin-hud-editor-panel admin-front-hud-page-content-layout-panel">
+        <PageContentLayoutControls
+          settings={settings}
+          onSettingChange={onSettingChange}
+          className="admin-front-hud-page-content-settings"
+        />
+      </section>
+      <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+    </HudEditorModelLayout>
   );
 }

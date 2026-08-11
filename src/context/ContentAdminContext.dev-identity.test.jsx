@@ -10,6 +10,7 @@ function ContextProbe() {
   const {
     devIdentity,
     renameDevIdentity,
+    setDevIdentityAccentColor,
     blocksByPath,
     updateBlock,
     updateBlockSetting,
@@ -44,6 +45,7 @@ function ContextProbe() {
       <p data-testid="block-order">{pageBlocks.map((block) => block.id).join('|')}</p>
       <p data-testid="hero-hidden">{heroBlock?.hidden ? 'yes' : 'no'}</p>
       <button type="button" onClick={() => renameDevIdentity('Taylor QA')}>Rename</button>
+      <button type="button" onClick={() => setDevIdentityAccentColor('#f26660')}>Set color</button>
       <button
         type="button"
         onClick={() => updateBlockSetting(pathname, blockId, 'line1Text', 'Updated hero line')}
@@ -108,6 +110,20 @@ describe('ContentAdminContext dev identity metadata', () => {
 
     expect(screen.getByTestId('dev-name').textContent).toBe('Taylor QA');
     expect(screen.getByTestId('dev-id').textContent).toBe(beforeId);
+  });
+
+  it('updates the local identity color without changing the same author id', () => {
+    render(
+      <ContentAdminProvider>
+        <ContextProbe />
+      </ContentAdminProvider>,
+    );
+
+    const beforeId = screen.getByTestId('dev-id').textContent;
+    fireEvent.click(screen.getByRole('button', { name: 'Set color' }));
+
+    expect(screen.getByTestId('dev-id').textContent).toBe(beforeId);
+    expect(JSON.parse(window.localStorage.getItem('agf-dev-identity-v1')).accentColor).toBe('#f26660');
   });
 
   it('can take over an existing active block lock without rewriting saved draft ownership', () => {

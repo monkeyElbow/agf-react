@@ -15,7 +15,7 @@ const CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS = Object.freeze({
   'native-info-page--legacy-cga': 'Charitable gift annuity sections need route-specific hero clearance and card/form presentation.',
   'native-info-page--legacy-child': 'Planned-giving child routes share a declared compatibility shell for their managed dynamic sections.',
   'native-info-page--legacy-generosity-fund': 'Donor-advised fund assets and online-giving sections need route-specific dynamic grid spacing and typography.',
-  'native-info-page--legacy-giving': 'The planned-giving overview uses declared dynamic billboard and CTA presentation contracts for its product parade and legacy-giving sections.',
+  'native-info-page--legacy-giving': 'Planned-giving product cards need route-scoped flex-card padding and vertical balance.',
   'native-info-page--life-quote': 'Life quote product cards need route-specific dynamic grid card shell sizing.',
 });
 
@@ -146,7 +146,22 @@ describe('implementation-ownership.service-native style ownership', () => {
     const source = readSource('./service-native.css');
 
     expect(source).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card {');
-    expect(source).toContain('padding: clamp(1.2rem, 2.2vw, 2rem) clamp(2.2rem, 4vw, 3rem) clamp(2.8rem, 4.8vw, 3.8rem);');
+    expect(source).toContain('padding: clamp(1.8rem, 3vw, 2.6rem) clamp(2.2rem, 4vw, 3rem);');
+    expect(source).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) {');
+    expect(source).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) h3 {');
+    expect(source).toContain('font-size: max(var(--dynamic-grid-card-title-size, 1.14rem), clamp(1.55rem, 2.35vw, 1.9rem));');
+  });
+
+  it('keeps planned-giving asset bullet cards padded beyond the dynamic-grid default', () => {
+    const source = readSource('./service-native.css');
+
+    expect(source).toContain('.native-info-page--legacy-child .service-native-section.native-dynamic-grid:is(');
+    expect(source).toContain('  .legacy-child-native-assets,');
+    expect(source).toContain('  .legacy-child-native-cga-assets,');
+    expect(source).toContain('  .legacy-child-native-trusts-funding');
+    expect(source).toContain('padding: clamp(2.4rem, 4.8vw, 3.6rem);');
+    expect(source).toContain('padding-bottom: clamp(3.6rem, 7.2vw, 5.4rem);');
+    expect(source).toContain('.native-info-page--legacy-cga .service-native-section.native-dynamic-grid:is(');
   });
 
   it('keeps calculator tool content shells from inheriting default blank content-block spacing', () => {

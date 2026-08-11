@@ -16,7 +16,7 @@ const BILLBOARD_TITLE_TONE_OPTIONS = [
 
 const BILLBOARD_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-  { value: 'sand', label: 'Sand Gradient', swatch: 'linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)' },
+  { value: 'sand', label: 'Sand Gradient', swatch: getTokenSwatch('sand') },
   { value: 'blue', label: 'Blue Gradient', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
 ];
@@ -38,7 +38,7 @@ const BILLBOARD_BUTTON_TONE_OPTIONS = [
   { value: 'super-grey', label: 'Super Grey', swatch: '#414042' },
   { value: 'mango', label: 'Mango', swatch: '#f6b146' },
   { value: 'melon', label: 'Melon', swatch: '#f48f7a' },
-  { value: 'sandstone', label: 'Sandstone', swatch: '#c4beb6' },
+  { value: 'sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
   { value: 'white', label: 'White', swatch: '#ffffff' },
 ];
 
@@ -116,6 +116,7 @@ const sections = [
       defineEditorField({ id: 'titleSizeRem', label: 'Billboard heading size (rem)', type: 'number', min: 2.4, max: 8, step: 0.05 }),
       defineEditorField({ id: 'titleLetterSpacingEm', label: 'Billboard heading letter spacing (em)', type: 'number', min: -0.12, max: 0.04, step: 0.005 }),
       defineEditorField({ id: 'bodyHtml', label: 'Billboard body HTML', type: 'html' }),
+      defineEditorField({ id: 'bodyColorClassName', label: 'Body color', type: 'swatch', options: BILLBOARD_TITLE_TONE_OPTIONS }),
       defineEditorField({ id: 'body', label: 'Fallback body text', type: 'textarea', rows: 3 }),
       defineEditorField({ id: 'fineprint', label: 'Fineprint', type: 'textarea', rows: 4 }),
       defineEditorField({ id: 'fineprintDisclosureId', label: 'Fineprint disclosure ID', type: 'text' }),
@@ -143,7 +144,6 @@ const sections = [
       }),
       defineEditorField({ id: 'lineSpacing', label: 'Billboard title line spacing', type: 'number' }),
       defineEditorField({ id: 'contentMaxWidthPx', label: 'Billboard content max width (px)', type: 'number', min: 560, max: 1440, step: 10 }),
-      defineEditorField({ id: 'headlineMaxWidthPx', label: 'Headline max width (px)', type: 'number', min: 560, max: 1440, step: 10 }),
     ],
   },
   {
@@ -216,6 +216,7 @@ export const billboardBlockDefinition = createBlockDefinition({
   allowedVariants: ['default', 'feature'],
   supportedModes: ['dynamic'],
   defaults: {
+    bodyColorClassName: '',
     bgTone: 'blue',
     textTone: 'white',
     justify: 'center',

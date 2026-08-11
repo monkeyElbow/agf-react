@@ -119,21 +119,26 @@ describe('HomePage columns HUD', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open Housing HUD panel' }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Title').value).toBe('Housing intro heading');
-      expect(screen.getByLabelText('Body HTML (optional rich copy)').value).toContain('Housing intro body');
-      expect(screen.getByLabelText('Lead Copy').value).toBe('');
+      expect(screen.getByRole('textbox', { name: 'Title' }).value).toBe('Housing intro heading');
       expect(screen.queryByLabelText('Line 1')).toBeNull();
       expect(screen.queryByLabelText('Line 2')).toBeNull();
     });
 
-    fireEvent.change(screen.getByLabelText('Title'), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), {
       target: { value: 'Updated intro heading' },
     });
-    fireEvent.blur(screen.getByLabelText('Title'));
-    fireEvent.change(screen.getByLabelText('Body HTML (optional rich copy)'), {
+    fireEvent.blur(screen.getByRole('textbox', { name: 'Title' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: 'Body HTML' }).value).toContain('Housing intro body');
+      expect(screen.getByRole('textbox', { name: 'Lead copy' }).value).toBe('');
+    });
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Body HTML' }), {
       target: { value: '<p>Updated intro body</p>' },
     });
-    fireEvent.blur(screen.getByLabelText('Body HTML (optional rich copy)'));
+    fireEvent.blur(screen.getByRole('textbox', { name: 'Body HTML' }));
     expect(mockUpdateBlockSetting).toHaveBeenCalledWith('/', 'home_ministry_allies', 'title', 'Updated intro heading');
     expect(mockUpdateBlockSetting).toHaveBeenCalledWith('/', 'home_ministry_allies', 'bodyHtml', '<p>Updated intro body</p>');
   });

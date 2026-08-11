@@ -4,6 +4,7 @@ import pageContentHudIcon from '../assets/admin-block-icons/page-content.svg';
 import { getBlockDefinition, isSingletonBlockKind, resolveBlockPresetDefinition } from '../blocks/registry';
 import { resolveSiteFeatureCatalogEntry } from '../data/siteFeatureCatalog';
 import { getVisibleDynamicBlocks } from './pageBlockRuntime';
+import { formatBlockDisplayName } from './blockDisplayName';
 
 const HUD_ID_OVERRIDES = {
   value_cards: {
@@ -52,11 +53,12 @@ export function getBlockHudDefinition(block) {
   const siteFeatureLabel = blockKind === 'site_feature'
     ? String(resolveSiteFeatureCatalogEntry(block?.settings?.featureId || block?.featureId)?.label || '').trim()
     : '';
-  const label = override?.label
+  const baseLabel = override?.label
     || (kindDefinition?.label && presetLabel ? `${kindDefinition.label} · ${presetLabel}` : '')
     || (kindDefinition?.label && siteFeatureLabel ? `${kindDefinition.label} · ${siteFeatureLabel}` : '')
     || kindDefinition?.label
     || humanizeToken(block?.label || block?.name || blockId || blockKind || 'content');
+  const label = formatBlockDisplayName(baseLabel, block);
 
   return {
     label,

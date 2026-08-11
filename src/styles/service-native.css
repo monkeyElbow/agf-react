@@ -2542,6 +2542,38 @@
   color: #ffffff;
 }
 
+/* A body-level color chosen from a HUD HTML editor. Inline semantic spans keep
+   their own color; the direct body elements inherit this base color. */
+.native-info-rich-html.is-atlantean,
+.native-info-rich-html.is-atlantean > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-atlantean);
+}
+
+.native-info-rich-html.is-mango,
+.native-info-rich-html.is-mango > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-mango);
+}
+
+.native-info-rich-html.is-melon,
+.native-info-rich-html.is-melon > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-melon);
+}
+
+.native-info-rich-html.is-sandstone,
+.native-info-rich-html.is-sandstone > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-sandstone);
+}
+
+.native-info-rich-html.is-super-grey,
+.native-info-rich-html.is-super-grey > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-super-grey);
+}
+
+.native-info-rich-html.is-white,
+.native-info-rich-html.is-white > :is(h1, h2, h3, h4, p, li, a) {
+  color: #ffffff;
+}
+
 .tax-guide-content.native-dynamic-page-content .native-info-rich-html {
   width: min(76ch, calc(100% - (var(--ag-panel-gutter) * 2)));
 }
@@ -5020,7 +5052,7 @@
 .native-dynamic-request.is-request-form-preset-loans-inquiry .native-info-inline-form-step-actions {
   margin-top: 0.3rem;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.7rem;
 }
 
@@ -6667,6 +6699,8 @@
 
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-left,
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-left > h2,
+.service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-left > h3,
+.service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-left > p,
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-left .native-info-rich-html,
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-left .native-info-rich-html p {
   text-align: left;
@@ -6674,6 +6708,8 @@
 
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-center,
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-center > h2,
+.service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-center > h3,
+.service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-center > p,
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-center .native-info-rich-html,
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-center .native-info-rich-html p {
   text-align: center;
@@ -6681,6 +6717,8 @@
 
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-right,
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-right > h2,
+.service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-right > h3,
+.service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-right > p,
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-right .native-info-rich-html,
 .service-native-section.test-dynamic-billboard .native-info-section-copy.is-justify-right .native-info-rich-html p {
   text-align: right;
@@ -6844,6 +6882,8 @@
 
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-left,
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-left > h2,
+.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-left > h3,
+.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-left > p,
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-left .native-info-rich-html,
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-left .native-info-rich-html p {
   justify-self: start;
@@ -6853,6 +6893,8 @@
 
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-center,
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-center > h2,
+.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-center > h3,
+.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-center > p,
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-center .native-info-rich-html,
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-center .native-info-rich-html p {
   justify-self: center;
@@ -6862,6 +6904,8 @@
 
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-right,
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-right > h2,
+.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-right > h3,
+.service-native-section.dynamic-billboard .native-info-section-copy.is-justify-right > p,
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-right .native-info-rich-html,
 .service-native-section.dynamic-billboard .native-info-section-copy.is-justify-right .native-info-rich-html p {
   justify-self: end;
@@ -7599,7 +7643,8 @@
 
 .service-native-section.native-dynamic-grid.is-width-browser > .ag-panel-rail-wide,
 .service-native-section.test-dynamic-grid.is-width-browser > .ag-panel-rail-wide {
-  width: min(1280px, calc(100% - (var(--ag-panel-gutter) * 2)));
+  width: calc(100% - (var(--ag-panel-gutter) * 2));
+  max-width: none;
 }
 
 .service-native-section.native-dynamic-grid .native-info-section-copy,
@@ -7646,6 +7691,7 @@
 .service-native-section.test-dynamic-grid .service-native-card {
   border-radius: var(--native-card-shell-radius);
   padding: var(--dynamic-grid-card-padding, var(--native-card-shell-padding));
+  padding-bottom: calc(var(--dynamic-grid-card-padding, var(--native-card-shell-padding)) * 1.35);
 }
 
 .service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card) h3,
@@ -7654,22 +7700,17 @@
   font-family: var(--ag-font-helv);
   font-size: var(--dynamic-grid-card-title-size, clamp(1.14rem, 2vw, 1.34rem));
   line-height: 1.2;
-  min-height: 2.6em;
+  min-height: 0;
   display: flex;
-  align-items: flex-end;
-  margin: 0 0 var(--native-card-shell-title-gap);
-  padding-bottom: var(--native-card-shell-title-padding);
+  align-items: flex-start;
+  margin: 0 0 1rem;
+  padding-bottom: 0;
   position: relative;
 }
 
 .service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card) h3::after,
 .service-native-section.test-dynamic-grid .service-native-card h3::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-bottom: 1px solid var(--dynamic-grid-divider-color);
+  display: none;
 }
 
 .service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card) :is(p, li, a:not(.service-native-btn)),
@@ -7878,6 +7919,45 @@
 .service-native-section.test-dynamic-grid.is-card-none .service-native-card.card-none:hover {
   box-shadow: none;
   transform: none;
+}
+
+.service-native-section.native-dynamic-grid .service-native-card.borderless-shadow,
+.service-native-section.test-dynamic-grid .service-native-card.borderless-shadow {
+  border: 0;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 16px 34px rgba(5, 30, 54, 0.16);
+}
+
+.service-native-section.native-dynamic-grid .service-native-card.borderless-shadow:hover,
+.service-native-section.test-dynamic-grid .service-native-card.borderless-shadow:hover {
+  box-shadow: 0 20px 42px rgba(5, 30, 54, 0.22);
+  transform: translateY(-3px);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating {
+  --dynamic-grid-alt-title-one: var(--ag-color-atlantean-dark);
+  --dynamic-grid-alt-title-two: var(--ag-color-mango);
+  --dynamic-grid-alt-title-three: var(--ag-color-melon);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-bg-blue,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-bg-grey {
+  --dynamic-grid-alt-title-one: #ffffff;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating .service-native-grid > .service-native-card:nth-child(3n + 1) h3,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating .service-native-grid > .service-native-card:nth-child(3n + 1) h3 mark {
+  color: var(--dynamic-grid-alt-title-one);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating .service-native-grid > .service-native-card:nth-child(3n + 2) h3,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating .service-native-grid > .service-native-card:nth-child(3n + 2) h3 mark {
+  color: var(--dynamic-grid-alt-title-two);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating .service-native-grid > .service-native-card:nth-child(3n + 3) h3,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating .service-native-grid > .service-native-card:nth-child(3n + 3) h3 mark {
+  color: var(--dynamic-grid-alt-title-three);
 }
 
 .service-native-section.native-dynamic-columns,
@@ -10030,13 +10110,20 @@
 }
 
 .native-info-page--legacy-giving .legacy-giving-types .service-native-card {
-  padding: clamp(1.2rem, 2.2vw, 2rem) clamp(2.2rem, 4vw, 3rem) clamp(2.8rem, 4.8vw, 3.8rem);
+  justify-content: center;
+  padding: clamp(1.8rem, 3vw, 2.6rem) clamp(2.2rem, 4vw, 3rem);
+}
+
+/* Dynamic-grid defaults carry higher specificity; keep planned-giving card padding visible. */
+.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) {
+  padding: clamp(1.8rem, 3vw, 2.6rem) clamp(2.2rem, 4vw, 3rem);
 }
 
 .native-info-page--legacy-giving .legacy-giving-types .service-native-card > div:first-child {
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   flex-direction: column;
+  justify-content: center;
 }
 
 .native-info-page--legacy-giving .legacy-giving-types .service-native-card.fade-up[data-fade-state="pending"] {
@@ -10044,9 +10131,9 @@
   translate: 0 16px;
 }
 
-.native-info-page--legacy-giving .legacy-giving-types .service-native-card h3 {
+.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) h3 {
   font-family: var(--ag-font-heading);
-  font-size: clamp(1.15rem, 1.7vw, 1.55rem);
+  font-size: max(var(--dynamic-grid-card-title-size, 1.14rem), clamp(1.55rem, 2.35vw, 1.9rem));
   line-height: 1.08;
   text-align: center;
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
@@ -10055,7 +10142,7 @@
 }
 
 .native-info-page--legacy-giving .legacy-giving-types .service-native-action-row {
-  margin-top: auto;
+  margin-top: clamp(1rem, 1.8vw, 1.35rem);
   padding-top: clamp(1rem, 1.8vw, 1.35rem);
   justify-content: center;
 }
@@ -10502,45 +10589,19 @@
 
 .native-info-page--legacy-giving .legacy-giving-cta > .ag-panel-rail {
   max-width: var(--ag-content-max);
-  display: grid;
-  grid-template-columns: minmax(360px, 0.92fr) minmax(0, 1.08fr);
-  align-items: center;
-  gap: clamp(2rem, 4vw, 4.2rem);
+  display: flex;
+  justify-content: center;
 }
 
 .native-info-page--legacy-giving .legacy-giving-cta .native-info-inline-form {
-  order: 1;
-  width: min(470px, 100%);
+  width: min(680px, 100%);
   margin-top: 0;
-  margin-inline: 0;
+  margin-inline: auto;
   border: 1px solid rgba(17, 53, 75, 0.14);
   border-radius: 12px;
   background: #ffffff;
   padding: clamp(2.2rem, 4vw, 3rem) clamp(1.3rem, 2.4vw, 1.85rem) clamp(1.65rem, 2.9vw, 2.3rem);
   box-shadow: 0 16px 32px rgba(12, 42, 61, 0.05);
-}
-
-.native-info-page--legacy-giving .legacy-giving-cta .native-info-section-copy {
-  order: 2;
-  align-self: center;
-  max-width: none;
-  margin: 0;
-  text-align: left;
-}
-
-.native-info-page--legacy-giving .legacy-giving-cta .native-info-section-copy > :is(h2, p, .native-info-rich-html) {
-  text-align: left;
-}
-
-.native-info-page--legacy-giving .legacy-giving-cta .native-info-section-copy .dynamic-cta-form-callout {
-  max-width: 32rem;
-  margin-top: 1rem;
-  color: var(--ag-color-atlantean);
-  font-family: var(--ag-font-helv);
-  font-size: clamp(1.25rem, 2.2vw, 1.7rem);
-  font-weight: 700;
-  line-height: 1.18;
-  letter-spacing: var(--ag-letter-spacing-helv-intro);
 }
 
 .legacy-giving-cta .dynamic-cta-form-heading {
@@ -10583,24 +10644,6 @@
 
 .native-info-page--legacy-giving .legacy-giving-cta .native-info-inline-form .service-native-btn {
   margin-top: 0.75rem;
-}
-
-@media (max-width: 900px) {
-  .native-info-page--legacy-giving .legacy-giving-cta > .ag-panel-rail {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .native-info-page--legacy-giving .legacy-giving-cta .native-info-section-copy {
-    order: 1;
-    max-width: 38rem;
-    margin-inline: auto;
-  }
-
-  .native-info-page--legacy-giving .legacy-giving-cta .native-info-inline-form {
-    order: 2;
-    width: min(680px, 100%);
-    margin-inline: auto;
-  }
 }
 
 .native-info-page--legacy-giving .legacy-giving-comparison > .ag-panel-rail {
@@ -18274,6 +18317,10 @@ p.impact-proof-story-proof-body {
   max-width: 78rem;
 }
 
+.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-calculator {
+  padding-top: clamp(3.4rem, 6.8vw, 5.2rem);
+}
+
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-calculator > .ag-panel-rail > h2 {
   margin-bottom: 0.1rem;
   text-align: center;
@@ -18670,7 +18717,7 @@ p.impact-proof-story-proof-body {
   --dynamic-grid-card-body-size: 1.08rem;
   --dynamic-grid-card-body-line-height: 1.65;
   padding-top: clamp(2.6rem, 6vw, 4.8rem);
-  padding-bottom: clamp(2.6rem, 6vw, 4.8rem);
+  padding-bottom: clamp(1.8rem, 3.8vw, 3rem);
   background: #ffffff;
 }
 
@@ -18822,6 +18869,7 @@ p.impact-proof-story-proof-body {
 }
 
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card {
+  --investments-cert-body-padding-bottom: clamp(1.8rem, 3.3vw, 2.2rem);
   padding: 0;
   border: none;
   border-radius: 16px;
@@ -18901,7 +18949,7 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-trusts-differences {
   background: #ffffff;
-  padding: clamp(3.9rem, 7.4vw, 6.2rem) 0 clamp(2.15rem, 4.6vw, 3.4rem);
+  padding: clamp(3.9rem, 7.4vw, 6.2rem) 0 clamp(3.5rem, 6.2vw, 5rem);
 }
 
 .legacy-child-native-trusts-differences > :is(.ag-panel-rail, .ag-panel-rail-wide) {
@@ -19011,7 +19059,7 @@ p.impact-proof-story-proof-body {
 .legacy-child-native-trusts-funding,
 .legacy-child-native-trusts-funding:nth-of-type(even) {
   background: #ffffff;
-  padding-top: clamp(1.6rem, 3.5vw, 2.7rem);
+  padding-top: clamp(3.9rem, 7.4vw, 6.2rem);
   padding-bottom: clamp(3.9rem, 7.4vw, 6.2rem);
 }
 
@@ -19231,7 +19279,7 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-trusts-crt-types,
 .legacy-child-native-trusts-clt-types {
-  padding: clamp(2.6rem, 5vw, 4.2rem) 0;
+  padding: clamp(1.6rem, 3.5vw, 2.7rem) 0 clamp(2.6rem, 5vw, 4.2rem);
   background: #ffffff;
 }
 
@@ -22313,6 +22361,25 @@ p.impact-proof-story-proof-body {
 
 /* Asset grids share one card-title and bullet treatment across planned-giving pages. */
 
+/* Keep the bullet cards roomy after the generic dynamic-grid shell applies its padding. */
+.native-info-page--legacy-child .service-native-section.native-dynamic-grid:is(
+  .legacy-child-native-assets,
+  .legacy-child-native-cga-assets,
+  .legacy-child-native-trusts-funding
+) .service-native-card:not(.investments-native-cert-card) {
+  padding: clamp(2.4rem, 4.8vw, 3.6rem);
+  padding-bottom: clamp(3.6rem, 7.2vw, 5.4rem);
+}
+
+.native-info-page--legacy-cga .service-native-section.native-dynamic-grid:is(
+  .legacy-child-native-assets,
+  .legacy-child-native-cga-assets,
+  .legacy-child-native-trusts-funding
+) .service-native-card:not(.investments-native-cert-card) {
+  padding: clamp(2.4rem, 4.8vw, 3.6rem);
+  padding-bottom: clamp(3.6rem, 7.2vw, 5.4rem);
+}
+
 .service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card h3,
 .service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card h3::after {
   display: none;
@@ -22334,6 +22401,10 @@ p.impact-proof-story-proof-body {
 .native-info-page--legacy-child .service-native-section.native-dynamic-grid.legacy-child-native-give-assets {
   padding-top: clamp(0.9rem, 2vw, 1.5rem);
   padding-bottom: clamp(4.5rem, 8vw, 6.2rem);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-generosity-fund .service-native-section.native-dynamic-grid.legacy-child-native-generosity-assets {
+  padding-top: clamp(4.5rem, 8vw, 6.2rem);
 }
 
 .native-info-page--legacy-child .legacy-child-native-give-assets > .ag-panel-rail {
@@ -22401,6 +22472,25 @@ p.impact-proof-story-proof-body {
   text-align: left;
 }
 
+/* Planned-giving gift cards: readable, evenly spaced bullets without bold copy. */
+.native-info-page--legacy-child
+  .service-native-section.native-dynamic-grid.legacy-child-native-assets
+  .service-native-card-bullet-list li {
+  font-weight: 400;
+}
+
+.native-info-page--legacy-child
+  .service-native-section.native-dynamic-grid.legacy-child-native-assets
+  .service-native-card-bullet-list li + li {
+  margin-top: clamp(0.7rem, 1.35vw, 0.95rem);
+}
+
+.native-info-page--legacy-child
+  .service-native-section.native-dynamic-grid.legacy-child-native-assets
+  .service-native-card-bullet-list li strong {
+  font-weight: 400;
+}
+
 .native-info-page--legacy-cga .legacy-child-native-cga-qcd-fineprint {
   padding-top: 0;
   padding-bottom: clamp(2.2rem, 4vw, 3rem);
@@ -22453,6 +22543,18 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-cga .legacy-child-native-cga-options {
   background: linear-gradient(135deg, #00adbb 0%, #008aab 100%);
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-grid {
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-options .investments-native-cert-card {
+  box-shadow: 0 10px 22px rgba(12, 42, 61, 0.1);
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-options .investments-native-cert-card:hover {
+  box-shadow: 0 14px 28px rgba(12, 42, 61, 0.12);
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-options > .ag-panel-rail > h2 {
@@ -22824,34 +22926,36 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-cga .legacy-child-native-cga-outro {
   background: #ffffff;
-  padding: clamp(2.8rem, 5vw, 4.4rem) 0 clamp(1rem, 2.2vw, 1.6rem);
+  padding: clamp(3rem, 6vw, 5rem) 0;
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-outro > .ag-panel-rail {
+  max-width: var(--ag-content-max);
   text-align: center;
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-outro .native-info-section-copy > h2 {
   color: var(--ag-color-super-grey);
   font-family: var(--ag-font-helv);
-  letter-spacing: -0.05em;
-  font-size: clamp(2.5rem, 5.5vw, 4.2rem);
-  line-height: 1.02;
+  font-size: clamp(3.2rem, 7.4vw, 5.6rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
+  text-wrap: balance;
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-outro .native-info-section-subtitle {
-  color: var(--ag-color-super-grey);
+  margin-top: 0.8rem;
+  color: var(--ag-color-atlantean);
   font-family: var(--ag-font-helv);
+  font-size: clamp(1.6rem, 3.6vw, 2.4rem);
+  line-height: 1.05;
   letter-spacing: var(--ag-letter-spacing-helv-heading);
-  font-size: clamp(1.45rem, 3.2vw, 2.2rem);
-  text-align: center;
-  margin-top: 0.7rem;
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-outro .service-native-action-row {
   justify-content: center;
-  margin-top: 1.2rem;
-  margin-bottom: 0;
+  margin-top: clamp(1.4rem, 3vw, 2.1rem);
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-state-notices {
@@ -23462,7 +23566,11 @@ p.impact-proof-story-proof-body {
 }
 
 .native-dynamic-request .native-info-inline-form-step-actions {
-  justify-content: space-between;
+  justify-content: flex-start;
+}
+
+.native-dynamic-request .native-info-inline-form-step-spacer {
+  display: none;
 }
 
 .native-dynamic-request .dynamic-request-progress {
@@ -23532,7 +23640,66 @@ p.impact-proof-story-proof-body {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: 0;
-  text-align: left;
+  text-align: center;
+}
+
+/* Dynamic CTA blocks keep the copy and bordered form centered on one content rail. */
+.native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail,
+.native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail-wide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  width: min(1160px, calc(100% - (var(--ag-panel-gutter) * 1.15)));
+}
+
+.native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail > .native-info-section-copy,
+.native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail-wide > .native-info-section-copy {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  text-align: center;
+}
+
+.native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail > .native-info-section-copy > :is(h2, h3, p, .native-info-rich-html, .native-info-link-list),
+.native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail-wide > .native-info-section-copy > :is(h2, h3, p, .native-info-rich-html, .native-info-link-list) {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.native-info-page .service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).has-inline-cta-shell > .ag-panel-rail > .native-info-section-copy > .native-info-rich-html,
+.native-info-page .service-native-section:is(.native-dynamic-cta, .test-dynamic-cta).has-inline-cta-shell > .ag-panel-rail-wide > .native-info-section-copy > .native-info-rich-html {
+  margin: 0.8rem 0 0;
+  color: inherit;
+  font-family: var(--ag-font-helv);
+  font-size: clamp(1.35rem, 2.1vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail > .native-info-inline-form,
+.native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail-wide > .native-info-inline-form {
+  order: 1;
+  width: min(680px, 100%);
+  max-width: 100%;
+  margin: clamp(1rem, 2vw, 1.5rem) 0 0;
+  align-self: center;
+}
+
+@media (max-width: 820px) {
+  .native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail,
+  .native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail-wide {
+    gap: 0;
+  }
+
+  .native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail > .native-info-section-copy,
+  .native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail-wide > .native-info-section-copy,
+  .native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail > .native-info-inline-form,
+  .native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail-wide > .native-info-inline-form {
+    max-width: 620px;
+  }
 }
 
 .native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail > .native-info-inline-form h5,
@@ -23777,3 +23944,9 @@ p.impact-proof-story-proof-body {
 /* Intro HUD pilot: keep the editor body intentional and compact without changing field contracts. */
 
 /* Keep the Intro workflow in the shared top action-row position. */
+
+/* Card grids use spacing and color to organize cards; title dividers are retired. */
+.service-native-section.native-dynamic-grid .service-native-grid > .service-native-card h3::after,
+.service-native-section.test-dynamic-grid .service-native-grid > .service-native-card h3::after {
+  display: none;
+}

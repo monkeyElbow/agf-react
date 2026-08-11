@@ -86,7 +86,7 @@ describe('ContentAdminContext state normalization', () => {
     }));
   });
 
-  it('does not silently upgrade unsupported retired loans blocks during normalization', () => {
+  it('removes unsupported retired static loans blocks during normalization', () => {
     const legacyBlock = {
       id: 'request_form',
       kind: 'retired_request_form',
@@ -100,17 +100,7 @@ describe('ContentAdminContext state normalization', () => {
       },
     });
 
-    expect(normalized.blocksByPath['/services/loans']).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: 'request_form',
-          kind: 'retired_request_form',
-          mode: 'static',
-          settings: {},
-          editableFields: [],
-        }),
-      ]),
-    );
+    expect(normalized.blocksByPath['/services/loans']).toEqual([]);
   });
 
   it('preserves unsupported IRA daily billboard legacy settings during ordinary normalization', () => {

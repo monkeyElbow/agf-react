@@ -92,7 +92,7 @@ describe('PageBlocksRenderer CTA form', () => {
     expect(screen.getByRole('button', { name: 'Follow up with me' })).toBeTruthy();
   });
 
-  it('preserves the planned-giving CTA presentation contract and places copy beside the form', () => {
+  it('preserves the planned-giving CTA copy and bordered form contract', () => {
     const { container } = renderCtaBlock({
       id: 'cta_form',
       type: 'cta_form',

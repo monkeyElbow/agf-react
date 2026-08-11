@@ -4,7 +4,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
 import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import PageBlocksRenderer from '../components/blocks/PageBlocksRenderer';
-import { homePageBlocks } from '../data/pageBlocks/homeBlocks';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
@@ -92,7 +91,7 @@ const HOME_HERO_LINE_CLASSNAME_FALLBACK = {
   line3: 'home-native-title line3',
 };
 const HOME_TOP_STRIP_BG_SWATCH_OPTIONS = [
-  { value: 'sand', label: 'Sand', swatch: 'linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)' },
+  { value: 'sand', label: 'Sand', swatch: getTokenSwatch('sand') },
   { value: 'grey', label: 'Grey', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
   { value: 'blue', label: 'Blue', swatch: getTokenSwatch('blue') },
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
@@ -154,7 +153,11 @@ export default function HomePage() {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
-  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const {
+    enabled: frontHudEnabled,
+    opacity: frontHudOpacity,
+    setEnabled: setFrontHudEnabled = null,
+  } = useFrontHud();
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
@@ -470,12 +473,14 @@ export default function HomePage() {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setFrontHudEnabled?.(false);
   };
   const closeMobileHudPanel = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
     setMobileHudMoreOpen(false);
     setMobileHudDeleteConfirmBlockId('');
+    setFrontHudEnabled?.(false);
   };
   const clearMobileHudSelection = () => {
     setHudDockCollapsed(true);
@@ -925,7 +930,7 @@ export default function HomePage() {
     const heroSettings = managedHeroBlock?.settings && typeof managedHeroBlock.settings === 'object'
       ? normalizeDynamicHeroSettings('/', managedHeroBlock.settings)
       : null;
-    return buildResolvedHomeBlocks(homePageBlocks, {
+    return buildResolvedHomeBlocks({
       defaultNewsletterFormId: HOME_NEWSLETTER_FORM_ID,
       managedBlocks,
       managedBlocksById,
@@ -945,7 +950,7 @@ export default function HomePage() {
       heroSettings,
       managedHomeServicesFeatureBlock,
       homeServicesFeatureSettings,
-      homeServicesFeatureIsActive: Boolean(dynamicHomeServicesFeatureBlock || !managedHomeServicesFeatureBlock),
+      homeServicesFeatureIsActive: Boolean(dynamicHomeServicesFeatureBlock),
     });
   }, [
     dynamicHomeServicesFeatureBlock,
@@ -1050,34 +1055,9 @@ export default function HomePage() {
   return (
     <div
       ref={pageRef}
-      className={`ag-page-shell home-native-page${HOME_HERO_TEMPORARILY_HIDDEN ? ' is-home-hero-temporarily-hidden' : ''}${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${homeHudFocusClass}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
+      className={`ag-page-shell home-native-page${HOME_HERO_TEMPORARILY_HIDDEN ? ' is-home-hero-temporarily-hidden' : ''}${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${homeHudFocusClass}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
       onClickCapture={isMobileFrontHud ? handleMobilePageHudClickCapture : undefined}
     >
-      {showHomeColumnsDebug ? (
-        <pre
-          style={{
-            position: 'fixed',
-            left: '12px',
-            bottom: '12px',
-            zIndex: 9999,
-            width: 'min(560px, calc(100% - 24px))',
-            maxWidth: 'calc(100% - 24px)',
-            maxHeight: '40vh',
-            overflow: 'auto',
-            boxSizing: 'border-box',
-            margin: 0,
-            padding: '12px 14px',
-            borderRadius: '12px',
-            background: 'rgba(20, 28, 36, 0.92)',
-            color: '#f3f7fb',
-            fontSize: '12px',
-            lineHeight: 1.45,
-            boxShadow: '0 18px 40px rgba(0, 0, 0, 0.28)',
-          }}
-        >
-          {JSON.stringify(homeColumnsDiagnostics, null, 2)}
-        </pre>
-      ) : null}
       {showFrontHud && !isMobileFrontHud ? (
         <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
           <div className={`admin-front-hud-dock-tabs${isDockDragging ? ' is-drag-active' : ''}`}>
@@ -1138,7 +1118,6 @@ export default function HomePage() {
               pathname="/"
               reviewHref="/admin/content?page=%2F"
               placement="dock-inline"
-              showBlockPublishAction={false}
               showBlockDiscardAction
               blockId={activeHudPanel.block.id}
               blockLabel={activeHudPanel.label}

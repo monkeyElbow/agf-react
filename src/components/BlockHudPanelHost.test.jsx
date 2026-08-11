@@ -1,10 +1,92 @@
 import { createElement } from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ContentAdminContext } from '../context/ContentAdminContext';
+import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
+import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
+import { getEditableFieldsForKind } from '../blocks/registry';
 import BlockHudPanelHost from './BlockHudPanelHost';
 
+function IntroHudLocalDraftProbe({
+  blocks,
+  commitBlockSettingsPatch = () => true,
+}) {
+  const { blocks: managedBlocks, stageLocalBlockSetting } = useLocalBlockDrafts({
+    pathname: '/test',
+    blocks,
+    commitBlockSettingsPatch,
+  });
+  const block = managedBlocks.find((candidate) => candidate?.id === 'intro') || managedBlocks[0];
+
+  return (
+    <BlockHudPanelHost
+      block={block}
+      pathname="/test"
+      onSettingChange={(settingKey, nextValue) => {
+        stageLocalBlockSetting(block.id, settingKey, nextValue);
+      }}
+    />
+  );
+}
+
 describe('BlockHudPanelHost', () => {
+  it('routes CTA form HUD blocks through the reference CTA editor', () => {
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'cta_form',
+        kind: 'cta_form',
+        mode: 'dynamic',
+        settings: {
+          title: 'Let us help',
+          bodyHtml: '<p>Lead copy</p>',
+          fieldsJson: JSON.stringify([
+            { id: 'name', label: 'Name', type: 'text', required: true },
+          ]),
+        },
+      },
+      onSettingChange: vi.fn(),
+    }));
+
+    expect(screen.getByRole('navigation', { name: 'CTA editor sections' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Heading' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Message + Submit' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Form Fields' })).toBeTruthy();
+  });
+
+  it('routes card grid HUD blocks through the shared model rail and block options page', () => {
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'card-grid-flexible-cards',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          title: 'Flexible cards',
+          bodyHtml: '<p>Starter copy</p>',
+          bgTone: 'white',
+          columns: 'three',
+          cardStyle: 'none',
+          card1Title: 'Starter card',
+          card1Body: 'Starter card copy',
+        },
+      },
+      onSettingChange: vi.fn(),
+    }));
+
+    expect(screen.getByRole('navigation', { name: 'Card Grid · Flexible cards editor sections' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Content' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Cards' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Block options' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Block options' }).className).toContain('is-block-options');
+    expect(screen.getByRole('button', { name: 'Content' }).className).not.toContain('is-block-options');
+    expect(screen.getAllByRole('region', { name: 'Block options' })).toHaveLength(1);
+    expect(document.querySelector('.admin-card-grid-hud-group--heading')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-group--appearance')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-group--layout')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-group--typography')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-reference .admin-front-hud-swatch-row')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-reference .admin-swatch-list')).toBeNull();
+  });
+
   it('renders intro blocks with the HUD intro editor', () => {
     render(createElement(BlockHudPanelHost, {
       block: {
@@ -23,6 +105,91 @@ describe('BlockHudPanelHost', () => {
     expect(backgroundPalette).toBeTruthy();
     expect(within(backgroundPalette).getByRole('radio', { name: 'Sand' })).toBeTruthy();
     expect(screen.getByText('Core Color')).toBeTruthy();
+  });
+
+  it('keeps intro accent line caret stable through stale HUD snapshots', () => {
+    vi.useFakeTimers();
+    const commitBlockSettingsPatch = vi.fn(() => true);
+    const initialBlocks = [{
+      id: 'intro',
+      kind: 'intro',
+      mode: 'dynamic',
+      editableFields: getEditableFieldsForKind('intro', 'hud'),
+      settings: {
+        heading: 'Intro heading',
+        extraLine: 'Start line',
+        bgTone: 'sand',
+        textTone: 'dark',
+      },
+    }];
+    const firstCommitBlocks = [{
+      ...initialBlocks[0],
+      editableFields: initialBlocks[0].editableFields,
+      settings: {
+        ...initialBlocks[0].settings,
+        extraLine: 'Vision fuel',
+      },
+    }];
+    const secondCommitBlocks = [{
+      ...initialBlocks[0],
+      editableFields: initialBlocks[0].editableFields,
+      settings: {
+        ...initialBlocks[0].settings,
+        extraLine: 'Vision fuel today',
+      },
+    }];
+
+    const { rerender } = render(
+      <IntroHudLocalDraftProbe
+        blocks={initialBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Accent Line'), {
+      target: { value: 'Vision fuel' },
+    });
+    act(() => {
+      vi.advanceTimersByTime(LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
+    });
+
+    rerender(
+      <IntroHudLocalDraftProbe
+        blocks={firstCommitBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Accent Line'), {
+      target: { value: 'Vision fuel today' },
+    });
+    act(() => {
+      vi.advanceTimersByTime(LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
+    });
+
+    rerender(
+      <IntroHudLocalDraftProbe
+        blocks={secondCommitBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    const accentInput = screen.getByLabelText('Accent Line');
+    accentInput.focus();
+    accentInput.setSelectionRange(7, 7);
+
+    rerender(
+      <IntroHudLocalDraftProbe
+        blocks={firstCommitBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    expect(screen.getByLabelText('Accent Line').value).toBe('Vision fuel today');
+    expect(screen.getByLabelText('Accent Line').selectionStart).toBe(7);
+    expect(screen.getByLabelText('Accent Line').selectionEnd).toBe(7);
+
+    vi.useRealTimers();
   });
 
   it('surfaces passive foreign drafts inside the HUD with handoff language', () => {
@@ -92,6 +259,30 @@ describe('BlockHudPanelHost', () => {
     expect(onPublishBlock).toHaveBeenCalledTimes(1);
   });
 
+  it('shows the earlier save and newer draft saver together in the editor notice', () => {
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'intro',
+        kind: 'intro',
+        mode: 'dynamic',
+        settings: { heading: 'Shared intro' },
+      },
+      ownership: {
+        state: 'drafted-other',
+        overlayLabel: 'Last saved by Admin 1',
+        overlayDetail: 'Saved 4 min ago',
+        overlaySecondaryLabel: 'Draft saved by Admin 3',
+        overlaySecondaryDetail: 'Draft saved 1 min ago',
+      },
+      onOwnershipAction: vi.fn(),
+      onSettingChange: vi.fn(),
+    }));
+
+    expect(screen.getByText('Last saved by Admin 1')).toBeTruthy();
+    expect(screen.getByText('Saved 4 min ago. This draft is not live yet.')).toBeTruthy();
+    expect(screen.getByText('Draft saved by Admin 3. Draft saved 1 min ago')).toBeTruthy();
+  });
+
   it('keeps takeover available when another admin is the last saver but no active lock is present', async () => {
     const onOwnershipAction = vi.fn().mockResolvedValue({ ok: true });
 
@@ -117,9 +308,9 @@ describe('BlockHudPanelHost', () => {
     expect(await screen.findByText('Draft takeover complete.')).toBeTruthy();
   });
 
-  it('provides add, discard, and delete actions inside block options', async () => {
-    const addBlock = vi.fn();
+  it('provides discard and delete actions inside block options without an add-block control', async () => {
     const removeBlock = vi.fn();
+    const onBlockDeleted = vi.fn();
     const block = {
       id: 'hero',
       kind: 'custom_notice',
@@ -130,37 +321,77 @@ describe('BlockHudPanelHost', () => {
 
     render(
       <ContentAdminContext.Provider value={{
-        availableBlockTemplates: [{
-          templateId: 'intro',
-          kind: 'intro',
-          mode: 'dynamic',
-          name: 'Intro',
-          settings: {},
-        }],
-        authoringBlocksByPath: { '/services/loans': [block] },
         getPageChangeSummary: () => ({ changedBlockIds: ['hero'] }),
         getPagePublishSummary: () => ({ changedBlockIds: ['hero'] }),
-        addBlock,
         removeBlock,
       }}>
         <BlockHudPanelHost
           block={block}
           pathname="/services/loans"
+          onBlockDeleted={onBlockDeleted}
           onSettingChange={vi.fn()}
         />
       </ContentAdminContext.Provider>,
     );
 
     const options = screen.getByRole('region', { name: 'Block options' });
-    expect(within(options).getByRole('button', { name: 'Add block' })).toBeTruthy();
+    expect(within(options).queryByRole('button', { name: 'Add block' })).toBeNull();
     expect(within(options).getByRole('button', { name: 'Delete block' })).toBeTruthy();
-
-    fireEvent.click(within(options).getByRole('button', { name: 'Add block' }));
-    expect(addBlock).toHaveBeenCalledWith('/services/loans', 'intro', 1);
 
     fireEvent.click(within(options).getByRole('button', { name: 'Delete block' }));
     fireEvent.click(within(options).getByRole('button', { name: 'Confirm delete block' }));
     expect(removeBlock).toHaveBeenCalledWith('/services/loans', 'hero');
+    expect(onBlockDeleted).toHaveBeenCalledWith('hero');
+  });
+
+  it('keeps Billboard delete controls on the final HUD editor page', () => {
+    const removeBlock = vi.fn();
+    const updateBlock = vi.fn();
+    const onBlockDeleted = vi.fn();
+
+    render(
+      <ContentAdminContext.Provider value={{
+        getPageChangeSummary: () => ({ changedBlockIds: ['billboard'] }),
+        getPagePublishSummary: () => ({ changedBlockIds: ['billboard'] }),
+        removeBlock,
+        updateBlock,
+      }}>
+        <BlockHudPanelHost
+          block={{
+            id: 'billboard',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: {
+              title: 'Vision fuel',
+              bgTone: 'white',
+              textTone: 'dark',
+            },
+          }}
+          pathname="/test"
+          onBlockDeleted={onBlockDeleted}
+          onSettingChange={vi.fn()}
+        />
+      </ContentAdminContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Block options' }));
+    const options = screen.getByRole('region', { name: 'Block options' });
+    expect(options.tagName).toBe('SECTION');
+    expect(options.classList.contains('admin-hud-editor-block-options-page')).toBe(true);
+    expect(options.querySelector('.admin-front-hud-block-options')).toBeNull();
+    const nicknameInput = within(options).getByRole('textbox', { name: 'Block nickname' });
+
+    fireEvent.change(nicknameInput, { target: { value: 'Vision intro' } });
+    fireEvent.blur(nicknameInput);
+
+    expect(updateBlock).toHaveBeenCalledWith('/test', 'billboard', { adminName: 'Vision intro' });
+    expect(within(options).getByRole('button', { name: 'Delete block' })).toBeTruthy();
+
+    fireEvent.click(within(options).getByRole('button', { name: 'Delete block' }));
+    fireEvent.click(within(options).getByRole('button', { name: 'Confirm delete block' }));
+
+    expect(removeBlock).toHaveBeenCalledWith('/test', 'billboard');
+    expect(onBlockDeleted).toHaveBeenCalledWith('billboard');
   });
 
   it('blocks HUD field edits while another admin owns the block', () => {
@@ -318,8 +549,34 @@ describe('BlockHudPanelHost', () => {
 
     expect(screen.getByLabelText('Form heading text')).toBeTruthy();
     expect(screen.getByLabelText('Lead Copy')).toBeTruthy();
+    const contentPage = document.querySelector('.admin-request-form-hud-page--content');
+    expect(contentPage?.querySelector('.admin-request-form-lead-row')).toBeTruthy();
+    expect(contentPage?.querySelector('.admin-request-form-lead-field')).toBeTruthy();
+    expect(contentPage?.querySelector('.admin-request-form-lead-text-color')).toBeTruthy();
+    expect(screen.queryByText('Set the heading and supporting copy shown beside the form.')).toBeNull();
     expect(screen.getByRole('radiogroup', { name: 'Text color' })).toBeTruthy();
+    expect(document.querySelector('.admin-color-text-swatch-list.hud-standard-swatch-palette')).toBeTruthy();
     expect(screen.getByLabelText('Step 1 field 1 label')).toBeTruthy();
+    expect(screen.getByRole('navigation', { name: 'Request form editor sections' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Content' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Appearance' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Form options' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Form steps' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Block options' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Form options' }));
+    const submitButtonPreview = screen.getByRole('button', { name: 'Submit request' });
+    expect(submitButtonPreview.tagName).toBe('BUTTON');
+    expect(submitButtonPreview.getAttribute('type')).toBe('button');
+    expect(submitButtonPreview.className).toContain('service-native-btn');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+    expect(screen.getByRole('button', { name: 'Appearance' }).getAttribute('aria-pressed')).toBe('true');
+    expect(document.querySelector('.admin-request-form-hud-editor.is-section-appearance')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Form steps' }));
+    expect(screen.getByRole('button', { name: /step 1/i }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('button', { name: /step 1/i }).textContent).toContain('Close');
   });
 
   it('renders page content blocks with the dedicated page content editor', () => {

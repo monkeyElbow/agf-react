@@ -31,6 +31,7 @@ export default function ColorPalette({
   getOptionStyle,
   getOptionLabel,
   getOptionShortLabel,
+  onOptionMouseDown,
   hideSwatchForOption,
 }) {
   const safeOptions = Array.isArray(options) ? options : [];
@@ -70,12 +71,10 @@ export default function ColorPalette({
           : '';
         const style = typeof getOptionStyle === 'function'
           ? getOptionStyle(option, { index, active, disabled })
-          : (variant === 'admin'
-            ? {
-                '--admin-swatch-color': swatch,
-                '--admin-bg-swatch': swatch,
-              }
-            : undefined);
+          : {
+              '--admin-swatch-color': swatch,
+              '--admin-bg-swatch': swatch,
+            };
         const buttonClassName = [
           buttonBaseClassName,
           active ? 'is-active' : '',
@@ -94,7 +93,12 @@ export default function ColorPalette({
             className={buttonClassName}
             style={style}
             disabled={disabled}
-            onMouseDown={preventMouseDown ? (event) => event.preventDefault() : undefined}
+            onMouseDown={(event) => {
+              onOptionMouseDown?.(option, index, event);
+              if (preventMouseDown) {
+                event.preventDefault();
+              }
+            }}
             onClick={() => onChange?.(optionValue, option, index)}
           >
             {!hideSwatch ? (

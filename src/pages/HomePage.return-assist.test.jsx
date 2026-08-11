@@ -5,6 +5,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocumentsProvider } from '../context/DocumentsContext';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import {
   clearHomeReturnAssistState,
   recordHomeReturnAssistNavigation,
@@ -76,7 +77,9 @@ describe('HomePage return assist', () => {
   ];
 
   beforeEach(() => {
-    mockBlocksByPath = {};
+    mockBlocksByPath = {
+      '/': contentBlockBlueprintsByPath['/'].map((block) => ({ ...block, settings: { ...block.settings } })),
+    };
     window.sessionStorage.clear();
     clearHomeReturnAssistState();
   });
@@ -145,7 +148,7 @@ describe('HomePage return assist', () => {
 
     expect(await screen.findByRole('searchbox', { name: "What can we help you find?" })).toBeTruthy();
 
-    const impactStoryBlock = container.querySelector('[data-block-id="home_impact_story"]');
+    const impactStoryBlock = container.querySelector('[data-block-id="impact_stat"]');
     const servicesFeatureBlock = container.querySelector('[data-block-id="home_services_feature_animation"]');
     const returnAssist = container.querySelector('.home-return-assist');
 

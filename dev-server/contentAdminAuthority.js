@@ -70,11 +70,21 @@ export function createContentAdminAuthorityLease({
     } catch (error) {
       if (error?.code !== 'EEXIST') throw error;
       const existing = readLease(lockFile);
-      if (!existing || !processIsAlive(existing.pid)) {
-        throw authorityError('Content-admin authority lock is stale and requires explicit cleanup.', {
+      if (existing && !processIsAlive(existing.pid)) {
+        try {
+          fs.unlinkSync(lockFile);
+        } catch (unlinkError) {
+          if (unlinkError?.code !== 'ENOENT') {
+            throw unlinkError;
+          }
+        }
+        return acquire();
+      }
+      if (!existing) {
+        throw authorityError('Content-admin authority lock is unreadable and may belong to a starting process.', {
           lockFile,
           existing,
-          stale: true,
+          stale: false,
         });
       }
       throw authorityError('Another content-admin authority already owns the project.', {
@@ -142,6 +152,6 @@ export function inspectContentAdminAuthority(lockFile) {
     lockFile: path.resolve(lockFile),
     lease: clone(lease),
     processAlive: lease ? processIsAlive(lease.pid) : false,
-    status: !lease ? 'available' : processIsAlive(lease.pid) ? 'owned' : 'stale-requires-explicit-cleanup',
+    status: !lease ? 'available' : processIsAlive(lease.pid) ? 'owned' : 'stale-auto-reclaimable',
   };
 }

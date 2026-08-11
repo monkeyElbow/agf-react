@@ -21,10 +21,12 @@ const mockRemoveBlock = vi.fn();
 const mockMoveBlock = vi.fn();
 const mockResetContentAdmin = vi.fn();
 let mockSharedSnapshotUpdatedAt = 0;
+let mockSharedSyncStatus = null;
 let mockLastSharedSaveResult = null;
 let mockLastSharedPublishResult = null;
 let mockDirtyPaths = ['/services/loans'];
 let mockBlockCollaborationById = {};
+let mockBlocksByPath = null;
 let mockPageChangeSummary = {
   changedBlockIds: ['hero'],
   changedBlockCount: 1,
@@ -45,6 +47,7 @@ let mockPageWorkflowActivity = {
   currentActorBlockCount: 1,
   otherActorBlockCount: 0,
 };
+let mockPendingExternalDraftPaths = [];
 
 vi.mock('../context/TestimonialsContext', () => ({
   useTestimonials: () => ({
@@ -83,7 +86,7 @@ vi.mock('../context/ContentAdminContext', async () => {
           parentPath: null,
         },
       },
-      blocksByPath: {
+      blocksByPath: mockBlocksByPath || {
         '/services/loans': [
           {
             id: 'hero',
@@ -135,8 +138,10 @@ vi.mock('../context/ContentAdminContext', async () => {
       lastSharedSaveResult: mockLastSharedSaveResult,
       lastSharedPublishResult: mockLastSharedPublishResult,
       sharedSnapshotUpdatedAt: mockSharedSnapshotUpdatedAt,
+      sharedSyncStatus: mockSharedSyncStatus,
       dirtyPaths: mockDirtyPaths,
       isPageDirty: (pathname) => mockDirtyPaths.includes(pathname),
+      hasPendingExternalDrafts: (pathname) => mockPendingExternalDraftPaths.includes(pathname),
       getPageChangeSummary: () => mockPageChangeSummary,
       getPagePublishSummary: () => mockPagePublishSummary,
       getPageWorkflowActivity: () => mockPageWorkflowActivity,
@@ -177,10 +182,12 @@ describe('AdminContentPage shared save workflow', () => {
     mockMoveBlock.mockReset();
     mockResetContentAdmin.mockReset();
     mockSharedSnapshotUpdatedAt = 0;
+    mockSharedSyncStatus = null;
     mockLastSharedSaveResult = null;
     mockLastSharedPublishResult = null;
     mockDirtyPaths = ['/services/loans'];
     mockBlockCollaborationById = {};
+    mockBlocksByPath = null;
     mockPageChangeSummary = {
       changedBlockIds: ['hero'],
       changedBlockCount: 1,
@@ -201,6 +208,7 @@ describe('AdminContentPage shared save workflow', () => {
       currentActorBlockCount: 1,
       otherActorBlockCount: 0,
     };
+    mockPendingExternalDraftPaths = [];
 
     mockSaveSharedDraftNow.mockResolvedValue({ ok: true });
     mockPublishSharedPageNow.mockResolvedValue({ ok: true });
@@ -261,8 +269,8 @@ describe('AdminContentPage shared save workflow', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save draft and preview' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save all page drafts' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Preview' }).disabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
     expect(screen.getByRole('button', { name: 'History' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Promote content to seed' })).toBeTruthy();
@@ -273,20 +281,41 @@ describe('AdminContentPage shared save workflow', () => {
     expect(screen.getByText(/Reset from seed replaces saved admin content with code defaults/i)).toBeTruthy();
     expect(screen.getByText(/Promote content to seed updates that reset baseline/i)).toBeTruthy();
 
-    fireEvent.change(screen.getByLabelText('Optional save note'), { target: { value: 'Refined CTA copy' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.change(screen.getByLabelText('Draft save note (optional)'), { target: { value: 'Refined CTA copy' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save all page drafts' }));
 
     await waitFor(() => {
       expect(mockSaveSharedDraftNow).toHaveBeenCalledWith('Refined CTA copy');
     });
+    expect(screen.getByRole('button', { name: 'Draft saved' }).disabled).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'History' }));
 
     expect(await screen.findByRole('heading', { name: 'Revision history' })).toBeTruthy();
     expect(await screen.findByText('Sarah MacBook')).toBeTruthy();
     expect(screen.getAllByText(/Refined hero copy/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Restore page' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Restore page to draft' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Restore selected blocks' })).toBeTruthy();
+  });
+
+  it('shows block inventory loading feedback while shared blocks hydrate', () => {
+    mockBlocksByPath = { '/services/loans': [] };
+    mockSharedSyncStatus = {
+      isPending: true,
+      hasQueuedDraftSync: false,
+      pendingMutationCount: 1,
+      lastAppliedAt: 0,
+    };
+
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Loading blocks from shared draft...')).toBeTruthy();
+    expect(screen.getByText('Blocks are loading from the shared draft.')).toBeTruthy();
+    expect(document.querySelectorAll('.admin-block-loading-row')).toHaveLength(3);
   });
 
   it('restores the latest shared backup from the save bar', async () => {
@@ -331,7 +360,7 @@ describe('AdminContentPage shared save workflow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'History' }));
     await screen.findByRole('heading', { name: 'Revision history' });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Restore page' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Restore page to draft' }));
     await waitFor(() => {
       expect(mockRestorePageRevision).toHaveBeenCalledWith('/services/loans', 'rev-1');
     });
@@ -452,6 +481,20 @@ describe('AdminContentPage shared save workflow', () => {
     expect(screen.queryByLabelText('Block mode')).toBeNull();
   });
 
+  it('saves an optional admin nickname from the block list without changing block identity', () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    const adminNameInput = screen.getByRole('textbox', { name: 'Admin name for Hero' });
+    fireEvent.change(adminNameInput, { target: { value: 'Pricing' } });
+    fireEvent.blur(adminNameInput);
+
+    expect(mockUpdateBlock).toHaveBeenCalledWith('/services/loans', 'hero', { adminName: 'Pricing' });
+  });
+
   it('allows moving from editing block A to editing block B without saving block A first', () => {
     render(
       <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
@@ -525,6 +568,44 @@ describe('AdminContentPage shared save workflow', () => {
     expect(screen.queryByText(/Active edit:/i)).toBeNull();
   });
 
+  it('shows live state and disables draft actions after publish settles', () => {
+    mockDirtyPaths = [];
+    mockPageChangeSummary = {
+      changedBlockIds: [],
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockPagePublishSummary = {
+      changedBlockIds: [],
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockLastSharedPublishResult = {
+      status: 'published',
+      changedPaths: ['/services/loans'],
+      publishedPaths: ['/services/loans'],
+      publishedBlockIdsByPath: { '/services/loans': ['hero'] },
+      blockedBlocks: [],
+      updatedAt: Date.now(),
+    };
+
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getAllByText('Live').length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText(/^Draft save:/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Save all page drafts' }).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Discard all page drafts' }).disabled).toBe(true);
+  });
+
   it('keeps passive foreign draft markers out of inspect mode while preserving a takeover option', () => {
     mockDirtyPaths = [];
     mockBlockCollaborationById = {
@@ -582,7 +663,7 @@ describe('AdminContentPage shared save workflow', () => {
     expect(view.container.querySelector('.admin-selected-block-lock-banner')).toBeNull();
   });
 
-  it('keeps Save draft distinct from Make live while preserving multiple changed blocks together', async () => {
+  it('keeps Save all page drafts distinct from Make live while preserving multiple changed blocks together', async () => {
     mockPageChangeSummary = {
       changedBlockIds: ['hero', 'cta_form'],
       changedBlockCount: 2,
@@ -610,13 +691,81 @@ describe('AdminContentPage shared save workflow', () => {
     expect(screen.getByText('Make live: 2 blocks, order')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Make live' }).disabled).toBe(false);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save all page drafts' }));
 
     await waitFor(() => {
       expect(mockSaveSharedDraftNow).toHaveBeenCalledTimes(1);
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Make live' }));
+
+    await waitFor(() => {
+      expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/services/loans', '');
+    });
+  });
+
+  it('enables Make live from the admin bottom bar when a pending external draft exists', async () => {
+    mockDirtyPaths = [];
+    mockPendingExternalDraftPaths = ['/services/loans'];
+    mockPageChangeSummary = {
+      changedBlockIds: [],
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockPagePublishSummary = {
+      changedBlockIds: [],
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
+    expect(makeLiveButton.disabled).toBe(false);
+
+    fireEvent.click(makeLiveButton);
+
+    await waitFor(() => {
+      expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/services/loans', '');
+    });
+  });
+
+  it('shows only current-admin eligible blocks in page Make live while preserving another admin draft', async () => {
+    mockDirtyPaths = [];
+    mockPagePublishSummary = {
+      changedBlockIds: ['hero', 'intro'],
+      changedBlockCount: 2,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: true,
+    };
+    mockPageWorkflowActivity = {
+      hasCurrentActorDraft: true,
+      hasOtherActorDraft: true,
+      otherActorBlockCount: 1,
+      currentActorBlockIds: ['intro'],
+      otherActorBlocks: [{ blockId: 'hero', state: 'drafted-other' }],
+    };
+
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Make live: 1 block')).toBeTruthy();
+    const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
+    expect(makeLiveButton.disabled).toBe(false);
+
+    fireEvent.click(makeLiveButton);
 
     await waitFor(() => {
       expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/services/loans', '');
@@ -642,7 +791,7 @@ describe('AdminContentPage shared save workflow', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save all page drafts' }));
     mockLastSharedSaveResult = {
       status: 'partially-saved',
       changedPaths: ['/services/loans'],

@@ -1,11 +1,17 @@
+import { useRef, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
 import ColorPalette from './ColorPalette';
-import { HudEditorMain, HudEditorSection, HudEditorSettingsRail, HudEditorShell } from './HudEditorShell';
+import {
+  HudEditorBlockOptionsPage,
+  HudEditorMain,
+  HudEditorModelLayout,
+  HudEditorSection,
+  appendHudBlockOptionsSection,
+} from './HudEditorShell';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from './HeroHudEditorShared';
 import TextHighlightColorControls from './TextHighlightColorControls';
 import {
   INTRO_ACCENT_TONE_OPTIONS,
-  PANEL_TEXT_TONE_OPTIONS,
   SEMANTIC_TEXT_COLOR_OPTIONS,
   SURFACE_BG_TONE_OPTIONS,
   resolvePanelTextToneClassName,
@@ -47,9 +53,10 @@ export default function IntroHudEditorPanel({
   onToggleBodyMiniEditor,
   bodyHtml,
   onBodyHtmlChange,
+  bodyColorClassName,
+  onBodyColorChange,
   bodyInputRef,
   textTone,
-  onTextToneChange,
   bgTone,
   onBgToneChange,
   justify,
@@ -58,7 +65,9 @@ export default function IntroHudEditorPanel({
   onLineSpacingChange,
   allowWhiteBackground = false,
   actionsSlot = null,
+  blockOptions = null,
 }) {
+  const paletteSelectionRef = useRef(null);
   const selectedHeadingText = String(headingSelection?.text || '');
   const headingSelectionStart = Number(headingSelection?.start);
   const headingSelectionEnd = Number(headingSelection?.end);
@@ -80,9 +89,38 @@ export default function IntroHudEditorPanel({
     ? resolveSelectionRangeColor(headingHighlights, headingSelectionStart, headingSelectionEnd)
     : String(headingColor || '');
   const previewHeadingClassName = resolveIntroPreviewHeadingClassName(headingColor, textTone);
+  const [activeEditorSection, setActiveEditorSection] = useState('heading');
+
+  const readLiveHeadingSelection = () => {
+    const input = headingInputRef?.current;
+    if (!input) {
+      return headingSelection;
+    }
+    const rawStart = Number(input.selectionStart);
+    const rawEnd = Number(input.selectionEnd);
+    if (!Number.isInteger(rawStart) || !Number.isInteger(rawEnd)) {
+      return headingSelection;
+    }
+    const start = Math.max(0, Math.min(rawStart, rawEnd));
+    const end = Math.max(start, Math.max(rawStart, rawEnd));
+    const source = String(input.value || '');
+    return { start, end, text: source.slice(start, end) };
+  };
+
+  const editorSections = appendHudBlockOptionsSection([
+    { id: 'heading', label: 'Heading', icon: 'Aa' },
+    { id: 'body', label: 'Body', icon: '¶' },
+    ...(actionsSlot ? [{ id: 'actions', label: 'Actions', icon: '↗' }] : []),
+  ], blockOptions);
 
   return (
-    <HudEditorShell className="admin-hud-editor-shell--intro">
+    <HudEditorModelLayout
+      className="admin-hud-editor-shell--intro"
+      sections={editorSections}
+      activeSection={activeEditorSection}
+      onSectionChange={setActiveEditorSection}
+      label="Intro editor sections"
+    >
       <HudEditorMain className="admin-intro-hud-main-stack">
         <HudEditorSection className="admin-front-hud-card admin-intro-hud-card admin-intro-hud-card--layout" label="Layout settings">
           <div className="admin-intro-hud-layout-control-grid is-stacked">
@@ -143,7 +181,7 @@ export default function IntroHudEditorPanel({
                 placeholder="Start intro heading..."
                 showPlaceholders
                 onLineTextChange={(_lineKey, nextValue) => onHeadingChange?.(nextValue)}
-                onLineInteract={() => onHeadingSelectionCapture?.()}
+                onLineInteract={(_lineKey, selectionMeta) => onHeadingSelectionCapture?.(selectionMeta)}
                 setLineInputRef={(_lineKey, node) => {
                   if (headingInputRef && typeof headingInputRef === 'object') {
                     headingInputRef.current = node;
@@ -162,9 +200,20 @@ export default function IntroHudEditorPanel({
             ariaLabel={headingColorLabel}
             options={SEMANTIC_TEXT_COLOR_OPTIONS}
             value={activeHeadingColorValue}
+            onPaletteMouseDown={() => {
+              const liveSelection = readLiveHeadingSelection();
+              paletteSelectionRef.current = liveSelection;
+              onHeadingSelectionCapture?.(liveSelection);
+            }}
             onChange={(nextValue) => {
-              if (hasHeadingSelection) {
-                onHeadingSelectionColorChange?.(nextValue);
+              const liveSelection = paletteSelectionRef.current || readLiveHeadingSelection();
+              paletteSelectionRef.current = null;
+              const canApplyLiveSelection = Number.isInteger(liveSelection?.start)
+                && Number.isInteger(liveSelection?.end)
+                && liveSelection.end > liveSelection.start
+                && Boolean(liveSelection.text);
+              if (canApplyLiveSelection) {
+                onHeadingSelectionColorChange?.(nextValue, liveSelection);
                 return;
               }
               onHeadingColorChange?.(nextValue);
@@ -212,13 +261,16 @@ export default function IntroHudEditorPanel({
                 {bodyMiniEditorEnabled ? 'HTML' : 'Text'}
               </button>
             </div>
-            <div className={`admin-front-hud-intro-body-editor is-bg-${String(bgTone || 'white').trim() || 'white'} is-text-${String(textTone || 'dark').trim() || 'dark'}`}>
+            <div className={`admin-front-hud-intro-body-editor is-bg-${String(bgTone || 'white').trim() || 'white'} is-text-${String(textTone || 'dark').trim() || 'dark'}${bodyColorClassName ? ` ${bodyColorClassName}` : ''}`}>
               {bodyMiniEditorEnabled ? (
                 <div className="admin-front-hud-mini-html-wrap">
                   <AdminHtmlEditor
                     compact
+                    paletteVariant="hud"
                     value={String(bodyHtml || '')}
                     onChange={(nextValue) => onBodyHtmlChange?.(nextValue)}
+                    baseColorClassName={bodyColorClassName}
+                    onBaseColorChange={onBodyColorChange}
                     placeholder="Start intro body copy..."
                   />
                 </div>
@@ -233,23 +285,15 @@ export default function IntroHudEditorPanel({
               )}
             </div>
           </div>
-          <div className="admin-front-hud-row admin-front-hud-intro-body-tone">
-            <span>Base Body Tone</span>
-            <ColorPalette
-              variant="hud"
-              className="is-compact is-icon-only"
-              ariaLabel="Intro body text color"
-              options={PANEL_TEXT_TONE_OPTIONS}
-              value={textTone}
-              onChange={(nextValue) => onTextToneChange?.(nextValue)}
-            />
-          </div>
         </HudEditorSection>
       </HudEditorMain>
 
-      <HudEditorSettingsRail>
-        {actionsSlot}
-      </HudEditorSettingsRail>
-    </HudEditorShell>
+      {actionsSlot ? (
+        <div className="admin-hud-editor-actions-page admin-hud-editor-settings-rail admin-intro-hud-actions-rail">
+          {actionsSlot}
+        </div>
+      ) : null}
+      <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+    </HudEditorModelLayout>
   );
 }

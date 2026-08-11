@@ -34,6 +34,7 @@ import {
 import { defaultServicesCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultServicesIntroRuntime } from '../data/servicesOverviewSeed';
 import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
+import FrontHudStructureControls from '../components/FrontHudStructureControls';
 
 const SERVICES_HERO_PIE_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const DEFAULT_SERVICES_INTRO = buildDefaultServicesIntroRuntime();
@@ -145,7 +146,11 @@ export default function ServicesPage() {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
-  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const {
+    enabled: frontHudEnabled,
+    opacity: frontHudOpacity,
+    setEnabled: setFrontHudEnabled = null,
+  } = useFrontHud();
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
@@ -551,6 +556,7 @@ export default function ServicesPage() {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setFrontHudEnabled?.(false);
   };
 
   useEffect(() => () => {
@@ -574,6 +580,9 @@ export default function ServicesPage() {
         isActive={!hudDockCollapsed && activeHudPanelId === panel.id}
         onClick={() => openHudPanel(panel.id, panel.sectionKey)}
         style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+        structureControls={(
+          <FrontHudStructureControls pathname="/services" blockId={blockId} placement="anchor" />
+        )}
       />
     );
   };
@@ -632,7 +641,7 @@ export default function ServicesPage() {
   return (
     <div
       ref={pageRef}
-      className={`service-native-page services-native-page${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
+      className={`service-native-page services-native-page${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
     >
       {showFrontHud ? (
         <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
@@ -685,7 +694,6 @@ export default function ServicesPage() {
             pathname="/services"
             reviewHref="/admin/content?page=%2Fservices"
             placement="dock-inline"
-            showBlockPublishAction={false}
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
             blockLabel={activeHudPanel.label}

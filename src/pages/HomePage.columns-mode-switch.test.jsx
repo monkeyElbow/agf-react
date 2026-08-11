@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentAdminProvider, useContentAdmin } from '../context/ContentAdminContext';
-import { homePageBlocks } from '../data/pageBlocks/homeBlocks';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import HomePage from './HomePage';
 
 void [MemoryRouter, ContentAdminProvider, HomePage];
@@ -97,7 +97,7 @@ describe('HomePage home columns mode switch', () => {
   });
 
   it('keeps the home do-the-math seed canonical as a billboard block', () => {
-    const block = homePageBlocks.find((entry) => entry?.id === 'home_do_the_math');
+    const block = contentBlockBlueprintsByPath['/'].find((entry) => entry?.id === 'home_do_the_math');
 
     expect(block).toMatchObject({
       id: 'home_do_the_math',

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { contentBlockBlueprintsByPath } from './contentBlockBlueprints';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,6 +50,8 @@ describe('source-default content block blueprint construction', () => {
     expect(source).toMatch(/id: 'growth_feature'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'investments_growth_feature'/);
     expect(source).toMatch(/id: 'dashboard_login_cta'[\s\S]*?templateId: 'cta_band'[\s\S]*?kind: 'cta_band'[\s\S]*?hidden: true[\s\S]*?buildCtaBandPresetSettings\('dashboard-login'\)/);
     expect(source).toMatch(/id: 'cta_form'[\s\S]*?kind: 'cta_form'[\s\S]*?editableFields:/);
+    expect(source).toMatch(/\/test': \[[\s\S]*?id: 'cta_form'[\s\S]*?editableFields:[\s\S]*?createDynamicColumnsBlueprint/);
+    expect(contentBlockBlueprintsByPath['/test'].some((block) => block?.id === 'newsletter')).toBe(false);
     expect(source).toMatch(/createDynamicCardGridBlueprint\(\{[\s\S]*?id: 'loan_options'[\s\S]*?presetId:/);
     expect(source).toMatch(/id: 'services_cards'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_breakdown'/);
     expect(source).toMatch(/id: 'matters_band'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_matters_band'/);

@@ -26,7 +26,8 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('margin-bottom: clamp(3.4rem, 6.6vw, 5.4rem);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card > div:first-child {');
     expect(cssSource).toContain('flex: 1 1 auto;');
-    expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-card h3 {');
+    expect(cssSource).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) h3 {');
+    expect(cssSource).toContain('font-size: max(var(--dynamic-grid-card-title-size, 1.14rem), clamp(1.55rem, 2.35vw, 1.9rem));');
     expect(cssSource).toContain('min-height: 0;');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .service-native-action-row {');
     expect(cssSource).toContain('margin-top: auto;');
@@ -43,6 +44,7 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-cta {');
     expect(cssSource).toContain('padding-top: clamp(2.2rem, 5vw, 3.4rem);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-cta .native-info-inline-form {');
+    expect(cssSource).toContain('display: flex;\n  justify-content: center;');
     expect(cssSource).toContain('width: min(680px, 100%);');
     expect(cssSource).toContain('margin-inline: auto;');
     expect(cssSource).toContain('padding: clamp(2.2rem, 4vw, 3rem) clamp(1.3rem, 2.4vw, 1.85rem) clamp(1.65rem, 2.9vw, 2.3rem);');
@@ -53,6 +55,7 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.legacy-giving-cta .dynamic-cta-form-subtitle {');
     expect(cssSource).toContain('max-width: 24rem;');
     expect(cssSource).toContain('margin: 0.7rem auto 0;');
+    expect(cssSource).not.toContain('grid-template-columns: minmax(360px, 0.92fr) minmax(0, 1.08fr);');
   });
 
   it('keeps the endowments hero breathing room scoped to that compact legacy child route', () => {
@@ -166,6 +169,8 @@ describe('planned giving review polish guardrail', () => {
     expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-endowments-calculator'");
     expect(blueprintSource).toContain("widget: 'endowment-calculator'");
     expect(componentSource).toContain('annual ministry impact');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-calculator {');
+    expect(cssSource).toContain('padding-top: clamp(3.4rem, 6.8vw, 5.2rem);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-calculator > .ag-panel-rail > h2 {');
     expect(cssSource).toContain('margin-bottom: 0.1rem;');
     expect(cssSource).toContain('letter-spacing: -0.03em;');
@@ -205,6 +210,7 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('padding-bottom: clamp(0.31rem, 0.66vw, 0.39rem);');
     expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card > .investments-native-cert-card__body {');
     expect(cssSource).toContain('padding-top: clamp(0.675rem, 1.4vw, 0.875rem);');
+    expect(cssSource).toContain('--investments-cert-body-padding-bottom: clamp(1.8rem, 3.3vw, 2.2rem);');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trust-choices--trusts .charitable-trusts-native-choice-card h3,');
     expect(cssSource).toContain('.legacy-child-native-trust-choices--trusts.native-dynamic-grid .service-native-card h3 {');
     expect(cssSource).toContain('font-size: clamp(1.9rem, 3.35vw, 2.45rem);');
@@ -277,6 +283,8 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--legacy-generosity-fund .service-native-section.native-dynamic-grid.legacy-child-native-generosity-assets {');
     expect(cssSource).toContain('padding-top: clamp(0.9rem, 2vw, 1.5rem);');
     expect(cssSource).toContain('padding-bottom: clamp(4.5rem, 8vw, 6.2rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-generosity-fund .service-native-section.native-dynamic-grid.legacy-child-native-generosity-assets {');
+    expect(cssSource).toContain('padding-top: clamp(4.5rem, 8vw, 6.2rem);');
     expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list li {');
     expect(cssSource).toContain('font-size: clamp(1.1rem, 2vw, 1.35rem);');
     expect(cssSource).toContain('line-height: 1.32;');
@@ -290,7 +298,30 @@ describe('planned giving review polish guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trusts-funding {');
+    expect(cssSource).toContain('padding-top: clamp(3.9rem, 7.4vw, 6.2rem);');
     expect(cssSource).toContain('padding-bottom: clamp(4.5rem, 8vw, 6.2rem);');
+  });
+
+  it('keeps trust type sections tighter above titles than below bullets', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.legacy-child-native-trusts-crt-types,\n.legacy-child-native-trusts-clt-types {');
+    expect(cssSource).toContain('padding: clamp(1.6rem, 3.5vw, 2.7rem) 0 clamp(2.6rem, 5vw, 4.2rem);');
+  });
+
+  it('keeps CGA options and outro on the planned-giving billboard/card rhythm', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const blueprintSource = readSource('../data/contentBlockBlueprints.js');
+
+    expect(blueprintSource).toContain("sectionClassName: 'legacy-child-native-options legacy-child-native-cga-options'");
+    expect(blueprintSource).toContain("title: 'Plenty of options.'");
+    expect(cssSource).toContain('.native-info-page--legacy-cga .legacy-child-native-cga-options .service-native-grid {');
+    expect(cssSource).toContain('margin-top: clamp(2rem, 4vw, 3rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-cga .legacy-child-native-cga-options .investments-native-cert-card {');
+    expect(cssSource).toContain('box-shadow: 0 10px 22px rgba(12, 42, 61, 0.1);');
+    expect(cssSource).toContain('.native-info-page--legacy-cga .legacy-child-native-cga-outro {');
+    expect(cssSource).toContain('padding: clamp(3rem, 6vw, 5rem) 0;');
+    expect(cssSource).toContain('font-size: clamp(3.2rem, 7.4vw, 5.6rem);');
   });
 
   it('keeps Ministry Impact Fund step icons aligned on a shared rail', () => {

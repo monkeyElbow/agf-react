@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   ADMIN_BLOCKS_AUDIT_SURFACE,
@@ -5,6 +7,13 @@ import {
 } from './AdminBlocksPage';
 
 describe('collectBlockIssues', () => {
+  it('does not render the retired mode column in the block audit table', () => {
+    const source = readFileSync(path.resolve(process.cwd(), 'src/pages/AdminBlocksPage.jsx'), 'utf8');
+
+    expect(source).not.toContain('<th>Mode</th>');
+    expect(source).not.toContain('admin-block-audit-mode-pill');
+  });
+
   it('classifies the admin blocks page as a snapshot health diagnostic surface', () => {
     expect(ADMIN_BLOCKS_AUDIT_SURFACE).toMatchObject({
       id: 'admin-blocks-snapshot-health',

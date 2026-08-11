@@ -1,0 +1,42 @@
+/* Admin-only shell rules. Keep these behind the existing admin page root. */
+.admin-content-page-wrap .search-page-input {
+  height: 44px;
+  box-sizing: border-box;
+}
+
+.admin-content-page-wrap {
+  background: #f4f0e8;
+  padding-top: clamp(0.8rem, 2vw, 1.35rem);
+  padding-bottom: clamp(1.25rem, 3vw, 2rem);
+}
+
+.admin-content-page-wrap .page-shell {
+  background: #ffffff;
+  border-color: rgba(131, 126, 120, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(65, 64, 66, 0.08);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.admin-content-page-wrap .page-shell-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-content-page-wrap .page-shell-body h3 {
+  margin: 0.2rem 0 0.65rem;
+  font-size: 1.2rem;
+}
+
+/* Admin editor controls follow the public form geometry without reshaping binary controls. */
+.admin-content-page-wrap :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']),
+  select
+) {
+  border-radius: var(--ag-field-radius);
+}
+
+.admin-content-page-wrap textarea {
+  border-radius: 18px;
+}

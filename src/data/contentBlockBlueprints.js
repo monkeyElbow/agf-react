@@ -680,7 +680,7 @@ const heroDynamicLineToneOptions = [
   { value: 'is-mango', label: 'Mango', swatch: 'linear-gradient(145deg, #f6b146 0%, #e8991f 100%)' },
   { value: 'is-melon', label: 'Melon', swatch: 'linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)' },
   { value: 'is-super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
-  { value: 'is-sandstone', label: 'Sandstone', swatch: 'linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)' },
+  { value: 'is-sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
   { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
 ];
 
@@ -1944,7 +1944,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         justify: 'center',
         lineSpacing: 1,
         contentMaxWidthPx: 1216,
-        headlineMaxWidthPx: 560,
+        headlineMaxWidthPx: 1216,
         actionsBeforeCards: true,
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
@@ -4011,7 +4011,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         titleSizeRem: 5.25,
         titleLetterSpacingEm: -0.03,
         contentMaxWidthPx: 1480,
-        headlineMaxWidthPx: 560,
+        headlineMaxWidthPx: 1480,
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
           hrefField: 'buttonUrl',
@@ -4782,6 +4782,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       name: 'Billboard',
       kind: 'billboard',
       mode: 'dynamic',
+      excludeFromInsertCatalog: true,
       settings: {
         ...defaultServicesIntroBillboardSettings,
       },
@@ -5068,6 +5069,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         bgTone: 'white',
         textTone: 'dark',
         justify: 'center',
+        sectionClassName: 'dynamic-billboard loans-native-vision-fuel',
         lineSpacing: 1,
         titleFontFamily: 'helv',
         titleFontWeight: 700,
@@ -7745,6 +7747,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         titleSizeRem: 6.15,
         titleLetterSpacingEm: -0.03,
         contentMaxWidthPx: 1216,
+        sectionClassName: 'retirement-do-the-math-billboard',
         scrollReveal: 'scale-up',
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
@@ -7938,24 +7941,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         ]),
       },
       editableFields: ctaFormEditableFields,
-    },
-    {
-      id: 'newsletter',
-      name: 'Newsletter',
-      kind: 'newsletter',
-      mode: 'dynamic',
-      settings: {
-        title: 'Stay in the loop.',
-        titleClassName: '',
-        titleHighlightsJson: '[{"text":"loop","className":"is-mango"}]',
-        bodyHtml: '<p>Get the occasional message about rates, products, services, and a few practical tips.</p>',
-        bgTone: 'grey',
-        textTone: 'white',
-        formId: '34a993b6-d0fb-48fd-b3c4-faad7332770c',
-        accountId: '',
-        sourceId: '',
-      },
-      editableFields: sharedDynamicNewsletterEditableFields,
     },
     createDynamicColumnsBlueprint({
       id: 'columns',
@@ -9375,7 +9360,373 @@ export const contentBlockBlueprintsByPath = applyCanonicalDefinitionsToBlueprint
   canonicalizeBlueprintMapLinks(RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH),
 );
 
+function reusableCatalogBlock(block) {
+  return applyCanonicalDefinitionToBlock({ ...block, isReusableTemplate: true });
+}
+
+function buildCatalogCardGridTemplate({ id, name, presetId, title, cardTitle = 'Card title', cardBody = 'Add card description here.' }) {
+  return reusableCatalogBlock({
+    ...createDynamicCardGridBlueprint({
+      id,
+      name,
+      presetId,
+      settings: {
+        title,
+        titleClassName: '',
+        titleHighlightsJson: '',
+        body: '',
+        bodyHtml: '',
+        ...seedBlueprintCardGridCardFields(1, { title: cardTitle, body: cardBody }),
+        ...seedBlueprintCardGridCardFields(2, { title: cardTitle, body: cardBody }),
+        ...seedBlueprintCardGridCardFields(3, { title: cardTitle, body: cardBody }),
+      },
+    }),
+  });
+}
+
+function buildCatalogColumnsTemplate({ id, name, presetId, title, columns = 'two', style = 'retirement', count = 2 }) {
+  const settings = {
+    title,
+    titleClassName: '',
+    titleHighlightsJson: '',
+    bodyHtml: '',
+    leadLine: '',
+    followupLine: '',
+    columnsStyle: style,
+    columns,
+    ...[1, 2, 3, 4].reduce((fields, slot) => ({
+      ...fields,
+      [`col${slot}Enabled`]: slot <= count,
+      [`col${slot}Type`]: 'text',
+      [`col${slot}Title`]: slot <= count ? `Column ${slot}` : '',
+      [`col${slot}Body`]: slot <= count ? 'Add column copy here.' : '',
+      [`col${slot}BodyHtml`]: '',
+      [`col${slot}ImageUrl`]: '',
+      [`col${slot}ImageAlt`]: '',
+      [`col${slot}WidthShare`]: 1,
+      ...seedBlueprintColumnButtonFields(slot),
+    }), {}),
+  };
+  return reusableCatalogBlock({
+    ...createDynamicColumnsBlueprint({ id, name, presetId, settings }),
+  });
+}
+
 const TEMPLATE_ONLY_BLOCK_BLUEPRINTS = Object.freeze([
+  applyCanonicalDefinitionToBlock({
+    id: 'card_grid_default',
+    templateId: 'card_grid',
+    presetId: 'default',
+    name: 'Card Grid · Flexible cards',
+    kind: 'card_grid',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    isAddBlockDefault: true,
+    settings: {
+      title: 'Card Grid - Flexible cards',
+      titleClassName: '',
+      titleHighlightsJson: '',
+      body: '',
+      bodyHtml: '',
+      ...seedBlueprintCardGridCardFields(1, {
+        title: 'Card title',
+        body: 'Add card description here.',
+      }),
+      ...seedBlueprintCardGridCardFields(2, {
+        title: 'Card title',
+        body: 'Add card description here.',
+      }),
+      ...seedBlueprintCardGridCardFields(3, {
+        title: 'Card title',
+        body: 'Add card description here.',
+      }),
+    },
+    editableFields: sharedDynamicGridEditableFields,
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'billboard_default',
+    templateId: 'billboard',
+    name: 'Billboard',
+    kind: 'billboard',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    settings: {
+      title: 'Add a headline.',
+      titleClassName: '',
+      titleHighlightsJson: '',
+      subtitle: '',
+      bodyHtml: '<p>Add supporting copy here.</p>',
+      body: '',
+      bgTone: 'blue',
+      textTone: 'white',
+      justify: 'center',
+      lineSpacing: 1,
+      titleFontFamily: 'helv',
+      titleFontWeight: 700,
+      titleSizeRem: 3.4,
+      titleLetterSpacingEm: -0.038,
+      buttonLabel: '',
+      buttonUrl: '',
+      buttonPageRef: '',
+      buttonOpenInNewWindow: false,
+    },
+    editableFields: sharedDynamicBillboardEditableFields,
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'feature_panel_default',
+    templateId: 'feature_panel',
+    name: 'Feature Panel',
+    kind: 'feature_panel',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    settings: {
+      title: 'Add a feature panel title.',
+      bodyHtml: '<p>Add feature panel copy here.</p>',
+      body: '',
+      buttonLabel: '',
+      buttonUrl: '',
+      buttonPageRef: '',
+      buttonOpenInNewWindow: false,
+      anchorId: '',
+      sectionClassName: '',
+      fullBleed: false,
+    },
+    editableFields: featurePanelEditableFields,
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'intro_default',
+    templateId: 'intro',
+    name: 'Intro',
+    kind: 'intro',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    settings: {
+      heading: 'Add an intro heading.',
+      headingClassName: '',
+      headingHighlightsJson: '',
+      bodyHtml: '<p>Add intro copy here.</p>',
+      body: '',
+      justify: 'center',
+      lineSpacing: 1.04,
+      extraLine: '',
+      extraLineTone: '',
+      bgTone: 'sand',
+      textTone: 'dark',
+      button1Label: '',
+      button1Url: '',
+      button1PageRef: '',
+      button1OpenInNewWindow: false,
+      button2Label: '',
+      button2Url: '',
+      button2PageRef: '',
+      button2OpenInNewWindow: false,
+    },
+    editableFields: sharedDynamicIntroEditableFields,
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'newsletter_default',
+    templateId: 'newsletter',
+    name: 'Newsletter',
+    kind: 'newsletter',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    settings: {
+      title: 'Stay connected.',
+      titleClassName: '',
+      titleHighlightsJson: '',
+      bodyHtml: '<p>Add newsletter copy here.</p>',
+      bgTone: 'grey',
+      textTone: 'white',
+      formId: '',
+      accountId: '',
+      sourceId: '',
+    },
+    editableFields: sharedDynamicNewsletterEditableFields,
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'cta_form_default',
+    templateId: 'cta_form',
+    name: 'CTA Form',
+    kind: 'cta_form',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    settings: {
+      ...buildNameEmailPhoneMessageCtaSettings({
+        title: 'Ready to take the next step?',
+        subtitle: 'Share a few details and we will be in touch.',
+        bgTone: 'sand',
+      }),
+      titleClassName: '',
+      titleHighlightsJson: '',
+      bodyHtml: '',
+    },
+    editableFields: ctaFormEditableFields,
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'request_form_default',
+    templateId: 'request_form',
+    name: 'Request Form',
+    kind: 'request_form',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    settings: {
+      title: 'Request more information.',
+      titleClassName: '',
+      titleHighlightsJson: '',
+      subtitle: 'Tell us what you need and we will respond.',
+      bodyHtml: '',
+      body: '',
+      bgTone: 'sand',
+      textTone: 'dark',
+      spaceBeforeRem: 1.6,
+      spaceAfterRem: 1.6,
+      submitLabel: 'Submit request',
+      successMessage: 'Thanks. We received your request.',
+      salesforceUrl: '',
+      step1Title: 'Contact info',
+      step1Note: '',
+      step1Alert: '',
+      step1FieldsJson: JSON.stringify([
+        { id: 'firstName', label: 'First Name', type: 'text', required: true },
+        { id: 'lastName', label: 'Last Name', type: 'text', required: true },
+        { id: 'email', label: 'Email', type: 'email', required: true },
+        { id: 'phone', label: 'Phone', type: 'tel' },
+      ]),
+      step2Title: 'Organization details',
+      step2Note: '',
+      step2Alert: '',
+      step2FieldsJson: JSON.stringify([
+        { id: 'organization', label: 'Church or Ministry', type: 'text' },
+        { id: 'city', label: 'City', type: 'text' },
+        { id: 'state', label: 'State', type: 'text' },
+        { id: 'message', label: 'Message', type: 'textarea', rows: 4 },
+      ]),
+      step3Title: 'Wrap up',
+      step3Note: '',
+      step3Alert: '',
+      step3FieldsJson: '[]',
+      step4Title: '',
+      step4Note: '',
+      step4Alert: '',
+      step4FieldsJson: '[]',
+      step5Title: '',
+      step5Note: '',
+      step5Alert: '',
+      step5FieldsJson: '[]',
+    },
+    editableFields: requestFormEditableFields,
+  }),
+  buildCatalogCardGridTemplate({
+    id: 'card_grid_eligibility_cards',
+    name: 'Card Grid · Eligibility cards',
+    presetId: 'eligibility-cards',
+    title: 'Add an eligibility heading.',
+    cardTitle: 'Eligibility item',
+    cardBody: 'Add eligibility details here.',
+  }),
+  buildCatalogCardGridTemplate({
+    id: 'card_grid_step_cards',
+    name: 'Card Grid · Step-by-step cards',
+    presetId: 'step-cards',
+    title: 'Add a process heading.',
+    cardTitle: 'Step',
+    cardBody: 'Add step details here.',
+  }),
+  buildCatalogColumnsTemplate({
+    id: 'columns_default',
+    name: 'Columns · Flexible columns',
+    presetId: 'default',
+    title: 'Add a columns heading.',
+  }),
+  buildCatalogColumnsTemplate({
+    id: 'columns_housing_allowance',
+    name: 'Columns · Housing allowance',
+    presetId: 'housing-allowance',
+    title: 'Add a two-column highlight.',
+  }),
+  buildCatalogColumnsTemplate({
+    id: 'columns_do_the_math',
+    name: 'Columns · Do the math',
+    presetId: 'do-the-math',
+    title: 'Add a calculator promo heading.',
+  }),
+  buildCatalogColumnsTemplate({
+    id: 'columns_value_cards',
+    name: 'Columns · Value cards',
+    presetId: 'value-cards',
+    title: 'Add a value-card heading.',
+    columns: 'three',
+    style: 'loans-value',
+    count: 3,
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'cta_band_default',
+    templateId: 'cta_band',
+    presetId: 'default',
+    name: 'CTA Band · General CTA',
+    kind: 'cta_band',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    isAddBlockDefault: true,
+    settings: buildCtaBandPresetSettings('default'),
+    editableFields: ctaBandEditableFields,
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'impact_stat_default',
+    templateId: 'impact_stat',
+    name: 'Impact Stats',
+    kind: 'impact_stat',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    settings: {
+      titlePrefix: 'What you do',
+      highlight: 'matters.',
+      body: 'Add a short explanation of the impact behind this page.',
+      countUp: true,
+      ctaLabel: '',
+      ctaPath: '',
+      ctaPageRef: '',
+      ctaOpenInNewWindow: false,
+      stat1Value: '0',
+      stat1Label: 'First statistic',
+      stat1Tone: 'sandstone',
+      stat2Value: '0',
+      stat2Label: 'Second statistic',
+      stat2Tone: 'sandstone',
+      stat3Value: '0',
+      stat3Label: 'Third statistic',
+      stat3Tone: 'mango',
+    },
+    editableFields: getEditableFieldsForKind('impact_stat'),
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'split_panel_default',
+    templateId: 'split_panel',
+    name: 'Split Panel',
+    kind: 'split_panel',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    settings: {
+      presentation: 'default',
+      leftTone: 'atlantean',
+      rightTone: 'mango',
+      leftTitle: 'Left panel',
+      leftBodyHtml: '<p>Add left-panel copy here.</p>',
+      leftBody: '',
+      leftButtonLabel: '',
+      leftButtonUrl: '',
+      leftButtonPageRef: '',
+      leftButtonOpenInNewWindow: false,
+      rightTitle: 'Right panel',
+      rightBodyHtml: '<p>Add right-panel copy here.</p>',
+      rightBody: '',
+      rightButtonLabel: '',
+      rightButtonUrl: '',
+      rightButtonPageRef: '',
+      rightButtonOpenInNewWindow: false,
+    },
+    editableFields: splitPanelEditableFields,
+  }),
   applyCanonicalDefinitionToBlock({
     id: 'dashboard_login_cta',
     templateId: 'cta_band',
@@ -9383,6 +9734,7 @@ const TEMPLATE_ONLY_BLOCK_BLUEPRINTS = Object.freeze([
     name: 'CTA Band · Dashboard login',
     kind: 'cta_band',
     mode: 'dynamic',
+    isReusableTemplate: true,
     hidden: true,
     settings: buildCtaBandPresetSettings('dashboard-login'),
     editableFields: ctaBandEditableFields,
@@ -9422,6 +9774,7 @@ export function genericPageBlockBlueprint() {
       description: String(defaultSiteFeatureEntry?.description || '').trim(),
       kind: 'site_feature',
       mode: 'dynamic',
+      isReusableTemplate: true,
       settings: {
         featureId: defaultSiteFeatureEntry?.featureId || 'editorial_spotlight',
         headline: '',
@@ -9508,7 +9861,7 @@ export function genericPageBlockBlueprint() {
           type: 'swatch',
           options: [
             { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-            { value: 'sand', label: 'Sand Gradient', swatch: 'linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)' },
+            { value: 'sand', label: 'Sand Gradient', swatch: getTokenSwatch('sand') },
             { value: 'blue', label: 'Blue Gradient', swatch: getTokenSwatch('blue') },
             { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
           ],
@@ -9570,7 +9923,38 @@ function templateScore(block) {
   return (editableCount * 10) + settingsCount + dynamicBoost;
 }
 
+function isInsertCatalogTemplate(block) {
+  if (block?.excludeFromInsertCatalog === true) {
+    return false;
+  }
+  const kind = String(block?.kind || '').trim().toLowerCase();
+  if ([
+    'billboard',
+    'card_grid',
+    'columns',
+    'cta_band',
+    'cta_form',
+    'feature_panel',
+    'impact_stat',
+    'intro',
+    'newsletter',
+    'request_form',
+    'site_feature',
+    'split_panel',
+    'calculator_cta',
+  ].includes(kind)) {
+    return block?.isReusableTemplate === true;
+  }
+  return true;
+}
+
+let allBlockTemplateBlueprintsCache = null;
+
 export function getAllBlockTemplateBlueprints() {
+  if (allBlockTemplateBlueprintsCache) {
+    return allBlockTemplateBlueprintsCache;
+  }
+
   const byTemplateLookupId = new Map();
   const sources = [
     ...Object.values(contentBlockBlueprintsByPath || {}),
@@ -9580,6 +9964,9 @@ export function getAllBlockTemplateBlueprints() {
 
   sources.forEach((blocks) => {
     (Array.isArray(blocks) ? blocks : []).forEach((block) => {
+      if (!isInsertCatalogTemplate(block)) {
+        return;
+      }
       const templateLookupId = String(block?.id || '').trim();
       const templateId = resolveBlueprintSeedTemplateId(templateLookupId, block?.templateId);
       if (!templateLookupId || !templateId) {
@@ -9602,11 +9989,13 @@ export function getAllBlockTemplateBlueprints() {
     });
   });
 
-  return Array.from(byTemplateLookupId.values()).sort((a, b) => {
+  allBlockTemplateBlueprintsCache = Array.from(byTemplateLookupId.values()).sort((a, b) => {
     const nameCompare = String(a.name || '').localeCompare(String(b.name || ''));
     if (nameCompare !== 0) {
       return nameCompare;
     }
     return String(a.kind || '').localeCompare(String(b.kind || ''));
   });
+
+  return allBlockTemplateBlueprintsCache;
 }

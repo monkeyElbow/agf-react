@@ -17,7 +17,7 @@ const GRID_HEADING_TONE_OPTIONS = [
 
 const GRID_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-  { value: 'sand', label: 'Sand Gradient', swatch: 'linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)' },
+  { value: 'sand', label: 'Sand Gradient', swatch: getTokenSwatch('sand') },
   { value: 'blue', label: 'Blue Gradient', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
 ];
@@ -28,15 +28,7 @@ const GRID_CARD_STYLE_OPTIONS = [
   { value: 'card3', label: 'Card 3' },
   { value: 'card4', label: 'Card 4' },
   { value: 'none', label: 'No card style' },
-];
-
-const GRID_DIVIDER_TONE_OPTIONS = [
-  { value: 'auto', label: 'Auto', swatch: 'linear-gradient(145deg, #c9d3dc 0%, #a8b6c3 100%)' },
-  { value: 'super-grey', label: 'Super Grey', swatch: '#414042' },
-  { value: 'atlantean', label: 'Blue', swatch: '#00adbb' },
-  { value: 'mango', label: 'Mango', swatch: '#f6b146' },
-  { value: 'melon', label: 'Melon', swatch: '#f48f7a' },
-  { value: 'white', label: 'White', swatch: '#ffffff' },
+  { value: 'borderless-shadow', label: 'Borderless with shadow' },
 ];
 
 const GRID_TEXT_TONE_OPTIONS = [
@@ -47,13 +39,9 @@ const GRID_TEXT_TONE_OPTIONS = [
   { value: 'white', label: 'White', swatch: '#ffffff' },
 ];
 
-const GRID_CARD_DIVIDER_OVERRIDE_OPTIONS = [
-  { value: '', label: 'Global', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
-  { value: 'super-grey', label: 'Super Grey', swatch: '#414042' },
-  { value: 'atlantean', label: 'Blue', swatch: '#00adbb' },
-  { value: 'mango', label: 'Mango', swatch: '#f6b146' },
-  { value: 'melon', label: 'Melon', swatch: '#f48f7a' },
-  { value: 'white', label: 'White', swatch: '#ffffff' },
+const GRID_CARD_TITLE_TONE_OPTIONS = [
+  ...GRID_TEXT_TONE_OPTIONS,
+  { value: 'alternating', label: 'Alternating brand colors', swatch: 'linear-gradient(90deg, #00adbb 0 33%, #f6b146 33% 66%, #f48f7a 66%)' },
 ];
 
 const sections = [
@@ -108,13 +96,6 @@ const sections = [
         type: 'select',
         options: GRID_CARD_STYLE_OPTIONS,
       }),
-      defineEditorField({ id: 'showTitleDivider', label: 'Title divider under card titles', type: 'boolean' }),
-      defineEditorField({
-        id: 'dividerTone',
-        label: 'Divider line color',
-        type: 'swatch',
-        options: GRID_DIVIDER_TONE_OPTIONS,
-      }),
       defineEditorField({ id: 'cardPaddingRem', label: 'Card padding (rem)', type: 'number', min: 0.75, max: 3, step: 0.05 }),
       defineEditorField({ id: 'cardTitleSizeRem', label: 'Card title size (rem)', type: 'number', min: 0.9, max: 2, step: 0.05 }),
       defineEditorField({ id: 'cardBodySizeRem', label: 'Card body size (rem)', type: 'number', min: 0.8, max: 1.5, step: 0.05 }),
@@ -123,7 +104,7 @@ const sections = [
         id: 'titleTone',
         label: 'Title color',
         type: 'swatch',
-        options: GRID_TEXT_TONE_OPTIONS,
+        options: GRID_CARD_TITLE_TONE_OPTIONS,
       }),
       defineEditorField({
         id: 'bodyTone',
@@ -202,12 +183,6 @@ const sections = [
         defineEditorField({ id: `card${slot}Fineprint`, label: `Card ${slot} fineprint`, type: 'textarea', rows: 2 }),
         defineEditorField({ id: `card${slot}LinksJson`, label: `Card ${slot} PDF / link list JSON`, type: 'textarea', rows: 4 }),
         defineEditorField({ id: `card${slot}AccordionsJson`, label: `Card ${slot} accordion JSON`, type: 'textarea', rows: 6 }),
-        defineEditorField({
-          id: `card${slot}DividerTone`,
-          label: `Card ${slot} line color override`,
-          type: 'swatch',
-          options: GRID_CARD_DIVIDER_OVERRIDE_OPTIONS,
-        }),
         ...defineTransitionalActionFields({
           labelId: `card${slot}ButtonLabel`,
           labelLabel: `Card ${slot} button label`,
@@ -274,8 +249,6 @@ export const cardGridBlockDefinition = createBlockDefinition({
     cardStyle: 'card2',
     titleTone: 'super-grey',
     bodyTone: 'super-grey',
-    showTitleDivider: true,
-    dividerTone: 'auto',
     cardPaddingRem: 1.35,
     cardTitleSizeRem: 1.14,
     cardBodySizeRem: 1,

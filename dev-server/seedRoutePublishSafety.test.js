@@ -180,8 +180,9 @@ describe('seed route publish safety', () => {
     expect(backupFiles(backupDir)).toHaveLength(1);
     const backupPayload = JSON.parse(fs.readFileSync(path.join(backupDir, backupFiles(backupDir)[0]), 'utf8'));
     expect(backupPayload.record.state.blocksByPath[ROUTE][0].settings.title).toBe('Edited title');
-    expect(snapshot.state.blocksByPath[ROUTE]).toEqual(seedState.blocksByPath[ROUTE]);
-    expect(snapshot.baseSnapshot.blocksByPath[ROUTE]).toEqual(seedState.blocksByPath[ROUTE]);
+    const compactSeedBlocks = seedState.blocksByPath[ROUTE].map(({ editableFields, ...block }) => block);
+    expect(snapshot.state.blocksByPath[ROUTE]).toEqual(compactSeedBlocks);
+    expect(snapshot.baseSnapshot.blocksByPath[ROUTE]).toEqual(compactSeedBlocks);
     expect(snapshot.state.blocksByPath[unrelatedRoute][0].settings.title).toBe('Keep me');
     expect(store.getRevisionHistory(ROUTE)[0]?.reason).toBe('Replace route from reviewed seed baseline');
     expect(snapshot.state.collaborationByPath[ROUTE].history[0].details)

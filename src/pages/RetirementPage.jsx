@@ -69,6 +69,7 @@ import { getTokenSwatch } from '../lib/colorSystem';
 import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
 import { heroTitleSizeRemToRuntimeCss, normalizeHeroTitleLetterSpacingEm } from '../lib/heroTitleSize';
 import { buildHeroLineStyle } from '../lib/heroLineStyle';
+import FrontHudStructureControls from '../components/FrontHudStructureControls';
 
 const RETIREMENT_TOP_3_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   slug: 'top-3-investing-mistakes-to-avoid',
@@ -298,7 +299,7 @@ function normalizeRetirementHeroLineGap(value) {
 }
 const RETIREMENT_HUD_BG_SWATCH_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #efefef 100%)' },
-  { value: 'sand', label: 'Sand', swatch: 'linear-gradient(145deg, #f2eeeb 0%, #d9d3cb 100%)' },
+  { value: 'sand', label: 'Sand', swatch: getTokenSwatch('sand') },
   { value: 'blue', label: 'Blue', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
 ];
@@ -532,7 +533,11 @@ export default function RetirementPage() {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
-  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const {
+    enabled: frontHudEnabled,
+    opacity: frontHudOpacity,
+    setEnabled: setFrontHudEnabled = null,
+  } = useFrontHud();
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
@@ -1115,6 +1120,7 @@ export default function RetirementPage() {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setFrontHudEnabled?.(false);
   };
 
   useEffect(() => () => {
@@ -1138,6 +1144,9 @@ export default function RetirementPage() {
         isActive={!hudDockCollapsed && activeHudPanelId === panel.id}
         onClick={() => openHudPanel(panel.id, panel.anchorSelector)}
         style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+        structureControls={(
+          <FrontHudStructureControls pathname="/services/retirement" blockId={blockId} placement="anchor" />
+        )}
       />
     );
   };
@@ -1687,7 +1696,7 @@ export default function RetirementPage() {
   return (
     <div
       ref={pageRef}
-      className={`service-native-page retirement-native-page${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
+      className={`service-native-page retirement-native-page${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
     >
       {showFrontHud ? (
         <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
@@ -1740,7 +1749,6 @@ export default function RetirementPage() {
             pathname="/services/retirement"
             reviewHref="/admin/content?page=%2Fservices%2Fretirement"
             placement="dock-inline"
-            showBlockPublishAction={false}
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
             blockLabel={activeHudPanel.label}

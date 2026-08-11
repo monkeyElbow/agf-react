@@ -11,8 +11,6 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardStyle: 'card2',
       titleTone: 'super-grey',
       bodyTone: 'super-grey',
-      showTitleDivider: true,
-      dividerTone: 'auto',
       cardPaddingRem: 1.35,
       cardTitleSizeRem: 1.14,
       cardBodySizeRem: 1,
@@ -20,7 +18,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
     }),
     editor: Object.freeze({
       introFields: true,
-      layoutFieldIds: Object.freeze(['contentWidth', 'columns', 'cardStyle', 'showTitleDivider']),
+      layoutFieldIds: Object.freeze(['contentWidth', 'columns', 'cardStyle']),
       typographyFields: true,
       maxCards: 8,
       cardFeatures: Object.freeze({
@@ -43,8 +41,6 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardStyle: 'card2',
       titleTone: 'super-grey',
       bodyTone: 'super-grey',
-      showTitleDivider: false,
-      dividerTone: 'auto',
       cardPaddingRem: 2.6,
       cardTitleSizeRem: 1.45,
       cardBodySizeRem: 1.02,
@@ -52,7 +48,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
     }),
     editor: Object.freeze({
       introFields: false,
-      layoutFieldIds: Object.freeze(['cardStyle', 'showTitleDivider']),
+      layoutFieldIds: Object.freeze(['cardStyle']),
       typographyFields: true,
       maxCards: 4,
       cardFeatures: Object.freeze({
@@ -75,8 +71,6 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardStyle: 'none',
       titleTone: 'super-grey',
       bodyTone: 'super-grey',
-      showTitleDivider: true,
-      dividerTone: 'auto',
       cardPaddingRem: 0.75,
       cardTitleSizeRem: 1.5,
       cardBodySizeRem: 1.08,
@@ -84,7 +78,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
     }),
     editor: Object.freeze({
       introFields: true,
-      layoutFieldIds: Object.freeze(['showTitleDivider']),
+      layoutFieldIds: Object.freeze([]),
       typographyFields: true,
       maxCards: 3,
       cardFeatures: Object.freeze({
@@ -107,8 +101,6 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardStyle: 'card2',
       titleTone: 'super-grey',
       bodyTone: 'super-grey',
-      showTitleDivider: true,
-      dividerTone: 'auto',
       cardPaddingRem: 1.75,
       cardTitleSizeRem: 1.22,
       cardBodySizeRem: 1.08,
@@ -116,7 +108,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
     }),
     editor: Object.freeze({
       introFields: true,
-      layoutFieldIds: Object.freeze(['showTitleDivider']),
+      layoutFieldIds: Object.freeze([]),
       typographyFields: true,
       maxCards: 3,
       cardFeatures: Object.freeze({

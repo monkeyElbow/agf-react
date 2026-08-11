@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
 import ColorPalette from './ColorPalette';
+import {
+  HudEditorBlockOptionsPage,
+  HudEditorModelLayout,
+  appendHudBlockOptionsSection,
+} from './HudEditorShell';
 import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from './HeroHudEditorShared';
 import {
   BUTTON_TONE_OPTIONS,
@@ -10,6 +15,7 @@ import {
 import { parseHeroRangeHighlights, resolveSelectionRangeColor } from '../lib/heroHudRanges';
 import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import { CTA_FORM_DYNAMIC_FIELD_TYPE_OPTIONS, CTA_FORM_MAX_FIELDS } from '../blocks/foundation/forms';
+import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
 
 const CTA_HUD_SUBMIT_STYLE_OPTIONS = [
   { value: 'blue', label: 'Blue' },
@@ -19,6 +25,11 @@ const CTA_HUD_SUBMIT_STYLE_OPTIONS = [
 const CTA_FIELD_TYPE_LABELS = new Map(
   CTA_FORM_DYNAMIC_FIELD_TYPE_OPTIONS.map((option) => [option.value, option.label]),
 );
+const CTA_EDITOR_SECTIONS = Object.freeze([
+  { id: 'heading', label: 'Heading', icon: 'Aa' },
+  { id: 'message', label: 'Message + Submit', icon: '↗' },
+  { id: 'fields', label: 'Form Fields', icon: '☷' },
+]);
 
 export { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 
@@ -47,6 +58,7 @@ function normalizeCtaHudBgTone(value) {
 }
 
 export default function CtaHudEditorPanel({
+  sourceRevision = 0,
   settings = {},
   fields = [],
   includeContactPreference = false,
@@ -54,10 +66,12 @@ export default function CtaHudEditorPanel({
   submitStyle = 'blue',
   submitTone = 'atlantean',
   bodyHtml = '',
+  bodyColorClassName = '',
   titleColor = '',
   titleSelection = { text: '' },
   setTitleInputRef,
   onBodyHtmlChange,
+  onBodyColorChange,
   onTitleChange,
   onTitleSelectionCapture,
   onFieldsChange,
@@ -70,6 +84,7 @@ export default function CtaHudEditorPanel({
   onTitleColorChange,
   onRemoveTitleSpan,
   onClearTitleSpans,
+  blockOptions = null,
 }) {
   const titleText = String(settings.title || '');
   const titleHighlights = parseHeroRangeHighlights(settings.titleHighlightsJson, titleText);
@@ -93,8 +108,22 @@ export default function CtaHudEditorPanel({
     ? resolveSelectionRangeColor(titleHighlights, titleSelectionStart, titleSelectionEnd)
     : String(titleColor || autoTitleColorValue);
   const fieldList = useMemo(() => (Array.isArray(fields) ? fields : []).filter(Boolean), [fields]);
+  const submitLabelDraftFields = useMemo(() => ([
+    {
+      id: 'submitLabel',
+      value: settings.submitLabel,
+      commit: onSubmitLabelChange,
+    },
+  ]), [onSubmitLabelChange, settings.submitLabel]);
+  const {
+    draftValues: submitLabelDraftValues,
+    updateDraftValue: updateSubmitLabelDraft,
+    commitDraftValue: commitSubmitLabelDraft,
+  } = useBufferedFieldDrafts({ fields: submitLabelDraftFields, sourceRevision });
   const [activeFieldIndex, setActiveFieldIndex] = useState(fieldList.length ? 0 : -1);
   const [isFieldEditorOpen, setIsFieldEditorOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('heading');
+  const editorSections = appendHudBlockOptionsSection(CTA_EDITOR_SECTIONS, blockOptions);
   const activeField = fieldList[activeFieldIndex] || null;
   const canAddField = fieldList.length < CTA_FORM_MAX_FIELDS;
 
@@ -196,7 +225,14 @@ export default function CtaHudEditorPanel({
   };
 
   return (
-    <div className="admin-cta-hud-editor">
+    <HudEditorModelLayout
+      className="admin-cta-hud-editor admin-cta-hud-editor--reference"
+      sections={editorSections}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      label="CTA editor sections"
+      panelClassName="admin-cta-hud-editor-panels"
+    >
       <section className="admin-front-hud-card admin-cta-hud-card admin-cta-hud-card--heading">
         <div className="admin-cta-hud-editor-box admin-cta-hud-editor-box--heading">
           <div className="admin-front-hud-field-group">
@@ -301,7 +337,7 @@ export default function CtaHudEditorPanel({
         </div>
       </section>
 
-      <section className="admin-front-hud-card">
+      <section className="admin-front-hud-card admin-cta-hud-card--message">
         <div className="admin-front-hud-card-head">
           <h4>Message + Submit</h4>
         </div>
@@ -312,8 +348,11 @@ export default function CtaHudEditorPanel({
               <AdminHtmlEditor
                 compact
                 showFooterToggle={false}
+                paletteVariant="hud"
                 value={String(bodyHtml || '')}
                 onChange={(nextValue) => onBodyHtmlChange?.(nextValue)}
+                baseColorClassName={bodyColorClassName}
+                onBaseColorChange={onBodyColorChange}
                 placeholder="Optional lead copy above the form"
               />
             </div>
@@ -323,8 +362,9 @@ export default function CtaHudEditorPanel({
               <span>Submit Label</span>
               <input
                 type="text"
-                value={String(settings.submitLabel || '')}
-                onChange={(event) => onSubmitLabelChange?.(event.target.value)}
+                value={submitLabelDraftValues.submitLabel ?? String(settings.submitLabel || '')}
+                onChange={(event) => updateSubmitLabelDraft('submitLabel', event.target.value)}
+                onBlur={() => commitSubmitLabelDraft('submitLabel')}
               />
             </label>
             <div className="admin-front-hud-row admin-cta-hud-submit-row">
@@ -366,7 +406,7 @@ export default function CtaHudEditorPanel({
               <span>Button Preview</span>
               <div className="admin-billboard-hud-button-preview-row">
                 <span className={toPreviewButtonClassName(submitStyle, submitTone)} aria-hidden="true">
-                  {String(settings.submitLabel || '').trim() || 'Follow up with me'}
+                  {String((submitLabelDraftValues.submitLabel ?? settings.submitLabel) || '').trim() || 'Follow up with me'}
                 </span>
               </div>
             </div>
@@ -518,7 +558,7 @@ export default function CtaHudEditorPanel({
           ) : null}
         </div>
       </section>
-
-    </div>
+      <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+    </HudEditorModelLayout>
   );
 }

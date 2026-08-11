@@ -3,6 +3,7 @@ import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import FrontHudPageWorkflow from './FrontHudPageWorkflow';
+import FrontHudStructureControls from './FrontHudStructureControls';
 import MobileFrontHudActionTray from './MobileFrontHudActionTray';
 import {
   createInitialFormValues,
@@ -927,6 +928,7 @@ function buildNativeIntroConfig(block, { includeTestClassName = false } = {}) {
     headingClassName: runtime.headingClassName || '',
     headingHighlights: Array.isArray(runtime.headingHighlights) ? runtime.headingHighlights : [],
     bodyHtml: normalizeHtmlContent(runtime.bodyHtml),
+    bodyColorClassName: runtime.bodyColorClassName || '',
     body: runtime.body ? [runtime.body] : [],
     emphasis: runtime.extraLine || null,
     emphasisClassName: runtime.extraLine ? (runtime.extraLineClassName || '') : '',
@@ -1002,6 +1004,7 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
     subtitleClassName: runtime.subtitleClassName || undefined,
     subtitleStyle: runtime.subtitleStyle || undefined,
     html: normalizeHtmlContent(runtime.bodyHtml),
+    htmlClassName: runtime.bodyColorClassName || '',
     body: runtime.body ? [runtime.body] : [],
     fineprint: runtime.fineprint || undefined,
     fineprintDisclosureId: runtime.fineprintDisclosureId || undefined,
@@ -1082,6 +1085,7 @@ function buildDynamicPageContentSection(block, pathname) {
     copyWrap: Boolean(copyWrap),
     justify,
     html,
+    htmlClassName: runtime.bodyColorClassName || '',
     widget: widget || undefined,
     logoImage: logoImage || undefined,
     logoAlt: logoAlt || undefined,
@@ -1133,8 +1137,6 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardStyle,
     titleTone,
     bodyTone,
-    dividerTone,
-    showTitleDivider,
     cardPaddingRem,
     cardTitleSizeRem,
     cardBodySizeRem,
@@ -1185,7 +1187,6 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       iconTone: card.iconTone || '',
       cardClass: card.cardClass,
       panelTone: card.panelTone,
-      dividerTone: card.dividerTone,
       actions: (Array.isArray(card.actions) ? card.actions : (card.action ? [card.action] : []))
         .map((action) => toNativeActionItem(action))
         .filter(Boolean),
@@ -1222,7 +1223,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
     },
-    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} is-divider-tone-${dividerTone} ${presetRuntimeClassName}${cardStyle === 'none' ? ' is-card-none' : ''}${showTitleDivider && !isLegacyAssetGrid ? ' is-divider-on' : ' is-divider-off'}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} ${presetRuntimeClassName}${cardStyle === 'none' ? ' is-card-none' : ''}`,
   };
 }
 
@@ -4482,9 +4483,14 @@ export default function NativeContentPage({ page }) {
   const { getChartValue } = useCharts();
   const { getDisclosureValue } = useDisclosures();
   const { rates, iraRates, ratesMeta } = useRates();
-  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const {
+    enabled: frontHudEnabled,
+    opacity: frontHudOpacity,
+    setEnabled: setFrontHudEnabled = null,
+  } = useFrontHud();
   const {
     blocksByPath,
+    publishedBlocksByPath,
     authoringBlocksByPath,
     resolveManagedPathFromRef,
     resolveAuthoringManagedPathFromRef = null,
@@ -4494,6 +4500,7 @@ export default function NativeContentPage({ page }) {
     moveBlock = () => {},
     removeBlock = () => {},
     pageHierarchy,
+    publishedPageHierarchy,
     authoringPageHierarchy,
     getBlockCollaboration = () => null,
     devIdentity = null,
@@ -4502,6 +4509,11 @@ export default function NativeContentPage({ page }) {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
+  const clearActiveBlockLockRef = useRef(clearActiveBlockLock);
+
+  useEffect(() => {
+    clearActiveBlockLockRef.current = clearActiveBlockLock;
+  }, [clearActiveBlockLock]);
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
@@ -4514,6 +4526,8 @@ export default function NativeContentPage({ page }) {
     blocksByPath,
     authoringPageHierarchy,
     pageHierarchy,
+    publishedBlocksByPath,
+    publishedPageHierarchy,
   });
   const managedResolveManagedPathFromRef = frontHudEnabled && hasAuthoringBlocksForPath
     ? (resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef)
@@ -4547,6 +4561,20 @@ export default function NativeContentPage({ page }) {
     registerExternalDraftFlushHandler,
     registerExternalDraftStatusHandler,
   });
+  const [livePreviewBlockId, setLivePreviewBlockId] = useState('');
+  const publishedPreviewBlocks = editableBlockPath
+    ? (publishedBlocksByPath?.[editableBlockPath] || [])
+    : [];
+  const publishedPreviewBlock = livePreviewBlockId
+    ? publishedPreviewBlocks.find((block) => String(block?.id || '').trim() === livePreviewBlockId)
+    : null;
+  const renderedPageBlocks = !frontHudEnabled
+    ? editablePageBlocksSource
+    : publishedPreviewBlock
+      ? editablePageBlocks.map((block) => (
+        String(block?.id || '').trim() === livePreviewBlockId ? publishedPreviewBlock : block
+      ))
+      : editablePageBlocks;
   const heroLineInputRefs = useRef({ line1: null, line2: null, line3: null });
   const heroHudSectionRef = useRef(null);
   const introHudSectionRef = useRef(null);
@@ -4566,7 +4594,7 @@ export default function NativeContentPage({ page }) {
 
   const content = useMemo(() => {
     let nextBaseContent = baseContent;
-    const pageBlocks = editablePageBlocks;
+    const pageBlocks = renderedPageBlocks;
     const fullyHiddenBlockIds = collectFullyHiddenBlockIds(pageBlocks);
     const visibleBlocks = pageBlocks.filter((block) => !toBoolean(block?.hidden));
     const heroBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'hero');
@@ -4738,7 +4766,7 @@ export default function NativeContentPage({ page }) {
       hideIntro: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has('intro')),
       sections: nextSections,
     };
-  }, [baseContent, editablePageBlocks, activePath, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, templatePath, testimonialsLibrary]);
+  }, [baseContent, renderedPageBlocks, activePath, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, templatePath, testimonialsLibrary]);
   const contentWithManagedDisclosures = useMemo(() => ({
     ...content,
     preIntroSections: Array.isArray(content.preIntroSections)
@@ -5165,12 +5193,17 @@ export default function NativeContentPage({ page }) {
     panels: hudDockPanels,
     storageKey: `native:v2:${resolvedPagePath || 'page'}`,
   });
-  const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanelId);
   const activeHudPanel = useMemo(
     () => orderedHudDockPanels.find((panel) => panel.id === activeHudPanelId) || null,
     [orderedHudDockPanels, activeHudPanelId],
   );
+  const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanel);
   const activeHudBlockId = hasOpenHudPanel ? String(activeHudPanel?.blockId || activeHudPanel?.block?.id || '').trim() : '';
+  useEffect(() => {
+    if (livePreviewBlockId && livePreviewBlockId !== activeHudBlockId) {
+      setLivePreviewBlockId('');
+    }
+  }, [activeHudBlockId, livePreviewBlockId]);
   const mobileSelectedHudPanel = isMobileFrontHud && activeHudPanelId
     ? (hudPanelById[activeHudPanelId] || null)
     : null;
@@ -5310,13 +5343,25 @@ export default function NativeContentPage({ page }) {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setLivePreviewBlockId('');
+    setFrontHudEnabled?.(false);
+  };
+
+  const closeHudBlockEditor = () => {
+    setHudDockCollapsed(true);
+    setActiveHudPanelId('');
+    setLivePreviewBlockId('');
+    setMobileHudMoreOpen(false);
+    setMobileHudDeleteConfirmBlockId('');
   };
 
   const closeMobileHudPanel = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setLivePreviewBlockId('');
     setMobileHudMoreOpen(false);
     setMobileHudDeleteConfirmBlockId('');
+    setFrontHudEnabled?.(false);
   };
 
   const clearMobileHudSelection = () => {
@@ -5329,9 +5374,9 @@ export default function NativeContentPage({ page }) {
   useEffect(() => () => {
     const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
     if (editableBlockPath && activeHudBlockId) {
-      clearActiveBlockLock(editableBlockPath, activeHudBlockId);
+      clearActiveBlockLockRef.current(editableBlockPath, activeHudBlockId);
     }
-  }, [activeHudPanel?.block?.id, clearActiveBlockLock, editableBlockPath]);
+  }, [activeHudPanel?.block?.id, editableBlockPath]);
 
   const selectMobileHudPanel = (panelId, options = {}) => {
     if (!isMobileFrontHud || !panelId) {
@@ -5407,14 +5452,13 @@ export default function NativeContentPage({ page }) {
       setActiveHudPanelId('');
       return;
     }
-    if (!activeHudPanelId || !hudDockPanels.some((panel) => panel.id === activeHudPanelId)) {
-      if (isMobileFrontHud) {
-        setActiveHudPanelId('');
-        return;
-      }
-      setActiveHudPanelId(hudDockPanels[0].id);
+    if (hudDockCollapsed) {
+      return;
     }
-  }, [showFrontHud, hudDockPanels, activeHudPanelId, isMobileFrontHud]);
+    if (activeHudPanelId && !hudDockPanels.some((panel) => panel.id === activeHudPanelId)) {
+      setActiveHudPanelId('');
+    }
+  }, [showFrontHud, hudDockPanels, activeHudPanelId, hudDockCollapsed, isMobileFrontHud]);
 
   useEffect(() => {
     if (!isMobileFrontHud || !mobileSelectedHudBlockId || hasOpenHudPanel) {
@@ -5702,7 +5746,7 @@ export default function NativeContentPage({ page }) {
         className={`ag-page-shell service-native-page native-info-page${compactClass}${pageClass}${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
         onClickCapture={isMobileFrontHud ? handleMobilePageHudClickCapture : undefined}
       >
-      {showFrontHud && hudDockPanels.length && !isMobileFrontHud ? (
+      {showFrontHud && !isMobileFrontHud ? (
         <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
           <div className={`admin-front-hud-dock-tabs${isDockDragging ? ' is-drag-active' : ''}`}>
             {orderedHudDockPanels.map((panel) => (
@@ -5738,7 +5782,7 @@ export default function NativeContentPage({ page }) {
                 aria-label="Hide panels"
                 title="Hide panels"
               >
-                ×
+                <span className="admin-front-hud-close-glyph" aria-hidden="true">×</span>
               </button>
             ) : null}
           </div>
@@ -5801,6 +5845,9 @@ export default function NativeContentPage({ page }) {
               isActive={isHudPanelVisible(heroHudPanelId)}
               onClick={() => toggleHudPanel(heroHudPanelId, { scrollToTarget: true })}
               style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+              structureControls={(
+                <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicHeroBlock?.id || 'hero'} placement="anchor" />
+              )}
             />
           ) : null}
         </section>
@@ -5949,6 +5996,9 @@ export default function NativeContentPage({ page }) {
               layerClassName="is-intro"
               anchorClassName="is-intro"
               style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+              structureControls={(
+                <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicIntroBlock?.id || 'intro'} placement="anchor" />
+              )}
             />
           ) : null}
         </section>
@@ -5989,14 +6039,6 @@ export default function NativeContentPage({ page }) {
           ? filteredCards.filter((card) => card.title === activeMessageCard)
           : filteredCards;
         const sectionClassName = String(section.className || '');
-        const productParadeCardStyle = sectionClassName.includes('legacy-giving-types')
-            ? {
-              paddingTop: '1rem',
-              paddingRight: '3rem',
-              paddingBottom: '4rem',
-              paddingLeft: '3rem',
-            }
-          : undefined;
         const cardsPresetToken = String(section.cardsPreset || '').trim().toLowerCase();
         const formVariant = String(section?.form?.variant || '').trim().toLowerCase();
         const SectionTitleTag = section.headingLevel === 'h1' ? 'h1' : 'h2';
@@ -6172,6 +6214,9 @@ export default function NativeContentPage({ page }) {
                   onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                   layerClassName="is-hero"
                   style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                  structureControls={(
+                    <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicSectionBlockId} placement="anchor" />
+                  )}
                 />
               ) : null}
             </section>
@@ -6228,7 +6273,7 @@ export default function NativeContentPage({ page }) {
                     {sectionIntroBodyHtml ? (
                       <SafeRichText
                         as="div"
-                        className={`native-info-rich-html${showSectionHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
+                        className={`native-info-rich-html${sectionIntro.bodyColorClassName ? ` ${sectionIntro.bodyColorClassName}` : ''}${showSectionHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
                         html={sectionIntroBodyHtml}
                         onClick={showSectionHud && allowOnPageClickEdit ? (event) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, event) : undefined}
                         onKeyDown={showSectionHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, (keyEvent) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, keyEvent)) : undefined}
@@ -6288,6 +6333,9 @@ export default function NativeContentPage({ page }) {
                   layerClassName="is-intro"
                   anchorClassName="is-intro"
                   style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                  structureControls={(
+                    <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicSectionBlockId} placement="anchor" />
+                  )}
                 />
               ) : null}
             </section>
@@ -6327,6 +6375,9 @@ export default function NativeContentPage({ page }) {
                   isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
                   onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                   style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                  structureControls={(
+                    <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicSectionBlockId} placement="anchor" />
+                  )}
                 />
               ) : null}
             </section>
@@ -6368,6 +6419,9 @@ export default function NativeContentPage({ page }) {
                   isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
                   onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                   style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                  structureControls={(
+                    <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicSectionBlockId} placement="anchor" />
+                  )}
                 />
               ) : null}
             </section>
@@ -6450,6 +6504,9 @@ export default function NativeContentPage({ page }) {
                   isActive={Boolean(dynamicSectionHudPanelId) && isHudPanelVisible(dynamicSectionHudPanelId)}
                   onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                   style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                  structureControls={(
+                    <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicSectionBlockId} placement="anchor" />
+                  )}
                 />
               ) : null}
             </section>
@@ -6579,7 +6636,7 @@ export default function NativeContentPage({ page }) {
                   {sectionHtml ? (
                     <SafeRichText
                       as="div"
-                      className={`native-info-rich-html${(showBillboardSectionHud || showPageContentSectionHud) && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
+                      className={`native-info-rich-html${section.htmlClassName ? ` ${section.htmlClassName}` : ''}${(showBillboardSectionHud || showPageContentSectionHud) && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
                       html={sectionHtml}
                       onClick={(showBillboardSectionHud || showPageContentSectionHud) && allowOnPageClickEdit
                         ? (event) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, event)
@@ -6672,7 +6729,7 @@ export default function NativeContentPage({ page }) {
                   {sectionHtml ? (
                     <SafeRichText
                       as="div"
-                      className={`native-info-rich-html${showPageContentSectionHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
+                      className={`native-info-rich-html${section.htmlClassName ? ` ${section.htmlClassName}` : ''}${showPageContentSectionHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
                       html={sectionHtml}
                       onClick={showPageContentSectionHud && allowOnPageClickEdit ? (event) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, event) : undefined}
                       onKeyDown={showPageContentSectionHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, (nextEvent) => handleSectionBodyEditIntent(dynamicSectionHudPanelId, nextEvent)) : undefined}
@@ -6907,7 +6964,7 @@ export default function NativeContentPage({ page }) {
                   const forceScrollRevealCard = shouldAnimateCard && sectionClassName.includes('legacy-giving-types');
 
                   return (
-                  <article key={card.title} className={`service-native-card ${shouldAnimateCard ? 'fade-up' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.dividerTone ? ` is-divider-tone-${card.dividerTone}` : ''}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}${stretchedLink ? ' has-stretched-link' : ''}`.trim()} style={productParadeCardStyle}>
+                  <article key={card.title} className={`service-native-card ${shouldAnimateCard ? 'fade-up' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}${stretchedLink ? ' has-stretched-link' : ''}`.trim()}>
                     <div className={card.messagePanel && resolvedMessageLayout === 'inline' ? 'consultant-card-details' : undefined}>
                       {card.iconKey ? (
                         <PlannedGivingStepIcon iconKey={card.iconKey} tone={card.iconTone} />
@@ -7153,6 +7210,9 @@ export default function NativeContentPage({ page }) {
                 onClick={() => toggleHudPanel(dynamicSectionHudPanelId, { scrollToTarget: true })}
                 layerClassName={`is-section${showCtaSectionHud || showRequestSectionHud ? ' is-cta' : ''}`}
                 style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+                structureControls={(
+                  <FrontHudStructureControls pathname={hudContentPath} blockId={dynamicSectionBlockId} placement="anchor" />
+                )}
               />
             ) : null}
           </section>
@@ -7171,7 +7231,7 @@ export default function NativeContentPage({ page }) {
             }
             return setActiveBlockLock(editableBlockPath, activeHudPanel.block.id, { force: true });
           }}
-          onClose={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
+          onClose={isMobileFrontHud ? closeMobileHudPanel : closeHudBlockEditor}
           className={isMobileFrontHud ? 'is-mobile-sheet' : ''}
           draggable={!isMobileFrontHud}
           isMobileSheet={isMobileFrontHud}
@@ -7183,6 +7243,11 @@ export default function NativeContentPage({ page }) {
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
             blockLabel={activeHudPanel.label}
+            isBillboardEditor={String(activeHudPanel.block.kind || '').trim() === 'billboard'}
+            isLivePreview={livePreviewBlockId === activeHudBlockId && Boolean(activeHudBlockId)}
+            onToggleLivePreview={(nextValue) => {
+              setLivePreviewBlockId(nextValue ? activeHudBlockId : '');
+            }}
             ownership={getOwnershipVisualForBlockId(activeHudPanel.block.id)}
             onOwnershipAction={() => {
               if (!editableBlockPath || !activeHudPanel?.block?.id) {
@@ -7190,7 +7255,7 @@ export default function NativeContentPage({ page }) {
               }
               return setActiveBlockLock(editableBlockPath, activeHudPanel.block.id, { force: true });
             }}
-            onDoneEditing={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
+            onDoneEditing={isMobileFrontHud ? closeMobileHudPanel : closeHudBlockEditor}
           />
           <Suspense fallback={null}>
             <BlockHudPanelHost
@@ -7204,6 +7269,13 @@ export default function NativeContentPage({ page }) {
                   return { ok: false, reason: 'missing-target' };
                 }
                 return setActiveBlockLock(editableBlockPath, activeHudPanel.block.id, { force: true });
+              }}
+              onBlockDeleted={() => {
+                setHudDockCollapsed(true);
+                setActiveHudPanelId('');
+                setLivePreviewBlockId('');
+                setMobileHudMoreOpen(false);
+                setMobileHudDeleteConfirmBlockId('');
               }}
               showPublishAction={false}
               onSettingChange={(settingKey, nextValue) => handleHudSetting(activeHudPanel.block, settingKey, nextValue)}

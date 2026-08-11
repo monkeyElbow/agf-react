@@ -102,6 +102,7 @@ export default function DynamicCtaSection({
   const titleClassName = String(runtime?.titleClassName || '').trim();
   const titleHighlights = Array.isArray(runtime?.titleHighlights) ? runtime.titleHighlights : [];
   const bodyHtml = String(runtime?.bodyHtml || '').trim();
+  const bodyColorClassName = String(runtime?.bodyColorClassName || '').trim();
   const fineprint = String(runtime?.fineprint || '').trim();
   const subtitle = String(runtime?.subtitle || '').trim();
   const bgTone = String(runtime?.bgTone || 'white').trim().toLowerCase() || 'white';
@@ -179,7 +180,7 @@ export default function DynamicCtaSection({
       </h5>
       {subtitle ? <p className="dynamic-cta-form-subtitle">{subtitle}</p> : null}
       {renderTitleInsideShell && bodyHtml ? (
-        <div className="native-info-rich-html dynamic-cta-form-callout" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+        <div className={`native-info-rich-html dynamic-cta-form-callout${bodyColorClassName ? ` ${bodyColorClassName}` : ''}`} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
       ) : null}
     </div>
   ) : null;
@@ -327,7 +328,7 @@ export default function DynamicCtaSection({
               })}
               {errorMessage ? <p className="dynamic-cta-form-error" role="alert">{errorMessage}</p> : null}
               {!renderTitleInsideShell && bodyHtml ? (
-                <div className="native-info-rich-html dynamic-cta-form-callout" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+                <div className={`native-info-rich-html dynamic-cta-form-callout${bodyColorClassName ? ` ${bodyColorClassName}` : ''}`} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
               ) : null}
               {fineprint ? <p className="dynamic-cta-form-fineprint">{fineprint}</p> : null}
               <button type="submit" className={resolvedSubmitButtonClassName}>{submitLabel}</button>

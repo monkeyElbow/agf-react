@@ -3,6 +3,7 @@ import PageShell from '../components/PageShell';
 import { getSingletonBlockKinds } from '../blocks/registry';
 import { useContentAdmin } from '../context/ContentAdminContext';
 import { pageByPath } from '../data/siteMap';
+import { getBlockHudDefinition } from '../lib/blockHudRegistry';
 
 const SINGLETON_BLOCK_KINDS = new Set(getSingletonBlockKinds());
 
@@ -33,16 +34,6 @@ function normalizeBlockMode(value) {
     return SNAPSHOT_RESIDUE_AUDIT_MODE;
   }
   return 'other';
-}
-
-function toDisplayMode(value) {
-  if (value === 'dynamic') {
-    return 'Dynamic';
-  }
-  if (value === SNAPSHOT_RESIDUE_AUDIT_MODE) {
-    return 'Snapshot residue';
-  }
-  return 'Other';
 }
 
 function toPageTitle(pathname, pageHierarchy) {
@@ -195,8 +186,7 @@ export default function AdminBlocksPage() {
           id: blockId || '(missing)',
           kind: kind || '(missing)',
           mode: normalizedMode,
-          modeLabel: toDisplayMode(normalizedMode),
-          name: String(block?.name || '').trim() || '(unnamed)',
+          name: getBlockHudDefinition(block).label,
           hidden: Boolean(block?.hidden),
           hasIssue: duplicateId || duplicateSingletonKind || issues.length > 0,
           hasConfigIssue: issues.length > 0,
@@ -368,7 +358,6 @@ export default function AdminBlocksPage() {
                     <th>Page</th>
                     <th className="admin-block-audit-col-id">ID</th>
                     <th>Kind</th>
-                    <th>Mode</th>
                     <th>Name</th>
                     <th>Flags</th>
                   </tr>
@@ -386,11 +375,6 @@ export default function AdminBlocksPage() {
                       </td>
                       <td>
                         <code>{row.kind}</code>
-                      </td>
-                      <td>
-                        <span className={`admin-block-audit-mode-pill is-${row.mode}`}>
-                          {row.modeLabel}
-                        </span>
                       </td>
                       <td>{row.name}</td>
                       <td>

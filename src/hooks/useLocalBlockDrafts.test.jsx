@@ -3,10 +3,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import useLocalBlockDrafts from './useLocalBlockDrafts';
 import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
 
+const noopFalse = () => false;
+
 function LocalBlockDraftsProbe({
   blocks,
-  claimBufferedBlockEdit = () => false,
-  commitBlockSettingsPatch = () => false,
+  claimBufferedBlockEdit = noopFalse,
+  commitBlockSettingsPatch = noopFalse,
   registerExternalDraftStatusHandler = null,
 }) {
   const { blocks: managedBlocks, stageLocalBlockSetting } = useLocalBlockDrafts({
@@ -124,6 +126,224 @@ describe('useLocalBlockDrafts', () => {
     expect(statusReader()).toEqual({
       pathname: '/services/loans',
       hasPendingDrafts: true,
+      pendingBlockIds: ['hero'],
     });
+  });
+
+  it('keeps committed local drafts visible when a stale block snapshot arrives later', () => {
+    vi.useFakeTimers();
+    const claimBufferedBlockEdit = vi.fn(() => true);
+    const commitBlockSettingsPatch = vi.fn(() => true);
+    const statusHandlers = new Map();
+    const registerExternalDraftStatusHandler = vi.fn((handlerId, getStatus) => {
+      statusHandlers.set(handlerId, getStatus);
+      return () => {
+        statusHandlers.delete(handlerId);
+      };
+    });
+    const staleBlocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Before',
+        },
+      },
+    ];
+    const committedBlocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Borrow wisely',
+        },
+      },
+    ];
+
+    const { rerender } = render(
+      <LocalBlockDraftsProbe
+        blocks={staleBlocks}
+        claimBufferedBlockEdit={claimBufferedBlockEdit}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+        registerExternalDraftStatusHandler={registerExternalDraftStatusHandler}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Hero text'), { target: { value: 'Borrow wisely' } });
+
+    act(() => {
+      vi.advanceTimersByTime(LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
+    });
+
+    expect(commitBlockSettingsPatch).toHaveBeenCalledWith('/services/loans', 'hero', {
+      line1Text: 'Borrow wisely',
+    });
+
+    rerender(
+      <LocalBlockDraftsProbe
+        blocks={committedBlocks}
+        claimBufferedBlockEdit={claimBufferedBlockEdit}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+        registerExternalDraftStatusHandler={registerExternalDraftStatusHandler}
+      />,
+    );
+
+    expect(screen.getByLabelText('Hero text').value).toBe('Borrow wisely');
+    const [statusReader] = [...statusHandlers.values()];
+    expect(statusReader()).toEqual({
+      pathname: '/services/loans',
+      hasPendingDrafts: false,
+      pendingBlockIds: [],
+    });
+
+    rerender(
+      <LocalBlockDraftsProbe
+        blocks={staleBlocks}
+        claimBufferedBlockEdit={claimBufferedBlockEdit}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+        registerExternalDraftStatusHandler={registerExternalDraftStatusHandler}
+      />,
+    );
+
+    expect(screen.getByLabelText('Hero text').value).toBe('Borrow wisely');
+    expect(commitBlockSettingsPatch).toHaveBeenCalledTimes(1);
+  });
+
+  it('releases a settled draft when source changes to a different newer value', () => {
+    vi.useFakeTimers();
+    const commitBlockSettingsPatch = vi.fn(() => true);
+    const staleBlocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Before',
+        },
+      },
+    ];
+    const committedBlocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Borrow wisely',
+        },
+      },
+    ];
+    const externalBlocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'External update',
+        },
+      },
+    ];
+
+    const { rerender } = render(
+      <LocalBlockDraftsProbe
+        blocks={staleBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Hero text'), { target: { value: 'Borrow wisely' } });
+    act(() => {
+      vi.advanceTimersByTime(LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
+    });
+
+    rerender(
+      <LocalBlockDraftsProbe
+        blocks={committedBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+    rerender(
+      <LocalBlockDraftsProbe
+        blocks={externalBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    expect(screen.getByLabelText('Hero text').value).toBe('External update');
+  });
+
+  it('keeps the caret stable when stale snapshots arrive after multiple local edits', () => {
+    vi.useFakeTimers();
+    const commitBlockSettingsPatch = vi.fn(() => true);
+    const initialBlocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Before',
+        },
+      },
+    ];
+    const firstCommitBlocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Borrow wisely',
+        },
+      },
+    ];
+    const secondCommitBlocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Borrow very wisely',
+        },
+      },
+    ];
+
+    const { rerender } = render(
+      <LocalBlockDraftsProbe
+        blocks={initialBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    const input = screen.getByLabelText('Hero text');
+    fireEvent.change(input, { target: { value: 'Borrow wisely' } });
+    act(() => {
+      vi.advanceTimersByTime(LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
+    });
+
+    rerender(
+      <LocalBlockDraftsProbe
+        blocks={firstCommitBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Hero text'), { target: { value: 'Borrow very wisely' } });
+    act(() => {
+      vi.advanceTimersByTime(LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
+    });
+
+    rerender(
+      <LocalBlockDraftsProbe
+        blocks={secondCommitBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    const editedInput = screen.getByLabelText('Hero text');
+    editedInput.focus();
+    editedInput.setSelectionRange(11, 11);
+
+    rerender(
+      <LocalBlockDraftsProbe
+        blocks={firstCommitBlocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    expect(screen.getByLabelText('Hero text').value).toBe('Borrow very wisely');
+    expect(screen.getByLabelText('Hero text').selectionStart).toBe(11);
+    expect(screen.getByLabelText('Hero text').selectionEnd).toBe(11);
   });
 });

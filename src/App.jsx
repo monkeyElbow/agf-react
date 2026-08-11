@@ -44,6 +44,25 @@ function ExternalRedirect({ to }) {
   return <div className="route-page-loading" />;
 }
 
+function sortManagedPages(pages) {
+  return [...pages].sort((a, b) => String(a.path || '').localeCompare(String(b.path || '')));
+}
+
+function mergeManagedPages(cachedPages, currentPages) {
+  const byPath = new Map();
+  (Array.isArray(cachedPages) ? cachedPages : []).forEach((page) => {
+    if (page?.path) {
+      byPath.set(page.path, page);
+    }
+  });
+  (Array.isArray(currentPages) ? currentPages : []).forEach((page) => {
+    if (page?.path) {
+      byPath.set(page.path, page);
+    }
+  });
+  return sortManagedPages(Array.from(byPath.values()));
+}
+
 function PageRoute({ page }) {
   const routeKey = String(page.routeKey || page.path || '').trim();
   const showAnnouncement = true;
@@ -225,8 +244,10 @@ function PageRoute({ page }) {
 export default function App() {
   const location = useLocation();
   const isInitialNavigationRef = useRef(true);
-  const { pageHierarchy, resolveManagedPath } = useContentAdmin();
+  const managedPagesCacheRef = useRef([]);
+  const { pageHierarchy, resolveManagedPath, sharedSyncStatus } = useContentAdmin();
   const { resolveRedirect } = useRedirects();
+  const sharedSyncPending = Boolean(sharedSyncStatus?.isPending || sharedSyncStatus?.hasQueuedDraftSync);
   const adminPages = useMemo(
     () => sitePages
       .filter((page) => page.path.startsWith('/admin/'))
@@ -237,12 +258,27 @@ export default function App() {
       })),
     [],
   );
-  const managedPages = useMemo(
+  const managedPagesFromState = useMemo(
     () => Object.values(pageHierarchy || {})
       .filter((page) => page && page.path)
       .sort((a, b) => a.path.localeCompare(b.path)),
     [pageHierarchy],
   );
+  const managedPages = useMemo(() => {
+    if (!sharedSyncPending) {
+      return managedPagesFromState;
+    }
+    return mergeManagedPages(managedPagesCacheRef.current, managedPagesFromState);
+  }, [managedPagesFromState, sharedSyncPending]);
+
+  useEffect(() => {
+    if (sharedSyncPending && !managedPagesFromState.length) {
+      return;
+    }
+    managedPagesCacheRef.current = sharedSyncPending
+      ? mergeManagedPages(managedPagesCacheRef.current, managedPagesFromState)
+      : managedPagesFromState;
+  }, [managedPagesFromState, sharedSyncPending]);
   const managedPageByPath = useMemo(
     () => Object.fromEntries(managedPages.map((page) => [page.path, page])),
     [managedPages],

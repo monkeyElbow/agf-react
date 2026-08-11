@@ -148,7 +148,7 @@ describe('canonical block registry', () => {
     const featurePanelBlock = (contentBlockBlueprintsByPath['/services/investments'] || []).find((block) => block?.kind === 'feature_panel' && block?.mode === 'dynamic');
     const splitPanelBlock = (contentBlockBlueprintsByPath['/services/retirement'] || []).find((block) => block?.kind === 'split_panel' && block?.mode === 'dynamic');
     const cardGridBlock = testBlocks.find((block) => block?.kind === 'card_grid' && block?.mode === 'dynamic');
-    const newsletterBlock = testBlocks.find((block) => block?.kind === 'newsletter' && block?.mode === 'dynamic');
+    const newsletterBlock = allBlocks.find((block) => block?.kind === 'newsletter' && block?.mode === 'dynamic');
     const ratesBlock = (contentBlockBlueprintsByPath['/rates'] || []).find((block) => block?.kind === 'rates' && block?.mode === 'dynamic');
     const servicesGridBlock = (contentBlockBlueprintsByPath['/'] || []).find((block) => block?.kind === 'services_grid' && block?.mode === 'dynamic');
     const siteFeatureBlock = genericBlocks.find((block) => block?.kind === 'site_feature' && block?.mode === 'dynamic');

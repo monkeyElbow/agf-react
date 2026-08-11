@@ -17,7 +17,24 @@ System Checks are the repeatable safety gate for the block-first site. They are 
 - `npm run test:system-guardrails`: runs focused guardrails for source convergence, snapshot schema, route classification, readiness inventory, block-only shells, state normalization, admin operator smoke/recovery, style ownership, insert choices, link-model convergence, editor/runtime parity, and block registry contracts.
 - `npm run check:system`: runs lint, all system scans, focused guardrails, the full test suite, and the production build.
 
+## Editor CSS boundary
+
+Public visitor styles stay in `src/styles.css` and the public feature sheets. Admin shell rules being migrated live in `src/styles/admin.css`. Front HUD rules live in `src/styles/front-hud.css`; page roots carry `.admin-front-hud-scope` as the browser-compatible selector-prefix migration boundary. Visitor mode does not add that class.
+
+`src/styles/editorCssIsolation.guardrail.test.js` protects the import boundary, the first extracted admin rules, and HUD root coverage. Add new editor-only rules to a scoped editor sheet instead of adding generic selectors to the public stylesheet.
+
 `npm run scan:system` is the scan-only gate: it does not run Vitest, Node tests, lint, or the production build. `npm test` runs the full automated test suite, including the Node rates-import tests. `npm run check:system` is the combined release gate because it runs lint, scans, focused guardrails, `npm test`, and the production build; a passing scan alone is not a passing test or release result.
+
+## Durable Content-Admin Policy
+
+Every guardrail must name the durable rule it protects and the legitimate admin action it still allows. Guardrails are not successful if they merely block the operator; they must preserve safe editing and publishing.
+
+- **One running authority:** protect the rule that only one Vite content-admin server owns shared content state, or clearly detect and report multiple running authorities. Admins must still be able to edit, save, and publish normally when one authority is running; restarting Vite may recover stale state but must not be required for ordinary edits.
+- **Save truth:** protect the rule that a partial, rejected, timed-out, or otherwise blocked save never reports success. Admins must still retain their local changes and receive a visible failure state that can be retried.
+- **Publish sequencing:** protect the rule that publishing always flushes local edits, saves the draft, reads back the saved block, publishes that exact revision, and verifies the resulting `baseSnapshot`. Admins must still be able to publish the intended latest edit from either the block editor or the page-wide admin controls.
+- **Publish receipt:** protect the rule that every publish produces a receipt containing route, block ID when applicable, draft revision, published revision, actor, timestamp, and verification result. Admins must still receive a clear confirmation or failure reason tied to the action they took.
+- **No restart dependency:** protect the rule that content operations remain correct across ordinary edits without a Vite restart. Admins must still be able to continue editing after saves, publishes, failed requests, and shared-state polling recoveries.
+- **Browser proof:** protect the rule that an implementation is incomplete until the exact new title/body appears on the rendered route after publishing. Admins must still be able to verify the result on the public-facing route, not only in an editor or API response.
 
 ## Release Gate
 

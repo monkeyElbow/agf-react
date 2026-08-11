@@ -43,7 +43,47 @@ export function getBlockOwnershipVisual(meta, currentUserId, now = Date.now()) {
   const savedBy = meta?.savedBy || null;
   const lockedByOther = lockedBy?.userId && lockedBy.userId !== normalizedCurrentUserId;
   const draftedByOther = draftedBy?.userId && draftedBy.userId !== normalizedCurrentUserId;
-  const savedByOther = savedBy?.userId && savedBy.userId !== normalizedCurrentUserId;
+  const savedByOther = !meta?.isPublishedEquivalent && savedBy?.userId && savedBy.userId !== normalizedCurrentUserId;
+  const draftedBySelf = draftedBy?.userId === normalizedCurrentUserId;
+  const savedBySelf = savedBy?.userId === normalizedCurrentUserId;
+
+  const buildDraftOverlay = () => {
+    if (!draftedBy) {
+      return {
+        overlayLabel: '',
+        overlayDetail: '',
+        overlayActor: null,
+        overlaySecondaryLabel: '',
+        overlaySecondaryDetail: '',
+        overlaySecondaryActor: null,
+      };
+    }
+
+    const draftDetail = draftedBy?.displayName && meta?.draftedAt
+      ? `Draft saved ${formatRelativeOwnershipTime(meta.draftedAt, now)}`
+      : '';
+    if (!savedBy) {
+      return {
+        overlayLabel: `Unpublished draft by ${toActorDisplayName(draftedBy)}`,
+        overlayDetail: draftDetail,
+        overlayActor: draftedBy,
+        overlaySecondaryLabel: '',
+        overlaySecondaryDetail: '',
+        overlaySecondaryActor: null,
+      };
+    }
+
+    return {
+      overlayLabel: `Last saved by ${toActorDisplayName(savedBy)}`,
+      overlayDetail: savedBy?.displayName && meta?.savedAt
+        ? `Saved ${formatRelativeOwnershipTime(meta.savedAt, now)}`
+        : '',
+      overlayActor: savedBy,
+      overlaySecondaryLabel: `Draft saved by ${toActorDisplayName(draftedBy)}`,
+      overlaySecondaryDetail: draftDetail,
+      overlaySecondaryActor: draftedBy,
+    };
+  };
 
   if (lockedByOther) {
     return {
@@ -53,6 +93,8 @@ export function getBlockOwnershipVisual(meta, currentUserId, now = Date.now()) {
       overlayDetail: savedBy?.displayName && meta?.savedAt
         ? `Saved ${formatRelativeOwnershipTime(meta.savedAt, now)}`
         : '',
+      overlayActor: lockedBy,
+      overlaySecondaryActor: null,
       isOwnedByOther: true,
       owner: lockedBy,
     };
@@ -70,19 +112,17 @@ export function getBlockOwnershipVisual(meta, currentUserId, now = Date.now()) {
   }
 
   if (draftedByOther) {
+    const draftOverlay = buildDraftOverlay();
     return {
       state: 'drafted-other',
       className: ' is-admin-owned-other is-admin-owned-drafted-other',
-      overlayLabel: `Unpublished draft by ${toActorDisplayName(draftedBy)}`,
-      overlayDetail: draftedBy?.displayName && meta?.draftedAt
-        ? `Draft saved ${formatRelativeOwnershipTime(meta.draftedAt, now)}`
-        : '',
+      ...draftOverlay,
       isOwnedByOther: true,
       owner: draftedBy,
     };
   }
 
-  if (savedByOther) {
+  if (savedByOther && !draftedBySelf) {
     return {
       state: 'saved-other',
       className: ' is-admin-owned-other is-admin-owned-saved-other',
@@ -90,6 +130,8 @@ export function getBlockOwnershipVisual(meta, currentUserId, now = Date.now()) {
       overlayDetail: savedBy?.displayName && meta?.savedAt
         ? `Saved ${formatRelativeOwnershipTime(meta.savedAt, now)}`
         : '',
+      overlayActor: savedBy,
+      overlaySecondaryActor: null,
       isOwnedByOther: true,
       owner: savedBy,
     };
@@ -98,19 +140,34 @@ export function getBlockOwnershipVisual(meta, currentUserId, now = Date.now()) {
   const ownedBySelf = Boolean(
     normalizedCurrentUserId
     && (
-      draftedBy?.userId === normalizedCurrentUserId
-      || savedBy?.userId === normalizedCurrentUserId
+      draftedBySelf
+      || savedBySelf
     )
   );
 
   if (ownedBySelf) {
+    const ownDraftIsLive = Boolean(meta?.isPublishedEquivalent);
+    const ownStatusActor = draftedBySelf ? draftedBy : savedBy;
+    const ownStatusLabel = ownDraftIsLive
+      ? `Published by ${toActorDisplayName(ownStatusActor)}`
+      : draftedBySelf
+        ? buildDraftOverlay().overlayLabel
+        : '';
+    const ownStatusDetail = ownStatusActor?.displayName && meta?.savedAt
+      ? `${ownDraftIsLive ? 'Published' : 'Draft saved'} ${formatRelativeOwnershipTime(meta.savedAt, now)}`
+      : '';
+    const draftOverlay = ownDraftIsLive ? null : buildDraftOverlay();
     return {
       state: 'owned-self',
       className: ' is-admin-owned-self',
-      overlayLabel: '',
-      overlayDetail: '',
+      overlayLabel: ownStatusLabel,
+      overlayDetail: ownDraftIsLive ? ownStatusDetail : (draftOverlay?.overlayDetail || ownStatusDetail),
+      overlayActor: ownDraftIsLive ? ownStatusActor : (draftOverlay?.overlayActor || ownStatusActor),
+      overlaySecondaryLabel: draftOverlay?.overlaySecondaryLabel || '',
+      overlaySecondaryDetail: draftOverlay?.overlaySecondaryDetail || '',
+      overlaySecondaryActor: draftOverlay?.overlaySecondaryActor || null,
       isOwnedByOther: false,
-      owner: draftedBy?.userId === normalizedCurrentUserId ? draftedBy : savedBy,
+      owner: ownStatusActor,
     };
   }
 
@@ -119,6 +176,10 @@ export function getBlockOwnershipVisual(meta, currentUserId, now = Date.now()) {
     className: '',
     overlayLabel: '',
     overlayDetail: '',
+    overlayActor: null,
+    overlaySecondaryLabel: '',
+    overlaySecondaryDetail: '',
+    overlaySecondaryActor: null,
     isOwnedByOther: false,
     owner: null,
   };
@@ -132,8 +193,22 @@ export default function BlockOwnershipOverlay({ ownership }) {
   return (
     <div className={`admin-block-ownership-overlay is-${ownership.state || 'none'}`} aria-hidden="true">
       <div className="admin-block-ownership-overlay-card">
-        <strong>{ownership.overlayLabel}</strong>
-        {ownership.overlayDetail ? <span>{ownership.overlayDetail}</span> : null}
+        <div
+          className="admin-block-ownership-overlay-item"
+          style={{ '--admin-block-ownership-accent': ownership.overlayActor?.accentColor || '' }}
+        >
+          <strong>{ownership.overlayLabel}</strong>
+          {ownership.overlayDetail ? <span>{ownership.overlayDetail}</span> : null}
+        </div>
+        {ownership.overlaySecondaryLabel ? (
+          <div
+            className="admin-block-ownership-overlay-item"
+            style={{ '--admin-block-ownership-accent': ownership.overlaySecondaryActor?.accentColor || '' }}
+          >
+            <strong>{ownership.overlaySecondaryLabel}</strong>
+            {ownership.overlaySecondaryDetail ? <span>{ownership.overlaySecondaryDetail}</span> : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );

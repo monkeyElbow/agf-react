@@ -14,7 +14,7 @@ const SPLIT_PANEL_TONE_OPTIONS = [
   { value: 'atlantean', label: 'Blue', swatch: getTokenSwatch('atlantean') },
   { value: 'mango', label: 'Mango', swatch: '#f6b146' },
   { value: 'super-grey', label: 'Super Grey', swatch: '#414042' },
-  { value: 'sandstone', label: 'Sandstone', swatch: '#c4beb6' },
+  { value: 'sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
 ];
 
 function validateSplitPanelActions(block) {

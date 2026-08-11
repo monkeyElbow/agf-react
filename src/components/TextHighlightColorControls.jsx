@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import ColorPalette from './ColorPalette';
 
 export default function TextHighlightColorControls({
@@ -16,6 +17,12 @@ export default function TextHighlightColorControls({
   paletteVariant = 'hud',
   paletteClassName = 'is-field-linked',
   swatchClassName = '',
+  getOptionLabel,
+  onPaletteMouseDown,
+  collapsibleSpans = false,
+  spanDetailsOpen,
+  onSpanDetailsToggle,
+  spanDetailsLabel = 'Show span details',
 }) {
   const safeRanges = Array.isArray(highlightRanges) ? highlightRanges : [];
   const resolvedSwatchClassName = swatchClassName || (paletteVariant === 'hud' ? 'is-compact is-icon-only' : '');
@@ -27,9 +34,19 @@ export default function TextHighlightColorControls({
       options={options}
       value={value}
       preventMouseDown
+      getOptionLabel={getOptionLabel}
+      onOptionMouseDown={onPaletteMouseDown}
       onChange={onChange}
     />
   );
+
+  const [localShowSpanDetails, setLocalShowSpanDetails] = useState(false);
+  const showSpanDetails = typeof spanDetailsOpen === 'boolean' ? spanDetailsOpen : localShowSpanDetails;
+  const toggleSpanDetails = () => {
+    const nextValue = !showSpanDetails;
+    setLocalShowSpanDetails(nextValue);
+    onSpanDetailsToggle?.(nextValue);
+  };
 
   return (
     <>
@@ -53,8 +70,19 @@ export default function TextHighlightColorControls({
       {note && notePlacement !== 'inline' ? (
         <p className="admin-front-hud-note">{note}</p>
       ) : null}
-      {safeRanges.length ? (
+      {collapsibleSpans && safeRanges.length ? (
+        <button
+          type="button"
+          className="admin-front-hud-mini-action"
+          aria-expanded={showSpanDetails}
+          onClick={toggleSpanDetails}
+        >
+          {showSpanDetails ? 'Hide span details' : 'Show span details'}
+        </button>
+      ) : null}
+      {safeRanges.length && (!collapsibleSpans || showSpanDetails) ? (
         <div className="admin-front-hud-hero-span-tools">
+          <span className="admin-front-hud-control-label">{spanDetailsLabel}</span>
           <div className="admin-front-hud-hero-span-chip-list">
             {safeRanges.map((range, rangeIndex) => {
               const chipText = String(sourceText || '').slice(range.start, range.end);

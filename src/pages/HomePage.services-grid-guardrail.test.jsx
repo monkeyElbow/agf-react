@@ -33,9 +33,9 @@ describe('home page services grid guardrail', () => {
     expect(pageSource).toContain("block?.id === 'services_grid'");
     expect(pageSource).toContain("block?.kind === 'services_grid'");
     expect(pageSource).toContain('servicesGridManagedBlock: dynamicServicesGridBlock,');
-    expect(pageSource).toContain('homeServicesFeatureIsActive: Boolean(dynamicHomeServicesFeatureBlock || !managedHomeServicesFeatureBlock),');
-    expect(resolverSource).toContain("id: context.servicesGridManagedBlock?.id || block.id || 'services_grid',");
-    expect(resolverSource).toContain("kind: context.servicesGridManagedBlock?.kind || block.kind || 'services_grid',");
-    expect(resolverSource).toContain("mode: context.servicesGridManagedBlock?.mode || block.mode || 'dynamic',");
+    expect(pageSource).toContain('homeServicesFeatureIsActive: Boolean(dynamicHomeServicesFeatureBlock),');
+    expect(resolverSource).toContain("type: String(block?.kind || block?.type || '').trim(),");
+    expect(resolverSource).toContain(".filter((block) => String(block?.mode || '').trim().toLowerCase() === 'dynamic')");
+    expect(resolverSource).toContain("context.homeServicesFeatureIsActive");
   });
 });

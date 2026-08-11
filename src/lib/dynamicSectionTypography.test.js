@@ -31,6 +31,7 @@ describe('dynamicSectionTypography', () => {
       lineHeight: 1.05,
       fontFamily: 'var(--ag-font-helv)',
       fontWeight: 700,
+      fontSynthesis: 'weight',
       fontSize: 'clamp(calc(3.37rem * 0.58), 8vw, 3.37rem)',
       letterSpacing: '-0.017em',
     });

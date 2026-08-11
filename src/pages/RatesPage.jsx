@@ -45,7 +45,11 @@ export default function RatesPage() {
     authoringBlocksByPath,
     clearActiveBlockLock = () => ({ ok: false }),
   } = useContentAdmin();
-  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const {
+    enabled: frontHudEnabled,
+    opacity: frontHudOpacity,
+    setEnabled: setFrontHudEnabled = null,
+  } = useFrontHud();
   const { blocksByPath: managedBlocksByPath } = selectFrontHudContentSource({
     enabled: frontHudEnabled,
     pathname: '/rates',
@@ -159,6 +163,7 @@ export default function RatesPage() {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setFrontHudEnabled?.(false);
   };
 
   useEffect(() => () => {
@@ -190,7 +195,7 @@ export default function RatesPage() {
   return (
     <div
       ref={pageRef}
-      className={`rates-page${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
+      className={`rates-page${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
     >
       {showFrontHud ? (
         <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
@@ -237,7 +242,6 @@ export default function RatesPage() {
             reviewHref="/admin/rates"
             reviewLabel="Open rates admin"
             placement="dock-inline"
-            showBlockPublishAction={false}
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
             blockLabel={activeHudPanel.label}

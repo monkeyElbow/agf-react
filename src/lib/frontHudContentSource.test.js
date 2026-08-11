@@ -52,4 +52,18 @@ describe('front HUD content source selection', () => {
 
     expect(result.blocksByPath).toBe(publishedBlocks);
   });
+
+  it('uses the explicit published snapshot when HUD closes after a local draft', () => {
+    const publishedBlocks = { '/test': [{ id: 'billboard', settings: { title: 'Published' } }] };
+    const authoringBlocks = { '/test': [{ id: 'billboard', settings: { title: 'Draft' } }] };
+    const result = selectFrontHudContentSource({
+      enabled: false,
+      pathname: '/test',
+      authoringBlocksByPath: authoringBlocks,
+      blocksByPath: authoringBlocks,
+      publishedBlocksByPath: publishedBlocks,
+    });
+
+    expect(result.blocksByPath).toBe(publishedBlocks);
+  });
 });

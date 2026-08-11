@@ -56,4 +56,15 @@ describe('native CTA renderer guardrail', () => {
     expect(cssSource).toContain('.service-native-section.test-dynamic-cta .native-info-section-copy > h2.is-sandstone,');
     expect(cssSource).toContain('.service-native-section.test-dynamic-cta .native-info-section-copy > h2 mark.is-sandstone {');
   });
+
+  it('keeps dynamic CTA blocks on a centered bordered form shell', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page .service-native-section.has-inline-cta-shell > .ag-panel-rail,');
+    expect(cssSource).toContain('flex-direction: column;');
+    expect(cssSource).toContain('align-items: center;');
+    expect(cssSource).toContain('width: min(680px, 100%);');
+    expect(cssSource).toContain('margin: clamp(1rem, 2vw, 1.5rem) 0 0;');
+    expect(cssSource).toContain('border: 1px solid rgba(17, 53, 75, 0.14);');
+  });
 });

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getGridCompatibleCardStyleOptions,
   getGridCompatibleToneOptions,
   getGridDefaultToneForBg,
   getGridSafeToneForBg,
+  isGridCardStyleAllowedForBg,
   isGridToneAllowedForBg,
 } from './dynamicGrid';
 
@@ -15,6 +17,17 @@ const SHARED_TONE_OPTIONS = [
 ];
 
 describe('dynamic grid contrast helpers', () => {
+  it('allows borderless shadow cards and alternating title colors across section surfaces', () => {
+    expect(isGridCardStyleAllowedForBg('borderless-shadow', 'white')).toBe(true);
+    expect(isGridCardStyleAllowedForBg('borderless-shadow', 'blue')).toBe(true);
+    expect(isGridToneAllowedForBg('alternating', 'white')).toBe(true);
+    expect(isGridToneAllowedForBg('alternating', 'grey')).toBe(true);
+    expect(getGridCompatibleCardStyleOptions([
+      { value: 'card2' },
+      { value: 'borderless-shadow' },
+    ], 'white').map((option) => option.value)).toEqual(['card2', 'borderless-shadow']);
+  });
+
   it('treats white as the shared safe default tone on blue and grey backgrounds', () => {
     expect(getGridDefaultToneForBg('blue')).toBe('white');
     expect(getGridDefaultToneForBg('grey')).toBe('white');

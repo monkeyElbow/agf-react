@@ -37,6 +37,15 @@ function renderPanel(settings = {}, onSettingChange = vi.fn()) {
 }
 
 describe('TopStripHudEditorPanel', () => {
+  it('exposes the top strip groups through the reference editor rail', () => {
+    renderPanel();
+
+    expect(screen.getByRole('navigation', { name: 'Top strip editor sections' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Strip' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Secure Login' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Phone + Rates' })).toBeTruthy();
+  });
+
   it('shows the full shared palette for rates link color', () => {
     renderPanel({
       ratesButtonTone: 'mango',

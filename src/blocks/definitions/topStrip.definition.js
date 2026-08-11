@@ -5,7 +5,7 @@ import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField } from '../foundation/editorDescriptors';
 
 const TOP_STRIP_BG_OPTIONS = [
-  { value: 'sand', label: 'Sand', swatch: 'linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)' },
+  { value: 'sand', label: 'Sand', swatch: getTokenSwatch('sand') },
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
   { value: 'blue', label: 'Blue', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Grey', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },

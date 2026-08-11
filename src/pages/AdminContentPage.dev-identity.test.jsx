@@ -120,4 +120,33 @@ describe('AdminContentPage dev identity surfaces', () => {
     expect(screen.queryByText(/owns the latest saved draft/i)).toBeNull();
     expect(screen.queryByRole('button', { name: 'Take over draft' })).toBeNull();
   });
+
+  it('offers an identity color picker beside the editable admin name', () => {
+    window.localStorage.setItem(DEV_IDENTITY_STORAGE_KEY, JSON.stringify({
+      userId: 'dev-current',
+      displayName: 'Taylor QA',
+      initials: 'TQ',
+      accentColor: '#00adbb',
+      createdAt: 1710000000000,
+      updatedAt: 1710000000000,
+    }));
+
+    render(
+      <ContentAdminProvider>
+        <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+          <AdminContentPage />
+        </MemoryRouter>
+      </ContentAdminProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
+
+    const picker = screen.getByLabelText('Admin identity color');
+    expect(picker.value).toBe('#00adbb');
+
+    fireEvent.change(picker, { target: { value: '#f26660' } });
+
+    expect(JSON.parse(window.localStorage.getItem(DEV_IDENTITY_STORAGE_KEY)).accentColor).toBe('#f26660');
+    expect(screen.getByLabelText('Developer display name').value).toBe('Taylor QA');
+  });
 });

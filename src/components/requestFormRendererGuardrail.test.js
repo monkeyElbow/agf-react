@@ -210,6 +210,14 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.native-info-inline-form select,\n.native-info-inline-form textarea {\n  margin-top: 0.3rem;\n  margin-left: calc(var(--ag-field-label-inline-offset) * -1);');
   });
 
+  it('keeps request-form step actions aligned to the field column instead of pushed to the right edge', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-dynamic-request .native-info-inline-form-step-actions {\n  justify-content: flex-start;');
+    expect(cssSource).toContain('.native-dynamic-request .native-info-inline-form-step-spacer {\n  display: none;');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-loans-inquiry .native-info-inline-form-step-actions {\n  margin-top: 0.3rem;\n  display: flex;\n  justify-content: flex-start;');
+  });
+
   it('keeps the shared dynamic request shell on a simple wide rail plus a vanilla two-column grid contract', () => {
     const cssSource = readSource('../styles/service-native.css');
 

@@ -5,7 +5,7 @@ function isHeroBlock(block) {
 
 function isReturnAssistAnchorBlock(block) {
   const blockId = String(block?.id || '').trim();
-  if (blockId === 'home_impact_story' || blockId === 'home_services_feature_animation') {
+  if (blockId === 'impact_stat' || blockId === 'home_impact_story' || blockId === 'home_services_feature_animation') {
     return true;
   }
   return isHeroBlock(block);

@@ -21,7 +21,7 @@ const CTA_FORM_HIGHLIGHT_TONE_OPTIONS = CTA_FORM_HEADING_TONE_OPTIONS.filter((op
 
 const CTA_FORM_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-  { value: 'sand', label: 'Sand Gradient', swatch: 'linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)' },
+  { value: 'sand', label: 'Sand Gradient', swatch: getTokenSwatch('sand') },
   { value: 'blue', label: 'Blue Gradient', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
 ];
@@ -53,6 +53,7 @@ const sections = [
         options: CTA_FORM_HIGHLIGHT_TONE_OPTIONS,
       }),
       defineEditorField({ id: 'bodyHtml', label: 'Lead copy HTML', type: 'html' }),
+      defineEditorField({ id: 'bodyColorClassName', label: 'Lead copy color', type: 'swatch', options: CTA_FORM_HEADING_TONE_OPTIONS }),
       defineEditorField({ id: 'fineprint', label: 'Fineprint', type: 'textarea', rows: 2 }),
       defineEditorField({ id: 'fieldsJson', label: 'CTA field definitions JSON', type: 'textarea', rows: 8 }),
       defineEditorField({ id: 'includeContactPreference', label: 'Ask for contact preference', type: 'boolean' }),
@@ -95,6 +96,7 @@ export const ctaFormBlockDefinition = createFormBlockDefinitionScaffold({
     titleClassName: '',
     titleHighlightsJson: '',
     bodyHtml: '',
+    bodyColorClassName: '',
     fineprint: '',
     subtitle: '',
     fieldsJson: defaultCtaFormFieldsJson,

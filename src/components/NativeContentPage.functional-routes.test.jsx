@@ -708,7 +708,8 @@ describe('NativeContentPage functional routes', () => {
 
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
-    expect(document.querySelector('[data-block-id="annuity_options"].legacy-child-native-cga-options.is-divider-off')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="annuity_options"].legacy-child-native-cga-options')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="annuity_options"]')?.className).not.toContain('is-divider');
     const estimatorLink = screen.getByRole('link', { name: 'Try the CGA estimator' });
     expect(estimatorLink.getAttribute('href')).toBe('#demo');
     fireEvent.click(estimatorLink);
@@ -825,7 +826,7 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Our fully online Donor Advised Fund simplifies your giving even more, letting you manage your giving anytime you want.')).toBeTruthy();
     const giftAssetsSection = document.querySelector('[data-block-id="gift_assets"]');
     expect(within(giftAssetsSection).getByRole('link', { name: 'Open a traditional DAF' })).toBeTruthy();
-    expect(giftAssetsSection?.className).toContain('is-divider-off');
+    expect(giftAssetsSection?.className).not.toContain('is-divider');
     expect([...giftAssetsSection.querySelectorAll('.service-native-card-bullet-list strong')]
       .map((item) => item.textContent))
       .toEqual([
@@ -926,7 +927,7 @@ describe('NativeContentPage functional routes', () => {
       .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
       .toEqual(['daf-step-1', 'mif-step-2', 'mif-step-3']);
     const giftTypesSection = document.querySelector('[data-block-id="gift_types"]');
-    expect(giftTypesSection?.className).toContain('is-divider-off');
+    expect(giftTypesSection?.className).not.toContain('is-divider');
     expect(within(giftTypesSection).queryByText('Cash')).toBeNull();
     expect(within(giftTypesSection).getByText('Stock')).toBeTruthy();
     expect(giftTypesSection?.textContent).not.toContain('see below');
@@ -1481,7 +1482,7 @@ describe('NativeContentPage functional routes', () => {
     expect(givingOptionsSection?.textContent).toContain('This is legacy planning and charitable giving made easy.');
     expect(givingOptionsSection?.querySelector('mark.is-atlantean')?.textContent).toBe('made easy');
     expect(productCards.length).toBeGreaterThan(0);
-    expect(firstCard?.getAttribute('style')).toContain('padding: 1rem 3rem 4rem;');
+    expect(firstCard?.getAttribute('style') || '').not.toContain('padding');
     expect(firstCard?.className).toContain('fade-up');
     expect(firstCard?.className).toContain('fade-up-force-observe');
     expect(within(firstCard).getByRole('heading', { name: 'Donor Advised Funds' })).toBeTruthy();

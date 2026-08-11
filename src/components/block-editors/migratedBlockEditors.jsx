@@ -1,14 +1,20 @@
 import { useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import AdminNumberInput from '../AdminNumberInput';
 import AdminHtmlEditor from '../AdminHtmlEditor';
-import BillboardHudEditorPanel from '../BillboardHudEditorPanel';
+import BillboardHudEditorPanel, { BillboardSlider, normalizeBillboardWidth } from '../BillboardHudEditorPanel';
 import ColorPalette from '../ColorPalette';
-import { HeroDriftNotice, useBufferedHeroLineTextDrafts } from '../HeroHudEditorShared';
+import { HeroHudEditorPanel, useBufferedHeroLineTextDrafts } from '../HeroHudEditorShared';
 import IntroHudEditorPanel from '../IntroHudEditorShared';
 import PageContentHudEditorPanel, { PageContentLayoutControls } from '../PageContentHudEditorPanel';
 import TestimonialsHudEditorPanel from '../TestimonialsHudEditorPanel';
 import TopStripHudEditorPanel from '../TopStripHudEditorPanel';
+import {
+  HudEditorBlockOptionsPage,
+  HudEditorModelLayout,
+  appendHudBlockOptionsSection,
+} from '../HudEditorShell';
 import { inspectDynamicHeroSettings } from '../../context/ContentAdminContext';
+import { useOptionalContentAdmin } from '../../context/ContentAdminContextCore';
 import { DocumentsContext } from '../../context/DocumentsContext';
 import {
   buildCtaFormSettingsPatch,
@@ -44,13 +50,11 @@ import {
 import {
   DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
   DEFAULT_HERO_TITLE_SIZE_REM,
-  heroTitleSizeRemToEditorCss,
   normalizeHeroTitleLetterSpacingEm,
   normalizeHeroTitleSizeRem,
 } from '../../lib/heroTitleSize';
 import {
   normalizeBillboardLineSpacing,
-  normalizeBillboardSubtitleDisplay,
   normalizeBillboardSubtitleSizeRem,
   normalizeBillboardTitleFontFamily,
   normalizeBillboardTitleFontWeight,
@@ -100,6 +104,13 @@ import {
   SITE_FEATURE_ACTION_FIELD_IDS,
 } from '../../data/siteFeatureCatalog';
 import { buildDynamicRatesFromBlock } from '../../lib/dynamicPageBlocks';
+import { EDITOR_DRAFT_FLUSH_EVENT } from '../../lib/contentAdminTiming';
+import {
+  createProtectedEditorDraft,
+  isOlderEditorDraftRevision,
+  normalizeEditorDraftRevision,
+  shouldKeepProtectedEditorDraft,
+} from '../../lib/editorDraftProtection';
 
 const BILLBOARD_BUTTON_STYLE_OPTIONS = [
   { value: 'blue', label: 'Blue' },
@@ -296,7 +307,6 @@ const JUSTIFY_ICON_ORDER = ['left', 'center', 'right'];
 const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline', 'ghost']);
 const HERO_SWATCH_OPTIONS = HERO_TEXT_COLOR_OPTIONS;
 const BILLBOARD_BG_SWATCH_OPTIONS = SURFACE_BG_TONE_OPTIONS;
-const BILLBOARD_TEXT_SWATCH_OPTIONS = PANEL_TEXT_TONE_OPTIONS;
 const BILLBOARD_BUTTON_TONE_OPTIONS = SHARED_BUTTON_TONE_OPTIONS;
 const HERO_BG_SWATCH_OPTIONS = SURFACE_BG_TONE_OPTIONS;
 const GRID_RESOURCE_LINK_TYPE_OPTIONS = [
@@ -1380,7 +1390,7 @@ function GridResourceAccordionEditor({
   );
 }
 
-function renderFieldControl(field, value, onChange, settings, onSettingChange, routeOptions = []) {
+function renderFieldControl(field, value, onChange, settings, onSettingChange, routeOptions = [], paletteVariant = 'admin') {
   if (field.type === 'boolean') {
     const activeValue = toBoolean(value);
     return (
@@ -1451,7 +1461,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
       || swatchClassName.includes('admin-control-swatch-palette');
     return (
       <ColorPalette
-        variant="admin"
+        variant={paletteVariant}
         className={`${useCompactPalette ? ' is-compact' : ''}${useIconOnlyPalette ? ' is-icon-only' : ''}${swatchClassName ? ` ${swatchClassName}` : ''}`}
         ariaLabel={field.label}
         options={options}
@@ -1492,7 +1502,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
               }}
             />
             <ColorPalette
-              variant="admin"
+              variant={paletteVariant}
               className="is-compact is-icon-only admin-highlight-color-swatches"
               ariaLabel={`${field.label} color ${index + 1}`}
               options={options}
@@ -1592,30 +1602,26 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
   return <input type="text" value={value ?? ''} onChange={(event) => onChange(event.target.value)} />;
 }
 
-function FieldControlGrid({ fields, settings, onSettingChange, className = '', routeOptions = [] }) {
+export function FieldControlGrid({ fields, settings, onSettingChange, className = '', routeOptions = [], paletteVariant = 'admin', sourceRevision = 0 }) {
   const items = Array.isArray(fields) ? fields.filter(Boolean) : [];
   if (!items.length) {
     return null;
   }
 
   return (
-    <div className={`admin-content-field-list${className ? ` ${className}` : ''}`}>
-      {items.map((field) => (
-        <label key={field.id} className={field.layout === 'half' ? 'is-half' : undefined}>
-          <span>{field.label}</span>
-          {renderFieldControl(
-            field,
-            settings?.[field.id],
-            (nextValue) => {
-              onSettingChange(field.id, nextValue);
-            },
-            settings,
-            onSettingChange,
-            routeOptions,
-          )}
-        </label>
-      ))}
-    </div>
+    <DraftBackedFieldControlGrid
+      fields={items}
+      settings={settings}
+      onSettingChange={onSettingChange}
+      className={className}
+      routeOptions={routeOptions}
+      paletteVariant={paletteVariant}
+      draftFieldIds={items
+        .filter((field) => ['text', 'textarea', 'route_link'].includes(String(field?.type || '').trim().toLowerCase()))
+        .map((field) => field.id)}
+      commitImmediately
+      sourceRevision={sourceRevision}
+    />
   );
 }
 
@@ -1625,6 +1631,7 @@ function PanelAppearanceControls({
   onSettingChange,
   className = '',
   compactSwatches = true,
+  paletteVariant = 'admin',
 }) {
   const items = (Array.isArray(fields) ? fields : [])
     .filter(Boolean)
@@ -1644,6 +1651,7 @@ function PanelAppearanceControls({
         settings={settings}
         onSettingChange={onSettingChange}
         className="admin-content-field-list--inline admin-panel-appearance-grid"
+        paletteVariant={paletteVariant}
       />
     </section>
   );
@@ -1665,16 +1673,17 @@ function toEditorHtml(value, fallbackText = '') {
   return `<p>${escaped}</p>`;
 }
 
-function EditorButtonPreview({ buttons }) {
+export function EditorButtonPreview({ buttons }) {
   const items = Array.isArray(buttons) ? buttons : [];
   const visible = items
     .map((item, index) => {
-      const label = String(item?.label || '').trim() || `Button ${index + 1}`;
+      const label = String(item?.label || '').trim();
+      if (!label) {
+        return null;
+      }
       const style = normalizeActionButtonStyleToken(item?.style);
       const defaultTone = style === 'dark' || style === 'ghost' ? 'super-grey' : 'atlantean';
-      const tone = style === 'outline'
-        ? normalizeActionButtonToneToken(item?.tone, defaultTone)
-        : defaultTone;
+      const tone = normalizeActionButtonToneToken(item?.tone, defaultTone);
       const className = [
         'service-native-btn',
         style === 'ghost' ? 'is-ghost' : '',
@@ -1682,21 +1691,33 @@ function EditorButtonPreview({ buttons }) {
         `is-tone-${tone}`,
       ].filter(Boolean).join(' ');
       return { label, className };
-    });
+    })
+    .filter(Boolean);
+
+  if (!visible.length) {
+    return null;
+  }
 
   return (
-    <div className="admin-button-preview-wrap" aria-label="Button preview">
+    <section className="admin-button-preview-wrap" aria-label="Button preview">
       <span className="admin-button-preview-label">Button preview</span>
       <div className="admin-button-preview-row">
         {visible.map((item, index) => (
-          <span key={`btn-preview-${index}`} className={item.className}>{item.label}</span>
+          <button
+            key={`btn-preview-${index}`}
+            type="button"
+            className={`${item.className} admin-button-preview-button`}
+            onClick={(event) => event.preventDefault()}
+          >
+            {item.label}
+          </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
-export function CtaFormBlockEditor({ block, onSettingChange, routeOptions = [] }) {
+export function CtaFormBlockEditor({ block, onSettingChange, routeOptions = [], sourceRevision = 0 }) {
   const settings = block.settings || {};
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
@@ -1711,6 +1732,7 @@ export function CtaFormBlockEditor({ block, onSettingChange, routeOptions = [] }
     settings,
     onSettingChange,
     fieldIds: ['bodyHtml'],
+    sourceRevision,
   });
   const ctaFormDraftSettings = useMemo(() => ({
     ...settings,
@@ -2148,6 +2170,17 @@ export function resolveRequestFormLeadCopyFieldId(settings = {}) {
 function RequestFormStepEditor({ stepNumber, settings, onSettingChange, expanded, onToggle }) {
   const fieldsKey = `step${stepNumber}FieldsJson`;
   const titleKey = `step${stepNumber}Title`;
+  const noteKey = `step${stepNumber}Note`;
+  const alertKey = `step${stepNumber}Alert`;
+  const {
+    draftValues: stepTextDraftValues,
+    updateDraftField: updateStepTextDraft,
+    commitDraftOnBlur: commitStepTextDraft,
+  } = useBufferedStringFieldDrafts({
+    settings,
+    onSettingChange,
+    fieldIds: [titleKey, noteKey, alertKey],
+  });
   const externalStepFields = useMemo(
     () => parseRequestFormStepFieldsJson(settings?.[fieldsKey]),
     [fieldsKey, settings],
@@ -2160,7 +2193,7 @@ function RequestFormStepEditor({ stepNumber, settings, onSettingChange, expanded
   const [hasDirtyStepFields, setHasDirtyStepFields] = useState(false);
   const stepFieldsRef = useRef(externalStepFields);
   const commitTimerRef = useRef(null);
-  const summaryTitle = String(settings?.[titleKey] || '').trim() || 'Untitled step';
+  const summaryTitle = String(stepTextDraftValues[titleKey] ?? settings?.[titleKey] ?? '').trim() || 'Untitled step';
   const summaryMeta = `${stepFields.length} ${stepFields.length === 1 ? 'field' : 'fields'}`;
 
   useEffect(() => {
@@ -2236,10 +2269,48 @@ function RequestFormStepEditor({ stepNumber, settings, onSettingChange, expanded
           <span className="admin-request-form-step-toggle-title">{summaryTitle}</span>
         </span>
         <span className="admin-request-form-step-toggle-meta">{summaryMeta}</span>
+        <span className="admin-request-form-step-toggle-indicator" aria-hidden="true">
+          {expanded ? 'Close −' : 'Open +'}
+        </span>
       </button>
 
       {expanded ? (
         <>
+          <div className="admin-request-form-step-settings">
+            <div className="admin-request-form-step-settings-head">
+              <strong>Step settings</strong>
+              <span>Name the step and give the admin-facing form guidance.</span>
+            </div>
+            <div className="admin-content-field-list admin-content-field-list--inline">
+              <label>
+                <span>{`Step ${stepNumber} title`}</span>
+                <input
+                  type="text"
+                  value={String(stepTextDraftValues[titleKey] ?? settings?.[titleKey] ?? '')}
+                  onChange={(event) => updateStepTextDraft(titleKey, event.target.value)}
+                  onBlur={() => commitStepTextDraft(titleKey)}
+                />
+              </label>
+              <label>
+                <span>{`Step ${stepNumber} note`}</span>
+                <input
+                  type="text"
+                  value={String(stepTextDraftValues[noteKey] ?? settings?.[noteKey] ?? '')}
+                  onChange={(event) => updateStepTextDraft(noteKey, event.target.value)}
+                  onBlur={() => commitStepTextDraft(noteKey)}
+                />
+              </label>
+              <label>
+                <span>{`Step ${stepNumber} alert`}</span>
+                <input
+                  type="text"
+                  value={String(stepTextDraftValues[alertKey] ?? settings?.[alertKey] ?? '')}
+                  onChange={(event) => updateStepTextDraft(alertKey, event.target.value)}
+                  onBlur={() => commitStepTextDraft(alertKey)}
+                />
+              </label>
+            </div>
+          </div>
           <div className="admin-request-form-step-fields">
             {stepFields.map((field, index) => {
               const type = normalizeRequestFormFieldType(field.type);
@@ -2448,7 +2519,13 @@ function createRequestFormStepFieldDraft(fieldNumber) {
   };
 }
 
-export function RequestFormBlockEditor({ block, onSettingChange }) {
+export function RequestFormBlockEditor({
+  block,
+  onSettingChange,
+  sourceRevision = 0,
+  hudMode = false,
+  blockOptions = null,
+}) {
   const settings = block.settings || {};
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
@@ -2464,6 +2541,20 @@ export function RequestFormBlockEditor({ block, onSettingChange }) {
   const requestTitleColorOptions = Array.isArray(titleColorField?.options) && titleColorField.options.length
     ? titleColorField.options
     : HERO_SWATCH_OPTIONS;
+  const requestTextColorControl = textToneField ? (
+    <label className="admin-request-form-swatch-group admin-request-form-lead-text-color">
+      <span>{textToneField.label || 'Text color'}</span>
+      <ColorPalette
+        variant="hud"
+        className="is-compact is-icon-only is-circular admin-request-form-hud-swatch-palette admin-request-form-swatch-palette"
+        ariaLabel={textToneField.label || 'Request form text color'}
+        options={Array.isArray(textToneField.options) ? textToneField.options : []}
+        value={String(settings.textTone || '')}
+        preventMouseDown
+        onChange={(nextValue) => onSettingChange('textTone', nextValue)}
+      />
+    </label>
+  ) : null;
   const leadCopyFieldId = resolveRequestFormLeadCopyFieldId(settings);
   const {
     draftValues: requestFormDraftValues,
@@ -2473,6 +2564,7 @@ export function RequestFormBlockEditor({ block, onSettingChange }) {
     settings,
     onSettingChange,
     fieldIds: [leadCopyFieldId],
+    sourceRevision,
   });
   const requestFormDraftSettings = useMemo(() => ({
     ...settings,
@@ -2482,13 +2574,13 @@ export function RequestFormBlockEditor({ block, onSettingChange }) {
     parseRequestFormStepFieldsJson(settings?.[`step${stepNumber}FieldsJson`]).length > 0
   ));
   const nextStepNumber = [1, 2, 3, 4, 5].find((stepNumber) => !visibleStepNumbers.includes(stepNumber)) || null;
-  const [expandedSteps, setExpandedSteps] = useState(() => new Set(visibleStepNumbers));
+  const [expandedSteps, setExpandedSteps] = useState(() => new Set(visibleStepNumbers.slice(0, 1)));
 
   useEffect(() => {
     setExpandedSteps((current) => {
       const next = new Set();
       visibleStepNumbers.forEach((stepNumber) => {
-        if (current.has(stepNumber) || visibleStepNumbers.length <= 3) {
+        if (current.has(stepNumber)) {
           next.add(stepNumber);
         }
       });
@@ -2499,148 +2591,147 @@ export function RequestFormBlockEditor({ block, onSettingChange }) {
     });
   }, [settings?.step1FieldsJson, settings?.step2FieldsJson, settings?.step3FieldsJson, settings?.step4FieldsJson, settings?.step5FieldsJson]);
 
-  return (
-    <div className="admin-intro-block-editor admin-request-form-editor">
-      <div className="admin-dynamic-panel-primary-grid admin-dynamic-panel-primary-grid--intro admin-request-form-primary-grid">
-        <div className="admin-intro-editor-main admin-request-form-editor-main">
-          <ColorTextSelectionEditor
-            label="Form heading"
-            text={settings.title ?? ''}
-            lineClassName={settings.titleClassName ?? ''}
-            highlightsJson={settings.titleHighlightsJson ?? ''}
-            onTextChange={(nextValue) => onSettingChange('title', nextValue)}
-            onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
-            onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
-            placeholder="Request form heading"
-            rows={2}
-            className="is-intro-heading"
-            unifiedPreviewEditor
-            previewClassName={getPanelTextTonePreviewClassName(requestTextTone, 'dark')}
-            previewWrapClassName={`is-bg-${requestBgTone}`}
-            spanDetailsUnderToggle
-            useResetForClear
-            swatchOptions={requestTitleColorOptions}
+  const headingAndLeadContent = (
+    <>
+      <ColorTextSelectionEditor
+        label="Form heading"
+        text={settings.title ?? ''}
+        lineClassName={settings.titleClassName ?? ''}
+        highlightsJson={settings.titleHighlightsJson ?? ''}
+        onTextChange={(nextValue) => onSettingChange('title', nextValue)}
+        onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
+        onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
+        placeholder="Request form heading"
+        rows={2}
+        className="is-intro-heading"
+        unifiedPreviewEditor
+        previewTagName="h2"
+        previewClassName={getPanelTextTonePreviewClassName(requestTextTone, 'dark')}
+        previewWrapClassName={`is-bg-${requestBgTone}`}
+        spanDetailsUnderToggle
+        useResetForClear
+        swatchOptions={requestTitleColorOptions}
+        swatchVariant="hud"
+      />
+      <div className="admin-request-form-lead-row">
+        <label className="admin-front-hud-field admin-request-form-lead-field">
+          <span>Lead Copy</span>
+          <textarea
+            rows={3}
+            value={String(requestFormDraftSettings[leadCopyFieldId] || '')}
+            onChange={(event) => updateRequestFormDraftField(leadCopyFieldId, event.target.value)}
+            onBlur={() => commitRequestFormDraftOnBlur(leadCopyFieldId)}
           />
-          <label className="admin-front-hud-field admin-request-form-lead-field">
-            <span>Lead Copy</span>
-            <textarea
-              rows={3}
-              value={String(requestFormDraftSettings[leadCopyFieldId] || '')}
-              onChange={(event) => updateRequestFormDraftField(leadCopyFieldId, event.target.value)}
-              onBlur={() => commitRequestFormDraftOnBlur(leadCopyFieldId)}
+        </label>
+        {requestTextColorControl}
+      </div>
+    </>
+  );
+
+  const appearanceContent = (
+    <div className="admin-request-form-appearance-content">
+      <div className="admin-request-form-swatch-groups">
+        {bgToneField ? (
+          <label className="admin-request-form-swatch-group">
+            <span>{bgToneField.label || 'Background color'}</span>
+            <ColorPalette
+              variant="hud"
+              className="is-compact is-icon-only is-circular admin-request-form-hud-swatch-palette admin-request-form-swatch-palette"
+              ariaLabel={bgToneField.label || 'Request form background'}
+              options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
+              value={String(settings.bgTone || '')}
+              preventMouseDown
+              onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
             />
           </label>
-        </div>
+        ) : null}
 
-        <div className="admin-intro-appearance-stack admin-request-form-appearance-stack">
-          <section className="admin-panel-appearance admin-panel-appearance--intro-text admin-request-form-appearance-panel">
-            <div className="admin-request-form-swatch-groups">
-              {bgToneField ? (
-                <label className="admin-request-form-swatch-group">
-                  <span>{bgToneField.label || 'Background color'}</span>
-                  <ColorPalette
-                    variant="admin"
-                    className="is-compact admin-hero-inline-swatch-list is-icon-only admin-intro-bg-palette-swatch-list admin-request-form-swatch-palette"
-                    ariaLabel={bgToneField.label || 'Request form background'}
-                    options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
-                    value={String(settings.bgTone || '')}
-                    preventMouseDown
-                    onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-                    getOptionClassName={(option, state) => ` admin-bg-swatch-option${state.active ? ' is-active' : ''}`}
-                  />
-                </label>
-              ) : null}
-
-              {textToneField ? (
-                <label className="admin-request-form-swatch-group">
-                  <span>{textToneField.label || 'Text color'}</span>
-                  <ColorPalette
-                    variant="admin"
-                    className="is-compact admin-hero-inline-swatch-list is-icon-only admin-intro-bg-palette-swatch-list admin-request-form-swatch-palette"
-                    ariaLabel={textToneField.label || 'Request form text color'}
-                    options={Array.isArray(textToneField.options) ? textToneField.options : []}
-                    value={String(settings.textTone || '')}
-                    preventMouseDown
-                    onChange={(nextValue) => onSettingChange('textTone', nextValue)}
-                  />
-                </label>
-              ) : null}
-            </div>
-
-            {spacingFields.length ? (
-              <details className="admin-request-form-spacing-details">
-                <summary>Spacing</summary>
-                <div className="admin-request-form-spacing-grid">
-                  {spacingFields.map((field) => {
-                    const currentValue = Number.isFinite(Number(settings?.[field.id])) ? Number(settings[field.id]) : 0;
-                    return (
-                      <label key={`request-form-spacing-${field.id}`} className="admin-request-form-spacing-control">
-                        <span>{field.label}</span>
-                        <div className="admin-hero-inline-height-row">
-                          <input
-                            type="range"
-                            min={Number(field.min) || 0}
-                            max={Number(field.max) || 8}
-                            step={Number(field.step) || 0.25}
-                            value={currentValue}
-                            onChange={(event) => onSettingChange(field.id, Number(event.target.value))}
-                            aria-label={field.label}
-                          />
-                          <input
-                            className="admin-hero-inline-height-number"
-                            type="number"
-                            min={Number(field.min) || 0}
-                            max={Number(field.max) || 8}
-                            step={Number(field.step) || 0.25}
-                            value={currentValue}
-                            onChange={(event) => onSettingChange(field.id, Number(event.target.value))}
-                            aria-label={`${field.label} number`}
-                          />
-                          <span className="admin-hero-inline-height-unit">rem</span>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              </details>
-            ) : null}
-          </section>
-        </div>
       </div>
 
-      {configFields.length ? (
-        <details className="admin-request-form-config-details">
-          <summary>Form behavior</summary>
-          <DraftBackedFieldControlGrid
-            fields={configFields}
-            settings={settings}
-            onSettingChange={onSettingChange}
-            className="admin-content-field-list--inline"
-            draftFieldIds={REQUEST_FORM_CONFIG_LOCAL_DRAFT_FIELD_IDS}
-          />
-        </details>
-      ) : null}
-
-      <div className="admin-cta-field-slots admin-request-form-step-list">
-        {visibleStepNumbers.map((stepNumber) => (
-          <RequestFormStepEditor
-            key={`request-form-step-${stepNumber}`}
-            stepNumber={stepNumber}
-            settings={settings}
-            onSettingChange={onSettingChange}
-            expanded={expandedSteps.has(stepNumber)}
-            onToggle={(nextStep) => setExpandedSteps((current) => {
-              const next = new Set(current);
-              if (next.has(nextStep)) {
-                next.delete(nextStep);
-              } else {
-                next.add(nextStep);
-              }
-              return next;
+      {spacingFields.length ? (
+        <div className="admin-request-form-spacing-controls" aria-label="Spacing controls">
+          <div className="admin-request-form-spacing-head">
+            <span>Spacing</span>
+            <small>Adjust the space before and after the form.</small>
+          </div>
+          <div className="admin-request-form-spacing-grid">
+            {spacingFields.map((field) => {
+              const currentValue = Number.isFinite(Number(settings?.[field.id])) ? Number(settings[field.id]) : 0;
+              return (
+                <BillboardSlider
+                  key={`request-form-spacing-${field.id}`}
+                  label={field.label}
+                  min={Number(field.min) || 0}
+                  max={Number(field.max) || 8}
+                  step={Number(field.step) || 0.25}
+                  value={currentValue}
+                  displayValue={`${currentValue.toFixed(2)}rem`}
+                  ariaLabel={field.label}
+                  onChange={(nextValue) => onSettingChange(field.id, nextValue)}
+                />
+              );
             })}
-          />
-        ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const formOptionsContent = configFields.length ? (
+    <div className="admin-request-form-options-layout">
+      <div className="admin-request-form-options-fields">
+        <div className="admin-request-form-page-heading">
+          <h3>Form options</h3>
+          <p>Control where submissions go and what the visitor sees after sending the form.</p>
+        </div>
+        <DraftBackedFieldControlGrid
+          fields={configFields}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          className="admin-content-field-list--inline"
+          draftFieldIds={REQUEST_FORM_CONFIG_LOCAL_DRAFT_FIELD_IDS}
+          sourceRevision={sourceRevision}
+        />
       </div>
+      <div className="admin-request-form-button-management">
+        <div className="admin-request-form-page-heading">
+          <h3>Submit button</h3>
+          <p>The button uses the shared form style. Change its label in the controls beside it.</p>
+        </div>
+        <div className="admin-request-form-button-preview" aria-label="Submit button preview">
+          <span className="admin-request-form-button-preview-label">Visitor sees</span>
+          <button type="button" className="service-native-btn is-tone-atlantean">
+            {String(settings.submitLabel || 'Submit request').trim() || 'Submit request'}
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const stepsContent = (
+    <div className="admin-request-form-steps-content">
+      <div className="admin-request-form-page-heading">
+        <h3>Form steps</h3>
+        <p>Choose a step to open it. Closed steps stay compact so the form structure is easy to scan.</p>
+      </div>
+      {visibleStepNumbers.map((stepNumber) => (
+        <RequestFormStepEditor
+          key={`request-form-step-${stepNumber}`}
+          stepNumber={stepNumber}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          expanded={expandedSteps.has(stepNumber)}
+          onToggle={(nextStep) => setExpandedSteps((current) => {
+            const next = new Set(current);
+            if (next.has(nextStep)) {
+              next.delete(nextStep);
+            } else {
+              next.add(nextStep);
+            }
+            return next;
+          })}
+        />
+      ))}
       {nextStepNumber ? (
         <div className="admin-request-form-step-actions">
           <button
@@ -2662,6 +2753,65 @@ export function RequestFormBlockEditor({ block, onSettingChange }) {
       ) : null}
     </div>
   );
+
+  const hudSections = appendHudBlockOptionsSection([
+    { id: 'content', label: 'Content', icon: '✦' },
+    { id: 'appearance', label: 'Appearance', icon: '◉' },
+    { id: 'integration', label: 'Form options', icon: '↔' },
+    { id: 'steps', label: 'Form steps', icon: '☷' },
+  ], blockOptions);
+  const [activeHudSection, setActiveHudSection] = useState(hudSections[0]?.id || 'content');
+
+  if (hudMode) {
+    return (
+      <HudEditorModelLayout
+        className="admin-request-form-hud-editor"
+        sections={hudSections}
+        activeSection={activeHudSection}
+        onSectionChange={setActiveHudSection}
+        label="Request form editor sections"
+        panelClassName="admin-request-form-hud-panels"
+      >
+        <section className="admin-request-form-hud-page admin-request-form-hud-page--content">
+          {headingAndLeadContent}
+        </section>
+        <section className="admin-request-form-hud-page admin-request-form-hud-page--appearance">
+          <div className="admin-request-form-page-heading">
+            <h3>Appearance</h3>
+            <p>Set the surface, text tone, and vertical spacing for this form.</p>
+          </div>
+          {appearanceContent}
+        </section>
+        <section className="admin-request-form-hud-page admin-request-form-hud-page--integration">
+          {formOptionsContent}
+        </section>
+        <section className="admin-request-form-hud-page admin-request-form-hud-page--steps">
+          {stepsContent}
+        </section>
+        <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+      </HudEditorModelLayout>
+    );
+  }
+
+  return (
+    <div className="admin-intro-block-editor admin-request-form-editor">
+      <div className="admin-dynamic-panel-primary-grid admin-dynamic-panel-primary-grid--intro admin-request-form-primary-grid">
+        <div className="admin-intro-editor-main admin-request-form-editor-main">{headingAndLeadContent}</div>
+        <div className="admin-intro-appearance-stack admin-request-form-appearance-stack">
+          <section className="admin-panel-appearance admin-panel-appearance--intro-text admin-request-form-appearance-panel">
+            {appearanceContent}
+          </section>
+        </div>
+      </div>
+      {formOptionsContent ? (
+        <details className="admin-request-form-config-details">
+          <summary>Form behavior</summary>
+          {formOptionsContent}
+        </details>
+      ) : null}
+      {stepsContent}
+    </div>
+  );
 }
 
 function ColorTextSelectionEditor({
@@ -2679,6 +2829,7 @@ function ColorTextSelectionEditor({
   unifiedPreviewEditor = false,
   previewClassName = '',
   previewWrapClassName = '',
+  previewTagName = 'p',
   previewStyle = undefined,
   previewOverlay = null,
   afterSwatches = null,
@@ -2688,6 +2839,7 @@ function ColorTextSelectionEditor({
   useResetForClear = false,
   showPlaceholderInPreview = true,
   swatchOptions = HERO_SWATCH_OPTIONS,
+  swatchVariant = 'admin',
 }) {
   const inputRef = useRef(null);
   const commitTimerRef = useRef(null);
@@ -2836,6 +2988,7 @@ function ColorTextSelectionEditor({
   const resolvedSwatchOptions = useResetForClear
     ? (Array.isArray(swatchOptions) ? swatchOptions.filter((option) => option.value !== '') : [])
     : (Array.isArray(swatchOptions) ? swatchOptions : []);
+  const PreviewTag = previewTagName;
 
   const textInput = (
     <textarea
@@ -2863,13 +3016,13 @@ function ColorTextSelectionEditor({
 
   const preview = (
     <div className={`admin-color-text-preview-wrap${previewWrapClassName ? ` ${previewWrapClassName}` : ''}${previewOverlay ? ' has-overlay' : ''}${useResetForClear ? ' has-reset-btn' : ''}`}>
-      <p
+      <PreviewTag
         className={`admin-color-text-preview${mergedPreviewClassName ? ` ${mergedPreviewClassName}` : ''}`}
         style={previewStyle}
         aria-live="polite"
       >
         {previewContent}
-      </p>
+      </PreviewTag>
       {useResetForClear ? (
         <button
           type="button"
@@ -2891,13 +3044,13 @@ function ColorTextSelectionEditor({
 
   const unifiedPreview = (
     <div className={`admin-color-text-preview-wrap admin-color-text-unified-editor${previewWrapClassName ? ` ${previewWrapClassName}` : ''}${previewOverlay ? ' has-overlay' : ''}${useResetForClear ? ' has-reset-btn' : ''}`}>
-      <p
+      <PreviewTag
         className={`admin-color-text-preview${mergedPreviewClassName ? ` ${mergedPreviewClassName}` : ''}`}
         style={previewStyle}
         aria-live="polite"
       >
         {previewContent}
-      </p>
+      </PreviewTag>
       <textarea
         ref={inputRef}
         rows={rows}
@@ -2996,8 +3149,8 @@ function ColorTextSelectionEditor({
         <div className="admin-color-text-controls-topline">
           <div onMouseDownCapture={syncSelection}>
             <ColorPalette
-              variant="admin"
-              className="is-compact is-icon-only admin-color-text-swatch-list"
+              variant={swatchVariant}
+              className={`is-compact is-icon-only${swatchVariant === 'hud' ? ' is-circular' : ''} admin-color-text-swatch-list`}
               ariaLabel={`${label} color controls`}
               options={resolvedSwatchOptions}
               value={activeValue}
@@ -3038,22 +3191,14 @@ function ColorTextSelectionEditor({
   );
 }
 
-export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOptions = [] }) {
+export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOptions = [], blockOptions = null, sourceRevision = 0 }) {
   const settings = block.settings || {};
   const heroInspection = useMemo(
     () => inspectDynamicHeroSettings(pathname, settings),
     [pathname, settings],
   );
-  const inputRefs = useRef({});
-  const pendingSwatchSelectionRef = useRef(null);
   const [activeLine, setActiveLine] = useState('line1');
-  const [showSpanDetails, setShowSpanDetails] = useState(false);
   const [showOptionalLine3, setShowOptionalLine3] = useState(() => hasDisplayableHeroLineText(settings, 'line3'));
-  const [selectionByLine, setSelectionByLine] = useState({
-    line1: { start: 0, end: 0 },
-    line2: { start: 0, end: 0 },
-    line3: { start: 0, end: 0 },
-  });
 
   const heroBgTone = (() => {
     const token = String(settings.bgTone || 'white').trim();
@@ -3072,7 +3217,6 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     return Math.max(20, Math.min(90, Math.round(numeric)));
   })();
   const heroTitleSizeRem = normalizeHeroTitleSizeRem(settings.titleSizeRem);
-  const heroTitleSizeCss = heroTitleSizeRemToEditorCss(heroTitleSizeRem);
   const heroTitleLetterSpacingEm = normalizeHeroTitleLetterSpacingEm(settings.titleLetterSpacingEm);
   const heroLineHeight = (() => {
     const numeric = Number(settings.lineHeight);
@@ -3083,11 +3227,6 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
   })();
   const editableFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(editableFields.map((field) => [field.id, field]));
-  const bgToneField = fieldById.get('bgTone') || null;
-  const heroBgToneOptions = Array.isArray(bgToneField?.options) && bgToneField.options.length
-    ? bgToneField.options
-    : HERO_BG_SWATCH_OPTIONS;
-  const justifyField = fieldById.get('justify') || null;
   const actionJustifyField = fieldById.get('actionJustify') || null;
   const button1Fields = buildHeroActionFields(fieldById, settings, 1);
   const button2Fields = buildHeroActionFields(fieldById, settings, 2);
@@ -3119,7 +3258,6 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     draftTexts: heroLineDraftTexts,
     updateLineDraft,
     commitLineDraftOnBlur,
-    isLineDirty,
   } = useBufferedHeroLineTextDrafts({
     lines: rawLineConfigs,
     onCommitLineText: (lineKey, nextText) => {
@@ -3130,6 +3268,7 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
         remapHighlightsJsonForTextChange(settings?.[`${lineKey}HighlightsJson`], previousText, nextText),
       );
     },
+    sourceRevision,
   });
   const resolveCurrentLineText = (lineKey, fallback = '') => (
     String(heroLineDraftTexts[lineKey] ?? fallback ?? '')
@@ -3149,6 +3288,7 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     return {
       ...line,
       text,
+      lineColor: extractHeroLineColorToken(line.className),
       displayClassName: resolveHeroLineDisplayClassName(line.className, heroBgTone, line.key),
       highlights,
     };
@@ -3158,134 +3298,7 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     ...Object.fromEntries(lineConfigs.map((line) => [line.key, line])),
   };
 
-  const activeConfig = lineByKey[activeLine] || lineByKey.line1;
-  const activeSelection = selectionByLine[activeLine] || { start: 0, end: 0 };
-  const hasSelection = activeSelection.end > activeSelection.start;
-  const activeLineColor = extractHeroLineColorToken(activeConfig?.className || '');
-  const selectedRangeColor = hasSelection
-    ? resolveSelectionRangeColor(activeConfig.highlights, activeSelection.start, activeSelection.end)
-    : '';
-  const hasSpanDetails = lineConfigs.some((line) => line.highlights.length);
-  const activeLineSpanCount = Array.isArray(activeConfig?.highlights) ? activeConfig.highlights.length : 0;
-  const otherLinesWithSpans = lineConfigs.filter((line) => line.key !== activeConfig?.key && line.highlights.length);
   const canHideOptionalLine3 = showOptionalLine3 && !hasStoredLine3Content;
-  const activeLineSummary = hasSelection
-    ? `Selection ${activeSelection.start}-${activeSelection.end}`
-    : activeLineSpanCount
-      ? `${activeLineSpanCount} ${activeLineSpanCount === 1 ? 'color span' : 'color spans'}`
-      : (String(activeConfig?.text || '').trim() ? 'Core color' : 'Start typing');
-
-  const syncSelection = (lineKey) => {
-    const nextSelection = readTextSelectionState(
-      inputRefs.current[lineKey],
-      selectionByLine[lineKey],
-      resolveCurrentLineText(lineKey, settings?.[`${lineKey}Text`]),
-    );
-    setSelectionByLine((prev) => ({
-      ...prev,
-      [lineKey]: { start: nextSelection.start, end: nextSelection.end },
-    }));
-    return nextSelection;
-  };
-
-  const updateLineText = (lineKey, nextText) => {
-    updateLineDraft(lineKey, nextText);
-
-    setSelectionByLine((prev) => {
-      const current = prev[lineKey] || { start: 0, end: 0 };
-      const max = nextText.length;
-      return {
-        ...prev,
-        [lineKey]: {
-          start: Math.max(0, Math.min(max, current.start)),
-          end: Math.max(0, Math.min(max, current.end)),
-        },
-      };
-    });
-  };
-
-  const activateLine = (lineKey, { focus = false } = {}) => {
-    setActiveLine(lineKey);
-    syncSelection(lineKey);
-    if (!focus || typeof window === 'undefined') {
-      return;
-    }
-    window.requestAnimationFrame(() => {
-      inputRefs.current[lineKey]?.focus();
-    });
-  };
-
-  const applySwatch = (colorValue) => {
-    const targetLine = activeLine || 'line1';
-    const line = lineByKey[targetLine] || lineByKey.line1;
-    if (!line) return;
-
-    const textLength = line.text.length;
-    const normalizeRange = (rawRange) => {
-      const rawStart = Number(rawRange?.start);
-      const rawEnd = Number(rawRange?.end);
-      const safeStart = Number.isFinite(rawStart) ? Math.max(0, Math.min(textLength, Math.floor(rawStart))) : 0;
-      const safeEnd = Number.isFinite(rawEnd) ? Math.max(safeStart, Math.min(textLength, Math.floor(rawEnd))) : safeStart;
-      return { start: safeStart, end: safeEnd };
-    };
-
-    const pendingSelection = pendingSwatchSelectionRef.current;
-    const selectionSource = (
-      pendingSelection
-      && pendingSelection.lineKey === targetLine
-      && Number.isInteger(pendingSelection.start)
-      && Number.isInteger(pendingSelection.end)
-    )
-      ? pendingSelection
-      : readTextSelectionState(inputRefs.current[targetLine], selectionByLine[targetLine], line.text);
-    pendingSwatchSelectionRef.current = null;
-    const currentSelection = normalizeRange(selectionSource);
-
-    if (currentSelection.end > currentSelection.start) {
-      if (isLineDirty(targetLine)) {
-        onSettingChange(`${targetLine}Text`, line.text);
-      }
-      onSettingChange(
-        `${targetLine}HighlightsJson`,
-        applySelectionColor(
-          resolveCurrentLineHighlightsJson(targetLine, line.text),
-          line.text,
-          currentSelection.start,
-          currentSelection.end,
-          colorValue,
-        ),
-      );
-      setSelectionByLine((prev) => ({
-        ...prev,
-        [targetLine]: currentSelection,
-      }));
-      return;
-    }
-
-    onSettingChange(
-      `${targetLine}ClassName`,
-      replaceHeroLineColorClass(line.className, colorValue),
-    );
-  };
-
-  const removeHighlightAtIndex = (lineKey, index) => {
-    const line = lineByKey[lineKey];
-    if (!line) return;
-    if (isLineDirty(lineKey)) {
-      onSettingChange(`${lineKey}Text`, line.text);
-    }
-    onSettingChange(
-      `${lineKey}HighlightsJson`,
-      removeSelectionRange(resolveCurrentLineHighlightsJson(lineKey, line.text), line.text, index),
-    );
-  };
-
-  const resetAllLines = () => {
-    lineConfigs.forEach((line) => {
-      onSettingChange(`${line.key}ClassName`, replaceHeroLineColorClass(line.className, ''));
-      onSettingChange(`${line.key}HighlightsJson`, '');
-    });
-  };
 
   const detailFieldIds = new Set([
     'animationPreset',
@@ -3321,417 +3334,105 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     .filter(Boolean);
 
   return (
-    <div className="admin-hero-editor">
-      <HeroDriftNotice driftReport={heroInspection} />
-      <div className="admin-hero-editor-main">
-        <div className="admin-hero-editor-preview-pane">
-          <div className="admin-hero-inline-stage-wrap">
-            {bgToneField ? (
-              <div className="admin-hero-bg-overlay">
-                <ColorPalette
-                  variant="admin"
-                  className="is-compact admin-hero-inline-swatch-list is-icon-only"
-                  ariaLabel="Hero background"
-                  options={heroBgToneOptions}
-                  value={String(settings.bgTone || '')}
-                  onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
-                  getOptionClassName={(option, state) => ` admin-bg-swatch-option${state.active ? ' is-active' : ''}`}
-                />
-              </div>
-            ) : null}
-            <button
-              type="button"
-              className="admin-hero-inline-reset-btn"
-              onClick={resetAllLines}
-              title="Reset hero line colors and highlights"
-              aria-label="Reset hero line colors and highlights"
+    <HeroHudEditorPanel
+      lines={lineConfigs}
+      activeLineKey={activeLine}
+      selection={{ line: activeLine, start: 0, end: 0, text: '' }}
+      driftReport={heroInspection}
+      bgTone={heroBgTone}
+      justify={heroJustify}
+      titleSizeRem={heroTitleSizeRem}
+      titleLetterSpacingEm={heroTitleLetterSpacingEm}
+      lineHeight={heroLineHeight}
+      lineColorOptions={HERO_SWATCH_OPTIONS}
+      onLineTextChange={(lineKey, nextValue) => updateLineDraft(lineKey, nextValue)}
+      onLineTextBlur={(lineKey) => commitLineDraftOnBlur(lineKey)}
+      onActivateLine={(lineKey) => setActiveLine(lineKey)}
+      onApplyLineColor={(lineKey, colorValue) => {
+        const line = lineByKey[lineKey] || lineByKey.line1;
+        if (!line) {
+          return;
+        }
+        onSettingChange(lineKey + 'ClassName', replaceHeroLineColorClass(line.className, colorValue));
+      }}
+      onApplySelectionColor={(lineKey, colorValue, selection) => {
+        const line = lineByKey[lineKey] || lineByKey.line1;
+        const start = Number(selection?.start);
+        const end = Number(selection?.end);
+        if (!line || !Number.isInteger(start) || !Number.isInteger(end) || end <= start) {
+          return;
+        }
+        onSettingChange(lineKey + 'Text', line.text);
+        onSettingChange(lineKey + 'HighlightsJson', applySelectionColor(
+          resolveCurrentLineHighlightsJson(lineKey, line.text),
+          line.text,
+          start,
+          end,
+          colorValue,
+        ));
+      }}
+      onRemoveSpan={(lineKey, index) => {
+        const line = lineByKey[lineKey] || lineByKey.line1;
+        if (!line) {
+          return;
+        }
+        onSettingChange(
+          lineKey + 'HighlightsJson',
+          removeSelectionRange(resolveCurrentLineHighlightsJson(lineKey, line.text), line.text, index),
+        );
+      }}
+      onClearLineSpans={(lineKey) => onSettingChange(lineKey + 'HighlightsJson', '')}
+      onBgToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+      onJustifyChange={(nextValue) => onSettingChange('justify', nextValue)}
+      onTitleSizeChange={(nextValue) => onSettingChange('titleSizeRem', nextValue)}
+      onTitleLetterSpacingChange={(nextValue) => onSettingChange('titleLetterSpacingEm', nextValue)}
+      onLineHeightChange={(nextValue) => onSettingChange('lineHeight', nextValue)}
+      canAddOptionalLine={canShowOptionalLine3}
+      onAddOptionalLine={() => {
+        setShowOptionalLine3(true);
+        setActiveLine('line3');
+      }}
+      canRemoveOptionalLine={canHideOptionalLine3}
+      onRemoveOptionalLine={() => {
+        setShowOptionalLine3(false);
+        if (activeLine === 'line3') {
+          setActiveLine('line2');
+        }
+      }}
+      extraControlsLabel="More controls"
+      blockOptions={blockOptions}
+    >
+      <div className="admin-hero-hud-extra-grid" aria-label="Hero settings">
+        <div className="admin-hero-hud-extra-row">
+          <label className="admin-front-hud-field">
+            <span>Hero animation</span>
+            <select
+              aria-label="Hero animation"
+              value={String(settings.animationPreset || 'default')}
+              onChange={(event) => onSettingChange('animationPreset', event.target.value)}
             >
-              ↺
-            </button>
-            <div className={`admin-hero-inline-stage is-bg-${heroBgTone} is-justify-${heroJustify}`} aria-label="Hero editor preview surface">
-              {lineConfigs.map((line, index) => (
-                <div
-                  key={line.key}
-                  className={`admin-hero-inline-line-wrap${activeLine === line.key ? ' is-active' : ''}`}
-                >
-                  <div
-                  className={`admin-hero-inline-line-stage${line.className ? ` ${line.className}` : ''}`}
-                  >
-                    <div
-                      className={`admin-hero-inline-line-mirror${line.displayClassName ? ` ${line.displayClassName}` : ''}`}
-                      aria-hidden="true"
-                      style={{
-                        lineHeight: heroLineHeight,
-                        fontSize: heroTitleSizeCss,
-                        letterSpacing: `${heroTitleLetterSpacingEm}em`,
-                      }}
-                    >
-                      {line.text
-                        ? renderPreviewHighlightedText(line.text, line.highlights)
-                        : <span className="admin-hero-inline-line-placeholder">{line.placeholder}</span>}
-                    </div>
-                    <input
-                      ref={(node) => {
-                        inputRefs.current[line.key] = node;
-                      }}
-                      type="text"
-                      className={`admin-hero-inline-line-input${line.displayClassName ? ` ${line.displayClassName}` : ''}`}
-                      value={line.text}
-                      style={{
-                        lineHeight: heroLineHeight,
-                        fontSize: heroTitleSizeCss,
-                        letterSpacing: `${heroTitleLetterSpacingEm}em`,
-                      }}
-                      onFocus={() => {
-                        setActiveLine(line.key);
-                        syncSelection(line.key);
-                      }}
-                      onClick={() => {
-                        setActiveLine(line.key);
-                        syncSelection(line.key);
-                      }}
-                      onSelect={() => syncSelection(line.key)}
-                      onKeyUp={() => syncSelection(line.key)}
-                      onMouseUp={() => syncSelection(line.key)}
-                      onChange={(event) => updateLineText(line.key, event.target.value)}
-                      onBlur={() => commitLineDraftOnBlur(line.key)}
-                      placeholder={line.placeholder}
-                      aria-label={`${line.label} text`}
-                      autoComplete="off"
-                      spellCheck="false"
-                    />
-                  </div>
-                </div>
+              {HERO_ANIMATION_PRESET_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
               ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="admin-hero-editor-controls-pane">
-          <div className="admin-hero-inline-toolbar">
-            <div className="admin-hero-inline-toolbar-head">
-              <div className="admin-hero-inline-toolbar-head-copy">
-                <p className="admin-hero-inline-toolbar-kicker">Editing</p>
-                <p className="admin-hero-inline-toolbar-title">{activeConfig?.label || 'Line 1'}</p>
-              </div>
-              <p className="admin-hero-inline-toolbar-status">{activeLineSummary}</p>
-            </div>
-
-            <div className="admin-hero-inline-line-selector" role="toolbar" aria-label="Hero line controls">
-              {lineConfigs.map((line) => (
-                <button
-                  key={`hero-line-tab-${line.key}`}
-                  type="button"
-                  className={`admin-hero-inline-line-tab${activeLine === line.key ? ' is-active' : ''}`}
-                  aria-label={`${line.label}${line.highlights.length ? ` (${line.highlights.length} spans)` : ''}`}
-                  aria-pressed={activeLine === line.key}
-                  onClick={() => activateLine(line.key, { focus: true })}
-                >
-                  <span>{line.label}</span>
-                  {line.highlights.length ? (
-                    <span className="admin-hero-inline-line-tab-meta">{line.highlights.length}</span>
-                  ) : null}
-                </button>
-              ))}
-              {canShowOptionalLine3 ? (
-                <button
-                  type="button"
-                  className="admin-hero-inline-span-toggle"
-                  onClick={() => {
-                    setShowOptionalLine3(true);
-                    activateLine('line3', { focus: true });
-                  }}
-                >
-                  Add Line 3
-                </button>
-              ) : null}
-              {canHideOptionalLine3 ? (
-                <button
-                  type="button"
-                  className="admin-hero-inline-span-toggle"
-                  onClick={() => {
-                    setShowOptionalLine3(false);
-                    if (activeLine === 'line3') {
-                      activateLine('line2', { focus: true });
-                    }
-                  }}
-                >
-                  Hide Line 3
-                </button>
-              ) : null}
-            </div>
-
-            <div className="admin-hero-inline-toolbar-main admin-hero-inline-toolbar-main--hero">
-              <div
-                onMouseDownCapture={() => {
-                  const targetLine = activeLine || activeConfig?.key || 'line1';
-                  const selection = syncSelection(targetLine);
-                  pendingSwatchSelectionRef.current = {
-                    lineKey: targetLine,
-                    start: selection?.start,
-                    end: selection?.end,
-                  };
-                }}
-              >
-                <ColorPalette
-                  variant="admin"
-                  className="is-compact admin-hero-inline-swatch-list is-icon-only"
-                  ariaLabel="Hero color controls"
-                  options={HERO_SWATCH_OPTIONS}
-                  value={hasSelection ? selectedRangeColor : activeLineColor}
-                  preventMouseDown
-                  onChange={(nextValue) => applySwatch(nextValue)}
-                  getOptionClassName={(option, state) => `${state.active ? ' is-active' : ''}${option.value === '' ? ' is-clear' : ''}`}
-                  getOptionLabel={(option) => (
-                    hasSelection
-                      ? `${option.label} (apply to selection)`
-                      : `${option.label} (apply to ${activeConfig.label})`
-                  )}
-                  getOptionShortLabel={(option) => option.shortLabel || option.label}
-                  hideSwatchForOption={(option) => Boolean(option.hideSwatch)}
-                />
-              </div>
-              {justifyField ? (
-                <JustifyPillControl
-                  label="Hero justify"
-                  value={heroJustify}
-                  options={Array.isArray(justifyField.options) ? justifyField.options : []}
-                  onChange={(nextValue) => onSettingChange('justify', nextValue)}
-                  className="admin-hero-inline-justify-control"
-                />
-              ) : null}
-              <button
-                type="button"
-                className="admin-hero-inline-span-toggle"
-                onClick={resetAllLines}
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                className="admin-hero-inline-span-toggle"
-                onClick={() => setShowSpanDetails((current) => !current)}
-              >
-                {showSpanDetails ? 'Hide span details' : 'Show span details'}
-              </button>
-            </div>
-
-            {showSpanDetails ? (
-              <div className="admin-hero-inline-spans">
-                <div className="admin-hero-inline-spans-row is-active-line">
-                  <div className="admin-hero-inline-spans-row-head">
-                    <p className="admin-hero-inline-spans-label">{activeConfig.label} spans</p>
-                    {activeLineSpanCount ? (
-                      <p className="admin-hero-inline-spans-count">{activeLineSpanCount}</p>
-                    ) : null}
-                  </div>
-                  {activeConfig.highlights.length ? (
-                    <div className="admin-hero-inline-span-chip-list">
-                      {activeConfig.highlights.map((range, index) => {
-                        const snippet = activeConfig.text.slice(range.start, range.end);
-                        const swatch = HERO_SWATCH_OPTIONS.find((option) => option.value === range.className);
-                        return (
-                          <button
-                            key={`${activeConfig.key}-span-${range.start}-${range.end}-${range.className}`}
-                            type="button"
-                            className="admin-hero-inline-span-chip"
-                            onClick={() => removeHighlightAtIndex(activeConfig.key, index)}
-                            title="Remove span"
-                          >
-                            <span
-                              className="admin-hero-inline-span-chip-color"
-                              aria-hidden="true"
-                              style={{ background: swatch?.swatch || '#ddd' }}
-                            />
-                            <span className="admin-hero-inline-span-chip-text">
-                              “{snippet || ' '}” ({range.start}-{range.end})
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="admin-hero-inline-spans-empty">{hasSpanDetails ? 'No spans on this line.' : 'No colored spans yet.'}</p>
-                  )}
-                </div>
-
-                {otherLinesWithSpans.length ? (
-                  <div className="admin-hero-inline-spans-overview">
-                    <p className="admin-hero-inline-spans-overview-label">Other lines with spans</p>
-                    <div className="admin-hero-inline-spans-overview-actions">
-                      {otherLinesWithSpans.map((line) => (
-                        <button
-                          key={`hero-other-span-line-${line.key}`}
-                          type="button"
-                          className="admin-hero-inline-line-tab is-secondary"
-                          aria-label={`Go to ${line.label} spans (${line.highlights.length})`}
-                          onClick={() => activateLine(line.key, { focus: true })}
-                        >
-                          <span>{line.label}</span>
-                          <span className="admin-hero-inline-line-tab-meta">{line.highlights.length}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="admin-hero-inline-spacing-grid">
-              <label className="admin-hero-inline-linegap-control">
-                <div className="admin-line-spacing-control-head">
-                  <div className="admin-line-spacing-control-copy">
-                    <span className="admin-line-spacing-control-label">Headline Size</span>
-                    <span className="admin-line-spacing-control-value">{heroTitleSizeRem.toFixed(1)}rem</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="admin-line-spacing-reset-btn"
-                    onClick={() => onSettingChange('titleSizeRem', DEFAULT_HERO_TITLE_SIZE_REM)}
-                    title="Reset headline size"
-                    aria-label="Reset headline size"
-                  >
-                    ↺
-                  </button>
-                </div>
-                <div className="admin-hero-inline-height-row">
-                  <input
-                    type="range"
-                    min="4.5"
-                    max="9"
-                    step="0.1"
-                    value={heroTitleSizeRem}
-                    onChange={(event) => onSettingChange('titleSizeRem', Number(event.target.value))}
-                    aria-label="Hero headline size"
-                  />
-                  <AdminNumberInput
-                    className="admin-hero-inline-height-number"
-                    min="4.5"
-                    max="9"
-                    step="0.1"
-                    value={heroTitleSizeRem}
-                    onChange={(nextValue) => onSettingChange('titleSizeRem', nextValue)}
-                    aria-label="Hero headline size number"
-                  />
-                  <span className="admin-hero-inline-height-unit">rem</span>
-                </div>
-              </label>
-              <label className="admin-hero-inline-linegap-control">
-                <div className="admin-line-spacing-control-head">
-                  <div className="admin-line-spacing-control-copy">
-                    <span className="admin-line-spacing-control-label">Headline Tracking</span>
-                    <span className="admin-line-spacing-control-value">{heroTitleLetterSpacingEm.toFixed(3)}em</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="admin-line-spacing-reset-btn"
-                    onClick={() => onSettingChange('titleLetterSpacingEm', DEFAULT_HERO_TITLE_LETTER_SPACING_EM)}
-                    title="Reset headline tracking"
-                    aria-label="Reset headline tracking"
-                  >
-                    ↺
-                  </button>
-                </div>
-                <div className="admin-hero-inline-height-row">
-                  <input
-                    type="range"
-                    min="-0.08"
-                    max="0.04"
-                    step="0.005"
-                    value={heroTitleLetterSpacingEm}
-                    onChange={(event) => onSettingChange('titleLetterSpacingEm', Number(event.target.value))}
-                    aria-label="Hero headline tracking"
-                  />
-                  <AdminNumberInput
-                    className="admin-hero-inline-height-number"
-                    min="-0.08"
-                    max="0.04"
-                    step="0.005"
-                    value={heroTitleLetterSpacingEm}
-                    onChange={(nextValue) => onSettingChange('titleLetterSpacingEm', nextValue)}
-                    aria-label="Hero headline tracking number"
-                  />
-                  <span className="admin-hero-inline-height-unit">em</span>
-                </div>
-              </label>
-              <label className="admin-hero-inline-linegap-control">
-                <div className="admin-line-spacing-control-head">
-                  <div className="admin-line-spacing-control-copy">
-                    <span className="admin-line-spacing-control-label">Text Line Height</span>
-                    <span className="admin-line-spacing-control-value">{heroLineHeight.toFixed(2)}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="admin-line-spacing-reset-btn"
-                    onClick={() => onSettingChange('lineHeight', 0.9)}
-                    title="Reset line height"
-                    aria-label="Reset line height"
-                  >
-                    ↺
-                  </button>
-                </div>
-                <div className="admin-hero-inline-height-row">
-                  <input
-                    type="range"
-                    min="0.72"
-                    max="1.2"
-                    step="0.01"
-                    value={heroLineHeight}
-                    onChange={(event) => onSettingChange('lineHeight', Number(event.target.value))}
-                    aria-label="Hero line height"
-                  />
-                  <AdminNumberInput
-                    className="admin-hero-inline-height-number"
-                    min="0.72"
-                    max="1.2"
-                    step="0.01"
-                    value={heroLineHeight}
-                    onChange={(nextValue) => onSettingChange('lineHeight', nextValue)}
-                    aria-label="Hero line height number"
-                  />
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-hero-lower-groups">
-        <section className="admin-hero-settings-group admin-hero-settings-group--hero" aria-label="Hero settings">
-          <div className="admin-hero-settings-group-head">
-            <p className="admin-hero-settings-group-kicker">Hero settings</p>
-            <p className="admin-hero-settings-group-title">Overall motion, height, and action alignment</p>
-          </div>
-          <div className="admin-hero-settings-meta-grid">
-            <label className="admin-hero-settings-control">
-              <span>Hero animation</span>
-              <select
-                aria-label="Hero animation"
-                value={String(settings.animationPreset || 'default')}
-                onChange={(event) => onSettingChange('animationPreset', event.target.value)}
-              >
-                {HERO_ANIMATION_PRESET_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+            </select>
+          </label>
+          {actionJustifyField ? (
+            <label className="admin-front-hud-field">
+              <span>{actionJustifyField.label}</span>
+              {renderFieldControl(
+                actionJustifyField,
+                settings?.[actionJustifyField.id],
+                (nextValue) => onSettingChange(actionJustifyField.id, nextValue),
+                settings,
+                onSettingChange,
+                routeOptions,
+              )}
             </label>
+          ) : null}
+        </div>
 
-            {actionJustifyField ? (
-              <label className="admin-hero-settings-control">
-                <span>{actionJustifyField.label}</span>
-                {renderFieldControl(
-                  actionJustifyField,
-                  settings?.[actionJustifyField.id],
-                  (nextValue) => onSettingChange(actionJustifyField.id, nextValue),
-                  settings,
-                  onSettingChange,
-                  routeOptions,
-                )}
-              </label>
-            ) : null}
-          </div>
-
-          <label className="admin-hero-settings-control admin-hero-settings-control--height">
+        <div className="admin-hero-hud-extra-group">
+          <div className="admin-hero-hud-extra-group-head">
             <span>Hero height</span>
             <select
               aria-label="Hero height"
@@ -3741,68 +3442,64 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
               <option value="default">Default</option>
               <option value="custom">Custom (% viewport)</option>
             </select>
-            {heroHeightMode === 'custom' ? (
-              <div className="admin-hero-inline-height-row">
-                <input
-                  type="range"
-                  min="20"
-                  max="90"
-                  step="1"
-                  value={heroHeightSvh}
-                  onChange={(event) => onSettingChange('heightSvh', Number(event.target.value))}
-                  aria-label="Hero height percent of viewport"
-                />
-                <AdminNumberInput
-                  className="admin-hero-inline-height-number"
-                  min="20"
-                  max="90"
-                  step="1"
-                  value={heroHeightSvh}
-                  onChange={(nextValue) => onSettingChange('heightSvh', nextValue)}
-                  aria-label="Hero height percent"
-                />
-                <span className="admin-hero-inline-height-unit">svh</span>
-              </div>
-            ) : null}
-          </label>
-        </section>
-
-        <section className="admin-hero-settings-group admin-hero-settings-group--button" aria-label="Button 1 settings">
-          <div className="admin-hero-settings-group-head">
-            <p className="admin-hero-settings-group-kicker">Button 1</p>
-            <p className="admin-hero-settings-group-title">Primary label, destination, and style</p>
           </div>
-          <DraftBackedFieldControlGrid
-            fields={button1Fields}
-            settings={settings}
-            onSettingChange={onSettingChange}
-            className="admin-content-field-list--inline admin-hero-action-fields"
-            routeOptions={routeOptions}
-            draftFieldIds={HERO_BUTTON_LOCAL_DRAFT_FIELD_IDS[1]}
-          />
-        </section>
+          {heroHeightMode === 'custom' ? (
+            <div className="admin-hero-inline-height-row">
+              <input
+                type="range"
+                min="20"
+                max="90"
+                step="1"
+                value={heroHeightSvh}
+                onChange={(event) => onSettingChange('heightSvh', Number(event.target.value))}
+                aria-label="Hero height percent of viewport"
+              />
+              <AdminNumberInput
+                className="admin-hero-inline-height-number"
+                min="20"
+                max="90"
+                step="1"
+                value={heroHeightSvh}
+                onChange={(nextValue) => onSettingChange('heightSvh', nextValue)}
+                aria-label="Hero height percent"
+              />
+              <span className="admin-hero-inline-height-unit">svh</span>
+            </div>
+          ) : null}
+        </div>
 
-        <section className="admin-hero-settings-group admin-hero-settings-group--button" aria-label="Button 2 settings">
-          <div className="admin-hero-settings-group-head">
-            <p className="admin-hero-settings-group-kicker">Button 2</p>
-            <p className="admin-hero-settings-group-title">Secondary label, destination, and style</p>
-          </div>
-          <DraftBackedFieldControlGrid
-            fields={button2Fields}
-            settings={settings}
-            onSettingChange={onSettingChange}
-            className="admin-content-field-list--inline admin-hero-action-fields"
-            routeOptions={routeOptions}
-            draftFieldIds={HERO_BUTTON_LOCAL_DRAFT_FIELD_IDS[2]}
-          />
-        </section>
+        <div className="admin-hero-hud-action-grid">
+          {button1Fields.length ? (
+            <section className="admin-hero-hud-action-group" aria-label="Button 1 settings">
+              <h5>Button 1</h5>
+              <DraftBackedFieldControlGrid
+                fields={button1Fields}
+                settings={settings}
+                onSettingChange={onSettingChange}
+                className="admin-content-field-list--inline admin-hero-action-fields"
+                routeOptions={routeOptions}
+                draftFieldIds={HERO_BUTTON_LOCAL_DRAFT_FIELD_IDS[1]}
+              />
+            </section>
+          ) : null}
+          {button2Fields.length ? (
+            <section className="admin-hero-hud-action-group" aria-label="Button 2 settings">
+              <h5>Button 2</h5>
+              <DraftBackedFieldControlGrid
+                fields={button2Fields}
+                settings={settings}
+                onSettingChange={onSettingChange}
+                className="admin-content-field-list--inline admin-hero-action-fields"
+                routeOptions={routeOptions}
+                draftFieldIds={HERO_BUTTON_LOCAL_DRAFT_FIELD_IDS[2]}
+              />
+            </section>
+          ) : null}
+        </div>
 
         {miscFields.length ? (
-          <section className="admin-hero-settings-group admin-hero-settings-group--misc" aria-label="Additional Hero settings">
-            <div className="admin-hero-settings-group-head">
-              <p className="admin-hero-settings-group-kicker">Additional settings</p>
-              <p className="admin-hero-settings-group-title">Remaining Hero controls</p>
-            </div>
+          <section className="admin-hero-hud-action-group" aria-label="Additional Hero settings">
+            <h5>Additional settings</h5>
             <FieldControlGrid
               fields={miscFields}
               settings={settings}
@@ -3813,11 +3510,12 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
           </section>
         ) : null}
       </div>
-    </div>
+    </HeroHudEditorPanel>
   );
+
 }
 
-export function IntroBlockEditor({ block, onSettingChange, routeOptions = [] }) {
+export function IntroBlockEditor({ block, onSettingChange, routeOptions = [], sourceRevision = 0 }) {
   const settings = block.settings || {};
   const introDraftSettings = useMemo(() => ({
     ...settings,
@@ -3859,11 +3557,13 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [] }) 
       button2Url: 'button2PageRef',
     },
     routeOptions,
+    sourceRevision,
   });
   const contentFields = allFields.filter((field) => (
     field.id !== 'heading'
     && field.id !== 'body'
     && field.id !== 'bodyHtml'
+    && field.id !== 'bodyColorClassName'
     && field.id !== 'bgTone'
     && field.id !== 'textTone'
     && field.id !== 'justify'
@@ -4074,16 +3774,25 @@ export function IntroBlockEditor({ block, onSettingChange, routeOptions = [] }) 
   );
 }
 
-function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [] }) {
+function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [], blockOptions = null }) {
   const settings = block.settings || {};
   const allFields = resolveEditorFields(block.kind, 'hud', block.editableFields);
+  const actionSettings = {
+    ...settings,
+    button1Style: settings.button1Style || 'blue',
+    button1Tone: settings.button1Tone || 'atlantean',
+    button2Style: settings.button2Style || 'blue',
+    button2Tone: settings.button2Tone || 'atlantean',
+  };
   const introHeadingInputRef = useRef(null);
   const introExtraLineInputRef = useRef(null);
   const introBodyInputRef = useRef(null);
   const [introHeadingSelection, setIntroHeadingSelection] = useState({ start: 0, end: 0, text: '' });
   const [introBodyMiniEditorEnabled, setIntroBodyMiniEditorEnabled] = useState(true);
-  const actionFields = allFields
-    .filter((field) => field.id.startsWith('button1') || field.id.startsWith('button2'))
+  const actionFieldGroups = [1, 2].map((buttonNumber) => ({
+    buttonNumber,
+    fields: allFields
+    .filter((field) => field.id.startsWith(`button${buttonNumber}`))
     .map((field) => {
       if (field.id === 'button1Url' && field.type === 'text') {
         return promoteRouteLinkDescriptor(field, 'button1PageRef');
@@ -4091,10 +3800,35 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [] }) {
       if (field.id === 'button2Url' && field.type === 'text') {
         return promoteRouteLinkDescriptor(field, 'button2PageRef');
       }
+      if (field.id === `button${buttonNumber}Label`) {
+        return { ...field, label: 'Label', layout: 'half' };
+      }
+      if (field.id === `button${buttonNumber}Style`) {
+        return { ...field, label: 'Style', layout: 'half' };
+      }
+      if (field.id === `button${buttonNumber}Tone`) {
+        return {
+          ...field,
+          label: 'Color',
+          compact: true,
+          iconOnly: true,
+          layout: 'half',
+          swatchClassName: 'admin-button-tone-swatch-list',
+        };
+      }
       return field;
-    });
+    }),
+  })).filter((group) => group.fields.length);
+  const actionFields = actionFieldGroups.flatMap((group) => group.fields);
 
-  const captureGenericSelection = (inputRef, setter) => {
+  const captureGenericSelection = (inputRef, setter, selectionMeta = null) => {
+    if (selectionMeta && Number.isInteger(selectionMeta.start) && Number.isInteger(selectionMeta.end)) {
+      const source = String(inputRef?.current?.value || selectionMeta.value || '');
+      const start = Math.max(0, Math.min(selectionMeta.start, selectionMeta.end));
+      const end = Math.max(start, Math.min(Math.max(selectionMeta.start, selectionMeta.end), source.length));
+      setter({ start, end, text: source.slice(start, end) });
+      return;
+    }
     const input = inputRef?.current;
     if (!input) {
       return;
@@ -4122,7 +3856,11 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [] }) {
         setIntroHeadingSelection({ start: 0, end: 0, text: '' });
       }}
       headingInputRef={introHeadingInputRef}
-      onHeadingSelectionCapture={() => captureGenericSelection(introHeadingInputRef, setIntroHeadingSelection)}
+      onHeadingSelectionCapture={(selectionMeta) => captureGenericSelection(
+        introHeadingInputRef,
+        setIntroHeadingSelection,
+        selectionMeta,
+      )}
       headingSelection={introHeadingSelection}
       headingHighlightsJson={String(settings.headingHighlightsJson || '')}
       headingColor={extractHeroLineColorToken(settings.headingClassName)}
@@ -4130,10 +3868,10 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [] }) {
         'headingClassName',
         replaceHeroLineColorClass(String(settings.headingClassName || ''), nextValue),
       )}
-      onHeadingSelectionColorChange={(nextValue) => {
+      onHeadingSelectionColorChange={(nextValue, selectedHeading = introHeadingSelection) => {
         const sourceText = String(settings.heading || '');
-        const safeStart = Math.max(0, Math.min(Number(introHeadingSelection.start) || 0, sourceText.length));
-        const safeEnd = Math.max(safeStart, Math.min(Number(introHeadingSelection.end) || 0, sourceText.length));
+        const safeStart = Math.max(0, Math.min(Number(selectedHeading.start) || 0, sourceText.length));
+        const safeEnd = Math.max(safeStart, Math.min(Number(selectedHeading.end) || 0, sourceText.length));
         if (safeEnd <= safeStart) {
           return;
         }
@@ -4161,6 +3899,8 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [] }) {
       onToggleBodyMiniEditor={() => setIntroBodyMiniEditorEnabled((current) => !current)}
       bodyHtml={String(settings.bodyHtml || '')}
       onBodyHtmlChange={(nextValue) => onSettingChange('bodyHtml', nextValue)}
+      bodyColorClassName={String(settings.bodyColorClassName || resolvePanelTextToneClassName(settings.textTone, 'dark'))}
+      onBodyColorChange={(nextValue) => onSettingChange('bodyColorClassName', nextValue)}
       bodyInputRef={introBodyInputRef}
       textTone={String(settings.textTone || 'dark')}
       onTextToneChange={(nextValue) => onSettingChange('textTone', nextValue)}
@@ -4172,51 +3912,64 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [] }) {
       onLineSpacingChange={(nextValue) => onSettingChange('lineSpacing', Number(nextValue))}
       allowWhiteBackground
       actionsSlot={actionFields.length ? (
-        <section className="admin-front-hud-card admin-intro-hud-card admin-intro-hud-card--actions">
+        <>
           <EditorButtonPreview
             buttons={[
               {
-                label: settings.button1Label,
-                style: settings.button1Style,
-                tone: settings.button1Tone,
+                label: actionSettings.button1Label,
+                style: actionSettings.button1Style,
+                tone: actionSettings.button1Tone,
               },
               {
-                label: settings.button2Label,
-                style: settings.button2Style,
-                tone: settings.button2Tone,
+                label: actionSettings.button2Label,
+                style: actionSettings.button2Style,
+                tone: actionSettings.button2Tone,
               },
             ]}
           />
-          <FieldControlGrid
-            fields={actionFields}
-            settings={settings}
-            onSettingChange={onSettingChange}
-            className="admin-content-field-list--inline"
-            routeOptions={routeOptions}
-          />
-        </section>
+          <div className="admin-intro-hud-action-groups">
+            {actionFieldGroups.map((group) => (
+              <section
+                key={`intro-hud-button-${group.buttonNumber}`}
+                className="admin-intro-hud-action-group"
+                aria-label={`Button ${group.buttonNumber} settings`}
+              >
+                <h4>Button {group.buttonNumber}</h4>
+                <FieldControlGrid
+                  fields={group.fields}
+                  settings={actionSettings}
+                  onSettingChange={onSettingChange}
+                  className="admin-content-field-list--inline admin-intro-hud-action-fields"
+                  routeOptions={routeOptions}
+                  paletteVariant="hud"
+                />
+              </section>
+            ))}
+          </div>
+        </>
       ) : null}
+      blockOptions={blockOptions}
     />
   );
 }
 
-export function BillboardBlockEditor({ block, onSettingChange, routeOptions = [] }) {
+export function BillboardBlockEditor({ block, onSettingChange, routeOptions = [], blockOptions = null, sourceRevision = 0 }) {
   const settings = block.settings || {};
   const billboardDraftSettings = useMemo(() => ({
     ...settings,
     buttonUrl: resolveSplitRouteLinkEditableHref(settings, 'buttonUrl', 'buttonPageRef'),
     button2Url: resolveSplitRouteLinkEditableHref(settings, 'button2Url', 'button2PageRef'),
   }), [settings]);
+  const effectiveBillboardSettings = billboardDraftSettings;
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const bgToneField = fieldById.get('bgTone') || null;
-  const textToneField = fieldById.get('textTone') || null;
   const justifyField = fieldById.get('justify') || null;
   const buttonStyleField = fieldById.get('buttonStyle') || null;
   const buttonToneField = fieldById.get('buttonTone') || null;
   const button2StyleField = fieldById.get('button2Style') || null;
   const button2ToneField = fieldById.get('button2Tone') || null;
-  const billboardBgTone = normalizePanelBgTone(settings.bgTone);
+  const billboardBgTone = normalizePanelBgTone(effectiveBillboardSettings.bgTone);
   const billboardJustifyOptions = Array.isArray(justifyField?.options) && justifyField.options.length
     ? justifyField.options
     : [
@@ -4224,21 +3977,20 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       { value: 'center', label: 'Center' },
       { value: 'right', label: 'Right' },
     ];
-  const billboardJustify = normalizeJustifySelection(settings.justify, billboardJustifyOptions);
-  const billboardLineSpacing = normalizeBillboardLineSpacing(settings.lineSpacing);
-  const billboardTitleFontFamily = normalizeBillboardTitleFontFamily(settings.titleFontFamily);
+  const billboardJustify = normalizeJustifySelection(effectiveBillboardSettings.justify, billboardJustifyOptions);
+  const billboardLineSpacing = normalizeBillboardLineSpacing(effectiveBillboardSettings.lineSpacing);
+  const billboardTitleFontFamily = normalizeBillboardTitleFontFamily(effectiveBillboardSettings.titleFontFamily);
   const billboardTitleFontWeight = normalizeBillboardTitleFontWeight(
-    settings.titleFontWeight,
+    effectiveBillboardSettings.titleFontWeight,
     billboardTitleFontFamily,
   );
-  const billboardTitleSizeRem = normalizeBillboardTitleSizeRem(settings.titleSizeRem);
+  const billboardTitleSizeRem = normalizeBillboardTitleSizeRem(effectiveBillboardSettings.titleSizeRem);
   const billboardTitleLetterSpacingEm = normalizeBillboardTitleLetterSpacingEm(
-    settings.titleLetterSpacingEm,
+    effectiveBillboardSettings.titleLetterSpacingEm,
     billboardTitleFontFamily,
   );
-  const billboardSubtitleDisplay = normalizeBillboardSubtitleDisplay(settings.subtitleDisplay);
-  const billboardSubtitleSizeRem = normalizeBillboardSubtitleSizeRem(settings.subtitleSizeRem);
-  const billboardTextTone = normalizePanelTextTone(settings.textTone, 'white');
+  const billboardSubtitleSizeRem = normalizeBillboardSubtitleSizeRem(effectiveBillboardSettings.subtitleSizeRem);
+  const billboardTextTone = normalizePanelTextTone(effectiveBillboardSettings.textTone, 'white');
   const billboardTitleInputRef = useRef(null);
   const [billboardTitleSelection, setBillboardTitleSelection] = useState({
     start: 0,
@@ -4259,6 +4011,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       button2Url: 'button2PageRef',
     },
     routeOptions,
+    sourceRevision,
   });
 
   const captureBillboardTitleSelection = () => {
@@ -4288,18 +4041,12 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       subtitle={String(draftValues.subtitle || '')}
       onSubtitleChange={(nextValue) => updateDraftField('subtitle', nextValue)}
       onSubtitleBlur={() => commitDraftOnBlur('subtitle')}
-      subtitleColor={extractHeroLineColorToken(String(settings.subtitleClassName || '').trim())}
+      subtitleColor={extractHeroLineColorToken(String(effectiveBillboardSettings.subtitleClassName || '').trim())}
       onSubtitleColorChange={(nextValue) => onSettingChange(
         'subtitleClassName',
-        replaceHeroLineColorClass(String(settings.subtitleClassName || '').trim(), nextValue),
+        replaceHeroLineColorClass(String(effectiveBillboardSettings.subtitleClassName || '').trim(), nextValue),
       )}
       subtitleColorOptions={HERO_SWATCH_OPTIONS}
-      subtitleDisplay={billboardSubtitleDisplay}
-      onSubtitleDisplayChange={(nextValue) => onSettingChange('subtitleDisplay', nextValue)}
-      subtitleDisplayOptions={[
-        { value: 'supporting', label: 'Supporting (default)' },
-        { value: 'headline', label: 'Headline' },
-      ]}
       subtitleSizeRem={billboardSubtitleSizeRem}
       onSubtitleSizeRemChange={(nextValue) => onSettingChange('subtitleSizeRem', Number(nextValue))}
       body={String(draftValues.body || '')}
@@ -4308,10 +4055,10 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       titleInputRef={billboardTitleInputRef}
       onTitleSelectionCapture={captureBillboardTitleSelection}
       titleSelection={billboardTitleSelection}
-      titleColor={extractHeroLineColorToken(String(settings.titleClassName || '').trim())}
+      titleColor={extractHeroLineColorToken(String(effectiveBillboardSettings.titleClassName || '').trim())}
       onTitleColorChange={(nextValue) => onSettingChange(
         'titleClassName',
-        replaceHeroLineColorClass(String(settings.titleClassName || '').trim(), nextValue),
+        replaceHeroLineColorClass(String(effectiveBillboardSettings.titleClassName || '').trim(), nextValue),
       )}
       onTitleSelectionColorChange={(nextValue) => {
         const currentTitle = String(draftValues.title || '');
@@ -4323,7 +4070,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
         onSettingChange(
           'titleHighlightsJson',
           applySelectionColor(
-            settings.titleHighlightsJson,
+            effectiveBillboardSettings.titleHighlightsJson,
             currentTitle,
             safeStart,
             safeEnd,
@@ -4335,9 +4082,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       bodyHtml={String(draftValues.bodyHtml || '')}
       onBodyHtmlChange={(nextValue) => updateDraftField('bodyHtml', nextValue)}
       onBodyHtmlBlur={() => commitDraftOnBlur('bodyHtml')}
-      textTone={billboardTextTone}
-      onTextToneChange={(nextValue) => onSettingChange('textTone', nextValue)}
-      textToneOptions={Array.isArray(textToneField?.options) && textToneField.options.length ? textToneField.options : BILLBOARD_TEXT_SWATCH_OPTIONS}
+      bodyColorClassName={String(effectiveBillboardSettings.bodyColorClassName || resolvePanelTextToneClassName(billboardTextTone, 'white'))}
+      onBodyColorChange={(nextValue) => onSettingChange('bodyColorClassName', nextValue)}
       bgTone={billboardBgTone}
       onBgToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
       bgToneOptions={Array.isArray(bgToneField?.options) && bgToneField.options.length ? bgToneField.options : BILLBOARD_BG_SWATCH_OPTIONS}
@@ -4351,7 +4097,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
         { value: 'helv', label: 'Helvetica Neue' },
       ]}
       titleFontWeight={billboardTitleFontWeight}
-      onTitleFontWeightChange={(nextValue) => onSettingChange('titleFontWeight', nextValue)}
+      onTitleFontWeightChange={(nextValue) => onSettingChange('titleFontWeight', Number(nextValue))}
       titleWeightOptions={[600, 700, 800, 900]}
       lineSpacing={billboardLineSpacing}
       onLineSpacingChange={(nextValue) => onSettingChange('lineSpacing', Number(nextValue))}
@@ -4359,8 +4105,6 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       onTitleSizeRemChange={(nextValue) => onSettingChange('titleSizeRem', Number(nextValue))}
       titleLetterSpacingEm={billboardTitleLetterSpacingEm}
       onTitleLetterSpacingEmChange={(nextValue) => onSettingChange('titleLetterSpacingEm', Number(nextValue))}
-      headlineMaxWidthPx={Number.isFinite(Number(settings.headlineMaxWidthPx)) ? Number(settings.headlineMaxWidthPx) : null}
-      onHeadlineMaxWidthPxChange={(nextValue) => onSettingChange('headlineMaxWidthPx', nextValue == null ? null : Number(nextValue))}
       buttonLabel={String(draftValues.buttonLabel || '')}
       onButtonLabelChange={(nextValue) => updateDraftField('buttonLabel', nextValue)}
       onButtonLabelBlur={() => commitDraftOnBlur('buttonLabel')}
@@ -4370,10 +4114,10 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       }}
       onButtonHrefBlur={() => commitDraftOnBlur('buttonUrl')}
       buttonHrefLabel="Button URL/path"
-      buttonStyle={String(settings.buttonStyle || '').trim().toLowerCase() || 'blue'}
+      buttonStyle={String(effectiveBillboardSettings.buttonStyle || '').trim().toLowerCase() || 'blue'}
       onButtonStyleChange={(nextValue) => onSettingChange('buttonStyle', nextValue)}
       buttonStyleOptions={Array.isArray(buttonStyleField?.options) && buttonStyleField.options.length ? buttonStyleField.options : BILLBOARD_BUTTON_STYLE_OPTIONS}
-      buttonTone={String(settings.buttonTone || '').trim().toLowerCase() || 'atlantean'}
+      buttonTone={String(effectiveBillboardSettings.buttonTone || '').trim().toLowerCase() || 'atlantean'}
       onButtonToneChange={(nextValue) => onSettingChange('buttonTone', nextValue)}
       buttonToneOptions={Array.isArray(buttonToneField?.options) && buttonToneField.options.length ? buttonToneField.options : BILLBOARD_BUTTON_TONE_OPTIONS}
       button2Label={String(draftValues.button2Label || '')}
@@ -4385,14 +4129,15 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       }}
       onButton2HrefBlur={() => commitDraftOnBlur('button2Url')}
       button2HrefLabel="Button 2 URL/path"
-      button2Style={String(settings.button2Style || '').trim().toLowerCase() || 'outline'}
+      button2Style={String(effectiveBillboardSettings.button2Style || '').trim().toLowerCase() || 'outline'}
       onButton2StyleChange={(nextValue) => onSettingChange('button2Style', nextValue)}
       button2StyleOptions={Array.isArray(button2StyleField?.options) && button2StyleField.options.length ? button2StyleField.options : BILLBOARD_BUTTON_STYLE_OPTIONS}
-      button2Tone={String(settings.button2Tone || '').trim().toLowerCase() || 'white'}
+      button2Tone={String(effectiveBillboardSettings.button2Tone || '').trim().toLowerCase() || 'white'}
       onButton2ToneChange={(nextValue) => onSettingChange('button2Tone', nextValue)}
       button2ToneOptions={Array.isArray(button2ToneField?.options) && button2ToneField.options.length ? button2ToneField.options : BILLBOARD_BUTTON_TONE_OPTIONS}
-      contentMaxWidthPx={settings.contentMaxWidthPx ?? null}
-      onContentMaxWidthPxChange={(nextValue) => onSettingChange('contentMaxWidthPx', nextValue == null || nextValue === '' ? '' : Number(nextValue))}
+      contentMaxWidthPx={effectiveBillboardSettings.contentMaxWidthPx ?? null}
+      onContentMaxWidthPxChange={(nextValue) => onSettingChange('contentMaxWidthPx', nextValue == null || nextValue === '' ? '' : normalizeBillboardWidth(nextValue))}
+      blockOptions={blockOptions}
     />
   );
 }
@@ -4446,7 +4191,10 @@ function useBufferedStringFieldDrafts({
   routeFieldIdByFieldId = {},
   routeLinkFieldByFieldId = {},
   routeOptions = [],
+  sourceRevision = 0,
 }) {
+  const contentAdmin = useOptionalContentAdmin();
+  const effectiveSourceRevision = sourceRevision || contentAdmin?.sharedSnapshotUpdatedAt || 0;
   const normalizedFieldIds = useMemo(
     () => (Array.isArray(fieldIds) ? fieldIds.map((fieldId) => String(fieldId || '').trim()).filter(Boolean) : []),
     [fieldIds],
@@ -4462,6 +4210,8 @@ function useBufferedStringFieldDrafts({
   const [dirtyFieldIds, setDirtyFieldIds] = useState([]);
   const commitTimersRef = useRef(new Map());
   const protectedDraftValuesRef = useRef(new Map());
+  const latestSourceRevisionRef = useRef(normalizeEditorDraftRevision(effectiveSourceRevision));
+  const draftValuesRef = useRef(draftValues);
   const externalDraftValues = useMemo(
     () => readEditorLocalDrafts(settings, normalizedFieldIds, routeFieldIdByFieldId, routeLinkFieldByFieldId),
     [normalizedFieldIds, routeFieldIdByFieldId, routeLinkFieldByFieldId, settings],
@@ -4477,6 +4227,17 @@ function useBufferedStringFieldDrafts({
   }, []);
 
   useEffect(() => {
+    draftValuesRef.current = draftValues;
+  }, [draftValues]);
+
+  useEffect(() => {
+    latestSourceRevisionRef.current = Math.max(
+      latestSourceRevisionRef.current,
+      normalizeEditorDraftRevision(effectiveSourceRevision),
+    );
+  }, [effectiveSourceRevision]);
+
+  useEffect(() => {
     const activeFieldIds = new Set(normalizedFieldIds);
     protectedDraftValuesRef.current.forEach((_, fieldId) => {
       if (!activeFieldIds.has(fieldId)) {
@@ -4486,14 +4247,25 @@ function useBufferedStringFieldDrafts({
   }, [normalizedFieldIds]);
 
   useEffect(() => {
+    const normalizedSourceRevision = normalizeEditorDraftRevision(effectiveSourceRevision);
+    if (isOlderEditorDraftRevision(normalizedSourceRevision, latestSourceRevisionRef.current)) {
+      return;
+    }
     setDraftValues((current) => {
       let changed = false;
       const next = { ...current };
       normalizedFieldIds.forEach((fieldId) => {
-        if (dirtyFieldIds.includes(fieldId) || protectedDraftValuesRef.current.has(fieldId)) {
+        const externalValue = externalDraftValues[fieldId];
+        const protectedDraft = protectedDraftValuesRef.current.get(fieldId);
+        if (protectedDraft) {
+          if (shouldKeepProtectedEditorDraft(protectedDraft, normalizedSourceRevision)) {
+            return;
+          }
+          protectedDraftValuesRef.current.delete(fieldId);
+        }
+        if (dirtyFieldIds.includes(fieldId)) {
           return;
         }
-        const externalValue = externalDraftValues[fieldId];
         if (current[fieldId] === externalValue) {
           return;
         }
@@ -4502,7 +4274,7 @@ function useBufferedStringFieldDrafts({
       });
       return changed ? next : current;
     });
-  }, [dirtyFieldIds, externalDraftValues, normalizedFieldIds]);
+  }, [dirtyFieldIds, externalDraftValues, normalizedFieldIds, effectiveSourceRevision]);
 
   useEffect(() => {
     setRouteRefDraftValues((current) => {
@@ -4537,7 +4309,10 @@ function useBufferedStringFieldDrafts({
       commitTimersRef.current.delete(fieldId);
     }
 
-    protectedDraftValuesRef.current.set(fieldId, nextValue);
+    protectedDraftValuesRef.current.set(
+      fieldId,
+      createProtectedEditorDraft(nextValue, effectiveSourceRevision),
+    );
     onSettingChange(fieldId, nextValue);
 
     const routeRefFieldId = routeFieldIdByFieldId[fieldId];
@@ -4566,7 +4341,14 @@ function useBufferedStringFieldDrafts({
   };
 
   const updateDraftField = (fieldId, nextValue, { commitImmediately = false, skipRouteRefSync = false } = {}) => {
-    protectedDraftValuesRef.current.set(fieldId, nextValue);
+    protectedDraftValuesRef.current.set(
+      fieldId,
+      createProtectedEditorDraft(nextValue, effectiveSourceRevision),
+    );
+    draftValuesRef.current = {
+      ...draftValuesRef.current,
+      [fieldId]: nextValue,
+    };
     setDraftValues((current) => (
       current[fieldId] === nextValue
         ? current
@@ -4581,8 +4363,21 @@ function useBufferedStringFieldDrafts({
   };
 
   const commitDraftOnBlur = (fieldId) => {
-    commitDraftField(fieldId, draftValues[fieldId] ?? '');
+    commitDraftField(fieldId, draftValuesRef.current[fieldId] ?? '');
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    const flushDrafts = () => {
+      dirtyFieldIds.forEach((fieldId) => {
+        commitDraftField(fieldId, draftValuesRef.current[fieldId] ?? '');
+      });
+    };
+    window.addEventListener(EDITOR_DRAFT_FLUSH_EVENT, flushDrafts);
+    return () => window.removeEventListener(EDITOR_DRAFT_FLUSH_EVENT, flushDrafts);
+  }, [dirtyFieldIds]);
 
   const handleRouteRefChange = (fieldId, nextValue) => {
     const routeRefFieldId = routeFieldIdByFieldId[fieldId];
@@ -4597,7 +4392,14 @@ function useBufferedStringFieldDrafts({
     onSettingChange(routeRefFieldId, nextValue);
     const matchedPage = normalizedRouteOptions.find((page) => toManagedPageLinkRef(page) === String(nextValue || '').trim());
     if (matchedPage?.path) {
-      protectedDraftValuesRef.current.set(fieldId, matchedPage.path);
+      protectedDraftValuesRef.current.set(
+        fieldId,
+        createProtectedEditorDraft(matchedPage.path, effectiveSourceRevision),
+      );
+      draftValuesRef.current = {
+        ...draftValuesRef.current,
+        [fieldId]: matchedPage.path,
+      };
       setDraftValues((current) => (
         current[fieldId] === matchedPage.path
           ? current
@@ -4617,7 +4419,14 @@ function useBufferedStringFieldDrafts({
       commitTimersRef.current.delete(fieldId);
     }
 
-    protectedDraftValuesRef.current.set(fieldId, nextValue);
+    protectedDraftValuesRef.current.set(
+      fieldId,
+      createProtectedEditorDraft(nextValue, effectiveSourceRevision),
+    );
+    draftValuesRef.current = {
+      ...draftValuesRef.current,
+      [fieldId]: nextValue,
+    };
     setDraftValues((current) => (
       current[fieldId] === nextValue
         ? current
@@ -4655,6 +4464,9 @@ function DraftBackedFieldControlGrid({
   className = '',
   routeOptions = [],
   draftFieldIds = [],
+  paletteVariant = 'admin',
+  commitImmediately = false,
+  sourceRevision = 0,
 }) {
   const items = Array.isArray(fields) ? fields.filter(Boolean) : [];
   const explicitDraftFieldIds = new Set(
@@ -4692,6 +4504,7 @@ function DraftBackedFieldControlGrid({
     routeFieldIdByFieldId,
     routeLinkFieldByFieldId,
     routeOptions,
+    sourceRevision,
   });
   const draftedFieldIdSet = new Set(draftedFieldIds);
 
@@ -4705,7 +4518,11 @@ function DraftBackedFieldControlGrid({
         const fieldId = String(field?.id || '').trim();
         const isDrafted = draftedFieldIdSet.has(fieldId);
         return (
-          <label key={field.id} className={field.layout === 'half' ? 'is-half' : undefined}>
+          <label
+            key={field.id}
+            className={field.layout === 'half' ? 'is-half' : undefined}
+            data-editor-field-id={field.id}
+          >
             <span>{field.label}</span>
             {isDrafted ? (
               field.type === 'route_link' ? (
@@ -4715,7 +4532,7 @@ function DraftBackedFieldControlGrid({
                   routeRefValue={field.routeRefFieldId ? routeRefDraftValues[fieldId] ?? '' : ''}
                   openInNewWindowValue={resolveCanonicalRouteLinkOpenInNewWindow(settings, field)}
                   openInNewWindowLabel={field.openInNewWindowLabel || 'Open in new window'}
-                  onChange={(nextValue) => updateDraftField(fieldId, nextValue)}
+                  onChange={(nextValue) => updateDraftField(fieldId, nextValue, { commitImmediately })}
                   onRouteLinkChange={(nextValue, nextRouteRefValue) => {
                     commitRouteLinkField(fieldId, nextValue, nextRouteRefValue, resolveCanonicalRouteLinkOpenInNewWindow(settings, field));
                   }}
@@ -4734,7 +4551,7 @@ function DraftBackedFieldControlGrid({
                   rows={field.rows || 4}
                   value={draftValues[fieldId] ?? ''}
                   placeholder={field.placeholder || undefined}
-                  onChange={(event) => updateDraftField(fieldId, event.target.value)}
+                  onChange={(event) => updateDraftField(fieldId, event.target.value, { commitImmediately })}
                   onBlur={() => commitDraftOnBlur(fieldId)}
                 />
               ) : (
@@ -4742,7 +4559,7 @@ function DraftBackedFieldControlGrid({
                   type="text"
                   value={draftValues[fieldId] ?? ''}
                   placeholder={field.placeholder || undefined}
-                  onChange={(event) => updateDraftField(fieldId, event.target.value)}
+                  onChange={(event) => updateDraftField(fieldId, event.target.value, { commitImmediately })}
                   onBlur={() => commitDraftOnBlur(fieldId)}
                 />
               )
@@ -4755,6 +4572,7 @@ function DraftBackedFieldControlGrid({
               settings,
               onSettingChange,
               routeOptions,
+              paletteVariant,
             )}
           </label>
         );
@@ -4839,6 +4657,7 @@ function SingleActionPromoBlockEditor({
   fallbackActionFieldIds = [],
   routeRefFieldIds = {},
   draftFieldIds = [],
+  sourceRevision = 0,
 }) {
   const settings = block.settings || {};
   const presetDefinition = resolveBlockPresetDefinition(block);
@@ -4877,6 +4696,7 @@ function SingleActionPromoBlockEditor({
           className="admin-content-field-list--inline"
           routeOptions={routeOptions}
           draftFieldIds={draftFieldIds}
+          sourceRevision={sourceRevision}
         />
       </section>
       <section className="admin-cta-field-slot-card">
@@ -4888,13 +4708,14 @@ function SingleActionPromoBlockEditor({
           className="admin-content-field-list--inline"
           routeOptions={routeOptions}
           draftFieldIds={draftFieldIds}
+          sourceRevision={sourceRevision}
         />
       </section>
     </div>
   );
 }
 
-export function FeaturePanelBlockEditor({ block, onSettingChange, routeOptions = [] }) {
+export function FeaturePanelBlockEditor({ block, onSettingChange, routeOptions = [], sourceRevision = 0 }) {
   return (
     <SingleActionPromoBlockEditor
       block={block}
@@ -4905,11 +4726,14 @@ export function FeaturePanelBlockEditor({ block, onSettingChange, routeOptions =
       fallbackActionFieldIds={['buttonLabel', 'buttonUrl', 'buttonOpenInNewWindow']}
       routeRefFieldIds={{ buttonUrl: 'buttonPageRef' }}
       draftFieldIds={['title', 'body', 'buttonLabel', 'buttonUrl']}
+      sourceRevision={sourceRevision}
     />
   );
 }
 
-export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = [] }) {
+export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = [], sourceRevision = 0 }) {
+  const contentAdmin = useOptionalContentAdmin();
+  const effectiveSourceRevision = sourceRevision || contentAdmin?.sharedSnapshotUpdatedAt || 0;
   const settings = block.settings || {};
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
@@ -4924,6 +4748,8 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
   const [draftValues, setDraftValues] = useState(() => readEditorLocalDrafts(settings, SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS));
   const [dirtyFieldIds, setDirtyFieldIds] = useState([]);
   const commitTimersRef = useRef(new Map());
+  const protectedDraftValuesRef = useRef(new Map());
+  const latestSourceRevisionRef = useRef(normalizeEditorDraftRevision(effectiveSourceRevision));
   const externalDraftValues = useMemo(
     () => readEditorLocalDrafts(settings, SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS),
     [settings],
@@ -4935,6 +4761,17 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
   }, []);
 
   useEffect(() => {
+    latestSourceRevisionRef.current = Math.max(
+      latestSourceRevisionRef.current,
+      normalizeEditorDraftRevision(effectiveSourceRevision),
+    );
+  }, [effectiveSourceRevision]);
+
+  useEffect(() => {
+    const normalizedSourceRevision = normalizeEditorDraftRevision(effectiveSourceRevision);
+    if (isOlderEditorDraftRevision(normalizedSourceRevision, latestSourceRevisionRef.current)) {
+      return;
+    }
     setDraftValues((current) => {
       let changed = false;
       const next = { ...current };
@@ -4943,6 +4780,13 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
           return;
         }
         const externalValue = externalDraftValues[fieldId];
+        const protectedDraft = protectedDraftValuesRef.current.get(fieldId);
+        if (protectedDraft) {
+          if (shouldKeepProtectedEditorDraft(protectedDraft, normalizedSourceRevision)) {
+            return;
+          }
+          protectedDraftValuesRef.current.delete(fieldId);
+        }
         if (current[fieldId] === externalValue) {
           return;
         }
@@ -4951,7 +4795,7 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
       });
       return changed ? next : current;
     });
-  }, [dirtyFieldIds, externalDraftValues]);
+  }, [dirtyFieldIds, externalDraftValues, effectiveSourceRevision]);
 
   useEffect(() => {
     setDirtyFieldIds((current) => {
@@ -4967,6 +4811,10 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
       commitTimersRef.current.delete(fieldId);
     }
 
+    protectedDraftValuesRef.current.set(
+      fieldId,
+      createProtectedEditorDraft(nextValue, effectiveSourceRevision),
+    );
     onSettingChange(fieldId, nextValue);
   };
 
@@ -4982,6 +4830,10 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
         : { ...current, buttonUrl: nextValue }
     ));
     setDirtyFieldIds((current) => (current.includes('buttonUrl') ? current : [...current, 'buttonUrl']));
+    protectedDraftValuesRef.current.set(
+      'buttonUrl',
+      createProtectedEditorDraft(nextValue, effectiveSourceRevision),
+    );
     commitCanonicalRouteLink(
       onSettingChange,
       buttonUrlField || 'buttonUrl',
@@ -5003,6 +4855,10 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
   };
 
   const updateDraftField = (fieldId, nextValue, { commitImmediately = false, skipRouteRefSync = false } = {}) => {
+    protectedDraftValuesRef.current.set(
+      fieldId,
+      createProtectedEditorDraft(nextValue, effectiveSourceRevision),
+    );
     setDraftValues((current) => (
       current[fieldId] === nextValue
         ? current
@@ -5019,6 +4875,19 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
   const commitDraftOnBlur = (fieldId) => {
     commitDraftField(fieldId, draftValues[fieldId] ?? '');
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    const flushDrafts = () => {
+      dirtyFieldIds.forEach((fieldId) => {
+        commitDraftField(fieldId, draftValues[fieldId] ?? '');
+      });
+    };
+    window.addEventListener(EDITOR_DRAFT_FLUSH_EVENT, flushDrafts);
+    return () => window.removeEventListener(EDITOR_DRAFT_FLUSH_EVENT, flushDrafts);
+  }, [dirtyFieldIds, draftValues]);
 
   return (
     <div className="admin-cta-field-slots">
@@ -5437,14 +5306,13 @@ export function CalculatorCtaBlockEditor({ block, onSettingChange }) {
   );
 }
 
-export function GridBlockEditor({ block, onSettingChange, routeOptions = [] }) {
+export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hudMode = false }) {
   const documentsContext = useContext(DocumentsContext);
   const documents = Array.isArray(documentsContext?.documents) ? documentsContext.documents : [];
   const settings = block.settings || {};
   const presetDefinition = resolveBlockPresetDefinition(block);
   const presetEditor = presetDefinition?.editor || {};
   const presetCardFeatures = presetEditor?.cardFeatures || {};
-  const presetDescription = String(presetDefinition?.description || '').trim();
   const introHtml = String(settings.bodyHtml || '').trim();
   const hasIntroContent = Boolean(
     String(settings.title || '').trim()
@@ -5456,7 +5324,6 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [] }) {
   const bgToneField = fieldById.get('bgTone') || null;
   const titleToneFieldBase = fieldById.get('titleTone') || null;
   const bodyToneFieldBase = fieldById.get('bodyTone') || null;
-  const dividerToneField = fieldById.get('dividerTone') || null;
   const cardStyleFieldBase = fieldById.get('cardStyle') || null;
   const gridBgTone = normalizeGridBgTone(settings.bgTone);
   const titleToneField = useMemo(() => {
@@ -5493,37 +5360,25 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [] }) {
   const allowedLayoutFieldIds = new Set(
     Array.isArray(presetEditor.layoutFieldIds) && presetEditor.layoutFieldIds.length
       ? presetEditor.layoutFieldIds
-      : ['contentWidth', 'columns', 'cardStyle', 'showTitleDivider'],
+      : ['contentWidth', 'columns', 'cardStyle'],
   );
   const showTypographyFields = presetEditor.typographyFields !== false;
   const presetMaxCards = Number.isInteger(presetEditor.maxCards)
     ? Math.max(1, Math.min(8, presetEditor.maxCards))
     : 8;
-  const appearanceFields = [titleToneField, bodyToneField, dividerToneField]
+  const appearanceFields = [titleToneField, bodyToneField]
     .filter(Boolean)
     .map((field) => ({
       ...field,
-      label: field.id === 'dividerTone'
-        ? 'Line color'
-        : (field.id === 'titleTone' ? 'Card title color' : field.label),
+      label: field.id === 'titleTone' ? 'Card title color' : field.label,
       compact: true,
       iconOnly: true,
       swatchClassName: 'admin-button-tone-swatch-list',
     }));
-  const cardDividerOptions = useMemo(() => (
-    (Array.isArray(dividerToneField?.options) ? dividerToneField.options : [])
-      .map((option) => ({
-        ...option,
-        token: String(option?.value || '').trim().toLowerCase(),
-      }))
-      .filter((option) => option.token && option.token !== 'auto')
-  ), [dividerToneField]);
-
   const layoutFields = [
     fieldById.get('contentWidth'),
     fieldById.get('columns'),
     cardStyleField,
-    fieldById.get('showTitleDivider'),
   ].filter((field) => field && allowedLayoutFieldIds.has(field.id));
   const cardTypographyFields = [
     fieldById.get('cardPaddingRem'),
@@ -5574,13 +5429,6 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [] }) {
       onSettingChange('bodyTone', nextBodyTone);
     }
   }, [bodyToneFieldBase, gridBgTone, onSettingChange, settings.bodyTone]);
-
-  useEffect(() => {
-    if (Object.prototype.hasOwnProperty.call(settings, 'dividerTone')) {
-      return;
-    }
-    onSettingChange('dividerTone', 'auto');
-  }, [onSettingChange, settings]);
 
   const handleGridBackgroundChange = (nextBgToneRaw) => {
     const nextBgTone = normalizeGridBgTone(nextBgToneRaw);
@@ -5639,7 +5487,6 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [] }) {
             accordionCount ? `${accordionCount} accordion groups` : '',
           ]),
           isExisting: Boolean(title || body || hasAction || hasSecondaryAction || linkCount || accordionCount),
-          dividerToneValue: String(settings[`card${slot}DividerTone`] || '').trim().toLowerCase(),
           fields: [
             fieldById.get(`card${slot}Title`),
             fieldById.get(`card${slot}Body`),
@@ -5698,18 +5545,180 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [] }) {
 
   const nextHiddenCardSlot = availableCardSlots.find((slot) => !visibleCardSlots.includes(slot)) || null;
 
-  return (
-    <div className="admin-intro-block-editor">
-      {presetDefinition ? (
-        <section className="admin-cta-field-slot-card">
-          <h4>Card Grid Preset</h4>
-          <p><strong>{presetDefinition.label}</strong></p>
-          {presetDescription ? (
-            <p>{presetDescription}</p>
+  const cardList = (
+    <ProgressiveCardEditorList
+      heading="Cards"
+      className="admin-progressive-slot-list--grid-cards"
+      slots={cardSlots.filter((item) => visibleCardSlots.includes(item.slot))}
+      expandedSlot={expandedCardSlot}
+      onToggleSlot={(slot) => setExpandedCardSlot((current) => (current === slot ? null : slot))}
+      onRevealNextSlot={nextHiddenCardSlot
+        ? () => {
+          setRevealedCardSlots((current) => mergeVisibleSlotList([...current, nextHiddenCardSlot], existingCardSlots, availableCardSlots));
+          setExpandedCardSlot(nextHiddenCardSlot);
+        }
+        : null}
+      revealLabel={nextHiddenCardSlot ? `Add card ${nextHiddenCardSlot}` : 'Add card'}
+      renderSlotBody={(slotData) => (
+        <>
+          <DraftBackedFieldControlGrid
+            fields={slotData.fields}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            className="admin-content-field-list--inline"
+            routeOptions={routeOptions}
+            draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
+          />
+          {slotData.showDirectLinks ? (
+            <GridResourceLinkListEditor
+              label="Direct PDF / link list"
+              items={parseGridResourceLinkItems(settings[`card${slotData.slot}LinksJson`])}
+              onChange={(nextItems) => onSettingChange(`card${slotData.slot}LinksJson`, serializeGridResourceLinkItems(nextItems))}
+              routeOptions={normalizedRouteOptions}
+              documentOptions={documentOptions}
+              addLabel="Add direct link"
+            />
           ) : null}
-        </section>
-      ) : null}
+          {slotData.showAccordions ? (
+            <GridResourceAccordionEditor
+              value={parseGridResourceAccordions(settings[`card${slotData.slot}AccordionsJson`])}
+              onChange={(nextItems) => onSettingChange(`card${slotData.slot}AccordionsJson`, serializeGridResourceAccordions(nextItems))}
+              routeOptions={normalizedRouteOptions}
+              documentOptions={documentOptions}
+            />
+          ) : null}
+        </>
+      )}
+    />
+  );
 
+  if (hudMode) {
+    return (
+      <div className="admin-card-grid-hud-reference">
+        <div className="admin-card-grid-hud-page admin-card-grid-hud-page--content">
+          <div className="admin-card-grid-hud-content-groups">
+          <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--heading" aria-label="Card Grid content settings">
+            <div className="admin-billboard-hud-reference-head">
+              <div><h3>Content</h3><span>Heading and intro copy</span></div>
+              <span className="admin-billboard-editor-panel-index">01</span>
+            </div>
+            {showIntroFields ? (
+              <ColorTextSelectionEditor
+                label="Grid intro heading"
+                text={settings.title ?? ''}
+                lineClassName={settings.titleClassName ?? ''}
+                highlightsJson={settings.titleHighlightsJson ?? ''}
+                onTextChange={(nextValue) => onSettingChange('title', nextValue)}
+                onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
+                onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
+                placeholder="Card grid heading"
+                rows={2}
+                className="is-intro-heading admin-card-grid-hud-heading-editor"
+                unifiedPreviewEditor
+                showPlaceholderInPreview={false}
+                previewWrapClassName={`is-bg-${gridBgTone}`}
+                showSpanDetailsInline
+                showClearSpansButton
+                useResetForClear
+                swatchVariant="hud"
+              />
+            ) : null}
+            <div className="admin-card-grid-hud-intro-copy">
+              <span>Intro copy</span>
+              <AdminHtmlEditor
+                compact
+                paletteVariant="hud"
+                value={toEditorHtml(settings.bodyHtml, settings.body)}
+                onChange={(nextValue) => onSettingChange('bodyHtml', nextValue)}
+                placeholder="Optional intro copy"
+              />
+            </div>
+          </section>
+          </div>
+        </div>
+
+        <div className="admin-card-grid-hud-page admin-card-grid-hud-page--appearance">
+          <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--appearance" aria-label="Card Grid appearance settings">
+            <div className="admin-billboard-hud-reference-head">
+              <div><h3>Appearance</h3><span>Color and surface</span></div>
+              <span className="admin-billboard-editor-panel-index">02</span>
+            </div>
+            <PanelAppearanceControls
+              fields={appearanceFields}
+              settings={settings}
+              onSettingChange={onSettingChange}
+              compactSwatches={false}
+              paletteVariant="hud"
+              className="admin-panel-appearance--intro-text"
+            />
+            {bgToneField ? (
+              <label className="admin-front-hud-field admin-card-grid-hud-bg-field">
+                <span>{bgToneField.label || 'Background color'}</span>
+                <ColorPalette
+                  variant="hud"
+                  className="is-compact is-icon-only is-circular"
+                  ariaLabel={bgToneField.label || 'Grid background'}
+                  options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
+                  value={String(settings.bgTone || '')}
+                  preventMouseDown
+                  onChange={(nextValue) => handleGridBackgroundChange(nextValue)}
+                />
+              </label>
+            ) : null}
+          </section>
+        </div>
+
+        <div className="admin-card-grid-hud-page admin-card-grid-hud-page--layout">
+          <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--layout" aria-label="Card Grid layout settings">
+            <div className="admin-billboard-hud-reference-head">
+              <div><h3>Layout</h3><span>Width, columns, and card surface</span></div>
+              <span className="admin-billboard-editor-panel-index">03</span>
+            </div>
+            <FieldControlGrid
+              fields={layoutFields}
+              settings={settings}
+              onSettingChange={(fieldId, nextValue) => {
+                if (fieldId === 'cardStyle') {
+                  const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
+                  onSettingChange('cardStyle', nextStyle);
+                  return;
+                }
+                onSettingChange(fieldId, nextValue);
+              }}
+              className="admin-content-field-list--inline admin-card-grid-hud-fields"
+              paletteVariant="hud"
+            />
+          </section>
+        </div>
+
+        {showTypographyFields ? (
+          <div className="admin-card-grid-hud-page admin-card-grid-hud-page--typography">
+            <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--typography" aria-label="Card Grid typography settings">
+              <div className="admin-billboard-hud-reference-head">
+                <div><h3>Card typography</h3><span>Size, spacing, and leading</span></div>
+                <span className="admin-billboard-editor-panel-index">04</span>
+              </div>
+              <FieldControlGrid
+                fields={cardTypographyFields}
+                settings={settings}
+                onSettingChange={onSettingChange}
+                className="admin-content-field-list--inline admin-card-grid-hud-fields"
+                paletteVariant="hud"
+              />
+            </section>
+          </div>
+        ) : null}
+        <div className="admin-card-grid-hud-page admin-card-grid-hud-page--cards">
+          <div className="admin-card-grid-hud-cards-group" aria-label="Card Grid cards settings">
+          {cardList}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-intro-block-editor admin-card-grid-hud-editor">
       <div className="admin-dynamic-panel-primary-grid admin-dynamic-panel-primary-grid--intro admin-grid-heading-row">
         {showIntroFields ? (
           <div className="admin-intro-editor-main admin-grid-heading-editor">
@@ -5721,7 +5730,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [] }) {
               onTextChange={(nextValue) => onSettingChange('title', nextValue)}
               onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
               onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
-              placeholder="Grid heading"
+              placeholder="Card grid heading"
               rows={2}
               className="is-intro-heading"
               unifiedPreviewEditor
@@ -5737,7 +5746,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [] }) {
                 compact
                 value={toEditorHtml(settings.bodyHtml, settings.body)}
                 onChange={(nextValue) => onSettingChange('bodyHtml', nextValue)}
-                placeholder="Grid intro copy"
+                placeholder="Optional intro copy"
               />
             </div>
           </div>
@@ -5779,98 +5788,35 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [] }) {
         </div>
       </div>
 
-      <FieldControlGrid
-        fields={layoutFields}
-        settings={settings}
-        onSettingChange={(fieldId, nextValue) => {
-          if (fieldId === 'cardStyle') {
-            const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
-            onSettingChange('cardStyle', nextStyle);
-            return;
-          }
-          onSettingChange(fieldId, nextValue);
-        }}
-        className="admin-content-field-list--inline admin-grid-layout-fields"
-      />
-      {showTypographyFields ? (
+      <section className="admin-card-grid-control-group">
+        <h4>Layout</h4>
         <FieldControlGrid
-          fields={cardTypographyFields}
+          fields={layoutFields}
           settings={settings}
-          onSettingChange={onSettingChange}
+          onSettingChange={(fieldId, nextValue) => {
+            if (fieldId === 'cardStyle') {
+              const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
+              onSettingChange('cardStyle', nextStyle);
+              return;
+            }
+            onSettingChange(fieldId, nextValue);
+          }}
           className="admin-content-field-list--inline admin-grid-layout-fields"
         />
+      </section>
+      {showTypographyFields ? (
+        <section className="admin-card-grid-control-group">
+          <h4>Card typography</h4>
+          <FieldControlGrid
+            fields={cardTypographyFields}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            className="admin-content-field-list--inline admin-grid-layout-fields"
+          />
+        </section>
       ) : null}
 
-      <ProgressiveCardEditorList
-        heading="Cards"
-        className="admin-progressive-slot-list--grid-cards"
-        slots={cardSlots.filter((item) => visibleCardSlots.includes(item.slot))}
-        expandedSlot={expandedCardSlot}
-        onToggleSlot={(slot) => setExpandedCardSlot((current) => (current === slot ? null : slot))}
-        onRevealNextSlot={nextHiddenCardSlot
-          ? () => {
-            setRevealedCardSlots((current) => mergeVisibleSlotList([...current, nextHiddenCardSlot], existingCardSlots, availableCardSlots));
-            setExpandedCardSlot(nextHiddenCardSlot);
-          }
-          : null}
-        revealLabel={nextHiddenCardSlot ? `Add card ${nextHiddenCardSlot}` : 'Add card'}
-        renderSlotBody={(slotData) => (
-          <>
-            <div className="admin-grid-card-divider-controls admin-grid-card-divider-controls--body">
-              <ColorPalette
-                variant="admin"
-                className="is-compact is-icon-only admin-grid-card-divider-palette"
-                ariaLabel={`Card ${slotData.slot} line color override`}
-                options={cardDividerOptions}
-                value={slotData.dividerToneValue}
-                onChange={(nextValue, option) => {
-                  const resolvedValue = option?.value ?? nextValue;
-                  onSettingChange(`card${slotData.slot}DividerTone`, resolvedValue);
-                }}
-                isOptionActive={(option) => slotData.dividerToneValue === option.token}
-                getOptionClassName={(option, state) => `admin-grid-card-divider-swatch${state.active ? ' is-active' : ''}`}
-                getOptionLabel={(option) => option.label || option.value}
-                getOptionShortLabel={(option) => option.shortLabel || option.label || option.value}
-              />
-              <button
-                type="button"
-                className={`admin-grid-card-divider-clear${slotData.dividerToneValue ? ' is-active' : ''}`}
-                onClick={() => onSettingChange(`card${slotData.slot}DividerTone`, '')}
-                title="Clear override (use global grid line color)"
-                aria-label={`Clear Card ${slotData.slot} line color override`}
-              >
-                ×
-              </button>
-            </div>
-            <DraftBackedFieldControlGrid
-              fields={slotData.fields}
-              settings={settings}
-              onSettingChange={onSettingChange}
-              className="admin-content-field-list--inline"
-              routeOptions={routeOptions}
-              draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
-            />
-            {slotData.showDirectLinks ? (
-              <GridResourceLinkListEditor
-                label="Direct PDF / link list"
-                items={parseGridResourceLinkItems(settings[`card${slotData.slot}LinksJson`])}
-                onChange={(nextItems) => onSettingChange(`card${slotData.slot}LinksJson`, serializeGridResourceLinkItems(nextItems))}
-                routeOptions={normalizedRouteOptions}
-                documentOptions={documentOptions}
-                addLabel="Add direct link"
-              />
-            ) : null}
-            {slotData.showAccordions ? (
-              <GridResourceAccordionEditor
-                value={parseGridResourceAccordions(settings[`card${slotData.slot}AccordionsJson`])}
-                onChange={(nextItems) => onSettingChange(`card${slotData.slot}AccordionsJson`, serializeGridResourceAccordions(nextItems))}
-                routeOptions={normalizedRouteOptions}
-                documentOptions={documentOptions}
-              />
-            ) : null}
-          </>
-        )}
-      />
+      {cardList}
     </div>
   );
 }
@@ -5987,11 +5933,13 @@ export function PageContentBlockEditor({ block, onSettingChange }) {
   );
 }
 
-export function PageContentHudBlockEditor({ block, onSettingChange }) {
+export function PageContentHudBlockEditor({ block, onSettingChange, blockOptions = null, sourceRevision = 0 }) {
   return (
     <PageContentHudEditorPanel
       block={block}
       onSettingChange={onSettingChange}
+      blockOptions={blockOptions}
+      sourceRevision={sourceRevision}
     />
   );
 }
@@ -6029,7 +5977,7 @@ export function TopStripBlockEditor({ block, onSettingChange }) {
   );
 }
 
-export function TopStripHudBlockEditor({ block, onSettingChange }) {
+export function TopStripHudBlockEditor({ block, onSettingChange, blockOptions = null, sourceRevision = 0 }) {
   const settings = block.settings || {};
   const allFields = resolveEditorFields(block.kind, 'hud', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
@@ -6042,6 +5990,8 @@ export function TopStripHudBlockEditor({ block, onSettingChange }) {
       textOptions={Array.isArray(fieldById.get('textTone')?.options) ? fieldById.get('textTone').options : []}
       loginToneOptions={Array.isArray(fieldById.get('loginButtonTone')?.options) ? fieldById.get('loginButtonTone').options : []}
       ratesToneOptions={Array.isArray(fieldById.get('ratesButtonTone')?.options) ? fieldById.get('ratesButtonTone').options : []}
+      blockOptions={blockOptions}
+      sourceRevision={sourceRevision}
     />
   );
 }
@@ -6391,7 +6341,7 @@ export function TestimonialsBlockEditor({
   );
 }
 
-export function TestimonialsHudBlockEditor({ block, pathname = '', onSettingChange, testimonialsLibrary = [] }) {
+export function TestimonialsHudBlockEditor({ block, pathname = '', onSettingChange, testimonialsLibrary = [], blockOptions = null }) {
   void pathname;
   const {
     settings,
@@ -6449,6 +6399,7 @@ export function TestimonialsHudBlockEditor({ block, pathname = '', onSettingChan
       onToggleFilterTag={toggleFilterTag}
       previewItems={previewItems}
       formatAttribution={formatTestimonialAttribution}
+      blockOptions={blockOptions}
     />
   );
 }

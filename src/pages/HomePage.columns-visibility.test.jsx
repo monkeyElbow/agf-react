@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
 import { serializeLinkValue } from '../lib/linkValue';
 
 let mockBlocksByPath = {};
@@ -75,14 +76,16 @@ function expectHomeMathBillboardWithoutPhoto({ requireHighlight = true } = {}) {
 
 describe('HomePage columns visibility', () => {
   beforeEach(() => {
-    mockBlocksByPath = {};
+    mockBlocksByPath = {
+      '/': contentBlockBlueprintsByPath['/'].map((block) => ({ ...block, settings: { ...block.settings } })),
+    };
   });
 
-  it('renders the home impact story through the site-feature path by default', () => {
+  it('renders the current dynamic home impact block by default', () => {
     const { container } = renderHomePage();
 
     const heroBlock = container.querySelector('[data-block-id="hero"]');
-    const impactBlock = container.querySelector('[data-block-id="home_impact_story"]');
+    const impactBlock = container.querySelector('[data-block-id="impact_stat"]');
     const featureBlock = container.querySelector('[data-block-id="home_services_feature_animation"]');
     const homePage = container.querySelector('.home-native-page');
 
@@ -92,10 +95,11 @@ describe('HomePage columns visibility', () => {
     expect(heroBlock).toBeTruthy();
     expect(homePage?.className).toContain('ag-page-shell');
     expect(homePage?.className).not.toContain('is-home-hero-temporarily-hidden');
-    expect(impactBlock?.compareDocumentPosition(featureBlock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(impactBlock).toBeTruthy();
+    expect(featureBlock).toBeTruthy();
   });
 
-  it('renders managed home columns in static and dynamic modes', () => {
+  it('renders managed home columns from dynamic blocks', () => {
     mockBlocksByPath = {
       '/': [
         {
@@ -110,7 +114,7 @@ describe('HomePage columns visibility', () => {
         {
           id: 'home_do_the_math',
           kind: 'billboard',
-          mode: 'static',
+          mode: 'dynamic',
           settings: {
             title: '(let us) Do the math.',
             titleHighlightsJson: '[{"text":"(let us)","className":"is-atlantean"}]',
@@ -132,7 +136,7 @@ describe('HomePage columns visibility', () => {
     expectHomeMathBillboardWithoutPhoto({ requireHighlight: false });
   });
 
-  it('renders a managed static home hero instead of falling back to the seed hero copy', () => {
+  it('does not render retired static home hero records', () => {
     mockBlocksByPath = {
       '/': [
         {
@@ -161,13 +165,13 @@ describe('HomePage columns visibility', () => {
 
     renderHomePage();
 
-    expect(screen.getByText('Managed.')).toBeTruthy();
-    expect(screen.getByText('Static for QA.')).toBeTruthy();
-    expect(screen.getByText('Still deterministic.')).toBeTruthy();
+    expect(screen.queryByText('Managed.')).toBeNull();
+    expect(screen.queryByText('Static for QA.')).toBeNull();
+    expect(screen.queryByText('Still deterministic.')).toBeNull();
     expect(screen.queryByText('Convenient.')).toBeNull();
   });
 
-  it('ignores stale static managed home billboard records and keeps the seed billboards visible', () => {
+  it('does not resurrect retired static home billboard records', () => {
     mockBlocksByPath = {
       '/': [
         {
@@ -192,18 +196,17 @@ describe('HomePage columns visibility', () => {
 
     renderHomePage();
 
-    expectHomeMhaBillboard();
-    expectHomeMathBlockTitle();
-    expectHomeMathBillboardWithoutPhoto();
+    expect(screen.queryByText('Ministry allies.')).toBeNull();
+    expect(screen.queryByText('(let us) Do the math.')).toBeNull();
   });
 
-  it('falls back to the static home columns layout when managed settings become unusable', () => {
+  it('preserves empty dynamic home settings without static copy fallback', () => {
     mockBlocksByPath = {
       '/': [
         {
           id: 'home_ministry_allies',
           kind: 'billboard',
-          mode: 'static',
+          mode: 'dynamic',
           settings: {
             title: '',
             bodyHtml: '',
@@ -225,9 +228,8 @@ describe('HomePage columns visibility', () => {
 
     renderHomePage();
 
-    expectHomeMhaBillboard();
-    expectHomeMathBlockTitle();
-    expectHomeMathBillboardWithoutPhoto();
+    expect(screen.queryByText('Ministry allies.')).toBeNull();
+    expect(screen.queryByText('(let us) Do the math.')).toBeNull();
   });
 
   it('renders managed home math billboard content on the canonical renderer contract', () => {
@@ -236,7 +238,7 @@ describe('HomePage columns visibility', () => {
         {
           id: 'home_ministry_allies',
           kind: 'billboard',
-          mode: 'static',
+          mode: 'dynamic',
           settings: {
             title: 'Ministry allies.',
           },
@@ -248,6 +250,9 @@ describe('HomePage columns visibility', () => {
           settings: {
             title: 'Compare the paths.',
             body: 'Tune the whole section from the HUD.',
+            titleHighlightsJson: '',
+            buttonLabel: 'Use the calculators',
+            buttonLinkJson: serializeLinkValue({ kind: 'internal', to: '/calculators' }),
           },
         },
       ],
@@ -280,7 +285,7 @@ describe('HomePage columns visibility', () => {
     expect(screen.getByText(/Layout and motion stay in code/i)).toBeTruthy();
   });
 
-  it('does not render stale dynamic impact stat blocks after the canonical home impact story', () => {
+  it('renders explicitly managed dynamic impact stat blocks', () => {
     mockBlocksByPath = {
       '/': [
         {
@@ -307,7 +312,7 @@ describe('HomePage columns visibility', () => {
 
     renderHomePage();
 
-    expect(screen.queryByRole('heading', { name: /Measured ministry impact/i })).toBeNull();
-    expect(screen.queryByText('Still supported on the home shared renderer path.')).toBeNull();
+    expect(screen.getByRole('heading', { name: /Measured ministry impact/i })).toBeTruthy();
+    expect(screen.getByText('Still supported on the home shared renderer path.')).toBeTruthy();
   });
 });

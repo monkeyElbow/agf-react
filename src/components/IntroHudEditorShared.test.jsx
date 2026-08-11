@@ -1,9 +1,10 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { createElement } from 'react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import IntroHudEditorPanel from './IntroHudEditorShared';
 
 function renderPanel(props = {}) {
-  return render(IntroHudEditorPanel({
+  return render(createElement(IntroHudEditorPanel, {
     heading: 'Invest like it matters. Because it does.',
     headingSelection: { start: 0, end: 0, text: '' },
     headingColor: '',
@@ -24,7 +25,7 @@ describe('IntroHudEditorPanel', () => {
     expect(within(corePalette).getByRole('radio', { name: 'Sandstone' })).toBeTruthy();
 
     rerender(
-      IntroHudEditorPanel({
+      createElement(IntroHudEditorPanel, {
         heading: 'Invest like it matters. Because it does.',
         headingSelection: { start: 28, end: 35, text: 'se it d' },
         headingHighlightsJson: '[{"start":24,"end":39,"className":"is-atlantean","text":"Because it does"}]',
@@ -42,6 +43,34 @@ describe('IntroHudEditorPanel', () => {
     expect(within(selectionPalette).getByRole('radio', { name: 'Blue' }).getAttribute('aria-checked')).toBe('true');
   });
 
+  it('applies the first swatch click to the live selected letter, not the core heading', () => {
+    const headingInputRef = { current: null };
+    const onHeadingColorChange = vi.fn();
+    const onHeadingSelectionColorChange = vi.fn();
+    renderPanel({
+      headingInputRef,
+      onHeadingColorChange,
+      onHeadingSelectionColorChange,
+    });
+
+    const headingInput = screen.getByRole('textbox', { name: 'Heading' });
+    headingInputRef.current = headingInput;
+    headingInput.selectionStart = 8;
+    headingInput.selectionEnd = 9;
+
+    const blueSwatch = within(screen.getByRole('radiogroup', { name: 'Core Color' }))
+      .getByRole('radio', { name: 'Blue' });
+    fireEvent.mouseDown(blueSwatch);
+    fireEvent.click(blueSwatch);
+
+    expect(onHeadingSelectionColorChange).toHaveBeenCalledWith('is-atlantean', {
+      start: 8,
+      end: 9,
+      text: 'i',
+    });
+    expect(onHeadingColorChange).not.toHaveBeenCalled();
+  });
+
   it('keeps sandstone available as an explicit intro heading preview color', () => {
     const { container } = renderPanel({ headingColor: 'is-sandstone' });
 
@@ -52,7 +81,7 @@ describe('IntroHudEditorPanel', () => {
   it('renders the intro heading as a live preview editor instead of a plain text input only', () => {
     renderPanel();
 
-    expect(screen.getByLabelText('Heading')).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: 'Heading' })).toBeTruthy();
     expect(document.querySelector('.admin-intro-hud-live-heading')).toBeTruthy();
   });
 
@@ -85,16 +114,17 @@ describe('IntroHudEditorPanel', () => {
   });
 
   it('keeps the pilot compact by removing redundant section headers and notes', () => {
-    renderPanel();
+    const { container } = renderPanel();
 
-    expect(screen.queryByText('Heading', { exact: true })).toBeNull();
-    expect(screen.queryByText('Body', { exact: true })).toBeNull();
-    expect(screen.queryByText('Layout', { exact: true })).toBeNull();
-    expect(screen.queryByText('Actions', { exact: true })).toBeNull();
+    const sectionRail = screen.getByRole('navigation', { name: 'Intro editor sections' });
+    expect(within(sectionRail).getByRole('button', { name: 'Heading' })).toBeTruthy();
+    expect(within(sectionRail).getByRole('button', { name: 'Body' })).toBeTruthy();
+    expect(within(sectionRail).queryByRole('button', { name: 'Layout' })).toBeNull();
+    expect(within(sectionRail).queryByRole('button', { name: 'Actions' })).toBeNull();
     expect(screen.queryByText('Click body copy on page to jump here.')).toBeNull();
     expect(screen.queryByText('Optional line beneath the heading.')).toBeNull();
-    expect(document.querySelector('.admin-intro-hud-heading-group')?.parentElement?.className).toContain('admin-hud-editor-main');
-    expect(document.querySelector('.admin-intro-hud-accent-group')?.parentElement?.className).toContain('admin-hud-editor-main');
+    expect(container.querySelector('.admin-intro-hud-heading-group')?.parentElement?.className).toContain('admin-hud-editor-main');
+    expect(container.querySelector('.admin-intro-hud-accent-group')?.parentElement?.className).toContain('admin-hud-editor-main');
   });
 
   it('keeps highlight guidance inline with the highlight swatches', () => {
@@ -117,5 +147,21 @@ describe('IntroHudEditorPanel', () => {
     expect(layout?.compareDocumentPosition(heading)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+  });
+
+  it('keeps the actions page as one HUD group instead of nesting a second card', () => {
+    const { container } = renderPanel({
+      actionsSlot: (
+        <>
+          <div className="admin-intro-hud-action-groups">
+            <section className="admin-intro-hud-action-group"><h4>Button 1</h4></section>
+          </div>
+        </>
+      ),
+    });
+
+    const actionsPage = container.querySelector('.admin-hud-editor-actions-page');
+    expect(actionsPage?.querySelector('.admin-front-hud-card')).toBeNull();
+    expect(actionsPage?.querySelector('.admin-intro-hud-action-group')).toBeTruthy();
   });
 });

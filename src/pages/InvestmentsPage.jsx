@@ -27,6 +27,7 @@ import {
   defaultInvestmentsGrowthFeatureSettings,
 } from '../data/investmentsPageSeed';
 import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
+import FrontHudStructureControls from '../components/FrontHudStructureControls';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import {
   formatTestimonialAttribution,
@@ -856,7 +857,11 @@ export default function InvestmentsPage() {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
-  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const {
+    enabled: frontHudEnabled,
+    opacity: frontHudOpacity,
+    setEnabled: setFrontHudEnabled = null,
+  } = useFrontHud();
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
@@ -1356,6 +1361,7 @@ export default function InvestmentsPage() {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setFrontHudEnabled?.(false);
   };
 
   useEffect(() => () => {
@@ -1379,6 +1385,9 @@ export default function InvestmentsPage() {
         isActive={!hudDockCollapsed && activeHudPanelId === panel.id}
         onClick={() => toggleHudPanel(panel.id, panel.sectionRef)}
         style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
+        structureControls={(
+          <FrontHudStructureControls pathname="/services/investments" blockId={blockId} placement="anchor" />
+        )}
       />
     );
   };
@@ -1921,7 +1930,7 @@ export default function InvestmentsPage() {
   return (
     <div
       ref={pageRef}
-      className={`service-native-page investments-native-page${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
+      className={`service-native-page investments-native-page${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
     >
       {showFrontHud ? (
         <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
@@ -1977,7 +1986,6 @@ export default function InvestmentsPage() {
               pathname="/services/investments"
               reviewHref="/admin/content?page=%2Fservices%2Finvestments"
             placement="dock-inline"
-            showBlockPublishAction={false}
             showBlockDiscardAction
               blockId={activeHudPanel.block.id}
               blockLabel={activeHudPanel.label}

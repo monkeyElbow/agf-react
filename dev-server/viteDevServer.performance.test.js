@@ -36,6 +36,16 @@ describe('Vite development performance boundaries', () => {
     expect(storeSource).toContain('getAuthoritySnapshot()');
   });
 
+  it('keeps public route hydration scoped to the published route slice', () => {
+    const source = readRepoFile('vite.config.js');
+    const storeSource = readRepoFile('dev-server/contentAdminStore.js');
+
+    expect(source).toContain("'/published-route'");
+    expect(source).toContain('getPublishedRouteSnapshot');
+    expect(storeSource).toContain('getPublishedRouteSnapshot(pathname)');
+    expect(storeSource).toContain('record.baseSnapshot');
+  });
+
   it('keeps diagnostics opt-in and identifies the serving authority', () => {
     const source = readRepoFile('vite.config.js');
 

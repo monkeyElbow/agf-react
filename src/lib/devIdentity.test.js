@@ -5,6 +5,7 @@ import {
   getOrCreateDevIdentity,
   readStoredDevIdentity,
   renameStoredDevIdentity,
+  setStoredDevIdentityAccentColor,
 } from './devIdentity';
 
 function createStorageStub() {
@@ -79,6 +80,26 @@ describe('dev identity helpers', () => {
     expect(identity.userId).toBe('dev-existing-user');
     expect(identity.displayName).toBe('James Laptop');
     expect(identity.updatedAt).toBe(1710000000000);
+  });
+
+  it('updates the stored accent color without changing the underlying user id', () => {
+    const storage = createStorageStub();
+    const original = getOrCreateDevIdentity({
+      storage,
+      now: 1710000000000,
+      navigatorImpl: { platform: 'MacIntel' },
+      cryptoImpl: { randomUUID: () => 'same-user' },
+    });
+
+    const updated = setStoredDevIdentityAccentColor('#F26660', {
+      storage,
+      now: 1710000100000,
+    });
+
+    expect(updated.userId).toBe(original.userId);
+    expect(updated.accentColor).toBe('#f26660');
+    expect(updated.updatedAt).toBe(1710000100000);
+    expect(readStoredDevIdentity(storage)?.accentColor).toBe('#f26660');
   });
 
   it('derives initials predictably for single and multiple word names', () => {

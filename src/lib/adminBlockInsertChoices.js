@@ -29,9 +29,12 @@ function pickRepresentativeTemplate(templates, kind, presetDefinition) {
     ...((Array.isArray(presetDefinition?.templateIds) ? presetDefinition.templateIds : []).map(normalizeToken)),
   ];
 
-  return [...templates].sort((left, right) => (
-    compareTemplateIdsByPreference(left?.templateId, right?.templateId, preferredTemplateIds)
-  ))[0] || null;
+  return [...templates].sort((left, right) => {
+    if (Boolean(left?.isAddBlockDefault) !== Boolean(right?.isAddBlockDefault)) {
+      return left?.isAddBlockDefault ? -1 : 1;
+    }
+    return compareTemplateIdsByPreference(left?.templateId, right?.templateId, preferredTemplateIds);
+  })[0] || null;
 }
 
 function buildBaseHaystack(parts) {
@@ -175,18 +178,22 @@ export function buildAdminBlockInsertChoices(availableBlockTemplates, options = 
     .map((template) => {
       const kind = String(template?.kind || '').trim();
       const definition = getBlockDefinition(kind);
+      const canonicalLabel = String(definition?.label || kind || 'Block').trim();
+      const usesCanonicalFormLabel = ['cta_form', 'request_form'].includes(normalizeToken(kind));
       return {
         id: `${targetMode}:template:${String(template?.templateId || '').trim()}`,
         createTemplateId: buildBlockTemplateCreateId(template),
         templateId: String(template?.templateId || '').trim(),
         kind,
         editorType: String(definition?.editorType || kind).trim(),
-        canonicalLabel: String(definition?.label || kind || 'Block').trim(),
+        canonicalLabel,
         familyKind: '',
         familyLabel: '',
         presetId: '',
         presetLabel: '',
-        name: String(template?.name || template?.templateId || template?.kind || 'Block').trim(),
+        name: usesCanonicalFormLabel
+          ? canonicalLabel
+          : String(template?.name || template?.templateId || template?.kind || 'Block').trim(),
         description: String(template?.description || template?.kind || '').trim(),
         mode: targetMode,
         isCompatibility: false,

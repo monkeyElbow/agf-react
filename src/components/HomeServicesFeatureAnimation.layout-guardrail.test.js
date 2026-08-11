@@ -117,7 +117,7 @@ describe('home services feature alignment guardrail', () => {
     const resolverSource = readSource('../lib/homeBlockResolver.js');
 
     expect(pageSource).toContain("const HOME_HERO_TEMPORARILY_HIDDEN = false;");
-    expect(resolverSource).toContain('return reorderHomeTopBlocks(resolvedBlocks.concat(extraRenderableManagedBlocks));');
+    expect(resolverSource).toContain('return reorderHomeTopBlocks(resolvedBlocks);');
     expect(cssSource).toContain('.home-native-page.is-home-hero-temporarily-hidden [data-block-id="hero"] {');
     expect(cssSource).toContain('display: none;');
     expect(cssSource).toContain('.home-native-page.is-home-hero-temporarily-hidden .home-impact-story-stage {');

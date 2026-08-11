@@ -9,6 +9,7 @@ void [MemoryRouter, NativeContentPage];
 
 let mockFrontHudEnabled = false;
 const mockSaveSharedDraftNow = vi.fn();
+const mockSetFrontHudEnabled = vi.fn();
 const mockUpdateBlock = vi.fn();
 const mockMoveBlock = vi.fn();
 const mockRemoveBlock = vi.fn();
@@ -65,6 +66,7 @@ vi.mock('../context/FrontHudContext', () => ({
   useFrontHud: () => ({
     enabled: mockFrontHudEnabled,
     opacity: 15,
+    setEnabled: mockSetFrontHudEnabled,
   }),
 }));
 
@@ -114,6 +116,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     mockFrontHudEnabled = false;
     mockMobileFrontHud = false;
     mockSaveSharedDraftNow.mockReset();
+    mockSetFrontHudEnabled.mockReset();
     mockSaveSharedDraftNow.mockResolvedValue({ ok: true });
     mockUpdateBlock.mockReset();
     mockMoveBlock.mockReset();
@@ -272,11 +275,35 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getByRole('heading', { name: 'AG Ministry' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Group Life' })).toBeTruthy();
     expect(screen.getByLabelText('Front HUD editor panels')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save all page drafts' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Open page admin' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Page Content HUD panel' })).toBeTruthy();
     expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
+  });
+
+  it('closes only the desktop HUD block editor while keeping HUD enabled', async () => {
+    mockFrontHudEnabled = true;
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/ministers-group-life-plan',
+            title: 'Ministers Group Life Plan',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Hero HUD panel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close panel' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Front HUD editor panels')).toBeTruthy();
+    });
+    expect(mockSetFrontHudEnabled).not.toHaveBeenCalledWith(false);
+    expect(screen.queryByRole('button', { name: 'Close panel' })).toBeNull();
   });
 
   it('shows hero and intro HUD controls on the managed planned giving overview page', () => {
@@ -428,6 +455,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     await waitFor(() => {
       expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
     });
+    expect(mockSetFrontHudEnabled).toHaveBeenCalledWith(false);
     expect(container.querySelector('[data-block-id="hero"]')?.getAttribute('data-mobile-front-hud-selected')).not.toBe('true');
   });
 
@@ -1269,7 +1297,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save all page drafts' }));
 
     await waitFor(() => {
       expect(mockSaveSharedDraftNow).toHaveBeenCalledWith('');
@@ -1290,7 +1318,9 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             bodyHtml: '<p>Shared billboard body.</p>',
             bgTone: 'blue',
             textTone: 'white',
-            justify: 'center',
+            justify: 'right',
+            subtitle: 'Supporting billboard copy',
+            titleFontWeight: 900,
             contentMaxWidthPx: 1100,
             buttonLabel: 'Learn more',
             buttonLinkJson: serializeLinkValue({
@@ -1317,9 +1347,14 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     const billboardHeading = screen.getByRole('heading', { name: 'Need more room?' });
     const billboardSection = billboardHeading.closest('section');
     const billboardRail = billboardSection?.querySelector('.ag-panel-rail');
+    const billboardCopy = billboardSection?.querySelector('.native-info-section-copy');
+    const billboardSubtitle = billboardCopy?.querySelector('h3');
 
     expect(billboardSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-bottom: clamp(4.1rem, 8vw, 6.8rem)');
     expect(billboardRail?.getAttribute('style') || '').toContain('--dynamic-billboard-max-width: 1100px');
+    expect(billboardHeading.style.fontWeight).toBe('900');
+    expect(billboardCopy?.className).toContain('is-justify-right');
+    expect(billboardSubtitle).toBeTruthy();
   });
 
   it('treats /test as an active-block page instead of rendering native starter content', () => {

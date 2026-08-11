@@ -5,6 +5,7 @@ const GRID_CARD_STYLE_BG_COMPATIBILITY = {
   card3: new Set(['sand', 'blue', 'grey']),
   card4: new Set(['grey']),
   none: new Set(['white', 'sand', 'blue', 'grey']),
+  'borderless-shadow': new Set(['white', 'sand', 'blue', 'grey']),
 };
 const GRID_TEXT_TONE_BG_COMPATIBILITY = {
   'super-grey': new Set(['white', 'sand']),
@@ -12,11 +13,10 @@ const GRID_TEXT_TONE_BG_COMPATIBILITY = {
   mango: new Set(['white', 'sand', 'blue', 'grey']),
   melon: new Set(['white', 'sand', 'blue', 'grey']),
   white: new Set(['blue', 'grey']),
+  alternating: new Set(['white', 'sand', 'blue', 'grey']),
 };
 const GRID_COLUMNS_SET = new Set(['two', 'three', 'four']);
 const GRID_WIDTH_SET = new Set(['content', 'browser']);
-const GRID_TONE_SET = new Set(['super-grey', 'atlantean', 'mango', 'melon', 'white']);
-const GRID_DIVIDER_TONE_SET = new Set(['auto', 'super-grey', 'atlantean', 'mango', 'melon', 'white']);
 
 export function normalizeGridBgTone(value) {
   const token = String(value || 'white').trim().toLowerCase();
@@ -131,16 +131,6 @@ export function normalizeDynamicGridColumns(value) {
 export function normalizeDynamicGridWidth(value) {
   const token = String(value || '').trim().toLowerCase();
   return GRID_WIDTH_SET.has(token) ? token : 'content';
-}
-
-export function normalizeDynamicGridDividerTone(value) {
-  const token = String(value || '').trim().toLowerCase();
-  return GRID_DIVIDER_TONE_SET.has(token) ? token : 'auto';
-}
-
-export function normalizeDynamicGridCardDividerTone(value) {
-  const token = String(value || '').trim().toLowerCase();
-  return GRID_TONE_SET.has(token) ? token : '';
 }
 
 export function normalizeDynamicGridCardPaddingRem(value) {

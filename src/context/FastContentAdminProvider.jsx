@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { sitePages } from '../data/siteMap';
 import { ContentAdminContext } from './ContentAdminContextCore';
+import { fetchPublishedContentRouteSnapshot } from '../lib/devContentAuthorityClient';
 
 const FRONT_HUD_ENABLED_STORAGE_KEY = 'agf-admin-front-hud-enabled-v1';
 
@@ -91,6 +92,9 @@ function buildFastContextValue(state) {
 
 export default function FastContentAdminProvider({ children }) {
   const [publishedSnapshot, setPublishedSnapshot] = useState(null);
+  const [locationPathname, setLocationPathname] = useState(() => (
+    typeof window !== 'undefined' ? window.location.pathname : '/'
+  ));
   const [HeavyProvider, setHeavyProvider] = useState(null);
   const [shouldLoadHeavy, setShouldLoadHeavy] = useState(
     () => typeof window !== 'undefined' && window.location.pathname.startsWith('/admin/') || readFrontHudEnabled(),
@@ -102,13 +106,12 @@ export default function FastContentAdminProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!shouldLoadHeavy || !import.meta.env.DEV || typeof window === 'undefined' || typeof window.fetch !== 'function') {
+    if (shouldLoadHeavy || !import.meta.env.DEV || typeof window === 'undefined') {
       return undefined;
     }
 
     let active = true;
-    window.fetch('/__dev/content-admin/state', { headers: { Accept: 'application/json' } })
-      .then((response) => (response.ok ? response.json() : null))
+    fetchPublishedContentRouteSnapshot(locationPathname)
       .then((snapshot) => {
         if (active && snapshot?.initialized) {
           setPublishedSnapshot(snapshot);
@@ -121,7 +124,32 @@ export default function FastContentAdminProvider({ children }) {
     return () => {
       active = false;
     };
-  }, [shouldLoadHeavy]);
+  }, [locationPathname, shouldLoadHeavy]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    const updatePathname = () => setLocationPathname(window.location.pathname || '/');
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    window.history.pushState = function pushStateWithContentRouteUpdate(...args) {
+      const result = originalPushState.apply(this, args);
+      updatePathname();
+      return result;
+    };
+    window.history.replaceState = function replaceStateWithContentRouteUpdate(...args) {
+      const result = originalReplaceState.apply(this, args);
+      updatePathname();
+      return result;
+    };
+    window.addEventListener('popstate', updatePathname);
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      window.removeEventListener('popstate', updatePathname);
+    };
+  }, []);
 
   useEffect(() => {
     if (!shouldLoadHeavy) {

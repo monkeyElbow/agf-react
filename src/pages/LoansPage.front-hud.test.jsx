@@ -83,7 +83,7 @@ describe('LoansPage front HUD', () => {
   it('shows a HUD tab for every dynamic loans block', () => {
     renderLoansPage();
 
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save all page drafts' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Open page admin' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Hero' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Intro' })).toBeTruthy();
@@ -182,6 +182,57 @@ describe('LoansPage front HUD', () => {
     expect(rail?.getAttribute('style') || '').toContain('--dynamic-billboard-max-width: 1040px');
   });
 
+  it('keeps an added billboard in its managed block slot when the page rerenders during edit', () => {
+    const blocks = cloneLoansDynamicBlocks();
+    const introIndex = blocks.findIndex((block) => block.id === 'intro');
+    const visionBlock = blocks.find((block) => block.id === 'vision_fuel');
+    const addedBillboard = {
+      ...visionBlock,
+      id: 'billboard',
+      name: 'Billboard',
+      settings: {
+        ...(visionBlock?.settings || {}),
+        title: 'Inserted billboard',
+      },
+    };
+    blocks.splice(introIndex + 1, 0, addedBillboard);
+    mockBlocksByPath = {
+      '/services/loans': blocks,
+    };
+
+    const rendered = renderLoansPage();
+    const firstOrder = Array.from(rendered.container.querySelectorAll('[data-block-id]'))
+      .map((node) => node.getAttribute('data-block-id'));
+
+    expect(firstOrder.indexOf('intro')).toBeLessThan(firstOrder.indexOf('billboard'));
+    expect(firstOrder.indexOf('billboard')).toBeLessThan(firstOrder.indexOf('loan_options'));
+
+    mockBlocksByPath = {
+      '/services/loans': blocks.map((block) => (
+        block.id === 'billboard'
+          ? {
+            ...block,
+            settings: {
+              ...(block.settings || {}),
+              title: 'Edited billboard',
+            },
+          }
+          : block
+      )),
+    };
+    rendered.rerender(
+      <MemoryRouter>
+        <LoansPage />
+      </MemoryRouter>,
+    );
+
+    const secondOrder = Array.from(rendered.container.querySelectorAll('[data-block-id]'))
+      .map((node) => node.getAttribute('data-block-id'));
+    expect(secondOrder.indexOf('intro')).toBeLessThan(secondOrder.indexOf('billboard'));
+    expect(secondOrder.indexOf('billboard')).toBeLessThan(secondOrder.indexOf('loan_options'));
+    expect(screen.getByText('Edited billboard')).toBeTruthy();
+  });
+
   it('lets the loans billboard subtitle and action disappear when the admin clears them', () => {
     mockBlocksByPath = {
       '/services/loans': cloneLoansDynamicBlocks().map((block) => (
@@ -241,4 +292,5 @@ describe('LoansPage front HUD', () => {
 
     expect(screen.getByRole('button', { name: 'Request Form' })).toBeTruthy();
   });
+
 });

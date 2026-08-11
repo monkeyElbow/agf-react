@@ -1,8 +1,12 @@
-/* eslint-disable react-hooks/static-components */
 import { createContext, useContext, useRef, useState } from 'react';
 import * as ContentAdminContextModule from '../context/ContentAdminContext';
 import { isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
 import HudBlockOptions from './HudBlockOptions';
+import {
+  HudEditorBlockOptionsPage,
+  HudEditorModelLayout,
+  appendHudBlockOptionsSection,
+} from './HudEditorShell';
 import {
   FieldControlGrid,
 } from '../pages/AdminContentPage';
@@ -10,6 +14,7 @@ import { getMigratedBlockEditorComponent } from './block-editors/migratedBlockEd
 import CtaHudEditorPanel from './CtaHudEditorPanel';
 import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import { getBlockHudDefinition } from '../lib/blockHudRegistry';
+import { getBlockEditorSections } from '../blocks/registry';
 import {
   applySelectionColor,
   extractHeroLineColorToken,
@@ -22,6 +27,84 @@ import {
 } from '../blocks/foundation/forms';
 
 const EmptyContentAdminContext = createContext(null);
+
+function getCompatibilitySectionIcon(section, index) {
+  const iconById = {
+    content: '✦',
+    cards: '▦',
+    actions: '↗',
+    action: '↗',
+    placement: '⌗',
+    layout: '◫',
+    presentation: '◈',
+    behavior: '◌',
+    calculator: '∑',
+    followup: '→',
+    columns: '▥',
+    selection: '✓',
+    display: '◫',
+    integration: '↔',
+    media: '▧',
+    support: '?',
+    fineprint: 'i',
+  };
+  const sectionId = String(section?.id || '').trim().toLowerCase();
+  if (iconById[sectionId]) {
+    return iconById[sectionId];
+  }
+  const label = String(section?.title || section?.label || '').trim();
+  const firstLetter = label.match(/[A-Za-z0-9]/)?.[0] || String(index + 1);
+  return firstLetter.toUpperCase();
+}
+
+const HUD_EDITORS_WITH_SECTION_RAIL = new Set([
+  'hero',
+  'intro',
+  'content',
+  'top_strip',
+  'testimonials',
+  'billboard',
+  'request_form',
+]);
+
+function HudEditorCompatibilityShell({ blockKind, blockLabel, children, blockOptions = null }) {
+  const label = String(blockLabel || 'Block').trim() || 'Block';
+  const definitionSections = getBlockEditorSections(blockKind, 'hud');
+  const cardGridSections = blockKind === 'card_grid'
+    ? [
+      { id: 'content', label: 'Content', icon: '✦' },
+      { id: 'appearance', label: 'Appearance', icon: '◉' },
+      { id: 'layout', label: 'Layout', icon: '◫' },
+      { id: 'typography', label: 'Typography', icon: 'Aa' },
+      { id: 'cards', label: 'Cards', icon: '▦' },
+    ]
+    : null;
+  const modelSections = cardGridSections || (definitionSections.length
+    ? definitionSections.map((section, index) => ({
+      id: String(section.id || `section-${index + 1}`),
+      label: String(section.title || section.label || `Section ${index + 1}`),
+      icon: getCompatibilitySectionIcon(section, index),
+    }))
+    : [{ id: 'controls', label: 'Controls', icon: 'C' }]);
+  const sections = appendHudBlockOptionsSection(modelSections, blockOptions);
+  const [activeSection, setActiveSection] = useState(sections[0]?.id || 'controls');
+
+  return (
+    <HudEditorModelLayout
+      className={`admin-hud-editor-compatibility-layout admin-hud-editor-compatibility-layout--${String(blockKind || 'generic').replace(/[^a-z0-9_-]/gi, '-')}`}
+      sections={sections}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      label={`${label} editor sections`}
+      hideRailLabels
+    >
+      <div className="admin-hud-editor-compatibility-content" data-hud-editor-kind={blockKind || undefined}>
+        {children}
+      </div>
+      <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+    </HudEditorModelLayout>
+  );
+}
 
 function readOptionalModuleExport(module, exportName) {
   try {
@@ -41,6 +124,7 @@ export default function BlockHudPanelHost({
   onOwnershipAction = null,
   onReleaseDraft = null,
   onPublishBlock = null,
+  onBlockDeleted = null,
   showWorkflowActions = true,
   showPublishAction = true,
   onSettingChange,
@@ -79,14 +163,18 @@ export default function BlockHudPanelHost({
       state: ownership.state,
       label: ownership.overlayLabel || 'Unpublished draft by another admin',
       detail: `${ownership.overlayDetail ? `${ownership.overlayDetail}. ` : ''}This draft is not live yet.`,
+      secondaryLabel: ownership.overlaySecondaryLabel || '',
+      secondaryDetail: ownership.overlaySecondaryDetail || '',
       actionLabel: typeof onOwnershipAction === 'function' ? 'Take over draft' : '',
     }
     : ownership?.state === 'editing-other'
       ? {
-        state: ownership.state,
-        label: ownership.overlayLabel || 'Another admin is editing this block',
-        detail: `${ownership.overlayDetail ? `${ownership.overlayDetail}. ` : ''}Another admin still holds the active edit lock.`,
-        actionLabel: typeof onOwnershipAction === 'function' ? 'Take over edit' : '',
+      state: ownership.state,
+      label: ownership.overlayLabel || 'Another admin is editing this block',
+      detail: `${ownership.overlayDetail ? `${ownership.overlayDetail}. ` : ''}Another admin still holds the active edit lock.`,
+      secondaryLabel: '',
+      secondaryDetail: '',
+      actionLabel: typeof onOwnershipAction === 'function' ? 'Take over edit' : '',
       }
       : null;
 
@@ -115,6 +203,12 @@ export default function BlockHudPanelHost({
       <div className="admin-front-hud-ownership-copy">
         <strong>{hudOwnershipNotice.label}</strong>
         <span>{hudOwnershipNotice.detail}</span>
+        {hudOwnershipNotice.secondaryLabel ? (
+          <span>
+            {hudOwnershipNotice.secondaryLabel}
+            {hudOwnershipNotice.secondaryDetail ? `. ${hudOwnershipNotice.secondaryDetail}` : ''}
+          </span>
+        ) : null}
       </div>
     </div>
   ) : null;
@@ -130,8 +224,36 @@ export default function BlockHudPanelHost({
       onOwnershipAction={onOwnershipAction}
       onReleaseDraft={releaseDraft}
       onPublishBlock={publishBlock}
+      onBlockDeleted={onBlockDeleted}
     />
   );
+
+  const renderMigratedHudEditor = () => {
+    const editor = (
+      <MigratedHudEditor
+        key={block.id}
+        block={block}
+        pathname={pathname}
+        routeOptions={routeOptions}
+        testimonialsLibrary={testimonialsLibrary}
+        hudMode
+        sourceRevision={contentAdmin?.sharedSnapshotUpdatedAt || 0}
+        ratesContext={ratesContext}
+        onSettingChange={blockedOnSettingChange}
+        blockOptions={blockOptionsMarkup}
+      />
+    );
+
+    if (HUD_EDITORS_WITH_SECTION_RAIL.has(String(block.kind || '').trim())) {
+      return editor;
+    }
+
+    return (
+      <HudEditorCompatibilityShell blockKind={block.kind} blockLabel={definition.label || block.kind} blockOptions={blockOptionsMarkup}>
+        {editor}
+      </HudEditorCompatibilityShell>
+    );
+  };
 
   const renderReadOnlyShell = (content) => (
     <fieldset
@@ -140,7 +262,7 @@ export default function BlockHudPanelHost({
       style={{ margin: 0, padding: 0, border: 0, minWidth: 0 }}
     >
       <div
-        className={isForeignOwned ? 'is-admin-front-hud-readonly' : undefined}
+        className={`admin-hud-editor-shared-surface${isForeignOwned ? ' is-admin-front-hud-readonly' : ''}`}
         style={isForeignOwned ? { pointerEvents: 'none', opacity: 0.68 } : undefined}
       >
         {content}
@@ -153,17 +275,8 @@ export default function BlockHudPanelHost({
       <>
         {ownershipNoticeMarkup}
         {renderReadOnlyShell(
-          <MigratedHudEditor
-            key={block.id}
-            block={block}
-            pathname={pathname}
-            routeOptions={routeOptions}
-            testimonialsLibrary={testimonialsLibrary}
-            ratesContext={ratesContext}
-            onSettingChange={blockedOnSettingChange}
-          />,
+          renderMigratedHudEditor(),
         )}
-        {blockOptionsMarkup}
       </>
     );
   }
@@ -175,11 +288,13 @@ export default function BlockHudPanelHost({
         {ownershipNoticeMarkup}
         {renderReadOnlyShell(
             <CtaHudEditorPanel
+              sourceRevision={contentAdmin?.sharedSnapshotUpdatedAt || 0}
               settings={settings}
               bgTone={String(settings.bgTone || 'white')}
               submitStyle={normalizeCtaHudSubmitStyle(settings.submitStyle)}
               submitTone={normalizeCtaHudSubmitTone(settings.submitTone, settings.submitStyle)}
               bodyHtml={String(settings.bodyHtml || '')}
+              bodyColorClassName={String(settings.bodyColorClassName || 'is-super-grey')}
               titleColor={extractHeroLineColorToken(settings.titleClassName)}
               titleSelection={ctaTitleSelection}
               setTitleInputRef={(node) => {
@@ -191,6 +306,7 @@ export default function BlockHudPanelHost({
                 setCtaTitleSelection({ start: 0, end: 0, text: '' });
               }}
               onBodyHtmlChange={(nextValue) => blockedOnSettingChange('bodyHtml', nextValue)}
+              onBodyColorChange={(nextValue) => blockedOnSettingChange('bodyColorClassName', nextValue)}
               fields={ctaFields}
               includeContactPreference={Boolean(settings.includeContactPreference)}
               onFieldsChange={(nextFields) => {
@@ -233,9 +349,9 @@ export default function BlockHudPanelHost({
                 blockedOnSettingChange('titleHighlightsJson', '');
                 setCtaTitleSelection({ start: 0, end: 0, text: '' });
               }}
+              blockOptions={blockOptionsMarkup}
             />,
           )}
-          {blockOptionsMarkup}
         </>
       );
     default:
@@ -252,14 +368,16 @@ export default function BlockHudPanelHost({
         <>
           {ownershipNoticeMarkup}
           {renderReadOnlyShell(
-            <FieldControlGrid
-              fields={editableFields}
-              settings={block.settings}
-              onSettingChange={blockedOnSettingChange}
-              routeOptions={routeOptions}
-            />,
+            <HudEditorCompatibilityShell blockKind={block.kind} blockLabel={definition.label || block.kind} blockOptions={blockOptionsMarkup}>
+              <FieldControlGrid
+                fields={editableFields}
+                settings={block.settings}
+                onSettingChange={blockedOnSettingChange}
+                routeOptions={routeOptions}
+                paletteVariant="hud"
+              />
+            </HudEditorCompatibilityShell>,
           )}
-          {blockOptionsMarkup}
         </>
       );
   }

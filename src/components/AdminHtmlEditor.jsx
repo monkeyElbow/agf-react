@@ -170,6 +170,10 @@ export default function AdminHtmlEditor({
   placeholder = 'Start writing...',
   compact = false,
   showFooterToggle = true,
+  paletteVariant = 'admin',
+  ariaLabel = 'HTML content',
+  baseColorClassName = '',
+  onBaseColorChange,
 }) {
   const editorRef = useRef(null);
   const [sourceMode, setSourceMode] = useState(false);
@@ -195,6 +199,15 @@ export default function AdminHtmlEditor({
       editorRef.current.innerHTML = htmlValue;
     }
   }, [htmlValue, sourceMode]);
+
+  useEffect(() => {
+    const nextBaseColor = HTML_EDITOR_COLOR_SWATCHES.find((swatch) => (
+      swatch.className === String(baseColorClassName || '').trim()
+    ));
+    if (nextBaseColor && nextBaseColor.id !== selectedColorId) {
+      setSelectedColorId(nextBaseColor.id);
+    }
+  }, [baseColorClassName, selectedColorId]);
 
   function emitChange(nextHtml) {
     const normalizedHtml = ensureHtml(normalizeHtmlEditorSemanticColors(nextHtml));
@@ -236,13 +249,25 @@ export default function AdminHtmlEditor({
     event.preventDefault();
   }
 
+  function hasSelectionInEditor() {
+    if (!editorRef.current || typeof document === 'undefined') {
+      return false;
+    }
+    const selection = document.getSelection?.();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      return false;
+    }
+    return editorRef.current.contains(selection.anchorNode)
+      && editorRef.current.contains(selection.focusNode);
+  }
+
   return (
-    <div className={`admin-html-editor${compact ? ' is-compact' : ''}`}>
+    <div className={`admin-html-editor${compact ? ' is-compact' : ''}${baseColorClassName ? ` ${baseColorClassName}` : ''}`}>
       <div className="admin-html-editor-toolbar" role="toolbar" aria-label="Article body formatting">
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('bold')} title="Bold"><strong>B</strong></button>
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('italic')} title="Italic"><em>I</em></button>
         <ColorPalette
-          variant="admin"
+          variant={paletteVariant}
           className="is-compact is-icon-only admin-html-editor-color-group"
           ariaLabel="Text color"
           options={HTML_EDITOR_COLOR_PALETTE_OPTIONS}
@@ -254,6 +279,10 @@ export default function AdminHtmlEditor({
               return;
             }
             setSelectedColorId(nextValue);
+            if (typeof onBaseColorChange === 'function' && !hasSelectionInEditor()) {
+              onBaseColorChange(nextSwatch.className);
+              return;
+            }
             applyCommand('foreColor', nextSwatch.value);
           }}
           getOptionClassName={(option, state) => `admin-html-editor-color-swatch${state.active ? ' is-active' : ''}${option.value === 'white' ? ' is-light' : ''}`}
@@ -280,6 +309,7 @@ export default function AdminHtmlEditor({
       {sourceMode ? (
         <textarea
           className="admin-html-editor-source"
+          aria-label={ariaLabel}
           rows={compact ? 8 : 16}
           value={htmlValue}
           onChange={(event) => emitChange(event.target.value)}
@@ -289,6 +319,8 @@ export default function AdminHtmlEditor({
         <div
           ref={editorRef}
           className="admin-html-editor-surface"
+          role="textbox"
+          aria-label={ariaLabel}
           contentEditable
           suppressContentEditableWarning
           data-placeholder={placeholder}

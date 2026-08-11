@@ -14,7 +14,6 @@ describe('buildNativeHudPanels', () => {
       'billboard',
       'card_grid',
       'cta_form',
-      'newsletter',
       'columns',
     ]);
   });

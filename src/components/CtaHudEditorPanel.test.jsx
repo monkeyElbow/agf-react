@@ -41,7 +41,7 @@ describe('CtaHudEditorPanel', () => {
       ],
     });
 
-    const cards = Array.from(container.querySelectorAll('.admin-cta-hud-editor > section'));
+    const cards = Array.from(container.querySelectorAll('.admin-cta-hud-editor-panels > section'));
     expect(cards).toHaveLength(3);
     expect(within(cards[1]).getByText('Message + Submit')).toBeTruthy();
     expect(within(cards[1]).getByText('Lead Copy')).toBeTruthy();
@@ -49,6 +49,15 @@ describe('CtaHudEditorPanel', () => {
     expect(within(cards[1]).getByRole('group', { name: 'CTA submit style' })).toBeTruthy();
     expect(within(cards[1]).getByText('Button Preview')).toBeTruthy();
     expect(within(cards[2]).getByText('Form Fields')).toBeTruthy();
+  });
+
+  it('exposes the CTA groups through the reference editor rail', () => {
+    renderPanel();
+
+    expect(screen.getByRole('navigation', { name: 'CTA editor sections' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Heading' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Message + Submit' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Form Fields' })).toBeTruthy();
   });
 
   it('shows title span chips and omits the old heading helper copy', () => {
@@ -215,7 +224,7 @@ describe('CtaHudEditorPanel', () => {
   });
 
   it('renders the lead copy editor inside the shared message and submit card', () => {
-    renderPanel({
+    const { container } = renderPanel({
       settings: {
         title: 'Ready to connect your faith & finances?',
       },
@@ -223,7 +232,7 @@ describe('CtaHudEditorPanel', () => {
     });
 
     expect(screen.getByText('Lead Copy')).toBeTruthy();
-    expect(screen.getByText('Message + Submit')).toBeTruthy();
+    expect(within(container.querySelector('.admin-cta-hud-card--message')).getByText('Message + Submit')).toBeTruthy();
     expect(screen.queryByText('Appearance')).toBeNull();
     expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
   });
@@ -244,7 +253,7 @@ describe('CtaHudEditorPanel', () => {
     expect(screen.queryByLabelText('Field Label')).toBeNull();
     expect(container.querySelector('.admin-cta-hud-field-row-key')?.textContent).toContain('Key: full_name');
 
-    fireEvent.click(screen.getByRole('button', { name: /Message/i }));
+    fireEvent.click(within(container.querySelector('.admin-cta-hud-field-list')).getByRole('button', { name: /Message/i }));
     const editorSheet = screen.getByRole('dialog', { name: 'Edit field Message' });
     expect(editorSheet).toBeTruthy();
     expect(container.querySelector('.admin-cta-hud-field-editor')).toBeNull();

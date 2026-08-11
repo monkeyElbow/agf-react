@@ -1,77 +1,9 @@
 import {
   normalizeFollowUpSubmitLabel,
 } from '../blocks/foundation/forms';
-import { serializeLinkValue } from './linkValue';
 
 const HOME_MINISTRY_ALLIES_BLOCK_ID = 'home_ministry_allies';
 const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
-const HOME_BILLBOARD_FALLBACK_FIELDS = Object.freeze([
-  'title',
-  'titleClassName',
-  'titleHighlightsJson',
-  'subtitle',
-  'bodyHtml',
-  'body',
-  'bgTone',
-  'textTone',
-  'justify',
-  'lineSpacing',
-  'titleFontFamily',
-  'titleFontWeight',
-  'titleSizeRem',
-  'titleLetterSpacingEm',
-  'contentMaxWidthPx',
-  'buttonLabel',
-  'buttonLinkJson',
-  'buttonStyle',
-  'buttonTone',
-  'scrollReveal',
-]);
-export const HOME_COLUMNS_MATH_BILLBOARD_DEFAULTS = Object.freeze({
-  title: '(let us) Do the math.',
-  titleClassName: '',
-  titleHighlightsJson: '[{"text":"(let us)","className":"is-atlantean"}]',
-  subtitle: '',
-  bodyHtml: '',
-  body: 'Retirement savings, compound interest, loan payments, net worth, and more.',
-  bgTone: 'white',
-  textTone: 'dark',
-  justify: 'center',
-  lineSpacing: 0.94,
-  titleFontFamily: 'helv',
-  titleFontWeight: 700,
-  titleSizeRem: 6.15,
-  titleLetterSpacingEm: -0.03,
-  contentMaxWidthPx: 1216,
-  buttonLabel: 'Use the calculators',
-  buttonLinkJson: serializeLinkValue({
-    kind: 'internal',
-    to: '/calculators',
-  }),
-  buttonStyle: 'blue',
-  buttonTone: 'atlantean',
-  scrollReveal: 'scale-up',
-});
-const HOME_EXTRA_RENDERABLE_DYNAMIC_KINDS = new Set(['site_feature']);
-
-function toBooleanSetting(value, fallback = true) {
-  if (typeof value === 'boolean') {
-    return value;
-  }
-  if (typeof value === 'string') {
-    const token = value.trim().toLowerCase();
-    if (token === 'true') {
-      return true;
-    }
-    if (token === 'false') {
-      return false;
-    }
-  }
-  if (value == null) {
-    return fallback;
-  }
-  return Boolean(value);
-}
 
 export function isManagedBlockVisible(block) {
   return block?.hidden !== true && block?.hidden !== 'true';
@@ -86,7 +18,7 @@ function reorderHomeTopBlocks(blocks = []) {
     return [];
   }
 
-  const priorityOrder = ['top_strip', 'home_impact_story', 'home_services_feature_animation', 'hero'];
+  const priorityOrder = ['top_strip', 'impact_stat', 'home_impact_story', 'home_services_feature_animation', 'hero'];
   const priorityIndexByKey = new Map(priorityOrder.map((key, index) => [key, index]));
   const prioritized = new Array(priorityOrder.length).fill(null);
   const remainder = [];
@@ -104,21 +36,6 @@ function reorderHomeTopBlocks(blocks = []) {
   return prioritized.filter(Boolean).concat(remainder);
 }
 
-function hasReadableHtmlContent(value) {
-  const html = String(value || '').trim();
-  if (!html) {
-    return false;
-  }
-  const text = html
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;|&#160;/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return Boolean(text);
-}
-
 function hasRenderableHomeColumnsLayout(block) {
   const columnsStyle = String(block?.columnsStyle || '').trim().toLowerCase() || 'retirement';
   const columns = Array.isArray(block?.columnsData) && block.columnsData.length
@@ -126,7 +43,7 @@ function hasRenderableHomeColumnsLayout(block) {
     : Array.from({ length: 4 }, (_, index) => {
         const slot = index + 1;
         const enabledValue = block?.[`col${slot}Enabled`];
-        const isEnabled = enabledValue === undefined ? slot <= 2 : toBooleanSetting(enabledValue);
+        const isEnabled = enabledValue === undefined ? slot <= 2 : Boolean(enabledValue);
         if (!isEnabled) {
           return null;
         }
@@ -164,104 +81,21 @@ function hasRenderableHomeColumnsLayout(block) {
   return hasPhotoColumn && hasTextColumn;
 }
 
-function mergeHomeColumnsWithFallback(baseBlock, dynamicSettings) {
-  const settings = dynamicSettings && typeof dynamicSettings === 'object' ? dynamicSettings : {};
-  const merged = { ...baseBlock, ...settings };
-  const columnsData = Array.isArray(merged.columnsData) ? merged.columnsData : null;
-  if (columnsData) {
-    const hasMeaningfulColumnsData = columnsData.some((column) => {
-      if (!column || typeof column !== 'object') {
-        return false;
-      }
-      return [
-        column.title,
-        column.body,
-        column.imageUrl,
-        column.imageAlt,
-        column.buttonLabel,
-        column.buttonLinkJson,
-      ].some((entry) => String(entry || '').trim());
-    });
-    if (!hasMeaningfulColumnsData) {
-      delete merged.columnsData;
-    }
-  }
-
-  [
-    'bgTone',
-    'columns',
-    'contentWidth',
-    'col1Type',
-    'col1ImageUrl',
-    'col1ImageAlt',
-    'col1Title',
-    'col1TitleClassName',
-    'col1TitleHighlightsJson',
-    'col1Body',
-    'col1ButtonLabel',
-    'col1ButtonLinkJson',
-    'col2Type',
-    'col2ImageUrl',
-    'col2ImageAlt',
-    'col2Title',
-    'col2TitleClassName',
-    'col2TitleHighlightsJson',
-    'col2Body',
-    'col2ButtonLabel',
-    'col2ButtonLinkJson',
-  ].forEach((field) => {
-    const current = merged[field];
-    if (current == null) {
-      merged[field] = baseBlock[field];
-      return;
-    }
-    if (typeof current === 'string' && !current.trim()) {
-      merged[field] = baseBlock[field];
-    }
-  });
-
-  if (!hasRenderableHomeColumnsLayout(merged)) {
-    return { ...baseBlock };
-  }
-
-  return merged;
-}
-
-function mergeHomeBillboardSettingsWithFallback(baseSettings, nextSettings) {
-  const settings = nextSettings && typeof nextSettings === 'object' ? nextSettings : {};
-  const merged = { ...(baseSettings || {}), ...settings };
-
-  HOME_BILLBOARD_FALLBACK_FIELDS.forEach((field) => {
-    const current = merged[field];
-    if (current == null) {
-      merged[field] = baseSettings?.[field];
-      return;
-    }
-    if (typeof current === 'string' && !current.trim()) {
-      merged[field] = baseSettings?.[field];
-    }
-  });
-
-  return merged;
-}
-
-function resolveHomeColumnsMathBlock(staticBlock, managedBlock) {
+function resolveHomeColumnsMathBlock(managedBlock) {
   const activeManagedBlock = String(managedBlock?.mode || '').trim().toLowerCase() === 'dynamic'
     ? managedBlock
     : null;
-  const managedSettings = activeManagedBlock?.settings && typeof activeManagedBlock.settings === 'object'
+  if (!activeManagedBlock) {
+    return null;
+  }
+  const settings = activeManagedBlock.settings && typeof activeManagedBlock.settings === 'object'
     ? activeManagedBlock.settings
-    : null;
-  const baseSettings = mergeHomeBillboardSettingsWithFallback(
-    HOME_COLUMNS_MATH_BILLBOARD_DEFAULTS,
-    staticBlock?.settings && typeof staticBlock.settings === 'object' ? staticBlock.settings : {},
-  );
-  const settings = managedSettings
-    ? mergeHomeBillboardSettingsWithFallback(baseSettings, managedSettings)
-    : baseSettings;
+    : {};
 
   return {
-    id: String(staticBlock?.id || HOME_DO_THE_MATH_BLOCK_ID).trim() || HOME_DO_THE_MATH_BLOCK_ID,
+    ...activeManagedBlock,
+    id: String(activeManagedBlock.id || HOME_DO_THE_MATH_BLOCK_ID).trim() || HOME_DO_THE_MATH_BLOCK_ID,
+    type: 'billboard',
     kind: 'billboard',
     mode: 'dynamic',
     settings,
@@ -269,24 +103,21 @@ function resolveHomeColumnsMathBlock(staticBlock, managedBlock) {
   };
 }
 
-function resolveHomeColumnsMhaBlock(staticBlock, managedBlock) {
+function resolveHomeColumnsMhaBlock(managedBlock) {
   const activeManagedBlock = String(managedBlock?.mode || '').trim().toLowerCase() === 'dynamic'
     ? managedBlock
     : null;
-  const baseSettings = staticBlock?.settings && typeof staticBlock.settings === 'object'
-    ? staticBlock.settings
-    : {};
-  const managedSettings = activeManagedBlock?.settings && typeof activeManagedBlock.settings === 'object'
+  if (!activeManagedBlock) {
+    return null;
+  }
+  const settings = activeManagedBlock.settings && typeof activeManagedBlock.settings === 'object'
     ? activeManagedBlock.settings
-    : null;
-  const managedKind = String(activeManagedBlock?.kind || '').trim().toLowerCase();
-  const settings = managedKind === 'billboard' && managedSettings
-    ? mergeHomeBillboardSettingsWithFallback(baseSettings, managedSettings)
-    : baseSettings;
+    : {};
 
   return {
-    ...staticBlock,
-    id: String(activeManagedBlock?.id || staticBlock?.id || HOME_MINISTRY_ALLIES_BLOCK_ID).trim() || HOME_MINISTRY_ALLIES_BLOCK_ID,
+    ...activeManagedBlock,
+    id: String(activeManagedBlock.id || HOME_MINISTRY_ALLIES_BLOCK_ID).trim() || HOME_MINISTRY_ALLIES_BLOCK_ID,
+    type: 'billboard',
     kind: 'billboard',
     mode: 'dynamic',
     settings,
@@ -297,6 +128,9 @@ function resolveHomeColumnsMhaBlock(staticBlock, managedBlock) {
 function resolveHomeBlock(block, context) {
   const blockId = String(block?.id || '').trim();
   const managedBlock = blockId ? (context.managedBlocksById.get(blockId) || null) : null;
+  if (String(managedBlock?.mode || '').trim().toLowerCase() !== 'dynamic') {
+    return null;
+  }
 
   if (block.type === 'site_feature' && block.id === 'home_services_feature_animation') {
     return {
@@ -309,41 +143,28 @@ function resolveHomeBlock(block, context) {
             featureId: String(context.homeServicesFeatureSettings.featureId || block.featureId || 'home_services_feature_animation').trim() || 'home_services_feature_animation',
             headline: String(context.homeServicesFeatureSettings.headline ?? block.headline ?? '').trim(),
           }
-        : {
-            featureId: String(block.featureId || 'home_services_feature_animation').trim() || 'home_services_feature_animation',
-            headline: String(block.headline || '').trim(),
-          },
+        : undefined,
     };
   }
 
   if (block.type === 'newsletter' && context.newsletterSettings) {
-    const fallbackTitle = String(
-      block.title || [block.headingPrefix, block.headingHighlight].filter(Boolean).join(' '),
-    ).trim();
-    const fallbackBodyHtml = hasReadableHtmlContent(block.bodyHtml)
-      ? String(block.bodyHtml || '').trim()
-      : (block.body ? `<p>${block.body}</p>` : '');
-    const nextTitle = String(context.newsletterSettings.title || '').trim() || fallbackTitle;
-    const nextBodyText = String(context.newsletterSettings.body || block.body || '').trim();
-    const rawBodyHtml = String(context.newsletterSettings.bodyHtml || '').trim();
-    const nextBodyHtml = hasReadableHtmlContent(rawBodyHtml)
-      ? rawBodyHtml
-      : (nextBodyText ? `<p>${nextBodyText}</p>` : fallbackBodyHtml);
+    const settings = context.newsletterSettings;
     return {
       ...block,
       id: context.newsletterManagedBlock?.id || block.id || 'newsletter',
       kind: context.newsletterManagedBlock?.kind || block.kind || 'newsletter',
       mode: context.newsletterManagedBlock?.mode || block.mode || 'dynamic',
-      title: nextTitle,
-      titleClassName: String(context.newsletterSettings.titleClassName || block.titleClassName || '').trim(),
-      titleHighlightsJson: String(context.newsletterSettings.titleHighlightsJson || block.titleHighlightsJson || '').trim(),
-      bodyHtml: nextBodyHtml,
-      body: nextBodyText || String(block.body || '').trim(),
-      bgTone: String(context.newsletterSettings.bgTone || block.bgTone || 'grey').trim() || 'grey',
-      textTone: String(context.newsletterSettings.textTone || block.textTone || 'white').trim() || 'white',
-      formId: String(context.newsletterSettings.formId || block.formId || context.defaultNewsletterFormId).trim() || context.defaultNewsletterFormId,
-      accountId: String(context.newsletterSettings.accountId || block.accountId || '').trim(),
-      sourceId: String(context.newsletterSettings.sourceId || block.sourceId || '').trim(),
+      ...settings,
+      title: String(settings.title ?? '').trim(),
+      titleClassName: String(settings.titleClassName ?? '').trim(),
+      titleHighlightsJson: String(settings.titleHighlightsJson ?? '').trim(),
+      bodyHtml: String(settings.bodyHtml ?? '').trim(),
+      body: String(settings.body ?? '').trim(),
+      bgTone: String(settings.bgTone ?? '').trim(),
+      textTone: String(settings.textTone ?? '').trim(),
+      formId: String(settings.formId ?? context.defaultNewsletterFormId ?? '').trim(),
+      accountId: String(settings.accountId ?? '').trim(),
+      sourceId: String(settings.sourceId ?? '').trim(),
     };
   }
 
@@ -414,44 +235,27 @@ function resolveHomeBlock(block, context) {
       }
       return undefined;
     };
-    const fallbackLegacyTitle = [
-      String(block.headingPrefix || '').trim(),
-      String(block.headingHighlight || '').trim(),
-      String(block.headingSuffix || '').trim(),
-    ].filter(Boolean).join(' ').trim();
-    const fallbackLegacyHighlight = String(block.headingHighlight || '').trim();
-    const fallbackLegacyHighlightsJson = fallbackLegacyHighlight
-      ? JSON.stringify([{ text: fallbackLegacyHighlight, className: 'is-atlantean' }])
-      : '';
-    const noteText = String(context.ctaSettings.note || block.note || '').trim();
-    const fallbackBodyHtml = noteText ? `<p>${noteText}</p>` : '';
-
     const resolvedCtaBlock = {
       ...block,
       id: context.ctaManagedBlock?.id || block.id || 'cta_form',
       kind: context.ctaManagedBlock?.kind || block.kind || 'cta_form',
       mode: context.ctaManagedBlock?.mode || block.mode || 'dynamic',
-      title: String(readCtaSetting('title') ?? block.title ?? fallbackLegacyTitle).trim(),
-      titleClassName: String(readCtaSetting('titleClassName') ?? block.titleClassName ?? '').trim(),
-      titleHighlightsJson: String(readCtaSetting('titleHighlightsJson') ?? block.titleHighlightsJson ?? fallbackLegacyHighlightsJson).trim(),
-      subtitle: String(readCtaSetting('subtitle') ?? block.subtitle ?? '').trim(),
-      bodyHtml: String(readCtaSetting('bodyHtml') ?? block.bodyHtml ?? fallbackBodyHtml).trim(),
-      bgTone: 'white',
+      title: String(readCtaSetting('title') ?? '').trim(),
+      titleClassName: String(readCtaSetting('titleClassName') ?? '').trim(),
+      titleHighlightsJson: String(readCtaSetting('titleHighlightsJson') ?? '').trim(),
+      subtitle: String(readCtaSetting('subtitle') ?? '').trim(),
+      bodyHtml: String(readCtaSetting('bodyHtml') ?? '').trim(),
+      bgTone: String(readCtaSetting('bgTone') ?? '').trim(),
       submitStyle: String(
-        readCtaSetting('submitStyle')
-        || block.submitStyle
-        || 'blue'
-      ).trim().toLowerCase() || 'blue',
-      submitTone: String(readCtaSetting('submitTone') ?? block.submitTone ?? '').trim().toLowerCase(),
+        readCtaSetting('submitStyle') ?? ''
+      ).trim().toLowerCase(),
+      submitTone: String(readCtaSetting('submitTone') ?? '').trim().toLowerCase(),
       submitLabel: normalizeFollowUpSubmitLabel(
-        readCtaSetting('submitLabel', 'buttonLabel')
-        || block.submitLabel
-        || block.buttonLabel,
-        'Follow up with me',
+        readCtaSetting('submitLabel', 'buttonLabel') ?? '',
       ),
-      salesforceUrl: String(readCtaSetting('salesforceUrl') ?? block.salesforceUrl ?? '').trim(),
-      successMessage: String(readCtaSetting('successMessage') ?? block.successMessage ?? '').trim() || block.successMessage,
-      fieldsJson: String(readCtaSetting('fieldsJson') ?? block.fieldsJson ?? '').trim() || block.fieldsJson,
+      salesforceUrl: String(readCtaSetting('salesforceUrl') ?? '').trim(),
+      successMessage: String(readCtaSetting('successMessage') ?? '').trim(),
+      fieldsJson: String(readCtaSetting('fieldsJson') ?? '').trim(),
     };
     return resolvedCtaBlock;
   }
@@ -467,39 +271,34 @@ function resolveHomeBlock(block, context) {
   }
 
   if (blockId === HOME_MINISTRY_ALLIES_BLOCK_ID) {
-    return resolveHomeColumnsMhaBlock(block, managedBlock);
+    return resolveHomeColumnsMhaBlock(managedBlock);
   }
 
   if (blockId === HOME_DO_THE_MATH_BLOCK_ID) {
-    return resolveHomeColumnsMathBlock(block, managedBlock);
+    return resolveHomeColumnsMathBlock(managedBlock);
   }
 
   return block;
 }
 
-export function buildResolvedHomeBlocks(staticBlocks, context) {
-  const resolvedBlocks = staticBlocks.map((block) => resolveHomeBlock(block, context)).filter(Boolean);
-  const resolvedBlockIds = new Set(
-    resolvedBlocks
-      .map((block) => String(block?.id || '').trim())
-      .filter(Boolean),
-  );
-  const extraRenderableManagedBlocks = context.managedBlocks.filter((block) => {
-    if (!isManagedBlockVisible(block)) {
-      return false;
-    }
-    if (String(block?.mode || '').trim().toLowerCase() !== 'dynamic') {
-      return false;
-    }
-    const kind = String(block?.kind || block?.type || '').trim().toLowerCase();
-    if (!HOME_EXTRA_RENDERABLE_DYNAMIC_KINDS.has(kind)) {
-      return false;
-    }
-    const blockId = String(block?.id || '').trim();
-    return !blockId || !resolvedBlockIds.has(blockId);
-  });
+export function buildResolvedHomeBlocks(context = {}) {
+  const managedBlocks = Array.isArray(context.managedBlocks) ? context.managedBlocks : [];
+  const managedBlocksById = context.managedBlocksById instanceof Map
+    ? context.managedBlocksById
+    : new Map(managedBlocks.map((block) => [String(block?.id || '').trim(), block]));
+  const resolvedBlocks = managedBlocks
+    .filter((block) => String(block?.mode || '').trim().toLowerCase() === 'dynamic')
+    .filter((block) => !(String(block?.kind || '').trim() === 'services_grid' && context.homeServicesFeatureIsActive))
+    .map((block) => {
+      const settings = block?.settings && typeof block.settings === 'object' ? block.settings : {};
+      return resolveHomeBlock(
+        { ...block, type: String(block?.kind || block?.type || '').trim(), ...settings, settings },
+        { ...context, managedBlocksById },
+      );
+    })
+    .filter(Boolean);
 
-  return reorderHomeTopBlocks(resolvedBlocks.concat(extraRenderableManagedBlocks));
+  return reorderHomeTopBlocks(resolvedBlocks);
 }
 
 export function summarizeHomeColumnsBlock(block) {

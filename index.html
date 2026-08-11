@@ -26,7 +26,8 @@
     <script>
       (() => {
         const RECOVERY_STATE_KEY = 'agf:module-load-recovery';
-        const RECOVERY_WINDOW_MS = 15000;
+        const RECOVERY_WINDOW_MS = 30000;
+        const BOOT_TIMEOUT_MS = 20000;
 
         const readRecoveryState = () => {
           try {
@@ -149,8 +150,17 @@
         });
 
         window.addEventListener('load', () => {
-          clearRecoveryState();
+          if (window.__AGF_APP_BOOTED__) {
+            clearRecoveryState();
+          }
         }, { once: true });
+
+        window.setTimeout(() => {
+          if (window.__AGF_APP_BOOTED__) {
+            return;
+          }
+          requestRecoveryReload('bootstrap-timeout');
+        }, BOOT_TIMEOUT_MS);
       })();
     </script>
     <script type="module" src="/src/main.jsx"></script>

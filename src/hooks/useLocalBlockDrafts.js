@@ -16,6 +16,79 @@ function settingsValueEquals(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function hasPatchValues(patch) {
+  return Boolean(patch && typeof patch === 'object' && Object.keys(patch).length);
+}
+
+function cloneDraftPatchMap(source) {
+  const next = {};
+  Object.entries(source || {}).forEach(([blockId, patch]) => {
+    if (!hasPatchValues(patch)) {
+      return;
+    }
+    next[blockId] = {
+      ...patch,
+    };
+  });
+  return next;
+}
+
+function removePatchValue(source, blockId, settingKey) {
+  const currentPatch = source?.[blockId];
+  if (!hasPatchValues(currentPatch) || !Object.prototype.hasOwnProperty.call(currentPatch, settingKey)) {
+    return source;
+  }
+  const next = {
+    ...(source || {}),
+  };
+  const nextPatch = {
+    ...currentPatch,
+  };
+  delete nextPatch[settingKey];
+  if (Object.keys(nextPatch).length) {
+    next[blockId] = nextPatch;
+  } else {
+    delete next[blockId];
+  }
+  return next;
+}
+
+function setPatchValue(source, blockId, settingKey, settingValue) {
+  const currentPatch = source?.[blockId] || {};
+  if (settingsValueEquals(currentPatch?.[settingKey], settingValue)) {
+    return source || {};
+  }
+  return {
+    ...(source || {}),
+    [blockId]: {
+      ...currentPatch,
+      [settingKey]: settingValue,
+    },
+  };
+}
+
+function removeBlockPatch(source, blockId) {
+  if (!source || !Object.prototype.hasOwnProperty.call(source, blockId)) {
+    return source || {};
+  }
+  return Object.fromEntries(Object.entries(source).filter(([nextBlockId]) => nextBlockId !== blockId));
+}
+
+function appendUniqueSettingValue(values, nextValue) {
+  const nextValues = Array.isArray(values) ? [...values] : [];
+  if (!nextValues.some((value) => settingsValueEquals(value, nextValue))) {
+    nextValues.push(nextValue);
+  }
+  return nextValues;
+}
+
+function protectionIncludesValue(protection, sourceValue) {
+  const previousValues = Array.isArray(protection?.previousValues)
+    ? protection.previousValues
+    : [protection?.previousValue];
+  return previousValues.some((value) => settingsValueEquals(sourceValue, value));
+}
+
 export function applyLocalBlockDrafts(blocks, draftsByBlockId) {
   const currentBlocks = Array.isArray(blocks) ? blocks : [];
   if (!draftsByBlockId || typeof draftsByBlockId !== 'object' || !Object.keys(draftsByBlockId).length) {
@@ -69,14 +142,27 @@ export default function useLocalBlockDrafts({
 }) {
   const normalizedPath = String(pathname || '').trim();
   const [draftsByBlockId, setDraftsByBlockId] = useState({});
+  const [settledDraftsByBlockId, setSettledDraftsByBlockId] = useState({});
   const draftsByBlockIdRef = useRef(draftsByBlockId);
+  const settledDraftsByBlockIdRef = useRef(settledDraftsByBlockId);
+  const blocksRef = useRef(blocks);
+  const draftProtectionRef = useRef({});
   const commitTimersRef = useRef(new Map());
   const claimedBlockIdsRef = useRef(new Set());
   const flushHandlerIdRef = useRef(`local-draft:${Math.random().toString(36).slice(2, 10)}`);
+  const flushAllDraftsRef = useRef(() => false);
 
   useEffect(() => {
     draftsByBlockIdRef.current = draftsByBlockId;
   }, [draftsByBlockId]);
+
+  useEffect(() => {
+    settledDraftsByBlockIdRef.current = settledDraftsByBlockId;
+  }, [settledDraftsByBlockId]);
+
+  useEffect(() => {
+    blocksRef.current = blocks;
+  }, [blocks]);
 
   const clearCommitTimer = useCallback((blockId) => {
     const normalizedBlockId = String(blockId || '').trim();
@@ -92,6 +178,10 @@ export default function useLocalBlockDrafts({
 
   const syncDraftStateFromRef = useCallback(() => {
     setDraftsByBlockId(draftsByBlockIdRef.current);
+  }, []);
+
+  const syncSettledDraftStateFromRef = useCallback(() => {
+    setSettledDraftsByBlockId(settledDraftsByBlockIdRef.current);
   }, []);
 
   const commitDraftPatch = useCallback((blockId) => {
@@ -115,13 +205,33 @@ export default function useLocalBlockDrafts({
       return false;
     }
     let didFlushAny = false;
+    let nextDrafts = cloneDraftPatchMap(draftEntries);
+    let nextSettledDrafts = cloneDraftPatchMap(settledDraftsByBlockIdRef.current);
     Object.keys(draftEntries).forEach((blockId) => {
       if (commitDraftPatch(blockId)) {
         didFlushAny = true;
+        nextDrafts = removeBlockPatch(nextDrafts, blockId);
+        nextSettledDrafts = {
+          ...nextSettledDrafts,
+          [blockId]: {
+            ...(nextSettledDrafts?.[blockId] || {}),
+            ...(draftEntries?.[blockId] || {}),
+          },
+        };
       }
     });
+    if (didFlushAny) {
+      draftsByBlockIdRef.current = nextDrafts;
+      settledDraftsByBlockIdRef.current = nextSettledDrafts;
+      setDraftsByBlockId(nextDrafts);
+      setSettledDraftsByBlockId(nextSettledDrafts);
+    }
     return didFlushAny;
   }, [commitDraftPatch, syncDraftStateFromRef]);
+
+  useEffect(() => {
+    flushAllDraftsRef.current = flushAllDrafts;
+  }, [flushAllDrafts]);
 
   const stageLocalBlockSettings = useCallback((blockId, settingsPatch) => {
     const normalizedBlockId = String(blockId || '').trim();
@@ -145,14 +255,44 @@ export default function useLocalBlockDrafts({
     const nextDraft = {
       ...previousDraft,
     };
+    let nextSettledDrafts = settledDraftsByBlockIdRef.current || {};
+    const sourceBlock = (Array.isArray(blocksRef.current) ? blocksRef.current : [])
+      .find((block) => String(block?.id || '').trim() === normalizedBlockId);
+    const sourceSettings = sourceBlock?.settings || {};
+    const previousProtection = draftProtectionRef.current?.[normalizedBlockId] || {};
+    const nextProtection = {
+      ...previousProtection,
+    };
+
     normalizedPatchEntries.forEach(([settingKey, settingValue]) => {
+      const previousVisibleValue = Object.prototype.hasOwnProperty.call(previousDraft, settingKey)
+        ? previousDraft[settingKey]
+        : Object.prototype.hasOwnProperty.call(nextSettledDrafts?.[normalizedBlockId] || {}, settingKey)
+          ? nextSettledDrafts[normalizedBlockId][settingKey]
+          : sourceSettings?.[settingKey];
+      const previousProtectionValues = Array.isArray(previousProtection?.[settingKey]?.previousValues)
+        ? previousProtection[settingKey].previousValues
+        : [previousProtection?.[settingKey]?.previousValue].filter((value) => value !== undefined);
       nextDraft[settingKey] = settingValue;
+      nextSettledDrafts = removePatchValue(nextSettledDrafts, normalizedBlockId, settingKey);
+      nextProtection[settingKey] = {
+        previousValues: appendUniqueSettingValue(
+          appendUniqueSettingValue(previousProtectionValues, sourceSettings?.[settingKey]),
+          previousVisibleValue,
+        ),
+      };
     });
     draftsByBlockIdRef.current = {
       ...previousDrafts,
       [normalizedBlockId]: nextDraft,
     };
+    settledDraftsByBlockIdRef.current = nextSettledDrafts;
+    draftProtectionRef.current = {
+      ...draftProtectionRef.current,
+      [normalizedBlockId]: nextProtection,
+    };
     syncDraftStateFromRef();
+    syncSettledDraftStateFromRef();
 
     clearCommitTimer(normalizedBlockId);
     if (typeof window !== 'undefined') {
@@ -161,7 +301,7 @@ export default function useLocalBlockDrafts({
       }, LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
       commitTimersRef.current.set(normalizedBlockId, timerId);
     }
-  }, [claimBufferedBlockEdit, clearCommitTimer, commitDraftPatch, normalizedPath, syncDraftStateFromRef]);
+  }, [claimBufferedBlockEdit, clearCommitTimer, commitDraftPatch, normalizedPath, syncDraftStateFromRef, syncSettledDraftStateFromRef]);
 
   const stageLocalBlockSetting = useCallback((blockId, settingKey, settingValue) => {
     const normalizedSettingKey = String(settingKey || '').trim();
@@ -174,8 +314,8 @@ export default function useLocalBlockDrafts({
   }, [stageLocalBlockSettings]);
 
   const mergedBlocks = useMemo(
-    () => applyLocalBlockDrafts(blocks, draftsByBlockId),
-    [blocks, draftsByBlockId],
+    () => applyLocalBlockDrafts(applyLocalBlockDrafts(blocks, settledDraftsByBlockId), draftsByBlockId),
+    [blocks, draftsByBlockId, settledDraftsByBlockId],
   );
 
   useEffect(() => {
@@ -184,40 +324,87 @@ export default function useLocalBlockDrafts({
         .map((block) => [String(block?.id || '').trim(), block]),
     );
 
-    setDraftsByBlockId((previous) => {
-      let didChange = false;
-      const nextDrafts = {};
+    const previousDrafts = draftsByBlockIdRef.current || {};
+    let nextDrafts = cloneDraftPatchMap(previousDrafts);
+    let nextSettledDrafts = cloneDraftPatchMap(settledDraftsByBlockIdRef.current);
+    let nextProtections = {
+      ...(draftProtectionRef.current || {}),
+    };
 
-      Object.entries(previous || {}).forEach(([blockId, patch]) => {
-        const block = blocksById.get(blockId);
-        if (!block) {
-          didChange = true;
-          clearCommitTimer(blockId);
-          claimedBlockIdsRef.current.delete(blockId);
+    Object.entries(previousDrafts || {}).forEach(([blockId, patch]) => {
+      const block = blocksById.get(blockId);
+      if (!block) {
+        nextDrafts = removeBlockPatch(nextDrafts, blockId);
+        nextSettledDrafts = removeBlockPatch(nextSettledDrafts, blockId);
+        nextProtections = removeBlockPatch(nextProtections, blockId);
+        clearCommitTimer(blockId);
+        claimedBlockIdsRef.current.delete(blockId);
+        return;
+      }
+
+      Object.entries(patch || {}).forEach(([settingKey, settingValue]) => {
+        if (!settingsValueEquals(block?.settings?.[settingKey], settingValue)) {
           return;
         }
-
-        const nextPatch = Object.fromEntries(
-          Object.entries(patch || {}).filter(([settingKey, settingValue]) => (
-            !settingsValueEquals(block?.settings?.[settingKey], settingValue)
-          )),
-        );
-
-        if (!Object.keys(nextPatch).length) {
-          didChange = true;
-          clearCommitTimer(blockId);
-          claimedBlockIdsRef.current.delete(blockId);
-          return;
-        }
-
-        if (Object.keys(nextPatch).length !== Object.keys(patch || {}).length) {
-          didChange = true;
-        }
-        nextDrafts[blockId] = nextPatch;
+        nextDrafts = removePatchValue(nextDrafts, blockId, settingKey);
+        nextSettledDrafts = setPatchValue(nextSettledDrafts, blockId, settingKey, settingValue);
       });
 
-      return didChange ? nextDrafts : previous;
+      if (!hasPatchValues(nextDrafts?.[blockId])) {
+        clearCommitTimer(blockId);
+        claimedBlockIdsRef.current.delete(blockId);
+      }
     });
+
+    Object.entries(nextSettledDrafts || {}).forEach(([blockId, patch]) => {
+      const block = blocksById.get(blockId);
+      if (!block) {
+        nextSettledDrafts = removeBlockPatch(nextSettledDrafts, blockId);
+        nextProtections = removeBlockPatch(nextProtections, blockId);
+        return;
+      }
+
+      Object.entries(patch || {}).forEach(([settingKey, settledValue]) => {
+        const protection = nextProtections?.[blockId]?.[settingKey];
+        const sourceValue = block?.settings?.[settingKey];
+        if (
+          settingsValueEquals(sourceValue, settledValue)
+          || protectionIncludesValue(protection, sourceValue)
+        ) {
+          return;
+        }
+
+        nextSettledDrafts = removePatchValue(nextSettledDrafts, blockId, settingKey);
+        const blockProtections = {
+          ...(nextProtections?.[blockId] || {}),
+        };
+        delete blockProtections[settingKey];
+        if (Object.keys(blockProtections).length) {
+          nextProtections = {
+            ...nextProtections,
+            [blockId]: blockProtections,
+          };
+        } else {
+          nextProtections = removeBlockPatch(nextProtections, blockId);
+        }
+      });
+    });
+
+    const draftsChanged = JSON.stringify(nextDrafts) !== JSON.stringify(draftsByBlockIdRef.current || {});
+    const settledChanged = JSON.stringify(nextSettledDrafts) !== JSON.stringify(settledDraftsByBlockIdRef.current || {});
+    const protectionsChanged = JSON.stringify(nextProtections) !== JSON.stringify(draftProtectionRef.current || {});
+
+    if (draftsChanged) {
+      draftsByBlockIdRef.current = nextDrafts;
+      setDraftsByBlockId(nextDrafts);
+    }
+    if (settledChanged) {
+      settledDraftsByBlockIdRef.current = nextSettledDrafts;
+      setSettledDraftsByBlockId(nextSettledDrafts);
+    }
+    if (protectionsChanged) {
+      draftProtectionRef.current = nextProtections;
+    }
   }, [blocks, clearCommitTimer]);
 
   useEffect(() => {
@@ -234,21 +421,33 @@ export default function useLocalBlockDrafts({
     return registerExternalDraftStatusHandler(flushHandlerIdRef.current, () => ({
       pathname: normalizedPath,
       hasPendingDrafts: Object.keys(draftsByBlockIdRef.current || {}).length > 0,
+      pendingBlockIds: Object.keys(draftsByBlockIdRef.current || {}),
     }));
   }, [normalizedPath, registerExternalDraftStatusHandler]);
 
   useEffect(() => () => {
-    flushAllDrafts();
+    flushAllDraftsRef.current();
     commitTimersRef.current.forEach((timerId) => {
       if (typeof window !== 'undefined' && timerId) {
         window.clearTimeout(timerId);
       }
     });
     commitTimersRef.current.clear();
-  }, [flushAllDrafts]);
+  }, []);
 
   useEffect(() => {
     claimedBlockIdsRef.current.clear();
+    commitTimersRef.current.forEach((timerId) => {
+      if (typeof window !== 'undefined' && timerId) {
+        window.clearTimeout(timerId);
+      }
+    });
+    commitTimersRef.current.clear();
+    draftsByBlockIdRef.current = {};
+    settledDraftsByBlockIdRef.current = {};
+    draftProtectionRef.current = {};
+    setDraftsByBlockId({});
+    setSettledDraftsByBlockId({});
   }, [normalizedPath]);
 
   return {

@@ -15,7 +15,7 @@ const NEWSLETTER_HEADING_TONE_OPTIONS = [
 
 const NEWSLETTER_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-  { value: 'sand', label: 'Sand Gradient', swatch: 'linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)' },
+  { value: 'sand', label: 'Sand Gradient', swatch: getTokenSwatch('sand') },
   { value: 'blue', label: 'Blue Gradient', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
 ];

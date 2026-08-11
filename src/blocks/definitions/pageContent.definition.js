@@ -11,7 +11,7 @@ const PAGE_CONTENT_HEADING_TONE_OPTIONS = [
   { value: 'is-mango', label: 'Mango', swatch: 'linear-gradient(145deg, #f6b146 0%, #e8991f 100%)' },
   { value: 'is-melon', label: 'Melon', swatch: 'linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)' },
   { value: 'is-super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
-  { value: 'is-sandstone', label: 'Sandstone', swatch: 'linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)' },
+  { value: 'is-sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
   { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
 ];
 
@@ -39,6 +39,7 @@ const sections = [
       defineEditorField({ id: 'subtitle', label: 'Section subtitle', type: 'text' }),
       defineEditorField({ id: 'body', label: 'Section body', type: 'textarea', rows: 4 }),
       defineEditorField({ id: 'html', label: 'Page Content HTML', type: 'html' }),
+      defineEditorField({ id: 'bodyColorClassName', label: 'Body color', type: 'swatch', options: PAGE_CONTENT_HEADING_TONE_OPTIONS }),
       defineEditorField({ id: 'widget', label: 'Widget key', type: 'text' }),
     ],
   },
@@ -159,6 +160,7 @@ export const pageContentBlockDefinition = createBlockDefinition({
     subtitle: '',
     body: '',
     html: '',
+    bodyColorClassName: '',
     widget: '',
     logoImage: '',
     logoAlt: '',

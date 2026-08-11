@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import '../styles/front-hud.css';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
+import { PUBLISH_STATUS } from '../lib/contentAdminPublishing';
 
 const HUD_WORKFLOW_SETTLED_STATUS_DELAY_MS = 1400;
 
@@ -93,14 +94,17 @@ function summarizeSharedPublishResultForPath(publishResult, pathname) {
   };
 }
 
-function formatWorkflowScopeLabel(prefix, summary, emptyLabel) {
+function formatWorkflowScopeLabel(prefix, summary, emptyLabel, changedBlockCountOverride = null) {
   if (!summary?.hasUnsavedChanges) {
     return emptyLabel;
   }
 
   const parts = [];
-  if (summary.changedBlockCount) {
-    parts.push(`${summary.changedBlockCount} block${summary.changedBlockCount === 1 ? '' : 's'}`);
+  const changedBlockCount = changedBlockCountOverride == null
+    ? Number(summary.changedBlockCount) || 0
+    : Number(changedBlockCountOverride) || 0;
+  if (changedBlockCount) {
+    parts.push(`${changedBlockCount} block${changedBlockCount === 1 ? '' : 's'}`);
   }
   if (summary.hasOrderChanges) {
     parts.push('order');
@@ -125,6 +129,9 @@ export default function FrontHudPageWorkflow({
   showBlockDiscardAction = true,
   onDoneEditing = null,
   doneEditingLabel = 'Done editing',
+  isBillboardEditor = false,
+  isLivePreview = false,
+  onToggleLivePreview = null,
 }) {
   const {
     isPageDirty = () => false,
@@ -133,9 +140,11 @@ export default function FrontHudPageWorkflow({
     getPageWorkflowActivity = () => null,
     lastSharedSaveResult = null,
     lastSharedPublishResult = null,
+    sharedPublishStatus = '',
     sharedSyncStatus = null,
     hasPendingExternalDrafts = () => false,
     saveSharedDraftNow = async () => ({ ok: false }),
+    saveSharedBlockDraftNow = async () => ({ ok: false }),
     discardSharedPageDraft = async () => ({ ok: false }),
     discardSharedBlockDraft = async () => ({ ok: false }),
     publishSharedPageNow = async () => ({ ok: false }),
@@ -147,9 +156,21 @@ export default function FrontHudPageWorkflow({
   const workflowRef = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDiscarding, setIsDiscarding] = useState(false);
+  const [isDiscardConfirming, setIsDiscardConfirming] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isTakingOver, setIsTakingOver] = useState(false);
-  const [isRevealing, setIsRevealing] = useState(false);
+  // Track visibility during render so the first visible bar render already has its reveal class.
+  const previousBarVisibilityRef = useRef(false);
+  const revealCycleRef = useRef(0);
+  if (placement === 'bar') {
+    if (!isVisible) {
+      previousBarVisibilityRef.current = false;
+    } else if (!previousBarVisibilityRef.current) {
+      previousBarVisibilityRef.current = true;
+      revealCycleRef.current += 1;
+    }
+  }
+  const [completedRevealKey, setCompletedRevealKey] = useState(null);
   const [saveError, setSaveError] = useState('');
   const [saveOutcome, setSaveOutcome] = useState(null);
   const [publishError, setPublishError] = useState('');
@@ -167,6 +188,9 @@ export default function FrontHudPageWorkflow({
   const hasPendingExternalDraftsOnPage = normalizedPath
     ? Boolean(hasPendingExternalDrafts(normalizedPath))
     : false;
+  const hasPendingExternalDraftOnBlock = normalizedPath && normalizedBlockId
+    ? Boolean(hasPendingExternalDrafts(normalizedPath, normalizedBlockId))
+    : false;
   const pathSaveResult = useMemo(
     () => summarizeSharedSaveResultForPath(lastSharedSaveResult, normalizedPath),
     [lastSharedSaveResult, normalizedPath],
@@ -177,9 +201,22 @@ export default function FrontHudPageWorkflow({
   );
   const changedBlockCount = Number(changeSummary?.changedBlockCount) || 0;
   const draftScopeLabel = formatWorkflowScopeLabel('Draft saves', changeSummary, 'Draft save clean');
-  const publishScopeLabel = formatWorkflowScopeLabel('Make live publishes', publishSummary, 'Already live');
   const syncPending = Boolean(sharedSyncStatus?.isPending);
-  const hasDraftActivitySignal = pageDirty || hasPendingExternalDraftsOnPage || isSaving || syncPending;
+  const hasPublishChanges = Boolean(publishSummary?.hasUnsavedChanges);
+  const hasQueuedDraftSync = Boolean(sharedSyncStatus?.hasQueuedDraftSync);
+  const isSharedWorkflowBusy = sharedPublishStatus === PUBLISH_STATUS.SAVING_DRAFT
+    || sharedPublishStatus === PUBLISH_STATUS.PUBLISHING
+    || sharedPublishStatus === PUBLISH_STATUS.VERIFYING
+    || sharedPublishStatus === PUBLISH_STATUS.STATUS_UNKNOWN;
+  const hasUnpublishedChanges = Boolean(
+    (normalizedBlockId ? (pageDirty || hasPendingExternalDraftOnBlock) : pageDirty)
+    || (normalizedBlockId ? hasPendingExternalDraftOnBlock : hasPendingExternalDraftsOnPage)
+    || hasPublishChanges
+    || isSaving
+    || syncPending
+    || hasQueuedDraftSync,
+  );
+  const hasDraftActivitySignal = hasUnpublishedChanges;
   const [showSettledStatus, setShowSettledStatus] = useState(() => !hasDraftActivitySignal);
   const shouldUseCalmDraftPresentation = !showSettledStatus && !saveError && !pathSaveResult?.error;
 
@@ -213,6 +250,7 @@ export default function FrontHudPageWorkflow({
   }, [saveOutcome]);
 
   const saveWasAcknowledged = saveOutcome?.status === 'saved' && !isSaving;
+  const hasLocalDraftBuffer = hasPendingExternalDraftsOnPage;
 
   const saveFeedbackLabel = saveError
     ? saveError
@@ -225,18 +263,32 @@ export default function FrontHudPageWorkflow({
     : pathSaveResult?.status === 'discarded'
       ? 'Unpublished changes discarded; live content unchanged'
     : saveWasAcknowledged
-      ? `Draft saved${saveOutcome.updatedAt ? ` ${formatRelativeTime(saveOutcome.updatedAt)}` : ''}`
-    : pageDirty || hasPendingExternalDraftsOnPage || isSaving
-      ? 'Changes stay local while you type.'
-      : shouldUseCalmDraftPresentation
-        ? 'Draft updates are settling in the background.'
+      ? `Draft saved to shared content${saveOutcome.updatedAt ? ` ${formatRelativeTime(saveOutcome.updatedAt)}` : ''}`
+    : hasLocalDraftBuffer
+      ? 'In browser memory; not saved as a system draft yet.'
+    : syncPending || hasQueuedDraftSync || isSaving
+      ? 'Saving draft to shared content...'
+    : pageDirty
+      ? 'Draft changes ready to save.'
+    : shouldUseCalmDraftPresentation
+      ? 'Draft saved to shared content; confirming status...'
     : pathSaveResult?.error
       ? `Last save failed${pathSaveResult.updatedAt ? ` ${formatRelativeTime(pathSaveResult.updatedAt)}` : ''}`
-      : pathSaveResult?.updatedAt
-        ? 'Draft saved'
-        : 'No shared draft save yet';
+      : hasUnpublishedChanges && pathSaveResult?.updatedAt
+        ? `Draft saved to shared content${pathSaveResult.updatedAt ? ` ${formatRelativeTime(pathSaveResult.updatedAt)}` : ''}`
+        : hasUnpublishedChanges && sharedSyncStatus?.lastAppliedAt
+          ? `Draft synced to shared content ${formatRelativeTime(sharedSyncStatus.lastAppliedAt)}`
+          : 'Live content is current.';
   const publishFeedbackLabel = publishError
     ? publishError
+    : sharedPublishStatus === PUBLISH_STATUS.SAVING_DRAFT
+      ? 'Saving draft before live publish...'
+    : sharedPublishStatus === 'STATUS_UNKNOWN'
+      ? 'Publish status unknown; verifying before retrying'
+    : sharedPublishStatus === 'VERIFYING'
+      ? 'Verifying live publish...'
+    : sharedPublishStatus === 'PUBLISHING'
+      ? 'Publishing live content...'
     : pathPublishResult?.status === 'failed'
       ? 'Live publish failed; draft content was preserved'
     : pathPublishResult?.status === 'partially-published'
@@ -251,56 +303,102 @@ export default function FrontHudPageWorkflow({
           ? `Last publish failed${pathPublishResult.updatedAt ? ` ${formatRelativeTime(pathPublishResult.updatedAt)}` : ''}`
           : pathPublishResult?.updatedAt
             ? 'Live publish complete'
-            : 'Not live yet in dev authority';
-  const saveActivityLabel = pathSaveResult?.updatedAt
+            : 'Live site has not been updated by Make live';
+  const saveActivityLabel = hasUnpublishedChanges && pathSaveResult?.updatedAt
     ? `Last draft save ${formatRelativeTime(pathSaveResult.updatedAt)}`
     : '';
   const publishActivityLabel = pathPublishResult?.updatedAt
     ? `Last live publish ${formatRelativeTime(pathPublishResult.updatedAt)}`
     : '';
-  const liveSyncLabel = syncPending
-    ? (pageDirty || isSaving || shouldUseCalmDraftPresentation
-        ? 'Live sync catching up in the background.'
-        : 'Live sync sending changes...')
-    : sharedSyncStatus?.lastSettledAt
-      ? 'Live sync ready'
-      : sharedSyncStatus?.lastAppliedAt
-        ? 'Live sync updated'
-        : 'Live sync idle';
-  const syncActivityLabel = sharedSyncStatus?.lastSettledAt
-    ? `Live sync caught up ${formatRelativeTime(sharedSyncStatus.lastSettledAt)}`
-    : sharedSyncStatus?.lastAppliedAt
-      ? `Live sync updated ${formatRelativeTime(sharedSyncStatus.lastAppliedAt)}`
+  const draftSyncLabel = hasUnpublishedChanges && (syncPending || hasQueuedDraftSync)
+    ? 'Saving draft to shared content...'
+    : hasUnpublishedChanges && sharedSyncStatus?.lastSettledAt
+      ? 'Draft sync complete'
+      : hasUnpublishedChanges && sharedSyncStatus?.lastAppliedAt
+        ? 'Draft synced to shared content'
+      : 'Live content is current';
+  const syncActivityLabel = hasUnpublishedChanges && sharedSyncStatus?.lastSettledAt
+    ? `Draft sync completed ${formatRelativeTime(sharedSyncStatus.lastSettledAt)}`
+    : hasUnpublishedChanges && sharedSyncStatus?.lastAppliedAt
+      ? `Draft synced to shared content ${formatRelativeTime(sharedSyncStatus.lastAppliedAt)}`
       : '';
   const headline = saveError || pathSaveResult?.error || pathSaveResult?.status === 'blocked' || pathSaveResult?.status === 'failed'
     ? 'Unpublished changes'
     : pathSaveResult?.status === 'partially-saved'
       ? 'Partially saved'
-    : pageDirty || hasPendingExternalDraftsOnPage || isSaving
-      ? 'Editing draft'
-      : shouldUseCalmDraftPresentation
-        ? 'Updating draft'
-        : 'Draft saved';
+    : hasLocalDraftBuffer
+      ? 'Editing locally'
+    : syncPending || hasQueuedDraftSync || isSaving
+      ? 'Saving draft'
+    : pageDirty
+      ? 'Draft ready to save'
+    : shouldUseCalmDraftPresentation
+      ? 'Confirming draft save'
+    : hasPublishChanges
+      ? 'Draft saved'
+        : 'Live';
   const statusToneClassName = saveError || pathSaveResult?.error || pathSaveResult?.status === 'failed'
     ? 'is-error'
-    : pageDirty || hasPendingExternalDraftsOnPage || isSaving || shouldUseCalmDraftPresentation
+    : hasLocalDraftBuffer || syncPending || hasQueuedDraftSync || pageDirty || hasPublishChanges || isSaving || shouldUseCalmDraftPresentation
       ? 'is-dirty'
       : 'is-saved';
   const draftMarkerToneClassName = saveError || pathSaveResult?.error || pathSaveResult?.status === 'failed'
     ? 'is-error'
-    : pageDirty || hasPendingExternalDraftsOnPage || isSaving || shouldUseCalmDraftPresentation
+    : hasUnpublishedChanges || shouldUseCalmDraftPresentation
       ? 'is-amber'
       : pathSaveResult?.updatedAt
         ? 'is-green'
         : 'is-green';
   const syncMarkerToneClassName = saveError || pathSaveResult?.error || publishError || (pathPublishResult?.error && pathPublishResult.error !== 'already-live')
     ? 'is-error'
-    : syncPending || Boolean(publishSummary?.hasUnsavedChanges) || shouldUseCalmDraftPresentation
+    : hasUnpublishedChanges || shouldUseCalmDraftPresentation
       ? 'is-amber'
       : 'is-green';
 
+  const hasWorkflowOwnershipSignal = typeof workflowActivity?.hasCurrentActorDraft === 'boolean';
+  const hasBlockDraft = normalizedBlockId
+    ? Boolean(
+      publishSummary?.changedBlockIds?.includes(normalizedBlockId)
+      || changeSummary?.changedBlockIds?.includes(normalizedBlockId)
+      || workflowActivity?.currentActorBlockIds?.includes(normalizedBlockId)
+      || hasPendingExternalDraftOnBlock,
+    )
+    : false;
+  const canShowDraftActionsForCurrentActor = hasWorkflowOwnershipSignal
+    ? !workflowActivity?.hasOtherActorDraft
+    : true;
+  const showDraftActions = normalizedBlockId
+    ? hasBlockDraft || canShowDraftActionsForCurrentActor
+    : placement === 'bar'
+    ? true
+    : hasWorkflowOwnershipSignal
+    ? canShowDraftActionsForCurrentActor
+    : true;
+  const publishBlockedByOtherDraft = normalizedBlockId
+    ? Boolean(workflowActivity?.otherActorBlocks?.some((entry) => entry.blockId === normalizedBlockId))
+    : Boolean(workflowActivity?.hasOtherActorDraft);
+  const foreignPublishBlockIds = new Set(
+    (Array.isArray(workflowActivity?.otherActorBlocks) ? workflowActivity.otherActorBlocks : [])
+      .map((entry) => String(entry?.blockId || '').trim())
+      .filter(Boolean),
+  );
+  const publishablePageBlockIds = (Array.isArray(publishSummary?.changedBlockIds) ? publishSummary.changedBlockIds : [])
+    .filter((blockId) => !foreignPublishBlockIds.has(String(blockId || '').trim()));
+  const canPartiallyPublishPage = Boolean(
+    !normalizedBlockId
+    && publishBlockedByOtherDraft
+    && (!publishSummary?.hasOrderChanges || publishSummary?.isDeletionOnlyOrderChange)
+    && !publishSummary?.hasPageMetaChanges
+    && publishablePageBlockIds.length,
+  );
+  const publishScopeLabel = formatWorkflowScopeLabel(
+    'Make live publishes',
+    publishSummary,
+    'Already live',
+    canPartiallyPublishPage ? publishablePageBlockIds.length : null,
+  );
   const metaItems = [
-    draftScopeLabel,
+    hasUnpublishedChanges ? draftScopeLabel : '',
     publishScopeLabel,
     changeSummary?.hasOrderChanges ? 'Order changed' : '',
     changeSummary?.hasPageMetaChanges ? 'Page details changed' : '',
@@ -313,50 +411,46 @@ export default function FrontHudPageWorkflow({
     pathPublishResult?.blockedBlocks?.length
       ? `${pathPublishResult.blockedBlocks.length} publish block${pathPublishResult.blockedBlocks.length === 1 ? '' : 's'}`
       : '',
-    syncPending ? 'Live sync pending' : '',
+    syncPending || hasQueuedDraftSync ? 'Draft sync pending' : '',
   ].filter(Boolean);
   const activityItems = [saveActivityLabel, publishActivityLabel, syncActivityLabel].filter(Boolean);
-  const hasWorkflowOwnershipSignal = typeof workflowActivity?.hasCurrentActorDraft === 'boolean';
-  const savedBlockIds = pathSaveResult?.savedBlockIds || [];
-  const hasBlockDraft = normalizedBlockId
-    ? Boolean(
-      publishSummary?.changedBlockIds?.includes(normalizedBlockId)
-      || changeSummary?.changedBlockIds?.includes(normalizedBlockId)
-      || savedBlockIds.includes(normalizedBlockId)
-      || workflowActivity?.currentActorBlockIds?.includes(normalizedBlockId),
-    )
-    : false;
-  const showDraftActions = normalizedBlockId
-    ? hasBlockDraft
-    : hasWorkflowOwnershipSignal
-    ? Boolean(workflowActivity.hasCurrentActorDraft)
-    : true;
-  const publishBlockedByOtherDraft = normalizedBlockId
-    ? Boolean(workflowActivity?.otherActorBlocks?.some((entry) => entry.blockId === normalizedBlockId))
-    : Boolean(workflowActivity?.hasOtherActorDraft);
-  const hasPublishChanges = Boolean(publishSummary?.hasUnsavedChanges);
   const hasBlockPublishChanges = normalizedBlockId
-    ? hasBlockDraft
+    ? hasBlockDraft || publishSummary?.orderChangedBlockIds?.includes(normalizedBlockId)
     : hasPublishChanges;
-  const canSaveDraft = showDraftActions && !isSaving && (pageDirty || hasPendingExternalDraftsOnPage);
+  const hasUnsavedOwnershipMetadata = normalizedBlockId
+    ? Boolean(workflowActivity?.currentActorUnsavedSaveBlockIds?.includes(normalizedBlockId))
+    : Boolean(workflowActivity?.hasCurrentActorUnsavedSave);
+  const hasBlockSaveChanges = normalizedBlockId
+    ? hasBlockDraft || hasPendingExternalDraftOnBlock || hasUnsavedOwnershipMetadata
+    : pageDirty || hasPendingExternalDraftsOnPage || hasUnsavedOwnershipMetadata;
+  const canSaveDraft = showDraftActions
+    && !isSaving
+    && !isPublishing
+    && !isSharedWorkflowBusy
+    && hasBlockSaveChanges;
   const canDiscardDraft = showDraftActions
     && !isSaving
     && !isPublishing
     && !isDiscarding
+    && !isSharedWorkflowBusy
     && (normalizedBlockId
-      ? hasBlockPublishChanges
+      ? hasBlockPublishChanges || hasPendingExternalDraftOnBlock
       : pageDirty || hasPublishChanges || hasPendingExternalDraftsOnPage);
   const canMakeLive = showDraftActions
     && !isSaving
     && !isPublishing
-    && !publishBlockedByOtherDraft
+    && !isDiscarding
+    && !isSharedWorkflowBusy
+    && (!publishBlockedByOtherDraft || canPartiallyPublishPage)
     && (normalizedBlockId
-      ? hasBlockPublishChanges
+      ? hasBlockPublishChanges || hasPendingExternalDraftOnBlock
       : pageDirty || hasPublishChanges || hasPendingExternalDraftsOnPage);
   const makeLiveTitle = publishBlockedByOtherDraft
-    ? `${workflowActivity.otherActorBlockCount || 1} other-admin block${workflowActivity.otherActorBlockCount === 1 ? '' : 's'} must be resolved before making live.`
+    ? canPartiallyPublishPage
+      ? `Make live will publish ${publishablePageBlockIds.length} eligible block${publishablePageBlockIds.length === 1 ? '' : 's'}; ${workflowActivity.otherActorBlockCount || 1} other-admin block${workflowActivity.otherActorBlockCount === 1 ? '' : 's'} will remain draft.`
+      : `${workflowActivity.otherActorBlockCount || 1} other-admin block${workflowActivity.otherActorBlockCount === 1 ? '' : 's'} must be resolved before making live.`
     : normalizedBlockId
-      ? hasBlockPublishChanges
+      ? hasBlockPublishChanges || hasPendingExternalDraftOnBlock
         ? publishFeedbackLabel
         : 'This block is already live.'
       : hasPublishChanges || pageDirty || hasPendingExternalDraftsOnPage
@@ -379,7 +473,10 @@ export default function FrontHudPageWorkflow({
     setSaveError('');
     try {
       const result = await onOwnershipAction();
-      if (result?.ok === false) {
+      const settledResult = result?.pending && typeof result.pending.then === 'function'
+        ? await result.pending
+        : result;
+      if (result?.ok === false || settledResult?.ok === false) {
         setSaveError('Takeover failed; the other admin still owns this block.');
       }
     } catch {
@@ -409,9 +506,11 @@ export default function FrontHudPageWorkflow({
     setSaveOutcome(null);
     setIsSaving(true);
     try {
-      const result = await saveSharedDraftNow('');
+      const result = normalizedBlockId
+        ? await saveSharedBlockDraftNow(normalizedPath, normalizedBlockId, 'HUD block draft save')
+        : await saveSharedDraftNow('');
       if (result?.ok === false) {
-        setSaveError('Save failed');
+        setSaveError(result?.reason === 'content-admin-request-timeout' ? 'Save timed out' : 'Save failed');
       } else {
         setSaveOutcome({
           status: 'saved',
@@ -424,6 +523,8 @@ export default function FrontHudPageWorkflow({
       setIsSaving(false);
     }
   };
+
+  const saveDraftActionLabel = normalizedBlockId ? 'Save block draft' : 'Save all page drafts';
 
   const handleMakeLive = async () => {
     if (!normalizedPath || !canMakeLive) {
@@ -440,6 +541,8 @@ export default function FrontHudPageWorkflow({
           setPublishError('Live publish blocked');
         } else if (result?.reason === 'already-live') {
           setPublishError('Already live');
+        } else if (result?.reason === 'content-admin-request-timeout') {
+          setPublishError('Live publish timed out; draft was not confirmed live');
         } else if (result?.reason === 'save-before-publish-failed' || result?.reason === 'save-before-block-publish-failed') {
           setPublishError('Draft save failed before live publish');
         } else {
@@ -457,14 +560,18 @@ export default function FrontHudPageWorkflow({
     if (!normalizedPath || !canDiscardDraft) {
       return;
     }
-    const discardScopeLabel = normalizedBlockId ? blockLabel : normalizedPath;
-    const discardDescription = normalizedBlockId
-      ? `This restores only ${blockLabel} to its current published content. Other drafts on the page remain unchanged.`
-      : 'This restores every unpublished block on the page to its current published content. Live content remains unchanged.';
-    if (typeof window !== 'undefined' && !window.confirm(
-      `Discard unpublished changes for ${discardScopeLabel}? ${discardDescription}`,
-    )) {
+    if (isBillboardEditor && !isDiscardConfirming) {
+      setIsDiscardConfirming(true);
       return;
+    }
+    if (!isBillboardEditor && typeof window !== 'undefined') {
+      const discardScopeLabel = normalizedBlockId ? blockLabel : normalizedPath;
+      const discardDescription = normalizedBlockId
+        ? `This restores only ${blockLabel} to its current published content. Other drafts on the page remain unchanged.`
+        : 'This restores every unpublished block on the page to its current published content. Live content remains unchanged.';
+      if (!window.confirm(`Discard unpublished changes for ${discardScopeLabel}? ${discardDescription}`)) {
+        return;
+      }
     }
     setSaveError('');
     setIsDiscarding(true);
@@ -481,101 +588,141 @@ export default function FrontHudPageWorkflow({
       setSaveError('Discard failed');
     } finally {
       setIsDiscarding(false);
+      setIsDiscardConfirming(false);
     }
   };
 
+  const handleViewLive = () => {
+    if (typeof onToggleLivePreview === 'function') {
+      onToggleLivePreview(!isLivePreview);
+      return;
+    }
+    setFrontHudEnabled?.(false);
+  };
+
+  const revealKey = `${revealCycleRef.current}:${revealToken}`;
+  const isRevealing = placement === 'bar'
+    && isVisible
+    && completedRevealKey !== revealKey;
+
   useLayoutEffect(() => {
-    if (placement !== 'bar' || !revealToken || typeof window === 'undefined') {
+    if (!isRevealing || typeof window === 'undefined') {
       return undefined;
     }
 
-    setIsRevealing(true);
     const timeoutId = window.setTimeout(() => {
-      setIsRevealing(false);
-    }, 680);
+      setCompletedRevealKey(revealKey);
+    }, 520);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [placement, revealToken]);
+  }, [isRevealing, revealKey]);
+
+  useLayoutEffect(() => {
+    if (placement !== 'bar' || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const workflowNode = workflowRef.current;
+    const pageRoot = workflowNode?.closest('.is-front-hud-docked');
+    if (!workflowNode || !pageRoot) {
+      return undefined;
+    }
+
+    const syncWorkflowHeight = () => {
+      pageRoot.style.setProperty(
+        '--ag-admin-front-hud-workflow-height',
+        `${Math.ceil(workflowNode.getBoundingClientRect().height)}px`,
+      );
+    };
+
+    syncWorkflowHeight();
+    window.addEventListener('resize', syncWorkflowHeight);
+    const resizeObserver = typeof window.ResizeObserver === 'function'
+      ? new window.ResizeObserver(syncWorkflowHeight)
+      : null;
+    resizeObserver?.observe(workflowNode);
+
+    return () => {
+      window.removeEventListener('resize', syncWorkflowHeight);
+      resizeObserver?.disconnect();
+      pageRoot.style.removeProperty('--ag-admin-front-hud-workflow-height');
+    };
+  }, [isVisible, placement]);
 
   if (placement === 'dock-inline') {
-    if (!showDraftActions && !reviewHref && !onDoneEditing && !canTakeOver) {
+    if (!showDraftActions && !reviewHref && !onDoneEditing && !canTakeOver && !isBillboardEditor) {
       return null;
     }
 
     return (
-      <div className="admin-front-hud-page-workflow is-dock-inline" role="group" aria-label="Page workflow">
-        {onDoneEditing ? (
-          <button
-            type="button"
-            className="admin-front-hud-page-workflow-action is-secondary"
-            onClick={onDoneEditing}
-          >
-            {doneEditingLabel}
-          </button>
-        ) : null}
-        {typeof setFrontHudEnabled === 'function' ? (
-          <button
-            type="button"
-            className="admin-front-hud-page-workflow-action is-secondary"
-            onClick={() => setFrontHudEnabled(false)}
-            title="Show the published page and close the editing HUD."
-          >
-            View live
-          </button>
-        ) : null}
-        {takeOverAction}
-        {showDraftActions ? (
-          <>
+      <div className={`admin-front-hud-page-workflow is-dock-inline is-editor-command-bar${isBillboardEditor ? ' is-billboard-command-bar' : ''}`} role="group" aria-label={isBillboardEditor ? 'Billboard editor commands' : 'Page workflow'}>
+        <div className="admin-front-hud-page-workflow-command-group is-left">
+          {onDoneEditing ? (
+            <button type="button" className="admin-front-hud-page-workflow-action is-secondary" onClick={onDoneEditing}>
+              {doneEditingLabel}
+            </button>
+          ) : null}
+          {(typeof onToggleLivePreview === 'function' || typeof setFrontHudEnabled === 'function') ? (
             <button
               type="button"
-              className="admin-front-hud-page-workflow-action"
-              onClick={handleSaveDraft}
-              disabled={!canSaveDraft}
-              title={saveFeedbackLabel}
+              className={`admin-front-hud-page-workflow-action is-secondary${isLivePreview ? ' is-live-preview' : ''}`}
+              aria-pressed={typeof onToggleLivePreview === 'function' ? isLivePreview : undefined}
+              onClick={handleViewLive}
+              title={typeof onToggleLivePreview === 'function'
+                ? (isLivePreview
+                  ? 'Return this block to its editable draft view.'
+                  : 'Preview this block as currently published without closing the editor.')
+                : 'Show the published page and close the editing HUD.'}
             >
-              {isSaving ? 'Saving…' : 'Save draft'}
+              {typeof onToggleLivePreview === 'function'
+                ? (isLivePreview ? 'Toggle view draft' : 'Toggle view live')
+                : 'View live'}
             </button>
-            {showBlockPublishAction ? (
-              <button
-                type="button"
-                className="admin-front-hud-page-workflow-action is-secondary"
-                onClick={handleMakeLive}
-                disabled={!canMakeLive}
-                title={makeLiveTitle}
-              >
-                {isPublishing ? 'Publishing…' : 'Make live'}
-              </button>
-            ) : null}
-            {showBlockDiscardAction ? (
-              <button
-                type="button"
-                className="admin-front-hud-page-workflow-action is-danger"
-                onClick={handleDiscardDraft}
-                disabled={!canDiscardDraft}
-                title={normalizedBlockId
-                  ? 'Discard unpublished changes for this block only; other page drafts remain.'
-                  : 'Discard all unpublished changes on this page; live content remains unchanged.'}
-              >
-                {isDiscarding ? 'Discarding…' : normalizedBlockId ? 'Discard Block Draft' : 'Discard all page drafts'}
-              </button>
-            ) : null}
-          </>
-        ) : null}
-        {reviewHref ? (
-          <a
-            href={reviewHref}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="admin-front-hud-dock-link admin-front-hud-page-workflow-inline-link"
-            aria-label={reviewLabel}
-            title={reviewLabel}
-          >
-            <span aria-hidden="true">↗</span>
-            <span>Open admin in new window</span>
-          </a>
-        ) : null}
+          ) : null}
+          {takeOverAction}
+        </div>
+        <div className="admin-front-hud-page-workflow-command-group is-right">
+          <span className={`admin-front-hud-page-workflow-save-state${saveError ? ' is-error' : ''}`} role="status" aria-live="polite">{saveFeedbackLabel}</span>
+          {showDraftActions ? (
+            <button type="button" className="admin-front-hud-page-workflow-action" onClick={handleSaveDraft} disabled={!canSaveDraft} title={saveFeedbackLabel}>
+              {isSaving ? 'Saving…' : saveDraftActionLabel}
+            </button>
+          ) : null}
+          {showBlockPublishAction && showDraftActions ? (
+            <button type="button" className="admin-front-hud-page-workflow-action is-primary" onClick={handleMakeLive} disabled={!canMakeLive} title={makeLiveTitle}>
+              {isPublishing ? 'Publishing…' : 'Make live'}
+            </button>
+          ) : null}
+          {(showBlockDiscardAction || reviewHref) ? (
+            <details className="admin-front-hud-page-workflow-overflow">
+              <summary aria-label={`More ${isBillboardEditor ? 'Billboard editor' : 'HUD editor'} actions`} title="More actions">More</summary>
+              <div className="admin-front-hud-page-workflow-overflow-menu">
+                {showBlockDiscardAction ? (
+                  <div className="admin-front-hud-page-workflow-overflow-item">
+                    {isDiscardConfirming ? <span>{normalizedBlockId ? 'Discard this block draft?' : 'Discard page drafts?'}</span> : null}
+                    <button
+                      type="button"
+                      className="admin-front-hud-page-workflow-action is-danger"
+                      onClick={handleDiscardDraft}
+                      disabled={!canDiscardDraft}
+                      title={normalizedBlockId
+                        ? 'Discard unpublished changes for this block only; other page drafts remain.'
+                        : 'Discard all unpublished changes on this page; live content remains unchanged.'}
+                    >
+                      {isDiscarding ? 'Discarding…' : isDiscardConfirming ? 'Confirm discard' : normalizedBlockId ? 'Discard Block Draft' : 'Discard all page drafts'}
+                    </button>
+                    {isDiscardConfirming ? <button type="button" className="admin-front-hud-page-workflow-action is-secondary" onClick={() => setIsDiscardConfirming(false)}>Cancel</button> : null}
+                  </div>
+                ) : null}
+                {reviewHref ? (
+                  <a href={reviewHref} target="_blank" rel="noreferrer noopener" className="admin-front-hud-page-workflow-action is-secondary" aria-label={reviewLabel} title={reviewLabel}>Open admin</a>
+                ) : null}
+              </div>
+            </details>
+          ) : null}
+        </div>
       </div>
     );
   }
@@ -595,7 +742,7 @@ export default function FrontHudPageWorkflow({
           >
             <span className="admin-front-hud-page-workflow-marker-label">
               <span className={`admin-front-hud-page-workflow-marker ${draftMarkerToneClassName}`} aria-hidden="true" />
-              <span>Draft</span>
+              <span>{hasUnpublishedChanges ? 'Draft' : 'Live'}</span>
             </span>
             <strong>{headline}</strong>
             {saveFeedbackLabel !== headline ? <span>{saveFeedbackLabel}</span> : null}
@@ -603,10 +750,10 @@ export default function FrontHudPageWorkflow({
           <div className="admin-front-hud-page-workflow-sync">
             <span className="admin-front-hud-page-workflow-sync-label">
               <span className={`admin-front-hud-page-workflow-marker ${syncMarkerToneClassName}`} aria-hidden="true" />
-              <span>Live sync</span>
+              <span>Published site</span>
             </span>
             <span>{publishFeedbackLabel}</span>
-            <span>{liveSyncLabel}</span>
+            <span>{draftSyncLabel}</span>
           </div>
         </div>
       </div>
@@ -635,19 +782,8 @@ export default function FrontHudPageWorkflow({
               onClick={handleSaveDraft}
               disabled={!canSaveDraft}
             >
-              {isSaving ? 'Saving…' : 'Save draft'}
+              {isSaving ? 'Saving…' : saveDraftActionLabel}
             </button>
-            {showBlockPublishAction ? (
-              <button
-                type="button"
-                className="admin-front-hud-page-workflow-action is-secondary"
-                onClick={handleMakeLive}
-                disabled={!canMakeLive}
-                title={makeLiveTitle}
-              >
-                {isPublishing ? 'Publishing…' : 'Make live'}
-              </button>
-            ) : null}
             {showBlockDiscardAction ? (
               <button
                 type="button"
@@ -659,6 +795,17 @@ export default function FrontHudPageWorkflow({
                   : 'Discard all unpublished changes on this page; live content remains unchanged.'}
               >
                 {isDiscarding ? 'Discarding…' : normalizedBlockId ? 'Discard Block Draft' : 'Discard all page drafts'}
+              </button>
+            ) : null}
+            {showBlockPublishAction ? (
+              <button
+                type="button"
+                className="admin-front-hud-page-workflow-action is-secondary"
+                onClick={handleMakeLive}
+                disabled={!canMakeLive}
+                title={makeLiveTitle}
+              >
+                {isPublishing ? 'Publishing…' : 'Make live'}
               </button>
             ) : null}
           </>

@@ -4,6 +4,13 @@ import FastContentAdminProvider from './FastContentAdminProvider';
 import { useOptionalContentAdmin } from './ContentAdminContextCore';
 
 const heavyProviderMounts = vi.fn();
+const { publishedRouteSnapshotFetches } = vi.hoisted(() => ({
+  publishedRouteSnapshotFetches: vi.fn(() => Promise.resolve(null)),
+}));
+
+vi.mock('../lib/devContentAuthorityClient', () => ({
+  fetchPublishedContentRouteSnapshot: publishedRouteSnapshotFetches,
+}));
 
 vi.mock('./ContentAdminContext', () => ({
   ContentAdminProvider({ children }) {
@@ -20,6 +27,7 @@ function Probe() {
 describe('FastContentAdminProvider', () => {
   beforeEach(() => {
     heavyProviderMounts.mockClear();
+    publishedRouteSnapshotFetches.mockClear();
     window.localStorage.clear();
   });
 
@@ -33,6 +41,7 @@ describe('FastContentAdminProvider', () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(heavyProviderMounts).not.toHaveBeenCalled();
     expect(screen.queryByTestId('heavy-provider')).toBeNull();
+    expect(publishedRouteSnapshotFetches).toHaveBeenCalled();
   });
 
   it('loads the full provider only after explicit admin activation', async () => {

@@ -536,6 +536,9 @@ describe('HomeImpactStoryFeature', () => {
     const cssSource = readSource('../styles/home-native.css');
 
     expect(cssSource).toContain('.home-impact-story {');
+    expect(cssSource).toContain('.home-native-impact {');
+    expect(cssSource).toContain('background: transparent;');
+    expect(cssSource).toContain('padding: 0;');
     expect(cssSource).toContain('.home-impact-story-frame {');
     expect(cssSource).toContain('overflow: hidden;');
     expect(cssSource).toContain('overflow: clip;');

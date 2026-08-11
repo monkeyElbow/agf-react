@@ -12,11 +12,9 @@ import {
   getGridSafeToneForBg,
   normalizeDynamicGridCardBodyLineHeight,
   normalizeDynamicGridCardBodySizeRem,
-  normalizeDynamicGridCardDividerTone,
   normalizeDynamicGridCardPaddingRem,
   normalizeDynamicGridCardTitleSizeRem,
   normalizeDynamicGridColumns,
-  normalizeDynamicGridDividerTone,
   normalizeDynamicGridWidth,
   normalizeGridBgTone,
 } from './dynamicGrid';
@@ -33,6 +31,7 @@ import {
   normalizeHeroTitleLetterSpacingEm,
   normalizeHeroTitleSizeRem,
 } from './heroTitleSize';
+import { normalizeHeroLineGapEm } from './heroLineStyle';
 import {
   buildBillboardSubtitleStyle,
   buildBillboardTitleStyle,
@@ -926,6 +925,7 @@ export function buildDynamicIntroFromBlock(block) {
   const headingHighlights = parseTextHighlights(settings.headingHighlightsJson);
   const bodyHtml = String(settings.bodyHtml || '').trim();
   const body = String(settings.body || '').trim();
+  const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
   const extraLine = String(settings.extraLine || '').trim();
   const extraLineClassName = toIntroEmphasisClassName(settings.extraLineTone);
   const extraLineStyle = toIntroEmphasisStyle(settings.extraLineTone);
@@ -970,6 +970,7 @@ export function buildDynamicIntroFromBlock(block) {
     headingHighlights,
     bodyHtml,
     body,
+    ...(bodyColorClassName ? { bodyColorClassName } : {}),
     extraLine,
     extraLineClassName,
     extraLineStyle,
@@ -997,6 +998,7 @@ export function buildDynamicBillboardFromBlock(block) {
   const sectionClassName = sanitizeClassName(settings.sectionClassName || '');
   const bodyHtml = String(settings.bodyHtml || '').trim();
   const body = String(settings.body || '').trim();
+  const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
   const fineprint = parsePageContentTextLines(settings.fineprint);
   const bgTone = String(settings.bgTone || 'blue').trim().toLowerCase() || 'blue';
   const textTone = String(settings.textTone || 'white').trim().toLowerCase() || 'white';
@@ -1017,13 +1019,11 @@ export function buildDynamicBillboardFromBlock(block) {
     ? normalizeBillboardSubtitleSizeRem(settings.subtitleSizeRem)
     : null;
   const subtitleResolvedColor = resolveBillboardSubtitleColor(subtitleClassName);
-  const hasHeadlineWidthOverride = String(settings.headlineMaxWidthPx ?? '').trim() !== ''
-    && Number.isFinite(Number(settings.headlineMaxWidthPx));
-  const headlineMaxWidthPx = hasHeadlineWidthOverride
-    ? normalizePageContentMaxWidthPx(settings.headlineMaxWidthPx, 920)
-    : null;
   const hasContentWidthOverride = String(settings.contentMaxWidthPx ?? '').trim() !== ''
     && Number.isFinite(Number(settings.contentMaxWidthPx));
+  const contentMaxWidthPx = hasContentWidthOverride
+    ? normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 920)
+    : null;
   const actions = [
     buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['buttonLabel'],
@@ -1090,6 +1090,7 @@ export function buildDynamicBillboardFromBlock(block) {
     }),
     bodyHtml,
     body,
+    ...(bodyColorClassName ? { bodyColorClassName } : {}),
     fineprint: fineprint.length ? fineprint : null,
     fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
     bgTone,
@@ -1097,15 +1098,16 @@ export function buildDynamicBillboardFromBlock(block) {
     justify,
     lineSpacing,
     scrollReveal,
-    copyStyle: headlineMaxWidthPx
-      ? { '--dynamic-billboard-copy-max-width': `${headlineMaxWidthPx}px` }
+    // Older snapshots may still carry headlineMaxWidthPx, but the title must
+    // follow the billboard content rail instead of being trapped in a legacy
+    // narrow column.
+    copyStyle: contentMaxWidthPx
+      ? { '--dynamic-billboard-copy-max-width': `${contentMaxWidthPx}px` }
       : undefined,
     copyClassName: sanitizeClassName(settings.copyClassName || '')
       || (scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : ''),
     copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -20% 0px' : '',
-    contentMaxWidthPx: hasContentWidthOverride
-      ? normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 920)
-      : null,
+    contentMaxWidthPx,
     action: actions[0] || null,
     actions,
     actionsBeforeCards: toBoolean(settings.actionsBeforeCards),
@@ -1957,6 +1959,9 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     resolveCtaFormSetting(settings, fallbackSettings, 'titleHighlightsJson') || '',
   );
   const bodyHtml = normalizeHtmlContent(resolveCtaFormSetting(settings, fallbackSettings, 'bodyHtml'));
+  const bodyColorClassName = normalizeHighlightClassName(
+    resolveCtaFormSetting(settings, fallbackSettings, 'bodyColorClassName') || '',
+  );
   const fineprint = String(resolveCtaFormSetting(settings, fallbackSettings, 'fineprint') || '').trim()
     || (isPlannedGivingCtaSource(settings) ? PLANNED_GIVING_CTA_FINEPRINT : '');
   const subtitle = String(resolveCtaFormSetting(settings, fallbackSettings, 'subtitle') || '').trim();
@@ -2000,6 +2005,7 @@ export function buildDynamicCtaFormFromBlock(block, { fallbackSettings = null, f
     displayMode,
     triggerMode,
     bodyHtml,
+    ...(bodyColorClassName ? { bodyColorClassName } : {}),
     fineprint,
     subtitle,
     bgTone,
@@ -2322,14 +2328,10 @@ export function buildDynamicGridFromBlock(block) {
   const cardStyle = getGridSafeCardStyleForBg(settings.cardStyle, bgTone);
   const titleTone = getGridSafeToneForBg(settings.titleTone, bgTone, 'super-grey');
   const bodyTone = getGridSafeToneForBg(settings.bodyTone, bgTone, 'super-grey');
-  const dividerTone = normalizeDynamicGridDividerTone(settings.dividerTone);
   const cardPaddingRem = normalizeDynamicGridCardPaddingRem(settings.cardPaddingRem);
   const cardTitleSizeRem = normalizeDynamicGridCardTitleSizeRem(settings.cardTitleSizeRem);
   const cardBodySizeRem = normalizeDynamicGridCardBodySizeRem(settings.cardBodySizeRem);
   const cardBodyLineHeight = normalizeDynamicGridCardBodyLineHeight(settings.cardBodyLineHeight);
-  const showTitleDivider = !Object.prototype.hasOwnProperty.call(settings, 'showTitleDivider')
-    ? true
-    : toBoolean(settings.showTitleDivider);
   const resolvedCardClass = cardStyle === 'none' ? 'card-none' : cardStyle;
   const sectionAction = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
@@ -2381,7 +2383,6 @@ export function buildDynamicGridFromBlock(block) {
         toneKeys: [`__card${slot}SecondaryTone`],
         classNameKeys: [`card${slot}Button2ClassName`],
       });
-      const cardDividerTone = normalizeDynamicGridCardDividerTone(settings[`card${slot}DividerTone`]);
       const cardList = parseCardGridListJson(settings[`card${slot}ListJson`]);
       const cardFineprint = parsePageContentTextLines(settings[`card${slot}Fineprint`]);
       const cardLinks = parseCardGridLinkItemsJson(settings[`card${slot}LinksJson`]);
@@ -2404,7 +2405,6 @@ export function buildDynamicGridFromBlock(block) {
         iconTone: cardIconTone,
         cardClass: [resolvedCardClass, cardClassName].filter(Boolean).join(' '),
         panelTone: String(settings[`card${slot}PanelTone`] || '').trim(),
-        dividerTone: cardDividerTone || undefined,
         action: cardActions[0] || null,
         actions: cardActions,
         links: cardLinks,
@@ -2438,8 +2438,6 @@ export function buildDynamicGridFromBlock(block) {
     cardStyle,
     titleTone,
     bodyTone,
-    dividerTone,
-    showTitleDivider,
     cardPaddingRem,
     cardTitleSizeRem,
     cardBodySizeRem,
@@ -2534,6 +2532,7 @@ export function buildDynamicPageContentFromBlock(block) {
   const subtitle = String(settings.subtitle || '').trim();
   const body = parsePageContentTextLines(settings.body);
   const html = String(settings.html || '').trim();
+  const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
   const widget = String(settings.widget || '').trim();
   const logoImage = String(settings.logoImage || '').trim();
   const logoAlt = String(settings.logoAlt || '').trim();
@@ -2610,6 +2609,7 @@ export function buildDynamicPageContentFromBlock(block) {
     subtitle,
     body,
     html: normalizedHtml,
+    ...(bodyColorClassName ? { bodyColorClassName } : {}),
     widget,
     logoImage,
     logoAlt,
@@ -2723,6 +2723,9 @@ export function buildDynamicHeroFromBlock(block) {
   const titleSizeRem = normalizeHeroTitleSizeRem(settings.titleSizeRem);
   const titleLetterSpacingEm = normalizeHeroTitleLetterSpacingEm(settings.titleLetterSpacingEm);
   const lineHeight = Number.isFinite(Number(settings.lineHeight)) ? Number(settings.lineHeight) : 0.9;
+  const heightMode = String(settings.heightMode || 'default').trim() === 'custom' ? 'custom' : 'default';
+  const heightSvh = Number.isFinite(Number(settings.heightSvh)) ? Number(settings.heightSvh) : undefined;
+  const lineGap = normalizeHeroLineGapEm(settings.lineGap);
   const actionJustifyToken = String(settings.actionJustify || justify || 'center').trim().toLowerCase();
   const actionJustify = actionJustifyToken === 'left' || actionJustifyToken === 'right' ? actionJustifyToken : 'center';
 
@@ -2733,7 +2736,9 @@ export function buildDynamicHeroFromBlock(block) {
     justify,
     titleSizeRem,
     titleLetterSpacingEm,
-    lineGap: 0,
+    lineGap,
+    heightMode,
+    ...(heightSvh !== undefined ? { heightSvh } : {}),
     lineHeight,
     actions,
     actionJustify,

@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './styles.css';
+import './styles/admin.css';
 import { RatesProvider } from './context/RatesContext';
 import ContentAdminProvider from './context/FastContentAdminProvider';
 import { AnnouncementProvider } from './context/AnnouncementContext';
@@ -45,3 +46,7 @@ function renderApp() {
 }
 
 renderApp();
+
+if (typeof window !== 'undefined') {
+  window.__AGF_APP_BOOTED__ = true;
+}

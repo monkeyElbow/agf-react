@@ -40,9 +40,9 @@ const CONTEXTUAL_BLOCK_KINDS = new Set([
 const CONTEXTUAL_BLOCK_PAGE_FAMILIES = Object.freeze({
   calculator_cta: Object.freeze(['calculators', 'investments', 'retirement']),
   calculator_intro: Object.freeze(['calculators']),
-  cta_form: Object.freeze(['insurance', 'investments', 'loans', 'planned-giving', 'retirement']),
+  cta_form: Object.freeze(['insurance', 'investments', 'loans', 'planned-giving', 'retirement', 'test']),
   impact_stat: Object.freeze(['about', 'home']),
-  request_form: Object.freeze(['insurance', 'loans', 'planned-giving', 'retirement']),
+  request_form: Object.freeze(['insurance', 'loans', 'planned-giving', 'retirement', 'test']),
   split_panel: Object.freeze(['investments', 'planned-giving', 'retirement']),
 });
 
@@ -73,6 +73,7 @@ function normalizeList(values) {
 export function getManagedPageFamily(pathname) {
   const path = String(pathname || '').trim().toLowerCase();
   if (path === '/') return 'home';
+  if (path === '/test') return 'test';
   if (path.startsWith('/services/loans')) return 'loans';
   if (path.startsWith('/services/investments')) return 'investments';
   if (path.startsWith('/services/retirement')) return 'retirement';

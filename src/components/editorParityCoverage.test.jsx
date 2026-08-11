@@ -30,14 +30,18 @@ import {
 } from './block-editors/migratedBlockEditors';
 import BlockHudPanelHost from './BlockHudPanelHost';
 import {
-  getAllBlockTemplateBlueprints,
+  contentBlockBlueprintsByPath,
+  genericPageBlockBlueprint,
 } from '../data/contentBlockBlueprints';
 import { defaultTestimonialsLibrary } from '../data/testimonialsLibrarySeed';
 import { getBlockHudDefinition } from '../lib/blockHudRegistry';
 import { EDITOR_PARITY_CONTRACT, EDITOR_PARITY_TYPES, getEditorParityContract } from '../lib/editorParityContract';
 import { getEditableFieldsForKind } from '../blocks/registry';
 
-const allBlueprintBlocks = getAllBlockTemplateBlueprints();
+const allBlueprintBlocks = [
+  ...genericPageBlockBlueprint(),
+  ...Object.values(contentBlockBlueprintsByPath || {}).flat(),
+];
 
 const ADMIN_RENDERERS_BY_KIND = {
   hero: HeroBlockEditor,

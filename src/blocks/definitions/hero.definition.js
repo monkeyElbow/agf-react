@@ -15,7 +15,7 @@ const HERO_LINE_TONE_OPTIONS = [
   { value: 'is-mango', label: 'Mango', swatch: 'linear-gradient(145deg, #f6b146 0%, #e8991f 100%)' },
   { value: 'is-melon', label: 'Melon', swatch: 'linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)' },
   { value: 'is-super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
-  { value: 'is-sandstone', label: 'Sandstone', swatch: 'linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)' },
+  { value: 'is-sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
   { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
 ];
 
@@ -30,13 +30,13 @@ const HERO_BUTTON_TONE_OPTIONS = [
   { value: 'super-grey', label: 'Super Grey', swatch: '#414042' },
   { value: 'mango', label: 'Mango', swatch: '#f6b146' },
   { value: 'melon', label: 'Melon', swatch: '#f48f7a' },
-  { value: 'sandstone', label: 'Sandstone', swatch: '#c4beb6' },
+  { value: 'sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
   { value: 'white', label: 'White', swatch: '#ffffff' },
 ];
 
 const HERO_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-  { value: 'sand', label: 'Sand Gradient', swatch: 'linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)' },
+  { value: 'sand', label: 'Sand Gradient', swatch: getTokenSwatch('sand') },
   { value: 'blue', label: 'Blue Gradient', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
 ];

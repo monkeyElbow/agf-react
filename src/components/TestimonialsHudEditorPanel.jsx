@@ -1,4 +1,9 @@
 import { useState } from 'react';
+import {
+  HudEditorBlockOptionsPage,
+  HudEditorModelLayout,
+  appendHudBlockOptionsSection,
+} from './HudEditorShell';
 
 function TestimonialsHudEditorPanel({
   limit,
@@ -13,6 +18,7 @@ function TestimonialsHudEditorPanel({
   previewItems,
   formatAttribution,
   adminTestimonialsHref = '/admin/testimonials',
+  blockOptions = null,
 }) {
   const safeLibrary = Array.isArray(library) ? library : [];
   const safeSelectedIds = Array.isArray(selectedIds) ? selectedIds.map((entry) => String(entry)) : [];
@@ -57,8 +63,21 @@ function TestimonialsHudEditorPanel({
     setIsSelectorFilterActive(false);
   };
 
+  const [activeEditorSection, setActiveEditorSection] = useState('selection');
+
+  const editorSections = appendHudBlockOptionsSection([
+    { id: 'selection', label: 'Select', icon: '✓' },
+    { id: 'preview', label: 'Preview', icon: '▣' },
+  ], blockOptions);
+
   return (
-    <div className="admin-front-hud-testimonials-editor">
+    <HudEditorModelLayout
+      className="admin-front-hud-testimonials-editor"
+      sections={editorSections}
+      activeSection={activeEditorSection}
+      onSectionChange={setActiveEditorSection}
+      label="Testimonials editor sections"
+    >
       <div className="admin-front-hud-testimonials-head">
         <p className="admin-front-hud-note">Pick quotes from the shared library. IDs and tags are managed automatically.</p>
         <a
@@ -230,7 +249,8 @@ function TestimonialsHudEditorPanel({
           </div>
         </div>
       </div>
-    </div>
+      <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+    </HudEditorModelLayout>
   );
 }
 

@@ -1,15 +1,17 @@
 export const BLUE_SURFACE_SWATCH = 'linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)';
 export const BLUE_SURFACE_OVERLAY_SOFT = 'linear-gradient(var(--ag-surface-blue-angle), rgba(var(--ag-color-atlantean-dark-rgb), 0.34) 0%, rgba(var(--ag-color-atlantean-rgb), 0.24) 100%)';
 export const BLUE_SURFACE_OVERLAY_STRONG = 'linear-gradient(var(--ag-surface-blue-angle), rgba(var(--ag-color-atlantean-dark-rgb), 0.8) 0%, rgba(var(--ag-color-atlantean-rgb), 0.45) 100%)';
+export const SANDSTONE_GRADIENT_SWATCH = 'linear-gradient(145deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%)';
+export const SAND_SURFACE_GRADIENT_SWATCH = 'linear-gradient(147deg, var(--ag-color-sand) 62%, var(--ag-color-sand-dark) 100%)';
 
 const TOKEN_SWATCHS = Object.freeze({
   atlantean: BLUE_SURFACE_SWATCH,
   mango: 'linear-gradient(145deg, var(--ag-color-mango) 0%, var(--ag-color-mango-dark) 100%)',
   melon: 'linear-gradient(145deg, var(--ag-color-melon) 0%, var(--ag-color-melon-dark) 100%)',
-  sandstone: 'linear-gradient(145deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%)',
+  sandstone: SANDSTONE_GRADIENT_SWATCH,
   'super-grey': 'linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)',
   white: 'linear-gradient(145deg, var(--ag-color-white) 0%, var(--ag-color-white-soft) 100%)',
-  sand: 'linear-gradient(145deg, var(--ag-color-sand) 0%, var(--ag-color-sand-dark) 100%)',
+  sand: SAND_SURFACE_GRADIENT_SWATCH,
   blue: BLUE_SURFACE_SWATCH,
   grey: 'linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)',
   dark: 'linear-gradient(145deg, var(--ag-color-super-grey) 0%, var(--ag-color-super-grey-dark) 100%)',

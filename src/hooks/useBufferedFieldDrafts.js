@@ -1,4 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useOptionalContentAdmin } from '../context/ContentAdminContextCore';
+import {
+  createProtectedEditorDraft,
+  isOlderEditorDraftRevision,
+  normalizeEditorDraftRevision,
+  shouldKeepProtectedEditorDraft,
+} from '../lib/editorDraftProtection';
 
 export const BUFFERED_FIELD_DRAFT_COMMIT_DELAY_MS = 320;
 
@@ -33,7 +40,10 @@ function areTokenListsEqual(left = [], right = []) {
 export default function useBufferedFieldDrafts({
   fields = [],
   commitDelayMs = BUFFERED_FIELD_DRAFT_COMMIT_DELAY_MS,
+  sourceRevision = 0,
 }) {
+  const contentAdmin = useOptionalContentAdmin();
+  const effectiveSourceRevision = sourceRevision || contentAdmin?.sharedSnapshotUpdatedAt || 0;
   const normalizedFields = useMemo(() => normalizeFieldDefinitions(fields), [fields]);
   const externalDraftValues = useMemo(
     () => readExternalDraftValues(normalizedFields),
@@ -50,6 +60,8 @@ export default function useBufferedFieldDrafts({
   const fieldDefinitionsByIdRef = useRef(fieldDefinitionsById);
   const committedValuesRef = useRef(externalDraftValues);
   const commitTimersRef = useRef(new Map());
+  const protectedDraftValuesRef = useRef(new Map());
+  const latestSourceRevisionRef = useRef(normalizeEditorDraftRevision(effectiveSourceRevision));
 
   useEffect(() => {
     draftValuesRef.current = draftValues;
@@ -60,12 +72,23 @@ export default function useBufferedFieldDrafts({
     fieldDefinitionsByIdRef.current = fieldDefinitionsById;
   }, [externalDraftValues, fieldDefinitionsById]);
 
+  useEffect(() => {
+    latestSourceRevisionRef.current = Math.max(
+      latestSourceRevisionRef.current,
+      normalizeEditorDraftRevision(effectiveSourceRevision),
+    );
+  }, [effectiveSourceRevision]);
+
   useEffect(() => () => {
     commitTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
     commitTimersRef.current.clear();
   }, []);
 
   useEffect(() => {
+    const normalizedSourceRevision = normalizeEditorDraftRevision(effectiveSourceRevision);
+    if (isOlderEditorDraftRevision(normalizedSourceRevision, latestSourceRevisionRef.current)) {
+      return;
+    }
     setDraftValues((current) => {
       let changed = false;
       const next = { ...current };
@@ -74,6 +97,13 @@ export default function useBufferedFieldDrafts({
           return;
         }
         const externalValue = externalDraftValues[field.id] ?? '';
+        const protectedDraft = protectedDraftValuesRef.current.get(field.id);
+        if (protectedDraft) {
+          if (shouldKeepProtectedEditorDraft(protectedDraft, normalizedSourceRevision)) {
+            return;
+          }
+          protectedDraftValuesRef.current.delete(field.id);
+        }
         committedValuesRef.current[field.id] = externalValue;
         if ((current[field.id] ?? '') === externalValue) {
           return;
@@ -83,7 +113,7 @@ export default function useBufferedFieldDrafts({
       });
       return changed ? next : current;
     });
-  }, [dirtyFieldIds, externalDraftValues, normalizedFields]);
+  }, [dirtyFieldIds, externalDraftValues, normalizedFields, effectiveSourceRevision]);
 
   useEffect(() => {
     setDirtyFieldIds((current) => {
@@ -112,6 +142,10 @@ export default function useBufferedFieldDrafts({
 
     const nextValue = String(
       explicitValue ?? draftValuesRef.current?.[normalizedFieldId] ?? externalDraftValuesRef.current?.[normalizedFieldId] ?? '',
+    );
+    protectedDraftValuesRef.current.set(
+      normalizedFieldId,
+      createProtectedEditorDraft(nextValue, effectiveSourceRevision),
     );
     const previousValue = String(
       committedValuesRef.current?.[normalizedFieldId] ?? externalDraftValuesRef.current?.[normalizedFieldId] ?? '',
@@ -143,6 +177,14 @@ export default function useBufferedFieldDrafts({
       return;
     }
     const safeNextValue = String(nextValue || '');
+    protectedDraftValuesRef.current.set(
+      normalizedFieldId,
+      createProtectedEditorDraft(safeNextValue, effectiveSourceRevision),
+    );
+    draftValuesRef.current = {
+      ...draftValuesRef.current,
+      [normalizedFieldId]: safeNextValue,
+    };
     setDraftValues((current) => (
       current[normalizedFieldId] === safeNextValue
         ? current

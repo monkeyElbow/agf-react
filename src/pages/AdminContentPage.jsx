@@ -22,18 +22,6 @@ import { inspectDynamicHeroSettings, useContentAdmin } from '../context/ContentA
 import { useTestimonials } from '../context/TestimonialsContext';
 import { pageByPath } from '../data/siteMap';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
-import heroBlockIcon from '../assets/admin-block-icons/hero.svg';
-import introBlockIcon from '../assets/admin-block-icons/intro.svg';
-import billboardBlockIcon from '../assets/admin-block-icons/billboard.svg';
-import gridBlockIcon from '../assets/admin-block-icons/grid.svg';
-import ctaFormBlockIcon from '../assets/admin-block-icons/cta-form.svg';
-import columnsBlockIcon from '../assets/admin-block-icons/columns.svg';
-import pageContentBlockIcon from '../assets/admin-block-icons/page-content.svg';
-import ratesBlockIcon from '../assets/admin-block-icons/rates.svg';
-import newsletterBlockIcon from '../assets/admin-block-icons/newsletter.svg';
-import topStripBlockIcon from '../assets/admin-block-icons/top-strip.svg';
-import requestFormBlockIcon from '../assets/admin-block-icons/request-form.svg';
-import testimonialsBlockIcon from '../assets/admin-block-icons/testimonials.svg';
 import {
   applySelectionColor,
   extractHeroLineColorToken,
@@ -56,6 +44,10 @@ import {
   resolvePanelTextToneClassName,
 } from '../lib/colorSystem';
 import { buildAdminBlockInsertChoices } from '../lib/adminBlockInsertChoices';
+import { normalizeAdminBlockName } from '../lib/blockDisplayName';
+import { PUBLISH_STATUS } from '../lib/contentAdminPublishing';
+import { getBlockHudDefinition } from '../lib/blockHudRegistry';
+import { getBlockTemplateIcon, toBlockKindMonogram } from '../lib/blockTemplatePresentation';
 import { isBlocklessManagedPagePath } from '../lib/managedPageShells';
 import { isPageContentKind, isPageContentTemplateId } from '../lib/pageContentIdentity';
 import {
@@ -150,60 +142,6 @@ function toBoolean(value) {
   return Boolean(value);
 }
 
-function toBlockKindMonogram(kind) {
-  const token = String(kind || '')
-    .trim()
-    .toUpperCase();
-  if (!token) {
-    return 'BL';
-  }
-  const parts = token.split(/[^A-Z0-9]+/).filter(Boolean);
-  if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[1][0]}`;
-  }
-  if (parts.length === 1 && parts[0].length >= 2) {
-    return parts[0].slice(0, 2);
-  }
-  return token.slice(0, 2);
-}
-
-const BLOCK_TEMPLATE_ICON_BY_ID = {
-  hero: heroBlockIcon,
-  intro: introBlockIcon,
-  billboard: billboardBlockIcon,
-  grid: gridBlockIcon,
-  columns: columnsBlockIcon,
-  cta_form: ctaFormBlockIcon,
-  certificates_table: ratesBlockIcon,
-  ira_table: ratesBlockIcon,
-  newsletter: newsletterBlockIcon,
-  top_strip: topStripBlockIcon,
-  request_form: requestFormBlockIcon,
-  testimonials: testimonialsBlockIcon,
-};
-
-const BLOCK_TEMPLATE_ICON_BY_KIND = {
-  hero: heroBlockIcon,
-  intro: introBlockIcon,
-  billboard: billboardBlockIcon,
-  card_grid: gridBlockIcon,
-  columns: columnsBlockIcon,
-  cta_form: ctaFormBlockIcon,
-  newsletter: newsletterBlockIcon,
-  top_strip: topStripBlockIcon,
-  request_form: requestFormBlockIcon,
-  testimonials: testimonialsBlockIcon,
-};
-
-function getBlockTemplateIcon(template) {
-  const templateId = String(template?.templateId || '').trim();
-  const kind = String(template?.kind || '').trim();
-  if (isPageContentTemplateId(templateId) || isPageContentKind(kind)) {
-    return pageContentBlockIcon;
-  }
-  return BLOCK_TEMPLATE_ICON_BY_ID[templateId] || BLOCK_TEMPLATE_ICON_BY_KIND[kind] || '';
-}
-
 function toAdminListSnippet(value, maxLength = 34) {
   const source = String(value || '')
     .replace(/\s+/g, ' ')
@@ -218,13 +156,7 @@ function toAdminListSnippet(value, maxLength = 34) {
 }
 
 function getAdminBlockLabel(block) {
-  const kind = String(block?.kind || '').trim().toLowerCase();
-  const baseName = String(block?.name || '').trim();
-  if (kind === 'billboard') {
-    const titlePreview = toAdminListSnippet(block?.settings?.title, 36);
-    return titlePreview ? `Billboard · ${titlePreview}` : 'Billboard';
-  }
-  return baseName || kind || 'Block';
+  return getBlockHudDefinition(block).label;
 }
 
 function stripHtmlToText(value) {
@@ -307,10 +239,6 @@ function canBlockOpenEditor(block, migratedEditor = null) {
   );
 }
 
-function formatBlockModeLabel(mode) {
-  return String(mode || '').trim().toLowerCase() === 'dynamic' ? 'Dynamic' : 'Legacy snapshot';
-}
-
 function summarizeSharedSaveResultForPath(saveResult, pathname) {
   const normalizedPath = String(pathname || '').trim();
   if (!saveResult || !normalizedPath) {
@@ -367,14 +295,17 @@ function summarizeSharedPublishResultForPath(publishResult, pathname) {
   };
 }
 
-function formatWorkflowScopeLabel(prefix, summary, emptyLabel) {
+function formatWorkflowScopeLabel(prefix, summary, emptyLabel, changedBlockCountOverride = null) {
   if (!summary?.hasUnsavedChanges) {
     return emptyLabel;
   }
 
   const parts = [];
-  if (summary.changedBlockCount) {
-    parts.push(`${summary.changedBlockCount} block${summary.changedBlockCount === 1 ? '' : 's'}`);
+  const changedBlockCount = changedBlockCountOverride == null
+    ? Number(summary.changedBlockCount) || 0
+    : Number(changedBlockCountOverride) || 0;
+  if (changedBlockCount) {
+    parts.push(`${changedBlockCount} block${changedBlockCount === 1 ? '' : 's'}`);
   }
   if (summary.hasOrderChanges) {
     parts.push('order');
@@ -1440,6 +1371,9 @@ export default function AdminContentPage() {
   const [revisionActionBusy, setRevisionActionBusy] = useState('');
   const [revisionBlockSelectionById, setRevisionBlockSelectionById] = useState({});
   const [draftSaveNote, setDraftSaveNote] = useState('');
+  const [draftSaveConfirmation, setDraftSaveConfirmation] = useState(false);
+  const [draftSaveBusy, setDraftSaveBusy] = useState(false);
+  const [pagePublishBusy, setPagePublishBusy] = useState(false);
   const [activeEditorBlockId, setActiveEditorBlockId] = useState(null);
   const [sharedBackupEntries, setSharedBackupEntries] = useState([]);
   const [sharedBackupsLoading, setSharedBackupsLoading] = useState(false);
@@ -1452,6 +1386,7 @@ export default function AdminContentPage() {
   const [blockPublishMessage, setBlockPublishMessage] = useState('');
   const [ownershipActionBusy, setOwnershipActionBusy] = useState(false);
   const [ownershipMessage, setOwnershipMessage] = useState('');
+  const [blockAdminNameDrafts, setBlockAdminNameDrafts] = useState({});
   const routeEditorRef = useRef(null);
 
   const {
@@ -1470,10 +1405,13 @@ export default function AdminContentPage() {
     availableBlockTemplates,
     getBreadcrumbTrail,
     renameDevIdentity,
+    setDevIdentityAccentColor = () => null,
     getBlockCollaboration,
     getPageHistory,
     lastSharedSaveResult,
     lastSharedPublishResult,
+    sharedPublishStatus = '',
+    sharedSyncStatus = null,
     sharedSnapshotUpdatedAt,
     sharedSeedBaseline,
     isPageDirty,
@@ -1502,8 +1440,18 @@ export default function AdminContentPage() {
     registerExternalDraftStatusHandler = null,
     getAuthoringBreadcrumbTrail = null,
   } = useContentAdmin();
+  const clearActiveBlockLockRef = useRef(clearActiveBlockLock);
+
+  useEffect(() => {
+    clearActiveBlockLockRef.current = clearActiveBlockLock;
+  }, [clearActiveBlockLock]);
   const adminPageHierarchy = authoringPageHierarchy || pageHierarchy;
   const adminBlocksByPath = authoringBlocksByPath || blocksByPath;
+  const sharedContentSyncPending = Boolean(sharedSyncStatus?.isPending || sharedSyncStatus?.hasQueuedDraftSync);
+  const sharedPublishBusy = sharedPublishStatus === PUBLISH_STATUS.SAVING_DRAFT
+    || sharedPublishStatus === PUBLISH_STATUS.PUBLISHING
+    || sharedPublishStatus === PUBLISH_STATUS.VERIFYING
+    || sharedPublishStatus === PUBLISH_STATUS.STATUS_UNKNOWN;
   const { testimonials: testimonialsLibrary } = useTestimonials();
   const loadSharedBackups = useCallback(async () => {
     setSharedBackupsLoading(true);
@@ -1540,6 +1488,7 @@ export default function AdminContentPage() {
 
   const selectedPage = adminPageHierarchy[selectedPath] || null;
   const selectedBlocksSource = adminBlocksByPath[selectedPath] || [];
+  const requestedAdminPagePath = useMemo(() => getRequestedAdminPagePath(location.search), [location.search]);
   const { blocks: selectedBlocks, stageLocalBlockSetting } = useLocalBlockDrafts({
     pathname: selectedPath,
     blocks: selectedBlocksSource,
@@ -1631,22 +1580,46 @@ export default function AdminContentPage() {
   }, [selectedPath]);
 
   useEffect(() => {
+    setDraftSaveConfirmation(false);
+  }, [selectedPath]);
+
+  useEffect(() => {
     if (!editablePages.length) {
+      if (sharedContentSyncPending || requestedAdminPagePath) {
+        return;
+      }
       setSelectedPath('/');
       setSelectedBlockId(null);
       return;
     }
     if (!editablePages.some((page) => page.path === selectedPath)) {
+      if (
+        selectedPath
+        && (
+          adminPageHierarchy[selectedPath]
+          || adminBlocksByPath[selectedPath]
+          || (sharedContentSyncPending && requestedAdminPagePath === selectedPath)
+        )
+      ) {
+        return;
+      }
       setSelectedPath(editablePages[0].path);
       setSelectedBlockId(null);
     }
-  }, [editablePages, selectedPath]);
+  }, [
+    adminBlocksByPath,
+    adminPageHierarchy,
+    editablePages,
+    requestedAdminPagePath,
+    selectedPath,
+    sharedContentSyncPending,
+  ]);
 
   useEffect(() => {
     if (!editablePages.length) {
       return;
     }
-    const requestedPath = getRequestedAdminPagePath(location.search);
+    const requestedPath = requestedAdminPagePath;
     if (!requestedPath || requestedPath === selectedPath) {
       return;
     }
@@ -1654,7 +1627,7 @@ export default function AdminContentPage() {
       return;
     }
     applySelectedPath(requestedPath, { syncUrl: false });
-  }, [applySelectedPath, editablePages, location.search, selectedPath]);
+  }, [applySelectedPath, editablePages, requestedAdminPagePath, selectedPath]);
 
   useEffect(() => {
     setRoutePathDraft(selectedPath || '');
@@ -1694,9 +1667,9 @@ export default function AdminContentPage() {
 
   useEffect(() => () => {
     if (selectedPath && activeEditorBlockId) {
-      clearActiveBlockLock(selectedPath, activeEditorBlockId);
+      clearActiveBlockLockRef.current(selectedPath, activeEditorBlockId);
     }
-  }, [activeEditorBlockId, clearActiveBlockLock, selectedPath]);
+  }, [activeEditorBlockId, selectedPath]);
 
   useEffect(() => {
     if (insertChoiceId && filteredInsertChoices.some((choice) => choice.id === insertChoiceId)) {
@@ -1835,12 +1808,51 @@ export default function AdminContentPage() {
 
   const selectedPagePreviewHref = selectedPath || '/';
   const selectedPathDirty = isPageDirty(selectedPath);
+
+  const getBlockAdminNameDraftKey = (blockId) => `${selectedPath}:${String(blockId || '').trim()}`;
+  const getBlockAdminNameInputValue = (block) => {
+    const key = getBlockAdminNameDraftKey(block?.id);
+    return Object.prototype.hasOwnProperty.call(blockAdminNameDrafts, key)
+      ? blockAdminNameDrafts[key]
+      : String(block?.adminName || '');
+  };
+  const handleBlockAdminNameChange = (block, value) => {
+    const key = getBlockAdminNameDraftKey(block?.id);
+    setBlockAdminNameDrafts((previous) => ({ ...previous, [key]: value }));
+  };
+  const commitBlockAdminName = (block) => {
+    const key = getBlockAdminNameDraftKey(block?.id);
+    const nextName = normalizeAdminBlockName(blockAdminNameDrafts[key]);
+    const currentName = normalizeAdminBlockName(block?.adminName);
+    if (nextName !== currentName && block?.id) {
+      updateBlock(selectedPath, block.id, { adminName: nextName });
+    }
+    setBlockAdminNameDrafts((previous) => {
+      const next = { ...previous };
+      delete next[key];
+      return next;
+    });
+  };
   const selectedBlockOwnership = getBlockOwnershipVisual(selectedBlockMeta, devIdentity?.userId);
   const selectedBlockLockedByCurrentUser = selectedBlockOwnership.state === 'editing-self';
   const selectedBlockLockedByOther = selectedBlockOwnership.state === 'editing-other';
   const selectedBlockDraftedByOther = selectedBlockOwnership.state === 'drafted-other';
   const selectedPathSaveResult = summarizeSharedSaveResultForPath(lastSharedSaveResult, selectedPath);
   const selectedPathPublishResult = summarizeSharedPublishResultForPath(lastSharedPublishResult, selectedPath);
+  const selectedPathHasPendingLocalDraft = Boolean(hasPendingExternalDrafts(selectedPath));
+  const selectedPathDraftSyncPending = sharedContentSyncPending;
+  const hasUnpublishedPageChanges = Boolean(
+    selectedPathDirty
+    || selectedPathHasPendingLocalDraft
+    || selectedPathDraftSyncPending
+    || selectedPathPublishSummary?.hasUnsavedChanges,
+  );
+  const blockInventoryLoading = selectedPathDraftSyncPending && selectedBlocks.length === 0;
+  const blockInventoryStatusText = blockInventoryLoading
+    ? 'Loading blocks from shared draft...'
+    : selectedPathDraftSyncPending
+      ? 'Refreshing block inventory from shared draft...'
+      : '';
   const selectedBlockSaveConflict = selectedBlock && selectedPathSaveResult
     ? selectedPathSaveResult.blockedBlocks.find((entry) => entry.blockId === selectedBlock.id) || null
     : null;
@@ -1860,13 +1872,29 @@ export default function AdminContentPage() {
       ? 'Draft save failed; local changes are still here'
     : selectedPathSaveResult?.status === 'partially-saved'
       ? `Saved ${selectedPathSaveResult.savedBlockIds.length} block${selectedPathSaveResult.savedBlockIds.length === 1 ? '' : 's'}; ${selectedPathSaveResult.blockedBlocks.length} conflicting block${selectedPathSaveResult.blockedBlocks.length === 1 ? '' : 's'} skipped`
-      : selectedPathSaveResult?.status === 'blocked'
+    : selectedPathSaveResult?.status === 'blocked'
         ? 'Draft save blocked; resolve ownership to continue'
-    : selectedPathSaveResult
-      ? `Last save: ${selectedPathSaveResult.savedBlockIds.length} block${selectedPathSaveResult.savedBlockIds.length === 1 ? '' : 's'} saved${selectedPathSaveResult.blockedBlocks.length ? `, ${selectedPathSaveResult.blockedBlocks.length} conflicting block${selectedPathSaveResult.blockedBlocks.length === 1 ? '' : 's'} skipped` : ''}${selectedPathSaveResult.updatedAt ? ` ${formatRelativeTime(selectedPathSaveResult.updatedAt)}` : ''}`
-      : '';
+    : selectedPathHasPendingLocalDraft
+      ? 'In browser memory; not saved as a system draft yet.'
+    : selectedPathDraftSyncPending
+      ? 'Saving draft to shared content...'
+    : selectedPathDirty
+      ? 'Draft changes ready to save.'
+    : hasUnpublishedPageChanges && selectedPathSaveResult
+      ? `Draft saved to shared content: ${selectedPathSaveResult.savedBlockIds.length} block${selectedPathSaveResult.savedBlockIds.length === 1 ? '' : 's'} saved${selectedPathSaveResult.blockedBlocks.length ? `, ${selectedPathSaveResult.blockedBlocks.length} conflicting block${selectedPathSaveResult.blockedBlocks.length === 1 ? '' : 's'} skipped` : ''}${selectedPathSaveResult.updatedAt ? ` ${formatRelativeTime(selectedPathSaveResult.updatedAt)}` : ''}`
+      : hasUnpublishedPageChanges && sharedSyncStatus?.lastAppliedAt
+        ? `Draft synced to shared content ${formatRelativeTime(sharedSyncStatus.lastAppliedAt)}`
+        : 'Live content is current.';
   const pagePublishFeedback = selectedPathPublishResult?.error === 'publish-blocked-by-other-draft'
     ? `Last publish blocked${selectedPathPublishResult.updatedAt ? ` ${formatRelativeTime(selectedPathPublishResult.updatedAt)}` : ''}`
+    : sharedPublishStatus === 'SAVING_DRAFT'
+      ? 'Saving draft before live publish...'
+    : sharedPublishStatus === 'STATUS_UNKNOWN'
+      ? 'Publish status unknown; verify before retrying'
+    : sharedPublishStatus === 'VERIFYING'
+      ? 'Verifying live publish...'
+    : sharedPublishStatus === 'PUBLISHING'
+      ? `${formatWorkflowScopeLabel('Publishing', selectedPathPublishSummary, 'Publishing live content...')}`
     : selectedPathPublishResult?.status === 'failed'
       ? 'Live publish failed; draft content was preserved'
     : selectedPathPublishResult?.status === 'partially-published'
@@ -1881,11 +1909,45 @@ export default function AdminContentPage() {
           ? `Last live publish: ${selectedPathPublishResult.publishedBlockIds.length} block${selectedPathPublishResult.publishedBlockIds.length === 1 ? '' : 's'}${selectedPathPublishResult.hasOrderChanges ? ', order' : ''}${selectedPathPublishResult.hasPageMetaChanges ? ', page details' : ''}${selectedPathPublishResult.updatedAt ? ` ${formatRelativeTime(selectedPathPublishResult.updatedAt)}` : ''}`
           : '';
   const draftScopeLabel = formatWorkflowScopeLabel('Draft save', selectedPathChangeSummary, 'Draft save: clean');
-  const publishScopeLabel = formatWorkflowScopeLabel('Make live', selectedPathPublishSummary, 'Make live: already live');
   const publishBlockedByOtherDraft = Boolean(selectedPathWorkflowActivity?.hasOtherActorDraft);
-  const canMakeLive = !publishBlockedByOtherDraft
-    && (selectedPathDirty || Boolean(selectedPathPublishSummary?.hasUnsavedChanges));
+  const foreignPublishBlockIds = new Set(
+    (Array.isArray(selectedPathWorkflowActivity?.otherActorBlocks) ? selectedPathWorkflowActivity.otherActorBlocks : [])
+      .map((entry) => String(entry?.blockId || '').trim())
+      .filter(Boolean),
+  );
+  const publishablePageBlockIds = (Array.isArray(selectedPathPublishSummary?.changedBlockIds) ? selectedPathPublishSummary.changedBlockIds : [])
+    .filter((blockId) => !foreignPublishBlockIds.has(String(blockId || '').trim()));
+  const canPartiallyPublishPage = Boolean(
+    publishBlockedByOtherDraft
+    && !selectedPathPublishSummary?.hasOrderChanges
+    && !selectedPathPublishSummary?.hasPageMetaChanges
+    && publishablePageBlockIds.length,
+  );
+  const publishScopeLabel = formatWorkflowScopeLabel(
+    'Make live',
+    selectedPathPublishSummary,
+    'Make live: already live',
+    canPartiallyPublishPage ? publishablePageBlockIds.length : null,
+  );
+  const hasMakeLiveChanges = selectedPathDirty
+    || Boolean(selectedPathPublishSummary?.hasUnsavedChanges)
+    || selectedPathHasPendingLocalDraft;
+  const canMakeLive = (!publishBlockedByOtherDraft || canPartiallyPublishPage)
+    && !pagePublishBusy
+    && !sharedPublishBusy
+    && hasMakeLiveChanges;
+  const canPreviewSavedDraft = !selectedPathDirty
+    && !selectedPathHasPendingLocalDraft
+    && !selectedPathDraftSyncPending;
+
+  useEffect(() => {
+    if (selectedPathDirty) {
+      setDraftSaveConfirmation(false);
+    }
+  }, [selectedPathDirty]);
   const canDiscardPageDraft = !draftDiscardBusy
+    && !pagePublishBusy
+    && !sharedPublishBusy
     && (selectedPathDirty
       || Boolean(selectedPathPublishSummary?.hasUnsavedChanges)
       || hasPendingExternalDrafts(selectedPath));
@@ -1895,8 +1957,10 @@ export default function AdminContentPage() {
     && selectedPathPublishSummary?.changedBlockIds?.includes(selectedBlock.id),
   );
   const makeLiveTitle = publishBlockedByOtherDraft
-    ? `${selectedPathWorkflowActivity?.otherActorBlockCount || 1} other-admin block${selectedPathWorkflowActivity?.otherActorBlockCount === 1 ? '' : 's'} must be resolved before publishing live.`
-    : selectedPathPublishSummary?.hasUnsavedChanges || selectedPathDirty
+    ? canPartiallyPublishPage
+      ? `Make live will publish ${publishablePageBlockIds.length} eligible block${publishablePageBlockIds.length === 1 ? '' : 's'}; ${selectedPathWorkflowActivity?.otherActorBlockCount || 1} other-admin block${selectedPathWorkflowActivity?.otherActorBlockCount === 1 ? '' : 's'} will remain draft.`
+      : `${selectedPathWorkflowActivity?.otherActorBlockCount || 1} other-admin block${selectedPathWorkflowActivity?.otherActorBlockCount === 1 ? '' : 's'} must be resolved before publishing live.`
+    : hasMakeLiveChanges
       ? 'Save local edits if needed, then publish this page live.'
       : 'This page is already live.';
   const selectedBlockTakeoverLabel = selectedBlockOwnership.state === 'editing-other'
@@ -1910,18 +1974,26 @@ export default function AdminContentPage() {
     || selectedPathSaveResult?.status === 'blocked'
     || selectedPathSaveResult?.status === 'failed'
     ? 'Needs attention'
-    : selectedPathDirty
+    : pagePublishBusy || sharedPublishBusy
       ? 'In progress'
-      : 'Saved';
+    : selectedPathDirty || selectedPathHasPendingLocalDraft || selectedPathDraftSyncPending
+      ? 'In progress'
+      : hasUnpublishedPageChanges
+        ? 'Draft'
+        : 'Live';
   const pageStateHeadline = selectedPathSaveResult?.status === 'partially-saved'
     ? 'Partially saved'
     : selectedPathSaveResult?.status === 'blocked'
       ? 'Unpublished changes'
       : selectedPathSaveResult?.status === 'failed'
         ? 'Save failed'
-      : selectedPathDirty
+      : pagePublishBusy || sharedPublishBusy
+        ? 'Publishing changes'
+      : selectedPathDirty || selectedPathHasPendingLocalDraft || selectedPathDraftSyncPending
         ? 'Unsaved changes'
-        : 'Draft saved';
+        : hasUnpublishedPageChanges
+          ? 'Draft saved'
+          : 'Live';
   const latestSharedBackupEntry = sharedBackupEntries[0] || null;
 
   const beginEditingBlock = (blockId, lockOptions = undefined) => {
@@ -1979,17 +2051,31 @@ export default function AdminContentPage() {
   };
 
   const handleSaveDraft = async () => {
-    const result = await saveSharedDraftNow(draftSaveNote);
-    if (result?.ok) {
-      if (selectedPath && activeEditorBlockId) {
-        clearActiveBlockLock(selectedPath, activeEditorBlockId);
+    if (draftSaveBusy || pagePublishBusy || sharedPublishBusy) {
+      return;
+    }
+    setDraftSaveBusy(true);
+    try {
+      const result = await saveSharedDraftNow(draftSaveNote);
+      if (result?.ok) {
+        if (selectedPath && activeEditorBlockId) {
+          clearActiveBlockLock(selectedPath, activeEditorBlockId);
+        }
+        setDraftSaveNote('');
+        setDraftSaveConfirmation(true);
+        setActiveEditorBlockId(null);
+      } else {
+        setDraftSaveConfirmation(false);
       }
-      setDraftSaveNote('');
-      setActiveEditorBlockId(null);
+    } finally {
+      setDraftSaveBusy(false);
     }
   };
 
   const handleMakeLive = async () => {
+    if (pagePublishBusy || sharedPublishBusy || !canMakeLive) {
+      return;
+    }
     const changedBlockIds = Array.isArray(selectedPathPublishSummary?.changedBlockIds)
       ? selectedPathPublishSummary.changedBlockIds
       : [];
@@ -2006,13 +2092,16 @@ export default function AdminContentPage() {
     )) {
       return;
     }
-    const result = await publishSharedPageNow(selectedPath, draftSaveNote);
-    if (result?.ok) {
-      if (selectedPath && activeEditorBlockId) {
-        clearActiveBlockLock(selectedPath, activeEditorBlockId);
+    setPagePublishBusy(true);
+    try {
+      const result = await publishSharedPageNow(selectedPath, draftSaveNote);
+      if (result?.ok) {
+        setDraftSaveNote('');
+        setDraftSaveConfirmation(false);
+        setActiveEditorBlockId(null);
       }
-      setDraftSaveNote('');
-      setActiveEditorBlockId(null);
+    } finally {
+      setPagePublishBusy(false);
     }
   };
 
@@ -2078,9 +2167,9 @@ export default function AdminContentPage() {
     }
   };
 
-  const handlePreviewDraft = async () => {
-    if (selectedPathDirty) {
-      await handleSaveDraft();
+  const handlePreviewDraft = () => {
+    if (!canPreviewSavedDraft) {
+      return;
     }
     window.open(selectedPagePreviewHref, '_blank', 'noopener,noreferrer');
   };
@@ -2347,6 +2436,22 @@ export default function AdminContentPage() {
                     }}
                     aria-label="Developer display name"
                   />
+                  <label
+                    className="admin-dev-identity-color-picker"
+                    title="Choose identity color"
+                  >
+                    <span
+                      className="admin-dev-identity-color-swatch"
+                      style={{ backgroundColor: devIdentity?.accentColor || '#00adbb' }}
+                      aria-hidden="true"
+                    />
+                    <input
+                      type="color"
+                      value={devIdentity?.accentColor || '#00adbb'}
+                      onChange={(event) => setDevIdentityAccentColor(event.target.value)}
+                      aria-label="Admin identity color"
+                    />
+                  </label>
                   <button
                     type="button"
                     className="action-btn action-btn-outline"
@@ -2564,6 +2669,7 @@ export default function AdminContentPage() {
           <div className="admin-page-save-bar">
             <div className="admin-page-save-bar-copy">
               <div className="admin-page-save-bar-context">
+                <div className="admin-page-save-bar-kicker">Page draft workspace</div>
                 <strong>{selectedPage?.title || 'Selected page'}</strong>
                 <span>{selectedPath || '/'}</span>
               </div>
@@ -2577,7 +2683,7 @@ export default function AdminContentPage() {
                 {changedBlockLabel ? (
                   <span>{changedBlockLabel}</span>
                 ) : null}
-                <span>{draftScopeLabel}</span>
+                {hasUnpublishedPageChanges ? <span>{draftScopeLabel}</span> : null}
                 <span>{publishScopeLabel}</span>
                 {selectedPathChangeSummary?.hasOrderChanges ? (
                   <span>Order changed</span>
@@ -2648,10 +2754,16 @@ export default function AdminContentPage() {
                   <span>{selectedPathPublishResult.blockedBlocks.length} publish block{selectedPathPublishResult.blockedBlocks.length === 1 ? '' : 's'}</span>
                 ) : null}
                 {pageSaveFeedback ? (
-                  <span>{pageSaveFeedback}</span>
+                  <span
+                    className={`admin-page-save-feedback${selectedPathSaveResult?.error ? ' is-error' : ''}`}
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {pageSaveFeedback}
+                  </span>
                 ) : null}
                 {pagePublishFeedback ? (
-                  <span>{pagePublishFeedback}</span>
+                  <span role="status" aria-live="polite">{pagePublishFeedback}</span>
                 ) : null}
                 <details className="admin-page-save-bar-details">
                   <summary>Details</summary>
@@ -2684,21 +2796,24 @@ export default function AdminContentPage() {
             </div>
             <div className="admin-page-save-bar-actions">
               <div className="admin-page-save-bar-primary-actions">
-                <input
-                  type="text"
-                  className="search-page-input admin-page-save-note-input"
-                  value={draftSaveNote}
-                  onChange={(event) => setDraftSaveNote(event.target.value)}
-                  placeholder="Optional save note"
-                  aria-label="Optional save note"
-                />
+                <label className="admin-page-save-note">
+                  <span>Describe this draft (optional)</span>
+                  <input
+                    type="text"
+                    className="search-page-input admin-page-save-note-input"
+                    value={draftSaveNote}
+                    onChange={(event) => setDraftSaveNote(event.target.value)}
+                    placeholder="What changed in this draft?"
+                    aria-label="Draft save note (optional)"
+                  />
+                </label>
                 <button
                   type="button"
-                  className="action-btn"
+                  className={`action-btn${draftSaveConfirmation ? ' admin-page-save-confirmed' : ''}`}
                   onClick={handleSaveDraft}
-                  disabled={!selectedPathDirty}
+                  disabled={!selectedPathDirty || draftSaveConfirmation || draftSaveBusy || pagePublishBusy || sharedPublishBusy}
                 >
-                  Save draft
+                  {draftSaveBusy ? 'Saving…' : draftSaveConfirmation ? 'Draft saved' : 'Save all page drafts'}
                 </button>
               </div>
               <div className="admin-page-save-bar-secondary-actions">
@@ -2706,11 +2821,12 @@ export default function AdminContentPage() {
                   type="button"
                   className="action-btn action-btn-outline"
                   onClick={handlePreviewDraft}
-                  title={selectedPathDirty
-                    ? 'Save the current draft, then open a preview.'
-                    : 'Open the current draft preview.'}
+                  disabled={!canPreviewSavedDraft}
+                  title={canPreviewSavedDraft
+                    ? 'Open the current saved draft preview.'
+                    : 'Save the draft before opening its preview.'}
                 >
-                  {selectedPathDirty ? 'Save draft and preview' : 'Preview'}
+                  Preview
                 </button>
                 <button
                   type="button"
@@ -2803,7 +2919,10 @@ export default function AdminContentPage() {
               <div className="admin-page-history-drawer-head">
                 <div>
                   <h3>Revision history</h3>
-                  <p>Restore the whole page or copy selected blocks from a prior save into the current draft.</p>
+                  <p>
+                    Restore a full page or selected blocks into the active draft. Nothing is published automatically,
+                    and the current draft is backed up before a restore.
+                  </p>
                 </div>
                 {revisionEntries.length > 1 ? (
                   <button
@@ -2845,7 +2964,7 @@ export default function AdminContentPage() {
                               onClick={() => handleRestorePageRevision(revision.id)}
                               disabled={Boolean(revisionActionBusy)}
                             >
-                              {revisionActionBusy === `page:${revision.id}` ? 'Restoring…' : 'Restore page'}
+                              {revisionActionBusy === `page:${revision.id}` ? 'Restoring…' : 'Restore page to draft'}
                             </button>
                           </div>
                         </div>
@@ -2905,19 +3024,33 @@ export default function AdminContentPage() {
 
         <section className="admin-content-section">
           <h3>Blocks</h3>
+          {blockInventoryStatusText ? (
+            <p className="admin-block-inventory-status" role="status" aria-live="polite">
+              <span className="admin-block-inventory-spinner" aria-hidden="true" />
+              {blockInventoryStatusText}
+            </p>
+          ) : null}
           <div className="table-scroll">
             <table className="data-table data-table--inputs">
               <thead>
                 <tr>
                   <th>Block</th>
                   <th>Type</th>
-                  <th>Mode</th>
                   <th>Visible</th>
                   <th>Layer</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
+                {blockInventoryLoading ? (
+                  Array.from({ length: 3 }, (_, index) => (
+                    <tr key={`block-inventory-loading-${index + 1}`} className="admin-block-loading-row">
+                      <td colSpan={5}>
+                        <span className="admin-block-loading-line" />
+                      </td>
+                    </tr>
+                  ))
+                ) : null}
                 {Array.from({ length: selectedBlocks.length + 1 }, (_, insertIndex) => (
                   <Fragment key={`insert-slot-${insertIndex}`}>
                     <tr
@@ -2939,7 +3072,7 @@ export default function AdminContentPage() {
                         handleBlockDropAtInsertIndex(event, insertIndex);
                       }}
                     >
-                      <td colSpan={6}>
+                      <td colSpan={5}>
                         {insertAtIndex === insertIndex ? (
                           <div className="admin-block-insert-editor">
                             <div className="admin-block-insert-picker" role="radiogroup" aria-label="Select block family or preset to insert">
@@ -3045,7 +3178,7 @@ export default function AdminContentPage() {
                             setInsertAtIndex(null);
                             setPendingRemoveBlockId(null);
                           }}
-                          className={`admin-block-row${selectedBlock?.id === block.id ? ' admin-block-selected-row' : ''}${toBoolean(block.hidden) ? ' admin-block-hidden-row' : ''}${draggingBlockId === block.id ? ' is-dragging' : ''}${String(block.mode || '').toLowerCase() === 'dynamic' ? ' admin-block-row--dynamic' : ''}`}
+                          className={`admin-block-row${selectedBlock?.id === block.id ? ' admin-block-selected-row' : ''}${toBoolean(block.hidden) ? ' admin-block-hidden-row' : ''}${draggingBlockId === block.id ? ' is-dragging' : ''}`}
                         >
                           <td>
                             <div className="admin-block-name-cell">
@@ -3062,15 +3195,26 @@ export default function AdminContentPage() {
                               )}
                               <span className="admin-block-name-copy">
                                 <span>{blockLabel}</span>
+                                <input
+                                  type="text"
+                                  className="admin-block-admin-name-input"
+                                  value={getBlockAdminNameInputValue(block)}
+                                  maxLength={40}
+                                  placeholder="Add admin name"
+                                  aria-label={`Admin name for ${blockLabel}`}
+                                  onClick={(event) => event.stopPropagation()}
+                                  onChange={(event) => handleBlockAdminNameChange(block, event.target.value)}
+                                  onBlur={() => commitBlockAdminName(block)}
+                                  onKeyDown={(event) => {
+                                    if (event.key === 'Enter') {
+                                      event.currentTarget.blur();
+                                    }
+                                  }}
+                                />
                               </span>
                             </div>
                           </td>
                           <td>{block.kind}</td>
-                          <td className="admin-block-status-cell">
-                            <span className={`admin-block-mode-pill${String(block.mode || '').trim().toLowerCase() === 'dynamic' ? ' is-dynamic' : ''}`}>
-                              {formatBlockModeLabel(block.mode)}
-                            </span>
-                          </td>
                           <td>
                             <button
                               type="button"
@@ -3266,6 +3410,7 @@ export default function AdminContentPage() {
                       pathname={selectedPath}
                       routeOptions={routeLinkOptions}
                       testimonialsLibrary={testimonialsLibrary}
+                      sourceRevision={sharedSnapshotUpdatedAt || 0}
                       onSettingChange={(settingKey, nextValue) => stageLocalBlockSetting(selectedBlock.id, settingKey, nextValue)}
                     />
                   ) : (
@@ -3274,6 +3419,7 @@ export default function AdminContentPage() {
                       settings={selectedBlock.settings}
                       className={selectedBlock.kind === 'top_strip' ? 'admin-top-strip-grid' : ''}
                       routeOptions={routeLinkOptions}
+                      sourceRevision={sharedSnapshotUpdatedAt || 0}
                       onSettingChange={(settingKey, nextValue) => {
                         stageLocalBlockSetting(selectedBlock.id, settingKey, nextValue);
                       }}
@@ -3372,7 +3518,9 @@ export default function AdminContentPage() {
             </>
           ) : (
             <p className="blank-state-note">
-              {selectedBlocks.length
+              {blockInventoryLoading
+                ? 'Blocks are loading from the shared draft.'
+                : selectedBlocks.length
                 ? 'Select a block to inspect it. Editing starts only after you click Edit.'
                 : 'No blocks found for this page yet.'}
             </p>

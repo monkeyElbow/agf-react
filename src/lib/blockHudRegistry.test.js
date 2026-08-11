@@ -99,6 +99,15 @@ describe('buildHudPanelsFromBlocks', () => {
     });
   });
 
+  it('keeps the block kind label first when an admin nickname is present', () => {
+    expect(getBlockHudDefinition({
+      id: 'pricing_billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      adminName: 'Pricing',
+    }).label).toBe('Billboard - Pricing');
+  });
+
   it('uses the billboard editor contract for home ministry allies while keeping the explicit label', () => {
     expect(getBlockHudDefinition({
       id: 'home_ministry_allies',

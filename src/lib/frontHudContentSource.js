@@ -27,11 +27,13 @@ export function selectFrontHudContentSource({
   blocksByPath = {},
   authoringPageHierarchy = {},
   pageHierarchy = {},
+  publishedBlocksByPath = null,
+  publishedPageHierarchy = null,
 } = {}) {
   if (!enabled) {
     return {
-      blocksByPath,
-      pageHierarchy,
+      blocksByPath: publishedBlocksByPath || blocksByPath,
+      pageHierarchy: publishedPageHierarchy || pageHierarchy,
       hasAuthoringBlocksForPath: false,
       hasAuthoringPageForPath: false,
     };

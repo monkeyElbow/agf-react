@@ -19,7 +19,7 @@ describe('production load stability contracts', () => {
   it('keeps the full admin provider activation-driven', () => {
     const providerSource = readSource('../context/FastContentAdminProvider.jsx');
     expect(providerSource).toContain("if (!shouldLoadHeavy) {");
-    expect(providerSource).toContain('if (!shouldLoadHeavy || !import.meta.env.DEV');
+    expect(providerSource).toContain('if (shouldLoadHeavy || !import.meta.env.DEV');
     expect(providerSource).toContain('activateAdminProvider');
     expect(providerSource).toContain("import('./ContentAdminContext')");
   });

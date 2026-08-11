@@ -93,6 +93,7 @@ export function buildBillboardTitleStyle({
     lineHeight: normalizedLineSpacing,
     fontFamily: normalizedFontFamily === 'helv' ? 'var(--ag-font-helv)' : 'var(--ag-font-heading)',
     fontWeight: normalizedFontWeight,
+    fontSynthesis: 'weight',
     fontSize: `clamp(calc(${normalizedTitleSizeRem}rem * 0.58), 8vw, ${normalizedTitleSizeRem}rem)`,
     letterSpacing: `${normalizedLetterSpacing}em`,
   };

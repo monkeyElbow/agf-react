@@ -1,10 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { buildAdminBlockInsertChoices } from '../lib/adminBlockInsertChoices';
+import { useEffect, useState } from 'react';
 import { isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
-
-function getChoiceLabel(choice) {
-  return String(choice?.name || choice?.kind || choice?.templateId || 'Block').trim() || 'Block';
-}
+import { ADMIN_BLOCK_NAME_MAX_LENGTH, normalizeAdminBlockName } from '../lib/blockDisplayName';
 
 export default function HudBlockOptions({
   block,
@@ -16,32 +12,20 @@ export default function HudBlockOptions({
   onOwnershipAction = null,
   onReleaseDraft = null,
   onPublishBlock = null,
+  onBlockDeleted = null,
 }) {
   const admin = contentAdmin || {};
   const {
-    availableBlockTemplates = [],
-    authoringBlocksByPath = {},
-    blocksByPath = {},
-    addBlock = () => {},
     removeBlock = () => {},
+    updateBlock = () => {},
     getPageChangeSummary = () => null,
     getPagePublishSummary = () => null,
     releaseActiveBlockDraft = null,
   } = admin;
-  const [selectedTemplateId, setSelectedTemplateId] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
   const [isTakingOver, setIsTakingOver] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState('');
-
-  const choices = useMemo(
-    () => buildAdminBlockInsertChoices(availableBlockTemplates, { mode: 'dynamic', pathname }),
-    [availableBlockTemplates, pathname],
-  );
-  const currentBlocks = Array.isArray(authoringBlocksByPath?.[pathname])
-    ? authoringBlocksByPath[pathname]
-    : (Array.isArray(blocksByPath?.[pathname]) ? blocksByPath[pathname] : []);
-  const blockIndex = currentBlocks.findIndex((entry) => entry?.id === block?.id);
+  const [nicknameDraft, setNicknameDraft] = useState(() => String(block?.adminName || ''));
   const isForeignOwned = isForeignOwnedBlockOwnership(ownership);
   const canTakeOver = Boolean(ownership?.isOwnedByOther) || isForeignOwned;
   const changeSummary = getPageChangeSummary(pathname) || {};
@@ -62,28 +46,26 @@ export default function HudBlockOptions({
   );
 
   useEffect(() => {
-    if (!selectedTemplateId && choices.length) {
-      setSelectedTemplateId(choices[0].createTemplateId);
-    }
-  }, [choices, selectedTemplateId]);
+    setNicknameDraft(String(block?.adminName || ''));
+  }, [block?.adminName, block?.id]);
 
   if (!block) {
     return null;
   }
 
-  const handleAddBlock = () => {
-    if (!selectedTemplateId || isAdding || isForeignOwned) {
+  const commitNickname = () => {
+    if (isForeignOwned || !block.id) {
+      setNicknameDraft(String(block.adminName || ''));
       return;
     }
-    setIsAdding(true);
-    setMessage('');
-    try {
-      addBlock(pathname, selectedTemplateId, blockIndex >= 0 ? blockIndex + 1 : undefined);
-      const choice = choices.find((entry) => entry.createTemplateId === selectedTemplateId);
-      setMessage(`${getChoiceLabel(choice)} added after this block.`);
-    } finally {
-      setIsAdding(false);
+    const nextName = normalizeAdminBlockName(nicknameDraft);
+    const currentName = normalizeAdminBlockName(block.adminName);
+    setNicknameDraft(nextName);
+    if (nextName === currentName) {
+      return;
     }
+    updateBlock(pathname, block.id, { adminName: nextName });
+    setMessage(nextName ? 'Block nickname saved.' : 'Block nickname cleared.');
   };
 
   const handleDeleteBlock = () => {
@@ -96,6 +78,7 @@ export default function HudBlockOptions({
       return;
     }
     removeBlock(pathname, block.id);
+    onBlockDeleted?.(block.id);
   };
 
   const handleTakeOver = async () => {
@@ -113,11 +96,34 @@ export default function HudBlockOptions({
   };
 
   return (
-    <section className="admin-front-hud-block-options" aria-label="Block options">
+    <section className="admin-hud-editor-block-options-page admin-front-hud-block-options" aria-label="Block options">
       <div className="admin-front-hud-block-options-head">
         <strong>Block options</strong>
         {message ? <span role="status">{message}</span> : null}
       </div>
+      <label className="admin-front-hud-field admin-front-hud-block-nickname-field">
+        <span>Block nickname</span>
+        <input
+          type="text"
+          value={nicknameDraft}
+          maxLength={ADMIN_BLOCK_NAME_MAX_LENGTH}
+          placeholder="Optional admin-only name"
+          aria-label="Block nickname"
+          disabled={isForeignOwned}
+          onChange={(event) => setNicknameDraft(event.target.value)}
+          onBlur={commitNickname}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.currentTarget.blur();
+            }
+            if (event.key === 'Escape') {
+              setNicknameDraft(String(block.adminName || ''));
+              event.currentTarget.blur();
+            }
+          }}
+        />
+        <small>Shown in admin/HUD labels only.</small>
+      </label>
       <div className="admin-front-hud-block-options-actions">
         {showWorkflowActions && canTakeOver && typeof onOwnershipAction === 'function' ? (
           <button type="button" className="action-btn action-btn-outline" onClick={handleTakeOver} disabled={isTakingOver}>
@@ -150,22 +156,19 @@ export default function HudBlockOptions({
         >
           {isDeleting ? 'Confirm delete block' : 'Delete block'}
         </button>
-      </div>
-      {choices.length ? (
-        <div className="admin-front-hud-block-add">
-          <label className="admin-front-hud-field">
-            <span>Add block after this block</span>
-            <select value={selectedTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)} disabled={isForeignOwned || isAdding}>
-              {choices.map((choice) => (
-                <option key={choice.id} value={choice.createTemplateId}>{getChoiceLabel(choice)}</option>
-              ))}
-            </select>
-          </label>
-          <button type="button" className="action-btn action-btn-outline" onClick={handleAddBlock} disabled={isForeignOwned || isAdding || !selectedTemplateId}>
-            {isAdding ? 'Adding…' : 'Add block'}
+        {isDeleting ? (
+          <button
+            type="button"
+            className="action-btn action-btn-outline"
+            onClick={() => {
+              setIsDeleting(false);
+              setMessage('');
+            }}
+          >
+            Cancel
           </button>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </section>
   );
 }

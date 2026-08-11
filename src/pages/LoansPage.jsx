@@ -9,7 +9,7 @@ import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import DynamicRequestFormSection from '../components/DynamicRequestFormSection';
 import SafeRichText from '../components/SafeRichText';
-import { ColumnsBlock, renderHighlightedText } from '../components/blocks/PageBlocksRenderer';
+import { BillboardBlock, ColumnsBlock, renderHighlightedText } from '../components/blocks/PageBlocksRenderer';
 import { useDisclosures } from '../context/DisclosuresContext';
 import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
 import { useFrontHud } from '../context/FrontHudContext';
@@ -35,6 +35,7 @@ import {
 import { defaultLoansCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultLoansIntroRuntime } from '../data/loansIntroSeed';
 import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
+import FrontHudStructureControls from '../components/FrontHudStructureControls';
 
 const LOANS_TARIFFS_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   slug: 'tariffs-timing-truth-keep-building-through-the-chaos',
@@ -75,6 +76,20 @@ const LOANS_HUD_ANCHOR_SELECTOR_BY_ID = {
   testimonials: '.loans-native-testimonials',
   cta_band: '.loans-native-option-question-wrap',
 };
+const LOANS_INLINE_SECTION_ANCHOR_IDS = [
+  'hero',
+  'intro',
+  'loan_options',
+  'request_form',
+  'value_cards',
+  'vision_fuel',
+  'cta_form',
+  'testimonials',
+];
+const LOANS_INLINE_CANONICAL_BLOCK_IDS = new Set([
+  ...LOANS_INLINE_SECTION_ANCHOR_IDS,
+  'cta_band',
+]);
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -535,7 +550,11 @@ export default function LoansPage({ sectionsOnly = false }) {
     registerExternalDraftFlushHandler = null,
     registerExternalDraftStatusHandler = null,
   } = useContentAdmin();
-  const { enabled: frontHudEnabled, opacity: frontHudOpacity } = useFrontHud();
+  const {
+    enabled: frontHudEnabled,
+    opacity: frontHudOpacity,
+    setEnabled: setFrontHudEnabled = null,
+  } = useFrontHud();
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
@@ -729,6 +748,26 @@ export default function LoansPage({ sectionsOnly = false }) {
       return next;
     }, {})
   ), [hudPanels]);
+  const managedBlockIndexById = useMemo(() => (
+    managedBlocks.reduce((next, block, index) => {
+      const blockId = String(block?.id || '').trim();
+      if (blockId && !next.has(blockId)) {
+        next.set(blockId, index);
+      }
+      return next;
+    }, new Map())
+  ), [managedBlocks]);
+  const additionalBillboardBlocks = useMemo(() => (
+    managedBlocks.filter((block) => (
+      block
+      && String(block.id || '').trim()
+      && !LOANS_INLINE_CANONICAL_BLOCK_IDS.has(String(block.id || '').trim())
+      && String(block.kind || '').trim() === 'billboard'
+      && String(block.mode || '').trim() === 'dynamic'
+      && block.hidden !== true
+      && block.hidden !== 'true'
+    ))
+  ), [managedBlocks]);
   const activeHudBlockId = hasOpenHudPanel ? String(activeHudPanel?.blockId || activeHudPanel?.block?.id || '').trim() : '';
   const getHudBlockStateClassName = (blockId) => {
     const normalizedBlockId = String(blockId || '').trim();
@@ -938,6 +977,7 @@ export default function LoansPage({ sectionsOnly = false }) {
   const closeHudDock = () => {
     setHudDockCollapsed(true);
     setActiveHudPanelId('');
+    setFrontHudEnabled?.(false);
   };
 
   useEffect(() => () => {
@@ -973,6 +1013,9 @@ export default function LoansPage({ sectionsOnly = false }) {
         isActive={hudAnchor.isActive}
         onClick={hudAnchor.onClick}
         style={hudAnchor.style}
+        structureControls={(
+          <FrontHudStructureControls pathname="/services/loans" blockId={blockId} placement="anchor" />
+        )}
       />
     );
   };
@@ -986,6 +1029,39 @@ export default function LoansPage({ sectionsOnly = false }) {
       return;
     }
     stageLocalBlockSetting(block.id, settingKey, settingValue);
+  };
+  const renderAdditionalBillboardsAfter = (anchorBlockId) => {
+    const normalizedAnchorId = String(anchorBlockId || '').trim();
+    const anchorIndex = normalizedAnchorId === '__start'
+      ? -1
+      : managedBlockIndexById.get(normalizedAnchorId);
+    if (!Number.isFinite(anchorIndex)) {
+      return null;
+    }
+    const nextKnownIndex = LOANS_INLINE_SECTION_ANCHOR_IDS
+      .map((blockId) => managedBlockIndexById.get(blockId))
+      .filter((index) => Number.isFinite(index) && index > anchorIndex)
+      .sort((left, right) => left - right)[0] ?? Number.POSITIVE_INFINITY;
+    const slotBlocks = additionalBillboardBlocks.filter((block) => {
+      const blockIndex = managedBlockIndexById.get(String(block?.id || '').trim());
+      return Number.isFinite(blockIndex) && blockIndex > anchorIndex && blockIndex < nextKnownIndex;
+    });
+    if (!slotBlocks.length) {
+      return null;
+    }
+    return slotBlocks.map((block) => {
+      const blockId = String(block?.id || '').trim();
+      return (
+        <BillboardBlock
+          key={`loans-extra-billboard-${blockId}`}
+          block={block}
+          resolveTo={resolveRoutePath}
+          ownership={getOwnershipVisualForBlockId(blockId)}
+          hudAnchor={resolveHudAnchor(blockId)}
+          extraSectionClassName={getHudBlockStateClassName(blockId).trim()}
+        />
+      );
+    });
   };
   const loanOptionsCards = Array.isArray(loanOptionsGrid?.cards) ? loanOptionsGrid.cards : [];
   const showLoanOptionsSection = Boolean(
@@ -1005,7 +1081,7 @@ export default function LoansPage({ sectionsOnly = false }) {
   return (
     <div
       ref={sectionsOnly ? undefined : pageRef}
-      className={`${sectionsOnly ? '' : 'service-native-page '}loans-native-page${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
+      className={`${sectionsOnly ? '' : 'service-native-page '}loans-native-page${showFrontHud ? ' is-front-hud-docked admin-front-hud-scope' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}`}
     >
       {showFrontHud ? (
         <aside className={`admin-front-hud-dock${hudDockCollapsed ? ' is-collapsed' : ''}`} aria-label="Front HUD editor panels">
@@ -1056,7 +1132,6 @@ export default function LoansPage({ sectionsOnly = false }) {
             pathname="/services/loans"
             reviewHref="/admin/content?page=%2Fservices%2Floans"
             placement="dock-inline"
-            showBlockPublishAction={false}
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
             blockLabel={activeHudPanel.label}
@@ -1078,6 +1153,7 @@ export default function LoansPage({ sectionsOnly = false }) {
           />
         </FrontHudPanelShell>
       ) : null}
+      {renderAdditionalBillboardsAfter('__start')}
       {!sectionsOnly ? (
       <section
         className={`service-native-hero${dynamicHero ? ` is-bg-${dynamicHero.bgTone || 'white'} is-justify-${dynamicHero.justify || 'center'}` : ''}${getHudBlockStateClassName('hero')}${getOwnershipVisualForBlockId('hero').className || ''}`}
@@ -1120,6 +1196,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         </div>
       </section>
       ) : null}
+      {renderAdditionalBillboardsAfter('hero')}
 
       {!sectionsOnly ? (
       <section
@@ -1187,6 +1264,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         </div>
       </section>
       ) : null}
+      {renderAdditionalBillboardsAfter('intro')}
 
       {showLoanOptionsSection ? (
       <section
@@ -1301,6 +1379,7 @@ export default function LoansPage({ sectionsOnly = false }) {
         </div>
       </section>
       ) : null}
+      {renderAdditionalBillboardsAfter('loan_options')}
 
       <section className={`service-native-section loans-native-inquiry native-dynamic-request is-request-form-preset-loans-inquiry is-bg-blue is-text-white${getHudBlockStateClassName('request_form')}${getOwnershipVisualForBlockId('request_form').className || ''}`} id="form" data-block-id="request_form">
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('request_form')} />
@@ -1309,6 +1388,7 @@ export default function LoansPage({ sectionsOnly = false }) {
           <DynamicRequestFormSection config={inquiryConfig} />
         </div>
       </section>
+      {renderAdditionalBillboardsAfter('request_form')}
 
       {renderedValueCardsBlock ? (
         <ColumnsBlock
@@ -1320,6 +1400,7 @@ export default function LoansPage({ sectionsOnly = false }) {
           extraSectionClassName={`loans-native-more${getHudBlockStateClassName('value_cards')}`}
         />
       ) : null}
+      {renderAdditionalBillboardsAfter('value_cards')}
 
       <section className="service-native-section loans-native-calculator-wrap" id="run-some-numbers">
         <div className="ag-panel-rail">
@@ -1587,6 +1668,7 @@ export default function LoansPage({ sectionsOnly = false }) {
           </div>
         </section>
       ) : null}
+      {renderAdditionalBillboardsAfter('vision_fuel')}
 
       <DynamicCtaSection
         managedBlocks={managedBlocks}
@@ -1614,6 +1696,7 @@ export default function LoansPage({ sectionsOnly = false }) {
           document.dispatchEvent(new CustomEvent('agf:cta-submit', { detail: payload }));
         }}
       />
+      {renderAdditionalBillboardsAfter('cta_form')}
 
       <section className={`service-native-section loans-native-testimonials${getHudBlockStateClassName('testimonials')}${getOwnershipVisualForBlockId('testimonials').className || ''}`} data-block-id="testimonials">
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('testimonials')} />
@@ -1632,6 +1715,7 @@ export default function LoansPage({ sectionsOnly = false }) {
           ) : null}
         </div>
       </section>
+      {renderAdditionalBillboardsAfter('testimonials')}
 
       <section className="service-native-section service-native-article-teaser loans-native-tariffs">
         <div className="ag-panel-rail-wide">

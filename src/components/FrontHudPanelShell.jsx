@@ -180,7 +180,7 @@ export default function FrontHudPanelShell({
           aria-label="Close panel"
           title="Close panel"
         >
-          {resolvedCloseButtonText}
+          <span className="admin-front-hud-close-glyph" aria-hidden="true">{resolvedCloseButtonText}</span>
         </button>
       </div>
       <div className="admin-front-hud-tool-content">

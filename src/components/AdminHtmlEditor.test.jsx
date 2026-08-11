@@ -34,6 +34,51 @@ describe('AdminHtmlEditor', () => {
     expect(execCommand).toHaveBeenCalledWith('foreColor', false, '#f26660');
   });
 
+  it('uses the same palette to change the base body color when no text is selected', () => {
+    const execCommand = vi.fn();
+    const onBaseColorChange = vi.fn();
+    document.execCommand = execCommand;
+
+    render(createElement(AdminHtmlEditor, {
+      value: '<p>Newsletter copy</p>',
+      onChange: () => {},
+      onBaseColorChange,
+      paletteVariant: 'hud',
+      compact: true,
+    }));
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Mango' }));
+
+    expect(onBaseColorChange).toHaveBeenCalledWith('is-mango');
+    expect(execCommand).not.toHaveBeenCalledWith('foreColor', false, '#faa31a');
+  });
+
+  it('keeps applying inline color when body text is selected', () => {
+    const execCommand = vi.fn();
+    const onBaseColorChange = vi.fn();
+    document.execCommand = execCommand;
+    const { container } = render(createElement(AdminHtmlEditor, {
+      value: '<p>Newsletter copy</p>',
+      onChange: () => {},
+      onBaseColorChange,
+      paletteVariant: 'hud',
+      compact: true,
+    }));
+    const surface = container.querySelector('.admin-html-editor-surface');
+    const textNode = surface.querySelector('p').firstChild;
+    const range = document.createRange();
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, 5);
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Mango' }));
+
+    expect(onBaseColorChange).not.toHaveBeenCalled();
+    expect(execCommand).toHaveBeenCalledWith('foreColor', false, '#faa31a');
+  });
+
   it('normalizes supported html color markup into semantic classes that survive runtime sanitizing', () => {
     expect(
       normalizeHtmlEditorSemanticColors('<p><span style="color: rgb(0, 173, 187);">Blue</span> <font color="#f26660">Melon</font></p>'),

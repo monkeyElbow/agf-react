@@ -28,8 +28,11 @@ describe('block catalog', () => {
 
   it('allows standard blocks and filters contextual blocks by route family', () => {
     expect(getManagedPageFamily('/services/planned-giving/endowments')).toBe('planned-giving');
+    expect(getManagedPageFamily('/test')).toBe('test');
     expect(isBlockCatalogChoiceAllowed({ kind: 'intro' }, { pathname: '/about-us' })).toBe(true);
     expect(isBlockCatalogChoiceAllowed({ kind: 'request_form' }, { pathname: '/services/loans' })).toBe(true);
+    expect(isBlockCatalogChoiceAllowed({ kind: 'cta_form' }, { pathname: '/test' })).toBe(true);
+    expect(isBlockCatalogChoiceAllowed({ kind: 'request_form' }, { pathname: '/test' })).toBe(true);
     expect(isBlockCatalogChoiceAllowed({ kind: 'request_form' }, { pathname: '/about-us' })).toBe(false);
   });
 

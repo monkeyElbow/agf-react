@@ -2326,31 +2326,27 @@ describe('source-default content block blueprint coverage', () => {
     });
   });
 
-  it('keeps aggregated template sources on direct blueprint template ids without persisted bridges', () => {
+  it('keeps route-owned blocks in page blueprints without promoting them into add templates', () => {
     const templates = getAllBlockTemplateBlueprints();
-    const servicesCardsTemplate = templates.find((template) => template?.templateLookupId === 'services_cards');
-    const mattersBandTemplate = templates.find((template) => template?.templateLookupId === 'matters_band');
-    const loanOptionsTemplate = templates.find((template) => template?.templateLookupId === 'loan_options');
+    const servicesBlocks = contentBlockBlueprintsByPath['/services'] || [];
+    const loansBlocks = contentBlockBlueprintsByPath['/services/loans'] || [];
 
-    expect(servicesCardsTemplate).toMatchObject({
-      templateLookupId: 'services_cards',
-      templateId: 'services_cards',
+    expect(servicesBlocks.find((block) => block?.id === 'services_cards')).toMatchObject({
+      id: 'services_cards',
       mode: 'dynamic',
       kind: 'site_feature',
     });
-
-    expect(mattersBandTemplate).toMatchObject({
-      templateLookupId: 'matters_band',
-      templateId: 'matters_band',
+    expect(servicesBlocks.find((block) => block?.id === 'matters_band')).toMatchObject({
+      id: 'matters_band',
       mode: 'dynamic',
       kind: 'site_feature',
     });
-    expect(loanOptionsTemplate).toMatchObject({
-      templateLookupId: 'loan_options',
-      templateId: 'card_grid',
+    expect(loansBlocks.find((block) => block?.id === 'loan_options')).toMatchObject({
+      id: 'loan_options',
       mode: 'dynamic',
       kind: 'card_grid',
     });
+    expect(templates.some((template) => ['services_cards', 'matters_band', 'loan_options'].includes(template?.templateLookupId))).toBe(false);
     expect(templates.some((template) => template?.mode === 'static')).toBe(false);
     expect(templates.some((template) => template?.isCompatibility)).toBe(false);
   });

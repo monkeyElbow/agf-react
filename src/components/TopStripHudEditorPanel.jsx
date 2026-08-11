@@ -1,4 +1,17 @@
+import { useMemo, useState } from 'react';
 import ColorPalette from './ColorPalette';
+import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
+import {
+  HudEditorBlockOptionsPage,
+  HudEditorModelLayout,
+  appendHudBlockOptionsSection,
+} from './HudEditorShell';
+
+const TOP_STRIP_EDITOR_SECTIONS = Object.freeze([
+  { id: 'strip', label: 'Strip', icon: 'Aa' },
+  { id: 'login', label: 'Secure Login', icon: '↗' },
+  { id: 'rates', label: 'Phone + Rates', icon: '#' },
+]);
 
 function toBool(value, fallback = false) {
   if (typeof value === 'boolean') {
@@ -52,10 +65,12 @@ function TogglePills({
 export default function TopStripHudEditorPanel({
   settings = {},
   onSettingChange,
+  sourceRevision = 0,
   bgOptions = [],
   textOptions = [],
   loginToneOptions = [],
   ratesToneOptions = [],
+  blockOptions = null,
 }) {
   const showLogin = toBool(settings.showLogin, true);
   const showPhone = toBool(settings.showPhone, true);
@@ -66,10 +81,31 @@ export default function TopStripHudEditorPanel({
   const loginButtonToneOptions = loginButtonStyle === 'outline' && Array.isArray(ratesToneOptions) && ratesToneOptions.length
     ? ratesToneOptions
     : loginToneOptions;
+  const [activeSection, setActiveSection] = useState('strip');
+  const stringDraftFields = useMemo(() => (
+    ['loginLabel', 'loginHref', 'phone', 'ratesLabel', 'ratesPath'].map((id) => ({
+      id,
+      value: settings[id],
+      commit: onSettingChange ? (nextValue) => onSettingChange(id, nextValue) : null,
+    }))
+  ), [onSettingChange, settings.loginHref, settings.loginLabel, settings.phone, settings.ratesLabel, settings.ratesPath]);
+  const {
+    draftValues,
+    updateDraftValue,
+    commitDraftValue,
+  } = useBufferedFieldDrafts({ fields: stringDraftFields, sourceRevision });
+  const editorSections = appendHudBlockOptionsSection(TOP_STRIP_EDITOR_SECTIONS, blockOptions);
 
   return (
-    <div className="admin-top-strip-hud-editor">
-      <section className="admin-top-strip-hud-card">
+    <HudEditorModelLayout
+      className="admin-top-strip-hud-editor admin-top-strip-hud-editor--reference"
+      sections={editorSections}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      label="Top strip editor sections"
+      panelClassName="admin-top-strip-hud-editor-panels"
+    >
+      <section className="admin-top-strip-hud-card admin-top-strip-hud-card--strip">
         <div className="admin-top-strip-hud-card-head">
           <h4>Strip</h4>
           <p>Global appearance</p>
@@ -123,7 +159,7 @@ export default function TopStripHudEditorPanel({
         </div>
       </section>
 
-      <section className="admin-top-strip-hud-card">
+      <section className="admin-top-strip-hud-card admin-top-strip-hud-card--login">
         <div className="admin-top-strip-hud-card-head">
           <h4>Secure Login</h4>
           <p>Left-side button</p>
@@ -142,16 +178,18 @@ export default function TopStripHudEditorPanel({
           <span>Login Label</span>
           <input
             type="text"
-            value={String(settings.loginLabel || '')}
-            onChange={(event) => onSettingChange?.('loginLabel', event.target.value)}
+            value={draftValues.loginLabel ?? String(settings.loginLabel || '')}
+            onChange={(event) => updateDraftValue('loginLabel', event.target.value)}
+            onBlur={() => commitDraftValue('loginLabel')}
           />
         </label>
         <label className="admin-front-hud-field">
           <span>Login URL</span>
           <input
             type="text"
-            value={String(settings.loginHref || '')}
-            onChange={(event) => onSettingChange?.('loginHref', event.target.value)}
+            value={draftValues.loginHref ?? String(settings.loginHref || '')}
+            onChange={(event) => updateDraftValue('loginHref', event.target.value)}
+            onBlur={() => commitDraftValue('loginHref')}
           />
         </label>
         <div className="admin-front-hud-row">
@@ -182,7 +220,7 @@ export default function TopStripHudEditorPanel({
         </div>
       </section>
 
-      <section className="admin-top-strip-hud-card">
+      <section className="admin-top-strip-hud-card admin-top-strip-hud-card--rates">
         <div className="admin-top-strip-hud-card-head">
           <h4>Phone + Rates</h4>
           <p>Right-side controls</p>
@@ -196,8 +234,9 @@ export default function TopStripHudEditorPanel({
           <span>Phone Number</span>
           <input
             type="text"
-            value={String(settings.phone || '')}
-            onChange={(event) => onSettingChange?.('phone', event.target.value)}
+            value={draftValues.phone ?? String(settings.phone || '')}
+            onChange={(event) => updateDraftValue('phone', event.target.value)}
+            onBlur={() => commitDraftValue('phone')}
           />
         </label>
         <TogglePills
@@ -214,16 +253,18 @@ export default function TopStripHudEditorPanel({
           <span>Rates Label</span>
           <input
             type="text"
-            value={String(settings.ratesLabel || '')}
-            onChange={(event) => onSettingChange?.('ratesLabel', event.target.value)}
+            value={draftValues.ratesLabel ?? String(settings.ratesLabel || '')}
+            onChange={(event) => updateDraftValue('ratesLabel', event.target.value)}
+            onBlur={() => commitDraftValue('ratesLabel')}
           />
         </label>
         <label className="admin-front-hud-field">
           <span>Rates URL / Path</span>
           <input
             type="text"
-            value={String(settings.ratesPath || '')}
-            onChange={(event) => onSettingChange?.('ratesPath', event.target.value)}
+            value={draftValues.ratesPath ?? String(settings.ratesPath || '')}
+            onChange={(event) => updateDraftValue('ratesPath', event.target.value)}
+            onBlur={() => commitDraftValue('ratesPath')}
           />
         </label>
         <div className="admin-front-hud-row">
@@ -253,6 +294,8 @@ export default function TopStripHudEditorPanel({
           />
         </div>
       </section>
-    </div>
+
+      <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+    </HudEditorModelLayout>
   );
 }

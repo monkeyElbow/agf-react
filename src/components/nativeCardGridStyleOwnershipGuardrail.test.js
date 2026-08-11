@@ -23,4 +23,17 @@ describe('native card-grid style ownership guardrail', () => {
     expect(source).not.toContain('.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options');
     expect(source).not.toContain('.native-info-page--retirement-403b .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-eligibility-cards');
   });
+
+  it('keeps planned-giving gift-card bullets regular weight with shared spacing', () => {
+    const source = readSource('../styles/service-native.css');
+
+    expect(source).toContain(
+      '.native-info-page--legacy-child\n  .service-native-section.native-dynamic-grid.legacy-child-native-assets\n  .service-native-card-bullet-list li {',
+    );
+    expect(source).toContain('font-weight: 400;');
+    expect(source).toContain('margin-top: clamp(0.7rem, 1.35vw, 0.95rem);');
+    expect(source).toContain(
+      '.service-native-card-bullet-list li strong {\n  font-weight: 400;',
+    );
+  });
 });

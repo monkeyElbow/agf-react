@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
-import { homePageBlocks } from '../../data/pageBlocks/homeBlocks';
 import { contentBlockBlueprintsByPath } from '../../data/contentBlockBlueprints';
 import { normalizeDynamicHeroSettings } from '../../context/ContentAdminContext';
 
@@ -23,14 +22,6 @@ vi.mock('../../context/ContentAdminContextCore', async () => {
 });
 
 import PageBlocksRenderer from './PageBlocksRenderer';
-
-function getHomeHeroTemplate() {
-  const block = homePageBlocks.find((entry) => entry?.type === 'hero');
-  if (!block) {
-    throw new Error('Home hero template not found.');
-  }
-  return block;
-}
 
 function getHomeHeroSeedSettings() {
   const block = (contentBlockBlueprintsByPath['/'] || []).find((entry) => (
@@ -50,10 +41,11 @@ function readSource(relativePath) {
 
 function renderHomeHero(settings) {
   const heroBlock = {
-    ...getHomeHeroTemplate(),
     id: 'hero',
     kind: 'hero',
     mode: 'dynamic',
+    type: 'hero',
+    settings: { ...settings },
     ...settings,
   };
 
@@ -113,10 +105,11 @@ describe('home hero render guardrails', () => {
 
   it('preserves home hero tag structure, line classes, and per-line sizing in HUD edit mode', () => {
     const heroBlock = {
-      ...getHomeHeroTemplate(),
       id: 'hero',
       kind: 'hero',
       mode: 'dynamic',
+      type: 'hero',
+      settings: { ...normalizeDynamicHeroSettings('/', getHomeHeroSeedSettings()) },
       ...normalizeDynamicHeroSettings('/', getHomeHeroSeedSettings()),
     };
 

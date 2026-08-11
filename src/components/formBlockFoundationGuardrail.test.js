@@ -41,6 +41,7 @@ describe('form block foundation guardrail', () => {
     expect(editorSource).toContain('className="admin-content-checkbox-row admin-content-checkbox-row--request-form"');
     expect(editorSource).toContain('<span>Required</span>');
     expect(editorSource).toContain('<span>Full width</span>');
+    expect(editorSource).toContain('swatchVariant="hud"');
     expect(editorSource).toContain('admin-request-form-swatch-palette');
     expect(stylesSource).toContain('.admin-content-field-list label.admin-content-checkbox-row {');
     expect(stylesSource).toContain('.admin-request-form-step-field-behavior {');

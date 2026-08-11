@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const STORAGE_KEY_PREFIX = 'agf:front-hud:dock-order:';
 
@@ -57,12 +57,30 @@ function writeStoredOrder(storageKey, ids) {
   }
 }
 
-function mergeCurrentPanelOrder(currentOrder, panelIds) {
+export function mergeCurrentPanelOrder(currentOrder, panelIds) {
   const normalizedCurrent = normalizePanelIds(currentOrder);
   const normalizedPanels = normalizePanelIds(panelIds);
   const persisted = normalizedCurrent.filter((id) => normalizedPanels.includes(id));
-  const missing = normalizedPanels.filter((id) => !persisted.includes(id));
-  return [...persisted, ...missing];
+  const persistedSet = new Set(persisted);
+  const merged = [...persisted];
+
+  // Keep intentional user ordering, but place newly added panels around the
+  // existing anchors according to the page's current block order.
+  normalizedPanels.forEach((panelId, panelIndex) => {
+    if (persistedSet.has(panelId)) {
+      return;
+    }
+    const nextPersistedId = normalizedPanels
+      .slice(panelIndex + 1)
+      .find((candidateId) => persistedSet.has(candidateId));
+    if (nextPersistedId) {
+      merged.splice(merged.indexOf(nextPersistedId), 0, panelId);
+      return;
+    }
+    merged.push(panelId);
+  });
+
+  return merged;
 }
 
 function resolveDropPosition(event) {
@@ -120,22 +138,34 @@ export default function useHudDockOrder({ panels, storageKey }) {
     return `${STORAGE_KEY_PREFIX}${suffix}`;
   }, [storageKey]);
   const [orderedIds, setOrderedIds] = useState([]);
+  const [isOrderHydrated, setIsOrderHydrated] = useState(false);
+  const previousPanelIdsRef = useRef(panelIds);
   const [draggedPanelId, setDraggedPanelId] = useState('');
   const [dragOverPanelId, setDragOverPanelId] = useState('');
   const [dragOverPosition, setDragOverPosition] = useState('');
 
   useEffect(() => {
     setOrderedIds(readStoredOrder(storageToken));
+    setIsOrderHydrated(true);
   }, [storageToken]);
 
   useEffect(() => {
-    const merged = mergeCurrentPanelOrder(orderedIds, panelIds);
+    if (!isOrderHydrated) {
+      return;
+    }
+    const previousPanelIds = previousPanelIdsRef.current;
+    const hasSamePanelMembers = previousPanelIds.length === panelIds.length
+      && previousPanelIds.every((id) => panelIds.includes(id));
+    const pageOrderChanged = hasSamePanelMembers && !arraysEqual(previousPanelIds, panelIds);
+    const currentOrder = pageOrderChanged ? panelIds : orderedIds;
+    const merged = mergeCurrentPanelOrder(currentOrder, panelIds);
+    previousPanelIdsRef.current = panelIds;
     if (arraysEqual(orderedIds, merged)) {
       return;
     }
     setOrderedIds(merged);
     writeStoredOrder(storageToken, merged);
-  }, [orderedIds, panelIds, panelIdsSignature, storageToken]);
+  }, [isOrderHydrated, orderedIds, panelIds, panelIdsSignature, storageToken]);
 
   const orderedPanels = useMemo(() => {
     if (!normalizedPanels.length || !orderedIds.length) {

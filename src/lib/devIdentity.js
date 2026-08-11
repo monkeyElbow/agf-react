@@ -15,6 +15,14 @@ function toTrimmed(value) {
   return String(value || '').trim();
 }
 
+function normalizeAccentColor(value, fallback) {
+  const color = toTrimmed(value);
+  if (/^#[0-9a-f]{6}$/i.test(color)) {
+    return color.toLowerCase();
+  }
+  return fallback;
+}
+
 function readNavigatorPlatform(navigatorImpl) {
   const raw = toTrimmed(
     navigatorImpl?.userAgentData?.platform
@@ -95,7 +103,10 @@ export function normalizeDevIdentity(rawIdentity) {
     userId,
     displayName,
     initials: toTrimmed(source.initials) || deriveDevIdentityInitials(displayName),
-    accentColor: toTrimmed(source.accentColor) || pickDevIdentityAccent(userId || displayName),
+    accentColor: normalizeAccentColor(
+      source.accentColor,
+      pickDevIdentityAccent(userId || displayName),
+    ),
     createdAt: Number.isFinite(Number(source.createdAt)) ? Number(source.createdAt) : Date.now(),
     updatedAt: Number.isFinite(Number(source.updatedAt)) ? Number(source.updatedAt) : Date.now(),
   };
@@ -173,6 +184,23 @@ export function renameStoredDevIdentity(displayName, {
     ...current,
     displayName: nextName,
     initials: deriveDevIdentityInitials(nextName),
+    updatedAt: now,
+  }, storage);
+}
+
+export function setStoredDevIdentityAccentColor(accentColor, {
+  storage = globalThis.localStorage,
+  now = Date.now(),
+} = {}) {
+  const current = getOrCreateDevIdentity({ storage, now });
+  const nextAccentColor = normalizeAccentColor(accentColor, current?.accentColor);
+  if (!current || !nextAccentColor) {
+    return current;
+  }
+
+  return persistDevIdentity({
+    ...current,
+    accentColor: nextAccentColor,
     updatedAt: now,
   }, storage);
 }

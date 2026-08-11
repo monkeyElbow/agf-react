@@ -26,6 +26,7 @@ vi.mock('../lib/devContentAuthorityClient', () => ({
   restoreSharedContentBackup: vi.fn(),
   restoreSharedPageRevision: vi.fn(),
   saveSharedPageDraft: vi.fn(),
+  saveSharedBlockDraft: vi.fn(),
   syncSharedBlockDraft: vi.fn(),
 }));
 
@@ -103,7 +104,7 @@ describe('ContentAdminContext shared bootstrap', () => {
     expect(state?.blocksByPath?.['/services/planned-giving/donor-advised-fund']?.length).toBeGreaterThan(0);
   });
 
-  it('uses shared normalization without rewriting canonical managed inventory', async () => {
+  it('uses shared normalization and removes retired static page records', async () => {
     const sharedState = {
       pageHierarchy: {},
       blocksByPath: {
@@ -171,12 +172,8 @@ describe('ContentAdminContext shared bootstrap', () => {
       normalizeContentAdminState(baseSnapshot).blocksByPath['/services/insurance/property-casualty-insurance'],
     );
     expect(authoringBlocks.some((block) => block?.id === 'page_content')).toBe(true);
-    expect(authoringHero?.mode).toBe('static');
-    expect(authoringHero?.settings?.targetSectionKey).toBe('class:legacy-hero');
-    expect(authoringHero?.editableFields).toEqual([]);
-    expect(publishedIntro?.mode).toBe('static');
-    expect(publishedIntro?.settings?.targetSectionClassName).toBe('legacy-intro');
-    expect(publishedIntro?.editableFields).toEqual([]);
+    expect(authoringHero).toBeUndefined();
+    expect(publishedIntro).toBeUndefined();
   });
 
   it('returns a failed shared reset result when backup creation blocks the reset', async () => {

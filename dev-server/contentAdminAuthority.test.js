@@ -70,4 +70,20 @@ describe('content-admin authority lease', () => {
       lease: { authorityInstanceId: 'replacement' },
     });
   });
+
+  it('automatically reclaims a stale lock during normal startup', () => {
+    const lockFile = createTempLock();
+    fs.writeFileSync(lockFile, JSON.stringify({
+      authorityInstanceId: 'dead',
+      pid: 2147483647,
+    }));
+    const replacement = lease(lockFile, 'replacement');
+
+    replacement.acquire();
+
+    expect(inspectContentAdminAuthority(lockFile)).toMatchObject({
+      status: 'owned',
+      lease: { authorityInstanceId: 'replacement' },
+    });
+  });
 });
