@@ -1,6 +1,9 @@
 const DEV_CONTENT_AUTHORITY_BASE = '/__dev/content-admin';
 const SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS = 5000;
-const SHARED_DRAFT_SAVE_TIMEOUT_MS = 20_000;
+const SHARED_DRAFT_SAVE_TIMEOUT_MS = 6000;
+const SHARED_DRAFT_SYNC_TIMEOUT_MS = 3000;
+const SHARED_PUBLISH_TIMEOUT_MS = 10_000;
+const SHARED_PUBLISH_STATUS_TIMEOUT_MS = 5000;
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -22,7 +25,11 @@ async function parseJsonResponse(response) {
 }
 
 async function sendJson(pathname, options = {}) {
-  const { timeoutMs = 0, ...requestOptions } = options;
+  const {
+    timeoutMs = 0,
+    timeoutMessage = 'Content authority request timed out',
+    ...requestOptions
+  } = options;
   const controller = timeoutMs > 0 && typeof AbortController === 'function'
     ? new AbortController()
     : null;
@@ -41,7 +48,7 @@ async function sendJson(pathname, options = {}) {
     return parseJsonResponse(response);
   } catch (error) {
     if (controller?.signal.aborted) {
-      const timeoutError = new Error('Content draft save timed out');
+      const timeoutError = new Error(timeoutMessage);
       timeoutError.code = 'content-admin-request-timeout';
       throw timeoutError;
     }
@@ -55,6 +62,22 @@ async function sendJson(pathname, options = {}) {
 
 export async function fetchSharedContentSnapshot() {
   return sendJson('/state', {
+    method: 'GET',
+    timeoutMs: SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS,
+  });
+}
+
+export async function fetchSharedContentRouteSnapshot(pathname) {
+  const normalizedPath = String(pathname || '').trim() || '/';
+  return sendJson(`/route-state?path=${encodeURIComponent(normalizedPath)}`, {
+    method: 'GET',
+    timeoutMs: SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS,
+  });
+}
+
+export async function fetchPublishedContentRouteSnapshot(pathname) {
+  const normalizedPath = String(pathname || '').trim() || '/';
+  return sendJson(`/published-route?path=${encodeURIComponent(normalizedPath)}`, {
     method: 'GET',
     timeoutMs: SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS,
   });
@@ -86,8 +109,38 @@ export async function saveSharedPageDraft(nextState, actor = null, summary = '')
   return sendJson('/save-draft', {
     method: 'POST',
     timeoutMs: SHARED_DRAFT_SAVE_TIMEOUT_MS,
+    timeoutMessage: 'Content draft save timed out',
     body: JSON.stringify({
       state: cloneJson(nextState),
+      actor: cloneJson(actor),
+      summary: String(summary || ''),
+    }),
+  });
+}
+
+export async function saveSharedRouteDraft(pathname, routeState, actor = null, summary = '') {
+  return sendJson('/save-route-draft', {
+    method: 'POST',
+    timeoutMs: SHARED_DRAFT_SAVE_TIMEOUT_MS,
+    timeoutMessage: 'Content route draft save timed out',
+    body: JSON.stringify({
+      pathname: String(pathname || ''),
+      state: cloneJson(routeState),
+      actor: cloneJson(actor),
+      summary: String(summary || ''),
+    }),
+  });
+}
+
+export async function saveSharedBlockDraft(pathname, blockId, block, actor = null, summary = '') {
+  return sendJson('/save-block-draft', {
+    method: 'POST',
+    timeoutMs: SHARED_DRAFT_SAVE_TIMEOUT_MS,
+    timeoutMessage: 'Block draft save timed out',
+    body: JSON.stringify({
+      pathname: String(pathname || ''),
+      blockId: String(blockId || ''),
+      block: cloneJson(block),
       actor: cloneJson(actor),
       summary: String(summary || ''),
     }),
@@ -164,13 +217,17 @@ export async function publishSharedDisclosures(actor = null) {
   });
 }
 
-export async function publishSharedPage(pathname, actor = null, summary = '') {
+export async function publishSharedPage(pathname, actor = null, summary = '', options = {}) {
   return sendJson('/publish-page', {
     method: 'POST',
+    timeoutMs: SHARED_PUBLISH_TIMEOUT_MS,
+    timeoutMessage: 'Live publish timed out',
     body: JSON.stringify({
       pathname,
       actor: cloneJson(actor),
       summary: String(summary || ''),
+      operationId: String(options.operationId || ''),
+      expectedDraftRevision: String(options.expectedDraftRevision || ''),
     }),
   });
 }
@@ -186,22 +243,43 @@ export async function migrateSharedGenerosityFundSnapshot(defaultState, actor = 
   });
 }
 
-export async function publishSharedBlock(pathname, blockId, actor = null, summary = '', expectedBlock = null) {
+export async function publishSharedBlock(pathname, blockId, actor = null, summary = '', expectedBlock = null, options = {}) {
+  const publishOptions = options?.operationId
+    ? options
+    : expectedBlock?.operationId
+      ? expectedBlock
+      : {};
+  const expectedBlockPayload = publishOptions === expectedBlock ? null : expectedBlock;
   return sendJson('/publish-block', {
     method: 'POST',
+    timeoutMs: SHARED_PUBLISH_TIMEOUT_MS,
+    timeoutMessage: 'Live publish timed out',
     body: JSON.stringify({
       pathname,
       blockId,
       actor: cloneJson(actor),
       summary: String(summary || ''),
-      expectedBlock: cloneJson(expectedBlock),
+      expectedBlock: cloneJson(expectedBlockPayload),
+      operationId: String(publishOptions.operationId || ''),
+      expectedDraftRevision: String(publishOptions.expectedDraftRevision || ''),
     }),
+  });
+}
+
+export async function fetchSharedPublishStatus(operationId) {
+  const normalizedOperationId = String(operationId || '').trim();
+  return sendJson(`/publish-status?operationId=${encodeURIComponent(normalizedOperationId)}`, {
+    method: 'GET',
+    timeoutMs: SHARED_PUBLISH_STATUS_TIMEOUT_MS,
+    timeoutMessage: 'Publish status verification timed out',
   });
 }
 
 export async function syncSharedBlockDraft(pathname, blockId, block, actor = null) {
   return sendJson('/blocks/sync-draft', {
     method: 'POST',
+    timeoutMs: SHARED_DRAFT_SYNC_TIMEOUT_MS,
+    timeoutMessage: 'Draft sync timed out',
     body: JSON.stringify({
       pathname,
       blockId,

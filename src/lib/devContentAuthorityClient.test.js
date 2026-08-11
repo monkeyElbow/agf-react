@@ -5,6 +5,8 @@ import {
   fetchSharedAnnouncement,
   initializeSharedContentFromSeed,
   migrateSharedGenerosityFundSnapshot,
+  publishSharedBlock,
+  publishSharedPage,
   promoteSharedContentToSeed,
   releaseSharedBlockLock,
   resetSharedContentFromSeed,
@@ -13,8 +15,11 @@ import {
   restoreSharedContentBackup,
   restoreSharedPageRevision,
   saveSharedAnnouncement,
+  saveSharedBlockDraft,
   saveSharedPageDraft,
+  saveSharedRouteDraft,
   syncSharedBlockDraft,
+  fetchSharedPublishStatus,
 } from './devContentAuthorityClient';
 
 describe('devContentAuthorityClient', () => {
@@ -112,6 +117,97 @@ describe('devContentAuthorityClient', () => {
     expect(payload.blockId).toBe('hero');
     expect(payload.block.settings.line1Text).toBe('HUD synced title');
     expect(payload.actor.displayName).toBe('Taylor QA');
+  });
+
+  it('sends a distinct block-scoped draft save request', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await saveSharedBlockDraft('/services/loans', 'hero', {
+      id: 'hero',
+      kind: 'hero',
+      settings: { line1Text: 'Saved hero title' },
+    }, { userId: 'dev-taylor' }, 'Save hero block');
+
+    const [url, request] = fetchMock.mock.calls[0];
+    const payload = JSON.parse(request.body);
+    expect(url).toContain('/save-block-draft');
+    expect(payload.blockId).toBe('hero');
+    expect(payload.summary).toBe('Save hero block');
+    expect(payload.block.settings.line1Text).toBe('Saved hero title');
+  });
+
+  it('bounds live publish requests so a stalled authority cannot hold the editor forever', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockImplementation((_url, request) => new Promise((_resolve, reject) => {
+      request.signal.addEventListener('abort', () => reject(new Error('aborted')));
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      const request = publishSharedBlock('/test', 'billboard', {
+        userId: 'dev-taylor',
+        displayName: 'Taylor QA',
+      });
+      const rejection = expect(request).rejects.toMatchObject({
+        code: 'content-admin-request-timeout',
+      });
+      await vi.advanceTimersByTimeAsync(10_001);
+      await rejection;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('bounds draft saves so a stalled authority fails quickly', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockImplementation((_url, request) => new Promise((_resolve, reject) => {
+      request.signal.addEventListener('abort', () => reject(new Error('aborted')));
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      const pageSave = saveSharedPageDraft({ blocksByPath: { '/test': [] } }, { userId: 'dev-taylor' });
+      const routeSave = saveSharedRouteDraft('/test', { blocksByPath: { '/test': [] } }, { userId: 'dev-taylor' });
+      const pageRejection = expect(pageSave).rejects.toMatchObject({
+        code: 'content-admin-request-timeout',
+      });
+      const routeRejection = expect(routeSave).rejects.toMatchObject({
+        code: 'content-admin-request-timeout',
+      });
+      await vi.advanceTimersByTimeAsync(6001);
+      await pageRejection;
+      await routeRejection;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('sends publish operation identity and supports scoped status verification', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true, status: 'committed', committed: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await publishSharedPage('/services/loans', { userId: 'dev-taylor' }, 'publish page', {
+      operationId: 'page-operation-1',
+      expectedDraftRevision: 'draft-revision-10',
+    });
+    await fetchSharedPublishStatus('page-operation-1');
+
+    const [publishUrl, publishRequest] = fetchMock.mock.calls[0];
+    const [statusUrl, statusRequest] = fetchMock.mock.calls[1];
+    const payload = JSON.parse(publishRequest.body);
+
+    expect(publishUrl).toContain('/publish-page');
+    expect(payload.operationId).toBe('page-operation-1');
+    expect(payload.expectedDraftRevision).toBe('draft-revision-10');
+    expect(statusUrl).toContain('/publish-status?operationId=page-operation-1');
+    expect(statusRequest.method).toBe('GET');
   });
 
   it('uses the dedicated shared announcement endpoints', async () => {

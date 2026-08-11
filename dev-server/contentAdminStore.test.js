@@ -568,6 +568,26 @@ describe('createDevContentAuthorityStore', () => {
     expect(fs.readFileSync(persistenceFile, 'utf8')).toBe(sharedSourceText);
   });
 
+  it('serves only the published block slice for public route hydration', () => {
+    const persistenceFile = makeTempFile();
+    const store = createJsonStore(persistenceFile);
+    const actor = createActor();
+    const seedState = buildSeedState();
+
+    store.resetFromSeed(seedState, { actor });
+    const draftState = cloneJson(store.readCurrentState());
+    draftState.blocksByPath['/services/loans'][0].settings.line1Text = 'Draft-only title';
+    store.savePageDraft(draftState, { actor, summary: 'route hydration test draft' });
+    const routeSnapshot = store.getPublishedRouteSnapshot('/services/loans');
+
+    expect(routeSnapshot.initialized).toBe(true);
+    expect(Object.keys(routeSnapshot.state.blocksByPath)).toEqual(['/services/loans']);
+    expect(routeSnapshot.state.blocksByPath['/services/loans']).toHaveLength(2);
+    expect(routeSnapshot.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+    expect(routeSnapshot.state.blocksByPath['/services/investments']).toBeUndefined();
+    expect(routeSnapshot.state.collaborationByPath).toEqual({});
+  });
+
   it('returns clear validation findings for malformed blocks', () => {
     const persistenceFile = makeTempFile();
     const store = createJsonStore(persistenceFile);
@@ -1070,7 +1090,7 @@ describe('createDevContentAuthorityStore', () => {
     expect(fs.readFileSync(persistenceFile)).toEqual(before);
   });
 
-  it('restores page revision block arrays without resurrecting missing current seed blocks', () => {
+  it('restores page revision block arrays without resurrecting missing current seed or retired static blocks', () => {
     const persistenceFile = makeTempFile();
     const currentState = buildSeedState();
     const pathname = '/services/loans';
@@ -1162,14 +1182,13 @@ describe('createDevContentAuthorityStore', () => {
     expect(restored.ok).toBe(true);
     expect(restoredBlocks.map((block) => `${block.id}:${block.kind}:${block.mode}`)).toEqual([
       'cta_form:cta_form:dynamic',
-      'old_static_section:content:static',
     ]);
     expect(restoredBlocks.some((block) => block.id === 'hero')).toBe(false);
     expect(restoredBlocks.find((block) => block.id === 'cta_form')?.settings.title).toBe('Revision CTA');
     expect(restoredBlocks.find((block) => block.id === 'cta_form')?.settings.targetSectionKey).toBeUndefined();
     expect(restoredCollaboration.blocks.cta_form).toBeTruthy();
-    expect(restoredCollaboration.blocks.old_static_section).toBeTruthy();
-    expect(restoredCollaboration.history.map((entry) => entry.blockId)).toEqual(['cta_form', 'old_static_section']);
+    expect(restoredCollaboration.blocks.old_static_section).toBeUndefined();
+    expect(restoredCollaboration.history.map((entry) => entry.blockId)).toEqual(['cta_form']);
   });
 
   it('does not silently repair retired 403(b) strategy CTAs or RMHA copy from persisted revision restores', () => {
@@ -1706,6 +1725,16 @@ describe('createDevContentAuthorityStore', () => {
     expect(released.state.collaborationByPath['/services/loans'].blocks.hero.lockedBy).toBe(null);
   });
 
+  it('treats releasing an already-cleared lock as a successful no-op', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    store.resetFromSeed(buildSeedState(), { actor: createActor() });
+
+    const released = store.releaseBlockLock('/services/loans', 'hero', createActor());
+
+    expect(released.ok).toBe(true);
+  });
+
   it('syncs one active block draft into shared state without clearing the editor lock', () => {
     const persistenceFile = makeTempFile();
     const storeA = createStore(persistenceFile);
@@ -1723,13 +1752,24 @@ describe('createDevContentAuthorityStore', () => {
 
     expect(synced.ok).toBe(true);
     expect(synced.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('HUD synced hero title');
+    expect(storeA.readPublishedSnapshot().blocksByPath['/services/loans'][0].settings.line1Text)
+      .toBe('Original title');
     expect(synced.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy.displayName).toBe('Taylor QA');
+    expect(synced.state.collaborationByPath['/services/loans'].blocks.hero.savedBy).toBe(null);
     expect(synced.state.collaborationByPath['/services/loans'].blocks.hero.lockedBy.displayName).toBe('Taylor QA');
     expect(synced.state.collaborationByPath['/services/loans'].history[0].action).toBe('block-draft-synced');
 
     const storeB = createStore(persistenceFile);
     expect(storeB.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('HUD synced hero title');
+    expect(storeB.getPublishedRouteSnapshot('/services/loans').state.blocksByPath['/services/loans'][0].settings.line1Text)
+      .toBe('Original title');
     expect(storeB.getSnapshot().state.collaborationByPath['/services/loans'].blocks.hero.lockedBy.displayName).toBe('Taylor QA');
+
+    const saved = storeA.saveDraft(synced.state, { actor: createActor(), summary: 'explicit draft save' });
+    expect(saved.ok).toBe(true);
+    expect(saved.saveResult.savedBlockIdsByPath['/services/loans']).toContain('hero');
+    expect(saved.state.collaborationByPath['/services/loans'].blocks.hero.savedBy.displayName).toBe('Taylor QA');
+    expect(saved.state.collaborationByPath['/services/loans'].blocks.hero.lockedBy).toBe(null);
   });
 
   it('rejects block draft sync when another admin still owns that draft', () => {
@@ -1792,7 +1832,11 @@ describe('createDevContentAuthorityStore', () => {
     nextState.blocksByPath['/services/loans'][1].settings.title = 'Still draft';
     store.saveDraft(nextState, { actor, summary: 'block publish setup' });
 
-    const published = store.publishBlock('/services/loans', 'hero', { actor, summary: 'publish hero only' });
+    const published = store.publishBlock('/services/loans', 'hero', {
+      actor,
+      summary: 'publish hero only',
+      expectedBlock: nextState.blocksByPath['/services/loans'][0],
+    });
 
     expect(published.ok).toBe(true);
     expect(published.publishResult.receipt).toMatchObject({
@@ -1803,8 +1847,192 @@ describe('createDevContentAuthorityStore', () => {
     });
     expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Block live title');
     expect(published.baseSnapshot.blocksByPath['/services/loans'][1].settings.title).toBe('Request help');
+    expect(Object.keys(published.state.blocksByPath)).toEqual(['/services/loans']);
+    expect(Object.keys(published.baseSnapshot.blocksByPath)).toEqual(['/services/loans']);
+    expect(published.state.blocksByPath['/services/investments']).toBeUndefined();
     expect(published.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
+    expect(published.state.collaborationByPath['/services/loans'].blocks.hero.savedBy.displayName).toBe('Taylor QA');
     expect(published.state.collaborationByPath['/services/loans'].blocks.cta_form.draftedBy.displayName).toBe('Taylor QA');
+  });
+
+  it('keeps a newly added block at its draft insertion position when publishing only that block', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const nextState = cloneJson(store.readCurrentState());
+    nextState.blocksByPath['/services/loans'].splice(1, 0, {
+      id: 'intro',
+      kind: 'intro',
+      mode: 'dynamic',
+      settings: {
+        title: 'New intro',
+      },
+    });
+    const saved = store.saveDraft(nextState, { actor, summary: 'add intro between hero and CTA' });
+    expect(saved.ok).toBe(true);
+    expect(saved.state.blocksByPath['/services/loans'].map((block) => block.id)).toEqual([
+      'hero',
+      'intro',
+      'cta_form',
+    ]);
+
+    const published = store.publishBlock('/services/loans', 'intro', {
+      actor,
+      summary: 'publish intro only',
+      expectedBlock: nextState.blocksByPath['/services/loans'][1],
+    });
+
+    expect(published.ok).toBe(true);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'].map((block) => block.id)).toEqual([
+      'hero',
+      'intro',
+      'cta_form',
+    ]);
+  });
+
+  it('repairs an already-published block that is at the wrong position', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    const seed = buildSeedState();
+    seed.blocksByPath['/services/loans'].push({
+      id: 'intro',
+      kind: 'intro',
+      mode: 'dynamic',
+      settings: { title: 'Old intro' },
+    });
+    store.resetFromSeed(seed, { actor });
+
+    const nextState = cloneJson(store.readCurrentState());
+    const blocks = nextState.blocksByPath['/services/loans'];
+    const [intro] = blocks.splice(2, 1);
+    blocks.splice(1, 0, intro);
+    store.saveDraft(nextState, { actor, summary: 'repair intro position' });
+
+    const published = store.publishBlock('/services/loans', 'intro', {
+      actor,
+      summary: 'publish intro position repair',
+      expectedBlock: intro,
+    });
+
+    expect(published.ok).toBe(true);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'].map((block) => block.id)).toEqual([
+      'hero',
+      'intro',
+      'cta_form',
+    ]);
+  });
+
+  it('records the publishing admin and current time after an autosynced draft', () => {
+    const persistenceFile = makeTempFile();
+    let timestamp = 1710000000000;
+    const actor = createActor();
+    const store = createStore(persistenceFile, {
+      now: () => {
+        timestamp += 1000;
+        return timestamp;
+      },
+    });
+    store.resetFromSeed(buildSeedState(), { actor });
+    const nextHero = cloneJson(store.readCurrentState().blocksByPath['/services/loans'][0]);
+    nextHero.settings.line1Text = 'Autosynced hero draft';
+    const synced = store.syncBlockDraft('/services/loans', 'hero', nextHero, { actor });
+    const syncedAt = synced.state.collaborationByPath['/services/loans'].blocks.hero.draftedAt;
+
+    const published = store.publishBlock('/services/loans', 'hero', {
+      actor,
+      summary: 'publish autosynced hero',
+    });
+
+    expect(published.ok).toBe(true);
+    expect(published.state.collaborationByPath['/services/loans'].blocks.hero.savedBy).toEqual(actor);
+    expect(published.state.collaborationByPath['/services/loans'].blocks.hero.savedAt).toBeGreaterThan(syncedAt);
+    expect(published.state.collaborationByPath['/services/loans'].history[0]).toMatchObject({
+      action: 'block-published',
+      actor,
+    });
+  });
+
+  it('records the saving admin and current time when an autosynced draft is explicitly saved', () => {
+    const persistenceFile = makeTempFile();
+    let timestamp = 1710000000000;
+    const actor = createActor();
+    const store = createStore(persistenceFile, {
+      now: () => {
+        timestamp += 1000;
+        return timestamp;
+      },
+    });
+    store.resetFromSeed(buildSeedState(), { actor });
+    const nextHero = cloneJson(store.readCurrentState().blocksByPath['/services/loans'][0]);
+    nextHero.settings.line1Text = 'Autosynced hero draft';
+    const synced = store.syncBlockDraft('/services/loans', 'hero', nextHero, { actor });
+    const syncedAt = synced.state.collaborationByPath['/services/loans'].blocks.hero.draftedAt;
+
+    const saved = store.saveDraft(store.readCurrentState(), { actor, summary: 'explicitly save autosynced hero' });
+
+    expect(saved.ok).toBe(true);
+    expect(saved.state.collaborationByPath['/services/loans'].blocks.hero.savedBy).toEqual(actor);
+    expect(saved.state.collaborationByPath['/services/loans'].blocks.hero.savedAt).toBeGreaterThan(syncedAt);
+    expect(saved.state.collaborationByPath['/services/loans'].history[0]).toMatchObject({
+      action: 'block-draft-saved',
+      actor,
+    });
+  });
+
+  it('saves one block draft without saving other page changes', () => {
+    const persistenceFile = makeTempFile();
+    const actor = createActor();
+    const store = createStore(persistenceFile);
+    store.resetFromSeed(buildSeedState(), { actor });
+    const publishedBeforeSave = store.readPublishedSnapshot();
+    const nextState = cloneJson(store.readCurrentState());
+    const hero = nextState.blocksByPath['/services/loans'][0];
+    const otherBlock = nextState.blocksByPath['/services/loans'][1];
+    hero.settings.line1Text = 'Only hero is saved';
+    otherBlock.settings.title = 'Other block remains unsaved';
+    store.syncBlockDraft('/services/loans', 'hero', hero, { actor });
+    store.syncBlockDraft('/services/loans', otherBlock.id, otherBlock, { actor });
+
+    const saved = store.saveBlockDraft('/services/loans', 'hero', hero, {
+      actor,
+      summary: 'Save hero block only',
+    });
+
+    expect(saved.ok).toBe(true);
+    expect(saved.saveResult.savedBlockIdsByPath['/services/loans']).toEqual(['hero']);
+    expect(saved.state.collaborationByPath['/services/loans'].blocks.hero.savedBy).toEqual(actor);
+    expect(saved.state.collaborationByPath['/services/loans'].blocks[otherBlock.id].savedBy).toBe(null);
+    expect(saved.baseSnapshot).toEqual(publishedBeforeSave);
+    expect(store.readPublishedSnapshot()).toEqual(publishedBeforeSave);
+  });
+
+  it('publishes a deleted block without publishing unrelated page drafts', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    store.resetFromSeed(buildSeedState(), { actor });
+    const nextState = cloneJson(store.readCurrentState());
+    nextState.blocksByPath['/services/loans'] = nextState.blocksByPath['/services/loans']
+      .filter((block) => block.id !== 'cta_form');
+    nextState.blocksByPath['/services/loans'][0].settings.line1Text = 'Unrelated draft stays unpublished';
+    store.saveDraft(nextState, { actor, summary: 'remove CTA draft' });
+
+    const published = store.publishBlock('/services/loans', 'cta_form', {
+      actor,
+      summary: 'publish CTA removal',
+    });
+
+    expect(published.ok).toBe(true);
+    expect(published.publishedBlock).toBe(null);
+    expect(published.publishResult.receipt.publishedBlockIds).toEqual(['cta_form']);
+    expect(published.state.blocksByPath['/services/loans'].some((block) => block.id === 'cta_form')).toBe(false);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'].some((block) => block.id === 'cta_form')).toBe(false);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+    expect(published.state.collaborationByPath['/services/loans'].blocks.cta_form).toBeUndefined();
+    expect(published.state.collaborationByPath['/services/loans'].history[0].action).toBe('block-removal-published');
   });
 
   it('rejects block publish when the expected draft is stale', () => {
@@ -1897,8 +2125,253 @@ describe('createDevContentAuthorityStore', () => {
     });
     expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Published hero title');
     expect(published.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
+    expect(published.state.collaborationByPath['/services/loans'].blocks.hero.savedBy.displayName).toBe('Taylor QA');
     expect(published.state.collaborationByPath['/services/loans'].blocks.hero.lockedBy).toBe(null);
     expect(published.state.collaborationByPath['/services/loans'].history[0].action).toBe('page-published');
+  });
+
+  it('publishes a deleted block during a page publish without publishing another admin draft', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    const otherActor = createActor({
+      userId: 'dev-other',
+      displayName: 'Other editor',
+      initials: 'OE',
+      accentColor: '#3355cc',
+    });
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const foreignDraft = cloneJson(store.readCurrentState());
+    foreignDraft.blocksByPath['/services/loans'][0].settings.line1Text = 'Keep this draft unpublished';
+    store.syncBlockDraft('/services/loans', 'hero', foreignDraft.blocksByPath['/services/loans'][0], {
+      actor: otherActor,
+    });
+
+    const nextState = cloneJson(store.readCurrentState());
+    nextState.blocksByPath['/services/loans'] = nextState.blocksByPath['/services/loans']
+      .filter((block) => block.id !== 'cta_form');
+    store.saveRouteDraft('/services/loans', {
+      pageHierarchy: { '/services/loans': nextState.pageHierarchy['/services/loans'] },
+      blocksByPath: { '/services/loans': nextState.blocksByPath['/services/loans'] },
+      collaborationByPath: { '/services/loans': nextState.collaborationByPath['/services/loans'] },
+      pathAliases: nextState.pathAliases,
+    }, { actor, summary: 'remove CTA from live page' });
+
+    const published = store.publishPage('/services/loans', { actor, summary: 'publish CTA removal' });
+
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.status).toBe('partially-published');
+    expect(published.publishResult.publishedBlockIdsByPath['/services/loans']).toEqual(['cta_form']);
+    expect(published.publishResult.blockedBlockIdsByPath['/services/loans']).toEqual(['hero']);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'].some((block) => block.id === 'cta_form')).toBe(false);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+    expect(published.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Keep this draft unpublished');
+  });
+
+  it('publishes a deleted hero while preserving foreign drafts on the remaining page blocks', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    const foreignActor = createActor({
+      userId: 'dev-other',
+      displayName: 'Other editor',
+      initials: 'OE',
+      accentColor: '#3355cc',
+    });
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const foreignDraft = cloneJson(store.readCurrentState());
+    foreignDraft.blocksByPath['/services/loans'][1].settings.title = 'Keep this CTA draft unpublished';
+    store.syncBlockDraft('/services/loans', 'cta_form', foreignDraft.blocksByPath['/services/loans'][1], {
+      actor: foreignActor,
+    });
+
+    const nextState = cloneJson(store.readCurrentState());
+    nextState.blocksByPath['/services/loans'] = nextState.blocksByPath['/services/loans']
+      .filter((block) => block.id !== 'hero');
+    store.saveRouteDraft('/services/loans', {
+      pageHierarchy: { '/services/loans': nextState.pageHierarchy['/services/loans'] },
+      blocksByPath: { '/services/loans': nextState.blocksByPath['/services/loans'] },
+      collaborationByPath: { '/services/loans': nextState.collaborationByPath['/services/loans'] },
+      pathAliases: nextState.pathAliases,
+    }, { actor, summary: 'remove extra hero from live page' });
+
+    const published = store.publishPage('/services/loans', { actor, summary: 'publish extra hero removal' });
+
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.status).toBe('partially-published');
+    expect(published.publishResult.publishedBlockIdsByPath['/services/loans']).toEqual(['hero']);
+    expect(published.publishResult.blockedBlockIdsByPath['/services/loans']).toEqual(['cta_form']);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'].some((block) => block.id === 'hero')).toBe(false);
+    expect(published.state.blocksByPath['/services/loans'][0].settings.title).toBe('Keep this CTA draft unpublished');
+    expect(published.state.collaborationByPath['/services/loans'].blocks.cta_form.draftedBy).toEqual(foreignActor);
+  });
+
+  it('does not resurrect a shared-draft deletion when a stale browser saves the old page list', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    const staleActor = createActor({
+      userId: 'dev-stale-browser',
+      displayName: 'Stale browser',
+      initials: 'SB',
+      accentColor: '#3355cc',
+    });
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const deletionDraft = cloneJson(store.readCurrentState());
+    deletionDraft.blocksByPath['/services/loans'] = deletionDraft.blocksByPath['/services/loans']
+      .filter((block) => block.id !== 'hero');
+    store.saveRouteDraft('/services/loans', {
+      pageHierarchy: { '/services/loans': deletionDraft.pageHierarchy['/services/loans'] },
+      blocksByPath: { '/services/loans': deletionDraft.blocksByPath['/services/loans'] },
+      collaborationByPath: { '/services/loans': deletionDraft.collaborationByPath['/services/loans'] },
+      pathAliases: deletionDraft.pathAliases,
+    }, { actor, summary: 'delete hero in shared draft' });
+
+    const stalePage = buildSeedState();
+    stalePage.blocksByPath['/services/loans'][1].settings.title = 'Stale CTA draft';
+    const staleSave = store.saveRouteDraft('/services/loans', {
+      pageHierarchy: { '/services/loans': stalePage.pageHierarchy['/services/loans'] },
+      blocksByPath: { '/services/loans': stalePage.blocksByPath['/services/loans'] },
+      collaborationByPath: { '/services/loans': stalePage.collaborationByPath['/services/loans'] },
+      pathAliases: stalePage.pathAliases,
+    }, { actor: staleActor, summary: 'stale browser flush before publish' });
+
+    expect(staleSave.ok).toBe(true);
+    expect(store.readCurrentState().blocksByPath['/services/loans'].some((block) => block.id === 'hero')).toBe(false);
+    expect(store.readCurrentState().blocksByPath['/services/loans'][0].settings.title).toBe('Stale CTA draft');
+
+    const published = store.publishPage('/services/loans', { actor, summary: 'publish deletion after stale flush' });
+
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.status).toBe('partially-published');
+    expect(published.baseSnapshot.blocksByPath['/services/loans'].some((block) => block.id === 'hero')).toBe(false);
+    expect(published.state.blocksByPath['/services/loans'][0].settings.title).toBe('Stale CTA draft');
+  });
+
+  it('persists scoped publish operation receipts for idempotent timeout verification', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const nextState = buildSeedState();
+    nextState.blocksByPath['/services/loans'][0].settings.line1Text = 'Receipt-backed live title';
+    store.saveDraft(nextState, { actor, summary: 'receipt setup' });
+
+    const published = store.publishPage('/services/loans', {
+      actor,
+      operationId: 'page-operation-10',
+      expectedDraftRevision: store.getRouteSnapshot('/services/loans').draftRevision,
+    });
+
+    expect(published.ok).toBe(true);
+    expect(published.operationId).toBe('page-operation-10');
+    expect(published.publishedRevision).toMatch(/^[a-f0-9]{12}$/);
+    expect(store.getPublishStatus('page-operation-10')).toMatchObject({
+      committed: true,
+      operationId: 'page-operation-10',
+      pathname: '/services/loans',
+      scope: 'page',
+      publishedRoute: {
+        blocksByPath: {
+          '/services/loans': expect.arrayContaining([
+            expect.objectContaining({
+              settings: expect.objectContaining({ line1Text: 'Receipt-backed live title' }),
+            }),
+          ]),
+        },
+      },
+    });
+
+    const reloadedStore = createStore(persistenceFile);
+    expect(reloadedStore.getPublishStatus('page-operation-10')).toMatchObject({
+      committed: true,
+      operationId: 'page-operation-10',
+    });
+    expect(reloadedStore.publishPage('/services/loans', {
+      actor,
+      operationId: 'page-operation-10',
+    }).operationId).toBe('page-operation-10');
+  });
+
+  it('rejects a publish request when a newer draft revision exists', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const firstDraft = buildSeedState();
+    firstDraft.blocksByPath['/services/loans'][0].settings.line1Text = 'Draft revision ten';
+    store.saveDraft(firstDraft, { actor, summary: 'draft ten' });
+    const firstRevision = store.getRouteSnapshot('/services/loans').draftRevision;
+
+    const newerDraft = buildSeedState();
+    newerDraft.blocksByPath['/services/loans'][0].settings.line1Text = 'Draft revision eleven';
+    store.saveDraft(newerDraft, { actor, summary: 'draft eleven' });
+
+    const result = store.publishPage('/services/loans', {
+      actor,
+      operationId: 'stale-page-operation',
+      expectedDraftRevision: firstRevision,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe('page-publish-stale-draft');
+    expect(store.readPublishedSnapshot().blocksByPath['/services/loans'][0].settings.line1Text)
+      .toBe('Original title');
+    expect(store.readCurrentState().blocksByPath['/services/loans'][0].settings.line1Text)
+      .toBe('Draft revision eleven');
+  });
+
+  it('partially publishes eligible page blocks while preserving a changed foreign draft', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    const foreignActor = createActor({
+      userId: 'dev-other',
+      displayName: 'Morgan Laptop',
+      initials: 'ML',
+      accentColor: '#3355cc',
+    });
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const foreignDraft = cloneJson(store.readCurrentState());
+    foreignDraft.blocksByPath['/services/loans'][0].settings.line1Text = 'Foreign draft remains';
+    store.syncBlockDraft('/services/loans', 'hero', foreignDraft.blocksByPath['/services/loans'][0], { actor: foreignActor });
+
+    const nextState = cloneJson(store.readCurrentState());
+    nextState.blocksByPath['/services/loans'][1].settings.title = 'Eligible CTA publish';
+    store.saveDraft(nextState, { actor, summary: 'save eligible block' });
+
+    const published = store.publishPage('/services/loans', { actor, summary: 'publish eligible blocks' });
+
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.status).toBe('partially-published');
+    expect(published.publishResult.publishedBlockIdsByPath['/services/loans']).toEqual(['cta_form']);
+    expect(published.publishResult.blockedBlockIdsByPath['/services/loans']).toEqual(['hero']);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][1].settings.title).toBe('Eligible CTA publish');
+    expect(published.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Foreign draft remains');
+    expect(published.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toEqual(foreignActor);
+
+    const claimed = store.acquireBlockLock('/services/loans', 'hero', actor, { force: true });
+    expect(claimed.ok).toBe(true);
+    expect(claimed.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toEqual(actor);
+
+    const publishedAfterTakeover = store.publishPage('/services/loans', {
+      actor,
+      summary: 'publish hero after takeover',
+    });
+
+    expect(publishedAfterTakeover.ok).toBe(true);
+    expect(publishedAfterTakeover.publishResult.status).toBe('published');
+    expect(publishedAfterTakeover.publishResult.publishedBlockIdsByPath['/services/loans']).toEqual(['hero']);
+    expect(publishedAfterTakeover.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text)
+      .toBe('Foreign draft remains');
+    expect(publishedAfterTakeover.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
   });
 
   it('re-normalizes malformed preset-family template ids during shared draft saves', () => {
@@ -2031,7 +2504,7 @@ describe('createDevContentAuthorityStore', () => {
     expect(backups[1].reason).toBe('before-reset-from-seed');
   });
 
-  it('restores backup records without forcing the current seed block inventory', () => {
+  it('restores backup records without forcing the current seed inventory or retired static blocks', () => {
     const persistenceFile = makeTempFile();
     const backupDir = path.join(path.dirname(persistenceFile), 'backups');
     const store = createStore(persistenceFile, { backupDir });
@@ -2144,19 +2617,17 @@ describe('createDevContentAuthorityStore', () => {
     expect(restored.ok).toBe(true);
     expect(restoredBlocks.map((block) => `${block.id}:${block.kind}:${block.mode}`)).toEqual([
       'cta_form:cta_form:dynamic',
-      'old_static_section:content:static',
     ]);
     expect(restoredBlocks.some((block) => block.id === 'hero')).toBe(false);
     expect(restoredCta.settings.title).toBe('Backup CTA');
     expect(restoredCta.settings.targetSectionClassName).toBeUndefined();
-    expect(restored.state.blocksByPath['/old-route']).toEqual(oldBackupState.blocksByPath['/old-route']);
+    expect(restored.state.blocksByPath['/old-route']).toEqual([]);
     expect(restored.state.pageHierarchy['/old-route']).toEqual(oldBackupState.pageHierarchy['/old-route']);
     expect(restored.state.pathAliases['/old-loans']).toBe(pathname);
-    expect(restored.state.collaborationByPath[pathname].blocks.old_static_section).toBeTruthy();
-    expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual(['old_static_section']);
+    expect(restored.state.collaborationByPath[pathname].blocks.old_static_section).toBeUndefined();
+    expect(restored.state.collaborationByPath[pathname].history.map((entry) => entry.blockId)).toEqual([]);
     expect(restoredRevisionBlocks.map((block) => `${block.id}:${block.kind}:${block.mode}`)).toEqual([
       'cta_form:cta_form:dynamic',
-      'old_static_section:content:static',
     ]);
   });
 
@@ -2223,6 +2694,33 @@ describe('createDevContentAuthorityStore', () => {
     expect(saved.ok).toBe(true);
     expect(saved.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Updated without deletion');
     expect(listBackupFiles(backupDir)).toHaveLength(0);
+  });
+
+  it('keeps route-scoped mutation responses compact and bounded', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const seed = buildSeedState();
+    seed.blocksByPath['/services/loans'].forEach((block) => {
+      block.editableFields = Array.from({ length: 200 }, (_, index) => ({
+        id: `field-${index}`,
+        label: `Repeated editor metadata ${index}`,
+      }));
+    });
+    store.resetFromSeed(seed, { actor: createActor() });
+
+    const nextState = cloneJson(store.getSnapshot().state);
+    nextState.blocksByPath['/services/loans'][0].settings.line1Text = 'Scoped save';
+    const saved = store.saveRouteDraft('/services/loans', nextState, {
+      actor: createActor(),
+      summary: 'scoped payload test',
+    });
+    const persisted = fs.readFileSync(persistenceFile, 'utf8');
+
+    expect(saved.ok).toBe(true);
+    expect(Object.keys(saved.state.blocksByPath)).toEqual(['/services/loans']);
+    expect(saved.state.blocksByPath['/services/loans'][0]).not.toHaveProperty('editableFields');
+    expect(persisted).not.toContain('Repeated editor metadata');
+    expect(Buffer.byteLength(JSON.stringify(saved))).toBeLessThan(40_000);
   });
 
   it('publishes changed blocks when an unrelated stale foreign draft exists on the same page', () => {

@@ -8,9 +8,13 @@ import { defaultAnnouncement, normalizeAnnouncement } from '../src/lib/announcem
 import { normalizeCalculatorIntroBlock, normalizeCalculatorWidgetBlock } from '../src/lib/calculatorWidgetIdentity.js';
 import { normalizeBlockPresentation } from '../src/lib/blockPresentationContracts.js';
 import {
+  isRetiredNonDynamicContentAdminBlock,
   normalizeContentAdminBlock,
   normalizeContentAdminState,
   normalizeContentAdminRecord,
+  compactContentAdminBlock,
+  compactContentAdminState,
+  compactContentAdminRecord,
 } from '../src/lib/contentAdminNormalization.js';
 import { normalizeSharedOperationStatus } from '../src/lib/contentAdminCollaboration.js';
 import { validateContentAdminStateSchema } from '../src/lib/contentAdminSnapshotSchema.js';
@@ -34,6 +38,7 @@ import {
 
 const DEFAULT_MAX_REVISIONS_PER_PAGE = 40;
 const DEFAULT_MAX_AUTOMATIC_BACKUPS = 100;
+const MAX_PUBLISH_OPERATION_RECEIPTS = 80;
 const LEGACY_GIVING_CHARITABLE_GIFT_ANNUITIES_PATH = '/services/planned-giving/charitable-gift-annuities';
 const LEGACY_GIVING_CHARITABLE_TRUSTS_PATH = '/services/planned-giving/charitable-trusts';
 const LEGACY_GIVING_MINISTRY_IMPACT_FUND_PATH = '/services/planned-giving/ministry-impact-fund';
@@ -210,6 +215,12 @@ function normalizeStoredRecord(rawRecord, maxRevisionsPerPage) {
           .slice(0, maxRevisionsPerPage),
       ]),
     ),
+    publishOperationsById: Object.fromEntries(
+      Object.entries(parsed?.publishOperationsById || {})
+        .map(([operationId, operation]) => [operationId, normalizePublishOperationRecord(operation)])
+        .filter(([, operation]) => operation)
+        .slice(0, MAX_PUBLISH_OPERATION_RECEIPTS),
+    ),
     ...(snapshotMigrations ? { snapshotMigrations } : {}),
   };
 }
@@ -371,11 +382,27 @@ function getForeignOwnershipMeta(meta, actor) {
   };
 }
 
-function mergePageDraftForSafeSave(pathname, currentState, incomingState, actor, { now: getNow, createId }) {
+function mergePageDraftForSafeSave(pathname, currentState, incomingState, actor, {
+  now: getNow,
+  createId,
+  baselineState = null,
+} = {}) {
   const timestamp = getNow();
+  const normalizedActor = normalizeActor(actor);
   const currentBlocks = Array.isArray(currentState?.blocksByPath?.[pathname]) ? currentState.blocksByPath[pathname] : [];
-  const incomingBlocks = Array.isArray(incomingState?.blocksByPath?.[pathname]) ? incomingState.blocksByPath[pathname] : [];
+  const rawIncomingBlocks = Array.isArray(incomingState?.blocksByPath?.[pathname]) ? incomingState.blocksByPath[pathname] : [];
   const currentById = indexBlocksById(currentBlocks);
+  const baselineBlocks = Array.isArray(baselineState?.blocksByPath?.[pathname]) ? baselineState.blocksByPath[pathname] : [];
+  const baselineById = indexBlocksById(baselineBlocks);
+  const incomingBlocks = rawIncomingBlocks.filter((block) => {
+    const blockId = String(block?.id || '').trim();
+    if (!blockId || currentById.has(blockId) || !baselineById.has(blockId)) {
+      return true;
+    }
+    // A stale browser can send a published block after another admin deleted
+    // it from the shared draft. Do not turn that stale copy into an add.
+    return !areBlocksEquivalent(block, baselineById.get(blockId));
+  });
   const incomingById = indexBlocksById(incomingBlocks);
   const currentEntry = ensureCollaborationEntry(currentState?.collaborationByPath || {}, pathname);
   const incomingEntry = ensureCollaborationEntry(incomingState?.collaborationByPath || {}, pathname);
@@ -455,7 +482,17 @@ function mergePageDraftForSafeSave(pathname, currentState, incomingState, actor,
       nextBlocksMeta[blockId] = normalizeBlockMeta(currentMeta);
       return;
     }
-    if (!areBlocksEquivalent(currentBlock, incomingBlock)) {
+    const currentMetaNormalized = normalizeBlockMeta(currentMeta || incomingEntry.blocks?.[blockId]);
+    const hasUnsavedDraftMetadata = Boolean(
+      normalizedActor
+      && currentMetaNormalized.draftedBy?.userId === normalizedActor.userId
+      && (
+        currentMetaNormalized.savedBy?.userId !== normalizedActor.userId
+        || currentMetaNormalized.savedAt !== currentMetaNormalized.draftedAt
+        || currentMetaNormalized.lockedBy?.userId === normalizedActor.userId
+      )
+    );
+    if (!areBlocksEquivalent(currentBlock, incomingBlock) || hasUnsavedDraftMetadata) {
       savedBlockIds.push(blockId);
       nextBlocksMeta[blockId] = buildSavedBlockMeta(currentMeta, actor, timestamp);
       return;
@@ -763,7 +800,9 @@ function normalizePageBlockState(_pathname, block) {
 }
 
 function normalizePageBlocksState(pathname, blocks) {
-  return (Array.isArray(blocks) ? blocks : []).map((block) => normalizePageBlockState(pathname, block));
+  return (Array.isArray(blocks) ? blocks : [])
+    .filter((block) => !isRetiredNonDynamicContentAdminBlock(block))
+    .map((block) => normalizePageBlockState(pathname, block));
 }
 
 function normalizeBlocksWithoutInventoryRepair(pathname, blocks) {
@@ -854,6 +893,8 @@ function summarizePageAuthoringDiff(currentState, baselineState, pathname) {
       changedBlockIds: [],
       changedBlockCount: 0,
       hasOrderChanges: false,
+      isDeletionOnlyOrderChange: false,
+      removedBlockIds: [],
       hasPageMetaChanges: false,
       hasChanges: false,
     };
@@ -866,9 +907,18 @@ function summarizePageAuthoringDiff(currentState, baselineState, pathname) {
   const currentBlockIds = currentBlocks.map((block) => String(block?.id || '').trim()).filter(Boolean);
   const baselineBlockIds = baselineBlocks.map((block) => String(block?.id || '').trim()).filter(Boolean);
   const orderedBlockIds = [...new Set([...currentBlockIds, ...baselineBlockIds])];
+  const currentBlockIdSet = new Set(currentBlockIds);
+  const baselineBlockIdSet = new Set(baselineBlockIds);
+  const removedBlockIds = baselineBlockIds.filter((blockId) => !currentBlockIdSet.has(blockId));
+  const addedBlockIds = currentBlockIds.filter((blockId) => !baselineBlockIdSet.has(blockId));
+  const baselineWithoutRemovedBlocks = baselineBlockIds.filter((blockId) => currentBlockIdSet.has(blockId));
   const currentBlockById = new Map(currentBlocks.map((block) => [String(block?.id || '').trim(), block]));
   const baselineBlockById = new Map(baselineBlocks.map((block) => [String(block?.id || '').trim(), block]));
   const hasOrderChanges = JSON.stringify(currentBlockIds) !== JSON.stringify(baselineBlockIds);
+  const isDeletionOnlyOrderChange = hasOrderChanges
+    && removedBlockIds.length > 0
+    && addedBlockIds.length === 0
+    && JSON.stringify(currentBlockIds) === JSON.stringify(baselineWithoutRemovedBlocks);
   const changedBlockIds = orderedBlockIds.filter((blockId) => (
     JSON.stringify(currentBlockById.get(blockId) || null) !== JSON.stringify(baselineBlockById.get(blockId) || null)
   ));
@@ -884,6 +934,8 @@ function summarizePageAuthoringDiff(currentState, baselineState, pathname) {
     changedBlockIds,
     changedBlockCount: changedBlockIds.length,
     hasOrderChanges,
+    isDeletionOnlyOrderChange,
+    removedBlockIds,
     hasPageMetaChanges,
     hasChanges: Boolean(changedBlockIds.length || hasOrderChanges || hasPageMetaChanges),
   };
@@ -937,10 +989,40 @@ function replaceBlockInPageSlice(targetState, sourceState, pathname, blockId, co
     ? nextState.blocksByPath[normalizedPath]
     : [];
   const targetIndex = targetBlocks.findIndex((block) => String(block?.id || '').trim() === normalizedBlockId);
-  if (sourceBlock && targetIndex >= 0) {
-    targetBlocks.splice(targetIndex, 1, cloneJson(sourceBlock));
-  } else if (sourceBlock) {
-    targetBlocks.push(cloneJson(sourceBlock));
+  if (sourceBlock) {
+    // A block-scoped publish must not publish the other draft blocks, but the
+    // published block must land at its draft position. This also repairs an
+    // older publish that already placed a newly inserted block at the bottom.
+    if (targetIndex >= 0) {
+      targetBlocks.splice(targetIndex, 1);
+    }
+    const sourceIndex = sourceBlocks.findIndex((block) => (
+      String(block?.id || '').trim() === normalizedBlockId
+    ));
+    let insertionIndex = targetBlocks.length;
+    for (let index = sourceIndex + 1; index < sourceBlocks.length; index += 1) {
+      const followingId = String(sourceBlocks[index]?.id || '').trim();
+      const followingIndex = targetBlocks.findIndex((block) => (
+        String(block?.id || '').trim() === followingId
+      ));
+      if (followingIndex >= 0) {
+        insertionIndex = followingIndex;
+        break;
+      }
+    }
+    if (insertionIndex === targetBlocks.length) {
+      for (let index = sourceIndex - 1; index >= 0; index -= 1) {
+        const precedingId = String(sourceBlocks[index]?.id || '').trim();
+        const precedingIndex = targetBlocks.findIndex((block) => (
+          String(block?.id || '').trim() === precedingId
+        ));
+        if (precedingIndex >= 0) {
+          insertionIndex = precedingIndex + 1;
+          break;
+        }
+      }
+    }
+    targetBlocks.splice(insertionIndex, 0, cloneJson(sourceBlock));
   } else if (targetIndex >= 0) {
     targetBlocks.splice(targetIndex, 1);
   }
@@ -1097,13 +1179,15 @@ function collectChangedPaths(prevState, nextState) {
   return [...allPaths].filter((pathname) => snapshotSignature(prevState, pathname) !== snapshotSignature(nextState, pathname));
 }
 
-function clearPublishedDraftOwnership(meta) {
+function clearPublishedDraftOwnership(meta, actor = null, timestamp = null) {
   const normalizedMeta = normalizeBlockMeta(meta);
+  const normalizedActor = normalizeActor(actor);
+  const normalizedTimestamp = Number.isFinite(Number(timestamp)) ? Number(timestamp) : null;
   return {
     draftedBy: null,
     draftedAt: null,
-    savedBy: normalizedMeta.savedBy,
-    savedAt: normalizedMeta.savedAt,
+    savedBy: normalizedActor || normalizedMeta.savedBy,
+    savedAt: normalizedActor && normalizedTimestamp ? normalizedTimestamp : normalizedMeta.savedAt,
     lockedBy: null,
     lockedAt: null,
   };
@@ -1180,6 +1264,36 @@ function normalizeRevisionRecord(rawRevision) {
   };
 }
 
+function normalizePublishOperationRecord(rawOperation) {
+  const source = rawOperation && typeof rawOperation === 'object' ? rawOperation : {};
+  const operationId = String(source.operationId || '').trim();
+  const pathname = String(source.pathname || '').trim();
+  const scope = source.scope === 'block' ? 'block' : 'page';
+  if (!operationId || !pathname) {
+    return null;
+  }
+  return {
+    operationId,
+    pathname,
+    scope,
+    blockId: String(source.blockId || '').trim(),
+    expectedDraftRevision: String(source.expectedDraftRevision || '').trim(),
+    draftRevision: String(source.draftRevision || '').trim(),
+    publishedRevision: String(source.publishedRevision || '').trim(),
+    publishedAt: Number.isFinite(Number(source.publishedAt)) ? Number(source.publishedAt) : null,
+    status: String(source.status || '').trim() || 'published',
+    publishedRoute: source.publishedRoute && typeof source.publishedRoute === 'object'
+      ? cloneJson(source.publishedRoute)
+      : null,
+    publishedBlock: Object.prototype.hasOwnProperty.call(source, 'publishedBlock')
+      ? cloneJson(source.publishedBlock)
+      : undefined,
+    publishResult: source.publishResult && typeof source.publishResult === 'object'
+      ? cloneJson(source.publishResult)
+      : null,
+  };
+}
+
 function defaultRecord() {
   return {
     initialized: false,
@@ -1190,11 +1304,12 @@ function defaultRecord() {
     state: normalizeSharedState(null),
     baseSnapshot: normalizeSharedState(null),
     revisionsByPath: {},
+    publishOperationsById: {},
   };
 }
 
 function stringifyPersistedJson(value) {
-  return `${JSON.stringify(value, null, 2)}\n`;
+  return `${JSON.stringify(value)}\n`;
 }
 
 export function createJsonContentStore({
@@ -1223,6 +1338,8 @@ export function createJsonContentStore({
   let publishedRevisionValue = '';
   let legacyRevisionsByPath = {};
   const externalRevisionStorageEnabled = Boolean(String(revisionDirectory || '').trim());
+  const dirtyExternalRevisionPaths = new Set();
+  let externalRevisionStorageNeedsFullWrite = false;
   const normalizedRetentionPolicy = normalizeContentAdminRetentionPolicy(retentionPolicy);
 
   const reportDiagnostic = (operation, startedAt, details = {}) => {
@@ -1290,6 +1407,8 @@ export function createJsonContentStore({
     if (externalRevisionStorageEnabled && fs.existsSync(revisionDirectory)) {
       fs.rmSync(revisionDirectory, { recursive: true, force: true });
     }
+    dirtyExternalRevisionPaths.clear();
+    externalRevisionStorageNeedsFullWrite = true;
   };
 
   const getRevisionsForPath = (pathname) => (
@@ -1313,14 +1432,20 @@ export function createJsonContentStore({
     const dir = path.dirname(persistenceFile);
     fs.mkdirSync(dir, { recursive: true });
     if (externalRevisionStorageEnabled) {
-      Object.entries(nextRecord.revisionsByPath || {}).forEach(([pathname, revisions]) => {
-        writeExternalRevisions(pathname, revisions);
-      });
-      const hotRecord = { ...nextRecord };
+      const revisionEntries = externalRevisionStorageNeedsFullWrite
+        ? Object.entries(nextRecord.revisionsByPath || {})
+        : [...dirtyExternalRevisionPaths].map((pathname) => [
+          pathname,
+          nextRecord.revisionsByPath?.[pathname] || [],
+        ]);
+      revisionEntries.forEach(([pathname, revisions]) => writeExternalRevisions(pathname, revisions));
+      const hotRecord = { ...compactContentAdminRecord(nextRecord) };
       delete hotRecord.revisionsByPath;
       fs.writeFileSync(persistenceFile, stringifyPersistedJson(hotRecord));
+      dirtyExternalRevisionPaths.clear();
+      externalRevisionStorageNeedsFullWrite = false;
     } else {
-      fs.writeFileSync(persistenceFile, stringifyPersistedJson(nextRecord));
+      fs.writeFileSync(persistenceFile, stringifyPersistedJson(compactContentAdminRecord(nextRecord)));
     }
     persistenceMtimeMs = readPersistenceMtimeMs();
     exposeLoadedStaleOwnership = false;
@@ -1536,7 +1661,7 @@ export function createJsonContentStore({
           : Object.keys(record?.state?.blocksByPath || {}).sort(),
         retentionClass: 'backup',
       },
-      record: cloneJson(
+      record: compactContentAdminRecord(
         externalRevisionStorageEnabled
           ? { ...record, revisionsByPath: readAllExternalRevisions() }
           : record,
@@ -1641,6 +1766,14 @@ export function createJsonContentStore({
     .digest('hex')
     .slice(0, 12);
 
+  const routeRevision = (sourceState, pathname) => createHash('sha1')
+    .update(JSON.stringify(buildRevisionSnapshot(sourceState, String(pathname || '').trim() || '/')))
+    .digest('hex')
+    .slice(0, 12);
+
+  const getDraftRevision = (pathname) => routeRevision(record.state, pathname);
+  const getPublishedRouteRevision = (pathname) => routeRevision(record.baseSnapshot, pathname);
+
   const getPublishedRevision = () => {
     if (publishedRevisionSource !== record.baseSnapshot) {
       publishedRevisionSource = record.baseSnapshot;
@@ -1649,13 +1782,19 @@ export function createJsonContentStore({
     return publishedRevisionValue;
   };
 
-  const publishAuthoritySnapshot = () => ({
+  const publishAuthoritySnapshot = (pathname = '') => ({
     persistenceFile: path.resolve(persistenceFile),
     persistenceMtimeMs,
     loadedAt,
     recordRevision: Number(record.updatedAt) || 0,
     draftRevision: Number(record.updatedAt) || 0,
     publishedRevision: getPublishedRevision(),
+    ...(String(pathname || '').trim()
+      ? {
+        draftRevision: getDraftRevision(pathname),
+        publishedRevision: getPublishedRouteRevision(pathname),
+      }
+      : {}),
   });
 
   const publishSnapshot = () => ({
@@ -1666,12 +1805,12 @@ export function createJsonContentStore({
     // Stale ownership is a derived operational marker. Hide it from clients
     // when the active block is already equal to the published block, while
     // retaining the original audit metadata in the persisted record.
-    state: cloneJson(
+    state: compactContentAdminState(
       exposeLoadedStaleOwnership
         ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
         : record.state,
     ),
-    baseSnapshot: cloneJson(record.baseSnapshot),
+    baseSnapshot: compactContentAdminState(record.baseSnapshot),
     ...(record.snapshotMigrations
       ? { snapshotMigrations: cloneJson(record.snapshotMigrations) }
       : {}),
@@ -1679,10 +1818,115 @@ export function createJsonContentStore({
     authority: publishAuthoritySnapshot(),
   });
 
+  const publishRouteSnapshot = (pathname) => {
+    const normalizedPath = String(pathname || '').trim() || '/';
+    const buildRouteState = (sourceState) => ({
+      pageHierarchy: sourceState?.pageHierarchy?.[normalizedPath]
+        ? { [normalizedPath]: cloneJson(sourceState.pageHierarchy[normalizedPath]) }
+        : {},
+      blocksByPath: Object.prototype.hasOwnProperty.call(sourceState?.blocksByPath || {}, normalizedPath)
+        ? { [normalizedPath]: (sourceState.blocksByPath[normalizedPath] || []).map(compactContentAdminBlock) }
+        : {},
+      pathAliases: cloneJson(sourceState?.pathAliases || {}),
+      collaborationByPath: sourceState?.collaborationByPath?.[normalizedPath]
+        ? { [normalizedPath]: cloneJson(sourceState.collaborationByPath[normalizedPath]) }
+        : {},
+    });
+
+    return {
+      initialized: record.initialized,
+      updatedAt: record.updatedAt,
+      announcementUpdatedAt: record.announcementUpdatedAt,
+      announcement: cloneJson(record.announcement),
+      state: buildRouteState(
+        exposeLoadedStaleOwnership
+          ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
+          : record.state,
+      ),
+      baseSnapshot: buildRouteState(record.baseSnapshot),
+      seedBaseline: getSeedBaselineInfo(),
+      authority: publishAuthoritySnapshot(normalizedPath),
+      draftRevision: getDraftRevision(normalizedPath),
+      publishedRevision: getPublishedRouteRevision(normalizedPath),
+    };
+  };
+
   const publishAnnouncementSnapshot = () => ({
     announcement: cloneJson(record.announcement),
     updatedAt: record.announcementUpdatedAt,
   });
+
+  const buildPublishOperationResponse = (operation) => {
+    const normalizedOperation = normalizePublishOperationRecord(operation);
+    if (!normalizedOperation) {
+      return { ok: false, error: 'publish-operation-not-found' };
+    }
+    return {
+      ok: true,
+      operationId: normalizedOperation.operationId,
+      pathname: normalizedOperation.pathname,
+      scope: normalizedOperation.scope,
+      blockId: normalizedOperation.blockId,
+      draftRevision: normalizedOperation.draftRevision,
+      publishedRevision: normalizedOperation.publishedRevision,
+      publishedAt: normalizedOperation.publishedAt,
+      status: 'committed',
+      committed: true,
+      publishedRoute: cloneJson(normalizedOperation.publishedRoute),
+      baseSnapshot: cloneJson(normalizedOperation.publishedRoute),
+      publishedBlock: cloneJson(normalizedOperation.publishedBlock),
+      publishResult: cloneJson(normalizedOperation.publishResult),
+    };
+  };
+
+  const findPublishOperation = (operationId) => {
+    const normalizedOperationId = String(operationId || '').trim();
+    if (!normalizedOperationId) return null;
+    return normalizePublishOperationRecord(record.publishOperationsById?.[normalizedOperationId]);
+  };
+
+  const recordPublishOperation = ({
+    operationId,
+    pathname,
+    scope,
+    blockId = '',
+    expectedDraftRevision = '',
+    publishResult,
+    publishedBlock = undefined,
+    publishedAt,
+  }) => {
+    const normalizedOperationId = String(operationId || '').trim();
+    if (!normalizedOperationId) return;
+    const normalizedPath = String(pathname || '').trim();
+    const operation = normalizePublishOperationRecord({
+      operationId: normalizedOperationId,
+      pathname: normalizedPath,
+      scope,
+      blockId,
+      expectedDraftRevision,
+      draftRevision: getDraftRevision(normalizedPath),
+      publishedRevision: getPublishedRouteRevision(normalizedPath),
+      publishedAt,
+      status: 'published',
+      publishedRoute: publishRouteSnapshot(normalizedPath).baseSnapshot,
+      publishedBlock,
+      publishResult,
+    });
+    if (!operation) return;
+    const entries = Object.entries({
+      ...(record.publishOperationsById || {}),
+      [normalizedOperationId]: operation,
+    })
+      .map(([id, value]) => [id, normalizePublishOperationRecord(value)])
+      .filter(([, value]) => value)
+      .sort(([, left], [, right]) => Number(right.publishedAt || 0) - Number(left.publishedAt || 0))
+      .slice(0, MAX_PUBLISH_OPERATION_RECEIPTS);
+    record = {
+      ...record,
+      publishOperationsById: Object.fromEntries(entries),
+    };
+    persistRecord();
+  };
 
   const addRevisionsForChangedPaths = (prevState, nextState, { actor, reason, summary = '' } = {}) => {
     const changedPaths = collectChangedPaths(prevState, nextState);
@@ -1704,10 +1948,40 @@ export function createJsonContentStore({
         ? readExternalRevisions(pathname)
         : (Array.isArray(record.revisionsByPath[pathname]) ? record.revisionsByPath[pathname] : []);
       record.revisionsByPath[pathname] = [nextRevision, ...previous].slice(0, maxRevisionsPerPage);
+      if (externalRevisionStorageEnabled) {
+        dirtyExternalRevisionPaths.add(pathname);
+      }
     });
   };
 
-  const commitState = (nextState, { actor, reason, summary = '', trackRevisions = true } = {}) => {
+  const addRevisionForChangedPath = (prevState, nextState, pathname, { actor, reason, summary = '' } = {}) => {
+    const normalizedPath = String(pathname || '').trim();
+    if (!normalizedPath || snapshotSignature(prevState, normalizedPath) === snapshotSignature(nextState, normalizedPath)) {
+      return;
+    }
+    const normalizedActor = normalizeActor(actor);
+    const nextRevision = {
+      id: createId(now()),
+      pathname: normalizedPath,
+      createdAt: now(),
+      actor: normalizedActor,
+      reason: String(reason || '').trim() || 'draft-saved',
+      summary: String(summary || '').trim(),
+      snapshot: buildRevisionSnapshot(nextState, normalizedPath),
+    };
+    const previous = externalRevisionStorageEnabled
+      ? readExternalRevisions(normalizedPath)
+      : (Array.isArray(record.revisionsByPath[normalizedPath]) ? record.revisionsByPath[normalizedPath] : []);
+    record.revisionsByPath[normalizedPath] = [nextRevision, ...previous].slice(0, maxRevisionsPerPage);
+    if (externalRevisionStorageEnabled) {
+      dirtyExternalRevisionPaths.add(normalizedPath);
+    }
+  };
+
+  const commitState = (
+    nextState,
+    { actor, reason, summary = '', trackRevisions = true, responsePathname = '' } = {},
+  ) => {
     const normalizedNextState = normalizeSharedState(nextState);
     const previousState = record.state;
     if (trackRevisions) {
@@ -1720,7 +1994,7 @@ export function createJsonContentStore({
       state: normalizedNextState,
     };
     persistRecord();
-    return publishSnapshot();
+    return responsePathname ? publishRouteSnapshot(responsePathname) : publishSnapshot();
   };
 
   const replacePageStateFromRevision = (pathname, revision) => {
@@ -1774,14 +2048,51 @@ export function createJsonContentStore({
       return publishSnapshot();
     },
 
+    getRouteSnapshot(pathname) {
+      reloadIfPersistenceChanged();
+      return publishRouteSnapshot(pathname);
+    },
+
+    getPublishedRouteSnapshot(pathname) {
+      reloadIfPersistenceChanged();
+      const normalizedPath = String(pathname || '').trim() || '/';
+      const publishedRoute = publishRouteSnapshot(normalizedPath);
+      const publicRouteState = {
+        ...publishedRoute.baseSnapshot,
+        collaborationByPath: {},
+      };
+      return {
+        initialized: publishedRoute.initialized,
+        updatedAt: publishedRoute.updatedAt,
+        state: publicRouteState,
+        baseSnapshot: publicRouteState,
+      };
+    },
+
     getAuthoritySnapshot() {
       reloadIfPersistenceChanged();
       return publishAuthoritySnapshot();
     },
 
+    getPublishStatus(operationId) {
+      reloadIfPersistenceChanged();
+      const operation = findPublishOperation(operationId);
+      if (!operation) {
+        return {
+          ok: true,
+          operationId: String(operationId || '').trim(),
+          status: 'not-committed',
+          committed: false,
+        };
+      }
+      return buildPublishOperationResponse(operation);
+    },
+
     refreshFromDisk() {
       reloadIfPersistenceChanged();
-      return publishSnapshot();
+      // Refresh is used as a request boundary. Do not clone and serialize the
+      // multi-megabyte admin snapshot when the caller only needs fresh state.
+      return null;
     },
 
     getAnnouncementSnapshot() {
@@ -1830,7 +2141,7 @@ export function createJsonContentStore({
           ok: false,
           error: 'backup-failed',
           details: error instanceof Error ? error.message : 'backup-failed',
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
         };
       }
       const next = publishSnapshot();
@@ -1846,7 +2157,12 @@ export function createJsonContentStore({
       };
     },
 
-    saveDraft(nextState, { actor, reason = 'draft-saved', summary = '' } = {}) {
+    saveDraft(nextState, {
+      actor,
+      reason = 'draft-saved',
+      summary = '',
+      responsePathname = '',
+    } = {}) {
       const normalizedIncomingState = normalizeSharedState(nextState);
       const currentState = exposeLoadedStaleOwnership
         ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
@@ -1877,6 +2193,7 @@ export function createJsonContentStore({
         const merged = mergePageDraftForSafeSave(pathname, currentState, normalizedIncomingState, actor, {
           now,
           createId,
+          baselineState: record.baseSnapshot,
         });
         nextMergedState.blocksByPath[pathname] = merged.blocks;
         nextMergedState.collaborationByPath[pathname] = merged.collaborationEntry;
@@ -1918,12 +2235,121 @@ export function createJsonContentStore({
         }
       }
 
-      const snapshot = commitState(nextMergedState, { actor, reason, summary });
+      const snapshot = commitState(nextMergedState, {
+        actor,
+        reason,
+        summary,
+        responsePathname,
+      });
       return {
         ok: true,
         ...snapshot,
         saveResult,
       };
+    },
+
+    saveRouteDraft(pathname, routeState, options = {}) {
+      const normalizedPath = String(pathname || '').trim();
+      if (!normalizedPath) {
+        return { ok: false, error: 'invalid-route-draft-request', ...publishSnapshot() };
+      }
+      const {
+        actor,
+        reason = 'draft-saved',
+        summary = '',
+      } = options || {};
+      const incomingState = normalizeSharedState(routeState);
+      const currentState = exposeLoadedStaleOwnership
+        ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
+        : normalizeSharedState(record.state);
+      const nextState = normalizeSharedState(currentState);
+      if (incomingState.pageHierarchy?.[normalizedPath]) {
+        nextState.pageHierarchy[normalizedPath] = cloneJson(incomingState.pageHierarchy[normalizedPath]);
+      }
+      nextState.pathAliases = {
+        ...(nextState.pathAliases || {}),
+        ...(incomingState.pathAliases || {}),
+      };
+      if (Object.prototype.hasOwnProperty.call(incomingState.blocksByPath || {}, normalizedPath)) {
+        const merged = mergePageDraftForSafeSave(normalizedPath, currentState, incomingState, actor, {
+          now,
+          createId,
+          baselineState: record.baseSnapshot,
+        });
+        nextState.blocksByPath[normalizedPath] = merged.blocks;
+        nextState.collaborationByPath[normalizedPath] = merged.collaborationEntry;
+        const routeChanged = snapshotSignature(currentState, normalizedPath) !== snapshotSignature(nextState, normalizedPath);
+        const saveResult = {
+          didSave: routeChanged,
+          hasConflicts: merged.blockedBlocks.length > 0,
+          changedPaths: routeChanged ? [normalizedPath] : [],
+          savedPaths: routeChanged ? [normalizedPath] : [],
+          savedBlockIdsByPath: merged.savedBlockIds.length
+            ? { [normalizedPath]: merged.savedBlockIds }
+            : {},
+          blockedBlockIdsByPath: merged.blockedBlockIds.length
+            ? { [normalizedPath]: merged.blockedBlockIds }
+            : {},
+          blockedBlocks: merged.blockedBlocks,
+        };
+        saveResult.status = normalizeSharedOperationStatus(saveResult.status, {
+          kind: 'save',
+          didChange: saveResult.didSave,
+          hasConflicts: saveResult.hasConflicts,
+          hasError: false,
+        });
+        const currentBlockIds = new Set(
+          (Array.isArray(currentState.blocksByPath?.[normalizedPath]) ? currentState.blocksByPath[normalizedPath] : [])
+            .map((block) => String(block?.id || '').trim())
+            .filter(Boolean),
+        );
+        const nextBlockIds = new Set(
+          (Array.isArray(nextState.blocksByPath?.[normalizedPath]) ? nextState.blocksByPath[normalizedPath] : [])
+            .map((block) => String(block?.id || '').trim())
+            .filter(Boolean),
+        );
+        const removedBlockIds = [...currentBlockIds].filter((blockId) => !nextBlockIds.has(blockId));
+        if (removedBlockIds.length && routeChanged) {
+          try {
+            createSharedContentBackup('before-destructive-draft-save', {
+              removedPagePaths: [],
+              removedBlocksByPath: { [normalizedPath]: removedBlockIds },
+              changedPaths: [normalizedPath],
+              summary: String(summary || '').trim(),
+            });
+          } catch (error) {
+            return {
+              ok: false,
+              error: 'backup-failed',
+              details: error instanceof Error ? error.message : 'backup-failed',
+              ...publishRouteSnapshot(normalizedPath),
+            };
+          }
+        }
+        if (routeChanged) {
+          addRevisionForChangedPath(currentState, nextState, normalizedPath, { actor, reason, summary });
+        }
+        record = {
+          ...record,
+          initialized: true,
+          updatedAt: now(),
+          state: normalizeSharedState(nextState),
+        };
+        persistRecord();
+        return {
+          ok: true,
+          ...publishRouteSnapshot(normalizedPath),
+          saveResult,
+        };
+      }
+      nextState.pathAliases = {
+        ...(nextState.pathAliases || {}),
+        ...(incomingState.pathAliases || {}),
+      };
+      return this.saveDraft(nextState, {
+        ...options,
+        responsePathname: normalizedPath,
+      });
     },
 
     savePageDraft(nextState, options = {}) {
@@ -1934,7 +2360,7 @@ export function createJsonContentStore({
       const normalizedPath = String(pathname || '').trim();
       const normalizedActor = normalizeActor(actor);
       if (!normalizedPath || !normalizedActor) {
-        return { ok: false, error: 'invalid-discard-request', ...publishSnapshot() };
+        return { ok: false, error: 'invalid-discard-request', ...publishRouteSnapshot(normalizedPath) };
       }
 
       const currentState = exposeLoadedStaleOwnership
@@ -1945,7 +2371,7 @@ export function createJsonContentStore({
       if (!discardSummary.hasChanges) {
         return {
           ok: true,
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
           discardResult: {
             status: 'no-op',
             didDiscard: false,
@@ -1984,7 +2410,7 @@ export function createJsonContentStore({
         return {
           ok: false,
           error: 'discard-blocked-by-other-draft',
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
           discardResult: {
             status: 'blocked',
             didDiscard: false,
@@ -2034,7 +2460,7 @@ export function createJsonContentStore({
           ok: false,
           error: 'backup-failed',
           details: error instanceof Error ? error.message : 'backup-failed',
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
         };
       }
 
@@ -2042,6 +2468,7 @@ export function createJsonContentStore({
         actor: normalizedActor,
         reason: 'draft-discarded',
         summary: String(summary || '').trim() || normalizedPath,
+        responsePathname: normalizedPath,
       });
       return {
         ok: true,
@@ -2061,7 +2488,7 @@ export function createJsonContentStore({
       const normalizedBlockId = String(blockId || '').trim();
       const normalizedActor = normalizeActor(actor);
       if (!normalizedPath || !normalizedBlockId || !normalizedActor) {
-        return { ok: false, error: 'invalid-discard-block-request', ...publishSnapshot() };
+        return { ok: false, error: 'invalid-discard-block-request', ...publishRouteSnapshot(normalizedPath) };
       }
 
       const currentState = exposeLoadedStaleOwnership
@@ -2080,12 +2507,12 @@ export function createJsonContentStore({
       const baselineBlock = baselineIndex >= 0 ? baselineBlocks[baselineIndex] : null;
 
       if (!currentBlock && !baselineBlock) {
-        return { ok: false, error: 'block-not-found', ...publishSnapshot() };
+        return { ok: false, error: 'block-not-found', ...publishRouteSnapshot(normalizedPath) };
       }
       if (JSON.stringify(currentBlock) === JSON.stringify(baselineBlock)) {
         return {
           ok: true,
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
           discardResult: {
             status: 'no-op',
             didDiscard: false,
@@ -2103,7 +2530,7 @@ export function createJsonContentStore({
           ok: false,
           error: 'discard-blocked-by-other-draft',
           blockedBlocks: [{ pathname: normalizedPath, blockId: normalizedBlockId, ...conflict }],
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
         };
       }
 
@@ -2147,7 +2574,7 @@ export function createJsonContentStore({
           ok: false,
           error: 'backup-failed',
           details: error instanceof Error ? error.message : 'backup-failed',
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
         };
       }
 
@@ -2155,6 +2582,7 @@ export function createJsonContentStore({
         actor: normalizedActor,
         reason: 'block-draft-discarded',
         summary: String(summary || '').trim() || `${normalizedPath}#${normalizedBlockId}`,
+        responsePathname: normalizedPath,
       });
       return {
         ok: true,
@@ -2171,23 +2599,28 @@ export function createJsonContentStore({
       };
     },
 
-    syncBlockDraft(pathname, blockId, nextBlock, { actor, reason = 'block-draft-synced' } = {}) {
+    syncBlockDraft(pathname, blockId, nextBlock, {
+      actor,
+      reason = 'block-draft-synced',
+      summary = '',
+      markSaved = false,
+    } = {}) {
       const normalizedPath = String(pathname || '').trim();
       const normalizedBlockId = String(blockId || '').trim();
       const normalizedActor = normalizeActor(actor);
       const normalizedIncomingBlockId = String(nextBlock?.id || normalizedBlockId).trim();
       if (!normalizedPath || !normalizedBlockId || !normalizedActor || !normalizedIncomingBlockId) {
-        return { ok: false, error: 'invalid-block-sync-request', ...publishSnapshot() };
+        return { ok: false, error: 'invalid-block-sync-request', ...publishRouteSnapshot(normalizedPath) };
       }
       if (normalizedIncomingBlockId !== normalizedBlockId) {
-        return { ok: false, error: 'block-id-mismatch', ...publishSnapshot() };
+        return { ok: false, error: 'block-id-mismatch', ...publishRouteSnapshot(normalizedPath) };
       }
 
       const nextState = normalizeSharedState(record.state);
       const currentBlocks = Array.isArray(nextState.blocksByPath[normalizedPath]) ? nextState.blocksByPath[normalizedPath] : [];
       const blockIndex = currentBlocks.findIndex((entry) => String(entry?.id || '').trim() === normalizedBlockId);
       if (blockIndex === -1) {
-        return { ok: false, error: 'block-not-found', ...publishSnapshot() };
+        return { ok: false, error: 'block-not-found', ...publishRouteSnapshot(normalizedPath) };
       }
 
       const currentCollaboration = normalizeCollaborationByPath(nextState.collaborationByPath);
@@ -2200,7 +2633,7 @@ export function createJsonContentStore({
           error: conflict.reason,
           owner: conflict.owner,
           state: conflict.state,
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
         };
       }
 
@@ -2211,50 +2644,95 @@ export function createJsonContentStore({
         id: normalizedBlockId,
       }));
       nextState.blocksByPath[normalizedPath] = updatedBlocks;
+      const nextBlockMeta = markSaved
+        ? buildSavedBlockMeta(currentMeta, normalizedActor, timestamp)
+        : buildSyncedDraftBlockMeta(currentMeta, normalizedActor, timestamp);
+      const nextHistoryEntry = buildHistoryEntry({
+        action: markSaved ? 'block-draft-saved' : 'block-draft-synced',
+        blockId: normalizedBlockId,
+        actor: normalizedActor,
+        details: markSaved ? String(summary || '').trim() : 'shared-draft-content',
+        now: timestamp,
+        createId,
+      });
       nextState.collaborationByPath = {
         ...currentCollaboration,
         [normalizedPath]: {
           ...entry,
           blocks: {
             ...(entry.blocks || {}),
-            [normalizedBlockId]: buildSyncedDraftBlockMeta(currentMeta, normalizedActor, timestamp),
+            [normalizedBlockId]: nextBlockMeta,
           },
-          history: appendHistoryEntry(entry.history, buildHistoryEntry({
-            action: 'block-draft-synced',
-            blockId: normalizedBlockId,
-            actor: normalizedActor,
-            details: 'shared-draft-content',
-            now: timestamp,
-            createId,
-          })),
+          history: appendHistoryEntry(entry.history, nextHistoryEntry),
         },
       };
 
+      const snapshot = commitState(nextState, {
+        actor: normalizedActor,
+        reason,
+        summary: String(summary || '').trim(),
+        trackRevisions: Boolean(markSaved),
+        responsePathname: normalizedPath,
+      });
       return {
         ok: true,
-        ...commitState(nextState, {
-          actor: normalizedActor,
-          reason,
-          summary: `${normalizedPath}:${normalizedBlockId}`,
-          trackRevisions: false,
-        }),
+        ...snapshot,
+        ...(markSaved ? {
+          saveResult: {
+            didSave: !areBlocksEquivalent(currentBlocks[blockIndex], nextBlock)
+              || currentMeta.savedBy?.userId !== normalizedActor.userId
+              || currentMeta.savedAt !== timestamp,
+            hasConflicts: false,
+            status: 'saved',
+            changedPaths: [normalizedPath],
+            savedPaths: [normalizedPath],
+            savedBlockIdsByPath: { [normalizedPath]: [normalizedBlockId] },
+            blockedBlockIdsByPath: {},
+            blockedBlocks: [],
+            updatedAt: snapshot.updatedAt,
+          },
+        } : {}),
       };
     },
 
     saveBlockDraft(pathname, blockId, nextBlock, options = {}) {
-      return this.syncBlockDraft(pathname, blockId, nextBlock, options);
+      return this.syncBlockDraft(pathname, blockId, nextBlock, {
+        ...options,
+        markSaved: true,
+        reason: options?.reason || 'block-draft-saved',
+      });
     },
 
-    publishPage(pathname, { actor, summary = '' } = {}) {
+    publishPage(pathname, {
+      actor,
+      summary = '',
+      operationId = '',
+      expectedDraftRevision = '',
+    } = {}) {
       const normalizedPath = String(pathname || '').trim();
       const normalizedActor = normalizeActor(actor);
       if (!normalizedPath || !normalizedActor) {
-        return { ok: false, error: 'invalid-publish-request', ...publishSnapshot() };
+        return { ok: false, error: 'invalid-publish-request', ...publishRouteSnapshot(normalizedPath) };
+      }
+
+      const existingOperation = findPublishOperation(operationId);
+      if (existingOperation) {
+        if (existingOperation.pathname !== normalizedPath || existingOperation.scope !== 'page') {
+          return { ok: false, error: 'publish-operation-mismatch', ...publishRouteSnapshot(normalizedPath) };
+        }
+        return buildPublishOperationResponse(existingOperation);
       }
 
       const currentState = exposeLoadedStaleOwnership
         ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
         : normalizeSharedState(record.state);
+      if (expectedDraftRevision && expectedDraftRevision !== routeRevision(currentState, normalizedPath)) {
+        return {
+          ok: false,
+          error: 'page-publish-stale-draft',
+          ...publishRouteSnapshot(normalizedPath),
+        };
+      }
       const currentEntry = ensureCollaborationEntry(currentState.collaborationByPath || {}, normalizedPath);
       const currentBlocks = Array.isArray(currentState.blocksByPath?.[normalizedPath])
         ? currentState.blocksByPath[normalizedPath]
@@ -2270,7 +2748,7 @@ export function createJsonContentStore({
         return {
           ok: false,
           error: 'already-live',
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
           publishResult: {
             status: 'already-live',
             didPublish: false,
@@ -2305,11 +2783,20 @@ export function createJsonContentStore({
         });
       });
 
-      if (blockedBlocks.length) {
+      const blockedBlockIds = new Set(blockedBlocks.map((entry) => entry.blockId));
+      const canPartiallyPublish = Boolean(
+        blockedBlocks.length
+        && (!publishSummary.hasOrderChanges || publishSummary.isDeletionOnlyOrderChange)
+        && !publishSummary.hasPageMetaChanges,
+      );
+      const publishableBlockIds = publishSummary.changedBlockIds
+        .filter((blockId) => !blockedBlockIds.has(blockId));
+
+      if (blockedBlocks.length && (!canPartiallyPublish || !publishableBlockIds.length)) {
         return {
           ok: false,
           error: 'publish-blocked-by-other-draft',
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
           publishResult: {
             status: 'blocked',
             didPublish: false,
@@ -2339,14 +2826,24 @@ export function createJsonContentStore({
         if (!blockId) {
           return;
         }
-        nextBlocksMeta[blockId] = clearPublishedDraftOwnership(currentEntry.blocks?.[blockId]);
+        nextBlocksMeta[blockId] = blockedBlockIds.has(blockId)
+          ? normalizeBlockMeta(currentEntry.blocks?.[blockId])
+          : publishSummary.changedBlockIds.includes(blockId)
+          ? clearPublishedDraftOwnership(currentEntry.blocks?.[blockId], normalizedActor, timestamp)
+          : clearPublishedDraftOwnership(currentEntry.blocks?.[blockId]);
+      });
+      Object.entries(currentEntry.blocks || {}).forEach(([blockId, rawMeta]) => {
+        if (!blockedBlockIds.has(blockId) || Object.prototype.hasOwnProperty.call(nextBlocksMeta, blockId)) {
+          return;
+        }
+        nextBlocksMeta[blockId] = normalizeBlockMeta(rawMeta);
       });
 
       const nextCollaborationEntry = {
         ...currentEntry,
         blocks: nextBlocksMeta,
         history: appendHistoryEntry(currentEntry.history, buildHistoryEntry({
-          action: 'page-published',
+          action: blockedBlocks.length ? 'page-partially-published' : 'page-published',
           actor: normalizedActor,
           details: String(summary || '').trim(),
           now: timestamp,
@@ -2354,7 +2851,31 @@ export function createJsonContentStore({
         })),
       };
       const nextState = replacePageSlice(currentState, currentState, normalizedPath, nextCollaborationEntry);
-      const nextBaseSnapshot = replacePageSlice(record.baseSnapshot, nextState, normalizedPath, nextCollaborationEntry);
+      let nextPublishedBlocks = blockedBlocks.length
+        ? cloneJson(record.baseSnapshot.blocksByPath?.[normalizedPath] || [])
+        : cloneJson(currentBlocks);
+      if (blockedBlocks.length) {
+        const currentBlockById = new Map(currentBlocks.map((block) => [String(block?.id || '').trim(), block]));
+        nextPublishedBlocks = nextPublishedBlocks.filter((block) => (
+          !publishableBlockIds.includes(String(block?.id || '').trim())
+          || currentBlockById.has(String(block?.id || '').trim())
+        ));
+        publishableBlockIds.forEach((blockId) => {
+          const currentBlock = currentBlockById.get(blockId);
+          if (!currentBlock) {
+            return;
+          }
+          const existingIndex = nextPublishedBlocks.findIndex((block) => String(block?.id || '').trim() === blockId);
+          if (existingIndex >= 0) {
+            nextPublishedBlocks.splice(existingIndex, 1, cloneJson(currentBlock));
+          } else {
+            nextPublishedBlocks.push(cloneJson(currentBlock));
+          }
+        });
+      }
+      const nextPublishedState = normalizeSharedState(record.baseSnapshot);
+      nextPublishedState.blocksByPath[normalizedPath] = nextPublishedBlocks;
+      const nextBaseSnapshot = replacePageSlice(record.baseSnapshot, nextPublishedState, normalizedPath, nextCollaborationEntry);
       record = {
         ...record,
         initialized: true,
@@ -2363,61 +2884,194 @@ export function createJsonContentStore({
         baseSnapshot: nextBaseSnapshot,
       };
       persistRecord();
-      return {
-        ok: true,
-        ...publishSnapshot(),
-        publishResult: {
-          receipt: {
-            route: normalizedPath,
-            scope: 'page',
-            actor: normalizedActor,
-            publishedBlockIds: publishSummary.changedBlockIds,
-          },
-          status: 'published',
-          didPublish: true,
-          hasConflicts: false,
-          changedPaths: [normalizedPath],
-          publishedPaths: [normalizedPath],
-          publishedBlockIdsByPath: {
-            [normalizedPath]: publishSummary.changedBlockIds,
-          },
-          blockedBlockIdsByPath: {},
-          blockedBlocks: [],
-          hasOrderChangesByPath: {
-            [normalizedPath]: publishSummary.hasOrderChanges,
-          },
-          hasPageMetaChangesByPath: {
-            [normalizedPath]: publishSummary.hasPageMetaChanges,
-          },
-          updatedAt: timestamp,
+      const publishResult = {
+        receipt: {
+          route: normalizedPath,
+          scope: 'page',
+          actor: normalizedActor,
+          publishedBlockIds: blockedBlocks.length ? publishableBlockIds : publishSummary.changedBlockIds,
         },
+        operationId: String(operationId || '').trim(),
+        pathname: normalizedPath,
+        scope: 'page',
+        status: blockedBlocks.length ? 'partially-published' : 'published',
+        didPublish: true,
+        hasConflicts: Boolean(blockedBlocks.length),
+        changedPaths: [normalizedPath],
+        publishedPaths: [normalizedPath],
+        publishedBlockIdsByPath: {
+          [normalizedPath]: blockedBlocks.length ? publishableBlockIds : publishSummary.changedBlockIds,
+        },
+        blockedBlockIdsByPath: blockedBlocks.length
+          ? { [normalizedPath]: blockedBlocks.map((entry) => entry.blockId) }
+          : {},
+        blockedBlocks,
+        hasOrderChangesByPath: {
+          [normalizedPath]: publishSummary.hasOrderChanges,
+        },
+        hasPageMetaChangesByPath: {
+          [normalizedPath]: publishSummary.hasPageMetaChanges,
+        },
+        updatedAt: timestamp,
       };
+      const response = {
+        ok: true,
+        ...publishRouteSnapshot(normalizedPath),
+        operationId: String(operationId || '').trim(),
+        pathname: normalizedPath,
+        scope: 'page',
+        draftRevision: getDraftRevision(normalizedPath),
+        publishedRevision: getPublishedRouteRevision(normalizedPath),
+        publishedAt: timestamp,
+        publishResult,
+      };
+      recordPublishOperation({
+        operationId,
+        pathname: normalizedPath,
+        scope: 'page',
+        expectedDraftRevision,
+        publishResult,
+        publishedAt: timestamp,
+      });
+      return response;
     },
 
-    publishBlock(pathname, blockId, { actor, summary = '', expectedBlock = null } = {}) {
+    publishBlock(pathname, blockId, {
+      actor,
+      summary = '',
+      expectedBlock = null,
+      operationId = '',
+      expectedDraftRevision = '',
+    } = {}) {
       const normalizedPath = String(pathname || '').trim();
       const normalizedBlockId = String(blockId || '').trim();
       const normalizedActor = normalizeActor(actor);
       if (!normalizedPath || !normalizedBlockId || !normalizedActor) {
-        return { ok: false, error: 'invalid-block-publish-request', ...publishSnapshot() };
+        return { ok: false, error: 'invalid-block-publish-request', ...publishRouteSnapshot(normalizedPath) };
+      }
+
+      const existingOperation = findPublishOperation(operationId);
+      if (existingOperation) {
+        if (existingOperation.pathname !== normalizedPath
+          || existingOperation.scope !== 'block'
+          || existingOperation.blockId !== normalizedBlockId) {
+          return { ok: false, error: 'publish-operation-mismatch', ...publishRouteSnapshot(normalizedPath) };
+        }
+        return buildPublishOperationResponse(existingOperation);
       }
 
       const currentState = exposeLoadedStaleOwnership
         ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
         : normalizeSharedState(record.state);
+      if (expectedDraftRevision && expectedDraftRevision !== routeRevision(currentState, normalizedPath)) {
+        return {
+          ok: false,
+          error: 'block-publish-stale-draft',
+          ...publishRouteSnapshot(normalizedPath),
+        };
+      }
       const currentEntry = ensureCollaborationEntry(currentState.collaborationByPath || {}, normalizedPath);
       const currentBlock = currentState.blocksByPath?.[normalizedPath]
         ?.find((block) => String(block?.id || '').trim() === normalizedBlockId);
       const publishedBlock = record.baseSnapshot.blocksByPath?.[normalizedPath]
         ?.find((block) => String(block?.id || '').trim() === normalizedBlockId);
       if (!currentBlock) {
-        return { ok: false, error: 'block-not-found', ...publishSnapshot() };
+        if (!publishedBlock) {
+          return { ok: false, error: 'block-not-found', ...publishRouteSnapshot(normalizedPath) };
+        }
+
+        const currentMeta = normalizeBlockMeta(currentEntry.blocks?.[normalizedBlockId]);
+        const conflict = getOtherActorConflict(currentMeta, normalizedActor);
+        if (conflict) {
+          return {
+            ok: false,
+            error: 'publish-blocked-by-other-draft',
+            blockedBlocks: [{ pathname: normalizedPath, blockId: normalizedBlockId, ...conflict }],
+            ...publishRouteSnapshot(normalizedPath),
+          };
+        }
+
+        const timestamp = now();
+        const nextEntry = {
+          ...currentEntry,
+          blocks: { ...(currentEntry.blocks || {}) },
+          history: appendHistoryEntry(currentEntry.history, buildHistoryEntry({
+            action: 'block-removal-published',
+            blockId: normalizedBlockId,
+            actor: normalizedActor,
+            details: String(summary || '').trim(),
+            now: timestamp,
+            createId,
+          })),
+        };
+        delete nextEntry.blocks[normalizedBlockId];
+
+        const nextState = replaceBlockInPageSlice(currentState, currentState, normalizedPath, normalizedBlockId, nextEntry);
+        const nextBaseSnapshot = replaceBlockInPageSlice(record.baseSnapshot, nextState, normalizedPath, normalizedBlockId, nextEntry);
+        record = {
+          ...record,
+          initialized: true,
+          updatedAt: timestamp,
+          state: nextState,
+          baseSnapshot: nextBaseSnapshot,
+        };
+        persistRecord();
+        const publishResult = {
+          receipt: {
+            route: normalizedPath,
+            scope: 'block',
+            actor: normalizedActor,
+            publishedBlockIds: [normalizedBlockId],
+          },
+          operationId: String(operationId || '').trim(),
+          pathname: normalizedPath,
+          scope: 'block',
+          blockId: normalizedBlockId,
+          status: 'published',
+          didPublish: true,
+          hasConflicts: false,
+          changedPaths: [normalizedPath],
+          publishedPaths: [normalizedPath],
+          publishedBlockIdsByPath: { [normalizedPath]: [normalizedBlockId] },
+          blockedBlockIdsByPath: {},
+          blockedBlocks: [],
+          updatedAt: timestamp,
+        };
+        const response = {
+          ok: true,
+          ...publishRouteSnapshot(normalizedPath),
+          publishedBlock: null,
+          operationId: String(operationId || '').trim(),
+          pathname: normalizedPath,
+          scope: 'block',
+          blockId: normalizedBlockId,
+          draftRevision: getDraftRevision(normalizedPath),
+          publishedRevision: getPublishedRouteRevision(normalizedPath),
+          publishedAt: timestamp,
+          publishResult,
+        };
+        recordPublishOperation({
+          operationId,
+          pathname: normalizedPath,
+          scope: 'block',
+          blockId: normalizedBlockId,
+          expectedDraftRevision,
+          publishedBlock: null,
+          publishResult,
+          publishedAt: timestamp,
+        });
+        return response;
       }
       if (expectedBlock && JSON.stringify(currentBlock) !== JSON.stringify(normalizeContentAdminBlock(expectedBlock))) {
-        return { ok: false, error: 'block-publish-stale-draft', ...publishSnapshot() };
+        return { ok: false, error: 'block-publish-stale-draft', ...publishRouteSnapshot(normalizedPath) };
       }
-      if (JSON.stringify(currentBlock) === JSON.stringify(publishedBlock || null)) {
-        return { ok: false, error: 'already-live', ...publishSnapshot() };
+      const currentBlockIndex = currentState.blocksByPath?.[normalizedPath]
+        ?.findIndex((block) => String(block?.id || '').trim() === normalizedBlockId) ?? -1;
+      const publishedBlockIndex = record.baseSnapshot.blocksByPath?.[normalizedPath]
+        ?.findIndex((block) => String(block?.id || '').trim() === normalizedBlockId) ?? -1;
+      const blockOrderChanged = currentBlockIndex !== publishedBlockIndex;
+      if (JSON.stringify(currentBlock) === JSON.stringify(publishedBlock || null) && !blockOrderChanged) {
+        return { ok: false, error: 'already-live', ...publishRouteSnapshot(normalizedPath) };
       }
 
       const currentMeta = normalizeBlockMeta(currentEntry.blocks?.[normalizedBlockId]);
@@ -2427,7 +3081,7 @@ export function createJsonContentStore({
           ok: false,
           error: 'publish-blocked-by-other-draft',
           blockedBlocks: [{ pathname: normalizedPath, blockId: normalizedBlockId, ...conflict }],
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
         };
       }
 
@@ -2436,7 +3090,7 @@ export function createJsonContentStore({
         ...currentEntry,
         blocks: {
           ...(currentEntry.blocks || {}),
-          [normalizedBlockId]: clearPublishedDraftOwnership(currentMeta),
+          [normalizedBlockId]: clearPublishedDraftOwnership(currentMeta, normalizedActor, timestamp),
         },
         history: appendHistoryEntry(currentEntry.history, buildHistoryEntry({
           action: 'block-published',
@@ -2459,28 +3113,51 @@ export function createJsonContentStore({
       persistRecord();
       const publishedBlockSnapshot = record.baseSnapshot.blocksByPath?.[normalizedPath]
         ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
-      return {
-        ok: true,
-        ...publishSnapshot(),
-        publishedBlock: cloneJson(publishedBlockSnapshot),
-        publishResult: {
-          receipt: {
-            route: normalizedPath,
-            scope: 'block',
-            actor: normalizedActor,
-            publishedBlockIds: [normalizedBlockId],
-          },
-          status: 'published',
-          didPublish: true,
-          hasConflicts: false,
-          changedPaths: [normalizedPath],
-          publishedPaths: [normalizedPath],
-          publishedBlockIdsByPath: { [normalizedPath]: [normalizedBlockId] },
-          blockedBlockIdsByPath: {},
-          blockedBlocks: [],
-          updatedAt: timestamp,
+      const publishResult = {
+        receipt: {
+          route: normalizedPath,
+          scope: 'block',
+          actor: normalizedActor,
+          publishedBlockIds: [normalizedBlockId],
         },
+        operationId: String(operationId || '').trim(),
+        pathname: normalizedPath,
+        scope: 'block',
+        blockId: normalizedBlockId,
+        status: 'published',
+        didPublish: true,
+        hasConflicts: false,
+        changedPaths: [normalizedPath],
+        publishedPaths: [normalizedPath],
+        publishedBlockIdsByPath: { [normalizedPath]: [normalizedBlockId] },
+        blockedBlockIdsByPath: {},
+        blockedBlocks: [],
+        updatedAt: timestamp,
       };
+      const response = {
+        ok: true,
+        ...publishRouteSnapshot(normalizedPath),
+        publishedBlock: cloneJson(publishedBlockSnapshot),
+        operationId: String(operationId || '').trim(),
+        pathname: normalizedPath,
+        scope: 'block',
+        blockId: normalizedBlockId,
+        draftRevision: getDraftRevision(normalizedPath),
+        publishedRevision: getPublishedRouteRevision(normalizedPath),
+        publishedAt: timestamp,
+        publishResult,
+      };
+      recordPublishOperation({
+        operationId,
+        pathname: normalizedPath,
+        scope: 'block',
+        blockId: normalizedBlockId,
+        expectedDraftRevision,
+        publishedBlock: publishedBlockSnapshot,
+        publishResult,
+        publishedAt: timestamp,
+      });
+      return response;
     },
 
     publishPath(pathname, options = {}) {
@@ -2599,7 +3276,7 @@ export function createJsonContentStore({
           if (!blockId) {
             return;
           }
-          nextBlocksMeta[blockId] = clearPublishedDraftOwnership(currentEntry.blocks?.[blockId]);
+          nextBlocksMeta[blockId] = clearPublishedDraftOwnership(currentEntry.blocks?.[blockId], normalizedActor, timestamp);
         });
         const nextCollaborationEntry = {
           ...currentEntry,
@@ -2852,7 +3529,7 @@ export function createJsonContentStore({
       const normalizedBlockId = String(blockId || '').trim();
       const normalizedActor = normalizeActor(actor);
       if (!normalizedPath || !normalizedBlockId || !normalizedActor) {
-        return { ok: false, error: 'invalid-lock-request', ...publishSnapshot() };
+        return { ok: false, error: 'invalid-lock-request', ...publishRouteSnapshot(normalizedPath) };
       }
       const nextState = normalizeSharedState(record.state);
       const currentCollaboration = normalizeCollaborationByPath(nextState.collaborationByPath);
@@ -2864,7 +3541,7 @@ export function createJsonContentStore({
           ok: false,
           error: 'locked-by-other',
           lockedBy: lockedByOther,
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
         };
       }
       if (!force && draftedByOther) {
@@ -2872,7 +3549,7 @@ export function createJsonContentStore({
           ok: false,
           error: 'drafted-by-other',
           draftedBy: draftedByOther,
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
         };
       }
       const timestamp = now();
@@ -2920,6 +3597,7 @@ export function createJsonContentStore({
           reason: 'block-lock-updated',
           summary: `${normalizedPath}:${normalizedBlockId}`,
           trackRevisions: false,
+          responsePathname: normalizedPath,
         }),
       };
     },
@@ -2933,13 +3611,18 @@ export function createJsonContentStore({
       const normalizedBlockId = String(blockId || '').trim();
       const normalizedActor = normalizeActor(actor);
       if (!normalizedPath || !normalizedBlockId || !normalizedActor) {
-        return { ok: false, error: 'invalid-lock-request', ...publishSnapshot() };
+        return { ok: false, error: 'invalid-lock-request', ...publishRouteSnapshot(normalizedPath) };
       }
       const nextState = normalizeSharedState(record.state);
       const entry = ensureCollaborationEntry(nextState.collaborationByPath || {}, normalizedPath);
       const currentMeta = normalizeBlockMeta(entry.blocks?.[normalizedBlockId]);
       if (currentMeta.lockedBy?.userId !== normalizedActor.userId) {
-        return { ok: false, error: 'not-lock-owner', ...publishSnapshot() };
+        // Publish/discard can clear the lock before the editor cleanup runs.
+        // Releasing an already-released lock is a successful no-op.
+        if (!currentMeta.lockedBy?.userId) {
+          return { ok: true, ...publishRouteSnapshot(normalizedPath) };
+        }
+        return { ok: false, error: 'not-lock-owner', ...publishRouteSnapshot(normalizedPath) };
       }
       const timestamp = now();
       nextState.collaborationByPath = {
@@ -2970,6 +3653,7 @@ export function createJsonContentStore({
           reason: 'block-lock-updated',
           summary: `${normalizedPath}:${normalizedBlockId}`,
           trackRevisions: false,
+          responsePathname: normalizedPath,
         }),
       };
     },
@@ -2979,7 +3663,7 @@ export function createJsonContentStore({
       const normalizedBlockId = String(blockId || '').trim();
       const normalizedActor = normalizeActor(actor);
       if (!normalizedPath || !normalizedBlockId || !normalizedActor) {
-        return { ok: false, error: 'invalid-draft-release-request', ...publishSnapshot() };
+        return { ok: false, error: 'invalid-draft-release-request', ...publishRouteSnapshot(normalizedPath) };
       }
 
       const nextState = normalizeSharedState(record.state);
@@ -2992,7 +3676,7 @@ export function createJsonContentStore({
           error: lockedByOther ? 'locked-by-other' : 'drafted-by-other',
           lockedBy: lockedByOther,
           draftedBy: draftedByOther,
-          ...publishSnapshot(),
+          ...publishRouteSnapshot(normalizedPath),
         };
       }
 
@@ -3031,6 +3715,7 @@ export function createJsonContentStore({
           reason: 'block-draft-released',
           summary: `${normalizedPath}:${normalizedBlockId}`,
           trackRevisions: false,
+          responsePathname: normalizedPath,
         }),
       };
     },

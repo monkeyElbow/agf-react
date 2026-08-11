@@ -139,8 +139,23 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (req.method === 'GET' && url.pathname === '/route-state') {
+            sendJson(res, 200, contentStore.getRouteSnapshot(url.searchParams.get('path')));
+            return;
+          }
+
+          if (req.method === 'GET' && url.pathname === '/published-route') {
+            sendJson(res, 200, contentStore.getPublishedRouteSnapshot(url.searchParams.get('path')));
+            return;
+          }
+
           if (req.method === 'GET' && url.pathname === '/metadata') {
             sendJson(res, 200, contentStore.getAuthoritySnapshot());
+            return;
+          }
+
+          if (req.method === 'GET' && url.pathname === '/publish-status') {
+            sendJson(res, 200, contentStore.getPublishStatus(url.searchParams.get('operationId')));
             return;
           }
 
@@ -197,6 +212,23 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/save-route-draft') {
+            sendJson(res, 200, contentStore.saveRouteDraft(body.pathname, body.state, {
+              actor: body.actor,
+              summary: body.summary,
+            }));
+            return;
+          }
+
+          if (url.pathname === '/save-block-draft') {
+            const result = contentStore.saveBlockDraft(body.pathname, body.blockId, body.block, {
+              actor: body.actor,
+              summary: body.summary,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/discard-draft') {
             const result = contentStore.discardPageDraft(body.pathname, {
               actor: body.actor,
@@ -246,6 +278,8 @@ function contentAdminDevPlugin() {
             const result = contentStore.publishPath(body.pathname, {
               actor: body.actor,
               summary: body.summary,
+              operationId: body.operationId,
+              expectedDraftRevision: body.expectedDraftRevision,
             });
             sendJson(res, result.ok ? 200 : 409, result);
             return;
@@ -256,6 +290,8 @@ function contentAdminDevPlugin() {
               actor: body.actor,
               summary: body.summary,
               expectedBlock: body.expectedBlock,
+              operationId: body.operationId,
+              expectedDraftRevision: body.expectedDraftRevision,
             });
             sendJson(res, result.ok ? 200 : 409, result);
             return;
@@ -284,7 +320,7 @@ function contentAdminDevPlugin() {
           }
 
           if (url.pathname === '/blocks/sync-draft') {
-            const result = contentStore.saveBlockDraft(body.pathname, body.blockId, body.block, {
+            const result = contentStore.syncBlockDraft(body.pathname, body.blockId, body.block, {
               actor: body.actor,
             });
             sendJson(res, result.ok ? 200 : 409, result);
