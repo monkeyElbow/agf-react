@@ -2,7 +2,7 @@
 
 Topic: Core service navigation and high-level positioning  
 Public routes: `/`, `/services`  
-Source files: `src/data/pageBlocks/homeBlocks.js`, `src/data/nativePageContent.js`
+Source files: `src/data/contentBlockBlueprints.js`, `src/data/nativePageContent.js`
 
 ## Home page positioning
 

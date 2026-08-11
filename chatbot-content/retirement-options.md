@@ -2,7 +2,7 @@
 
 Topic: Retirement overview, 403(b)-related public support content, and online contributions  
 Public routes: `/services/retirement`, `/online-contributions`, `/services/retirement/403b`  
-Source files: `src/data/nativePageContent.js`, `src/data/pageBlocks/homeBlocks.js`, `src/data/contentBlockBlueprints.js`, `src/data/ratesDefault.js`
+Source files: `src/data/nativePageContent.js`, `src/data/contentBlockBlueprints.js`, `src/data/ratesDefault.js`
 
 ## Retirement overview
 

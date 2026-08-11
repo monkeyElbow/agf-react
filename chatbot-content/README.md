@@ -27,7 +27,7 @@ This folder is a local staging area for public-facing AGFinancial website conten
 ## Current canonical sources used
 
 - `src/data/nativePageContent.js`
-- `src/data/pageBlocks/homeBlocks.js`
+- `src/data/contentBlockBlueprints.js` (home dynamic block defaults)
 - `src/data/contentBlockBlueprints.js`
 - `src/data/siteMap.js`
 - `src/pages/RatesPage.jsx`

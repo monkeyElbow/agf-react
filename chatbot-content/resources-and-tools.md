@@ -2,7 +2,7 @@
 
 Topic: Resources hub and calculators directory  
 Public routes: `/resources`, `/calculators`, `/calculators/emergency-fund`, `/calculators/increased-contribution`, `/calculators/net-worth`  
-Source files: `src/data/nativePageContent.js`, `src/data/pageBlocks/homeBlocks.js`
+Source files: `src/data/nativePageContent.js`, `src/data/contentBlockBlueprints.js`
 
 ## Resources hub
 

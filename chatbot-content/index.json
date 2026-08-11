@@ -21,7 +21,7 @@
     "file": "services-overview.md",
     "topic": "Core service navigation and positioning",
     "publicRoutes": ["/", "/services"],
-    "sourceFiles": ["src/data/pageBlocks/homeBlocks.js", "src/data/nativePageContent.js"],
+    "sourceFiles": ["src/data/contentBlockBlueprints.js", "src/data/nativePageContent.js"],
     "contentType": "overview",
     "notes": ["Includes home-page service positioning, calculator teaser, and newsletter summary."],
     "reviewRequired": false
@@ -48,7 +48,7 @@
     "file": "retirement-options.md",
     "topic": "Retirement overview, 403(b) support content, and online contributions",
     "publicRoutes": ["/services/retirement", "/online-contributions", "/services/retirement/403b"],
-    "sourceFiles": ["src/data/nativePageContent.js", "src/data/pageBlocks/homeBlocks.js", "src/data/contentBlockBlueprints.js", "src/data/ratesDefault.js"],
+    "sourceFiles": ["src/data/nativePageContent.js", "src/data/contentBlockBlueprints.js", "src/data/ratesDefault.js"],
     "contentType": "service-detail",
     "notes": ["Includes overview content, housing allowance mention, 403(b) compliance copy, and online contributions setup."],
     "reviewRequired": true
@@ -75,7 +75,7 @@
     "file": "resources-and-tools.md",
     "topic": "Resources hub and calculators directory",
     "publicRoutes": ["/resources", "/calculators", "/calculators/emergency-fund", "/calculators/increased-contribution", "/calculators/net-worth"],
-    "sourceFiles": ["src/data/nativePageContent.js", "src/data/pageBlocks/homeBlocks.js"],
+    "sourceFiles": ["src/data/nativePageContent.js", "src/data/contentBlockBlueprints.js"],
     "contentType": "resource-hub",
     "notes": ["Full article-body export is deferred; this pass captures hub summaries and calculator content first."],
     "reviewRequired": true
