@@ -11,6 +11,7 @@ The dev server creates the store in `vite.config.js` and exposes these content-a
 - `GET /__dev/content-admin/backups`
 - `POST /__dev/content-admin/initialize`
 - `POST /__dev/content-admin/save-draft`
+- `POST /__dev/content-admin/save-block-draft`
 - `POST /__dev/content-admin/publish-page`
 - `POST /__dev/content-admin/publish-seed-routes`
 - `POST /__dev/content-admin/blocks/sync-draft`
