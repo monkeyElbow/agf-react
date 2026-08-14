@@ -1,29 +1,35 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import '../styles/service-native.css';
+import '../styles/service-native-functional-tools.css';
 import { Link } from 'react-router-dom';
-import BlockHudPanelHost from '../components/BlockHudPanelHost';
+import {
+  FrontHudPageWorkflow,
+  FrontHudPanelShell,
+  FrontHudStructureControls,
+  LazyBlockHudPanelHost as BlockHudPanelHost,
+  preloadBlockHudPanelHost,
+  preloadFrontHudChrome,
+} from '../components/BlockHudPanelHostLoader';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
-import FrontHudPanelShell from '../components/FrontHudPanelShell';
-import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import DynamicRequestFormSection from '../components/DynamicRequestFormSection';
 import SafeRichText from '../components/SafeRichText';
 import { BillboardBlock, ColumnsBlock, renderHighlightedText } from '../components/blocks/PageBlocksRenderer';
 import { useDisclosures } from '../context/DisclosuresContext';
-import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
+import { getResourceArticleFeatureConfig } from '../data/resourceArticleFeatureIndex';
 import { useFrontHud } from '../context/FrontHudContext';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useTestimonials } from '../context/TestimonialsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
+import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
 import { resolveTestimonialsBlockData } from '../lib/testimonials';
 import {
   actionButtonClassName,
   buildDynamicBillboardFromBlock,
-  buildDynamicCtaBandFromBlock,
   buildDynamicGridFromBlock,
   buildDynamicHeroFromBlock,
   buildDynamicIntroFromBlock,
@@ -34,8 +40,6 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { defaultLoansCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultLoansIntroRuntime } from '../data/loansIntroSeed';
-import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
-import FrontHudStructureControls from '../components/FrontHudStructureControls';
 
 const LOANS_TARIFFS_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   slug: 'tariffs-timing-truth-keep-building-through-the-chaos',
@@ -535,10 +539,6 @@ function buildLoanPdf(summaryText, rows) {
 export default function LoansPage({ sectionsOnly = false }) {
   const pageRef = useRef(null);
   const {
-    blocksByPath,
-    pageHierarchy,
-    authoringBlocksByPath,
-    authoringPageHierarchy,
     resolveManagedPathFromRef = (pathRef, fallback = '/') => String(pathRef || '').trim() || fallback,
     resolveAuthoringManagedPathFromRef = null,
     setActiveBlockLock = () => ({ ok: false }),
@@ -558,14 +558,7 @@ export default function LoansPage({ sectionsOnly = false }) {
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
-  } = selectFrontHudContentSource({
-    enabled: frontHudEnabled,
-    pathname: '/services/loans',
-    authoringBlocksByPath,
-    blocksByPath,
-    authoringPageHierarchy,
-    pageHierarchy,
-  });
+  } = useManagedContentSource({ pathname: '/services/loans' });
   const managedResolveManagedPathFromRef = frontHudEnabled
     ? (resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef)
     : resolveManagedPathFromRef;
@@ -653,10 +646,10 @@ export default function LoansPage({ sectionsOnly = false }) {
       && block?.hidden !== 'true'
     )) || null
   ), [managedBlocks]);
-  const loanOptionsCtaBandBlock = useMemo(() => (
+  const loanOptionsBillboardBlock = useMemo(() => (
     managedBlocks.find((block) => (
       block?.id === 'cta_band'
-      && block?.kind === 'cta_band'
+      && block?.kind === 'billboard'
       && block?.mode === 'dynamic'
       && block?.hidden !== true
       && block?.hidden !== 'true'
@@ -684,9 +677,9 @@ export default function LoansPage({ sectionsOnly = false }) {
     () => buildLoanValueCardsRenderableBlock(valueCardsBlock),
     [valueCardsBlock],
   );
-  const loanOptionsCtaBand = useMemo(
-    () => buildDynamicCtaBandFromBlock(loanOptionsCtaBandBlock),
-    [loanOptionsCtaBandBlock],
+  const loanOptionsBillboard = useMemo(
+    () => buildDynamicBillboardFromBlock(loanOptionsBillboardBlock),
+    [loanOptionsBillboardBlock],
   );
   const dynamicVisionFuel = useMemo(
     () => buildLoanVisionFuelConfigFromBlock(visionFuelBlock),
@@ -730,7 +723,10 @@ export default function LoansPage({ sectionsOnly = false }) {
   );
   const frontHudOpacityRatio = clampFrontHudOpacity(frontHudOpacity) / 100;
   const hudPanels = useMemo(
-    () => buildHudPanelsFromBlocks(managedBlocks, { anchorSelectorById: LOANS_HUD_ANCHOR_SELECTOR_BY_ID }),
+    () => buildHudPanelsFromBlocks(managedBlocks, {
+      anchorSelectorById: LOANS_HUD_ANCHOR_SELECTOR_BY_ID,
+      includeHidden: true,
+    }),
     [managedBlocks],
   );
   const showFrontHud = !sectionsOnly && frontHudEnabled && hudPanels.length > 0;
@@ -793,6 +789,13 @@ export default function LoansPage({ sectionsOnly = false }) {
     panels: hudPanels,
     storageKey: 'loans',
   });
+
+  useEffect(() => {
+    if (showFrontHud) {
+      void preloadFrontHudChrome();
+      void preloadBlockHudPanelHost();
+    }
+  }, [showFrontHud]);
 
   useEffect(() => {
     if (!showFrontHud) {
@@ -996,6 +999,7 @@ export default function LoansPage({ sectionsOnly = false }) {
     }
     return {
       label: panel.label,
+      icon: panel.icon,
       isActive: !hudDockCollapsed && activeHudPanelId === panel.id,
       onClick: () => toggleHudPanel(panel.id, panel.anchorSelector),
       style: { '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) },
@@ -1070,9 +1074,9 @@ export default function LoansPage({ sectionsOnly = false }) {
     || loanOptionsGrid?.bodyHtml
     || loanOptionsGrid?.body
     || loanOptionsCards.length
-    || loanOptionsCtaBand,
+    || loanOptionsBillboard,
   );
-  const loanOptionsCtaAction = loanOptionsCtaBand?.action || null;
+  const loanOptionsCtaAction = loanOptionsBillboard?.actions?.[0] || null;
   const loanOptionsCtaHref = String(loanOptionsCtaAction?.to || loanOptionsCtaAction?.href || '').trim();
   const loanOptionsCtaLabel = String(loanOptionsCtaAction?.label || '').trim();
   const loanOptionsCtaClassName = loanOptionsCtaAction?.className
@@ -1090,12 +1094,13 @@ export default function LoansPage({ sectionsOnly = false }) {
               <button
                 key={panel.id}
                 type="button"
-                className={`admin-front-hud-dock-tab${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
+                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
                 onClick={() => toggleHudPanel(panel.id, panel.anchorSelector)}
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
                 <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
+                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
               </button>
             ))}
           </div>
@@ -1134,6 +1139,7 @@ export default function LoansPage({ sectionsOnly = false }) {
             placement="dock-inline"
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
+            block={activeHudPanel.block}
             blockLabel={activeHudPanel.label}
             onDoneEditing={closeHudDock}
           />
@@ -1340,7 +1346,7 @@ export default function LoansPage({ sectionsOnly = false }) {
               ))}
             </div>
           ) : null}
-          {loanOptionsCtaBand ? (
+          {loanOptionsBillboard ? (
             <div
               className={`loans-native-option-question-wrap fade-up${getHudBlockStateClassName('cta_band')}${getOwnershipVisualForBlockId('cta_band').className || ''}`}
               data-block-id="cta_band"
@@ -1348,8 +1354,10 @@ export default function LoansPage({ sectionsOnly = false }) {
               <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('cta_band')} />
               {renderHudAnchor('cta_band')}
               <div className="native-info-section-copy is-justify-center">
-                {loanOptionsCtaBand.title ? <h2>{loanOptionsCtaBand.title}</h2> : null}
-                {loanOptionsCtaBand.body ? <p>{loanOptionsCtaBand.body}</p> : null}
+                {loanOptionsBillboard.title ? <h2>{loanOptionsBillboard.title}</h2> : null}
+                {loanOptionsBillboard.bodyHtml ? (
+                  <SafeRichText as="div" className="native-info-rich-html" html={loanOptionsBillboard.bodyHtml} />
+                ) : loanOptionsBillboard.body ? <p>{loanOptionsBillboard.body}</p> : null}
                 {loanOptionsCtaLabel && loanOptionsCtaHref ? (
                   <div className="service-native-action-row is-centered">
                     {loanOptionsCtaHref.startsWith('/') ? (

@@ -29,6 +29,7 @@ const GRID_CARD_STYLE_OPTIONS = [
   { value: 'card4', label: 'Card 4' },
   { value: 'none', label: 'No card style' },
   { value: 'borderless-shadow', label: 'Borderless with shadow' },
+  { value: 'planned-giving-centered', label: 'Centered bullet panel (like CGA)' },
 ];
 
 const GRID_TEXT_TONE_OPTIONS = [
@@ -85,6 +86,7 @@ const sections = [
         label: 'Grid columns',
         type: 'select',
         options: [
+          { value: 'one', label: '1 column' },
           { value: 'two', label: '2 columns' },
           { value: 'three', label: '3 columns' },
           { value: 'four', label: '4 columns' },
@@ -179,7 +181,7 @@ const sections = [
         }),
         defineEditorField({ id: `card${slot}PanelTone`, label: `Card ${slot} panel tone`, type: 'text' }),
         defineEditorField({ id: `card${slot}Body`, label: `Card ${slot} body`, type: 'textarea', rows: 2 }),
-        defineEditorField({ id: `card${slot}ListJson`, label: `Card ${slot} bullet list JSON`, type: 'textarea', rows: 5 }),
+        defineEditorField({ id: `card${slot}ListJson`, label: `Card ${slot} bullets`, type: 'textarea', rows: 5 }),
         defineEditorField({ id: `card${slot}Fineprint`, label: `Card ${slot} fineprint`, type: 'textarea', rows: 2 }),
         defineEditorField({ id: `card${slot}LinksJson`, label: `Card ${slot} PDF / link list JSON`, type: 'textarea', rows: 4 }),
         defineEditorField({ id: `card${slot}AccordionsJson`, label: `Card ${slot} accordion JSON`, type: 'textarea', rows: 6 }),

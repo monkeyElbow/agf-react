@@ -719,17 +719,14 @@ describe('NativeContentPage functional routes', () => {
     expect(annuityOptions?.querySelectorAll('.investments-native-cert-card')).toHaveLength(2);
     expect(annuityOptions?.querySelectorAll('.service-native-action-row')).toHaveLength(0);
     const giftAssets = document.querySelector('[data-block-id="gift_assets"]');
-    const secureAct = document.querySelector('[data-block-id="secure_act"]');
     const qcdFineprint = document.querySelector('[data-block-id="qcd_fineprint"]');
     expect(giftAssets).toBeTruthy();
-    expect(secureAct).toBeTruthy();
     expect(qcdFineprint).toBeTruthy();
-    expect(giftAssets.compareDocumentPosition(secureAct) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(secureAct.compareDocumentPosition(qcdFineprint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(secureAct.querySelector('.native-info-rich-html p')?.textContent).toContain('The SECURE 2.0 Act');
+    expect(giftAssets.querySelector('.service-native-card-rich-body p')?.textContent).toContain('The SECURE 2.0 Act');
+    expect([...giftAssets.querySelectorAll('.service-native-card-rich-body .is-atlantean')]
+      .map((element) => element.textContent)).toContain('The SECURE 2.0 Act of 2022');
+    expect(giftAssets.querySelector('.service-native-card-rich-body')?.compareDocumentPosition(giftAssets.querySelector('.service-native-action-row')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(qcdFineprint.querySelector('.native-info-rich-html p')?.textContent).toContain('Also available');
-    expect(qcdFineprint.querySelector('.native-info-rich-html p')?.textContent).not.toContain('The SECURE 2.0 Act');
-    expect(secureAct.className).toContain('legacy-child-native-cga-secure-act');
     expect(document.querySelector('.legacy-child-native-cga-request.native-dynamic-request.is-request-form-preset-legacy-cga')).toBeTruthy();
     const productSelect = screen.getByLabelText('Product of interest');
     expect(within(productSelect).getByRole('option', { name: 'CGA (immediate)' })).toBeTruthy();
@@ -780,7 +777,7 @@ describe('NativeContentPage functional routes', () => {
       .toEqual(['daf-step-1', 'mif-step-3', 'endowments-step-3']);
     const assetsSection = document.querySelector('[data-block-id="assets_you_may_give"]');
     expect(assetsSection?.className).toContain('legacy-child-native-give-assets');
-    expect(within(assetsSection).getByRole('heading', { name: /It starts with\s*what you give\./ })).toBeTruthy();
+    expect(within(assetsSection).getByRole('heading', { name: /Assets\s*you may give/ })).toBeTruthy();
     expect(assetsSection?.querySelectorAll('.service-native-card')).toHaveLength(1);
     expect(assetsSection?.textContent).toContain('Cash');
     expect(assetsSection?.textContent).toContain('Securities (restricted and marketable)');
@@ -788,9 +785,9 @@ describe('NativeContentPage functional routes', () => {
     const endowmentProductSelect = screen.getByLabelText('Product of interest');
     expect([...endowmentProductSelect.querySelectorAll('option')].map((option) => option.textContent)).toEqual([
       'Select one',
-      'Endowments',
+      'Endowment',
     ]);
-    expect(screen.getByRole('heading', { name: 'Begin the Endowment sign up process' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Leave a legacy that lasts.' })).toBeTruthy();
   });
 
   it('renders generosity fund from explicit managed blocks with the generosity request preset', () => {
@@ -933,6 +930,9 @@ describe('NativeContentPage functional routes', () => {
     expect(giftTypesSection?.textContent).not.toContain('see below');
     expect(screen.getByRole('heading', { name: 'Unlocked.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Most wealth isn’t cash.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Ministry support. Unlocked and expanded.' })).toBeTruthy();
+    expect([...screen.getByLabelText('Product of interest').querySelectorAll('option')].map((option) => option.textContent))
+      .toEqual(['Select one', 'Ministry Impact Fund®']);
   });
 
   it('renders the about us route with the updated intro, full-width image section, strategy links, and allies CTA', () => {
@@ -1523,15 +1523,18 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByRole('heading', { name: /Qualified\s*Charitable/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Distribution' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Your IRA can do more.' })).toBeTruthy();
-    expect(screen.getByText(/transfer up to \$110,000 per year directly/i)).toBeTruthy();
-    expect(screen.getByText('Placeholder: describe the first QCD step here.')).toBeTruthy();
-    expect(container.querySelector('.legacy-child-native-flow-steps.legacy-child-native-qcd-steps.native-dynamic-columns')).toBeTruthy();
-    expect([...container.querySelectorAll('.legacy-child-native-qcd-steps [data-planned-giving-step-icon]')]
+    expect(screen.getByText(/not a dollar goes to taxes first/i)).toBeTruthy();
+    expect(screen.getByText('Because the distribution goes directly to the ministry, it\'s excluded from your taxable income entirely. Your generosity goes further.')).toBeTruthy();
+    expect(container.querySelector('.is-columns-preset-planned-giving-steps.native-dynamic-columns')).toBeTruthy();
+    expect([...container.querySelectorAll('.is-columns-preset-planned-giving-steps [data-planned-giving-step-icon]')]
       .map((icon) => icon.getAttribute('data-planned-giving-step-icon')))
       .toEqual(['endowments-step-1', 'daf-step-3', 'qcd-step-3']);
     expect(container.querySelector('section[data-block-id="hero"]')).toBeTruthy();
     expect(container.querySelector('section[data-block-id="intro"]')).toBeTruthy();
     expect(container.querySelector('section[data-block-id="how_it_works"]')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Your IRA. Their gain.' })).toBeTruthy();
+    expect(screen.getByText('Ready to make your distribution count? Use this form to take the first step.')).toBeTruthy();
+    expect(container.querySelector('section[data-block-id="request_form"]')).toBeTruthy();
     expect(container.querySelector('section[data-block-id="page_content"]')).toBeNull();
   });
 

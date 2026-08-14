@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import BillboardHudEditorPanel, { normalizeBillboardWidth } from './BillboardHudEditorPanel';
 
@@ -20,10 +20,51 @@ describe('BillboardHudEditorPanel reference layout', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
     expect(screen.getByRole('region', { name: 'Copy settings' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Heading settings' })).toBeNull();
+    expect(screen.queryByText('Plain lead and rich body content')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
     expect(screen.getByRole('region', { name: 'Buttons settings' })).toBeTruthy();
-    expect(screen.getByText('Preview button')).toBeTruthy();
+    expect(screen.getByText('No buttons added yet.')).toBeTruthy();
+  });
+
+  it('shows only labeled buttons at public size, with hover behavior and new-window controls', () => {
+    const onButtonOpenInNewWindowChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        buttonLabel="Read more"
+        buttonHref=""
+        buttonOpenInNewWindow={false}
+        onButtonOpenInNewWindowChange={onButtonOpenInNewWindowChange}
+        button2Label=""
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
+
+    const preview = screen.getByRole('region', { name: 'Button preview' });
+    expect(within(preview).getByRole('button', { name: 'Read more' }).className)
+      .toContain('service-native-btn');
+    expect(within(preview).queryByRole('button', { name: 'Secondary button' })).toBeNull();
+    expect(screen.getAllByRole('checkbox', { name: 'Open in new window' })).toHaveLength(2);
+
+    fireEvent.click(screen.getAllByRole('checkbox', { name: 'Open in new window' })[0]);
+    expect(onButtonOpenInNewWindowChange).toHaveBeenCalledWith(true);
+  });
+
+  it('only exposes button color when that button uses Outline style', () => {
+    render(
+      <BillboardHudEditorPanel
+        buttonLabel="Primary"
+        buttonStyle="blue"
+        button2Label="Secondary"
+        button2Style="outline"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
+
+    expect(screen.queryByRole('radiogroup', { name: 'Billboard button color' })).toBeNull();
+    expect(screen.getByRole('radiogroup', { name: 'Billboard button 2 color' })).toBeTruthy();
   });
 
   it('uses section columns for button controls and preview instead of labeled parent divs', () => {
@@ -58,6 +99,24 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(screen.getByTitle('Italic')).toBeTruthy();
   });
 
+  it('keeps rich body copy readable against the selected billboard background', () => {
+    render(
+      <BillboardHudEditorPanel
+        title="A headline"
+        bgTone="blue"
+        bodyColorClassName="is-white"
+        bodyHtml="<p>Add supporting copy here.</p>"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+
+    const editor = screen.getByRole('textbox', { name: 'Body HTML' });
+    const editorShell = editor.closest('.admin-billboard-hud-copy-editor');
+    expect(editorShell?.classList.contains('is-bg-blue')).toBe(true);
+    expect(editorShell?.classList.contains('is-white')).toBe(true);
+  });
+
   it('keeps heading typography controls in the heading panel and sends numeric title weight', () => {
     const onTitleFontWeightChange = vi.fn();
     render(
@@ -78,5 +137,22 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '600' }));
     expect(onTitleFontWeightChange).toHaveBeenCalledWith(600);
+  });
+
+  it('lets the layout slider leave Auto and restores Auto when clicked', () => {
+    const onContentMaxWidthPxChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        contentMaxWidthPx=""
+        onContentMaxWidthPxChange={onContentMaxWidthPxChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    const slider = screen.getByRole('slider', { name: 'Content width' });
+    expect(slider.disabled).toBe(false);
+
+    fireEvent.change(slider, { target: { value: '900' } });
+    expect(onContentMaxWidthPxChange).toHaveBeenCalledWith(900);
   });
 });

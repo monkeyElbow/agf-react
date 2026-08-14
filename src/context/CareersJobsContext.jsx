@@ -1,8 +1,6 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 
 const STORAGE_KEY = 'agf-careers-jobs-v1';
-const CareersJobsContext = createContext(null);
-
 const DEFAULT_APPLY_URL = 'https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=8c8cb88c-f3c9-4ceb-ae10-05cce7cdd3f7&ccId=19000101_000001&jobId=969925&source=CC2&lang=en_US';
 
 const defaultJobs = [
@@ -131,6 +129,19 @@ function isVisibleNow(job, now = new Date()) {
   return true;
 }
 
+const defaultCareersJobsValue = {
+  jobs: defaultJobs,
+  addJob: () => null,
+  updateJob: () => {},
+  deleteJob: () => {},
+  duplicateJob: () => null,
+  resetJobs: () => {},
+  getVisibleJobs: (now = new Date()) => sortJobs(defaultJobs.filter((item) => isVisibleNow(item, now))),
+  isVisibleNow,
+};
+
+const CareersJobsContext = createContext(defaultCareersJobsValue);
+
 export function CareersJobsProvider({ children }) {
   const [jobs, setJobs] = useState(readInitialJobs);
 
@@ -222,9 +233,5 @@ export function CareersJobsProvider({ children }) {
 }
 
 export function useCareersJobs() {
-  const context = useContext(CareersJobsContext);
-  if (!context) {
-    throw new Error('useCareersJobs must be used within CareersJobsProvider');
-  }
-  return context;
+  return useContext(CareersJobsContext);
 }

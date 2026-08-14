@@ -122,6 +122,7 @@ export const sitePages = [
   { path: '/admin/jobs', title: 'Admin - Jobs', section: 'Admin', source: null },
   { path: '/admin/redirects', title: 'Admin - Redirects', section: 'Admin', source: null },
   { path: '/admin/blocks', title: 'Admin - Blocks Audit', section: 'Admin', source: null },
+  { path: '/admin/profile', title: 'Admin - Profile', section: 'Admin', source: null },
 ];
 
 export const pageByPath = Object.fromEntries(sitePages.map((page) => [page.path, page]));

@@ -119,6 +119,21 @@ describe('devContentAuthorityClient', () => {
     expect(payload.actor.displayName).toBe('Taylor QA');
   });
 
+  it('sends the published revision fence with block draft syncs', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await syncSharedBlockDraft('/services/loans', 'hero', { id: 'hero' }, null, {
+      expectedPublishedRevision: 'abc123',
+    });
+
+    const payload = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(payload.expectedPublishedRevision).toBe('abc123');
+  });
+
   it('sends a distinct block-scoped draft save request', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

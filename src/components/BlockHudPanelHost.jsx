@@ -9,8 +9,8 @@ import {
 } from './HudEditorShell';
 import {
   FieldControlGrid,
-} from '../pages/AdminContentPage';
-import { getMigratedBlockEditorComponent } from './block-editors/migratedBlockEditors';
+  getMigratedBlockEditorComponent,
+} from './block-editors/migratedBlockEditors';
 import CtaHudEditorPanel from './CtaHudEditorPanel';
 import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ctaHudSettings';
 import { getBlockHudDefinition } from '../lib/blockHudRegistry';
@@ -72,7 +72,6 @@ function HudEditorCompatibilityShell({ blockKind, blockLabel, children, blockOpt
   const definitionSections = getBlockEditorSections(blockKind, 'hud');
   const cardGridSections = blockKind === 'card_grid'
     ? [
-      { id: 'content', label: 'Content', icon: '✦' },
       { id: 'appearance', label: 'Appearance', icon: '◉' },
       { id: 'layout', label: 'Layout', icon: '◫' },
       { id: 'typography', label: 'Typography', icon: 'Aa' },
@@ -294,6 +293,7 @@ export default function BlockHudPanelHost({
               submitStyle={normalizeCtaHudSubmitStyle(settings.submitStyle)}
               submitTone={normalizeCtaHudSubmitTone(settings.submitTone, settings.submitStyle)}
               bodyHtml={String(settings.bodyHtml || '')}
+              subtitle={String(settings.subtitle || '')}
               bodyColorClassName={String(settings.bodyColorClassName || 'is-super-grey')}
               titleColor={extractHeroLineColorToken(settings.titleClassName)}
               titleSelection={ctaTitleSelection}
@@ -306,6 +306,7 @@ export default function BlockHudPanelHost({
                 setCtaTitleSelection({ start: 0, end: 0, text: '' });
               }}
               onBodyHtmlChange={(nextValue) => blockedOnSettingChange('bodyHtml', nextValue)}
+              onSubtitleChange={(nextValue) => blockedOnSettingChange('subtitle', nextValue)}
               onBodyColorChange={(nextValue) => blockedOnSettingChange('bodyColorClassName', nextValue)}
               fields={ctaFields}
               includeContactPreference={Boolean(settings.includeContactPreference)}

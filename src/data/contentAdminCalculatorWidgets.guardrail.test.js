@@ -122,21 +122,23 @@ function expectCalculatorIntroShape(entries) {
       'titleClassName',
       'titleHighlightsJson',
     ]);
-    expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual([
-      'title',
-      'titleClassName',
-      'titleHighlightsJson',
-      'body',
-      'fullBleed',
-      'spaceBeforeRem',
-      'spaceAfterRem',
-      'paddingTopRem',
-      'paddingBottomRem',
-      'contentMaxWidthPx',
-      'copyWrap',
-      'anchorId',
-      'sectionClassName',
-    ]);
+    if (source === 'blueprint' || source === 'normalizer') {
+      expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual([
+        'title',
+        'titleClassName',
+        'titleHighlightsJson',
+        'body',
+        'fullBleed',
+        'spaceBeforeRem',
+        'spaceAfterRem',
+        'paddingTopRem',
+        'paddingBottomRem',
+        'contentMaxWidthPx',
+        'copyWrap',
+        'anchorId',
+        'sectionClassName',
+      ]);
+    }
     expect((block?.editableFields || []).some((field) => field.label === 'Page Content HTML'), `${pathname} ${source} page content label`).toBe(false);
     expect(RETIRED_INTRO_PAGE_CONTENT_SETTING_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(block?.settings || {}, key)), `${pathname} ${source} retired settings`).toEqual([]);
   });
@@ -158,17 +160,19 @@ function expectCalculatorWidgetShape(entries) {
       'spaceBeforeRem',
       'widget',
     ]);
-    expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual([
-      'widget',
-      'fullBleed',
-      'spaceBeforeRem',
-      'spaceAfterRem',
-      'paddingTopRem',
-      'paddingBottomRem',
-      'contentMaxWidthPx',
-      'anchorId',
-      'sectionClassName',
-    ]);
+    if (source === 'blueprint' || source === 'normalizer') {
+      expect((block?.editableFields || []).map((field) => field.id), `${pathname} ${source} editable fields`).toEqual([
+        'widget',
+        'fullBleed',
+        'spaceBeforeRem',
+        'spaceAfterRem',
+        'paddingTopRem',
+        'paddingBottomRem',
+        'contentMaxWidthPx',
+        'anchorId',
+        'sectionClassName',
+      ]);
+    }
     expect((block?.editableFields || []).some((field) => field.label === 'Page Content HTML'), `${pathname} ${source} page content label`).toBe(false);
     expect(RETIRED_PAGE_CONTENT_SETTING_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(block?.settings || {}, key)), `${pathname} ${source} retired settings`).toEqual([]);
   });

@@ -13,6 +13,14 @@ function normalizeToken(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+// These kinds remain readable for old snapshots, but are no longer add-block
+// choices. New content uses the canonical family below them.
+const COMPATIBILITY_ONLY_BLOCK_KINDS = new Set([
+  'site_feature',
+  'photo_column',
+  'split_panel',
+]);
+
 function compareTemplateIdsByPreference(leftId, rightId, preferredTemplateIds) {
   const leftIndex = preferredTemplateIds.indexOf(normalizeToken(leftId));
   const rightIndex = preferredTemplateIds.indexOf(normalizeToken(rightId));
@@ -134,7 +142,9 @@ function buildPresetBearingChoices(templatesByKind, targetMode) {
         familyLabel,
         presetId: String(presetDefinition.id || '').trim(),
         presetLabel: String(presetDefinition.label || '').trim(),
-        name: `${familyLabel} · ${presetDefinition.label}`,
+        name: String(presetDefinition.label || '').trim() === familyLabel
+          ? familyLabel
+          : `${familyLabel} · ${presetDefinition.label}`,
         description: usesCanonicalTemplateId
           ? 'Canonical family preset'
           : `Canonical family preset via compatibility template: ${representative.name}`,
@@ -158,6 +168,8 @@ export function buildAdminBlockInsertChoices(availableBlockTemplates, options = 
   };
   const sourceTemplates = (Array.isArray(availableBlockTemplates) ? availableBlockTemplates : [])
     .filter((template) => normalizeToken(template?.mode) === targetMode)
+    .filter((template) => template?.hidden !== true)
+    .filter((template) => template?.excludeFromInsertCatalog !== true)
     .filter((template) => isBlockCatalogChoiceAllowed(template, catalogOptions));
   const templatesByKind = new Map();
 
@@ -175,6 +187,7 @@ export function buildAdminBlockInsertChoices(availableBlockTemplates, options = 
   const presetBearingChoices = buildPresetBearingChoices(templatesByKind, targetMode);
   const genericChoices = sourceTemplates
     .filter((template) => !PRESET_FAMILY_KINDS.includes(normalizeToken(template?.kind)))
+    .filter((template) => !COMPATIBILITY_ONLY_BLOCK_KINDS.has(normalizeToken(template?.kind)))
     .map((template) => {
       const kind = String(template?.kind || '').trim();
       const definition = getBlockDefinition(kind);

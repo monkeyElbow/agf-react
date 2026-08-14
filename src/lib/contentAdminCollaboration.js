@@ -98,6 +98,9 @@ export function normalizeSharedSaveResult(rawResult) {
   const hasConflicts = Boolean(source.hasConflicts || blockedBlocks.length);
   return {
     error: String(source.error || '').trim(),
+    details: String(source.details || '').trim(),
+    statusCode: Number.isFinite(Number(source.statusCode)) ? Number(source.statusCode) : null,
+    endpoint: String(source.endpoint || '').trim(),
     status: normalizeSharedOperationStatus(source.status || source.error, {
       kind: 'save',
       didChange: didSave,
@@ -139,8 +142,14 @@ export function normalizeSharedPublishResult(rawResult) {
   const didPublish = Boolean(source.didPublish);
   const hasConflicts = Boolean(source.hasConflicts || blockedBlocks.length);
   const rawReceipt = source.receipt && typeof source.receipt === 'object' ? source.receipt : null;
+  const rawVerification = rawReceipt?.verification && typeof rawReceipt.verification === 'object'
+    ? rawReceipt.verification
+    : null;
   return {
     error: String(source.error || '').trim(),
+    details: String(source.details || '').trim(),
+    statusCode: Number.isFinite(Number(source.statusCode)) ? Number(source.statusCode) : null,
+    endpoint: String(source.endpoint || '').trim(),
     status: normalizeSharedOperationStatus(source.status || source.error, {
       kind: 'publish',
       didChange: didPublish,
@@ -180,7 +189,18 @@ export function normalizeSharedPublishResult(rawResult) {
       ? {
         route: String(rawReceipt.route || '').trim(),
         scope: String(rawReceipt.scope || '').trim(),
+        blockId: String(rawReceipt.blockId || '').trim(),
+        draftRevision: String(rawReceipt.draftRevision || '').trim(),
+        publishedRevision: String(rawReceipt.publishedRevision || '').trim(),
         actor: normalizeContentActor(rawReceipt.actor),
+        timestamp: Number.isFinite(Number(rawReceipt.timestamp)) ? Number(rawReceipt.timestamp) : null,
+        verification: rawVerification
+          ? {
+            status: String(rawVerification.status || '').trim(),
+            baseSnapshotMatches: Boolean(rawVerification.baseSnapshotMatches),
+          }
+          : null,
+        operationId: String(rawReceipt.operationId || '').trim(),
         publishedBlockIds: Array.isArray(rawReceipt.publishedBlockIds)
           ? rawReceipt.publishedBlockIds.map((value) => String(value || '').trim()).filter(Boolean)
           : [],

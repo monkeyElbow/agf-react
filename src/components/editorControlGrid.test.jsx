@@ -16,7 +16,7 @@ function getProbeValue(field, currentValue) {
       ?? '';
   }
   if (field.type === 'route_link') {
-    return JSON.stringify({ kind: 'internal', to: '/editor-control-grid-probe' });
+    return 'https://example.test/editor-control-grid-probe';
   }
   return `__editor_control_grid_probe__${field.id}`;
 }
@@ -36,6 +36,12 @@ function triggerField(field, fieldRoot, settings) {
   }
   if (field.type === 'highlight_list') {
     fireEvent.click(fieldRoot.querySelector('button'));
+    return;
+  }
+  if (field.type === 'route_link') {
+    const control = fieldRoot.querySelector('.admin-route-link-override input');
+    expect(control, `${field.id} URL/path override control`).toBeTruthy();
+    fireEvent.change(control, { target: { value: nextValue } });
     return;
   }
   const control = fieldRoot.querySelector('select, textarea, input, [contenteditable="true"]');

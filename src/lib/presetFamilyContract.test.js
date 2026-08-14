@@ -15,7 +15,7 @@ import {
 
 describe('preset family contract', () => {
   it('keeps canonical preset-bearing families on one shared metadata and runtime-hook standard', () => {
-    expect(PRESET_FAMILY_KINDS).toEqual(['columns', 'card_grid', 'cta_band']);
+    expect(PRESET_FAMILY_KINDS).toEqual(['columns', 'card_grid', 'billboard']);
 
     PRESET_FAMILY_KINDS.forEach((kind) => {
       const definition = getBlockDefinition(kind);
@@ -59,7 +59,11 @@ describe('preset family contract', () => {
         expect(choice.familyLabel).toBe(definition?.label);
         expect(choice.presetId).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
         expect(choice.presetLabel).toBe(presetDefinition?.label);
-        expect(choice.name).toBe(`${choice.familyLabel} · ${choice.presetLabel}`);
+        expect(choice.name).toBe(
+          choice.familyLabel === choice.presetLabel
+            ? choice.familyLabel
+            : `${choice.familyLabel} · ${choice.presetLabel}`,
+        );
       });
   });
 

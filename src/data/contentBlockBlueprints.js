@@ -18,9 +18,9 @@ import {
   DEFAULT_SERVICE_HERO_PIE_SLICES,
 } from '../lib/dynamicPageBlocks';
 import { buildCardGridPresetSettings } from '../lib/cardGridPresets';
+import { buildBillboardPresetSettings } from '../lib/billboardPresets';
 import { buildBlockTemplateCreateId } from '../lib/blockTemplateIdentity';
 import { buildColumnsPresetSettings } from '../lib/columnsPresets';
-import { buildCtaBandPresetSettings } from '../lib/ctaBandPresets';
 import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { getTokenSwatch } from '../lib/colorSystem';
 import { PAGE_CONTENT_IDENTITY } from '../lib/pageContentIdentity';
@@ -113,7 +113,6 @@ const sharedDynamicIntroEditableFields = getEditableFieldsForKind('intro');
 const sharedDynamicGridEditableFields = getEditableFieldsForKind('card_grid');
 const sharedDynamicBillboardEditableFields = getEditableFieldsForKind('billboard');
 const impactStatEditableFields = getEditableFieldsForKind('impact_stat');
-const ctaBandEditableFields = getEditableFieldsForKind('cta_band');
 const sharedDynamicNewsletterEditableFields = getEditableFieldsForKind('newsletter');
 const featurePanelEditableFields = getEditableFieldsForKind('feature_panel');
 const splitPanelEditableFields = getEditableFieldsForKind('split_panel');
@@ -477,7 +476,9 @@ function seedBlueprintFlowStepColumnFields(columnNumber, {
 function createPlannedGivingHowItWorksColumnsBlueprint({
   id = 'how_it_works',
   name = 'How It Works',
+  presetId = 'default',
   sectionClassName = '',
+  useLegacyFlowClass = true,
   steps = [],
   buttonLabel = '',
   buttonHref = '',
@@ -485,13 +486,14 @@ function createPlannedGivingHowItWorksColumnsBlueprint({
   buttonStyle = 'blue',
   buttonTone = 'atlantean',
 }) {
-  const normalizedSectionClassName = ['legacy-child-native-flow-steps', sectionClassName]
+  const normalizedSectionClassName = [useLegacyFlowClass ? 'legacy-child-native-flow-steps' : '', sectionClassName]
     .filter(Boolean)
     .join(' ');
 
   return createDynamicColumnsBlueprint({
     id,
     name,
+    presetId,
     settings: {
       title: 'How it works',
       titleClassName: '',
@@ -534,16 +536,16 @@ function createPlannedGivingHowItWorksColumnsBlueprint({
   });
 }
 
-function createDynamicCtaBandBlueprint({ id, name, presetId = 'default', templateId = '', settings = {} }) {
+function createDynamicBillboardBlueprint({ id, name, presetId = 'default', templateId = '', settings = {} }) {
   return {
     id,
-    templateId: String(templateId || '').trim() || 'cta_band',
+    templateId: String(templateId || '').trim() || 'billboard',
     presetId,
     name,
-    kind: 'cta_band',
+    kind: 'billboard',
     mode: 'dynamic',
-    settings: buildCtaBandPresetSettings(presetId, settings),
-    editableFields: ctaBandEditableFields,
+    settings: buildBillboardPresetSettings(presetId, settings),
+    editableFields: sharedDynamicBillboardEditableFields,
   };
 }
 
@@ -1706,54 +1708,13 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         sectionClassName: 'legacy-child-native-assets legacy-child-native-cga-assets',
         ...seedBlueprintCardGridCardFields(1, {
           title: 'Gift funding options',
-          listJson: JSON.stringify([
-            'Cash (a significant portion of the annuity income may be tax-free)',
-            'Appreciated securities (may avoid a portion of capital gains tax)',
-            '$10,000 minimum',
-          ]),
+          body: '<ul><li><strong><span class="is-atlantean">Cash</span></strong> (a significant portion of the annuity income may be tax-free)</li><li><strong><span class="is-atlantean">Appreciated securities</span></strong> (may avoid a portion of capital gains tax)</li><li><strong><span class="is-atlantean">$10,000 minimum</span></strong></li></ul><p><strong><span class="is-atlantean">The SECURE 2.0 Act of 2022</span></strong> allows you to fund a Charitable Gift Annuity with funds distributed from your IRA—up to $50,000* of your annual Qualified Charitable Distribution limit (QCD). This charitable distribution amount is both retirement income for you, and a gift of support to a ministry you choose. Even better, this distribution can count toward your IRA’s annual Required Minimum Distribution (RMD). <strong>You’re permitted to take advantage of this unique opportunity only once.</strong></p>',
           fineprint: '*as of 2025',
           buttonLabel: 'Learn more about this',
           buttonHref: '/services/planned-giving/charitable-gift-annuities#demo',
         }),
       },
     }),
-    {
-      id: 'secure_act',
-      name: 'SECURE 2.0 Act',
-      kind: PAGE_CONTENT_IDENTITY.kind,
-      mode: 'dynamic',
-      settings: {
-        title: '',
-        subtitle: '',
-        body: '',
-        html: '<p><strong>The SECURE 2.0 Act</strong> allows you to fund a Charitable Gift Annuity with funds distributed from your IRA up to $50,000* of your annual Qualified Charitable Distribution limit (QCD). This charitable distribution amount is both retirement income for you, and a gift of support to a ministry you choose. Even better, this distribution can count toward your IRA’s annual Required Minimum Distribution (RMD). You’re permitted to take advantage of this unique opportunity only once.</p>',
-        widget: '',
-        fullBleed: false,
-        spaceBeforeRem: 0,
-        spaceAfterRem: 0,
-        paddingTopRem: 0,
-        paddingBottomRem: 1.2,
-        contentMaxWidthPx: 980,
-        anchorId: '',
-        sectionClassName: 'legacy-child-native-cga-secure-act',
-        copyWrap: false,
-        buttonLabel: '',
-        buttonUrl: '',
-        buttonPageRef: '',
-        buttonOpenInNewWindow: false,
-        buttonDocumentId: '',
-        addressClassName: '',
-        addressTitle: '',
-        addressLines: '',
-        tableHeadersJson: '',
-        tableRowsJson: '',
-        tableValueAlignment: '',
-        tableChartId: '',
-        fineprint: '',
-        fineprintDisclosureId: '',
-      },
-      editableFields: sharedDynamicPageContentEditableFields,
-    },
     {
       id: 'qcd_fineprint',
       name: 'QCD Fineprint',
@@ -2045,14 +2006,14 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         {
           iconKey: 'daf-step-1',
           iconTone: 'sandstone',
-          body: 'Your donor transfers cash or asset(s) to your Ministry Impact Fund®, potentially receiving a charitable deduction and minimized or eliminated capital gains.',
+          body: 'Open a Ministry Impact Fund®. Your donors transfer cash or assets to the fund, potentially a charitable deduction and minimized or eliminated capital gains.',
           buttonLabel: 'Open a Ministry Impact Fund®',
           buttonHref: '#ministry-impact-form',
         },
         {
           iconKey: 'mif-step-2',
           iconTone: 'sandstone',
-          body: 'AG Foundation liquidates the asset(s) for you, handling all administrative details.',
+          body: 'AG Foundation liquidates the assets for you and your donors, handling all administrative details.',
           buttonLabel: 'Secure message upload',
           buttonHref: 'https://uploads.agfinancial.org/',
           buttonOpenInNewWindow: true,
@@ -2172,12 +2133,12 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       mode: 'dynamic',
       hidden: false,
       settings: {
-        title: 'A legacy of giving.',
+        title: 'Ministry support. Unlocked and expanded.',
         titleClassName: '',
-        titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
-        subtitle: 'Let’s map out the best next step.',
+        titleHighlightsJson: '',
+        subtitle: '',
         bodyHtml: '',
-        body: 'We’re ready to help you explore how your gift can continue to give. And give. And give…',
+        body: 'Use this form to start the Ministry Impact Fund® process.',
         bgTone: 'blue',
         textTone: 'white',
         spaceBeforeRem: 3.6,
@@ -2205,10 +2166,31 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         step5Note: '',
         step5Alert: '',
         step1FieldsJson: JSON.stringify([
-          { id: 'firstName', label: 'First Name*', type: 'text', required: true },
-          { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+          { id: 'name', label: 'Name*', type: 'text', required: true },
+          {
+            id: 'givingProduct',
+            label: 'Product of interest',
+            type: 'select',
+            placeholder: 'Select one',
+            required: true,
+            options: [
+              { value: 'ministry-impact-fund', label: 'Ministry Impact Fund®' },
+            ],
+          },
+          {
+            id: 'contactPreference',
+            label: 'How should we get in touch with you?',
+            type: 'select',
+            placeholder: 'Select one',
+            required: true,
+            options: [
+              { value: 'phone', label: 'Phone' },
+              { value: 'email', label: 'Email' },
+            ],
+          },
           { id: 'phone', label: 'Phone*', type: 'tel', placeholder: '(555) 555-5555', required: true },
           { id: 'email', label: 'Email*', type: 'email', required: true },
+          { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
         ]),
         step2FieldsJson: '[]',
         step3FieldsJson: '[]',
@@ -3799,7 +3781,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
           href: 'https://secure.agfinancial.org/invest',
           styleField: 'buttonStyle',
           toneField: 'buttonTone',
-          style: 'dark',
+          style: 'outline',
           tone: 'white',
           openInNewWindowField: 'buttonOpenInNewWindow',
           openInNewWindow: true,
@@ -3970,6 +3952,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         textTone: 'white',
         justify: 'center',
         lineSpacing: 1,
+        titleFontFamily: 'helv',
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
           hrefField: 'buttonUrl',
@@ -5115,9 +5098,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: testimonialsEditableFields,
     },
-    createDynamicCtaBandBlueprint({
+    createDynamicBillboardBlueprint({
       id: 'cta_band',
-      name: 'CTA Band',
+      name: 'Billboard · Loan options',
       settings: {
         title: 'Which loan is right for me?',
         body: '',
@@ -5538,7 +5521,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         heading: 'Your IRA can do more.',
         headingClassName: '',
         headingHighlightsJson: '',
-        bodyHtml: '<p>If you’re 70½ or older, a Qualified Charitable Distribution (QCD) lets you transfer up to $110,000 per year directly to your church or an eligible ministry tax-free, and straight from the source.</p>',
+        bodyHtml: '<p>If you\'re 70½ or older, a Qualified Charitable Distribution (QCD) lets you transfer up to $110,000 per year directly to your church or an eligible ministry — tax-free, and straight from the source. It counts toward your required minimum distribution, and not a dollar goes to taxes first.</p>',
         body: '',
         justify: 'center',
         lineSpacing: 1.04,
@@ -5552,7 +5535,8 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     createPlannedGivingHowItWorksColumnsBlueprint({
       id: 'how_it_works',
       name: 'How It Works',
-      sectionClassName: 'legacy-child-native-qcd-steps',
+      presetId: 'planned-giving-steps',
+      useLegacyFlowClass: false,
       steps: [
         {
           iconKey: 'endowments-step-1',
@@ -5567,10 +5551,106 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         {
           iconKey: 'qcd-step-3',
           iconTone: 'atlantean',
-          body: 'Placeholder: describe the third QCD step here.',
+          body: 'Because the distribution goes directly to the ministry, it\'s excluded from your taxable income entirely. Your generosity goes further.',
         },
       ],
     }),
+    createDynamicCardGridBlueprint({
+      id: 'card_grid',
+      name: 'QCD requirements',
+      settings: {
+        title: 'It starts with your IRA.',
+        titleClassName: '',
+        titleHighlightsJson: '[{"text":"your IRA","className":"is-atlantean"}]',
+        bodyHtml: '',
+        body: '',
+        bgTone: 'white',
+        contentWidth: 'content',
+        columns: 'one',
+        cardStyle: 'planned-giving-centered',
+        ...seedBlueprintCardGridCardFields(1, {
+          title: 'A few things to know:',
+          listJson: JSON.stringify([
+            'Must be age 70½ or older',
+            'Transfers up to $110,000 per year',
+            'Counts toward your required minimum distribution (RMD)',
+            'Goes directly from your IRA to the ministry, never to you first',
+            'Excluded from your taxable income',
+            'Must go to an eligible 501(c)(3) — not a DAF or private foundation',
+          ]),
+        }),
+      },
+    }),
+    {
+      id: 'request_form',
+      name: 'QCD Request Form',
+      kind: 'request_form',
+      mode: 'dynamic',
+      hidden: false,
+      settings: {
+        title: 'Your IRA. Their gain.',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        subtitle: '',
+        bodyHtml: '',
+        body: 'Ready to make your distribution count? Use this form to take the first step.',
+        bgTone: 'blue',
+        textTone: 'white',
+        spaceBeforeRem: 2.6,
+        spaceAfterRem: 2.8,
+        submitLabel: 'Submit',
+        successMessage: 'Thanks. We received your request and will follow up soon.',
+        salesforceUrl: '',
+        anchorId: 'qcd-request-form',
+        sectionClassName: 'legacy-child-native-qcd-request',
+        presetId: 'legacy-generosity',
+        step1Title: '',
+        step1Note: '',
+        step1Alert: '',
+        step2Title: '',
+        step2Note: '',
+        step2Alert: '',
+        step3Title: '',
+        step3Note: '',
+        step3Alert: '',
+        step4Title: '',
+        step4Note: '',
+        step4Alert: '',
+        step5Title: '',
+        step5Note: '',
+        step5Alert: '',
+        step1FieldsJson: JSON.stringify([
+          { id: 'name', label: 'Name*', type: 'text', required: true },
+          {
+            id: 'givingProduct',
+            label: 'Product of interest',
+            type: 'select',
+            placeholder: 'Select one',
+            required: true,
+            options: [{ value: 'qualified-charitable-distribution', label: 'Qualified Charitable Distribution (QCD)' }],
+          },
+          {
+            id: 'contactPreference',
+            label: 'How should we get in touch with you?',
+            type: 'select',
+            placeholder: 'Select one',
+            required: true,
+            options: [
+              { value: 'phone', label: 'Phone' },
+              { value: 'email', label: 'Email' },
+            ],
+          },
+          { id: 'phone', label: 'Phone*', type: 'tel', placeholder: '(555) 555-5555', required: true },
+          { id: 'email', label: 'Email*', type: 'email', required: true },
+          { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
+        ]),
+        step2FieldsJson: '[]',
+        step3FieldsJson: '[]',
+        step4FieldsJson: '[]',
+        step5FieldsJson: '[]',
+      },
+      editableFields: requestFormEditableFields,
+    },
   ],
   '/services/planned-giving/endowments': [
     {
@@ -5648,9 +5728,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       id: 'assets_you_may_give',
       name: 'Gift Assets Cards',
       settings: {
-        title: 'It starts with what you give.',
+        title: 'Assets you may give',
         titleClassName: '',
-        titleHighlightsJson: '[{"text":"what you give","className":"is-atlantean"}]',
+        titleHighlightsJson: '[{"text":"you may give","className":"is-atlantean"}]',
         bodyHtml: '',
         body: '',
         bgTone: 'white',
@@ -5754,14 +5834,14 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       mode: 'dynamic',
       hidden: false,
       settings: {
-        title: 'Begin the Endowment sign up process',
-        titleClassName: '',
+        title: 'Leave a legacy that lasts.',
+        titleClassName: 'is-super-grey',
         titleHighlightsJson: '',
         subtitle: '',
         bodyHtml: '',
-        body: '',
-        bgTone: 'sand',
-        textTone: 'dark',
+        body: 'Use this form to start your Endowment setup',
+        bgTone: 'blue',
+        textTone: 'white',
         spaceBeforeRem: 2.6,
         spaceAfterRem: 2.8,
         anchorId: 'endowment-request-form',
@@ -5795,7 +5875,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
             placeholder: 'Select one',
             required: true,
             options: [
-              { value: 'endowments', label: 'Endowments' },
+              { value: 'endowments', label: 'Endowment' },
             ],
           },
           { id: 'phone', label: 'Phone*', type: 'tel', placeholder: '(555) 555-5555', required: true },
@@ -6540,6 +6620,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         bodyHtml: '',
         imageUrl: insuranceMissionAssureImage,
         imageAlt: 'Mission Assure coverage',
+        logoKey: 'mission-assure',
         sectionClassName: 'insurance-native-mission-assure',
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
@@ -9446,6 +9527,7 @@ const TEMPLATE_ONLY_BLOCK_BLUEPRINTS = Object.freeze([
   applyCanonicalDefinitionToBlock({
     id: 'billboard_default',
     templateId: 'billboard',
+    presetId: 'default',
     name: 'Billboard',
     kind: 'billboard',
     mode: 'dynamic',
@@ -9480,12 +9562,12 @@ const TEMPLATE_ONLY_BLOCK_BLUEPRINTS = Object.freeze([
     mode: 'dynamic',
     isReusableTemplate: true,
     settings: {
-      title: 'Add a feature panel title.',
-      bodyHtml: '<p>Add feature panel copy here.</p>',
+      title: 'Church Cash Reserves',
+      bodyHtml: '<p>Financial stability is essential for long-term growth. Build a practical reserve strategy so your ministry is ready for both opportunity and disruption.</p>',
       body: '',
-      buttonLabel: '',
-      buttonUrl: '',
-      buttonPageRef: '',
+      buttonLabel: 'Ready for the unexpected?',
+      buttonUrl: '/resources',
+      buttonPageRef: '/resources',
       buttonOpenInNewWindow: false,
       anchorId: '',
       sectionClassName: '',
@@ -9660,18 +9742,6 @@ const TEMPLATE_ONLY_BLOCK_BLUEPRINTS = Object.freeze([
     count: 3,
   }),
   applyCanonicalDefinitionToBlock({
-    id: 'cta_band_default',
-    templateId: 'cta_band',
-    presetId: 'default',
-    name: 'CTA Band · General CTA',
-    kind: 'cta_band',
-    mode: 'dynamic',
-    isReusableTemplate: true,
-    isAddBlockDefault: true,
-    settings: buildCtaBandPresetSettings('default'),
-    editableFields: ctaBandEditableFields,
-  }),
-  applyCanonicalDefinitionToBlock({
     id: 'impact_stat_default',
     templateId: 'impact_stat',
     name: 'Impact Stats',
@@ -9729,15 +9799,15 @@ const TEMPLATE_ONLY_BLOCK_BLUEPRINTS = Object.freeze([
   }),
   applyCanonicalDefinitionToBlock({
     id: 'dashboard_login_cta',
-    templateId: 'cta_band',
+    templateId: 'billboard',
     presetId: 'dashboard-login',
-    name: 'CTA Band · Dashboard login',
-    kind: 'cta_band',
+    name: 'Billboard · Dashboard login',
+    kind: 'billboard',
     mode: 'dynamic',
     isReusableTemplate: true,
     hidden: true,
-    settings: buildCtaBandPresetSettings('dashboard-login'),
-    editableFields: ctaBandEditableFields,
+    settings: buildBillboardPresetSettings('dashboard-login'),
+    editableFields: sharedDynamicBillboardEditableFields,
   }),
 ]);
 
@@ -9932,7 +10002,6 @@ function isInsertCatalogTemplate(block) {
     'billboard',
     'card_grid',
     'columns',
-    'cta_band',
     'cta_form',
     'feature_panel',
     'impact_stat',
@@ -9957,8 +10026,10 @@ export function getAllBlockTemplateBlueprints() {
 
   const byTemplateLookupId = new Map();
   const sources = [
-    ...Object.values(contentBlockBlueprintsByPath || {}),
-    genericPageBlockBlueprint(),
+    // Route blueprints seed page content. They are intentionally not an add-
+    // block catalog source: a live one-off must not become reusable merely
+    // because it happens to share a kind with a catalog item.
+    genericPageBlockBlueprint().filter((block) => block?.isReusableTemplate === true),
     canonicalizeBlueprintBlocksLinks(TEMPLATE_ONLY_BLOCK_BLUEPRINTS),
   ];
 

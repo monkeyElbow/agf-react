@@ -234,6 +234,37 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.queryByLabelText('Open in admin content editor (new window)')).toBeNull();
   });
 
+  it('keeps a hidden CGA page-content block out of the HUD-off render', () => {
+    mockBlocksByPath = {
+      '/services/planned-giving/charitable-gift-annuities': [
+        {
+          id: 'qcd_fineprint',
+          name: 'QCD Fineprint',
+          kind: 'content',
+          mode: 'dynamic',
+          hidden: true,
+          settings: {
+            html: '<p>Hidden CGA page content must not render.</p>',
+          },
+          editableFields: [],
+        },
+      ],
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/planned-giving/charitable-gift-annuities',
+            title: 'Charitable Gift Annuities',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByText('Hidden CGA page content must not render.')).toBeNull();
+  });
+
   it('does not emit native hero drift warnings or fallback hero content for block-only pages without a hero block', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mockBlocksByPath = {
@@ -258,7 +289,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     warnSpy.mockRestore();
   });
 
-  it('keeps the ministers group life hero visible when HUD is on while showing HUD chrome only then', () => {
+  it('keeps the ministers group life hero visible when HUD is on while showing HUD chrome only then', async () => {
     mockFrontHudEnabled = true;
 
     render(
@@ -275,7 +306,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getByRole('heading', { name: 'AG Ministry' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Group Life' })).toBeTruthy();
     expect(screen.getByLabelText('Front HUD editor panels')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save all page drafts' })).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save all page drafts' })).toBeTruthy());
     expect(screen.getByRole('link', { name: 'Open page admin' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Page Content HUD panel' })).toBeTruthy();
@@ -297,6 +328,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Open Hero HUD panel' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Close panel' })).toBeTruthy());
     fireEvent.click(screen.getByRole('button', { name: 'Close panel' }));
 
     await waitFor(() => {
@@ -341,7 +373,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getAllByRole('button', { name: 'Open Page Content HUD panel' })).toHaveLength(2);
   });
 
-  it('switches mobile HUD to selection mode without rendering the desktop dock chrome', () => {
+  it('switches mobile HUD to selection mode without rendering the desktop dock chrome', async () => {
     mockFrontHudEnabled = true;
     mockMobileFrontHud = true;
 
@@ -362,18 +394,18 @@ describe('NativeContentPage HUD visibility boundaries', () => {
 
     fireEvent.click(container.querySelector('[data-block-id="hero"]'));
 
-    expect(screen.getByLabelText('Hero mobile HUD actions')).toBeTruthy();
+    await waitFor(() => expect(screen.getByLabelText('Hero mobile HUD actions')).toBeTruthy());
     expect(container.querySelector('[data-block-id="hero"]')?.getAttribute('data-mobile-front-hud-selected')).toBe('true');
     expect(container.querySelector('[data-block-id="page_content"]')?.getAttribute('data-mobile-front-hud-selected')).not.toBe('true');
 
     fireEvent.click(container.querySelector('[data-block-id="page_content"]'));
 
-    expect(screen.getByLabelText('Page Content mobile HUD actions')).toBeTruthy();
+    await waitFor(() => expect(screen.getByLabelText('Page Content mobile HUD actions')).toBeTruthy());
     expect(container.querySelector('[data-block-id="page_content"]')?.getAttribute('data-mobile-front-hud-selected')).toBe('true');
     expect(container.querySelector('[data-block-id="hero"]')?.getAttribute('data-mobile-front-hud-selected')).not.toBe('true');
   });
 
-  it('selects a mobile HUD block from visible linked content instead of requiring incidental blank space taps', () => {
+  it('selects a mobile HUD block from visible linked content instead of requiring incidental blank space taps', async () => {
     mockFrontHudEnabled = true;
     mockMobileFrontHud = true;
     mockBlocksByPath = {
@@ -424,7 +456,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
 
     fireEvent.click(screen.getByRole('link', { name: 'Talk now' }));
 
-    expect(screen.getByLabelText('Page Content mobile HUD actions')).toBeTruthy();
+    await waitFor(() => expect(screen.getByLabelText('Page Content mobile HUD actions')).toBeTruthy());
     expect(container.querySelector('[data-block-id="page_content"]')?.getAttribute('data-mobile-front-hud-selected')).toBe('true');
   });
 
@@ -444,8 +476,10 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     );
 
     fireEvent.click(container.querySelector('[data-block-id="hero"]'));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Edit' })).toBeTruthy());
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Close panel' })).toBeTruthy());
     const closeButton = screen.getByRole('button', { name: 'Close panel' });
     expect(closeButton.textContent).toBe('Close');
     expect(closeButton.closest('[data-mobile-front-hud-sheet-header="true"]')).toBeTruthy();
@@ -475,11 +509,14 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     );
 
     fireEvent.click(container.querySelector('[data-block-id="hero"]'));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Edit' })).toBeTruthy());
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Close panel' })).toBeTruthy());
     expect(screen.getByRole('button', { name: 'Close panel' })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Close panel' }));
     fireEvent.click(container.querySelector('[data-block-id="page_content"]'));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Move Page Content up' })).toBeTruthy());
     fireEvent.click(screen.getByRole('button', { name: 'Move Page Content up' }));
     expect(mockMoveBlock).toHaveBeenCalledWith('/services/insurance/ministers-group-life-plan', 'page_content', 'up');
 
@@ -497,7 +534,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     });
   });
 
-  it('keeps hidden impact hero and intro blocks out of the HUD while showing block-owned sections', () => {
+  it('shows hidden impact hero and intro blocks to admins in HUD while keeping them out of public mode', () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
       '/about-us/impact': [
@@ -600,17 +637,17 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       </MemoryRouter>,
     );
 
-    expect(container.querySelector('.service-native-hero')).toBeNull();
-    expect(container.querySelector('.service-native-intro')).toBeNull();
-    expect(screen.queryByText('Put your money where your faith is.')).toBeNull();
+    expect(container.querySelector('.service-native-hero.is-admin-hidden-block')).toBeTruthy();
+    expect(container.querySelector('.service-native-intro.is-admin-hidden-block')).toBeTruthy();
+    expect(screen.getByText('Put your money where your faith is.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Serving you, alongside you.' })).toBeTruthy();
     expect(screen.getByText(/improving financial health while growing God’s kingdom/i)).toBeTruthy();
     expect(screen.getByText('We’re ministry allies.')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'We’re making' })).toBeTruthy();
+    expect(screen.getAllByRole('heading', { name: 'We’re making' }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('a difference… thanks to you.')).toBeTruthy();
     expect(screen.queryByText('Let’s make them together.')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Open Hero HUD panel' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Open Intro HUD panel' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open Intro HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Billboard HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Site Feature · Impact proof story HUD panel' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Open Page Content HUD panel' })).toBeNull();
@@ -627,13 +664,13 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           mode: 'dynamic',
           hidden: false,
           settings: {
-            title: 'Begin the Endowment sign up process',
-            titleClassName: '',
+            title: 'Leave a legacy that lasts.',
+            titleClassName: 'is-super-grey',
             titleHighlightsJson: '',
             subtitle: '',
             bodyHtml: '',
-            body: '',
-            bgTone: 'grey',
+            body: 'Use this form to start your Endowment setup',
+            bgTone: 'blue',
             textTone: 'white',
             spaceBeforeRem: 2.6,
             spaceAfterRem: 2.8,
@@ -645,10 +682,26 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             step1Note: '',
             step1Alert: '',
             step1FieldsJson: JSON.stringify([
-              { id: 'firstName', label: 'First Name*', type: 'text', required: true },
-              { id: 'lastName', label: 'Last Name*', type: 'text', required: true },
+              { id: 'name', label: 'Name*', type: 'text', required: true },
+              {
+                id: 'givingProduct',
+                label: 'Product of interest',
+                type: 'select',
+                placeholder: 'Select one',
+                required: true,
+                options: [{ value: 'ministry-impact-fund', label: 'Ministry Impact Fund®' }],
+              },
+              {
+                id: 'contactPreference',
+                label: 'How should we get in touch with you?',
+                type: 'select',
+                placeholder: 'Select one',
+                required: true,
+                options: [{ value: 'phone', label: 'Phone' }, { value: 'email', label: 'Email' }],
+              },
               { id: 'phone', label: 'Phone*', type: 'tel', placeholder: '(555) 555-5555', required: true },
               { id: 'email', label: 'Email*', type: 'email', required: true },
+              { id: 'message', label: 'Message', type: 'textarea', rows: 4, placeholder: 'How can we help?' },
             ]),
             step2Title: '',
             step2Note: '',
@@ -691,7 +744,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       </MemoryRouter>,
     );
 
-    const requestHeading = screen.getByRole('heading', { name: 'Begin the Endowment sign up process' });
+    const requestHeading = screen.getByRole('heading', { name: 'Leave a legacy that lasts.' });
     const requestSection = requestHeading.closest('section');
 
     expect(requestSection).toBeTruthy();
@@ -706,7 +759,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.queryByText('Contact details')).toBeNull();
   });
 
-  it('wires endowments intro takeover to the active editable route', () => {
+  it('wires endowments intro takeover to the active editable route', async () => {
     mockFrontHudEnabled = true;
     mockBlocksByPath = {
       '/services/planned-giving/endowments': (contentBlockBlueprintsByPath['/services/planned-giving/endowments'] || [])
@@ -741,6 +794,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Open Intro HUD panel' }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Take over draft' }).length).toBeGreaterThan(0));
     fireEvent.click(screen.getAllByRole('button', { name: 'Take over draft' })[0]);
 
     expect(mockSetActiveBlockLock).toHaveBeenCalledWith(
@@ -941,12 +995,12 @@ describe('NativeContentPage HUD visibility boundaries', () => {
           mode: 'dynamic',
           hidden: false,
           settings: {
-            title: 'A legacy of giving.',
+            title: 'Ministry support. Unlocked and expanded.',
             titleClassName: '',
-            titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+            titleHighlightsJson: '',
             subtitle: '',
             bodyHtml: '',
-            body: 'We’re ready to help you explore how your gift can continue to give. And give. And give…',
+            body: 'Use this form to start the Ministry Impact Fund® process.',
             bgTone: 'blue',
             textTone: 'white',
             spaceBeforeRem: 3.6,
@@ -1007,7 +1061,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
       </MemoryRouter>,
     );
 
-    const requestHeading = screen.getByRole('heading', { name: /A legacy of giving\./ });
+    const requestHeading = screen.getByRole('heading', { name: 'Ministry support. Unlocked and expanded.' });
     const requestSection = requestHeading.closest('section');
 
     expect(requestSection).toBeTruthy();

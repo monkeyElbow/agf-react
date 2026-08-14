@@ -123,11 +123,13 @@ describe('request form renderer guardrail', () => {
 
   it('renders dynamic request blocks directly instead of targeting native sections', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
-    expect(source).toContain('const renderBlock = normalizeBlockForRender(block);');
-    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'request_form') {");
-    expect(source).toContain('const requestSection = buildDynamicRequestFormSection(renderBlock, activePath);');
-    expect(source).toContain('acc.push(requestSection);');
+    expect(source).toContain('function buildManagedBlockSection(block, {');
+    expect(source).toContain("if (renderBlock.kind === 'request_form') {");
+    expect(source).toContain('buildDynamicRequestFormSection(renderBlock, pathname);');
+    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).toContain('return <DynamicRequestFormSection config={config} />;');
     expect(source).not.toContain('const targetedDynamicRequestSections = new Map();');
     expect(source).not.toContain("const targetKey = String(mappedSection?.targetSectionKey || '').trim();");
@@ -275,7 +277,7 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy {');
     expect(cssSource).toContain('justify-self: stretch;');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy > h2 {');
-    expect(cssSource).toContain('font-family: var(--ag-font-helv);');
+    expect(cssSource).toContain('font-family: var(--ag-font-heading);');
     expect(cssSource).toContain('text-wrap: wrap;');
     expect(cssSource).not.toContain('.legacy-child-native-endowments-legacy-form > .ag-panel-rail {');
   });
@@ -317,7 +319,7 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.legacy-child-native-request:not(.native-dynamic-request) .native-info-inline-form h5 {');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy > h2 {');
     expect(cssSource).toContain('color: var(--ag-color-super-grey);');
-    expect(cssSource).toContain('font-family: var(--ag-font-helv);');
+    expect(cssSource).toContain('font-family: var(--ag-font-heading);');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-impact {\n  padding-top: clamp(3rem, 6vw, 4.8rem);\n  padding-bottom: clamp(3rem, 6vw, 4.8rem);\n}');
   });
 

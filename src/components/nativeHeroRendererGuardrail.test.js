@@ -13,6 +13,7 @@ function readSource(relativePath) {
 describe('native hero renderer guardrail', () => {
   it('keeps the shared dynamic hero builder in the native page path', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
     const stylesSource = readSource('../styles/service-native.css');
 
@@ -21,8 +22,8 @@ describe('native hero renderer guardrail', () => {
     expect(source).toContain('renderTextWithHighlights,');
     expect(source).toContain("from '../lib/dynamicPageBlocks';");
     expect(source).toContain('resolveHeroLineDisplayClassName,');
-    expect(source).toContain('const adminHero = buildDynamicHeroFromBlock(heroBlock);');
-    expect(source).toContain('const heroBlock = findVisibleDynamicBlockByKind(visibleBlocks, \'hero\');');
+    expect(source).toContain('buildHero: (block) => buildDynamicHeroFromBlock(block),');
+    expect(compositionSource).toContain("const primaryHeroBlock = visibleBlocks.find((block) => blockKind(block) === 'hero') || null;");
     expect(source).not.toContain('buildTestDynamicHero');
     expect(source).toContain('const renderedHero = dynamicHeroBlock');
     expect(source).toContain('const renderedDynamicHero = useMemo(');

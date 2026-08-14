@@ -13,12 +13,17 @@ function readSource(relativePath) {
 describe('native newsletter renderer guardrail', () => {
   it('keeps the shared dynamic newsletter builder in the native page path', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
     expect(source).toContain('buildDynamicNewsletterFromBlock,');
     expect(source).toContain('import NewsletterSignupForm from \'./NewsletterSignupForm\';');
     expect(source).toContain('const runtime = buildDynamicNewsletterFromBlock(block);');
     expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-newsletter' : 'native-dynamic-newsletter';");
-    expect(source).toContain('const newsletterSection = buildDynamicNewsletterSection(renderBlock, activePath);');
+    expect(source).toContain('function buildManagedBlockSection(block, {');
+    expect(source).toContain("if (renderBlock.kind === 'newsletter') {");
+    expect(source).toContain('buildDynamicNewsletterSection(renderBlock, pathname);');
+    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).toContain('<NewsletterSignupForm className="is-native-newsletter" />');
   });
 

@@ -9,6 +9,13 @@ export const SYSTEM_READABILITY_BOUNDARIES = Object.freeze([
     pass: 'Pass 5',
   },
   {
+    file: 'src/styles/home-service-public.css',
+    owner: 'Home public block surfaces and route-specific presentation rules',
+    currentBoundary: 'Home-owned public stylesheet with service-family rules excluded',
+    nextSplit: 'split above-feature shared surfaces from below-feature route choreography if Home rendering needs another boundary',
+    pass: 'Pass 5',
+  },
+  {
     file: 'src/styles/front-hud.css',
     owner: 'front HUD ownership overlays, workflow controls, and editor presentation styles',
     currentBoundary: 'shared HUD stylesheet loaded by front HUD components',
@@ -17,9 +24,16 @@ export const SYSTEM_READABILITY_BOUNDARIES = Object.freeze([
   },
   {
     file: 'src/styles.css',
-    owner: 'global application styles, admin styles, and shared base styles',
-    currentBoundary: 'single global stylesheet imported by the app',
-    nextSplit: 'split admin CSS, global base CSS, and app shell utilities after service-native ownership is reduced',
+    owner: 'public site styles and shared base styles',
+    currentBoundary: 'public stylesheet; admin selectors are owned by src/styles/admin.css',
+    nextSplit: 'split global base CSS from app-shell utilities after service-native ownership is reduced',
+    pass: 'Pass 5',
+  },
+  {
+    file: 'src/styles/admin.css',
+    owner: 'admin shell, HUD controls, swatches, and admin workbench styles',
+    currentBoundary: 'extracted admin stylesheet loaded after the public stylesheet',
+    nextSplit: 'split shared HUD primitives from page-specific admin panels; no admin selectors remain in the public stylesheet',
     pass: 'Pass 5',
   },
   {

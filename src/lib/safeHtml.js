@@ -55,6 +55,9 @@ function sanitizeHref(value) {
   if (!href) {
     return '';
   }
+  if (/^(?:\\|\/\/)/.test(href)) {
+    return '';
+  }
   if (/^(https?:|mailto:|tel:|#|\/)/i.test(href)) {
     return href;
   }

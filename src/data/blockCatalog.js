@@ -19,7 +19,6 @@ const STANDARD_BLOCK_KINDS = new Set([
   'billboard',
   'card_grid',
   'columns',
-  'cta_band',
   'feature_panel',
   'intro',
   'legal_copy',
@@ -115,8 +114,8 @@ function buildKindMetadata(kind) {
   if (STANDARD_BLOCK_KINDS.has(token)) {
     return {
       catalogVisibility: 'standard',
-      architectureType: ['card_grid', 'columns', 'cta_band'].includes(token) ? 'preset' : 'standard-block',
-      category: ['cta_band', 'feature_panel'].includes(token) ? 'conversion' : 'content',
+      architectureType: ['billboard', 'card_grid', 'columns'].includes(token) ? 'preset' : 'standard-block',
+      category: ['feature_panel'].includes(token) ? 'conversion' : 'content',
       description: 'Reusable content block.',
     };
   }

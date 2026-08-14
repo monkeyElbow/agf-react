@@ -122,6 +122,7 @@ export default function FrontHudPageWorkflow({
   placement = 'dock',
   isVisible = true,
   blockId = '',
+  block = null,
   blockLabel = 'this block',
   ownership = null,
   onOwnershipAction = null,
@@ -135,6 +136,8 @@ export default function FrontHudPageWorkflow({
 }) {
   const {
     isPageDirty = () => false,
+    blocksByPath = {},
+    updateBlock = null,
     getPageChangeSummary = () => null,
     getPagePublishSummary = () => null,
     getPageWorkflowActivity = () => null,
@@ -153,6 +156,15 @@ export default function FrontHudPageWorkflow({
   const { revealToken = 0, setEnabled: setFrontHudEnabled = null } = useFrontHud() || {};
   const normalizedPath = String(pathname || '').trim();
   const normalizedBlockId = String(blockId || '').trim();
+  const contextBlock = normalizedPath && normalizedBlockId && Array.isArray(blocksByPath?.[normalizedPath])
+    ? blocksByPath[normalizedPath].find((block) => String(block?.id || '').trim() === normalizedBlockId)
+    : null;
+  // Active editor block is authoritative. Context map can lag local HUD draft buffer.
+  const activeBlock = block || contextBlock;
+  const isBlockHidden = Boolean(
+    activeBlock?.hidden === true
+    || String(activeBlock?.hidden || '').trim().toLowerCase() === 'true',
+  );
   const workflowRef = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDiscarding, setIsDiscarding] = useState(false);
@@ -174,6 +186,7 @@ export default function FrontHudPageWorkflow({
   const [saveError, setSaveError] = useState('');
   const [saveOutcome, setSaveOutcome] = useState(null);
   const [publishError, setPublishError] = useState('');
+  const [blockDraftSaveFailed, setBlockDraftSaveFailed] = useState(false);
 
   const changeSummary = normalizedPath
     ? (getPageChangeSummary(normalizedPath) || {})
@@ -219,6 +232,10 @@ export default function FrontHudPageWorkflow({
   const hasDraftActivitySignal = hasUnpublishedChanges;
   const [showSettledStatus, setShowSettledStatus] = useState(() => !hasDraftActivitySignal);
   const shouldUseCalmDraftPresentation = !showSettledStatus && !saveError && !pathSaveResult?.error;
+  const sharedSyncFailure = sharedSyncStatus?.lastError;
+  const sharedSyncFailureLabel = sharedSyncFailure
+    ? `${sharedSyncFailure.operation || 'Shared content sync'} failed${sharedSyncFailure.status ? ` (${sharedSyncFailure.status})` : ''}: ${sharedSyncFailure.message}${sharedSyncFailure.endpoint ? ` [${sharedSyncFailure.endpoint}]` : ''}`
+    : '';
 
   useEffect(() => {
     if (hasDraftActivitySignal) {
@@ -252,7 +269,11 @@ export default function FrontHudPageWorkflow({
   const saveWasAcknowledged = saveOutcome?.status === 'saved' && !isSaving;
   const hasLocalDraftBuffer = hasPendingExternalDraftsOnPage;
 
-  const saveFeedbackLabel = saveError
+  const saveFeedbackLabel = sharedSyncFailureLabel
+    ? sharedSyncFailureLabel
+    : blockDraftSaveFailed
+      ? `${saveError || 'Draft save failed'}; save again before Make live`
+    : saveError
     ? saveError
     : pathSaveResult?.status === 'failed'
       ? 'Draft save failed; local changes are still here'
@@ -367,6 +388,15 @@ export default function FrontHudPageWorkflow({
   const canShowDraftActionsForCurrentActor = hasWorkflowOwnershipSignal
     ? !workflowActivity?.hasOtherActorDraft
     : true;
+  const canToggleBlockVisibility = Boolean(
+    normalizedBlockId
+    && typeof updateBlock === 'function'
+    && canShowDraftActionsForCurrentActor
+    && !isSaving
+    && !isPublishing
+    && !isDiscarding
+    && !isSharedWorkflowBusy,
+  );
   const showDraftActions = normalizedBlockId
     ? hasBlockDraft || canShowDraftActionsForCurrentActor
     : placement === 'bar'
@@ -382,12 +412,21 @@ export default function FrontHudPageWorkflow({
       .map((entry) => String(entry?.blockId || '').trim())
       .filter(Boolean),
   );
+  const publishOrderChangedBlockIds = publishSummary?.isDeletionOnlyOrderChange
+    ? []
+    : (Array.isArray(publishSummary?.orderChangedBlockIds)
+      ? publishSummary.orderChangedBlockIds
+      : []);
   const publishablePageBlockIds = (Array.isArray(publishSummary?.changedBlockIds) ? publishSummary.changedBlockIds : [])
+    .concat(publishOrderChangedBlockIds)
+    .filter((blockId, index, blockIds) => blockIds.indexOf(blockId) === index)
     .filter((blockId) => !foreignPublishBlockIds.has(String(blockId || '').trim()));
+  const blockedOrderChange = publishOrderChangedBlockIds
+    .some((blockId) => foreignPublishBlockIds.has(String(blockId || '').trim()));
   const canPartiallyPublishPage = Boolean(
     !normalizedBlockId
     && publishBlockedByOtherDraft
-    && (!publishSummary?.hasOrderChanges || publishSummary?.isDeletionOnlyOrderChange)
+    && !blockedOrderChange
     && !publishSummary?.hasPageMetaChanges
     && publishablePageBlockIds.length,
   );
@@ -441,11 +480,14 @@ export default function FrontHudPageWorkflow({
     && !isPublishing
     && !isDiscarding
     && !isSharedWorkflowBusy
+    && !(normalizedBlockId && blockDraftSaveFailed)
     && (!publishBlockedByOtherDraft || canPartiallyPublishPage)
     && (normalizedBlockId
       ? hasBlockPublishChanges || hasPendingExternalDraftOnBlock
       : pageDirty || hasPublishChanges || hasPendingExternalDraftsOnPage);
-  const makeLiveTitle = publishBlockedByOtherDraft
+  const makeLiveTitle = blockDraftSaveFailed
+    ? 'Save block draft must succeed before this block can be made live.'
+    : publishBlockedByOtherDraft
     ? canPartiallyPublishPage
       ? `Make live will publish ${publishablePageBlockIds.length} eligible block${publishablePageBlockIds.length === 1 ? '' : 's'}; ${workflowActivity.otherActorBlockCount || 1} other-admin block${workflowActivity.otherActorBlockCount === 1 ? '' : 's'} will remain draft.`
       : `${workflowActivity.otherActorBlockCount || 1} other-admin block${workflowActivity.otherActorBlockCount === 1 ? '' : 's'} must be resolved before making live.`
@@ -498,6 +540,13 @@ export default function FrontHudPageWorkflow({
     </button>
   ) : null;
 
+  const handleToggleBlockVisibility = () => {
+    if (!normalizedPath || !normalizedBlockId || !canToggleBlockVisibility) {
+      return;
+    }
+    updateBlock(normalizedPath, normalizedBlockId, { hidden: !isBlockHidden });
+  };
+
   const handleSaveDraft = async () => {
     if (!normalizedPath || !canSaveDraft) {
       return;
@@ -510,14 +559,17 @@ export default function FrontHudPageWorkflow({
         ? await saveSharedBlockDraftNow(normalizedPath, normalizedBlockId, 'HUD block draft save')
         : await saveSharedDraftNow('');
       if (result?.ok === false) {
+        setBlockDraftSaveFailed(Boolean(normalizedBlockId));
         setSaveError(result?.reason === 'content-admin-request-timeout' ? 'Save timed out' : 'Save failed');
       } else {
+        setBlockDraftSaveFailed(false);
         setSaveOutcome({
           status: 'saved',
           updatedAt: Number(result?.saveResult?.updatedAt || result?.snapshot?.updatedAt || Date.now()),
         });
       }
     } catch {
+      setBlockDraftSaveFailed(Boolean(normalizedBlockId));
       setSaveError('Save failed');
     } finally {
       setIsSaving(false);
@@ -537,6 +589,13 @@ export default function FrontHudPageWorkflow({
         ? await publishSharedBlockNow(normalizedPath, normalizedBlockId, 'HUD block publish')
         : await publishSharedPageNow(normalizedPath, '');
       if (result?.ok === false) {
+        if (normalizedBlockId && (
+          ['save-before-block-publish-failed', 'content-admin-request-timeout', 'block-draft-not-saved', 'failed', 'blocked'].includes(result?.reason)
+          || result?.saveResult?.status === 'failed'
+          || result?.saveResult?.status === 'blocked'
+        )) {
+          setBlockDraftSaveFailed(true);
+        }
         if (result?.reason === 'publish-blocked-by-other-draft') {
           setPublishError('Live publish blocked');
         } else if (result?.reason === 'already-live') {
@@ -682,9 +741,26 @@ export default function FrontHudPageWorkflow({
             </button>
           ) : null}
           {takeOverAction}
+          {normalizedBlockId && showDraftActions ? (
+            <button
+              type="button"
+              className={`admin-front-hud-page-workflow-action is-secondary${isBlockHidden ? ' is-hidden-toggle' : ''}`}
+              onClick={handleToggleBlockVisibility}
+              disabled={!canToggleBlockVisibility}
+              aria-pressed={isBlockHidden}
+              title={isBlockHidden
+                ? 'Show this block to visitors after saving the block draft and making it live.'
+                : 'Hide this block from visitors after saving the block draft and making it live.'}
+            >
+              {isBlockHidden ? 'Show block' : 'Hide block'}
+            </button>
+          ) : null}
         </div>
         <div className="admin-front-hud-page-workflow-command-group is-right">
-          <span className={`admin-front-hud-page-workflow-save-state${saveError ? ' is-error' : ''}`} role="status" aria-live="polite">{saveFeedbackLabel}</span>
+          {isBlockHidden ? (
+            <span className="admin-front-hud-page-workflow-hidden-state" role="status">Hidden from visitors</span>
+          ) : null}
+          <span className={`admin-front-hud-page-workflow-save-state${saveError || sharedSyncFailureLabel ? ' is-error' : ''}`} role="status" aria-live="polite">{saveFeedbackLabel}</span>
           {showDraftActions ? (
             <button type="button" className="admin-front-hud-page-workflow-action" onClick={handleSaveDraft} disabled={!canSaveDraft} title={saveFeedbackLabel}>
               {isSaving ? 'Saving…' : saveDraftActionLabel}

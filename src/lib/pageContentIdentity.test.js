@@ -84,12 +84,10 @@ describe('page content identity contract', () => {
       candidate?.templateLookupId === PAGE_CONTENT_IDENTITY.templateId
       && candidate?.kind === PAGE_CONTENT_IDENTITY.kind
     ));
-    expect(template).toMatchObject({
-      templateLookupId: PAGE_CONTENT_IDENTITY.templateId,
-      templateId: PAGE_CONTENT_IDENTITY.templateId,
-      kind: PAGE_CONTENT_IDENTITY.kind,
-      mode: 'dynamic',
-    });
+    // Page Content remains valid persisted/seed identity, but is not a
+    // reusable add-block template. This prevents generic rich content from
+    // becoming a one-off blueprint option.
+    expect(template).toBeUndefined();
 
     const choice = buildAdminBlockInsertChoices(templates, { mode: 'dynamic' }).find((candidate) => (
       candidate?.kind === PAGE_CONTENT_IDENTITY.kind

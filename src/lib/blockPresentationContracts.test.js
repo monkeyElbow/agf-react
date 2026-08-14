@@ -17,7 +17,7 @@ describe('block presentation contracts', () => {
       step1Alert: 'Old divider copy',
     })).toMatchObject({
       titleClassName: '',
-      titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+      titleHighlightsJson: '',
       bgTone: 'blue',
       textTone: 'white',
       spaceBeforeRem: 3.6,
@@ -62,6 +62,15 @@ describe('block presentation contracts', () => {
     expect(normalizeBillboardPresentationSettings({
       title: 'More joy in receiving.',
     })).toEqual({ title: 'More joy in receiving.' });
+
+    expect(normalizeBillboardPresentationSettings({
+      sectionClassName: 'retirement-everyday retirement-daily-billboard',
+      titleFontFamily: 'heading',
+      titleFontWeight: 800,
+    })).toMatchObject({
+      titleFontFamily: 'helv',
+      titleFontWeight: 700,
+    });
   });
 
   it('removes preset-owned request form fields from editable field schemas', () => {
@@ -104,6 +113,27 @@ describe('block presentation contracts', () => {
     });
 
     expect(normalized.editableFields.map((field) => field.id)).toEqual(['title', 'body']);
+
+    const dailyBillboard = normalizeBlockPresentation({
+      kind: 'billboard',
+      settings: {
+        sectionClassName: 'retirement-everyday retirement-daily-billboard',
+        titleFontFamily: 'heading',
+        titleFontWeight: 800,
+      },
+      editableFields: [
+        { id: 'title' },
+        { id: 'titleFontFamily' },
+        { id: 'titleFontWeight' },
+        { id: 'body' },
+      ],
+    });
+
+    expect(dailyBillboard.settings).toMatchObject({
+      titleFontFamily: 'helv',
+      titleFontWeight: 700,
+    });
+    expect(dailyBillboard.editableFields.map((field) => field.id)).toEqual(['title', 'body']);
   });
 
   it('keeps presentation normalization idempotent and editable copy stable', () => {

@@ -1,24 +1,51 @@
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { createJsonContentStore } from './dev-server/jsonContentStore';
 import { createSharedDisclosuresStore } from './dev-server/disclosuresStore';
 import { createContentAdminAuthorityLease } from './dev-server/contentAdminAuthority.js';
+import { createContentAdminSessionManager } from './dev-server/contentAdminAuth.js';
+import {
+  isContentAdminPublicPublishedRead,
+  isSameOriginContentAdminRequest,
+  shouldAllowUnauthenticatedContentAdminRequest,
+} from './dev-server/contentAdminHttpBoundary.js';
+import { buildSiteChatbotGroundingContext } from './src/lib/chatbotGrounding.js';
+
+const MAX_CONTENT_ADMIN_REQUEST_BYTES = 2 * 1024 * 1024;
+const MAX_CHATBOT_REQUEST_BYTES = 32 * 1024;
+const MAX_CHATBOT_PROMPT_LENGTH = 2000;
+const CHATBOT_RATE_WINDOW_MS = 60 * 1000;
+const CHATBOT_RATE_LIMIT = 20;
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   res.end(JSON.stringify(payload));
 }
 
-function readRequestBody(req) {
+function readRequestBody(req, maxBytes = MAX_CONTENT_ADMIN_REQUEST_BYTES) {
   return new Promise((resolve, reject) => {
     let body = '';
+    let receivedBytes = 0;
+    let rejected = false;
     req.on('data', (chunk) => {
+      receivedBytes += Buffer.byteLength(chunk);
+      if (receivedBytes > maxBytes) {
+        rejected = true;
+        const error = new Error('Request body exceeds the allowed size.');
+        error.code = 'request-body-too-large';
+        req.resume();
+        reject(error);
+        return;
+      }
       body += chunk;
     });
     req.on('end', () => {
+      if (rejected) return;
       if (!body) {
         resolve({});
         return;
@@ -29,12 +56,43 @@ function readRequestBody(req) {
         reject(error);
       }
     });
-    req.on('error', reject);
+    req.on('error', (error) => {
+      if (!rejected) reject(error);
+    });
   });
+}
+
+function getSafeDiagnostics(diagnostics, authorityLease, server) {
+  return {
+    serverInstanceId: diagnostics.serverInstanceId,
+    startupAt: diagnostics.startupAt,
+    serverReadyAt: diagnostics.serverReadyAt,
+    storeReadyAt: diagnostics.storeReadyAt,
+    pluginCreatedMs: diagnostics.pluginCreatedMs,
+    serverReadyMs: diagnostics.serverReadyMs,
+    storeReadyMs: diagnostics.storeReadyMs,
+    requestCount: diagnostics.requestCount,
+    slowRequests: diagnostics.slowRequests,
+    authority: {
+      ownsLease: authorityLease.isOwner(),
+      identity: {
+        authorityInstanceId: diagnostics.serverInstanceId,
+        host: authorityLease.getIdentity().host,
+        port: server.httpServer?.address?.()?.port || server.config.server.port || null,
+      },
+    },
+    port: server.httpServer?.address?.()?.port || server.config.server.port || null,
+    now: new Date().toISOString(),
+    elapsedSincePluginCreateMs: Math.round((Date.now() - Number(diagnostics.startupAtMs || Date.now())) * 100) / 100,
+  };
 }
 
 function contentAdminDevPlugin() {
   const repoRoot = process.cwd();
+  const env = {
+    ...process.env,
+    ...loadEnv(process.env.NODE_ENV === 'production' ? 'production' : 'development', repoRoot, ''),
+  };
   const persistenceFile = path.resolve(repoRoot, 'dev-data/content-admin-shared.json');
   const revisionDirectory = path.resolve(repoRoot, 'dev-data/content-admin-revisions');
   const authorityLockFile = path.resolve(repoRoot, 'dev-data/content-admin-authority.lock');
@@ -51,6 +109,7 @@ function contentAdminDevPlugin() {
     revisionDirectory,
     authorityLockFile,
     startupAt: new Date(pluginCreatedAt).toISOString(),
+    startupAtMs: pluginCreatedAt,
     pluginCreatedMs: 0,
     serverReadyAt: '',
     serverReadyMs: 0,
@@ -62,6 +121,10 @@ function contentAdminDevPlugin() {
   let store = null;
   let disclosuresStore = null;
   let authorityLease = null;
+  const sessionManager = createContentAdminSessionManager({
+    password: env.CONTENT_ADMIN_DEV_PASSWORD,
+  });
+  const chatbotRateByAddress = new Map();
 
   const logPerf = (label, durationMs, details = {}) => {
     const roundedDuration = Math.round(Number(durationMs) * 100) / 100;
@@ -103,12 +166,19 @@ function contentAdminDevPlugin() {
   return {
     name: 'agf-dev-content-authority',
     configureServer(server) {
+      // Vite can re-run configureServer during a config restart before the
+      // previous HTTP server emits close. Release this process's lease first
+      // so a normal restart cannot look like a second content authority.
+      authorityLease?.release();
       authorityLease = createContentAdminAuthorityLease({
         lockFile: authorityLockFile,
-        host: server.config.server.host || 'localhost',
+        host: server.config.server.host === true
+          ? '0.0.0.0'
+          : server.config.server.host || 'localhost',
         port: server.config.server.port || null,
         projectRoot: repoRoot,
         authorityInstanceId: serverInstanceId,
+        allowSameProcessRestart: true,
       });
       authorityLease.acquire();
       server.middlewares.use('/__dev/content-admin', async (req, res) => {
@@ -116,14 +186,75 @@ function contentAdminDevPlugin() {
         diagnostics.requestCount += 1;
         const url = new URL(req.url || '/', 'http://localhost');
         try {
-          if (req.method === 'GET' && url.pathname === '/diagnostics') {
-            sendJson(res, 200, {
-              ...diagnostics,
-              authority: authorityLease.getDiagnostics(),
-              port: server.httpServer?.address?.()?.port || server.config.server.port || null,
-              now: new Date().toISOString(),
-              elapsedSincePluginCreateMs: Math.round((Date.now() - pluginCreatedAt) * 100) / 100,
+          if (!isSameOriginContentAdminRequest({
+            origin: req.headers?.origin,
+            host: req.headers?.host,
+          })) {
+            sendJson(res, 403, {
+              error: 'content-admin-origin-rejected',
+              details: 'Content-admin requests must come from the same origin.',
             });
+            return;
+          }
+
+          if (url.pathname === '/auth/login') {
+            if (req.method !== 'POST') {
+              sendJson(res, 404, { error: 'not-found' });
+              return;
+            }
+            const body = await readRequestBody(req, 16 * 1024);
+            const login = sessionManager.login(body.password, body.actor);
+            if (!login.ok) {
+              sendJson(res, login.status, login);
+              return;
+            }
+            res.setHeader('Set-Cookie', sessionManager.cookieHeader(login.sessionId));
+            sendJson(res, 200, { ok: true, actor: login.actor, expiresAt: login.expiresAt });
+            return;
+          }
+
+          if (url.pathname === '/auth/logout') {
+            if (req.method !== 'POST') {
+              sendJson(res, 404, { error: 'not-found' });
+              return;
+            }
+            sessionManager.logout(req.headers.cookie);
+            res.setHeader('Set-Cookie', `${sessionManager.cookieHeader('')}; Max-Age=0`);
+            sendJson(res, 200, { ok: true });
+            return;
+          }
+
+          let body = {};
+          if (req.method === 'POST') {
+            body = await readRequestBody(req);
+          }
+          const isPublicPublishedRead = isContentAdminPublicPublishedRead(req.method, url.pathname);
+          if (!isPublicPublishedRead) {
+            const auth = sessionManager.authenticate(req.headers.cookie);
+            if (!auth.ok) {
+              // Keep the trusted development LAN workflow usable before the
+              // server-backed account system exists. A password remains an
+              // optional opt-in boundary when this dev server is shared more
+              // broadly than the trusted local network.
+              if (!shouldAllowUnauthenticatedContentAdminRequest({
+                sessionConfigured: sessionManager.isConfigured(),
+              })) {
+                sendJson(res, auth.status, {
+                  error: auth.error,
+                  details: auth.details,
+                });
+                return;
+              }
+            } else {
+              // The browser may send actor metadata for compatibility, but
+              // the authenticated session is the authority for who performed
+              // the action.
+              body.actor = auth.session.actor;
+            }
+          }
+
+          if (req.method === 'GET' && url.pathname === '/diagnostics') {
+            sendJson(res, 200, getSafeDiagnostics(diagnostics, authorityLease, server));
             return;
           }
 
@@ -188,8 +319,6 @@ function contentAdminDevPlugin() {
             sendJson(res, 404, { error: 'not-found' });
             return;
           }
-
-          const body = await readRequestBody(req);
 
           if (url.pathname === '/initialize') {
             const snapshot = contentStore.getSnapshot();
@@ -319,9 +448,37 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/migrate-qcd-centered-card-grid') {
+            const result = contentStore.migrateQcdCenteredCardGridSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-cga-secure-act-card') {
+            const result = contentStore.migrateCgaSecureActCardSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-insurance-coverage-cta') {
+            const result = contentStore.migrateInsuranceCoverageCtaSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/blocks/sync-draft') {
             const result = contentStore.syncBlockDraft(body.pathname, body.blockId, body.block, {
               actor: body.actor,
+              expectedPublishedRevision: body.expectedPublishedRevision,
             });
             sendJson(res, result.ok ? 200 : 409, result);
             return;
@@ -398,9 +555,16 @@ function contentAdminDevPlugin() {
 
           sendJson(res, 404, { error: 'not-found' });
         } catch (error) {
+          if (error?.code === 'request-body-too-large') {
+            sendJson(res, 413, {
+              error: 'request-body-too-large',
+              details: 'Request body exceeds the allowed size.',
+            });
+            return;
+          }
           sendJson(res, 500, {
             error: 'content-admin-dev-server-error',
-            details: error instanceof Error ? error.message : 'unknown-error',
+            details: 'The content-admin request could not be completed.',
           });
         } finally {
           const durationMs = performance.now() - requestStartedAt;
@@ -415,6 +579,64 @@ function contentAdminDevPlugin() {
             ];
           }
           logPerf(`request ${req.method} ${url.pathname}`, durationMs);
+        }
+      });
+
+      server.middlewares.use('/api/chatbot', async (req, res) => {
+        if (req.method !== 'POST' || !isSameOriginContentAdminRequest({
+          origin: req.headers?.origin,
+          host: req.headers?.host,
+        })) {
+          sendJson(res, 405, { error: 'method-not-allowed' });
+          return;
+        }
+        try {
+          const address = String(req.socket?.remoteAddress || 'unknown');
+          const now = Date.now();
+          const recent = (chatbotRateByAddress.get(address) || []).filter((timestamp) => now - timestamp < CHATBOT_RATE_WINDOW_MS);
+          if (recent.length >= CHATBOT_RATE_LIMIT) {
+            sendJson(res, 429, { error: 'chatbot-rate-limit', details: 'Please wait before sending another message.' });
+            return;
+          }
+          chatbotRateByAddress.set(address, [...recent, now]);
+          const body = await readRequestBody(req, MAX_CHATBOT_REQUEST_BYTES);
+          const prompt = String(body.prompt || '').trim();
+          if (!prompt || prompt.length > MAX_CHATBOT_PROMPT_LENGTH) {
+            sendJson(res, 400, { error: 'chatbot-prompt-invalid', details: `Prompt must be between 1 and ${MAX_CHATBOT_PROMPT_LENGTH} characters.` });
+            return;
+          }
+          const apiKey = String(env.OPENAI_API_KEY || '').trim();
+          if (!apiKey) {
+            sendJson(res, 503, { error: 'chatbot-not-configured' });
+            return;
+          }
+          const { default: OpenAI } = await import('openai');
+          const client = new OpenAI({ apiKey });
+          const conversation = Array.isArray(body.conversation) ? body.conversation.slice(-6) : [];
+          const transcript = conversation
+            .filter((message) => message?.role === 'assistant' || message?.role === 'user')
+            .map((message) => `${message.role === 'assistant' ? 'Assistant' : 'User'}: ${String(message.text || '').slice(0, MAX_CHATBOT_PROMPT_LENGTH)}`)
+            .filter(Boolean)
+            .join('\n\n');
+          const grounding = buildSiteChatbotGroundingContext(prompt);
+          const input = [grounding, transcript, `User: ${prompt}`].filter(Boolean).join('\n\n');
+          const response = await client.responses.create({
+            model: 'gpt-5.4-mini',
+            instructions: 'You are the AGFinancial website assistant. Answer only from approved AGFinancial content provided in the prompt. Do not invent URLs, rates, policies, or personalized financial, legal, tax, or retirement advice. Be concise and suggest contacting AGFinancial when information is incomplete.',
+            input,
+          });
+          const outputText = String(response.output_text || '').trim();
+          if (!outputText) {
+            sendJson(res, 502, { error: 'chatbot-empty-response' });
+            return;
+          }
+          sendJson(res, 200, { text: outputText });
+        } catch (error) {
+          if (error?.code === 'request-body-too-large') {
+            sendJson(res, 413, { error: 'request-body-too-large', details: 'Request body exceeds the allowed size.' });
+            return;
+          }
+          sendJson(res, 502, { error: 'chatbot-request-failed', details: 'The chatbot service is temporarily unavailable.' });
         }
       });
 

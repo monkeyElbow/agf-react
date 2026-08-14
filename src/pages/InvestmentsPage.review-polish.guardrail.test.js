@@ -65,6 +65,8 @@ describe('investments page review polish guardrails', () => {
     expect(cssSource).toContain('max-width: none;');
     expect(cssSource).toContain('white-space: nowrap;');
     expect(cssSource).toContain('text-wrap: nowrap;');
+    expect(cssSource).toContain('.investments-native-page .investments-native-growth-card--investor .service-native-action-row {');
+    expect(cssSource).toContain('margin-top: 0;');
     expect(cssSource).toContain('.investments-native-growth-card--investor .native-info-section-copy.billboard-scroll-progress-copy {');
     expect(cssSource).toContain('.investments-native-dashboard-billboard .native-info-rich-html p {');
     expect(cssSource).toContain('font-size: clamp(1.4rem, 2.8vw, 1.85rem);');
@@ -115,7 +117,11 @@ describe('investments page review polish guardrails', () => {
 
   it('keeps the ladder calculator as one cohesive calculator zone with ladder-owned result sheets', () => {
     const pageSource = readSource('./InvestmentsPage.jsx');
-    const cssSource = readSource('../styles/service-native.css');
+    const cssSource = [
+      readSource('../styles/service-native.css'),
+      readSource('../styles/service-native-functional-tools.css'),
+      readSource('../styles/investments-native-ladder.css'),
+    ].join('\n');
 
     expect(pageSource).toContain('data-ladder-intro');
     expect(pageSource).toContain('Initial setup');

@@ -18,8 +18,9 @@ import {
   normalizeDynamicGridWidth,
   normalizeGridBgTone,
 } from './dynamicGrid';
-import { resolveCtaBandPresetId } from './ctaBandPresets';
+import { resolveBillboardPresetId } from './billboardPresets';
 import { resolveCardGridPresetId } from './cardGridPresets';
+import { resolveColumnsPresetId } from './columnsPresets';
 import {
   normalizeButtonTone,
   normalizePanelTextTone as normalizeSharedPanelTextTone,
@@ -308,6 +309,7 @@ function buildCanonicalActionLinkFromFields(source, {
   actionKeys = ['action'],
   targetAnchorIdKeys = ['targetAnchorId'],
   targetBlockIdKeys = ['targetBlockId'],
+  allowLabelWithoutTarget = false,
 } = {}) {
   const label = readCanonicalStringValue(source, labelKeys);
   const action = readCanonicalStringValue(source, actionKeys);
@@ -341,7 +343,12 @@ function buildCanonicalActionLinkFromFields(source, {
   }
 
   if (!linkValue) {
-    return null;
+    return allowLabelWithoutTarget ? {
+      label,
+      style: readCanonicalStringValue(source, styleKeys),
+      tone: readCanonicalStringValue(source, toneKeys),
+      openInNewWindow: false,
+    } : null;
   }
 
   return {
@@ -522,12 +529,15 @@ function buildSingleActionPromoRuntime(source, {
   const action = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
     linkJsonKeys: ['buttonLinkJson'],
-    hrefKeys: [],
-    toKeys: [],
-    openInNewWindowKeys: [],
+    hrefKeys: ['buttonUrl'],
+    toKeys: ['buttonPageRef'],
+    styleKeys: ['buttonStyle'],
+    toneKeys: ['buttonTone'],
+    openInNewWindowKeys: ['buttonOpenInNewWindow'],
   });
   const imageUrl = includeImage ? String(settings.imageUrl || '').trim() : '';
   const imageAlt = includeImage ? String(settings.imageAlt || '').trim() : '';
+  const logoKey = includeImage ? String(settings.logoKey || '').trim() : '';
   const bgTone = includeBgTone
     ? normalizePanelBgTone(settings.bgTone ?? settings.background, bgToneDefault)
     : '';
@@ -538,10 +548,11 @@ function buildSingleActionPromoRuntime(source, {
 
   return {
     title,
+    titleClassName: normalizeHighlightClassName(settings.titleClassName || ''),
     titleHighlights: parseTextHighlights(settings.titleHighlightsJson),
     body,
     ...(includeBodyHtml ? { bodyHtml } : {}),
-    ...(includeImage ? { imageUrl, imageAlt } : {}),
+    ...(includeImage ? { imageUrl, imageAlt, logoKey } : {}),
     ...(includeBgTone ? { bgTone } : {}),
     action,
   };
@@ -1037,6 +1048,7 @@ export function buildDynamicBillboardFromBlock(block) {
       actionKeys: ['buttonAction'],
       targetAnchorIdKeys: ['buttonTargetAnchorId'],
       targetBlockIdKeys: ['buttonTargetBlockId'],
+      allowLabelWithoutTarget: true,
     }),
     buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['button2Label'],
@@ -1047,6 +1059,7 @@ export function buildDynamicBillboardFromBlock(block) {
       styleKeys: ['button2Style'],
       toneKeys: ['button2Tone'],
       openInNewWindowKeys: [],
+      allowLabelWithoutTarget: true,
     }),
   ]
     .filter(Boolean)
@@ -1064,6 +1077,7 @@ export function buildDynamicBillboardFromBlock(block) {
   }
 
   return {
+    presetId: resolveBillboardPresetId(block),
     title,
     titleClassName,
     titleHighlights,
@@ -1195,6 +1209,7 @@ export function buildDynamicColumnsFromBlock(block) {
   }
 
   return {
+    presetId: resolveColumnsPresetId(block),
     title,
     titleClassName: normalizeHighlightClassName(settings.titleClassName || ''),
     titleHighlights: parseTextHighlights(settings.titleHighlightsJson),
@@ -1236,6 +1251,7 @@ export function buildDynamicFeaturePanelFromBlock(block) {
   }
   return {
     ...runtime,
+    logoKey: runtime.logoKey || (String(settings.sectionClassName || '').split(/\s+/).includes('insurance-native-mission-assure') ? 'mission-assure' : ''),
     anchorId: String(settings.anchorId || '').trim(),
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
     fullBleed: toBoolean(settings.fullBleed),
@@ -1569,37 +1585,6 @@ export function buildDynamicImpactStatFromBlock(block) {
     action,
     stats,
     countUp,
-  };
-}
-
-export function buildDynamicCtaBandFromBlock(block) {
-  const kind = String(block?.kind || block?.type || '').trim();
-  const mode = String(block?.mode || 'dynamic').trim();
-  if (kind !== 'cta_band' && kind !== '' && block?.type !== 'cta_band') {
-    return null;
-  }
-  if (kind === 'cta_band' && mode !== 'dynamic' && block?.type !== 'cta_band') {
-    return null;
-  }
-
-  const settings = block?.settings && typeof block.settings === 'object'
-    ? block.settings
-    : block;
-  const runtime = buildSingleActionPromoRuntime({
-    ...block,
-    ...settings,
-  }, {
-    includeBgTone: true,
-    bgToneDefault: 'blue',
-  });
-
-  if (!runtime) {
-    return null;
-  }
-
-  return {
-    presetId: resolveCtaBandPresetId(block),
-    ...runtime,
   };
 }
 
@@ -2349,7 +2334,11 @@ export function buildDynamicGridFromBlock(block) {
       const cardTitle = String(settings[`card${slot}Title`] || '').trim();
       const cardTitleClassName = normalizeHighlightClassName(settings[`card${slot}TitleClassName`] || '');
       const cardTitleHighlights = parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
-      const cardBody = String(settings[`card${slot}Body`] || '').trim();
+      const cardBodySource = String(settings[`card${slot}Body`] || '').trim();
+      const cardBodyHtml = /<[a-z][^>]*>/i.test(cardBodySource)
+        ? normalizeHtmlContent(cardBodySource)
+        : '';
+      const cardBody = cardBodyHtml ? '' : cardBodySource;
       const cardClassName = sanitizeClassName(settings[`card${slot}ClassName`] || '');
       const cardIconKey = String(settings[`card${slot}IconKey`] || '').trim();
       const cardIconTone = sanitizeClassName(settings[`card${slot}IconTone`] || '');
@@ -2388,7 +2377,7 @@ export function buildDynamicGridFromBlock(block) {
       const cardLinks = parseCardGridLinkItemsJson(settings[`card${slot}LinksJson`]);
       const cardAccordions = parseCardGridAccordionsJson(settings[`card${slot}AccordionsJson`]);
       const cardActions = [cardPrimaryAction, cardSecondaryAction].filter(Boolean);
-      if (!cardTitle && !cardBody && !cardList.length && !cardFineprint.length && !cardActions.length && !cardLinks.length && !cardAccordions.length) {
+      if (!cardTitle && !cardBody && !cardBodyHtml && !cardList.length && !cardFineprint.length && !cardActions.length && !cardLinks.length && !cardAccordions.length) {
         return null;
       }
 
@@ -2398,6 +2387,7 @@ export function buildDynamicGridFromBlock(block) {
         titleClassName: cardTitleClassName,
         titleHighlights: cardTitleHighlights,
         body: cardBody,
+        bodyHtml: cardBodyHtml,
         bodySegments: splitCertificateCardBody(cardBody),
         list: cardList,
         fineprint: cardFineprint.length ? cardFineprint : null,

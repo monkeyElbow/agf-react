@@ -33,8 +33,8 @@ describe('source-default content block blueprint construction', () => {
     expect(source).toContain("templateId: String(templateId || '').trim() || 'card_grid'");
     expect(source).toContain('function createDynamicColumnsBlueprint({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
     expect(source).toContain("templateId: String(templateId || '').trim() || 'columns'");
-    expect(source).toContain('function createDynamicCtaBandBlueprint({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
-    expect(source).toContain("templateId: String(templateId || '').trim() || 'cta_band'");
+    expect(source).toContain('function createDynamicBillboardBlueprint({ id, name, presetId = \'default\', templateId = \'\', settings = {} })');
+    expect(source).toContain("templateId: String(templateId || '').trim() || 'billboard'");
     expect(source).toContain('const sharedDynamicBillboardEditableFields = getEditableFieldsForKind(\'billboard\');');
 
     expect(source).toMatch(/\/test': \[[\s\S]*?id: 'intro'[\s\S]*?editableFields: sharedDynamicIntroEditableFields,/);
@@ -48,14 +48,14 @@ describe('source-default content block blueprint construction', () => {
     expect(source).toMatch(/createDynamicColumnsBlueprint\(\{[\s\S]*?id: 'value_cards'[\s\S]*?presetId: 'value-cards'[\s\S]*?\}\)/);
     expect(source).toMatch(/createDynamicColumnsBlueprint\(\{[\s\S]*?id: 'columns'[\s\S]*?presetId: 'default'[\s\S]*?\}\)/);
     expect(source).toMatch(/id: 'growth_feature'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'investments_growth_feature'/);
-    expect(source).toMatch(/id: 'dashboard_login_cta'[\s\S]*?templateId: 'cta_band'[\s\S]*?kind: 'cta_band'[\s\S]*?hidden: true[\s\S]*?buildCtaBandPresetSettings\('dashboard-login'\)/);
+    expect(source).toMatch(/id: 'dashboard_login_cta'[\s\S]*?templateId: 'billboard'[\s\S]*?presetId: 'dashboard-login'[\s\S]*?kind: 'billboard'[\s\S]*?hidden: true[\s\S]*?buildBillboardPresetSettings\('dashboard-login'\)/);
     expect(source).toMatch(/id: 'cta_form'[\s\S]*?kind: 'cta_form'[\s\S]*?editableFields:/);
     expect(source).toMatch(/\/test': \[[\s\S]*?id: 'cta_form'[\s\S]*?editableFields:[\s\S]*?createDynamicColumnsBlueprint/);
     expect(contentBlockBlueprintsByPath['/test'].some((block) => block?.id === 'newsletter')).toBe(false);
     expect(source).toMatch(/createDynamicCardGridBlueprint\(\{[\s\S]*?id: 'loan_options'[\s\S]*?presetId:/);
     expect(source).toMatch(/id: 'services_cards'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_breakdown'/);
     expect(source).toMatch(/id: 'matters_band'[\s\S]*?kind: 'site_feature'[\s\S]*?featureId: 'services_matters_band'/);
-    expect(source).toMatch(/createDynamicCtaBandBlueprint\(\{[\s\S]*?id: 'cta_band'[\s\S]*?presetId:/);
+    expect(source).toMatch(/createDynamicBillboardBlueprint\(\{[\s\S]*?id: 'cta_band'[\s\S]*?presetId:/);
     expect(source).toMatch(/id: 'billboard'[\s\S]*?name: 'Retire Every Day Billboard'[\s\S]*?editableFields: sharedDynamicBillboardEditableFields,/);
 
     expect(source).not.toContain("id: 'legacy_removed_block'");

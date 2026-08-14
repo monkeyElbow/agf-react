@@ -26,6 +26,13 @@ After the request settles, the editor reports that the draft was synced to share
 
 Save Draft sends the page-level draft snapshot and gives the admin an explicit acknowledgement. This confirms the system draft is saved; it still does not publish the page.
 
+All draft writes pass through one client-side draft coordinator. It has three
+scopes—page, route, and block—and two block intents: explicit save and
+background sync. The dev authority keeps separate HTTP adapters for those
+operations, but the coordinator is the single place that defines their
+payloads, validation, and timeout semantics. This boundary can later point at
+the database adapter without changing editor behavior.
+
 ## 4. Make Live
 
 Make Live is the only publishing action. It flushes pending draft edits, waits for draft synchronization, and then updates the published snapshot. Until that action succeeds, the live site must continue rendering the previous published snapshot.

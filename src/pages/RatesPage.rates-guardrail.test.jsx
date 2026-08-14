@@ -15,7 +15,8 @@ describe('rates page renderer guardrail', () => {
     const source = readSource('./RatesPage.jsx');
     const cssSource = readSource('../styles.css');
 
-    expect(source).toContain("import BlockHudPanelHost from '../components/BlockHudPanelHost';");
+    expect(source).toContain("LazyBlockHudPanelHost as BlockHudPanelHost");
+    expect(source).not.toContain("from '../components/BlockHudPanelHost';");
     expect(source).toContain("import CertificateRatesSheet from '../components/CertificateRatesSheet';");
     expect(source).toContain("import IraRatesSheet from '../components/IraRatesSheet';");
     expect(source).toContain("import SafeRichText from '../components/SafeRichText';");

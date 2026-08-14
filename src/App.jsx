@@ -1,7 +1,8 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import SiteLayout from './components/SiteLayout';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 const NativeContentPage = lazy(() => import('./components/NativeContentPage'));
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
@@ -11,6 +12,7 @@ const AdminRedirectsPage = lazy(() => import('./pages/AdminRedirectsPage'));
 const AdminDocumentsPage = lazy(() => import('./pages/AdminDocumentsPage'));
 import PageBreadcrumbs from './components/PageBreadcrumbs';
 import SiteAnnouncementBar from './components/SiteAnnouncementBar';
+import SiteLoadingScreen from './components/SiteLoadingScreen';
 import { pageByPath, sitePages } from './data/siteMap';
 import { useContentAdmin } from './context/ContentAdminContextCore';
 import { useRedirects } from './context/RedirectsContext';
@@ -30,9 +32,40 @@ const AdminDisclosuresPage = lazy(() => import('./pages/AdminDisclosuresPage'));
 const AdminChartsPage = lazy(() => import('./pages/AdminChartsPage'));
 const AdminJobsPage = lazy(() => import('./pages/AdminJobsPage'));
 const AdminBlocksPage = lazy(() => import('./pages/AdminBlocksPage'));
+const AdminProfilePage = lazy(() => import('./pages/AdminProfilePage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
 const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
 const ResourceArticlePage = lazy(() => import('./pages/ResourceArticlePage'));
+const LazyConsultantsProvider = lazy(() => import('./context/ConsultantsContext').then((module) => ({
+  default: module.ConsultantsProvider,
+})));
+const LazyConsultantResponsesProvider = lazy(() => import('./context/ConsultantResponsesContext').then((module) => ({
+  default: module.ConsultantResponsesProvider,
+})));
+const LazyCareersJobsProvider = lazy(() => import('./context/CareersJobsContext').then((module) => ({
+  default: module.CareersJobsProvider,
+})));
+
+const CONSULTANT_DATA_ROUTES = new Set([
+  '/services/loans/loan-consultants',
+  '/services/retirement/retirement-consultants',
+  '/admin/consultants',
+]);
+
+function withRouteDataProviders(routeKey, node) {
+  let nextNode = node;
+  if (CONSULTANT_DATA_ROUTES.has(routeKey)) {
+    nextNode = (
+      <LazyConsultantResponsesProvider>
+        <LazyConsultantsProvider>{nextNode}</LazyConsultantsProvider>
+      </LazyConsultantResponsesProvider>
+    );
+  }
+  if (routeKey === '/about-us/careers' || routeKey === '/admin/jobs') {
+    nextNode = <LazyCareersJobsProvider>{nextNode}</LazyCareersJobsProvider>;
+  }
+  return nextNode;
+}
 
 function ExternalRedirect({ to }) {
   useEffect(() => {
@@ -41,7 +74,7 @@ function ExternalRedirect({ to }) {
     }
   }, [to]);
 
-  return <div className="route-page-loading" />;
+  return <SiteLoadingScreen />;
 }
 
 function sortManagedPages(pages) {
@@ -79,7 +112,9 @@ function PageRoute({ page }) {
     </>
   );
   const withPageSuspense = (node) => withTopBands(
-    <Suspense fallback={<div className="route-page-loading" />}>{node}</Suspense>,
+    <Suspense fallback={<SiteLoadingScreen />}>
+      {withRouteDataProviders(routeKey, node)}
+    </Suspense>,
   );
 
   if (routeKey === '/') {
@@ -96,7 +131,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/services/investments') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <InvestmentsPage />
       </Suspense>
     ));
@@ -104,7 +139,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/services/loans') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <LoansPage />
       </Suspense>
     ));
@@ -112,7 +147,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/services/retirement') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <RetirementPage />
       </Suspense>
     ));
@@ -120,7 +155,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/rates') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminRatesPage />
       </Suspense>
     ));
@@ -140,7 +175,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/resources') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminResourcesPage />
       </Suspense>
     ));
@@ -148,7 +183,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/media-audit') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminMediaAuditPage />
       </Suspense>
     ));
@@ -156,7 +191,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/consultants') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminConsultantsPage />
       </Suspense>
     ));
@@ -164,7 +199,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/testimonials') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminTestimonialsPage />
       </Suspense>
     ));
@@ -172,7 +207,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/disclosures') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminDisclosuresPage />
       </Suspense>
     ));
@@ -180,7 +215,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/charts') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminChartsPage />
       </Suspense>
     ));
@@ -188,7 +223,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/jobs') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminJobsPage />
       </Suspense>
     ));
@@ -196,7 +231,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/message') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminMessagePage />
       </Suspense>
     ));
@@ -204,15 +239,23 @@ function PageRoute({ page }) {
 
   if (routeKey === '/admin/blocks') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <AdminBlocksPage />
+      </Suspense>
+    ));
+  }
+
+  if (routeKey === '/admin/profile') {
+    return withTopBands((
+      <Suspense fallback={<SiteLoadingScreen />}>
+        <AdminProfilePage />
       </Suspense>
     ));
   }
 
   if (routeKey === '/rates') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <RatesPage />
       </Suspense>
     ));
@@ -220,7 +263,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/resources') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <ResourcesPage />
       </Suspense>
     ));
@@ -228,7 +271,7 @@ function PageRoute({ page }) {
 
   if (routeKey === '/search') {
     return withTopBands((
-      <Suspense fallback={<div className="route-page-loading" />}>
+      <Suspense fallback={<SiteLoadingScreen />}>
         <SearchPage />
       </Suspense>
     ));
@@ -244,7 +287,7 @@ function PageRoute({ page }) {
 export default function App() {
   const location = useLocation();
   const isInitialNavigationRef = useRef(true);
-  const managedPagesCacheRef = useRef([]);
+  const [managedPagesCache, setManagedPagesCache] = useState([]);
   const { pageHierarchy, resolveManagedPath, sharedSyncStatus } = useContentAdmin();
   const { resolveRedirect } = useRedirects();
   const sharedSyncPending = Boolean(sharedSyncStatus?.isPending || sharedSyncStatus?.hasQueuedDraftSync);
@@ -268,17 +311,20 @@ export default function App() {
     if (!sharedSyncPending) {
       return managedPagesFromState;
     }
-    return mergeManagedPages(managedPagesCacheRef.current, managedPagesFromState);
-  }, [managedPagesFromState, sharedSyncPending]);
+    return mergeManagedPages(managedPagesCache, managedPagesFromState);
+  }, [managedPagesCache, managedPagesFromState, sharedSyncPending]);
 
   useEffect(() => {
     if (sharedSyncPending && !managedPagesFromState.length) {
       return;
     }
-    managedPagesCacheRef.current = sharedSyncPending
-      ? mergeManagedPages(managedPagesCacheRef.current, managedPagesFromState)
+    const nextCache = sharedSyncPending
+      ? mergeManagedPages(managedPagesCache, managedPagesFromState)
       : managedPagesFromState;
-  }, [managedPagesFromState, sharedSyncPending]);
+    setManagedPagesCache((current) => (
+      JSON.stringify(current) === JSON.stringify(nextCache) ? current : nextCache
+    ));
+  }, [managedPagesCache, managedPagesFromState, sharedSyncPending]);
   const managedPageByPath = useMemo(
     () => Object.fromEntries(managedPages.map((page) => [page.path, page])),
     [managedPages],
@@ -373,20 +419,22 @@ export default function App() {
 
   return (
     <SiteLayout>
-      <Routes>
-        {routablePages.map((page) => (
-          <Route key={page.path} path={page.path} element={<PageRoute page={page} />} />
-        ))}
-        <Route
-          path="/resources/article/:slug"
-          element={(
-            <Suspense fallback={<div className="route-page-loading" />}>
-              <ResourceArticlePage />
-            </Suspense>
-          )}
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <RouteErrorBoundary key={`${location.pathname}${location.search}${location.hash}`}>
+        <Routes>
+          {routablePages.map((page) => (
+            <Route key={page.path} path={page.path} element={<PageRoute page={page} />} />
+          ))}
+          <Route
+            path="/resources/article/:slug"
+            element={(
+              <Suspense fallback={<SiteLoadingScreen />}>
+                <ResourceArticlePage />
+              </Suspense>
+            )}
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </RouteErrorBoundary>
     </SiteLayout>
   );
 }

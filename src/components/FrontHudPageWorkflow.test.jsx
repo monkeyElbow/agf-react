@@ -14,6 +14,7 @@ const mockDiscardSharedPageDraft = vi.fn();
 const mockDiscardSharedBlockDraft = vi.fn();
 const mockPublishSharedPageNow = vi.fn();
 const mockPublishSharedBlockNow = vi.fn();
+const mockUpdateBlock = vi.fn();
 let mockDirty = true;
 let mockChangeSummary = {
   changedBlockCount: 2,
@@ -51,10 +52,15 @@ let mockWorkflowActivity = {
   hasOtherActorDraft: false,
 };
 let mockFrontHudRevealToken = 0;
+let mockBlocksByPath = {
+  '/services/loans': [{ id: 'hero', hidden: false }],
+};
 
 vi.mock('../context/ContentAdminContextCore', () => ({
   useContentAdmin: () => ({
     isPageDirty: () => mockDirty,
+    blocksByPath: mockBlocksByPath,
+    updateBlock: mockUpdateBlock,
     getPageChangeSummary: () => mockChangeSummary,
     getPagePublishSummary: () => mockPublishSummary,
     getPageWorkflowActivity: () => mockWorkflowActivity,
@@ -126,6 +132,10 @@ describe('FrontHudPageWorkflow', () => {
     mockDiscardSharedBlockDraft.mockReset();
     mockPublishSharedPageNow.mockReset();
     mockPublishSharedBlockNow.mockReset();
+    mockUpdateBlock.mockReset();
+    mockBlocksByPath = {
+      '/services/loans': [{ id: 'hero', hidden: false }],
+    };
     mockSaveSharedDraftNow.mockResolvedValue({ ok: true });
     mockSaveSharedBlockDraftNow.mockResolvedValue({ ok: true });
     mockDiscardSharedPageDraft.mockResolvedValue({ ok: true });
@@ -193,6 +203,31 @@ describe('FrontHudPageWorkflow', () => {
     expect(screen.getByRole('button', { name: 'Save all page drafts' }).textContent).toBe('Save all page drafts');
   });
 
+  it('blocks block-level Make live after a draft save timeout until saving succeeds', async () => {
+    mockSaveSharedBlockDraftNow.mockResolvedValue({
+      ok: false,
+      reason: 'content-admin-request-timeout',
+    });
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="hero"
+        placement="dock-inline"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save block draft' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Save timed out; save again before Make live')).toBeTruthy();
+    });
+    const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
+    expect(makeLiveButton.disabled).toBe(true);
+    fireEvent.click(makeLiveButton);
+    expect(mockPublishSharedBlockNow).not.toHaveBeenCalled();
+  });
+
   it('keeps Save block draft available to stamp ownership after autosync settles', async () => {
     mockDirty = false;
     mockSharedSyncStatus = {
@@ -221,6 +256,103 @@ describe('FrontHudPageWorkflow', () => {
     await waitFor(() => {
       expect(mockSaveSharedBlockDraftNow).toHaveBeenCalledWith('/services/loans', 'hero', 'HUD block draft save');
     });
+  });
+
+  it('hides the active block through the shared draft path from the HUD command bar', () => {
+    mockDirty = false;
+    mockChangeSummary = {
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockPublishSummary = {
+      changedBlockCount: 0,
+      changedBlockIds: [],
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockSharedSyncStatus = {
+      isPending: false,
+      pendingMutationCount: 0,
+      hasQueuedDraftSync: false,
+      lastQueuedAt: 0,
+      lastSettledAt: Date.now() - 30_000,
+      lastAppliedAt: Date.now() - 30_000,
+    };
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="hero"
+        placement="dock-inline"
+      />,
+    );
+
+    const hideButton = screen.getByRole('button', { name: 'Hide block' });
+    expect(hideButton.disabled).toBe(false);
+    fireEvent.click(hideButton);
+
+    expect(mockUpdateBlock).toHaveBeenCalledWith('/services/loans', 'hero', { hidden: true });
+    expect(screen.queryByText('Hidden from visitors')).toBeNull();
+  });
+
+  it('labels an already hidden block and offers the matching show action', () => {
+    mockDirty = false;
+    mockChangeSummary = {
+      changedBlockCount: 0,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockPublishSummary = {
+      changedBlockCount: 0,
+      changedBlockIds: [],
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: false,
+    };
+    mockSharedSyncStatus = {
+      isPending: false,
+      pendingMutationCount: 0,
+      hasQueuedDraftSync: false,
+      lastQueuedAt: 0,
+      lastSettledAt: Date.now() - 30_000,
+      lastAppliedAt: Date.now() - 30_000,
+    };
+    mockBlocksByPath = {
+      '/services/loans': [{ id: 'hero', hidden: true }],
+    };
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="hero"
+        placement="dock-inline"
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Show block' })).toBeTruthy();
+    expect(screen.getByText('Hidden from visitors')).toBeTruthy();
+  });
+
+  it('uses active HUD block state when shared context map still has older visibility', () => {
+    mockBlocksByPath = {
+      '/services/loans': [{ id: 'hero', hidden: false }],
+    };
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="hero"
+        block={{ id: 'hero', hidden: true }}
+        placement="dock-inline"
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Show block' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Hide block' })).toBeNull();
   });
 
   it('confirms and discards the current page draft without publishing it', async () => {
@@ -754,6 +886,43 @@ describe('FrontHudPageWorkflow', () => {
     );
 
     expect(screen.getByText('Make live publishes 1 block')).toBeTruthy();
+    const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
+    expect(makeLiveButton.disabled).toBe(false);
+
+    fireEvent.click(makeLiveButton);
+
+    await waitFor(() => {
+      expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/services/loans', '');
+    });
+  });
+
+  it('publishes eligible page order changes when another admin owns an unmoved block', async () => {
+    mockDirty = false;
+    mockPublishSummary = {
+      changedBlockCount: 3,
+      changedBlockIds: ['hero', 'cta_form', 'newsletter'],
+      orderChangedBlockIds: ['hero', 'cta_form'],
+      hasOrderChanges: true,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: true,
+    };
+    mockWorkflowActivity = {
+      hasCurrentActorDraft: true,
+      hasOtherActorDraft: true,
+      otherActorBlockCount: 1,
+      currentActorBlockIds: ['hero', 'cta_form'],
+      otherActorBlocks: [{ blockId: 'newsletter', state: 'drafted-other' }],
+    };
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        reviewHref="/admin/content?page=%2Fservices%2Floans"
+        placement="bar"
+      />,
+    );
+
+    expect(screen.getByText('Make live publishes 2 blocks, order')).toBeTruthy();
     const makeLiveButton = screen.getByRole('button', { name: 'Make live' });
     expect(makeLiveButton.disabled).toBe(false);
 

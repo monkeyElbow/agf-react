@@ -85,6 +85,37 @@ describe('content-admin normalization parity', () => {
     expect(normalized.blocksByPath['/test'][1].settings.titleFontFamily).toBe('helv');
   });
 
+  it('canonicalizes legacy CTA without merging site-feature content', () => {
+    const normalized = normalizeInBoth(state([
+      block('legacy-cta', {
+        kind: 'cta_band',
+        templateId: 'cta_band',
+        settings: { title: 'Keep this CTA', body: 'Keep this copy.' },
+      }),
+      block('legacy-feature', {
+        kind: 'site_feature',
+        templateId: 'site_feature',
+        settings: { featureId: 'home_impact_story', headline: 'Keep this headline' },
+      }),
+    ]));
+
+    expect(normalized.blocksByPath['/test']).toEqual([
+      expect.objectContaining({
+        id: 'legacy-cta',
+        kind: 'billboard',
+        templateId: 'billboard',
+        presetId: 'default',
+        settings: { title: 'Keep this CTA', body: 'Keep this copy.' },
+      }),
+      expect.objectContaining({
+        id: 'legacy-feature',
+        kind: 'site_feature',
+        templateId: 'site_feature',
+        settings: { featureId: 'home_impact_story', headline: 'Keep this headline' },
+      }),
+    ]);
+  });
+
   it('normalizes optional admin block names as metadata without moving them into settings', () => {
     const normalized = normalizeInBoth(state([
       block('named', {

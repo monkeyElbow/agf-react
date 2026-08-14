@@ -14,6 +14,8 @@ describe('services hero pie renderer guardrail', () => {
   it('keeps the shared dynamic hero pie builder in the services page path', () => {
     const source = readSource('./ServicesPage.jsx');
 
+    expect(source).toContain("import '../styles/home-native.css';");
+    expect(source).toContain("import '../styles/service-native.css';");
     expect(source).toContain('buildDynamicHeroPieFromBlock,');
     expect(source).toContain('DEFAULT_SERVICE_HERO_PIE_SLICES,');
     expect(source).toContain("buildDynamicHeroPieFromBlock(heroPieBlock || {");

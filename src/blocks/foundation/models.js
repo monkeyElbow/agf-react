@@ -9,7 +9,6 @@ export const BLOCK_KIND_VALUES = Object.freeze([
   'card_grid',
   'columns',
   'content',
-  'cta_band',
   'cta_form',
   'feature_panel',
   'hero',

@@ -13,15 +13,18 @@ function readSource(relativePath) {
 describe('native testimonials renderer guardrail', () => {
   it('keeps the shared dynamic testimonials builder in the native page path', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
     expect(source).toContain('buildDynamicTestimonialsFromBlock,');
     expect(source).toContain('const runtime = buildDynamicTestimonialsFromBlock(block, {');
     expect(source).toContain('library: testimonialsLibrary,');
     expect(source).not.toContain('const runtime = buildDynamicTestimonialsFromBlock(block, {\n    pathname,');
     expect(source).toContain("const sectionClassBase = pathname === '/test' ? 'test-dynamic-testimonials' : 'native-dynamic-testimonials';");
-    expect(source).toContain('const testimonialsSection = buildDynamicTestimonialsSection(renderBlock, activePath, testimonialsLibrary);');
-    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'testimonials') {");
-    expect(source).toContain('acc.push(testimonialsSection);');
+    expect(source).toContain('function buildManagedBlockSection(block, {');
+    expect(source).toContain("if (renderBlock.kind === 'testimonials') {");
+    expect(source).toContain('buildDynamicTestimonialsSection(renderBlock, pathname, testimonialsLibrary);');
+    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).not.toContain('const targetedDynamicTestimonialsSections = new Map();');
     expect(source).not.toContain('const targetedDynamicTestimonialsFineprintSections = new Map();');
     expect(source).not.toContain("const targetKey = String(mappedSection?.targetSectionKey || '').trim();");

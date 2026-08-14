@@ -37,19 +37,31 @@ describe('content-admin operation result contracts', () => {
     });
   });
 
-  it('preserves a verified publish receipt with route, scope, actor, and block IDs', () => {
+  it('preserves the complete verified publish receipt contract', () => {
     expect(normalizeSharedPublishResult({
       didPublish: true,
       receipt: {
         route: '/services/loans',
         scope: 'block',
+        blockId: 'hero',
+        draftRevision: 'draft-12',
+        publishedRevision: 'live-12',
         actor: { userId: 'taylor', displayName: 'Taylor QA' },
+        timestamp: 1710000030000,
+        verification: { status: 'verified', baseSnapshotMatches: true },
+        operationId: 'block-publish-12',
         publishedBlockIds: ['hero'],
       },
     }).receipt).toMatchObject({
       route: '/services/loans',
       scope: 'block',
+      blockId: 'hero',
+      draftRevision: 'draft-12',
+      publishedRevision: 'live-12',
       actor: { userId: 'taylor', displayName: 'Taylor QA' },
+      timestamp: 1710000030000,
+      verification: { status: 'verified', baseSnapshotMatches: true },
+      operationId: 'block-publish-12',
       publishedBlockIds: ['hero'],
     });
   });

@@ -145,6 +145,27 @@ describe('getBlockOwnershipVisual', () => {
     expect(ownership.overlaySecondaryDetail).toBe('Draft saved 1 min ago');
   });
 
+  it('labels a newly added block as draft instead of implying it was already live', () => {
+    const ownership = getBlockOwnershipVisual({
+      isNewBlock: true,
+      draftedBy: {
+        userId: 'dev-james',
+        displayName: 'James Laptop',
+      },
+      draftedAt: 1710000000000,
+      savedBy: {
+        userId: 'dev-james',
+        displayName: 'James Laptop',
+      },
+      savedAt: 1710000000000,
+    }, 'dev-james', 1710000060000);
+
+    expect(ownership.state).toBe('owned-self');
+    expect(ownership.overlayLabel).toBe('Draft saved by James Laptop');
+    expect(ownership.overlayDetail).toBe('Draft saved 1 min ago');
+    expect(ownership.overlaySecondaryLabel).toBe('');
+  });
+
   it('shows a live confirmation for the current admin after publishing', () => {
     const ownership = getBlockOwnershipVisual({
       isPublishedEquivalent: true,

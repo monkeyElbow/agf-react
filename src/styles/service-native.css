@@ -225,925 +225,6 @@
   line-height: 1.05;
   letter-spacing: 0;
 }
-
-.native-info-page--calculators {
-  background: #ffffff;
-}
-
-.calculators-native-collection {
-  padding-top: clamp(0.7rem, 1.6vw, 1rem);
-  padding-bottom: clamp(0.7rem, 1.6vw, 1rem);
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection,
-.native-info-page--calculators .calculators-native-page-head + .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection {
-  padding-top: 0;
-}
-
-.calculators-native-collection + .calculators-native-collection {
-  padding-top: clamp(1.05rem, 2.3vw, 1.8rem);
-}
-
-.calculators-native-collection > .ag-panel-rail {
-  max-width: min(1180px, calc(100% - (var(--ag-panel-gutter) * 2)));
-}
-
-.calculators-native-collection h2 {
-  margin: 0;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-body);
-  font-size: clamp(1.7rem, 2.6vw, 2.2rem);
-  line-height: 1.02;
-  letter-spacing: -0.035em;
-}
-
-.calculators-native-collection .service-native-grid {
-  margin-top: 0;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(0.95rem, 2vw, 1.25rem);
-  align-items: stretch;
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-grid {
-  margin-top: 0;
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: clamp(212px, 20vw, 252px);
-  padding: clamp(1.75rem, 2.6vw, 2.25rem);
-  border: 1px solid rgba(202, 207, 212, 0.9);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: none;
-  transition:
-    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 160ms ease,
-    background-color 160ms ease,
-    box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.calculators-native-collection .service-native-card::before {
-  display: none;
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:is(:hover, :focus-within) {
-  transform: translateY(-2px) scale(1.004);
-  border-color: rgba(var(--ag-color-atlantean-rgb), 0.28);
-  background: #ffffff;
-  box-shadow: none;
-}
-
-.calculators-native-collection .service-native-card > div:first-child {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card h3 {
-  display: block;
-  min-height: 0;
-  margin: 0;
-  padding-bottom: 0;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: clamp(1.95rem, 3.05vw, 2.52rem);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card h3::after {
-  display: none !important;
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n + 1) h3 {
-  color: var(--ag-color-atlantean);
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n + 2) h3 {
-  color: var(--ag-color-mango);
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n) h3 {
-  color: var(--ag-color-super-grey);
-}
-
-.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card > div > p:not(.service-native-card-subtitle):not(.service-native-card-phone) {
-  margin-top: 0.85rem;
-  color: rgba(65, 64, 66, 0.8);
-  font-size: clamp(1.02rem, 1.55vw, 1.18rem);
-  line-height: 1.48;
-  font-weight: 400;
-}
-
-.calculators-native-collection .service-native-card .service-native-action-row {
-  margin-top: auto;
-  padding-top: 1.15rem;
-  justify-content: flex-start;
-}
-
-.calculators-native-collection .service-native-card.has-stretched-link > :not(.service-native-card-stretched-link) {
-  pointer-events: none;
-}
-
-.calculators-native-collection .service-native-card .service-native-card-stretched-link:focus-visible {
-  border-radius: inherit;
-  outline: 2px solid rgba(var(--ag-color-atlantean-rgb), 0.42);
-  outline-offset: -4px;
-}
-
-.calculators-native-collection .service-native-btn {
-  --btn-color: var(--ag-color-atlantean-dark);
-  --btn-hover-color: var(--ag-color-atlantean);
-  min-width: 134px;
-  justify-content: center;
-  box-shadow: none;
-}
-
-.calculators-native-billboard.dynamic-billboard {
-  padding-top: clamp(4.1rem, 8.4vw, 7rem);
-  padding-bottom: clamp(4.3rem, 8.8vw, 7.4rem);
-}
-
-.calculators-native-collection + .calculators-native-billboard.dynamic-billboard {
-  margin-top: clamp(2rem, 4.2vw, 3.4rem);
-}
-
-.calculators-native-billboard.dynamic-billboard > .ag-panel-rail {
-  width: min(var(--dynamic-billboard-max-width, 1080px), calc(100% - (var(--ag-panel-gutter) * 2)));
-}
-
-.calculators-native-billboard.dynamic-billboard .native-info-section-copy {
-  width: min(100%, 68rem);
-  margin: 0 auto;
-  gap: clamp(0.45rem, 1.2vw, 0.75rem);
-  justify-items: center;
-  text-align: center;
-}
-
-.calculators-native-billboard.dynamic-billboard .native-info-section-copy > h2 {
-  justify-self: center;
-  font-family: var(--ag-font-helv);
-  font-size: clamp(2.35rem, 5.8vw, 4.85rem);
-  line-height: 0.98;
-  letter-spacing: var(--ag-letter-spacing-helv-heading);
-}
-
-.calculators-native-billboard.dynamic-billboard .native-info-section-subtitle {
-  justify-self: center;
-  margin-top: 0.1rem;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: clamp(2rem, 5vw, 4.2rem);
-  line-height: 0.94;
-  letter-spacing: var(--ag-letter-spacing-helv-heading);
-}
-
-.calculators-native-billboard.dynamic-billboard .native-info-rich-html p,
-.calculators-native-billboard.dynamic-billboard .native-info-section-copy > p {
-  width: min(31ch, 100%);
-  justify-self: center;
-  margin-top: clamp(0.8rem, 2vw, 1.2rem);
-  margin-inline: auto;
-  color: rgba(255, 255, 255, 0.96);
-  font-size: clamp(1.15rem, 2.3vw, 1.65rem);
-  line-height: 1.38;
-  text-align: center;
-}
-
-.calculators-native-cta.native-dynamic-cta {
-  padding-top: clamp(1.4rem, 3.2vw, 2.4rem);
-  padding-bottom: clamp(2.9rem, 6vw, 4.9rem);
-}
-
-.calculators-native-cta.native-dynamic-cta > .ag-panel-rail {
-  width: min(1180px, calc(100% - (var(--ag-panel-gutter) * 2)));
-}
-
-.calculators-native-cta.native-dynamic-cta .native-info-section-copy {
-  margin-left: 0;
-  margin-right: 0;
-  max-width: none;
-  text-align: left;
-}
-
-.calculators-native-cta.native-dynamic-cta .native-info-section-copy > h2 {
-  font-family: var(--ag-font-heading);
-  font-size: clamp(2.5rem, 6.2vw, 5rem);
-  line-height: 0.95;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
-  text-align: left;
-}
-
-.calculators-native-cta.native-dynamic-cta .dynamic-cta-form {
-  width: min(100%, 100%);
-}
-
-.calculators-native-cta.native-dynamic-cta .dynamic-cta-form h6 {
-  margin: 0.6rem 0 0;
-  color: var(--ag-color-atlantean);
-  font-family: var(--ag-font-heading);
-  font-size: clamp(1.65rem, 3.2vw, 2.65rem);
-  line-height: 1.02;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
-}
-
-.calculators-native-cta.native-dynamic-cta .native-info-inline-form {
-  padding: clamp(1.6rem, 3vw, 2.25rem);
-  border-radius: 22px;
-}
-
-@media (max-width: 980px) {
-  .calculators-native-billboard.dynamic-billboard .native-info-section-subtitle {
-    font-size: clamp(1.8rem, 4.8vw, 3.2rem);
-  }
-}
-
-@media (max-width: 640px) {
-  .calculators-native-collection .service-native-card {
-    min-height: 0;
-  }
-
-  .calculators-native-collection .service-native-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .calculators-native-collection .service-native-btn {
-    width: 100%;
-  }
-
-  .calculators-native-cta.native-dynamic-cta .native-info-section-copy > h2 {
-    font-size: clamp(2.15rem, 10vw, 3rem);
-  }
-
-  .calculators-native-cta.native-dynamic-cta .dynamic-cta-form h6 {
-    font-size: clamp(1.45rem, 7vw, 2rem);
-  }
-}
-
-.native-info-page--calculator-tool .service-native-section.calculator-tool-shell {
-  padding-block: clamp(0.7rem, 1.2vw, 1rem);
-}
-
-.native-info-page--calculator-tool .calculator-tool-native-page-head + .service-native-section.calculator-tool-shell {
-  padding-top: 0;
-}
-
-.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-shell {
-  padding-top: 0;
-}
-
-.native-info-page--calculator-tool .service-native-section.calculator-tool-shell .native-info-section-copy > h2 {
-  margin-inline: auto;
-  font-family: var(--ag-font-helv);
-  letter-spacing: -0.03em;
-  font-size: clamp(1.62rem, 2.6vw, 2.15rem);
-  line-height: 1.08;
-  max-width: 24ch;
-  text-align: center;
-}
-
-.native-info-page--calculator-tool .service-native-section.calculator-tool-shell .native-info-section-copy > p {
-  margin-inline: auto;
-  max-width: min(70ch, 100%);
-  font-size: clamp(1.08rem, 1.5vw, 1.24rem);
-  line-height: 1.52;
-  text-align: center;
-}
-
-.native-info-page--calculator-tool .calculator-tool-contact.native-dynamic-cta {
-  padding-top: clamp(2.1rem, 4.4vw, 3.4rem);
-}
-
-.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-contact.native-dynamic-cta {
-  padding-top: clamp(2.1rem, 4.4vw, 3.4rem);
-}
-
-.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell {
-  padding-block: clamp(0.52rem, 0.9vw, 0.78rem);
-}
-
-.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell .native-info-section-copy > h2 {
-  margin-bottom: 0.35rem;
-}
-
-.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell .native-info-section-copy > p {
-  max-width: 76ch;
-}
-
-.native-financial-tool {
-  border: 1px solid rgba(196, 190, 182, 0.62);
-  border-radius: 24px;
-  background: #ffffff;
-  box-shadow: 0 4px 14px rgba(13, 61, 78, 0.04);
-  padding: clamp(1.05rem, 1.85vw, 1.45rem);
-}
-
-.native-financial-tool-lead {
-  margin: 0 0 1.15rem;
-  max-width: 66ch;
-  font-size: clamp(0.98rem, 1.18vw, 1.08rem);
-  line-height: 1.55;
-  font-weight: 600;
-  color: rgba(65, 64, 66, 0.84);
-}
-
-.financial-tool-section + .financial-tool-section {
-  margin-top: 1.3rem;
-}
-
-.financial-tool-section h3 {
-  margin: 0 0 0.65rem;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: 1.02rem;
-  letter-spacing: -0.02em;
-}
-
-.financial-tool-note {
-  margin: 0 0 0.8rem;
-  color: rgba(65, 64, 66, 0.82);
-  font-size: 0.94rem;
-}
-
-.financial-tool-groups-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
-}
-
-.financial-tool-group {
-  background: rgba(251, 250, 247, 0.84);
-  border: 1px solid rgba(214, 220, 224, 0.8);
-  border-radius: 18px;
-  padding: 1rem;
-}
-
-.financial-tool-group.is-liability {
-  background: rgba(255, 249, 245, 0.78);
-}
-
-.financial-tool-group h3 {
-  margin: 0 0 0.75rem;
-  font-family: var(--ag-font-helv);
-  font-size: 1rem;
-  color: var(--ag-color-super-grey);
-  letter-spacing: -0.02em;
-}
-
-.financial-tool-input-list {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.financial-tool-input-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 180px;
-  gap: 0.7rem;
-  align-items: center;
-  margin: 0;
-}
-
-.financial-tool-input-row > span {
-  color: var(--ag-color-super-grey);
-  font-size: 0.93rem;
-  line-height: 1.25;
-}
-
-.financial-tool-input-row > input {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid rgba(196, 190, 182, 0.72);
-  border-radius: 12px;
-  background: #ffffff;
-  color: var(--ag-color-super-grey);
-  padding: 0.68rem 0.78rem;
-  font-size: 0.95rem;
-  text-align: right;
-  box-shadow: none;
-}
-
-.financial-tool-input-row > select {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid rgba(196, 190, 182, 0.72);
-  border-radius: 12px;
-  background: #ffffff;
-  color: var(--ag-color-super-grey);
-  padding: 0.68rem 0.78rem;
-  font-size: 0.95rem;
-  box-shadow: none;
-}
-
-.financial-tool-input-row > input:focus {
-  outline: 2px solid rgba(0, 172, 187, 0.28);
-  border-color: var(--ag-color-atlantean);
-}
-
-.financial-tool-input-row > select:focus {
-  outline: 2px solid rgba(0, 172, 187, 0.28);
-  border-color: var(--ag-color-atlantean);
-}
-
-.financial-tool-itemized-grid {
-  margin-top: 0.75rem;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem 0.9rem;
-}
-
-.financial-tool-itemized-grid .financial-tool-input-row {
-  grid-template-columns: minmax(0, 1fr) 138px;
-}
-
-.financial-tool-actions {
-  margin-top: 1.1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.financial-tool-results {
-  margin-top: 1.15rem;
-  padding-top: 1.1rem;
-  border-top: 1px solid rgba(196, 190, 182, 0.46);
-  display: grid;
-  gap: 0.9rem;
-}
-
-.financial-tool-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.financial-tool-metric {
-  background: #ffffff;
-  border: 1px solid rgba(214, 220, 224, 0.86);
-  border-radius: 18px;
-  padding: 0.95rem;
-}
-
-.financial-tool-metric.is-good {
-  background: rgba(var(--ag-color-atlantean-rgb), 0.075);
-  border-color: rgba(var(--ag-color-atlantean-rgb), 0.18);
-}
-
-.financial-tool-metric.is-warn {
-  background: rgba(250, 163, 26, 0.08);
-  border-color: rgba(250, 163, 26, 0.2);
-}
-
-.financial-tool-metric.is-bad {
-  background: rgba(197, 51, 43, 0.06);
-  border-color: rgba(197, 51, 43, 0.2);
-}
-
-.financial-tool-metric-label {
-  font-size: 0.82rem;
-  color: rgba(65, 64, 66, 0.85);
-}
-
-.financial-tool-metric-value {
-  margin-top: 0.25rem;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-}
-
-.financial-tool-metric-sub {
-  margin-top: 0.3rem;
-  font-size: 0.82rem;
-  color: rgba(65, 64, 66, 0.75);
-}
-
-.financial-tool-result-text {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--ag-color-super-grey);
-}
-
-.financial-tool-bars,
-.financial-tool-stacked-bar,
-.financial-tool-plan,
-.financial-tool-table-wrap,
-.financial-tool-chart-surface,
-.increased-contribution-mini-chart {
-  border: 1px solid rgba(214, 220, 224, 0.86);
-  border-radius: 18px;
-  background: #ffffff;
-  padding: 0.95rem;
-  box-shadow: none;
-}
-
-.financial-tool-bar-row {
-  display: grid;
-  grid-template-columns: 110px minmax(0, 1fr) 130px;
-  gap: 0.6rem;
-  align-items: center;
-}
-
-.financial-tool-bar-row + .financial-tool-bar-row {
-  margin-top: 0.55rem;
-}
-
-.financial-tool-bar-label,
-.financial-tool-bar-value {
-  font-size: 0.9rem;
-  color: var(--ag-color-super-grey);
-}
-
-.financial-tool-bar-value {
-  text-align: right;
-  font-weight: 700;
-}
-
-.financial-tool-bar-track {
-  height: 0.8rem;
-  border-radius: 999px;
-  background: rgba(65, 64, 66, 0.08);
-  overflow: hidden;
-}
-
-.financial-tool-bar-fill {
-  height: 100%;
-}
-
-.financial-tool-bar-fill.is-assets {
-  background: var(--ag-color-atlantean);
-}
-
-.financial-tool-bar-fill.is-liabilities {
-  background: #c5332b;
-}
-
-.financial-tool-bar-fill.is-net {
-  background: #2f7fb7;
-}
-
-.financial-tool-bar-fill.is-net-negative {
-  background: var(--ag-color-mango);
-}
-
-.financial-tool-stacked-bar-track {
-  display: flex;
-  width: 100%;
-  min-height: 2.15rem;
-  border-radius: 999px;
-  background: rgba(65, 64, 66, 0.08);
-  overflow: hidden;
-}
-
-.financial-tool-stacked-bar-segment {
-  min-width: 0;
-}
-
-.financial-tool-stacked-bar-segment.is-current {
-  background: var(--ag-color-atlantean);
-}
-
-.financial-tool-stacked-bar-segment.is-gap {
-  background: rgba(65, 64, 66, 0.16);
-}
-
-.financial-tool-stacked-legend {
-  margin-top: 0.6rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1rem;
-  font-size: 0.88rem;
-  color: var(--ag-color-super-grey);
-}
-
-.financial-tool-stacked-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.financial-tool-stacked-legend i {
-  width: 0.8rem;
-  height: 0.8rem;
-  display: inline-block;
-  background: rgba(65, 64, 66, 0.16);
-}
-
-.financial-tool-stacked-legend i.is-current {
-  background: var(--ag-color-atlantean);
-}
-
-.financial-tool-plan h4 {
-  margin: 0 0 0.75rem;
-  font-family: var(--ag-font-helv);
-  font-size: 1rem;
-  color: var(--ag-color-super-grey);
-  letter-spacing: -0.02em;
-}
-
-.financial-tool-plan-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.financial-tool-plan-grid > div {
-  border: 1px solid rgba(214, 220, 224, 0.82);
-  border-radius: 14px;
-  background: rgba(249, 248, 245, 0.84);
-  padding: 0.72rem;
-}
-
-.financial-tool-plan-grid > div > span {
-  display: block;
-  color: rgba(65, 64, 66, 0.8);
-  font-size: 0.8rem;
-}
-
-.financial-tool-plan-grid > div > strong {
-  display: block;
-  margin-top: 0.2rem;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: 1rem;
-  letter-spacing: -0.02em;
-}
-
-.financial-tool-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 0.92rem;
-}
-
-.financial-tool-table th,
-.financial-tool-table td {
-  padding: 0.7rem 0.82rem;
-  border-bottom: 1px solid rgba(218, 223, 227, 0.92);
-  vertical-align: middle;
-}
-
-.financial-tool-table th {
-  background: rgba(250, 248, 244, 0.92);
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.16;
-  text-align: left;
-  text-transform: uppercase;
-}
-
-.financial-tool-table th:not(:first-child),
-.financial-tool-table td:not(:first-child) {
-  text-align: right;
-}
-
-.financial-tool-table tbody tr:nth-child(even) td {
-  background: rgba(250, 249, 247, 0.7);
-}
-
-.financial-tool-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.financial-tool-table tbody tr.is-total td {
-  font-weight: 700;
-  background: rgba(249, 250, 251, 0.92);
-}
-
-.financial-tool-fineprint {
-  margin: 0.8rem 0 0;
-  color: rgba(65, 64, 66, 0.72);
-  font-size: 0.8rem;
-  line-height: 1.4;
-}
-
-.increased-contribution-input-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.increased-contribution-tool {
-  padding: clamp(1.15rem, 2vw, 1.5rem);
-}
-
-.increased-contribution-tool .native-financial-tool-lead {
-  margin-bottom: 1.2rem;
-}
-
-.increased-contribution-tool .financial-tool-group {
-  padding: clamp(0.95rem, 1.6vw, 1.25rem);
-}
-
-.increased-contribution-tool .financial-tool-group h3 {
-  margin-bottom: 0.8rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid rgba(65, 64, 66, 0.08);
-}
-
-.increased-contribution-tool .financial-tool-input-list {
-  gap: 0.75rem;
-}
-
-.increased-contribution-tool .financial-tool-input-row {
-  grid-template-columns: minmax(0, 1fr) 190px;
-  gap: 0.8rem;
-}
-
-.increased-contribution-tool .financial-tool-input-row > span {
-  line-height: 1.3;
-}
-
-.increased-contribution-tool .financial-tool-actions {
-  margin-top: 1.15rem;
-}
-
-.increased-contribution-tool .financial-tool-results {
-  margin-top: 1.15rem;
-  gap: 1rem;
-}
-
-.increased-contribution-full {
-  grid-column: 1 / -1;
-}
-
-.increased-contribution-contrib-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.increased-contribution-contrib-grid .financial-tool-input-row {
-  grid-template-columns: minmax(0, 1fr) 180px;
-}
-
-.increased-contribution-mini-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1rem;
-  margin-bottom: 0.7rem;
-  color: var(--ag-color-super-grey);
-  font-size: 0.88rem;
-}
-
-.increased-contribution-mini-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.increased-contribution-mini-legend i {
-  width: 0.8rem;
-  height: 0.8rem;
-  display: inline-block;
-}
-
-.increased-contribution-mini-legend i.is-current {
-  background: #b2ebf2;
-  border: 1px solid rgba(0, 138, 171, 0.35);
-}
-
-.increased-contribution-mini-legend i.is-proposed {
-  background: var(--ag-color-atlantean);
-}
-
-.increased-contribution-mini-rows {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.increased-contribution-mini-row {
-  display: grid;
-  grid-template-columns: 78px minmax(0, 1fr) 220px;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.18rem 0;
-}
-
-.increased-contribution-mini-year {
-  color: rgba(65, 64, 66, 0.85);
-  font-size: 0.85rem;
-}
-
-.increased-contribution-mini-track {
-  position: relative;
-  min-height: 1.35rem;
-  background: rgba(65, 64, 66, 0.05);
-  overflow: hidden;
-}
-
-.increased-contribution-mini-fill {
-  position: absolute;
-  left: 0;
-  height: 50%;
-}
-
-.increased-contribution-mini-fill.is-current {
-  top: 0;
-  background: #b2ebf2;
-}
-
-.increased-contribution-mini-fill.is-proposed {
-  bottom: 0;
-  background: var(--ag-color-atlantean);
-}
-
-.increased-contribution-mini-values {
-  display: grid;
-  justify-items: end;
-  line-height: 1.1;
-}
-
-.increased-contribution-mini-values strong {
-  color: var(--ag-color-super-grey);
-  font-size: 0.9rem;
-}
-
-.increased-contribution-mini-values span {
-  color: rgba(65, 64, 66, 0.72);
-  font-size: 0.8rem;
-}
-
-.increased-contribution-tool .financial-tool-plan,
-.increased-contribution-tool .financial-tool-table-wrap {
-  padding: 1rem;
-}
-
-.increased-contribution-tool .financial-tool-table-wrap {
-  max-height: 24rem;
-  overflow: auto;
-}
-
-@media (max-width: 1024px) {
-  .financial-tool-groups-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .financial-tool-metrics {
-    grid-template-columns: 1fr;
-  }
-
-  .financial-tool-plan-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .increased-contribution-contrib-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .increased-contribution-tool .financial-tool-input-row {
-    grid-template-columns: minmax(0, 1fr) 170px;
-  }
-}
-
-@media (max-width: 760px) {
-  .financial-tool-itemized-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .financial-tool-input-row,
-  .financial-tool-itemized-grid .financial-tool-input-row {
-    grid-template-columns: 1fr;
-    gap: 0.25rem;
-  }
-
-  .financial-tool-input-row > input {
-    text-align: left;
-  }
-
-  .financial-tool-bar-row {
-    grid-template-columns: 1fr;
-    gap: 0.35rem;
-  }
-
-  .financial-tool-bar-value {
-    text-align: left;
-  }
-
-  .financial-tool-plan-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .increased-contribution-mini-row {
-    grid-template-columns: 1fr;
-    gap: 0.3rem;
-  }
-
-  .increased-contribution-mini-values {
-    justify-items: start;
-  }
-
-  .increased-contribution-tool .financial-tool-input-row {
-    grid-template-columns: 1fr;
-    gap: 0.3rem;
-  }
-}
-
 .retirement-native-hero-line {
   margin: 0;
   text-align: center;
@@ -1543,228 +624,8 @@
   --btn-hover-text: var(--btn-hover-color);
 }
 
-.retirement-calc-section {
-  background: linear-gradient(180deg, #fbf9f6 0%, #ffffff 100%);
-}
-
-.retirement-calc-title {
-  margin: 0;
-  color: var(--ag-color-super-grey);
-  text-align: center;
-  font-family: var(--ag-font-helv);
-  display: inline-block;
-  max-width: 100%;
-  font-size: clamp(1.62rem, 2.1vw, 2.05rem);
-  line-height: 1;
-  letter-spacing: -0.03em;
-  white-space: nowrap;
-}
-
-.retirement-calc-intro {
-  width: min(76ch, 100%);
-  margin: 0 auto;
-  text-align: center;
-}
-
-.retirement-calc-lead {
-  margin: 0.55rem 0 0;
-  max-width: 62ch;
-  text-align: inherit;
-  color: rgba(65, 64, 66, 0.84);
-  font-size: clamp(1rem, 1.35vw, 1.1rem);
-  line-height: 1.55;
-}
-
-@media (max-width: 760px) {
-  .retirement-calc-title {
-    white-space: normal;
-  }
-}
-
-.retirement-calc-box {
-  margin-top: clamp(1.15rem, 2.4vw, 1.7rem);
-  padding: clamp(1.1rem, 2.35vw, 1.75rem);
-  color: var(--ag-color-super-grey);
-}
-
-.retirement-calc-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 1.05rem;
-}
-
-.retirement-calc-grid label {
-  display: grid;
-  gap: 0.42rem;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: rgba(65, 64, 66, 0.88);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.retirement-calc-grid label strong {
-  color: var(--ag-color-atlantean-dark);
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.retirement-calc-grid :is(input, select) {
-  width: 100%;
-  min-height: 48px;
-  margin-top: 0;
-  padding: 0.72rem 0.82rem;
-  border: 1px solid rgba(196, 190, 182, 0.72);
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: none;
-  color: var(--ag-color-super-grey);
-  font: inherit;
-}
-
-.retirement-calc-grid :is(input, select):focus-visible {
-  outline: 2px solid rgba(0, 138, 171, 0.18);
-  outline-offset: 0;
-  border-color: rgba(0, 138, 171, 0.46);
-  box-shadow:
-    inset 0 1px 2px rgba(12, 42, 61, 0.04),
-    0 0 0 3px rgba(0, 173, 187, 0.12);
-}
-
-.retirement-calc-grid input[type='range'] {
-  min-height: auto;
-  margin-top: 0.15rem;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  accent-color: var(--ag-color-atlantean);
-}
-
-.retirement-calc-results {
-  margin-top: 1.2rem;
-  padding-top: 1.05rem;
-  border-top: 1px solid rgba(196, 190, 182, 0.46);
-}
-
-.retirement-calc-results h3 {
-  margin: 0 0 0.85rem;
-  color: var(--ag-color-super-grey);
-  font-size: 1rem;
-  font-family: var(--ag-font-helv);
-  letter-spacing: -0.02em;
-}
-
-.retirement-calc-chart {
-  margin-top: 0.95rem;
-  padding: 0.95rem 1rem 0.85rem;
-}
-
-.retirement-calc-chart svg {
-  display: block;
-  width: 100%;
-  height: 300px;
-}
-
-.retirement-calc-legend {
-  margin-top: 0.5rem;
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.retirement-calc-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: rgba(65, 64, 66, 0.82);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.retirement-calc-legend span::before {
-  content: '';
-  width: 14px;
-  height: 3px;
-  border-radius: 999px;
-}
-
-.retirement-calc-legend .is-projected::before {
-  background: #00a3b3;
-}
-
-.retirement-calc-legend .is-target::before {
-  background: #ffa400;
-}
-
-.retirement-lead-form {
-  margin-top: 1.4rem;
-  padding-top: 1.3rem;
-  border-top: 1px solid rgba(17, 53, 75, 0.1);
-}
-
-.retirement-lead-form h5 {
-  margin: 0;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-heading);
-  font-size: clamp(1.5rem, 2.4vw, 1.95rem);
-  line-height: 1.08;
-  letter-spacing: var(--ag-letter-spacing-avenir-heading);
-}
-
-.retirement-lead-form p {
-  margin-top: 0.55rem;
-  max-width: 44ch;
-  color: rgba(65, 64, 66, 0.84);
-}
-
-.retirement-lead-thanks {
-  margin-top: 0.7rem;
-  padding: 0.95rem 1rem;
-  border: 1px solid rgba(0, 138, 171, 0.2);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.96);
-  color: var(--ag-color-super-grey);
-}
-
-.retirement-lead-form form {
-  margin-top: 1rem;
-  padding: clamp(1rem, 2.2vw, 1.45rem);
-  border: 1px solid rgba(17, 53, 75, 0.1);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 1px 2px rgba(12, 42, 61, 0.03);
-}
-
-.retirement-lead-form .service-native-action-row {
-  margin-top: 1rem;
-  justify-content: center;
-}
-
-.retirement-calc-grid-span {
-  grid-column: 1 / -1;
-}
-
-.retirement-btn-reset {
-  font: inherit;
-  cursor: pointer;
-}
-
 .retirement-everyday {
-  --dynamic-billboard-padding-top: clamp(2.35rem, 4.9vw, 3.4rem);
+  --dynamic-billboard-padding-top: clamp(4.1rem, 8vw, 6.8rem);
   --retirement-billboard-stack-gap: clamp(1.2rem, 2.35vw, 1.7rem);
   --retirement-billboard-starting-gap: clamp(0.6rem, 1.175vw, 0.85rem);
   padding-bottom: var(--dynamic-billboard-padding-bottom, clamp(3.2rem, 7vw, 5.6rem));
@@ -2192,6 +1053,89 @@
   }
 }
 
+/* Shared planned-giving card-grid presentation. This is a reusable style on
+   the flexible card grid, not a page-specific section-class exception. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered {
+  padding-top: clamp(0.25rem, 0.6vw, 0.5rem);
+  padding-bottom: clamp(1.2rem, 2.6vw, 2rem);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered > .ag-panel-rail {
+  max-width: var(--ag-content-max);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered > .ag-panel-rail > .native-info-section-copy > h2 {
+  text-align: center;
+  font-family: var(--ag-font-helv);
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-grid {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  margin-top: clamp(1.35rem, 3vw, 2rem);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card {
+  width: min(100%, 520px);
+  border: 2px solid rgba(0, 138, 171, 0.2);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);
+  color: var(--ag-color-super-grey);
+  box-shadow: 0 18px 36px rgba(12, 42, 61, 0.08);
+  padding: var(--dynamic-grid-card-padding, var(--native-card-shell-padding));
+  padding-bottom: calc(var(--dynamic-grid-card-padding, var(--native-card-shell-padding)) * 1.35);
+  transform: none;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card h3 {
+  display: none;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-bullet-list,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-rich-body :is(ul, ol) {
+  display: inline-block;
+  margin: 0;
+  padding-left: 1.4rem;
+  text-align: left;
+  color: var(--ag-color-super-grey);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-bullet-list li,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-rich-body li {
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  line-height: 1.32;
+  font-weight: 400;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-bullet-list li + li,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-rich-body li + li {
+  margin-top: 0.42rem;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-bullet-list li::marker,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-rich-body li::marker {
+  color: var(--ag-color-atlantean);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-rich-body > :first-child {
+  margin-top: 0;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-rich-body > :last-child {
+  margin-bottom: 0;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-rich-body strong {
+  font-weight: 400;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .service-native-section.retirement-do-the-math-billboard .home-math-badge {
     opacity: 1;
@@ -2410,26 +1354,31 @@
   padding-top: 0;
 }
 
-.service-native-article-teaser {
+.service-native-article-teaser,
+.service-native-feature-panel {
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.service-native-article-teaser .ag-panel-rail-wide {
+.service-native-article-teaser .ag-panel-rail-wide,
+.service-native-feature-panel .ag-panel-rail-wide {
   width: 100%;
   max-width: none;
 }
 
-.service-native-article-teaser .service-native-dark-feature {
+.service-native-article-teaser .service-native-dark-feature,
+.service-native-feature-panel .service-native-dark-feature {
   border-radius: 0;
 }
 
-.service-native-article-teaser .service-native-dark-feature-inner {
+.service-native-article-teaser .service-native-dark-feature-inner,
+.service-native-feature-panel .service-native-dark-feature-inner {
   min-height: clamp(340px, 52vh, 620px);
   align-items: stretch;
 }
 
-.service-native-article-teaser .service-native-dark-feature-copy {
+.service-native-article-teaser .service-native-dark-feature-copy,
+.service-native-feature-panel .service-native-dark-feature-copy {
   min-height: clamp(340px, 52vh, 620px);
   padding: clamp(1.8rem, 3.6vw, 3.1rem);
   display: flex;
@@ -2438,19 +1387,22 @@
   align-self: stretch;
 }
 
-.service-native-article-teaser .service-native-dark-feature-media {
+.service-native-article-teaser .service-native-dark-feature-media,
+.service-native-feature-panel .service-native-dark-feature-media {
   min-height: 100%;
   align-self: stretch;
   background-size: cover;
   background-position: center;
 }
 
-.service-native-article-teaser .service-native-dark-feature-copy h3 {
+.service-native-article-teaser .service-native-dark-feature-copy h3,
+.service-native-feature-panel .service-native-dark-feature-copy h3 {
   font-size: clamp(2rem, 4.2vw, 3.3rem);
   line-height: 1;
 }
 
-.service-native-article-teaser .service-native-dark-feature-copy p {
+.service-native-article-teaser .service-native-dark-feature-copy p,
+.service-native-feature-panel .service-native-dark-feature-copy p {
   font-size: clamp(1rem, 2vw, 1.25rem);
 }
 
@@ -3198,6 +2150,12 @@
   overflow: visible;
 }
 
+/* The Investments page has no body copy between this headline and action.
+   Keep the title's bottom spacing, but do not add a second matching gap. */
+.investments-native-page .investments-native-growth-card--investor .service-native-action-row {
+  margin-top: 0;
+}
+
 .investments-native-dashboard-action,
 .investments-native-dashboard-action:visited {
   --btn-outline-expand-block: 0.125rem;
@@ -3354,1388 +2312,6 @@
   text-decoration: underline;
 }
 
-.investments-native-ladder-box {
-  width: min(1100px, 100%);
-  max-width: 100%;
-  margin: 0 auto;
-  padding: clamp(1.15rem, 2.2vw, 1.55rem);
-  border-radius: 24px;
-  border: 1px solid rgba(196, 190, 182, 0.62);
-  background: #ffffff;
-  box-shadow: 0 6px 18px rgba(13, 61, 78, 0.04);
-  display: grid;
-  gap: 1.2rem;
-}
-
-.investments-native-ladder-box h2 {
-  margin: 0;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: clamp(1.2rem, 3vw, 2.35rem);
-  line-height: 1.04;
-  letter-spacing: -0.04em;
-  white-space: nowrap;
-  text-align: left;
-}
-
-.investments-native-ladder-box h2 .is-atlantean {
-  color: #00a5b4;
-}
-
-.investments-native-ladder-intro {
-  display: grid;
-  width: 100%;
-  justify-items: start;
-  text-align: left;
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.investments-native-ladder-intro-copy {
-  width: min(56rem, 100%);
-  max-width: 62ch;
-  display: grid;
-  justify-items: start;
-}
-
-.investments-native-ladder-intro-copy h2 {
-  max-width: none;
-  margin-left: 0;
-  margin-right: 0;
-}
-
-.investments-native-ladder-lead {
-  margin: 0.7rem 0 0;
-  color: rgba(65, 64, 66, 0.86);
-  font-family: var(--ag-font-body);
-  font-size: clamp(1rem, 1.32vw, 1.1rem);
-  font-weight: 600;
-  line-height: 1.45;
-  max-width: 40ch;
-  text-wrap: pretty;
-}
-
-.investments-native-ladder-copy {
-  margin: 0.85rem 0 0;
-  max-width: 62ch;
-  color: #45575d;
-  font-size: 0.98rem;
-  line-height: 1.58;
-}
-
-.investments-native-ladder-mobile-summary {
-  display: none;
-}
-
-.investments-native-ladder-phase-note {
-  margin: 0.55rem 0 0;
-  color: #666666;
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-
-.investments-native-ladder-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  width: 100%;
-  margin: 0;
-  gap: 1rem;
-  align-items: start;
-}
-
-.investments-native-ladder-panel {
-  min-width: 0;
-  padding: clamp(1.2rem, 2.25vw, 1.6rem);
-  border-radius: 22px;
-  border: 1px solid rgba(214, 220, 224, 0.86);
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-}
-
-.investments-native-ladder-builder {
-  width: 100%;
-  margin: 0;
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.investments-native-ladder-preview {
-  border-color: rgba(214, 220, 224, 0.86);
-  background: rgba(251, 250, 247, 0.68);
-}
-
-.investments-native-ladder-panel-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.investments-native-ladder-panel-head h3 {
-  margin: 0;
-  color: #1b2d34;
-  font-size: clamp(1.12rem, 1.62vw, 1.42rem);
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.investments-native-ladder-panel-head p {
-  margin: 0.25rem 0 0;
-  color: #566164;
-  font-size: 0.88rem;
-  line-height: 1.45;
-}
-
-.investments-native-ladder-badge {
-  display: none;
-}
-
-.investments-native-ladder-builder-grid {
-  margin-top: 0.85rem;
-  display: grid;
-  gap: 0.85rem;
-}
-
-.investments-native-ladder-field {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.investments-native-ladder-field.is-amount input {
-  font-size: 1.08rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-field-label {
-  margin: 0;
-  color: #21343a;
-  font-weight: 700;
-  font-size: 0.86rem;
-  line-height: 1.4;
-}
-
-.investments-native-ladder-field-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-}
-
-.investments-native-ladder-chip-note {
-  color: #6b7072;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0;
-}
-
-.investments-native-ladder-field-helper,
-.investments-native-ladder-helper {
-  margin: 0;
-  color: #666666;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.investments-native-ladder-field input,
-.investments-native-ladder-gated-row input,
-.investments-native-ladder-contact-info-row input,
-.investments-native-ladder-contact-info-row select,
-.investments-native-ladder-contact-phone {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid rgba(104, 120, 127, 0.25);
-  border-radius: 14px;
-  padding: 0.68rem 0.82rem;
-  font: inherit;
-  background: #ffffff;
-  color: #1f2325;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-}
-
-.investments-native-ladder-field input:focus,
-.investments-native-ladder-gated-row input:focus,
-.investments-native-ladder-contact-info-row input:focus,
-.investments-native-ladder-contact-info-row select:focus,
-.investments-native-ladder-contact-phone:focus {
-  outline: 2px solid rgba(0, 125, 152, 0.2);
-  outline-offset: 2px;
-  border-color: rgba(0, 125, 152, 0.38);
-}
-
-.investments-native-ladder-currency {
-  position: relative;
-}
-
-.investments-native-ladder-currency::before {
-  content: '$';
-  position: absolute;
-  left: 0.9rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #68777d;
-  font-weight: 700;
-  pointer-events: none;
-}
-
-.investments-native-ladder-currency input {
-  padding-left: 1.55rem;
-}
-
-.investments-native-ladder-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.investments-native-ladder-span-stepper-shell {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.investments-native-ladder-span-details {
-  border-radius: 14px;
-  border: 1px solid rgba(214, 220, 224, 0.82);
-  background: rgba(255, 255, 255, 0.96);
-}
-
-.investments-native-ladder-span-details > .investments-native-ladder-advanced-summary {
-  padding-top: 0.66rem;
-  padding-bottom: 0.66rem;
-}
-
-.investments-native-ladder-span-details > .investments-native-ladder-span-stepper-shell {
-  padding: 0 0.85rem 0.85rem;
-}
-
-.investments-native-ladder-chip {
-  border: 1px solid rgba(196, 190, 182, 0.66);
-  border-radius: 12px;
-  padding: 0.62rem 0.8rem;
-  background: rgba(255, 255, 255, 0.96);
-  color: #2c3d42;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-}
-
-.investments-native-ladder-chip strong {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: rgba(0, 125, 152, 0.12);
-  color: #0a6d83;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.22rem 0.45rem;
-}
-
-.investments-native-ladder-chip:hover {
-  transform: none;
-  border-color: rgba(var(--ag-color-atlantean-rgb), 0.3);
-}
-
-.investments-native-ladder-chip.is-selected {
-  border-color: rgba(var(--ag-color-atlantean-rgb), 0.34);
-  background: rgba(var(--ag-color-atlantean-rgb), 0.06);
-  box-shadow: none;
-}
-
-.investments-native-ladder-stepper {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) 42px;
-  gap: 0.45rem;
-  align-items: center;
-}
-
-.investments-native-ladder-stepper-btn {
-  height: 42px;
-  border: 1px solid rgba(0, 125, 152, 0.16);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.96);
-  color: #0a6d83;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.investments-native-ladder-meter {
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(205, 214, 218, 0.7);
-  overflow: hidden;
-}
-
-.investments-native-ladder-meter span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #00adbb 0%, #0a6d83 100%);
-}
-
-.investments-native-ladder-choice-group {
-  border: 0;
-  padding: 0;
-  margin: 0;
-}
-
-.investments-native-ladder-choice-grid {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.investments-native-ladder-choice-grid.is-compact {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.investments-native-ladder-choice {
-  position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.55rem;
-  align-items: center;
-  padding: 0.68rem 0.78rem;
-  border-radius: 14px;
-  border: 1px solid rgba(79, 91, 95, 0.12);
-  background: rgba(251, 251, 251, 0.94);
-  cursor: pointer;
-}
-
-.investments-native-ladder-choice input {
-  margin-top: 0;
-  accent-color: #0a6d83;
-}
-
-.investments-native-ladder-choice-copy {
-  display: grid;
-  gap: 0;
-}
-
-.investments-native-ladder-choice-copy strong {
-  color: #20343b;
-  font-size: 0.84rem;
-  line-height: 1.3;
-}
-
-.investments-native-ladder-choice-copy span,
-.investments-native-ladder-choice-state {
-  color: #617075;
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-
-.investments-native-ladder-choice-state {
-  border-radius: 999px;
-  background: rgba(33, 52, 58, 0.06);
-  padding: 0.26rem 0.5rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-choice.is-selected {
-  border-color: rgba(0, 125, 152, 0.32);
-  background: linear-gradient(135deg, rgba(0, 173, 187, 0.08) 0%, rgba(255, 255, 255, 0.98) 100%);
-  box-shadow: none;
-}
-
-.investments-native-ladder-rates-field {
-  padding-top: 0.15rem;
-}
-
-.investments-native-ladder-rate-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-
-.investments-native-ladder-rate-grid.is-compact {
-  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
-}
-
-.investments-native-ladder-rate-grid label {
-  display: grid;
-  gap: 0.28rem;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #314247;
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-rate-grid input {
-  padding: 0.6rem 0.72rem;
-}
-
-.investments-native-ladder-builder-footer {
-  margin-top: 0.9rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid rgba(171, 159, 143, 0.22);
-}
-
-.service-native-action-row.investments-native-ladder-action {
-  margin-top: 0;
-  justify-content: flex-start;
-}
-
-.investments-native-ladder-footnotes {
-  margin-top: 0.8rem;
-  display: grid;
-  gap: 0.34rem;
-}
-
-.investments-native-ladder-note,
-.investments-native-ladder-disclaimer {
-  margin: 0;
-  color: #555555;
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
-
-.investments-native-ladder-custom-note {
-  margin: 0;
-  color: #7a2f2f;
-  font-size: 0.92rem;
-  font-weight: 700;
-  line-height: 1.45;
-}
-
-.investments-native-ladder-error {
-  margin: 0.1rem 0 0;
-  color: #b91c1c;
-  font-size: 0.84rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-advanced,
-.investments-native-ladder-timeline-details {
-  border-radius: 16px;
-  border: 1px solid rgba(214, 220, 224, 0.82);
-  background: rgba(255, 255, 255, 0.96);
-}
-
-.investments-native-ladder-timeline-details {
-  margin-top: 0.7rem;
-}
-
-.investments-native-ladder-advanced-summary {
-  position: relative;
-  list-style: none;
-  cursor: pointer;
-  padding: 0.78rem 2.15rem 0.78rem 0.9rem;
-  color: #22363c;
-  font-size: 0.84rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-advanced-summary::-webkit-details-marker {
-  display: none;
-}
-
-.investments-native-ladder-advanced-summary::after {
-  content: '+';
-  position: absolute;
-  right: 0.9rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #0a6d83;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-advanced[open] > .investments-native-ladder-advanced-summary::after,
-.investments-native-ladder-timeline-details[open] > .investments-native-ladder-advanced-summary::after {
-  content: '−';
-}
-
-.investments-native-ladder-advanced-body {
-  padding: 0 0.9rem 0.9rem;
-  display: grid;
-  gap: 0.8rem;
-}
-
-.investments-native-ladder-detail-intro {
-  margin: 0;
-  padding: 0 0.9rem;
-  color: #666666;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.investments-native-ladder-scroll-hint {
-  padding: 0 0.9rem;
-  color: #68777d;
-  font-size: 0.72rem;
-  line-height: 1.4;
-}
-
-.investments-native-ladder-summary-strip {
-  margin-top: 0.75rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.investments-native-ladder-preview .investments-native-ladder-summary-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.65rem 0.75rem;
-  padding: 0;
-  border-radius: 0;
-  border: 0;
-  background: transparent;
-}
-
-.investments-native-ladder-summary-strip.is-results {
-  margin-top: 0.85rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.62rem;
-}
-
-.investments-native-ladder-summary-chip {
-  min-width: 0;
-  display: inline-grid;
-  gap: 0.12rem;
-  padding: 0.7rem 0.82rem;
-  border-radius: 14px;
-  border: 1px solid rgba(214, 220, 224, 0.86);
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.investments-native-ladder-summary-chip strong {
-  color: #536166;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.investments-native-ladder-summary-chip span {
-  color: var(--ag-color-super-grey);
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.investments-native-ladder-summary-strip.is-results .investments-native-ladder-summary-chip {
-  padding: 0.74rem 0.82rem;
-  border-radius: 14px;
-  border-color: rgba(214, 220, 224, 0.86);
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.investments-native-ladder-summary-strip.is-results .investments-native-ladder-summary-chip strong {
-  color: #536166;
-}
-
-.investments-native-ladder-summary-strip.is-results .investments-native-ladder-summary-chip span {
-  font-size: 1rem;
-}
-
-.investments-native-ladder-preview .investments-native-ladder-summary-chip {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.investments-native-ladder-preview .investments-native-ladder-summary-chip strong {
-  color: #5e6d74;
-}
-
-.investments-native-ladder-preview .investments-native-ladder-summary-chip span {
-  color: var(--ag-color-atlantean-dark);
-  font-size: 0.98rem;
-}
-
-.investments-native-ladder-preview-copy {
-  margin: 0.72rem 0 0;
-  max-width: 56ch;
-  color: #55656a;
-  font-size: 0.92rem;
-  line-height: 1.55;
-}
-
-.investments-native-ladder-preview-note {
-  margin: 0.45rem 0 0;
-  max-width: 56ch;
-  color: #66777c;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.investments-native-ladder-mini-visual {
-  margin-top: 0.7rem;
-  padding: 0.72rem 0.8rem 0.78rem;
-  border-radius: 18px;
-  border: 1px solid rgba(214, 220, 224, 0.82);
-  background: #ffffff;
-}
-
-.investments-native-ladder-mini-heading {
-  margin: 0 0 0.48rem;
-  color: var(--ag-color-atlantean-dark);
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.investments-native-ladder-mini-scale {
-  display: grid;
-  align-items: center;
-  gap: 0.45rem;
-  color: #66777c;
-  font-size: 0.68rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-mini-scale span {
-  text-align: center;
-}
-
-.investments-native-ladder-mini-scale span:first-child {
-  text-align: left;
-  color: #0c5969;
-}
-
-.investments-native-ladder-legend {
-  margin-top: 0.65rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem 0.9rem;
-  color: #506268;
-  font-size: 0.74rem;
-  line-height: 1.35;
-}
-
-.investments-native-ladder-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.investments-native-ladder-legend i {
-  flex: 0 0 auto;
-}
-
-.investments-native-ladder-legend i.is-bar {
-  width: 26px;
-  height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #00adbb 0%, #0a6d83 100%);
-}
-
-.investments-native-ladder-legend i.is-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #f39b2b;
-}
-
-.investments-native-ladder-legend i.is-rollover {
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 125, 152, 0.2);
-  background: rgba(0, 173, 187, 0.09);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.investments-native-ladder-legend i.is-rollover::before {
-  content: '↻';
-  color: #0a6d83;
-  font-style: normal;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-visual-scroll {
-  margin-top: 0.6rem;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
-  position: relative;
-}
-
-.investments-native-ladder-visual-scroll.has-fade::after {
-  content: '';
-  position: sticky;
-  right: 0;
-  top: 0;
-  display: block;
-  width: 2.5rem;
-  height: 100%;
-  margin-left: auto;
-  background: linear-gradient(90deg, rgba(246, 242, 237, 0) 0%, rgba(246, 242, 237, 0.96) 100%);
-  pointer-events: none;
-}
-
-.investments-native-ladder-visual-shell {
-  min-width: max(620px, 100%);
-}
-
-.investments-native-ladder-preview-scale {
-  margin-top: 0.6rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  color: #68777d;
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-visual-years {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.investments-native-ladder-year-label {
-  text-align: center;
-  color: #586469;
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-visual-rows {
-  margin-top: 0.65rem;
-  display: grid;
-  gap: 0.55rem;
-}
-
-.investments-native-ladder-visual-rows.is-mini {
-  margin-top: 0.55rem;
-  gap: 0.42rem;
-}
-
-.investments-native-ladder-visual-rows.is-detailed {
-  margin-top: 0.8rem;
-  gap: 0.75rem;
-}
-
-.investments-native-ladder-rung-row {
-  display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
-  gap: 0.55rem;
-  align-items: center;
-}
-
-.investments-native-ladder-rung-row.is-mini {
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 0.5rem;
-}
-
-.investments-native-ladder-rung-meta {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.investments-native-ladder-rung-meta.is-mini {
-  gap: 0;
-}
-
-.investments-native-ladder-rung-meta strong {
-  color: #25383f;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-rung-meta.is-mini strong {
-  font-size: 0.72rem;
-  color: #506268;
-}
-
-.investments-native-ladder-rung-meta span,
-.investments-native-ladder-rung-meta small {
-  color: #68777d;
-  font-size: 0.72rem;
-  line-height: 1.4;
-}
-
-.investments-native-ladder-rung-track {
-  position: relative;
-  min-height: 50px;
-  border-radius: 16px;
-  background:
-    repeating-linear-gradient(
-      to right,
-      rgba(65, 64, 66, 0.08) 0,
-      rgba(65, 64, 66, 0.08) 1px,
-      transparent 1px,
-      transparent var(--ladder-tick-step, 10%)
-    ),
-    linear-gradient(180deg, rgba(246, 248, 249, 0.98) 0%, rgba(255, 255, 255, 0.96) 100%);
-  border: 1px solid rgba(214, 220, 224, 0.82);
-  overflow: hidden;
-}
-
-.investments-native-ladder-rung-track.is-compact {
-  min-height: 42px;
-}
-
-.investments-native-ladder-rung-track.is-mini {
-  min-height: 28px;
-  border-radius: 12px;
-}
-
-.investments-native-ladder-rung-bar {
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  min-width: 1%;
-  border-radius: 999px;
-  padding: 0 0.45rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #ffffff;
-  background: linear-gradient(120deg, #00adbb 0%, #007d98 100%);
-  box-shadow: 0 8px 14px rgba(0, 125, 152, 0.16);
-}
-
-.investments-native-ladder-rung-bar.is-rollover {
-  background: linear-gradient(120deg, #008aab 0%, #00667b 100%);
-}
-
-.investments-native-ladder-rung-track.is-compact .investments-native-ladder-rung-bar {
-  top: 10px;
-  bottom: 10px;
-}
-
-.investments-native-ladder-rung-track.is-mini .investments-native-ladder-rung-bar {
-  top: 6px;
-  bottom: 6px;
-  padding: 0;
-  box-shadow: 0 6px 12px rgba(0, 125, 152, 0.12);
-}
-
-.investments-native-ladder-rung-marker {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.investments-native-ladder-rung-dot {
-  display: block;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #f39b2b;
-  box-shadow: 0 0 0 4px rgba(243, 155, 43, 0.18);
-}
-
-.investments-native-ladder-rung-rollover {
-  position: absolute;
-  top: -0.92rem;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #0f766e;
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-results {
-  width: 100%;
-  margin: 0.15rem 0 0;
-  display: grid;
-  gap: 0.9rem;
-}
-
-.investments-native-ladder-result-sheet {
-  position: relative;
-  border-radius: 18px;
-  border: 1px solid rgba(214, 220, 224, 0.86);
-  background: #ffffff;
-  box-shadow: none;
-  overflow: hidden;
-}
-
-.investments-native-ladder-result-sheet::before {
-  display: none;
-}
-
-.investments-native-ladder-rhythm {
-  padding: 1rem;
-  background: rgba(250, 249, 247, 0.72);
-}
-
-.investments-native-ladder-panel-head--results {
-  padding: 0.1rem 0 0.85rem;
-  border-bottom: 1px solid rgba(214, 220, 224, 0.86);
-}
-
-.investments-native-ladder-rhythm-strip {
-  margin-top: 0.85rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.62rem;
-}
-
-.investments-native-ladder-rhythm-card {
-  display: grid;
-  gap: 0.24rem;
-  padding: 0.78rem 0.86rem;
-  border-radius: 14px;
-  border: 1px solid rgba(214, 220, 224, 0.82);
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.investments-native-ladder-rhythm-card strong {
-  color: #536166;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0;
-}
-
-.investments-native-ladder-rhythm-card span {
-  color: var(--ag-color-atlantean-dark);
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.investments-native-ladder-rhythm-card small {
-  color: #6f6861;
-  font-size: 0.72rem;
-  line-height: 1.45;
-}
-
-.investments-native-ladder-accordion {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.investments-native-ladder-accordion-item {
-  overflow: hidden;
-}
-
-.investments-native-ladder-accordion-summary {
-  position: relative;
-  cursor: pointer;
-  list-style: none;
-  padding: 0.9rem 2.4rem 0.9rem 1rem;
-  border-bottom: 1px solid rgba(214, 220, 224, 0.82);
-  background: rgba(250, 249, 247, 0.8);
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-body);
-  font-size: clamp(0.95rem, 1.45vw, 1.04rem);
-  font-weight: 700;
-}
-
-.investments-native-ladder-accordion-summary::-webkit-details-marker {
-  display: none;
-}
-
-.investments-native-ladder-accordion-summary::after {
-  content: '+';
-  position: absolute;
-  right: 0.95rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--ag-color-atlantean-dark);
-  font-weight: 700;
-}
-
-.investments-native-ladder-accordion-item[open] .investments-native-ladder-accordion-summary::after {
-  content: '−';
-}
-
-.investments-native-ladder-accordion-body {
-  padding: 0 1rem 1rem;
-}
-
-.investments-native-ladder-table-shell {
-  margin-top: 0.6rem;
-  border: 1px solid rgba(214, 220, 224, 0.82);
-  border-radius: 16px;
-  background: #ffffff;
-  overflow: hidden;
-}
-
-.investments-native-ladder-gated {
-  display: grid;
-  gap: 1rem;
-  padding: 1.05rem;
-  background: rgba(250, 249, 247, 0.72);
-  border: 1px solid rgba(214, 220, 224, 0.82);
-  border-radius: 18px;
-  box-shadow: none;
-}
-
-.investments-native-ladder-gated-download {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.investments-native-ladder-gated h4 {
-  margin: 0;
-  color: var(--ag-color-atlantean-dark);
-  font-family: var(--ag-font-body);
-  font-size: clamp(1.05rem, 1.8vw, 1.4rem);
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.investments-native-ladder-cta-note {
-  margin-top: 0;
-  color: #555555;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.investments-native-ladder-gated-row {
-  margin-top: 0.7rem;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.investments-native-ladder-gated-actions {
-  margin-top: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.investments-native-ladder-opt-in {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  margin-top: 0.95rem;
-  color: #1f3137;
-  font-size: 0.92rem;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.investments-native-ladder-opt-in input {
-  margin-top: 0.12rem;
-  accent-color: var(--ag-color-atlantean);
-}
-
-.investments-native-ladder-opt-in-note {
-  margin: 0.45rem 0 0;
-  color: #59686e;
-  font-size: 0.84rem;
-  line-height: 1.5;
-}
-
-.investments-native-ladder-contact {
-  padding-top: 0.9rem;
-  border-top: 1px solid rgba(214, 220, 224, 0.88);
-}
-
-.investments-native-ladder-contact .investments-native-ladder-contact-heading {
-  margin: 0;
-  color: #111827;
-  font-family: var(--ag-font-body);
-  font-size: clamp(1.15rem, 2vw, 1.5rem);
-  font-weight: 700;
-}
-
-.investments-native-ladder-contact-message {
-  margin: 0.6rem 0 0.4rem;
-  font-size: 0.9rem;
-  color: #555555;
-}
-
-.investments-native-ladder-contact-info-row,
-.investments-native-ladder-contact-phone-row {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.investments-native-ladder-contact-info-row {
-  margin-top: 0.5rem;
-}
-
-.investments-native-ladder-contact-phone-row {
-  margin-top: 0.75rem;
-  align-items: center;
-}
-
-.investments-native-ladder-contact-phone {
-  max-width: 280px;
-}
-
-.investments-native-ladder-contact-submit {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.investments-native-ladder-discuss-message {
-  font-size: 0.9rem;
-  color: #555555;
-}
-
-.investments-native-ladder-discuss-message.is-success {
-  color: #0f766e;
-}
-
-.investments-native-ladder-discuss-message.is-alert {
-  color: #b91c1c;
-}
-
-.investments-native-ladder-fineprint {
-  margin-top: 0.9rem;
-}
-
-.investments-native-ladder-fineprint .service-native-note {
-  margin-top: 0.55rem;
-}
-
-.investments-native-ladder-fineprint .service-native-note:first-child {
-  margin-top: 0;
-}
-
-.service-native-section.investments-native-ladder-section {
-  background: #ffffff;
-  padding-bottom: clamp(2.7rem, 6vw, 3.9rem);
-}
-
-.investments-native-ladder-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.investments-native-ladder-table thead th {
-  padding: 0.56rem 0.78rem;
-  border-bottom: 1px solid rgba(214, 220, 224, 0.88);
-  background: rgba(250, 248, 244, 0.92);
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.16;
-  text-transform: uppercase;
-}
-
-.investments-native-ladder-table thead th:first-child {
-  text-align: left;
-}
-
-.investments-native-ladder-table thead th:not(:first-child) {
-  text-align: right;
-}
-
-.investments-native-ladder-table thead th.is-highlight {
-  color: var(--ag-color-super-grey);
-}
-
-.investments-native-ladder-table tbody th,
-.investments-native-ladder-table tbody td {
-  padding: 0.64rem 0.84rem;
-  border-bottom: 1px solid rgba(222, 225, 229, 0.9);
-  vertical-align: middle;
-}
-
-.investments-native-ladder-table tbody th {
-  text-align: left;
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-body);
-  font-size: 0.98rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.06;
-}
-
-.investments-native-ladder-table tbody td {
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-body);
-  font-size: clamp(0.9rem, 0.94vw, 0.96rem);
-  font-weight: 650;
-  letter-spacing: -0.002em;
-  text-align: right;
-}
-
-.investments-native-ladder-table tbody tr:nth-child(even) td,
-.investments-native-ladder-table tbody tr:nth-child(even) th {
-  background: rgba(250, 249, 247, 0.7);
-}
-
-.investments-native-ladder-table tbody tr:last-child th,
-.investments-native-ladder-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.investments-native-ladder-table-cell--value {
-  color: var(--ag-color-super-grey);
-  font-size: clamp(1rem, 1.04vw, 1.08rem);
-  font-weight: 780;
-}
-
-.investments-native-ladder-table-cell--value.is-cash {
-  color: #0f766e;
-}
-
-.investments-native-ladder-table-cell--secondary {
-  color: #0c5969;
-  font-weight: 700;
-}
-
-.investments-native-ladder-status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 4.8rem;
-  padding: 0.34rem 0.56rem;
-  border-radius: 999px;
-  border: 1px solid rgba(214, 220, 224, 0.92);
-  background: rgba(255, 255, 255, 0.98);
-  color: #42545a;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.investments-native-ladder-status.is-reinvested {
-  border-color: rgba(0, 125, 152, 0.18);
-  background: rgba(0, 173, 187, 0.08);
-  color: #0c5969;
-}
-
-.investments-native-ladder-status.is-cash {
-  border-color: rgba(243, 155, 43, 0.22);
-  background: rgba(250, 163, 26, 0.12);
-  color: #a15f09;
-}
-
-.investments-native-ladder-mobile-sheet {
-  display: none;
-  margin-top: 0.6rem;
-  gap: 0.72rem;
-}
-
-.investments-native-ladder-mobile-row {
-  border: 1px solid rgba(214, 220, 224, 0.92);
-  border-radius: 18px;
-  background: #ffffff;
-  overflow: hidden;
-}
-
-.investments-native-ladder-mobile-row-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.7rem;
-  padding: 0.78rem 0.84rem;
-  border-bottom: 1px solid rgba(214, 220, 224, 0.88);
-  background: linear-gradient(180deg, rgba(243, 250, 252, 0.96) 0%, rgba(255, 255, 255, 0.98) 100%);
-}
-
-.investments-native-ladder-mobile-row-head h4 {
-  margin: 0;
-  color: var(--ag-color-atlantean-dark);
-  font-size: 1rem;
-  font-weight: 780;
-  line-height: 1.08;
-  letter-spacing: -0.024em;
-}
-
-.investments-native-ladder-mobile-row-head p {
-  margin: 0.2rem 0 0;
-  color: #5b6a70;
-  font-size: 0.76rem;
-  line-height: 1.35;
-}
-
-.investments-native-ladder-mobile-row-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  background: rgba(230, 235, 238, 0.9);
-}
-
-.investments-native-ladder-mobile-cell {
-  display: grid;
-  gap: 0.18rem;
-  padding: 0.62rem 0.74rem 0.68rem;
-  background: #ffffff;
-}
-
-.investments-native-ladder-mobile-cell:nth-child(2n) {
-  border-left: 1px solid rgba(218, 223, 227, 0.92);
-}
-
-.investments-native-ladder-mobile-cell:nth-child(n + 3) {
-  border-top: 1px solid rgba(218, 223, 227, 0.92);
-}
-
-.investments-native-ladder-mobile-cell.is-value {
-  background: rgba(var(--ag-color-atlantean-rgb), 0.08);
-}
-
-.investments-native-ladder-mobile-cell.is-value.is-cash strong {
-  color: #0f766e;
-}
-
-.investments-native-ladder-mobile-cell.is-secondary {
-  background: rgba(241, 250, 251, 0.98);
-}
-
-.investments-native-ladder-mobile-cell span {
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.14;
-  text-transform: uppercase;
-}
-
-.investments-native-ladder-mobile-cell strong {
-  color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-body);
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.015em;
-}
-
-.investments-native-ladder-mobile-cell.is-value strong,
-.investments-native-ladder-mobile-cell.is-secondary strong {
-  color: var(--ag-color-atlantean-dark);
-}
-
-@media (max-width: 420px) {
-  .investments-native-ladder-mobile-row-head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .investments-native-ladder-mobile-row-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .investments-native-ladder-mobile-cell:nth-child(2n) {
-    border-left: 0;
-  }
-
-  .investments-native-ladder-mobile-cell:nth-child(n + 2) {
-    border-top: 1px solid rgba(218, 223, 227, 0.92);
-  }
-}
-
 .loans-native-page .service-native-hero {
   background: #ffffff;
 }
@@ -4874,6 +2450,13 @@
   width: min(1600px, calc(100% - 2.5rem));
 }
 
+/* Loan options use the same four-up benefits-card treatment as the 403(b) page. */
+.service-native-section.loans-native-options {
+  background: linear-gradient(180deg, #ffffff 0%, #f0eee8 100%);
+  padding-top: clamp(2.2rem, 4.4vw, 3.25rem);
+  padding-bottom: clamp(0.85rem, 1.8vw, 1.25rem);
+}
+
 .service-native-section.loans-native-options .loans-native-options-title {
   text-align: center;
   font-size: var(--loans-native-options-title-size);
@@ -4904,26 +2487,94 @@
 
 .loans-native-options-grid {
   margin-top: var(--loans-native-options-copy-gap);
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.35rem);
 }
 
 .loans-native-option-card {
-  border-radius: 9px;
-  padding: clamp(1.35rem, 2.8vw, 2.25rem);
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 100%;
+  padding: clamp(2.1rem, 3.2vw, 3rem);
+  background: rgba(255, 255, 255, 0.96);
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.loans-native-option-card:hover {
+  border-color: rgba(0, 125, 152, 0.2);
 }
 
 .loans-native-option-card h3 {
-  font-size: clamp(1.45rem, 2.3vw, 1.62rem);
-  line-height: 1.06;
-  font-family: var(--ag-font-body);
+  flex: 0 0 auto;
+  /* Match the 403(b) benefits-card title/body separation. */
+  margin: 0 0 clamp(0.95rem, 1.5vw, 1.25rem);
+  color: var(--ag-color-super-grey);
+  font-size: clamp(1.68rem, 2.45vw, 2.14rem);
+  line-height: 0.9 !important;
   font-weight: 700;
+  letter-spacing: 0;
+  min-height: 0 !important;
+  padding-bottom: 0 !important;
+  border-bottom: 0;
+  overflow-wrap: anywhere;
+}
+
+.loans-native-option-card > p {
+  flex: 0 1 auto;
+  min-width: 0;
+  /* Keep the body scale and leading aligned with the 403(b) card family. */
+  margin: 0;
+  color: var(--ag-color-super-grey);
+  font-size: clamp(0.96rem, 0.9vw, 1.08rem);
+  line-height: 1.54;
+  overflow-wrap: anywhere;
+}
+
+.loans-native-option-card > .service-native-action-row {
+  flex: 0 0 auto;
+  width: 100%;
+  margin-top: auto;
+  padding-top: clamp(1.15rem, 1.8vw, 1.5rem);
+  justify-content: flex-start;
 }
 
 .loans-native-option-card hr {
   border: 0;
   border-top: 1px solid rgba(65, 64, 66, 0.18);
-  margin: 0.85rem 0 0.8rem;
+  margin: 0.95rem 0 0.8rem;
+}
+
+.loans-native-option-card:nth-child(4n + 1) h3,
+.loans-native-option-card:nth-child(4n + 1) h3 mark {
+  color: var(--ag-color-atlantean);
+}
+
+.loans-native-option-card:nth-child(4n + 2) h3,
+.loans-native-option-card:nth-child(4n + 2) h3 mark {
+  color: var(--ag-color-mango);
+}
+
+.loans-native-option-card:nth-child(4n + 3) h3,
+.loans-native-option-card:nth-child(4n + 3) h3 mark {
+  color: var(--ag-color-super-grey);
+}
+
+.loans-native-option-card:nth-child(4n) h3,
+.loans-native-option-card:nth-child(4n) h3 mark {
+  color: var(--ag-color-atlantean);
+}
+
+@media (max-width: 980px) {
+  .loans-native-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .loans-native-options-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .loans-native-option-question {
@@ -5570,7 +3221,7 @@
 }
 
 .loans-native-vision-fuel {
-  --dynamic-billboard-copy-max-width: 44rem;
+  --dynamic-billboard-copy-max-width: 64rem;
   --dynamic-billboard-body-max-width: 36ch;
   text-align: center;
 }
@@ -5585,12 +3236,17 @@
 
 .loans-native-vision-fuel .native-info-section-copy > h2 {
   text-align: center;
+  /* The saved legacy value is visibly too tight for this short headline. */
+  letter-spacing: -0.012em !important;
 }
 
 .loans-native-vision-fuel .native-info-section-subtitle {
   margin-top: 0.2rem;
   margin-bottom: 0;
   text-align: center;
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
 }
 
 .loans-native-vision-fuel .native-info-rich-html,
@@ -5598,11 +3254,18 @@
   color: inherit;
 }
 
-.loans-native-vision-fuel .native-info-rich-html p {
+.service-native-section.dynamic-billboard.loans-native-vision-fuel .native-info-rich-html p {
   margin-top: clamp(0.45rem, 1.6vw, 0.95rem);
   text-align: center;
-  font-size: clamp(1.2rem, 2.3vw, 1.75rem);
+  font-size: clamp(1.35rem, 2.3vw, 1.8rem);
   line-height: 1.35;
+}
+
+@media (max-width: 760px) {
+  .loans-native-vision-fuel .native-info-section-subtitle {
+    width: 100%;
+    white-space: normal;
+  }
 }
 
 .loans-native-vision-fuel .service-native-action-row {
@@ -6068,11 +3731,11 @@
   line-height: 1.55;
 }
 
-.service-native-cta-band {
+.service-native-action-band {
   background: #ffffff;
 }
 
-.service-native-cta-band .ag-panel-rail {
+.service-native-action-band .ag-panel-rail {
   text-align: center;
   padding-top: clamp(2rem, 4vw, 3rem);
   padding-bottom: clamp(2rem, 4vw, 3rem);
@@ -6429,6 +4092,39 @@
   color: var(--ag-color-atlantean-dark);
 }
 
+/* An explicit HUD body color must win over the intro's section-level text
+   tone. Keep this scoped to dynamic intros so authored inline color spans can
+   still override the inherited body color. */
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-atlantean,
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-atlantean > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-atlantean);
+}
+
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-mango,
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-mango > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-mango);
+}
+
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-melon,
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-melon > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-melon);
+}
+
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-sandstone,
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-sandstone > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-sandstone);
+}
+
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-super-grey,
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-super-grey > :is(h1, h2, h3, h4, p, li, a) {
+  color: var(--ag-color-super-grey);
+}
+
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-white,
+.service-native-intro:is(.dynamic-intro, .test-dynamic-intro) .native-info-rich-html.is-white > :is(h1, h2, h3, h4, p, li, a) {
+  color: #ffffff;
+}
+
 .service-native-intro.dynamic-intro .service-native-intro-copy > h2.is-atlantean,
 .service-native-intro.dynamic-intro .service-native-intro-copy > h2 mark.is-atlantean,
 .service-native-intro.test-dynamic-intro .service-native-intro-copy > h2.is-atlantean,
@@ -6469,60 +4165,6 @@
 .service-native-intro.test-dynamic-intro .service-native-intro-copy > h2.is-white,
 .service-native-intro.test-dynamic-intro .service-native-intro-copy > h2 mark.is-white {
   color: #ffffff;
-}
-
-.service-native-page :is(.service-native-hero, .service-native-intro, .service-native-section) {
-  position: relative;
-  isolation: isolate;
-  z-index: 0;
-  transition: box-shadow 2000ms cubic-bezier(0.22, 1, 0.36, 1), filter 2000ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.service-native-page :is(.service-native-hero, .service-native-intro, .service-native-section)::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 9;
-  pointer-events: none;
-  background: linear-gradient(160deg, rgba(11, 21, 33, 0.78) 0%, rgba(11, 21, 33, 0.92) 100%);
-  opacity: 0;
-  transition: opacity 2000ms cubic-bezier(0.22, 1, 0.36, 1), background-color 2000ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.home-native-page :is(
-  .home-native-strip,
-  .home-native-hero,
-  .home-services-feature,
-  .home-native-services,
-  .home-native-impact,
-  .service-native-section,
-  .home-native-feature,
-  .home-native-newsletter
-) {
-  position: relative;
-  isolation: isolate;
-  z-index: 0;
-  transition: box-shadow 2000ms cubic-bezier(0.22, 1, 0.36, 1), filter 2000ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.home-native-page :is(
-  .home-native-strip,
-  .home-native-hero,
-  .home-services-feature,
-  .home-native-services,
-  .home-native-impact,
-  .service-native-section,
-  .home-native-feature,
-  .home-native-newsletter
-)::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 9;
-  pointer-events: none;
-  background: linear-gradient(160deg, rgba(11, 21, 33, 0.78) 0%, rgba(11, 21, 33, 0.92) 100%);
-  opacity: 0;
-  transition: opacity 2000ms cubic-bezier(0.22, 1, 0.36, 1), background-color 2000ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Keep the inline block controls below the desktop breadcrumb row. */
@@ -11557,28 +9199,26 @@
 .native-info-page--insurance .insurance-native-coverage .service-native-card {
   --insurance-coverage-card-cap-height: clamp(8.2rem, 13vw, 10.2rem);
   --insurance-coverage-card-cap-bg: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
-  position: relative;
-  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
   overflow: hidden;
   border-radius: 16px;
   padding: 0;
-  border: none;
-  background: var(--insurance-coverage-card-cap-bg);
+  border: 1px solid rgba(65, 64, 66, 0.08);
+  background: #ffffff;
   box-shadow: 0 18px 34px rgba(65, 64, 66, 0.1);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card::after {
-  content: '';
-  position: absolute;
-  inset: var(--insurance-coverage-card-cap-height) 0 0;
-  z-index: 0;
-  border-radius: 0 0 16px 16px;
-  background: linear-gradient(142deg, rgba(255, 255, 255, 1) 58%, rgba(255, 255, 255, 0.95) 100%);
+  display: none;
 }
 
-.native-info-page--insurance .insurance-native-coverage .service-native-card > * {
-  position: relative;
-  z-index: 1;
+.native-info-page--insurance .insurance-native-coverage .service-native-card > div:first-child {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:hover {
@@ -11589,6 +9229,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
+  flex: 0 0 auto;
   min-height: var(--insurance-coverage-card-cap-height);
   margin: 0;
   padding:
@@ -11596,13 +9237,21 @@
     clamp(2rem, 4vw, 2.65rem)
     clamp(1.9rem, 4vw, 2.5rem);
   color: #ffffff;
+  border-radius: 15px 15px 0 0;
   font-family: var(--ag-font-heading);
   font-weight: 700;
-  font-size: clamp(2.28rem, 3.45vw, 2.72rem);
+  font-size: clamp(2.35rem, 3.6vw, 2.95rem);
   line-height: 0.94;
   text-align: left;
   letter-spacing: clamp(-0.045em, -0.12vw, -0.024em);
   text-wrap: balance;
+}
+
+/* Keep the colored card cap readable even when a shared card preset supplies a darker title tone. */
+.native-info-page--insurance .insurance-native-coverage .service-native-card h3,
+.native-info-page--insurance .insurance-native-coverage .service-native-card h3 mark,
+.native-info-page--insurance .insurance-native-coverage .service-native-card h3 strong {
+  color: #ffffff !important;
 }
 
 .native-info-page--insurance .insurance-native-quote {
@@ -11616,6 +9265,7 @@
   color: var(--ag-color-super-grey);
   font-size: clamp(1rem, 1.38vw, 1.1rem);
   line-height: 1.58;
+  overflow-wrap: anywhere;
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card a:not(.service-native-btn) {
@@ -11664,7 +9314,7 @@
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(1) h3 {
-  background: transparent;
+  background: var(--insurance-coverage-card-cap-bg);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(1) {
@@ -11672,7 +9322,7 @@
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(2) h3 {
-  background: transparent;
+  background: var(--insurance-coverage-card-cap-bg);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(2) {
@@ -11680,7 +9330,7 @@
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(3) h3 {
-  background: transparent;
+  background: var(--insurance-coverage-card-cap-bg);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(3) {
@@ -11688,7 +9338,7 @@
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(4) h3 {
-  background: transparent;
+  background: var(--insurance-coverage-card-cap-bg);
 }
 
 .native-info-page--insurance .insurance-native-coverage .service-native-card:nth-child(4) {
@@ -11770,7 +9420,12 @@
 
 .native-info-page--insurance .insurance-native-risk .service-native-dark-feature-media {
   order: 2;
-  min-height: clamp(300px, 38vw, 520px);
+  width: min(100%, 27rem);
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+  align-self: center;
+  justify-self: center;
+  border-radius: 12px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -11781,6 +9436,10 @@
   order: 1;
   display: grid;
   align-content: center;
+  justify-items: center;
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: 0;
   gap: clamp(0.7rem, 1.6vw, 1.15rem);
 }
 
@@ -11813,6 +9472,7 @@
 }
 
 .native-info-page--insurance .insurance-native-risk .service-native-dark-feature-copy p:not(:first-of-type) {
+  width: min(100%, 48ch);
   font-size: clamp(1.02rem, 1.45vw, 1.2rem);
   line-height: 1.46;
 }
@@ -11836,7 +9496,7 @@
 }
 
 .native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-inner {
-  grid-template-columns: clamp(22.5rem, 34vw, 26rem) minmax(0, 1fr);
+  grid-template-columns: clamp(18rem, 30vw, 25rem) minmax(0, 1fr);
   grid-template-areas:
     "media copy";
   align-items: center;
@@ -11846,8 +9506,11 @@
 .native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-media {
   grid-area: media;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   min-height: 0;
+  max-width: 25rem;
+  align-self: center;
+  justify-self: end;
   background-size: cover;
   background-position: center;
   border-radius: 12px;
@@ -11890,12 +9553,30 @@
 
 .native-info-page--insurance .insurance-native-mission-assure .native-info-feature-logo {
   width: min(320px, 94%);
+  height: auto;
+  display: block;
   margin-bottom: clamp(0.8rem, 1.6vw, 1.2rem);
 }
 
 .native-info-page--insurance .insurance-native-mission-assure .service-native-action-row {
   margin-top: clamp(0.15rem, 0.6vw, 0.45rem);
   justify-content: flex-start;
+}
+
+/*
+ * The shared dark-feature preset reserves a tall canvas for editorial promos.
+ * Insurance's guide and Mission Assure sections are compact two-column content,
+ * so they must size to their content instead of inheriting that display height.
+ */
+.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-inner,
+.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-inner {
+  min-height: 0;
+}
+
+.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-copy,
+.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy {
+  min-height: 0;
+  padding: clamp(2rem, 4vw, 3.75rem) clamp(1.5rem, 3vw, 3.5rem);
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-details > .ag-panel-rail,
@@ -12474,7 +10155,8 @@
 
   .native-info-page--insurance .insurance-native-risk .service-native-dark-feature-media {
     width: min(240px, 100%);
-    min-height: clamp(250px, 68vw, 320px);
+    aspect-ratio: 4 / 3;
+    min-height: 0;
     margin: clamp(0.75rem, 3vw, 1.25rem) auto 0;
     justify-self: center;
   }
@@ -12499,7 +10181,7 @@
 
   .native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-media {
     width: min(26rem, 100%);
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 4 / 3;
     min-height: 0;
     margin: 0 0 0.9rem;
     border-radius: 10px;
@@ -15910,7 +13592,7 @@ p.impact-proof-story-proof-body {
   width: calc(100% - (var(--ag-panel-gutter) * 0.6));
 }
 
-.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card {
+.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) {
   background: linear-gradient(142deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
   border: 0;
   border-radius: 16px;
@@ -15922,14 +13604,14 @@ p.impact-proof-story-proof-body {
   -webkit-backdrop-filter: blur(10px) saturate(120%);
 }
 
-.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div {
+.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) > div {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   text-align: center;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {
+.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) h3 {
   display: block;
   min-height: 0;
   margin: 0;
@@ -15941,25 +13623,25 @@ p.impact-proof-story-proof-body {
   font-family: var(--ag-font-heading);
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
   text-align: center;
-  font-size: clamp(1.9rem, 3.35vw, 2.45rem);
-  line-height: 1.02;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  line-height: 1;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3::after {
+.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) h3::after {
   display: none !important;
 }
 
-.native-info-page--retirement-iras .retirement-child-native-ira-types .retirement-ira-type-card--traditional h3,
-.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card:nth-child(1) h3 {
+.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .retirement-ira-type-card--traditional h3,
+.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:nth-child(1) h3 {
   color: var(--ag-color-atlantean);
 }
 
-.native-info-page--retirement-iras .retirement-child-native-ira-types .retirement-ira-type-card--roth h3,
-.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card:nth-child(2) h3 {
+.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .retirement-ira-type-card--roth h3,
+.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:nth-child(2) h3 {
   color: var(--ag-color-mango);
 }
 
-.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div > p {
+.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) > div > p {
   flex: 1 1 auto;
   margin: 0;
   padding:
@@ -15968,8 +13650,8 @@ p.impact-proof-story-proof-body {
     clamp(3.2rem, 5.6vw, 4.4rem);
   background: transparent;
   color: var(--ag-color-super-grey) !important;
-  font-size: clamp(1.1rem, 1.6vw, 1.22rem);
-  line-height: 1.6;
+  font-size: clamp(1.2rem, 1.8vw, 1.38rem);
+  line-height: 1.54;
   text-align: left;
 }
 
@@ -16332,6 +14014,16 @@ p.impact-proof-story-proof-body {
 .native-info-page--retirement-iras .retirement-child-native-rollover .service-native-action-row {
   justify-content: center;
   margin-top: 1.15rem;
+}
+
+.native-info-page--retirement-iras .service-native-section.dynamic-billboard.retirement-rollover-billboard .native-info-section-copy > h2 {
+  font-family: var(--ag-font-helv) !important;
+  letter-spacing: var(--ag-letter-spacing-helv-intro);
+}
+
+.native-info-page--retirement-iras .service-native-section.dynamic-billboard.retirement-rollover-billboard .native-info-rich-html p {
+  font-size: var(--service-native-intro-body-size);
+  line-height: 1.55;
 }
 
 .retirement-403b-native-enroll > .native-info-full-bleed > h2 {
@@ -17694,7 +15386,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock > .ag-panel-rail > h2 {
-  font-size: clamp(2.1rem, 4.6vw, 3.2rem);
+  font-size: clamp(2.6rem, 5vw, 4rem);
   letter-spacing: var(--ag-letter-spacing-helv-heading);
   text-align: center;
 }
@@ -17745,11 +15437,11 @@ p.impact-proof-story-proof-body {
   column-gap: clamp(1.25rem, 2.6vw, 2rem);
   row-gap: 0;
   align-items: start;
-  padding: clamp(1.2rem, 2.3vw, 1.6rem) clamp(1.35rem, 2.7vw, 2rem);
+  padding: clamp(0.85rem, 1.7vw, 1.15rem) clamp(1.35rem, 2.7vw, 2rem) clamp(2.2rem, 4vw, 3rem);
   border: 2px solid var(--stock-step-accent);
   border-radius: 1.75rem;
-  background: #fff;
-  box-shadow: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);
+  box-shadow: 0 18px 36px rgba(12, 42, 61, 0.08);
   transform: none;
 }
 
@@ -17808,7 +15500,8 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card .service-native-action-row:last-child {
   margin-top: 1rem;
-  padding-top: 0;
+  padding-top: 0.25rem;
+  padding-bottom: 0.35rem;
   justify-content: flex-start;
   gap: 0.85rem;
   flex-wrap: wrap;
@@ -17894,9 +15587,9 @@ p.impact-proof-story-proof-body {
 .legacy-child-native-request:not(.native-dynamic-request) .native-info-section-copy > h2,
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy > h2 {
   color: var(--ag-color-super-grey);
-  font-family: var(--ag-font-helv);
-  letter-spacing: var(--ag-letter-spacing-helv-heading);
-  font-size: clamp(2.2rem, 4.6vw, 3.4rem);
+  font-family: var(--ag-font-heading);
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
+  font-size: clamp(2.3rem, 4.8vw, 3.5rem);
 }
 
 .legacy-child-native-request:not(.native-dynamic-request) .native-info-section-copy > h2 mark.is-white,
@@ -17908,8 +15601,8 @@ p.impact-proof-story-proof-body {
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
 .native-dynamic-request.is-request-form-preset-legacy-impact .dynamic-request-copy .native-info-rich-html :is(p, li, a) {
   color: #ffffff;
-  font-size: clamp(1.2rem, 2.4vw, 1.55rem);
-  line-height: 1.5;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  line-height: 1.55;
   max-width: 30rem;
 }
 
@@ -17982,17 +15675,17 @@ p.impact-proof-story-proof-body {
   margin-top: 0.2rem;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) {
   padding: clamp(3.9rem, 7.4vw, 6.2rem) 0 clamp(2.15rem, 4.6vw, 3.4rem);
   background: #faf7f1;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps > .native-info-full-bleed {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) > .native-info-full-bleed {
   width: min(calc(100% - (var(--ag-panel-gutter) * 1.4)), 76rem);
   margin-inline: auto;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-info-section-copy > h2 {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-info-section-copy > h2 {
   margin: 0;
   text-align: center;
   color: var(--ag-color-super-grey);
@@ -18003,14 +15696,14 @@ p.impact-proof-story-proof-body {
   letter-spacing: -0.038em;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-grid {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-grid {
   counter-reset: planned-giving-flow;
   margin-top: clamp(2rem, 4vw, 3rem);
   gap: clamp(1.6rem, 3vw, 2.4rem) clamp(1.2rem, 2.2vw, 1.8rem);
   align-items: start;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item {
   min-height: 0;
   border: 0;
   border-radius: 0;
@@ -18018,7 +15711,7 @@ p.impact-proof-story-proof-body {
   overflow: visible;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step {
   display: flex;
   flex-direction: column;
   position: relative;
@@ -18026,7 +15719,7 @@ p.impact-proof-story-proof-body {
   width: min(100%, 21rem);
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step::before {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step::before {
   order: 1;
   counter-increment: planned-giving-flow;
   content: '0' counter(planned-giving-flow);
@@ -18040,29 +15733,29 @@ p.impact-proof-story-proof-body {
   line-height: 0.82;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step:nth-child(2)::before {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step:nth-child(2)::before {
   color: var(--ag-color-atlantean);
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step:nth-child(3)::before {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step:nth-child(3)::before {
   color: var(--ag-color-mango);
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-copy {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-copy {
   padding: 0;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .planned-giving-step-icon {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step .planned-giving-step-icon {
   order: 0;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .native-columns-copy {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step .native-columns-copy {
   order: 2;
   padding-top: clamp(0.4rem, 0.9vw, 0.65rem);
   border-top: 0;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-copy h3 {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-copy h3 {
   margin: 0;
   padding: 0;
   border: 0;
@@ -18075,7 +15768,7 @@ p.impact-proof-story-proof-body {
   text-wrap: balance;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .native-columns-copy p {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step .native-columns-copy p {
   margin: 0;
   max-width: 28ch;
   color: rgba(65, 64, 66, 0.9);
@@ -18083,7 +15776,7 @@ p.impact-proof-story-proof-body {
   line-height: 1.68;
 }
 
-.native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-actions {
+.native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-actions {
   margin-top: clamp(0.95rem, 1.8vw, 1.25rem);
 }
 
@@ -18465,10 +16158,10 @@ p.impact-proof-story-proof-body {
 }
 
 .native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy > h2 {
-  color: var(--ag-color-mango);
-  font-family: var(--ag-font-helv);
-  font-size: clamp(2.4rem, 5vw, 3.4rem);
-  line-height: 1.05;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-heading);
+  font-size: clamp(2.3rem, 4.8vw, 3.5rem);
+  line-height: 0.98;
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
   max-width: none;
   text-wrap: wrap;
@@ -18479,7 +16172,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy > h2 mark {
-  color: var(--ag-color-mango);
+  color: var(--ag-color-super-grey);
 }
 
 .legacy-child-native-endowments-legacy-form:not(.native-dynamic-request) .native-info-section-copy > p {
@@ -18489,9 +16182,9 @@ p.impact-proof-story-proof-body {
 .native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
 .native-dynamic-request.is-request-form-preset-legacy-endowment .dynamic-request-copy .native-info-rich-html :is(p, li, a) {
   color: #ffffff;
-  font-size: clamp(1.1rem, 2vw, 1.35rem);
-  line-height: 1.6;
-  max-width: none;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  line-height: 1.55;
+  max-width: 30rem;
   text-align: left;
 }
 
@@ -19551,25 +17244,25 @@ p.impact-proof-story-proof-body {
 }
 
 @media (max-width: 960px) {
-  .native-info-page--legacy-child .legacy-child-native-flow-steps > .native-info-full-bleed {
+  .native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) > .native-info-full-bleed {
     width: min(calc(100% - (var(--ag-panel-gutter) * 1.6)), 76rem);
   }
 
-  .native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-grid {
+  .native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: clamp(1.4rem, 4vw, 2rem);
   }
 
-  .native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step {
+  .native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step {
     text-align: center;
   }
 
-  .native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .native-columns-copy {
+  .native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step .native-columns-copy {
     justify-items: center;
     text-align: center;
   }
 
-  .native-info-page--legacy-child .legacy-child-native-flow-steps .native-columns-item.is-flow-step .native-columns-copy p {
+  .native-info-page--legacy-child :is(.legacy-child-native-flow-steps, .is-columns-preset-planned-giving-steps) .native-columns-item.is-flow-step .native-columns-copy p {
     margin-inline: auto;
   }
 
@@ -20204,9 +17897,9 @@ p.impact-proof-story-proof-body {
   gap: clamp(1rem, 2vw, 1.25rem);
 }
 
-.native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card {
+.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) {
   min-height: 100%;
-  padding: clamp(1.9rem, 2.8vw, 2.6rem);
+  padding: clamp(2.7rem, 4.8vw, 4.2rem);
   border: 0;
   border-radius: 12px;
   box-shadow: 0 14px 30px rgba(15, 41, 58, 0.08);
@@ -20226,21 +17919,21 @@ p.impact-proof-story-proof-body {
   background: linear-gradient(145deg, rgba(65, 64, 66, 1) 0%, rgba(32, 34, 40, 1) 100%);
 }
 
-.native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card h3,
-.native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card p {
-  color: #fff;
+.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) h3,
+.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) > div > p {
+  color: #fff !important;
 }
 
-.native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card h3 {
+.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) h3 {
   font-family: var(--ag-font-heading);
   font-weight: 700;
   letter-spacing: var(--ag-letter-spacing-avenir-heading) !important;
-  font-size: clamp(1.85rem, 2.8vw, 2.45rem);
+  font-size: clamp(2.3rem, 4.8vw, 3.5rem) !important;
   text-align: center;
   margin-bottom: 0.8rem;
 }
 
-.native-info-page--retirement-rollovers .retirement-rollovers-native-options .service-native-card > div > p {
+.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) > div > p {
   font-size: clamp(1.1rem, 1.6vw, 1.22rem);
   line-height: 1.52;
 }
@@ -21859,7 +19552,8 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--retirement-409a .retirement-child-native-scenarios .service-native-card h3 {
   text-align: center;
-  font-size: clamp(1.2rem, 1.9vw, 1.5rem);
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  line-height: 0.98;
 }
 
 .native-info-page--retirement-409a .retirement-child-native-scenarios .service-native-card:nth-child(1) h3 {
@@ -22320,7 +20014,89 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-bullet-list strong {
+  color: var(--ag-color-atlantean);
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body {
+  margin-top: 0;
+  text-align: left;
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > ul {
+  display: block;
+  margin: 0;
+  padding-left: 1.4rem;
   color: var(--ag-color-super-grey);
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > ul li {
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  line-height: 1.32;
+  font-weight: 400;
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > ul li + li {
+  margin-top: 0.42rem;
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > ul li::marker {
+  color: var(--ag-color-atlantean);
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > ul strong,
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > p .is-atlantean {
+  color: var(--ag-color-atlantean);
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body p {
+  margin: clamp(1.35rem, 2.4vw, 1.85rem) 1.4rem 0;
+  color: var(--ag-color-super-grey);
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  line-height: 1.55;
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body :is(p, li) .is-text-small {
+  font-size: 0.9em;
+}
+
+:is(.native-info-rich-html, .service-native-card-rich-body) .is-text-fine-print {
+  font-size: 0.82em;
+}
+
+:is(.native-info-rich-html, .service-native-card-rich-body) .is-text-small {
+  font-size: 0.9em;
+}
+
+:is(.native-info-rich-html, .service-native-card-rich-body) .is-text-body {
+  font-size: 1em;
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body :is(p, li) .is-text-body {
+  font-size: 1em;
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body :is(p, li) .is-text-lead {
+  font-size: 1.15em;
+}
+
+:is(.native-info-rich-html, .service-native-card-rich-body) .is-text-large {
+  font-size: 1.08em;
+}
+
+:is(.native-info-rich-html, .service-native-card-rich-body) .is-text-lead {
+  font-size: 1.15em;
+}
+
+:is(.native-info-rich-html, .service-native-card-rich-body) .is-text-display {
+  font-size: 1.3em;
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body p + p {
+  margin-top: 1.35rem;
+}
+
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body .is-atlantean {
+  color: var(--ag-color-atlantean);
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-action-row {
@@ -22329,9 +20105,10 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-fineprint {
-  margin: 1rem 0 0 1.4rem;
+  margin: 1.35rem 0 0 1.4rem;
   color: #6c6c6c;
   font-size: 1rem;
+  line-height: 1.5;
   font-weight: 600;
   text-align: left;
 }
@@ -22378,6 +20155,11 @@ p.impact-proof-story-proof-body {
 ) .service-native-card:not(.investments-native-cert-card) {
   padding: clamp(2.4rem, 4.8vw, 3.6rem);
   padding-bottom: clamp(3.6rem, 7.2vw, 5.4rem);
+}
+
+.native-info-page--legacy-cga .service-native-section.native-dynamic-grid.legacy-child-native-cga-assets .service-native-card:not(.investments-native-cert-card) {
+  padding: clamp(1.25rem, 2.6vw, 1.9rem);
+  padding-bottom: clamp(2rem, 4vw, 3rem);
 }
 
 .service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card h3,
@@ -23108,7 +20890,7 @@ p.impact-proof-story-proof-body {
     min-height: 210px;
   }
 
-  .service-native-section.service-native-article-teaser .service-native-dark-feature-inner,
+  .service-native-section:is(.service-native-article-teaser, .service-native-feature-panel) .service-native-dark-feature-inner,
   .native-info-page--legacy-giving .legacy-giving-opportunity .service-native-dark-feature-inner,
   .native-info-page--insurance .insurance-native-fraud .service-native-dark-feature-inner,
   .native-info-page--mission-assure .mission-assure-native-camp-safety .service-native-dark-feature-inner {
@@ -23116,14 +20898,14 @@ p.impact-proof-story-proof-body {
     min-height: auto;
   }
 
-  .service-native-section.service-native-article-teaser .service-native-dark-feature-media,
+  .service-native-section:is(.service-native-article-teaser, .service-native-feature-panel) .service-native-dark-feature-media,
   .native-info-page--legacy-giving .legacy-giving-opportunity .service-native-dark-feature-media,
   .native-info-page--insurance .insurance-native-fraud .service-native-dark-feature-media,
   .native-info-page--mission-assure .mission-assure-native-camp-safety .service-native-dark-feature-media {
     min-height: clamp(14rem, 58vw, 22rem);
   }
 
-  .service-native-section.service-native-article-teaser .service-native-dark-feature-copy,
+  .service-native-section:is(.service-native-article-teaser, .service-native-feature-panel) .service-native-dark-feature-copy,
   .native-info-page--legacy-giving .legacy-giving-opportunity .service-native-dark-feature-copy,
   .native-info-page--insurance .insurance-native-fraud .service-native-dark-feature-copy,
   .native-info-page--mission-assure .mission-assure-native-camp-safety .service-native-dark-feature-copy {
@@ -23181,10 +20963,6 @@ p.impact-proof-story-proof-body {
     line-height: 0.95;
   }
 
-  .retirement-calc-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .retirement-feature-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -23226,167 +21004,6 @@ p.impact-proof-story-proof-body {
 
   .loans-native-mobile-sheet {
     display: block;
-  }
-
-  .service-native-section.investments-native-ladder-section {
-    padding-bottom: clamp(2.7rem, 7vw, 3.7rem);
-  }
-
-  .service-native-section.investments-native-ladder-section > .ag-panel-rail {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .investments-native-ladder-box {
-    border-radius: 20px;
-    border: 1px solid rgba(214, 220, 224, 0.82);
-    background: #ffffff;
-    box-shadow: none;
-    padding: 0.82rem;
-  }
-
-  .investments-native-ladder-panel-head,
-  .investments-native-ladder-field-head {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .investments-native-ladder-shell {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.6rem;
-  }
-
-  .investments-native-ladder-intro-copy {
-    display: grid;
-    justify-items: start;
-    max-width: none;
-  }
-
-  .investments-native-ladder-intro-copy h2,
-  .investments-native-ladder-lead,
-  .investments-native-ladder-copy {
-    max-width: none;
-  }
-
-  .investments-native-ladder-box h2 {
-    font-size: clamp(1.15rem, 4.8vw, 1.42rem);
-  }
-
-  .investments-native-ladder-copy {
-    margin-top: 0.45rem;
-  }
-
-  .investments-native-ladder-preview {
-    order: 1;
-  }
-
-  .investments-native-ladder-builder {
-    order: 2;
-  }
-
-  .investments-native-ladder-intro {
-    padding: 0.35rem 0.15rem 0.1rem;
-  }
-
-  .investments-native-ladder-panel {
-    padding: 0.82rem;
-    border-radius: 18px;
-  }
-
-  .investments-native-ladder-builder-grid {
-    margin-top: 0.55rem;
-    gap: 0.58rem;
-  }
-
-  .investments-native-ladder-choice-grid.is-compact,
-  .investments-native-ladder-rate-grid,
-  .investments-native-ladder-rate-grid.is-compact,
-  .investments-native-ladder-gated-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .investments-native-ladder-rung-row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.45rem;
-  }
-
-  .investments-native-ladder-rung-track,
-  .investments-native-ladder-rung-track.is-compact {
-    min-height: 38px;
-  }
-
-  .investments-native-ladder-rung-track .investments-native-ladder-rung-bar,
-  .investments-native-ladder-rung-track.is-compact .investments-native-ladder-rung-bar {
-    top: 8px;
-    bottom: 8px;
-  }
-
-  .investments-native-ladder-stepper {
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
-  }
-
-  .investments-native-ladder-phase-note {
-    display: none;
-  }
-
-  .investments-native-ladder-rhythm-strip {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .investments-native-ladder-table-shell {
-    display: none;
-  }
-
-  .investments-native-ladder-mobile-sheet {
-    display: grid;
-  }
-
-  .investments-native-ladder-contact-phone {
-    max-width: 100%;
-  }
-
-  .investments-native-ladder-contact-submit {
-    width: 100%;
-  }
-
-  .investments-native-ladder-contact-phone-row {
-    align-items: stretch;
-  }
-
-  .investments-native-ladder-preview .investments-native-ladder-summary-strip {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.48rem;
-    padding: 0.68rem 0.72rem;
-  }
-
-  .investments-native-ladder-summary-chip {
-    width: auto;
-    border-radius: 16px;
-  }
-
-  .investments-native-ladder-summary-strip.is-results {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .investments-native-ladder-preview-copy,
-  .investments-native-ladder-preview-note,
-  .investments-native-ladder-mini-visual,
-  .investments-native-ladder-detail-intro,
-  .investments-native-ladder-preview-scale,
-  .investments-native-ladder-preview .investments-native-ladder-legend {
-    display: none;
-  }
-
-  .investments-native-ladder-scroll-hint {
-    padding-top: 0.2rem;
-  }
-
-  .investments-native-ladder-visual-shell {
-    min-width: max(520px, 100%);
-  }
-
-  .investments-native-ladder-opt-in {
-    font-size: 0.88rem;
   }
 
   .impact-native-stats > .native-info-full-bleed {
@@ -23949,4 +21566,77 @@ p.impact-proof-story-proof-body {
 .service-native-section.native-dynamic-grid .service-native-grid > .service-native-card h3::after,
 .service-native-section.test-dynamic-grid .service-native-grid > .service-native-card h3::after {
   display: none;
+}
+
+/* Code-managed site features use the reusable article-teaser presentation. */
+.service-native-section.is-article-feature {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.service-native-section.is-article-feature > .ag-panel-rail,
+.service-native-section.is-article-feature > .ag-panel-rail-wide {
+  width: 100%;
+  max-width: none;
+}
+
+.service-native-section.is-article-feature .service-native-dark-feature {
+  border-radius: 0;
+}
+
+.service-native-section.is-article-feature .service-native-dark-feature-inner {
+  min-height: clamp(340px, 52vh, 620px);
+  align-items: stretch;
+}
+
+.service-native-section.is-article-feature .service-native-dark-feature-copy {
+  min-height: clamp(340px, 52vh, 620px);
+  padding: clamp(1.8rem, 3.6vw, 3.1rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.service-native-section.is-article-feature .service-native-dark-feature-media {
+  min-height: 100%;
+  align-self: stretch;
+  background-size: cover;
+  background-position: center;
+}
+
+.service-native-section.is-article-feature .service-native-dark-feature-copy h3 {
+  font-size: clamp(2rem, 4.2vw, 3.3rem);
+  line-height: 1;
+}
+
+.service-native-section.is-article-feature .service-native-dark-feature-copy > :is(p, .article-feature-body),
+.service-native-section.is-article-feature .article-feature-body :is(p, li) {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.45;
+}
+
+.service-native-section.is-article-feature .article-feature-body > :first-child {
+  margin-top: 0;
+}
+
+.service-native-section.is-article-feature .article-feature-body > :last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 760px) {
+  .service-native-section.is-article-feature .service-native-dark-feature-inner {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: auto;
+  }
+
+  .service-native-section.is-article-feature .service-native-dark-feature-media {
+    min-height: clamp(14rem, 58vw, 22rem);
+  }
+
+  .service-native-section.is-article-feature .service-native-dark-feature-copy {
+    width: 100%;
+    min-width: 0;
+    min-height: auto;
+  }
 }

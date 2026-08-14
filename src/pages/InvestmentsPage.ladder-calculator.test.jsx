@@ -295,7 +295,11 @@ describe('investments ladder calculator', () => {
 
   it('keeps the laddering responsive shell hooks in page and CSS source', () => {
     const pageSource = readFileSync(path.resolve(__dirname, './InvestmentsPage.jsx'), 'utf8');
-    const cssSource = readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8');
+    const cssSource = [
+      readFileSync(path.resolve(__dirname, '../styles/service-native.css'), 'utf8'),
+      readFileSync(path.resolve(__dirname, '../styles/service-native-functional-tools.css'), 'utf8'),
+      readFileSync(path.resolve(__dirname, '../styles/investments-native-ladder.css'), 'utf8'),
+    ].join('\n');
 
     expect(pageSource).toContain('data-ladder-preview-card');
     expect(pageSource).toContain('data-ladder-intro');

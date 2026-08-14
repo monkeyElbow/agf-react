@@ -116957,7 +116957,7 @@
             "card2Button2DocumentId": "",
             "card2Button2ClassName": "",
             "buttonLabel": "Open IRA",
-            "buttonStyle": "dark",
+            "buttonStyle": "outline",
             "buttonTone": "white",
             "buttonLinkJson": "{\"kind\":\"external\",\"openInNewWindow\":true,\"href\":\"https://secure.agfinancial.org/invest\"}"
           },

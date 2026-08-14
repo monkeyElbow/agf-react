@@ -1791,6 +1791,36 @@ describe('createDevContentAuthorityStore', () => {
     expect(store.getSnapshot().state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Original title');
   });
 
+  it('rejects a delayed block sync from before a publish', () => {
+    const persistenceFile = makeTempFile();
+    const actor = createActor();
+    const store = createStore(persistenceFile);
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const publishedRevisionBeforeEdit = store.getRouteSnapshot('/services/loans').publishedRevision;
+    const draftHero = cloneJson(store.readCurrentState().blocksByPath['/services/loans'][0]);
+    draftHero.settings.line1Text = 'Published title';
+    const saved = store.syncBlockDraft('/services/loans', 'hero', draftHero, { actor });
+    expect(saved.ok).toBe(true);
+
+    const published = store.publishBlock('/services/loans', 'hero', { actor });
+    expect(published.ok).toBe(true);
+
+    const staleHero = cloneJson(draftHero);
+    staleHero.settings.line1Text = 'Old editor buffer';
+    const delayedSync = store.syncBlockDraft('/services/loans', 'hero', staleHero, {
+      actor,
+      expectedPublishedRevision: publishedRevisionBeforeEdit,
+    });
+
+    expect(delayedSync.ok).toBe(false);
+    expect(delayedSync.error).toBe('block-draft-sync-stale-published-revision');
+    expect(store.readCurrentState().blocksByPath['/services/loans'][0].settings.line1Text)
+      .toBe('Published title');
+    expect(store.readPublishedSnapshot().blocksByPath['/services/loans'][0].settings.line1Text)
+      .toBe('Published title');
+  });
+
   it('requires an explicit force claim before taking over a passive foreign draft', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);
@@ -1842,7 +1872,12 @@ describe('createDevContentAuthorityStore', () => {
     expect(published.publishResult.receipt).toMatchObject({
       route: '/services/loans',
       scope: 'block',
+      blockId: 'hero',
+      draftRevision: expect.any(String),
+      publishedRevision: expect.stringMatching(/^[a-f0-9]{12}$/),
       actor: { userId: 'dev-taylor' },
+      timestamp: expect.any(Number),
+      verification: { status: 'verified', baseSnapshotMatches: true },
       publishedBlockIds: ['hero'],
     });
     expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Block live title');
@@ -2111,6 +2146,7 @@ describe('createDevContentAuthorityStore', () => {
     nextState.blocksByPath['/services/loans'][0].settings.line1Text = 'Published hero title';
     const saved = store.saveDraft(nextState, { actor: createActor(), summary: 'hero ready for live' });
     expect(saved.saveResult.savedBlockIdsByPath['/services/loans']).toContain('hero');
+    const savedDraftRevision = store.getRouteSnapshot('/services/loans').draftRevision;
 
     const published = store.publishPage('/services/loans', { actor: createActor(), summary: 'ship it' });
 
@@ -2121,7 +2157,11 @@ describe('createDevContentAuthorityStore', () => {
     expect(published.publishResult.receipt).toMatchObject({
       route: '/services/loans',
       scope: 'page',
+      draftRevision: savedDraftRevision,
+      publishedRevision: expect.stringMatching(/^[a-f0-9]{12}$/),
       actor: { userId: 'dev-taylor' },
+      timestamp: expect.any(Number),
+      verification: { status: 'verified', baseSnapshotMatches: true },
     });
     expect(published.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Published hero title');
     expect(published.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
@@ -2372,6 +2412,60 @@ describe('createDevContentAuthorityStore', () => {
     expect(publishedAfterTakeover.baseSnapshot.blocksByPath['/services/loans'][0].settings.line1Text)
       .toBe('Foreign draft remains');
     expect(publishedAfterTakeover.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toBe(null);
+  });
+
+  it('publishes eligible order changes while preserving a changed foreign draft on an unmoved block', () => {
+    const persistenceFile = makeTempFile();
+    const store = createStore(persistenceFile);
+    const actor = createActor();
+    const foreignActor = createActor({
+      userId: 'dev-other',
+      displayName: 'Morgan Laptop',
+      initials: 'ML',
+      accentColor: '#3355cc',
+    });
+    const seed = buildSeedState();
+    seed.blocksByPath['/services/loans'].push({
+      id: 'newsletter',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: { title: 'Original newsletter' },
+    });
+    store.resetFromSeed(seed, { actor });
+
+    const foreignDraft = cloneJson(store.readCurrentState());
+    foreignDraft.blocksByPath['/services/loans'][2].settings.title = 'Foreign newsletter draft';
+    store.syncBlockDraft(
+      '/services/loans',
+      'newsletter',
+      foreignDraft.blocksByPath['/services/loans'][2],
+      { actor: foreignActor },
+    );
+
+    const nextState = cloneJson(store.readCurrentState());
+    const blocks = nextState.blocksByPath['/services/loans'];
+    [blocks[0], blocks[1]] = [blocks[1], blocks[0]];
+    store.saveDraft(nextState, { actor, summary: 'move eligible blocks' });
+
+    const published = store.publishPage('/services/loans', {
+      actor,
+      summary: 'publish eligible order changes',
+    });
+
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.status).toBe('partially-published');
+    expect(published.publishResult.publishedBlockIdsByPath['/services/loans'])
+      .toEqual(['cta_form', 'hero']);
+    expect(published.publishResult.blockedBlockIdsByPath['/services/loans'])
+      .toEqual(['newsletter']);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'].map((block) => block.id))
+      .toEqual(['cta_form', 'hero', 'newsletter']);
+    expect(published.baseSnapshot.blocksByPath['/services/loans']
+      .find((block) => block.id === 'newsletter').settings.title)
+      .toBe('Original newsletter');
+    expect(published.state.blocksByPath['/services/loans']
+      .find((block) => block.id === 'newsletter').settings.title)
+      .toBe('Foreign newsletter draft');
   });
 
   it('re-normalizes malformed preset-family template ids during shared draft saves', () => {

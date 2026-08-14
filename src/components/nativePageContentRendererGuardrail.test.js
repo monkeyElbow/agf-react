@@ -19,6 +19,7 @@ function readCssBetween(source, startPattern, endPattern) {
 describe('native page content renderer guardrail', () => {
   it('keeps the shared dynamic page content builder in the native page path', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
     expect(source).toContain('buildDynamicPageContentFromBlock,');
     expect(source).toContain('const runtime = buildDynamicPageContentFromBlock(block);');
@@ -29,8 +30,11 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('const shouldRenderIntro = !isBlockOnlyManagedPage && !hideIntro && hasIntroContent;');
     expect(source).toContain('const showIntroHud = showFrontHud && shouldRenderIntro && Boolean(introHudPanel);');
     expect(source).toContain('{shouldRenderIntro ? (');
-    expect(source).toContain('const pageContentSection = buildDynamicPageContentSection(renderBlock, activePath);');
-    expect(source).toContain("if (renderBlock.mode === 'dynamic' && (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND)) {");
+    expect(source).toContain('function buildManagedBlockSection(block, {');
+    expect(source).toContain("if (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND) {");
+    expect(source).toContain('buildDynamicPageContentSection(renderBlock, pathname);');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
+    expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).toContain("const dynamicSectionPanel = dynamicSectionBlockId ? (hudPanelByBlockId[dynamicSectionBlockId] || null) : null;");
     expect(source).not.toContain("if (block.id === 'page_content') {");
   });
@@ -38,15 +42,16 @@ describe('native page content renderer guardrail', () => {
   it('keeps block-only hero and intro blocks on the ordered dynamic section path instead of shell slots', () => {
     const source = readSource('./NativeContentPage.jsx');
     const shellSource = readSource('../lib/managedPageShells.js');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
     expect(source).toContain('function buildDynamicHeroShellSection(block) {');
     expect(source).toContain('function buildDynamicIntroShellSection(block, { includeTestClassName = false } = {}) {');
-    expect(source).toContain("if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'hero') {");
-    expect(source).toContain("if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'intro') {");
-    expect(source).toContain('const adminIntro = !isBlockOnlyManagedPage');
+    expect(compositionSource).toContain('const primarySlotIds = new Set(');
+    expect(compositionSource).toContain('isBlockOnlyManagedPage');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
     expect(source).toContain('const shouldRenderHero = !isBlockOnlyManagedPage && !hideHero && Boolean(heroBase);');
-    expect(source).toContain('hideHero: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideHero) || fullyHiddenBlockIds.has(\'hero\')),');
-    expect(source).toContain('hideIntro: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has(\'intro\')),');
+    expect(compositionSource).toContain('hideHero: !isBlockOnlyManagedPage && (');
+    expect(compositionSource).toContain('hideIntro: !isBlockOnlyManagedPage && (');
     expect(shellSource).toContain('hero: null,');
     expect(shellSource).toContain('intro: null,');
     expect(shellSource).toContain('hideHero: false,');
@@ -55,23 +60,26 @@ describe('native page content renderer guardrail', () => {
 
   it('keeps site features on the shared dynamic section path instead of bespoke page ownership', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
     expect(source).toContain('buildDynamicSiteFeatureFromBlock,');
     expect(source).toContain('const runtime = buildDynamicSiteFeatureFromBlock(block);');
     expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-site-feature' : 'native-dynamic-site-feature'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
-    expect(source).toContain('const siteFeatureSection = buildDynamicSiteFeatureSection(renderBlock, activePath);');
-    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'site_feature') {");
+    expect(source).toContain("if (renderBlock.kind === 'site_feature') {");
+    expect(source).toContain('buildDynamicSiteFeatureSection(renderBlock, pathname);');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
   });
 
   it('keeps feature panels on the shared dynamic section path without native-section targeting', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
     expect(source).toContain('buildDynamicFeaturePanelFromBlock,');
     expect(source).toContain('const runtime = buildDynamicFeaturePanelFromBlock(block);');
-    expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
-    expect(source).toContain('const featurePanelSection = buildDynamicFeaturePanelSection(renderBlock, activePath);');
-    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'feature_panel') {");
-    expect(source).toContain('acc.push(featurePanelSection);');
+    expect(source).toContain("className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'} service-native-feature-panel${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`");
+    expect(source).toContain("if (renderBlock.kind === 'feature_panel') {");
+    expect(source).toContain('buildDynamicFeaturePanelSection(renderBlock, pathname);');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
     expect(source).not.toContain('const mappedSection = buildDynamicFeaturePanelSection(block, activePath);');
   });
 
@@ -415,6 +423,7 @@ describe('native page content renderer guardrail', () => {
 
   it('keeps the remaining NativeContentPage ownership boundary explicit: delegated functional routes, delegated child-route composition, and only named inline path exceptions', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
     expect(source).toContain("const resolvedPagePath = String(activePath || templatePath || '/').trim() || '/';");
     expect(source).toContain("isBlockOnlyManagedPagePath,");
@@ -428,7 +437,9 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('preIntroSections: [],');
     expect(source).toContain('sections: [],');
     expect(source).toContain(': (hasManagedBlockSource ? null : heroBase);');
-    expect(source).toContain('const dynamicSections = visibleBlocks.reduce');
+    expect(compositionSource).toContain('const orderedBlocks = composeManagedBlockOrder(blocks);');
+    expect(compositionSource).toContain('const visibleBlocks = orderedBlocks');
+    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
     expect(source).not.toContain('const allowTargetedDynamicSections = !isBlockOnlyManagedPage;');
     expect(source).not.toContain('targetedDynamicCtaSections');
     expect(source).not.toContain('mappedSection');

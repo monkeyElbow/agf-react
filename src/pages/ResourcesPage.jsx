@@ -13,13 +13,13 @@ function normalizeSearchText(value) {
 }
 
 function ResourcesPageContent() {
-  const { articles } = useResources();
+  const { publishedArticles: publishedArticleRecords } = useResources();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
 
   const publishedArticles = useMemo(
-    () => articles.filter((item) => item.type === 'article' && item.isPublished),
-    [articles],
+    () => publishedArticleRecords.filter((item) => item.type === 'article'),
+    [publishedArticleRecords],
   );
 
   const categories = useMemo(() => {

@@ -14,6 +14,7 @@ describe('native intro and billboard renderer guardrail', () => {
   it('keeps native intro and billboard merge paths sourced from shared canonical runtimes', () => {
     const source = readSource('./NativeContentPage.jsx');
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
     expect(source).toContain('buildDynamicIntroFromBlock,');
     expect(source).toContain('buildDynamicBillboardFromBlock,');
@@ -33,9 +34,11 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain('className={buildActionRowClassName(introJustify, \'center\')}');
     expect(source).toContain("className={buildActionRowClassName(sectionJustifyToken, 'left')}");
     expect(source).toContain("style={buildActionRowStyle(sectionJustifyToken, 'left')}");
-    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'billboard') {");
-    expect(source).toContain("const billboardSection = buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });");
-    expect(source).toContain('acc.push(billboardSection);');
+    expect(source).toContain('function buildManagedBlockSection(block, {');
+    expect(source).toContain("if (renderBlock.kind === 'billboard') {");
+    expect(source).toContain('buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });');
+    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).not.toContain('routeScopedClassName');
     expect(source).not.toContain("pathname === '/services/retirement/403b'");
     expect(source).not.toContain('function normalizeIntroLineSpacing(');

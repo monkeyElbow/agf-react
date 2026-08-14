@@ -287,9 +287,10 @@ describe('planned giving and IRA source defaults', () => {
     expect(iraTypes?.settings).toMatchObject({
       bodyTone: 'super-grey',
       justify: 'center',
-      buttonStyle: 'dark',
+      buttonStyle: 'outline',
       buttonTone: 'white',
     });
+    expect(iraBlocks.find((block) => block?.id === 'rollover_billboard')?.settings?.titleFontFamily).toBe('helv');
     expectLink(iraTypes?.settings, 'buttonLinkJson', {
       kind: 'external',
       href: 'https://secure.agfinancial.org/invest',
@@ -308,7 +309,7 @@ describe('planned giving and IRA source defaults', () => {
       titleSizeRem: 5.25,
       titleLetterSpacingEm: -0.03,
       contentMaxWidthPx: 1480,
-      headlineMaxWidthPx: 560,
+      headlineMaxWidthPx: 1480,
       sectionClassName: 'retirement-everyday retirement-daily-billboard',
     });
   });

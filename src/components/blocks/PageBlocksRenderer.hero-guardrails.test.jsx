@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { contentBlockBlueprintsByPath } from '../../data/contentBlockBlueprints';
@@ -103,7 +103,7 @@ describe('home hero render guardrails', () => {
     expect(container.querySelector('.home-native-hero .home-native-title.line3.is-super-grey')).toBeNull();
   });
 
-  it('preserves home hero tag structure, line classes, and per-line sizing in HUD edit mode', () => {
+  it('preserves home hero tag structure, line classes, and per-line sizing in HUD edit mode', async () => {
     const heroBlock = {
       id: 'hero',
       kind: 'hero',
@@ -130,6 +130,7 @@ describe('home hero render guardrails', () => {
       ),
     );
 
+    await waitFor(() => expect(container.querySelector('.home-native-hero p.home-native-eyebrow.is-atlantean')?.textContent).toBe('Convenient.'));
     const line1 = container.querySelector('.home-native-hero p.home-native-eyebrow.is-atlantean');
     const line2 = container.querySelector('.home-native-hero h1.home-native-title.line1.line2.is-mango');
     const line3 = container.querySelector('.home-native-hero h1.home-native-title.line3.is-super-grey');

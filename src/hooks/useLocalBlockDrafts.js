@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
+import {
+  EDITOR_DRAFT_PUBLISHED_EVENT,
+  LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS,
+} from '../lib/contentAdminTiming';
 
 function settingsValueEquals(left, right) {
   if (Object.is(left, right)) {
@@ -449,6 +452,52 @@ export default function useLocalBlockDrafts({
     setDraftsByBlockId({});
     setSettledDraftsByBlockId({});
   }, [normalizedPath]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handlePublishedDrafts = (event) => {
+      const detail = event?.detail || {};
+      const eventPathname = String(detail.pathname || '').trim();
+      if (eventPathname && eventPathname !== normalizedPath) {
+        return;
+      }
+      const publishedBlockIds = Array.isArray(detail.blockIds)
+        ? detail.blockIds.map((blockId) => String(blockId || '').trim()).filter(Boolean)
+        : [];
+      const shouldClearBlock = (blockId) => (
+        !publishedBlockIds.length || publishedBlockIds.includes(blockId)
+      );
+      const clearIds = new Set([
+        ...Object.keys(draftsByBlockIdRef.current || {}),
+        ...Object.keys(settledDraftsByBlockIdRef.current || {}),
+        ...Object.keys(draftProtectionRef.current || {}),
+      ].filter(shouldClearBlock));
+      if (!clearIds.size) {
+        return;
+      }
+      clearIds.forEach((blockId) => {
+        clearCommitTimer(blockId);
+        claimedBlockIdsRef.current.delete(blockId);
+      });
+      const removeSelectedBlocks = (source) => Object.fromEntries(
+        Object.entries(source || {}).filter(([blockId]) => !clearIds.has(blockId)),
+      );
+      const nextDrafts = removeSelectedBlocks(draftsByBlockIdRef.current);
+      const nextSettledDrafts = removeSelectedBlocks(settledDraftsByBlockIdRef.current);
+      const nextProtections = removeSelectedBlocks(draftProtectionRef.current);
+      draftsByBlockIdRef.current = nextDrafts;
+      settledDraftsByBlockIdRef.current = nextSettledDrafts;
+      draftProtectionRef.current = nextProtections;
+      setDraftsByBlockId(nextDrafts);
+      setSettledDraftsByBlockId(nextSettledDrafts);
+    };
+
+    window.addEventListener(EDITOR_DRAFT_PUBLISHED_EVENT, handlePublishedDrafts);
+    return () => window.removeEventListener(EDITOR_DRAFT_PUBLISHED_EVENT, handlePublishedDrafts);
+  }, [clearCommitTimer, normalizedPath]);
 
   return {
     blocks: mergedBlocks,

@@ -17,6 +17,11 @@ import {
   compactContentAdminRecord,
 } from '../src/lib/contentAdminNormalization.js';
 import { normalizeSharedOperationStatus } from '../src/lib/contentAdminCollaboration.js';
+import {
+  findManagedOrderChangedBlockIds,
+  mergePublishedManagedBlocks,
+  placeManagedBlockAtDraftPosition,
+} from '../src/lib/managedBlockOrder.js';
 import { validateContentAdminStateSchema } from '../src/lib/contentAdminSnapshotSchema.js';
 import {
   compareSeedRouteSlices,
@@ -25,7 +30,17 @@ import {
 import {
   GENEROSITY_FUND_SNAPSHOT_MIGRATION_ID,
   GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
+  CGA_SECURE_ACT_CARD_MIGRATION_ID,
+  CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
+  INSURANCE_COVERAGE_CTA_MIGRATION_ID,
+  INSURANCE_COVERAGE_CTA_MIGRATION_VERSION,
+  QCD_CENTERED_CARD_GRID_MIGRATION_ID,
+  QCD_CENTERED_CARD_GRID_MIGRATION_VERSION,
   migrateGenerosityFundSnapshot,
+  migrateQcdCenteredCardGridState,
+  migrateCgaSecureActCardState,
+  migrateInsuranceCoverageCtaState,
+  migratePlannedGivingStepsBlock,
   stripRetiredTargetBridgeSettingsFromBlock,
   stripRetiredTargetBridgeSettingsFromBlocks,
   stripRetiredTargetBridgeSettingsFromState,
@@ -97,8 +112,12 @@ function normalizeActor(rawActor) {
   if (!source) {
     return null;
   }
-  const userId = String(source.userId || '').trim();
-  const displayName = String(source.displayName || '').trim();
+  const rawUserId = String(source.userId || '').trim();
+  const rawDisplayName = String(source.displayName || '').trim();
+  const isLegacyYourmom = rawUserId === 'dev-d018b3e9-dcae-4181-82c4-7946f2eb3125'
+    || /^yourmom$/i.test(rawDisplayName);
+  const userId = isLegacyYourmom ? 'dev-user-1' : rawUserId;
+  const displayName = isLegacyYourmom ? 'James' : rawDisplayName;
   if (!userId || !displayName) {
     return null;
   }
@@ -107,6 +126,36 @@ function normalizeActor(rawActor) {
     displayName,
     initials: String(source.initials || '').trim() || displayName.slice(0, 2).toUpperCase(),
     accentColor: String(source.accentColor || '').trim() || '#00adbb',
+  };
+}
+
+function buildPublishReceipt({
+  route,
+  scope,
+  blockId = '',
+  actor,
+  publishedBlockIds = [],
+  draftRevision,
+  publishedRevision,
+  timestamp,
+  operationId = '',
+}) {
+  return {
+    route: String(route || '').trim(),
+    scope: scope === 'block' ? 'block' : 'page',
+    blockId: String(blockId || '').trim() || null,
+    draftRevision: String(draftRevision || '').trim(),
+    publishedRevision: String(publishedRevision || '').trim(),
+    actor: normalizeActor(actor),
+    timestamp: Number.isFinite(Number(timestamp)) ? Number(timestamp) : null,
+    verification: {
+      status: 'verified',
+      baseSnapshotMatches: true,
+    },
+    operationId: String(operationId || '').trim(),
+    publishedBlockIds: (Array.isArray(publishedBlockIds) ? publishedBlockIds : [])
+      .map((value) => String(value || '').trim())
+      .filter(Boolean),
   };
 }
 
@@ -795,8 +844,8 @@ function normalizeLegacyPageBlockState(pathname, block) {
   return normalizeBlockPresentation(nextBlock);
 }
 
-function normalizePageBlockState(_pathname, block) {
-  return normalizeContentAdminBlock(block);
+function normalizePageBlockState(pathname, block) {
+  return migratePlannedGivingStepsBlock(pathname, normalizeContentAdminBlock(block));
 }
 
 function normalizePageBlocksState(pathname, blocks) {
@@ -922,6 +971,7 @@ function summarizePageAuthoringDiff(currentState, baselineState, pathname) {
   const changedBlockIds = orderedBlockIds.filter((blockId) => (
     JSON.stringify(currentBlockById.get(blockId) || null) !== JSON.stringify(baselineBlockById.get(blockId) || null)
   ));
+  const orderChangedBlockIds = findManagedOrderChangedBlockIds(currentBlockIds, baselineBlockIds);
   const hasPageMetaChanges = JSON.stringify({
     page: current.pageHierarchy?.[normalizedPath] || null,
     aliases: aliasesForPath(current.pathAliases, normalizedPath),
@@ -933,6 +983,7 @@ function summarizePageAuthoringDiff(currentState, baselineState, pathname) {
   return {
     changedBlockIds,
     changedBlockCount: changedBlockIds.length,
+    orderChangedBlockIds,
     hasOrderChanges,
     isDeletionOnlyOrderChange,
     removedBlockIds,
@@ -993,36 +1044,12 @@ function replaceBlockInPageSlice(targetState, sourceState, pathname, blockId, co
     // A block-scoped publish must not publish the other draft blocks, but the
     // published block must land at its draft position. This also repairs an
     // older publish that already placed a newly inserted block at the bottom.
-    if (targetIndex >= 0) {
-      targetBlocks.splice(targetIndex, 1);
-    }
-    const sourceIndex = sourceBlocks.findIndex((block) => (
-      String(block?.id || '').trim() === normalizedBlockId
+    targetBlocks.splice(0, targetBlocks.length, ...placeManagedBlockAtDraftPosition(
+      targetBlocks,
+      sourceBlocks,
+      normalizedBlockId,
+      cloneJson(sourceBlock),
     ));
-    let insertionIndex = targetBlocks.length;
-    for (let index = sourceIndex + 1; index < sourceBlocks.length; index += 1) {
-      const followingId = String(sourceBlocks[index]?.id || '').trim();
-      const followingIndex = targetBlocks.findIndex((block) => (
-        String(block?.id || '').trim() === followingId
-      ));
-      if (followingIndex >= 0) {
-        insertionIndex = followingIndex;
-        break;
-      }
-    }
-    if (insertionIndex === targetBlocks.length) {
-      for (let index = sourceIndex - 1; index >= 0; index -= 1) {
-        const precedingId = String(sourceBlocks[index]?.id || '').trim();
-        const precedingIndex = targetBlocks.findIndex((block) => (
-          String(block?.id || '').trim() === precedingId
-        ));
-        if (precedingIndex >= 0) {
-          insertionIndex = precedingIndex + 1;
-          break;
-        }
-      }
-    }
-    targetBlocks.splice(insertionIndex, 0, cloneJson(sourceBlock));
   } else if (targetIndex >= 0) {
     targetBlocks.splice(targetIndex, 1);
   }
@@ -1773,6 +1800,17 @@ export function createJsonContentStore({
 
   const getDraftRevision = (pathname) => routeRevision(record.state, pathname);
   const getPublishedRouteRevision = (pathname) => routeRevision(record.baseSnapshot, pathname);
+  const getPublishedRevisionsByPath = () => {
+    const pathnames = new Set([
+      ...Object.keys(record.baseSnapshot?.pageHierarchy || {}),
+      ...Object.keys(record.baseSnapshot?.blocksByPath || {}),
+    ]);
+    return Object.fromEntries(
+      [...pathnames]
+        .filter(Boolean)
+        .map((pathname) => [pathname, getPublishedRouteRevision(pathname)]),
+    );
+  };
 
   const getPublishedRevision = () => {
     if (publishedRevisionSource !== record.baseSnapshot) {
@@ -1811,6 +1849,7 @@ export function createJsonContentStore({
         : record.state,
     ),
     baseSnapshot: compactContentAdminState(record.baseSnapshot),
+    publishedRevisionsByPath: getPublishedRevisionsByPath(),
     ...(record.snapshotMigrations
       ? { snapshotMigrations: cloneJson(record.snapshotMigrations) }
       : {}),
@@ -2604,6 +2643,7 @@ export function createJsonContentStore({
       reason = 'block-draft-synced',
       summary = '',
       markSaved = false,
+      expectedPublishedRevision = '',
     } = {}) {
       const normalizedPath = String(pathname || '').trim();
       const normalizedBlockId = String(blockId || '').trim();
@@ -2614,6 +2654,20 @@ export function createJsonContentStore({
       }
       if (normalizedIncomingBlockId !== normalizedBlockId) {
         return { ok: false, error: 'block-id-mismatch', ...publishRouteSnapshot(normalizedPath) };
+      }
+
+      const currentPublishedRevision = getPublishedRouteRevision(normalizedPath);
+      if (
+        expectedPublishedRevision
+        && String(expectedPublishedRevision).trim() !== currentPublishedRevision
+      ) {
+        return {
+          ok: false,
+          error: 'block-draft-sync-stale-published-revision',
+          expectedPublishedRevision: String(expectedPublishedRevision).trim(),
+          currentPublishedRevision,
+          ...publishRouteSnapshot(normalizedPath),
+        };
       }
 
       const nextState = normalizeSharedState(record.state);
@@ -2726,6 +2780,7 @@ export function createJsonContentStore({
       const currentState = exposeLoadedStaleOwnership
         ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
         : normalizeSharedState(record.state);
+      const draftRevision = routeRevision(currentState, normalizedPath);
       if (expectedDraftRevision && expectedDraftRevision !== routeRevision(currentState, normalizedPath)) {
         return {
           ok: false,
@@ -2738,11 +2793,13 @@ export function createJsonContentStore({
         ? currentState.blocksByPath[normalizedPath]
         : [];
       const publishSummary = summarizePageAuthoringDiff(currentState, record.baseSnapshot, normalizedPath);
-      const publishConflictBlockIds = new Set(
-        publishSummary.hasOrderChanges
-          ? currentBlocks.map((block) => String(block?.id || '').trim()).filter(Boolean)
-          : publishSummary.changedBlockIds,
-      );
+      const publishOrderChangedBlockIds = publishSummary.isDeletionOnlyOrderChange
+        ? []
+        : (publishSummary.orderChangedBlockIds || []);
+      const publishConflictBlockIds = new Set([
+        ...publishSummary.changedBlockIds,
+        ...publishOrderChangedBlockIds,
+      ]);
 
       if (!publishSummary.hasChanges) {
         return {
@@ -2784,13 +2841,17 @@ export function createJsonContentStore({
       });
 
       const blockedBlockIds = new Set(blockedBlocks.map((entry) => entry.blockId));
+      const publishableBlockIds = [...new Set([
+        ...publishSummary.changedBlockIds,
+        ...publishOrderChangedBlockIds,
+      ])].filter((blockId) => !blockedBlockIds.has(blockId));
+      const blockedOrderChange = publishOrderChangedBlockIds
+        .some((blockId) => blockedBlockIds.has(blockId));
       const canPartiallyPublish = Boolean(
         blockedBlocks.length
-        && (!publishSummary.hasOrderChanges || publishSummary.isDeletionOnlyOrderChange)
+        && !blockedOrderChange
         && !publishSummary.hasPageMetaChanges,
       );
-      const publishableBlockIds = publishSummary.changedBlockIds
-        .filter((blockId) => !blockedBlockIds.has(blockId));
 
       if (blockedBlocks.length && (!canPartiallyPublish || !publishableBlockIds.length)) {
         return {
@@ -2828,7 +2889,7 @@ export function createJsonContentStore({
         }
         nextBlocksMeta[blockId] = blockedBlockIds.has(blockId)
           ? normalizeBlockMeta(currentEntry.blocks?.[blockId])
-          : publishSummary.changedBlockIds.includes(blockId)
+          : publishableBlockIds.includes(blockId)
           ? clearPublishedDraftOwnership(currentEntry.blocks?.[blockId], normalizedActor, timestamp)
           : clearPublishedDraftOwnership(currentEntry.blocks?.[blockId]);
       });
@@ -2855,23 +2916,11 @@ export function createJsonContentStore({
         ? cloneJson(record.baseSnapshot.blocksByPath?.[normalizedPath] || [])
         : cloneJson(currentBlocks);
       if (blockedBlocks.length) {
-        const currentBlockById = new Map(currentBlocks.map((block) => [String(block?.id || '').trim(), block]));
-        nextPublishedBlocks = nextPublishedBlocks.filter((block) => (
-          !publishableBlockIds.includes(String(block?.id || '').trim())
-          || currentBlockById.has(String(block?.id || '').trim())
-        ));
-        publishableBlockIds.forEach((blockId) => {
-          const currentBlock = currentBlockById.get(blockId);
-          if (!currentBlock) {
-            return;
-          }
-          const existingIndex = nextPublishedBlocks.findIndex((block) => String(block?.id || '').trim() === blockId);
-          if (existingIndex >= 0) {
-            nextPublishedBlocks.splice(existingIndex, 1, cloneJson(currentBlock));
-          } else {
-            nextPublishedBlocks.push(cloneJson(currentBlock));
-          }
-        });
+        nextPublishedBlocks = mergePublishedManagedBlocks(
+          nextPublishedBlocks,
+          currentBlocks,
+          publishableBlockIds,
+        ).map(cloneJson);
       }
       const nextPublishedState = normalizeSharedState(record.baseSnapshot);
       nextPublishedState.blocksByPath[normalizedPath] = nextPublishedBlocks;
@@ -2885,12 +2934,19 @@ export function createJsonContentStore({
       };
       persistRecord();
       const publishResult = {
-        receipt: {
+        receipt: buildPublishReceipt({
           route: normalizedPath,
           scope: 'page',
           actor: normalizedActor,
-          publishedBlockIds: blockedBlocks.length ? publishableBlockIds : publishSummary.changedBlockIds,
-        },
+          publishedBlockIds: blockedBlocks.length ? publishableBlockIds : [...new Set([
+            ...publishSummary.changedBlockIds,
+            ...publishOrderChangedBlockIds,
+          ])],
+          draftRevision,
+          publishedRevision: getPublishedRouteRevision(normalizedPath),
+          timestamp,
+          operationId,
+        }),
         operationId: String(operationId || '').trim(),
         pathname: normalizedPath,
         scope: 'page',
@@ -2900,7 +2956,10 @@ export function createJsonContentStore({
         changedPaths: [normalizedPath],
         publishedPaths: [normalizedPath],
         publishedBlockIdsByPath: {
-          [normalizedPath]: blockedBlocks.length ? publishableBlockIds : publishSummary.changedBlockIds,
+          [normalizedPath]: blockedBlocks.length ? publishableBlockIds : [...new Set([
+            ...publishSummary.changedBlockIds,
+            ...publishOrderChangedBlockIds,
+          ])],
         },
         blockedBlockIdsByPath: blockedBlocks.length
           ? { [normalizedPath]: blockedBlocks.map((entry) => entry.blockId) }
@@ -2963,6 +3022,7 @@ export function createJsonContentStore({
       const currentState = exposeLoadedStaleOwnership
         ? clearUnchangedBlockDraftOwnership(record.state, record.baseSnapshot)
         : normalizeSharedState(record.state);
+      const draftRevision = routeRevision(currentState, normalizedPath);
       if (expectedDraftRevision && expectedDraftRevision !== routeRevision(currentState, normalizedPath)) {
         return {
           ok: false,
@@ -3017,12 +3077,17 @@ export function createJsonContentStore({
         };
         persistRecord();
         const publishResult = {
-          receipt: {
+          receipt: buildPublishReceipt({
             route: normalizedPath,
             scope: 'block',
+            blockId: normalizedBlockId,
             actor: normalizedActor,
             publishedBlockIds: [normalizedBlockId],
-          },
+            draftRevision,
+            publishedRevision: getPublishedRouteRevision(normalizedPath),
+            timestamp,
+            operationId,
+          }),
           operationId: String(operationId || '').trim(),
           pathname: normalizedPath,
           scope: 'block',
@@ -3045,7 +3110,7 @@ export function createJsonContentStore({
           pathname: normalizedPath,
           scope: 'block',
           blockId: normalizedBlockId,
-          draftRevision: getDraftRevision(normalizedPath),
+          draftRevision,
           publishedRevision: getPublishedRouteRevision(normalizedPath),
           publishedAt: timestamp,
           publishResult,
@@ -3114,12 +3179,17 @@ export function createJsonContentStore({
       const publishedBlockSnapshot = record.baseSnapshot.blocksByPath?.[normalizedPath]
         ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
       const publishResult = {
-        receipt: {
+        receipt: buildPublishReceipt({
           route: normalizedPath,
           scope: 'block',
+          blockId: normalizedBlockId,
           actor: normalizedActor,
           publishedBlockIds: [normalizedBlockId],
-        },
+          draftRevision,
+          publishedRevision: getPublishedRouteRevision(normalizedPath),
+          timestamp,
+          operationId,
+        }),
         operationId: String(operationId || '').trim(),
         pathname: normalizedPath,
         scope: 'block',
@@ -3416,6 +3486,254 @@ export function createJsonContentStore({
         migration: {
           id: GENEROSITY_FUND_SNAPSHOT_MIGRATION_ID,
           version: GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateQcdCenteredCardGridSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[QCD_CENTERED_CARD_GRID_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= QCD_CENTERED_CARD_GRID_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: QCD_CENTERED_CARD_GRID_MIGRATION_ID,
+            version: QCD_CENTERED_CARD_GRID_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateQcdCenteredCardGridState(record.state);
+      const baseMigration = migrateQcdCenteredCardGridState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-qcd-centered-card-grid-migration', {
+            action: 'qcd-centered-card-grid-migration',
+            migrationId: QCD_CENTERED_CARD_GRID_MIGRATION_ID,
+            migrationVersion: QCD_CENTERED_CARD_GRID_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [QCD_CENTERED_CARD_GRID_MIGRATION_ID]: QCD_CENTERED_CARD_GRID_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'QCD centered card-grid migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: QCD_CENTERED_CARD_GRID_MIGRATION_ID,
+          version: QCD_CENTERED_CARD_GRID_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateInsuranceCoverageCtaSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[INSURANCE_COVERAGE_CTA_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= INSURANCE_COVERAGE_CTA_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: INSURANCE_COVERAGE_CTA_MIGRATION_ID,
+            version: INSURANCE_COVERAGE_CTA_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateInsuranceCoverageCtaState(record.state, {
+        sourceState: record.state,
+      });
+      const baseMigration = migrateInsuranceCoverageCtaState(record.baseSnapshot, {
+        sourceState: stateMigration.state,
+      });
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-insurance-coverage-cta-migration', {
+            action: 'insurance-coverage-cta-migration',
+            migrationId: INSURANCE_COVERAGE_CTA_MIGRATION_ID,
+            migrationVersion: INSURANCE_COVERAGE_CTA_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [INSURANCE_COVERAGE_CTA_MIGRATION_ID]: INSURANCE_COVERAGE_CTA_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Insurance coverage CTA field migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: INSURANCE_COVERAGE_CTA_MIGRATION_ID,
+          version: INSURANCE_COVERAGE_CTA_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateCgaSecureActCardSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(record.snapshotMigrations?.[CGA_SECURE_ACT_CARD_MIGRATION_ID] || 0);
+      if (currentVersion >= CGA_SECURE_ACT_CARD_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: CGA_SECURE_ACT_CARD_MIGRATION_ID,
+            version: CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateCgaSecureActCardState(record.state);
+      const baseMigration = migrateCgaSecureActCardState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-cga-secure-act-card-migration', {
+            action: 'cga-secure-act-card-migration',
+            migrationId: CGA_SECURE_ACT_CARD_MIGRATION_ID,
+            migrationVersion: CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [CGA_SECURE_ACT_CARD_MIGRATION_ID]: CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'CGA SECURE 2.0 card migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: CGA_SECURE_ACT_CARD_MIGRATION_ID,
+          version: CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
           didMigrate: changed,
           alreadyApplied: false,
         },

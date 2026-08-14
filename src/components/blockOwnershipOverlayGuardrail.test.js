@@ -23,6 +23,10 @@ describe('block ownership overlay guardrail', () => {
 
     expect(cssSource).toContain('.is-admin-owned-drafted-other::after');
     expect(cssSource).toContain('.is-admin-owned-editing-other::after');
+    expect(cssSource).toContain('/* A passive draft is available to inspect, not disabled. */');
+    expect(cssSource).toContain('/* A historical save is context, not a blocking state. */');
+    expect(cssSource).toContain('box-shadow: inset 0 0 0 2px rgba(0, 138, 171, 0.58), inset 6px 0 0 #008aab;');
+    expect(cssSource).toContain('box-shadow: inset 0 0 0 2px rgba(83, 103, 121, 0.46), inset 6px 0 0 #536779;');
     expect(cssSource).toContain('.admin-block-ownership-overlay');
     expect(cssSource).toContain('.admin-block-ownership-overlay-card');
     expect(cssSource).toContain('.admin-block-ownership-overlay-item');
@@ -30,14 +34,17 @@ describe('block ownership overlay guardrail', () => {
     expect(cssSource).toMatch(/\.admin-front-hud-anchor-label\s*\{[\s\S]*?border-radius: 999px;[\s\S]*?backdrop-filter: blur\(10px\);/);
     expect(cssSource).toMatch(/\.admin-front-hud-anchor-icon\s*\{[\s\S]*?border-radius: 999px;[\s\S]*?backdrop-filter: blur\(8px\);/);
     expect(cssSource).toMatch(/\.admin-front-hud-dock-tab-icon\s*\{[\s\S]*?border-radius: 999px;[\s\S]*?backdrop-filter: blur\(8px\);/);
-    expect(cssSource).toContain('padding: 2px 0.5rem 2px 0.16rem;');
+    expect(cssSource).toContain('padding: 2px 0.5rem;');
     expect(cssSource).toContain('margin-left: 0.3rem;');
     expect(cssSource).toContain('var(--admin-block-ownership-accent');
     expect(cssSource).toContain('.admin-block-ownership-overlay-item + .admin-block-ownership-overlay-item');
+    expect(cssSource).toContain('.is-admin-hidden-block::after');
+    expect(cssSource).toContain('rgba(231, 164, 38, 0.28)');
 
     expect(nativePageSource).toContain('BlockOwnershipOverlay');
     expect(nativePageSource).toContain('getOwnershipVisualForBlockId');
     expect(homeRendererSource).toContain('getBlockOwnershipVisual');
+    expect(homeRendererSource).toContain('is-admin-hidden-block');
     expect(homeRendererSource).toContain('<BlockOwnershipOverlay ownership={ownership} />');
     expect(loansSource).toContain("ownership={getOwnershipVisualForBlockId('cta_form')}");
     expect(servicesSource).toContain("ownership={getOwnershipVisualForBlockId('cta_form')}");

@@ -16,6 +16,8 @@ describe('admin editor control rounding', () => {
     const hudSource = readSource('../styles/front-hud.css');
 
     expect(adminSource).toContain('.admin-button-preview-row .service-native-btn {');
+    expect(adminSource).toContain('font-size: 1rem;');
+    expect(adminSource).toContain('min-height: 44px;');
     expect(adminSource).toContain('border-radius: 999px;');
     expect(adminSource).toContain('.admin-content-page-wrap :is(');
     expect(adminSource).toContain('border-radius: var(--ag-field-radius);');
@@ -23,10 +25,26 @@ describe('admin editor control rounding', () => {
     expect(adminSource).toContain('border-radius: 18px;');
 
     expect(hudSource).toContain('.admin-billboard-editor-preview-button {');
+    expect(hudSource).toContain('.admin-hud-editor-shared-surface .admin-billboard-editor-preview-button,');
+    expect(hudSource).toContain('font-size: 1rem !important;');
+    expect(hudSource).toContain('.admin-button-preview-surface');
+    expect(hudSource).toContain('.admin-hud-editor-shared-surface :is(');
     expect(hudSource).toContain('.admin-front-hud-tool :is(');
     expect(hudSource).toContain('border-radius: var(--ag-field-radius) !important;');
     expect(hudSource).toContain('.admin-front-hud-tool textarea {');
     expect(hudSource).toContain('border-radius: 18px !important;');
+  });
+
+  it('keeps every shared admin color palette circular, including rich-body HTML editors', () => {
+    const adminSource = readSource('../styles/admin.css');
+    const htmlEditorSource = readSource('../components/AdminHtmlEditor.jsx');
+
+    expect(adminSource).toContain('Standard admin circular swatch palette contract.');
+    expect(adminSource).toContain('--admin-swatch-option-radius: 50%;');
+    expect(adminSource).toContain('--admin-swatch-chip-radius: 50%;');
+    expect(adminSource).toContain('.admin-html-editor-color-group .admin-swatch-option');
+    expect(adminSource).toContain('border-radius: 50% !important;');
+    expect(htmlEditorSource).toContain('is-compact is-icon-only is-circular admin-html-editor-color-group');
   });
 
   it('keeps Request Form lead copy readable after compact field styling', () => {

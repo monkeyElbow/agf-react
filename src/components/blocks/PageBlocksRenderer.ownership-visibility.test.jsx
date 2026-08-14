@@ -70,4 +70,30 @@ describe('PageBlocksRenderer ownership visibility', () => {
     expect(container.querySelector('.admin-block-ownership-overlay')).toBeTruthy();
     expect(container.querySelector('.home-native-hero')?.className).toContain('is-admin-owned-saved-other');
   });
+
+  it('keeps the canonical panel icon on the rendered name badge', () => {
+    const { container } = renderRenderer({
+      ownershipEnabled: true,
+      hudAnchorsByBlockId: {
+        hero: {
+          panelId: 'hero-main',
+          label: 'Hero',
+          icon: '/icons/hero.svg',
+          anchorSelector: '[data-block-id="hero"]',
+        },
+      },
+      onHudAnchorClick: vi.fn(),
+    });
+
+    expect(container.querySelector('.admin-front-hud-anchor-icon-image')?.getAttribute('src')).toBe('/icons/hero.svg');
+  });
+
+  it('uses the shared mango dimming layer for hidden blocks while keeping the block visible to HUD authors', () => {
+    const { container } = renderRenderer({
+      ownershipEnabled: true,
+      blocks: [{ ...buildHeroBlock(), hidden: true }],
+    });
+
+    expect(container.querySelector('.home-native-hero')?.className).toContain('is-admin-hidden-block');
+  });
 });

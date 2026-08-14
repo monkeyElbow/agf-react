@@ -62,7 +62,6 @@ This pattern is currently applied to:
 - `site_feature`
 - `feature_panel`
 - `split_panel`
-- `cta_band`
 - `impact_stat`
 - `services_grid`
 - `card_grid`

@@ -1,5 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import '../styles/service-native.css';
+import '../styles/calculator-foundation.css';
+import '../styles/investments-native-ladder.css';
 import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
@@ -14,6 +16,7 @@ import { useTestimonials } from '../context/TestimonialsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
+import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import SafeRichText from '../components/SafeRichText';
 import CertificateRatesSheet from '../components/CertificateRatesSheet';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
@@ -26,9 +29,14 @@ import {
   defaultInvestmentsCtaSettings,
   defaultInvestmentsGrowthFeatureSettings,
 } from '../data/investmentsPageSeed';
-import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
-import FrontHudStructureControls from '../components/FrontHudStructureControls';
-import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
+import {
+  BlockHudPanelLoading,
+  FrontHudStructureControls,
+  LazyBlockHudPanelHost as BlockHudPanelHost,
+  preloadBlockHudPanelHost,
+  preloadFrontHudChrome,
+} from '../components/BlockHudPanelHostLoader';
+import { getResourceArticleFeatureConfig } from '../data/resourceArticleFeatureIndex';
 import {
   formatTestimonialAttribution,
   normalizeDisplayTestimonials,
@@ -69,7 +77,6 @@ import {
   normalizeHeroTitleLetterSpacingEm,
 } from '../lib/heroTitleSize';
 
-const BlockHudPanelHost = lazy(() => import('../components/BlockHudPanelHost'));
 const FrontHudPanelShell = lazy(() => import('../components/FrontHudPanelShell'));
 const FrontHudPageWorkflow = lazy(() => import('../components/FrontHudPageWorkflow'));
 const HeroInlineLiveEditor = lazy(async () => {
@@ -844,10 +851,6 @@ export default function InvestmentsPage() {
   const introBodyInputRef = useRef(null);
   const heroLineInputRefs = useRef({ line1: null, line2: null, line3: null });
   const {
-    blocksByPath,
-    pageHierarchy,
-    authoringBlocksByPath,
-    authoringPageHierarchy,
     setActiveBlockLock = () => ({ ok: false }),
     clearActiveBlockLock = () => ({ ok: false }),
     getBlockCollaboration = () => null,
@@ -865,14 +868,7 @@ export default function InvestmentsPage() {
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
-  } = selectFrontHudContentSource({
-    enabled: frontHudEnabled,
-    pathname: '/services/investments',
-    authoringBlocksByPath,
-    blocksByPath,
-    authoringPageHierarchy,
-    pageHierarchy,
-  });
+  } = useManagedContentSource({ pathname: '/services/investments' });
   const { testimonials: testimonialsLibrary } = useTestimonials();
   const { getDisclosureValue } = useDisclosures();
   const { rates, ratesMeta } = useRates();
@@ -1222,6 +1218,7 @@ export default function InvestmentsPage() {
   const hudPanels = useMemo(
     () => buildHudPanelsFromBlocks(managedBlocks, {
       panelIdById: INVESTMENTS_HUD_PANEL_ID_BY_BLOCK_ID,
+      includeHidden: true,
     }).map((panel) => ({
       ...panel,
       sectionRef: panel.blockId === 'hero'
@@ -1253,6 +1250,12 @@ export default function InvestmentsPage() {
     [managedPageHierarchy],
   );
   const showFrontHud = frontHudEnabled && hudPanels.length > 0;
+  useEffect(() => {
+    if (showFrontHud) {
+      void preloadFrontHudChrome();
+      void preloadBlockHudPanelHost();
+    }
+  }, [showFrontHud]);
   const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanelId);
   const isHeroHudFocusTarget = hasOpenHudPanel && activeHudPanelId === INVESTMENTS_HERO_HUD_PANEL_ID;
   const isIntroHudFocusTarget = hasOpenHudPanel && activeHudPanelId === INVESTMENTS_INTRO_HUD_PANEL_ID;
@@ -1939,14 +1942,15 @@ export default function InvestmentsPage() {
               <button
                 key={panel.id}
                 type="button"
-                className={`admin-front-hud-dock-tab${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
+                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
                 onClick={() => toggleHudPanel(panel.id, panel.sectionRef)}
-                aria-label={`Edit ${panel.label}`}
-                title={`Edit ${panel.label}`}
+                aria-label={`Edit ${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
+                title={`Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
                 <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
+                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
               </button>
             ))}
           </div>
@@ -1967,7 +1971,7 @@ export default function InvestmentsPage() {
         <FrontHudPageWorkflow pathname="/services/investments" reviewHref="/admin/content?page=%2Fservices%2Finvestments" placement="bar" isVisible={showFrontHud} />
       </Suspense>
       {hasOpenHudPanel && activeHudPanel ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<BlockHudPanelLoading label={activeHudPanel.label} />}>
           <FrontHudPanelShell
             title={activeHudPanel.label}
             blockId={activeHudPanel.block.id}
@@ -1987,7 +1991,8 @@ export default function InvestmentsPage() {
               reviewHref="/admin/content?page=%2Fservices%2Finvestments"
             placement="dock-inline"
             showBlockDiscardAction
-              blockId={activeHudPanel.block.id}
+            blockId={activeHudPanel.block.id}
+            block={activeHudPanel.block}
               blockLabel={activeHudPanel.label}
               onDoneEditing={closeHudDock}
             />
@@ -2309,7 +2314,7 @@ export default function InvestmentsPage() {
         <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('laddering')} />
         {renderHudAnchor('laddering')}
         <div className="ag-panel-rail">
-          <div className="investments-native-ladder-box fade-up">
+          <div className="investments-native-ladder-box calculator-surface fade-up">
             <div className="investments-native-ladder-intro" data-ladder-intro>
               <div className="investments-native-ladder-intro-copy">
                 <h2>{renderLadderTitle(calculatorCtaRuntime?.title)}</h2>

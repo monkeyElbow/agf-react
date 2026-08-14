@@ -6,6 +6,7 @@ const GRID_CARD_STYLE_BG_COMPATIBILITY = {
   card4: new Set(['grey']),
   none: new Set(['white', 'sand', 'blue', 'grey']),
   'borderless-shadow': new Set(['white', 'sand', 'blue', 'grey']),
+  'planned-giving-centered': new Set(['white', 'sand', 'blue', 'grey']),
 };
 const GRID_TEXT_TONE_BG_COMPATIBILITY = {
   'super-grey': new Set(['white', 'sand']),
@@ -15,7 +16,7 @@ const GRID_TEXT_TONE_BG_COMPATIBILITY = {
   white: new Set(['blue', 'grey']),
   alternating: new Set(['white', 'sand', 'blue', 'grey']),
 };
-const GRID_COLUMNS_SET = new Set(['two', 'three', 'four']);
+const GRID_COLUMNS_SET = new Set(['one', 'two', 'three', 'four']);
 const GRID_WIDTH_SET = new Set(['content', 'browser']);
 
 export function normalizeGridBgTone(value) {

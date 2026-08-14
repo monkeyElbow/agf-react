@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../BlockOwnershipOverlay';
+import SafeRichText from '../SafeRichText';
 import FrontHudAnchorTag from '../FrontHudAnchorTag';
-import FrontHudStructureControls from '../FrontHudStructureControls';
+import MissionAssureLogo from '../MissionAssureLogo';
+import { FrontHudStructureControls, HeroInlineLiveEditor } from '../BlockHudPanelHostLoader';
 import {
   createInitialFormValues,
   normalizeFollowUpSubmitLabel,
@@ -35,6 +37,7 @@ import {
   normalizeSurfaceBgTone,
 } from '../../lib/colorSystem';
 import { normalizeBlockForRender } from '../../lib/blockPresentationContracts';
+import { composeManagedBlockOrder, getManagedBlockRenderKey } from '../../lib/managedBlockOrder';
 import {
   buildPresetFamilyRuntimeClassName,
   resolvePresetFamilyClassToken,
@@ -44,7 +47,7 @@ import {
   linkValueToEditableHref,
 } from '../../lib/linkValue';
 import DynamicRequestFormSection from '../DynamicRequestFormSection';
-import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../HeroHudEditorShared';
+import { renderHeroRangesAsNodes } from '../HeroHudEditorShared';
 import HomeImpactStoryFeature, { HomeImpactStoryStaticContent } from '../HomeImpactStoryFeature';
 import HomeServicesFeatureAnimation from '../HomeServicesFeatureAnimation';
 import ImpactProofStoryFeature from '../ImpactProofStoryFeature';
@@ -52,7 +55,6 @@ import InvestmentsGrowthFeature from '../InvestmentsGrowthFeature';
 import LegacyGivingStewardshipStoryFeature from '../LegacyGivingStewardshipStoryFeature';
 import NewsletterSignupForm from '../NewsletterSignupForm';
 import PlannedGivingStepIcon from '../PlannedGivingStepIcon';
-import SafeRichText from '../SafeRichText';
 import { extractHeroLineColorToken } from '../../lib/heroHudRanges';
 import {
   normalizeHeroTitleLetterSpacingEm,
@@ -77,6 +79,10 @@ const EMPTY_OWNERSHIP = Object.freeze({
   isOwnedByOther: false,
   owner: null,
 });
+
+function isAdminHiddenBlock(block) {
+  return block?.hidden === true || block?.hidden === 'true';
+}
 const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
 const HOME_DO_THE_MATH_PRESS_SEQUENCE_MS = 1140;
 
@@ -543,7 +549,6 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
             readOnly={isForeignOwnedBlockOwnership(ownership)}
             onLineInteract={heroHud.onLineInteract}
             setLineInputRef={heroHud.setLineInputRef}
-            renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}
             resolveLineClassName={(line, index) => line.className || `line${index + 1}`}
             resolveLineTagName={(line) => (line.key === 'line1' ? 'p' : 'h1')}
           />
@@ -972,9 +977,11 @@ export function BillboardBlock({
   const railStyle = runtime.contentMaxWidthPx
     ? { '--dynamic-billboard-max-width': `${runtime.contentMaxWidthPx}px` }
     : undefined;
+  const presetClassName = buildPresetFamilyRuntimeClassName('billboard', runtime.presetId || 'default');
   const sectionClassName = [
     'service-native-section',
     'home-native-billboard',
+    presetClassName,
     `is-bg-${normalizePanelBgTone(runtime.bgTone || 'grey')}`,
     `is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
     runtime.sectionClassName || '',
@@ -1023,9 +1030,10 @@ export function BillboardBlock({
             </p>
           ) : null}
           {runtime.bodyHtml ? (
-            <div
+            <SafeRichText
+              as="div"
               className="native-info-rich-html"
-              dangerouslySetInnerHTML={{ __html: runtime.bodyHtml }}
+              html={runtime.bodyHtml}
             />
           ) : null}
           {!runtime.bodyHtml && runtime.body ? (
@@ -1077,7 +1085,7 @@ function toActionButtonClassName(style, tone) {
 function buildBillboardAction(action, resolveTo) {
   const label = String(action?.label || '').trim();
   const rawTarget = String(action?.to || action?.href || '').trim();
-  if (!label || !rawTarget) {
+  if (!label) {
     return null;
   }
 
@@ -1090,6 +1098,14 @@ function buildBillboardAction(action, resolveTo) {
   })
     ? normalizeUniversalOutlineButtonClassName(baseClassName, action?.tone || 'atlantean')
     : baseClassName;
+
+  if (!rawTarget) {
+    return {
+      label,
+      className: `${baseClassName} is-static`,
+      openInNewWindow: false,
+    };
+  }
 
   if (isExternal) {
     return {
@@ -1111,6 +1127,19 @@ function buildBillboardAction(action, resolveTo) {
 function BillboardAction({ item }) {
   if (!item) {
     return null;
+  }
+
+  if (!item.href && !item.to) {
+    return (
+      <button
+        type="button"
+        className={item.className}
+        aria-disabled="true"
+        onClick={(event) => event.preventDefault()}
+      >
+        {item.label}
+      </button>
+    );
   }
 
   if (item.href) {
@@ -1347,7 +1376,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
             ) : null}
             {subtitle ? <p className="native-info-section-subtitle">{subtitle}</p> : null}
             {renderBodyInSectionCopy ? (
-              <div className="native-info-rich-html dynamic-cta-form-callout" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+              <SafeRichText as="div" className="native-info-rich-html dynamic-cta-form-callout" html={bodyHtml} />
             ) : null}
           </div>
         ) : null}
@@ -1471,7 +1500,7 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
               })}
               {errorMessage ? <p className="dynamic-cta-form-error" role="alert">{errorMessage}</p> : null}
               {!renderBodyInSectionCopy && bodyHtml ? (
-                <div className="native-info-rich-html dynamic-cta-form-callout" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+                <SafeRichText as="div" className="native-info-rich-html dynamic-cta-form-callout" html={bodyHtml} />
               ) : null}
               {runtime.fineprint ? <p className="dynamic-cta-form-fineprint">{runtime.fineprint}</p> : null}
               <button type="submit" className={submitButtonClassName}>{submitLabel}</button>
@@ -1508,7 +1537,7 @@ function NewsletterBlock({ block, ownership, hudAnchor }) {
           {titleHighlights.length ? renderHighlightedText(title, titleHighlights) : title}
         </h2>
         {bodyHtml ? (
-          <div className="home-native-newsletter-copy" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+          <SafeRichText as="div" className="home-native-newsletter-copy" html={bodyHtml} />
         ) : body ? (
           <p>{body}</p>
         ) : null}
@@ -1617,10 +1646,10 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
   }
 
   return (
-    <section className={`service-native-section native-dynamic-site-feature${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+    <section className={`service-native-section service-native-article-teaser is-article-feature native-dynamic-site-feature${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
       <BlockOwnershipOverlay ownership={ownership} />
       <SharedBlockHudAnchor hudAnchor={hudAnchor} />
-      <div className="ag-panel-rail">
+      <div className="ag-panel-rail-wide">
         <div className="service-native-dark-feature">
           <div className="service-native-dark-feature-inner">
             <div
@@ -1631,7 +1660,7 @@ function SiteFeatureBlock({ block, resolveTo, ownership, hudAnchor }) {
             />
             <div className="service-native-dark-feature-copy">
               {runtime.title ? (
-                <h3 aria-label={runtime.titleHighlights?.length ? runtime.title : undefined}>
+                <h3 className={runtime.titleClassName || undefined} aria-label={runtime.titleHighlights?.length ? runtime.title : undefined}>
                   {runtime.titleHighlights?.length
                     ? renderHighlightedText(runtime.title, runtime.titleHighlights)
                     : runtime.title}
@@ -1674,10 +1703,10 @@ function FeaturePanelBlock({ block, resolveTo, ownership, hudAnchor }) {
     : null;
 
   return (
-    <section className={`service-native-section native-dynamic-feature-panel${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
+    <section className={`service-native-section service-native-feature-panel native-dynamic-feature-panel${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}${ownership?.className || ''}`} data-block-id={block?.id || undefined}>
       <BlockOwnershipOverlay ownership={ownership} />
       <SharedBlockHudAnchor hudAnchor={hudAnchor} />
-      <div className="ag-panel-rail">
+      <div className="ag-panel-rail-wide">
         <div className="service-native-dark-feature">
           <div className="service-native-dark-feature-inner">
             <div
@@ -1687,15 +1716,18 @@ function FeaturePanelBlock({ block, resolveTo, ownership, hudAnchor }) {
               aria-label={runtime.imageAlt || undefined}
             />
             <div className="service-native-dark-feature-copy">
+              {runtime.logoKey === 'mission-assure' ? (
+                <MissionAssureLogo className="native-info-feature-logo" />
+              ) : null}
               {runtime.title ? (
-                <h3 aria-label={runtime.titleHighlights?.length ? runtime.title : undefined}>
+                <h3 className={runtime.titleClassName || undefined} aria-label={runtime.titleHighlights?.length ? runtime.title : undefined}>
                   {runtime.titleHighlights?.length
                     ? renderHighlightedText(runtime.title, runtime.titleHighlights)
                     : runtime.title}
                 </h3>
               ) : null}
               {bodyHtml ? (
-                <div className="native-info-rich-html" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+                <SafeRichText as="div" className="native-info-rich-html article-feature-body" html={bodyHtml} />
               ) : runtime.body ? (
                 <p>{runtime.body}</p>
               ) : null}
@@ -1926,7 +1958,7 @@ export function ColumnsBlock({
                 </p>
               ) : null}
               {bodyHtml ? (
-                <div className="native-info-rich-html" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+                <SafeRichText as="div" className="native-info-rich-html" html={bodyHtml} />
               ) : null}
               {followupLine ? (
                 <p className={`native-columns-followup-line${followupLineClassName ? ` ${followupLineClassName}` : ''}`}>
@@ -2177,6 +2209,7 @@ export default function PageBlocksRenderer({
     }
     return {
       label: panel.label,
+      icon: panel.icon,
       isActive: !hudDockCollapsed && activeHudPanelId === panel.panelId,
       onClick: () => onHudAnchorClick(panel.panelId, panel.anchorSelector),
       style: { '--ag-admin-front-hud-opacity': String(hudOpacityRatio) },
@@ -2192,7 +2225,7 @@ export default function PageBlocksRenderer({
 
   return (
     <>
-      {blocks.map((block, index) => {
+      {composeManagedBlockOrder(blocks).map((block, index) => {
         const renderBlock = toRendererBlock(normalizeBlockForRender(block));
         const blockKind = String(renderBlock?.kind || renderBlock?.type || '').trim();
         const Renderer = blockRenderers[blockKind];
@@ -2200,19 +2233,26 @@ export default function PageBlocksRenderer({
           return null;
         }
         const hudAnchor = resolveHudAnchor(renderBlock);
+        const ownership = ownershipEnabled
+          ? getBlockOwnershipVisual(
+            getBlockCollaboration(ownershipPathname, renderBlock?.id),
+            devIdentity?.userId,
+          )
+          : EMPTY_OWNERSHIP;
+        const blockOwnership = ownershipEnabled && isAdminHiddenBlock(renderBlock)
+          ? {
+            ...ownership,
+            className: `${ownership.className || ''} is-admin-hidden-block`.trim(),
+          }
+          : ownership;
         return (
           <Renderer
-            key={`${blockKind || 'block'}-${index}`}
+            key={getManagedBlockRenderKey(renderBlock, index)}
             block={renderBlock}
             resolveTo={resolveTo}
             heroHud={blockKind === 'hero' ? heroHud : null}
             hudAnchor={hudAnchor}
-            ownership={ownershipEnabled
-              ? getBlockOwnershipVisual(
-                getBlockCollaboration(ownershipPathname, renderBlock?.id),
-                devIdentity?.userId,
-              )
-              : EMPTY_OWNERSHIP}
+            ownership={blockOwnership}
           />
         );
       })}

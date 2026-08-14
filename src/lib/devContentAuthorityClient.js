@@ -1,9 +1,16 @@
+import { createContentAdminDraftCoordinator } from './contentAdminDraftCoordinator';
+import { getOrCreateDevIdentity } from './devIdentity';
+
 const DEV_CONTENT_AUTHORITY_BASE = '/__dev/content-admin';
-const SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS = 5000;
+// The current dev snapshot is a large JSON document shared over the trusted
+// LAN. Five seconds is short enough to turn a slow but valid response into a
+// loading loop; save and publish timeouts remain intentionally tighter.
+const SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS = 15_000;
 const SHARED_DRAFT_SAVE_TIMEOUT_MS = 6000;
 const SHARED_DRAFT_SYNC_TIMEOUT_MS = 3000;
 const SHARED_PUBLISH_TIMEOUT_MS = 10_000;
 const SHARED_PUBLISH_STATUS_TIMEOUT_MS = 5000;
+let contentAdminAuthPromise = null;
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -13,15 +20,57 @@ export function isDevContentAuthorityEnabled() {
   return Boolean(import.meta.env.DEV && import.meta.env.MODE !== 'test');
 }
 
-async function parseJsonResponse(response) {
+async function parseJsonResponse(response, requestUrl) {
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     const error = new Error(data?.error || `Request failed with ${response.status}`);
     error.status = response.status;
     error.payload = data;
+    error.endpoint = requestUrl;
     throw error;
   }
   return data;
+}
+
+function readRequestActor(requestOptions = {}) {
+  try {
+    const payload = JSON.parse(String(requestOptions.body || '{}'));
+    return payload?.actor || null;
+  } catch {
+    return null;
+  }
+}
+
+async function authenticateDevContentAuthority(actor) {
+  if (contentAdminAuthPromise) {
+    return contentAdminAuthPromise;
+  }
+
+  contentAdminAuthPromise = (async () => {
+    const password = typeof window !== 'undefined' && typeof window.prompt === 'function'
+      ? window.prompt('Content admin password')
+      : '';
+    if (!password) {
+      const error = new Error('Content admin authentication was cancelled.');
+      error.code = 'content-admin-auth-cancelled';
+      throw error;
+    }
+
+    const response = await fetch(`${DEV_CONTENT_AUTHORITY_BASE}/auth/login`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password, actor: cloneJson(actor || getOrCreateDevIdentity()) }),
+    });
+    await parseJsonResponse(response, `${DEV_CONTENT_AUTHORITY_BASE}/auth/login`);
+  })();
+
+  try {
+    await contentAdminAuthPromise;
+  } catch (error) {
+    contentAdminAuthPromise = null;
+    throw error;
+  }
 }
 
 async function sendJson(pathname, options = {}) {
@@ -36,20 +85,30 @@ async function sendJson(pathname, options = {}) {
   const timeoutId = controller
     ? setTimeout(() => controller.abort(), timeoutMs)
     : null;
+  const requestUrl = `${DEV_CONTENT_AUTHORITY_BASE}${pathname}`;
   try {
-    const response = await fetch(`${DEV_CONTENT_AUTHORITY_BASE}${pathname}`, {
-    ...requestOptions,
-    ...(controller ? { signal: controller.signal } : {}),
-    headers: {
-      'Content-Type': 'application/json',
-      ...(requestOptions.headers || {}),
-    },
-    });
-    return parseJsonResponse(response);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await fetch(requestUrl, {
+        ...requestOptions,
+        credentials: 'same-origin',
+        ...(controller ? { signal: controller.signal } : {}),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(requestOptions.headers || {}),
+        },
+      });
+      if (response.status === 401 && attempt === 0) {
+        await authenticateDevContentAuthority(readRequestActor(requestOptions));
+        continue;
+      }
+      return parseJsonResponse(response, requestUrl);
+    }
+    throw new Error('Content authority authentication retry failed.');
   } catch (error) {
     if (controller?.signal.aborted) {
       const timeoutError = new Error(timeoutMessage);
       timeoutError.code = 'content-admin-request-timeout';
+      timeoutError.endpoint = requestUrl;
       throw timeoutError;
     }
     throw error;
@@ -58,6 +117,18 @@ async function sendJson(pathname, options = {}) {
       clearTimeout(timeoutId);
     }
   }
+}
+
+const contentAdminDraftCoordinator = createContentAdminDraftCoordinator({
+  request: sendJson,
+  timeouts: {
+    saveMs: SHARED_DRAFT_SAVE_TIMEOUT_MS,
+    syncMs: SHARED_DRAFT_SYNC_TIMEOUT_MS,
+  },
+});
+
+export function saveSharedDraft(request) {
+  return contentAdminDraftCoordinator.saveDraft(request);
 }
 
 export async function fetchSharedContentSnapshot() {
@@ -106,44 +177,33 @@ export async function initializeSharedContentFromSeed(seedState, actor = null) {
 }
 
 export async function saveSharedPageDraft(nextState, actor = null, summary = '') {
-  return sendJson('/save-draft', {
-    method: 'POST',
-    timeoutMs: SHARED_DRAFT_SAVE_TIMEOUT_MS,
-    timeoutMessage: 'Content draft save timed out',
-    body: JSON.stringify({
-      state: cloneJson(nextState),
-      actor: cloneJson(actor),
-      summary: String(summary || ''),
-    }),
+  return saveSharedDraft({
+    scope: 'page',
+    state: nextState,
+    actor,
+    summary,
   });
 }
 
 export async function saveSharedRouteDraft(pathname, routeState, actor = null, summary = '') {
-  return sendJson('/save-route-draft', {
-    method: 'POST',
-    timeoutMs: SHARED_DRAFT_SAVE_TIMEOUT_MS,
-    timeoutMessage: 'Content route draft save timed out',
-    body: JSON.stringify({
-      pathname: String(pathname || ''),
-      state: cloneJson(routeState),
-      actor: cloneJson(actor),
-      summary: String(summary || ''),
-    }),
+  return saveSharedDraft({
+    scope: 'route',
+    pathname,
+    state: routeState,
+    actor,
+    summary,
   });
 }
 
 export async function saveSharedBlockDraft(pathname, blockId, block, actor = null, summary = '') {
-  return sendJson('/save-block-draft', {
-    method: 'POST',
-    timeoutMs: SHARED_DRAFT_SAVE_TIMEOUT_MS,
-    timeoutMessage: 'Block draft save timed out',
-    body: JSON.stringify({
-      pathname: String(pathname || ''),
-      blockId: String(blockId || ''),
-      block: cloneJson(block),
-      actor: cloneJson(actor),
-      summary: String(summary || ''),
-    }),
+  return saveSharedDraft({
+    scope: 'block',
+    intent: 'explicit',
+    pathname,
+    blockId,
+    block,
+    actor,
+    summary,
   });
 }
 
@@ -275,17 +335,15 @@ export async function fetchSharedPublishStatus(operationId) {
   });
 }
 
-export async function syncSharedBlockDraft(pathname, blockId, block, actor = null) {
-  return sendJson('/blocks/sync-draft', {
-    method: 'POST',
-    timeoutMs: SHARED_DRAFT_SYNC_TIMEOUT_MS,
-    timeoutMessage: 'Draft sync timed out',
-    body: JSON.stringify({
-      pathname,
-      blockId,
-      block: cloneJson(block),
-      actor: cloneJson(actor),
-    }),
+export async function syncSharedBlockDraft(pathname, blockId, block, actor = null, options = {}) {
+  return saveSharedDraft({
+    scope: 'block',
+    intent: 'sync',
+    pathname,
+    blockId,
+    block,
+    actor,
+    expectedPublishedRevision: options?.expectedPublishedRevision,
   });
 }
 
@@ -373,6 +431,26 @@ export async function resetSharedContentFromSeed(seedState, actor = null) {
     body: JSON.stringify({
       seedState: cloneJson(seedState),
       actor: cloneJson(actor),
+    }),
+  });
+}
+
+export async function migrateQcdCenteredCardGridSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-qcd-centered-card-grid', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateCgaSecureActCardSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-cga-secure-act-card', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
     }),
   });
 }

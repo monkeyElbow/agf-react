@@ -26,6 +26,7 @@ const ADMIN_NAV_ITEMS = [
   { to: '/admin/redirects', label: 'Redirects' },
   { to: '/admin/media-audit', label: 'Media Audit' },
   { to: '/admin/blocks', label: 'Blocks Audit' },
+  { to: '/admin/profile', label: 'My Profile' },
 ];
 
 function clampFrontHudOpacity(value) {
@@ -74,6 +75,7 @@ export default function SiteLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const {
+    devIdentity,
     resolveManagedPathFromRef,
     activateAdminProvider = () => {},
   } = useContentAdmin();
@@ -885,6 +887,24 @@ export default function SiteLayout({ children }) {
                       </div>
                     </div>
                   </div>
+                  <NavLink
+                    to="/admin/profile"
+                    className={`site-nav-link nav-profile-link${location.pathname === '/admin/profile' ? ' is-active' : ''}`}
+                    style={{ '--admin-profile-color': devIdentity?.accentColor || '#00adbb' }}
+                    aria-label={`Admin profile: ${devIdentity?.displayName || 'Admin'}`}
+                    title="Admin profile"
+                    onClick={handleNavItemSelect}
+                  >
+                    <span className="nav-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="17" height="17" focusable="false">
+                        <path
+                          fill="#ffffff"
+                          d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"
+                        />
+                      </svg>
+                    </span>
+                    <span className="nav-profile-name">{devIdentity?.displayName || 'Admin'}</span>
+                  </NavLink>
                 </div>
               </div>
             </div>

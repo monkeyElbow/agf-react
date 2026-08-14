@@ -4,7 +4,7 @@ import { ResourcesProvider, useResources } from '../context/ResourcesContext';
 
 function SearchPageContent() {
   const { documents } = useDocuments();
-  const { articles } = useResources();
+  const { publishedArticles } = useResources();
 
   return (
     <div className="search-page">
@@ -14,7 +14,7 @@ function SearchPageContent() {
         <SiteSearchPanel
           variant="page"
           documents={documents}
-          articles={articles}
+          articles={publishedArticles}
           autoFocus
         />
       </div>

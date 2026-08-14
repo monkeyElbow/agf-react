@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Component, useCallback, useEffect, useMemo, useState } from 'react';
 import { sitePages } from '../data/siteMap';
 import { ContentAdminContext } from './ContentAdminContextCore';
-import { fetchPublishedContentRouteSnapshot } from '../lib/devContentAuthorityClient';
+import { fetchPublishedContentRouteSnapshot } from '../lib/devContentAuthorityRuntime';
+import SiteLoadingScreen from '../components/SiteLoadingScreen';
 
 const FRONT_HUD_ENABLED_STORAGE_KEY = 'agf-admin-front-hud-enabled-v1';
 
@@ -90,20 +91,80 @@ function buildFastContextValue(state) {
   };
 }
 
+function describeProviderError(error) {
+  return {
+    name: error?.name || 'Error',
+    message: error?.message || 'The admin provider could not be loaded.',
+  };
+}
+
+function AdminProviderFailure({ error, onRetry }) {
+  return (
+    <main className="admin-provider-failure" role="alert">
+      <div className="admin-provider-failure-card">
+        <p className="admin-provider-failure-eyebrow">Content admin unavailable</p>
+        <h1>Admin tools could not finish loading.</h1>
+        <p>
+          Your content is unchanged. Check that one Vite content-admin server is running, then try again.
+        </p>
+        <p className="admin-provider-failure-detail">{error?.message || 'Unknown provider load error.'}</p>
+        <button type="button" onClick={onRetry}>Try again</button>
+      </div>
+    </main>
+  );
+}
+
+class PublicAdminProviderBoundary extends Component {
+  state = { error: null };
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  componentDidCatch(error) {
+    this.props.onError?.(error);
+  }
+
+  render() {
+    if (this.state.error) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
 export default function FastContentAdminProvider({ children }) {
   const [publishedSnapshot, setPublishedSnapshot] = useState(null);
   const [locationPathname, setLocationPathname] = useState(() => (
     typeof window !== 'undefined' ? window.location.pathname : '/'
   ));
   const [HeavyProvider, setHeavyProvider] = useState(null);
+  const [adminProviderError, setAdminProviderError] = useState(null);
+  const [adminProviderLoadAttempt, setAdminProviderLoadAttempt] = useState(0);
   const [shouldLoadHeavy, setShouldLoadHeavy] = useState(
     () => typeof window !== 'undefined' && window.location.pathname.startsWith('/admin/') || readFrontHudEnabled(),
   );
+  const isAdminRoute = locationPathname.startsWith('/admin/');
   const fastState = useMemo(() => buildFastState(publishedSnapshot), [publishedSnapshot]);
 
   const activateAdminProvider = useCallback(() => {
+    setAdminProviderError(null);
     setShouldLoadHeavy(true);
+    setAdminProviderLoadAttempt((attempt) => attempt + 1);
   }, []);
+
+  const retryAdminProvider = useCallback(() => {
+    setAdminProviderError(null);
+    setHeavyProvider(null);
+    setShouldLoadHeavy(true);
+    setAdminProviderLoadAttempt((attempt) => attempt + 1);
+  }, []);
+
+  useEffect(() => {
+    if (locationPathname.startsWith('/admin/') && !shouldLoadHeavy) {
+      setShouldLoadHeavy(true);
+    }
+  }, [locationPathname, shouldLoadHeavy]);
 
   useEffect(() => {
     if (shouldLoadHeavy || !import.meta.env.DEV || typeof window === 'undefined') {
@@ -155,29 +216,83 @@ export default function FastContentAdminProvider({ children }) {
     if (!shouldLoadHeavy) {
       return undefined;
     }
+
+    // Admin/HUD controls own this stylesheet. Keep 145 KB of editor CSS out
+    // of ordinary public-route startup, but load it with the same activation
+    // boundary as the heavy admin provider.
+    void import('../styles/admin.css');
+    return undefined;
+  }, [shouldLoadHeavy]);
+
+  useEffect(() => {
+    if (!shouldLoadHeavy) {
+      return undefined;
+    }
     let active = true;
+    setAdminProviderError(null);
     import('./ContentAdminContext').then((module) => {
-      if (active) {
+      if (active && typeof module.ContentAdminProvider === 'function') {
         setHeavyProvider(() => module.ContentAdminProvider);
+        return;
       }
-    }).catch(() => {
-      // Public rendering remains available if the optional admin provider fails to load.
+      if (active) {
+        setAdminProviderError(describeProviderError(new Error('ContentAdminProvider export was not found.')));
+      }
+    }).catch((error) => {
+      if (active) {
+        setAdminProviderError(describeProviderError(error));
+      }
     });
     return () => {
       active = false;
     };
-  }, [shouldLoadHeavy]);
+  }, [adminProviderLoadAttempt, shouldLoadHeavy]);
+
+  const fastContextValue = {
+    ...buildFastContextValue(fastState),
+    activateAdminProvider,
+    retryAdminProvider,
+    isAdminProviderReady: Boolean(HeavyProvider),
+    isAdminProviderLoading: shouldLoadHeavy && !HeavyProvider && !adminProviderError,
+    adminProviderError,
+  };
 
   if (HeavyProvider) {
-    return <HeavyProvider>{children}</HeavyProvider>;
+    const publicFallback = isAdminRoute
+      ? (
+        <ContentAdminContext.Provider value={fastContextValue}>
+          <AdminProviderFailure
+            error={adminProviderError || new Error('The admin provider could not finish loading.')}
+            onRetry={retryAdminProvider}
+          />
+        </ContentAdminContext.Provider>
+      )
+      : children;
+    return (
+      <PublicAdminProviderBoundary
+        key={adminProviderLoadAttempt}
+        fallback={publicFallback}
+        onError={(error) => setAdminProviderError(describeProviderError(error))}
+      >
+        <HeavyProvider>{children}</HeavyProvider>
+      </PublicAdminProviderBoundary>
+    );
+  }
+
+  if (isAdminRoute) {
+    return (
+      <ContentAdminContext.Provider value={fastContextValue}>
+        {adminProviderError ? (
+          <AdminProviderFailure error={adminProviderError} onRetry={retryAdminProvider} />
+        ) : (
+          <SiteLoadingScreen />
+        )}
+      </ContentAdminContext.Provider>
+    );
   }
 
   return (
-    <ContentAdminContext.Provider value={{
-      ...buildFastContextValue(fastState),
-      activateAdminProvider,
-      isAdminProviderLoading: shouldLoadHeavy,
-    }}>
+    <ContentAdminContext.Provider value={fastContextValue}>
       {children}
     </ContentAdminContext.Provider>
   );

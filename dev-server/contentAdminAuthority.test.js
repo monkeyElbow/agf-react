@@ -27,6 +27,7 @@ function lease(lockFile, authorityInstanceId) {
     port: 5173,
     processId: process.pid,
     processStartTime: 123,
+    processStartTimeReader: () => 123,
     authorityInstanceId,
     now: () => 456,
   });
@@ -40,9 +41,39 @@ describe('content-admin authority lease', () => {
 
     const second = lease(lockFile, 'second');
     expect(() => second.acquire()).toThrow(/already owns/);
-    expect(inspectContentAdminAuthority(lockFile)).toMatchObject({
+    expect(inspectContentAdminAuthority(lockFile, { processStartTimeReader: () => 123 })).toMatchObject({
       status: 'owned',
       lease: { authorityInstanceId: 'first', pid: process.pid },
+    });
+  });
+
+  it('allows Vite to replace its own authority during a same-process restart', () => {
+    const lockFile = createTempLock();
+    const first = createContentAdminAuthorityLease({
+      lockFile,
+      projectRoot: '/repo',
+      processId: process.pid,
+      processStartTime: 123,
+      processStartTimeReader: () => 123,
+      authorityInstanceId: 'first',
+      allowSameProcessRestart: true,
+    });
+    first.acquire();
+
+    const replacement = createContentAdminAuthorityLease({
+      lockFile,
+      projectRoot: '/repo',
+      processId: process.pid,
+      processStartTime: 123,
+      processStartTimeReader: () => 123,
+      authorityInstanceId: 'replacement',
+      allowSameProcessRestart: true,
+    });
+    replacement.acquire();
+
+    expect(inspectContentAdminAuthority(lockFile, { processStartTimeReader: () => 123 })).toMatchObject({
+      status: 'owned',
+      lease: { authorityInstanceId: 'replacement', pid: process.pid },
     });
   });
 
@@ -65,7 +96,7 @@ describe('content-admin authority lease', () => {
 
     replacement.reclaimStale();
 
-    expect(inspectContentAdminAuthority(lockFile)).toMatchObject({
+    expect(inspectContentAdminAuthority(lockFile, { processStartTimeReader: () => 123 })).toMatchObject({
       status: 'owned',
       lease: { authorityInstanceId: 'replacement' },
     });
@@ -81,7 +112,33 @@ describe('content-admin authority lease', () => {
 
     replacement.acquire();
 
-    expect(inspectContentAdminAuthority(lockFile)).toMatchObject({
+    expect(inspectContentAdminAuthority(lockFile, { processStartTimeReader: () => 123 })).toMatchObject({
+      status: 'owned',
+      lease: { authorityInstanceId: 'replacement' },
+    });
+  });
+
+  it('reclaims a lock when the pid was reused by a different process instance', () => {
+    const lockFile = createTempLock();
+    fs.writeFileSync(lockFile, JSON.stringify({
+      authorityInstanceId: 'old-instance',
+      pid: process.pid,
+      processStartTime: 123,
+    }));
+    const replacement = createContentAdminAuthorityLease({
+      lockFile,
+      projectRoot: '/repo',
+      processId: process.pid,
+      processStartTime: 10000,
+      processStartTimeReader: () => 10000,
+      authorityInstanceId: 'replacement',
+    });
+
+    replacement.acquire();
+
+    expect(inspectContentAdminAuthority(lockFile, {
+      processStartTimeReader: () => 10000,
+    })).toMatchObject({
       status: 'owned',
       lease: { authorityInstanceId: 'replacement' },
     });

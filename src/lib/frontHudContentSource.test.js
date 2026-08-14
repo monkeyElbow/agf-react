@@ -66,4 +66,31 @@ describe('front HUD content source selection', () => {
 
     expect(result.blocksByPath).toBe(publishedBlocks);
   });
+
+  it('keeps HUD and public order identical after the published snapshot converges', () => {
+    const convergedBlocks = {
+      '/test': [
+        { id: 'hero' },
+        { id: 'intro_2' },
+        { id: 'request_form' },
+      ],
+    };
+    const draftMode = selectFrontHudContentSource({
+      enabled: true,
+      pathname: '/test',
+      authoringBlocksByPath: convergedBlocks,
+      blocksByPath: convergedBlocks,
+      publishedBlocksByPath: convergedBlocks,
+    });
+    const publicMode = selectFrontHudContentSource({
+      enabled: false,
+      pathname: '/test',
+      authoringBlocksByPath: convergedBlocks,
+      blocksByPath: convergedBlocks,
+      publishedBlocksByPath: convergedBlocks,
+    });
+
+    expect(draftMode.blocksByPath['/test'].map((block) => block.id))
+      .toEqual(publicMode.blocksByPath['/test'].map((block) => block.id));
+  });
 });

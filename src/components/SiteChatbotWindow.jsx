@@ -385,6 +385,17 @@ export default function SiteChatbotWindow({
         return;
       }
 
+      if (error?.code === 'chatbot-not-configured') {
+        appendMessage({
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          text: buildSiteChatbotFallbackReply(trimmed),
+          timestamp: new Date(),
+        });
+        setStatus('idle');
+        return;
+      }
+
       setStatus('error');
       setErrorMessage('We could not reach the local OpenAI test connection. Please try again in a moment or use the contact action for direct assistance.');
       console.error('Site chatbot OpenAI request failed.', error);

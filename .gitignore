@@ -19,6 +19,8 @@ coverage/
 
 # Local project notes and scratch files
 dev-notes/
+.agents/
+skills-lock.json
 
 # Legacy WP saved-page exports (not app source of truth)
 public/wp-pages/

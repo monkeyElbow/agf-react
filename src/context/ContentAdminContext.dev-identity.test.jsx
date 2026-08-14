@@ -54,9 +54,9 @@ function ContextProbe() {
       </button>
       <button type="button" onClick={() => updateBlock(pathname, blockId, { hidden: true })}>Hide block</button>
       <button type="button" onClick={() => moveBlock(pathname, blockId, 'down')}>Move block</button>
-      <button type="button" onClick={() => moveBlockToIndex(pathname, 'cta_band', 1)}>Move CTA band to index 1</button>
-      <button type="button" onClick={() => addBlock(pathname, 'dynamic:cta_band:default', 1)}>Insert CTA band</button>
-      <button type="button" onClick={() => removeBlock(pathname, 'cta_band_2')}>Remove inserted CTA band</button>
+      <button type="button" onClick={() => moveBlockToIndex(pathname, 'cta_band', 1)}>Move Billboard to index 1</button>
+      <button type="button" onClick={() => addBlock(pathname, 'dynamic:billboard:default', 1)}>Insert Billboard</button>
+      <button type="button" onClick={() => removeBlock(pathname, 'billboard_2')}>Remove inserted Billboard</button>
       <button
         type="button"
         onClick={() => setActiveBlockLock(pathname, blockId, { force: true })}
@@ -246,7 +246,7 @@ describe('ContentAdminContext dev identity metadata', () => {
     expect(screen.getByTestId('hero-hidden').textContent).toBe('yes');
     expect(screen.getByTestId('changed-block-count').textContent).toBe('1');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Move CTA band to index 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Move Billboard to index 1' }));
 
     expect(screen.getByTestId('block-order').textContent.split('|').slice(0, 3)).toEqual([
       'hero',
@@ -255,16 +255,16 @@ describe('ContentAdminContext dev identity metadata', () => {
     ]);
     expect(screen.getByTestId('has-order-changes').textContent).toBe('yes');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Insert CTA band' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Insert Billboard' }));
 
     expect(screen.getByTestId('block-order').textContent.split('|').slice(0, 4)).toEqual([
       'hero',
-      'cta_band_2',
+      'billboard_2',
       'cta_band',
       'intro',
     ]);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove inserted CTA band' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove inserted Billboard' }));
 
     expect(screen.getByTestId('block-order').textContent.split('|').slice(0, 3)).toEqual([
       'hero',

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
 import ColorPalette from './ColorPalette';
+import RouteLinkField from './RouteLinkField';
 import {
   HudEditorBlockOptionsPage,
   HudEditorModelLayout,
@@ -22,10 +23,16 @@ export const BILLBOARD_EDITOR_SECTIONS = Object.freeze([
 function billboardPreviewButtonClassName(style, tone) {
   const normalizedStyle = String(style || '').trim().toLowerCase();
   const normalizedTone = String(tone || '').trim().toLowerCase();
+  const previewTone = normalizedStyle === 'dark'
+    ? 'super-grey'
+    : normalizedStyle === 'outline'
+      ? (normalizedTone || 'atlantean')
+      : 'atlantean';
   return [
+    'service-native-btn',
     'admin-billboard-editor-preview-button',
-    normalizedStyle === 'dark' ? 'is-dark' : normalizedStyle === 'outline' ? 'is-outline' : 'is-filled',
-    normalizedTone ? `is-tone-${normalizedTone}` : '',
+    normalizedStyle === 'dark' ? 'is-dark' : normalizedStyle === 'outline' ? 'is-outline' : '',
+    `is-tone-${previewTone}`,
   ].filter(Boolean).join(' ');
 }
 
@@ -46,6 +53,10 @@ function formatSelectionLabel(text) {
     return 'Core Color';
   }
   return `Selection Color "${value.length > 28 ? `${value.slice(0, 25)}...` : value}"`;
+}
+
+function isOutlineButtonStyle(style) {
+  return String(style || '').trim().toLowerCase() === 'outline';
 }
 
 function normalizeSliderValue(value, fallback, min, max, step) {
@@ -144,20 +155,22 @@ function BillboardColors({ ariaLabel, options = [], value, onChange, preventMous
   );
 }
 
-function BillboardPanel({ id, title, description, children, className = '', headerContent = null }) {
+function BillboardPanel({ id, title, description, children, className = '', headerContent = null, showHeader = true }) {
   return (
     <section className={`admin-billboard-hud-reference-panel${className ? ` ${className}` : ''}`} aria-label={`${title} settings`}>
-      <div className="admin-billboard-hud-reference-head">
-        {headerContent || (
-          <>
-            <div>
-              <h3>{title}</h3>
-              {description ? <span>{description}</span> : null}
-            </div>
-            <span className="admin-billboard-editor-panel-index">{id}</span>
-          </>
-        )}
-      </div>
+      {showHeader ? (
+        <div className="admin-billboard-hud-reference-head">
+          {headerContent || (
+            <>
+              <div>
+                <h3>{title}</h3>
+                {description ? <span>{description}</span> : null}
+              </div>
+              <span className="admin-billboard-editor-panel-index">{id}</span>
+            </>
+          )}
+        </div>
+      ) : null}
       {children}
     </section>
   );
@@ -200,7 +213,6 @@ function BillboardWidthControl({ label, value, onChange, autoLabel }) {
           step={BILLBOARD_WIDTH_STEP_PX}
           value={normalizedValue ?? BILLBOARD_WIDTH_MIN_PX}
           aria-label={label}
-          disabled={isAuto}
           onChange={(event) => handleSliderChange(event.target.value)}
         />
       </div>
@@ -257,9 +269,12 @@ export default function BillboardHudEditorPanel({
   onButtonLabelChange,
   onButtonLabelBlur,
   buttonHref,
+  buttonRouteRef,
   onButtonHrefChange,
-  onButtonHrefBlur,
-  buttonHrefLabel = 'Button URL/path',
+  onButtonRouteLinkChange,
+  buttonRouteOptions = [],
+  buttonOpenInNewWindow = false,
+  onButtonOpenInNewWindowChange,
   buttonStyle,
   onButtonStyleChange,
   buttonStyleOptions = [],
@@ -270,9 +285,12 @@ export default function BillboardHudEditorPanel({
   onButton2LabelChange,
   onButton2LabelBlur,
   button2Href,
+  button2RouteRef,
   onButton2HrefChange,
-  onButton2HrefBlur,
-  button2HrefLabel = 'Button 2 URL/path',
+  onButton2RouteLinkChange,
+  button2RouteOptions = [],
+  button2OpenInNewWindow = false,
+  onButton2OpenInNewWindowChange,
   button2Style,
   onButton2StyleChange,
   button2StyleOptions = [],
@@ -286,8 +304,16 @@ export default function BillboardHudEditorPanel({
   const [activeSection, setActiveSection] = useState('heading');
   const editorSections = appendHudBlockOptionsSection(BILLBOARD_EDITOR_SECTIONS, blockOptions);
   const hasSelection = Boolean(String(titleSelection?.text || '').trim());
-  const resolvedButtonPreviewLabel = String(buttonLabel || '').trim() || 'Preview button';
-  const resolvedButton2PreviewLabel = String(button2Label || '').trim() || 'Secondary button';
+  const previewButtons = [
+    { label: buttonLabel, style: buttonStyle, tone: buttonTone },
+    { label: button2Label, style: button2Style, tone: button2Tone },
+  ].map((button) => ({
+    ...button,
+    label: String(button.label || '').trim(),
+  })).filter((button) => button.label);
+  const button1UsesTone = isOutlineButtonStyle(buttonStyle);
+  const button2UsesTone = isOutlineButtonStyle(button2Style);
+  const previewBackgroundTone = String(bgTone || 'white').trim().toLowerCase() || 'white';
 
   return (
     <HudEditorModelLayout
@@ -396,24 +422,26 @@ export default function BillboardHudEditorPanel({
         ) : null}
 
         {activeSection === 'copy' ? (
-          <BillboardPanel id="02" title="Copy" description="Plain lead and rich body content">
+          <BillboardPanel id="02" title="Copy" showHeader={false}>
             <div className="admin-billboard-editor-copy-grid">
               <BillboardField label="Lead copy">
                 <textarea aria-label="Lead copy" value={String(body || '')} onChange={(event) => onBodyChange?.(event.target.value)} onBlur={() => onBodyBlur?.()} rows={5} />
                 <small>Plain text shown before the rich body.</small>
               </BillboardField>
               <BillboardControlField label="Body HTML">
-                <AdminHtmlEditor
-                  ariaLabel="Body HTML"
-                  value={String(bodyHtml || '')}
-                  onChange={(nextValue) => onBodyHtmlChange?.(nextValue)}
-                  onBlur={() => onBodyHtmlBlur?.()}
-                  baseColorClassName={bodyColorClassName}
-                  onBaseColorChange={onBodyColorChange}
-                  compact
-                  showFooterToggle
-                  paletteVariant="hud"
-                />
+                <div className={`admin-billboard-hud-copy-editor is-bg-${String(bgTone || 'white').trim() || 'white'} ${String(bodyColorClassName || '').trim()}`}>
+                  <AdminHtmlEditor
+                    ariaLabel="Body HTML"
+                    value={String(bodyHtml || '')}
+                    onChange={(nextValue) => onBodyHtmlChange?.(nextValue)}
+                    onBlur={() => onBodyHtmlBlur?.()}
+                    baseColorClassName={bodyColorClassName}
+                    onBaseColorChange={onBodyColorChange}
+                    compact
+                    showFooterToggle
+                    paletteVariant="hud"
+                  />
+                </div>
                 <small>Rich content rendered after the lead copy.</small>
               </BillboardControlField>
             </div>
@@ -424,29 +452,73 @@ export default function BillboardHudEditorPanel({
           <section className="admin-billboard-hud-button-section" aria-label="Buttons settings">
             <div className="admin-billboard-hud-reference-grid admin-billboard-hud-button-reference-grid">
               <section className="admin-billboard-hud-button-fields" aria-label="Button 1 controls">
-                <span className="admin-front-hud-hero-line-label">Button 1</span>
-                <BillboardField label="Label"><input type="text" value={String(buttonLabel || '')} onChange={(event) => onButtonLabelChange?.(event.target.value)} onBlur={() => onButtonLabelBlur?.()} /></BillboardField>
-                <BillboardField label={buttonHrefLabel}><input type="text" value={String(buttonHref || '')} onChange={(event) => onButtonHrefChange?.(event.target.value)} onBlur={() => onButtonHrefBlur?.()} /></BillboardField>
+                <span className="admin-billboard-hud-button-field-label">Button 1 Label</span>
+                <input
+                  className="admin-billboard-hud-button-input"
+                  aria-label="Button 1 Label"
+                  type="text"
+                  value={String(buttonLabel || '')}
+                  onChange={(event) => onButtonLabelChange?.(event.target.value)}
+                  onBlur={() => onButtonLabelBlur?.()}
+                />
+                <RouteLinkField
+                  inputLabel="Button URL/path"
+                  value={String(buttonHref || '')}
+                  routeRefValue={buttonRouteRef}
+                  openInNewWindowValue={buttonOpenInNewWindow}
+                  onChange={onButtonHrefChange}
+                  onRouteLinkChange={onButtonRouteLinkChange}
+                  onOpenInNewWindowChange={onButtonOpenInNewWindowChange}
+                  routeOptions={buttonRouteOptions}
+                />
                 <div className="admin-billboard-hud-button-options-row">
                   <div className="admin-hud-editor-inline-control"><span>Button 1 style</span><BillboardColors ariaLabel="Billboard button style" options={buttonStyleOptions.map((option) => ({ ...option, swatch: option.swatch || buildButtonStyleSwatch(option.value) }))} value={buttonStyle} onChange={onButtonStyleChange} /></div>
-                  <div className="admin-hud-editor-inline-control"><span>Button 1 color</span><BillboardColors ariaLabel="Billboard button color" options={buttonToneOptions} value={buttonTone} onChange={onButtonToneChange} /></div>
+                  {button1UsesTone ? (
+                    <div className="admin-hud-editor-inline-control"><span>Button 1 color</span><BillboardColors ariaLabel="Billboard button color" options={buttonToneOptions} value={buttonTone} onChange={onButtonToneChange} /></div>
+                  ) : null}
                 </div>
               </section>
               <section className="admin-billboard-hud-button-fields" aria-label="Button 2 controls">
-                <span className="admin-front-hud-hero-line-label">Button 2</span>
-                <BillboardField label="Label"><input type="text" value={String(button2Label || '')} onChange={(event) => onButton2LabelChange?.(event.target.value)} onBlur={() => onButton2LabelBlur?.()} /></BillboardField>
-                <BillboardField label={button2HrefLabel}><input type="text" value={String(button2Href || '')} onChange={(event) => onButton2HrefChange?.(event.target.value)} onBlur={() => onButton2HrefBlur?.()} /></BillboardField>
+                <span className="admin-billboard-hud-button-field-label">Button 2 Label</span>
+                <input
+                  className="admin-billboard-hud-button-input"
+                  aria-label="Button 2 Label"
+                  type="text"
+                  value={String(button2Label || '')}
+                  onChange={(event) => onButton2LabelChange?.(event.target.value)}
+                  onBlur={() => onButton2LabelBlur?.()}
+                />
+                <RouteLinkField
+                  inputLabel="Button 2 URL/path"
+                  value={String(button2Href || '')}
+                  routeRefValue={button2RouteRef}
+                  openInNewWindowValue={button2OpenInNewWindow}
+                  onChange={onButton2HrefChange}
+                  onRouteLinkChange={onButton2RouteLinkChange}
+                  onOpenInNewWindowChange={onButton2OpenInNewWindowChange}
+                  routeOptions={button2RouteOptions}
+                />
                 <div className="admin-billboard-hud-button-options-row">
                   <div className="admin-hud-editor-inline-control"><span>Button 2 style</span><BillboardColors ariaLabel="Billboard button 2 style" options={button2StyleOptions.map((option) => ({ ...option, swatch: option.swatch || buildButtonStyleSwatch(option.value) }))} value={button2Style} onChange={onButton2StyleChange} /></div>
-                  <div className="admin-hud-editor-inline-control"><span>Button 2 color</span><BillboardColors ariaLabel="Billboard button 2 color" options={button2ToneOptions} value={button2Tone} onChange={onButton2ToneChange} /></div>
+                  {button2UsesTone ? (
+                    <div className="admin-hud-editor-inline-control"><span>Button 2 color</span><BillboardColors ariaLabel="Billboard button 2 color" options={button2ToneOptions} value={button2Tone} onChange={onButton2ToneChange} /></div>
+                  ) : null}
                 </div>
               </section>
               <section className="admin-billboard-hud-button-preview-column" aria-label="Button preview">
                 <span className="admin-front-hud-hero-line-label">Preview</span>
-                <div className="admin-billboard-hud-button-preview">
+                <div className={`admin-billboard-hud-button-preview is-bg-${previewBackgroundTone}`}>
                   <div className="admin-billboard-hud-button-preview-row">
-                    <span className={billboardPreviewButtonClassName(buttonStyle, buttonTone)} aria-hidden="true">{resolvedButtonPreviewLabel}</span>
-                    <span className={billboardPreviewButtonClassName(button2Style, button2Tone)} aria-hidden="true">{resolvedButton2PreviewLabel}</span>
+                    {previewButtons.length ? previewButtons.map((button, index) => (
+                      <button
+                        key={`billboard-button-preview-${index}`}
+                        type="button"
+                        className={billboardPreviewButtonClassName(button.style, button.tone)}
+                        onClick={(event) => event.preventDefault()}
+                      >
+                        {button.label}
+                      </button>
+                    )) : <span className="admin-billboard-hud-button-preview-empty">No buttons added yet.</span>}
                   </div>
                 </div>
               </section>

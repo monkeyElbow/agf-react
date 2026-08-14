@@ -40,6 +40,7 @@ const sections = [
     surfaces: ['hud', 'admin'],
     fields: [
       defineEditorField({ id: 'title', label: 'CTA form heading', type: 'textarea', rows: 2 }),
+      defineEditorField({ id: 'subtitle', label: 'Supporting copy', type: 'textarea', rows: 2 }),
       defineEditorField({
         id: 'titleClassName',
         label: 'CTA form heading color',

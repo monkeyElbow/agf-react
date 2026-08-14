@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   FieldControlGrid,
@@ -7,7 +7,6 @@ import {
 import {
   BillboardBlockEditor,
   CalculatorCtaBlockEditor,
-  CtaBandBlockEditor,
   CtaFormBlockEditor,
   ColumnsBlockEditor,
   FeaturePanelBlockEditor,
@@ -47,7 +46,6 @@ const ADMIN_RENDERERS_BY_KIND = {
   hero: HeroBlockEditor,
   hero_pie: HeroPieBlockEditor,
   calculator_cta: CalculatorCtaBlockEditor,
-  cta_band: CtaBandBlockEditor,
   impact_stat: ImpactStatBlockEditor,
   legal_copy: LegalCopyBlockEditor,
   intro: IntroBlockEditor,
@@ -75,7 +73,6 @@ const SAMPLE_KIND_BY_EDITOR_TYPE = {
   calculator_cta: 'calculator_cta',
   calculator_intro: { __sample: 'calculator_intro' },
   calculator_widget: 'calculator_widget',
-  cta_band: 'cta_band',
   impact_stat: 'impact_stat',
   legal_copy: { __sample: 'legal_copy' },
   intro: 'intro',
@@ -133,18 +130,6 @@ const PARITY_ASSERTIONS = {
       expect(screen.getByLabelText('Discuss title')).toBeTruthy();
     },
   },
-  cta_band: {
-    admin: () => {
-      expect(screen.getByLabelText('CTA band title')).toBeTruthy();
-      expect(screen.getByLabelText('CTA band body')).toBeTruthy();
-      expect(screen.getByLabelText('Button label')).toBeTruthy();
-    },
-    hud: () => {
-      expect(screen.getByLabelText('CTA band title')).toBeTruthy();
-      expect(screen.getByLabelText('CTA band body')).toBeTruthy();
-      expect(screen.getByLabelText('Button label')).toBeTruthy();
-    },
-  },
   impact_stat: {
     admin: () => {
       expect(screen.getByLabelText('Impact title prefix')).toBeTruthy();
@@ -177,7 +162,8 @@ const PARITY_ASSERTIONS = {
     hud: () => {
       expect(screen.getByRole('radiogroup', { name: /Intro background/i })).toBeTruthy();
       expect(screen.getAllByText(/Base Body Tone|Core Color/i).length).toBeGreaterThan(0);
-      expect(screen.getByLabelText('Button 1 label')).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+      expect(screen.getAllByLabelText('Label').length).toBeGreaterThan(0);
     },
   },
   billboard: {
@@ -193,12 +179,12 @@ const PARITY_ASSERTIONS = {
   feature_panel: {
     admin: () => {
       expect(screen.getByLabelText('Feature panel title')).toBeTruthy();
-      expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
+      expect(screen.getByText('Feature panel body HTML')).toBeTruthy();
       expect(screen.getByLabelText('Button label')).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByLabelText('Feature panel title')).toBeTruthy();
-      expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
+      expect(screen.getByText('Feature panel body HTML')).toBeTruthy();
       expect(screen.getByLabelText('Button label')).toBeTruthy();
     },
   },
@@ -219,11 +205,11 @@ const PARITY_ASSERTIONS = {
   card_grid: {
     admin: () => {
       expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
-      expect(screen.getByText(/Grid intro heading|Intro handled outside this preset/i)).toBeTruthy();
+      expect(screen.getByText('Card title color')).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
-      expect(screen.getByText(/Grid intro heading|Intro handled outside this preset/i)).toBeTruthy();
+      expect(screen.getByText('Card title color')).toBeTruthy();
     },
   },
   cta_form: {
@@ -373,11 +359,11 @@ const PARITY_ASSERTIONS = {
   grid: {
     admin: () => {
       expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
-      expect(screen.getByText('Grid intro heading')).toBeTruthy();
+      expect(screen.getByText('Card title color')).toBeTruthy();
     },
     hud: () => {
       expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
-      expect(screen.getByText('Grid intro heading')).toBeTruthy();
+      expect(screen.getByText('Card title color')).toBeTruthy();
     },
   },
   fields: {
@@ -504,22 +490,6 @@ function getDynamicBlock(kindOrSelector) {
       },
     };
   }
-  if (selector.kind === 'cta_band') {
-    return {
-      id: 'cta-band-sample',
-      kind: 'cta_band',
-      mode: 'dynamic',
-      editableFields: getEditableFieldsForKind('cta_band'),
-      settings: {
-        title: 'Smart stewardship for today and tomorrow.',
-        body: 'Stay connected to the tools you need.',
-        buttonLabel: 'Learn more',
-        buttonUrl: '/services/planned-giving',
-        buttonPageRef: '/services/planned-giving',
-        background: 'blue',
-      },
-    };
-  }
   if (selector.kind === 'intro') {
     return {
       id: 'intro-sample',
@@ -533,6 +503,16 @@ function getDynamicBlock(kindOrSelector) {
         button1Label: 'Talk with us',
         button1PageRef: '/services/planned-giving/ministry-impact-fund',
       },
+    };
+  }
+  if (selector.kind === 'feature_panel') {
+    const featurePanel = cloneBlock(allBlueprintBlocks
+      .filter((block) => block?.mode === 'dynamic' && block?.kind === 'feature_panel')
+      .sort((a, b) => (Array.isArray(b?.editableFields) ? b.editableFields.length : 0)
+        - (Array.isArray(a?.editableFields) ? a.editableFields.length : 0))[0]);
+    return {
+      ...featurePanel,
+      settings: { ...(featurePanel.settings || {}) },
     };
   }
   const expectedKind = String(selector.kind || '').trim();

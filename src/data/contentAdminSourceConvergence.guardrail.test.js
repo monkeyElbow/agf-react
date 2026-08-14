@@ -51,7 +51,7 @@ const ROOT_PRODUCT_PAGE_CUSTOM_RENDERER_REQUIREMENTS = Object.freeze({
     ['vision_fuel', 'billboard'],
     ['cta_form', 'cta_form'],
     ['testimonials', 'testimonials'],
-    ['cta_band', 'cta_band'],
+    ['cta_band', 'billboard'],
   ],
   '/services/investments': [
     ['hero', 'hero'],

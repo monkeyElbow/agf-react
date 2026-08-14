@@ -32,6 +32,7 @@ import {
   resolveSelectionRangeColor,
 } from '../lib/heroHudRanges';
 import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
+import PlannedGivingStepsHudEditorPanel from './PlannedGivingStepsHudEditorPanel';
 
 export const COLUMNS_HUD_BG_OPTIONS = SURFACE_BG_TONE_OPTIONS;
 
@@ -506,10 +507,10 @@ function ColumnSlotEditor({
           paletteClassName="is-field-linked"
           swatchClassName="is-compact is-icon-only"
         />
-        <label className="admin-front-hud-field">
+        <label className="admin-front-hud-field admin-front-hud-columns-body-field">
           <span>{bodyLabel}</span>
           <textarea
-            rows={4}
+            rows={6}
             value={bodyValue}
             onChange={(event) => updateDraftValue(bodyFieldId, event.target.value)}
             onBlur={() => commitDraftValue(bodyFieldId)}
@@ -587,7 +588,7 @@ function ColumnSlotEditor({
   );
 }
 
-export default function ColumnsHudEditorPanel({
+function GenericColumnsHudEditorPanel({
   settings = {},
   onSettingChange,
   sourceRevision = 0,
@@ -968,4 +969,14 @@ export default function ColumnsHudEditorPanel({
       <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
     </HudEditorModelLayout>
   );
+}
+
+export default function ColumnsHudEditorPanel(props) {
+  const presetId = String(props?.presetId || '').trim().toLowerCase();
+  if (presetId === 'planned-giving-steps') {
+    // Kept as a small dispatcher so existing generic columns consumers keep
+    // their current editor while the named preset gets its own contract.
+    return <PlannedGivingStepsHudEditorPanel {...props} />;
+  }
+  return <GenericColumnsHudEditorPanel {...props} />;
 }

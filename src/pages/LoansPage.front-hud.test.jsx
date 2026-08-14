@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { contentBlockBlueprintsByPath } from '../data/contentBlockBlueprints';
@@ -80,10 +80,10 @@ describe('LoansPage front HUD', () => {
     };
   });
 
-  it('shows a HUD tab for every dynamic loans block', () => {
+  it('shows a HUD tab for every dynamic loans block', async () => {
     renderLoansPage();
 
-    expect(screen.getByRole('button', { name: 'Save all page drafts' })).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save all page drafts' })).toBeTruthy());
     expect(screen.getByRole('link', { name: 'Open page admin' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Hero' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Intro' })).toBeTruthy();
@@ -95,11 +95,11 @@ describe('LoansPage front HUD', () => {
     expect(screen.getByRole('button', { name: 'Open Request Form HUD panel' })).toBeTruthy();
   });
 
-  it('opens the request form, billboard, CTA, and testimonials HUD panels', () => {
+  it('opens the request form, billboard, CTA, and testimonials HUD panels', async () => {
     renderLoansPage();
 
     fireEvent.click(screen.getByRole('button', { name: 'Request Form' }));
-    expect(screen.getByLabelText('Form heading text')).toBeTruthy();
+    await waitFor(() => expect(screen.getByLabelText('Form heading text')).toBeTruthy());
     expect(screen.getByRole('textbox', { name: 'Lead Copy' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Add step 4' })).toBeTruthy();
 

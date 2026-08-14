@@ -9,6 +9,7 @@ import {
 describe('columns presets', () => {
   it('defines the canonical columns presets without splitting the family into pseudo-kinds', () => {
     expect(getColumnsPresetDefinitions().map((preset) => preset.id)).toEqual([
+      'planned-giving-steps',
       'default',
       'housing-allowance',
       'do-the-math',

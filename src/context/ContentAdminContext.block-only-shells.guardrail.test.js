@@ -71,7 +71,8 @@ describe('migration-temporary.block-only shell guardrail', () => {
       expect(source, `${pathname} should not be special-cased in NativeContentPage`).not.toContain(pathname);
     });
 
-    expect(source).toContain('const dynamicSections = visibleBlocks.reduce');
+    expect(source).toContain("import { composeManagedPage } from '../lib/managedPageComposition';");
+    expect(source).toContain('return composeManagedPage({');
     expect(source).toContain('isBlockOnlyManagedPagePath(activePath || templatePath)');
   });
 
@@ -198,7 +199,8 @@ describe('migration-temporary.block-only shell guardrail', () => {
       },
       '/services/planned-giving/qualified-charitable-distribution': {
         id: 'how_it_works',
-        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-qcd-steps',
+        presetId: 'planned-giving-steps',
+        sectionClassName: '',
         icons: ['endowments-step-1', 'daf-step-3', 'qcd-step-3'],
       },
       '/services/planned-giving/endowments': {
@@ -222,13 +224,20 @@ describe('migration-temporary.block-only shell guardrail', () => {
 
         Object.entries(expectedBlocksByPath).forEach(([pathname, expected]) => {
           const block = (blocksByPath[pathname] || []).find((candidate) => candidate?.id === expected.id);
+          const isMigratedSnapshot = rootKey !== 'seedState';
+          const expectedSectionClassName = expected.presetId && isMigratedSnapshot
+            ? expected.sectionClassName
+            : (expected.presetId
+              ? 'legacy-child-native-flow-steps legacy-child-native-qcd-steps'
+              : expected.sectionClassName);
 
           expect(block, `${relativePath} ${rootKey} ${pathname} should have ${expected.id}`).toMatchObject({
             kind: 'columns',
             mode: 'dynamic',
+            ...(expected.presetId && isMigratedSnapshot ? { presetId: expected.presetId } : {}),
             settings: {
               columns: 'three',
-              sectionClassName: expected.sectionClassName,
+              sectionClassName: expectedSectionClassName,
               col1Type: 'flow-step',
               col2Type: 'flow-step',
               col3Type: 'flow-step',

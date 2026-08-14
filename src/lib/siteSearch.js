@@ -13,6 +13,11 @@ const SEARCH_ALIAS_RULES = Object.freeze([
     terms: ['donor advised fund', 'donor-advised fund', 'generosity fund'],
   },
   {
+    label: 'Ministry Impact Fund',
+    triggers: ['mif'],
+    terms: ['ministry impact fund', 'impact fund'],
+  },
+  {
     label: 'Qualified Charitable Distribution',
     triggers: ['qcd'],
     terms: ['qualified charitable distribution', 'ira charitable distribution'],

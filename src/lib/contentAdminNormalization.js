@@ -6,7 +6,7 @@ import { normalizeCollaborationState } from './contentAdminCollaboration.js';
 
 // This version describes the record transformations below, not the renderer schema.
 // Increment it when a new, non-destructive stored-record migration is introduced.
-export const CONTENT_ADMIN_NORMALIZATION_VERSION = 1;
+export const CONTENT_ADMIN_NORMALIZATION_VERSION = 3;
 
 // Migrated editors resolve their field catalog from the block registry. Keeping
 // the same catalog on every stored block makes the shared snapshot needlessly
@@ -16,7 +16,6 @@ const REGISTRY_BACKED_DYNAMIC_BLOCK_KINDS = new Set([
   'calculator_cta',
   'calculator_intro',
   'calculator_widget',
-  'cta_band',
   'cta_form',
   'request_form',
   'hero',
@@ -156,6 +155,26 @@ function normalizeBlockSettings(settings) {
   return next;
 }
 
+function normalizeLegacyBlockFamily(rawBlock) {
+  const kind = String(rawBlock?.kind || rawBlock?.type || '').trim().toLowerCase();
+  const presetId = String(rawBlock?.presetId || '').trim().toLowerCase();
+  const templateId = String(rawBlock?.templateId || '').trim().toLowerCase();
+  const isLegacyCtaBand = kind === 'cta_band' || (kind === 'billboard' && presetId === 'cta-band');
+  if (!isLegacyCtaBand) {
+    return rawBlock;
+  }
+
+  const nextPresetId = presetId === 'dashboard-login' || templateId === 'dashboard_login_cta'
+    ? 'dashboard-login'
+    : 'default';
+  return {
+    ...rawBlock,
+    kind: 'billboard',
+    templateId: 'billboard',
+    presetId: nextPresetId,
+  };
+}
+
 export function isRetiredNonDynamicContentAdminBlock(block) {
   return isObject(block)
     && String(block.mode || '').trim().toLowerCase() === 'static';
@@ -167,7 +186,7 @@ export function normalizeContentAdminBlock(rawBlock) {
     return cloneJson(rawBlock);
   }
 
-  let nextBlock = cloneJson(rawBlock);
+  let nextBlock = normalizeLegacyBlockFamily(cloneJson(rawBlock));
   if (Object.prototype.hasOwnProperty.call(nextBlock, 'adminName')) {
     nextBlock.adminName = normalizeAdminBlockName(nextBlock.adminName);
   }

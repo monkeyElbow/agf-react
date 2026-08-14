@@ -45,6 +45,7 @@ describe('FrontHudAnchorTag', () => {
     expect(serviceNativeCss).toContain('/* Keep block names visible and clickable above every block overlay. */');
     expect(serviceNativeCss).toMatch(/\.admin-front-hud-layer\s*\{[\s\S]*?z-index: 1000;/);
     expect(serviceNativeCss).toMatch(/\.admin-front-hud-anchor\s*\{[\s\S]*?z-index: 1001;/);
+    expect(serviceNativeCss).toContain('padding: 2px 0.5rem;');
   });
 
   it('keeps the Intro workflow action row explicitly above the editor', () => {

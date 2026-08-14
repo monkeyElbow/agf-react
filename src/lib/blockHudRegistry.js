@@ -54,7 +54,9 @@ export function getBlockHudDefinition(block) {
     ? String(resolveSiteFeatureCatalogEntry(block?.settings?.featureId || block?.featureId)?.label || '').trim()
     : '';
   const baseLabel = override?.label
-    || (kindDefinition?.label && presetLabel ? `${kindDefinition.label} · ${presetLabel}` : '')
+    || (kindDefinition?.label && presetLabel && kindDefinition.label !== presetLabel
+      ? `${kindDefinition.label} · ${presetLabel}`
+      : '')
     || (kindDefinition?.label && siteFeatureLabel ? `${kindDefinition.label} · ${siteFeatureLabel}` : '')
     || kindDefinition?.label
     || humanizeToken(block?.label || block?.name || blockId || blockKind || 'content');
@@ -74,12 +76,18 @@ export function buildHudPanelsFromBlocks(
     anchorSelectorByKind = {},
     panelIdById = {},
     panelIdByKind = {},
+    includeHidden = false,
   } = {},
 ) {
   const seenBlockIds = new Set();
   const seenPanelIds = new Set();
+  const sourceBlocks = includeHidden
+    ? (Array.isArray(blocks) ? blocks : []).filter((block) => (
+      String(block?.mode || '').trim().toLowerCase() === 'dynamic'
+    ))
+    : getVisibleDynamicBlocks(blocks);
 
-  return getVisibleDynamicBlocks(blocks).reduce((panels, block) => {
+  return sourceBlocks.reduce((panels, block) => {
     const blockId = String(block?.id || '').trim();
     const blockKind = String(block?.kind || '').trim();
     const definition = getBlockHudDefinition(block);
@@ -105,6 +113,7 @@ export function buildHudPanelsFromBlocks(
       icon: definition.icon,
       editorType: definition.editorType,
       anchorSelector,
+      isHidden: block?.hidden === true || String(block?.hidden || '').trim().toLowerCase() === 'true',
     });
 
     return panels;

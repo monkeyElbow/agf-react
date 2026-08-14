@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import PageShell from '../components/PageShell';
 import AdminHtmlEditor from '../components/AdminHtmlEditor';
 import { pageByPath } from '../data/siteMap';
@@ -38,15 +38,26 @@ function toPathSegment(value) {
 function AdminResourcesPageContent() {
   const {
     articles,
+    isLoading,
     updateArticle,
+    saveArticle,
+    publishArticle,
+    discardArticleDraft,
+    scheduleArticle,
+    cancelScheduledArticle,
+    getArticleStatus,
+    hasDraftChanges,
     createArticle,
     deleteArticle,
     resetArticles,
   } = useResources();
 
-  const [selectedId, setSelectedId] = useState(articles[0]?.id || null);
+  const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [saveMessage, setSaveMessage] = useState('');
+  const [scheduleValue, setScheduleValue] = useState('');
+  const titleBeforeEditRef = useRef('');
 
   useEffect(() => {
     if (!articles.length) {
@@ -54,9 +65,18 @@ function AdminResourcesPageContent() {
       return;
     }
 
-    if (!selectedId || !articles.some((item) => item.id === selectedId)) {
-      setSelectedId(articles[0].id);
+    if (selectedId && !articles.some((item) => item.id === selectedId)) {
+      setSelectedId(null);
     }
+  }, [articles, selectedId]);
+
+  useEffect(() => {
+    setSaveMessage('');
+  }, [selectedId]);
+
+  useEffect(() => {
+    const nextArticle = articles.find((item) => item.id === selectedId);
+    setScheduleValue(toDateTimeLocal(nextArticle?.scheduledPublishAt));
   }, [articles, selectedId]);
 
   const availableCategories = useMemo(
@@ -79,7 +99,17 @@ function AdminResourcesPageContent() {
   }, [articles, categoryFilter, search]);
 
   const [sortOrder, setSortOrder] = useState('recent');
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('list');
+  const editorSectionRef = useRef(null);
+
+  const selectArticle = (articleId) => {
+    setSelectedId(articleId);
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        editorSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  };
 
   const sortedFiltered = useMemo(() => {
     const compareDate = (a, b) => {
@@ -94,6 +124,8 @@ function AdminResourcesPageContent() {
   }, [filtered, sortOrder]);
 
   const selected = articles.find((item) => item.id === selectedId) || null;
+  const selectedStatus = selected ? getArticleStatus(selected) : null;
+  const selectedHasDraftChanges = selected ? hasDraftChanges(selected) : false;
   const articleUrlPreview = selected
     ? `https://www.agfinancial.org/resources/${toPathSegment(selected.category) || 'article'}/${toPathSegment(selected.slug)}`
     : '';
@@ -107,6 +139,7 @@ function AdminResourcesPageContent() {
           <button
             type="button"
             className="action-btn action-btn-primary"
+            disabled={isLoading}
             onClick={() => {
               const newId = createArticle();
               if (newId) {
@@ -119,6 +152,7 @@ function AdminResourcesPageContent() {
           <button
             type="button"
             className="action-btn action-btn-outline"
+            disabled={isLoading}
             onClick={resetArticles}
           >
             Reset from seed
@@ -126,7 +160,50 @@ function AdminResourcesPageContent() {
           {selected ? (
             <button
               type="button"
+              className="action-btn action-btn-primary"
+              disabled={isLoading}
+              onClick={() => {
+                setSaveMessage(saveArticle(selected.id)
+                  ? 'Article draft saved.'
+                  : 'Article could not be saved.');
+              }}
+            >
+              Save article draft
+            </button>
+          ) : null}
+          {selected ? (
+            <button
+              type="button"
+              className="action-btn action-btn-primary"
+              disabled={isLoading || !selectedHasDraftChanges}
+              onClick={() => {
+                setSaveMessage(publishArticle(selected.id)
+                  ? 'Article is live.'
+                  : 'Article could not be made live.');
+              }}
+            >
+              Make live
+            </button>
+          ) : null}
+          {selected ? (
+            <button
+              type="button"
+              className="action-btn action-btn-outline"
+              disabled={isLoading || !selectedHasDraftChanges || !selected.publishedSnapshot}
+              onClick={() => {
+                setSaveMessage(discardArticleDraft(selected.id)
+                  ? 'Draft discarded. Live article restored.'
+                  : 'Draft could not be discarded.');
+              }}
+            >
+              Discard draft
+            </button>
+          ) : null}
+          {selected ? (
+            <button
+              type="button"
               className="action-btn action-btn-danger"
+              disabled={isLoading}
               onClick={() => {
                 deleteArticle(selected.id);
               }}
@@ -136,7 +213,16 @@ function AdminResourcesPageContent() {
           ) : null}
         </div>
 
-        <section className="admin-content-section admin-resources-toolbar">
+        <div className="admin-resources-master-detail">
+          <div className="admin-resources-library-column">
+            <section className="admin-content-section admin-resources-toolbar">
+              <div className="admin-resources-library-heading">
+                <div>
+                  <p className="admin-resources-eyebrow">Article library</p>
+                  <h2>Choose an article to edit</h2>
+                </div>
+                <span>{articles.length} total</span>
+              </div>
           <div className="admin-resources-toolbar-grid">
             <label htmlFor="admin-resources-search" className="search-page-label">
               Search articles
@@ -193,21 +279,24 @@ function AdminResourcesPageContent() {
               </button>
             </div>
           </div>
-        </section>
+            </section>
 
-        <section className="admin-content-section">
+            <section className="admin-content-section admin-resources-library-list">
           {sortedFiltered.length ? (
             <div className={`admin-resources-gallery is-${viewMode}`}>
               {sortedFiltered.map((item) => {
                 const isActive = item.id === selectedId;
-                const publishedLabel = item.isPublished ? 'Published' : 'Draft';
+                const status = getArticleStatus(item);
+                const publishedLabel = status === 'live'
+                  ? 'Live'
+                  : status === 'scheduled' ? 'Scheduled' : 'Draft';
                 const backgroundImage = item.mediaUrl ? { backgroundImage: `url(${item.mediaUrl})` } : {};
                 return (
                   <button
                     key={item.id}
                     type="button"
                     className={`admin-resources-card${isActive ? ' is-active' : ''}`}
-                    onClick={() => setSelectedId(item.id)}
+                    onClick={() => selectArticle(item.id)}
                     aria-pressed={isActive}
                   >
                     <div className="admin-resources-card-media" style={backgroundImage}>
@@ -234,16 +323,59 @@ function AdminResourcesPageContent() {
               <p className="blank-state-note">Try adjusting the search or category selection.</p>
             </div>
           )}
-        </section>
+            </section>
+          </div>
 
-        {selected ? (
-          <section className="admin-content-section">
+          <div className="admin-resources-editor-column">
+            {isLoading ? (
+              <section className="admin-content-section admin-resources-editor-panel" aria-live="polite">
+                <p className="admin-resources-eyebrow">Article editor</p>
+                <h2>Preparing article details…</h2>
+                <p className="blank-state-note">The library is ready. Full editing details are loading in the background.</p>
+              </section>
+            ) : selected ? (
+              <section className="admin-content-section admin-resources-editor-panel" ref={editorSectionRef}>
+                <div className="admin-resources-editor-heading">
+                  <div>
+                    <p className="admin-resources-eyebrow">Article editor</p>
+                    <h2>{selected.title || 'Untitled article'}</h2>
+                    <p>Make changes here; the library stays visible so you always know which article you are editing.</p>
+                  </div>
+                  <div className="admin-resources-editor-status-stack">
+                    <span className={`admin-resources-editor-status is-${selectedStatus}`}>
+                      {selectedStatus === 'live'
+                        ? 'Live'
+                        : selectedStatus === 'scheduled' ? 'Scheduled' : 'Draft'}
+                    </span>
+                    {selectedStatus === 'draft' && selected.publishedSnapshot ? (
+                      <span className="admin-resources-status-note">Draft differs from live</span>
+                    ) : null}
+                    {selectedStatus === 'scheduled' ? (
+                      <span className="admin-resources-status-note">
+                        Live on {new Date(selected.scheduledPublishAt).toLocaleString()}
+                      </span>
+                    ) : null}
+                    {saveMessage ? <span className="admin-resources-save-message" role="status">{saveMessage}</span> : null}
+                  </div>
+                </div>
             <div className="admin-content-field-list">
               <label>
                 <span>Title</span>
                 <input
                   value={selected.title}
                   onChange={(event) => updateArticle(selected.id, { title: event.target.value })}
+                  onFocus={() => {
+                    titleBeforeEditRef.current = selected.title;
+                  }}
+                  onBlur={(event) => {
+                    const nextTitle = event.target.value;
+                    const nextSlug = toPathSegment(nextTitle);
+                    const previousAutoSlug = toPathSegment(titleBeforeEditRef.current);
+                    const canAutoSlug = !selected.slug || selected.slug === previousAutoSlug;
+                    if (canAutoSlug && nextSlug) {
+                      updateArticle(selected.id, { title: nextTitle, slug: nextSlug });
+                    }
+                  }}
                 />
               </label>
 
@@ -255,7 +387,7 @@ function AdminResourcesPageContent() {
                 />
               </label>
 
-              <p className="blank-state-note">
+              <p className="blank-state-note admin-resources-public-url">
                 Public URL preview:&nbsp;
                 {articleUrlPreview ? (
                   <a href={articleUrlPreview} target="_blank" rel="noreferrer">{articleUrlPreview}</a>
@@ -284,7 +416,7 @@ function AdminResourcesPageContent() {
 
               <div className="admin-content-grid-two">
                 <label>
-                  <span>Published at</span>
+                  <span>Article date</span>
                   <input
                     type="datetime-local"
                     value={toDateTimeLocal(selected.publishedAt)}
@@ -292,17 +424,51 @@ function AdminResourcesPageContent() {
                   />
                 </label>
 
-                <label>
-                  <span>Published status</span>
-                  <select
-                    value={selected.isPublished ? 'published' : 'draft'}
-                    onChange={(event) => updateArticle(selected.id, { isPublished: event.target.value === 'published' })}
+                <div className="admin-resources-schedule-field">
+                  <label htmlFor="admin-resources-schedule-at">
+                    <span>Schedule make live</span>
+                    <input
+                      id="admin-resources-schedule-at"
+                      type="datetime-local"
+                      value={scheduleValue}
+                      min={toDateTimeLocal(new Date(Date.now() + 60000).toISOString())}
+                      onChange={(event) => setScheduleValue(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="action-btn action-btn-outline"
+                    disabled={isLoading || !selectedHasDraftChanges || !scheduleValue}
+                    onClick={() => {
+                      const scheduled = scheduleArticle(selected.id, fromDateTimeLocal(scheduleValue));
+                      setSaveMessage(scheduled
+                        ? 'Article scheduled to make live.'
+                        : 'Choose a future time before scheduling.');
+                    }}
                   >
-                    <option value="published">Published</option>
-                    <option value="draft">Draft</option>
-                  </select>
-                </label>
+                    Schedule
+                  </button>
+                  {selected.scheduledPublishAt ? (
+                    <button
+                      type="button"
+                      className="action-btn action-btn-quiet"
+                      disabled={isLoading}
+                      onClick={() => {
+                        setSaveMessage(cancelScheduledArticle(selected.id)
+                          ? 'Scheduled publish cancelled.'
+                          : 'Scheduled publish could not be cancelled.');
+                        setScheduleValue('');
+                      }}
+                    >
+                      Cancel schedule
+                    </button>
+                  ) : null}
+                </div>
               </div>
+
+              <p className="blank-state-note admin-resources-publish-note">
+                Editing changes the saved draft only. Make live publishes this exact draft; in current dev mode, a scheduled publish activates when the app checks the schedule.
+              </p>
 
               <label>
                 <span>Media URL</span>
@@ -374,15 +540,25 @@ function AdminResourcesPageContent() {
                 />
               </label>
             </div>
-          </section>
-        ) : (
-          <section className="admin-content-section">
-            <div className="blank-state">
-              <p>No article selected.</p>
-              <p className="blank-state-note">Add an article to start editing resources content.</p>
-            </div>
-          </section>
-        )}
+              </section>
+            ) : (
+              <section className="admin-content-section admin-resources-editor-panel">
+                <div className="admin-resources-empty-editor">
+                  <div className="admin-resources-empty-shape" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <p className="admin-resources-eyebrow">Article editor</p>
+                  <h2>Select or create an article</h2>
+                  <p className="blank-state-note">
+                    Choose an article from the library to edit its details, or use Add article above to start a new one.
+                  </p>
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
       </PageShell>
     </div>
   );

@@ -44,10 +44,13 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card {');
     expect(cssSource).toContain('border-radius: 16px;');
     expect(cssSource).toContain('padding: 0;');
-    expect(cssSource).toContain('background: var(--insurance-coverage-card-cap-bg);');
+    expect(cssSource).toContain('display: flex;');
+    expect(cssSource).toContain('flex-direction: column;');
+    expect(cssSource).toContain('background: #ffffff;');
     expect(cssSource).toContain('--insurance-coverage-card-cap-height: clamp(8.2rem, 13vw, 10.2rem);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card::after {');
-    expect(cssSource).toContain('background: linear-gradient(142deg, rgba(255, 255, 255, 1) 58%, rgba(255, 255, 255, 0.95) 100%);');
+    expect(cssSource).toContain('display: none;');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card > div:first-child {');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card p {');
     expect(cssSource).toContain('padding: clamp(1.35rem, 2.8vw, 1.75rem) clamp(2rem, 4vw, 2.65rem) 0;');
     expect(cssSource).toContain('color: var(--ag-color-super-grey);');
@@ -58,8 +61,10 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('justify-content: flex-start;');
     expect(cssSource).toContain('text-align: left;');
     expect(cssSource).toContain('font-weight: 700;');
-    expect(cssSource).toContain('font-size: clamp(2.28rem, 3.45vw, 2.72rem);');
+    expect(cssSource).toContain('font-size: clamp(2.35rem, 3.6vw, 2.95rem);');
     expect(cssSource).toContain('clamp(1.9rem, 4vw, 2.5rem);');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage .service-native-card h3 mark,');
+    expect(cssSource).toContain('color: #ffffff !important;');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-coverage > .ag-panel-rail > .service-native-action-row {');
     expect(cssSource).toContain('background: none;');
     expect(cssSource).toContain('width: 100%;');
@@ -82,9 +87,9 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure {');
     expect(cssSource).toContain('background: linear-gradient(145deg, var(--ag-color-sand) 0%, var(--ag-color-sandstone) 100%);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-inner {');
-    expect(cssSource).toContain('grid-template-columns: clamp(22.5rem, 34vw, 26rem) minmax(0, 1fr);');
+    expect(cssSource).toContain('grid-template-columns: clamp(18rem, 30vw, 25rem) minmax(0, 1fr);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-media {');
-    expect(cssSource).toContain('aspect-ratio: 1 / 1;');
+    expect(cssSource).toContain('aspect-ratio: 4 / 3;');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy {');
     expect(cssSource).toContain('justify-items: flex-start;');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .native-info-feature-logo {');
@@ -103,6 +108,16 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-certificate-proof {');
     expect(cssSource).toContain('background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-copy h3 mark.is-melon {');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-inner,');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-inner {\n  min-height: 0;');
+    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy {\n  min-height: 0;');
+  });
+
+  it('keeps the Mission Assure logo attached when dynamic feature blocks use the native page renderer', () => {
+    const source = readSource('./NativeContentPage.jsx');
+
+    expect(source).toContain("import MissionAssureLogo from './MissionAssureLogo';");
+    expect(source).toContain("logoComponent: runtime.logoKey === 'mission-assure' ? MissionAssureLogo : undefined,");
   });
 
   it('keeps the insurance Mission Assure heading and copy aligned to the 403(b) housing allowance reference', () => {
@@ -131,7 +146,7 @@ describe('insurance overview review polish guardrail', () => {
     expect(missionHeadingRule).toContain('max-width: 22em;');
     expect(missionHeadingRule).toContain('font-size: clamp(2rem, 4.6vw, 3.1rem);');
     expect(missionHeadingRule).toContain('text-wrap: balance;');
-    expect(cssSource).toContain('grid-template-columns: clamp(22.5rem, 34vw, 26rem) minmax(0, 1fr);');
+    expect(cssSource).toContain('grid-template-columns: clamp(18rem, 30vw, 25rem) minmax(0, 1fr);');
     expect(cssSource).toContain('gap: clamp(1rem, 3vw, 2.8rem);');
     expect(housingHeadingRule).toContain('--dynamic-columns-column-title-size: clamp(2rem, 4.6vw, 3.1rem);');
     expect(housingHeadingRule).toContain('--dynamic-columns-photo-max-width: 26rem;');

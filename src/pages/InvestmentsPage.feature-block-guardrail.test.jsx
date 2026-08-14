@@ -30,8 +30,8 @@ describe('investments feature block guardrails', () => {
     expect(blueprintSource).toContain("id: 'growth_feature'");
     expect(blueprintSource).toContain("featureId: 'investments_growth_feature'");
     expect(blueprintSource).toContain("id: 'dashboard_login_cta'");
-    expect(blueprintSource).toContain("templateId: 'cta_band'");
-    expect(blueprintSource).toContain("kind: 'cta_band'");
+    expect(blueprintSource).toContain("templateId: 'billboard'");
+    expect(blueprintSource).toContain("kind: 'billboard'");
     expect(blueprintSource).toContain('hidden: true');
 
     expect(catalogSource).toContain("featureId: 'investments_growth_feature'");

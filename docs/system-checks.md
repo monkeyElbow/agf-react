@@ -23,6 +23,8 @@ Public visitor styles stay in `src/styles.css` and the public feature sheets. Ad
 
 `src/styles/editorCssIsolation.guardrail.test.js` protects the import boundary, the first extracted admin rules, and HUD root coverage. Add new editor-only rules to a scoped editor sheet instead of adding generic selectors to the public stylesheet.
 
+`src/lib/contentAdminGuardrailRegistry.js` is the executable policy index. Every durable guardrail names the rule it protects, the legitimate admin action it must preserve, and the verification that covers it.
+
 `npm run scan:system` is the scan-only gate: it does not run Vitest, Node tests, lint, or the production build. `npm test` runs the full automated test suite, including the Node rates-import tests. `npm run check:system` is the combined release gate because it runs lint, scans, focused guardrails, `npm test`, and the production build; a passing scan alone is not a passing test or release result.
 
 ## Durable Content-Admin Policy

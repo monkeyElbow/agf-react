@@ -14,7 +14,7 @@ import {
   fetchSharedAnnouncement,
   isDevContentAuthorityEnabled,
   saveSharedAnnouncement,
-} from '../lib/devContentAuthorityClient';
+} from '../lib/devContentAuthorityRuntime';
 
 const AnnouncementContext = createContext(null);
 

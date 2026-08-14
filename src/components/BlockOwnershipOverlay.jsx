@@ -62,6 +62,16 @@ export function getBlockOwnershipVisual(meta, currentUserId, now = Date.now()) {
     const draftDetail = draftedBy?.displayName && meta?.draftedAt
       ? `Draft saved ${formatRelativeOwnershipTime(meta.draftedAt, now)}`
       : '';
+    if (meta?.isNewBlock) {
+      return {
+        overlayLabel: `Draft saved by ${toActorDisplayName(draftedBy)}`,
+        overlayDetail: draftDetail,
+        overlayActor: draftedBy,
+        overlaySecondaryLabel: '',
+        overlaySecondaryDetail: '',
+        overlaySecondaryActor: null,
+      };
+    }
     if (!savedBy) {
       return {
         overlayLabel: `Unpublished draft by ${toActorDisplayName(draftedBy)}`,

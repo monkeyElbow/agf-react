@@ -1,0 +1,308 @@
+/* Calculator overview and tool-shell styles. Loaded only by calculator-capable routes. */
+
+.native-info-page--calculators {
+  background: #ffffff;
+}
+
+.calculators-native-collection {
+  padding-top: clamp(0.7rem, 1.6vw, 1rem);
+  padding-bottom: clamp(0.7rem, 1.6vw, 1rem);
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection,
+.native-info-page--calculators .calculators-native-page-head + .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection {
+  padding-top: 0;
+}
+
+.calculators-native-collection + .calculators-native-collection {
+  padding-top: clamp(1.05rem, 2.3vw, 1.8rem);
+}
+
+.calculators-native-collection > .ag-panel-rail {
+  max-width: min(1180px, calc(100% - (var(--ag-panel-gutter) * 2)));
+}
+
+.calculators-native-collection h2 {
+  margin: 0;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-body);
+  font-size: clamp(1.7rem, 2.6vw, 2.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+}
+
+.calculators-native-collection .service-native-grid {
+  margin-top: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.95rem, 2vw, 1.25rem);
+  align-items: stretch;
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-grid {
+  margin-top: 0;
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(212px, 20vw, 252px);
+  padding: clamp(1.75rem, 2.6vw, 2.25rem);
+  border: 1px solid rgba(202, 207, 212, 0.9);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: none;
+  transition:
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.calculators-native-collection .service-native-card::before {
+  display: none;
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:is(:hover, :focus-within) {
+  transform: translateY(-2px) scale(1.004);
+  border-color: rgba(var(--ag-color-atlantean-rgb), 0.28);
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.calculators-native-collection .service-native-card > div:first-child {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card h3 {
+  display: block;
+  min-height: 0;
+  margin: 0;
+  padding-bottom: 0;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-size: clamp(1.95rem, 3.05vw, 2.52rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card h3::after {
+  display: none !important;
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n + 1) h3 {
+  color: var(--ag-color-atlantean);
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n + 2) h3 {
+  color: var(--ag-color-mango);
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n) h3 {
+  color: var(--ag-color-super-grey);
+}
+
+.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card > div > p:not(.service-native-card-subtitle):not(.service-native-card-phone) {
+  margin-top: 0.85rem;
+  color: rgba(65, 64, 66, 0.8);
+  font-size: clamp(1.02rem, 1.55vw, 1.18rem);
+  line-height: 1.48;
+  font-weight: 400;
+}
+
+.calculators-native-collection .service-native-card .service-native-action-row {
+  margin-top: auto;
+  padding-top: 1.15rem;
+  justify-content: flex-start;
+}
+
+.calculators-native-collection .service-native-card.has-stretched-link > :not(.service-native-card-stretched-link) {
+  pointer-events: none;
+}
+
+.calculators-native-collection .service-native-card .service-native-card-stretched-link:focus-visible {
+  border-radius: inherit;
+  outline: 2px solid rgba(var(--ag-color-atlantean-rgb), 0.42);
+  outline-offset: -4px;
+}
+
+.calculators-native-collection .service-native-btn {
+  --btn-color: var(--ag-color-atlantean-dark);
+  --btn-hover-color: var(--ag-color-atlantean);
+  min-width: 134px;
+  justify-content: center;
+  box-shadow: none;
+}
+
+.calculators-native-billboard.dynamic-billboard {
+  padding-top: clamp(4.1rem, 8.4vw, 7rem);
+  padding-bottom: clamp(4.3rem, 8.8vw, 7.4rem);
+}
+
+.calculators-native-collection + .calculators-native-billboard.dynamic-billboard {
+  margin-top: clamp(2rem, 4.2vw, 3.4rem);
+}
+
+.calculators-native-billboard.dynamic-billboard > .ag-panel-rail {
+  width: min(var(--dynamic-billboard-max-width, 1080px), calc(100% - (var(--ag-panel-gutter) * 2)));
+}
+
+.calculators-native-billboard.dynamic-billboard .native-info-section-copy {
+  width: min(100%, 68rem);
+  margin: 0 auto;
+  gap: clamp(0.45rem, 1.2vw, 0.75rem);
+  justify-items: center;
+  text-align: center;
+}
+
+.calculators-native-billboard.dynamic-billboard .native-info-section-copy > h2 {
+  justify-self: center;
+  font-family: var(--ag-font-helv);
+  font-size: clamp(2.35rem, 5.8vw, 4.85rem);
+  line-height: 0.98;
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
+}
+
+.calculators-native-billboard.dynamic-billboard .native-info-section-subtitle {
+  justify-self: center;
+  margin-top: 0.1rem;
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-helv);
+  font-size: clamp(2rem, 5vw, 4.2rem);
+  line-height: 0.94;
+  letter-spacing: var(--ag-letter-spacing-helv-heading);
+}
+
+.calculators-native-billboard.dynamic-billboard .native-info-rich-html p,
+.calculators-native-billboard.dynamic-billboard .native-info-section-copy > p {
+  width: min(31ch, 100%);
+  justify-self: center;
+  margin-top: clamp(0.8rem, 2vw, 1.2rem);
+  margin-inline: auto;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: clamp(1.15rem, 2.3vw, 1.65rem);
+  line-height: 1.38;
+  text-align: center;
+}
+
+.calculators-native-cta.native-dynamic-cta {
+  padding-top: clamp(1.4rem, 3.2vw, 2.4rem);
+  padding-bottom: clamp(2.9rem, 6vw, 4.9rem);
+}
+
+.calculators-native-cta.native-dynamic-cta > .ag-panel-rail {
+  width: min(1180px, calc(100% - (var(--ag-panel-gutter) * 2)));
+}
+
+.calculators-native-cta.native-dynamic-cta .native-info-section-copy {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: none;
+  text-align: left;
+}
+
+.calculators-native-cta.native-dynamic-cta .native-info-section-copy > h2 {
+  font-family: var(--ag-font-heading);
+  font-size: clamp(2.5rem, 6.2vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
+  text-align: left;
+}
+
+.calculators-native-cta.native-dynamic-cta .dynamic-cta-form {
+  width: min(100%, 100%);
+}
+
+.calculators-native-cta.native-dynamic-cta .dynamic-cta-form h6 {
+  margin: 0.6rem 0 0;
+  color: var(--ag-color-atlantean);
+  font-family: var(--ag-font-heading);
+  font-size: clamp(1.65rem, 3.2vw, 2.65rem);
+  line-height: 1.02;
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
+}
+
+.calculators-native-cta.native-dynamic-cta .native-info-inline-form {
+  padding: clamp(1.6rem, 3vw, 2.25rem);
+  border-radius: 22px;
+}
+
+@media (max-width: 980px) {
+  .calculators-native-billboard.dynamic-billboard .native-info-section-subtitle {
+    font-size: clamp(1.8rem, 4.8vw, 3.2rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .calculators-native-collection .service-native-card {
+    min-height: 0;
+  }
+
+  .calculators-native-collection .service-native-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calculators-native-collection .service-native-btn {
+    width: 100%;
+  }
+
+  .calculators-native-cta.native-dynamic-cta .native-info-section-copy > h2 {
+    font-size: clamp(2.15rem, 10vw, 3rem);
+  }
+
+  .calculators-native-cta.native-dynamic-cta .dynamic-cta-form h6 {
+    font-size: clamp(1.45rem, 7vw, 2rem);
+  }
+}
+
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell {
+  padding-block: clamp(0.7rem, 1.2vw, 1rem);
+}
+
+.native-info-page--calculator-tool .calculator-tool-native-page-head + .service-native-section.calculator-tool-shell {
+  padding-top: 0;
+}
+
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-shell {
+  padding-top: 0;
+}
+
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell .native-info-section-copy > h2 {
+  margin-inline: auto;
+  font-family: var(--ag-font-helv);
+  letter-spacing: -0.03em;
+  font-size: clamp(1.62rem, 2.6vw, 2.15rem);
+  line-height: 1.08;
+  max-width: 24ch;
+  text-align: center;
+}
+
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell .native-info-section-copy > p {
+  margin-inline: auto;
+  max-width: min(70ch, 100%);
+  font-size: clamp(1.08rem, 1.5vw, 1.24rem);
+  line-height: 1.52;
+  text-align: center;
+}
+
+.native-info-page--calculator-tool .calculator-tool-contact.native-dynamic-cta {
+  padding-top: clamp(2.1rem, 4.4vw, 3.4rem);
+}
+
+.native-info-page--calculator-tool .service-native-section.calculator-tool-shell + .service-native-section.calculator-tool-contact.native-dynamic-cta {
+  padding-top: clamp(2.1rem, 4.4vw, 3.4rem);
+}
+
+.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell {
+  padding-block: clamp(0.52rem, 0.9vw, 0.78rem);
+}
+
+.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell .native-info-section-copy > h2 {
+  margin-bottom: 0.35rem;
+}
+
+.native-info-page--calculator-increased-contribution .service-native-section.calculator-tool-shell .native-info-section-copy > p {
+  max-width: 76ch;
+}

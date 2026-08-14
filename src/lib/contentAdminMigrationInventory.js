@@ -73,6 +73,14 @@ export const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
     retireWhen: 'Retired after the final zero-finding scan; see the retirement receipt.',
   },
   {
+    id: 'qcd-centered-card-grid',
+    category: 'content-migration',
+    paths: Object.freeze(['/services/planned-giving/qualified-charitable-distribution']),
+    helpers: Object.freeze(['migrateQcdCenteredCardGridState']),
+    affectedLayers: AFFECTED_LAYERS,
+    retireWhen: 'Retired after the QCD card grid has the centered presentation and no untouched placeholder cards remain in active, base, revision, or backup snapshots.',
+  },
+  {
     id: 'retirement-ira-block-shape',
     status: 'retired',
     category: 'snapshot-migration',
@@ -137,6 +145,14 @@ export const CONTENT_ADMIN_MIGRATION_ADAPTERS = Object.freeze([
     affectedLayers: AFFECTED_LAYERS,
     retirementReceipt: 'docs/content-admin-adapter-retirements/cga-secure-act-content-compatibility.json',
     retireWhen: 'Retired after the final zero-finding scan; see the retirement receipt.',
+  },
+  {
+    id: 'cga-secure-act-card',
+    category: 'content-migration',
+    paths: Object.freeze(['/services/planned-giving/charitable-gift-annuities']),
+    helpers: Object.freeze(['migrateCgaSecureActCardState']),
+    affectedLayers: AFFECTED_LAYERS,
+    retireWhen: 'Retired after the SECURE 2.0 content and gift bullets are stored in gift_assets.card1Body, legacy secure_act, duplicate BodyHtml fields, and card ListJson are absent, and active, base, revision, and backup snapshots agree.',
   },
 ]);
 

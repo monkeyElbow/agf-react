@@ -4,6 +4,7 @@ import { defineEditorField, defineTransitionalActionFields } from '../foundation
 import { buildDynamicBillboardFromBlock } from '../../lib/dynamicPageBlocks';
 import { getTokenSwatch } from '../../lib/colorSystem';
 import { validateActionFieldGroups } from '../../lib/linkValue';
+import { getBillboardPresetDefinitions } from '../../lib/billboardPresets';
 
 const BILLBOARD_TITLE_TONE_OPTIONS = [
   { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
@@ -213,6 +214,7 @@ export const billboardBlockDefinition = createBlockDefinition({
   label: 'Billboard',
   icon: billboardHudIcon,
   editorType: 'billboard',
+  presets: getBillboardPresetDefinitions(),
   allowedVariants: ['default', 'feature'],
   supportedModes: ['dynamic'],
   defaults: {

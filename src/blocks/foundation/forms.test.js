@@ -42,6 +42,7 @@ describe('canonical form foundation', () => {
 
   it('keeps shared form primitives from collapsing block-specific field boundaries', () => {
     expect(getCanonicalFormBlockBoundary('cta_form')?.specificFieldIds).toContain('fieldsJson');
+    expect(getCanonicalFormBlockBoundary('cta_form')?.specificFieldIds).toContain('subtitle');
     expect(getCanonicalFormBlockBoundary('cta_form')?.specificFieldIds).not.toContain('field1Type');
     expect(isFieldAllowedForFormBlock('cta_form', 'field1Type')).toBe(false);
     expect(isFieldAllowedForFormBlock('cta_form', 'step1FieldsJson')).toBe(false);

@@ -24,10 +24,13 @@ describe('native CTA renderer guardrail', () => {
 
   it('renders dynamic CTA blocks directly instead of targeting native sections', () => {
     const source = readSource('./NativeContentPage.jsx');
+    const compositionSource = readSource('../lib/managedPageComposition.js');
 
-    expect(source).toContain("if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'cta_form') {");
-    expect(source).toContain('const ctaSection = buildDynamicCtaSection(renderBlock, activePath);');
-    expect(source).toContain('acc.push(ctaSection);');
+    expect(source).toContain('function buildManagedBlockSection(block, {');
+    expect(source).toContain("if (renderBlock.kind === 'cta_form') {");
+    expect(source).toContain('buildDynamicCtaSection(renderBlock, pathname);');
+    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).not.toContain('const targetedDynamicCtaSections = new Map();');
     expect(source).not.toContain("const targetKey = String(mappedSection?.targetSectionKey || '').trim();");
     expect(source).not.toContain("targetedDynamicCtaSections.set(targetKey, { block, mappedSection });");

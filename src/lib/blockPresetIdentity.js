@@ -1,11 +1,11 @@
 import {
+  getBillboardPresetDefinitions,
+  resolveBillboardPresetDefinition,
+} from './billboardPresets';
+import {
   getCardGridPresetDefinitions,
   resolveCardGridPresetDefinition,
 } from './cardGridPresets';
-import {
-  getCtaBandPresetDefinitions,
-  resolveCtaBandPresetDefinition,
-} from './ctaBandPresets';
 import {
   getColumnsPresetDefinitions,
   resolveColumnsPresetDefinition,
@@ -13,7 +13,7 @@ import {
 
 const CANONICAL_TEMPLATE_ID_BY_KIND = Object.freeze({
   card_grid: 'card_grid',
-  cta_band: 'cta_band',
+  billboard: 'billboard',
   columns: 'columns',
 });
 
@@ -50,9 +50,9 @@ function resolvePresetDefinition(block) {
     return findPresetDefinition(block, getCardGridPresetDefinitions())
       || resolveCardGridPresetDefinition(block);
   }
-  if (kind === 'cta_band') {
-    return findPresetDefinition(block, getCtaBandPresetDefinitions())
-      || resolveCtaBandPresetDefinition(block);
+  if (kind === 'billboard') {
+    return findPresetDefinition(block, getBillboardPresetDefinitions())
+      || resolveBillboardPresetDefinition(block);
   }
   if (kind === 'columns') {
     return findPresetDefinition(block, getColumnsPresetDefinitions())

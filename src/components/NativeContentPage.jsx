@@ -1,10 +1,9 @@
 import { createContext, lazy, Suspense, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
+
+const CalculatorRouteStyles = lazy(() => import('./CalculatorRouteStyles'));
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from './BlockOwnershipOverlay';
-import FrontHudPageWorkflow from './FrontHudPageWorkflow';
-import FrontHudStructureControls from './FrontHudStructureControls';
-import MobileFrontHudActionTray from './MobileFrontHudActionTray';
 import {
   createInitialFormValues,
   normalizeFormSubmissionConfig,
@@ -74,15 +73,25 @@ import {
 import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { normalizeBlockForRender } from '../lib/blockPresentationContracts';
 import { buildNativeHudPanels } from '../lib/nativeHudPanels';
-import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
+import { composeManagedPage } from '../lib/managedPageComposition';
 import useHudDockOrder from '../hooks/useHudDockOrder';
+import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import GivingComparisonMatrix from './GivingComparisonMatrix';
 import CharitableGiftTestDriveWidget from './CharitableGiftTestDriveWidget';
 import EmergencyFundCalculatorWidget from './EmergencyFundCalculatorWidget';
 import IncreasedContributionCalculatorWidget from './IncreasedContributionCalculatorWidget';
 import NetWorthCalculatorWidget from './NetWorthCalculatorWidget';
-import FrontHudPanelShell from './FrontHudPanelShell';
-import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from './HeroHudEditorShared';
+import {
+  BlockHudPanelLoading,
+  FrontHudPageWorkflow,
+  FrontHudPanelShell,
+  FrontHudStructureControls,
+  HeroInlineLiveEditor,
+  MobileFrontHudActionTray,
+  LazyBlockHudPanelHost as BlockHudPanelHost,
+  preloadBlockHudPanelHost,
+  preloadFrontHudChrome,
+} from './BlockHudPanelHostLoader';
 import LegacyGivingStewardshipStoryFeature from './LegacyGivingStewardshipStoryFeature';
 import PlannedGivingStepIcon from './PlannedGivingStepIcon';
 import ImpactProofStoryFeature from './ImpactProofStoryFeature';
@@ -101,6 +110,7 @@ import {
 } from '../data/investmentByMailInstitutionConfig';
 import NewsletterSignupForm from './NewsletterSignupForm';
 import SafeRichText from './SafeRichText';
+import MissionAssureLogo from './MissionAssureLogo';
 import {
   buildConsultantCards,
   composeConsultantSections,
@@ -136,6 +146,7 @@ import {
   resolvePresetFamilyClassToken,
 } from '../lib/presetFamilyContract';
 import { setupInvestmentsGrowthRevealMotion } from '../lib/investmentsGrowthReveal';
+import { isCalculatorRoutePath } from '../lib/routeStyleBoundaries';
 
 const US_STATE_LABELS = {
   AL: 'Alabama',
@@ -192,7 +203,6 @@ const US_STATE_LABELS = {
 };
 
 const MOBILE_FRONT_HUD_MEDIA_QUERY = '(max-width: 760px)';
-const BlockHudPanelHost = lazy(() => import('./BlockHudPanelHost'));
 
 function stateOptionLabel(code) {
   return `${US_STATE_LABELS[code] || code} (${code})`;
@@ -200,31 +210,6 @@ function stateOptionLabel(code) {
 
 function findVisibleDynamicBlockByKind(blocks, kind) {
   return blocks.find((block) => block?.kind === kind && block?.mode === 'dynamic') || null;
-}
-
-function collectFullyHiddenBlockIds(blocks) {
-  const entriesById = new Map();
-
-  (Array.isArray(blocks) ? blocks : []).forEach((block) => {
-    const blockId = String(block?.id || '').trim();
-    if (!blockId) {
-      return;
-    }
-    const hidden = toBoolean(block?.hidden);
-    const existing = entriesById.get(blockId) || { hasVisibleVariant: false, hasHiddenVariant: false };
-    if (hidden) {
-      existing.hasHiddenVariant = true;
-    } else {
-      existing.hasVisibleVariant = true;
-    }
-    entriesById.set(blockId, existing);
-  });
-
-  return new Set(
-    Array.from(entriesById.entries())
-      .filter(([, entry]) => entry.hasHiddenVariant && !entry.hasVisibleVariant)
-      .map(([blockId]) => blockId),
-  );
 }
 
 function getLocationOptions(section) {
@@ -947,7 +932,7 @@ function buildDynamicHeroShellSection(block) {
   }
 
   return {
-    id: 'dynamic-hero',
+    id: `dynamic-hero-${String(block?.id || 'hero').trim() || 'hero'}`,
     blockId: String(block?.id || '').trim() || undefined,
     nativeHero: runtime,
   };
@@ -960,7 +945,7 @@ function buildDynamicIntroShellSection(block, { includeTestClassName = false } =
   }
 
   return {
-    id: 'dynamic-intro',
+    id: `dynamic-intro-${String(block?.id || 'intro').trim() || 'intro'}`,
     blockId: String(block?.id || '').trim() || undefined,
     nativeIntro: introConfig,
     className: introConfig.className || '',
@@ -989,13 +974,14 @@ function buildNativeBillboardSection(block, { includeTestClassName = false } = {
   const railStyle = runtime.contentMaxWidthPx
     ? { '--dynamic-billboard-max-width': `${runtime.contentMaxWidthPx}px` }
     : undefined;
+  const presetClassName = buildPresetFamilyRuntimeClassName('billboard', runtime.presetId || 'default');
 
   return {
-    id: 'dynamic-billboard',
+    id: `dynamic-billboard-${String(block?.id || 'billboard').trim() || 'billboard'}`,
     blockId: String(block?.id || '').trim() || undefined,
     copyWrap: true,
     anchorId: runtime.anchorId || undefined,
-    className: `dynamic-billboard${includeTestClassName ? ' test-dynamic-billboard' : ''}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} is-bg-${normalizeHeroBgTone(runtime.bgTone || 'blue')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
+    className: `dynamic-billboard${includeTestClassName ? ' test-dynamic-billboard' : ''}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''} ${presetClassName} is-bg-${normalizeHeroBgTone(runtime.bgTone || 'blue')} is-text-${normalizePanelTextTone(runtime.textTone, 'white')}`,
     title: runtime.title,
     titleClassName: runtime.titleClassName || undefined,
     titleStyle: runtime.titleStyle,
@@ -1180,6 +1166,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       pagePath: card.pagePath,
       inquiryLabel: card.inquiryLabel,
       body: card.body,
+      bodyHtml: card.bodyHtml,
       bodySegments: card.bodySegments,
       list: Array.isArray(card.list) ? card.list : undefined,
       fineprint: card.fineprint || undefined,
@@ -1223,7 +1210,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
     },
-    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} ${presetRuntimeClassName}${cardStyle === 'none' ? ' is-card-none' : ''}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
   };
 }
 
@@ -1490,15 +1477,17 @@ function buildDynamicFeaturePanelSection(block, pathname) {
     id: `${pathname}-dynamic-feature-panel-${String(block.id || 'feature-panel').trim() || 'feature-panel'}`,
     blockId: String(block?.id || '').trim() || undefined,
     anchorId: runtime.anchorId || undefined,
-    className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
-    fullBleed: Boolean(runtime.fullBleed),
+    className: `${pathname === '/test' ? 'test-dynamic-feature-panel' : 'native-dynamic-feature-panel'} service-native-feature-panel${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
+    fullBleed: true,
     feature: {
       title: runtime.title,
+      titleClassName: runtime.titleClassName || '',
       titleHighlights: runtime.titleHighlights?.length ? runtime.titleHighlights : [],
       body: runtime.body ? [runtime.body] : [],
       html: runtime.bodyHtml || '',
       image: runtime.imageUrl || '',
       imageAlt: runtime.imageAlt || '',
+      logoComponent: runtime.logoKey === 'mission-assure' ? MissionAssureLogo : undefined,
       actions: runtime.action ? [runtime.action] : [],
     },
   };
@@ -1531,14 +1520,68 @@ function buildDynamicSiteFeatureSection(block, pathname) {
 
   return {
     ...baseSection,
+    className: `${baseSection.className} service-native-article-teaser is-article-feature`,
+    wide: true,
     feature: {
       title: runtime.title,
+      titleClassName: runtime.titleClassName || '',
       body: runtime.body ? [runtime.body] : [],
       image: runtime.imageUrl || '',
       imageAlt: runtime.imageAlt || '',
       actions: runtime.action ? [runtime.action] : [],
     },
   };
+}
+
+function buildManagedBlockSection(block, {
+  pathname,
+  isTestPage,
+  getConsultants,
+  testimonialsLibrary,
+} = {}) {
+  const renderBlock = normalizeBlockForRender(block);
+  if (!renderBlock || renderBlock.mode !== 'dynamic') {
+    return null;
+  }
+
+  if (renderBlock.kind === 'hero') {
+    return buildDynamicHeroShellSection(renderBlock);
+  }
+  if (renderBlock.kind === 'intro') {
+    return buildDynamicIntroShellSection(renderBlock, { includeTestClassName: isTestPage });
+  }
+  if (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND) {
+    return buildDynamicPageContentSection(renderBlock, pathname);
+  }
+  if (renderBlock.kind === 'card_grid') {
+    return buildDynamicGridSection(renderBlock, pathname, { getConsultants });
+  }
+  if (renderBlock.kind === 'columns') {
+    return buildDynamicColumnsSection(renderBlock, pathname);
+  }
+  if (renderBlock.kind === 'newsletter') {
+    return buildDynamicNewsletterSection(renderBlock, pathname);
+  }
+  if (renderBlock.kind === 'feature_panel') {
+    return buildDynamicFeaturePanelSection(renderBlock, pathname);
+  }
+  if (renderBlock.kind === 'site_feature') {
+    return buildDynamicSiteFeatureSection(renderBlock, pathname);
+  }
+  if (renderBlock.kind === 'cta_form') {
+    return buildDynamicCtaSection(renderBlock, pathname);
+  }
+  if (renderBlock.kind === 'request_form') {
+    return buildDynamicRequestFormSection(renderBlock, pathname);
+  }
+  if (renderBlock.kind === 'testimonials') {
+    return buildDynamicTestimonialsSection(renderBlock, pathname, testimonialsLibrary);
+  }
+  if (renderBlock.kind === 'billboard') {
+    return buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });
+  }
+
+  return null;
 }
 
 const CERTIFICATE_REQUEST_COVERAGE_OPTIONS = [
@@ -4489,9 +4532,7 @@ export default function NativeContentPage({ page }) {
     setEnabled: setFrontHudEnabled = null,
   } = useFrontHud();
   const {
-    blocksByPath,
     publishedBlocksByPath,
-    authoringBlocksByPath,
     resolveManagedPathFromRef,
     resolveAuthoringManagedPathFromRef = null,
     setActiveBlockLock = () => ({ ok: false }),
@@ -4499,9 +4540,6 @@ export default function NativeContentPage({ page }) {
     updateBlock = () => {},
     moveBlock = () => {},
     removeBlock = () => {},
-    pageHierarchy,
-    publishedPageHierarchy,
-    authoringPageHierarchy,
     getBlockCollaboration = () => null,
     devIdentity = null,
     claimBufferedBlockEdit = () => false,
@@ -4518,16 +4556,9 @@ export default function NativeContentPage({ page }) {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
     hasAuthoringBlocksForPath,
-  } = selectFrontHudContentSource({
-    enabled: frontHudEnabled,
+  } = useManagedContentSource({
     pathname: activePath,
     fallbackPathname: templatePath,
-    authoringBlocksByPath,
-    blocksByPath,
-    authoringPageHierarchy,
-    pageHierarchy,
-    publishedBlocksByPath,
-    publishedPageHierarchy,
   });
   const managedResolveManagedPathFromRef = frontHudEnabled && hasAuthoringBlocksForPath
     ? (resolveAuthoringManagedPathFromRef || resolveManagedPathFromRef)
@@ -4593,180 +4624,38 @@ export default function NativeContentPage({ page }) {
   const [mobileHudDeleteConfirmBlockId, setMobileHudDeleteConfirmBlockId] = useState('');
 
   const content = useMemo(() => {
-    let nextBaseContent = baseContent;
-    const pageBlocks = renderedPageBlocks;
-    const fullyHiddenBlockIds = collectFullyHiddenBlockIds(pageBlocks);
-    const visibleBlocks = pageBlocks.filter((block) => !toBoolean(block?.hidden));
-    const heroBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'hero');
-
-    if (!isBlockOnlyManagedPage) {
-      const adminHero = buildDynamicHeroFromBlock(heroBlock);
-      if (adminHero) {
-        nextBaseContent = {
-          ...nextBaseContent,
-          hero: {
-            ...(nextBaseContent.hero || {}),
-            ...adminHero,
-          },
-        };
-      }
-    }
-
-    const dynamicSections = visibleBlocks.reduce((acc, block) => {
-      const renderBlock = normalizeBlockForRender(block);
-
-      if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'hero') {
-        const heroSection = buildDynamicHeroShellSection(renderBlock);
-        if (heroSection) {
-          acc.push(heroSection);
-        }
-        return acc;
-      }
-
-      if (isBlockOnlyManagedPage && renderBlock.mode === 'dynamic' && renderBlock.kind === 'intro') {
-        const introSection = buildDynamicIntroShellSection(renderBlock);
-        if (introSection) {
-          acc.push(introSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND)) {
-        const pageContentSection = buildDynamicPageContentSection(renderBlock, activePath);
-        if (pageContentSection) {
-          acc.push(pageContentSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'card_grid') {
-        const gridSection = buildDynamicGridSection(renderBlock, activePath, { getConsultants });
-        if (gridSection) {
-          acc.push(gridSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'columns') {
-        const columnsSection = buildDynamicColumnsSection(renderBlock, activePath);
-        if (columnsSection) {
-          acc.push(columnsSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'newsletter') {
-        const newsletterSection = buildDynamicNewsletterSection(renderBlock, activePath);
-        if (newsletterSection) {
-          acc.push(newsletterSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'feature_panel') {
-        const featurePanelSection = buildDynamicFeaturePanelSection(renderBlock, activePath);
-        if (featurePanelSection) {
-          acc.push(featurePanelSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'site_feature') {
-        const siteFeatureSection = buildDynamicSiteFeatureSection(renderBlock, activePath);
-        if (siteFeatureSection) {
-          acc.push(siteFeatureSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'cta_form') {
-        const ctaSection = buildDynamicCtaSection(renderBlock, activePath);
-        if (ctaSection) {
-          acc.push(ctaSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'request_form') {
-        const requestSection = buildDynamicRequestFormSection(renderBlock, activePath);
-        if (requestSection) {
-          acc.push(requestSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'testimonials') {
-        const testimonialsSection = buildDynamicTestimonialsSection(renderBlock, activePath, testimonialsLibrary);
-        if (testimonialsSection) {
-          acc.push(testimonialsSection);
-        }
-        return acc;
-      }
-
-      if (renderBlock.mode === 'dynamic' && renderBlock.kind === 'billboard') {
-        const billboardSection = buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });
-        if (billboardSection) {
-          acc.push(billboardSection);
-        }
-        return acc;
-      }
-
-      return acc;
-    }, []);
-
-    if (fullyHiddenBlockIds.size) {
-      nextBaseContent = {
-        ...nextBaseContent,
-        sections: (nextBaseContent.sections || []).filter((section) => !fullyHiddenBlockIds.has(section?.id)),
-      };
-    }
-
-    if (dynamicSections.length) {
-      nextBaseContent = {
-        ...nextBaseContent,
-        sections: [...(nextBaseContent.sections || []), ...dynamicSections],
-      };
-    }
-
-    const dynamicIntroBlock = findVisibleDynamicBlockByKind(visibleBlocks, 'intro');
-    const adminIntro = !isBlockOnlyManagedPage
-      ? buildNativeIntroConfig(dynamicIntroBlock, { includeTestClassName: isTestPage })
-      : null;
-    if (adminIntro) {
-      const baseIntro = nextBaseContent?.intro;
-      const baseIntroObj = baseIntro && typeof baseIntro === 'object'
-        ? baseIntro
-        : (baseIntro ? { body: baseIntro } : {});
-      const mergedClassName = [baseIntroObj.className, adminIntro.className].filter(Boolean).join(' ').trim();
-      nextBaseContent = {
-        ...nextBaseContent,
-        intro: {
-          ...baseIntroObj,
-          ...adminIntro,
-          className: mergedClassName || undefined,
-        },
-      };
-    }
-
-    let nextSections = composeConsultantSections({
-      pathname: templatePath,
-      pagePath: activePath,
-      sections: nextBaseContent.sections || [],
-      getConsultants,
+    return composeManagedPage({
+      baseContent,
+      blocks: renderedPageBlocks,
+      pathname: activePath,
+      isBlockOnlyManagedPage,
+      includeHidden: frontHudEnabled,
+      normalizeBlock: normalizeBlockForRender,
+      buildHero: (block) => buildDynamicHeroFromBlock(block),
+      buildIntro: (block) => buildNativeIntroConfig(block, { includeTestClassName: isTestPage }),
+      buildSection: (block, options) => buildManagedBlockSection(block, {
+        ...options,
+        pathname: activePath,
+        isTestPage,
+        getConsultants,
+        testimonialsLibrary,
+      }),
+      composeRouteSections: (sections) => {
+        let nextSections = composeConsultantSections({
+          pathname: templatePath,
+          pagePath: activePath,
+          sections,
+          getConsultants,
+        });
+        nextSections = buildCareersRouteSections({
+          pathname: templatePath,
+          sections: nextSections,
+          getVisibleJobs,
+        });
+        return nextSections;
+      },
     });
-    nextSections = buildCareersRouteSections({
-      pathname: templatePath,
-      sections: nextSections,
-      getVisibleJobs,
-    });
-
-    return {
-      ...nextBaseContent,
-      hideHero: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideHero) || fullyHiddenBlockIds.has('hero')),
-      hideIntro: !isBlockOnlyManagedPage && (Boolean(nextBaseContent.hideIntro) || fullyHiddenBlockIds.has('intro')),
-      sections: nextSections,
-    };
-  }, [baseContent, renderedPageBlocks, activePath, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, templatePath, testimonialsLibrary]);
+  }, [baseContent, renderedPageBlocks, activePath, frontHudEnabled, getConsultants, getVisibleJobs, isBlockOnlyManagedPage, isTestPage, templatePath, testimonialsLibrary]);
   const contentWithManagedDisclosures = useMemo(() => ({
     ...content,
     preIntroSections: Array.isArray(content.preIntroSections)
@@ -4878,8 +4767,8 @@ export default function NativeContentPage({ page }) {
     [editablePageBlocks],
   );
   const hudDockPanels = useMemo(
-    () => buildNativeHudPanels({ blocks: visibleEditablePageBlocks }),
-    [visibleEditablePageBlocks],
+    () => buildNativeHudPanels({ blocks: editablePageBlocks, includeHidden: true }),
+    [editablePageBlocks],
   );
   const hudPanelById = useMemo(() => (
     hudDockPanels.reduce((next, panel) => {
@@ -4899,11 +4788,28 @@ export default function NativeContentPage({ page }) {
       return next;
     }, {})
   ), [hudDockPanels]);
-  const dynamicHeroBlock = hudPanelByBlockId.hero?.block || findVisibleDynamicBlockByKind(visibleEditablePageBlocks, 'hero');
-  const dynamicIntroBlock = hudPanelByBlockId.intro?.block || findVisibleDynamicBlockByKind(visibleEditablePageBlocks, 'intro');
-  const dynamicTestimonialsBlock = findVisibleDynamicBlockByKind(visibleEditablePageBlocks, 'testimonials');
+  const visibleHudPanelByBlockId = useMemo(() => (
+    buildNativeHudPanels({ blocks: visibleEditablePageBlocks }).reduce((next, panel) => {
+      const blockId = String(panel?.blockId || '').trim();
+      if (blockId) {
+        next[blockId] = panel;
+      }
+      return next;
+    }, {})
+  ), [visibleEditablePageBlocks]);
+  const renderHudPanelByBlockId = frontHudEnabled ? hudPanelByBlockId : visibleHudPanelByBlockId;
+  const renderEditablePageBlocks = frontHudEnabled ? editablePageBlocks : visibleEditablePageBlocks;
+  const dynamicHeroBlock = renderHudPanelByBlockId.hero?.block || findVisibleDynamicBlockByKind(renderEditablePageBlocks, 'hero');
+  const dynamicIntroBlock = renderHudPanelByBlockId.intro?.block || findVisibleDynamicBlockByKind(renderEditablePageBlocks, 'intro');
+  const dynamicTestimonialsBlock = findVisibleDynamicBlockByKind(renderEditablePageBlocks, 'testimonials');
   const frontHudOpacityRatio = clampFrontHudOpacity(frontHudOpacity) / 100;
   const showFrontHud = frontHudEnabled && hudDockPanels.length > 0;
+  useEffect(() => {
+    if (showFrontHud) {
+      void preloadFrontHudChrome();
+      void preloadBlockHudPanelHost();
+    }
+  }, [showFrontHud]);
   const isMobileFrontHud = showFrontHud && isMobileFrontHudViewport;
   const adminHudEditPath = resolvedPagePath;
   const hudContentPath = editableBlockPath || adminHudEditPath;
@@ -5031,8 +4937,8 @@ export default function NativeContentPage({ page }) {
       logHeroDriftWarningOnce(heroInspection, 'Native hero');
     }
   }, [heroInspection]);
-  const heroHudPanel = dynamicHeroBlock ? (hudPanelByBlockId[dynamicHeroBlock.id] || null) : null;
-  const introHudPanel = dynamicIntroBlock ? (hudPanelByBlockId[dynamicIntroBlock.id] || null) : null;
+  const heroHudPanel = dynamicHeroBlock ? (renderHudPanelByBlockId[dynamicHeroBlock.id] || null) : null;
+  const introHudPanel = dynamicIntroBlock ? (renderHudPanelByBlockId[dynamicIntroBlock.id] || null) : null;
   const showHeroHud = showFrontHud && shouldRenderHero && Boolean(heroHudPanel);
   const showIntroHud = showFrontHud && shouldRenderIntro && Boolean(introHudPanel);
   const getOwnershipVisualForBlockId = (blockId) => {
@@ -5741,6 +5647,11 @@ export default function NativeContentPage({ page }) {
 
   return (
     <InlineCtaRevealContext.Provider value={inlineCtaRevealContextValue}>
+      {isCalculatorRoutePath(templatePath) ? (
+        <Suspense fallback={null}>
+          <CalculatorRouteStyles />
+        </Suspense>
+      ) : null}
       <div
         ref={pageRef}
         className={`ag-page-shell service-native-page native-info-page${compactClass}${pageClass}${showFrontHud ? ' is-front-hud-docked' : ''}${hasOpenHudPanel ? ' has-active-front-hud-panel' : ''}${isMobileFrontHud ? ' is-mobile-front-hud' : ''}${isMobileFrontHud && mobileSelectedHudPanel && hudDockCollapsed ? ' has-mobile-selected-front-hud' : ''}`}
@@ -5753,10 +5664,10 @@ export default function NativeContentPage({ page }) {
               <button
                 key={`dock-${panel.id}`}
                 type="button"
-                className={`admin-front-hud-dock-tab${!hudDockCollapsed && activeHudPanelId === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
+                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanelId === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
                 onClick={() => toggleHudPanel(panel.id, { scrollToTarget: true })}
-                title={panel.label}
-                aria-label={panel.label}
+                title={`${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
+                aria-label={`${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
                 {...getDockTabDragProps(panel.id)}
               >
                 {panel.icon ? (
@@ -5770,6 +5681,7 @@ export default function NativeContentPage({ page }) {
                   <span className="admin-front-hud-dock-tab-fallback" aria-hidden="true">{panel.label.slice(0, 1)}</span>
                 )}
                 <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
+                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
               </button>
             ))}
           </div>
@@ -5792,7 +5704,7 @@ export default function NativeContentPage({ page }) {
       {shouldRenderHero ? (
         <section
           ref={dynamicHeroBlock ? heroHudSectionRef : undefined}
-          className={`service-native-hero is-bg-${renderedHeroBgTone} is-justify-${renderedHeroJustify}${showHeroHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isHeroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId(dynamicHeroBlock?.id).className || ''}`}
+          className={`service-native-hero is-bg-${renderedHeroBgTone} is-justify-${renderedHeroJustify}${renderedHero?.isAdminHiddenBlock ? ' is-admin-hidden-block' : ''}${showHeroHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isHeroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId(dynamicHeroBlock?.id).className || ''}`}
           data-block-id={dynamicHeroBlock?.id || 'hero'}
           data-mobile-front-hud-selectable={showHeroHud && isMobileFrontHud ? 'true' : undefined}
           data-mobile-front-hud-selected={isMobileHudPanelSelected(heroHudPanelId) ? 'true' : undefined}
@@ -5818,7 +5730,6 @@ export default function NativeContentPage({ page }) {
                 setLineInputRef={(lineKey, node) => {
                   heroLineInputRefs.current[lineKey] = node;
                 }}
-                renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}
                 resolveLineClassName={(line, index) => (
                   resolveHeroLineDisplayClassName(
                     String(line.className || '').trim(),
@@ -5854,7 +5765,7 @@ export default function NativeContentPage({ page }) {
       ) : null}
 
       {preIntroSections.map((section, sectionIndex) => {
-        const sectionKey = `${activePath}-pre-intro-${sectionIndex}-${section.title || 'section'}`;
+        const sectionKey = `${activePath}-pre-intro-${section.blockId || section.id || sectionIndex}`;
         const sectionClassName = String(section.className || '');
         const formVariant = String(section?.form?.variant || '').trim().toLowerCase();
         const isInlineCtaSection = isInlineCtaSectionShape(section);
@@ -5908,7 +5819,7 @@ export default function NativeContentPage({ page }) {
       {shouldRenderIntro ? (
         <section
           ref={dynamicIntroBlock ? introHudSectionRef : undefined}
-          className={`service-native-intro${introSplit ? ' is-split' : ''}${introConfig?.className ? ` ${introConfig.className}` : ''}${showIntroHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId(dynamicIntroBlock?.id).className || ''}`}
+          className={`service-native-intro${introSplit ? ' is-split' : ''}${introConfig?.className ? ` ${introConfig.className}` : ''}${introConfig?.isAdminHiddenBlock ? ' is-admin-hidden-block' : ''}${showIntroHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isIntroHudFocusTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${getOwnershipVisualForBlockId(dynamicIntroBlock?.id).className || ''}`}
           data-block-id={dynamicIntroBlock?.id || 'intro'}
           data-mobile-front-hud-selectable={showIntroHud && isMobileFrontHud ? 'true' : undefined}
           data-mobile-front-hud-selected={isMobileHudPanelSelected(introHudPanelId) ? 'true' : undefined}
@@ -5936,7 +5847,7 @@ export default function NativeContentPage({ page }) {
                 {introBodyHtml ? (
                   <SafeRichText
                     as="div"
-                    className={`native-info-rich-html${showIntroHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
+                    className={`native-info-rich-html${introConfig?.bodyColorClassName ? ` ${introConfig.bodyColorClassName}` : ''}${showIntroHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`}
                     html={introBodyHtml}
                     onClick={showIntroHud && allowOnPageClickEdit ? handleIntroBodyEditIntent : undefined}
                     onKeyDown={showIntroHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, handleIntroBodyEditIntent) : undefined}
@@ -5948,7 +5859,7 @@ export default function NativeContentPage({ page }) {
                   introParagraphs.map((paragraph) => (
                     <p
                       key={paragraph}
-                      className={showIntroHud && allowOnPageClickEdit ? 'admin-front-hud-click-edit-target' : undefined}
+                      className={`${introConfig?.bodyColorClassName || ''}${showIntroHud && allowOnPageClickEdit ? ' admin-front-hud-click-edit-target' : ''}`.trim() || undefined}
                       onClick={showIntroHud && allowOnPageClickEdit ? handleIntroBodyEditIntent : undefined}
                       onKeyDown={showIntroHud && allowOnPageClickEdit ? (event) => handleBodyEditKeyDown(event, handleIntroBodyEditIntent) : undefined}
                       role={showIntroHud && allowOnPageClickEdit ? 'button' : undefined}
@@ -6011,7 +5922,7 @@ export default function NativeContentPage({ page }) {
         }
         const cards = Array.isArray(section.cards) ? section.cards : [];
         const columnsItems = Array.isArray(section.columnsItems) ? section.columnsItems : [];
-        const sectionKey = `${activePath}-${globalSectionIndex}-${section.title || 'section'}`;
+        const sectionKey = `${activePath}-${section.blockId || section.id || globalSectionIndex}`;
         const sectionHtml = normalizeHtmlContent(section.html);
         const sectionJustifyToken = typeof section.justify === 'string' && section.justify.trim()
           ? normalizeHeroJustify(section.justify)
@@ -6092,17 +6003,21 @@ export default function NativeContentPage({ page }) {
             || `section-${globalSectionIndex + 1}`
           )
           && !showFrontHud;
-        const isDynamicBillboardSection = section.id === 'dynamic-billboard' || sectionClassName.includes('test-dynamic-billboard');
+        const isDynamicBillboardSection = sectionClassName.includes('dynamic-billboard');
         const isDynamicCtaSection = sectionClassName.includes('dynamic-cta');
         const isDynamicPageContentSection = sectionClassName.includes('dynamic-page-content');
         const isDynamicRequestSection = sectionClassName.includes('native-dynamic-request');
+        const isCgaAssetsGrid = sectionClassName.includes('legacy-child-native-cga-assets');
         const dynamicSectionBlockId = String(section?.blockId || '').trim();
-        const shouldAnimatePlannedGivingStepIcons = sectionClassName.includes('legacy-child-native-flow-steps');
+        const shouldAnimatePlannedGivingStepIcons = (
+          sectionClassName.includes('legacy-child-native-flow-steps')
+          || sectionClassName.includes('is-columns-preset-planned-giving-steps')
+        );
 
         if (isHiddenPendingInlineCtaReveal) {
           return null;
         }
-        const dynamicSectionPanel = dynamicSectionBlockId ? (hudPanelByBlockId[dynamicSectionBlockId] || null) : null;
+        const dynamicSectionPanel = dynamicSectionBlockId ? (renderHudPanelByBlockId[dynamicSectionBlockId] || null) : null;
         const dynamicSectionHudPanelId = dynamicSectionPanel?.id || '';
         const firstDynamicSectionIndex = dynamicSectionBlockId
           ? (firstDynamicSectionIndexByBlockId[dynamicSectionBlockId] ?? -1)
@@ -6160,7 +6075,7 @@ export default function NativeContentPage({ page }) {
                   dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;
                 }
               }}
-              className={`service-native-hero is-bg-${sectionHeroBgTone} is-justify-${sectionHeroJustify}${showSectionHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBlockHeroHudTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${sectionOwnership.className || ''}`}
+              className={`service-native-hero is-bg-${sectionHeroBgTone} is-justify-${sectionHeroJustify}${section.className ? ` ${section.className}` : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${hasOpenHudPanel ? (isBlockHeroHudTarget ? ' is-hud-focus-target' : ' is-hud-dimmed') : ''}${sectionOwnership.className || ''}`}
               data-block-id={dynamicSectionBlockId || undefined}
               data-mobile-front-hud-selectable={showSectionHud && isMobileFrontHud ? 'true' : undefined}
               data-mobile-front-hud-selected={isMobileHudPanelSelected(dynamicSectionHudPanelId) ? 'true' : undefined}
@@ -6186,7 +6101,6 @@ export default function NativeContentPage({ page }) {
                     setLineInputRef={(lineKey, node) => {
                       heroLineInputRefs.current[lineKey] = node;
                     }}
-                    renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}
                     resolveLineClassName={(line, index) => (
                       resolveHeroLineDisplayClassName(
                         String(line.className || '').trim(),
@@ -6478,14 +6392,14 @@ export default function NativeContentPage({ page }) {
                         />
                       ) : null}
                       {feature.title ? (
-                        <h3 aria-label={Array.isArray(feature.titleHighlights) && feature.titleHighlights.length ? feature.title : undefined}>
+                        <h3 className={feature.titleClassName || undefined} aria-label={Array.isArray(feature.titleHighlights) && feature.titleHighlights.length ? feature.title : undefined}>
                           {Array.isArray(feature.titleHighlights) && feature.titleHighlights.length
                             ? renderHighlightedText(feature.title, feature.titleHighlights)
                             : feature.title}
                         </h3>
                       ) : null}
                       {featureBody.map((paragraph) => <p key={paragraph}>{renderTextWithStrong(paragraph)}</p>)}
-                      {featureHtml ? <SafeRichText as="div" className="native-info-rich-html" html={featureHtml} /> : null}
+                      {featureHtml ? <SafeRichText as="div" className="native-info-rich-html article-feature-body" html={featureHtml} /> : null}
                       {Array.isArray(feature.actions) && feature.actions.length ? (
                         <div className="service-native-action-row">
                           {feature.actions.map((item) => (
@@ -6874,6 +6788,7 @@ export default function NativeContentPage({ page }) {
                       </h3>
                       {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
                       {card.body ? <p>{renderTextWithStrong(card.body)}</p> : null}
+                      {!isCgaAssetsGrid && card.bodyHtml ? <SafeRichText as="div" className="native-info-rich-html service-native-card-rich-body" html={card.bodyHtml} /> : null}
                       {Array.isArray(card.list) && card.list.length ? (
                         <ul className="service-native-card-bullet-list">
                           {card.list.map((item) => (
@@ -6881,6 +6796,7 @@ export default function NativeContentPage({ page }) {
                           ))}
                         </ul>
                       ) : null}
+                      {isCgaAssetsGrid && card.bodyHtml ? <SafeRichText as="div" className="native-info-rich-html service-native-card-rich-body" html={card.bodyHtml} /> : null}
                       {Array.isArray(card.actions) && card.actions.length ? (
                         <div className="service-native-action-row">
                           {card.actions.map((item) => (
@@ -6933,6 +6849,7 @@ export default function NativeContentPage({ page }) {
                             {minimum ? <strong>{minimum}</strong> : null}
                           </p>
                         ) : null}
+                        {card.bodyHtml ? <SafeRichText as="div" className="native-info-rich-html service-native-card-rich-body" html={card.bodyHtml} /> : null}
                         {Array.isArray(card.list) && card.list.length ? (
                           <ul className="service-native-card-bullet-list">
                             {card.list.map((item) => (
@@ -6984,6 +6901,7 @@ export default function NativeContentPage({ page }) {
                         </p>
                       ) : null}
                       {card.body ? <p>{renderTextWithStrong(card.body)}</p> : null}
+                      {card.bodyHtml ? <SafeRichText as="div" className="native-info-rich-html service-native-card-rich-body" html={card.bodyHtml} /> : null}
                       {Array.isArray(card.list) && card.list.length ? (
                         <ul className="service-native-card-bullet-list">
                           {card.list.map((item) => (
@@ -7242,6 +7160,7 @@ export default function NativeContentPage({ page }) {
             placement="dock-inline"
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
+            block={activeHudPanel.block}
             blockLabel={activeHudPanel.label}
             isBillboardEditor={String(activeHudPanel.block.kind || '').trim() === 'billboard'}
             isLivePreview={livePreviewBlockId === activeHudBlockId && Boolean(activeHudBlockId)}
@@ -7257,7 +7176,7 @@ export default function NativeContentPage({ page }) {
             }}
             onDoneEditing={isMobileFrontHud ? closeMobileHudPanel : closeHudBlockEditor}
           />
-          <Suspense fallback={null}>
+          <Suspense fallback={<BlockHudPanelLoading label={activeHudPanel.label} />}>
             <BlockHudPanelHost
               block={activeHudPanel.block}
               pathname={hudContentPath}
@@ -7306,7 +7225,7 @@ export default function NativeContentPage({ page }) {
       ) : null}
 
       {Array.isArray(content.actions) && content.actions.length ? (
-        <section className="service-native-cta-band">
+        <section className="service-native-action-band">
           <div className="ag-panel-rail">
             <div className="service-native-action-row is-centered">
               {content.actions.map((item) => (

@@ -21,7 +21,8 @@ describe('insurance risk guide mobile layout guardrail', () => {
     expect(cssSource).toContain('width: 100%;');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-media {');
     expect(cssSource).toContain('width: min(240px, 100%);');
-    expect(cssSource).toContain('min-height: clamp(250px, 68vw, 320px);');
+    expect(cssSource).toContain('aspect-ratio: 4 / 3;');
+    expect(cssSource).toContain('min-height: 0;');
     expect(cssSource).toContain('margin: clamp(0.75rem, 3vw, 1.25rem) auto 0;');
     expect(cssSource).toContain('justify-self: center;');
   });

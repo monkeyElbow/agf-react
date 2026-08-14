@@ -11,10 +11,10 @@ export const PRESET_FAMILY_CONTRACT = Object.freeze({
     rootClassName: 'native-dynamic-grid',
     runtimePresetClassPrefix: 'is-card-grid-preset-',
   }),
-  cta_band: Object.freeze({
-    cssNamespace: 'cta-band',
-    rootClassName: 'service-native-cta-band',
-    runtimePresetClassPrefix: 'is-cta-band-preset-',
+  billboard: Object.freeze({
+    cssNamespace: 'billboard',
+    rootClassName: 'dynamic-billboard',
+    runtimePresetClassPrefix: 'is-billboard-preset-',
   }),
 });
 

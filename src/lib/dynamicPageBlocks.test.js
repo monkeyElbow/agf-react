@@ -6,7 +6,6 @@ import {
   buildDynamicCalculatorCtaFromBlock,
   buildDynamicBillboardFromBlock,
   buildDynamicColumnsFromBlock,
-  buildDynamicCtaBandFromBlock,
   buildDynamicCtaFormFromBlock,
   buildDynamicFeaturePanelFromBlock,
   buildDynamicGridFromBlock,
@@ -573,7 +572,7 @@ describe('buildDynamicRequestFormFromBlock', () => {
         presetId: 'legacy-impact',
         title: 'A legacy of giving.',
         titleClassName: 'is-atlantean',
-        titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+        titleHighlightsJson: '',
         bgTone: 'blue',
         textTone: 'white',
         spaceBeforeRem: 0,
@@ -588,7 +587,7 @@ describe('buildDynamicRequestFormFromBlock', () => {
 
     expect(runtime).toMatchObject({
       titleClassName: '',
-      titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+      titleHighlightsJson: '',
       bgTone: 'blue',
       textTone: 'white',
       spaceBeforeRem: 3.6,
@@ -615,6 +614,7 @@ describe('buildDynamicIntroFromBlock', () => {
         headingClassName: 'blue',
         headingHighlightsJson: '[{"text":"clarity","className":"mango"}]',
         bodyHtml: '<p>Shared intro body.</p>',
+        bodyColorClassName: 'white',
         extraLine: 'A little more confidence.',
         extraLineTone: 'white',
         bgTone: 'sand',
@@ -635,6 +635,7 @@ describe('buildDynamicIntroFromBlock', () => {
       headingClassName: 'is-atlantean',
       headingHighlights: [{ text: 'clarity', className: 'is-mango' }],
       bodyHtml: '<p>Shared intro body.</p>',
+      bodyColorClassName: 'is-white',
       extraLine: 'A little more confidence.',
       extraLineClassName: 'is-white',
       bgTone: 'sand',
@@ -805,6 +806,22 @@ describe('buildDynamicBillboardFromBlock', () => {
       to: '/services/loans',
     }));
     expect(runtime?.action?.href).toBeUndefined();
+  });
+
+  it('keeps a labeled billboard button visible before its destination is entered', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Choose your next step.',
+        buttonLabel: 'Start here',
+        buttonLinkJson: '',
+      },
+    });
+
+    expect(runtime?.actions).toEqual([
+      expect.objectContaining({ label: 'Start here' }),
+    ]);
   });
 
   it('defaults the planned giving joy billboard heading to Helv for older saved blocks', () => {
@@ -1095,13 +1112,13 @@ describe('buildDynamicLegalCopyFromBlock', () => {
   });
 });
 
-describe('buildDynamicCtaBandFromBlock', () => {
-  it('normalizes CTA band blocks into the shared runtime shape', () => {
-    const runtime = buildDynamicCtaBandFromBlock({
+describe('buildDynamicBillboardFromBlock', () => {
+  it('normalizes migrated CTA content into the shared Billboard runtime shape', () => {
+    const runtime = buildDynamicBillboardFromBlock({
       id: 'dashboard_login_cta',
-      kind: 'cta_band',
+      kind: 'billboard',
       mode: 'dynamic',
-      templateId: 'cta_band',
+      templateId: 'dashboard_login_cta',
       presetId: 'dashboard-login',
       settings: {
         title: 'Already an investor?',
@@ -1117,17 +1134,16 @@ describe('buildDynamicCtaBandFromBlock', () => {
     });
 
     expect(runtime).toMatchObject({
-      presetId: 'dashboard-login',
       title: 'Already an investor?',
       body: '',
       bgTone: 'white',
-      action: {
+      actions: [{
         label: 'Log in to manage',
         href: 'https://secure.agfinancial.org/',
         openInNewWindow: true,
-      },
+      }],
     });
-    expect(runtime?.action?.link).toEqual({
+    expect(runtime?.actions?.[0]?.link).toEqual({
       kind: 'external',
       href: 'https://secure.agfinancial.org/',
       openInNewWindow: true,
@@ -1141,6 +1157,7 @@ describe('buildDynamicCtaBandFromBlock', () => {
       mode: 'dynamic',
       settings: {
         title: 'Church Cash Reserves',
+        titleClassName: 'is-mango',
         bodyHtml: '<p>Build a practical reserve strategy.</p>',
         buttonLabel: 'Explore',
         buttonLinkJson: serializeLinkValue({
@@ -1285,6 +1302,7 @@ describe('buildDynamicFeaturePanelFromBlock', () => {
       mode: 'dynamic',
       settings: {
         title: 'Church Cash Reserves',
+        titleClassName: 'is-mango',
         bodyHtml: '<p>Build a practical reserve strategy.</p>',
         imageUrl: 'https://media.agfinancial.org/church-cash-reserves.jpg',
         imageAlt: 'Church Cash Reserves',
@@ -1299,6 +1317,7 @@ describe('buildDynamicFeaturePanelFromBlock', () => {
 
     expect(runtime).toMatchObject({
       title: 'Church Cash Reserves',
+      titleClassName: 'is-mango',
       bodyHtml: '<p>Build a practical reserve strategy.</p>',
       imageUrl: 'https://media.agfinancial.org/church-cash-reserves.jpg',
       imageAlt: 'Church Cash Reserves',
@@ -1314,6 +1333,7 @@ describe('buildDynamicFeaturePanelFromBlock', () => {
       openInNewWindow: false,
     });
   });
+
 });
 
 describe('buildDynamicSiteFeatureFromBlock', () => {
@@ -1779,7 +1799,7 @@ describe('buildDynamicGridFromBlock', () => {
         cardBodySizeRem: 1.2,
         cardBodyLineHeight: 1.8,
         card1Title: 'First option',
-        card1Body: 'Primary copy',
+        card1Body: '<ul><li>Rich bullet</li></ul>',
         card1IconKey: 'daf-step-1',
         card1IconTone: 'atlantean',
         card1ListJson: '["First bullet","Second bullet"]',
@@ -1813,7 +1833,8 @@ describe('buildDynamicGridFromBlock', () => {
       expect.objectContaining({
         slot: 1,
         title: 'First option',
-        body: 'Primary copy',
+        body: '',
+        bodyHtml: '<ul><li>Rich bullet</li></ul>',
         list: ['First bullet', 'Second bullet'],
         iconKey: 'daf-step-1',
         iconTone: 'atlantean',

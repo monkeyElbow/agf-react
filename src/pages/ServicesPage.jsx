@@ -1,11 +1,10 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import '../styles/home-native.css';
 import '../styles/service-native.css';
 import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
-import FrontHudPanelShell from '../components/FrontHudPanelShell';
-import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import SafeRichText from '../components/SafeRichText';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
@@ -13,6 +12,7 @@ import { useTestimonials } from '../context/TestimonialsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
+import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
 import {
   formatTestimonialAttribution,
@@ -33,8 +33,15 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { defaultServicesCtaSettings } from '../data/ctaFormSeeds';
 import { buildDefaultServicesIntroRuntime } from '../data/servicesOverviewSeed';
-import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
-import FrontHudStructureControls from '../components/FrontHudStructureControls';
+import {
+  BlockHudPanelLoading,
+  FrontHudPageWorkflow,
+  FrontHudPanelShell,
+  FrontHudStructureControls,
+  LazyBlockHudPanelHost as BlockHudPanelHost,
+  preloadBlockHudPanelHost,
+  preloadFrontHudChrome,
+} from '../components/BlockHudPanelHostLoader';
 
 const SERVICES_HERO_PIE_REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const DEFAULT_SERVICES_INTRO = buildDefaultServicesIntroRuntime();
@@ -58,7 +65,6 @@ const SERVICES_HUD_SECTION_KEY_BY_BLOCK_ID = {
   cta_form: 'cta',
   testimonials: 'testimonials',
 };
-const BlockHudPanelHost = lazy(() => import('../components/BlockHudPanelHost'));
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -133,10 +139,6 @@ export default function ServicesPage() {
   const ctaSectionRef = useRef(null);
   const testimonialsSectionRef = useRef(null);
   const {
-    blocksByPath,
-    pageHierarchy,
-    authoringBlocksByPath,
-    authoringPageHierarchy,
     setActiveBlockLock = () => ({ ok: false }),
     clearActiveBlockLock = () => ({ ok: false }),
     getBlockCollaboration = () => null,
@@ -154,14 +156,7 @@ export default function ServicesPage() {
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
-  } = selectFrontHudContentSource({
-    enabled: frontHudEnabled,
-    pathname: '/services',
-    authoringBlocksByPath,
-    blocksByPath,
-    authoringPageHierarchy,
-    pageHierarchy,
-  });
+  } = useManagedContentSource({ pathname: '/services' });
   const { testimonials: testimonialsLibrary } = useTestimonials();
   useNativeEnhancements(pageRef);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -325,6 +320,7 @@ export default function ServicesPage() {
   const hudPanels = useMemo(
     () => buildHudPanelsFromBlocks(managedBlocks, {
       panelIdById: SERVICES_HUD_PANEL_ID_BY_BLOCK_ID,
+      includeHidden: true,
     }).map((panel) => ({
       ...panel,
       sectionKey: SERVICES_HUD_SECTION_KEY_BY_BLOCK_ID[panel.blockId] || '',
@@ -363,6 +359,12 @@ export default function ServicesPage() {
   });
   const frontHudOpacityRatio = clampFrontHudOpacity(frontHudOpacity) / 100;
   const showFrontHud = frontHudEnabled && hudPanels.length > 0;
+  useEffect(() => {
+    if (showFrontHud) {
+      void preloadFrontHudChrome();
+      void preloadBlockHudPanelHost();
+    }
+  }, [showFrontHud]);
   const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanelId);
   const activeHudBlockId = hasOpenHudPanel ? String(activeHudPanel?.blockId || activeHudPanel?.block?.id || '').trim() : '';
   const getHudBlockStateClassName = (blockId) => {
@@ -650,14 +652,15 @@ export default function ServicesPage() {
               <button
                 key={panel.id}
                 type="button"
-                className={`admin-front-hud-dock-tab${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
+                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
                 onClick={() => openHudPanel(panel.id, panel.sectionKey)}
-                aria-label={`Edit ${panel.label}`}
-                title={`Edit ${panel.label}`}
+                aria-label={`Edit ${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
+                title={`Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
                 <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
+                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
               </button>
             ))}
           </div>
@@ -696,10 +699,11 @@ export default function ServicesPage() {
             placement="dock-inline"
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
+            block={activeHudPanel.block}
             blockLabel={activeHudPanel.label}
             onDoneEditing={closeHudDock}
           />
-          <Suspense fallback={null}>
+          <Suspense fallback={<BlockHudPanelLoading label={activeHudPanel.label} />}>
             <BlockHudPanelHost
               block={activeHudPanel.block}
               pathname="/services"

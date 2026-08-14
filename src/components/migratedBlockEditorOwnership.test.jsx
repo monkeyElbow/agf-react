@@ -8,7 +8,6 @@ import {
   BillboardBlockEditor,
   CalculatorCtaBlockEditor,
   CalculatorWidgetBlockEditor,
-  CtaBandBlockEditor,
   CtaFormBlockEditor,
   ColumnsBlockEditor,
   FeaturePanelBlockEditor,
@@ -53,8 +52,6 @@ describe('migrated block editor ownership', () => {
     expect(getMigratedBlockEditorComponent('calculator_intro', 'hud')).toBe(CalculatorWidgetBlockEditor);
     expect(getMigratedBlockEditorComponent('calculator_widget', 'admin')).toBe(CalculatorWidgetBlockEditor);
     expect(getMigratedBlockEditorComponent('calculator_widget', 'hud')).toBe(CalculatorWidgetBlockEditor);
-    expect(getMigratedBlockEditorComponent('cta_band', 'admin')).toBe(CtaBandBlockEditor);
-    expect(getMigratedBlockEditorComponent('cta_band', 'hud')).toBe(CtaBandBlockEditor);
     expect(getMigratedBlockEditorComponent('cta_form', 'admin')).toBe(CtaFormBlockEditor);
     expect(getMigratedBlockEditorComponent('cta_form', 'hud')).toBeNull();
     expect(getMigratedBlockEditorComponent('request_form', 'admin')).toBe(RequestFormBlockEditor);
@@ -74,7 +71,8 @@ describe('migrated block editor ownership', () => {
     expect(getMigratedBlockEditorComponent('billboard', 'admin')).toBe(BillboardBlockEditor);
     expect(getMigratedBlockEditorComponent('billboard', 'hud')).toBe(BillboardBlockEditor);
     expect(getMigratedBlockEditorComponent('columns', 'admin')).toBe(ColumnsBlockEditor);
-    expect(getMigratedBlockEditorComponent('columns', 'hud')).toBe(ColumnsBlockEditor);
+    expect(getMigratedBlockEditorComponent('columns', 'hud')).not.toBe(ColumnsBlockEditor);
+    expect(getMigratedBlockEditorComponent('columns', 'hud')).toBeTruthy();
     expect(getMigratedBlockEditorComponent('feature_panel', 'admin')).toBe(FeaturePanelBlockEditor);
     expect(getMigratedBlockEditorComponent('feature_panel', 'hud')).toBe(FeaturePanelBlockEditor);
     expect(getMigratedBlockEditorComponent('card_grid', 'admin')).toBe(GridBlockEditor);
@@ -94,7 +92,7 @@ describe('migrated block editor ownership', () => {
   });
 
   it('keeps migrated editor sections sourced from one canonical registry path', () => {
-    ['content', 'calculator_cta', 'calculator_intro', 'calculator_widget', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip'].forEach((kind) => {
+    ['content', 'calculator_cta', 'calculator_intro', 'calculator_widget', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip'].forEach((kind) => {
       expect(getBlockEditorSections(kind, 'admin').length).toBeGreaterThan(0);
       expect(getBlockEditorSections(kind, 'hud').length).toBeGreaterThan(0);
     });

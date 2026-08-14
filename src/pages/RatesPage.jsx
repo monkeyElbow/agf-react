@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import '../styles/service-native.css';
-import BlockHudPanelHost from '../components/BlockHudPanelHost';
+import {
+  FrontHudPageWorkflow,
+  FrontHudPanelShell,
+  LazyBlockHudPanelHost as BlockHudPanelHost,
+  preloadBlockHudPanelHost,
+  preloadFrontHudChrome,
+} from '../components/BlockHudPanelHostLoader';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import PageShell from '../components/PageShell';
-import FrontHudPanelShell from '../components/FrontHudPanelShell';
-import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
 import SafeRichText from '../components/SafeRichText';
 import CertificateRatesSheet from '../components/CertificateRatesSheet';
 import IraRatesSheet from '../components/IraRatesSheet';
@@ -14,9 +18,9 @@ import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
+import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
 import { buildDynamicLegalCopyFromBlock, buildDynamicRatesFromBlock } from '../lib/dynamicPageBlocks';
-import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
 
 function clampFrontHudOpacity(value) {
   const numeric = Number(value);
@@ -40,22 +44,13 @@ export default function RatesPage() {
   const managedBlockRef = useRef(null);
   const certificatesSectionRef = useRef(null);
   const iraSectionRef = useRef(null);
-  const {
-    blocksByPath,
-    authoringBlocksByPath,
-    clearActiveBlockLock = () => ({ ok: false }),
-  } = useContentAdmin();
+  const { clearActiveBlockLock = () => ({ ok: false }) } = useContentAdmin();
   const {
     enabled: frontHudEnabled,
     opacity: frontHudOpacity,
     setEnabled: setFrontHudEnabled = null,
   } = useFrontHud();
-  const { blocksByPath: managedBlocksByPath } = selectFrontHudContentSource({
-    enabled: frontHudEnabled,
-    pathname: '/rates',
-    authoringBlocksByPath,
-    blocksByPath,
-  });
+  const { blocksByPath: managedBlocksByPath } = useManagedContentSource({ pathname: '/rates' });
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
   useNativeEnhancements(pageRef);
@@ -96,11 +91,18 @@ export default function RatesPage() {
       dynamicRatesPageBlocks.map((entry) => entry.block),
       {
         panelIdByKind: { rates: 'rates-table' },
+        includeHidden: true,
       },
     ),
     [dynamicRatesPageBlocks],
   );
   const showFrontHud = frontHudEnabled && hudPanels.length > 0;
+  useEffect(() => {
+    if (showFrontHud) {
+      void preloadFrontHudChrome();
+      void preloadBlockHudPanelHost();
+    }
+  }, [showFrontHud]);
   const frontHudOpacityRatio = clampFrontHudOpacity(frontHudOpacity) / 100;
   const activeHudPanel = useMemo(
     () => hudPanels.find((panel) => panel.id === activeHudPanelId) || null,
@@ -204,14 +206,15 @@ export default function RatesPage() {
               <button
                 key={panel.id}
                 type="button"
-                className={`admin-front-hud-dock-tab${!hudDockCollapsed && activeHudPanelId === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
+                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanelId === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
                 onClick={() => openRatesHudPanel(panel.id)}
-                aria-label={`Edit ${panel.label}`}
-                title={`Edit ${panel.label}`}
+                aria-label={`Edit ${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
+                title={`Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
                 <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
+                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
               </button>
             ))}
           </div>
@@ -244,6 +247,7 @@ export default function RatesPage() {
             placement="dock-inline"
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
+            block={activeHudPanel.block}
             blockLabel={activeHudPanel.label}
             onDoneEditing={closeHudDock}
           />

@@ -17,6 +17,20 @@ export const HTML_EDITOR_COLOR_SWATCHES = [
   { id: 'super-grey', label: 'Super Grey', value: '#414042', className: 'is-super-grey' },
   { id: 'white', label: 'White', value: '#ffffff', className: 'is-white' },
 ];
+export const HTML_EDITOR_TEXT_SIZE_OPTIONS = [
+  { id: 'fine-print', label: 'Fine print', commandValue: '1', className: 'is-text-fine-print' },
+  { id: 'small', label: 'Small', commandValue: '2', className: 'is-text-small' },
+  { id: 'body', label: 'Body', commandValue: '3', className: 'is-text-body' },
+  { id: 'large', label: 'Large', commandValue: '4', className: 'is-text-large' },
+  { id: 'lead', label: 'Lead', commandValue: '5', className: 'is-text-lead' },
+  { id: 'display', label: 'Display', commandValue: '6', className: 'is-text-display' },
+];
+const HTML_EDITOR_TEXT_SIZE_CLASS_NAMES = new Set(
+  HTML_EDITOR_TEXT_SIZE_OPTIONS.map((option) => option.className),
+);
+const HTML_EDITOR_TEXT_SIZE_CLASS_BY_COMMAND_VALUE = new Map(
+  HTML_EDITOR_TEXT_SIZE_OPTIONS.map((option) => [option.commandValue, option.className]),
+);
 const HTML_EDITOR_COLOR_PALETTE_OPTIONS = HTML_EDITOR_COLOR_SWATCHES.map((swatch) => ({
   value: swatch.id,
   label: swatch.label,
@@ -163,6 +177,67 @@ export function normalizeHtmlEditorSemanticColors(value) {
   return root.innerHTML.trim();
 }
 
+function applyTextSizeClass(element, nextClassName) {
+  const classes = String(element.getAttribute('class') || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((token) => !HTML_EDITOR_TEXT_SIZE_CLASS_NAMES.has(token));
+  if (nextClassName) {
+    classes.push(nextClassName);
+  }
+  if (classes.length) {
+    element.setAttribute('class', Array.from(new Set(classes)).join(' '));
+  } else {
+    element.removeAttribute('class');
+  }
+}
+
+function normalizeTextSizeElement(node, document) {
+  if (!node || node.nodeType !== document.ELEMENT_NODE) {
+    return;
+  }
+
+  let element = node;
+  const tagName = String(element.tagName || '').toLowerCase();
+  if (tagName === 'font' && element.hasAttribute('size')) {
+    const commandValue = element.getAttribute('size');
+    const replacement = document.createElement('span');
+    Array.from(element.attributes).forEach((attribute) => {
+      if (String(attribute.name || '').toLowerCase() !== 'size') {
+        replacement.setAttribute(attribute.name, attribute.value);
+      }
+    });
+    while (element.firstChild) {
+      replacement.appendChild(element.firstChild);
+    }
+    element.parentNode?.replaceChild(replacement, element);
+    element = replacement;
+    applyTextSizeClass(element, HTML_EDITOR_TEXT_SIZE_CLASS_BY_COMMAND_VALUE.get(commandValue) || '');
+  }
+
+  Array.from(element.childNodes).forEach((child) => normalizeTextSizeElement(child, document));
+}
+
+export function normalizeHtmlEditorTextSizes(value) {
+  const source = String(value || '').trim();
+  if (!source || typeof DOMParser === 'undefined' || !/<font\b[^>]*size\s*=|is-text-/i.test(source)) {
+    return source;
+  }
+  const parser = new DOMParser();
+  const document = parser.parseFromString(`<div>${source}</div>`, 'text/html');
+  const root = document.body.firstElementChild;
+  if (!root) {
+    return source;
+  }
+  Array.from(root.childNodes).forEach((child) => normalizeTextSizeElement(child, document));
+  return root.innerHTML.trim();
+}
+
+function normalizeHtmlEditorFormatting(value) {
+  return normalizeHtmlEditorTextSizes(normalizeHtmlEditorSemanticColors(value));
+}
+
 export default function AdminHtmlEditor({
   value,
   onChange,
@@ -173,13 +248,16 @@ export default function AdminHtmlEditor({
   paletteVariant = 'admin',
   ariaLabel = 'HTML content',
   baseColorClassName = '',
+  className = '',
   onBaseColorChange,
 }) {
   const editorRef = useRef(null);
+  const savedSelectionRangeRef = useRef(null);
   const [sourceMode, setSourceMode] = useState(false);
   const [selectedColorId, setSelectedColorId] = useState(HTML_EDITOR_COLOR_SWATCHES[0]?.id || '');
+  const [selectedTextSizeId, setSelectedTextSizeId] = useState('');
   const htmlValue = useMemo(
-    () => ensureHtml(normalizeHtmlEditorSemanticColors(value)),
+    () => ensureHtml(normalizeHtmlEditorFormatting(value)),
     [value],
   );
 
@@ -210,7 +288,7 @@ export default function AdminHtmlEditor({
   }, [baseColorClassName, selectedColorId]);
 
   function emitChange(nextHtml) {
-    const normalizedHtml = ensureHtml(normalizeHtmlEditorSemanticColors(nextHtml));
+    const normalizedHtml = ensureHtml(normalizeHtmlEditorFormatting(nextHtml));
     if (typeof onChange === 'function') {
       onChange(normalizedHtml);
     }
@@ -229,10 +307,19 @@ export default function AdminHtmlEditor({
     }
 
     editorRef.current.focus();
+    const savedRange = savedSelectionRangeRef.current;
+    if (savedRange && typeof document !== 'undefined') {
+      const selection = document.getSelection?.();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(savedRange);
+      }
+    }
     if (command === 'foreColor') {
       document.execCommand('styleWithCSS', false, true);
     }
     document.execCommand(command, false, commandValue);
+    savedSelectionRangeRef.current = null;
     emitChange(readEditorHtml());
   }
 
@@ -246,7 +333,22 @@ export default function AdminHtmlEditor({
 
   function preserveSelection(event) {
     // Keep focus/selection in the editable surface when clicking toolbar controls.
+    captureSelection();
     event.preventDefault();
+  }
+
+  function captureSelection() {
+    if (!editorRef.current || typeof document === 'undefined') {
+      return;
+    }
+    const selection = document.getSelection?.();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      return;
+    }
+    if (!editorRef.current.contains(selection.anchorNode) || !editorRef.current.contains(selection.focusNode)) {
+      return;
+    }
+    savedSelectionRangeRef.current = selection.getRangeAt(0).cloneRange();
   }
 
   function hasSelectionInEditor() {
@@ -262,13 +364,13 @@ export default function AdminHtmlEditor({
   }
 
   return (
-    <div className={`admin-html-editor${compact ? ' is-compact' : ''}${baseColorClassName ? ` ${baseColorClassName}` : ''}`}>
+    <div className={`admin-html-editor${compact ? ' is-compact' : ''}${baseColorClassName ? ` ${baseColorClassName}` : ''}${className ? ` ${className}` : ''}`}>
       <div className="admin-html-editor-toolbar" role="toolbar" aria-label="Article body formatting">
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('bold')} title="Bold"><strong>B</strong></button>
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('italic')} title="Italic"><em>I</em></button>
         <ColorPalette
           variant={paletteVariant}
-          className="is-compact is-icon-only admin-html-editor-color-group"
+          className="is-compact is-icon-only is-circular admin-html-editor-color-group"
           ariaLabel="Text color"
           options={HTML_EDITOR_COLOR_PALETTE_OPTIONS}
           value={selectedColorId}
@@ -289,6 +391,25 @@ export default function AdminHtmlEditor({
           getOptionLabel={(option) => option.label}
           getOptionShortLabel={(option) => option.shortLabel || option.label}
         />
+        <select
+          className="admin-html-editor-text-size"
+          aria-label="Text size"
+          value={selectedTextSizeId}
+          onMouseDown={captureSelection}
+          onChange={(event) => {
+            const nextOption = HTML_EDITOR_TEXT_SIZE_OPTIONS.find((option) => option.id === event.target.value);
+            if (!nextOption) {
+              return;
+            }
+            setSelectedTextSizeId('');
+            applyCommand('fontSize', nextOption.commandValue);
+          }}
+        >
+          <option value="">Text size</option>
+          {HTML_EDITOR_TEXT_SIZE_OPTIONS.map((option) => (
+            <option key={option.id} value={option.id}>{option.label}</option>
+          ))}
+        </select>
         <div className="admin-html-editor-toolbar-group" role="group" aria-label="Text alignment">
           <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('justifyLeft')} title="Align left">Left</button>
           <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('justifyCenter')} title="Align center">Center</button>

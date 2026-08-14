@@ -14,7 +14,6 @@ import {
 import {
   BillboardBlockEditor,
   CalculatorCtaBlockEditor,
-  CtaBandBlockEditor,
   CtaFormBlockEditor,
   ColumnsBlockEditor,
   FeaturePanelBlockEditor,
@@ -40,7 +39,6 @@ import { remapHighlightsJsonForTextChange } from '../lib/heroHudRanges';
 void [
   BillboardBlockEditor,
   CalculatorCtaBlockEditor,
-  CtaBandBlockEditor,
   ColumnsBlockEditor,
   FeaturePanelBlockEditor,
   CtaFormBlockEditor,
@@ -782,122 +780,6 @@ describe('dynamic block control wiring', () => {
     }
   });
 
-  it('wires cta band controls through the migrated cta band editor', () => {
-    vi.useFakeTimers();
-    const block = getDynamicBlock('cta_band');
-    const onSettingChange = vi.fn();
-
-    try {
-      render(
-        <CtaBandBlockEditor
-          block={block}
-          onSettingChange={onSettingChange}
-          routeOptions={[{ label: 'Impact', value: '/about-us/impact' }]}
-        />,
-      );
-
-      expect(screen.getByText('General CTA')).toBeTruthy();
-      fireEvent.change(screen.getByLabelText('CTA band title'), {
-        target: { value: 'Already connected?' },
-      });
-      fireEvent.change(screen.getByLabelText('CTA band body'), {
-        target: { value: 'Sign in to review your account.' },
-      });
-      fireEvent.change(screen.getByLabelText('Button label'), {
-        target: { value: 'Open dashboard' },
-      });
-
-      expect(onSettingChange).not.toHaveBeenCalledWith('title', 'Already connected?');
-      expect(onSettingChange).not.toHaveBeenCalledWith('body', 'Sign in to review your account.');
-      expect(onSettingChange).not.toHaveBeenCalledWith('buttonLabel', 'Open dashboard');
-
-      act(() => {
-        vi.advanceTimersByTime(350);
-      });
-
-      expect(onSettingChange).toHaveBeenCalledWith('title', 'Already connected?');
-      expect(onSettingChange).toHaveBeenCalledWith('body', 'Sign in to review your account.');
-      expect(onSettingChange).toHaveBeenCalledWith('buttonLabel', 'Open dashboard');
-    } finally {
-      vi.runOnlyPendingTimers();
-      vi.useRealTimers();
-    }
-  });
-
-  it('keeps cta band text drafts stable through stale upstream rerenders and commits on blur', () => {
-    vi.useFakeTimers();
-    const onSettingChange = vi.fn();
-    const routeOptions = [{ title: 'Impact', path: '/about-us/impact' }];
-    const { rerender } = render(
-      <CtaBandBlockEditor
-        block={getDynamicBlock('cta_band')}
-        onSettingChange={onSettingChange}
-        routeOptions={routeOptions}
-      />,
-    );
-
-    try {
-      const titleInput = screen.getByLabelText('CTA band title');
-      fireEvent.change(titleInput, {
-        target: { value: 'Draft dashboard prompt' },
-      });
-
-      expect(titleInput.value).toBe('Draft dashboard prompt');
-      expect(onSettingChange).not.toHaveBeenCalledWith('title', 'Draft dashboard prompt');
-
-      rerender(
-        <CtaBandBlockEditor
-          block={getDynamicBlock('cta_band')}
-          onSettingChange={onSettingChange}
-          routeOptions={routeOptions}
-        />,
-      );
-
-      const rerenderedTitleInput = screen.getByLabelText('CTA band title');
-      expect(rerenderedTitleInput.value).toBe('Draft dashboard prompt');
-
-      fireEvent.blur(rerenderedTitleInput);
-
-      expect(onSettingChange).toHaveBeenCalledWith('title', 'Draft dashboard prompt');
-    } finally {
-      vi.runOnlyPendingTimers();
-      vi.useRealTimers();
-    }
-  });
-
-  it('keeps cta band action links on the route-link editor control path', () => {
-    vi.useFakeTimers();
-    const block = getDynamicBlock('cta_band');
-    const onSettingChange = vi.fn();
-    const buttonUrlField = getField(block, 'buttonLinkJson');
-
-    try {
-      render(
-        <CtaBandBlockEditor
-          block={block}
-          onSettingChange={onSettingChange}
-          routeOptions={[{ path: '/contact-us', title: 'Contact us' }]}
-        />,
-      );
-
-      fireEvent.change(getRouteLinkTextInput(buttonUrlField.label), {
-        target: { value: '/contact-us' },
-      });
-
-      expect(onSettingChange).toHaveBeenCalledWith('buttonLinkJson', '{"kind":"internal","openInNewWindow":false,"to":"/contact-us"}');
-
-      act(() => {
-        vi.advanceTimersByTime(350);
-      });
-
-      expect(onSettingChange).not.toHaveBeenCalledWith('buttonPageRef', '/contact-us');
-      expect(onSettingChange).not.toHaveBeenCalledWith('buttonUrl', '/contact-us');
-    } finally {
-      vi.runOnlyPendingTimers();
-      vi.useRealTimers();
-    }
-  });
-
   it('keeps migrated feature panel action links on the route-link editor control path', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('feature_panel');
@@ -912,7 +794,7 @@ describe('dynamic block control wiring', () => {
         />,
       );
 
-      fireEvent.change(screen.getByRole('combobox'), {
+      fireEvent.change(screen.getByLabelText('Select internal page'), {
         target: { value: '/contact-us' },
       });
 
@@ -1256,6 +1138,20 @@ describe('dynamic block control wiring', () => {
     }
   });
 
+  it('wires the intro body palette to the base body color', () => {
+    const block = getDynamicBlock('intro');
+    const onSettingChange = vi.fn();
+
+    render(<IntroBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Text color' }))
+        .getByRole('radio', { name: 'Mango' }),
+    );
+
+    expect(onSettingChange).toHaveBeenCalledWith('bodyColorClassName', 'is-mango');
+  });
+
   it('keeps intro button links on the buffered route-sync path', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('intro');
@@ -1459,12 +1355,12 @@ describe('dynamic block control wiring', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
     fireEvent.click(
-      within(screen.getByRole('radiogroup', { name: 'Billboard text color' }))
+      within(screen.getByRole('radiogroup', { name: 'Text color' }))
         .getByRole('radio', { name: 'Super Grey' }),
     );
 
     expect(onSettingChange).toHaveBeenCalledWith('titleClassName', 'is-super-grey');
-    expect(onSettingChange).toHaveBeenCalledWith('textTone', 'dark');
+    expect(onSettingChange).toHaveBeenCalledWith('bodyColorClassName', 'is-super-grey');
   });
 
   it('treats the billboard title swatch row as a selection color control when title text is selected', () => {
@@ -2295,7 +2191,7 @@ describe('dynamic block control wiring', () => {
     expect(screen.queryByRole('button', { name: 'Add direct link' })).toBeNull();
   });
 
-  it('keeps the canonical columns preset explicit while wiring shared layout controls', () => {
+  it('keeps columns layout controls wired without a preset banner', () => {
     const block = getDynamicBlock('columns');
     const widthField = getField(block, 'contentWidth');
     const nextOption = widthField.options.find((option) => option.value !== block.settings.contentWidth);
@@ -2303,9 +2199,11 @@ describe('dynamic block control wiring', () => {
 
     render(<ColumnsBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    expect(screen.getByText('Columns Preset')).toBeTruthy();
-    expect(screen.getByText('Flexible columns')).toBeTruthy();
+    expect(screen.queryByText('Columns Preset')).toBeNull();
+    expect(screen.queryByText('Flexible columns')).toBeNull();
+    expect(screen.queryByText('General-purpose columns block for text and photo layouts.')).toBeNull();
     expect(screen.queryByLabelText('Columns style')).toBeNull();
+    expect(screen.getByLabelText('Column 1 body').getAttribute('rows')).toBe('6');
 
     fireEvent.change(screen.getByLabelText(widthField.label), {
       target: { value: nextOption.value },
@@ -2492,7 +2390,7 @@ describe('dynamic block control wiring', () => {
 
     render(<ColumnsBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    expect(screen.getByText('Value cards')).toBeTruthy();
+    expect(screen.queryByText('Value cards')).toBeNull();
     expect(screen.queryByLabelText('Columns style')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add column' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Remove last column' })).toBeNull();

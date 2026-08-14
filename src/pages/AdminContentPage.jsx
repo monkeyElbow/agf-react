@@ -4,6 +4,7 @@ import PageShell from '../components/PageShell';
 import AdminHtmlEditor from '../components/AdminHtmlEditor';
 import BillboardHudEditorPanel from '../components/BillboardHudEditorPanel';
 import AdminNumberInput from '../components/AdminNumberInput';
+import SharedRouteLinkField from '../components/RouteLinkField';
 import { getBlockOwnershipVisual } from '../components/BlockOwnershipOverlay';
 import ColorPalette from '../components/ColorPalette';
 import { HeroDriftNotice } from '../components/HeroHudEditorShared';
@@ -947,7 +948,8 @@ export function FieldControlGrid({ fields, settings, onSettingChange, className 
   );
 }
 
-function RouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, routeOptions = [] }) {
+/* RouteLinkField is shared by HUD and backend editors. */
+function LegacyRouteLinkField({ value, routeRefValue, onChange, onRouteRefChange, routeOptions = [] }) {
   const [routeSearch, setRouteSearch] = useState('');
   const allRouteOptions = useMemo(
     () => sortPages(Array.isArray(routeOptions) ? routeOptions : []),
@@ -1332,7 +1334,8 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
       onChange(serializeLinkValue(linkValue));
     };
     return (
-      <RouteLinkField
+      <SharedRouteLinkField
+        inputLabel={field.label || 'URL / Path'}
         value={routeLinkValue}
         routeRefValue={routeLinkRouteRefValue}
         onChange={(nextValue) => commitRouteLink(nextValue)}
@@ -1362,8 +1365,6 @@ export default function AdminContentPage() {
   const [insertTemplateSearch, setInsertTemplateSearch] = useState('');
   const [draggingBlockId, setDraggingBlockId] = useState('');
   const [dragOverInsertIndex, setDragOverInsertIndex] = useState(-1);
-  const [isDevIdentityEditMode, setIsDevIdentityEditMode] = useState(false);
-  const [devIdentityDraft, setDevIdentityDraft] = useState('');
   const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
   const [revisionEntries, setRevisionEntries] = useState([]);
   const [revisionLoading, setRevisionLoading] = useState(false);
@@ -1404,8 +1405,6 @@ export default function AdminContentPage() {
     moveBlockToIndex,
     availableBlockTemplates,
     getBreadcrumbTrail,
-    renameDevIdentity,
-    setDevIdentityAccentColor = () => null,
     getBlockCollaboration,
     getPageHistory,
     lastSharedSaveResult,
@@ -1683,10 +1682,6 @@ export default function AdminContentPage() {
   }, [filteredInsertChoices, insertChoiceId]);
 
   useEffect(() => {
-    setDevIdentityDraft(devIdentity?.displayName || '');
-  }, [devIdentity]);
-
-  useEffect(() => {
     setRevisionEntries([]);
     setRevisionError('');
     setRevisionBlockSelectionById({});
@@ -1865,8 +1860,14 @@ export default function AdminContentPage() {
     selectedPathSaveResult
     && (selectedPathSaveResult.error || selectedBlockSaveConflict || selectedBlockWasSaved)
   );
+  const sharedSyncFailure = sharedSyncStatus?.lastError;
+  const sharedSyncFailureLabel = sharedSyncFailure
+    ? `${sharedSyncFailure.operation || 'Shared content sync'} failed${sharedSyncFailure.status ? ` (${sharedSyncFailure.status})` : ''}: ${sharedSyncFailure.message}${sharedSyncFailure.endpoint ? ` [${sharedSyncFailure.endpoint}]` : ''}`
+    : '';
   const latestRevisionEntry = revisionEntries[0] || null;
-  const pageSaveFeedback = selectedPathSaveResult?.error
+  const pageSaveFeedback = sharedSyncFailureLabel
+    ? sharedSyncFailureLabel
+    : selectedPathSaveResult?.error
     ? `Last save failed${selectedPathSaveResult.updatedAt ? ` ${formatRelativeTime(selectedPathSaveResult.updatedAt)}` : ''}`
     : selectedPathSaveResult?.status === 'failed'
       ? 'Draft save failed; local changes are still here'
@@ -1915,11 +1916,20 @@ export default function AdminContentPage() {
       .map((entry) => String(entry?.blockId || '').trim())
       .filter(Boolean),
   );
+  const publishOrderChangedBlockIds = selectedPathPublishSummary?.isDeletionOnlyOrderChange
+    ? []
+    : (Array.isArray(selectedPathPublishSummary?.orderChangedBlockIds)
+      ? selectedPathPublishSummary.orderChangedBlockIds
+      : []);
   const publishablePageBlockIds = (Array.isArray(selectedPathPublishSummary?.changedBlockIds) ? selectedPathPublishSummary.changedBlockIds : [])
+    .concat(publishOrderChangedBlockIds)
+    .filter((blockId, index, blockIds) => blockIds.indexOf(blockId) === index)
     .filter((blockId) => !foreignPublishBlockIds.has(String(blockId || '').trim()));
+  const blockedOrderChange = publishOrderChangedBlockIds
+    .some((blockId) => foreignPublishBlockIds.has(String(blockId || '').trim()));
   const canPartiallyPublishPage = Boolean(
     publishBlockedByOtherDraft
-    && !selectedPathPublishSummary?.hasOrderChanges
+    && !blockedOrderChange
     && !selectedPathPublishSummary?.hasPageMetaChanges
     && publishablePageBlockIds.length,
   );
@@ -2058,12 +2068,8 @@ export default function AdminContentPage() {
     try {
       const result = await saveSharedDraftNow(draftSaveNote);
       if (result?.ok) {
-        if (selectedPath && activeEditorBlockId) {
-          clearActiveBlockLock(selectedPath, activeEditorBlockId);
-        }
         setDraftSaveNote('');
         setDraftSaveConfirmation(true);
-        setActiveEditorBlockId(null);
       } else {
         setDraftSaveConfirmation(false);
       }
@@ -2406,81 +2412,6 @@ export default function AdminContentPage() {
         title="Admin: Content Blocks"
         source={pageByPath['/admin/content']?.source ?? null}
         showBadge={false}
-        headerActions={(
-          <div className="admin-content-header-actions">
-            <div className="admin-dev-identity-badge">
-              <span
-                className="admin-dev-identity-initials"
-                style={{ backgroundColor: devIdentity?.accentColor || '#00adbb' }}
-                aria-hidden="true"
-              >
-                {devIdentity?.initials || 'DV'}
-              </span>
-              {isDevIdentityEditMode ? (
-                <div className="admin-dev-identity-edit">
-                  <input
-                    type="text"
-                    className="search-page-input admin-dev-identity-input"
-                    value={devIdentityDraft}
-                    onChange={(event) => setDevIdentityDraft(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Escape') {
-                        setIsDevIdentityEditMode(false);
-                        setDevIdentityDraft(devIdentity?.displayName || '');
-                      }
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                        renameDevIdentity(devIdentityDraft);
-                        setIsDevIdentityEditMode(false);
-                      }
-                    }}
-                    aria-label="Developer display name"
-                  />
-                  <label
-                    className="admin-dev-identity-color-picker"
-                    title="Choose identity color"
-                  >
-                    <span
-                      className="admin-dev-identity-color-swatch"
-                      style={{ backgroundColor: devIdentity?.accentColor || '#00adbb' }}
-                      aria-hidden="true"
-                    />
-                    <input
-                      type="color"
-                      value={devIdentity?.accentColor || '#00adbb'}
-                      onChange={(event) => setDevIdentityAccentColor(event.target.value)}
-                      aria-label="Admin identity color"
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className="action-btn action-btn-outline"
-                    onClick={() => {
-                      renameDevIdentity(devIdentityDraft);
-                      setIsDevIdentityEditMode(false);
-                    }}
-                  >
-                    Save name
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="admin-dev-identity-copy">
-                    <strong>{devIdentity?.displayName || 'Developer'}</strong>
-                    <span>Dev authoring identity</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="action-btn action-btn-outline"
-                    onClick={() => setIsDevIdentityEditMode(true)}
-                  >
-                    Rename
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
       >
         <section className="admin-content-section">
           <div className="admin-content-grid-two">
@@ -2782,12 +2713,18 @@ export default function AdminContentPage() {
                     {selectedPathPublishResult?.receipt ? (
                       <span>
                         Receipt: {selectedPathPublishResult.receipt.scope === 'block' ? 'block' : 'page'} publish
+                        {selectedPathPublishResult.receipt.blockId
+                          ? ` (${selectedPathPublishResult.receipt.blockId})`
+                          : ''}
                         {selectedPathPublishResult.receipt.actor?.displayName
                           ? ` by ${formatActorName(selectedPathPublishResult.receipt.actor)}`
                           : ''}
-                        {selectedPathPublishResult.updatedAt
-                          ? ` ${formatAdminTimestamp(selectedPathPublishResult.updatedAt)}`
+                        {selectedPathPublishResult.receipt.timestamp
+                          ? ` ${formatAdminTimestamp(selectedPathPublishResult.receipt.timestamp)}`
                           : ''}
+                        {selectedPathPublishResult.receipt.verification?.baseSnapshotMatches
+                          ? ' · base verified'
+                          : ' · verification unavailable'}
                       </span>
                     ) : null}
                   </div>

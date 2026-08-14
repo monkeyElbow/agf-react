@@ -8,6 +8,7 @@ const authorityMocks = vi.hoisted(() => ({
   acquireSharedBlockLock: vi.fn(),
   fetchSharedContentBackups: vi.fn(),
   fetchSharedContentSnapshot: vi.fn(),
+  fetchSharedContentRouteSnapshot: vi.fn(),
   fetchSharedPageRevisionHistory: vi.fn(),
   fetchSharedPublishStatus: vi.fn(),
   initializeSharedContentFromSeed: vi.fn(),
@@ -146,6 +147,7 @@ function OperatorProbe() {
       <output data-testid="workflow-other">{String(workflowActivity.otherActorBlockCount)}</output>
       <output data-testid="lock-owner">{collaboration.lockedBy?.displayName || ''}</output>
       <output data-testid="draft-owner">{collaboration.draftedBy?.displayName || ''}</output>
+      <output data-testid="saved-owner">{collaboration.savedBy?.displayName || ''}</output>
       <output data-testid="action-result">{result}</output>
       <button
         type="button"
@@ -196,6 +198,17 @@ function OperatorProbe() {
         }}
       >
         Remove billboard
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          if (!billboardBlock?.id) {
+            return;
+          }
+          admin.moveBlock(PAGE_PATH, billboardBlock.id, 'up');
+        }}
+      >
+        Move billboard up
       </button>
       <button
         type="button"
@@ -276,6 +289,7 @@ function OperatorProbe() {
 function BufferedBlockSaveProbe() {
   const admin = useContentAdmin();
   const [result, setResult] = useState('');
+  const collaboration = admin.getBlockCollaboration(PAGE_PATH, 'hero');
 
   return (
     <div>
@@ -295,6 +309,7 @@ function BufferedBlockSaveProbe() {
         Save buffered hero block
       </button>
       <output data-testid="buffered-save-result">{result}</output>
+      <output data-testid="buffered-saved-owner">{collaboration.savedBy?.displayName || ''}</output>
     </div>
   );
 }
@@ -316,6 +331,12 @@ describe('ContentAdminContext operator smoke and recovery', () => {
 
     const initialState = buildState();
     authorityMocks.fetchSharedContentSnapshot.mockResolvedValue({
+      initialized: true,
+      state: clone(initialState),
+      baseSnapshot: clone(initialState),
+      updatedAt: 1710000000000,
+    });
+    authorityMocks.fetchSharedContentRouteSnapshot.mockResolvedValue({
       initialized: true,
       state: clone(initialState),
       baseSnapshot: clone(initialState),
@@ -520,6 +541,45 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     expect(rehydratedHero.settings.line1Text).toBe('Edited hero');
   }, 15000);
 
+  it('reconciles authoritative ownership metadata after a block save failure without losing local content', async () => {
+    const authoritativeState = buildState({
+      collaborationByPath: {
+        [PAGE_PATH]: {
+          blocks: {
+            hero: {
+              savedBy: OTHER_ACTOR,
+              savedAt: 1710000015000,
+            },
+          },
+          history: [],
+        },
+      },
+    });
+    authorityMocks.saveSharedBlockDraft.mockRejectedValue(new Error('Request timed out'));
+    authorityMocks.fetchSharedContentRouteSnapshot.mockResolvedValue({
+      initialized: true,
+      state: clone(authoritativeState),
+      baseSnapshot: clone(authoritativeState),
+      updatedAt: 1710000015000,
+    });
+
+    render(
+      <ContentAdminProvider initialState={buildBootstrapState(buildState())}>
+        <BufferedBlockSaveProbe />
+      </ContentAdminProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change buffered hero setting' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save buffered hero block' }));
+
+    await waitFor(() => {
+      expect(authorityMocks.saveSharedBlockDraft).toHaveBeenCalled();
+      expect(authorityMocks.fetchSharedContentRouteSnapshot).toHaveBeenCalledWith(PAGE_PATH);
+      expect(screen.getByTestId('buffered-save-result').textContent).toBe('block-save-failed');
+      expect(screen.getByTestId('buffered-saved-owner').textContent).toBe(OTHER_ACTOR.displayName);
+    });
+  });
+
   it('flushes the latest buffered setting before a block draft save', async () => {
     authorityMocks.saveSharedBlockDraft.mockImplementation((pathname, blockId, block, actor, summary) => Promise.resolve({
       ok: true,
@@ -608,6 +668,48 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     expect(authorityMocks.syncSharedBlockDraft).not.toHaveBeenCalled();
     expect(screen.getByTestId('block-ids').textContent).toContain('billboard');
     expect(screen.getByTestId('block-ids').textContent).toContain('billboard_2');
+  });
+
+  it('keeps block reordering dirty until the explicit page draft save', async () => {
+    authorityMocks.saveSharedRouteDraft.mockImplementation((pathname, routeState, _actor, summary) => Promise.resolve({
+      ok: true,
+      state: {
+        ...buildState(),
+        blocksByPath: {
+          ...buildState().blocksByPath,
+          ...(routeState.blocksByPath || {}),
+        },
+        collaborationByPath: routeState.collaborationByPath || {},
+        pathAliases: routeState.pathAliases || {},
+      },
+      baseSnapshot: buildState(),
+      updatedAt: 1710000010550,
+      saveResult: {
+        didSave: true,
+        savedPaths: [pathname],
+        savedBlockIdsByPath: { [pathname]: ['billboard'] },
+        summary,
+      },
+    }));
+
+    renderOperatorProvider(buildState());
+    fireEvent.click(screen.getByRole('button', { name: 'Add billboard' }));
+    await waitFor(() => {
+      expect(authorityMocks.saveSharedRouteDraft).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move billboard up' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('dirty').textContent).toBe('true');
+      expect(authorityMocks.saveSharedRouteDraft).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => {
+      expect(authorityMocks.saveSharedRouteDraft).toHaveBeenCalledTimes(2);
+    });
+    const lastRouteState = authorityMocks.saveSharedRouteDraft.mock.calls.at(-1)?.[1] || {};
+    expect(lastRouteState.blocksByPath?.[PAGE_PATH]?.map((block) => block.id)).toEqual(['billboard', 'hero']);
   });
 
   it('keeps newly added route drafts publishable when draft save omits a live base snapshot', async () => {

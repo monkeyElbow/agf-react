@@ -36,12 +36,12 @@ describe('AdminContentPage block picker guardrails', () => {
     expect(screen.queryByRole('radio', { name: /Card Grid · Investment options/i })).toBeNull();
     expect(screen.getByRole('radio', { name: /Card Grid · Eligibility cards/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Card Grid · Step-by-step cards/i })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: /CTA Band · Dashboard login/i })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /BillboardCanonical family preset/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Columns · Flexible columns/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Columns · Housing allowance/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Columns · Do the math/i })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /Columns · Value cards/i })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: /CTA Band · General CTA/i })).toBeTruthy();
+    expect(screen.queryByRole('radio', { name: /CTA Band/i })).toBeNull();
 
     expect(screen.queryByRole('radio', { name: /CTA Band compatibility · What You Do Matters/i })).toBeNull();
     expect(screen.queryByRole('radio', { name: /Card Grid compatibility · Loan Options Grid/i })).toBeNull();
@@ -58,15 +58,15 @@ describe('AdminContentPage block picker guardrails', () => {
     );
 
     fireEvent.click((await screen.findAllByLabelText(/Insert block at position/i))[0]);
-    fireEvent.click(screen.getByRole('radio', { name: /CTA Band · Dashboard login/i }));
+    fireEvent.click(screen.getByRole('radio', { name: /BillboardCanonical family preset/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Add block' }));
 
     await waitFor(() => {
       const storedBlocks = readStoredState().blocksByPath?.['/test'] || [];
       expect(storedBlocks.some((block) => (
-        String(block?.kind || '').trim() === 'cta_band'
-        && String(block?.presetId || '').trim() === 'dashboard-login'
-        && String(block?.templateId || '').trim() === 'cta_band'
+        String(block?.kind || '').trim() === 'billboard'
+        && String(block?.presetId || '').trim() === 'default'
+        && String(block?.templateId || '').trim() === 'billboard'
       ))).toBe(true);
     });
 

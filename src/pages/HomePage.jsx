@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import '../styles/home-native.css';
 import '../styles/home-service-public.css';
 import { Link, useLocation } from 'react-router-dom';
 import { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
@@ -7,6 +8,7 @@ import PageBlocksRenderer from '../components/blocks/PageBlocksRenderer';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
+import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
@@ -36,8 +38,14 @@ import {
 } from '../lib/homeBlockResolver';
 import { linkValueToEditableHref, parseLinkValueJson } from '../lib/linkValue';
 import { groupHomeRenderItems, planHomeRenderItems } from './homePageRenderPlan';
+import HomeDeferredBlockRun from './HomeDeferredBlockRun';
 import { inspectDynamicHeroSettings, normalizeDynamicHeroSettings } from '../lib/dynamicHeroSettings';
-import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
+import {
+  BlockHudPanelLoading,
+  LazyBlockHudPanelHost as BlockHudPanelHost,
+  preloadBlockHudPanelHost,
+  preloadFrontHudChrome,
+} from '../components/BlockHudPanelHostLoader';
 
 const HOME_NEWSLETTER_FORM_ID = '34a993b6-d0fb-48fd-b3c4-faad7332770c';
 const HOME_TOP_STRIP_HUD_PANEL_ID = 'home-top-strip';
@@ -54,7 +62,6 @@ const HOME_MINISTRY_ALLIES_BLOCK_ID = 'home_ministry_allies';
 const HOME_DO_THE_MATH_BLOCK_ID = 'home_do_the_math';
 // Keep the first useful Home content in the initial viewport so the LCP is not a later scroll-driven feature.
 const HOME_HERO_TEMPORARILY_HIDDEN = false;
-const BlockHudPanelHost = lazy(() => import('../components/BlockHudPanelHost'));
 const FrontHudPanelShell = lazy(() => import('../components/FrontHudPanelShell'));
 const FrontHudPageWorkflow = lazy(() => import('../components/FrontHudPageWorkflow'));
 const MobileFrontHudActionTray = lazy(() => import('../components/MobileFrontHudActionTray'));
@@ -137,10 +144,6 @@ export default function HomePage() {
   const ctaTitleInputRef = useRef(null);
   const heroLineInputRefs = useRef({ line1: null, line2: null, line3: null });
   const {
-    blocksByPath,
-    pageHierarchy,
-    authoringBlocksByPath,
-    authoringPageHierarchy,
     updateBlock = () => {},
     moveBlock = () => {},
     removeBlock = () => {},
@@ -161,14 +164,7 @@ export default function HomePage() {
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
-  } = selectFrontHudContentSource({
-    enabled: frontHudEnabled,
-    pathname: '/',
-    authoringBlocksByPath,
-    blocksByPath,
-    authoringPageHierarchy,
-    pageHierarchy,
-  });
+  } = useManagedContentSource({ pathname: '/' });
   const [showReturnAssist, setShowReturnAssist] = useState(false);
   const [hudDockCollapsed, setHudDockCollapsed] = useState(true);
   const [activeHudPanelId, setActiveHudPanelId] = useState('');
@@ -295,6 +291,7 @@ export default function HomePage() {
     () => buildHudPanelsFromBlocks(managedBlocks, {
       panelIdById: HOME_HUD_PANEL_ID_BY_BLOCK_ID,
       anchorSelectorById: HOME_HUD_ANCHOR_SELECTOR_BY_BLOCK_ID,
+      includeHidden: true,
     }),
     [managedBlocks],
   );
@@ -317,6 +314,7 @@ export default function HomePage() {
       next[blockId] = {
         panelId: panel.id,
         label: panel.label,
+        icon: panel.icon,
         anchorSelector: panel.anchorSelector,
       };
       return next;
@@ -335,6 +333,12 @@ export default function HomePage() {
   });
   const frontHudOpacityRatio = clampFrontHudOpacity(frontHudOpacity) / 100;
   const showFrontHud = frontHudEnabled && hudPanels.length > 0;
+  useEffect(() => {
+    if (showFrontHud) {
+      void preloadFrontHudChrome();
+      void preloadBlockHudPanelHost();
+    }
+  }, [showFrontHud]);
   const isMobileFrontHud = showFrontHud && isMobileFrontHudViewport;
   const hasOpenHudPanel = showFrontHud && !hudDockCollapsed && Boolean(activeHudPanelId);
   const getOwnershipVisualForBlockId = (blockId) => {
@@ -1065,14 +1069,15 @@ export default function HomePage() {
               <button
                 key={panel.id}
                 type="button"
-                className={`admin-front-hud-dock-tab${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
+                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
                 onClick={() => openHudPanel(panel.id, panel.anchorSelector)}
-                aria-label={`Edit ${panel.label}`}
-                title={`Edit ${panel.label}`}
+                aria-label={`Edit ${panel.label}${panel.isHidden ? ' (hidden from visitors)' : ''}`}
+                title={`Edit ${panel.label}${panel.isHidden ? ' — hidden from visitors' : ''}`}
                 {...getDockTabDragProps(panel.id)}
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
                 <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
+                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
               </button>
             ))}
           </div>
@@ -1120,10 +1125,11 @@ export default function HomePage() {
               placement="dock-inline"
               showBlockDiscardAction
               blockId={activeHudPanel.block.id}
+              block={activeHudPanel.block}
               blockLabel={activeHudPanel.label}
               onDoneEditing={isMobileFrontHud ? closeMobileHudPanel : closeHudDock}
             />
-            <Suspense fallback={null}>
+            <Suspense fallback={<BlockHudPanelLoading label={activeHudPanel.label} />}>
               <BlockHudPanelHost
                 block={activeHudPanel.block}
                 pathname="/"
@@ -1144,9 +1150,8 @@ export default function HomePage() {
 
       {homeRenderItems.map((item, index) => {
         if (item?.type === 'block_run' && Array.isArray(item.blocks) && item.blocks.length) {
-          return (
+          const blockRun = (
             <PageBlocksRenderer
-              key={`block-run-${index}`}
               blocks={item.blocks}
               heroHud={homeHeroHudConfig}
               ownershipEnabled={showFrontHud}
@@ -1156,6 +1161,17 @@ export default function HomePage() {
               hudOpacityRatio={frontHudOpacityRatio}
               onHudAnchorClick={showFrontHud && !isMobileFrontHud ? openHudPanel : null}
             />
+          );
+
+          return item.deferred ? (
+            <HomeDeferredBlockRun
+              key={`block-run-${index}`}
+              enabled={!showFrontHud}
+            >
+              {blockRun}
+            </HomeDeferredBlockRun>
+          ) : (
+            <Fragment key={`block-run-${index}`}>{blockRun}</Fragment>
           );
         }
 

@@ -1,7 +1,6 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 
 const STORAGE_KEY = 'agf-consultants-admin-v1';
-const ConsultantsContext = createContext(null);
 
 const loanConsultantStatesByRegion = {
   northwest: ['AK', 'ID', 'MT', 'ND', 'OR', 'SD', 'UT', 'WA', 'WY'],
@@ -98,6 +97,17 @@ const defaultConsultantsByService = {
     },
   ],
 };
+
+const defaultConsultantsValue = {
+  consultantsByService: defaultConsultantsByService,
+  getConsultants: (service) => defaultConsultantsByService[service] || [],
+  addConsultant: () => null,
+  updateConsultant: () => {},
+  removeConsultant: () => {},
+  resetConsultants: () => {},
+};
+
+const ConsultantsContext = createContext(defaultConsultantsValue);
 
 function makeId(service) {
   return `${service}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -284,9 +294,5 @@ export function ConsultantsProvider({ children }) {
 }
 
 export function useConsultants() {
-  const context = useContext(ConsultantsContext);
-  if (!context) {
-    throw new Error('useConsultants must be used within ConsultantsProvider');
-  }
-  return context;
+  return useContext(ConsultantsContext);
 }

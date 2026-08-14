@@ -237,6 +237,32 @@ describe('CtaHudEditorPanel', () => {
     expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
   });
 
+  it('keeps the submit preview on the white form panel instead of the outer CTA surface', () => {
+    const { container } = renderPanel({ bgTone: 'blue' });
+    const preview = container.querySelector('.admin-cta-hud-button-preview');
+
+    expect(preview).toBeTruthy();
+    expect(preview.className).not.toContain('is-bg-blue');
+  });
+
+  it('exposes the rendered CTA supporting copy as an editable buffered field', () => {
+    const onSubtitleChange = vi.fn();
+    renderPanel({
+      subtitle: 'Share a few details and we will be in touch.',
+      onSubtitleChange,
+    });
+
+    const supportingCopy = screen.getByLabelText('Supporting Copy');
+    expect(supportingCopy.tagName).toBe('TEXTAREA');
+    expect(supportingCopy.value).toBe('Share a few details and we will be in touch.');
+
+    fireEvent.change(supportingCopy, { target: { value: 'We will call you soon.' } });
+    fireEvent.blur(supportingCopy);
+    expect(onSubtitleChange).toHaveBeenCalledWith('We will call you soon.', {
+      previousValue: 'Share a few details and we will be in touch.',
+    });
+  });
+
   it('renders compact CTA field rows and opens a dedicated editor sheet on selection', () => {
     const { container } = renderPanel({
       fields: [

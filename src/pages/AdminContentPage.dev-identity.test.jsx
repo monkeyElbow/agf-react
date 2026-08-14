@@ -13,7 +13,7 @@ vi.mock('../context/TestimonialsContext', () => ({
   }),
 }));
 
-describe('AdminContentPage dev identity surfaces', () => {
+describe('AdminContentPage identity behavior', () => {
   beforeEach(() => {
     window.localStorage.clear();
     vi.spyOn(window, 'confirm').mockReturnValue(true);
@@ -61,7 +61,6 @@ describe('AdminContentPage dev identity surfaces', () => {
 
     fireEvent.click(screen.getAllByText('Hero')[0]);
 
-    expect(screen.getByText('Taylor QA')).toBeTruthy();
     expect(screen.queryByText('Editing: Other Dev')).toBeNull();
     expect(screen.queryByText(/Editing now:/)).toBeNull();
     expect(view.container.querySelector('.admin-selected-block-lock-banner')).toBeNull();
@@ -121,7 +120,7 @@ describe('AdminContentPage dev identity surfaces', () => {
     expect(screen.queryByRole('button', { name: 'Take over draft' })).toBeNull();
   });
 
-  it('offers an identity color picker beside the editable admin name', () => {
+  it('keeps dev identity controls out of the content editor', () => {
     window.localStorage.setItem(DEV_IDENTITY_STORAGE_KEY, JSON.stringify({
       userId: 'dev-current',
       displayName: 'Taylor QA',
@@ -139,14 +138,9 @@ describe('AdminContentPage dev identity surfaces', () => {
       </ContentAdminProvider>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
-
-    const picker = screen.getByLabelText('Admin identity color');
-    expect(picker.value).toBe('#00adbb');
-
-    fireEvent.change(picker, { target: { value: '#f26660' } });
-
-    expect(JSON.parse(window.localStorage.getItem(DEV_IDENTITY_STORAGE_KEY)).accentColor).toBe('#f26660');
-    expect(screen.getByLabelText('Developer display name').value).toBe('Taylor QA');
+    expect(screen.queryByText('Dev authoring identity')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Rename' })).toBeNull();
+    expect(screen.queryByLabelText('Developer display name')).toBeNull();
+    expect(screen.queryByLabelText('Admin identity color')).toBeNull();
   });
 });

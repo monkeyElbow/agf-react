@@ -43,28 +43,30 @@ describe('calculators native page content', () => {
     expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
 
     const cssSource = readSource('../styles/service-native.css');
+    const calculatorCssSource = readSource('../styles/service-native-calculators.css');
+    const calculatorStyles = `${cssSource}\n${calculatorCssSource}`;
     expect(cssSource).not.toContain('.native-info-page--calculators .service-native-hero');
     expect(cssSource).toContain('.native-functional-page-head--utility,');
     expect(cssSource).toContain('padding: clamp(2.1rem, 4vw, 3rem) 0 clamp(1.15rem, 3vw, 1.9rem);');
     expect(cssSource).toContain('.native-functional-page-head--utility h1,');
     expect(cssSource).toContain('text-align: left;');
-    expect(cssSource).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection,');
-    expect(cssSource).toContain('.native-info-page--calculators .calculators-native-page-head + .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection {\n  padding-top: 0;\n}');
-    expect(cssSource).toContain('.calculators-native-collection .service-native-grid {\n  margin-top: 0;');
-    expect(cssSource).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-grid {\n  margin-top: 0;\n}');
-    expect(cssSource).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card {');
-    expect(cssSource).toContain('padding: clamp(1.75rem, 2.6vw, 2.25rem);');
-    expect(cssSource).toContain('transform 240ms cubic-bezier(0.22, 1, 0.36, 1),');
-    expect(cssSource).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:is(:hover, :focus-within) {');
-    expect(cssSource).toContain('transform: translateY(-2px) scale(1.004);');
-    expect(cssSource).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card h3 {');
-    expect(cssSource).toContain('min-height: 0;');
-    expect(cssSource).toContain('font-size: clamp(1.95rem, 3.05vw, 2.52rem);');
-    expect(cssSource).toContain('letter-spacing: -0.03em;');
-    expect(cssSource).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n) h3 {\n  color: var(--ag-color-super-grey);\n}');
-    expect(cssSource).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card > div > p:not(.service-native-card-subtitle):not(.service-native-card-phone) {');
-    expect(cssSource).toContain('font-size: clamp(1.02rem, 1.55vw, 1.18rem);');
-    expect(cssSource).toContain('font-weight: 400;');
+    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection,');
+    expect(calculatorStyles).toContain('.native-info-page--calculators .calculators-native-page-head + .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection {\n  padding-top: 0;\n}');
+    expect(calculatorStyles).toContain('.calculators-native-collection .service-native-grid {\n  margin-top: 0;');
+    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-grid {\n  margin-top: 0;\n}');
+    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card {');
+    expect(calculatorStyles).toContain('padding: clamp(1.75rem, 2.6vw, 2.25rem);');
+    expect(calculatorStyles).toContain('transform 240ms cubic-bezier(0.22, 1, 0.36, 1),');
+    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:is(:hover, :focus-within) {');
+    expect(calculatorStyles).toContain('transform: translateY(-2px) scale(1.004);');
+    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card h3 {');
+    expect(calculatorStyles).toContain('min-height: 0;');
+    expect(calculatorStyles).toContain('font-size: clamp(1.95rem, 3.05vw, 2.52rem);');
+    expect(calculatorStyles).toContain('letter-spacing: -0.03em;');
+    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card:nth-child(3n) h3 {\n  color: var(--ag-color-super-grey);\n}');
+    expect(calculatorStyles).toContain('.native-info-page--calculators .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).calculators-native-collection .service-native-card > div > p:not(.service-native-card-subtitle):not(.service-native-card-phone) {');
+    expect(calculatorStyles).toContain('font-size: clamp(1.02rem, 1.55vw, 1.18rem);');
+    expect(calculatorStyles).toContain('font-weight: 400;');
   });
 
   it('keeps standalone calculator routes shell-only with block-owned intro, widget, and contact form sections', () => {
@@ -107,7 +109,7 @@ describe('calculators native page content', () => {
       expect(blocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
     });
 
-    const cssSource = readSource('../styles/service-native.css');
+    const cssSource = `${readSource('../styles/service-native.css')}\n${readSource('../styles/service-native-calculators.css')}`;
     expect(cssSource).toContain('.native-functional-page-head--utility h1,');
     expect(cssSource).toContain('.native-info-page--calculator-tool .calculator-tool-native-page-head + .service-native-section.calculator-tool-shell {');
     expect(cssSource).not.toContain('.native-info-page--calculator-tool .service-native-hero');

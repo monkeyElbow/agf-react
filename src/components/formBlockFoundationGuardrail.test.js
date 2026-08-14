@@ -18,7 +18,7 @@ describe('form block foundation guardrail', () => {
     const nativeSource = readSource('./NativeContentPage.jsx');
     const pageBlocksSource = readSource('./blocks/PageBlocksRenderer.jsx');
     const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
-    const stylesSource = readSource('../styles.css');
+    const adminStylesSource = readSource('../styles/admin.css');
 
     expect(editorSource).toContain("from '../../blocks/foundation/forms'");
     expect(dynamicCtaSource).toContain("from '../blocks/foundation/forms'");
@@ -43,9 +43,9 @@ describe('form block foundation guardrail', () => {
     expect(editorSource).toContain('<span>Full width</span>');
     expect(editorSource).toContain('swatchVariant="hud"');
     expect(editorSource).toContain('admin-request-form-swatch-palette');
-    expect(stylesSource).toContain('.admin-content-field-list label.admin-content-checkbox-row {');
-    expect(stylesSource).toContain('.admin-request-form-step-field-behavior {');
-    expect(stylesSource).toContain('.admin-request-form-step-field-behavior-toggles {');
-    expect(stylesSource).toContain('.admin-swatch-list.admin-request-form-swatch-palette {');
+    expect(adminStylesSource).toContain('.admin-content-field-list label.admin-content-checkbox-row {');
+    expect(adminStylesSource).toContain('.admin-request-form-step-field-behavior {');
+    expect(adminStylesSource).toContain('.admin-request-form-step-field-behavior-toggles {');
+    expect(adminStylesSource).toContain('.admin-swatch-list.admin-request-form-swatch-palette {');
   });
 });

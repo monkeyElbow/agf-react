@@ -6,7 +6,6 @@ import { calculatorIntroBlockDefinition } from '../definitions/calculatorIntro.d
 import { calculatorWidgetBlockDefinition } from '../definitions/calculatorWidget.definition';
 import { cardGridBlockDefinition } from '../definitions/cardGrid.definition';
 import { columnsBlockDefinition } from '../definitions/columns.definition';
-import { ctaBandBlockDefinition } from '../definitions/ctaBand.definition';
 import { ctaFormBlockDefinition } from '../definitions/ctaForm.definition';
 import { featurePanelBlockDefinition } from '../definitions/featurePanel.definition';
 import { heroBlockDefinition } from '../definitions/hero.definition';
@@ -30,7 +29,6 @@ const MIGRATED_BLOCK_DEFINITIONS = Object.freeze({
   calculator_cta: calculatorCtaBlockDefinition,
   calculator_intro: calculatorIntroBlockDefinition,
   calculator_widget: calculatorWidgetBlockDefinition,
-  cta_band: ctaBandBlockDefinition,
   cta_form: ctaFormBlockDefinition,
   request_form: requestFormBlockDefinition,
   hero: heroBlockDefinition,

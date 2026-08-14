@@ -135,7 +135,7 @@ describe('implementation-ownership.service-native style ownership', () => {
   });
 
   it('keeps route-scoped dynamic block styling explicitly classified', () => {
-    const source = readSource('./service-native.css');
+    const source = `${readSource('./service-native.css')}\n${readSource('./service-native-calculators.css')}`;
 
     expect(getRouteScopedDynamicSelectorClasses(source)).toEqual(
       Object.keys(CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS).sort(),
@@ -165,7 +165,7 @@ describe('implementation-ownership.service-native style ownership', () => {
   });
 
   it('keeps calculator tool content shells from inheriting default blank content-block spacing', () => {
-    const source = readSource('./service-native.css');
+    const source = `${readSource('./service-native.css')}\n${readSource('./service-native-calculators.css')}`;
 
     [
       '.native-info-page--calculator-tool .service-native-section.calculator-tool-shell {',
@@ -275,7 +275,7 @@ describe('implementation-ownership.service-native style ownership', () => {
   });
 
   it('keeps migrated dynamic block style hooks block-owned instead of page-prefixed', () => {
-    const source = readSource('./service-native.css');
+    const source = `${readSource('./service-native.css')}\n${readSource('./service-native-calculators.css')}`;
 
     [
       '.native-info-page--contact-us .native-dynamic-request.contact-us-request',

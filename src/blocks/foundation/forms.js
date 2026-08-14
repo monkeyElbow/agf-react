@@ -50,6 +50,7 @@ const PREVIOUS_FOLLOW_UP_SUBMIT_LABEL = 'Follow-up with me';
 
 const CTA_FORM_SPECIFIC_FIELD_IDS = Object.freeze([
   'title',
+  'subtitle',
   'titleClassName',
   'titleHighlightsJson',
   'bodyHtml',

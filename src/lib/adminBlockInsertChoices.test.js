@@ -15,7 +15,9 @@ describe('admin block insert choices', () => {
       canonicalLabel: 'Card Grid',
       isCompatibility: false,
     });
-    const cardGridTemplate = getAllBlockTemplateBlueprints().find((template) => template?.isAddBlockDefault);
+    const cardGridTemplate = getAllBlockTemplateBlueprints().find((template) => (
+      template?.isAddBlockDefault && template?.kind === 'card_grid'
+    ));
     expect(cardGridTemplate).toMatchObject({
       kind: 'card_grid',
       templateId: 'card_grid',
@@ -26,13 +28,7 @@ describe('admin block insert choices', () => {
       },
     });
     expect(choices.some((choice) => choice.kind === 'card_grid' && choice.presetId === 'investment-options')).toBe(false);
-    expect(choices.find((choice) => choice.kind === 'cta_band' && choice.presetId === 'dashboard-login')).toMatchObject({
-      name: 'CTA Band · Dashboard login',
-      createTemplateId: 'dynamic:cta_band:dashboard-login',
-      editorType: 'cta_band',
-      canonicalLabel: 'CTA Band',
-      isCompatibility: false,
-    });
+    expect(choices.some((choice) => choice.kind === 'billboard' && choice.presetId === 'cta-band')).toBe(false);
     expect(choices.find((choice) => choice.kind === 'columns' && choice.presetId === 'default')).toMatchObject({
       name: 'Columns · Flexible columns',
       createTemplateId: 'dynamic:columns:default',
@@ -46,11 +42,11 @@ describe('admin block insert choices', () => {
       isCompatibility: false,
     });
     expect(choices.some((choice) => choice.kind === 'site_feature')).toBe(false);
-    expect(choices.find((choice) => choice.kind === 'cta_band' && choice.presetId === 'default')).toMatchObject({
-      name: 'CTA Band · General CTA',
-      createTemplateId: 'dynamic:cta_band:default',
-      editorType: 'cta_band',
-      canonicalLabel: 'CTA Band',
+    expect(choices.find((choice) => choice.kind === 'billboard' && choice.presetId === 'default')).toMatchObject({
+      name: 'Billboard',
+      createTemplateId: 'dynamic:billboard:default',
+      editorType: 'billboard',
+      canonicalLabel: 'Billboard',
       isCompatibility: false,
     });
   });
@@ -73,7 +69,7 @@ describe('admin block insert choices', () => {
     const choices = buildAdminBlockInsertChoices(getAllBlockTemplateBlueprints(), { mode: 'static' });
 
     expect(choices.some((choice) => choice.kind === 'card_grid' && choice.presetId === 'default' && !choice.isCompatibility)).toBe(false);
-    expect(choices.some((choice) => choice.kind === 'cta_band' && choice.presetId === 'default' && !choice.isCompatibility)).toBe(false);
+    expect(choices.some((choice) => choice.kind === 'cta_band')).toBe(false);
 
     expect(choices.some((choice) => choice.templateId === 'rates_table')).toBe(false);
     expect(choices.some((choice) => choice.isCompatibility)).toBe(false);
@@ -185,7 +181,6 @@ describe('admin block insert choices', () => {
       'columns_housing_allowance',
       'columns_do_the_math',
       'columns_value_cards',
-      'cta_band_default',
       'impact_stat_default',
       'split_panel_default',
     ];
@@ -211,7 +206,8 @@ describe('admin block insert choices', () => {
     expect(choices.find((choice) => choice.kind === 'request_form')?.createTemplateId).toBe('request_form_default');
     expect(choices.find((choice) => choice.kind === 'intro')?.createTemplateId).toBe('intro_default');
     expect(choices.find((choice) => choice.kind === 'newsletter')?.createTemplateId).toBe('newsletter_default');
-    expect(choices.find((choice) => choice.kind === 'split_panel')?.createTemplateId).toBe('split_panel_default');
+    expect(choices.find((choice) => choice.kind === 'split_panel')).toBeUndefined();
+    expect(choices.find((choice) => choice.kind === 'photo_column')).toBeUndefined();
     expect(choices.find((choice) => choice.kind === 'calculator_cta')).toBeUndefined();
     expect(choices.find((choice) => choice.kind === 'site_feature')).toBeUndefined();
   });

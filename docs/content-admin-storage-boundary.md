@@ -43,6 +43,12 @@ Snapshot audit scripts and guardrail tests still read `dev-data/*.json` directly
 
 The older method names remain as compatibility aliases while existing tests and scripts are moved over gradually.
 
+Every successful page or block publish also returns one receipt with the same durable shape:
+`route`, `scope`, `blockId` when scoped, `draftRevision`, `publishedRevision`, `actor`,
+`timestamp`, and `verification.baseSnapshotMatches`. The JSON adapter and a future database
+adapter must produce this receipt from the same publish transaction; the browser may display it,
+but must not manufacture it.
+
 ## Future SQLite Shape
 
 A future SQLite adapter should implement the same operations and keep UI-facing return payloads compatible. Likely tables:

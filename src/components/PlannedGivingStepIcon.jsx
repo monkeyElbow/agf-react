@@ -26,6 +26,22 @@ const STEP_ICON_SVG_BY_KEY = Object.freeze({
 
 export const PLANNED_GIVING_STEP_ICON_KEYS = Object.freeze(Object.keys(STEP_ICON_SVG_BY_KEY));
 
+// This is the only public list the editor uses. The SVG keys stay implementation
+// details of the approved asset library instead of becoming free-text settings.
+export const PLANNED_GIVING_STEP_ART_OPTIONS = Object.freeze([
+  Object.freeze({ value: 'cga-step-2', label: 'Gift annuity · plan' }),
+  Object.freeze({ value: 'cga-step-3', label: 'Gift annuity · finish' }),
+  Object.freeze({ value: 'crt-step-2', label: 'Trust · plan' }),
+  Object.freeze({ value: 'daf-step-1', label: 'DAF · start' }),
+  Object.freeze({ value: 'daf-step-2', label: 'DAF · give' }),
+  Object.freeze({ value: 'daf-step-3', label: 'DAF · recommend' }),
+  Object.freeze({ value: 'endowments-step-1', label: 'Endowment · start' }),
+  Object.freeze({ value: 'endowments-step-3', label: 'Endowment · finish' }),
+  Object.freeze({ value: 'mif-step-2', label: 'Ministry fund · give' }),
+  Object.freeze({ value: 'mif-step-3', label: 'Ministry fund · finish' }),
+  Object.freeze({ value: 'qcd-step-3', label: 'QCD · finish' }),
+]);
+
 export default function PlannedGivingStepIcon({
   iconKey,
   tone = '',

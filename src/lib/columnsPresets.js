@@ -1,5 +1,28 @@
 const COLUMNS_PRESET_DEFINITIONS = Object.freeze([
   Object.freeze({
+    id: 'planned-giving-steps',
+    label: 'Planned Giving Steps',
+    description: 'Numbered, art-led steps for planned-giving explanations.',
+    templateIds: Object.freeze([]),
+    defaults: Object.freeze({
+      columnsStyle: 'retirement',
+      bgTone: 'white',
+      contentWidth: 'browser',
+      columns: 'three',
+    }),
+    editor: Object.freeze({
+      layoutFieldIds: Object.freeze(['contentWidth']),
+      maxColumns: 4,
+      fixedColumns: false,
+      allowBackgroundTone: true,
+      allowPhotoColumns: false,
+      allowTextColumnImages: false,
+      allowColumnActions: true,
+      allowColumnWidthShare: false,
+      editorMode: 'planned-giving-steps',
+    }),
+  }),
+  Object.freeze({
     id: 'default',
     label: 'Flexible columns',
     description: 'General-purpose columns block for text and photo layouts.',

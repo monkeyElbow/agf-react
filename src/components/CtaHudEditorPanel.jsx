@@ -66,11 +66,13 @@ export default function CtaHudEditorPanel({
   submitStyle = 'blue',
   submitTone = 'atlantean',
   bodyHtml = '',
+  subtitle = '',
   bodyColorClassName = '',
   titleColor = '',
   titleSelection = { text: '' },
   setTitleInputRef,
   onBodyHtmlChange,
+  onSubtitleChange,
   onBodyColorChange,
   onTitleChange,
   onTitleSelectionCapture,
@@ -115,11 +117,23 @@ export default function CtaHudEditorPanel({
       commit: onSubmitLabelChange,
     },
   ]), [onSubmitLabelChange, settings.submitLabel]);
+  const subtitleDraftFields = useMemo(() => ([
+    {
+      id: 'subtitle',
+      value: subtitle,
+      commit: onSubtitleChange,
+    },
+  ]), [onSubtitleChange, subtitle]);
   const {
     draftValues: submitLabelDraftValues,
     updateDraftValue: updateSubmitLabelDraft,
     commitDraftValue: commitSubmitLabelDraft,
   } = useBufferedFieldDrafts({ fields: submitLabelDraftFields, sourceRevision });
+  const {
+    draftValues: subtitleDraftValues,
+    updateDraftValue: updateSubtitleDraft,
+    commitDraftValue: commitSubtitleDraft,
+  } = useBufferedFieldDrafts({ fields: subtitleDraftFields, sourceRevision });
   const [activeFieldIndex, setActiveFieldIndex] = useState(fieldList.length ? 0 : -1);
   const [isFieldEditorOpen, setIsFieldEditorOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('heading');
@@ -343,6 +357,16 @@ export default function CtaHudEditorPanel({
         </div>
         <div className="admin-cta-hud-message-submit-grid">
           <div className="admin-front-hud-field-group admin-cta-hud-message-submit-section">
+            <label className="admin-front-hud-field">
+              <span>Supporting Copy</span>
+              <textarea
+                rows={2}
+                value={subtitleDraftValues.subtitle ?? String(subtitle || '')}
+                onChange={(event) => updateSubtitleDraft('subtitle', event.target.value)}
+                onBlur={() => commitSubtitleDraft('subtitle')}
+                placeholder="Optional supporting copy above the form"
+              />
+            </label>
             <span className="admin-front-hud-control-label">Lead Copy</span>
             <div className="admin-cta-hud-body-editor">
               <AdminHtmlEditor
@@ -404,10 +428,14 @@ export default function CtaHudEditorPanel({
             ) : null}
             <div className="admin-front-hud-row admin-cta-hud-submit-row">
               <span>Button Preview</span>
-              <div className="admin-billboard-hud-button-preview-row">
-                <span className={toPreviewButtonClassName(submitStyle, submitTone)} aria-hidden="true">
+              <div className="admin-billboard-hud-button-preview-row admin-button-preview-surface admin-cta-hud-button-preview">
+                <button
+                  type="button"
+                  className={`${toPreviewButtonClassName(submitStyle, submitTone)} admin-button-preview-button`}
+                  onClick={(event) => event.preventDefault()}
+                >
                   {String((submitLabelDraftValues.submitLabel ?? settings.submitLabel) || '').trim() || 'Follow up with me'}
-                </span>
+                </button>
               </div>
             </div>
           </div>

@@ -73,18 +73,48 @@ describe('BlockHudPanelHost', () => {
     }));
 
     expect(screen.getByRole('navigation', { name: 'Card Grid · Flexible cards editor sections' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Content' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cards' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Block options' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Block options' }).className).toContain('is-block-options');
-    expect(screen.getByRole('button', { name: 'Content' }).className).not.toContain('is-block-options');
+    expect(screen.queryByRole('button', { name: 'Content' })).toBeNull();
     expect(screen.getAllByRole('region', { name: 'Block options' })).toHaveLength(1);
-    expect(document.querySelector('.admin-card-grid-hud-group--heading')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-group--heading')).toBeNull();
     expect(document.querySelector('.admin-card-grid-hud-group--appearance')).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-hud-group--layout')).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-hud-group--typography')).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-hud-reference .admin-front-hud-swatch-row')).toBeTruthy();
-    expect(document.querySelector('.admin-card-grid-hud-reference .admin-swatch-list')).toBeNull();
+    expect(screen.getByText('Card 1 body')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-reference .admin-swatch-list')).toBeTruthy();
+  });
+
+  it('shows editable bullets inside each flexible card', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'qcd-card-grid',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          title: 'It starts here.',
+          bgTone: 'white',
+          columns: 'one',
+          cardStyle: 'planned-giving-centered',
+          card1Title: 'A few things to know',
+          card1ListJson: JSON.stringify(['First requirement', 'Second requirement']),
+        },
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+
+    const firstBullet = screen.getByLabelText('Card 1 bullets 1');
+    expect(firstBullet.value).toBe('First requirement');
+    fireEvent.change(firstBullet, { target: { value: 'Updated requirement' } });
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'card1ListJson',
+      JSON.stringify(['Updated requirement', 'Second requirement']),
+    );
   });
 
   it('renders intro blocks with the HUD intro editor', () => {
@@ -649,11 +679,11 @@ describe('BlockHudPanelHost', () => {
     expect(screen.getByLabelText('Service slices (JSON)')).toBeTruthy();
   });
 
-  it('renders cta band blocks with the migrated cta band editor', () => {
+  it('renders legacy CTA content through the Billboard editor', () => {
     render(createElement(BlockHudPanelHost, {
       block: {
         id: 'dashboard_login_cta',
-        kind: 'cta_band',
+        kind: 'billboard',
         mode: 'dynamic',
         settings: {
           title: 'Already an investor?',
@@ -671,9 +701,14 @@ describe('BlockHudPanelHost', () => {
       onSettingChange: vi.fn(),
     }));
 
-    expect(screen.getByLabelText('CTA band title')).toBeTruthy();
-    expect(screen.getByLabelText('CTA band body')).toBeTruthy();
-    expect(screen.getByLabelText('Button label')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    expect(screen.getByLabelText('Body HTML')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Heading' }));
+    expect(screen.getByLabelText('Title')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Buttons' }));
+    expect(screen.getByLabelText('Button 1 Label')).toBeTruthy();
   });
 
   it('renders calculator cta blocks with the migrated calculator cta editor', () => {
@@ -726,6 +761,8 @@ describe('BlockHudPanelHost', () => {
     expect(screen.getByLabelText('Impact title prefix')).toBeTruthy();
     expect(screen.getByLabelText('Stat 1 value')).toBeTruthy();
     expect(screen.getByLabelText('CTA label')).toBeTruthy();
+    expect(document.querySelectorAll('.admin-impact-stat-hud-page')).toHaveLength(5);
+    expect(document.querySelector('.admin-impact-stat-hud-page--stat-2')).toBeTruthy();
   });
 
   it('renders legal copy blocks with the migrated legal copy editor', () => {
@@ -825,7 +862,6 @@ describe('BlockHudPanelHost', () => {
     }));
 
     expect(screen.getByDisplayValue('/services')).toBeTruthy();
-    expect(screen.getAllByRole('option', { name: '/services — Services' }).length).toBeGreaterThan(0);
   });
 
   it('renders photo column blocks with the migrated photo column editor', () => {

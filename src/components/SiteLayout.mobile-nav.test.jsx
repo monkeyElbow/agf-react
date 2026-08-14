@@ -121,6 +121,21 @@ describe('SiteLayout mobile nav drawer', () => {
     expect(document.getElementById('site-nav-dropdown-services')).toBeTruthy();
   });
 
+  it('shows the active admin nickname in the admin-color account badge', () => {
+    mockMatchMedia(true);
+    mockUseContentAdmin.mockReturnValue({
+      devIdentity: { displayName: 'Nathan', accentColor: '#faa31a' },
+      resolveManagedPathFromRef: (pathRef, fallback) => fallback || pathRef || '/',
+    });
+
+    renderLayout();
+
+    const profileLink = screen.getByRole('link', { name: 'Admin profile: Nathan' });
+    expect(profileLink.textContent).toContain('Nathan');
+    expect(profileLink.style.getPropertyValue('--admin-profile-color')).toBe('#faa31a');
+    expect(profileLink.querySelector('path')?.getAttribute('fill')).toBe('#ffffff');
+  });
+
   it('closes a desktop dropdown after clicking a submenu link', () => {
     mockMatchMedia(true);
     mockPathname = '/services';

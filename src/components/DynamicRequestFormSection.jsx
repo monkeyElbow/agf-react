@@ -6,6 +6,7 @@ import {
   validateRequiredFormFields,
 } from '../blocks/foundation/forms';
 import { parseTextHighlights, renderTextWithHighlights } from '../lib/dynamicPageBlocks';
+import SafeRichText from './SafeRichText';
 
 function normalizeHtmlContent(value) {
   const html = String(value || '').trim();
@@ -362,7 +363,7 @@ export default function DynamicRequestFormSection({ config }) {
         ) : null}
         {config?.subtitle ? <p className="dynamic-request-subtitle">{renderTextWithStrong(config.subtitle)}</p> : null}
         {bodyHtml ? (
-          <div className="native-info-rich-html dynamic-request-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+          <SafeRichText as="div" className="native-info-rich-html dynamic-request-body" html={bodyHtml} />
         ) : (
           bodyParagraphs.map((paragraph) => (
             <p key={paragraph} className="dynamic-request-body">{renderTextWithStrong(paragraph)}</p>

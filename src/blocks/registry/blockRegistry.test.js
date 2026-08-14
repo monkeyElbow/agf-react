@@ -34,7 +34,7 @@ function expectNoActionLikeSplitLinkSettings(settings = {}) {
 
 describe('canonical block registry', () => {
   it('registers the first migrated block kinds with required metadata', () => {
-    expect(getMigratedBlockKinds()).toEqual(['content', 'calculator_cta', 'calculator_intro', 'calculator_widget', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip']);
+    expect(getMigratedBlockKinds()).toEqual(['content', 'calculator_cta', 'calculator_intro', 'calculator_widget', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip']);
     expect(BLOCK_KIND_VALUES).not.toContain('rates_table');
     expect(BLOCK_MODE_VALUES).toEqual(['dynamic']);
 
@@ -73,14 +73,14 @@ describe('canonical block registry', () => {
     expect(getBlockPresetDefinition('services_grid', 'default')).toBeNull();
   });
 
-  it('keeps non-form CTA presets on the canonical cta-band definition while form CTA stays separate', () => {
-    expect(getBlockPresetDefinitions('cta_band').map((preset) => preset.id)).toEqual([
+  it('keeps non-form CTA content on the Billboard definition while form CTA stays separate', () => {
+    expect(getBlockPresetDefinitions('billboard').map((preset) => preset.id)).toEqual([
       'default',
       'dashboard-login',
     ]);
-    expect(getBlockDefinition('cta_band')?.editorType).toBe('cta_band');
-    expect(getBlockDefinition('cta_band')?.styleScope.cssNamespace).toBe('cta-band');
-    expect(getBlockPresetDefinition('cta_band', 'dashboard-login')?.templateIds).toEqual(['dashboard_login_cta']);
+    expect(getBlockDefinition('billboard')?.editorType).toBe('billboard');
+    expect(getBlockDefinition('billboard')?.styleScope.cssNamespace).toBe('billboard');
+    expect(getBlockPresetDefinition('billboard', 'dashboard-login')?.templateIds).toEqual(['dashboard_login_cta']);
     expect(getBlockPresetDefinition('calculator_cta', 'default')).toBeNull();
     expect(getBlockPresetDefinition('feature_panel', 'default')).toBeNull();
     expect(getBlockPresetDefinition('cta_form', 'default')).toBeNull();
@@ -98,6 +98,7 @@ describe('canonical block registry', () => {
 
   it('keeps columns variants on the canonical columns definition while photo-column remains separate', () => {
     expect(getBlockPresetDefinitions('columns').map((preset) => preset.id)).toEqual([
+      'planned-giving-steps',
       'default',
       'housing-allowance',
       'do-the-math',
@@ -136,7 +137,7 @@ describe('canonical block registry', () => {
     const genericBlocks = genericPageBlockBlueprint();
     const pageContentBlock = allBlocks.find((block) => block?.kind === 'content' && block?.id === 'page_content' && block?.mode === 'dynamic');
     const calculatorCtaBlock = (contentBlockBlueprintsByPath['/services/investments'] || []).find((block) => block?.kind === 'calculator_cta' && block?.mode === 'dynamic');
-    const ctaBandBlock = getAllBlockTemplateBlueprints().find((block) => block?.id === 'dashboard_login_cta');
+    const dashboardBillboardBlock = getAllBlockTemplateBlueprints().find((block) => block?.id === 'dashboard_login_cta');
     const heroBlock = testBlocks.find((block) => block?.kind === 'hero' && block?.mode === 'dynamic');
     const ctaFormBlock = (contentBlockBlueprintsByPath['/'] || []).find((block) => block?.kind === 'cta_form' && block?.mode === 'dynamic');
     const requestFormBlock = allBlocks.find((block) => block?.kind === 'request_form' && block?.mode === 'dynamic');
@@ -157,7 +158,7 @@ describe('canonical block registry', () => {
 
     expect(pageContentBlock?.editableFields).toEqual(getEditableFieldsForKind('content'));
     expect(calculatorCtaBlock?.editableFields).toEqual(getEditableFieldsForKind('calculator_cta'));
-    expect(ctaBandBlock?.editableFields).toEqual(getEditableFieldsForKind('cta_band'));
+    expect(dashboardBillboardBlock?.editableFields).toEqual(getEditableFieldsForKind('billboard'));
     expect(ctaFormBlock?.editableFields).toEqual(getEditableFieldsForKind('cta_form'));
     expect(requestFormBlock?.editableFields).toEqual(getEditableFieldsForKind('request_form'));
     expect(heroBlock?.editableFields).toEqual(getEditableFieldsForKind('hero'));
@@ -184,22 +185,18 @@ describe('canonical block registry', () => {
       const hudDefinition = getBlockHudDefinition(
         kind === 'card_grid'
           ? { id: kind, kind, presetId: 'default', templateId: 'card_grid' }
-          : (kind === 'cta_band'
-            ? { id: kind, kind, presetId: 'default', templateId: 'cta_band' }
-            : (kind === 'columns'
+          : (kind === 'columns'
               ? { id: kind, kind, presetId: 'default', templateId: 'columns' }
-              : { id: kind, kind }))
+              : { id: kind, kind })
       );
       const parityDefinition = getEditorParityContract(kind);
 
       const expectedHudLabel = (
         kind === 'card_grid'
           ? 'Card Grid · Flexible cards'
-          : (kind === 'cta_band'
-            ? 'CTA Band · General CTA'
-            : (kind === 'columns'
+          : (kind === 'columns'
               ? 'Columns · Flexible columns'
-              : (kind === 'site_feature' ? 'Site Feature · Editorial spotlight' : definition.label)))
+              : (kind === 'site_feature' ? 'Site Feature · Editorial spotlight' : definition.label))
       );
 
       expect(hudDefinition.label).toBe(expectedHudLabel);
@@ -213,7 +210,7 @@ describe('canonical block registry', () => {
     const hudRegistrySource = readSource('../../lib/blockHudRegistry.js');
     const paritySource = readSource('../../lib/editorParityContract.js');
 
-    ['content', 'calculator_cta', 'cta_band', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip'].forEach((kind) => {
+    ['content', 'calculator_cta', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip'].forEach((kind) => {
       expect(hudRegistrySource).not.toMatch(new RegExp(`^\\s{2}${kind}:`, 'm'));
       expect(paritySource).not.toMatch(new RegExp(`^\\s{2}${kind}:`, 'm'));
     });

@@ -20,7 +20,7 @@ describe('native columns renderer guardrail', () => {
     expect(source).toContain('const presetClassToken = resolvePresetFamilyClassToken(block);');
     expect(source).toContain("const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('columns', presetClassToken);");
     expect(source).not.toContain('normalizeColumnsPresetClassToken(block);');
-    expect(source).toContain('const columnsSection = buildDynamicColumnsSection(renderBlock, activePath);');
+    expect(source).toContain('buildDynamicColumnsSection(renderBlock, pathname);');
     expect(source).not.toContain('buildDynamicColumnsSection(block, activePath, resolveManagedPathFromRef)');
   });
 

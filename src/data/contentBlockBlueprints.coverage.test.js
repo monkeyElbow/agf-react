@@ -810,15 +810,20 @@ describe('source-default content block blueprint coverage', () => {
         col4Enabled: false,
       },
     });
-    expect(blocks.find((block) => block?.id === 'gift_assets')).toMatchObject({
+    const giftAssetsBlock = blocks.find((block) => block?.id === 'gift_assets');
+    expect(giftAssetsBlock).toMatchObject({
       kind: 'card_grid',
       mode: 'dynamic',
       settings: {
         sectionClassName: 'legacy-child-native-assets legacy-child-native-cga-assets',
         card1Title: 'Gift funding options',
         card1Fineprint: '*as of 2025',
+        card1Body: expect.stringContaining('<ul>'),
       },
     });
+    expect(giftAssetsBlock?.settings?.card1Body).toContain('The SECURE 2.0 Act of 2022');
+    expect(giftAssetsBlock?.settings?.card1BodyHtml).toBeUndefined();
+    expect(giftAssetsBlock?.settings?.card1ListJson).toBe('');
     expect(blocks.find((block) => block?.id === 'hero')?.settings).toMatchObject({
       button1Label: 'Try the CGA estimator',
     });
@@ -826,17 +831,8 @@ describe('source-default content block blueprint coverage', () => {
       kind: 'anchor',
       href: '#demo',
     });
-    expect(JSON.parse(blocks.find((block) => block?.id === 'gift_assets')?.settings?.card1ListJson || '[]'))
-      .not.toContain(expect.stringContaining('SECURE 2.0 Act'));
-    expect(blocks.find((block) => block?.id === 'secure_act')).toMatchObject({
-      kind: 'content',
-      mode: 'dynamic',
-      settings: {
-        sectionClassName: 'legacy-child-native-cga-secure-act',
-      },
-    });
-    expect(blocks.find((block) => block?.id === 'secure_act')?.settings?.html)
-      .toContain('The SECURE 2.0 Act');
+    expect(giftAssetsBlock?.settings?.card1Body).toContain('Cash');
+    expect(blocks.find((block) => block?.id === 'secure_act')).toBeUndefined();
     expect(blocks.find((block) => block?.id === 'qcd_fineprint')).toMatchObject({
       kind: 'content',
       mode: 'dynamic',
@@ -922,6 +918,10 @@ describe('source-default content block blueprint coverage', () => {
         col4Enabled: false,
       },
     });
+    expect(blocks.find((block) => block?.id === 'how_it_works')?.settings).toMatchObject({
+      col1Body: 'Open a Ministry Impact Fund®. Your donors transfer cash or assets to the fund, potentially a charitable deduction and minimized or eliminated capital gains.',
+      col2Body: 'AG Foundation liquidates the assets for you and your donors, handling all administrative details.',
+    });
     expectCanonicalLink(blocks.find((block) => block?.id === 'how_it_works')?.settings, 'col2ButtonLinkJson', {
       kind: 'external',
       href: 'https://uploads.agfinancial.org/',
@@ -952,12 +952,13 @@ describe('source-default content block blueprint coverage', () => {
       kind: 'request_form',
       mode: 'dynamic',
       settings: {
-        title: 'A legacy of giving.',
+        title: 'Ministry support. Unlocked and expanded.',
         anchorId: 'ministry-impact-form',
         sectionClassName: 'legacy-child-native-request',
         presetId: 'legacy-impact',
         titleClassName: '',
-        titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+        titleHighlightsJson: '',
+        body: 'Use this form to start the Ministry Impact Fund® process.',
         textTone: 'white',
         spaceAfterRem: 4.2,
         hideStepTitles: true,
@@ -965,6 +966,9 @@ describe('source-default content block blueprint coverage', () => {
         step1Note: '',
       },
     });
+    const requestFields = JSON.parse(requestBlock?.settings?.step1FieldsJson || '[]');
+    expect(requestFields.find((field) => field.id === 'givingProduct')?.options)
+      .toEqual([{ value: 'ministry-impact-fund', label: 'Ministry Impact Fund®' }]);
     expect(outroBlock).toMatchObject({
       kind: 'billboard',
       settings: {
@@ -1328,13 +1332,14 @@ describe('source-default content block blueprint coverage', () => {
       },
     });
     expect(qcdBlocks.find((block) => block?.id === 'intro')?.settings?.bodyHtml)
-      .toContain('transfer up to $110,000 per year directly');
+      .toBe('<p>If you\'re 70½ or older, a Qualified Charitable Distribution (QCD) lets you transfer up to $110,000 per year directly to your church or an eligible ministry — tax-free, and straight from the source. It counts toward your required minimum distribution, and not a dollar goes to taxes first.</p>');
     expect(qcdBlocks.find((block) => block?.id === 'how_it_works')).toMatchObject({
       kind: 'columns',
       mode: 'dynamic',
+      presetId: 'planned-giving-steps',
       settings: {
         title: 'How it works',
-        sectionClassName: 'legacy-child-native-flow-steps legacy-child-native-qcd-steps',
+        sectionClassName: '',
         col1Type: 'flow-step',
         col1IconKey: 'endowments-step-1',
         col1IconTone: 'atlantean',
@@ -1345,7 +1350,30 @@ describe('source-default content block blueprint coverage', () => {
         col3Type: 'flow-step',
         col3IconKey: 'qcd-step-3',
         col3IconTone: 'atlantean',
+        col3Body: 'Because the distribution goes directly to the ministry, it\'s excluded from your taxable income entirely. Your generosity goes further.',
         col4Enabled: false,
+      },
+    });
+    expect(qcdBlocks.find((block) => block?.id === 'card_grid')?.settings).toMatchObject({
+      title: 'It starts with your IRA.',
+      card1Title: 'A few things to know:',
+      card1ListJson: JSON.stringify([
+        'Must be age 70½ or older',
+        'Transfers up to $110,000 per year',
+        'Counts toward your required minimum distribution (RMD)',
+        'Goes directly from your IRA to the ministry, never to you first',
+        'Excluded from your taxable income',
+        'Must go to an eligible 501(c)(3) — not a DAF or private foundation',
+      ]),
+    });
+    expect(qcdBlocks.find((block) => block?.id === 'request_form')).toMatchObject({
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'Your IRA. Their gain.',
+        body: 'Ready to make your distribution count? Use this form to take the first step.',
+        anchorId: 'qcd-request-form',
+        presetId: 'legacy-generosity',
       },
     });
     expect(sitePages.some((page) => page.path === '/services/planned-giving/qualified-charitable-distribution')).toBe(true);
@@ -1522,7 +1550,7 @@ describe('source-default content block blueprint coverage', () => {
       mode: 'dynamic',
       settings: {
         sectionClassName: 'legacy-child-native-assets legacy-child-native-give-assets legacy-child-native-endowments-assets',
-        title: 'It starts with what you give.',
+        title: 'Assets you may give',
         card1Title: 'What you give',
         card1Fineprint: 'Minimum funding requirements are $10,000 for cash or securities, and $100,000 for real estate.',
       },
@@ -1552,10 +1580,15 @@ describe('source-default content block blueprint coverage', () => {
       sectionClassName: 'legacy-child-native-endowments-legacy-form',
       presetId: 'legacy-endowment',
       anchorId: 'endowment-request-form',
+      title: 'Leave a legacy that lasts.',
+      titleClassName: 'is-super-grey',
+      body: 'Use this form to start your Endowment setup',
+      bgTone: 'blue',
+      textTone: 'white',
     });
     const endowmentRequestFields = JSON.parse(endowmentBlocks.find((block) => block?.id === 'request_form')?.settings?.step1FieldsJson || '[]');
     expect(endowmentRequestFields.find((field) => field.id === 'givingProduct')?.options)
-      .toEqual([{ value: 'endowments', label: 'Endowments' }]);
+      .toEqual([{ value: 'endowments', label: 'Endowment' }]);
     expect(endowmentBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(endowmentBlocks.some((block) => block?.mode === 'static')).toBe(false);
     expect(endowmentBlocks.some((block) => Boolean(block?.settings?.targetSectionKey || block?.settings?.targetSectionClassName || block?.settings?.targetSectionIndex))).toBe(false);
@@ -2285,9 +2318,9 @@ describe('source-default content block blueprint coverage', () => {
       },
     });
     expect(loansBlocks.find((block) => block?.id === 'cta_band')).toMatchObject({
-      kind: 'cta_band',
+      kind: 'billboard',
       mode: 'dynamic',
-      templateId: 'cta_band',
+      templateId: 'billboard',
       presetId: 'default',
       settings: {
         title: 'Which loan is right for me?',

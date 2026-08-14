@@ -704,6 +704,45 @@ describe('AdminContentPage shared save workflow', () => {
     });
   });
 
+  it('keeps the active block editor open after saving so block Make live remains available', async () => {
+    mockBlocksByPath = {
+      '/services/loans': [
+        {
+          id: 'hero',
+          kind: 'hero',
+          mode: 'dynamic',
+          name: 'Hero',
+          settings: { line1Text: 'Draft hero' },
+          editableFields: [],
+        },
+      ],
+    };
+    mockPageChangeSummary = {
+      changedBlockIds: ['hero'],
+      changedBlockCount: 1,
+      hasOrderChanges: false,
+      hasPageMetaChanges: false,
+      hasUnsavedChanges: true,
+    };
+    mockPagePublishSummary = { ...mockPageChangeSummary };
+
+    render(
+      <MemoryRouter initialEntries={['/admin/content?page=/services/loans']}>
+        <AdminContentPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Hero' }));
+    expect(screen.getByRole('button', { name: 'Make block live' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save all page drafts' }));
+    await waitFor(() => {
+      expect(mockSaveSharedDraftNow).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByRole('button', { name: 'Make block live' })).toBeTruthy();
+  });
+
   it('enables Make live from the admin bottom bar when a pending external draft exists', async () => {
     mockDirtyPaths = [];
     mockPendingExternalDraftPaths = ['/services/loans'];

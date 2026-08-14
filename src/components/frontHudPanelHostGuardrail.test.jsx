@@ -37,7 +37,6 @@ const BANNED_DOCKED_PANEL_COMPONENTS = [
   'IntroBlockEditor',
   'BillboardBlockEditor',
   'CalculatorCtaBlockEditor',
-  'CtaBandBlockEditor',
   'FeaturePanelBlockEditor',
   'SplitPanelBlockEditor',
 ];

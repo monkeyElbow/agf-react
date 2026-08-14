@@ -1,5 +1,8 @@
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+
+const PROCESS_START_TIME_TOLERANCE_MS = 5000;
 
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -14,6 +17,39 @@ function processIsAlive(processId) {
   } catch (error) {
     return error?.code === 'EPERM';
   }
+}
+
+function readProcessStartTime(processId) {
+  const pid = Number(processId);
+  if (!Number.isInteger(pid) || pid <= 0) return null;
+  try {
+    const output = execFileSync('ps', ['-p', String(pid), '-o', 'lstart='], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    const timestamp = Date.parse(output);
+    return Number.isFinite(timestamp) ? timestamp : null;
+  } catch {
+    return null;
+  }
+}
+
+function leaseProcessIsAlive(lease, processStartTimeReader) {
+  if (!processIsAlive(lease?.pid)) {
+    return false;
+  }
+
+  const recordedStartTime = Number(lease?.processStartTime);
+  if (!Number.isFinite(recordedStartTime)) {
+    return true;
+  }
+
+  const actualStartTime = processStartTimeReader?.(lease.pid);
+  if (!Number.isFinite(actualStartTime)) {
+    return true;
+  }
+
+  return Math.abs(actualStartTime - recordedStartTime) <= PROCESS_START_TIME_TOLERANCE_MS;
 }
 
 function readLease(lockFile) {
@@ -38,7 +74,9 @@ export function createContentAdminAuthorityLease({
   projectRoot,
   processId = process.pid,
   processStartTime = Date.now() - (process.uptime() * 1000),
+  processStartTimeReader = readProcessStartTime,
   authorityInstanceId,
+  allowSameProcessRestart = false,
   now = () => Date.now(),
 } = {}) {
   if (!lockFile || !projectRoot || !authorityInstanceId) {
@@ -70,7 +108,24 @@ export function createContentAdminAuthorityLease({
     } catch (error) {
       if (error?.code !== 'EEXIST') throw error;
       const existing = readLease(lockFile);
-      if (existing && !processIsAlive(existing.pid)) {
+      const sameProcessRestart = Boolean(
+        allowSameProcessRestart
+        && existing
+        && Number(existing.pid) === identity.pid
+        && Number.isFinite(Number(existing.processStartTime))
+        && Math.abs(Number(existing.processStartTime) - identity.processStartTime) <= PROCESS_START_TIME_TOLERANCE_MS,
+      );
+      if (sameProcessRestart) {
+        try {
+          fs.unlinkSync(lockFile);
+        } catch (unlinkError) {
+          if (unlinkError?.code !== 'ENOENT') {
+            throw unlinkError;
+          }
+        }
+        return acquire();
+      }
+      if (existing && !leaseProcessIsAlive(existing, processStartTimeReader)) {
         try {
           fs.unlinkSync(lockFile);
         } catch (unlinkError) {
@@ -90,7 +145,7 @@ export function createContentAdminAuthorityLease({
       throw authorityError('Another content-admin authority already owns the project.', {
         lockFile,
         existing,
-        stale: false,
+        stale: !leaseProcessIsAlive(existing, processStartTimeReader),
       });
     }
   };
@@ -98,7 +153,7 @@ export function createContentAdminAuthorityLease({
   const reclaimStale = () => {
     const existing = readLease(lockFile);
     if (!existing) return acquire();
-    if (processIsAlive(existing.pid)) {
+    if (leaseProcessIsAlive(existing, processStartTimeReader)) {
       throw authorityError('Cannot reclaim an authority lock owned by a live process.', {
         lockFile,
         existing,
@@ -146,12 +201,13 @@ export function createContentAdminAuthorityLease({
   };
 }
 
-export function inspectContentAdminAuthority(lockFile) {
+export function inspectContentAdminAuthority(lockFile, { processStartTimeReader = readProcessStartTime } = {}) {
   const lease = readLease(lockFile);
+  const processAlive = lease ? leaseProcessIsAlive(lease, processStartTimeReader) : false;
   return {
     lockFile: path.resolve(lockFile),
     lease: clone(lease),
-    processAlive: lease ? processIsAlive(lease.pid) : false,
-    status: !lease ? 'available' : processIsAlive(lease.pid) ? 'owned' : 'stale-auto-reclaimable',
+    processAlive,
+    status: !lease ? 'available' : processAlive ? 'owned' : 'stale-auto-reclaimable',
   };
 }

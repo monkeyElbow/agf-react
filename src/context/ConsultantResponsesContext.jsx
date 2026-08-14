@@ -2,7 +2,13 @@ import { createContext, useContext, useMemo, useState } from 'react';
 
 const STORAGE_KEY = 'agf-consultant-responses-demo-v1';
 const MAX_ITEMS = 250;
-const ConsultantResponsesContext = createContext(null);
+const defaultConsultantResponsesValue = {
+  responses: [],
+  addResponse: () => {},
+  clearResponses: () => {},
+};
+
+const ConsultantResponsesContext = createContext(defaultConsultantResponsesValue);
 
 function normalizeResponseItem(item) {
   const source = item && typeof item === 'object' ? item : {};
@@ -83,9 +89,5 @@ export function ConsultantResponsesProvider({ children }) {
 }
 
 export function useConsultantResponses() {
-  const context = useContext(ConsultantResponsesContext);
-  if (!context) {
-    throw new Error('useConsultantResponses must be used within ConsultantResponsesProvider');
-  }
-  return context;
+  return useContext(ConsultantResponsesContext);
 }

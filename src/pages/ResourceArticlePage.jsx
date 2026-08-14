@@ -1,13 +1,14 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ResourcesProvider, useResources } from '../context/ResourcesContext';
 import { getResourceCategoryTone } from '../lib/resourceCategoryTone';
+import SafeRichText from '../components/SafeRichText';
 
 function ResourceArticlePageContent() {
   const { slug: slugParam } = useParams();
-  const { articles } = useResources();
+  const { publishedArticles } = useResources();
   const slug = decodeURIComponent(slugParam || '').toLowerCase();
 
-  const article = articles.find((item) => item.slug === slug && item.type === 'article');
+  const article = publishedArticles.find((item) => item.slug === slug && item.type === 'article');
   if (!article) {
     return <Navigate to="/resources" replace />;
   }
@@ -40,9 +41,10 @@ function ResourceArticlePageContent() {
       <section className="resources-native-article-content-wrap">
         <div className="ag-panel-rail">
           <div className="resources-native-article-content-shell">
-            <div
+            <SafeRichText
+              as="div"
               className="resources-native-article-content"
-              dangerouslySetInnerHTML={{ __html: article.bodyHtml || '<p>Article content unavailable.</p>' }}
+              html={article.bodyHtml || '<p>Article content unavailable.</p>'}
             />
             {article.sourceUrl ? (
               <p className="resources-native-article-source">

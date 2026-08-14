@@ -40,18 +40,23 @@ export function groupHomeRenderItems(items = []) {
   const renderItems = Array.isArray(items) ? items : [];
   const groupedItems = [];
   let pendingBlocks = [];
+  let deferred = false;
 
   const flushPendingBlocks = () => {
     if (!pendingBlocks.length) {
       return;
     }
-    groupedItems.push({ type: 'block_run', blocks: pendingBlocks });
+    groupedItems.push({ type: 'block_run', blocks: pendingBlocks, deferred });
     pendingBlocks = [];
   };
 
   renderItems.forEach((item) => {
     if (item?.type === 'block' && item.block) {
       pendingBlocks.push(item.block);
+      if (String(item.block.id || '').trim() === 'home_services_feature_animation') {
+        flushPendingBlocks();
+        deferred = true;
+      }
       return;
     }
     flushPendingBlocks();

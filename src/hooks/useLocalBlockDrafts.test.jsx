@@ -1,7 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import useLocalBlockDrafts from './useLocalBlockDrafts';
-import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
+import {
+  EDITOR_DRAFT_PUBLISHED_EVENT,
+  LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS,
+} from '../lib/contentAdminTiming';
 
 const noopFalse = () => false;
 
@@ -89,6 +92,45 @@ describe('useLocalBlockDrafts', () => {
     expect(commitBlockSettingsPatch).toHaveBeenCalledWith('/services/loans', 'hero', {
       line1Text: 'Borrow wisely',
     });
+  });
+
+  it('clears local editor buffers when the block is published', () => {
+    vi.useFakeTimers();
+    const commitBlockSettingsPatch = vi.fn(() => true);
+    const blocks = [
+      {
+        id: 'hero',
+        mode: 'dynamic',
+        settings: {
+          line1Text: 'Live title',
+        },
+      },
+    ];
+
+    render(
+      <LocalBlockDraftsProbe
+        blocks={blocks}
+        commitBlockSettingsPatch={commitBlockSettingsPatch}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Hero text'), { target: { value: 'Draft title' } });
+    expect(screen.getByLabelText('Hero text').value).toBe('Draft title');
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent(EDITOR_DRAFT_PUBLISHED_EVENT, {
+        detail: {
+          pathname: '/services/loans',
+          blockIds: ['hero'],
+        },
+      }));
+    });
+
+    expect(screen.getByLabelText('Hero text').value).toBe('Live title');
+    act(() => {
+      vi.advanceTimersByTime(LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS);
+    });
+    expect(commitBlockSettingsPatch).not.toHaveBeenCalled();
   });
 
   it('reports pending local drafts through the external status handler', () => {

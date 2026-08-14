@@ -7,7 +7,7 @@ import {
   resetSharedDisclosures,
   restoreSharedDisclosuresDraftFromLive,
   saveSharedDisclosures,
-} from '../lib/devContentAuthorityClient';
+} from '../lib/devContentAuthorityRuntime';
 import { getOrCreateDevIdentity, toDevIdentitySummary } from '../lib/devIdentity';
 
 const STORAGE_KEY = 'agf-disclosures-library-v1';

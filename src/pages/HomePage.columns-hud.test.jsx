@@ -131,14 +131,14 @@ describe('HomePage columns HUD', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
     await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: 'Body HTML' }).value).toContain('Housing intro body');
+      expect(screen.getByRole('textbox', { name: 'Body HTML' }).innerHTML).toContain('Housing intro body');
       expect(screen.getByRole('textbox', { name: 'Lead copy' }).value).toBe('');
     });
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Body HTML' }), {
-      target: { value: '<p>Updated intro body</p>' },
-    });
-    fireEvent.blur(screen.getByRole('textbox', { name: 'Body HTML' }));
+    const bodyEditor = screen.getByRole('textbox', { name: 'Body HTML' });
+    bodyEditor.innerHTML = '<p>Updated intro body</p>';
+    fireEvent.input(bodyEditor);
+    fireEvent.blur(bodyEditor);
     expect(mockUpdateBlockSetting).toHaveBeenCalledWith('/', 'home_ministry_allies', 'title', 'Updated intro heading');
     expect(mockUpdateBlockSetting).toHaveBeenCalledWith('/', 'home_ministry_allies', 'bodyHtml', '<p>Updated intro body</p>');
   });

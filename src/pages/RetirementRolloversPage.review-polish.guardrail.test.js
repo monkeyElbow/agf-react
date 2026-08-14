@@ -49,6 +49,12 @@ describe('retirement rollovers review polish guardrail', () => {
     expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process .rollovers-copy-address .native-info-copy-address-lines {');
     expect(cssSource).toContain('font-size: clamp(1.16rem, 1.88vw, 1.64rem);');
     expect(cssSource).toContain('margin-top: 1.8rem;');
+    expect(cssSource).toContain('.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) {');
+    expect(cssSource).toContain('padding: clamp(2.7rem, 4.8vw, 4.2rem);');
+    expect(cssSource).toContain('.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) h3,');
+    expect(cssSource).toContain('color: #fff !important;');
+    expect(cssSource).toContain('font-size: clamp(2.3rem, 4.8vw, 3.5rem) !important;');
+    expect(cssSource).toContain('.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) > div > p {');
   });
 
   it('keeps the follow-up section on the managed request-form path instead of the legacy inline cta shell', () => {

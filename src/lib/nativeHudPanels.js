@@ -10,7 +10,7 @@ const NATIVE_DEFAULT_ANCHOR_SELECTOR_BY_BLOCK_ID = Object.freeze({
   intro: '.service-native-intro',
 });
 
-export function buildNativeHudPanels({ blocks = [] } = {}) {
+export function buildNativeHudPanels({ blocks = [], includeHidden = false } = {}) {
   const anchorSelectorById = (Array.isArray(blocks) ? blocks : []).reduce((next, block) => {
     const blockId = String(block?.id || '').trim();
     if (!blockId || next[blockId]) {
@@ -23,5 +23,6 @@ export function buildNativeHudPanels({ blocks = [] } = {}) {
   return buildHudPanelsFromBlocks(blocks, {
     panelIdById: NATIVE_PANEL_ID_BY_BLOCK_ID,
     anchorSelectorById,
+    includeHidden,
   });
 }

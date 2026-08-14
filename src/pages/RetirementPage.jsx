@@ -1,18 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import '../styles/service-native.css';
+import '../styles/service-native-functional-tools.css';
 import { Link } from 'react-router-dom';
-import BlockHudPanelHost from '../components/BlockHudPanelHost';
+import {
+  FrontHudPageWorkflow,
+  FrontHudPanelShell,
+  FrontHudStructureControls,
+  HeroInlineLiveEditor,
+  LazyBlockHudPanelHost as BlockHudPanelHost,
+  preloadBlockHudPanelHost,
+  preloadFrontHudChrome,
+} from '../components/BlockHudPanelHostLoader';
 import BlockOwnershipOverlay, { getBlockOwnershipVisual, isForeignOwnedBlockOwnership } from '../components/BlockOwnershipOverlay';
 import ColorPalette from '../components/ColorPalette';
 import DynamicCtaSection from '../components/DynamicCtaSection';
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
-import FrontHudPanelShell from '../components/FrontHudPanelShell';
-import FrontHudPageWorkflow from '../components/FrontHudPageWorkflow';
-import { HeroInlineLiveEditor, renderHeroRangesAsNodes } from '../components/HeroHudEditorShared';
 import InvestmentsGrowthFeature from '../components/InvestmentsGrowthFeature';
 import SafeRichText from '../components/SafeRichText';
 import { HomeDoTheMathBadge } from '../components/blocks/PageBlocksRenderer';
-import { getResourceArticleFeatureConfig } from '../data/resourceArticles';
+import { getResourceArticleFeatureConfig } from '../data/resourceArticleFeatureIndex';
 import {
   parseCtaFormFieldsJson,
   serializeCtaFormFields,
@@ -28,7 +34,6 @@ import {
   defaultRetirementIntroSettings,
   defaultRetirementRolloverBillboardSettings,
 } from '../data/retirementOverviewSeed';
-import { selectFrontHudContentSource } from '../lib/frontHudContentSource';
 import { inspectDynamicHeroSettings } from '../lib/dynamicHeroSettings';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
 import { useFrontHud } from '../context/FrontHudContext';
@@ -36,6 +41,7 @@ import { useTestimonials } from '../context/TestimonialsContext';
 import useNativeEnhancements from '../hooks/useNativeEnhancements';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
+import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import { buildHudPanelsFromBlocks } from '../lib/blockHudRegistry';
 import { serializeLinkValue } from '../lib/linkValue';
 import {
@@ -69,7 +75,6 @@ import { getTokenSwatch } from '../lib/colorSystem';
 import { shouldRenderHeroInlineEditor } from '../lib/heroHudMode';
 import { heroTitleSizeRemToRuntimeCss, normalizeHeroTitleLetterSpacingEm } from '../lib/heroTitleSize';
 import { buildHeroLineStyle } from '../lib/heroLineStyle';
-import FrontHudStructureControls from '../components/FrontHudStructureControls';
 
 const RETIREMENT_TOP_3_ARTICLE_FEATURE = getResourceArticleFeatureConfig({
   slug: 'top-3-investing-mistakes-to-avoid',
@@ -519,10 +524,6 @@ export default function RetirementPage() {
   const introBodyInputRef = useRef(null);
   const heroLineInputRefs = useRef({ line1: null, line2: null, line3: null });
   const {
-    blocksByPath,
-    pageHierarchy,
-    authoringBlocksByPath,
-    authoringPageHierarchy,
     setActiveBlockLock = () => ({ ok: false }),
     clearActiveBlockLock = () => ({ ok: false }),
     getBlockCollaboration = () => null,
@@ -541,14 +542,7 @@ export default function RetirementPage() {
   const {
     blocksByPath: managedBlocksByPath,
     pageHierarchy: managedPageHierarchy,
-  } = selectFrontHudContentSource({
-    enabled: frontHudEnabled,
-    pathname: '/services/retirement',
-    authoringBlocksByPath,
-    blocksByPath,
-    authoringPageHierarchy,
-    pageHierarchy,
-  });
+  } = useManagedContentSource({ pathname: '/services/retirement' });
   const { testimonials: testimonialsLibrary } = useTestimonials();
   useNativeEnhancements(pageRef);
   const [calc, setCalc] = useState({
@@ -1008,6 +1002,7 @@ export default function RetirementPage() {
     () => buildHudPanelsFromBlocks(managedBlocks, {
       panelIdById: RETIREMENT_HUD_PANEL_ID_BY_BLOCK_ID,
       anchorSelectorById: RETIREMENT_HUD_ANCHOR_SELECTOR_BY_BLOCK_ID,
+      includeHidden: true,
     }),
     [managedBlocks],
   );
@@ -1063,6 +1058,13 @@ export default function RetirementPage() {
     panels: hudPanels,
     storageKey: 'retirement',
   });
+
+  useEffect(() => {
+    if (showFrontHud) {
+      void preloadFrontHudChrome();
+      void preloadBlockHudPanelHost();
+    }
+  }, [showFrontHud]);
 
   useEffect(() => {
     if (!showFrontHud) {
@@ -1705,7 +1707,7 @@ export default function RetirementPage() {
               <button
                 key={panel.id}
                 type="button"
-                className={`admin-front-hud-dock-tab${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
+                className={`admin-front-hud-dock-tab${panel.isHidden ? ' is-hidden-block' : ''}${!hudDockCollapsed && activeHudPanel?.id === panel.id ? ' is-active' : ''}${isPanelDragging(panel.id) ? ' is-dragging' : ''}${isPanelDragOver(panel.id) ? ' is-drag-over' : ''}${getPanelDropPosition(panel.id) ? ` is-drop-${getPanelDropPosition(panel.id)}` : ''}`}
                 onClick={() => openHudPanel(panel.id, panel.anchorSelector)}
                 aria-label={`Edit ${panel.label}`}
                 title={`Edit ${panel.label}`}
@@ -1713,6 +1715,7 @@ export default function RetirementPage() {
               >
                 <img src={panel.icon} alt="" aria-hidden="true" className="admin-front-hud-dock-tab-icon" />
                 <span className="admin-front-hud-dock-tab-label">{panel.label}</span>
+                {panel.isHidden ? <span className="admin-front-hud-dock-tab-hidden-marker" aria-hidden="true">Hidden</span> : null}
               </button>
             ))}
           </div>
@@ -1751,6 +1754,7 @@ export default function RetirementPage() {
             placement="dock-inline"
             showBlockDiscardAction
             blockId={activeHudPanel.block.id}
+            block={activeHudPanel.block}
             blockLabel={activeHudPanel.label}
             onDoneEditing={closeHudDock}
           />
@@ -1798,7 +1802,6 @@ export default function RetirementPage() {
               setLineInputRef={(lineKey, node) => {
                 heroLineInputRefs.current[lineKey] = node;
               }}
-              renderLineContent={(line) => renderHeroRangesAsNodes(line.text, line.highlights)}
               resolveLineClassName={(line, index) => line.className || `line${index + 1}`}
             />
           ) : dynamicHero?.lines?.length ? dynamicHero.lines.map((line, index) => {

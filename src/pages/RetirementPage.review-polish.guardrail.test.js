@@ -45,7 +45,7 @@ describe('retirement 403(b) review polish guardrail', () => {
   });
 
   it('keeps retirement hero spacing driven by shared HUD line-gap logic instead of a route-only css gap', () => {
-    const cssSource = readSource('../styles/service-native.css');
+    const cssSource = `${readSource('../styles/service-native.css')}\n${readSource('../styles/service-native-calculators.css')}`;
 
     expect(cssSource).toContain('.retirement-native-hero-line {');
     expect(cssSource).not.toContain('.retirement-native-hero-line + .retirement-native-hero-line {');
@@ -211,7 +211,7 @@ describe('retirement 403(b) review polish guardrail', () => {
 
   it('keeps the retirement calculator on the shared calculator system while preserving the svg chart structure', () => {
     const source = readSource('./RetirementPage.jsx');
-    const cssSource = readSource('../styles/service-native.css');
+    const cssSource = `${readSource('../styles/service-native.css')}\n${readSource('../styles/service-native-functional-tools.css')}`;
 
     expect(source).toContain('Retirement Savings Calculator');
     expect(source).toContain('aria-label="Retirement projection chart"');

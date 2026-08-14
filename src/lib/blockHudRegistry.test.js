@@ -12,6 +12,17 @@ describe('buildHudPanelsFromBlocks', () => {
     expect(panels.map((panel) => panel.blockId)).toEqual(['hero', 'intro']);
   });
 
+  it('can keep hidden dynamic blocks available to the HUD without changing the default', () => {
+    const blocks = [
+      { id: 'hero', kind: 'hero', mode: 'dynamic', hidden: true },
+      { id: 'intro', kind: 'intro', mode: 'dynamic', hidden: false },
+    ];
+
+    expect(buildHudPanelsFromBlocks(blocks).map((panel) => panel.blockId)).toEqual(['intro']);
+    expect(buildHudPanelsFromBlocks(blocks, { includeHidden: true }).map((panel) => panel.blockId)).toEqual(['hero', 'intro']);
+    expect(buildHudPanelsFromBlocks(blocks, { includeHidden: true })[0].isHidden).toBe(true);
+  });
+
   it('keeps distinct same-kind blocks on distinct HUD panels by default', () => {
     const panels = buildHudPanelsFromBlocks(
       [
@@ -68,14 +79,14 @@ describe('buildHudPanelsFromBlocks', () => {
     }).label).toBe('Card Grid · Investment options');
   });
 
-  it('keeps cta-band preset labels explicit in the HUD without creating pseudo-kinds', () => {
+  it('keeps dashboard login on the Billboard family without creating a pseudo-kind', () => {
     expect(getBlockHudDefinition({
       id: 'dashboard_login_cta',
-      kind: 'cta_band',
+      kind: 'billboard',
       mode: 'dynamic',
       presetId: 'dashboard-login',
-      templateId: 'cta_band',
-    }).label).toBe('CTA Band · Dashboard login');
+      templateId: 'billboard',
+    }).label).toBe('Billboard · Dashboard login');
   });
 
   it('keeps canonical generic columns labeled as one family with an explicit preset', () => {

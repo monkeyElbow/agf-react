@@ -92,6 +92,45 @@ describe('ColumnsHudEditorPanel', () => {
     expect(onSettingChange).toHaveBeenCalledWith('col3Enabled', true);
   });
 
+  it('uses the planned-giving Steps panel for the named preset', () => {
+    const onSettingChange = vi.fn();
+
+    render(
+      <ColumnsHudEditorPanel
+        presetId="planned-giving-steps"
+        settings={{
+          title: 'How it works',
+          columns: 'three',
+          col1Enabled: true,
+          col1Type: 'flow-step',
+          col1Body: 'First step body',
+          col1IconKey: 'endowments-step-1',
+          col1IconTone: 'atlantean',
+          col2Enabled: true,
+          col2Type: 'flow-step',
+          col2IconKey: 'daf-step-3',
+          col3Enabled: true,
+          col3Type: 'flow-step',
+          col3IconKey: 'qcd-step-3',
+        }}
+        onSettingChange={onSettingChange}
+      />,
+    );
+
+    expect(screen.getByText('Numbers follow order automatically.')).toBeTruthy();
+    expect(screen.getAllByText('Approved art only')).toHaveLength(3);
+    expect(screen.getAllByText('01')).toHaveLength(2);
+    expect(screen.getByText('02')).toBeTruthy();
+    expect(screen.getByText('03')).toBeTruthy();
+    expect(screen.getAllByRole('radiogroup', { name: /artwork/i })).toHaveLength(3);
+
+    fireEvent.click(
+      within(screen.getAllByRole('radiogroup', { name: /artwork/i })[0])
+        .getByRole('radio', { name: 'DAF · recommend' }),
+    );
+    expect(onSettingChange).toHaveBeenCalledWith('col1IconKey', 'daf-step-3');
+  });
+
   it('defaults the active editor to column 1', () => {
     render(
       <ColumnsHudEditorPanel
@@ -439,6 +478,8 @@ describe('ColumnsHudEditorPanel', () => {
 
     const titleInput = screen.getByLabelText('Title');
     const bodyInput = screen.getByLabelText('Body');
+
+    expect(bodyInput.getAttribute('rows')).toBe('6');
 
     fireEvent.change(titleInput, { target: { value: 'Draft title value' } });
     fireEvent.change(bodyInput, { target: { value: 'Draft body value' } });

@@ -54,7 +54,7 @@ const REQUEST_FORM_PRESET_PRESENTATION_CONTRACTS = Object.freeze({
       bgTone: 'blue',
       textTone: 'white',
       titleClassName: '',
-      titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+      titleHighlightsJson: '',
       spaceBeforeRem: 3.6,
       spaceAfterRem: 4.2,
       hideStepTitles: true,
@@ -119,6 +119,18 @@ const BILLBOARD_PRESENTATION_CONTRACTS = Object.freeze([
       'titleFontFamily',
       'titleFontWeight',
       'titleSizeRem',
+    ]),
+  }),
+  Object.freeze({
+    id: 'retirement-daily-billboard',
+    matches: (settings) => hasClassName(settings, 'retirement-daily-billboard'),
+    settings: Object.freeze({
+      titleFontFamily: 'helv',
+      titleFontWeight: 700,
+    }),
+    lockedFieldIds: Object.freeze([
+      'titleFontFamily',
+      'titleFontWeight',
     ]),
   }),
 ]);

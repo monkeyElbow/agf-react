@@ -1,4 +1,6 @@
 export const DEV_IDENTITY_STORAGE_KEY = 'agf-dev-identity-v1';
+export const DEV_ADMIN_PROFILES_STORAGE_KEY = 'agf-dev-admin-profiles-v1';
+const LEGACY_YOURMOM_DEV_USER_ID = 'dev-d018b3e9-dcae-4181-82c4-7946f2eb3125';
 
 const DEV_IDENTITY_ACCENTS = Object.freeze([
   '#00adbb',
@@ -9,6 +11,37 @@ const DEV_IDENTITY_ACCENTS = Object.freeze([
   '#5e548e',
   '#2a9d8f',
   '#b56576',
+]);
+
+export const DEFAULT_DEV_ADMIN_PROFILES = Object.freeze([
+  Object.freeze({
+    userId: 'dev-user-1',
+    fullName: 'James',
+    nickname: 'James',
+    email: 'james@example.test',
+    accentColor: '#00adbb',
+  }),
+  Object.freeze({
+    userId: 'dev-user-2',
+    fullName: 'Nathan',
+    nickname: 'Nathan',
+    email: 'nathan@example.test',
+    accentColor: '#faa31a',
+  }),
+  Object.freeze({
+    userId: 'dev-user-3',
+    fullName: 'Lisa',
+    nickname: 'Lisa',
+    email: 'lisa@example.test',
+    accentColor: '#f26660',
+  }),
+  Object.freeze({
+    userId: 'dev-user-4',
+    fullName: 'Tyler Durden',
+    nickname: 'Tyler Durden',
+    email: 'tyler.durden@example.test',
+    accentColor: '#414042',
+  }),
 ]);
 
 function toTrimmed(value) {
@@ -92,15 +125,33 @@ export function createDefaultDevIdentityName({ navigatorImpl = globalThis.naviga
 }
 
 export function normalizeDevIdentity(rawIdentity) {
-  const source = rawIdentity && typeof rawIdentity === 'object' ? rawIdentity : {};
+  const rawSource = rawIdentity && typeof rawIdentity === 'object' ? rawIdentity : {};
+  const isLegacyYourmom = rawSource.userId === LEGACY_YOURMOM_DEV_USER_ID
+    || /^yourmom$/i.test(toTrimmed(rawSource.displayName || rawSource.name || rawSource.nickname));
+  const source = isLegacyYourmom
+    ? {
+        ...rawSource,
+        userId: 'dev-user-1',
+        fullName: 'James',
+        nickname: 'James',
+        displayName: 'James',
+        email: 'james@example.test',
+        accentColor: '#00adbb',
+      }
+    : rawSource;
   const userId = toTrimmed(source.userId || source.id);
-  const displayName = toTrimmed(source.displayName || source.name);
+  const fullName = toTrimmed(source.fullName || source.name || source.displayName);
+  const nickname = toTrimmed(source.nickname || source.displayName || fullName);
+  const displayName = nickname || fullName;
   if (!userId || !displayName) {
     return null;
   }
 
   return {
     userId,
+    fullName: fullName || displayName,
+    nickname: nickname || displayName,
+    email: toTrimmed(source.email),
     displayName,
     initials: toTrimmed(source.initials) || deriveDevIdentityInitials(displayName),
     accentColor: normalizeAccentColor(
@@ -110,6 +161,104 @@ export function normalizeDevIdentity(rawIdentity) {
     createdAt: Number.isFinite(Number(source.createdAt)) ? Number(source.createdAt) : Date.now(),
     updatedAt: Number.isFinite(Number(source.updatedAt)) ? Number(source.updatedAt) : Date.now(),
   };
+}
+
+export function normalizeDevAdminProfile(rawProfile, fallbackProfile = null) {
+  const source = rawProfile && typeof rawProfile === 'object' ? rawProfile : {};
+  const fallback = fallbackProfile && typeof fallbackProfile === 'object' ? fallbackProfile : {};
+  const userId = toTrimmed(source.userId || source.id || fallback.userId);
+  const fullName = toTrimmed(source.fullName || source.name || source.displayName || fallback.fullName || fallback.name || fallback.displayName);
+  const nickname = toTrimmed(source.nickname || source.displayName || fallback.nickname || fallback.displayName || fullName);
+  if (!userId || !fullName) {
+    return null;
+  }
+  return normalizeDevIdentity({
+    ...fallback,
+    ...source,
+    userId,
+    fullName,
+    nickname: nickname || fullName,
+    displayName: nickname || fullName,
+  });
+}
+
+export function normalizeDevAdminProfiles(rawProfiles) {
+  const source = Array.isArray(rawProfiles) ? rawProfiles : [];
+  const sourceById = new Map(source.map((profile) => [
+    toTrimmed(profile?.userId || profile?.id),
+    profile,
+  ]).filter(([userId]) => userId));
+  const defaults = DEFAULT_DEV_ADMIN_PROFILES.map((profile) => normalizeDevAdminProfile(profile));
+  const normalizedDefaults = defaults.map((profile) => normalizeDevAdminProfile(
+    sourceById.get(profile.userId),
+    profile,
+  )).filter(Boolean);
+  const knownIds = new Set(normalizedDefaults.map((profile) => profile.userId));
+  const additionalProfiles = source
+    .map((profile) => normalizeDevAdminProfile(profile))
+    .filter((profile) => profile && !knownIds.has(profile.userId));
+  return [...normalizedDefaults, ...additionalProfiles];
+}
+
+export function readStoredDevAdminProfiles(storage = globalThis.localStorage) {
+  try {
+    const raw = storage?.getItem?.(DEV_ADMIN_PROFILES_STORAGE_KEY);
+    return normalizeDevAdminProfiles(raw ? JSON.parse(raw) : null);
+  } catch {
+    return normalizeDevAdminProfiles(null);
+  }
+}
+
+export function persistDevAdminProfiles(profiles, storage = globalThis.localStorage) {
+  const normalized = normalizeDevAdminProfiles(profiles);
+  try {
+    storage?.setItem?.(DEV_ADMIN_PROFILES_STORAGE_KEY, JSON.stringify(normalized));
+  } catch {
+    // ignore local persistence failures in dev mode
+  }
+  return normalized;
+}
+
+export function updateStoredDevAdminProfile(userId, patch = {}, {
+  storage = globalThis.localStorage,
+  now = Date.now(),
+} = {}) {
+  const normalizedUserId = toTrimmed(userId);
+  if (!normalizedUserId) {
+    return null;
+  }
+  const profiles = readStoredDevAdminProfiles(storage);
+  const current = profiles.find((profile) => profile.userId === normalizedUserId);
+  if (!current) {
+    return null;
+  }
+  const next = normalizeDevAdminProfile({
+    ...current,
+    ...patch,
+    userId: normalizedUserId,
+    updatedAt: now,
+  }, current);
+  const nextProfiles = persistDevAdminProfiles(
+    profiles.map((profile) => (profile.userId === normalizedUserId ? next : profile)),
+    storage,
+  );
+  const active = readStoredDevIdentity(storage);
+  if (active?.userId === normalizedUserId) {
+    persistDevIdentity(next, storage);
+  }
+  return nextProfiles.find((profile) => profile.userId === normalizedUserId) || next;
+}
+
+export function selectStoredDevAdminProfile(userId, {
+  storage = globalThis.localStorage,
+  now = Date.now(),
+} = {}) {
+  const normalizedUserId = toTrimmed(userId);
+  const profile = readStoredDevAdminProfiles(storage).find((item) => item.userId === normalizedUserId);
+  if (!profile) {
+    return readStoredDevIdentity(storage);
+  }
+  return persistDevIdentity({ ...profile, updatedAt: now }, storage);
 }
 
 export function createDevIdentity({
@@ -165,8 +314,18 @@ export function getOrCreateDevIdentity({
 } = {}) {
   const existing = readStoredDevIdentity(storage);
   if (existing) {
-    return existing;
+    const matchingProfile = readStoredDevAdminProfiles(storage)
+      .find((profile) => profile.userId === existing.userId);
+    return matchingProfile
+      ? persistDevIdentity({
+          ...matchingProfile,
+          createdAt: existing.createdAt,
+          updatedAt: existing.updatedAt,
+        }, storage)
+      : existing;
   }
+  // A new browser is an unassigned operator until someone chooses one of the
+  // temporary profiles. Never silently claim the first profile (James).
   return persistDevIdentity(createDevIdentity({ cryptoImpl, navigatorImpl, now }), storage);
 }
 
@@ -182,6 +341,7 @@ export function renameStoredDevIdentity(displayName, {
 
   return persistDevIdentity({
     ...current,
+    nickname: nextName,
     displayName: nextName,
     initials: deriveDevIdentityInitials(nextName),
     updatedAt: now,

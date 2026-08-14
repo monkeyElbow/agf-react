@@ -3153,8 +3153,8 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(growthFeatureBlock).toBeTruthy();
     expect(growthFeatureBlock?.mode).toBe('dynamic');
-    expect(growthFeatureBlock?.kind).toBe('site_feature');
-    expect(growthFeatureBlock?.templateId).toBeUndefined();
+    expect(growthFeatureBlock?.kind).toBe('feature_panel');
+    expect(growthFeatureBlock?.templateId).toBe('feature_panel');
     expect(growthFeatureBlock?.presetId).toBeUndefined();
     expect(growthFeatureBlock?.settings?.body).toBe('Already connected?');
     expect(growthFeatureBlock?.settings?.buttonLabel).toBe('Open dashboard');

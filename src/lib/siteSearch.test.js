@@ -73,6 +73,10 @@ describe('site search helpers', () => {
       title: 'Donor Advised Fund',
       path: '/services/planned-giving/donor-advised-fund',
     });
+    expect(searchSiteIndex(items, 'MIF')[0]).toMatchObject({
+      title: 'Ministry Impact Fund',
+      path: '/services/planned-giving/ministry-impact-fund',
+    });
     expect(searchSiteIndex(items, 'QCD')[0]).toMatchObject({
       title: 'Qualified Charitable Distribution',
       path: '/services/planned-giving/qualified-charitable-distribution',

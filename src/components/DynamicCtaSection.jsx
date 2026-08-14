@@ -11,6 +11,7 @@ import {
   renderTextWithHighlights,
 } from '../lib/dynamicPageBlocks';
 import BlockOwnershipOverlay from './BlockOwnershipOverlay';
+import SafeRichText from './SafeRichText';
 const CTA_DYNAMIC_SUBMIT_STYLE_SET = new Set(['blue', 'dark', 'outline']);
 const CTA_DYNAMIC_SUBMIT_TONE_SET = new Set(['atlantean', 'super-grey', 'mango', 'melon', 'white']);
 const EMPTY_CTA_FIELDS = Object.freeze([]);
@@ -180,7 +181,11 @@ export default function DynamicCtaSection({
       </h5>
       {subtitle ? <p className="dynamic-cta-form-subtitle">{subtitle}</p> : null}
       {renderTitleInsideShell && bodyHtml ? (
-        <div className={`native-info-rich-html dynamic-cta-form-callout${bodyColorClassName ? ` ${bodyColorClassName}` : ''}`} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+        <SafeRichText
+          as="div"
+          className={`native-info-rich-html dynamic-cta-form-callout${bodyColorClassName ? ` ${bodyColorClassName}` : ''}`}
+          html={bodyHtml}
+        />
       ) : null}
     </div>
   ) : null;
@@ -328,7 +333,11 @@ export default function DynamicCtaSection({
               })}
               {errorMessage ? <p className="dynamic-cta-form-error" role="alert">{errorMessage}</p> : null}
               {!renderTitleInsideShell && bodyHtml ? (
-                <div className={`native-info-rich-html dynamic-cta-form-callout${bodyColorClassName ? ` ${bodyColorClassName}` : ''}`} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+                <SafeRichText
+                  as="div"
+                  className={`native-info-rich-html dynamic-cta-form-callout${bodyColorClassName ? ` ${bodyColorClassName}` : ''}`}
+                  html={bodyHtml}
+                />
               ) : null}
               {fineprint ? <p className="dynamic-cta-form-fineprint">{fineprint}</p> : null}
               <button type="submit" className={resolvedSubmitButtonClassName}>{submitLabel}</button>
