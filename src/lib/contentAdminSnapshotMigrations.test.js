@@ -4,6 +4,7 @@ import { normalizeContentAdminState } from './contentAdminNormalization';
 import {
   CGA_PATH,
   CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
+  INSURANCE_PC_RESOURCES_PATH,
   INSURANCE_PATH,
   GENEROSITY_FUND_PATH,
   GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
@@ -11,6 +12,8 @@ import {
   migrateQcdCenteredCardGridState,
   migrateCgaSecureActCardState,
   migrateInsuranceCoverageCtaState,
+  migrateInsurancePcResourceCardsBlock,
+  migrateInsurancePcResourceCardsState,
   migratePlannedGivingStepsBlock,
   migrateGenerosityFundSnapshot,
   stripRetiredTargetBridgeSettingsFromState,
@@ -215,6 +218,48 @@ describe('content-admin snapshot migrations', () => {
     expect(migrated.changed).toBe(true);
     expect(migrated.state.blocksByPath['/services/planned-giving/qualified-charitable-distribution'][0].settings.card1ListJson)
       .toBe(JSON.stringify(['One line']));
+  });
+
+  it('converts legacy arrow-prefixed P&C resource copy into real card lists', () => {
+    const block = {
+      id: 'resources',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        card1Body: '› Sexual misconduct liability\n› Medical payments',
+        card1ListJson: '',
+        card2Body: '› Online safety tools\n› **Comprehensive risk management guide**',
+        card2ListJson: '',
+      },
+    };
+
+    const migrated = migrateInsurancePcResourceCardsBlock(INSURANCE_PC_RESOURCES_PATH, block);
+
+    expect(migrated.settings).toMatchObject({
+      card1Body: '',
+      card1ListJson: JSON.stringify(['Sexual misconduct liability', 'Medical payments']),
+      card2Body: '',
+      card2ListJson: JSON.stringify(['Online safety tools', '**Comprehensive risk management guide**']),
+    });
+    expect(migrateInsurancePcResourceCardsBlock('/test', block)).toEqual(block);
+  });
+
+  it('migrates P&C resource cards through the explicit state helper', () => {
+    const state = {
+      blocksByPath: {
+        [INSURANCE_PC_RESOURCES_PATH]: [{
+          id: 'resources',
+          kind: 'card_grid',
+          mode: 'dynamic',
+          settings: { card1Body: '› One item' },
+        }],
+      },
+    };
+
+    const migrated = migrateInsurancePcResourceCardsState(state);
+    expect(migrated.changed).toBe(true);
+    expect(migrated.state.blocksByPath[INSURANCE_PC_RESOURCES_PATH][0].settings.card1ListJson)
+      .toBe(JSON.stringify(['One item']));
   });
 
   it('moves CGA SECURE 2.0 content into the gift-assets card without changing other content', () => {

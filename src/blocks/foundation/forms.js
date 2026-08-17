@@ -351,7 +351,11 @@ export function parseCtaFormFieldsJson(value) {
   }
 }
 
-export function extractCtaFormFields(source, fallbackSource = null) {
+export function extractCtaFormFields(
+  source,
+  fallbackSource = null,
+  { allowLegacyStepFields = false } = {},
+) {
   const configuredFields = parseCtaFormFieldsJson(source?.fieldsJson);
   if (configuredFields.length) {
     return configuredFields;
@@ -361,6 +365,23 @@ export function extractCtaFormFields(source, fallbackSource = null) {
     const fallbackConfiguredFields = parseCtaFormFieldsJson(fallbackSource?.fieldsJson);
     if (fallbackConfiguredFields.length) {
       return fallbackConfiguredFields;
+    }
+  }
+
+  // Transitional read-only bridge for published snapshots created before CTA
+  // fields became canonical. Migration still owns persistence cleanup; this
+  // prevents the public renderer from dropping legitimate fields meanwhile.
+  if (allowLegacyStepFields) {
+    const legacyFields = parseCtaFormFieldsJson(source?.step1FieldsJson);
+    if (legacyFields.length) {
+      return legacyFields;
+    }
+
+    if (fallbackSource && fallbackSource !== source) {
+      const fallbackLegacyFields = parseCtaFormFieldsJson(fallbackSource?.step1FieldsJson);
+      if (fallbackLegacyFields.length) {
+        return fallbackLegacyFields;
+      }
     }
   }
 

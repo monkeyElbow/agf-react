@@ -32,6 +32,14 @@ export const INSURANCE_COVERAGE_CTA_MIGRATION_ID = 'insurance-coverage-cta-field
 export const INSURANCE_COVERAGE_CTA_MIGRATION_VERSION = 1;
 export const INSURANCE_PATH = '/services/insurance';
 
+export const INSURANCE_PC_RESOURCES_MIGRATION_ID = 'insurance-pc-resource-card-lists';
+export const INSURANCE_PC_RESOURCES_MIGRATION_VERSION = 1;
+export const INSURANCE_PC_RESOURCES_PATH = '/services/insurance/property-casualty-insurance';
+
+export const ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_ID = 'online-contributions-step-cards';
+export const ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_VERSION = 1;
+export const ONLINE_CONTRIBUTIONS_PATH = '/online-contributions';
+
 const CGA_SECURE_ACT_BODY_HTML = '<p><strong><span class="is-atlantean">The SECURE 2.0 Act of 2022</span></strong> allows you to fund a Charitable Gift Annuity with funds distributed from your IRA—up to $50,000* of your annual Qualified Charitable Distribution limit (QCD). This charitable distribution amount is both retirement income for you, and a gift of support to a ministry you choose. Even better, this distribution can count toward your IRA’s annual Required Minimum Distribution (RMD). <strong>You’re permitted to take advantage of this unique opportunity only once.</strong></p>';
 
 function escapeHtml(value) {
@@ -196,6 +204,142 @@ export function migrateQcdCenteredCardGridState(rawState) {
           blocksByPath: {
             ...(source.blocksByPath || {}),
             [PLANNED_GIVING_STEPS_PATH]: migratedBlocks,
+          },
+        }
+      : source,
+    changed,
+  };
+}
+
+/**
+ * Moves the Online Contributions setup cards onto the shared numbered-step
+ * preset. The old step sentences are retained at the start of each body so
+ * this migration changes presentation structure without dropping authored
+ * copy.
+ */
+export function migrateOnlineContributionsStepsBlock(pathname, block) {
+  const source = cloneJson(block);
+  if (
+    String(pathname || '').trim() !== ONLINE_CONTRIBUTIONS_PATH
+    || String(source?.id || '').trim() !== 'setup_steps'
+    || String(source?.kind || '').trim() !== 'card_grid'
+    || String(source?.mode || '').trim() !== 'dynamic'
+  ) {
+    return source;
+  }
+
+  const settings = source.settings && typeof source.settings === 'object'
+    ? { ...source.settings }
+    : {};
+  const oldPreset = String(source.presetId || '').trim();
+  const oldColumns = String(settings.columns || '').trim();
+  const alreadyNumbered = [1, 2, 3].every((slot) => (
+    String(settings[`card${slot}Title`] || '').trim() === String(slot).padStart(2, '0')
+  ));
+  if (oldPreset === 'step-cards' && oldColumns === 'one' && alreadyNumbered) {
+    return source;
+  }
+
+  let changed = false;
+  settings.columns = 'one';
+  if (oldColumns !== 'one') {
+    changed = true;
+  }
+
+  [1, 2, 3].forEach((slot) => {
+    const titleKey = `card${slot}Title`;
+    const bodyKey = `card${slot}Body`;
+    const legacyTitle = String(settings[titleKey] || '').trim();
+    const legacyBody = String(settings[bodyKey] || '').trim();
+    const titleWithoutNumber = legacyTitle.replace(/^\d+\)\s*/, '').trim();
+    const preservedLead = titleWithoutNumber || legacyTitle;
+    const nextBody = preservedLead && !legacyBody.startsWith(preservedLead)
+      ? [preservedLead, legacyBody].filter(Boolean).join(' ')
+      : legacyBody;
+    const nextTitle = String(slot).padStart(2, '0');
+    if (settings[titleKey] !== nextTitle || settings[bodyKey] !== nextBody) {
+      settings[titleKey] = nextTitle;
+      settings[bodyKey] = nextBody;
+      changed = true;
+    }
+  });
+
+  if (oldPreset !== 'step-cards') {
+    changed = true;
+  }
+  return changed ? { ...source, presetId: 'step-cards', settings } : source;
+}
+
+export function migrateOnlineContributionsStepsState(rawState) {
+  const source = cloneJson(rawState) || {};
+  const blocks = source?.blocksByPath?.[ONLINE_CONTRIBUTIONS_PATH];
+  if (!Array.isArray(blocks)) {
+    return { state: source, changed: false };
+  }
+  const migratedBlocks = blocks.map((block) => migrateOnlineContributionsStepsBlock(ONLINE_CONTRIBUTIONS_PATH, block));
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(blocks);
+  return {
+    state: changed
+      ? {
+          ...source,
+          blocksByPath: {
+            ...(source.blocksByPath || {}),
+            [ONLINE_CONTRIBUTIONS_PATH]: migratedBlocks,
+          },
+        }
+      : source,
+    changed,
+  };
+}
+
+export function migrateInsurancePcResourceCardsBlock(pathname, block) {
+  const source = cloneJson(block);
+  if (
+    String(pathname || '').trim() !== INSURANCE_PC_RESOURCES_PATH
+    || String(source?.id || '').trim() !== 'resources'
+    || String(source?.kind || '').trim() !== 'card_grid'
+    || String(source?.mode || '').trim() !== 'dynamic'
+  ) {
+    return source;
+  }
+
+  const settings = source.settings && typeof source.settings === 'object'
+    ? { ...source.settings }
+    : {};
+  let changed = false;
+  [1, 2].forEach((slot) => {
+    const bodyKey = `card${slot}Body`;
+    const listKey = `card${slot}ListJson`;
+    if (String(settings[listKey] || '').trim()) {
+      return;
+    }
+    const lines = parseLegacyCardLines(settings[bodyKey]);
+    if (!lines.length || !lines.every((line) => /^›\s*/.test(line))) {
+      return;
+    }
+    settings[listKey] = JSON.stringify(lines.map((line) => line.replace(/^›\s*/, '').trim()).filter(Boolean));
+    settings[bodyKey] = '';
+    changed = true;
+  });
+
+  return changed ? { ...source, settings } : source;
+}
+
+export function migrateInsurancePcResourceCardsState(rawState) {
+  const source = cloneJson(rawState) || {};
+  const blocks = source?.blocksByPath?.[INSURANCE_PC_RESOURCES_PATH];
+  if (!Array.isArray(blocks)) {
+    return { state: source, changed: false };
+  }
+  const migratedBlocks = blocks.map((block) => migrateInsurancePcResourceCardsBlock(INSURANCE_PC_RESOURCES_PATH, block));
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(blocks);
+  return {
+    state: changed
+      ? {
+          ...source,
+          blocksByPath: {
+            ...(source.blocksByPath || {}),
+            [INSURANCE_PC_RESOURCES_PATH]: migratedBlocks,
           },
         }
       : source,

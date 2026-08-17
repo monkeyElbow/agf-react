@@ -146,6 +146,14 @@ export async function fetchSharedContentRouteSnapshot(pathname) {
   });
 }
 
+export async function fetchRenderConvergenceContract(pathname) {
+  const normalizedPath = String(pathname || '').trim() || '/';
+  return sendJson('/render-contract?path=' + encodeURIComponent(normalizedPath), {
+    method: 'GET',
+    timeoutMs: SHARED_CONTENT_SNAPSHOT_TIMEOUT_MS,
+  });
+}
+
 export async function fetchPublishedContentRouteSnapshot(pathname) {
   const normalizedPath = String(pathname || '').trim() || '/';
   return sendJson(`/published-route?path=${encodeURIComponent(normalizedPath)}`, {
@@ -445,8 +453,38 @@ export async function migrateQcdCenteredCardGridSnapshot(actor = null, reason = 
   });
 }
 
+export async function migrateOnlineContributionsStepsSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-online-contributions-step-cards', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
 export async function migrateCgaSecureActCardSnapshot(actor = null, reason = '') {
   return sendJson('/migrate-cga-secure-act-card', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateInsuranceCoverageCtaSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-insurance-coverage-cta', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateInsurancePcResourceCardsSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-insurance-pc-resource-card-lists', {
     method: 'POST',
     body: JSON.stringify({
       actor: cloneJson(actor),

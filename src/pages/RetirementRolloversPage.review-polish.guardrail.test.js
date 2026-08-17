@@ -22,7 +22,7 @@ describe('retirement rollovers review polish guardrail', () => {
     expect(blueprintSource).toContain("addressLines: 'PO Box 2515\\nSpringfield MO 65801'");
     expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process {');
     expect(cssSource).toContain('counter-reset: rollover-process-step;');
-    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .service-native-copy-wrap > .native-info-rich-html > p::before {');
+    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .native-info-rich-html > p::before {');
     expect(cssSource).toContain('content: counter(rollover-process-step, decimal-leading-zero);');
     expect(cssSource).toContain('--rollover-step-accent: var(--ag-color-atlantean);');
     expect(cssSource).toContain('font-family: var(--ag-font-helv);');
@@ -35,13 +35,13 @@ describe('retirement rollovers review polish guardrail', () => {
     expect(cssSource).toContain('background: #fff;');
     expect(cssSource).toContain('line-height: 1.62;');
     expect(cssSource).toContain('max-width: 82ch;');
-    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .service-native-copy-wrap > .native-info-rich-html > p:nth-of-type(1)::before {');
+    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .native-info-rich-html > p:nth-of-type(1)::before {');
     expect(cssSource).toContain('color: var(--ag-color-atlantean);');
-    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .service-native-copy-wrap > .native-info-rich-html > p:nth-of-type(2)::before {');
+    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .native-info-rich-html > p:nth-of-type(2)::before {');
     expect(cssSource).toContain('color: var(--ag-color-mango);');
-    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .service-native-copy-wrap > .native-info-rich-html > p:nth-of-type(3)::before {');
+    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .native-info-rich-html > p:nth-of-type(3)::before {');
     expect(cssSource).toContain('color: var(--ag-color-sandstone);');
-    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .service-native-copy-wrap > .native-info-rich-html > p:nth-of-type(3) {');
+    expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process > .ag-panel-rail > .native-info-rich-html > p:nth-of-type(3) {');
     expect(cssSource).toContain('--rollover-step-accent: var(--ag-color-sandstone);');
     expect(cssSource).toContain('.native-info-page--retirement-rollovers .retirement-rollovers-native-process .rollovers-copy-address .native-info-copy-address-title {');
     expect(cssSource).toContain('color: var(--ag-color-atlantean);');
@@ -55,6 +55,9 @@ describe('retirement rollovers review polish guardrail', () => {
     expect(cssSource).toContain('color: #fff !important;');
     expect(cssSource).toContain('font-size: clamp(2.3rem, 4.8vw, 3.5rem) !important;');
     expect(cssSource).toContain('.native-info-page--retirement-rollovers .service-native-section.native-dynamic-grid.retirement-rollovers-native-options .service-native-card:not(.investments-native-cert-card) > div > p {');
+    expect(cssSource).toContain('padding-bottom: clamp(5.5rem, 9vw, 7rem);');
+    expect(cssSource).toContain('background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);');
+    expect(cssSource).toContain('box-shadow: 0 18px 36px rgba(12, 42, 61, 0.08);');
   });
 
   it('keeps the follow-up section on the managed request-form path instead of the legacy inline cta shell', () => {

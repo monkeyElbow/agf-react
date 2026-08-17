@@ -23,6 +23,7 @@ import {
   placeManagedBlockAtDraftPosition,
 } from '../src/lib/managedBlockOrder.js';
 import { validateContentAdminStateSchema } from '../src/lib/contentAdminSnapshotSchema.js';
+import { buildRenderConvergenceRouteContract } from '../src/lib/renderConvergenceContract.js';
 import {
   compareSeedRouteSlices,
   formatSeedRouteSliceDiffReport,
@@ -34,12 +35,18 @@ import {
   CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
   INSURANCE_COVERAGE_CTA_MIGRATION_ID,
   INSURANCE_COVERAGE_CTA_MIGRATION_VERSION,
+  INSURANCE_PC_RESOURCES_MIGRATION_ID,
+  INSURANCE_PC_RESOURCES_MIGRATION_VERSION,
+  ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_ID,
+  ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_VERSION,
   QCD_CENTERED_CARD_GRID_MIGRATION_ID,
   QCD_CENTERED_CARD_GRID_MIGRATION_VERSION,
   migrateGenerosityFundSnapshot,
   migrateQcdCenteredCardGridState,
   migrateCgaSecureActCardState,
   migrateInsuranceCoverageCtaState,
+  migrateInsurancePcResourceCardsState,
+  migrateOnlineContributionsStepsState,
   migratePlannedGivingStepsBlock,
   stripRetiredTargetBridgeSettingsFromBlock,
   stripRetiredTargetBridgeSettingsFromBlocks,
@@ -2092,6 +2099,30 @@ export function createJsonContentStore({
       return publishRouteSnapshot(pathname);
     },
 
+    getRenderConvergenceContract(pathname) {
+      reloadIfPersistenceChanged();
+      const normalizedPath = String(pathname || '').trim() || '/';
+      return {
+        ok: true,
+        contractVersion: 1,
+        pathname: normalizedPath,
+        authority: publishAuthoritySnapshot(normalizedPath),
+        runtimeUpdatedAt: Number(record.updatedAt) || 0,
+        authoring: buildRenderConvergenceRouteContract({
+          pathname: normalizedPath,
+          blocks: record.state?.blocksByPath?.[normalizedPath] || [],
+          source: 'authoring',
+          revision: getDraftRevision(normalizedPath),
+        }),
+        published: buildRenderConvergenceRouteContract({
+          pathname: normalizedPath,
+          blocks: record.baseSnapshot?.blocksByPath?.[normalizedPath] || [],
+          source: 'published',
+          revision: getPublishedRouteRevision(normalizedPath),
+        }),
+      };
+    },
+
     getPublishedRouteSnapshot(pathname) {
       reloadIfPersistenceChanged();
       const normalizedPath = String(pathname || '').trim() || '/';
@@ -3574,6 +3605,88 @@ export function createJsonContentStore({
       };
     },
 
+    migrateOnlineContributionsStepsSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_ID,
+            version: ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateOnlineContributionsStepsState(record.state);
+      const baseMigration = migrateOnlineContributionsStepsState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-online-contributions-step-cards-migration', {
+            action: 'online-contributions-step-cards-migration',
+            migrationId: ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_ID,
+            migrationVersion: ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_ID]: ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Online Contributions numbered step-card migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_ID,
+          version: ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
     migrateInsuranceCoverageCtaSnapshot({ actor, reason = '' } = {}) {
       const normalizedActor = normalizeActor(actor);
       const normalizedReason = String(reason || '').trim();
@@ -3654,6 +3767,88 @@ export function createJsonContentStore({
         migration: {
           id: INSURANCE_COVERAGE_CTA_MIGRATION_ID,
           version: INSURANCE_COVERAGE_CTA_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateInsurancePcResourceCardsSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[INSURANCE_PC_RESOURCES_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= INSURANCE_PC_RESOURCES_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: INSURANCE_PC_RESOURCES_MIGRATION_ID,
+            version: INSURANCE_PC_RESOURCES_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateInsurancePcResourceCardsState(record.state);
+      const baseMigration = migrateInsurancePcResourceCardsState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-insurance-pc-resource-card-lists-migration', {
+            action: 'insurance-pc-resource-card-lists-migration',
+            migrationId: INSURANCE_PC_RESOURCES_MIGRATION_ID,
+            migrationVersion: INSURANCE_PC_RESOURCES_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [INSURANCE_PC_RESOURCES_MIGRATION_ID]: INSURANCE_PC_RESOURCES_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Insurance P&C resource-card list migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: INSURANCE_PC_RESOURCES_MIGRATION_ID,
+          version: INSURANCE_PC_RESOURCES_MIGRATION_VERSION,
           didMigrate: changed,
           alreadyApplied: false,
         },

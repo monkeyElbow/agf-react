@@ -268,6 +268,27 @@ describe('buildDynamicCtaFormFromBlock', () => {
     ]);
   });
 
+  it('keeps legacy published CTA snapshots visible until the explicit field migration runs', () => {
+    const runtime = buildDynamicCtaFormFromBlock({
+      id: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      settings: {
+        title: 'What coverage is best for your ministry?',
+        sectionClassName: 'insurance-native-cta',
+        step1FieldsJson: ctaFieldsJson([
+          { id: 'name', label: 'Name', type: 'text', required: true },
+          { id: 'email', label: 'Email', type: 'email', required: true },
+        ]),
+      },
+    });
+
+    expect(runtime?.fields).toEqual([
+      expect.objectContaining({ id: 'name', type: 'text', required: true }),
+      expect.objectContaining({ id: 'email', type: 'email', required: true }),
+    ]);
+  });
+
   it('falls back to provided CTA defaults when a managed CTA leaves heading and fields blank', () => {
     const runtime = buildDynamicCtaFormFromBlock(
       {
@@ -1794,9 +1815,10 @@ describe('buildDynamicGridFromBlock', () => {
         cardStyle: 'card2',
         titleTone: 'white',
         bodyTone: 'white',
-      cardPaddingRem: 2.2,
+        cardPaddingRem: 2.2,
         cardTitleSizeRem: 1.5,
         cardBodySizeRem: 1.2,
+        cardBulletSize: 'large',
         cardBodyLineHeight: 1.8,
         card1Title: 'First option',
         card1Body: '<ul><li>Rich bullet</li></ul>',
@@ -1826,6 +1848,7 @@ describe('buildDynamicGridFromBlock', () => {
       cardPaddingRem: 2.2,
       cardTitleSizeRem: 1.5,
       cardBodySizeRem: 1.2,
+      cardBulletSize: 'large',
       cardBodyLineHeight: 1.8,
     });
     expect(runtime.titleHighlights).toEqual([{ text: 'options', className: 'is-mango' }]);
@@ -2404,6 +2427,20 @@ describe('buildDynamicPageContentFromBlock', () => {
     });
 
     expect(runtime?.headingLevel).toBe('h1');
+  });
+
+  it('preserves approved page-content logo keys for route renderers', () => {
+    const runtime = buildDynamicPageContentFromBlock({
+      id: 'mission-assure-intro',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Every trip is a step of faith.',
+        logoKey: 'mission-assure',
+      },
+    });
+
+    expect(runtime?.logoKey).toBe('mission-assure');
   });
 
   it('preserves page content table settings when the first visible column is not a row header', () => {

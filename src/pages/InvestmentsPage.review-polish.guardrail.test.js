@@ -102,7 +102,10 @@ describe('investments page review polish guardrails', () => {
     const pageSource = readSource('./InvestmentsPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(pageSource).toContain('className="service-native-grid is-two investments-native-cert-grid"');
+    expect(pageSource).toContain('className="service-native-grid is-two retirement-account-grid"');
+    expect(pageSource).toContain('retirement-account-card retirement-account-card--certificate');
+    expect(pageSource).toContain('retirement-account-card__cap');
+    expect(pageSource).toContain('retirement-account-card__body');
     expect(pageSource).not.toContain('className="service-native-grid is-two investments-native-cert-grid fade-out"');
     expect(pageSource).toContain('fade-up fade-up-force-observe');
     expect(cssSource).toContain('clamp(1.8rem, 3.3vw, 2.2rem)');

@@ -6689,10 +6689,12 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       mode: 'dynamic',
       settings: {
         title: 'Every trip is a step of faith, but you don’t have to take it uninsured.',
+        titleHighlightsJson: '[{"text":"faith","className":"is-atlantean"}]',
         subtitle: 'As low as **$1.25/day**',
         body: 'Mission Assure® helps take the “what if” out of church trips and events. At only $4.95 per person per day for **international** trips, and $1.25 per person per day for **domestic** trips or outings, Mission Assure® offers superior short-term insurance at an affordable price. Use the buttons below to apply for coverage, manage your trips, or report a claim.',
         html: '',
         widget: 'mission-assure-pricing',
+        logoKey: 'mission-assure',
         pricingEntriesJson: JSON.stringify([
           {
             trip: 'Domestic',
@@ -6749,7 +6751,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         lineSpacing: 1,
         titleFontFamily: 'helv',
         titleFontWeight: 700,
-        titleSizeRem: 3.6,
+        titleSizeRem: 3.4,
         titleLetterSpacingEm: 0,
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
@@ -6788,7 +6790,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         lineSpacing: 1,
         titleFontFamily: 'helv',
         titleFontWeight: 700,
-        titleSizeRem: 3.05,
+        titleSizeRem: 3.4,
         titleLetterSpacingEm: 0,
         ...seedBlueprintActionFields({
           labelField: 'buttonLabel',
@@ -7060,8 +7062,8 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         body: 'Provide a few specifics, and we’ll contact you about a policy built specifically for your ministry.',
         bgTone: 'blue',
         textTone: 'white',
-        spaceBeforeRem: 1.6,
-        spaceAfterRem: 1.6,
+        spaceBeforeRem: 3.6,
+        spaceAfterRem: 5.2,
         anchorId: 'quote',
         submitLabel: 'Submit quote request',
         successMessage: 'Thanks. We received your request.',
@@ -7229,11 +7231,30 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         sectionClassName: 'insurance-pc-native-resources',
         ...seedBlueprintCardGridCardFields(1, {
           title: 'Additional coverages available',
-          body: '› Sexual misconduct liability\n› Pastoral/counseling professional liability\n› Educator’s legal liability\n› Directors, officers, and trustees liability\n› Medical payments\n› Umbrella liability\n› Religious freedom legal defense',
+          body: '',
+          listJson: JSON.stringify([
+            'Sexual misconduct liability',
+            'Pastoral/counseling professional liability',
+            'Educator’s legal liability',
+            'Directors, officers, and trustees liability',
+            'Medical payments',
+            'Umbrella liability',
+            'Religious freedom legal defense',
+          ]),
         }),
         ...seedBlueprintCardGridCardFields(2, {
           title: 'Extensive risk management resources',
-          body: '› On-site safety and hazard analysis\n› Case management\n› Worker and volunteer screening\n› Water and temperature sensors\n› Swimmer and allergy bands\n› Ergonomic evaluations\n› Online safety tools\n› **Comprehensive risk management guide**',
+          body: '',
+          listJson: JSON.stringify([
+            'On-site safety and hazard analysis',
+            'Case management',
+            'Worker and volunteer screening',
+            'Water and temperature sensors',
+            'Swimmer and allergy bands',
+            'Ergonomic evaluations',
+            'Online safety tools',
+            '**Comprehensive risk management guide**',
+          ]),
         }),
       },
     }),
@@ -7391,6 +7412,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     createDynamicCardGridBlueprint({
       id: 'enroll_steps',
       name: 'Enrollment Steps',
+      presetId: 'step-cards',
       settings: {
         title: 'How to enroll',
         subtitle: 'Three steps. One clear path.',
@@ -8916,7 +8938,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     createDynamicCardGridBlueprint({
       id: 'setup_steps',
       name: 'Setup Steps',
-      presetId: 'default',
+      presetId: 'step-cards',
       settings: {
         title: '',
         subtitle: '',
@@ -8926,23 +8948,23 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         body: '',
         bgTone: 'sand',
         contentWidth: 'full',
-        columns: 'three',
+        columns: 'one',
         cardStyle: 'card2',
         fullBleed: true,
         sectionClassName: 'online-contrib-native-steps',
         ...seedBlueprintCardGridCardFields(1, {
-          title: '1) Create a new user account for your company.',
-          body: 'Start in Online Access and create a user account for your company.',
+          title: '01',
+          body: 'Create a new user account for your company. Start in Online Access and create a user account for your company.',
           buttonLabel: 'Create account',
           buttonHref: 'https://secure.agfinancial.org/cp/do/user/login',
         }),
         ...seedBlueprintCardGridCardFields(2, {
-          title: '2) Select "403(b) Employer" as the Account Type',
-          body: 'Choose the employer contribution account type during setup so the account is configured correctly.',
+          title: '02',
+          body: 'Select "403(b) Employer" as the Account Type. Choose the employer contribution account type during setup so the account is configured correctly.',
         }),
         ...seedBlueprintCardGridCardFields(3, {
-          title: '3) Get your Employer Code',
-          body: 'Contact Client Services at 866.621.1787 or clientservices@agfinancial.org for your Employer Code to complete your account setup.',
+          title: '03',
+          body: 'Get your Employer Code. Contact Client Services at 866.621.1787 or clientservices@agfinancial.org for your Employer Code to complete your account setup.',
           buttonLabel: 'Email',
           buttonHref: 'mailto:clientservices@agfinancial.org',
           button2Label: 'Call',

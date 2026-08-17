@@ -394,6 +394,7 @@ describe('source-default content block blueprint coverage', () => {
     expect(enrollBlock).toMatchObject({
       kind: 'card_grid',
       mode: 'dynamic',
+      presetId: 'step-cards',
       settings: {
         sectionClassName: 'ministers-group-life-native-enroll',
         card1ButtonLabel: 'Minister enrollment form',
@@ -1974,8 +1975,13 @@ describe('source-default content block blueprint coverage', () => {
     expect(overviewBlock?.settings?.html).toContain('clientservices@agfinancial.org');
     expect(stepsBlock).toMatchObject({
       mode: 'dynamic',
+      presetId: 'step-cards',
       settings: {
         sectionClassName: 'online-contrib-native-steps',
+        columns: 'one',
+        card1Title: '01',
+        card2Title: '02',
+        card3Title: '03',
       },
     });
     expectCanonicalLink(stepsBlock?.settings, 'card1ButtonLinkJson', {

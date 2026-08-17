@@ -227,7 +227,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card h3::after {');
     expect(cssSource).toContain('display: none !important;');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card p {');
-    expect(cssSource).toContain('font-size: clamp(1.12rem, 1.75vw, 1.28rem);');
+    expect(cssSource).toContain('font-size: var(--service-native-intro-body-size);');
     expect(cssSource).toContain('.native-info-page--life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).life-quote-native-types .service-native-card:nth-child(2) h3 {');
     expect(cssSource).toContain('color: var(--ag-color-mango);');
   });

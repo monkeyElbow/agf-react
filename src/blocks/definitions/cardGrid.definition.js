@@ -101,6 +101,15 @@ const sections = [
       defineEditorField({ id: 'cardPaddingRem', label: 'Card padding (rem)', type: 'number', min: 0.75, max: 3, step: 0.05 }),
       defineEditorField({ id: 'cardTitleSizeRem', label: 'Card title size (rem)', type: 'number', min: 0.9, max: 2, step: 0.05 }),
       defineEditorField({ id: 'cardBodySizeRem', label: 'Card body size (rem)', type: 'number', min: 0.8, max: 1.5, step: 0.05 }),
+      defineEditorField({
+        id: 'cardBulletSize',
+        label: 'Bullet size',
+        type: 'select',
+        options: [
+          { value: 'daf', label: 'DAF standard' },
+          { value: 'large', label: 'Large' },
+        ],
+      }),
       defineEditorField({ id: 'cardBodyLineHeight', label: 'Card body line height', type: 'number', min: 1.1, max: 2.1, step: 0.05 }),
       defineEditorField({
         id: 'titleTone',
@@ -254,6 +263,7 @@ export const cardGridBlockDefinition = createBlockDefinition({
     cardPaddingRem: 1.35,
     cardTitleSizeRem: 1.14,
     cardBodySizeRem: 1,
+    cardBulletSize: 'daf',
     cardBodyLineHeight: 1.58,
     anchorId: '',
     buttonLabel: '',

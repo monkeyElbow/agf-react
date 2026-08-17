@@ -153,6 +153,8 @@ describe('planned giving review polish guardrail', () => {
     expect(blueprintSource).not.toContain("sectionClassName: 'legacy-giving-comparison-matrix'");
     expect(blueprintSource).toContain("sectionClassName: 'legacy-giving-opportunity'");
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types .native-info-section-copy {');
+    expect(cssSource).toContain('--service-native-hero-rail-min-height: clamp(250px, 24vw, 320px);');
+    expect(cssSource).toContain('padding-block: clamp(3.8rem, 7.2vw, 5.2rem);');
     expect(cssSource).toContain('.native-info-page--legacy-giving .legacy-giving-types > .ag-panel-rail-wide,');
     expect(cssSource).toContain('width: min(var(--ag-panel-wide-max), calc(100% - (var(--ag-panel-effective-gutter, var(--ag-panel-gutter)) * 2)));');
     expect(cssSource).toContain('margin-bottom: clamp(3.4rem, 6.6vw, 5.4rem);');
@@ -232,10 +234,11 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('.legacy-child-native-trusts-differences.native-dynamic-grid .service-native-grid {');
     expect(cssSource).toContain('margin-top: clamp(2rem, 4vw, 3rem);');
     expect(cssSource).toContain('width: min(100%, 21rem);');
-    expect(cssSource).toContain('font-size: clamp(1.55rem, 2.4vw, 2rem);');
+    expect(cssSource).toContain('font-size: clamp(2.55rem, 4.8vw, 4.1rem);');
     expect(cssSource).toContain('.legacy-child-native-trusts-differences.native-dynamic-grid .service-native-card:nth-child(1) h3 {');
     expect(cssSource).toContain('color: var(--ag-color-atlantean);');
-    expect(cssSource).toContain('font-size: clamp(1.16rem, 1.75vw, 1.32rem);');
+    expect(cssSource).toContain('font-size: clamp(1.28rem, 1.95vw, 1.48rem);');
+    expect(cssSource).toContain('.service-native-section.native-dynamic-grid.legacy-child-native-trusts-differences .service-native-card .service-native-card-bullet-list li {');
     expect(cssSource).toContain('line-height: 1.68;');
   });
 
@@ -335,5 +338,31 @@ describe('planned giving review polish guardrail', () => {
     expect(cssSource).toContain('max-height: 100%;');
     expect(cssSource).toContain('.native-info-page--legacy-child .legacy-child-native-ministry-impact-steps .native-columns-item.is-flow-step:nth-child(n + 2)::before {');
     expect(cssSource).toContain('margin-top: clamp(1.35rem, 2vw, 1.9rem);');
+  });
+
+  it('keeps Ministry Impact Fund stock-transfer card content vertically centered', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .native-info-section-copy > h2 {');
+    expect(cssSource).toContain('margin-bottom: clamp(0.9rem, 1.8vw, 1.35rem);');
+    expect(cssSource).toContain('width: 100%;');
+    expect(cssSource).toContain('max-width: none;');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-card {');
+    expect(cssSource).toContain('border-radius: 1.75rem !important;');
+    expect(cssSource).toContain('align-content: center;');
+    expect(cssSource).toContain('padding-block-start: clamp(3rem, 4.8vw, 3.8rem);');
+    expect(cssSource).toContain('padding-block-end: clamp(2.2rem, 3.9vw, 3.1rem);');
+    expect(cssSource).toContain('padding-inline: clamp(1.35rem, 2.7vw, 2rem);');
+  });
+
+  it('keeps QCD asset-card spacing aligned to the DAF card treatment', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-qcd .service-native-section.native-dynamic-grid.is-card-grid-style-planned-giving-centered > .ag-panel-rail > .native-info-section-copy > h2 {');
+    expect(cssSource).toContain('margin-bottom: clamp(0.9rem, 1.8vw, 1.35rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-qcd .service-native-section.native-dynamic-grid.is-card-grid-style-planned-giving-centered .service-native-grid {');
+    expect(cssSource).toContain('margin-top: clamp(2.4rem, 4.8vw, 3.6rem);');
+    expect(cssSource).toContain('.native-info-page--legacy-child.native-info-page--legacy-qcd .service-native-section.native-dynamic-grid.is-card-grid-style-planned-giving-centered .service-native-card {');
+    expect(cssSource).toContain('padding: clamp(2rem, 4vw, 3rem);');
   });
 });

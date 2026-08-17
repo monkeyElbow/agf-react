@@ -18,6 +18,7 @@ const GRID_TEXT_TONE_BG_COMPATIBILITY = {
 };
 const GRID_COLUMNS_SET = new Set(['one', 'two', 'three', 'four']);
 const GRID_WIDTH_SET = new Set(['content', 'browser']);
+const GRID_BULLET_SIZE_SET = new Set(['daf', 'large']);
 
 export function normalizeGridBgTone(value) {
   const token = String(value || 'white').trim().toLowerCase();
@@ -156,6 +157,11 @@ export function normalizeDynamicGridCardBodySizeRem(value) {
     return 1;
   }
   return Math.max(0.8, Math.min(1.5, Number(numeric.toFixed(2))));
+}
+
+export function normalizeDynamicGridCardBulletSize(value) {
+  const token = String(value || '').trim().toLowerCase();
+  return GRID_BULLET_SIZE_SET.has(token) ? token : 'daf';
 }
 
 export function normalizeDynamicGridCardBodyLineHeight(value) {

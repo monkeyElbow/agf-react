@@ -179,6 +179,14 @@ describe('canonical form foundation', () => {
       field1Label: 'Retired slot field',
       field1Type: 'text',
     })).toEqual([]);
+
+    expect(extractCtaFormFields({
+      step1FieldsJson: serializeCtaFormFields([
+        { id: 'legacy_name', label: 'Legacy name', type: 'text' },
+      ]),
+    }, null, { allowLegacyStepFields: true })).toEqual([
+      expect.objectContaining({ id: 'legacy_name', label: 'Legacy name' }),
+    ]);
   });
 
   it('keeps common CTA seed presets authored with canonical fieldsJson', () => {

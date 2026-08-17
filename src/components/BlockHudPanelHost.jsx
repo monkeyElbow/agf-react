@@ -142,7 +142,11 @@ export default function BlockHudPanelHost({
   const MigratedHudEditor = getMigratedBlockEditorComponent(block.kind, 'hud');
   const editableFields = Array.isArray(block.editableFields) ? block.editableFields : [];
   const settings = block.settings || {};
-  const ctaFields = extractCtaFormFields(settings);
+  const ctaFields = extractCtaFormFields(settings, null, {
+    allowLegacyStepFields: String(settings.sectionClassName || '')
+      .split(/\s+/)
+      .includes('insurance-native-cta'),
+  });
   const isForeignOwned = isForeignOwnedBlockOwnership(ownership);
   const releaseDraft = onReleaseDraft || (
     typeof contentAdmin?.releaseActiveBlockDraft === 'function'

@@ -34,7 +34,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "preview:prod": "vite preview --port 4173 --strictPort",
-    "measure:dev": "node scripts/measure-vite-dev.mjs"
+    "measure:dev": "node scripts/measure-vite-dev.mjs",
+    "verify:route": "node scripts/verify-rendered-route.mjs"
   },
   "dependencies": {
     "openai": "^6.34.0",

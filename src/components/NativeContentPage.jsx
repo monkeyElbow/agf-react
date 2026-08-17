@@ -145,6 +145,8 @@ import {
   buildPresetFamilyRuntimeClassName,
   resolvePresetFamilyClassToken,
 } from '../lib/presetFamilyContract';
+import { RUNTIME_BUILD_ID } from '../lib/runtimeBuild';
+import { buildRenderConvergenceBlockContract } from '../lib/renderConvergenceContract';
 import { setupInvestmentsGrowthRevealMotion } from '../lib/investmentsGrowthReveal';
 import { isCalculatorRoutePath } from '../lib/routeStyleBoundaries';
 
@@ -1020,6 +1022,7 @@ function buildDynamicPageContentSection(block, pathname) {
     body,
     html,
     widget,
+    logoKey,
     logoImage,
     logoAlt,
     logoText,
@@ -1047,6 +1050,14 @@ function buildDynamicPageContentSection(block, pathname) {
   } = runtime;
   const blockId = String(block?.id || '').trim() || 'page-content';
   const blockKind = String(block?.kind || '').trim();
+  const sectionClassTokens = String(sectionClassName || '').split(/\s+/).filter(Boolean);
+  const isMissionAssureIntro = sectionClassTokens.includes('mission-assure-native-intro');
+  const resolvedTitleHighlights = titleHighlights.length
+    ? titleHighlights
+    : (isMissionAssureIntro && title.toLowerCase().includes('faith')
+      ? [{ text: 'faith', className: 'is-atlantean' }]
+      : []);
+  const resolvedLogoKey = logoKey || (isMissionAssureIntro ? 'mission-assure' : '');
   const sectionClassBase = blockKind === CALCULATOR_WIDGET_KIND
     ? (pathname === '/test' ? 'test-dynamic-calculator-widget' : 'native-dynamic-calculator-widget')
     : (blockKind === CALCULATOR_INTRO_KIND
@@ -1064,7 +1075,7 @@ function buildDynamicPageContentSection(block, pathname) {
     title,
     titleHtml,
     titleClassName: titleClassName || undefined,
-    titleHighlights: Array.isArray(titleHighlights) ? titleHighlights : [],
+    titleHighlights: Array.isArray(resolvedTitleHighlights) ? resolvedTitleHighlights : [],
     headingLevel: headingLevel === 'h1' ? 'h1' : 'h2',
     subtitle: subtitle || undefined,
     body: Array.isArray(body) ? body : [],
@@ -1073,6 +1084,7 @@ function buildDynamicPageContentSection(block, pathname) {
     html,
     htmlClassName: runtime.bodyColorClassName || '',
     widget: widget || undefined,
+    logoComponent: resolvedLogoKey === 'mission-assure' ? MissionAssureLogo : undefined,
     logoImage: logoImage || undefined,
     logoAlt: logoAlt || undefined,
     logoText: logoText || undefined,
@@ -1126,6 +1138,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardPaddingRem,
     cardTitleSizeRem,
     cardBodySizeRem,
+    cardBulletSize,
     cardBodyLineHeight,
     actions,
     cards: runtimeCards,
@@ -1134,11 +1147,16 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-grid' : 'native-dynamic-grid';
   const sectionClassTokens = sectionClassName.split(/\s+/).filter(Boolean);
   const isLegacyAssetGrid = sectionClassTokens.includes('legacy-child-native-assets');
+  const isPlannedGivingBulletGrid = isLegacyAssetGrid || cardStyle === 'planned-giving-centered';
+  // Planned-giving asset cards use DAF as shared baseline. Keep list size on
+  // block settings so admin changes whole list, including rich HTML bullets.
+  const plannedGivingBulletMaxSizeRem = cardBulletSize === 'large' ? 1.55 : 1.35;
   const cardLayout = (
     sectionClassTokens.includes('legacy-child-native-trust-choices--trusts')
     || sectionClassTokens.includes('legacy-child-native-cga-options')
+    || sectionClassTokens.includes('insurance-pc-native-resources')
   )
-    ? 'certificate'
+    ? (sectionClassTokens.includes('insurance-pc-native-resources') ? 'retirement-certificate' : 'certificate')
     : '';
   const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('card_grid', presetId);
   const consultantCards = consultantService
@@ -1194,6 +1212,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     body: body ? [body] : [],
     html: bodyHtml,
     copyWrap: hasIntroCopy,
+    presetId,
     cardsPreset,
     wide: contentWidth === 'browser',
     fullBleed,
@@ -1209,6 +1228,9 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       '--dynamic-grid-card-title-size': `${cardTitleSizeRem}rem`,
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
+      ...(isPlannedGivingBulletGrid
+        ? { '--planned-giving-bullet-size': `clamp(1.1rem, 2vw, ${plannedGivingBulletMaxSizeRem}rem)` }
+        : {}),
     },
     className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
   };
@@ -1544,44 +1566,42 @@ function buildManagedBlockSection(block, {
     return null;
   }
 
+  let section = null;
   if (renderBlock.kind === 'hero') {
-    return buildDynamicHeroShellSection(renderBlock);
-  }
-  if (renderBlock.kind === 'intro') {
-    return buildDynamicIntroShellSection(renderBlock, { includeTestClassName: isTestPage });
-  }
-  if (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND) {
-    return buildDynamicPageContentSection(renderBlock, pathname);
-  }
-  if (renderBlock.kind === 'card_grid') {
-    return buildDynamicGridSection(renderBlock, pathname, { getConsultants });
-  }
-  if (renderBlock.kind === 'columns') {
-    return buildDynamicColumnsSection(renderBlock, pathname);
-  }
-  if (renderBlock.kind === 'newsletter') {
-    return buildDynamicNewsletterSection(renderBlock, pathname);
-  }
-  if (renderBlock.kind === 'feature_panel') {
-    return buildDynamicFeaturePanelSection(renderBlock, pathname);
-  }
-  if (renderBlock.kind === 'site_feature') {
-    return buildDynamicSiteFeatureSection(renderBlock, pathname);
-  }
-  if (renderBlock.kind === 'cta_form') {
-    return buildDynamicCtaSection(renderBlock, pathname);
-  }
-  if (renderBlock.kind === 'request_form') {
-    return buildDynamicRequestFormSection(renderBlock, pathname);
-  }
-  if (renderBlock.kind === 'testimonials') {
-    return buildDynamicTestimonialsSection(renderBlock, pathname, testimonialsLibrary);
-  }
-  if (renderBlock.kind === 'billboard') {
-    return buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });
+    section = buildDynamicHeroShellSection(renderBlock);
+  } else if (renderBlock.kind === 'intro') {
+    section = buildDynamicIntroShellSection(renderBlock, { includeTestClassName: isTestPage });
+  } else if (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND) {
+    section = buildDynamicPageContentSection(renderBlock, pathname);
+  } else if (renderBlock.kind === 'card_grid') {
+    section = buildDynamicGridSection(renderBlock, pathname, { getConsultants });
+  } else if (renderBlock.kind === 'columns') {
+    section = buildDynamicColumnsSection(renderBlock, pathname);
+  } else if (renderBlock.kind === 'newsletter') {
+    section = buildDynamicNewsletterSection(renderBlock, pathname);
+  } else if (renderBlock.kind === 'feature_panel') {
+    section = buildDynamicFeaturePanelSection(renderBlock, pathname);
+  } else if (renderBlock.kind === 'site_feature') {
+    section = buildDynamicSiteFeatureSection(renderBlock, pathname);
+  } else if (renderBlock.kind === 'cta_form') {
+    section = buildDynamicCtaSection(renderBlock, pathname);
+  } else if (renderBlock.kind === 'request_form') {
+    section = buildDynamicRequestFormSection(renderBlock, pathname);
+  } else if (renderBlock.kind === 'testimonials') {
+    section = buildDynamicTestimonialsSection(renderBlock, pathname, testimonialsLibrary);
+  } else if (renderBlock.kind === 'billboard') {
+    section = buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });
   }
 
-  return null;
+  return section
+    ? {
+        ...section,
+        renderContract: buildRenderConvergenceBlockContract({
+          ...renderBlock,
+          renderPresetId: section.presetId || renderBlock.presetId,
+        }),
+      }
+    : null;
 }
 
 const CERTIFICATE_REQUEST_COVERAGE_OPTIONS = [
@@ -4533,6 +4553,7 @@ export default function NativeContentPage({ page }) {
   } = useFrontHud();
   const {
     publishedBlocksByPath,
+    sharedSnapshotUpdatedAt,
     resolveManagedPathFromRef,
     resolveAuthoringManagedPathFromRef = null,
     setActiveBlockLock = () => ({ ok: false }),
@@ -5950,6 +5971,8 @@ export default function NativeContentPage({ page }) {
           ? filteredCards.filter((card) => card.title === activeMessageCard)
           : filteredCards;
         const sectionClassName = String(section.className || '');
+        const renderContract = section.renderContract || {};
+        const contentSource = frontHudEnabled && hasAuthoringBlocksForPath ? 'authoring' : 'published';
         const cardsPresetToken = String(section.cardsPreset || '').trim().toLowerCase();
         const formVariant = String(section?.form?.variant || '').trim().toLowerCase();
         const SectionTitleTag = section.headingLevel === 'h1' ? 'h1' : 'h2';
@@ -6044,7 +6067,8 @@ export default function NativeContentPage({ page }) {
         const showCtaSectionHud = isDynamicCtaSection && showSectionHud;
         const showPageContentSectionHud = isDynamicPageContentSection && showSectionHud;
         const showRequestSectionHud = isDynamicRequestSection && showSectionHud;
-        const useCertificateCardLayout = section.cardLayout === 'certificate';
+        const useCertificateCardLayout = section.cardLayout === 'certificate' || section.cardLayout === 'retirement-certificate';
+        const useRetirementCertificateCardLayout = section.cardLayout === 'retirement-certificate';
 
         if (section.nativeHero) {
           const sectionHero = dynamicSectionBlockId === String(dynamicHeroBlock?.id || '').trim()
@@ -6448,6 +6472,14 @@ export default function NativeContentPage({ page }) {
             }}
             className={`service-native-section${section.sand ? ' is-sand' : ''}${section.className ? ` ${section.className}` : ''}${cardsPresetToken ? ` is-cards-preset-${cardsPresetToken}` : ''}${ctaPresentation.className ? ` ${ctaPresentation.className}` : ''}${hasInlineRequestShell ? ' has-inline-request-shell' : ''}${hasManagedRequestShell ? ' has-managed-request-shell' : ''}${hasInlineCtaShell ? ' has-inline-cta-shell' : ''}${showSectionHud ? ' has-admin-front-hud' : ''}${sectionHudFocusClass}${sectionOwnership.className || ''}`}
             data-block-id={dynamicSectionBlockId || undefined}
+            data-render-contract-version={renderContract.version || undefined}
+            data-render-kind={renderContract.kind || undefined}
+            data-render-preset-id={renderContract.presetId || undefined}
+            data-render-root-class={renderContract.rootClassName || undefined}
+            data-render-runtime-class={renderContract.runtimeClassName || undefined}
+            data-content-source={contentSource}
+            data-content-revision={sharedSnapshotUpdatedAt ? String(sharedSnapshotUpdatedAt) : undefined}
+            data-runtime-build-id={RUNTIME_BUILD_ID}
             data-cta-display-mode={hasInlineCtaShell ? ctaPresentation.displayMode : undefined}
             data-cta-trigger-mode={hasInlineCtaShell ? ctaPresentation.triggerMode : undefined}
             data-mobile-front-hud-selectable={showSectionHud && isMobileFrontHud ? 'true' : undefined}
@@ -6536,7 +6568,7 @@ export default function NativeContentPage({ page }) {
                       className={['native-info-section-subtitle', section.subtitleClassName || ''].filter(Boolean).join(' ')}
                       style={section.subtitleStyle || undefined}
                     >
-                      {section.subtitle}
+                      {renderTextWithStrong(section.subtitle)}
                     </h3>
                   ) : null}
                   {section.leadLine ? (
@@ -6811,7 +6843,7 @@ export default function NativeContentPage({ page }) {
             ) : null}
 
             {cards.length && visibleCards.length && useCertificateCardLayout ? (
-              <div className="service-native-grid is-two investments-native-cert-grid charitable-trusts-native-choice-grid">
+              <div className={`service-native-grid is-two ${useRetirementCertificateCardLayout ? 'retirement-account-grid' : 'investments-native-cert-grid'}`}>
                 {visibleCards.map((card, cardIndex) => {
                   const cardTone = cardIndex === 1 ? 'mango' : 'atlantean';
                   const { description, minimum } = card.bodySegments || { description: card.body || '', minimum: '' };
@@ -6828,9 +6860,9 @@ export default function NativeContentPage({ page }) {
                   return (
                     <article
                       key={card.title}
-                      className={`service-native-card investments-native-cert-card charitable-trusts-native-choice-card investments-native-cert-card--${cardTone} fade-up`}
+                      className={`service-native-card ${useRetirementCertificateCardLayout ? `retirement-account-card retirement-account-card--certificate retirement-account-card--${cardTone}` : `investments-native-cert-card investments-native-cert-card--${cardTone}`} fade-up`}
                     >
-                      <div className="investments-native-cert-card__cap">
+                      <div className={useRetirementCertificateCardLayout ? 'retirement-account-card__cap' : 'investments-native-cert-card__cap'}>
                         <h3
                           className={card.titleClassName || undefined}
                           aria-label={Array.isArray(card.titleHighlights) && card.titleHighlights.length ? card.title : undefined}
@@ -6840,7 +6872,7 @@ export default function NativeContentPage({ page }) {
                             : card.title}
                         </h3>
                       </div>
-                      <div className="investments-native-cert-card__body">
+                      <div className={useRetirementCertificateCardLayout ? 'retirement-account-card__body' : 'investments-native-cert-card__body'}>
                         {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
                         {description || minimum ? (
                           <p>

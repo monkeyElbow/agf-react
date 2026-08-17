@@ -788,12 +788,16 @@ function CardGridBulletListEditor({ label, value, onChange }) {
   );
 }
 
-function CardGridRichBodyEditor({ label, value, onChange }) {
+function CardGridRichBodyEditor({ label, value, onChange, wholeListSizeControl = false }) {
   return (
     <div className="admin-grid-resource-editor admin-card-grid-rich-body-editor">
       <div className="admin-grid-resource-editor-head">
         <strong>{label}</strong>
-        <span className="admin-grid-resource-editor-help">Rich text; appears below the bullets in the card.</span>
+        <span className="admin-grid-resource-editor-help">
+          {wholeListSizeControl
+            ? 'Edit bullets here; set whole-list size in Card typography.'
+            : 'Rich text; appears below the bullets in the card.'}
+        </span>
       </div>
       <AdminHtmlEditor
         compact
@@ -1707,7 +1711,11 @@ export function CtaFormBlockEditor({ block, onSettingChange, routeOptions = [], 
     ...ctaFormDraftValues,
   }), [ctaFormDraftValues, settings]);
   const externalCtaFields = useMemo(
-    () => extractCtaFormFields(settings),
+    () => extractCtaFormFields(settings, null, {
+      allowLegacyStepFields: String(settings.sectionClassName || '')
+        .split(/\s+/)
+        .includes('insurance-native-cta'),
+    }),
     [settings],
   );
   const serializedExternalCtaFields = useMemo(
@@ -4589,7 +4597,9 @@ function DraftBackedFieldControlGrid({
               )
             ) : renderFieldControl(
               field,
-              settings?.[field.id],
+              field.id === 'cardBulletSize' && settings?.[field.id] == null
+                ? 'daf'
+                : settings?.[field.id],
               (nextValue) => {
                 onSettingChange(field.id, nextValue);
               },
@@ -5370,6 +5380,9 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const isCgaAssetsGrid = String(settings.sectionClassName || '')
     .split(/\s+/)
     .includes('legacy-child-native-cga-assets');
+  const isPlannedGivingBulletGrid = isCgaAssetsGrid
+    || String(settings.sectionClassName || '').split(/\s+/).includes('legacy-child-native-assets')
+    || normalizeGridCardStyleToken(settings.cardStyle) === 'planned-giving-centered';
   const presetDefinition = resolveBlockPresetDefinition(block);
   const presetEditor = presetDefinition?.editor || {};
   const presetCardFeatures = presetEditor?.cardFeatures || {};
@@ -5436,7 +5449,13 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const cardTypographyFields = [
     fieldById.get('cardPaddingRem'),
     fieldById.get('cardTitleSizeRem'),
-    fieldById.get('cardBodySizeRem'),
+    fieldById.get('cardBodySizeRem')
+      ? {
+          ...fieldById.get('cardBodySizeRem'),
+          label: isPlannedGivingBulletGrid ? 'Card copy size (rem)' : fieldById.get('cardBodySizeRem').label,
+        }
+      : null,
+    isPlannedGivingBulletGrid ? fieldById.get('cardBulletSize') : null,
     fieldById.get('cardBodyLineHeight'),
   ].filter(Boolean);
   const normalizedRouteOptions = useMemo(
@@ -5627,6 +5646,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
           />
           <CardGridRichBodyEditor
             label={`Card ${slotData.slot} body`}
+            wholeListSizeControl={isPlannedGivingBulletGrid}
             value={isCgaAssetsGrid
               ? resolveCgaCardBodyEditorValue(settings, slotData.slot)
               : settings[`card${slotData.slot}Body`] || settings[`card${slotData.slot}BodyHtml`]}

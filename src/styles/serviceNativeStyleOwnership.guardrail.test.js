@@ -14,9 +14,13 @@ const CLASSIFIED_ROUTE_SCOPED_DYNAMIC_SELECTORS = Object.freeze({
   'native-info-page--insurance': 'Insurance overview keeps route-specific dynamic section art direction.',
   'native-info-page--legacy-cga': 'Charitable gift annuity sections need route-specific hero clearance and card/form presentation.',
   'native-info-page--legacy-child': 'Planned-giving child routes share a declared compatibility shell for their managed dynamic sections.',
+  'native-info-page--legacy-endowments': 'Endowment request form keeps its declared route background preset.',
   'native-info-page--legacy-generosity-fund': 'Donor-advised fund assets and online-giving sections need route-specific dynamic grid spacing and typography.',
   'native-info-page--legacy-giving': 'Planned-giving product cards need route-scoped flex-card padding and vertical balance.',
+  'native-info-page--legacy-qcd': 'Qualified charitable distribution steps retain their declared route presentation while sharing the step-card contract.',
   'native-info-page--life-quote': 'Life quote product cards need route-specific dynamic grid card shell sizing.',
+  'native-info-page--retirement-iras': 'IRA type cards keep their route-specific card shell and title spacing.',
+  'native-info-page--retirement-rollovers': 'Rollover cards keep their route-specific card presentation.',
 });
 
 function readSource(relativePath) {
@@ -150,6 +154,33 @@ describe('implementation-ownership.service-native style ownership', () => {
     expect(source).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) {');
     expect(source).toContain('.native-info-page--legacy-giving .service-native-section.native-dynamic-grid.legacy-giving-types .service-native-card:not(.investments-native-cert-card) h3 {');
     expect(source).toContain('font-size: max(var(--dynamic-grid-card-title-size, 1.14rem), clamp(1.55rem, 2.35vw, 1.9rem));');
+  });
+
+  it('keeps planned-giving route fixes on their declared hero, preset, and section owners', () => {
+    const source = readSource('./service-native.css');
+
+    [
+      '.native-info-page--legacy-giving .service-native-hero {',
+      'padding-block: clamp(3.8rem, 7.2vw, 5.2rem);',
+      '.legacy-child-native-trusts-differences .native-info-section-copy > h2 {',
+      'font-size: clamp(2.55rem, 4.8vw, 4.1rem);',
+      'font-size: clamp(1.8rem, 2.9vw, 2.35rem);',
+      'font-size: clamp(1.28rem, 1.95vw, 1.48rem);',
+      '.legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 {',
+      '.legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 {',
+      'padding: clamp(1.15rem, 2.4vw, 1.8rem) clamp(2rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem);',
+      '.native-info-page--legacy-child.native-info-page--legacy-endowments\n  .native-dynamic-request.is-request-form-preset-legacy-endowment {',
+      'background: var(--ag-surface-blue-gradient);',
+      '.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-stock .service-native-grid {',
+      'margin: clamp(2rem, 4vw, 3rem) auto 0;',
+      'align-items: center;',
+      'align-self: center;',
+      '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered {',
+      'padding-bottom: clamp(2rem, 4.2vw, 3.2rem);',
+      'padding-bottom: calc(var(--dynamic-grid-card-padding, var(--native-card-shell-padding)) * 1.55);',
+    ].forEach((expectedRule) => {
+      expect(source).toContain(expectedRule);
+    });
   });
 
   it('keeps planned-giving asset bullet cards padded beyond the dynamic-grid default', () => {
@@ -339,10 +370,10 @@ describe('implementation-ownership.service-native style ownership', () => {
       '--investments-cert-cap-padding-top: clamp(1.8rem, 3.3vw, 2.2rem);',
       'background: linear-gradient(160deg, rgba(241, 250, 251, 0.98) 0%, rgba(229, 247, 249, 0.96) 100%);',
       'padding: var(--investments-cert-body-padding-top) var(--investments-cert-body-padding-inline) var(--investments-cert-body-padding-bottom);',
-      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card),',
-      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card) h3,',
-      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card) :is(p, li, a:not(.service-native-btn)),',
-      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card) .service-native-action-row:last-child,',
+      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate),',
+      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) h3,',
+      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) :is(p, li, a:not(.service-native-btn)),',
+      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) .service-native-action-row:last-child,',
       '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card h3,',
       '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card h3::after {',
       '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card .service-native-card-bullet-list li,',
@@ -473,12 +504,12 @@ describe('implementation-ownership.service-native style ownership', () => {
       '--dynamic-grid-card-title-color: var(--ag-color-super-grey);',
       'padding-bottom: clamp(3.4rem, 6.4vw, 5rem);',
       'box-shadow: 0 8px 18px rgba(16, 43, 64, 0.06);',
-      '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div {',
+      '.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) > div {',
       'display: flex;',
-      '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card > div > p {',
+      '.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) > div > p {',
       'flex: 1 1 auto;',
       'text-align: left;',
-      '.native-info-page--retirement-iras .retirement-child-native-ira-types .service-native-card h3 {',
+      '.native-info-page--retirement-iras .service-native-section.native-dynamic-grid.retirement-child-native-ira-types .service-native-card:not(.investments-native-cert-card) h3 {',
       'display: block;',
       'min-height: 0;',
       'margin: 0;',

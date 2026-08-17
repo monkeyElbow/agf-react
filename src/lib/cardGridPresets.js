@@ -14,6 +14,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardPaddingRem: 1.35,
       cardTitleSizeRem: 1.14,
       cardBodySizeRem: 1,
+      cardBulletSize: 'daf',
       cardBodyLineHeight: 1.58,
     }),
     editor: Object.freeze({
@@ -44,6 +45,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardPaddingRem: 2.6,
       cardTitleSizeRem: 1.45,
       cardBodySizeRem: 1.02,
+      cardBulletSize: 'daf',
       cardBodyLineHeight: 1.56,
     }),
     editor: Object.freeze({
@@ -74,6 +76,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardPaddingRem: 0.75,
       cardTitleSizeRem: 1.5,
       cardBodySizeRem: 1.08,
+      cardBulletSize: 'daf',
       cardBodyLineHeight: 1.45,
     }),
     editor: Object.freeze({
@@ -104,6 +107,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardPaddingRem: 1.75,
       cardTitleSizeRem: 1.22,
       cardBodySizeRem: 1.08,
+      cardBulletSize: 'daf',
       cardBodyLineHeight: 1.55,
     }),
     editor: Object.freeze({

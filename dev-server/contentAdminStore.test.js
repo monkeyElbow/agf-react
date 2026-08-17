@@ -1612,6 +1612,122 @@ describe('createDevContentAuthorityStore', () => {
     expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
   });
 
+  it('migrates P&C arrow-prefixed resource cards with a backup and no-op repeat', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+    const actor = createActor();
+    const pathname = '/services/insurance/property-casualty-insurance';
+    const resourceBlock = {
+      id: 'resources',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        card1Body: '› Sexual misconduct liability\n› Medical payments',
+        card2Body: '› Online safety tools\n› **Comprehensive risk management guide**',
+      },
+    };
+    const state = {
+      pageHierarchy: { [pathname]: { path: pathname, title: 'Property & Casualty Insurance' } },
+      blocksByPath: { [pathname]: [resourceBlock] },
+      pathAliases: {},
+      collaborationByPath: { [pathname]: { blocks: {}, history: [] } },
+    };
+
+    store.resetFromSeed(state, { actor });
+    const migrated = store.migrateInsurancePcResourceCardsSnapshot({
+      actor,
+      reason: 'convert P&C resource arrows to editable lists',
+    });
+    const migratedBlock = migrated.state.blocksByPath[pathname][0];
+
+    expect(migrated.ok).toBe(true);
+    expect(migrated.migration).toMatchObject({
+      id: 'insurance-pc-resource-card-lists',
+      version: 1,
+      didMigrate: true,
+    });
+    expect(migratedBlock.settings).toMatchObject({
+      card1Body: '',
+      card1ListJson: JSON.stringify(['Sexual misconduct liability', 'Medical payments']),
+      card2Body: '',
+      card2ListJson: JSON.stringify(['Online safety tools', '**Comprehensive risk management guide**']),
+    });
+    expect(migrated.backup.reason).toBe('before-insurance-pc-resource-card-lists-migration');
+    expect(migrated.snapshotMigrations['insurance-pc-resource-card-lists']).toBe(1);
+
+    const reloaded = createStore(persistenceFile, { backupDir });
+    const secondPass = reloaded.migrateInsurancePcResourceCardsSnapshot({
+      actor,
+      reason: 'repeat should be a no-op',
+    });
+    expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
+  });
+
+  it('migrates Online Contributions setup cards onto the shared numbered-step preset', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+    const actor = createActor();
+    const pathname = '/online-contributions';
+    const setupSteps = {
+      id: 'setup_steps',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      presetId: 'default',
+      settings: {
+        columns: 'three',
+        card1Title: '1) Create a new user account for your company.',
+        card1Body: 'Start in Online Access and create a user account for your company.',
+        card2Title: '2) Select "403(b) Employer" as the Account Type',
+        card2Body: 'Choose the employer contribution account type during setup so the account is configured correctly.',
+        card3Title: '3) Get your Employer Code',
+        card3Body: 'Contact Client Services at 866.621.1787 or clientservices@agfinancial.org for your Employer Code to complete your account setup.',
+      },
+    };
+    const state = {
+      pageHierarchy: { [pathname]: { path: pathname, title: 'Online Contributions' } },
+      blocksByPath: { [pathname]: [setupSteps] },
+      pathAliases: {},
+      collaborationByPath: { [pathname]: { blocks: {}, history: [] } },
+    };
+
+    store.resetFromSeed(state, { actor });
+    const migrated = store.migrateOnlineContributionsStepsSnapshot({
+      actor,
+      reason: 'align Online Contributions with the shared numbered-step editor treatment',
+    });
+    const migratedBlock = migrated.state.blocksByPath[pathname][0];
+
+    expect(migrated.ok).toBe(true);
+    expect(migrated.migration).toMatchObject({
+      id: 'online-contributions-step-cards',
+      version: 1,
+      didMigrate: true,
+    });
+    expect(migratedBlock).toMatchObject({
+      presetId: 'step-cards',
+      settings: {
+        columns: 'one',
+        card1Title: '01',
+        card2Title: '02',
+        card3Title: '03',
+      },
+    });
+    expect(migratedBlock.settings.card1Body).toContain('Create a new user account for your company.');
+    expect(migratedBlock.settings.card2Body).toContain('Select "403(b) Employer" as the Account Type');
+    expect(migratedBlock.settings.card3Body).toContain('Get your Employer Code');
+    expect(migrated.backup.reason).toBe('before-online-contributions-step-cards-migration');
+    expect(migrated.snapshotMigrations['online-contributions-step-cards']).toBe(1);
+
+    const reloaded = createStore(persistenceFile, { backupDir });
+    const secondPass = reloaded.migrateOnlineContributionsStepsSnapshot({
+      actor,
+      reason: 'repeat should be a no-op',
+    });
+    expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
+  });
+
   it('restoring a page revision creates new current draft state without mutating the old revision', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);

@@ -578,6 +578,11 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByRole('heading', { name: 'AG Insurance Program' })).toBeTruthy();
     expect(screen.getByAltText('Church Mutual Insurance')).toBeTruthy();
     expect(screen.getByText('Additional coverages available')).toBeTruthy();
+    expect(document.querySelectorAll('.insurance-pc-native-resources .retirement-account-card--certificate')).toHaveLength(2);
+    expect(document.querySelector('.insurance-pc-native-resources .investments-native-cert-card')).toBeNull();
+    expect(document.querySelectorAll('.insurance-pc-native-resources .service-native-card-bullet-list')).toHaveLength(2);
+    expect(document.querySelectorAll('.insurance-pc-native-resources .service-native-card-bullet-list li')).toHaveLength(15);
+    expect(document.querySelector('.insurance-pc-native-resources')?.textContent).not.toContain('›');
     expect(screen.getByText('Safe & sound')).toBeTruthy();
     expect(screen.getByText('CM0045 (04-2020)')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
@@ -680,6 +685,9 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('[data-block-id="request_form"]')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Move your funds.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Start the process' })).toBeTruthy();
+    expect(document.querySelector('[data-block-id="rollover_options"] > .ag-panel-rail > .native-info-section-copy > h2')).toBeTruthy();
+    expect(document.querySelector('[data-block-id="rollover_process"] > .ag-panel-rail > .native-info-rich-html > h2')).toBeTruthy();
+    expect(document.querySelectorAll('[data-block-id="rollover_process"] > .ag-panel-rail > .native-info-rich-html > p')).toHaveLength(3);
     expect(screen.getByRole('link', { name: 'Rollover/Transfer Form' })).toBeTruthy();
     expect(screen.getAllByText('Our rollover specialists are happy to help focus your retirement.')).toHaveLength(1);
   });

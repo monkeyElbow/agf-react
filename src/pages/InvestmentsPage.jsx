@@ -2201,19 +2201,19 @@ export default function InvestmentsPage() {
           <BlockOwnershipOverlay ownership={getOwnershipVisualForBlockId('certificates')} />
           {renderHudAnchor('certificates')}
           <div className="ag-panel-rail">
-            <div className="service-native-grid is-two investments-native-cert-grid">
+            <div className="service-native-grid is-two retirement-account-grid">
               {resolvedCertificateCards.map((card) => (
                 <article
                   key={`${card.titleTop}-${card.titleBottom}`}
-                  className={`service-native-card investments-native-cert-card investments-native-cert-card--${card.tone} fade-up fade-up-force-observe`}
+                  className={`service-native-card retirement-account-card retirement-account-card--certificate retirement-account-card--${card.tone} fade-up fade-up-force-observe`}
                 >
-                  <div className="investments-native-cert-card__cap">
+                  <div className="retirement-account-card__cap">
                     <h3>
                       {card.titleTop}
                       {card.titleBottom ? <><br />{card.titleBottom}</> : null}
                     </h3>
                   </div>
-                  <div className="investments-native-cert-card__body">
+                  <div className="retirement-account-card__body">
                     <p>
                       {card.description}
                       {card.minimum ? (

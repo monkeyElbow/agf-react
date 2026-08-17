@@ -11,6 +11,7 @@ import {
   getGridSafeCardStyleForBg,
   getGridSafeToneForBg,
   normalizeDynamicGridCardBodyLineHeight,
+  normalizeDynamicGridCardBulletSize,
   normalizeDynamicGridCardBodySizeRem,
   normalizeDynamicGridCardPaddingRem,
   normalizeDynamicGridCardTitleSizeRem,
@@ -1880,9 +1881,15 @@ function normalizePlannedGivingCtaFields(fields, source = {}) {
 }
 
 function buildDynamicCtaFieldsFromSource(primarySource, fallbackSource = null) {
+  const allowLegacyStepFields = [primarySource, fallbackSource].some((source) => (
+    String(source?.sectionClassName || '')
+      .split(/\s+/)
+      .includes('insurance-native-cta')
+  ));
   const baseFields = extractCtaFormFields(primarySource, fallbackSource, {
     allowSlotCompatibility: false,
     preferFallbackSourceBeforeSlotCompatibility: true,
+    allowLegacyStepFields,
   }).map((field) => ({
     id: String(field.id || '').trim(),
     label: String(field.label || '').trim(),
@@ -2316,6 +2323,7 @@ export function buildDynamicGridFromBlock(block) {
   const cardPaddingRem = normalizeDynamicGridCardPaddingRem(settings.cardPaddingRem);
   const cardTitleSizeRem = normalizeDynamicGridCardTitleSizeRem(settings.cardTitleSizeRem);
   const cardBodySizeRem = normalizeDynamicGridCardBodySizeRem(settings.cardBodySizeRem);
+  const cardBulletSize = normalizeDynamicGridCardBulletSize(settings.cardBulletSize);
   const cardBodyLineHeight = normalizeDynamicGridCardBodyLineHeight(settings.cardBodyLineHeight);
   const resolvedCardClass = cardStyle === 'none' ? 'card-none' : cardStyle;
   const sectionAction = buildCanonicalActionLinkFromFields(settings, {
@@ -2431,6 +2439,7 @@ export function buildDynamicGridFromBlock(block) {
     cardPaddingRem,
     cardTitleSizeRem,
     cardBodySizeRem,
+    cardBulletSize,
     cardBodyLineHeight,
     actions: sectionAction ? [sectionAction] : [],
     cards,
@@ -2524,6 +2533,7 @@ export function buildDynamicPageContentFromBlock(block) {
   const html = String(settings.html || '').trim();
   const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
   const widget = String(settings.widget || '').trim();
+  const logoKey = String(settings.logoKey || '').trim().toLowerCase();
   const logoImage = String(settings.logoImage || '').trim();
   const logoAlt = String(settings.logoAlt || '').trim();
   const logoText = String(settings.logoText || '').trim();
@@ -2601,6 +2611,7 @@ export function buildDynamicPageContentFromBlock(block) {
     html: normalizedHtml,
     ...(bodyColorClassName ? { bodyColorClassName } : {}),
     widget,
+    ...(logoKey ? { logoKey } : {}),
     logoImage,
     logoAlt,
     logoText,

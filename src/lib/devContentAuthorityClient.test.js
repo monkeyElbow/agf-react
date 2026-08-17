@@ -4,6 +4,7 @@ import {
   fetchSharedContentBackups,
   fetchSharedAnnouncement,
   initializeSharedContentFromSeed,
+  migrateInsuranceCoverageCtaSnapshot,
   migrateSharedGenerosityFundSnapshot,
   publishSharedBlock,
   publishSharedPage,
@@ -305,6 +306,29 @@ describe('devContentAuthorityClient', () => {
     expect(request.method).toBe('POST');
     expect(payload.defaultState.blocksByPath['/services/planned-giving/donor-advised-fund']).toEqual([]);
     expect(payload.reason).toBe('one-time snapshot migration');
+    expect(payload.actor.userId).toBe('dev-jordan');
+  });
+
+  it('uses the explicit versioned insurance CTA snapshot migration endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await migrateInsuranceCoverageCtaSnapshot(
+      {
+        userId: 'dev-jordan',
+        displayName: 'Jordan QA',
+      },
+      'repair published insurance CTA field schema',
+    );
+
+    const [url, request] = fetchMock.mock.calls[0];
+    const payload = JSON.parse(request.body);
+    expect(url).toContain('/migrate-insurance-coverage-cta');
+    expect(request.method).toBe('POST');
+    expect(payload.reason).toBe('repair published insurance CTA field schema');
     expect(payload.actor.userId).toBe('dev-jordan');
   });
 });

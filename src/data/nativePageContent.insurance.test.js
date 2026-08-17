@@ -74,8 +74,24 @@ describe('insurance native page content', () => {
     expect(content?.sections).toBeUndefined();
     expect(requestBlock?.settings?.sectionClassName).toBe('insurance-pc-native-quote');
     expect(requestBlock?.settings?.anchorId).toBe('quote');
+    expect(requestBlock?.settings?.spaceBeforeRem).toBe(3.6);
+    expect(requestBlock?.settings?.spaceAfterRem).toBe(5.2);
     expect(requestBlock?.settings?.targetSectionKey).toBeUndefined();
     expect(resourcesBlock?.settings?.card1Title).toBe('Additional coverages available');
+    expect(resourcesBlock?.settings?.sectionClassName).toBe('insurance-pc-native-resources');
     expect(noticeBlock?.settings?.fineprintDisclosureId).toBe('insurance-property-casualty-coverage-notice');
+  });
+
+  it('keeps Mission Assure intro identity and emphasis in the managed block blueprint', () => {
+    const blocks = contentBlockBlueprintsByPath['/services/insurance/mission-assure'] || [];
+    const introBlock = blocks.find((block) => block?.id === 'intro_pricing');
+    const getCoveredBlock = blocks.find((block) => block?.id === 'get_covered_billboard');
+    const claimBlock = blocks.find((block) => block?.id === 'report_claim_billboard');
+
+    expect(introBlock?.settings?.logoKey).toBe('mission-assure');
+    expect(introBlock?.settings?.titleHighlightsJson).toContain('faith');
+    expect(introBlock?.settings?.subtitle).toBe('As low as **$1.25/day**');
+    expect(getCoveredBlock?.settings?.sectionClassName).toBe('mission-assure-native-get-covered');
+    expect(claimBlock?.settings?.bodyHtml).toBe('<p>Start here.</p>');
   });
 });

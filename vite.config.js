@@ -18,6 +18,7 @@ const MAX_CHATBOT_REQUEST_BYTES = 32 * 1024;
 const MAX_CHATBOT_PROMPT_LENGTH = 2000;
 const CHATBOT_RATE_WINDOW_MS = 60 * 1000;
 const CHATBOT_RATE_LIMIT = 20;
+const VITE_RUNTIME_BUILD_ID = `${process.pid}-${Date.now()}`;
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
@@ -65,6 +66,7 @@ function readRequestBody(req, maxBytes = MAX_CONTENT_ADMIN_REQUEST_BYTES) {
 function getSafeDiagnostics(diagnostics, authorityLease, server) {
   return {
     serverInstanceId: diagnostics.serverInstanceId,
+    buildId: diagnostics.buildId,
     startupAt: diagnostics.startupAt,
     serverReadyAt: diagnostics.serverReadyAt,
     storeReadyAt: diagnostics.storeReadyAt,
@@ -103,6 +105,7 @@ function contentAdminDevPlugin() {
   const serverInstanceId = `${process.pid}-${pluginCreatedAt}-${Math.random().toString(36).slice(2, 8)}`;
   const diagnostics = {
     serverInstanceId,
+    buildId: VITE_RUNTIME_BUILD_ID,
     processId: process.pid,
     repoRoot,
     persistenceFile,
@@ -272,6 +275,11 @@ function contentAdminDevPlugin() {
 
           if (req.method === 'GET' && url.pathname === '/route-state') {
             sendJson(res, 200, contentStore.getRouteSnapshot(url.searchParams.get('path')));
+            return;
+          }
+
+          if (req.method === 'GET' && url.pathname === '/render-contract') {
+            sendJson(res, 200, contentStore.getRenderConvergenceContract(url.searchParams.get('path')));
             return;
           }
 
@@ -457,6 +465,15 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/migrate-online-contributions-step-cards') {
+            const result = contentStore.migrateOnlineContributionsStepsSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/migrate-cga-secure-act-card') {
             const result = contentStore.migrateCgaSecureActCardSnapshot({
               actor: body.actor,
@@ -468,6 +485,15 @@ function contentAdminDevPlugin() {
 
           if (url.pathname === '/migrate-insurance-coverage-cta') {
             const result = contentStore.migrateInsuranceCoverageCtaSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-insurance-pc-resource-card-lists') {
+            const result = contentStore.migrateInsurancePcResourceCardsSnapshot({
               actor: body.actor,
               reason: body.reason,
             });
@@ -663,6 +689,9 @@ function contentAdminDevPlugin() {
 }
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_AG_RUNTIME_BUILD_ID': JSON.stringify(VITE_RUNTIME_BUILD_ID),
+  },
   plugins: [react(), contentAdminDevPlugin()],
   server: {
     strictPort: true,
