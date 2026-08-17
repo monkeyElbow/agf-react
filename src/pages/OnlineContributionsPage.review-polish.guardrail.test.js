@@ -30,6 +30,9 @@ describe('online contributions review polish guardrail', () => {
     expect(cssSource).toContain('grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);');
     expect(cssSource).toContain('font-size: clamp(2.55rem, 4.35vw, 3.2rem);');
     expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-steps .service-native-card {');
+    expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-steps > :is(.native-info-full-bleed, .ag-panel-rail, .ag-panel-rail-wide) {');
+    expect(cssSource).toContain('max-width: 74rem !important;');
+    expect(cssSource).toContain('margin-inline: auto !important;');
     expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr) !important;');
     expect(cssSource).toContain('width: min(100%, 82ch) !important;');
     expect(cssSource).toContain('grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);');

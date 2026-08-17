@@ -19938,6 +19938,16 @@ p.impact-proof-story-proof-body {
   padding-bottom: clamp(4.2rem, 7vw, 5.8rem);
 }
 
+.native-info-page--online-contributions .online-contrib-native-steps > :is(.native-info-full-bleed, .ag-panel-rail, .ag-panel-rail-wide) {
+  /* The old full-bleed rail was width-constrained but left-anchored. Center
+     the rail first; centering the inner cards alone cannot repair that drift.
+     Older snapshots may render this section as ag-panel-rail instead of
+     native-info-full-bleed, so cover all three renderer rail shapes here. */
+  width: min(calc(100% - (var(--ag-panel-gutter) * 2)), 74rem) !important;
+  max-width: 74rem !important;
+  margin-inline: auto !important;
+}
+
 /* Online Contributions is an older seeded route. Keep its numbered cards
    visibly tied to the shared step-card accents even when an older snapshot
    has not yet carried the preset runtime class. */
