@@ -5456,6 +5456,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       sharedPublishStatus,
       sharedSnapshotUpdatedAt,
       sharedSeedBaseline,
+      getPublishedRevisionForPath: (pathname) => publishedRouteRevisionsRef.current.get(String(pathname || '').trim()) || '',
       sharedSyncStatus: {
         isPending: sharedSyncState.pendingMutationCount > 0 || sharedSyncState.hasQueuedDraftSync,
         pendingMutationCount: sharedSyncState.pendingMutationCount,

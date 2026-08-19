@@ -1,5 +1,6 @@
 import { createContext, lazy, Suspense, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import '../styles/service-native.css';
+import '../styles/service-native-numbered-cards.css';
 import { Link } from 'react-router-dom';
 
 const CalculatorRouteStyles = lazy(() => import('./CalculatorRouteStyles'));
@@ -72,8 +73,18 @@ import {
 } from '../lib/dynamicPageBlocks';
 import { CALCULATOR_INTRO_KIND, CALCULATOR_WIDGET_KIND } from '../lib/calculatorWidgetIdentity';
 import { normalizeBlockForRender } from '../lib/blockPresentationContracts';
+import { resolveNumberedStepCardsClassName } from '../lib/numberedStepCardsContract';
+import {
+  DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
+  DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+} from '../lib/dynamicGrid';
 import { buildNativeHudPanels } from '../lib/nativeHudPanels';
 import { composeManagedPage } from '../lib/managedPageComposition';
+import {
+  buildRuntimeAuthorityDescriptor,
+  publishRuntimeAuthorityDescriptor,
+} from '../lib/runtimeAuthorityDescriptor';
+import { getRouteAuthority } from '../lib/managedRouteAuthorityManifest';
 import useHudDockOrder from '../hooks/useHudDockOrder';
 import { useManagedContentSource } from '../hooks/useManagedContentSource';
 import GivingComparisonMatrix from './GivingComparisonMatrix';
@@ -1139,6 +1150,8 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardTitleSizeRem,
     cardBodySizeRem,
     cardBulletSize,
+    cardBulletSizeRem,
+    cardBulletLineHeight,
     cardBodyLineHeight,
     actions,
     cards: runtimeCards,
@@ -1147,10 +1160,14 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-grid' : 'native-dynamic-grid';
   const sectionClassTokens = sectionClassName.split(/\s+/).filter(Boolean);
   const isLegacyAssetGrid = sectionClassTokens.includes('legacy-child-native-assets');
-  const isPlannedGivingBulletGrid = isLegacyAssetGrid || cardStyle === 'planned-giving-centered';
-  // Planned-giving asset cards use DAF as shared baseline. Keep list size on
-  // block settings so admin changes whole list, including rich HTML bullets.
-  const plannedGivingBulletMaxSizeRem = cardBulletSize === 'large' ? 1.55 : 1.35;
+  const isPlannedGivingBulletGrid = isLegacyAssetGrid
+    || sectionClassTokens.includes('legacy-giving-types')
+    || cardStyle === 'planned-giving-centered';
+  // Keep planned-giving bullet typography on block settings so admin changes
+  // the whole list, including rich HTML bullets, from one measurable control.
+  const plannedGivingBulletSizeRem = Number.isFinite(Number(cardBulletSizeRem))
+    ? Number(cardBulletSizeRem)
+    : DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM;
   const cardLayout = (
     sectionClassTokens.includes('legacy-child-native-trust-choices--trusts')
     || sectionClassTokens.includes('legacy-child-native-cga-options')
@@ -1159,6 +1176,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     ? (sectionClassTokens.includes('insurance-pc-native-resources') ? 'retirement-certificate' : 'certificate')
     : '';
   const presetRuntimeClassName = buildPresetFamilyRuntimeClassName('card_grid', presetId);
+  const numberedStepCardsClassName = resolveNumberedStepCardsClassName({ presetId, sectionClassName });
   const consultantCards = consultantService
     ? buildConsultantCards({
       consultantService,
@@ -1229,10 +1247,17 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
       ...(isPlannedGivingBulletGrid
-        ? { '--planned-giving-bullet-size': `clamp(1.1rem, 2vw, ${plannedGivingBulletMaxSizeRem}rem)` }
+        ? {
+            '--planned-giving-bullet-size': `${plannedGivingBulletSizeRem}rem`,
+            '--planned-giving-bullet-line-height': String(
+              Number.isFinite(Number(cardBulletLineHeight))
+                ? cardBulletLineHeight
+                : DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
+            ),
+          }
         : {}),
     },
-    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${numberedStepCardsClassName ? ` ${numberedStepCardsClassName}` : ''}${isPlannedGivingBulletGrid ? ' is-planned-giving-bullet-grid' : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
   };
 }
 
@@ -1571,7 +1596,7 @@ function buildManagedBlockSection(block, {
     section = buildDynamicHeroShellSection(renderBlock);
   } else if (renderBlock.kind === 'intro') {
     section = buildDynamicIntroShellSection(renderBlock, { includeTestClassName: isTestPage });
-  } else if (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND) {
+  } else if (renderBlock.kind === 'content' || renderBlock.kind === 'support_library' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND) {
     section = buildDynamicPageContentSection(renderBlock, pathname);
   } else if (renderBlock.kind === 'card_grid') {
     section = buildDynamicGridSection(renderBlock, pathname, { getConsultants });
@@ -4554,6 +4579,9 @@ export default function NativeContentPage({ page }) {
   const {
     publishedBlocksByPath,
     sharedSnapshotUpdatedAt,
+    getPublishedRevisionForPath = () => '',
+    lastSharedSaveResult = null,
+    lastSharedPublishResult = null,
     resolveManagedPathFromRef,
     resolveAuthoringManagedPathFromRef = null,
     setActiveBlockLock = () => ({ ok: false }),
@@ -4690,6 +4718,55 @@ export default function NativeContentPage({ page }) {
         .map((section) => applyManagedChartsToSection(section, getChartValue))
       : [],
   }), [content, getChartValue, getDisclosureValue]);
+  const runtimeAuthorityDescriptors = useMemo(() => {
+    const routeAuthority = getRouteAuthority(activePath || templatePath);
+    const publishedRevision = getPublishedRevisionForPath(editableBlockPath || activePath || templatePath);
+    const draftRevision = lastSharedSaveResult?.snapshot?.draftRevision
+      || lastSharedSaveResult?.payload?.draftRevision
+      || '';
+    const lastPublishedRevision = lastSharedPublishResult?.snapshot?.publishedRevision
+      || lastSharedPublishResult?.payload?.publishedRevision
+      || publishedRevision;
+    const activeRevision = frontHudEnabled ? draftRevision : lastPublishedRevision;
+    const sectionsByBlockId = new Map(
+      (Array.isArray(contentWithManagedDisclosures.sections) ? contentWithManagedDisclosures.sections : [])
+        .map((section) => [String(section?.blockId || '').trim(), section])
+        .filter(([blockId]) => blockId),
+    );
+    return (Array.isArray(contentWithManagedDisclosures.managedBlocks) ? contentWithManagedDisclosures.managedBlocks : [])
+      .map((block) => buildRuntimeAuthorityDescriptor({
+        pathname: activePath || templatePath,
+        block,
+        section: sectionsByBlockId.get(String(block?.id || '').trim()),
+        source: frontHudEnabled
+          ? (hasAuthoringBlocksForPath ? 'draft' : 'fallback')
+          : 'published',
+        draftRevision,
+        publishedRevision: lastPublishedRevision,
+        activeRevision,
+        hudEnabled: frontHudEnabled,
+        runtimeBuildId: RUNTIME_BUILD_ID,
+        routeAuthority,
+      }));
+  }, [
+    activePath,
+    templatePath,
+    contentWithManagedDisclosures,
+    editableBlockPath,
+    frontHudEnabled,
+    getPublishedRevisionForPath,
+    hasAuthoringBlocksForPath,
+    lastSharedPublishResult,
+    lastSharedSaveResult,
+  ]);
+
+  useEffect(() => {
+    publishRuntimeAuthorityDescriptor(runtimeAuthorityDescriptors, {
+      pathname: activePath || templatePath,
+      hudEnabled: frontHudEnabled,
+      runtimeBuildId: RUNTIME_BUILD_ID,
+    });
+  }, [activePath, templatePath, frontHudEnabled, runtimeAuthorityDescriptors]);
   const preIntroSections = Array.isArray(contentWithManagedDisclosures.preIntroSections) ? contentWithManagedDisclosures.preIntroSections : [];
   const postIntroSections = Array.isArray(contentWithManagedDisclosures.sections) ? contentWithManagedDisclosures.sections : [];
   const sectionList = [...preIntroSections, ...postIntroSections];
@@ -6069,6 +6146,7 @@ export default function NativeContentPage({ page }) {
         const showRequestSectionHud = isDynamicRequestSection && showSectionHud;
         const useCertificateCardLayout = section.cardLayout === 'certificate' || section.cardLayout === 'retirement-certificate';
         const useRetirementCertificateCardLayout = section.cardLayout === 'retirement-certificate';
+        const useCharitableTrustChoiceLayout = sectionClassName.includes('legacy-child-native-trust-choices--trusts');
 
         if (section.nativeHero) {
           const sectionHero = dynamicSectionBlockId === String(dynamicHeroBlock?.id || '').trim()
@@ -6843,7 +6921,7 @@ export default function NativeContentPage({ page }) {
             ) : null}
 
             {cards.length && visibleCards.length && useCertificateCardLayout ? (
-              <div className={`service-native-grid is-two ${useRetirementCertificateCardLayout ? 'retirement-account-grid' : 'investments-native-cert-grid'}`}>
+              <div className={`service-native-grid is-two ${useRetirementCertificateCardLayout ? 'retirement-account-grid' : 'investments-native-cert-grid'}${useCharitableTrustChoiceLayout ? ' charitable-trusts-native-choice-grid' : ''}`}>
                 {visibleCards.map((card, cardIndex) => {
                   const cardTone = cardIndex === 1 ? 'mango' : 'atlantean';
                   const { description, minimum } = card.bodySegments || { description: card.body || '', minimum: '' };
@@ -6860,7 +6938,7 @@ export default function NativeContentPage({ page }) {
                   return (
                     <article
                       key={card.title}
-                      className={`service-native-card ${useRetirementCertificateCardLayout ? `retirement-account-card retirement-account-card--certificate retirement-account-card--${cardTone}` : `investments-native-cert-card investments-native-cert-card--${cardTone}`} fade-up`}
+                      className={`service-native-card ${useRetirementCertificateCardLayout ? `retirement-account-card retirement-account-card--certificate retirement-account-card--${cardTone}` : `investments-native-cert-card investments-native-cert-card--${cardTone}`}${useCharitableTrustChoiceLayout ? ' charitable-trusts-native-choice-card' : ''} fade-up`}
                     >
                       <div className={useRetirementCertificateCardLayout ? 'retirement-account-card__cap' : 'investments-native-cert-card__cap'}>
                         <h3
@@ -6906,14 +6984,11 @@ export default function NativeContentPage({ page }) {
                 {visibleCards.map((card) => {
                   const isActiveMessageCard = focusMessageCard && activeMessageCard === card.title;
                   const resolvedMessageLayout = isActiveMessageCard && card.messagePanel ? 'inline' : 'toggle';
-                  const stretchedLink = !card.messagePanel && card.stretchedLink && typeof card.stretchedLink === 'object'
-                    ? card.stretchedLink
-                    : null;
                   const shouldAnimateCard = !focusMessageCard;
                   const forceScrollRevealCard = shouldAnimateCard && sectionClassName.includes('legacy-giving-types');
 
                   return (
-                  <article key={card.title} className={`service-native-card ${shouldAnimateCard ? 'fade-up' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}${stretchedLink ? ' has-stretched-link' : ''}`.trim()}>
+                  <article key={card.title} className={`service-native-card ${shouldAnimateCard ? 'fade-up' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}`.trim()}>
                     <div className={card.messagePanel && resolvedMessageLayout === 'inline' ? 'consultant-card-details' : undefined}>
                       {card.iconKey ? (
                         <PlannedGivingStepIcon iconKey={card.iconKey} tone={card.iconTone} />
@@ -6995,14 +7070,7 @@ export default function NativeContentPage({ page }) {
                         ))}
                       </div>
                     ) : null}
-                    {stretchedLink ? (
-                      <div className="service-native-action-row">
-                        <span className="service-native-btn is-static" aria-hidden="true">
-                          {stretchedLink.label || card.cta || 'Learn more'}
-                        </span>
-                      </div>
-                    ) : null}
-                    {!card.messagePanel && !stretchedLink && !Array.isArray(card.actions) && (card.to || card.href || card.documentId) ? (
+                    {!card.messagePanel && !Array.isArray(card.actions) && (card.to || card.href || card.documentId) ? (
                       <div className="service-native-action-row">
                         <Action
                           item={{
@@ -7013,13 +7081,6 @@ export default function NativeContentPage({ page }) {
                           }}
                         />
                       </div>
-                    ) : null}
-                    {stretchedLink ? (
-                      <NativeLink item={stretchedLink} className="service-native-card-stretched-link">
-                        <span className="service-native-card-stretched-link-label">
-                          {stretchedLink.label || card.cta || card.title || 'Open card link'}
-                        </span>
-                      </NativeLink>
                     ) : null}
                   </article>
                   );

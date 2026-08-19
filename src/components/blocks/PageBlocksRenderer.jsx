@@ -66,6 +66,8 @@ import {
   normalizeHeroLineGapEm,
 } from '../../lib/heroLineStyle';
 import { setupInvestmentsGrowthRevealMotion } from '../../lib/investmentsGrowthReveal';
+import { buildRuntimeAuthorityDescriptor, publishRuntimeAuthorityDescriptor } from '../../lib/runtimeAuthorityDescriptor';
+import { RUNTIME_BUILD_ID } from '../../lib/runtimeBuild';
 
 const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
 const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo', 'flow-step', 'support']);
@@ -2198,6 +2200,24 @@ export default function PageBlocksRenderer({
     const resolved = resolveManagedPathFromRef(pathRef, pathRef);
     return resolved || fallback;
   };
+  const runtimeAuthorityDescriptors = useMemo(() => (
+    composeManagedBlockOrder(blocks).map((block) => buildRuntimeAuthorityDescriptor({
+      pathname: ownershipPathname,
+      block,
+      source: hudAnchorsByBlockId ? 'draft' : 'published',
+      hudEnabled: Boolean(hudAnchorsByBlockId),
+      runtimeBuildId: RUNTIME_BUILD_ID,
+    }))
+  ), [blocks, ownershipPathname, hudAnchorsByBlockId]);
+
+  useEffect(() => {
+    publishRuntimeAuthorityDescriptor(runtimeAuthorityDescriptors, {
+      pathname: ownershipPathname,
+      hudEnabled: Boolean(hudAnchorsByBlockId),
+      runtimeBuildId: RUNTIME_BUILD_ID,
+      mergeExisting: true,
+    });
+  }, [runtimeAuthorityDescriptors, ownershipPathname, hudAnchorsByBlockId]);
   const resolveHudAnchor = (block) => {
     const blockId = String(block?.id || '').trim();
     if (!blockId || !hudAnchorsByBlockId || typeof onHudAnchorClick !== 'function') {

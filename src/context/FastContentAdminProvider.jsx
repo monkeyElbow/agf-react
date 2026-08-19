@@ -58,6 +58,7 @@ function buildFastState(snapshot = null) {
     authoringBlocksByPath: {},
     pathAliases,
     authoringPathAliases: pathAliases,
+    publishedRevisionsByPath: snapshot?.publishedRevisionsByPath || {},
   };
 }
 
@@ -88,6 +89,7 @@ function buildFastContextValue(state) {
     resolveAuthoringManagedPathFromRef: resolvePathFromRef,
     getBreadcrumbTrail: (pathname) => buildBreadcrumbTrail(pathname, state.pageHierarchy),
     getAuthoringBreadcrumbTrail: (pathname) => buildBreadcrumbTrail(pathname, state.authoringPageHierarchy),
+    getPublishedRevisionForPath: (pathname) => state.publishedRevisionsByPath?.[String(pathname || '').trim()] || '',
   };
 }
 
