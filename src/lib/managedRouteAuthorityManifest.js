@@ -128,6 +128,7 @@ const BLOCK_FAMILIES = Object.freeze([
   ['billboard', 'NativeContentPage.buildManagedBlockSection | PageBlocksRenderer.BillboardBlock', ['service-native.css', 'home-service-public.css']],
   ['intro', 'NativeContentPage.buildManagedBlockSection | PageBlocksRenderer.IntroBlock', ['service-native.css', 'home-service-public.css']],
   ['card_grid', 'NativeContentPage.buildManagedBlockSection | PageBlocksRenderer.card_grid', ['service-native.css', 'home-service-public.css', 'service-native-numbered-cards.css']],
+  ['card_chart', 'NativeContentPage.buildManagedBlockSection | PageBlocksRenderer.card_chart', ['service-native.css']],
   ['cta_form', 'NativeContentPage.buildManagedBlockSection | PageBlocksRenderer.CtaFormBlock', ['service-native.css']],
   ['request_form', 'NativeContentPage.buildManagedBlockSection | dynamic request renderer', ['service-native.css']],
   ['columns', 'NativeContentPage.buildManagedBlockSection | PageBlocksRenderer.ColumnsBlock', ['service-native.css']],

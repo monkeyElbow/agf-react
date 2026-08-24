@@ -25,6 +25,11 @@
   --ag-field-bg: #ffffff;
   --ag-field-placeholder: color-mix(in srgb, var(--ag-color-super-grey) 64%, #9ea7ac 36%);
   --ag-field-focus-ring: 0 0 0 3px color-mix(in srgb, var(--ag-color-atlantean-dark) 18%, transparent);
+  /* Admin editors use a quiet resting surface and a white focused surface.
+     Keep this separate from public form fields so HUD polish cannot drift live forms. */
+  --ag-admin-field-bg: #f3f5f6;
+  --ag-admin-field-bg-focus: #ffffff;
+  --ag-admin-field-transition: background-color 180ms ease, border-color 180ms ease;
   --ag-field-select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'%3E%3Cpath d='M5 7L9 11L13 7' stroke='%23414042' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --ag-field-label-inline-offset: 1.15rem;
   --ag-field-label-gap: 0.16rem;

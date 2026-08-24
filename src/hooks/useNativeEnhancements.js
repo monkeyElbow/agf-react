@@ -214,6 +214,27 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
 
       const timers = new Map();
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const failOpenNodes = nodes.filter((node) => node.classList.contains('fade-up-fail-open'));
+
+      // Card content must never disappear because an observer entry was lost
+      // during hydration, HMR, or a browser background/foreground transition.
+      // Keep the normal observer animation, but use the viewport as a small
+      // fail-open path for the card family when the observer does not report.
+      const revealFailOpenCardsInView = () => {
+        const currentViewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+        if (!currentViewportHeight) {
+          return;
+        }
+        failOpenNodes.forEach((target, index) => {
+          if (target.getAttribute('data-fade-state') !== 'pending') {
+            return;
+          }
+          const rect = target.getBoundingClientRect();
+          if (rect.bottom > 0 && rect.top < currentViewportHeight + 160) {
+            queueReveal(target, index);
+          }
+        });
+      };
 
       const isInitiallyVisible = (target) => {
         if (!target || !viewportHeight) {
@@ -302,6 +323,28 @@ export default function useNativeEnhancements(containerRef, rerunKey) {
         resetPendingState(el);
         getFadeObserver(el.getAttribute('data-fade-root-margin')).observe(el);
       });
+
+      if (failOpenNodes.length) {
+        let fallbackRafId = 0;
+        const requestFailOpenReveal = () => {
+          if (fallbackRafId) {
+            return;
+          }
+          fallbackRafId = window.requestAnimationFrame(() => {
+            fallbackRafId = 0;
+            revealFailOpenCardsInView();
+          });
+        };
+        const fallbackTimer = window.setTimeout(revealFailOpenCardsInView, 250);
+        window.addEventListener('scroll', requestFailOpenReveal, { passive: true });
+        window.addEventListener('resize', requestFailOpenReveal);
+        cleanups.push(() => {
+          window.clearTimeout(fallbackTimer);
+          window.cancelAnimationFrame(fallbackRafId);
+          window.removeEventListener('scroll', requestFailOpenReveal);
+          window.removeEventListener('resize', requestFailOpenReveal);
+        });
+      }
       cleanups.push(() => {
         observerByRootMargin.forEach((observer) => observer.disconnect());
         observerByRootMargin.clear();

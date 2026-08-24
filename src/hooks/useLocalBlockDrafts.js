@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   EDITOR_DRAFT_PUBLISHED_EVENT,
+  EDITOR_DRAFT_RESET_EVENT,
   LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS,
 } from '../lib/contentAdminTiming';
 
@@ -499,11 +500,41 @@ export default function useLocalBlockDrafts({
     return () => window.removeEventListener(EDITOR_DRAFT_PUBLISHED_EVENT, handlePublishedDrafts);
   }, [clearCommitTimer, normalizedPath]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleResetDraft = (event) => {
+      const detail = event?.detail || {};
+      const eventPathname = String(detail.pathname || '').trim();
+      const eventBlockId = String(detail.blockId || '').trim();
+      if (!eventPathname || eventPathname !== normalizedPath || !eventBlockId) {
+        return;
+      }
+
+      clearCommitTimer(eventBlockId);
+      claimedBlockIdsRef.current.delete(eventBlockId);
+      draftsByBlockIdRef.current = removeBlockPatch(draftsByBlockIdRef.current, eventBlockId);
+      settledDraftsByBlockIdRef.current = removeBlockPatch(settledDraftsByBlockIdRef.current, eventBlockId);
+      draftProtectionRef.current = removeBlockPatch(draftProtectionRef.current, eventBlockId);
+      setDraftsByBlockId(draftsByBlockIdRef.current);
+      setSettledDraftsByBlockId(settledDraftsByBlockIdRef.current);
+    };
+
+    window.addEventListener(EDITOR_DRAFT_RESET_EVENT, handleResetDraft);
+    return () => window.removeEventListener(EDITOR_DRAFT_RESET_EVENT, handleResetDraft);
+  }, [clearCommitTimer, normalizedPath]);
+
   return {
     blocks: mergedBlocks,
     stageLocalBlockSetting,
     stageLocalBlockSettings,
     flushAllDrafts,
+    hasPendingBlockDraft: useCallback(
+      (blockId) => Boolean(draftsByBlockIdRef.current?.[String(blockId || '').trim()]),
+      [],
+    ),
     hasPendingDrafts: Object.keys(draftsByBlockId).length > 0,
   };
 }

@@ -29,7 +29,7 @@ describe('native CTA renderer guardrail', () => {
     expect(source).toContain('function buildManagedBlockSection(block, {');
     expect(source).toContain("if (renderBlock.kind === 'cta_form') {");
     expect(source).toContain('buildDynamicCtaSection(renderBlock, pathname);');
-    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
     expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).not.toContain('const targetedDynamicCtaSections = new Map();');
     expect(source).not.toContain("const targetKey = String(mappedSection?.targetSectionKey || '').trim();");

@@ -463,6 +463,36 @@ export async function migrateOnlineContributionsStepsSnapshot(actor = null, reas
   });
 }
 
+export async function migrateNumberedStepCardsSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-numbered-step-cards', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateSiteFeatureCollectionsSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-site-feature-collections', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateSupportLibrarySnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-support-library', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
 export async function migrateCgaSecureActCardSnapshot(actor = null, reason = '') {
   return sendJson('/migrate-cga-secure-act-card', {
     method: 'POST',
@@ -475,6 +505,16 @@ export async function migrateCgaSecureActCardSnapshot(actor = null, reason = '')
 
 export async function migrateInsuranceCoverageCtaSnapshot(actor = null, reason = '') {
   return sendJson('/migrate-insurance-coverage-cta', {
+    method: 'POST',
+    body: JSON.stringify({
+      actor: cloneJson(actor),
+      reason: String(reason || '').trim(),
+    }),
+  });
+}
+
+export async function migrateInsuranceFeatureColumnsSnapshot(actor = null, reason = '') {
+  return sendJson('/migrate-insurance-feature-columns', {
     method: 'POST',
     body: JSON.stringify({
       actor: cloneJson(actor),

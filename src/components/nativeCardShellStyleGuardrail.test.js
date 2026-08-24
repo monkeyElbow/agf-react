@@ -16,7 +16,7 @@ describe('native card shell style guardrail', () => {
 
     expect(source).toContain('.service-native-section.native-dynamic-grid,');
     expect(source).toContain('.service-native-section.native-dynamic-columns,');
-    expect(source).toContain('--native-card-shell-radius: 10px;');
+    expect(source).toContain('--native-card-shell-radius: 14px;');
     expect(source).toContain('--native-card-shell-padding: clamp(1.05rem, 2.2vw, 1.45rem);');
     expect(source).toContain('--native-card-shell-title-gap: 0.62rem;');
     expect(source).toContain('--native-card-shell-action-gap: 1rem;');

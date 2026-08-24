@@ -97,7 +97,7 @@ describe('SiteFeatureBlockEditor', () => {
     expect(onSettingChange).not.toHaveBeenCalledWith('buttonPageRef', '/forms');
   });
 
-  it('keeps the home impact story editor surface limited to headline, body, and CTA path overrides', () => {
+  it('exposes the home impact story metrics as a repeatable collection', () => {
     render(
       createElement(SiteFeatureBlockEditor, {
         block: createBlock({
@@ -114,10 +114,12 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.getByLabelText('Body override')).toBeTruthy();
     expect(screen.getByLabelText('CTA label override')).toBeTruthy();
     expect(screen.getByLabelText('CTA URL / Path override')).toBeTruthy();
-    expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
+    expect(screen.getByText('Impact metrics')).toBeTruthy();
+    expect(screen.getAllByLabelText('Metric value')).toHaveLength(3);
+    expect(screen.getByLabelText('Open CTA in new window')).toBeTruthy();
   });
 
-  it('keeps the planned giving stewardship story editor surface limited to headline overrides', () => {
+  it('exposes planned giving stewardship beats as a repeatable collection', () => {
     render(
       createElement(SiteFeatureBlockEditor, {
         block: createBlock({
@@ -131,13 +133,15 @@ describe('SiteFeatureBlockEditor', () => {
     );
 
     expect(screen.getByLabelText('Headline override')).toBeTruthy();
+    expect(screen.getByText('Story beats')).toBeTruthy();
+    expect(screen.getAllByLabelText('Story copy')).toHaveLength(4);
     expect(screen.queryByLabelText('Body override')).toBeNull();
     expect(screen.queryByLabelText('CTA label override')).toBeNull();
     expect(screen.queryByLabelText('CTA URL / Path override')).toBeNull();
     expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
   });
 
-  it('keeps the impact proof story editor surface limited to body and CTA path overrides', () => {
+  it('exposes impact proof cards and introduction fields', () => {
     render(
       createElement(SiteFeatureBlockEditor, {
         block: createBlock({
@@ -154,6 +158,40 @@ describe('SiteFeatureBlockEditor', () => {
     expect(screen.getByLabelText('Body override')).toBeTruthy();
     expect(screen.getByLabelText('CTA label override')).toBeTruthy();
     expect(screen.getByLabelText('CTA URL / Path override')).toBeTruthy();
-    expect(screen.queryByLabelText('Open CTA in new window')).toBeNull();
+    expect(screen.getByText('Impact proof cards')).toBeTruthy();
+    expect(screen.getByLabelText('Feature intro heading')).toBeTruthy();
+    expect(screen.getByLabelText('Open CTA in new window')).toBeTruthy();
+  });
+
+  it('keeps retirement panels on the panels page and exposes CTA target behavior', () => {
+    const onSettingChange = vi.fn();
+    render(
+      createElement(SiteFeatureBlockEditor, {
+        block: createBlock({
+          settings: {
+            featureId: 'retirement_plan_feature',
+          },
+        }),
+        onSettingChange,
+        routeOptions: [],
+      }),
+    );
+
+    const collectionHeading = screen.getByText('Feature panels');
+    const collection = collectionHeading.closest('[data-site-feature-collection]');
+    expect(collection?.className).toContain('admin-site-feature-editor-page--panels');
+    expect(collection?.className).toContain('admin-site-feature-collection--flat');
+    expect(collectionHeading.closest('.admin-site-feature-collection-header')?.parentElement).toBe(collection);
+    expect(collection?.querySelector('.admin-site-feature-collection-list')?.parentElement).toBe(collection);
+    expect(collection?.parentElement?.className).toContain('admin-site-feature-editor');
+    expect(screen.queryByText('Add, remove, and edit content without changing the feature layout.')).toBeNull();
+    expect(screen.getAllByLabelText('Panel title')[0].tagName).toBe('TEXTAREA');
+    expect(screen.getByLabelText('Open CTA in new window')).toBeTruthy();
+
+    fireEvent.click(screen.getByLabelText('Open CTA in new window'));
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'buttonLinkJson',
+      '{"kind":"internal","openInNewWindow":true,"to":"/contact"}',
+    );
   });
 });

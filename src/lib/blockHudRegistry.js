@@ -26,6 +26,9 @@ const HUD_ID_OVERRIDES = {
   home_do_the_math: {
     label: 'Do the Math',
   },
+  retirement_plan_feature: {
+    label: 'Smart benefits, strong advantages',
+  },
 };
 
 function humanizeToken(value) {
@@ -34,6 +37,34 @@ function humanizeToken(value) {
     .replace(/[_-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function normalizeHudTitle(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function resolveSiteFeatureTitle(block, featureEntry, fallbackTitle = '') {
+  const settings = block?.settings && typeof block.settings === 'object'
+    ? block.settings
+    : {};
+  const allowedFieldIds = new Set(
+    Array.isArray(featureEntry?.allowedEditableFieldIds) ? featureEntry.allowedEditableFieldIds : [],
+  );
+  const headlineOverride = allowedFieldIds.has('headline')
+    ? normalizeHudTitle(settings.headline)
+    : '';
+  if (headlineOverride) {
+    return headlineOverride;
+  }
+
+  const runtime = typeof featureEntry?.buildRuntime === 'function'
+    ? featureEntry.buildRuntime({ settings }) || {}
+    : {};
+  return normalizeHudTitle(runtime.title)
+    || normalizeHudTitle(fallbackTitle)
+    || normalizeHudTitle(featureEntry?.label);
 }
 
 export function getBlockHudDefinition(block) {
@@ -50,14 +81,18 @@ export function getBlockHudDefinition(block) {
     }
     : null;
   const presetLabel = String(presetDefinition?.label || '').trim();
-  const siteFeatureLabel = blockKind === 'site_feature'
-    ? String(resolveSiteFeatureCatalogEntry(block?.settings?.featureId || block?.featureId)?.label || '').trim()
+  const siteFeatureEntry = blockKind === 'site_feature'
+    ? resolveSiteFeatureCatalogEntry(block?.settings?.featureId || block?.featureId)
+    : null;
+  const siteFeatureTitle = blockKind === 'site_feature'
+    ? resolveSiteFeatureTitle(block, siteFeatureEntry, override?.label)
     : '';
-  const baseLabel = override?.label
+  const baseLabel = blockKind === 'site_feature'
+    ? `Feature${siteFeatureTitle ? ` - ${siteFeatureTitle}` : ''}`
+    : override?.label
     || (kindDefinition?.label && presetLabel && kindDefinition.label !== presetLabel
       ? `${kindDefinition.label} · ${presetLabel}`
       : '')
-    || (kindDefinition?.label && siteFeatureLabel ? `${kindDefinition.label} · ${siteFeatureLabel}` : '')
     || kindDefinition?.label
     || humanizeToken(block?.label || block?.name || blockId || blockKind || 'content');
   const label = formatBlockDisplayName(baseLabel, block);

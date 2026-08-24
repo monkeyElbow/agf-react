@@ -245,7 +245,33 @@ describe('DynamicCtaSection', () => {
 
     expect(container.querySelector('.native-info-section-copy')).toBeNull();
     expect(container.querySelector('.dynamic-cta-form-heading')).not.toBeNull();
+    expect(container.querySelector('.dynamic-cta-form-title')).not.toBeNull();
     expect(screen.getByText('Imagine the possibilities.')).toBeTruthy();
+  });
+
+  it('keeps an explicitly selected title color on the inside-form renderer path', () => {
+    const { container } = render(
+      <DynamicCtaSection
+        managedBlocks={[
+          {
+            id: 'cta_form',
+            kind: 'cta_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'Color follows the saved setting.',
+              titleClassName: 'is-mango',
+              fieldsJson: ctaFieldsJson([
+                { id: 'name', label: 'Name', type: 'text', required: true },
+              ]),
+            },
+          },
+        ]}
+        defaultSettings={{}}
+        titlePlacement="inside"
+      />,
+    );
+
+    expect(container.querySelector('.dynamic-cta-form-title.is-mango')).not.toBeNull();
   });
 
   it('renders structured CTA fields with checkbox support and built-in contact preference', () => {

@@ -25,6 +25,9 @@ describe('block ownership overlay guardrail', () => {
     expect(cssSource).toContain('.is-admin-owned-editing-other::after');
     expect(cssSource).toContain('/* A passive draft is available to inspect, not disabled. */');
     expect(cssSource).toContain('/* A historical save is context, not a blocking state. */');
+    expect(cssSource).toContain('/* Ownership badges identify passive drafts');
+    expect(cssSource).toMatch(/has-active-front-hud-panel[\s\S]*\.is-admin-owned-drafted-other:not\(.is-hud-focus-target\)::after[\s\S]*opacity: var\(--ag-admin-front-hud-dim-strength/);
+    expect(cssSource).toMatch(/has-active-front-hud-panel[\s\S]*\.is-admin-owned-saved-other:not\(.is-hud-focus-target\)::after[\s\S]*opacity: var\(--ag-admin-front-hud-dim-strength/);
     expect(cssSource).toContain('box-shadow: inset 0 0 0 2px rgba(0, 138, 171, 0.58), inset 6px 0 0 #008aab;');
     expect(cssSource).toContain('box-shadow: inset 0 0 0 2px rgba(83, 103, 121, 0.46), inset 6px 0 0 #536779;');
     expect(cssSource).toContain('.admin-block-ownership-overlay');

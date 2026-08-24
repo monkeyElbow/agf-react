@@ -474,6 +474,33 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/migrate-numbered-step-cards') {
+            const result = contentStore.migrateNumberedStepCardsSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-site-feature-collections') {
+            const result = contentStore.migrateSiteFeatureCollectionsSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-support-library') {
+            const result = contentStore.migrateSupportLibrarySnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/migrate-cga-secure-act-card') {
             const result = contentStore.migrateCgaSecureActCardSnapshot({
               actor: body.actor,
@@ -483,8 +510,44 @@ function contentAdminDevPlugin() {
             return;
           }
 
+          if (url.pathname === '/migrate-endowments-presentation') {
+            const result = contentStore.migrateEndowmentsPresentationSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-mif-request-headline-colors') {
+            const result = contentStore.migrateMifRequestHeadlineColorSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-qcd-request-headline-colors') {
+            const result = contentStore.migrateQcdRequestHeadlineColorSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
           if (url.pathname === '/migrate-insurance-coverage-cta') {
             const result = contentStore.migrateInsuranceCoverageCtaSnapshot({
+              actor: body.actor,
+              reason: body.reason,
+            });
+            sendJson(res, result.ok ? 200 : 409, result);
+            return;
+          }
+
+          if (url.pathname === '/migrate-insurance-feature-columns') {
+            const result = contentStore.migrateInsuranceFeatureColumnsSnapshot({
               actor: body.actor,
               reason: body.reason,
             });

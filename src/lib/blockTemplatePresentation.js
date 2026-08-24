@@ -44,6 +44,7 @@ const BLOCK_TEMPLATE_ICON_BY_KIND = {
   intro: introBlockIcon,
   billboard: billboardBlockIcon,
   card_grid: gridBlockIcon,
+  card_chart: pageContentBlockIcon,
   columns: columnsBlockIcon,
   cta_form: ctaFormBlockIcon,
   newsletter: newsletterBlockIcon,

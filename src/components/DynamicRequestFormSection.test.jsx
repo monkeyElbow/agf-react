@@ -103,4 +103,13 @@ describe('DynamicRequestFormSection', () => {
     expect(screen.getByText('Have your policy number ready.')).toBeTruthy();
     expect(container.querySelectorAll('.dynamic-request-progress-dot')).toHaveLength(2);
   });
+
+  it('keeps the saved body color class on the rendered rich body', () => {
+    const { container } = renderSection({
+      bodyHtml: '<p>Color-controlled request copy.</p>',
+      bodyColorClassName: 'is-mango',
+    });
+
+    expect(container.querySelector('.dynamic-request-body')?.className).toContain('is-mango');
+  });
 });

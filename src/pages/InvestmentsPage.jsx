@@ -52,6 +52,7 @@ import {
   removeSelectionRange,
   replaceHeroLineColorClass,
 } from '../lib/heroHudRanges';
+import { applyTextColorSelection } from '../lib/textColorSelection';
 import { logHeroDriftWarningOnce } from '../lib/heroDriftWarnings';
 import {
   actionButtonClassName,
@@ -1637,25 +1638,21 @@ export default function InvestmentsPage() {
     updateHeroSetting(classNameKey, replaceHeroLineColorClass(currentClassName, colorValue));
   };
 
-  const applyHeroSelectionColor = (lineKey, colorValue) => {
+  const applyHeroSelectionColor = (lineKey, colorValue, selection = heroSelection) => {
     const normalizedLineKey = lineKey === 'line2' || lineKey === 'line3' ? lineKey : 'line1';
     const lineText = String(heroHudSettings[`${normalizedLineKey}Text`] || '');
-    const safeStart = Math.max(0, Math.min(Number(heroSelection.start) || 0, lineText.length));
-    const safeEnd = Math.max(safeStart, Math.min(Number(heroSelection.end) || 0, lineText.length));
-    if (safeEnd <= safeStart) {
+    const result = applyTextColorSelection({
+      text: lineText,
+      lineClassName: String(heroHudSettings[`${normalizedLineKey}ClassName`] || ''),
+      highlightsJson: heroHudSettings[`${normalizedLineKey}HighlightsJson`],
+      selection,
+      colorValue,
+    });
+    if (result.target !== 'selection') {
       return;
     }
     const highlightsKey = `${normalizedLineKey}HighlightsJson`;
-    updateHeroSetting(
-      highlightsKey,
-      applySelectionColor(
-        heroHudSettings[highlightsKey],
-        lineText,
-        safeStart,
-        safeEnd,
-        colorValue,
-      ),
-    );
+    updateHeroSetting(highlightsKey, result.highlightsJson);
   };
 
   const removeHeroSpan = (lineKey, index) => {
@@ -1683,26 +1680,28 @@ export default function InvestmentsPage() {
   };
 
   const applyIntroHeadingColor = (colorValue) => {
-    updateIntroSetting('headingClassName', colorValue);
+    updateIntroSetting('headingClassName', applyTextColorSelection({
+      text: String(introHudSettings.heading || ''),
+      lineClassName: String(introHudSettings.headingClassName || ''),
+      highlightsJson: introHudSettings.headingHighlightsJson,
+      selection: { start: 0, end: 0 },
+      colorValue,
+    }).lineClassName);
   };
 
-  const applyIntroHeadingSelectionColor = (colorValue) => {
+  const applyIntroHeadingSelectionColor = (colorValue, selection = introHeadingSelection) => {
     const sourceText = String(introHudSettings.heading || '');
-    const safeStart = Math.max(0, Math.min(Number(introHeadingSelection.start) || 0, sourceText.length));
-    const safeEnd = Math.max(safeStart, Math.min(Number(introHeadingSelection.end) || 0, sourceText.length));
-    if (safeEnd <= safeStart) {
+    const result = applyTextColorSelection({
+      text: sourceText,
+      lineClassName: String(introHudSettings.headingClassName || ''),
+      highlightsJson: introHudSettings.headingHighlightsJson,
+      selection,
+      colorValue,
+    });
+    if (result.target !== 'selection') {
       return;
     }
-    updateIntroSetting(
-      'headingHighlightsJson',
-      applySelectionColor(
-        introHudSettings.headingHighlightsJson,
-        sourceText,
-        safeStart,
-        safeEnd,
-        colorValue,
-      ),
-    );
+    updateIntroSetting('headingHighlightsJson', result.highlightsJson);
   };
 
   const removeIntroHeadingSpan = (index) => {

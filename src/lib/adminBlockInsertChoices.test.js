@@ -15,6 +15,14 @@ describe('admin block insert choices', () => {
       canonicalLabel: 'Card Grid',
       isCompatibility: false,
     });
+    expect(choices.find((choice) => choice.kind === 'card_chart')).toMatchObject({
+      name: 'Card Chart',
+      createTemplateId: 'card_chart_default',
+      templateId: 'card_chart',
+      editorType: 'card_chart',
+      canonicalLabel: 'Card Chart',
+      isCompatibility: false,
+    });
     const cardGridTemplate = getAllBlockTemplateBlueprints().find((template) => (
       template?.isAddBlockDefault && template?.kind === 'card_grid'
     ));

@@ -12,6 +12,7 @@ const mockSaveSharedDraftNow = vi.fn();
 const mockSaveSharedBlockDraftNow = vi.fn();
 const mockDiscardSharedPageDraft = vi.fn();
 const mockDiscardSharedBlockDraft = vi.fn();
+const mockResetBlockToSavedDraft = vi.fn();
 const mockPublishSharedPageNow = vi.fn();
 const mockPublishSharedBlockNow = vi.fn();
 const mockUpdateBlock = vi.fn();
@@ -72,6 +73,7 @@ vi.mock('../context/ContentAdminContextCore', () => ({
     saveSharedBlockDraftNow: mockSaveSharedBlockDraftNow,
     discardSharedPageDraft: mockDiscardSharedPageDraft,
     discardSharedBlockDraft: mockDiscardSharedBlockDraft,
+    resetBlockToSavedDraft: mockResetBlockToSavedDraft,
     publishSharedPageNow: mockPublishSharedPageNow,
     publishSharedBlockNow: mockPublishSharedBlockNow,
   }),
@@ -130,6 +132,7 @@ describe('FrontHudPageWorkflow', () => {
     mockSaveSharedBlockDraftNow.mockReset();
     mockDiscardSharedPageDraft.mockReset();
     mockDiscardSharedBlockDraft.mockReset();
+    mockResetBlockToSavedDraft.mockReset();
     mockPublishSharedPageNow.mockReset();
     mockPublishSharedBlockNow.mockReset();
     mockUpdateBlock.mockReset();
@@ -140,6 +143,7 @@ describe('FrontHudPageWorkflow', () => {
     mockSaveSharedBlockDraftNow.mockResolvedValue({ ok: true });
     mockDiscardSharedPageDraft.mockResolvedValue({ ok: true });
     mockDiscardSharedBlockDraft.mockResolvedValue({ ok: true });
+    mockResetBlockToSavedDraft.mockReturnValue({ ok: true, didReset: true });
     mockPublishSharedPageNow.mockResolvedValue({ ok: true });
     mockPublishSharedBlockNow.mockResolvedValue({ ok: true });
   });
@@ -402,6 +406,35 @@ describe('FrontHudPageWorkflow', () => {
       });
       expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('only Hero'));
       expect(mockDiscardSharedPageDraft).not.toHaveBeenCalled();
+    } finally {
+      confirmSpy.mockRestore();
+    }
+  });
+
+  it('resets only the active block to its last saved draft', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mockPublishSummary = {
+      ...mockPublishSummary,
+      changedBlockIds: ['hero'],
+    };
+
+    try {
+      render(
+        <FrontHudPageWorkflow
+          pathname="/services/loans"
+          blockId="hero"
+          blockLabel="Hero"
+          placement="dock-inline"
+        />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Reset to saved draft' }));
+
+      await waitFor(() => {
+        expect(mockResetBlockToSavedDraft).toHaveBeenCalledWith('/services/loans', 'hero');
+      });
+      expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('last saved draft'));
+      expect(mockDiscardSharedBlockDraft).not.toHaveBeenCalled();
     } finally {
       confirmSpy.mockRestore();
     }

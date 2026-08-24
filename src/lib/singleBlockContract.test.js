@@ -74,8 +74,13 @@ describe('canonical single-block contract', () => {
       if (choice) {
         expect(choice.editorType).toBe(contract.editorType);
         expect(choice.canonicalLabel).toBe(contract.label);
-        expect(choice.familyKind).toBe('');
-        expect(choice.presetId).toBe('');
+        if (choice.kind === 'billboard') {
+          expect(choice.familyKind).toBe('billboard');
+          expect(choice.presetId).toBeTruthy();
+        } else {
+          expect(choice.familyKind).toBe('');
+          expect(choice.presetId).toBe('');
+        }
       }
 
       const sampleBlock = {

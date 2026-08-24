@@ -118,16 +118,6 @@
   justify-content: flex-start;
 }
 
-.calculators-native-collection .service-native-card.has-stretched-link > :not(.service-native-card-stretched-link) {
-  pointer-events: none;
-}
-
-.calculators-native-collection .service-native-card .service-native-card-stretched-link:focus-visible {
-  border-radius: inherit;
-  outline: 2px solid rgba(var(--ag-color-atlantean-rgb), 0.42);
-  outline-offset: -4px;
-}
-
 .calculators-native-collection .service-native-btn {
   --btn-color: var(--ag-color-atlantean-dark);
   --btn-hover-color: var(--ag-color-atlantean);

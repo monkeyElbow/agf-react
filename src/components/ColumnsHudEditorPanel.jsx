@@ -23,14 +23,13 @@ import {
   serializeLinkValue,
 } from '../lib/linkValue';
 import {
-  applySelectionColor,
   extractHeroLineColorToken,
   parseHeroRangeHighlights,
   remapHighlightsJsonForTextChange,
   removeSelectionRange,
-  replaceHeroLineColorClass,
   resolveSelectionRangeColor,
 } from '../lib/heroHudRanges';
+import { applyTextColorSelection, readColorSelection } from '../lib/textColorSelection';
 import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
 import PlannedGivingStepsHudEditorPanel from './PlannedGivingStepsHudEditorPanel';
 
@@ -122,11 +121,14 @@ function ColumnsTextSpanEditor({
     ? resolveSelectionRangeColor(highlights, selection.start, selection.end)
     : lineColor;
   const applyLineColor = (colorValue) => {
-    onSettingChange(classNameKey, replaceHeroLineColorClass(String(value?.className || '').trim(), colorValue));
-    if (!colorValue) {
-      return;
-    }
-    onSettingChange(highlightsKey, '');
+    const result = applyTextColorSelection({
+      text: String(value?.text || ''),
+      lineClassName: String(value?.className || '').trim(),
+      highlightsJson: value?.highlightsJson,
+      selection: { start: 0, end: 0 },
+      colorValue,
+    });
+    onSettingChange(classNameKey, result.lineClassName);
   };
 
   const handleTextChange = (nextTextValue) => {
@@ -138,15 +140,17 @@ function ColumnsTextSpanEditor({
 
   const applySelectedTextColor = (colorValue) => {
     const currentText = String(value.text || '');
-    const safeStart = Math.max(0, Math.min(Number(selection.start) || 0, currentText.length));
-    const safeEnd = Math.max(safeStart, Math.min(Number(selection.end) || 0, currentText.length));
-    if (safeEnd <= safeStart) {
+    const result = applyTextColorSelection({
+      text: currentText,
+      lineClassName: String(value?.className || '').trim(),
+      highlightsJson: value.highlightsJson,
+      selection: readColorSelection(null, selection, currentText),
+      colorValue,
+    });
+    if (result.target !== 'selection') {
       return;
     }
-    onSettingChange(
-      highlightsKey,
-      applySelectionColor(value.highlightsJson, currentText, safeStart, safeEnd, colorValue),
-    );
+    onSettingChange(highlightsKey, result.highlightsJson);
   };
 
   return (
@@ -173,6 +177,7 @@ function ColumnsTextSpanEditor({
             ariaLabel={`${label} color`}
             options={textColorOptions}
             value={activeSelectionColorValue}
+            onOptionMouseDown={() => captureSelection(inputRef, setSelection)}
             onChange={applyLineColor}
           />
         </div>
@@ -184,6 +189,8 @@ function ColumnsTextSpanEditor({
             ariaLabel={`${label} selection color`}
             options={textColorOptions.filter((option) => option.value)}
             value={activeSelectionColorValue}
+            preventMouseDown
+            onOptionMouseDown={() => captureSelection(inputRef, setSelection)}
             onChange={applySelectedTextColor}
             isOptionDisabled={() => !selection.text}
             getOptionClassName={() => (selection.text ? '' : 'is-disabled')}
@@ -466,28 +473,22 @@ function ColumnSlotEditor({
           ariaLabel={`Column ${slot} title color`}
           options={textColorOptions}
           value={activeTitleColorValue}
+          onPaletteMouseDown={() => captureSelection(titleInputRef, setTitleSelection)}
           onChange={(nextValue) => {
-            const currentSelection = readSelection(titleSelection, titleValue);
-            const safeStart = Math.max(0, Math.min(Number(currentSelection.start) || 0, titleValue.length));
-            const safeEnd = Math.max(safeStart, Math.min(Number(currentSelection.end) || 0, titleValue.length));
+            const currentSelection = readColorSelection(titleInputRef.current, titleSelection, titleValue);
             commitDraftValue(titleFieldId);
-            if (safeEnd > safeStart) {
-              onSettingChange(
-                titleHighlightsFieldId,
-                applySelectionColor(
-                  titleHighlightsJson,
-                  titleValue,
-                  safeStart,
-                  safeEnd,
-                  nextValue,
-                ),
-              );
+            const result = applyTextColorSelection({
+              text: titleValue,
+              lineClassName: titleClassName,
+              highlightsJson: titleHighlightsJson,
+              selection: currentSelection,
+              colorValue: nextValue,
+            });
+            if (result.target === 'selection') {
+              onSettingChange(titleHighlightsFieldId, result.highlightsJson);
               return;
             }
-            onSettingChange(
-              `col${slot}TitleClassName`,
-              replaceHeroLineColorClass(titleClassName, nextValue),
-            );
+            onSettingChange(`col${slot}TitleClassName`, result.lineClassName);
           }}
           sourceText={titleValue}
           highlightRanges={titleHighlights}
@@ -826,28 +827,22 @@ function GenericColumnsHudEditorPanel({
             ariaLabel="Columns heading color"
             options={textColorOptions}
             value={activeHeadingColorValue}
+            onPaletteMouseDown={() => captureSelection(titleInputRef, setTitleSelection)}
             onChange={(nextValue) => {
-              const currentSelection = readSelection(titleSelection, titleValue);
-              const safeStart = Math.max(0, Math.min(Number(currentSelection.start) || 0, titleValue.length));
-              const safeEnd = Math.max(safeStart, Math.min(Number(currentSelection.end) || 0, titleValue.length));
+              const currentSelection = readColorSelection(titleInputRef.current, titleSelection, titleValue);
               commitDraftValue('title');
-              if (safeEnd > safeStart) {
-                onSettingChange(
-                  'titleHighlightsJson',
-                  applySelectionColor(
-                    headingDraftHighlightsJson,
-                    titleValue,
-                    safeStart,
-                    safeEnd,
-                    nextValue,
-                  ),
-                );
+              const result = applyTextColorSelection({
+                text: titleValue,
+                lineClassName: headingClassName,
+                highlightsJson: headingDraftHighlightsJson,
+                selection: currentSelection,
+                colorValue: nextValue,
+              });
+              if (result.target === 'selection') {
+                onSettingChange('titleHighlightsJson', result.highlightsJson);
                 return;
               }
-              onSettingChange(
-                'titleClassName',
-                replaceHeroLineColorClass(headingClassName, nextValue),
-              );
+              onSettingChange('titleClassName', result.lineClassName);
             }}
             sourceText={titleValue}
             highlightRanges={titleHighlights}

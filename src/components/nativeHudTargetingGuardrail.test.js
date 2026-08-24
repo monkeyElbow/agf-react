@@ -18,7 +18,7 @@ describe('native HUD targeting guardrail', () => {
     expect(source).toContain('const hudDockPanels = useMemo(');
     expect(source).toContain('const hudPanelByBlockId = useMemo(() => (');
     expect(source).toContain('const firstDynamicSectionIndexByBlockId = useMemo(() => {');
-    expect(source).toContain('const dynamicSectionPanel = dynamicSectionBlockId ? (hudPanelByBlockId[dynamicSectionBlockId] || null) : null;');
+    expect(source).toContain('const dynamicSectionPanel = dynamicSectionBlockId ? (renderHudPanelByBlockId[dynamicSectionBlockId] || null) : null;');
     expect(source).toContain('activeHudBlockId === dynamicSectionBlockId');
     expect(source).toContain('dynamicHudSectionRefs.current[dynamicSectionBlockId] = node;');
     expect(source).toContain('const fallbackSelector = String(panel?.anchorSelector || \'\').trim();');

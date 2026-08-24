@@ -20,4 +20,16 @@ describe('rich HTML renderer security boundary', () => {
       expect(source).not.toMatch(/dangerouslySetInnerHTML=\{\{\s*__html:\s*(?:bodyHtml|runtime\.bodyHtml|article\.bodyHtml)/);
     });
   });
+
+  it('carries saved semantic body colors through every direct rich-body renderer', () => {
+    const renderer = readRepoFile('src/components/blocks/PageBlocksRenderer.jsx');
+    const request = readRepoFile('src/components/DynamicRequestFormSection.jsx');
+    const css = readRepoFile('src/styles/service-native.css');
+
+    expect(renderer).toContain('runtime.bodyColorClassName || \'\'');
+    expect(request).toContain('config.bodyColorClassName');
+    expect(css).toContain('.service-native-page .native-info-rich-html .is-mango');
+    expect(css).toContain('.service-native-page .native-info-rich-html.is-mango');
+    expect(css).toContain('.home-native-newsletter-copy .is-mango');
+  });
 });

@@ -389,6 +389,151 @@ describe('HeroInlineLiveEditor', () => {
 });
 
 describe('HeroHudEditorPanel', () => {
+  it('renders stored highlight colors in the visible line mirror', () => {
+    const { container } = render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Every trip is a step of faith.',
+        lineColor: 'is-super-grey',
+        highlights: [{ start: 24, end: 29, className: 'is-mango' }],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      driftReport: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+    }));
+
+    expect(container.querySelector('.admin-hero-inline-line-mirror mark.is-mango')?.textContent).toBe('faith');
+  });
+
+  it('passes the current highlighted input range to the color callback', () => {
+    const onApplySelectionColor = vi.fn();
+
+    render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Every trip is a step of faith.',
+        lineColor: 'is-super-grey',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      driftReport: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [
+        { value: 'is-atlantean', label: 'Atlantean', swatch: '#00adbb' },
+      ],
+      onApplySelectionColor,
+    }));
+
+    const input = screen.getByLabelText('Line 1 text');
+    input.focus();
+    input.setSelectionRange(24, 29);
+    fireEvent.select(input);
+
+    const swatch = screen.getByRole('radio', { name: /Atlantean/ });
+    fireEvent.mouseDown(swatch);
+    fireEvent.click(swatch);
+
+    expect(onApplySelectionColor).toHaveBeenCalledWith(
+      'line1',
+      'is-atlantean',
+      expect.objectContaining({ start: 24, end: 29, text: 'faith' }),
+    );
+  });
+
+  it('keeps a highlighted range when the browser collapses it before palette mousedown', () => {
+    const onApplySelectionColor = vi.fn();
+
+    render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Every trip is a step of faith.',
+        lineColor: 'is-super-grey',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      driftReport: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [
+        { value: 'is-mango', label: 'Mango', swatch: '#faa31a' },
+      ],
+      onApplySelectionColor,
+    }));
+
+    const input = screen.getByLabelText('Line 1 text');
+    input.focus();
+    input.setSelectionRange(24, 29);
+    fireEvent.select(input);
+    input.setSelectionRange(0, 0);
+
+    const swatch = screen.getByRole('radio', { name: /Mango/ });
+    fireEvent.mouseDown(swatch);
+    fireEvent.click(swatch);
+
+    expect(onApplySelectionColor).toHaveBeenCalledWith(
+      'line1',
+      'is-mango',
+      expect.objectContaining({ start: 24, end: 29, text: 'faith' }),
+    );
+  });
+
+  it('keeps a highlighted range when palette mousedown is skipped', () => {
+    const onApplySelectionColor = vi.fn();
+
+    render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Every trip is a step of faith.',
+        lineColor: 'is-super-grey',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      driftReport: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [
+        { value: 'is-mango', label: 'Mango', swatch: '#faa31a' },
+      ],
+      onApplySelectionColor,
+    }));
+
+    const input = screen.getByLabelText('Line 1 text');
+    input.focus();
+    input.setSelectionRange(24, 29);
+    fireEvent.select(input);
+    input.setSelectionRange(0, 0);
+
+    fireEvent.click(screen.getByRole('radio', { name: /Mango/ }));
+
+    expect(onApplySelectionColor).toHaveBeenCalledWith(
+      'line1',
+      'is-mango',
+      expect.objectContaining({ start: 24, end: 29, text: 'faith' }),
+    );
+  });
+
   it('surfaces headline tracking controls with hero guardrails', () => {
     const onTitleLetterSpacingChange = vi.fn();
 

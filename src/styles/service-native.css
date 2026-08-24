@@ -239,11 +239,6 @@
   letter-spacing: clamp(-0.065em, -0.22vw, -0.04em);
 }
 
-.retirement-native-page .service-native-hero {
-  --service-native-hero-rail-min-height: 300px;
-  padding: clamp(1.85rem, 4.25vw, 2.7rem) 0;
-}
-
 .service-native-intro {
   --service-native-intro-padding-top: clamp(3.55rem, 8vw, 5.95rem);
   --service-native-intro-padding-bottom: clamp(4.1rem, 9.2vw, 6.95rem);
@@ -398,8 +393,8 @@
   --investments-growth-display-letter-spacing: -0.05em;
   position: relative;
   margin-top: -1px;
-  padding-top: clamp(7rem, 11vw, 9.75rem);
-  padding-bottom: clamp(7rem, 10vw, 9rem);
+  padding-top: clamp(5.5rem, 8.5vw, 7.5rem);
+  padding-bottom: clamp(8.25rem, 12vw, 10.75rem);
   background: #4a484b;
 }
 
@@ -464,7 +459,7 @@
   width: min(36ch, 100%);
   max-width: min(36ch, 100%);
   margin-bottom: 0;
-  color: #ffffff;
+  color: #ffffff !important;
   font-family: var(--ag-font-heading);
   font-size: clamp(1.85rem, 3.15vw, 3rem);
   font-weight: 700;
@@ -636,6 +631,22 @@
   --btn-hover-text: var(--btn-hover-color);
 }
 
+/* Investments certificate polish is page-specific: the shared certificate
+   shell is also reused by retirement and insurance content. */
+.investments-native-page .retirement-account-card--certificate h3 {
+  font-size: clamp(2.185rem, 3.8525vw, 2.8175rem);
+}
+
+.investments-native-page .retirement-account-card--certificate .retirement-account-card__body {
+  padding-bottom: clamp(2.75rem, 4.8vw, 3.75rem);
+}
+
+.investments-native-page .retirement-account-card--certificate .service-native-action-row .service-native-btn.is-tone-mango,
+.investments-native-page .retirement-account-card--certificate .service-native-action-row .service-native-btn.is-tone-mango:visited {
+  --btn-text: var(--ag-color-mango);
+  --btn-hover-text: var(--ag-color-mango);
+}
+
 .retirement-everyday {
   --dynamic-billboard-padding-top: clamp(4.1rem, 8vw, 6.8rem);
   --retirement-billboard-stack-gap: clamp(1.2rem, 2.35vw, 1.7rem);
@@ -735,6 +746,10 @@
   justify-self: center;
   justify-items: center;
   text-align: center;
+}
+
+.retirement-daily-billboard {
+  --dynamic-billboard-copy-max-width: 44rem;
 }
 
 .retirement-daily-billboard > .ag-panel-rail {
@@ -1065,6 +1080,328 @@
   }
 }
 
+/*
+ * Explicit HUD text colors are content settings, not route decoration.
+ *
+ * Route presets may establish a default color for a heading or rich-text
+ * surface, but an admin-selected semantic color must win after the setting
+ * has crossed into the public renderer. Keep this authority at the end of
+ * the service stylesheet so legacy route selectors cannot make the editor
+ * preview disagree with the rendered block.
+ */
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-atlantean,
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-atlantean :is(span, strong, em),
+.service-native-page .native-info-rich-html.is-atlantean {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-mango,
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-mango :is(span, strong, em),
+.service-native-page .native-info-rich-html.is-mango {
+  color: var(--ag-color-mango) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-melon,
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-melon :is(span, strong, em),
+.service-native-page .native-info-rich-html.is-melon {
+  color: var(--ag-color-melon) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-sandstone,
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-sandstone :is(span, strong, em),
+.service-native-page .native-info-rich-html.is-sandstone {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-super-grey,
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-super-grey :is(span, strong, em),
+.service-native-page .native-info-rich-html.is-super-grey {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-white,
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-white :is(span, strong, em),
+.service-native-page .native-info-rich-html.is-white {
+  color: #ffffff !important;
+}
+
+/* A highlighted span remains an explicit selection color over the base. */
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html
+) mark.is-atlantean {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html
+) mark.is-mango {
+  color: var(--ag-color-mango) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html
+) mark.is-melon {
+  color: var(--ag-color-melon) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html
+) mark.is-sandstone {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html
+) mark.is-super-grey {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.service-native-page :is(
+  .service-native-hero h1,
+  .service-native-intro-copy > h2,
+  .native-info-section-copy > h2,
+  .native-info-section-copy > h3,
+  .native-columns-copy > h2,
+  .native-columns-copy > h3,
+  .native-columns-lead-line,
+  .native-columns-followup-line,
+  .native-info-section-subtitle,
+  .dynamic-request-copy > h2,
+  .service-native-card h3,
+  .service-native-dark-feature-copy h3,
+  .native-info-rich-html
+) mark.is-white {
+  color: #ffffff !important;
+}
+
 /* Shared planned-giving card-grid presentation. This is a reusable style on
    the flexible card grid, not a page-specific section-class exception. */
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered {
@@ -1092,7 +1429,7 @@
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card {
   width: min(100%, 520px);
   border: 2px solid rgba(0, 138, 171, 0.2);
-  border-radius: 8px;
+  border-radius: 14px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);
   color: var(--ag-color-super-grey);
   box-shadow: 0 18px 36px rgba(12, 42, 61, 0.08);
@@ -1122,7 +1459,7 @@
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-bullet-list li,
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card-rich-body li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
   font-weight: 400;
 }
 
@@ -1771,41 +2108,6 @@
   text-decoration: none;
 }
 
-.service-native-card.has-stretched-link {
-  position: relative;
-}
-
-.service-native-card.has-stretched-link > :not(.service-native-card-stretched-link) {
-  position: relative;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.service-native-card.has-stretched-link .service-native-card-stretched-link {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-}
-
-.service-native-card.has-stretched-link .service-native-btn.is-static {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.service-native-card-stretched-link-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 .investments-native-hero h1 mark.is-atlantean {
   color: var(--ag-color-atlantean);
 }
@@ -2127,6 +2429,10 @@
 
 .investments-native-growth-card h3.is-super-grey {
   color: var(--ag-color-super-grey);
+}
+
+.investments-native-growth-card h3.is-white {
+  color: #ffffff;
 }
 
 .investments-native-growth-card p {
@@ -2482,8 +2788,8 @@
 /* Loan options use the same four-up benefits-card treatment as the 403(b) page. */
 .service-native-section.loans-native-options {
   background: linear-gradient(180deg, #ffffff 0%, #f0eee8 100%);
-  padding-top: clamp(2.2rem, 4.4vw, 3.25rem);
-  padding-bottom: clamp(0.85rem, 1.8vw, 1.25rem);
+  padding-top: clamp(6.4rem, 11.2vw, 8.8rem);
+  padding-bottom: clamp(1.6rem, 3.2vw, 2.4rem);
 }
 
 .service-native-section.loans-native-options .loans-native-options-title {
@@ -2624,7 +2930,8 @@
 }
 
 .loans-native-option-question-wrap {
-  padding-top: clamp(2.8rem, 5vw, 4.2rem);
+  padding-top: clamp(5.2rem, 8.8vw, 7.6rem);
+  padding-bottom: clamp(4rem, 8vw, 6rem);
 }
 
 .loans-native-option-question-wrap .native-info-section-copy {
@@ -5290,7 +5597,7 @@
 .service-native-section.test-dynamic-grid,
 .service-native-section.test-dynamic-columns {
   --native-card-family-gap: clamp(0.95rem, 2vw, 1.3rem);
-  --native-card-shell-radius: 10px;
+  --native-card-shell-radius: 14px;
   --native-card-shell-padding: clamp(1.05rem, 2.2vw, 1.45rem);
   --native-card-shell-title-gap: 0.62rem;
   --native-card-shell-title-padding: 0.58rem;
@@ -5384,8 +5691,10 @@
   display: none;
 }
 
-.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) :is(p, li, a:not(.service-native-btn)),
-.service-native-section.test-dynamic-grid .service-native-card :is(p, li, a:not(.service-native-btn)) {
+.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) :is(p, a:not(.service-native-btn)),
+.service-native-section.test-dynamic-grid .service-native-card :is(p, a:not(.service-native-btn)),
+.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) li:not(.service-native-card-bullet-list li, .service-native-card-rich-body > ul li),
+.service-native-section.test-dynamic-grid .service-native-card li:not(.service-native-card-bullet-list li, .service-native-card-rich-body > ul li) {
   color: var(--dynamic-grid-body-color);
   font-size: var(--dynamic-grid-card-body-size, 1rem);
   line-height: var(--dynamic-grid-card-body-line-height, 1.58);
@@ -5396,8 +5705,10 @@
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).legacy-child-native-assets .service-native-card :is(.service-native-card-bullet-list li, .service-native-card-rich-body > ul li),
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).legacy-child-native-give-assets .service-native-card :is(.service-native-card-bullet-list li, .service-native-card-rich-body > ul li),
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).legacy-child-native-trusts-funding .service-native-card :is(.service-native-card-bullet-list li, .service-native-card-rich-body > ul li),
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-bullet-controlled .service-native-card :is(.service-native-card-bullet-list li, .service-native-card-rich-body > ul li),
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-style-planned-giving-centered .service-native-card :is(.service-native-card-bullet-list li, .service-native-card-rich-body > ul li) {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) .service-native-action-row:last-child,
@@ -5591,7 +5902,11 @@
   border: 0;
   background: transparent;
   box-shadow: none;
-  padding: 0;
+  /* "Minimal card" removes the surface, not the content rail. Keep the
+     administrator's shared padding control active so borderless cards do not
+     collapse against the grid edge. */
+  padding: var(--dynamic-grid-card-padding, var(--native-card-shell-padding));
+  padding-bottom: calc(var(--dynamic-grid-card-padding, var(--native-card-shell-padding)) * 1.35);
   transform: none;
 }
 
@@ -5615,7 +5930,7 @@
 }
 
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating {
-  --dynamic-grid-alt-title-one: var(--ag-color-atlantean-dark);
+  --dynamic-grid-alt-title-one: var(--ag-color-atlantean);
   --dynamic-grid-alt-title-two: var(--ag-color-mango);
   --dynamic-grid-alt-title-three: var(--ag-color-melon);
 }
@@ -8734,7 +9049,6 @@
 }
 
 .native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2,
-.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2.is-white,
 .native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2.is-super-grey {
   color: var(--ag-color-super-grey);
 }
@@ -9658,7 +9972,7 @@
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-details > .ag-panel-rail > h2 {
   margin-inline: auto;
-  margin-bottom: clamp(0.35rem, 0.85vw, 0.65rem);
+  margin-bottom: clamp(1rem, 1.8vw, 1.4rem);
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-details > .ag-panel-rail > h2 {
@@ -9741,8 +10055,7 @@
   transform: translateY(-4px) scale(1.02);
 }
 
-.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card h3,
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3 {
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).ministers-group-life-native-details .service-native-card h3 {
   font-size: clamp(1.4rem, 2.2vw, 1.85rem);
   line-height: 1.04;
 }
@@ -9799,18 +10112,11 @@
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll {
   /* Keep enrollment steps on the same visual contract as the MIF steps:
-     sand section, white numbered cards, and no extra card skin. */
+     white section, white numbered cards, and no extra card skin. */
   --step-card-body-font-size: clamp(1.16rem, 1.75vw, 1.32rem);
   --step-card-body-line-height: 1.68;
-  background: #faf7f1;
+  background: #ffffff !important;
   padding: clamp(3.9rem, 7.4vw, 6.2rem) 0 clamp(2.15rem, 4.6vw, 3.4rem);
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll > .native-info-full-bleed {
-  /* MIF's step cards use a centered content rail, not a browser-wide row. */
-  width: min(calc(100% - (var(--ag-panel-gutter) * 1.4)), 68rem) !important;
-  max-width: 68rem !important;
-  margin-inline: auto;
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll > .native-info-full-bleed > h2 {
@@ -9825,118 +10131,6 @@
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll > .native-info-full-bleed > .native-info-section-subtitle {
   margin-bottom: clamp(2rem, 4vw, 3rem);
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-grid {
-  grid-template-columns: minmax(0, 1fr);
-  /* Match the centered MIF stock-transfer card rail so body copy wraps and
-     card height comes from the content instead of stretching edge to edge. */
-  width: min(100%, 82ch) !important;
-  max-width: none;
-  margin: clamp(2rem, 4vw, 3rem) auto 0;
-  gap: clamp(1.2rem, 2.4vw, 1.7rem);
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card {
-  --ministers-group-life-step-accent: var(--ag-color-atlantean);
-  display: grid;
-  grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);
-  column-gap: clamp(1.25rem, 2.6vw, 2rem);
-  /* Keep the copy and actions in one compact content rhythm. The number can
-     remain centered independently without pushing the action row away from
-     the copy. */
-  row-gap: clamp(0.35rem, 0.8vw, 0.65rem);
-  align-items: start;
-  padding: clamp(1.85rem, 3.2vw, 2.55rem) clamp(2.25rem, 4.1vw, 3.25rem);
-  border: 2px solid var(--ministers-group-life-step-accent);
-  /* Match the rollover numbered-card corners and keep legacy card skins from
-     flattening this box in older snapshots. */
-  border-radius: 1.75rem !important;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);
-  box-shadow: 0 18px 36px rgba(12, 42, 61, 0.08);
-  transform: none;
-  transition: border-color 220ms ease, box-shadow 220ms ease;
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(1) {
-  --ministers-group-life-step-accent: var(--ag-color-atlantean);
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(2) {
-  --ministers-group-life-step-accent: var(--ag-color-mango);
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(3) {
-  --ministers-group-life-step-accent: var(--ag-color-sandstone-dark);
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(1) h3,
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(1) {
-  color: var(--ag-color-atlantean) !important;
-  border-color: var(--ag-color-atlantean) !important;
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(2) h3,
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(2) {
-  color: var(--ag-color-mango) !important;
-  border-color: var(--ag-color-mango) !important;
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(3) h3,
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(3) {
-  color: var(--ag-color-sandstone-dark) !important;
-  border-color: var(--ag-color-sandstone-dark) !important;
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card > div:first-child {
-  display: contents;
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3 {
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  display: flex;
-  min-height: 0 !important;
-  align-self: center;
-  align-items: center;
-  justify-content: center;
-  justify-self: center;
-  margin: 0;
-  padding-bottom: 0 !important;
-  color: var(--ministers-group-life-step-accent);
-  font-family: var(--ag-font-helv);
-  /* MIF is the canonical numbered-card contract. Keep route-specific
-     enrollment markup from growing its 01/02/03 numbers back to the old
-     oversized treatment. */
-  font-size: clamp(2.55rem, 4.35vw, 3.2rem) !important;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: var(--ministers-group-life-step-accent) !important;
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3::after {
-  display: none !important;
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card p {
-  grid-column: 2;
-  margin: 0;
-  color: var(--ag-color-super-grey);
-  font-size: clamp(1.08rem, 1.75vw, 1.24rem);
-  line-height: 1.58;
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-action-row {
-  grid-column: 2;
-  margin-top: clamp(0.15rem, 0.35vw, 0.3rem);
-  padding-top: 0;
-  justify-content: flex-start;
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-support .service-native-action-row {
@@ -9973,7 +10167,7 @@
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .ministers-group-life-copy-address {
-  margin-top: clamp(1rem, 2vw, 1.5rem);
+  margin-top: clamp(0.55rem, 1.1vw, 0.85rem);
   padding: clamp(1.35rem, 2.6vw, 2rem) clamp(1.5rem, 3vw, 2.4rem);
   border-radius: 1.5rem;
   background: #ffffff;
@@ -10025,9 +10219,11 @@
 
 /* The return instructions are a separate page-content block that happens to
    share the enrollment class for typography. Its public surface is white;
-   only the enrollment cards belong on the sand background. */
+   keep its top quiet and give the following support library room. */
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll-return {
   background: #ffffff;
+  padding-top: 0;
+  padding-bottom: clamp(4.3rem, 9.2vw, 6.8rem);
 }
 
 .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-note strong {
@@ -10210,39 +10406,16 @@
 }
 
 @media (max-width: 980px) {
-  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll > .native-info-full-bleed {
-    width: min(calc(100% - (var(--ag-panel-gutter) * 1.6)), 76rem);
-  }
-
   .native-info-page--ministers-group-life-plan .ministers-group-life-native-details .service-native-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 860px) {
   .native-info-page--ministers-group-life-plan .ministers-group-life-native-details .service-native-grid,
   .native-info-page--ministers-group-life-plan .ministers-group-life-native-support .service-native-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 0.55rem;
-    padding: clamp(1.6rem, 5vw, 2.1rem) clamp(1.35rem, 4vw, 2.1rem);
-  }
-
-  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3 {
-    grid-row: auto;
-    justify-self: start;
-  }
-
-  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card p,
-  .native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-action-row {
-    grid-column: 1;
   }
 
   .native-support-library-tools,
@@ -12285,17 +12458,12 @@ p.impact-proof-story-proof-body {
   line-height: 1.5;
 }
 
-.impact-native-stats .impact-native-card.has-stretched-link {
-  cursor: pointer;
-}
-
 .impact-native-stats .impact-native-card .service-native-action-row {
   justify-content: flex-start;
   align-items: flex-start;
 }
 
-.impact-native-stats .impact-native-card .service-native-action-row .service-native-btn,
-.impact-native-stats .impact-native-card .service-native-action-row .service-native-btn.is-static {
+.impact-native-stats .impact-native-card .service-native-action-row .service-native-btn {
   display: inline-block;
   width: auto;
   max-width: none;
@@ -12304,11 +12472,6 @@ p.impact-proof-story-proof-body {
   white-space: nowrap;
   line-height: 1;
   padding: 0.68rem 1.4rem;
-}
-
-.impact-native-stats .impact-native-card .service-native-card-stretched-link:focus-visible {
-  outline: 2px solid var(--ag-color-atlantean);
-  outline-offset: 4px;
 }
 
 .impact-native-stats .impact-native-card--loans {
@@ -14638,7 +14801,7 @@ p.impact-proof-story-proof-body {
 
 .retirement-403b-native-enroll .service-native-card:nth-child(2) h3,
 .retirement-403b-native-enroll .service-native-card:nth-child(2) p {
-  color: #fff;
+  color: #fff !important;
 }
 
 .retirement-403b-native-enroll .service-native-action-row {
@@ -15192,21 +15355,6 @@ p.impact-proof-story-proof-body {
   letter-spacing: 0;
 }
 
-/* Ministers enrollment uses the shared numbered-card renderer, but its route
-   contract needs the same compact text-to-action rhythm as the MIF cards:
-   more breathing room at the card edge, less empty space between copy and
-   buttons. Keep this override after the generic step-card skin so it wins in
-   the cascade without changing any content or card data. */
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card {
-  row-gap: clamp(0.25rem, 0.55vw, 0.45rem);
-  padding: clamp(2rem, 3.4vw, 2.75rem) clamp(2rem, 3.8vw, 3rem);
-}
-
-.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card .service-native-action-row {
-  margin-top: 0;
-  padding-top: 0;
-}
-
 @media (max-width: 720px) {
   .retirement-403b-group-enrollment-steps .service-native-card {
     grid-template-columns: minmax(0, 1fr);
@@ -15262,10 +15410,6 @@ p.impact-proof-story-proof-body {
   background: #fff;
   padding-top: clamp(4.2rem, 7vw, 5.8rem);
   padding-bottom: clamp(1.8rem, 3.5vw, 2.8rem);
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps > .native-info-full-bleed {
-  width: min(calc(100% - (var(--ag-panel-gutter) * 1.4)), 76rem);
 }
 
 .native-info-page--online-contributions .online-contrib-native-steps .service-native-grid {
@@ -15573,23 +15717,24 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-assets .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-assets .service-native-card-bullet-list li + li {
   margin-top: 0.42rem;
 }
 
-.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-assets .service-native-card-bullet-list li:last-child {
-  margin-top: 1rem;
-  font-size: 1rem;
-  color: #6c6c6c;
-  font-weight: 600;
-  list-style: none;
-}
-
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-assets .service-native-card-bullet-list strong {
   color: var(--ag-color-super-grey);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-assets .service-native-card-fineprint {
+  margin: 1rem 0 0;
+  color: #6c6c6c;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 600;
+  text-align: left;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-assets .service-native-action-row {
@@ -16323,7 +16468,7 @@ p.impact-proof-story-proof-body {
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .native-info-section-copy > h2 {
   font-size: clamp(3.15rem, 7.8vw, 6.1rem);
   line-height: 1;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-endowments .legacy-child-native-endowments-big-cta .native-info-section-subtitle {
@@ -16669,13 +16814,6 @@ p.impact-proof-story-proof-body {
   background: linear-gradient(142deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.84) 100%);
   padding: 0;
   box-shadow: 0 18px 32px rgba(16, 23, 36, 0.12);
-  cursor: pointer;
-  transition: transform 0.5s ease, box-shadow 0.5s ease;
-}
-
-.legacy-child-native-trust-choices--trusts .service-native-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 26px 42px rgba(16, 23, 36, 0.16);
 }
 
 .legacy-child-native-trust-choices--trusts .service-native-card h3 {
@@ -16810,18 +16948,6 @@ p.impact-proof-story-proof-body {
   overflow: visible;
   background: transparent;
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.18);
-  cursor: pointer;
-  transform: translateZ(0) scale(1);
-  transform-origin: center;
-  transition:
-    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform, box-shadow;
-}
-
-.legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card:hover {
-  transform: translateY(-2px) scale(1.008);
-  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.14);
 }
 
 .legacy-child-native-trust-choices--trusts.native-dynamic-grid .charitable-trusts-native-choice-card > .investments-native-cert-card__cap {
@@ -16887,7 +17013,10 @@ p.impact-proof-story-proof-body {
 }
 
 .legacy-child-native-trusts-differences > :is(.ag-panel-rail, .ag-panel-rail-wide) {
-  width: min(calc(100% - (var(--ag-panel-gutter) * 1.4)), 76rem);
+  /* Keep this card-free comparison on the same content rail as the trust
+     cards above. The snapshot historically called this browser width, but
+     the comparison copy should not use the full site canvas. */
+  width: min(1100px, calc(100% - (var(--ag-panel-gutter) * 2)));
   margin-inline: auto;
 }
 
@@ -16914,8 +17043,11 @@ p.impact-proof-story-proof-body {
 }
 
 .legacy-child-native-trusts-differences .service-native-card {
-  width: min(100%, 21rem);
-  padding: 0;
+  width: min(100%, 31rem);
+  /* This is a borderless comparison card, but it still follows the shared
+     card content rail and remains adjustable from HUD card padding. */
+  padding: var(--dynamic-grid-card-padding, var(--native-card-shell-padding));
+  padding-bottom: calc(var(--dynamic-grid-card-padding, var(--native-card-shell-padding)) * 1.35);
   background: transparent;
   border: none;
   border-radius: 0;
@@ -16971,7 +17103,7 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-trusts-differences .service-native-card p,
 .legacy-child-native-trusts-differences .service-native-card-bullet-list {
-  max-width: 28ch;
+  max-width: 34ch;
   color: var(--ag-color-super-grey);
   font-size: clamp(1.28rem, 1.95vw, 1.48rem);
   line-height: 1.68;
@@ -16989,8 +17121,8 @@ p.impact-proof-story-proof-body {
 /* The generic dynamic-grid rule sizes every list item directly. Keep this
    route's deliberately larger comparison bullets as the winning rule. */
 .service-native-section.native-dynamic-grid.legacy-child-native-trusts-differences .service-native-card .service-native-card-bullet-list li {
-  font-size: clamp(1.28rem, 1.95vw, 1.48rem);
-  line-height: 1.68;
+  font-size: var(--planned-giving-bullet-size, clamp(1.28rem, 1.95vw, 1.48rem));
+  line-height: var(--planned-giving-bullet-line-height, 1.68);
 }
 
 .legacy-child-native-trusts-differences .service-native-card-bullet-list li + li {
@@ -17053,12 +17185,12 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-trusts-funding .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .service-native-section.native-dynamic-grid.legacy-child-native-trusts-funding .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .legacy-child-native-trusts-funding .service-native-card-bullet-list li + li {
@@ -17278,7 +17410,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .trusts-type-card .service-native-card-bullet-list {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-trusts .trusts-type-card .service-native-card-bullet-list li + li {
@@ -17312,12 +17444,12 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list {
   font-size: var(--planned-giving-bullet-size, clamp(1.18rem, 2.1vw, 1.42rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.18rem, 2.1vw, 1.42rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .legacy-child-native-trusts-crt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list li + li {
@@ -17364,12 +17496,12 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list {
   font-size: var(--planned-giving-bullet-size, clamp(1.18rem, 2.1vw, 1.42rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.18rem, 2.1vw, 1.42rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .legacy-child-native-trusts-clt-types.native-dynamic-grid .service-native-card.card2 .service-native-card-bullet-list li + li {
@@ -17832,7 +17964,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list li + li {
@@ -17853,7 +17985,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-generosity-fund .legacy-child-native-generosity-assets .service-native-card-bullet-list li + li {
@@ -17877,6 +18009,10 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child.native-info-page--legacy-qcd .service-native-section.native-dynamic-grid.is-card-grid-style-planned-giving-centered .service-native-grid {
   margin-top: clamp(2.4rem, 4.8vw, 3.6rem);
+}
+
+.native-info-page--legacy-child.native-info-page--legacy-qcd .service-native-section.native-dynamic-grid.is-card-grid-style-planned-giving-centered {
+  padding-bottom: clamp(2.4rem, 4.8vw, 3.6rem);
 }
 
 .native-info-page--legacy-child.native-info-page--legacy-qcd .service-native-section.native-dynamic-grid.is-card-grid-style-planned-giving-centered .service-native-card {
@@ -18903,168 +19039,6 @@ p.impact-proof-story-proof-body {
   background: linear-gradient(142deg, rgba(0, 138, 171, 0.96) 0%, rgba(27, 46, 108, 0.95) 100%);
 }
 
-.service-native-section.native-dynamic-page-content.retirement-403b-native-strategy-feature,
-.service-native-section.test-dynamic-page-content.retirement-403b-native-strategy-feature {
-  background: #fff;
-  padding-top: clamp(1.35rem, 3vw, 2.25rem);
-  padding-bottom: clamp(0.7rem, 1.5vw, 1.05rem);
-}
-
-.service-native-section.native-dynamic-page-content.retirement-403b-native-strategy-feature > .native-info-full-bleed,
-.service-native-section.native-dynamic-page-content.retirement-403b-native-strategy-feature > .ag-panel-rail-wide,
-.service-native-section.test-dynamic-page-content.retirement-403b-native-strategy-feature > .native-info-full-bleed,
-.service-native-section.test-dynamic-page-content.retirement-403b-native-strategy-feature > .ag-panel-rail-wide {
-  width: min(calc(100% - (var(--ag-panel-gutter) * 0.8)), 1100px);
-  margin-top: 0;
-}
-
-.retirement-403b-native-strategy-feature .native-info-rich-html {
-  margin-top: 0;
-}
-
-.ret403b-strategy-feature {
-  display: block;
-}
-
-.ret403b-strategy-feature-row.services-breakdown-panel {
-  margin: 0;
-}
-
-.ret403b-strategy-feature > .ret403b-strategy-feature-row.services-breakdown-panel + .ret403b-strategy-feature-row.services-breakdown-panel {
-  margin-top: clamp(0.8rem, 1.45vw, 1.05rem) !important;
-}
-
-.retirement-403b-native-strategy-feature .native-info-rich-html .services-breakdown-panel + .services-breakdown-panel,
-.retirement-403b-native-strategy-feature .native-info-rich-html .ret403b-strategy-feature-row + .ret403b-strategy-feature-row {
-  margin-top: clamp(1.35rem, 2.4vw, 1.8rem) !important;
-}
-
-.retirement-403b-native-strategy-feature .native-info-rich-html .ret403b-strategy-feature-row {
-  column-gap: clamp(1.8rem, 3vw, 3rem);
-}
-
-.ret403b-strategy-feature-links {
-  grid-column: 3;
-  grid-row: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem 0.72rem;
-  justify-content: flex-start;
-  align-content: start;
-  margin: 0;
-  padding: 0;
-}
-
-.ret403b-strategy-feature-links > .service-native-btn.ret403b-strategy-feature-link,
-.ret403b-strategy-feature-links > .service-native-btn.ret403b-strategy-feature-link:visited {
-  max-width: 100%;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) {
-  grid-column: 3;
-  grid-row: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem 0.72rem;
-  justify-content: flex-start;
-  align-content: start;
-  margin: 0;
-  padding: 0;
-}
-
-.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a,
-.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a:visited {
-  --btn-color: var(--ag-color-atlantean-dark);
-  --btn-hover-color: var(--ag-color-atlantean-dark);
-  --btn-text: var(--ag-color-atlantean-dark);
-  --btn-hover-text: var(--ag-color-atlantean-dark);
-  --btn-bg: transparent;
-  --btn-hover-bg: transparent;
-  --btn-outline-expand-block: 0.125rem;
-  --btn-outline-expand-inline: 0.1875rem;
-  --btn-outline-padding-block-base: 0.76rem;
-  --btn-outline-padding-inline-base: 1.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  max-width: 100%;
-  margin: 0;
-  padding:
-    var(--btn-outline-padding-block-base)
-    var(--btn-outline-padding-inline-base);
-  border: 1px solid var(--btn-color) !important;
-  border-radius: 999px;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--btn-text) !important;
-  text-decoration: none;
-  font-family: var(--ag-font-helv);
-  font-size: 1rem;
-  font-weight: 100;
-  line-height: 1.1;
-  text-align: center;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  transition:
-    border-color 220ms ease,
-    background-color 220ms ease,
-    color 220ms ease,
-    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 1px solid transparent;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  transition:
-    inset 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 220ms ease,
-    border-color 220ms ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a:hover {
-    border-color: transparent !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    color: var(--btn-hover-text) !important;
-    filter: none;
-    transform: none;
-  }
-
-  .retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a:hover::after {
-    inset:
-      calc(-1 * var(--btn-outline-expand-block))
-      calc(-1 * var(--btn-outline-expand-inline));
-    border-color: var(--btn-hover-color);
-    opacity: 1;
-  }
-}
-
-.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a:focus-visible {
-  border-color: transparent !important;
-  background: transparent !important;
-  box-shadow: 0 0 0 3px rgba(0, 138, 171, 0.28) !important;
-  color: var(--btn-hover-text) !important;
-  filter: none;
-  transform: none;
-}
-
-.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a:focus-visible::after {
-  inset:
-    calc(-1 * var(--btn-outline-expand-block))
-    calc(-1 * var(--btn-outline-expand-inline));
-  border-color: var(--btn-hover-color);
-  opacity: 1;
-}
-
 .retirement-403b-native-qualify .service-native-card,
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-eligibility-cards .service-native-card {
   min-height: 100%;
@@ -19239,19 +19213,6 @@ p.impact-proof-story-proof-body {
 
 .retirement-403b-native-contribution-limits .service-native-note:last-of-type {
   margin-bottom: clamp(2rem, 4vw, 3rem);
-}
-
-@media (max-width: 720px) {
-  .service-native-section.native-dynamic-page-content.retirement-403b-native-strategy-feature > .native-info-full-bleed,
-  .service-native-section.native-dynamic-page-content.retirement-403b-native-strategy-feature > .ag-panel-rail-wide,
-  .service-native-section.test-dynamic-page-content.retirement-403b-native-strategy-feature > .native-info-full-bleed,
-  .service-native-section.test-dynamic-page-content.retirement-403b-native-strategy-feature > .ag-panel-rail-wide {
-    width: calc(100% - (var(--ag-panel-gutter) * 0.7));
-  }
-
-  .retirement-403b-native-strategy-heading .service-native-action-row .service-native-btn {
-    width: 100%;
-  }
 }
 
 .retirement-403b-quickcheck-widget {
@@ -19558,9 +19519,9 @@ p.impact-proof-story-proof-body {
 .service-native-section.native-dynamic-grid.retirement-403b-native-loan-apply .service-native-card {
   --ret403b-step-accent: var(--ag-color-atlantean);
   display: grid;
-  grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr) auto;
+  grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);
   column-gap: clamp(1.25rem, 2.6vw, 2rem);
-  row-gap: 0;
+  row-gap: clamp(0.65rem, 1.4vw, 0.95rem);
   align-items: center;
   align-content: center;
   border: 2px solid var(--ret403b-step-accent);
@@ -19594,7 +19555,7 @@ p.impact-proof-story-proof-body {
 
 .service-native-section.native-dynamic-grid.retirement-403b-native-loan-apply .service-native-card h3 {
   grid-column: 1;
-  grid-row: 1;
+  grid-row: 1 / span 2;
   align-self: center;
   justify-self: center;
   min-height: 0;
@@ -19634,12 +19595,13 @@ p.impact-proof-story-proof-body {
 
 .service-native-section.native-dynamic-grid.retirement-403b-native-loan-apply .service-native-card .service-native-action-row,
 .service-native-section.native-dynamic-grid.retirement-403b-native-loan-apply .service-native-card .service-native-action-row:last-child {
-  grid-column: 3;
-  grid-row: 1;
-  align-self: center;
-  margin-top: 0;
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  margin-top: 0.2rem;
   padding-top: 0;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  min-width: 0;
 }
 
 .service-native-section.native-dynamic-grid.retirement-403b-native-loan-apply .service-native-btn.is-outline,
@@ -19652,6 +19614,8 @@ p.impact-proof-story-proof-body {
   --btn-outline-padding-inline-base: 1.42rem;
   font-weight: 650;
   letter-spacing: 0;
+  max-width: 100%;
+  white-space: normal;
 }
 
 @media (max-width: 720px) {
@@ -19770,11 +19734,12 @@ p.impact-proof-story-proof-body {
 
 .service-native-section.native-dynamic-grid.retirement-403b-native-enroll .service-native-card h3,
 .service-native-section.test-dynamic-grid.retirement-403b-native-enroll .service-native-card h3 {
-  --dynamic-grid-card-title-size: clamp(2.26rem, 3.55vw, 2.85rem);
-  font-size: clamp(2.26rem, 3.55vw, 2.85rem) !important;
+  --dynamic-grid-card-title-size: clamp(1.68rem, 2.45vw, 2.14rem);
+  font-size: clamp(1.68rem, 2.45vw, 2.14rem) !important;
   line-height: 0.9 !important;
   letter-spacing: -0.035em;
   max-width: 14.5ch;
+  transform: translateY(clamp(0.35rem, 0.7vw, 0.6rem));
 }
 
 .retirement-403b-native-enroll .service-native-card h3::after {
@@ -19938,136 +19903,6 @@ p.impact-proof-story-proof-body {
   padding-bottom: clamp(4.2rem, 7vw, 5.8rem);
 }
 
-.native-info-page--online-contributions .online-contrib-native-steps > :is(.native-info-full-bleed, .ag-panel-rail, .ag-panel-rail-wide) {
-  /* The old full-bleed rail was width-constrained but left-anchored. Center
-     the rail first; centering the inner cards alone cannot repair that drift.
-     Older snapshots may render this section as ag-panel-rail instead of
-     native-info-full-bleed, so cover all three renderer rail shapes here. */
-  width: min(calc(100% - (var(--ag-panel-gutter) * 2)), 74rem) !important;
-  max-width: 74rem !important;
-  margin-inline: auto !important;
-}
-
-/* Online Contributions is an older seeded route. Keep its numbered cards
-   visibly tied to the shared step-card accents even when an older snapshot
-   has not yet carried the preset runtime class. */
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card {
-  /* The shared step-card skin reads this established accent variable for the
-     border, number, and outline buttons. */
-  --ret403b-step-accent: var(--ag-color-atlantean);
-  /* Older shared snapshots may not carry the step-cards preset class. Keep
-     this route visually correct even while those snapshots converge. */
-  border: 2px solid var(--ret403b-step-accent) !important;
-}
-
-/* The saved Online Contributions block can predate the preset runtime class.
-   Keep its three cards on the same stacked, centered MIF geometry even in
-   that older snapshot shape. */
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-grid {
-  grid-template-columns: minmax(0, 1fr) !important;
-  width: min(100%, 82ch) !important;
-  max-width: none;
-  margin: clamp(2rem, 4vw, 3rem) auto 0;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card {
-  display: grid;
-  grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);
-  column-gap: clamp(1.25rem, 2.6vw, 2rem);
-  row-gap: clamp(0.85rem, 1.9vw, 1.2rem);
-  align-items: center;
-  padding: clamp(1.2rem, 2.3vw, 1.6rem) clamp(1.35rem, 2.7vw, 2rem);
-  border-radius: 1.75rem !important;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);
-  box-shadow: none;
-  transform: none;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card > div:first-child {
-  display: contents;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card h3 {
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  align-self: center;
-  justify-self: center;
-  min-height: 0;
-  margin: 0;
-  padding-bottom: 0;
-  font-family: var(--ag-font-helv);
-  font-size: clamp(2.55rem, 4.35vw, 3.2rem) !important;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card p {
-  grid-column: 2;
-  min-width: 0;
-  margin: 0;
-  font-size: var(--step-card-body-font-size, clamp(1.18rem, 1.95vw, 1.42rem));
-  line-height: var(--step-card-body-line-height, 1.42);
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card .service-native-action-row {
-  grid-column: 2;
-  margin-top: 0.1rem;
-  padding-top: 0;
-  justify-content: flex-start;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n + 1) {
-  --ret403b-step-accent: var(--ag-color-atlantean);
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n + 2) {
-  --ret403b-step-accent: var(--ag-color-mango);
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n) {
-  --ret403b-step-accent: var(--ag-color-sandstone-dark);
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card h3 {
-  color: var(--ret403b-step-accent) !important;
-}
-
-/* Keep this route correct while its older shared snapshot converges on the
-   step-cards preset class. These explicit rules also make the number color
-   independent of the card's inherited variable. */
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n + 1) h3 {
-  color: var(--ag-color-atlantean) !important;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n + 2) h3 {
-  color: var(--ag-color-mango) !important;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n) h3 {
-  color: var(--ag-color-sandstone-dark) !important;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n + 1) {
-  border-color: var(--ag-color-atlantean) !important;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n + 2) {
-  border-color: var(--ag-color-mango) !important;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n) {
-  border-color: var(--ag-color-sandstone-dark) !important;
-}
-
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-btn.is-outline,
-.native-info-page--online-contributions .online-contrib-native-steps .service-native-btn.is-outline:visited {
-  --btn-color: var(--ret403b-step-accent);
-  --btn-hover-color: var(--ret403b-step-accent);
-  --btn-text: var(--ret403b-step-accent);
-  --btn-hover-text: var(--ret403b-step-accent);
-}
-
 .native-info-page--online-contributions .online-contrib-native-help {
   background: linear-gradient(135deg, rgba(9, 66, 93, 0.97) 0%, rgba(0, 138, 171, 0.95) 100%);
   padding-top: clamp(4.8rem, 8vw, 6.6rem);
@@ -20129,8 +19964,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child .legacy-child-native-steps .service-native-card:hover,
-.native-info-page--legacy-child .legacy-child-native-options .service-native-card:not(.investments-native-cert-card):hover,
-.native-info-page--legacy-child .legacy-child-native-trust-choices .service-native-card:hover {
+.native-info-page--legacy-child .legacy-child-native-options .service-native-card:not(.investments-native-cert-card):hover {
   transform: translateY(-6px) scale(1.012);
 }
 
@@ -20414,7 +20248,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
   font-weight: 700;
 }
 
@@ -20450,7 +20284,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > ul li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
   font-weight: 400;
 }
 
@@ -20468,10 +20302,18 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body p {
-  margin: clamp(1.35rem, 2.4vw, 1.85rem) 1.4rem 0;
+  margin: clamp(1.75rem, 3vw, 2.25rem) 1.4rem 0;
   color: var(--ag-color-super-grey);
   font-size: clamp(1.1rem, 2vw, 1.35rem);
   line-height: 1.55;
+}
+
+/* Some migrated CGA cards keep the paragraph copy as inline rich HTML directly
+   after the bullet list. Promote that first inline node so the list-to-copy
+   gap is present for both legacy and corrected editor output. */
+.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > ul + :is(strong, span, em, a) {
+  display: block;
+  margin-top: clamp(1.75rem, 3vw, 2.25rem);
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body :is(p, li) .is-text-small {
@@ -20525,7 +20367,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-fineprint {
-  margin: 1.35rem 0 0 1.4rem;
+  margin: clamp(2rem, 3vw, 2.5rem) 0 0;
   color: #6c6c6c;
   font-size: 1rem;
   line-height: 1.5;
@@ -20590,7 +20432,7 @@ p.impact-proof-story-proof-body {
 .service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card .service-native-card-bullet-list li,
 .service-native-section.native-dynamic-grid.legacy-child-native-cga-assets .service-native-card .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 /* Shared one-card asset treatment for planned-giving give/assets sections. */
@@ -20650,7 +20492,7 @@ p.impact-proof-story-proof-body {
 
 .native-info-page--legacy-child .legacy-child-native-give-assets .service-native-card-bullet-list li {
   font-size: var(--planned-giving-bullet-size, clamp(1.1rem, 2vw, 1.35rem));
-  line-height: 1.32;
+  line-height: var(--planned-giving-bullet-line-height, 1.32);
 }
 
 .native-info-page--legacy-child .legacy-child-native-give-assets .service-native-card-bullet-list li + li {
@@ -20667,7 +20509,7 @@ p.impact-proof-story-proof-body {
 }
 
 .native-info-page--legacy-child .legacy-child-native-give-assets .service-native-card-fineprint {
-  margin: 1rem 0 0 1.4rem;
+  margin: 1rem 0 0;
   color: #6c6c6c;
   font-size: 1rem;
   font-weight: 600;
@@ -21095,18 +20937,24 @@ p.impact-proof-story-proof-body {
 }
 
 .legacy-child-native-cga-request:not(.native-dynamic-request) .native-info-section-copy > h2,
-.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2,
-.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {
+.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {
   color: #ffffff;
   font-family: var(--ag-font-heading);
   letter-spacing: var(--ag-letter-spacing-avenir-heading);
   font-size: clamp(2.2rem, 4.7vw, 3.5rem);
 }
 
+.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {
+  color: var(--ag-color-super-grey);
+}
+
 .legacy-child-native-cga-request:not(.native-dynamic-request) .native-info-section-copy > h2 mark.is-mango,
-.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 mark.is-mango,
-.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 mark.is-mango {
+.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 mark.is-mango {
   color: var(--ag-color-mango);
+}
+
+.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 mark.is-mango {
+  color: #ffffff;
 }
 
 .legacy-child-native-cga-request:not(.native-dynamic-request) .native-info-section-copy > h2 span,
@@ -21118,9 +20966,7 @@ p.impact-proof-story-proof-body {
 
 .legacy-child-native-cga-request:not(.native-dynamic-request) .native-info-section-copy > p,
 .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
-.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy .native-info-rich-html :is(p, li, a),
-.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),
-.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy .native-info-rich-html :is(p, li, a) {
+.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy .native-info-rich-html :is(p, li, a) {
   color: #ffffff;
   font-size: clamp(1.15rem, 2.2vw, 1.45rem);
   line-height: 1.55;
@@ -22044,6 +21890,112 @@ p.impact-proof-story-proof-body {
   margin-bottom: 0;
 }
 
+/*
+ * Planned-giving bullet-card contract.
+ *
+ * These cards can be rendered from the published snapshot or the HUD's
+ * authoring snapshot. Their source is allowed to differ, but the space before
+ * the editable bullet content is not. Keep that geometry owned by one class
+ * and one variable so HUD visibility cannot change the public layout.
+ */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-planned-giving-bullet-grid
+  .service-native-card > div > h3 {
+  margin-bottom: 0;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-planned-giving-bullet-grid
+  .service-native-card > div > :is(.service-native-card-bullet-list, .service-native-card-rich-body) {
+  margin-block-start: var(--planned-giving-bullet-list-top-gap, 1rem);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-planned-giving-bullet-grid
+  .service-native-card > div > .service-native-card-rich-body > :first-child {
+  margin-block-start: 0;
+}
+
+/*
+ * One measurable bullet contract for flexible planned-giving cards. Existing
+ * snapshots may not have the newer settings, so this default must stay large
+ * and readable until an admin chooses another value in HUD.
+ */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-planned-giving-bullet-grid {
+  --planned-giving-bullet-size: 1.55rem;
+  --planned-giving-bullet-line-height: 1.5;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-planned-giving-bullet-grid
+  .service-native-card-rich-body > ul li :is(span, strong, em, a) {
+  /* Legacy rich HTML sometimes carries a smaller inline font size. Let the
+     block-level bullet control own list text without changing copy. */
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-planned-giving-bullet-grid
+  .service-native-card :is(.service-native-card-bullet-list li, .service-native-card-rich-body > ul li) {
+  font-size: var(--planned-giving-bullet-size);
+  line-height: var(--planned-giving-bullet-line-height);
+}
+
+/* The trust-differences family has its own visual scale, but the HUD's
+   measurable card controls must still be able to raise that scale. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).legacy-child-native-trusts-differences
+  .service-native-card h3 {
+  font-size: max(var(--dynamic-grid-card-title-size, 0rem), clamp(1.8rem, 2.9vw, 2.35rem));
+}
+
+/* Card title colors are per-card controls. Keep these after route-specific
+   defaults so an explicit HUD choice wins without changing card content. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-atlantean,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-atlantean mark {
+  color: var(--ag-color-atlantean);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-mango,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-mango mark {
+  color: var(--ag-color-mango);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-melon,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-melon mark {
+  color: var(--ag-color-melon);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-sandstone,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-sandstone mark {
+  color: var(--ag-color-sandstone);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-super-grey,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-super-grey mark {
+  color: var(--ag-color-super-grey);
+}
+
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-white,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid)
+  .service-native-card h3.is-white mark {
+  color: #ffffff;
+}
+
+/* MIF's dated footnote is not one of its bullets. Preserve its fine-print
+   treatment while all actual bullet rows use shared controls. */
+.native-info-page--legacy-child.native-info-page--legacy-ministry-impact
+  .legacy-child-native-assets .service-native-card-bullet-list li:last-child {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
 @media (max-width: 760px) {
   .service-native-section.is-article-feature .service-native-dark-feature-inner {
     grid-template-columns: minmax(0, 1fr);
@@ -22058,5 +22010,584 @@ p.impact-proof-story-proof-body {
     width: 100%;
     min-width: 0;
     min-height: auto;
+  }
+}
+
+/*
+ * Final semantic-color authority for dynamic form headings.
+ *
+ * Request/CTA presets are allowed to choose their default tone, but an
+ * explicit class written by a HUD color picker is the saved content value.
+ * Keep these rules last so legacy preset CSS cannot make preview and page
+ * disagree. The inside-form CTA title is included because it is an h5 rather
+ * than the outside-form h2 used by the other form renderer.
+ */
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-atlantean,
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-atlantean :is(span, strong, em) {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-mango,
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-mango :is(span, strong, em) {
+  color: var(--ag-color-mango) !important;
+}
+
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-melon,
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-melon :is(span, strong, em) {
+  color: var(--ag-color-melon) !important;
+}
+
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-sandstone,
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-sandstone :is(span, strong, em) {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-super-grey,
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-super-grey :is(span, strong, em) {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-white,
+.service-native-page :is(
+  .dynamic-request-copy > h2,
+  .dynamic-cta-form-title
+).is-white :is(span, strong, em) {
+  color: #ffffff !important;
+}
+
+/* Direct home-renderer surfaces use their own legacy wrapper classes, but
+ * their selected semantic colors still come from the shared HTML editor. */
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-atlantean,
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+).is-atlantean :is(span, strong, em),
+.service-native-page .home-native-newsletter-copy.is-atlantean {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-mango,
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+).is-mango :is(span, strong, em),
+.service-native-page .home-native-newsletter-copy.is-mango {
+  color: var(--ag-color-mango) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-melon,
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+).is-melon :is(span, strong, em),
+.service-native-page .home-native-newsletter-copy.is-melon {
+  color: var(--ag-color-melon) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-sandstone,
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+).is-sandstone :is(span, strong, em),
+.service-native-page .home-native-newsletter-copy.is-sandstone {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-super-grey,
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+).is-super-grey :is(span, strong, em),
+.service-native-page .home-native-newsletter-copy.is-super-grey {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy > :is(h1, h2, h3, h4, h5, h6, p, li, a)
+).is-white,
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+).is-white :is(span, strong, em),
+.service-native-page .home-native-newsletter-copy.is-white {
+  color: #ffffff !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+) mark.is-atlantean {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+) mark.is-mango {
+  color: var(--ag-color-mango) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+) mark.is-melon {
+  color: var(--ag-color-melon) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+) mark.is-sandstone {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+) mark.is-super-grey {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.service-native-page :is(
+  .home-native-hero :is(p, h1),
+  .home-native-billboard-subtitle,
+  .home-native-newsletter h2,
+  .home-native-newsletter-copy
+) mark.is-white {
+  color: #ffffff !important;
+}
+
+/* HomePage is not wrapped in service-native-page, so keep the same authority
+ * on its direct PageBlocksRenderer path. */
+.home-native-page :is(
+  .home-native-hero :is(p, h1).is-atlantean,
+  .home-native-hero :is(p, h1) mark.is-atlantean,
+  .home-native-billboard-subtitle.is-atlantean,
+  .home-native-newsletter h2.is-atlantean,
+  .home-native-newsletter-copy.is-atlantean,
+  .home-native-newsletter-copy .is-atlantean
+) {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.home-native-page :is(
+  .home-native-hero :is(p, h1).is-mango,
+  .home-native-hero :is(p, h1) mark.is-mango,
+  .home-native-billboard-subtitle.is-mango,
+  .home-native-newsletter h2.is-mango,
+  .home-native-newsletter-copy.is-mango,
+  .home-native-newsletter-copy .is-mango
+) {
+  color: var(--ag-color-mango) !important;
+}
+
+.home-native-page :is(
+  .home-native-hero :is(p, h1).is-melon,
+  .home-native-hero :is(p, h1) mark.is-melon,
+  .home-native-billboard-subtitle.is-melon,
+  .home-native-newsletter h2.is-melon,
+  .home-native-newsletter-copy.is-melon,
+  .home-native-newsletter-copy .is-melon
+) {
+  color: var(--ag-color-melon) !important;
+}
+
+.home-native-page :is(
+  .home-native-hero :is(p, h1).is-sandstone,
+  .home-native-hero :is(p, h1) mark.is-sandstone,
+  .home-native-billboard-subtitle.is-sandstone,
+  .home-native-newsletter h2.is-sandstone,
+  .home-native-newsletter-copy.is-sandstone,
+  .home-native-newsletter-copy .is-sandstone
+) {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.home-native-page :is(
+  .home-native-hero :is(p, h1).is-super-grey,
+  .home-native-hero :is(p, h1) mark.is-super-grey,
+  .home-native-billboard-subtitle.is-super-grey,
+  .home-native-newsletter h2.is-super-grey,
+  .home-native-newsletter-copy.is-super-grey,
+  .home-native-newsletter-copy .is-super-grey
+) {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.home-native-page :is(
+  .home-native-hero :is(p, h1).is-white,
+  .home-native-hero :is(p, h1) mark.is-white,
+  .home-native-billboard-subtitle.is-white,
+  .home-native-newsletter h2.is-white,
+  .home-native-newsletter-copy.is-white,
+  .home-native-newsletter-copy .is-white
+) {
+  color: #ffffff !important;
+}
+
+/* Rich HTML selection colors may land on a nested span rather than the
+ * paragraph wrapper. Keep that selection explicit on every service editor
+ * body, including Card Grid and Columns rich bodies. */
+.service-native-page .native-info-rich-html .is-atlantean {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.service-native-page .native-info-rich-html .is-mango {
+  color: var(--ag-color-mango) !important;
+}
+
+.service-native-page .native-info-rich-html .is-melon {
+  color: var(--ag-color-melon) !important;
+}
+
+.service-native-page .native-info-rich-html .is-sandstone {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.service-native-page .native-info-rich-html .is-super-grey {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.service-native-page .native-info-rich-html .is-white {
+  color: #ffffff !important;
+}
+
+/* A base color is applied to the rich-body wrapper when no text selection is
+ * active. Keep that wrapper-level choice authoritative too. */
+.service-native-page .native-info-rich-html.is-atlantean,
+.service-native-page .native-info-rich-html.is-atlantean :is(span, strong, em, a) {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.service-native-page .native-info-rich-html.is-mango,
+.service-native-page .native-info-rich-html.is-mango :is(span, strong, em, a) {
+  color: var(--ag-color-mango) !important;
+}
+
+.service-native-page .native-info-rich-html.is-melon,
+.service-native-page .native-info-rich-html.is-melon :is(span, strong, em, a) {
+  color: var(--ag-color-melon) !important;
+}
+
+.service-native-page .native-info-rich-html.is-sandstone,
+.service-native-page .native-info-rich-html.is-sandstone :is(span, strong, em, a) {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.service-native-page .native-info-rich-html.is-super-grey,
+.service-native-page .native-info-rich-html.is-super-grey :is(span, strong, em, a) {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.service-native-page .native-info-rich-html.is-white,
+.service-native-page .native-info-rich-html.is-white :is(span, strong, em, a) {
+  color: #ffffff !important;
+}
+
+/* Card Chart defaults: give comparison cells enough breathing room for the
+ * reusable block. Keep the values on section variables so future editor
+ * controls can override them without changing the renderer contract. */
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) {
+  --card-chart-cell-padding: clamp(1.05rem, 1.8vw, 1.35rem) clamp(1.15rem, 2vw, 1.55rem);
+  --card-chart-mobile-cell-padding: 0.9rem 1rem 1rem;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart)
+  .info-table-sheet__table
+  :is(th, td) {
+  padding: var(--card-chart-cell-padding);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart)
+  .info-table-sheet__card-cell {
+  padding: var(--card-chart-mobile-cell-padding);
+}
+
+/* The reusable chart owns the IRA comparison presentation. Keep these rules
+   on the shared block class so a fresh Card Chart has the same shell, type,
+   cell spacing, and list dividers as the source chart. */
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) {
+  --card-chart-cell-padding: 0.9rem 1rem;
+  --card-chart-header-padding: clamp(0.78rem, 1.4vw, 1rem) clamp(1rem, 1.9vw, 1.35rem);
+  --card-chart-mobile-cell-padding: 0.82rem 0.88rem;
+  background: #fff;
+  padding-top: clamp(2.8rem, 5.5vw, 4.25rem);
+  padding-bottom: clamp(2.4rem, 4.8vw, 3.6rem);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) > .native-info-full-bleed {
+  width: calc(100% - (var(--ag-panel-gutter) * 0.6));
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) > .native-info-full-bleed > h2 {
+  color: var(--ag-color-super-grey);
+  font-family: "helvetica-neue-lt-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0;
+  text-align: center;
+  font-size: clamp(2.2rem, 4.2vw, 3.55rem);
+  width: min(72rem, 100%);
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: clamp(1.3rem, 2.8vw, 2rem);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) > .native-info-full-bleed > h2.is-atlantean {
+  color: var(--ag-color-atlantean);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) > .native-info-full-bleed > h2.is-mango {
+  color: var(--ag-color-mango);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) > .native-info-full-bleed > h2.is-melon {
+  color: var(--ag-color-melon);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) > .native-info-full-bleed > h2.is-sandstone {
+  color: var(--ag-color-sandstone-dark);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) > .native-info-full-bleed > h2.is-white {
+  color: #fff;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) > .native-info-full-bleed > h2::after {
+  display: none;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .native-info-table-wrap {
+  --card-chart-shadow-gutter: clamp(1.35rem, 2.7vw, 2rem);
+  box-sizing: border-box;
+  max-width: calc(72rem + (var(--card-chart-shadow-gutter) * 2));
+  margin: 0 auto;
+  padding: 0 var(--card-chart-shadow-gutter) clamp(1.6rem, 2.8vw, 2.2rem);
+  overflow: visible;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet {
+  max-width: 72rem;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__desktop-shell {
+  border: 0;
+  background: transparent;
+  filter: drop-shadow(0 18px 34px rgba(65, 64, 66, 0.18));
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table {
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: clamp(1.05rem, 2.2vw, 1.6rem) 0;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table th,
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table td {
+  border: 0;
+  padding: var(--card-chart-cell-padding);
+  vertical-align: top;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table thead th {
+  border-bottom: 0;
+  padding: var(--card-chart-header-padding);
+  color: #fff;
+  font-family: var(--ag-font-body);
+  font-size: clamp(1.18rem, 1.34vw, 1.42rem);
+  font-weight: 780;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  text-align: left;
+  text-transform: none;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table thead th:nth-child(1) {
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
+  text-align: center;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table thead th:nth-child(2) {
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(135deg, #f7b229 0%, var(--ag-color-mango) 100%);
+  text-align: center;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody td {
+  min-height: 24rem;
+  border-bottom: 1px solid rgba(222, 225, 229, 0.9);
+  color: var(--ag-color-super-grey);
+  font-family: var(--ag-font-body);
+  font-size: clamp(1.05rem, 1.12vw, 1.14rem);
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.38;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody tr:last-child td:nth-child(1),
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody tr:last-child td:nth-child(2) {
+  border-radius: 0 0 14px 14px;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody td:nth-child(1),
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card-cell:nth-child(1) {
+  background: #eef8fa;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody td:nth-child(2),
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card-cell:nth-child(2) {
+  background: #fff6e8;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table thead th.is-tone-atlantean {
+  background: linear-gradient(135deg, var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table thead th.is-tone-mango {
+  background: linear-gradient(135deg, #f7b229 0%, var(--ag-color-mango) 100%);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table thead th.is-tone-melon {
+  background: linear-gradient(135deg, #e87868 0%, var(--ag-color-melon) 100%);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table thead th.is-tone-sandstone {
+  background: linear-gradient(135deg, #a89d94 0%, var(--ag-color-sandstone) 100%);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table thead th.is-tone-super-grey {
+  background: linear-gradient(135deg, #303033 0%, var(--ag-color-super-grey) 100%);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody td.is-tone-atlantean,
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card-cell[data-info-table-column-tone="atlantean"] {
+  background: #eef8fa;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody td.is-tone-mango,
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card-cell[data-info-table-column-tone="mango"] {
+  background: #fff6e8;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody td.is-tone-melon,
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card-cell[data-info-table-column-tone="melon"] {
+  background: #fff0ee;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody td.is-tone-sandstone,
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card-cell[data-info-table-column-tone="sandstone"] {
+  background: #f4f1ee;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody td.is-tone-super-grey,
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card-cell[data-info-table-column-tone="super-grey"] {
+  background: #f1f1f2;
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__cell-list li + li {
+  padding-top: 0.58rem;
+  border-top: 1px solid rgba(65, 64, 66, 0.12);
+}
+
+.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__card {
+  border-color: rgba(196, 190, 182, 0.38);
+  box-shadow: 0 16px 34px rgba(65, 64, 66, 0.16);
+}
+
+@media (max-width: 900px) {
+  .service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) > .native-info-full-bleed {
+    width: calc(100% - (var(--ag-panel-gutter) * 0.85));
+  }
+
+  .service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table th,
+  .service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table td {
+    padding: 0.82rem 0.88rem;
   }
 }

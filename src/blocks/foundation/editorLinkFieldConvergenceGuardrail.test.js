@@ -17,7 +17,6 @@ describe('editor link field convergence guardrail', () => {
     const introSource = readSource('../definitions/intro.definition.js');
     const billboardSource = readSource('../definitions/billboard.definition.js');
     const featurePanelSource = readSource('../definitions/featurePanel.definition.js');
-    const ctaBandSource = readSource('../definitions/ctaBand.definition.js');
     const impactStatSource = readSource('../definitions/impactStat.definition.js');
     const splitPanelSource = readSource('../definitions/splitPanel.definition.js');
     const photoColumnSource = readSource('../definitions/photoColumn.definition.js');
@@ -33,7 +32,6 @@ describe('editor link field convergence guardrail', () => {
       introSource,
       billboardSource,
       featurePanelSource,
-      ctaBandSource,
       impactStatSource,
       splitPanelSource,
       photoColumnSource,

@@ -24,6 +24,7 @@ const CANONICAL_EDITOR_PARITY_CONTRACT = Object.freeze(
           : definition.kind === 'intro'
           || definition.kind === 'testimonials'
           || definition.kind === 'content'
+          || definition.kind === 'support_library'
           || definition.kind === 'top_strip'
           ? 'custom-hud'
           : 'shared-admin',

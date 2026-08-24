@@ -20,8 +20,30 @@ describe('PageContentHudEditorPanel', () => {
     renderPanel({ html: '<p>Page content body.</p>' });
 
     expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Page content block preview' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'HTML' }));
     expect(screen.getByLabelText('Body HTML')).toBeTruthy();
+  });
+
+  it('loads legacy address copy into HUD HTML editor and promotes it on blur', () => {
+    const onSettingChange = vi.fn();
+    renderPanel({
+      html: '<p></p>',
+      addressTitle: 'Mail or fax completed forms to:',
+      addressLines: 'AGFinancial Insurance\nPO Box 10263\nSpringfield, MO 65808-0263',
+    }, onSettingChange);
+
+    const editor = screen.getByRole('textbox', { name: 'HTML content' });
+    expect(editor.textContent).toContain('Mail or fax completed forms to:');
+    expect(editor.textContent).toContain('Springfield, MO 65808-0263');
+
+    editor.innerHTML = '<p>Updated mail instructions.</p>';
+    fireEvent.input(editor);
+    fireEvent.blur(editor);
+
+    expect(onSettingChange).toHaveBeenCalledWith('html', '<p>Updated mail instructions.</p>');
+    expect(onSettingChange).toHaveBeenCalledWith('addressTitle', '');
+    expect(onSettingChange).toHaveBeenCalledWith('addressLines', '');
   });
 
   it('maps width presets onto the existing max-width field', () => {

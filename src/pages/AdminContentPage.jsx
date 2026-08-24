@@ -24,7 +24,6 @@ import { useTestimonials } from '../context/TestimonialsContext';
 import { pageByPath } from '../data/siteMap';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import {
-  applySelectionColor,
   extractHeroLineColorToken,
   parseHeroRangeHighlights,
   readTextSelectionState,
@@ -44,6 +43,7 @@ import {
   normalizeSurfaceBgTone,
   resolvePanelTextToneClassName,
 } from '../lib/colorSystem';
+import { applyTextColorSelection } from '../lib/textColorSelection';
 import { buildAdminBlockInsertChoices } from '../lib/adminBlockInsertChoices';
 import { normalizeAdminBlockName } from '../lib/blockDisplayName';
 import { PUBLISH_STATUS } from '../lib/contentAdminPublishing';
@@ -642,7 +642,7 @@ function ColorTextSelectionEditor({
 }) {
   const inputRef = useRef(null);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  const isInputFocusedRef = useRef(false);
   const [showSpanDetails, setShowSpanDetails] = useState(false);
   const value = String(text ?? '');
   const normalizedLineClass = String(lineClassName || '').trim();
@@ -670,35 +670,22 @@ function ColorTextSelectionEditor({
 
   const applySwatch = (colorValue) => {
     const el = inputRef.current;
-    if (!isInputFocused) {
-      onLineClassNameChange(replaceHeroLineColorClass(normalizedLineClass, colorValue));
+    const result = applyTextColorSelection({
+      text: value,
+      lineClassName: normalizedLineClass,
+      highlightsJson,
+      selection: isInputFocusedRef.current
+        ? readTextSelectionState(el, selection, value)
+        : { start: 0, end: 0 },
+      colorValue,
+    });
+    if (result.target !== 'selection') {
+      onLineClassNameChange(result.lineClassName);
       setSelection({ start: 0, end: 0 });
       return;
     }
-
-    if (el && document.activeElement !== el) {
-      el.focus();
-    }
-    const currentSelection = (() => {
-      const nextSelection = readTextSelectionState(el, selection, value);
-      return { start: nextSelection.start, end: nextSelection.end };
-    })();
-
-    if (currentSelection.end > currentSelection.start) {
-      onHighlightsJsonChange(
-        applySelectionColor(
-          highlightsJson,
-          value,
-          currentSelection.start,
-          currentSelection.end,
-          colorValue,
-        ),
-      );
-      setSelection(currentSelection);
-      return;
-    }
-
-    onLineClassNameChange(replaceHeroLineColorClass(normalizedLineClass, colorValue));
+    onHighlightsJsonChange(result.highlightsJson);
+    setSelection(result.selection);
   };
 
   const removeHighlightAtIndex = (index) => {
@@ -730,11 +717,11 @@ function ColorTextSelectionEditor({
       value={value}
       placeholder={placeholder}
       onFocus={() => {
-        setIsInputFocused(true);
+        isInputFocusedRef.current = true;
         syncSelection();
       }}
       onBlur={() => {
-        setIsInputFocused(false);
+        isInputFocusedRef.current = false;
         setSelection({ start: 0, end: 0 });
       }}
       onClick={syncSelection}
@@ -793,11 +780,11 @@ function ColorTextSelectionEditor({
         value={value}
         placeholder={placeholder}
         onFocus={() => {
-          setIsInputFocused(true);
+          isInputFocusedRef.current = true;
           syncSelection();
         }}
         onBlur={() => {
-          setIsInputFocused(false);
+          isInputFocusedRef.current = false;
           setSelection({ start: 0, end: 0 });
         }}
         onClick={syncSelection}
@@ -1419,6 +1406,7 @@ export default function AdminContentPage() {
     getPageWorkflowActivity,
     hasPendingExternalDrafts = () => false,
     saveSharedDraftNow,
+    resetBlockToSavedDraft = () => ({ ok: false, reason: 'shared-authority-disabled' }),
     discardSharedPageDraft = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
     discardSharedBlockDraft = async () => ({ ok: false, reason: 'shared-authority-disabled' }),
     publishSharedPageNow,
@@ -1488,7 +1476,11 @@ export default function AdminContentPage() {
   const selectedPage = adminPageHierarchy[selectedPath] || null;
   const selectedBlocksSource = adminBlocksByPath[selectedPath] || [];
   const requestedAdminPagePath = useMemo(() => getRequestedAdminPagePath(location.search), [location.search]);
-  const { blocks: selectedBlocks, stageLocalBlockSetting } = useLocalBlockDrafts({
+  const {
+    blocks: selectedBlocks,
+    stageLocalBlockSetting,
+    hasPendingBlockDraft,
+  } = useLocalBlockDrafts({
     pathname: selectedPath,
     blocks: selectedBlocksSource,
     claimBufferedBlockEdit,
@@ -1966,6 +1958,16 @@ export default function AdminContentPage() {
     && !draftDiscardBusy
     && selectedPathPublishSummary?.changedBlockIds?.includes(selectedBlock.id),
   );
+  const canResetSelectedBlockDraft = Boolean(
+    selectedBlock
+    && !draftDiscardBusy
+    && !pagePublishBusy
+    && !sharedPublishBusy
+    && (
+      selectedPathChangeSummary?.changedBlockIds?.includes(selectedBlock.id)
+      || hasPendingBlockDraft?.(selectedBlock.id)
+    ),
+  );
   const makeLiveTitle = publishBlockedByOtherDraft
     ? canPartiallyPublishPage
       ? `Make live will publish ${publishablePageBlockIds.length} eligible block${publishablePageBlockIds.length === 1 ? '' : 's'}; ${selectedPathWorkflowActivity?.otherActorBlockCount || 1} other-admin block${selectedPathWorkflowActivity?.otherActorBlockCount === 1 ? '' : 's'} will remain draft.`
@@ -2171,6 +2173,27 @@ export default function AdminContentPage() {
     } finally {
       setDraftDiscardBusy(false);
     }
+  };
+
+  const handleResetSelectedBlockDraft = () => {
+    if (!selectedPath || !selectedBlock?.id || !canResetSelectedBlockDraft) {
+      return;
+    }
+    const blockLabel = getAdminBlockLabel(selectedBlock);
+    if (typeof window !== 'undefined' && !window.confirm(
+      `Reset ${blockLabel} to its last saved draft? Local edits not saved as a draft will be removed. The saved draft and live site will not change.`,
+    )) {
+      return;
+    }
+    setDraftDiscardMessage('');
+    const result = resetBlockToSavedDraft(selectedPath, selectedBlock.id);
+    if (result?.ok === false) {
+      setDraftDiscardMessage(result?.reason === 'draft-save-pending'
+        ? 'Reset paused while the current draft save finishes.'
+        : 'Reset failed. The current block draft was preserved.');
+      return;
+    }
+    setDraftDiscardMessage(`${blockLabel} reset to its last saved draft. The saved draft and live site were not changed.`);
   };
 
   const handlePreviewDraft = () => {
@@ -3328,6 +3351,15 @@ export default function AdminContentPage() {
                   </button>
                   <button
                     type="button"
+                    className="action-btn action-btn-outline"
+                    onClick={handleResetSelectedBlockDraft}
+                    disabled={!canResetSelectedBlockDraft}
+                    title="Restore this block to its last saved draft without changing the saved draft or live site."
+                  >
+                    Reset to saved draft
+                  </button>
+                  <button
+                    type="button"
                     className={`action-btn action-btn-danger admin-selected-block-remove-btn${pendingRemoveBlockId === selectedBlock.id ? ' is-confirm' : ''}`}
                     onClick={() => handleRemoveBlockAction(selectedBlock)}
                   >
@@ -3422,6 +3454,15 @@ export default function AdminContentPage() {
                       title="Discard this block's unpublished changes only."
                     >
                       {draftDiscardBusy ? 'Discarding…' : 'Discard block draft'}
+                    </button>
+                    <button
+                      type="button"
+                      className="action-btn action-btn-outline"
+                      onClick={handleResetSelectedBlockDraft}
+                      disabled={!canResetSelectedBlockDraft}
+                      title="Restore this block to its last saved draft without changing the saved draft or live site."
+                    >
+                      Reset to saved draft
                     </button>
                   </div>
                 </div>

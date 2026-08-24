@@ -45,6 +45,23 @@ describe('PageBlocksRenderer source precedence', () => {
     expect(screen.queryByText('Stale body')).toBeNull();
   });
 
+  it('keeps the saved billboard body color class on the direct renderer path', () => {
+    const { container } = renderBlocks([{
+      id: 'billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Edited title',
+        bodyHtml: '<p>Color-controlled billboard copy.</p>',
+        bodyColorClassName: 'is-atlantean',
+        bgTone: 'white',
+        textTone: 'dark',
+      },
+    }]);
+
+    expect(container.querySelector('.native-info-rich-html')?.className).toContain('is-atlantean');
+  });
+
   it('preserves intentional empty canonical values and does not emit starter copy', () => {
     const { container } = renderBlocks([{
       id: 'newsletter',

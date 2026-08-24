@@ -128,7 +128,7 @@ describe('request form renderer guardrail', () => {
     expect(source).toContain('function buildManagedBlockSection(block, {');
     expect(source).toContain("if (renderBlock.kind === 'request_form') {");
     expect(source).toContain('buildDynamicRequestFormSection(renderBlock, pathname);');
-    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
     expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).toContain('return <DynamicRequestFormSection config={config} />;');
     expect(source).not.toContain('const targetedDynamicRequestSections = new Map();');
@@ -242,13 +242,24 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.native-dynamic-request .dynamic-request-copy h2 mark.is-sandstone {');
   });
 
+  it('keeps explicit HUD-picked text colors above route preset defaults', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('Explicit HUD text colors are content settings, not route decoration.');
+    expect(cssSource).toContain('.dynamic-request-copy > h2,');
+    expect(cssSource).toContain('.service-native-page .native-info-rich-html.is-mango {');
+    expect(cssSource).toContain('color: var(--ag-color-mango) !important;');
+    expect(cssSource).toContain('.service-native-page .native-info-rich-html.is-white {');
+    expect(cssSource).toContain('color: #ffffff !important;');
+  });
+
   it('keeps the Group Life request heading on dark core copy with white highlighted words in the dynamic request path', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2,');
-    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2.is-white,');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2.is-super-grey {');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2 mark.is-white {');
+    expect(cssSource).not.toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-copy > h2.is-white,');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-panel {');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-group-life-quote .dynamic-request-step-meta {');
     expect(cssSource).toContain('border-bottom: 0;');
@@ -303,10 +314,10 @@ describe('request form renderer guardrail', () => {
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-layout {');
     expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy {');
     expect(cssSource).toContain('.legacy-child-native-cga-request:not(.native-dynamic-request) .native-info-inline-form h5,');
-    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2,');
-    expect(cssSource).toContain('.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {');
-    expect(cssSource).toContain('.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 mark.is-mango {');
-    expect(cssSource).toContain('.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),');
+    expect(cssSource).toContain('.native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {');
+    expect(cssSource).not.toContain('.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 {');
+    expect(cssSource).not.toContain('.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy > h2 mark.is-mango {');
+    expect(cssSource).not.toContain('.native-info-page--legacy-cga .native-dynamic-request.is-request-form-preset-legacy-cga .dynamic-request-copy :is(p, .dynamic-request-subtitle, .dynamic-request-body, .native-info-rich-html),');
   });
 
   it('forces the ministry-impact-fund dynamic request section back onto the shared layout contract instead of the retired static outer grid', () => {

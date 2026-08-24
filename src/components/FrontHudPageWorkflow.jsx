@@ -128,6 +128,7 @@ export default function FrontHudPageWorkflow({
   onOwnershipAction = null,
   showBlockPublishAction = true,
   showBlockDiscardAction = true,
+  showBlockResetAction = true,
   onDoneEditing = null,
   doneEditingLabel = 'Done editing',
   isBillboardEditor = false,
@@ -150,6 +151,7 @@ export default function FrontHudPageWorkflow({
     saveSharedBlockDraftNow = async () => ({ ok: false }),
     discardSharedPageDraft = async () => ({ ok: false }),
     discardSharedBlockDraft = async () => ({ ok: false }),
+    resetBlockToSavedDraft = () => ({ ok: false }),
     publishSharedPageNow = async () => ({ ok: false }),
     publishSharedBlockNow = async () => ({ ok: false }),
   } = useContentAdmin() || {};
@@ -168,6 +170,7 @@ export default function FrontHudPageWorkflow({
   const workflowRef = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDiscarding, setIsDiscarding] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [isDiscardConfirming, setIsDiscardConfirming] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isTakingOver, setIsTakingOver] = useState(false);
@@ -475,6 +478,16 @@ export default function FrontHudPageWorkflow({
     && (normalizedBlockId
       ? hasBlockPublishChanges || hasPendingExternalDraftOnBlock
       : pageDirty || hasPublishChanges || hasPendingExternalDraftsOnPage);
+  const canResetBlockDraft = Boolean(
+    normalizedBlockId
+    && showDraftActions
+    && !isSaving
+    && !isPublishing
+    && !isDiscarding
+    && !isResetting
+    && !isSharedWorkflowBusy
+    && (hasBlockSaveChanges || hasBlockPublishChanges),
+  );
   const canMakeLive = showDraftActions
     && !isSaving
     && !isPublishing
@@ -651,6 +664,31 @@ export default function FrontHudPageWorkflow({
     }
   };
 
+  const handleResetBlockDraft = async () => {
+    if (!canResetBlockDraft) {
+      return;
+    }
+    if (typeof window !== 'undefined' && !window.confirm(
+      `Reset ${blockLabel} to its last saved draft? Any edits not saved as a draft will be removed. The saved draft and live site will not be changed.`,
+    )) {
+      return;
+    }
+    setSaveError('');
+    setIsResetting(true);
+    try {
+      const result = await resetBlockToSavedDraft(normalizedPath, normalizedBlockId);
+      if (result?.ok === false) {
+        setSaveError(result?.reason === 'draft-save-pending'
+          ? 'Reset paused while the current draft save finishes.'
+          : 'Reset failed; current changes are still here.');
+      }
+    } catch {
+      setSaveError('Reset failed; current changes are still here.');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const handleViewLive = () => {
     if (typeof onToggleLivePreview === 'function') {
       onToggleLivePreview(!isLivePreview);
@@ -771,10 +809,21 @@ export default function FrontHudPageWorkflow({
               {isPublishing ? 'Publishing…' : 'Make live'}
             </button>
           ) : null}
-          {(showBlockDiscardAction || reviewHref) ? (
+          {(showBlockResetAction || showBlockDiscardAction || reviewHref) ? (
             <details className="admin-front-hud-page-workflow-overflow">
               <summary aria-label={`More ${isBillboardEditor ? 'Billboard editor' : 'HUD editor'} actions`} title="More actions">More</summary>
               <div className="admin-front-hud-page-workflow-overflow-menu">
+                {showBlockResetAction && normalizedBlockId ? (
+                  <button
+                    type="button"
+                    className="admin-front-hud-page-workflow-action is-secondary"
+                    onClick={handleResetBlockDraft}
+                    disabled={!canResetBlockDraft}
+                    title="Restore this block to its last authority-saved draft. The live site and saved draft remain unchanged."
+                  >
+                    {isResetting ? 'Resetting…' : 'Reset to saved draft'}
+                  </button>
+                ) : null}
                 {showBlockDiscardAction ? (
                   <div className="admin-front-hud-page-workflow-overflow-item">
                     {isDiscardConfirming ? <span>{normalizedBlockId ? 'Discard this block draft?' : 'Discard page drafts?'}</span> : null}

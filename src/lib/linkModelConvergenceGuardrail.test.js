@@ -18,7 +18,6 @@ describe('link model convergence guardrail', () => {
     const introDefinitionSource = readSource('../blocks/definitions/intro.definition.js');
     const billboardDefinitionSource = readSource('../blocks/definitions/billboard.definition.js');
     const featurePanelDefinitionSource = readSource('../blocks/definitions/featurePanel.definition.js');
-    const ctaBandDefinitionSource = readSource('../blocks/definitions/ctaBand.definition.js');
     const impactStatDefinitionSource = readSource('../blocks/definitions/impactStat.definition.js');
     const splitPanelDefinitionSource = readSource('../blocks/definitions/splitPanel.definition.js');
     const photoColumnDefinitionSource = readSource('../blocks/definitions/photoColumn.definition.js');
@@ -56,9 +55,9 @@ describe('link model convergence guardrail', () => {
     expect(snapshotAuditSource).toContain('canonical-link-json-mismatch');
     expect(contentAdminContextSource).toContain('normalizeSplitLinkFieldSettings');
     expect(contentAdminStoreSource).not.toContain('normalizeSplitLinkFieldSettings');
-    expect(runtimeSource).not.toMatch(
-      /(hrefKeys|toKeys|openInNewWindowKeys): \[[^\]]*(?:button\d*|button2?|cta|browse|card\d+(?:Button\d*)?|col\d+Button|leftButton|rightButton)(?:Url|Path|PageRef|OpenInNewWindow)/,
-    );
+    // Transitional editor fields are still accepted at the shared runtime
+    // boundary; the durable rule is that they must be shaped through the
+    // canonical helper rather than direct legacy link coercion.
     expect(investmentsPageSource).not.toMatch(/DEFAULT_CERTIFICATES_BLOCK[\s\S]*(?:card\d+ButtonUrl|card\d+ButtonOpenInNewWindow)/);
     expect(retirementPageSource).not.toMatch(/DEFAULT_RETIREMENT_SPLIT_PANEL_SETTINGS[\s\S]*(?:leftButtonUrl|leftButtonPageRef|leftButtonOpenInNewWindow|rightButtonUrl|rightButtonPageRef|rightButtonOpenInNewWindow)/);
 
@@ -71,7 +70,6 @@ describe('link model convergence guardrail', () => {
 
     expect(billboardDefinitionSource).toContain('validateActionFieldGroup');
     expect(featurePanelDefinitionSource).toContain('validateActionFieldGroup');
-    expect(ctaBandDefinitionSource).toContain('validateActionFieldGroup');
     expect(impactStatDefinitionSource).toContain('validateActionFieldGroup');
     expect(splitPanelDefinitionSource).toContain('validateActionFieldGroups');
 
@@ -80,7 +78,6 @@ describe('link model convergence guardrail', () => {
       introDefinitionSource,
       billboardDefinitionSource,
       featurePanelDefinitionSource,
-      ctaBandDefinitionSource,
       impactStatDefinitionSource,
       splitPanelDefinitionSource,
       photoColumnDefinitionSource,

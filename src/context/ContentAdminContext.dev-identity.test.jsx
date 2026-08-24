@@ -56,7 +56,7 @@ function ContextProbe() {
       <button type="button" onClick={() => moveBlock(pathname, blockId, 'down')}>Move block</button>
       <button type="button" onClick={() => moveBlockToIndex(pathname, 'cta_band', 1)}>Move Billboard to index 1</button>
       <button type="button" onClick={() => addBlock(pathname, 'dynamic:billboard:default', 1)}>Insert Billboard</button>
-      <button type="button" onClick={() => removeBlock(pathname, 'billboard_2')}>Remove inserted Billboard</button>
+      <button type="button" onClick={() => removeBlock(pathname, 'billboard')}>Remove inserted Billboard</button>
       <button
         type="button"
         onClick={() => setActiveBlockLock(pathname, blockId, { force: true })}
@@ -259,7 +259,7 @@ describe('ContentAdminContext dev identity metadata', () => {
 
     expect(screen.getByTestId('block-order').textContent.split('|').slice(0, 4)).toEqual([
       'hero',
-      'billboard_2',
+      'billboard',
       'cta_band',
       'intro',
     ]);

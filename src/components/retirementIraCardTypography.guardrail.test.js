@@ -11,7 +11,7 @@ describe('retirement IRA card typography guardrails', () => {
     const source = readSource('../styles/service-native.css');
 
     expect(source).toContain(
-      'font-size: clamp(2.55rem, 4.8vw, 4.2rem);\n  line-height: 0.94;'
+      'font-size: clamp(2rem, 3.4vw, 3rem);\n  line-height: 1;'
     );
     expect(source).toContain(
       'font-size: clamp(1.2rem, 1.8vw, 1.38rem);\n  line-height: 1.54;'

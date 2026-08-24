@@ -11,7 +11,9 @@ import {
   getGridSafeCardStyleForBg,
   getGridSafeToneForBg,
   normalizeDynamicGridCardBodyLineHeight,
+  normalizeDynamicGridCardBulletLineHeight,
   normalizeDynamicGridCardBulletSize,
+  normalizeDynamicGridCardBulletSizeRem,
   normalizeDynamicGridCardBodySizeRem,
   normalizeDynamicGridCardPaddingRem,
   normalizeDynamicGridCardTitleSizeRem,
@@ -49,6 +51,7 @@ import {
   normalizeBlockForRender,
 } from './blockPresentationContracts';
 import { resolveSiteFeatureCatalogEntry } from '../data/siteFeatureCatalog';
+import { parseSupportLibraryGroups } from './supportLibrary';
 
 export { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
 
@@ -238,10 +241,6 @@ export function normalizeUniversalOutlineButtonClassName(className, fallbackTone
   }
 
   const rawTokens = source.split(/\s+/).filter(Boolean);
-  if (rawTokens.includes('service-native-card-stretched-link')) {
-    return source;
-  }
-
   const hasExplicitOutline = rawTokens.includes('is-outline');
   const explicitToneToken = rawTokens.find((token) => token.startsWith('is-tone-'));
   const toneToken = hasExplicitOutline && explicitToneToken
@@ -365,6 +364,129 @@ function buildCanonicalActionLinkFromFields(source, {
   };
 }
 
+function readFeatureCollectionOverride(settings, fieldId) {
+  if (!settings || typeof settings !== 'object' || !Object.prototype.hasOwnProperty.call(settings, fieldId)) {
+    return null;
+  }
+  try {
+    const parsed = typeof settings[fieldId] === 'string'
+      ? JSON.parse(settings[fieldId])
+      : settings[fieldId];
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function buildFeatureCollectionAction(item, fallbackAction = null) {
+  const source = item && typeof item === 'object' ? item : {};
+  const hasButtonLabel = Object.prototype.hasOwnProperty.call(source, 'buttonLabel');
+  const label = String(source.buttonLabel ?? fallbackAction?.label ?? '').trim();
+  const path = String(source.buttonPath ?? '').trim();
+  if (hasButtonLabel && !label) {
+    return null;
+  }
+  if (!hasButtonLabel && !path) {
+    return fallbackAction || null;
+  }
+  if (!label || !path) {
+    return null;
+  }
+  const linkValue = coerceLinkValueFromFields({
+    buttonLinkJson: JSON.stringify({
+      kind: 'internal',
+      to: path,
+      openInNewWindow: Boolean(source.buttonOpenInNewWindow),
+    }),
+  }, {
+    linkJsonKeys: ['buttonLinkJson'],
+  });
+  return linkValue
+    ? {
+      label,
+      ...linkValueToLinkProps(linkValue),
+      openInNewWindow: Boolean(linkValue.openInNewWindow),
+    }
+    : null;
+}
+
+function applySiteFeatureCollectionOverrides(featureId, settings, featureRuntime) {
+  const runtime = featureRuntime && typeof featureRuntime === 'object' ? featureRuntime : {};
+  const panels = readFeatureCollectionOverride(settings, 'panelsJson');
+  const metrics = readFeatureCollectionOverride(settings, 'metricsJson');
+  const cards = readFeatureCollectionOverride(settings, 'cardsJson');
+  const beats = readFeatureCollectionOverride(settings, 'beatsJson');
+
+  if (panels && (featureId === 'home_services_feature_animation'
+    || featureId === 'retirement_plan_feature'
+    || featureId === 'investments_growth_feature')) {
+    const fallbackPanels = Array.isArray(runtime.panels) ? runtime.panels : [];
+    const defaultTones = ['atlantean', 'atlantean-dark', 'investments-blue', 'legacy-warm', 'super-grey'];
+    runtime.panels = panels.map((item, index) => {
+      const fallback = fallbackPanels[index] || {};
+      return {
+        ...fallback,
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'kind') ? { kind: item.kind } : {}),
+        title: String(item?.title ?? '').trim(),
+        body: String(item?.body ?? '').trim(),
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'tone') ? { tone: item.tone } : {}),
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'surfaceTone') ? { surfaceTone: item.surfaceTone } : {}),
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'cardClass') ? { cardClass: item.cardClass } : {}),
+        tone: Object.prototype.hasOwnProperty.call(item || {}, 'tone')
+          ? item.tone
+          : (fallback.tone || defaultTones[index % defaultTones.length]),
+        action: featureId === 'home_services_feature_animation'
+          ? buildFeatureCollectionAction(item, fallback.action)
+          : fallback.action,
+      };
+    });
+  }
+
+  if (metrics && (featureId === 'home_impact_story' || featureId === 'impact_proof_story')) {
+    const fallbackMetrics = Array.isArray(runtime.metrics) ? runtime.metrics : [];
+    runtime.metrics = metrics.map((item, index) => {
+      const fallback = fallbackMetrics[index] || {};
+      return {
+        ...fallback,
+        value: String(item?.value ?? '').trim(),
+        eyebrow: String(item?.eyebrow ?? fallback.eyebrow ?? '').trim(),
+        label: String(item?.label ?? '').trim(),
+        body: String(item?.body ?? fallback.body ?? '').trim(),
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'valueTone') ? { valueTone: item.valueTone } : {}),
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'labelBreak') ? { labelBreak: item.labelBreak } : {}),
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'tone') ? { tone: item.tone } : {}),
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'nativeCardClass') ? { nativeCardClass: item.nativeCardClass } : {}),
+        action: buildFeatureCollectionAction(item, fallback.action),
+      };
+    }).filter((item) => item.value && item.label);
+  }
+
+  if (cards && featureId === 'about_history_feature') {
+    const fallbackCards = Array.isArray(runtime.cards) ? runtime.cards : [];
+    runtime.cards = cards.map((item, index) => {
+      const fallback = fallbackCards[index] || {};
+      return {
+        ...fallback,
+        title: String(item?.title ?? '').trim(),
+        body: String(item?.body ?? '').trim(),
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'titleClassName') ? { titleClassName: item.titleClassName } : {}),
+        ...(Object.prototype.hasOwnProperty.call(item || {}, 'panelTone') ? { panelTone: item.panelTone } : {}),
+        cardClass: Object.prototype.hasOwnProperty.call(item || {}, 'cardClass')
+          ? item.cardClass
+          : (fallback.cardClass || 'about-native-history-card about-native-history-card--custom'),
+      };
+    });
+  }
+
+  if (beats && featureId === 'legacy_giving_stewardship_story') {
+    runtime.beats = beats
+      .map((item) => String(typeof item === 'string' ? item : item?.copy ?? '').trim())
+      .filter(Boolean);
+  }
+
+  return runtime;
+}
+
 function normalizeOptionalHtmlContent(value) {
   const html = String(value || '').trim();
   return (!html || html === '<p></p>' || html === '<p><br></p>') ? '' : html;
@@ -432,62 +554,6 @@ function parsePageContentTableRows(value) {
         ? row.map((cell) => String(cell || '').trim())
         : null))
       .filter((row) => Array.isArray(row) && row.length);
-  } catch {
-    return [];
-  }
-}
-
-function normalizePageContentSupportLink(link) {
-  if (!link || typeof link !== 'object') {
-    return null;
-  }
-  const label = String(link.label || '').trim();
-  const href = String(link.href || '').trim();
-  const to = String(link.to || '').trim();
-  const documentId = String(link.documentId || '').trim();
-  if (!label || (!href && !to && !documentId)) {
-    return null;
-  }
-  return {
-    label,
-    ...(href ? { href } : {}),
-    ...(to ? { to } : {}),
-    ...(documentId ? { documentId } : {}),
-    ...(toBoolean(link.openInNewWindow) ? { openInNewWindow: true } : {}),
-  };
-}
-
-function parsePageContentSupportGroups(value) {
-  try {
-    const parsed = typeof value === 'string' ? JSON.parse(value || '[]') : value;
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed
-      .map((group) => {
-        const title = String(group?.title || '').trim();
-        const description = String(group?.description || '').trim();
-        const links = Array.isArray(group?.links)
-          ? group.links.map(normalizePageContentSupportLink).filter(Boolean)
-          : [];
-        const items = Array.isArray(group?.items)
-          ? group.items.map((item) => {
-            const question = String(item?.question || '').trim();
-            const answer = String(item?.answer || '').trim();
-            const itemLinks = Array.isArray(item?.links)
-              ? item.links.map(normalizePageContentSupportLink).filter(Boolean)
-              : [];
-            return question || answer || itemLinks.length
-              ? { question, answer, links: itemLinks }
-              : null;
-          }).filter(Boolean)
-          : [];
-
-        return title && (description || links.length || items.length)
-          ? { title, ...(description ? { description } : {}), links, items }
-          : null;
-      })
-      .filter(Boolean);
   } catch {
     return [];
   }
@@ -1139,6 +1205,7 @@ export function buildDynamicColumnsFromBlock(block) {
   const leadLine = String(settings.leadLine || '').trim();
   const followupLine = String(settings.followupLine || '').trim();
   const bodyHtml = String(settings.bodyHtml || '').trim();
+  const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
   const columnsStyle = normalizeColumnsStyle(settings.columnsStyle);
   const isLegacyHighlightStyle = columnsStyle === 'legacy-highlight';
   const bgTone = isLegacyHighlightStyle
@@ -1221,6 +1288,7 @@ export function buildDynamicColumnsFromBlock(block) {
     followupLineClassName: normalizeHighlightClassName(settings.followupLineClassName || ''),
     followupLineHighlights: parseTextHighlights(settings.followupLineHighlightsJson),
     bodyHtml: normalizedBodyHtml,
+    ...(bodyColorClassName ? { bodyColorClassName } : {}),
     justify,
     bgTone,
     contentWidth,
@@ -1277,18 +1345,48 @@ export function buildDynamicSiteFeatureFromBlock(block) {
   const featureId = String(featureEntry.featureId || '').trim();
   const allowedFieldIds = new Set(Array.isArray(featureEntry.allowedEditableFieldIds) ? featureEntry.allowedEditableFieldIds : []);
   const featureDefinition = featureEntry.buildRuntime({ settings });
-  const featureRuntime = featureDefinition && typeof featureDefinition === 'object'
+  let featureRuntime = featureDefinition && typeof featureDefinition === 'object'
     ? featureDefinition
     : {};
+  featureRuntime = applySiteFeatureCollectionOverrides(featureId, settings, { ...featureRuntime });
   const defaultTitle = String(featureRuntime.title || '').trim();
   const defaultBody = String(featureRuntime.body || '').trim();
   const defaultImageUrl = String(featureRuntime.imageUrl || '').trim();
   const defaultImageAlt = String(featureRuntime.imageAlt || '').trim();
-  const featureIntro = parseSiteFeatureIntroJson(
+  let featureIntro = parseSiteFeatureIntroJson(
     Object.prototype.hasOwnProperty.call(settings, 'featureIntroJson')
       ? settings.featureIntroJson
       : featureRuntime.featureIntro,
   );
+
+  if (featureId === 'impact_proof_story' && [
+    'introHeading',
+    'introBody',
+    'introEmphasis',
+  ].some((fieldId) => Object.prototype.hasOwnProperty.call(settings, fieldId))) {
+    featureIntro = {
+      ...(featureIntro || {}),
+      ...(Object.prototype.hasOwnProperty.call(settings, 'introHeading')
+        ? { heading: String(settings.introHeading || '').trim() }
+        : {}),
+      ...(Object.prototype.hasOwnProperty.call(settings, 'introBody')
+        ? { body: String(settings.introBody || '').trim() }
+        : {}),
+      ...(Object.prototype.hasOwnProperty.call(settings, 'introEmphasis')
+        ? { emphasis: String(settings.introEmphasis || '').trim() }
+        : {}),
+    };
+  }
+
+  if (allowedFieldIds.has('headline') && Object.prototype.hasOwnProperty.call(settings, 'headline')) {
+    const headlineOverride = String(settings.headline || '').trim();
+    if (Array.isArray(featureRuntime.headlineLines)) {
+      const defaultClassName = String(featureRuntime.headlineLines?.[0]?.[0]?.className || '').trim();
+      featureRuntime.headlineLines = headlineOverride
+        ? [[{ text: headlineOverride, className: defaultClassName }]]
+        : [];
+    }
+  }
 
   // Catalog defaults are code-managed feature structure. Declared editable
   // fields still own the visible value, including an intentional empty value.
@@ -1304,9 +1402,9 @@ export function buildDynamicSiteFeatureFromBlock(block) {
     ? buildCanonicalActionLinkFromFields(settings, {
       labelKeys: ['buttonLabel'],
       linkJsonKeys: ['buttonLinkJson'],
-      hrefKeys: [],
-      toKeys: [],
-      openInNewWindowKeys: [],
+      hrefKeys: ['buttonUrl'],
+      toKeys: ['buttonPageRef'],
+      openInNewWindowKeys: ['buttonOpenInNewWindow'],
     })
     : null;
   const action = overrideAction || featureRuntime.action || null;
@@ -2279,6 +2377,23 @@ export function buildDynamicRatesFromBlock(block) {
   };
 }
 
+// HUD editors can leave behind blank structural markup while a field is
+// focused. It is not authored content and must not create layout space in
+// one snapshot but not another.
+function normalizeOptionalCardRichHtml(value) {
+  const source = String(value || '').trim();
+  if (!source) {
+    return '';
+  }
+
+  const withoutBlankStructure = source
+    .replace(/<br\s*\/?>(\s*)/gi, '$1')
+    .replace(/<(p|div)(?:\s[^>]*)?>\s*(?:&nbsp;|\s)*<\/\1>/gi, '')
+    .trim();
+
+  return withoutBlankStructure.replace(/&nbsp;/gi, ' ');
+}
+
 export function buildDynamicGridFromBlock(block) {
   if (!block || block.mode !== 'dynamic' || block.kind !== 'card_grid') {
     return null;
@@ -2295,6 +2410,8 @@ export function buildDynamicGridFromBlock(block) {
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
   const subtitle = String(settings.subtitle || '').trim();
+  const subtitleClassName = normalizeHighlightClassName(settings.subtitleClassName || '');
+  const subtitleHighlights = parseTextHighlights(settings.subtitleHighlightsJson);
   const body = String(settings.body || '').trim();
   const bodyHtmlSource = String(settings.bodyHtml || '').trim();
   const bodyHtml = (!bodyHtmlSource || bodyHtmlSource === '<p></p>' || bodyHtmlSource === '<p><br></p>')
@@ -2303,6 +2420,10 @@ export function buildDynamicGridFromBlock(block) {
   const bgTone = normalizeGridBgTone(settings.bgTone || 'white');
   const contentWidth = normalizeDynamicGridWidth(settings.contentWidth);
   const columns = normalizeDynamicGridColumns(settings.columns);
+  const parsedCardCount = Number(settings.cardCount);
+  const cardCount = Number.isFinite(parsedCardCount) && parsedCardCount >= 1
+    ? Math.max(1, Math.min(8, Math.round(parsedCardCount)))
+    : null;
   const fullBleed = toBoolean(settings.fullBleed);
   const sand = toBoolean(settings.sand);
   const consultantService = String(settings.consultantService || '').trim().toLowerCase();
@@ -2324,7 +2445,26 @@ export function buildDynamicGridFromBlock(block) {
   const cardTitleSizeRem = normalizeDynamicGridCardTitleSizeRem(settings.cardTitleSizeRem);
   const cardBodySizeRem = normalizeDynamicGridCardBodySizeRem(settings.cardBodySizeRem);
   const cardBulletSize = normalizeDynamicGridCardBulletSize(settings.cardBulletSize);
+  const cardBulletSizeRem = normalizeDynamicGridCardBulletSizeRem(
+    settings.cardBulletSizeRem ?? settings.cardBulletSize,
+  );
+  const cardBulletLineHeight = normalizeDynamicGridCardBulletLineHeight(settings.cardBulletLineHeight);
   const cardBodyLineHeight = normalizeDynamicGridCardBodyLineHeight(settings.cardBodyLineHeight);
+  const hasPaddingTop = settings.paddingTopRem !== null && settings.paddingTopRem !== ''
+    && Number.isFinite(Number(settings.paddingTopRem));
+  const hasPaddingBottom = settings.paddingBottomRem !== null && settings.paddingBottomRem !== ''
+    && Number.isFinite(Number(settings.paddingBottomRem));
+  const hasHeaderSubheadSpace = settings.headerSubheadSpaceRem !== null && settings.headerSubheadSpaceRem !== ''
+    && Number.isFinite(Number(settings.headerSubheadSpaceRem));
+  const paddingTopRem = hasPaddingTop
+    ? normalizePageContentSpaceRem(settings.paddingTopRem, 3.8, 0, 8)
+    : undefined;
+  const paddingBottomRem = hasPaddingBottom
+    ? normalizePageContentSpaceRem(settings.paddingBottomRem, 3.8, 0, 8)
+    : undefined;
+  const headerSubheadSpaceRem = hasHeaderSubheadSpace
+    ? normalizePageContentSpaceRem(settings.headerSubheadSpaceRem, 0.45, 0, 4)
+    : undefined;
   const resolvedCardClass = cardStyle === 'none' ? 'card-none' : cardStyle;
   const sectionAction = buildCanonicalActionLinkFromFields(settings, {
     labelKeys: ['buttonLabel'],
@@ -2343,10 +2483,11 @@ export function buildDynamicGridFromBlock(block) {
       const cardTitleClassName = normalizeHighlightClassName(settings[`card${slot}TitleClassName`] || '');
       const cardTitleHighlights = parseTextHighlights(settings[`card${slot}TitleHighlightsJson`]);
       const cardBodySource = String(settings[`card${slot}Body`] || '').trim();
-      const cardBodyHtml = /<[a-z][^>]*>/i.test(cardBodySource)
-        ? normalizeHtmlContent(cardBodySource)
+      const cardBodyHtmlSource = normalizeOptionalCardRichHtml(cardBodySource);
+      const cardBodyHtml = /<[a-z][^>]*>/i.test(cardBodyHtmlSource)
+        ? normalizeHtmlContent(cardBodyHtmlSource)
         : '';
-      const cardBody = cardBodyHtml ? '' : cardBodySource;
+      const cardBody = cardBodyHtml ? '' : cardBodyHtmlSource;
       const cardClassName = sanitizeClassName(settings[`card${slot}ClassName`] || '');
       const cardIconKey = String(settings[`card${slot}IconKey`] || '').trim();
       const cardIconTone = sanitizeClassName(settings[`card${slot}IconTone`] || '');
@@ -2382,6 +2523,31 @@ export function buildDynamicGridFromBlock(block) {
       });
       const cardList = parseCardGridListJson(settings[`card${slot}ListJson`]);
       const cardFineprint = parsePageContentTextLines(settings[`card${slot}Fineprint`]);
+      const cardFineprintJustifyToken = String(settings[`card${slot}FineprintJustify`] || 'left').trim().toLowerCase();
+      const cardFineprintJustify = ['left', 'center', 'right'].includes(cardFineprintJustifyToken)
+        ? cardFineprintJustifyToken
+        : 'left';
+      const fineprintSpaceBeforeKey = `card${slot}FineprintSpaceBeforeRem`;
+      const fineprintLineHeightKey = `card${slot}FineprintLineHeight`;
+      const fineprintSpaceAfterKey = `card${slot}FineprintSpaceAfterRem`;
+      const hasFineprintSpaceBefore = Object.prototype.hasOwnProperty.call(settings, fineprintSpaceBeforeKey)
+        && settings[fineprintSpaceBeforeKey] !== null
+        && settings[fineprintSpaceBeforeKey] !== '';
+      const hasFineprintLineHeight = Object.prototype.hasOwnProperty.call(settings, fineprintLineHeightKey)
+        && settings[fineprintLineHeightKey] !== null
+        && settings[fineprintLineHeightKey] !== '';
+      const hasFineprintSpaceAfter = Object.prototype.hasOwnProperty.call(settings, fineprintSpaceAfterKey)
+        && settings[fineprintSpaceAfterKey] !== null
+        && settings[fineprintSpaceAfterKey] !== '';
+      const cardFineprintSpaceBeforeRem = hasFineprintSpaceBefore
+        ? normalizePageContentSpaceRem(settings[fineprintSpaceBeforeKey], 0.55, 0, 3)
+        : undefined;
+      const cardFineprintLineHeight = hasFineprintLineHeight
+        ? normalizePageContentSpaceRem(settings[fineprintLineHeightKey], 1.5, 1.1, 2.4)
+        : undefined;
+      const cardFineprintSpaceAfterRem = hasFineprintSpaceAfter
+        ? normalizePageContentSpaceRem(settings[fineprintSpaceAfterKey], 0, 0, 2)
+        : undefined;
       const cardLinks = parseCardGridLinkItemsJson(settings[`card${slot}LinksJson`]);
       const cardAccordions = parseCardGridAccordionsJson(settings[`card${slot}AccordionsJson`]);
       const cardActions = [cardPrimaryAction, cardSecondaryAction].filter(Boolean);
@@ -2391,7 +2557,7 @@ export function buildDynamicGridFromBlock(block) {
 
       return {
         slot,
-        title: cardTitle || `Card ${slot}`,
+        title: cardTitle,
         titleClassName: cardTitleClassName,
         titleHighlights: cardTitleHighlights,
         body: cardBody,
@@ -2399,6 +2565,10 @@ export function buildDynamicGridFromBlock(block) {
         bodySegments: splitCertificateCardBody(cardBody),
         list: cardList,
         fineprint: cardFineprint.length ? cardFineprint : null,
+        fineprintJustify: cardFineprintJustify,
+        fineprintSpaceBeforeRem: cardFineprintSpaceBeforeRem,
+        fineprintLineHeight: cardFineprintLineHeight,
+        fineprintSpaceAfterRem: cardFineprintSpaceAfterRem,
         iconKey: cardIconKey,
         iconTone: cardIconTone,
         cardClass: [resolvedCardClass, cardClassName].filter(Boolean).join(' '),
@@ -2422,12 +2592,15 @@ export function buildDynamicGridFromBlock(block) {
     titleClassName,
     titleHighlights,
     subtitle,
+    subtitleClassName,
+    subtitleHighlights,
     body,
     bodyHtml,
     anchorId: String(settings.anchorId || '').trim(),
     bgTone,
     contentWidth,
     columns,
+    cardCount,
     sectionClassName,
     fullBleed,
     sand,
@@ -2440,7 +2613,12 @@ export function buildDynamicGridFromBlock(block) {
     cardTitleSizeRem,
     cardBodySizeRem,
     cardBulletSize,
+    cardBulletSizeRem,
+    cardBulletLineHeight,
     cardBodyLineHeight,
+    paddingTopRem,
+    paddingBottomRem,
+    headerSubheadSpaceRem,
     actions: sectionAction ? [sectionAction] : [],
     cards,
   };
@@ -2459,6 +2637,7 @@ export function buildDynamicNewsletterFromBlock(block) {
   const bodyHtml = (!bodyHtmlSource || bodyHtmlSource === '<p></p>' || bodyHtmlSource === '<p><br></p>')
     ? ''
     : bodyHtmlSource;
+  const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
   const bgTone = normalizePanelBgTone(settings.bgTone || 'grey', 'grey');
   const textTone = normalizePanelTextTone(
     settings.textTone,
@@ -2477,6 +2656,7 @@ export function buildDynamicNewsletterFromBlock(block) {
     titleClassName,
     titleHighlights,
     bodyHtml,
+    ...(bodyColorClassName ? { bodyColorClassName } : {}),
     bgTone,
     textTone,
     formId,
@@ -2518,7 +2698,7 @@ export function buildDynamicTestimonialsFromBlock(block, { library = [] } = {}) 
 
 export function buildDynamicPageContentFromBlock(block) {
   const kind = String(block?.kind || '').trim();
-  if (!block || block.mode !== 'dynamic' || (kind !== 'content' && kind !== CALCULATOR_INTRO_KIND && kind !== CALCULATOR_WIDGET_KIND)) {
+  if (!block || block.mode !== 'dynamic' || (kind !== 'content' && kind !== 'support_library' && kind !== CALCULATOR_INTRO_KIND && kind !== CALCULATOR_WIDGET_KIND)) {
     return null;
   }
 
@@ -2538,7 +2718,7 @@ export function buildDynamicPageContentFromBlock(block) {
   const logoAlt = String(settings.logoAlt || '').trim();
   const logoText = String(settings.logoText || '').trim();
   const pricingEntries = parseMissionAssurePricingEntries(settings.pricingEntriesJson);
-  const supportGroups = parsePageContentSupportGroups(settings.supportGroupsJson);
+  const supportGroups = parseSupportLibraryGroups(settings.supportGroupsJson);
   const fullBleed = toBoolean(settings.fullBleed);
   const railClassName = sanitizeClassName(settings.railClassName || '');
   const justifyToken = String(settings.justify || 'center').trim().toLowerCase();
@@ -2638,6 +2818,62 @@ export function buildDynamicPageContentFromBlock(block) {
     justify,
     actions: action ? [action] : [],
     addressBlock,
+  };
+}
+
+export function buildDynamicCardChartFromBlock(block) {
+  if (!block || block.mode !== 'dynamic' || block.kind !== 'card_chart') {
+    return null;
+  }
+
+  const settings = block.settings || {};
+  const defaultColumnColors = ['atlantean', 'mango', 'melon', 'sandstone', 'super-grey', 'atlantean'];
+  const title = String(settings.title || '').trim();
+  const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
+  const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
+  const requestedCount = Number(settings.cardCount);
+  const cardCount = Number.isFinite(requestedCount)
+    ? Math.max(2, Math.min(6, Math.round(requestedCount)))
+    : 2;
+  const cards = Array.from({ length: cardCount }, (_, index) => {
+    const slot = index + 1;
+    return {
+      title: String(settings[`card${slot}Title`] || '').trim(),
+      color: String(settings[`card${slot}Color`] || '').trim() || defaultColumnColors[index],
+      bullets: parsePageContentTextLines(settings[`card${slot}Bullets`]),
+    };
+  }).filter((card) => card.title || card.bullets.length);
+
+  if (cards.length < 2) {
+    return null;
+  }
+
+  return {
+    title,
+    justify: String(settings.justify || '').trim() || 'center',
+    titleClassName,
+    titleHighlights,
+    table: {
+      headers: cards.map((card) => card.title),
+      rows: [cards.map((card) => card.bullets.join('\n'))],
+      columnTones: cards.map((card) => card.color),
+      valueAlignment: String(settings.valueAlignment || '').trim() || undefined,
+      firstColumnHeader: false,
+    },
+    fineprint: parsePageContentTextLines(settings.fineprint),
+    fineprintJustify: ['left', 'center', 'right'].includes(String(settings.fineprintJustify || '').trim())
+      ? String(settings.fineprintJustify).trim()
+      : 'center',
+    fineprintSizeRem: normalizePageContentSpaceRem(settings.fineprintSizeRem, 0.88, 0.65, 1.3),
+    fullBleed: toBoolean(settings.fullBleed),
+    spaceBeforeRem: normalizePageContentSpaceRem(settings.spaceBeforeRem, 0, 0, 8),
+    spaceAfterRem: normalizePageContentSpaceRem(settings.spaceAfterRem, 0, 0, 8),
+    paddingTopRem: normalizePageContentSpaceRem(settings.paddingTopRem, 2.4, 0, 8),
+    paddingBottomRem: normalizePageContentSpaceRem(settings.paddingBottomRem, 2.4, 0, 8),
+    cellPaddingRem: normalizePageContentSpaceRem(settings.cellPaddingRem, 0.9, 0.55, 1.8),
+    contentMaxWidthPx: normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 1180),
+    anchorId: String(settings.anchorId || '').trim(),
+    sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
   };
 }
 

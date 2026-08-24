@@ -1,3 +1,8 @@
+import {
+  DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
+  DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+} from './dynamicGrid';
+
 const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: 'default',
@@ -15,6 +20,8 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardTitleSizeRem: 1.14,
       cardBodySizeRem: 1,
       cardBulletSize: 'daf',
+      cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+      cardBulletLineHeight: DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
       cardBodyLineHeight: 1.58,
     }),
     editor: Object.freeze({
@@ -46,6 +53,8 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardTitleSizeRem: 1.45,
       cardBodySizeRem: 1.02,
       cardBulletSize: 'daf',
+      cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+      cardBulletLineHeight: DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
       cardBodyLineHeight: 1.56,
     }),
     editor: Object.freeze({
@@ -77,6 +86,8 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardTitleSizeRem: 1.5,
       cardBodySizeRem: 1.08,
       cardBulletSize: 'daf',
+      cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+      cardBulletLineHeight: DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
       cardBodyLineHeight: 1.45,
     }),
     editor: Object.freeze({
@@ -108,6 +119,8 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       cardTitleSizeRem: 1.22,
       cardBodySizeRem: 1.08,
       cardBulletSize: 'daf',
+      cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+      cardBulletLineHeight: DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
       cardBodyLineHeight: 1.55,
     }),
     editor: Object.freeze({

@@ -35,6 +35,36 @@ describe('admin editor control rounding', () => {
     expect(hudSource).toContain('border-radius: 18px !important;');
   });
 
+  it('gives block editor fields a soft resting shade and white focus state', () => {
+    const adminSource = readSource('../styles/admin.css');
+    const hudSource = readSource('../styles/front-hud.css');
+    const tokenSource = readSource('../styles/tokens.css');
+
+    expect(tokenSource).toContain('--ag-admin-field-bg: #f3f5f6;');
+    expect(tokenSource).toContain('--ag-admin-field-bg-focus: #ffffff;');
+    expect(tokenSource).toContain('--ag-admin-field-transition: background-color 180ms ease');
+    expect(adminSource).toContain('background: var(--ag-admin-field-bg);');
+    expect(adminSource).toContain('.admin-content-field-list :is(input, select, textarea):focus');
+    expect(hudSource).toContain('background: var(--ag-admin-field-bg) !important;');
+    expect(hudSource).toContain('background: var(--ag-admin-field-bg-focus) !important;');
+    expect(hudSource).toContain('transition: var(--ag-admin-field-transition);');
+    expect(hudSource).toContain('outline: none !important;');
+    expect(hudSource).toContain('box-shadow: none !important;');
+    expect(hudSource).toContain('border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.28) !important;');
+    expect(hudSource).toContain('decorative outline or shadow');
+    expect(tokenSource).not.toContain('box-shadow 180ms ease');
+    expect(hudSource).toContain('.admin-site-feature-field > :is(input, select, textarea)');
+    expect(hudSource).toContain('font-family: var(--ag-font-body) !important;');
+    expect(hudSource).toContain('border-radius: 18px !important;');
+    expect(hudSource).toContain('.admin-hud-editor-shared-surface :is(');
+    expect(hudSource).toContain(':not(.admin-front-hud-hero-live-input)');
+    expect(hudSource).toContain(
+      "textarea:not(.admin-color-text-inline-input):not(.admin-front-hud-hero-live-input)",
+    );
+    expect(hudSource).toContain('.admin-hud-editor-shared-surface textarea.admin-color-text-inline-input');
+    expect(hudSource).toContain('background: transparent !important;');
+  });
+
   it('keeps every shared admin color palette circular, including rich-body HTML editors', () => {
     const adminSource = readSource('../styles/admin.css');
     const htmlEditorSource = readSource('../components/AdminHtmlEditor.jsx');

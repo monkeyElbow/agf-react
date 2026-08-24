@@ -35056,7 +35056,7 @@
             "cardBodySizeRem": 1,
             "cardBodyLineHeight": 1.58,
             "title": "About the plan",
-            "subtitle": "Learn about eligibility requirements, coverage amounts, rates, and more.",
+            "subtitle": "Eligibility requirements, coverage amounts, rates, and more.",
             "titleClassName": "",
             "titleHighlightsJson": "",
             "bodyHtml": "",
@@ -55847,10 +55847,10 @@
         },
         {
           "id": "cta_band",
-          "templateId": "cta_band",
+          "templateId": "billboard",
           "presetId": "default",
           "name": "CTA Band",
-          "kind": "cta_band",
+          "kind": "billboard",
           "mode": "dynamic",
           "settings": {
             "title": "Which loan is right for me?",
@@ -93635,46 +93635,92 @@
         },
         {
           "id": "investment_strategy_options",
-          "name": "Investment Strategy Feature",
-          "kind": "content",
+          "name": "Investment Strategy Options",
+          "kind": "card_grid",
           "mode": "dynamic",
           "settings": {
+            "bgTone": "white",
+            "contentWidth": "browser",
+            "columns": "two",
+            "cardStyle": "card2",
+            "titleTone": "super-grey",
+            "bodyTone": "super-grey",
+            "showTitleDivider": false,
+            "dividerTone": "auto",
+            "cardPaddingRem": 2.6,
+            "cardTitleSizeRem": 1.45,
+            "cardBodySizeRem": 1.02,
+            "cardBodyLineHeight": 1.56,
             "title": "",
-            "subtitle": "",
+            "titleClassName": "",
+            "titleHighlightsJson": "",
+            "bodyHtml": "",
             "body": "",
-            "html": "\n          <div class=\"ret403b-strategy-feature\">\n            <article class=\"ret403b-strategy-feature-row services-breakdown-panel\">\n              <h3>MBA Income Fund</h3>\n              <p class=\"services-breakdown-description\">AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.</p>\n              <nav class=\"ret403b-strategy-feature-links\" aria-label=\"MBA Income Fund links\">\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">MBA Income Fund</a>\n              </nav>\n            </article>\n            <article class=\"ret403b-strategy-feature-row services-breakdown-panel\">\n              <h3>Risk-Based Strategies</h3>\n              <p class=\"services-breakdown-description\">These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.</p>\n              <nav class=\"ret403b-strategy-feature-links\" aria-label=\"Risk-Based Strategies links\">\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Screened strategies</a>\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-40.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Asset Manager 40%</a>\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-60.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Asset Manager 60%</a>\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity%20Asset-Manager%C2%AE-85.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Asset Manager 85%</a>\n              </nav>\n            </article>\n            <article class=\"ret403b-strategy-feature-row services-breakdown-panel\">\n              <h3>Target-Date Strategies</h3>\n              <p class=\"services-breakdown-description\">Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.</p>\n              <nav class=\"ret403b-strategy-feature-links\" aria-label=\"Target-Date Strategies links\">\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Target-Date.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Target-date strategies</a>\n              </nav>\n            </article>\n            <article class=\"ret403b-strategy-feature-row services-breakdown-panel\">\n              <h3>Individual Investment Options</h3>\n              <p class=\"services-breakdown-description\">This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.</p>\n              <nav class=\"ret403b-strategy-feature-links\" aria-label=\"Individual Investment Options links\">\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Select-Bond.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Steward Select Bond</a>\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Equity-Market-Neutral.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Steward Equity Market Neutral</a>\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Global-Equity.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Steward Global Equity</a>\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Covered-Call.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Steward Covered Call</a>\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-500-Index-Fund.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Fidelity 500 Index</a>\n                <a class=\"service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link\" href=\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Vanguard-Total-Bond-Market-Index-Fund.pdf\" target=\"_blank\" rel=\"noreferrer noopener\">Vanguard Total Bond Market Index</a>\n              </nav>\n            </article>\n          </div>\n        ",
-            "widget": "",
             "fullBleed": true,
-            "spaceBeforeRem": 0,
-            "spaceAfterRem": 0,
-            "paddingTopRem": 0,
-            "paddingBottomRem": 0,
-            "contentMaxWidthPx": 1184,
-            "anchorId": "",
-            "sectionClassName": "retirement-403b-native-strategy-feature",
-            "copyWrap": false,
-            "buttonLabel": "",
-            "buttonDocumentId": "",
-            "addressClassName": "",
-            "addressTitle": "",
-            "addressLines": "",
-            "tableHeadersJson": "",
-            "tableRowsJson": "",
-            "tableValueAlignment": "",
-            "tableChartId": "",
-            "fineprint": "",
-            "fineprintDisclosureId": ""
+            "sectionClassName": "retirement-403b-native-strategy-options",
+            "card1Title": "MBA Income Fund",
+            "card1TitleClassName": "",
+            "card1TitleHighlightsJson": "",
+            "card1ClassName": "",
+            "card1Body": "AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.",
+            "card1ListJson": "",
+            "card1Fineprint": "",
+            "card1LinksJson": "[{\"label\":\"MBA Income Fund\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf\",\"openInNewWindow\":true}}]",
+            "card1AccordionsJson": "",
+            "card1DividerTone": "",
+            "card1ButtonLabel": "",
+            "card1ButtonDocumentId": "",
+            "card1ButtonClassName": "",
+            "card1Button2Label": "",
+            "card1Button2DocumentId": "",
+            "card1Button2ClassName": "",
+            "card2Title": "Risk-Based Strategies",
+            "card2TitleClassName": "",
+            "card2TitleHighlightsJson": "",
+            "card2ClassName": "",
+            "card2Body": "These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.",
+            "card2ListJson": "",
+            "card2Fineprint": "",
+            "card2LinksJson": "[{\"label\":\"Screened strategies\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf\",\"openInNewWindow\":true}},{\"label\":\"Asset Manager 40%\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-40.pdf\",\"openInNewWindow\":true}},{\"label\":\"Asset Manager 60%\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-60.pdf\",\"openInNewWindow\":true}},{\"label\":\"Asset Manager 85%\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity%20Asset-Manager%C2%AE-85.pdf\",\"openInNewWindow\":true}}]",
+            "card2AccordionsJson": "",
+            "card2DividerTone": "",
+            "card2ButtonLabel": "",
+            "card2ButtonDocumentId": "",
+            "card2ButtonClassName": "",
+            "card2Button2Label": "",
+            "card2Button2DocumentId": "",
+            "card2Button2ClassName": "",
+            "card3Title": "Target-Date Strategies",
+            "card3TitleClassName": "",
+            "card3TitleHighlightsJson": "",
+            "card3ClassName": "",
+            "card3Body": "Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.",
+            "card3ListJson": "",
+            "card3Fineprint": "",
+            "card3LinksJson": "[{\"label\":\"Target-date strategies\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Target-Date.pdf\",\"openInNewWindow\":true}}]",
+            "card3AccordionsJson": "",
+            "card3DividerTone": "",
+            "card3ButtonLabel": "",
+            "card3ButtonDocumentId": "",
+            "card3ButtonClassName": "",
+            "card3Button2Label": "",
+            "card3Button2DocumentId": "",
+            "card3Button2ClassName": "",
+            "subtitle": "",
+            "card4Title": "Individual Investment Options",
+            "card4Body": "This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.",
+            "card4LinksJson": "[{\"label\":\"Steward Select Bond\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Select-Bond.pdf\",\"openInNewWindow\":true}},{\"label\":\"Steward Equity Market Neutral\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Equity-Market-Neutral.pdf\",\"openInNewWindow\":true}},{\"label\":\"Steward Global Equity\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Global-Equity.pdf\",\"openInNewWindow\":true}},{\"label\":\"Steward Covered Call\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Covered-Call.pdf\",\"openInNewWindow\":true}},{\"label\":\"Fidelity 500 Index\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-500-Index-Fund.pdf\",\"openInNewWindow\":true}},{\"label\":\"Vanguard Total Bond Market Index\",\"link\":{\"kind\":\"external\",\"href\":\"https://files.agfinancial.org/Retirement/Fund-Descriptors/Vanguard-Total-Bond-Market-Index-Fund.pdf\",\"openInNewWindow\":true}}]"
           },
           "editableFields": [
             {
               "id": "title",
-              "label": "Section title",
+              "label": "Grid heading",
               "type": "textarea",
               "rows": 2
             },
             {
               "id": "titleClassName",
-              "label": "Section title color",
+              "label": "Grid heading color",
               "type": "swatch",
               "options": [
                 {
@@ -93703,11 +93749,6 @@
                   "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
                 },
                 {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
                   "value": "is-white",
                   "label": "White",
                   "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
@@ -93716,7 +93757,7 @@
             },
             {
               "id": "titleHighlightsJson",
-              "label": "Section title highlights",
+              "label": "Grid heading highlights",
               "type": "highlight_list",
               "options": [
                 {
@@ -93740,11 +93781,6 @@
                   "swatch": "linear-gradient(145deg, #414042 0%, #5f5e61 100%)"
                 },
                 {
-                  "value": "is-sandstone",
-                  "label": "Sandstone",
-                  "swatch": "linear-gradient(145deg, #c4beb6 0%, #b1aaa2 100%)"
-                },
-                {
                   "value": "is-white",
                   "label": "White",
                   "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
@@ -93752,85 +93788,247 @@
               ]
             },
             {
-              "id": "subtitle",
-              "label": "Section subtitle",
-              "type": "text"
-            },
-            {
-              "id": "body",
-              "label": "Section body",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "html",
-              "label": "Page Content HTML",
+              "id": "bodyHtml",
+              "label": "Grid intro HTML",
               "type": "html"
             },
             {
-              "id": "widget",
-              "label": "Widget key",
-              "type": "text"
+              "id": "body",
+              "label": "Fallback body text",
+              "type": "textarea",
+              "rows": 3
             },
             {
-              "id": "logoImage",
-              "label": "Logo image URL",
-              "type": "text"
+              "id": "bgTone",
+              "label": "Grid background",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "linear-gradient(145deg, #ffffff 0%, #ededed 100%)"
+                },
+                {
+                  "value": "sand",
+                  "label": "Sand Gradient",
+                  "swatch": "linear-gradient(147deg, rgb(242, 238, 235) 62%, rgb(218, 215, 208) 100%)"
+                },
+                {
+                  "value": "blue",
+                  "label": "Blue Gradient",
+                  "swatch": "linear-gradient(var(--ag-surface-blue-angle), var(--ag-color-atlantean-dark) 0%, var(--ag-color-atlantean) 100%)"
+                },
+                {
+                  "value": "grey",
+                  "label": "Super Grey Gradient",
+                  "swatch": "linear-gradient(145deg, #414042 0%, #636265 100%)"
+                }
+              ]
             },
             {
-              "id": "logoAlt",
-              "label": "Logo alt text",
-              "type": "text"
+              "id": "contentWidth",
+              "label": "Content width",
+              "type": "select",
+              "options": [
+                {
+                  "value": "content",
+                  "label": "Content width"
+                },
+                {
+                  "value": "browser",
+                  "label": "Page/browser width"
+                }
+              ]
             },
             {
-              "id": "logoText",
-              "label": "Logo text fallback",
-              "type": "text"
+              "id": "columns",
+              "label": "Grid columns",
+              "type": "select",
+              "options": [
+                {
+                  "value": "two",
+                  "label": "2 columns"
+                },
+                {
+                  "value": "three",
+                  "label": "3 columns"
+                },
+                {
+                  "value": "four",
+                  "label": "4 columns"
+                }
+              ]
             },
             {
-              "id": "fullBleed",
-              "label": "Full bleed rail",
+              "id": "cardStyle",
+              "label": "Card style",
+              "type": "select",
+              "options": [
+                {
+                  "value": "card1",
+                  "label": "Card 1"
+                },
+                {
+                  "value": "card2",
+                  "label": "Card 2"
+                },
+                {
+                  "value": "card3",
+                  "label": "Card 3"
+                },
+                {
+                  "value": "card4",
+                  "label": "Card 4"
+                },
+                {
+                  "value": "none",
+                  "label": "No card style"
+                }
+              ]
+            },
+            {
+              "id": "showTitleDivider",
+              "label": "Title divider under card titles",
               "type": "boolean"
             },
             {
-              "id": "spaceBeforeRem",
-              "label": "Space before (rem)",
-              "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
+              "id": "dividerTone",
+              "label": "Divider line color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "auto",
+                  "label": "Auto",
+                  "swatch": "linear-gradient(145deg, #c9d3dc 0%, #a8b6c3 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
             },
             {
-              "id": "spaceAfterRem",
-              "label": "Space after (rem)",
+              "id": "cardPaddingRem",
+              "label": "Card padding (rem)",
               "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
+              "min": 0.75,
+              "max": 3,
+              "step": 0.05
             },
             {
-              "id": "paddingTopRem",
-              "label": "Padding top (rem)",
+              "id": "cardTitleSizeRem",
+              "label": "Card title size (rem)",
               "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
+              "min": 0.9,
+              "max": 2,
+              "step": 0.05
             },
             {
-              "id": "paddingBottomRem",
-              "label": "Padding bottom (rem)",
+              "id": "cardBodySizeRem",
+              "label": "Card body size (rem)",
               "type": "number",
-              "min": 0,
-              "max": 8,
-              "step": 0.25
+              "min": 0.8,
+              "max": 1.5,
+              "step": 0.05
             },
             {
-              "id": "contentMaxWidthPx",
-              "label": "Content max width (px)",
+              "id": "cardBodyLineHeight",
+              "label": "Card body line height",
               "type": "number",
-              "min": 560,
-              "max": 1440,
-              "step": 10
+              "min": 1.1,
+              "max": 2.1,
+              "step": 0.05
+            },
+            {
+              "id": "titleTone",
+              "label": "Title color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "bodyTone",
+              "label": "Body color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "subtitle",
+              "label": "Grid subtitle",
+              "type": "textarea",
+              "rows": 2
             },
             {
               "id": "anchorId",
@@ -93843,111 +94041,1162 @@
               "type": "text"
             },
             {
-              "id": "copyWrap",
-              "label": "Wrap section copy",
+              "id": "fullBleed",
+              "label": "Use full-bleed rail",
+              "type": "boolean"
+            },
+            {
+              "id": "sand",
+              "label": "Use sand section surface",
               "type": "boolean"
             },
             {
               "id": "buttonLabel",
-              "label": "Button label",
+              "label": "Section button label",
               "type": "text"
             },
             {
               "id": "buttonLinkJson",
-              "label": "Button URL",
+              "label": "Section button URL",
               "type": "route_link",
               "openInNewWindowLabel": "Open in new window"
             },
             {
-              "id": "buttonDocumentId",
-              "label": "Button document ID",
-              "type": "text"
-            },
-            {
-              "id": "addressClassName",
-              "label": "Address block class name",
-              "type": "text"
-            },
-            {
-              "id": "addressTitle",
-              "label": "Address title",
-              "type": "text"
-            },
-            {
-              "id": "addressLines",
-              "label": "Address lines",
-              "type": "textarea",
-              "rows": 4
-            },
-            {
-              "id": "tableHeadersJson",
-              "label": "Table headers JSON",
-              "type": "textarea",
-              "rows": 3
-            },
-            {
-              "id": "tableRowsJson",
-              "label": "Table rows JSON",
-              "type": "textarea",
-              "rows": 8
-            },
-            {
-              "id": "tableValueAlignment",
-              "label": "Table value alignment",
+              "id": "buttonStyle",
+              "label": "Section button style",
               "type": "select",
               "options": [
                 {
-                  "value": "",
-                  "label": "Default"
+                  "value": "blue",
+                  "label": "Blue"
                 },
                 {
-                  "value": "left",
-                  "label": "Left"
+                  "value": "dark",
+                  "label": "Dark"
                 },
                 {
-                  "value": "center",
-                  "label": "Center"
-                },
-                {
-                  "value": "right",
-                  "label": "Right"
+                  "value": "outline",
+                  "label": "Outline"
                 }
               ]
             },
             {
-              "id": "tableChartId",
-              "label": "Managed chart ID",
+              "id": "buttonTone",
+              "label": "Section button color",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "consultantService",
+              "label": "Consultant directory source",
+              "type": "select",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Manual cards"
+                },
+                {
+                  "value": "loans",
+                  "label": "Loans consultants"
+                },
+                {
+                  "value": "retirement",
+                  "label": "Retirement consultants"
+                }
+              ]
+            },
+            {
+              "id": "locationFilterEnabled",
+              "label": "Enable state filter",
+              "type": "boolean"
+            },
+            {
+              "id": "locationFilterLabel",
+              "label": "Filter label",
               "type": "text"
             },
             {
-              "id": "supportGroupsJson",
-              "label": "Support groups JSON",
+              "id": "locationFilterAriaLabel",
+              "label": "Filter aria label",
+              "type": "text"
+            },
+            {
+              "id": "locationFilterPlaceholder",
+              "label": "Filter placeholder",
+              "type": "text"
+            },
+            {
+              "id": "locationFilterRequireSelection",
+              "label": "Require a state selection",
+              "type": "boolean"
+            },
+            {
+              "id": "locationFilterFocusMessageCard",
+              "label": "Focus selected consultant card",
+              "type": "boolean"
+            },
+            {
+              "id": "card1Title",
+              "label": "Card 1 title",
+              "type": "text"
+            },
+            {
+              "id": "card1TitleClassName",
+              "label": "Card 1 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card1ClassName",
+              "label": "Card 1 class name",
+              "type": "text"
+            },
+            {
+              "id": "card1PanelTone",
+              "label": "Card 1 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card1Body",
+              "label": "Card 1 body",
               "type": "textarea",
-              "rows": 8
+              "rows": 2
             },
             {
-              "id": "supportGroupsExpanded",
-              "label": "Expand support items by default",
-              "type": "boolean"
-            },
-            {
-              "id": "supportGroupsCollapsible",
-              "label": "Support items are collapsible",
-              "type": "boolean"
-            },
-            {
-              "id": "fineprint",
-              "label": "Fineprint lines",
+              "id": "card1ListJson",
+              "label": "Card 1 bullet list JSON",
               "type": "textarea",
               "rows": 5
             },
             {
-              "id": "fineprintDisclosureId",
-              "label": "Managed disclosure ID",
+              "id": "card1Fineprint",
+              "label": "Card 1 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card1LinksJson",
+              "label": "Card 1 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card1AccordionsJson",
+              "label": "Card 1 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card1DividerTone",
+              "label": "Card 1 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card1ButtonLabel",
+              "label": "Card 1 button label",
+              "type": "text"
+            },
+            {
+              "id": "card1ButtonLinkJson",
+              "label": "Card 1 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card1ButtonDocumentId",
+              "label": "Card 1 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card1ButtonClassName",
+              "label": "Card 1 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card1Button2Label",
+              "label": "Card 1 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card1Button2LinkJson",
+              "label": "Card 1 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card1Button2DocumentId",
+              "label": "Card 1 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card1Button2ClassName",
+              "label": "Card 1 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card2Title",
+              "label": "Card 2 title",
+              "type": "text"
+            },
+            {
+              "id": "card2TitleClassName",
+              "label": "Card 2 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card2ClassName",
+              "label": "Card 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card2PanelTone",
+              "label": "Card 2 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card2Body",
+              "label": "Card 2 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card2ListJson",
+              "label": "Card 2 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card2Fineprint",
+              "label": "Card 2 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card2LinksJson",
+              "label": "Card 2 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card2AccordionsJson",
+              "label": "Card 2 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card2DividerTone",
+              "label": "Card 2 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card2ButtonLabel",
+              "label": "Card 2 button label",
+              "type": "text"
+            },
+            {
+              "id": "card2ButtonLinkJson",
+              "label": "Card 2 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card2ButtonDocumentId",
+              "label": "Card 2 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card2ButtonClassName",
+              "label": "Card 2 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card2Button2Label",
+              "label": "Card 2 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card2Button2LinkJson",
+              "label": "Card 2 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card2Button2DocumentId",
+              "label": "Card 2 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card2Button2ClassName",
+              "label": "Card 2 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card3Title",
+              "label": "Card 3 title",
+              "type": "text"
+            },
+            {
+              "id": "card3TitleClassName",
+              "label": "Card 3 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card3ClassName",
+              "label": "Card 3 class name",
+              "type": "text"
+            },
+            {
+              "id": "card3PanelTone",
+              "label": "Card 3 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card3Body",
+              "label": "Card 3 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card3ListJson",
+              "label": "Card 3 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card3Fineprint",
+              "label": "Card 3 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card3LinksJson",
+              "label": "Card 3 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card3AccordionsJson",
+              "label": "Card 3 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card3DividerTone",
+              "label": "Card 3 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card3ButtonLabel",
+              "label": "Card 3 button label",
+              "type": "text"
+            },
+            {
+              "id": "card3ButtonLinkJson",
+              "label": "Card 3 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card3ButtonDocumentId",
+              "label": "Card 3 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card3ButtonClassName",
+              "label": "Card 3 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card3Button2Label",
+              "label": "Card 3 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card3Button2LinkJson",
+              "label": "Card 3 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card3Button2DocumentId",
+              "label": "Card 3 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card3Button2ClassName",
+              "label": "Card 3 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card4Title",
+              "label": "Card 4 title",
+              "type": "text"
+            },
+            {
+              "id": "card4TitleClassName",
+              "label": "Card 4 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card4ClassName",
+              "label": "Card 4 class name",
+              "type": "text"
+            },
+            {
+              "id": "card4PanelTone",
+              "label": "Card 4 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card4Body",
+              "label": "Card 4 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card4ListJson",
+              "label": "Card 4 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card4Fineprint",
+              "label": "Card 4 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card4LinksJson",
+              "label": "Card 4 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card4AccordionsJson",
+              "label": "Card 4 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card4DividerTone",
+              "label": "Card 4 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card4ButtonLabel",
+              "label": "Card 4 button label",
+              "type": "text"
+            },
+            {
+              "id": "card4ButtonLinkJson",
+              "label": "Card 4 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card4ButtonDocumentId",
+              "label": "Card 4 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card4ButtonClassName",
+              "label": "Card 4 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card4Button2Label",
+              "label": "Card 4 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card4Button2LinkJson",
+              "label": "Card 4 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card4Button2DocumentId",
+              "label": "Card 4 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card4Button2ClassName",
+              "label": "Card 4 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card5Title",
+              "label": "Card 5 title",
+              "type": "text"
+            },
+            {
+              "id": "card5TitleClassName",
+              "label": "Card 5 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card5ClassName",
+              "label": "Card 5 class name",
+              "type": "text"
+            },
+            {
+              "id": "card5PanelTone",
+              "label": "Card 5 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card5Body",
+              "label": "Card 5 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card5ListJson",
+              "label": "Card 5 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card5Fineprint",
+              "label": "Card 5 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card5LinksJson",
+              "label": "Card 5 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card5AccordionsJson",
+              "label": "Card 5 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card5DividerTone",
+              "label": "Card 5 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card5ButtonLabel",
+              "label": "Card 5 button label",
+              "type": "text"
+            },
+            {
+              "id": "card5ButtonLinkJson",
+              "label": "Card 5 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card5ButtonDocumentId",
+              "label": "Card 5 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card5ButtonClassName",
+              "label": "Card 5 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card5Button2Label",
+              "label": "Card 5 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card5Button2LinkJson",
+              "label": "Card 5 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card5Button2DocumentId",
+              "label": "Card 5 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card5Button2ClassName",
+              "label": "Card 5 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card6Title",
+              "label": "Card 6 title",
+              "type": "text"
+            },
+            {
+              "id": "card6TitleClassName",
+              "label": "Card 6 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card6ClassName",
+              "label": "Card 6 class name",
+              "type": "text"
+            },
+            {
+              "id": "card6PanelTone",
+              "label": "Card 6 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card6Body",
+              "label": "Card 6 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card6ListJson",
+              "label": "Card 6 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card6Fineprint",
+              "label": "Card 6 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card6LinksJson",
+              "label": "Card 6 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card6AccordionsJson",
+              "label": "Card 6 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card6DividerTone",
+              "label": "Card 6 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card6ButtonLabel",
+              "label": "Card 6 button label",
+              "type": "text"
+            },
+            {
+              "id": "card6ButtonLinkJson",
+              "label": "Card 6 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card6ButtonDocumentId",
+              "label": "Card 6 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card6ButtonClassName",
+              "label": "Card 6 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card6Button2Label",
+              "label": "Card 6 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card6Button2LinkJson",
+              "label": "Card 6 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card6Button2DocumentId",
+              "label": "Card 6 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card6Button2ClassName",
+              "label": "Card 6 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card7Title",
+              "label": "Card 7 title",
+              "type": "text"
+            },
+            {
+              "id": "card7TitleClassName",
+              "label": "Card 7 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card7ClassName",
+              "label": "Card 7 class name",
+              "type": "text"
+            },
+            {
+              "id": "card7PanelTone",
+              "label": "Card 7 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card7Body",
+              "label": "Card 7 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card7ListJson",
+              "label": "Card 7 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card7Fineprint",
+              "label": "Card 7 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card7LinksJson",
+              "label": "Card 7 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card7AccordionsJson",
+              "label": "Card 7 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card7DividerTone",
+              "label": "Card 7 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card7ButtonLabel",
+              "label": "Card 7 button label",
+              "type": "text"
+            },
+            {
+              "id": "card7ButtonLinkJson",
+              "label": "Card 7 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card7ButtonDocumentId",
+              "label": "Card 7 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card7ButtonClassName",
+              "label": "Card 7 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card7Button2Label",
+              "label": "Card 7 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card7Button2LinkJson",
+              "label": "Card 7 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card7Button2DocumentId",
+              "label": "Card 7 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card7Button2ClassName",
+              "label": "Card 7 button 2 class name",
+              "type": "text"
+            },
+            {
+              "id": "card8Title",
+              "label": "Card 8 title",
+              "type": "text"
+            },
+            {
+              "id": "card8TitleClassName",
+              "label": "Card 8 title class name",
+              "type": "text"
+            },
+            {
+              "id": "card8ClassName",
+              "label": "Card 8 class name",
+              "type": "text"
+            },
+            {
+              "id": "card8PanelTone",
+              "label": "Card 8 panel tone",
+              "type": "text"
+            },
+            {
+              "id": "card8Body",
+              "label": "Card 8 body",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card8ListJson",
+              "label": "Card 8 bullet list JSON",
+              "type": "textarea",
+              "rows": 5
+            },
+            {
+              "id": "card8Fineprint",
+              "label": "Card 8 fineprint",
+              "type": "textarea",
+              "rows": 2
+            },
+            {
+              "id": "card8LinksJson",
+              "label": "Card 8 PDF / link list JSON",
+              "type": "textarea",
+              "rows": 4
+            },
+            {
+              "id": "card8AccordionsJson",
+              "label": "Card 8 accordion JSON",
+              "type": "textarea",
+              "rows": 6
+            },
+            {
+              "id": "card8DividerTone",
+              "label": "Card 8 line color override",
+              "type": "swatch",
+              "options": [
+                {
+                  "value": "",
+                  "label": "Global",
+                  "swatch": "linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)"
+                },
+                {
+                  "value": "super-grey",
+                  "label": "Super Grey",
+                  "swatch": "#414042"
+                },
+                {
+                  "value": "atlantean",
+                  "label": "Blue",
+                  "swatch": "#00adbb"
+                },
+                {
+                  "value": "mango",
+                  "label": "Mango",
+                  "swatch": "#f6b146"
+                },
+                {
+                  "value": "melon",
+                  "label": "Melon",
+                  "swatch": "#f48f7a"
+                },
+                {
+                  "value": "white",
+                  "label": "White",
+                  "swatch": "#ffffff"
+                }
+              ]
+            },
+            {
+              "id": "card8ButtonLabel",
+              "label": "Card 8 button label",
+              "type": "text"
+            },
+            {
+              "id": "card8ButtonLinkJson",
+              "label": "Card 8 button URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card8ButtonDocumentId",
+              "label": "Card 8 button document ID",
+              "type": "text"
+            },
+            {
+              "id": "card8ButtonClassName",
+              "label": "Card 8 button class name",
+              "type": "text"
+            },
+            {
+              "id": "card8Button2Label",
+              "label": "Card 8 button 2 label",
+              "type": "text"
+            },
+            {
+              "id": "card8Button2LinkJson",
+              "label": "Card 8 button 2 URL",
+              "type": "route_link",
+              "openInNewWindowLabel": "Open in new window"
+            },
+            {
+              "id": "card8Button2DocumentId",
+              "label": "Card 8 button 2 document ID",
+              "type": "text"
+            },
+            {
+              "id": "card8Button2ClassName",
+              "label": "Card 8 button 2 class name",
               "type": "text"
             }
           ],
-          "hidden": false
+          "hidden": false,
+          "templateId": "card_grid",
+          "presetId": "investment-options"
         },
         {
           "id": "who_qualifies",

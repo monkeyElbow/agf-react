@@ -50,4 +50,18 @@ describe('InfoTableSheet', () => {
     expect(screen.getAllByText('Must have earned income').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Income limits must be met for Roth IRA eligibility').length).toBeGreaterThan(0);
   });
+
+  it('keeps a single comparison point in the card chart as a bullet', () => {
+    const { container } = render(
+      <InfoTableSheet
+        headers={['Option A', 'Option B']}
+        rows={[["One point", "Another point"]]}
+        firstColumnHeader={false}
+      />,
+    );
+
+    // The shared source renders both desktop and mobile presentations; each
+    // presentation keeps the single comparison point as a bullet.
+    expect(container.querySelectorAll('.info-table-sheet__cell-list li')).toHaveLength(4);
+  });
 });

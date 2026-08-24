@@ -28,8 +28,12 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(source).toContain('buildDynamicSiteFeatureFromBlock');
     expect(catalogSource).toContain("featureId: 'retirement_plan_feature'");
     expect(catalogSource).toContain("className: 'retirement-plan-feature'");
+    expect(catalogSource).toContain("titleClassName: 'is-white'");
+    expect(readSource('../components/InvestmentsGrowthFeature.jsx')).toContain("investorPanel.titleClassName || 'is-super-grey'");
     expect(catalogSource).toContain('metrics:');
     expect(source).toContain('blockId="retirement_plan_feature"');
+    expect(source).toContain("sectionHudClassName={getHudBlockStateClassName('retirement_plan_feature').trim()}");
+    expect(readSource('../components/InvestmentsGrowthFeature.jsx')).toContain('if (isValidElement(hudAnchor))');
   });
 
   it('keeps the retirement hero wired to shared dynamic headline size and tracking controls', () => {
@@ -49,6 +53,9 @@ describe('retirement 403(b) review polish guardrail', () => {
 
     expect(cssSource).toContain('.retirement-native-hero-line {');
     expect(cssSource).not.toContain('.retirement-native-hero-line + .retirement-native-hero-line {');
+    expect(cssSource).toContain('--service-native-hero-rail-min-height: 373px;');
+    expect(cssSource).toContain('padding: clamp(2.45rem, 5.4vw, 3.3rem) 0;');
+    expect(cssSource).not.toContain('--service-native-hero-rail-min-height: 300px;');
   });
 
   it('keeps the retirement intro hidden block from falling back to default intro content', () => {

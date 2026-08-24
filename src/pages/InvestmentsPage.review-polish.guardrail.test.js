@@ -18,6 +18,7 @@ describe('investments page review polish guardrails', () => {
 
     expect(catalogSource).toContain("surfaceTone: 'blue'");
     expect(featureSource).toContain('data-investments-growth-background-panel={panel.surfaceTone}');
+    expect(featureSource).toContain("${hudAnchor ? ' has-admin-front-hud' : ''}");
     expect(featureSource).toContain('className="investments-native-build-title-line"');
     expect(cssSource).toContain('.investments-native-growth-surface-layer.is-blue {');
     expect(cssSource).toContain('.investments-native-growth-surface-layer.is-mango {');

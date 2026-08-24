@@ -138,6 +138,29 @@ describe('buildHudPanelsFromBlocks', () => {
       settings: {
         featureId: 'editorial_spotlight',
       },
-    }).label).toBe('Site Feature · Editorial spotlight');
+    }).label).toBe('Feature - Steady stories deserve careful presentation.');
+  });
+
+  it('uses an explicit site-feature headline override in the shared display name', () => {
+    expect(getBlockHudDefinition({
+      id: 'site_feature',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'editorial_spotlight',
+        headline: 'A custom feature title',
+      },
+    }).label).toBe('Feature - A custom feature title');
+  });
+
+  it('gives the retirement plan feature its visible section name in the HUD', () => {
+    expect(getBlockHudDefinition({
+      id: 'retirement_plan_feature',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'retirement_plan_feature',
+      },
+    }).label).toBe('Feature - Smart benefits, strong advantages');
   });
 });

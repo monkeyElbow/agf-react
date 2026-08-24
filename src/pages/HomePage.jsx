@@ -20,6 +20,7 @@ import {
   removeSelectionRange,
   replaceHeroLineColorClass,
 } from '../lib/heroHudRanges';
+import { applyTextColorSelection } from '../lib/textColorSelection';
 import { logHeroDriftWarningOnce } from '../lib/heroDriftWarnings';
 import {
   inspectHeroRender,
@@ -715,29 +716,25 @@ export default function HomePage() {
     updateHeroSetting(classNameKey, replaceHeroLineColorClass(currentClassName, colorValue));
   };
 
-  const applyHeroSelectionColor = (lineKey, colorValue) => {
+  const applyHeroSelectionColor = (lineKey, colorValue, selection = heroSelection) => {
     const normalizedLineKey = lineKey === 'line2' || lineKey === 'line3' ? lineKey : 'line1';
     const lineText = String(
       heroHudEditableLines.find((line) => line.key === normalizedLineKey)?.text
       || heroHudSettings[`${normalizedLineKey}Text`]
       || '',
     );
-    const safeStart = Math.max(0, Math.min(Number(heroSelection.start) || 0, lineText.length));
-    const safeEnd = Math.max(safeStart, Math.min(Number(heroSelection.end) || 0, lineText.length));
-    if (safeEnd <= safeStart) {
+    const result = applyTextColorSelection({
+      text: lineText,
+      lineClassName: String(heroHudSettings[`${normalizedLineKey}ClassName`] || ''),
+      highlightsJson: heroHudSettings[`${normalizedLineKey}HighlightsJson`],
+      selection,
+      colorValue,
+    });
+    if (result.target !== 'selection') {
       return;
     }
     const highlightsKey = `${normalizedLineKey}HighlightsJson`;
-    updateHeroSetting(
-      highlightsKey,
-      applySelectionColor(
-        heroHudSettings[highlightsKey],
-        lineText,
-        safeStart,
-        safeEnd,
-        colorValue,
-      ),
-    );
+    updateHeroSetting(highlightsKey, result.highlightsJson);
   };
 
   const removeHeroSpan = (lineKey, index) => {

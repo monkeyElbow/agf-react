@@ -17,6 +17,7 @@ export const BLOCK_CATALOG_ARCHITECTURE_TYPES = Object.freeze([
 
 const STANDARD_BLOCK_KINDS = new Set([
   'billboard',
+  'card_chart',
   'card_grid',
   'columns',
   'feature_panel',
@@ -114,7 +115,7 @@ function buildKindMetadata(kind) {
   if (STANDARD_BLOCK_KINDS.has(token)) {
     return {
       catalogVisibility: 'standard',
-      architectureType: ['billboard', 'card_grid', 'columns'].includes(token) ? 'preset' : 'standard-block',
+      architectureType: ['billboard', 'card_chart', 'card_grid', 'columns'].includes(token) ? 'preset' : 'standard-block',
       category: ['feature_panel'].includes(token) ? 'conversion' : 'content',
       description: 'Reusable content block.',
     };

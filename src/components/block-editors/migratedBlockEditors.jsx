@@ -1,6 +1,7 @@
 import { useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import AdminNumberInput from '../AdminNumberInput';
 import AdminHtmlEditor from '../AdminHtmlEditor';
+import PageContentEditorPreview from '../PageContentEditorPreview';
 import SharedRouteLinkField from '../RouteLinkField';
 import BillboardHudEditorPanel, { BillboardSlider, normalizeBillboardWidth } from '../BillboardHudEditorPanel';
 import ColorPalette from '../ColorPalette';
@@ -44,6 +45,7 @@ import {
   resolveHeroLineDisplayClassName,
   resolveSelectionRangeColor,
 } from '../../lib/heroHudRanges';
+import { applyTextColorSelection, readColorSelection } from '../../lib/textColorSelection';
 import {
   hasDisplayableHeroLineText,
   resolveVisibleHeroLineNumbers,
@@ -85,6 +87,8 @@ import {
   getGridCompatibleToneOptions,
   getGridSafeCardStyleForBg,
   getGridSafeToneForBg,
+  DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
+  DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
   normalizeGridBgTone,
   normalizeGridCardStyleToken,
   normalizeGridToneToken,
@@ -99,14 +103,30 @@ import {
   normalizeSemanticTextColorClass,
   normalizeSurfaceBgTone,
   resolvePanelTextToneClassName,
+  getTokenSwatch,
 } from '../../lib/colorSystem';
 import {
   getAllowedSiteFeatureEditableFieldIds,
   resolveSiteFeatureCatalogEntry,
   SITE_FEATURE_ACTION_FIELD_IDS,
 } from '../../data/siteFeatureCatalog';
+import {
+  getSiteFeatureCollectionItems,
+  getSiteFeatureCollectionModel,
+  SiteFeatureCollectionEditor,
+} from './SiteFeatureCollectionEditor';
 import { buildDynamicRatesFromBlock } from '../../lib/dynamicPageBlocks';
 import { EDITOR_DRAFT_FLUSH_EVENT } from '../../lib/contentAdminTiming';
+import {
+  getSupportLibraryUnresolvedDocumentIds,
+  parseSupportLibraryGroups,
+  serializeSupportLibraryGroups,
+} from '../../lib/supportLibrary';
+import {
+  getPageContentEditorField,
+  getPageContentEditorHtml,
+  hasLegacyPageContentSource,
+} from '../../lib/pageContentEditorHtml';
 import {
   createProtectedEditorDraft,
   isOlderEditorDraftRevision,
@@ -129,7 +149,19 @@ const HERO_ANIMATION_PRESET_OPTIONS = [
 const DEFAULT_INTRO_LINE_SPACING = 1.04;
 const DEFAULT_BILLBOARD_LINE_SPACING = 1;
 const EDITOR_LOCAL_DRAFT_COMMIT_DELAY_MS = 320;
-const SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS = Object.freeze(['headline', 'body', 'buttonLabel', 'buttonUrl']);
+const SITE_FEATURE_LOCAL_DRAFT_FIELD_IDS = Object.freeze([
+  'headline',
+  'body',
+  'buttonLabel',
+  'buttonUrl',
+  'panelsJson',
+  'metricsJson',
+  'cardsJson',
+  'beatsJson',
+  'introHeading',
+  'introBody',
+  'introEmphasis',
+]);
 const IMPACT_STAT_LOCAL_DRAFT_FIELD_IDS = Object.freeze([
   'titlePrefix',
   'highlight',
@@ -322,6 +354,13 @@ function resolveEditorFields(kind, surface = 'admin', fallbackFields = []) {
   return fields.length ? fields : (Array.isArray(fallbackFields) ? fallbackFields : []);
 }
 
+function hasGridCardSettings(settings, slot) {
+  const prefix = `card${slot}`;
+  return Object.entries(settings || {}).some(([key, value]) => (
+    key.startsWith(prefix) && String(value ?? '').trim()
+  ));
+}
+
 export function getBufferedStringDraftBlockKinds() {
   return [...BUFFERED_STRING_DRAFT_BLOCK_KINDS];
 }
@@ -397,21 +436,39 @@ function parseHighlightListValue(value) {
 function serializeHighlightListValue(items) {
   const normalized = (Array.isArray(items) ? items : [])
     .map((item) => ({
-      text: String(item?.text || '').trim(),
+      text: String(item?.text ?? ''),
       className: String(item?.className || '').trim(),
     }))
-    .filter((item) => item.text && item.className);
+    .filter((item) => item.text.trim() && item.className);
 
   return normalized.length ? JSON.stringify(normalized) : '';
 }
 
 function normalizeGridResourceLinkItem(item) {
   const source = item && typeof item === 'object' ? item : {};
-  const label = String(source.label || source.title || '').trim();
+  // Keep the raw label while an admin is typing. Trimming here makes the
+  // controlled input erase a trailing space before the next word is entered.
+  // Serializer validation trims only at the persistence boundary.
+  const label = String(source.label ?? source.title ?? '');
   const documentId = String(source.documentId || '').trim();
   const to = String(source.to || source.pageRef || '').trim();
   const href = String(source.href || source.url || '').trim();
   const openInNewWindow = toBoolean(source.openInNewWindow);
+  const declaredKind = String(source.kind || '').trim();
+
+  // Keep an unsaved local row's selected type. Without this, an empty row
+  // falls through to `external` on the next render and the internal page
+  // picker can never open until a destination already exists.
+  if (declaredKind === 'document' || declaredKind === 'internal' || declaredKind === 'external') {
+    return {
+      label,
+      kind: declaredKind,
+      documentId,
+      to,
+      href,
+      openInNewWindow,
+    };
+  }
 
   if (documentId) {
     return {
@@ -468,31 +525,45 @@ function serializeGridResourceLinkItems(items) {
   const normalized = (Array.isArray(items) ? items : [])
     .map((item) => normalizeGridResourceLinkItem(item))
     .map((item) => {
+      const label = String(item.label ?? '');
+      const hasLabel = label.trim();
       if (item.kind === 'document') {
-        if (!item.label || !item.documentId) {
-          return null;
+        if (!hasLabel || !item.documentId) {
+          return {
+            label,
+            kind: 'document',
+            documentId: item.documentId || '',
+          };
         }
         return {
-          label: item.label,
+          label,
           documentId: item.documentId,
           ...(item.openInNewWindow ? { openInNewWindow: true } : {}),
         };
       }
       if (item.kind === 'internal') {
-        if (!item.label || !item.to) {
-          return null;
+        if (!hasLabel || !item.to) {
+          return {
+            label,
+            kind: 'internal',
+            to: item.to || '',
+          };
         }
         return {
-          label: item.label,
+          label,
           to: item.to,
           ...(item.openInNewWindow ? { openInNewWindow: true } : {}),
         };
       }
-      if (!item.label || !item.href) {
-        return null;
+      if (!hasLabel || !item.href) {
+        return {
+          label,
+          kind: 'external',
+          href: item.href || '',
+        };
       }
       return {
-        label: item.label,
+        label,
         href: item.href,
         ...(item.openInNewWindow ? { openInNewWindow: true } : {}),
       };
@@ -516,7 +587,7 @@ function parseGridResourceAccordions(value) {
     return parsed
       .filter((item) => item && typeof item === 'object')
       .map((item) => ({
-        title: String(item.title || '').trim(),
+        title: String(item.title ?? ''),
         links: parseGridResourceLinkItems(JSON.stringify(Array.isArray(item.links) ? item.links : [])),
       }));
   } catch {
@@ -527,10 +598,9 @@ function parseGridResourceAccordions(value) {
 function serializeGridResourceAccordions(items) {
   const normalized = (Array.isArray(items) ? items : [])
     .map((item) => ({
-      title: String(item?.title || '').trim(),
+      title: String(item?.title ?? ''),
       links: JSON.parse(serializeGridResourceLinkItems(item?.links) || '[]'),
-    }))
-    .filter((item) => item.title && item.links.length);
+    }));
 
   return normalized.length ? JSON.stringify(normalized) : '';
 }
@@ -737,17 +807,36 @@ function serializeGridBulletList(items) {
   return normalized.some(Boolean) ? JSON.stringify(normalized) : '';
 }
 
+function parseGridBulletEditorList(value) {
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value || '[]') : value;
+    return Array.isArray(parsed)
+      ? parsed.map((item) => String(item ?? ''))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function serializeGridBulletEditorList(items) {
+  const normalized = (Array.isArray(items) ? items : [])
+    .map((item) => String(item ?? ''));
+  return normalized.length ? JSON.stringify(normalized) : '';
+}
+
 function CardGridBulletListEditor({ label, value, onChange }) {
-  const bullets = parseGridBulletList(value);
+  const bullets = parseGridBulletEditorList(value);
 
   const updateBullets = (nextBullets) => {
-    onChange(serializeGridBulletList(nextBullets));
+    onChange(serializeGridBulletEditorList(nextBullets));
   };
 
   return (
-    <div className="admin-grid-resource-editor admin-card-grid-bullet-editor">
+    <div
+      className="admin-grid-resource-editor admin-card-grid-bullet-editor"
+      aria-label={label}
+    >
       <div className="admin-grid-resource-editor-head">
-        <strong>{label}</strong>
         <button
           type="button"
           className="action-btn action-btn-outline"
@@ -768,7 +857,7 @@ function CardGridBulletListEditor({ label, value, onChange }) {
                 onChange={(event) => {
                   const nextBullets = [...bullets];
                   nextBullets[index] = event.target.value;
-                  onChange(serializeGridBulletList(nextBullets));
+                  onChange(serializeGridBulletEditorList(nextBullets));
                 }}
               />
               <button
@@ -788,21 +877,22 @@ function CardGridBulletListEditor({ label, value, onChange }) {
   );
 }
 
-function CardGridRichBodyEditor({ label, value, onChange, wholeListSizeControl = false }) {
+function CardGridRichBodyEditor({
+  label,
+  value,
+  onChange,
+}) {
   return (
     <div className="admin-grid-resource-editor admin-card-grid-rich-body-editor">
       <div className="admin-grid-resource-editor-head">
         <strong>{label}</strong>
-        <span className="admin-grid-resource-editor-help">
-          {wholeListSizeControl
-            ? 'Edit bullets here; set whole-list size in Card typography.'
-            : 'Rich text; appears below the bullets in the card.'}
-        </span>
+        <span className="admin-grid-resource-editor-help">Rich text; appears below the bullets in the card.</span>
       </div>
       <AdminHtmlEditor
         compact
         value={toEditorHtml(value)}
         onChange={onChange}
+        ariaLabel={label}
         placeholder="Optional card body copy"
       />
     </div>
@@ -841,7 +931,68 @@ function ProgressiveCardEditorList({
   revealLabel = 'Add card',
   renderSlotBody,
   className = '',
+  workspace = false,
 }) {
+  const activeSlot = Number(expandedSlot) || Number(slots[0]?.slot) || null;
+  const activeSlotData = slots.find((slotData) => Number(slotData?.slot) === activeSlot) || null;
+
+  if (workspace) {
+    return (
+      <div className={`admin-card-grid-workspace${className ? ` ${className}` : ''}`}>
+        <div className="admin-card-grid-workspace-head">
+          <h4>{heading}</h4>
+          {onRevealNextSlot ? (
+            <button
+              type="button"
+              className="admin-front-hud-mini-action"
+              onClick={onRevealNextSlot}
+            >
+              {revealLabel}
+            </button>
+          ) : null}
+        </div>
+        <nav className="admin-card-grid-card-nav" aria-label="Cards">
+          {slots.map((slotData) => {
+            const slot = Number(slotData?.slot);
+            const isActive = activeSlot === slot;
+            return (
+              <button
+                key={`card-grid-nav-${slot}`}
+                type="button"
+                className={`admin-card-grid-card-nav-item admin-progressive-slot-toggle${isActive ? ' is-active' : ''}`}
+                aria-label={`Card ${slot}${slotData?.title ? `: ${slotData.title}` : ''}`}
+                aria-current={isActive ? 'true' : undefined}
+                onClick={() => onToggleSlot?.(slot)}
+              >
+                <span className="admin-card-grid-card-nav-number">{String(slot).padStart(2, '0')}</span>
+                <span className="admin-card-grid-card-nav-card-label admin-progressive-slot-kicker">Card {slot}</span>
+                <span className="admin-card-grid-card-nav-title">
+                  {slotData?.title || slotData?.fallbackTitle || `Card ${slot}`}
+                </span>
+                {slotData?.summary ? (
+                  <span className="admin-card-grid-card-nav-summary">{slotData.summary}</span>
+                ) : null}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="admin-card-grid-workspace-main">
+          {activeSlotData ? (
+            <div
+              key={`card-grid-workspace-slot-${activeSlotData.slot}`}
+              className="admin-card-grid-workspace-slot"
+              data-card-slot={activeSlotData.slot}
+            >
+              {renderSlotBody?.(activeSlotData)}
+            </div>
+          ) : (
+            <p className="admin-grid-resource-empty">Select a card to begin.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`admin-progressive-slot-list${className ? ` ${className}` : ''}`}>
       <div className="admin-progressive-slot-list-head">
@@ -893,6 +1044,568 @@ function ProgressiveCardEditorList({
           </section>
         );
       })}
+    </div>
+  );
+}
+
+function CardGridEditorDisclosure({
+  label,
+  summary,
+  sectionId,
+  openSection,
+  onToggle,
+  children,
+}) {
+  const isOpen = openSection === sectionId;
+  return (
+    <section className={`admin-card-grid-editor-disclosure${isOpen ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="admin-card-grid-editor-disclosure-toggle"
+        aria-expanded={isOpen ? 'true' : 'false'}
+        onClick={() => onToggle(sectionId)}
+      >
+        <span>
+          <strong>{label}</strong>
+          {summary ? <small>{summary}</small> : null}
+        </span>
+        <span className="admin-card-grid-editor-disclosure-chevron" aria-hidden="true">
+          {isOpen ? '−' : '+'}
+        </span>
+      </button>
+      <div
+        className="admin-card-grid-editor-disclosure-body"
+        aria-hidden={isOpen ? undefined : 'true'}
+      >
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function CardGridHeaderEditor({
+  fieldById,
+  settings,
+  onSettingChange,
+  routeOptions,
+  paletteVariant = 'admin',
+}) {
+  const titleField = fieldById.get('title');
+  const titleColorField = fieldById.get('titleClassName');
+  const subtitleField = fieldById.get('subtitle');
+  const subtitleColorField = fieldById.get('subtitleClassName');
+  const bodyHtmlField = fieldById.get('bodyHtml');
+  const spacingFields = [
+    fieldById.get('paddingTopRem'),
+    fieldById.get('paddingBottomRem'),
+    fieldById.get('headerSubheadSpaceRem'),
+  ].filter(Boolean);
+  const titleColorOptions = Array.isArray(titleColorField?.options) && titleColorField.options.length
+    ? titleColorField.options
+    : HERO_SWATCH_OPTIONS;
+  const subtitleColorOptions = Array.isArray(subtitleColorField?.options) && subtitleColorField.options.length
+    ? subtitleColorField.options
+    : HERO_SWATCH_OPTIONS;
+
+  return (
+    <div className="admin-card-grid-header-editor">
+      {titleField ? (
+        <ColorTextSelectionEditor
+          label="Grid header"
+          text={settings.title ?? ''}
+          lineClassName={settings.titleClassName ?? ''}
+          highlightsJson={settings.titleHighlightsJson ?? ''}
+          onTextChange={(nextValue) => onSettingChange('title', nextValue)}
+          onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
+          onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
+          placeholder="Card Grid heading"
+          rows={2}
+          className="is-intro-heading"
+          unifiedPreviewEditor
+          previewTagName="h2"
+          spanDetailsUnderToggle
+          useResetForClear
+          swatchOptions={titleColorOptions}
+          swatchVariant={paletteVariant}
+        />
+      ) : null}
+
+      {subtitleField ? (
+        <ColorTextSelectionEditor
+          label="Grid subhead"
+          text={settings.subtitle ?? ''}
+          lineClassName={settings.subtitleClassName ?? ''}
+          highlightsJson={settings.subtitleHighlightsJson ?? ''}
+          onTextChange={(nextValue) => onSettingChange('subtitle', nextValue)}
+          onLineClassNameChange={(nextValue) => onSettingChange('subtitleClassName', nextValue)}
+          onHighlightsJsonChange={(nextValue) => onSettingChange('subtitleHighlightsJson', nextValue)}
+          placeholder="Card Grid subhead"
+          rows={2}
+          unifiedPreviewEditor
+          previewTagName="h3"
+          spanDetailsUnderToggle
+          useResetForClear
+          swatchOptions={subtitleColorOptions}
+          swatchVariant={paletteVariant}
+        />
+      ) : null}
+
+      {bodyHtmlField ? (
+        <AdminHtmlEditor
+          compact
+          value={toEditorHtml(settings.bodyHtml, settings.body)}
+          onChange={(nextValue) => onSettingChange('bodyHtml', nextValue)}
+          placeholder="Grid intro copy"
+        />
+      ) : null}
+
+      <FieldControlGrid
+        fields={spacingFields}
+        settings={settings}
+        onSettingChange={onSettingChange}
+        routeOptions={routeOptions}
+        paletteVariant={paletteVariant}
+        className="admin-content-field-list--inline admin-card-grid-header-spacing"
+      />
+    </div>
+  );
+}
+
+function CardGridButtonEditor({
+  buttonNumber,
+  fieldById,
+  settings,
+  onSettingChange,
+  routeOptions,
+}) {
+  const suffix = buttonNumber === 2 ? 'Button2' : 'Button';
+  const prefix = `card${buttonNumber}${suffix}`;
+  const labelField = fieldById.get(`${prefix}Label`);
+  const destinationField = getPromotedRouteLinkField(
+    fieldById,
+    `${prefix}Url`,
+    `${prefix}PageRef`,
+  );
+
+  if (!labelField && !destinationField) {
+    return null;
+  }
+
+  const fields = [
+    labelField ? { ...labelField, label: 'Button label' } : null,
+    destinationField
+      ? {
+          ...destinationField,
+          label: 'Destination',
+          openInNewWindowLabel: 'Open button in new window',
+        }
+      : null,
+  ].filter(Boolean);
+
+  return (
+    <section className="admin-card-grid-action-card">
+      <div className="admin-card-grid-action-card-head">
+        <strong>Button {buttonNumber}</strong>
+        <span>Label, destination, and window behavior</span>
+      </div>
+      <DraftBackedFieldControlGrid
+        fields={fields}
+        settings={settings}
+        onSettingChange={onSettingChange}
+        className="admin-card-grid-action-fields"
+        routeOptions={routeOptions}
+        draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
+      />
+    </section>
+  );
+}
+
+function CardGridCardEditor({
+  slotData,
+  settings,
+  onSettingChange,
+  fieldById,
+  routeOptions,
+  documentOptions,
+  isCgaAssetsGrid,
+}) {
+  const [openSection, setOpenSection] = useState(null);
+  const slot = Number(slotData?.slot);
+  const prefix = `card${slot}`;
+  const titleField = fieldById.get(`${prefix}Title`);
+  const titleColorField = fieldById.get(`${prefix}TitleClassName`);
+  const fineprintField = fieldById.get(`${prefix}Fineprint`);
+  const fineprintJustifyField = fieldById.get(`${prefix}FineprintJustify`);
+  const fineprintSpaceBeforeField = fieldById.get(`${prefix}FineprintSpaceBeforeRem`);
+  const fineprintLineHeightField = fieldById.get(`${prefix}FineprintLineHeight`);
+  const fineprintSpaceAfterField = fieldById.get(`${prefix}FineprintSpaceAfterRem`);
+  const contentFields = [titleField].filter(Boolean);
+  const bodyValue = isCgaAssetsGrid
+    ? resolveCgaCardBodyEditorValue(settings, slot)
+    : settings[`${prefix}Body`] || settings[`${prefix}BodyHtml`];
+  const primaryLabel = String(settings[`${prefix}ButtonLabel`] || '').trim();
+  const secondaryLabel = String(settings[`${prefix}Button2Label`] || '').trim();
+  const bullets = parseGridBulletEditorList(settings[`${prefix}ListJson`]);
+  const links = parseGridResourceLinkItems(settings[`${prefix}LinksJson`]);
+  const accordions = parseGridResourceAccordions(settings[`${prefix}AccordionsJson`]);
+  const titleColor = String(settings[`${prefix}TitleClassName`] || '').trim();
+
+  useEffect(() => {
+    setOpenSection(null);
+  }, [slot]);
+
+  const toggleSection = (sectionId) => {
+    setOpenSection((current) => (current === sectionId ? null : sectionId));
+  };
+
+  const handleBodyChange = (nextValue) => {
+    onSettingChange(`${prefix}Body`, nextValue);
+    if (isCgaAssetsGrid && Object.prototype.hasOwnProperty.call(settings, `${prefix}ListJson`)) {
+      onSettingChange(`${prefix}ListJson`, '');
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, `${prefix}BodyHtml`)) {
+      onSettingChange(`${prefix}BodyHtml`, '');
+    }
+  };
+
+  return (
+    <div className="admin-card-grid-focused-editor">
+      <div className="admin-card-grid-editor-disclosures">
+        <CardGridEditorDisclosure
+          label="Title and body"
+          summary="Edit the visible card content"
+          sectionId="content"
+          openSection={openSection}
+          onToggle={toggleSection}
+        >
+          <DraftBackedFieldControlGrid
+            fields={contentFields}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            className="admin-content-field-list--inline"
+            routeOptions={routeOptions}
+            draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
+          />
+          <CardGridRichBodyEditor
+            label={`Card ${slot} body`}
+            value={bodyValue}
+            onChange={handleBodyChange}
+          />
+          <DraftBackedFieldControlGrid
+            fields={[
+              fineprintField,
+              fineprintJustifyField,
+              fineprintSpaceBeforeField,
+              fineprintLineHeightField,
+              fineprintSpaceAfterField,
+            ].filter(Boolean)}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            className="admin-content-field-list--inline admin-card-grid-fineprint-editor"
+            routeOptions={routeOptions}
+            draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
+          />
+        </CardGridEditorDisclosure>
+
+        <CardGridEditorDisclosure
+          label="Buttons"
+          summary={primaryLabel || secondaryLabel ? `${[primaryLabel, secondaryLabel].filter(Boolean).length} configured` : 'None added'}
+          sectionId="actions"
+          openSection={openSection}
+          onToggle={toggleSection}
+        >
+          <div className="admin-card-grid-action-list">
+            <CardGridButtonEditor
+              buttonNumber={1}
+              fieldById={fieldById}
+              settings={settings}
+              onSettingChange={onSettingChange}
+              routeOptions={routeOptions}
+            />
+            <CardGridButtonEditor
+              buttonNumber={2}
+              fieldById={fieldById}
+              settings={settings}
+              onSettingChange={onSettingChange}
+              routeOptions={routeOptions}
+            />
+          </div>
+        </CardGridEditorDisclosure>
+
+        <CardGridEditorDisclosure
+          label="Title color override"
+          summary={titleColor ? 'Custom color selected' : 'Uses the grid color'}
+          sectionId="color"
+          openSection={openSection}
+          onToggle={toggleSection}
+        >
+          <FieldControlGrid
+            fields={[titleColorField].filter(Boolean)}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            className="admin-content-field-list--inline"
+            paletteVariant="hud"
+          />
+        </CardGridEditorDisclosure>
+
+        {!isCgaAssetsGrid ? (
+          <CardGridEditorDisclosure
+            label="Bullets"
+            summary={bullets.length ? `${bullets.length} added` : 'None added'}
+            sectionId="bullets"
+            openSection={openSection}
+            onToggle={toggleSection}
+          >
+            <CardGridBulletListEditor
+              label={`Card ${slot} bullets`}
+              value={settings[`${prefix}ListJson`]}
+              onChange={(nextValue) => onSettingChange(`${prefix}ListJson`, nextValue)}
+            />
+          </CardGridEditorDisclosure>
+        ) : null}
+
+        {slotData?.showDirectLinks ? (
+          <CardGridEditorDisclosure
+            label="Links"
+            summary={links.length ? `${links.length} added` : 'Optional'}
+            sectionId="links"
+            openSection={openSection}
+            onToggle={toggleSection}
+          >
+            <GridResourceLinkListEditor
+              label="Direct PDF / link list"
+              items={links}
+              onChange={(nextItems) => onSettingChange(`${prefix}LinksJson`, serializeGridResourceLinkItems(nextItems))}
+              routeOptions={routeOptions}
+              documentOptions={documentOptions}
+              showDocumentFilter
+              addLabel="Add link"
+              className="admin-card-grid-links-editor"
+            />
+          </CardGridEditorDisclosure>
+        ) : null}
+
+        {slotData?.showAccordions ? (
+          <CardGridEditorDisclosure
+            label="More details"
+            summary={accordions.length ? `${accordions.length} groups added` : 'Optional'}
+            sectionId="accordions"
+            openSection={openSection}
+            onToggle={toggleSection}
+          >
+            <GridResourceAccordionEditor
+              value={accordions}
+              onChange={(nextItems) => onSettingChange(`${prefix}AccordionsJson`, serializeGridResourceAccordions(nextItems))}
+              routeOptions={routeOptions}
+              documentOptions={documentOptions}
+              showDocumentFilter
+            />
+          </CardGridEditorDisclosure>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function CardChartBlockEditor({
+  block,
+  onSettingChange,
+  routeOptions = [],
+  sourceRevision = 0,
+  hudMode = false,
+  blockOptions = null,
+}) {
+  const settings = block?.settings || {};
+  const fields = resolveEditorFields('card_chart', hudMode ? 'hud' : 'admin', block?.editableFields);
+  const fieldById = new Map(fields.map((field) => [field.id, field]));
+  const headerFields = ['title', 'justify', 'titleClassName', 'titleHighlightsJson']
+    .map((fieldId) => fieldById.get(fieldId))
+    .filter(Boolean);
+  const countField = fieldById.get('cardCount');
+  const fineprintField = fieldById.get('fineprint');
+  const fineprintControls = ['fineprintJustify', 'fineprintSizeRem']
+    .map((fieldId) => fieldById.get(fieldId))
+    .filter(Boolean);
+  const spacingFields = ['spaceBeforeRem', 'spaceAfterRem', 'paddingTopRem', 'paddingBottomRem', 'cellPaddingRem']
+    .map((fieldId) => fieldById.get(fieldId))
+    .filter(Boolean);
+  const layoutFields = ['fullBleed', 'contentMaxWidthPx', 'sectionClassName', 'anchorId']
+    .map((fieldId) => fieldById.get(fieldId))
+    .filter(Boolean);
+  const requestedCount = Number(settings.cardCount);
+  const cardCount = Number.isFinite(requestedCount)
+    ? Math.max(2, Math.min(6, Math.round(requestedCount)))
+    : 2;
+  const cardGroups = Array.from({ length: cardCount }, (_, index) => {
+    const slot = index + 1;
+    return {
+      slot,
+      fields: [`card${slot}Title`, `card${slot}Color`, `card${slot}Bullets`]
+        .map((fieldId) => fieldById.get(fieldId))
+        .filter(Boolean),
+    };
+  });
+
+  const handleCardCountChange = (nextValue) => {
+    const nextCount = Math.max(2, Math.min(6, Number(nextValue) || 2));
+    onSettingChange('cardCount', String(nextCount));
+    for (let slot = 1; slot <= nextCount; slot += 1) {
+      const titleKey = `card${slot}Title`;
+      const bulletsKey = `card${slot}Bullets`;
+      if (settings[titleKey] == null || String(settings[titleKey]).trim() === '') {
+        onSettingChange(titleKey, `Card ${slot}`);
+      }
+      if (settings[bulletsKey] == null || String(settings[bulletsKey]).trim() === '') {
+        onSettingChange(bulletsKey, 'Add a comparison point.\nAdd another comparison point.');
+      }
+    }
+  };
+
+  const cardControls = (
+    <div className="admin-card-chart-card-list">
+      {cardGroups.map((group) => (
+        <section className="admin-card-chart-card-editor" key={`card-chart-card-${group.slot}`}>
+          <h4>Card {group.slot}</h4>
+          <FieldControlGrid
+            fields={group.fields}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            routeOptions={routeOptions}
+            sourceRevision={sourceRevision}
+            className="admin-content-field-list--inline"
+          />
+        </section>
+      ))}
+    </div>
+  );
+
+  const cardControlsPage = (
+    <div className="admin-card-chart-chart-controls">
+      {countField ? (
+        <FieldControlGrid
+          fields={[countField]}
+          settings={settings}
+          onSettingChange={(fieldId, nextValue) => handleCardCountChange(nextValue)}
+          routeOptions={routeOptions}
+          sourceRevision={sourceRevision}
+          className="admin-content-field-list--inline"
+        />
+      ) : null}
+      <p className="admin-card-chart-control-help">
+        Sets the number of comparison columns. Increasing this adds another editable card and chart column. Enter one comparison point per line; press Enter to add another point.
+      </p>
+      {cardControls}
+    </div>
+  );
+
+  const spacingControls = spacingFields.length ? (
+    <div className="admin-card-chart-spacing-controls">
+      <FieldControlGrid
+        fields={spacingFields}
+        settings={settings}
+        onSettingChange={onSettingChange}
+        routeOptions={routeOptions}
+        sourceRevision={sourceRevision}
+        className="admin-content-field-list--inline"
+      />
+    </div>
+  ) : null;
+
+  const fineprintControlsMarkup = fineprintField || fineprintControls.length ? (
+    <div className="admin-card-chart-fineprint-controls">
+      <FieldControlGrid
+        fields={[fineprintField, ...fineprintControls].filter(Boolean)}
+        settings={settings}
+        onSettingChange={onSettingChange}
+        routeOptions={routeOptions}
+        sourceRevision={sourceRevision}
+        className="admin-content-field-list--inline"
+      />
+    </div>
+  ) : null;
+
+  if (hudMode) {
+    const editorSections = appendHudBlockOptionsSection([
+      { id: 'header', label: 'Header', icon: 'H' },
+      { id: 'spacing', label: 'Spacing', icon: '↕' },
+      { id: 'cards', label: 'Cards', icon: '▦' },
+      { id: 'layout', label: 'Layout', icon: '⚙' },
+    ], blockOptions);
+    const [activeSection, setActiveSection] = useState(editorSections[0]?.id || 'header');
+    return (
+      <HudEditorModelLayout
+        className="admin-card-chart-hud-editor"
+        sections={editorSections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        label="Card Chart editor sections"
+        panelClassName="admin-card-chart-hud-panels"
+      >
+        <section className="admin-card-chart-hud-page admin-card-chart-hud-page--header">
+          <FieldControlGrid
+            fields={headerFields}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            routeOptions={routeOptions}
+            sourceRevision={sourceRevision}
+            className="admin-content-field-list--inline admin-card-chart-header-fields"
+          />
+          {fineprintControlsMarkup}
+        </section>
+        <section className="admin-card-chart-hud-page admin-card-chart-hud-page--spacing">
+          {spacingControls}
+        </section>
+        <section className="admin-card-chart-hud-page admin-card-chart-hud-page--cards">
+          {cardControlsPage}
+        </section>
+        <section className="admin-card-chart-hud-page admin-card-chart-hud-page--layout">
+          <FieldControlGrid
+            fields={layoutFields}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            routeOptions={routeOptions}
+            sourceRevision={sourceRevision}
+            className="admin-content-field-list--inline"
+          />
+        </section>
+        <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+      </HudEditorModelLayout>
+    );
+  }
+
+  return (
+    <div className="admin-card-chart-editor">
+      <section className="admin-card-chart-editor-section admin-card-chart-editor-section--header">
+        <h3>Header</h3>
+        <FieldControlGrid
+          fields={headerFields}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          routeOptions={routeOptions}
+          sourceRevision={sourceRevision}
+          className="admin-content-field-list--inline admin-card-chart-header-fields"
+        />
+        {fineprintControlsMarkup}
+      </section>
+      <section className="admin-card-chart-editor-section admin-card-chart-editor-section--spacing">
+        <h3>Spacing</h3>
+        {spacingControls}
+      </section>
+      <section className="admin-card-chart-editor-section admin-card-chart-editor-section--cards">
+        <h3>Cards</h3>
+        {cardControlsPage}
+      </section>
+      <section className="admin-card-chart-editor-section admin-card-chart-editor-section--layout">
+        <h3>Layout</h3>
+        <FieldControlGrid
+          fields={layoutFields}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          routeOptions={routeOptions}
+          sourceRevision={sourceRevision}
+          className="admin-content-field-list--inline"
+        />
+      </section>
     </div>
   );
 }
@@ -1061,15 +1774,15 @@ function getCompactToneField(fieldById, fieldId, isVisible) {
 function getIntroButtonStyleSwatch(style) {
   const token = String(style || '').trim().toLowerCase();
   if (token === 'dark') {
-    return 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)';
+    return getTokenSwatch('super-grey');
   }
   if (token === 'outline') {
-    return 'linear-gradient(145deg, #ffffff 0%, #edf4f7 100%)';
+    return getTokenSwatch('white');
   }
   if (token === 'ghost') {
-    return 'linear-gradient(145deg, #ffffff 0%, #dbe4ea 100%)';
+    return getTokenSwatch('white');
   }
-  return 'linear-gradient(145deg, #00adbb 0%, #008aab 100%)';
+  return getTokenSwatch('atlantean');
 }
 
 function getIntroButtonStyleField(field) {
@@ -1147,21 +1860,55 @@ function GridResourceLinkListEditor({
   onChange,
   routeOptions = [],
   documentOptions = [],
+  showDocumentFilter = false,
   addLabel = 'Add link',
   compact = false,
+  allowReorder = false,
+  className = '',
+  linkCardClassName = '',
+  showLabel = true,
 }) {
-  const datalistId = useId();
   const rows = Array.isArray(items) ? items : [];
+  const [localRows, setLocalRows] = useState(rows);
+  const [documentFilters, setDocumentFilters] = useState({});
+
+  useEffect(() => {
+    const localSerialized = serializeGridResourceLinkItems(localRows);
+    const incomingSerialized = serializeGridResourceLinkItems(rows);
+    if (localSerialized !== incomingSerialized) {
+      setLocalRows(rows);
+    }
+  }, [items]);
+
+  const handleChange = (nextRows) => {
+    setLocalRows(nextRows);
+    onChange(nextRows);
+  };
+
+  const getDocumentOptions = (index, selectedDocumentId) => {
+    const filter = String(documentFilters[index] || '').trim().toLowerCase();
+    const filteredOptions = filter
+      ? documentOptions.filter((option) => (
+        `${option.label} ${option.value}`.toLowerCase().includes(filter)
+      ))
+      : documentOptions;
+    const selectedOption = documentOptions.find((option) => option.value === selectedDocumentId);
+    if (selectedOption && !filteredOptions.some((option) => option.value === selectedOption.value)) {
+      return [selectedOption, ...filteredOptions];
+    }
+    return filteredOptions;
+  };
 
   return (
-    <div className={`admin-grid-resource-editor${compact ? ' is-compact' : ''}`}>
+    <div className={`admin-grid-resource-editor${compact ? ' is-compact' : ''}${className ? ` ${className}` : ''}`}>
       <div className="admin-grid-resource-editor-head">
-        <strong>{label}</strong>
+        {showLabel ? <strong>{label}</strong> : <span className="admin-sr-only">{label}</span>}
         <button
           type="button"
           className="action-btn action-btn-outline"
-          onClick={() => onChange([
-            ...rows,
+          aria-label={addLabel}
+          onClick={() => handleChange([
+            ...localRows,
             { label: '', kind: 'document', documentId: '', to: '', href: '', openInNewWindow: false },
           ])}
         >
@@ -1169,100 +1916,139 @@ function GridResourceLinkListEditor({
         </button>
       </div>
 
-      {rows.length ? (
+      {localRows.length ? (
         <div className="admin-grid-resource-link-list">
-          {rows.map((item, index) => {
+          {localRows.map((item, index) => {
             const normalized = normalizeGridResourceLinkItem(item);
+            const moveItem = (direction) => {
+              const nextIndex = index + direction;
+              if (nextIndex < 0 || nextIndex >= localRows.length) return;
+              const next = [...localRows];
+              [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+              handleChange(next);
+            };
             return (
-              <div key={`${label}-resource-${index}`} className="admin-grid-resource-link-card">
+              <div key={`${label}-resource-${index}`} className={`admin-grid-resource-link-card${linkCardClassName ? ` ${linkCardClassName}` : ''}`}>
                 <div className="admin-grid-resource-link-toprow">
-                  <input
-                    type="text"
-                    value={normalized.label}
-                    placeholder="Link label"
-                    onChange={(event) => {
-                      const next = [...rows];
-                      next[index] = { ...normalized, label: event.target.value };
-                      onChange(next);
-                    }}
-                  />
-                  <select
-                    value={normalized.kind}
-                    onChange={(event) => {
-                      const nextKind = event.target.value;
-                      const next = [...rows];
-                      next[index] = {
-                        label: normalized.label,
-                        kind: nextKind,
-                        documentId: '',
-                        to: '',
-                        href: '',
-                        openInNewWindow: false,
-                      };
-                      onChange(next);
-                    }}
-                  >
-                    {GRID_RESOURCE_LINK_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
+                  <label className="admin-grid-resource-field">
+                    <span>Link label</span>
+                    <input
+                      type="text"
+                      value={normalized.label}
+                      placeholder="Example: Read the article"
+                      onChange={(event) => {
+                        const next = [...localRows];
+                        next[index] = { ...normalized, label: event.target.value };
+                        handleChange(next);
+                      }}
+                    />
+                  </label>
+                  <label className="admin-grid-resource-field">
+                    <span>Link type</span>
+                    <select
+                      aria-label="Link type"
+                      value={normalized.kind}
+                      onChange={(event) => {
+                        const nextKind = event.target.value;
+                        const next = [...localRows];
+                        next[index] = {
+                          label: normalized.label,
+                          kind: nextKind,
+                          documentId: '',
+                          to: '',
+                          href: '',
+                          openInNewWindow: false,
+                        };
+                        handleChange(next);
+                      }}
+                    >
+                      {GRID_RESOURCE_LINK_TYPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  {allowReorder ? (
+                    <>
+                      <button type="button" className="action-btn action-btn-outline" onClick={() => moveItem(-1)} disabled={index === 0}>Up</button>
+                      <button type="button" className="action-btn action-btn-outline" onClick={() => moveItem(1)} disabled={index === rows.length - 1}>Down</button>
+                    </>
+                  ) : null}
                   <button
                     type="button"
                     className="admin-highlight-remove-btn"
-                    onClick={() => onChange(rows.filter((_, itemIndex) => itemIndex !== index))}
+                    onClick={() => handleChange(localRows.filter((_, itemIndex) => itemIndex !== index))}
                   >
                     Remove
                   </button>
                 </div>
 
                 {normalized.kind === 'document' ? (
-                  <select
-                    value={normalized.documentId}
-                    onChange={(event) => {
-                      const next = [...rows];
-                      next[index] = { ...normalized, documentId: event.target.value };
-                      onChange(next);
-                    }}
-                  >
-                    <option value="">Select document</option>
-                    {documentOptions.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
+                  <div className="admin-grid-resource-document-fields">
+                    <label className="admin-grid-resource-field admin-grid-resource-destination-field">
+                      <span>PDF / document</span>
+                      <select
+                        value={normalized.documentId}
+                        onChange={(event) => {
+                          const next = [...localRows];
+                          next[index] = { ...normalized, documentId: event.target.value };
+                          handleChange(next);
+                        }}
+                      >
+                        <option value="">Select document</option>
+                        {getDocumentOptions(index, normalized.documentId).map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    {showDocumentFilter ? (
+                      <label className="admin-grid-resource-field admin-grid-resource-document-filter-field">
+                        <span>Filter documents</span>
+                        <input
+                          type="search"
+                          aria-label={`Filter documents for link ${index + 1}`}
+                          value={documentFilters[index] || ''}
+                          placeholder="Search title, topic, or ID"
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+                            setDocumentFilters((current) => ({ ...current, [index]: nextValue }));
+                          }}
+                        />
+                      </label>
+                    ) : null}
+                  </div>
                 ) : null}
 
                 {normalized.kind === 'internal' ? (
-                  <>
-                    <input
-                      list={datalistId}
-                      type="text"
+                  <div className="admin-grid-resource-destination-field">
+                    <SharedRouteLinkField
+                      inputLabel="URL/path override"
                       value={normalized.to}
-                      placeholder="/page-path"
-                      onChange={(event) => {
-                        const next = [...rows];
-                        next[index] = { ...normalized, to: event.target.value };
-                        onChange(next);
+                      openInNewWindowValue={normalized.openInNewWindow}
+                      showOpenInNewWindow={false}
+                      onRouteLinkChange={(nextValue) => {
+                        const next = [...localRows];
+                        next[index] = { ...normalized, to: nextValue };
+                        handleChange(next);
                       }}
+                      routeOptions={routeOptions}
                     />
-                    <datalist id={datalistId}>
-                      {routeOptions.map((option) => (
-                        <option key={`route-${option.path}`} value={option.path}>{option.title}</option>
-                      ))}
-                    </datalist>
-                  </>
+                  </div>
                 ) : null}
 
                 {normalized.kind === 'external' ? (
-                  <input
-                    type="text"
-                    value={normalized.href}
-                    placeholder="https://..."
-                    onChange={(event) => {
-                      const next = [...rows];
-                      next[index] = { ...normalized, href: event.target.value };
-                      onChange(next);
-                    }}
-                  />
+                  <label className="admin-grid-resource-field admin-grid-resource-destination-field">
+                    <span>External URL</span>
+                    <input
+                      type="text"
+                      value={normalized.href}
+                      placeholder="https://..."
+                      onChange={(event) => {
+                        const next = [...localRows];
+                        next[index] = { ...normalized, href: event.target.value };
+                        handleChange(next);
+                      }}
+                    />
+                  </label>
                 ) : null}
 
                 {normalized.kind !== 'internal' ? (
@@ -1271,9 +2057,9 @@ function GridResourceLinkListEditor({
                       type="checkbox"
                       checked={Boolean(normalized.openInNewWindow)}
                       onChange={(event) => {
-                        const next = [...rows];
+                        const next = [...localRows];
                         next[index] = { ...normalized, openInNewWindow: event.target.checked };
-                        onChange(next);
+                        handleChange(next);
                       }}
                     />
                     <span>Open in new window</span>
@@ -1295,11 +2081,12 @@ function GridResourceAccordionEditor({
   onChange,
   routeOptions = [],
   documentOptions = [],
+  showDocumentFilter = false,
 }) {
   const accordions = Array.isArray(value) ? value : [];
 
   return (
-    <div className="admin-grid-resource-editor">
+    <div className="admin-grid-resource-editor admin-card-grid-accordion-editor">
       <div className="admin-grid-resource-editor-head">
         <strong>Accordion groups</strong>
         <button
@@ -1345,14 +2132,125 @@ function GridResourceAccordionEditor({
                 }}
                 routeOptions={routeOptions}
                 documentOptions={documentOptions}
+                showDocumentFilter={showDocumentFilter}
                 addLabel="Add accordion link"
                 compact
+                showLabel={false}
+                className="admin-card-grid-links-editor admin-card-grid-accordion-links-editor"
               />
             </div>
           ))}
         </div>
       ) : (
         <p className="admin-grid-resource-empty">No accordion groups added.</p>
+      )}
+    </div>
+  );
+}
+
+function SupportLibraryGroupsEditor({ value, onChange, routeOptions = [] }) {
+  const documentsContext = useContext(DocumentsContext);
+  const documents = Array.isArray(documentsContext?.documents) ? documentsContext.documents : [];
+  const groups = parseSupportLibraryGroups(value);
+  const documentOptions = useMemo(() => (
+    documents
+      .filter((document) => document?.active !== false && String(document?.id || '').trim())
+      .map((document) => ({
+        value: String(document.id).trim(),
+        label: [String(document.title || '').trim(), String(document.topic || '').trim()]
+          .filter(Boolean)
+          .join(' - ') || String(document.id).trim(),
+      }))
+  ), [documents]);
+  const unresolvedIds = getSupportLibraryUnresolvedDocumentIds(groups, documents);
+
+  const updateGroups = (nextGroups) => onChange(serializeSupportLibraryGroups(nextGroups));
+  const updateGroup = (index, patch) => {
+    const next = [...groups];
+    next[index] = { ...next[index], ...patch };
+    updateGroups(next);
+  };
+  const moveGroup = (index, direction) => {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= groups.length) return;
+    const next = [...groups];
+    [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+    updateGroups(next);
+  };
+
+  return (
+    <div className="admin-support-library-editor">
+      <div className="admin-grid-resource-editor-head">
+        <button
+          type="button"
+          className="action-btn action-btn-outline"
+          onClick={() => updateGroups([...groups, { title: 'New group', links: [], items: [] }])}
+        >
+          Add group
+        </button>
+      </div>
+      {unresolvedIds.length ? (
+        <p className="admin-support-library-warning" role="status">
+          {unresolvedIds.length} document{unresolvedIds.length === 1 ? '' : 's'} are not in the document library yet. Public links remain unchanged until the document is restored.
+        </p>
+      ) : null}
+      {groups.length ? (
+        <div className="admin-grid-accordion-list admin-support-library-group-list">
+          {groups.map((group, groupIndex) => (
+            <div key={`support-group-${groupIndex}`} className="admin-grid-accordion-card admin-support-library-group">
+              <div className="admin-grid-resource-link-toprow">
+                <input
+                  type="text"
+                  value={group.title || ''}
+                  aria-label={`Support group ${groupIndex + 1} title`}
+                  placeholder="Group title"
+                  onChange={(event) => updateGroup(groupIndex, { title: event.target.value })}
+                />
+                <button type="button" className="action-btn action-btn-outline" onClick={() => moveGroup(groupIndex, -1)} disabled={groupIndex === 0}>Up</button>
+                <button type="button" className="action-btn action-btn-outline" onClick={() => moveGroup(groupIndex, 1)} disabled={groupIndex === groups.length - 1}>Down</button>
+                <button
+                  type="button"
+                  className="admin-highlight-remove-btn"
+                  onClick={() => updateGroups(groups.filter((_, index) => index !== groupIndex))}
+                >
+                  Remove
+                </button>
+              </div>
+              <textarea
+                rows={2}
+                value={group.description || ''}
+                aria-label={`${group.title || `Support group ${groupIndex + 1}`} description`}
+                placeholder="Optional group description"
+                onChange={(event) => updateGroup(groupIndex, { description: event.target.value })}
+              />
+              <GridResourceLinkListEditor
+                label="Group links"
+                items={group.links}
+                routeOptions={routeOptions}
+                documentOptions={documentOptions}
+                addLabel="Add link"
+                allowReorder
+                className="admin-support-library-links"
+                linkCardClassName="admin-support-library-link"
+                showLabel={false}
+                onChange={(nextLinks) => updateGroup(groupIndex, {
+                  links: nextLinks.map((link) => ({
+                    label: link.label,
+                    ...(link.documentId ? { documentId: link.documentId } : {}),
+                    ...(link.to ? { to: link.to } : {}),
+                    ...(link.href ? { href: link.href } : {}),
+                    ...(link.openInNewWindow ? { openInNewWindow: true } : {}),
+                  })),
+                })}
+              />
+              {Array.isArray(group.items) && group.items.length ? (
+                <p className="admin-support-library-help">This group contains {group.items.length} existing FAQ item{group.items.length === 1 ? '' : 's'}. FAQ editing will be added without changing these links.</p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="admin-grid-resource-empty">No support groups added.</p>
       )}
     </div>
   );
@@ -1396,13 +2294,46 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
     );
   }
 
+  if (field.type === 'range') {
+    const min = Number.isFinite(Number(field.min)) ? Number(field.min) : 0;
+    const max = Number.isFinite(Number(field.max)) ? Number(field.max) : 100;
+    const step = Number.isFinite(Number(field.step)) ? Number(field.step) : 1;
+    const numericValue = Number(value);
+    const activeValue = Number.isFinite(numericValue)
+      ? Math.max(min, Math.min(max, numericValue))
+      : min;
+    return (
+      <div className="admin-range-number-control">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={activeValue}
+          onChange={(event) => onChange(Number(event.target.value))}
+          aria-label={field.label || 'Range'}
+        />
+        <AdminNumberInput
+          value={activeValue}
+          min={min}
+          max={max}
+          step={step}
+          onChange={onChange}
+          aria-label={`${field.label || 'Range'} value`}
+        />
+        <span>{field.suffix === '' ? '' : (field.suffix || 'rem')}</span>
+      </div>
+    );
+  }
+
   if (field.type === 'select') {
     const options = Array.isArray(field.options) ? field.options : [];
-    if (field.id === 'justify') {
+    const isFineprintJustify = /(?:FineprintJustify|fineprintJustify)$/.test(String(field.id || ''));
+    if (field.id === 'justify' || isFineprintJustify) {
       return (
         <JustifyPillControl
           label={field.label}
-          value={value ?? 'center'}
+          value={value ?? (field.id === 'fineprintJustify' ? 'center' : (isFineprintJustify ? 'left' : 'center'))}
           options={options}
           onChange={onChange}
         />
@@ -1537,6 +2468,16 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
     );
   }
 
+  if (field.type === 'support_library_groups') {
+    return (
+      <SupportLibraryGroupsEditor
+        value={value}
+        onChange={onChange}
+        routeOptions={routeOptions}
+      />
+    );
+  }
+
   if (field.type === 'route_link') {
     const routeRefFieldId = String(field.routeRefFieldId || '').trim();
     const resolvedValue = resolveCanonicalRouteLinkEditableHref(settings, field);
@@ -1571,7 +2512,7 @@ function renderFieldControl(field, value, onChange, settings, onSettingChange, r
   return <input type="text" value={value ?? ''} onChange={(event) => onChange(event.target.value)} />;
 }
 
-export function FieldControlGrid({ fields, settings, onSettingChange, className = '', routeOptions = [], paletteVariant = 'admin', sourceRevision = 0 }) {
+export function FieldControlGrid({ fields, settings, onSettingChange, className = '', hideLabels = false, routeOptions = [], paletteVariant = 'admin', sourceRevision = 0 }) {
   const items = Array.isArray(fields) ? fields.filter(Boolean) : [];
   if (!items.length) {
     return null;
@@ -1583,6 +2524,7 @@ export function FieldControlGrid({ fields, settings, onSettingChange, className 
       settings={settings}
       onSettingChange={onSettingChange}
       className={className}
+      hideLabels={hideLabels}
       routeOptions={routeOptions}
       paletteVariant={paletteVariant}
       draftFieldIds={items
@@ -1629,7 +2571,14 @@ function PanelAppearanceControls({
 function toEditorHtml(value, fallbackText = '') {
   const source = String(value || '').trim();
   if (source) {
-    return source;
+    if (/<[a-z][^>]*>/i.test(source)) {
+      return source;
+    }
+    const escaped = source
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
+    return `<p>${escaped}</p>`;
   }
   const text = String(fallbackText || '').trim();
   if (!text) {
@@ -2519,6 +3468,10 @@ export function RequestFormBlockEditor({
   const textToneField = fieldById.get('textTone') || null;
   const requestBgTone = normalizePanelBgTone(settings.bgTone);
   const requestTextTone = normalizePanelTextTone(settings.textTone, 'dark');
+  const requestHeadingPreviewWrapClassName = [
+    `is-bg-${requestBgTone}`,
+    requestBgTone === 'white' && requestTextTone === 'white' ? 'is-editor-contrast' : '',
+  ].filter(Boolean).join(' ');
   const spacingFields = ['spaceBeforeRem', 'spaceAfterRem']
     .map((id) => fieldById.get(id))
     .filter(Boolean);
@@ -2592,7 +3545,7 @@ export function RequestFormBlockEditor({
         unifiedPreviewEditor
         previewTagName="h2"
         previewClassName={getPanelTextTonePreviewClassName(requestTextTone, 'dark')}
-        previewWrapClassName={`is-bg-${requestBgTone}`}
+        previewWrapClassName={requestHeadingPreviewWrapClassName}
         spanDetailsUnderToggle
         useResetForClear
         swatchOptions={requestTitleColorOptions}
@@ -2828,8 +3781,9 @@ function ColorTextSelectionEditor({
 }) {
   const inputRef = useRef(null);
   const commitTimerRef = useRef(null);
+  const selectionRef = useRef({ start: 0, end: 0 });
+  const isInputFocusedRef = useRef(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const [showSpanDetails, setShowSpanDetails] = useState(false);
   const externalText = String(text ?? '');
   const externalHighlightsJson = String(highlightsJson ?? '');
@@ -2897,7 +3851,8 @@ function ColorTextSelectionEditor({
   };
 
   const syncSelection = () => {
-    const nextSelection = readTextSelectionState(inputRef.current, selection, value);
+    const nextSelection = readTextSelectionState(inputRef.current, selectionRef.current, value);
+    selectionRef.current = nextSelection;
     setSelection({ start: nextSelection.start, end: nextSelection.end });
   };
 
@@ -2906,16 +3861,29 @@ function ColorTextSelectionEditor({
     const nextHighlightsJson = remapHighlightsJsonForTextChange(activeHighlightsJson, prevText, nextText);
     syncLocalDraft(nextText, nextHighlightsJson);
     scheduleDraftCommit(nextText, nextHighlightsJson);
-    setSelection((prev) => ({
-      start: Math.max(0, Math.min(nextText.length, prev.start)),
-      end: Math.max(0, Math.min(nextText.length, prev.end)),
-    }));
+    setSelection((prev) => {
+      const nextSelection = {
+        start: Math.max(0, Math.min(nextText.length, prev.start)),
+        end: Math.max(0, Math.min(nextText.length, prev.end)),
+      };
+      selectionRef.current = nextSelection;
+      return nextSelection;
+    });
   };
 
   const applySwatch = (colorValue) => {
     const el = inputRef.current;
-    if (!isInputFocused) {
-      onLineClassNameChange(replaceHeroLineColorClass(normalizedLineClass, colorValue));
+    const inputIsFocused = isInputFocusedRef.current;
+    if (!inputIsFocused) {
+      const result = applyTextColorSelection({
+        text: value,
+        lineClassName: normalizedLineClass,
+        highlightsJson: activeHighlightsJson,
+        selection: { start: 0, end: 0 },
+        colorValue,
+      });
+      onLineClassNameChange(result.lineClassName);
+      selectionRef.current = { start: 0, end: 0 };
       setSelection({ start: 0, end: 0 });
       return;
     }
@@ -2923,26 +3891,27 @@ function ColorTextSelectionEditor({
     if (el && document.activeElement !== el) {
       el.focus();
     }
-    const currentSelection = (() => {
-      const nextSelection = readTextSelectionState(el, selection, value);
-      return { start: nextSelection.start, end: nextSelection.end };
-    })();
+    const currentSelection = readColorSelection(el, selectionRef.current, value);
+    const result = applyTextColorSelection({
+      text: value,
+      lineClassName: normalizedLineClass,
+      highlightsJson: activeHighlightsJson,
+      selection: currentSelection,
+      colorValue,
+    });
 
-    if (currentSelection.end > currentSelection.start) {
-      const nextHighlightsJson = applySelectionColor(
-        activeHighlightsJson,
-        value,
-        currentSelection.start,
-        currentSelection.end,
-        colorValue,
-      );
+    if (result.target === 'selection') {
+      const nextHighlightsJson = result.highlightsJson;
       syncLocalDraft(value, nextHighlightsJson);
       commitDraft(value, nextHighlightsJson);
-      setSelection(currentSelection);
+      selectionRef.current = result.selection;
+      setSelection(result.selection);
       return;
     }
 
-    onLineClassNameChange(replaceHeroLineColorClass(normalizedLineClass, colorValue));
+    selectionRef.current = { start: 0, end: 0 };
+    setSelection({ start: 0, end: 0 });
+    onLineClassNameChange(result.lineClassName);
   };
 
   const removeHighlightAtIndex = (index) => {
@@ -2979,16 +3948,17 @@ function ColorTextSelectionEditor({
     <textarea
       ref={inputRef}
       rows={rows}
-      className="admin-color-text-input"
-      value={value}
-      placeholder={placeholder}
-      onFocus={() => {
-        setIsInputFocused(true);
+        className="admin-color-text-input"
+        value={value}
+        placeholder={placeholder}
+        onFocus={() => {
+        isInputFocusedRef.current = true;
         syncSelection();
       }}
       onBlur={() => {
         commitDraft(value, activeHighlightsJson);
-        setIsInputFocused(false);
+        isInputFocusedRef.current = false;
+        selectionRef.current = { start: 0, end: 0 };
         setSelection({ start: 0, end: 0 });
       }}
       onClick={syncSelection}
@@ -3043,12 +4013,13 @@ function ColorTextSelectionEditor({
         value={value}
         placeholder={placeholder}
         onFocus={() => {
-          setIsInputFocused(true);
+          isInputFocusedRef.current = true;
           syncSelection();
         }}
         onBlur={() => {
           commitDraft(value, activeHighlightsJson);
-          setIsInputFocused(false);
+          isInputFocusedRef.current = false;
+          selectionRef.current = { start: 0, end: 0 };
           setSelection({ start: 0, end: 0 });
         }}
         onClick={syncSelection}
@@ -3338,23 +4309,32 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
         if (!line) {
           return;
         }
-        onSettingChange(lineKey + 'ClassName', replaceHeroLineColorClass(line.className, colorValue));
+        const result = applyTextColorSelection({
+          text: line.text,
+          lineClassName: line.className,
+          highlightsJson: resolveCurrentLineHighlightsJson(lineKey, line.text),
+          selection: { start: 0, end: 0 },
+          colorValue,
+        });
+        onSettingChange(lineKey + 'ClassName', result.lineClassName);
       }}
       onApplySelectionColor={(lineKey, colorValue, selection) => {
         const line = lineByKey[lineKey] || lineByKey.line1;
-        const start = Number(selection?.start);
-        const end = Number(selection?.end);
-        if (!line || !Number.isInteger(start) || !Number.isInteger(end) || end <= start) {
+        if (!line) {
+          return;
+        }
+        const result = applyTextColorSelection({
+          text: line.text,
+          lineClassName: line.className,
+          highlightsJson: resolveCurrentLineHighlightsJson(lineKey, line.text),
+          selection,
+          colorValue,
+        });
+        if (result.target !== 'selection') {
           return;
         }
         onSettingChange(lineKey + 'Text', line.text);
-        onSettingChange(lineKey + 'HighlightsJson', applySelectionColor(
-          resolveCurrentLineHighlightsJson(lineKey, line.text),
-          line.text,
-          start,
-          end,
-          colorValue,
-        ));
+        onSettingChange(lineKey + 'HighlightsJson', result.highlightsJson);
       }}
       onRemoveSpan={(lineKey, index) => {
         const line = lineByKey[lineKey] || lineByKey.line1;
@@ -3864,20 +4844,31 @@ function IntroHudBlockEditor({ block, onSettingChange, routeOptions = [], blockO
       headingSelection={introHeadingSelection}
       headingHighlightsJson={String(settings.headingHighlightsJson || '')}
       headingColor={extractHeroLineColorToken(settings.headingClassName)}
-      onHeadingColorChange={(nextValue) => onSettingChange(
-        'headingClassName',
-        replaceHeroLineColorClass(String(settings.headingClassName || ''), nextValue),
-      )}
+      onHeadingColorChange={(nextValue) => {
+        const result = applyTextColorSelection({
+          text: String(settings.heading || ''),
+          lineClassName: String(settings.headingClassName || ''),
+          highlightsJson: settings.headingHighlightsJson,
+          selection: { start: 0, end: 0 },
+          colorValue: nextValue,
+        });
+        onSettingChange('headingClassName', result.lineClassName);
+      }}
       onHeadingSelectionColorChange={(nextValue, selectedHeading = introHeadingSelection) => {
         const sourceText = String(settings.heading || '');
-        const safeStart = Math.max(0, Math.min(Number(selectedHeading.start) || 0, sourceText.length));
-        const safeEnd = Math.max(safeStart, Math.min(Number(selectedHeading.end) || 0, sourceText.length));
-        if (safeEnd <= safeStart) {
+        const result = applyTextColorSelection({
+          text: sourceText,
+          lineClassName: String(settings.headingClassName || ''),
+          highlightsJson: settings.headingHighlightsJson,
+          selection: selectedHeading,
+          colorValue: nextValue,
+        });
+        if (result.target !== 'selection') {
           return;
         }
         onSettingChange(
           'headingHighlightsJson',
-          applySelectionColor(settings.headingHighlightsJson, sourceText, safeStart, safeEnd, nextValue),
+          result.highlightsJson,
         );
       }}
       onRemoveHeadingSpan={(index) => {
@@ -4060,24 +5051,29 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       titleColor={extractHeroLineColorToken(String(effectiveBillboardSettings.titleClassName || '').trim())}
       onTitleColorChange={(nextValue) => onSettingChange(
         'titleClassName',
-        replaceHeroLineColorClass(String(effectiveBillboardSettings.titleClassName || '').trim(), nextValue),
+        applyTextColorSelection({
+          text: String(draftValues.title || ''),
+          lineClassName: String(effectiveBillboardSettings.titleClassName || '').trim(),
+          highlightsJson: effectiveBillboardSettings.titleHighlightsJson,
+          selection: { start: 0, end: 0 },
+          colorValue: nextValue,
+        }).lineClassName,
       )}
-      onTitleSelectionColorChange={(nextValue) => {
+      onTitleSelectionColorChange={(nextValue, selectedTitle = billboardTitleSelection) => {
         const currentTitle = String(draftValues.title || '');
-        const safeStart = Math.max(0, Math.min(Number(billboardTitleSelection.start) || 0, currentTitle.length));
-        const safeEnd = Math.max(safeStart, Math.min(Number(billboardTitleSelection.end) || 0, currentTitle.length));
-        if (safeEnd <= safeStart) {
+        const result = applyTextColorSelection({
+          text: currentTitle,
+          lineClassName: String(effectiveBillboardSettings.titleClassName || '').trim(),
+          highlightsJson: effectiveBillboardSettings.titleHighlightsJson,
+          selection: selectedTitle,
+          colorValue: nextValue,
+        });
+        if (result.target !== 'selection') {
           return;
         }
         onSettingChange(
           'titleHighlightsJson',
-          applySelectionColor(
-            effectiveBillboardSettings.titleHighlightsJson,
-            currentTitle,
-            safeStart,
-            safeEnd,
-            nextValue,
-          ),
+          result.highlightsJson,
         );
       }}
       titleColorOptions={HERO_SWATCH_OPTIONS}
@@ -4494,6 +5490,7 @@ function DraftBackedFieldControlGrid({
   settings,
   onSettingChange,
   className = '',
+  hideLabels = false,
   routeOptions = [],
   draftFieldIds = [],
   paletteVariant = 'admin',
@@ -4555,7 +5552,7 @@ function DraftBackedFieldControlGrid({
             className={field.layout === 'half' ? 'is-half' : undefined}
             data-editor-field-id={field.id}
           >
-            <span>{field.label}</span>
+            <span className={hideLabels ? 'admin-sr-only' : undefined}>{field.label}</span>
             {isDrafted ? (
               field.type === 'route_link' ? (
                 <SharedRouteLinkField
@@ -4597,9 +5594,14 @@ function DraftBackedFieldControlGrid({
               )
             ) : renderFieldControl(
               field,
-              field.id === 'cardBulletSize' && settings?.[field.id] == null
-                ? 'daf'
-                : settings?.[field.id],
+              field.id === 'cardBulletSizeRem' && settings?.[field.id] == null
+                ? (Number.isFinite(Number(settings?.cardBulletSize))
+                  ? Number(settings.cardBulletSize)
+                  : DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM)
+                : field.id === 'cardBulletLineHeight'
+                  && (!Number.isFinite(Number(settings?.[field.id])) || Number(settings[field.id]) < 1.1)
+                  ? DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT
+                  : (settings?.[field.id] ?? field.defaultValue),
               (nextValue) => {
                 onSettingChange(field.id, nextValue);
               },
@@ -4620,6 +5622,7 @@ function SiteFeatureDraftField({
   value,
   onChange,
   onBlur,
+  hideLabel = false,
   routeRefValue = '',
   openInNewWindowValue = false,
   showOpenInNewWindow = true,
@@ -4674,7 +5677,7 @@ function SiteFeatureDraftField({
 
   return (
     <label className={`admin-site-feature-field${fullWidth ? ' admin-site-feature-field--full' : ''}`}>
-      <span>{field.label}</span>
+      <span className={hideLabel ? 'admin-sr-only' : undefined}>{field.label}</span>
       {control}
     </label>
   );
@@ -4822,9 +5825,36 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const featureEntry = resolveSiteFeatureCatalogEntry(settings.featureId);
   const allowedFieldIds = new Set(getAllowedSiteFeatureEditableFieldIds(settings.featureId));
+  const featureRuntime = typeof featureEntry?.buildRuntime === 'function'
+    ? featureEntry.buildRuntime({ settings }) || {}
+    : {};
+  const collectionModel = getSiteFeatureCollectionModel(settings.featureId);
+  const collectionFieldId = collectionModel?.fieldId || '';
+  const collectionFallbackItems = collectionModel
+    ? featureRuntime.panels || featureRuntime.metrics || featureRuntime.cards || featureRuntime.beats || []
+    : [];
+  const featureIntroDefaults = (() => {
+    if (settings.featureId !== 'impact_proof_story') {
+      return {};
+    }
+    try {
+      const parsed = typeof settings.featureIntroJson === 'string'
+        ? JSON.parse(settings.featureIntroJson)
+        : settings.featureIntroJson;
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  })();
   const featureIdField = fieldById.get('featureId');
   const headlineField = fieldById.get('headline');
   const bodyField = fieldById.get('body');
+  const collectionField = fieldById.get(collectionFieldId);
+  const introFields = [
+    fieldById.get('introHeading'),
+    fieldById.get('introBody'),
+    fieldById.get('introEmphasis'),
+  ].filter(Boolean);
   const buttonLabelField = fieldById.get('buttonLabel');
   const buttonUrlField = getPromotedRouteLinkField(fieldById, 'buttonUrl', 'buttonPageRef');
   const allowsActionOverrides = SITE_FEATURE_ACTION_FIELD_IDS.some((fieldId) => allowedFieldIds.has(fieldId));
@@ -4973,12 +6003,8 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
   }, [dirtyFieldIds, draftValues]);
 
   return (
-    <div className="admin-cta-field-slots">
-      <section className="admin-cta-field-slot-card">
-        <h4>Code-managed feature</h4>
-        <p>{featureEntry?.description || 'Layout and animation are locked in code. This block only exposes a feature id plus optional copy and CTA overrides.'}</p>
-      </section>
-      <section className="admin-cta-field-slot-card">
+    <div className="admin-cta-field-slots admin-site-feature-editor">
+      <section className="admin-cta-field-slot-card admin-site-feature-editor-page admin-site-feature-editor-page--feature">
         <h4>{featureEntry?.label ? `${featureEntry.label} overrides` : 'Feature overrides'}</h4>
         {featureIdField && allowedFieldIds.has('featureId') ? (
           <FieldControlGrid
@@ -4986,6 +6012,7 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
             settings={settings}
             onSettingChange={onSettingChange}
             className="admin-content-field-list--inline"
+            hideLabels
             routeOptions={routeOptions}
           />
         ) : null}
@@ -5010,8 +6037,38 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
           ) : null}
         </div>
       </section>
+      {collectionField && allowedFieldIds.has(collectionFieldId) ? (
+        <SiteFeatureCollectionEditor
+          featureId={settings.featureId}
+          value={draftValues[collectionFieldId] ?? ''}
+          fallbackItems={collectionFallbackItems}
+          onChange={(nextValue) => updateDraftField(collectionFieldId, nextValue)}
+          className="admin-site-feature-editor-page admin-site-feature-editor-page--panels"
+        />
+      ) : null}
+      {settings.featureId === 'impact_proof_story' && introFields.length ? (
+        <section className="admin-cta-field-slot-card admin-site-feature-editor-page admin-site-feature-editor-page--feature">
+          <h4>Impact story introduction</h4>
+          <div className="admin-site-feature-field-stack">
+            {introFields.map((field) => (
+              <SiteFeatureDraftField
+                key={field.id}
+                field={field}
+                value={draftValues[field.id] ?? featureIntroDefaults[{
+                  introHeading: 'heading',
+                  introBody: 'body',
+                  introEmphasis: 'emphasis',
+                }[field.id]] ?? ''}
+                onChange={(nextValue) => updateDraftField(field.id, nextValue)}
+                onBlur={() => commitDraftOnBlur(field.id)}
+                fullWidth
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
       {allowsActionOverrides ? (
-        <section className="admin-cta-field-slot-card">
+        <section className="admin-cta-field-slot-card admin-site-feature-editor-page admin-site-feature-editor-page--action">
           <h4>Optional CTA override</h4>
           <div className="admin-site-feature-field-stack">
             {buttonLabelField && allowedFieldIds.has('buttonLabel') ? (
@@ -5020,6 +6077,7 @@ export function SiteFeatureBlockEditor({ block, onSettingChange, routeOptions = 
                 value={draftValues.buttonLabel}
                 onChange={(nextValue) => updateDraftField('buttonLabel', nextValue)}
                 onBlur={() => commitDraftOnBlur('buttonLabel')}
+                hideLabel
                 fullWidth
               />
             ) : null}
@@ -5382,7 +6440,14 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     .includes('legacy-child-native-cga-assets');
   const isPlannedGivingBulletGrid = isCgaAssetsGrid
     || String(settings.sectionClassName || '').split(/\s+/).includes('legacy-child-native-assets')
+    || String(settings.sectionClassName || '').split(/\s+/).includes('legacy-giving-types')
+    || String(settings.sectionClassName || '').split(/\s+/).includes('legacy-child-native-trusts-differences')
     || normalizeGridCardStyleToken(settings.cardStyle) === 'planned-giving-centered';
+  const hasCardBulletContent = Array.from({ length: 8 }, (_, index) => index + 1).some((slot) => (
+    parseGridBulletList(settings[`card${slot}ListJson`]).some(Boolean)
+    || /<li\b/i.test(String(settings[`card${slot}Body`] || settings[`card${slot}BodyHtml`] || ''))
+  ));
+  const showBulletTypography = isPlannedGivingBulletGrid || hasCardBulletContent;
   const presetDefinition = resolveBlockPresetDefinition(block);
   const presetEditor = presetDefinition?.editor || {};
   const presetCardFeatures = presetEditor?.cardFeatures || {};
@@ -5423,20 +6488,35 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
       options: compatibleOptions.length ? compatibleOptions : (Array.isArray(cardStyleFieldBase.options) ? cardStyleFieldBase.options : []),
     };
   }, [cardStyleFieldBase, gridBgTone]);
+  const hasExplicitCardCount = Number.isFinite(Number(settings.cardCount))
+    && Number(settings.cardCount) >= 1;
+  const inferredCardCount = Array.from({ length: 8 }, (_, index) => index + 1)
+    .filter((slot) => hasGridCardSettings(settings, slot))
+    .pop() || 1;
+  const layoutSettings = hasExplicitCardCount
+    ? settings
+    : { ...settings, cardCount: String(inferredCardCount) };
   const allowedLayoutFieldIds = new Set(
     Array.isArray(presetEditor.layoutFieldIds) && presetEditor.layoutFieldIds.length
       ? presetEditor.layoutFieldIds
       : ['contentWidth', 'columns', 'cardStyle'],
   );
+  if (fieldById.has('cardCount')) {
+    allowedLayoutFieldIds.add('cardCount');
+  }
   const showTypographyFields = presetEditor.typographyFields !== false;
   const presetMaxCards = Number.isInteger(presetEditor.maxCards)
     ? Math.max(1, Math.min(8, presetEditor.maxCards))
     : 8;
-  const appearanceFields = [titleToneField, bodyToneField]
+  const appearanceFields = [titleToneField, bodyToneField, bgToneField]
     .filter(Boolean)
     .map((field) => ({
       ...field,
-      label: field.id === 'titleTone' ? 'Card title color' : field.label,
+      label: field.id === 'titleTone'
+        ? 'Card title color'
+        : field.id === 'bodyTone'
+          ? 'Body color'
+          : 'Grid background',
       compact: true,
       iconOnly: true,
       swatchClassName: 'admin-button-tone-swatch-list',
@@ -5445,6 +6525,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     fieldById.get('contentWidth'),
     fieldById.get('columns'),
     cardStyleField,
+    fieldById.get('cardCount'),
   ].filter((field) => field && allowedLayoutFieldIds.has(field.id));
   const cardTypographyFields = [
     fieldById.get('cardPaddingRem'),
@@ -5455,9 +6536,20 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
           label: isPlannedGivingBulletGrid ? 'Card copy size (rem)' : fieldById.get('cardBodySizeRem').label,
         }
       : null,
-    isPlannedGivingBulletGrid ? fieldById.get('cardBulletSize') : null,
     fieldById.get('cardBodyLineHeight'),
   ].filter(Boolean);
+  const bulletTypographyFields = [
+    fieldById.get('cardBulletSizeRem'),
+    fieldById.get('cardBulletLineHeight'),
+  ].filter(Boolean);
+  const allCardTypographyFields = [
+    ...cardTypographyFields,
+    ...(showBulletTypography ? bulletTypographyFields : []),
+  ].map((field) => ({
+    ...field,
+    type: 'range',
+    suffix: ['cardBodyLineHeight', 'cardBulletLineHeight'].includes(field.id) ? '' : field.suffix,
+  }));
   const normalizedRouteOptions = useMemo(
     () => (Array.isArray(routeOptions) ? routeOptions.map(normalizeRouteOption).filter(Boolean) : []),
     [routeOptions],
@@ -5562,9 +6654,10 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
             linkCount ? `${linkCount} direct links` : '',
             accordionCount ? `${accordionCount} accordion groups` : '',
           ]),
-            isExisting: Boolean(title || body || fineprint || bulletList.some(Boolean) || hasAction || hasSecondaryAction || linkCount || accordionCount),
+            isExisting: hasGridCardSettings(settings, slot),
           fields: [
             fieldById.get(`card${slot}Title`),
+            fieldById.get(`card${slot}TitleClassName`),
             ...(showPrimaryActionFields
               ? [
                 fieldById.get(`card${slot}ButtonLabel`),
@@ -5582,12 +6675,15 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
           showAccordions,
         };
       })
-      .filter((item) => item.fields.length)
   ), [fieldById, settings]);
+  const requestedCardCount = hasExplicitCardCount
+    ? Math.max(1, Math.min(8, Math.round(Number(settings.cardCount))))
+    : null;
   const availableCardSlots = cardSlots
-    .filter((item) => item.slot <= presetMaxCards || item.isExisting)
+    .filter((item) => item.slot <= Math.max(presetMaxCards, requestedCardCount || 0) || item.isExisting)
     .map((item) => item.slot);
   const existingCardSlots = cardSlots.filter((item) => item.isExisting).map((item) => item.slot);
+  const explicitVisibleCardCount = requestedCardCount;
   const [revealedCardSlots, setRevealedCardSlots] = useState(existingCardSlots);
   const [expandedCardSlot, setExpandedCardSlot] = useState(existingCardSlots.length > 1 ? null : (existingCardSlots[0] || null));
 
@@ -5598,7 +6694,10 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     });
   }, [availableCardSlots, existingCardSlots]);
 
-  const visibleCardSlots = mergeVisibleSlotList(revealedCardSlots, existingCardSlots, availableCardSlots);
+  const progressiveVisibleCardSlots = mergeVisibleSlotList(revealedCardSlots, existingCardSlots, availableCardSlots);
+  const visibleCardSlots = explicitVisibleCardCount
+    ? cardSlots.slice(0, explicitVisibleCardCount).map((item) => item.slot)
+    : progressiveVisibleCardSlots;
 
   useEffect(() => {
     if (!visibleCardSlots.length) {
@@ -5624,9 +6723,10 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     <ProgressiveCardEditorList
       heading="Cards"
       className="admin-progressive-slot-list--grid-cards"
+      workspace
       slots={cardSlots.filter((item) => visibleCardSlots.includes(item.slot))}
       expandedSlot={expandedCardSlot}
-      onToggleSlot={(slot) => setExpandedCardSlot((current) => (current === slot ? null : slot))}
+      onToggleSlot={(slot) => setExpandedCardSlot(slot)}
       onRevealNextSlot={nextHiddenCardSlot
         ? () => {
           setRevealedCardSlots((current) => mergeVisibleSlotList([...current, nextHiddenCardSlot], existingCardSlots, availableCardSlots));
@@ -5635,65 +6735,16 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
         : null}
       revealLabel={nextHiddenCardSlot ? `Add card ${nextHiddenCardSlot}` : 'Add card'}
       renderSlotBody={(slotData) => (
-        <>
-          <DraftBackedFieldControlGrid
-            fields={slotData.fields}
-            settings={settings}
-            onSettingChange={onSettingChange}
-            className="admin-content-field-list--inline"
-            routeOptions={routeOptions}
-            draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
-          />
-          <CardGridRichBodyEditor
-            label={`Card ${slotData.slot} body`}
-            wholeListSizeControl={isPlannedGivingBulletGrid}
-            value={isCgaAssetsGrid
-              ? resolveCgaCardBodyEditorValue(settings, slotData.slot)
-              : settings[`card${slotData.slot}Body`] || settings[`card${slotData.slot}BodyHtml`]}
-            onChange={(nextValue) => {
-              onSettingChange(`card${slotData.slot}Body`, nextValue);
-              if (isCgaAssetsGrid && Object.prototype.hasOwnProperty.call(settings, `card${slotData.slot}ListJson`)) {
-                onSettingChange(`card${slotData.slot}ListJson`, '');
-              }
-              if (Object.prototype.hasOwnProperty.call(settings, `card${slotData.slot}BodyHtml`)) {
-                onSettingChange(`card${slotData.slot}BodyHtml`, '');
-              }
-            }}
-          />
-          <DraftBackedFieldControlGrid
-            fields={[fieldById.get(`card${slotData.slot}Fineprint`)].filter(Boolean)}
-            settings={settings}
-            onSettingChange={onSettingChange}
-            className="admin-content-field-list--inline admin-card-grid-fineprint-editor"
-            routeOptions={routeOptions}
-            draftFieldIds={GRID_LOCAL_DRAFT_FIELD_IDS}
-          />
-          {!isCgaAssetsGrid ? (
-            <CardGridBulletListEditor
-              label={`Card ${slotData.slot} bullets`}
-              value={settings[`card${slotData.slot}ListJson`]}
-              onChange={(nextValue) => onSettingChange(`card${slotData.slot}ListJson`, nextValue)}
-            />
-          ) : null}
-          {slotData.showDirectLinks ? (
-            <GridResourceLinkListEditor
-              label="Direct PDF / link list"
-              items={parseGridResourceLinkItems(settings[`card${slotData.slot}LinksJson`])}
-              onChange={(nextItems) => onSettingChange(`card${slotData.slot}LinksJson`, serializeGridResourceLinkItems(nextItems))}
-              routeOptions={normalizedRouteOptions}
-              documentOptions={documentOptions}
-              addLabel="Add direct link"
-            />
-          ) : null}
-          {slotData.showAccordions ? (
-            <GridResourceAccordionEditor
-              value={parseGridResourceAccordions(settings[`card${slotData.slot}AccordionsJson`])}
-              onChange={(nextItems) => onSettingChange(`card${slotData.slot}AccordionsJson`, serializeGridResourceAccordions(nextItems))}
-              routeOptions={normalizedRouteOptions}
-              documentOptions={documentOptions}
-            />
-          ) : null}
-        </>
+        <CardGridCardEditor
+          key={`card-grid-editor-${slotData.slot}`}
+          slotData={slotData}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          fieldById={fieldById}
+          routeOptions={normalizedRouteOptions}
+          documentOptions={documentOptions}
+          isCgaAssetsGrid={isCgaAssetsGrid}
+        />
       )}
     />
   );
@@ -5701,77 +6752,76 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   if (hudMode) {
     return (
       <div className="admin-card-grid-hud-reference">
+        <div className="admin-card-grid-hud-page admin-card-grid-hud-page--header">
+          <CardGridHeaderEditor
+            fieldById={fieldById}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            routeOptions={normalizedRouteOptions}
+            paletteVariant="hud"
+          />
+        </div>
         <div className="admin-card-grid-hud-page admin-card-grid-hud-page--appearance">
-          <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--appearance" aria-label="Card Grid appearance settings">
-            <div className="admin-billboard-hud-reference-head">
-              <div><h3>Appearance</h3><span>Color and surface</span></div>
-              <span className="admin-billboard-editor-panel-index">01</span>
-            </div>
-            <PanelAppearanceControls
-              fields={appearanceFields}
-              settings={settings}
-              onSettingChange={onSettingChange}
-              compactSwatches={false}
-              paletteVariant="hud"
-              className="admin-panel-appearance--intro-text"
-            />
-            {bgToneField ? (
-              <label className="admin-front-hud-field admin-card-grid-hud-bg-field">
-                <span>{bgToneField.label || 'Background color'}</span>
-                <ColorPalette
-                  variant="hud"
-                  className="is-compact is-icon-only is-circular"
-                  ariaLabel={bgToneField.label || 'Grid background'}
-                  options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
-                  value={String(settings.bgTone || '')}
-                  preventMouseDown
-                  onChange={(nextValue) => handleGridBackgroundChange(nextValue)}
-                />
-              </label>
-            ) : null}
-          </section>
-        </div>
+          <div className="admin-card-grid-hud-content-groups">
+            <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--appearance" aria-label="Card Grid appearance settings">
+              <div className="admin-billboard-hud-reference-head">
+                <div><h3>Appearance</h3></div>
+                <span className="admin-billboard-editor-panel-index">01</span>
+              </div>
+              <PanelAppearanceControls
+                fields={appearanceFields}
+                settings={settings}
+                onSettingChange={(fieldId, nextValue) => {
+                  if (fieldId === 'bgTone') {
+                    handleGridBackgroundChange(nextValue);
+                    return;
+                  }
+                  onSettingChange(fieldId, nextValue);
+                }}
+                compactSwatches={false}
+                paletteVariant="hud"
+                className="admin-panel-appearance--intro-text"
+              />
+            </section>
 
-        <div className="admin-card-grid-hud-page admin-card-grid-hud-page--layout">
-          <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--layout" aria-label="Card Grid layout settings">
-            <div className="admin-billboard-hud-reference-head">
-              <div><h3>Layout</h3><span>Width, columns, and card surface</span></div>
-              <span className="admin-billboard-editor-panel-index">02</span>
-            </div>
-            <FieldControlGrid
-              fields={layoutFields}
-              settings={settings}
-              onSettingChange={(fieldId, nextValue) => {
-                if (fieldId === 'cardStyle') {
-                  const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
-                  onSettingChange('cardStyle', nextStyle);
-                  return;
-                }
-                onSettingChange(fieldId, nextValue);
-              }}
-              className="admin-content-field-list--inline admin-card-grid-hud-fields"
-              paletteVariant="hud"
-            />
-          </section>
-        </div>
+            <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--layout" aria-label="Card Grid layout settings">
+              <div className="admin-billboard-hud-reference-head">
+                <div><h3>Layout</h3></div>
+                <span className="admin-billboard-editor-panel-index">02</span>
+              </div>
+              <FieldControlGrid
+                fields={layoutFields}
+                settings={layoutSettings}
+                onSettingChange={(fieldId, nextValue) => {
+                  if (fieldId === 'cardStyle') {
+                    const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
+                    onSettingChange('cardStyle', nextStyle);
+                    return;
+                  }
+                  onSettingChange(fieldId, nextValue);
+                }}
+                className="admin-content-field-list--inline admin-card-grid-hud-fields"
+                paletteVariant="hud"
+              />
+            </section>
 
-        {showTypographyFields ? (
-          <div className="admin-card-grid-hud-page admin-card-grid-hud-page--typography">
+            {showTypographyFields ? (
             <section className="admin-billboard-hud-reference-panel admin-card-grid-hud-group admin-card-grid-hud-group--typography" aria-label="Card Grid typography settings">
               <div className="admin-billboard-hud-reference-head">
-                <div><h3>Card typography</h3><span>Size, spacing, and leading</span></div>
+                <div><h3>Card typography</h3></div>
                 <span className="admin-billboard-editor-panel-index">03</span>
               </div>
               <FieldControlGrid
-                fields={cardTypographyFields}
+                fields={allCardTypographyFields}
                 settings={settings}
                 onSettingChange={onSettingChange}
                 className="admin-content-field-list--inline admin-card-grid-hud-fields"
                 paletteVariant="hud"
               />
             </section>
+            ) : null}
           </div>
-        ) : null}
+        </div>
         <div className="admin-card-grid-hud-page admin-card-grid-hud-page--cards">
           <div className="admin-card-grid-hud-cards-group" aria-label="Card Grid cards settings">
           {cardList}
@@ -5783,35 +6833,30 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
 
   return (
     <div className="admin-intro-block-editor admin-card-grid-hud-editor">
+      <section className="admin-card-grid-control-group admin-card-grid-header-control-group">
+        <h4>Header</h4>
+        <CardGridHeaderEditor
+          fieldById={fieldById}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          routeOptions={normalizedRouteOptions}
+        />
+      </section>
       <div className="admin-card-grid-editor-settings">
         <div className="admin-intro-appearance-stack admin-grid-appearance-stack">
           <PanelAppearanceControls
             fields={appearanceFields}
             settings={settings}
-            onSettingChange={onSettingChange}
+            onSettingChange={(fieldId, nextValue) => {
+              if (fieldId === 'bgTone') {
+                handleGridBackgroundChange(nextValue);
+                return;
+              }
+              onSettingChange(fieldId, nextValue);
+            }}
             compactSwatches={false}
             className="admin-panel-appearance--intro-text"
           />
-
-          {bgToneField ? (
-            <section className="admin-panel-appearance admin-panel-appearance--intro-text admin-panel-appearance--intro-bg">
-              <div className="admin-content-field-list admin-content-field-list--inline admin-panel-appearance-grid">
-                <label>
-                  <span>{bgToneField.label || 'Background color'}</span>
-                  <ColorPalette
-                    variant="admin"
-                    className="is-compact admin-hero-inline-swatch-list is-icon-only admin-intro-bg-palette-swatch-list"
-                    ariaLabel={bgToneField.label || 'Grid background'}
-                    options={Array.isArray(bgToneField.options) ? bgToneField.options : []}
-                    value={String(settings.bgTone || '')}
-                    preventMouseDown
-                    onChange={(nextValue) => handleGridBackgroundChange(nextValue)}
-                    getOptionClassName={(option, state) => ` admin-bg-swatch-option${state.active ? ' is-active' : ''}`}
-                  />
-                </label>
-              </div>
-            </section>
-          ) : null}
         </div>
       </div>
 
@@ -5819,7 +6864,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
         <h4>Layout</h4>
         <FieldControlGrid
           fields={layoutFields}
-          settings={settings}
+          settings={layoutSettings}
           onSettingChange={(fieldId, nextValue) => {
             if (fieldId === 'cardStyle') {
               const nextStyle = getGridSafeCardStyleForBg(nextValue, gridBgTone, cardStyleFieldBase?.options);
@@ -5835,7 +6880,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
         <section className="admin-card-grid-control-group">
           <h4>Card typography</h4>
           <FieldControlGrid
-            fields={cardTypographyFields}
+            fields={allCardTypographyFields}
             settings={settings}
             onSettingChange={onSettingChange}
             className="admin-content-field-list--inline admin-grid-layout-fields"
@@ -5864,6 +6909,7 @@ export function NewsletterBlockEditor({ block, onSettingChange }) {
     && field.id !== 'titleClassName'
     && field.id !== 'titleHighlightsJson'
     && field.id !== 'bodyHtml'
+    && field.id !== 'bodyColorClassName'
     && field.id !== 'bgTone'
     && field.id !== 'textTone'
   ));
@@ -5893,6 +6939,10 @@ export function NewsletterBlockEditor({ block, onSettingChange }) {
             compact
             value={toEditorHtml(settings.bodyHtml)}
             onChange={(nextValue) => onSettingChange('bodyHtml', nextValue)}
+            baseColorClassName={String(
+              settings.bodyColorClassName || resolvePanelTextToneClassName(newsletterTextTone, 'white'),
+            )}
+            onBaseColorChange={(nextValue) => onSettingChange('bodyColorClassName', nextValue)}
             placeholder="Newsletter body copy"
           />
         </div>
@@ -5940,14 +6990,29 @@ export function NewsletterBlockEditor({ block, onSettingChange }) {
 
 export function PageContentBlockEditor({ block, onSettingChange }) {
   const settings = block.settings || {};
+  const editorField = getPageContentEditorField(settings);
+  const usesLegacySource = hasLegacyPageContentSource(settings);
+
+  const handleHtmlChange = (nextValue) => {
+    onSettingChange(editorField, nextValue);
+    if (usesLegacySource) {
+      onSettingChange('body', '');
+      onSettingChange('addressTitle', '');
+      onSettingChange('addressLines', '');
+    }
+  };
 
   return (
     <div className="admin-intro-block-editor admin-page-content-block-editor">
       <div className="admin-page-content-editor-main">
         <AdminHtmlEditor
-          value={toEditorHtml(settings.html)}
-          onChange={(nextValue) => onSettingChange('html', nextValue)}
+          value={toEditorHtml(getPageContentEditorHtml(settings))}
+          onChange={handleHtmlChange}
           placeholder="Start page content..."
+        />
+        <PageContentEditorPreview
+          settings={settings}
+          html={getPageContentEditorHtml(settings)}
         />
       </div>
 
@@ -5957,6 +7022,66 @@ export function PageContentBlockEditor({ block, onSettingChange }) {
         className="admin-page-content-layout-shell--admin"
       />
     </div>
+  );
+}
+
+export function SupportLibraryBlockEditor({
+  block,
+  onSettingChange,
+  routeOptions = [],
+  blockOptions = null,
+  sourceRevision = 0,
+}) {
+  const settings = block.settings || {};
+  const fields = resolveEditorFields(block.kind, 'admin', block.editableFields);
+  const contentFields = fields.filter((field) => ['title', 'subtitle', 'html'].includes(field.id));
+  const supportFields = fields.filter((field) => ['supportGroupsExpanded', 'supportGroupsCollapsible'].includes(field.id));
+  const layoutFields = fields.filter((field) => ['fullBleed', 'spaceBeforeRem', 'spaceAfterRem', 'paddingTopRem', 'paddingBottomRem', 'contentMaxWidthPx'].includes(field.id));
+  const [activeEditorSection, setActiveEditorSection] = useState('content');
+  const editorSections = appendHudBlockOptionsSection([
+    { id: 'content', label: 'Content', icon: 'Aa' },
+    { id: 'library', label: 'Library', icon: '▤' },
+    { id: 'options', label: 'Options', icon: '⚙' },
+  ], blockOptions);
+
+  return (
+    <HudEditorModelLayout
+      className="admin-support-library-hud-editor"
+      sections={editorSections}
+      activeSection={activeEditorSection}
+      onSectionChange={setActiveEditorSection}
+      label="Support library editor sections"
+      panelClassName="admin-support-library-hud-panels"
+    >
+      <section className="admin-support-library-hud-page admin-support-library-hud-page--content">
+        <FieldControlGrid
+          fields={contentFields}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          routeOptions={routeOptions}
+          sourceRevision={sourceRevision}
+          className="admin-content-field-list--inline"
+        />
+      </section>
+      <section className="admin-support-library-hud-page admin-support-library-hud-page--library">
+        <SupportLibraryGroupsEditor
+          value={settings.supportGroupsJson}
+          onChange={(nextValue) => onSettingChange('supportGroupsJson', nextValue)}
+          routeOptions={routeOptions}
+        />
+      </section>
+      <section className="admin-support-library-hud-page admin-support-library-hud-page--options">
+        <FieldControlGrid
+          fields={[...supportFields, ...layoutFields]}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          routeOptions={routeOptions}
+          sourceRevision={sourceRevision}
+          className="admin-content-field-list--inline"
+        />
+      </section>
+      <HudEditorBlockOptionsPage>{blockOptions}</HudEditorBlockOptionsPage>
+    </HudEditorModelLayout>
   );
 }
 
@@ -6548,6 +7673,10 @@ export function ColumnsBlockEditor({ block, onSettingChange, routeOptions = [] }
         className="admin-grid-body-editor admin-grid-body-editor--columns-content"
         value={toEditorHtml(settings.bodyHtml)}
         onChange={(nextValue) => onSettingChange('bodyHtml', nextValue)}
+        baseColorClassName={String(
+          settings.bodyColorClassName || resolvePanelTextToneClassName(columnsPreviewTone, 'dark'),
+        )}
+        onBaseColorChange={(nextValue) => onSettingChange('bodyColorClassName', nextValue)}
         placeholder="Columns intro copy"
       />
 
@@ -6624,6 +7753,8 @@ export function ColumnsBlockEditor({ block, onSettingChange, routeOptions = [] }
               ...titleField,
               label: isPhotoColumn ? `Column ${slot} photo label` : titleField.label,
             } : null,
+            !isPhotoColumn ? fieldById.get(`col${slot}TitleClassName`) : null,
+            !isPhotoColumn ? fieldById.get(`col${slot}TitleHighlightsJson`) : null,
             !isLegacyHighlightStyle && bodyField ? {
               ...bodyField,
               label: isPhotoColumn ? `Column ${slot} photo caption` : bodyField.label,
@@ -6721,6 +7852,9 @@ export function getMigratedBlockEditorComponent(kind, surface = 'admin') {
   if (normalizedSurface === 'hud' && token === 'content') {
     return PageContentHudBlockEditor;
   }
+  if (normalizedSurface === 'hud' && token === 'support_library') {
+    return SupportLibraryBlockEditor;
+  }
   if (normalizedSurface === 'hud' && token === 'top_strip') {
     return TopStripHudBlockEditor;
   }
@@ -6781,11 +7915,17 @@ export function getMigratedBlockEditorComponent(kind, surface = 'admin') {
   if (token === 'card_grid') {
     return GridBlockEditor;
   }
+  if (token === 'card_chart') {
+    return CardChartBlockEditor;
+  }
   if (token === 'newsletter') {
     return NewsletterBlockEditor;
   }
   if (token === 'content') {
     return PageContentBlockEditor;
+  }
+  if (token === 'support_library') {
+    return SupportLibraryBlockEditor;
   }
   if (token === 'top_strip') {
     return TopStripBlockEditor;

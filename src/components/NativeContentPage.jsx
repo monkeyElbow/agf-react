@@ -52,6 +52,7 @@ import {
 import { normalizeIntroLineSpacing } from '../lib/dynamicSectionTypography';
 import {
   buildDynamicBillboardFromBlock,
+  buildDynamicCardChartFromBlock,
   buildDynamicCtaPresentationClassName,
   buildDynamicCtaFormFromBlock,
   buildDynamicColumnsFromBlock,
@@ -745,6 +746,27 @@ function normalizeHeroJustify(value) {
   return HERO_JUSTIFY_SET.has(token) ? token : 'center';
 }
 
+function buildNativeCardFineprintStyle(card) {
+  const style = {
+    textAlign: normalizeHeroJustify(card.fineprintJustify || 'left'),
+    marginLeft: 0,
+    marginRight: 0,
+  };
+  const spaceBefore = Number(card.fineprintSpaceBeforeRem);
+  const lineHeight = Number(card.fineprintLineHeight);
+  const spaceAfter = Number(card.fineprintSpaceAfterRem);
+  if (Number.isFinite(spaceBefore)) {
+    style.marginTop = `${spaceBefore}rem`;
+  }
+  if (Number.isFinite(lineHeight)) {
+    style.lineHeight = lineHeight;
+  }
+  if (Number.isFinite(spaceAfter)) {
+    style.marginBottom = `${spaceAfter}rem`;
+  }
+  return style;
+}
+
 function buildActionRowClassName(justify, fallback = 'left') {
   const normalized = normalizeHeroJustify(
     typeof justify === 'string' && justify.trim() ? justify : fallback,
@@ -1119,6 +1141,47 @@ function buildDynamicPageContentSection(block, pathname) {
   };
 }
 
+function buildDynamicCardChartSection(block, pathname) {
+  const runtime = buildDynamicCardChartFromBlock(block);
+  if (!runtime) {
+    return null;
+  }
+
+  const blockId = String(block?.id || '').trim() || 'card-chart';
+  const justify = ['left', 'center', 'right'].includes(runtime.justify)
+    ? runtime.justify
+    : 'center';
+  return {
+    id: `${pathname}-card-chart-${blockId}`,
+    blockId,
+    hideTitle: !runtime.title,
+    anchorId: runtime.anchorId || undefined,
+    className: `${pathname === '/test' ? 'test-dynamic-card-chart' : 'native-dynamic-card-chart'}${runtime.sectionClassName ? ` ${runtime.sectionClassName}` : ''}`,
+    fullBleed: Boolean(runtime.fullBleed),
+    title: runtime.title,
+    justify,
+    titleStyle: { textAlign: justify },
+    titleClassName: runtime.titleClassName || undefined,
+    titleHighlights: Array.isArray(runtime.titleHighlights) ? runtime.titleHighlights : [],
+    headingLevel: 'h2',
+    table: runtime.table,
+    fineprint: runtime.fineprint || undefined,
+    sectionStyle: {
+      '--dyn-content-margin-top': `${runtime.spaceBeforeRem}rem`,
+      '--dyn-content-margin-bottom': `${runtime.spaceAfterRem}rem`,
+      '--dyn-content-padding-top': `${runtime.paddingTopRem}rem`,
+      '--dyn-content-padding-bottom': `${runtime.paddingBottomRem}rem`,
+      '--dyn-content-max-width': `${runtime.contentMaxWidthPx}px`,
+      '--card-chart-cell-padding': `${runtime.cellPaddingRem}rem ${Math.max(runtime.cellPaddingRem, 1)}rem`,
+      '--card-chart-mobile-cell-padding': `${runtime.cellPaddingRem}rem ${Math.max(runtime.cellPaddingRem, 1)}rem`,
+    },
+    fineprintStyle: {
+      textAlign: runtime.fineprintJustify || 'center',
+      fontSize: `${runtime.fineprintSizeRem}rem`,
+    },
+  };
+}
+
 function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}) {
   const runtime = buildDynamicGridFromBlock(block);
   if (!runtime) {
@@ -1132,12 +1195,15 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     titleClassName,
     titleHighlights,
     subtitle,
+    subtitleClassName,
+    subtitleHighlights,
     body,
     bodyHtml,
     anchorId,
     bgTone,
     contentWidth,
     columns,
+    cardCount,
     sectionClassName,
     fullBleed,
     sand,
@@ -1153,6 +1219,9 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     cardBulletSizeRem,
     cardBulletLineHeight,
     cardBodyLineHeight,
+    paddingTopRem,
+    paddingBottomRem,
+    headerSubheadSpaceRem,
     actions,
     cards: runtimeCards,
   } = runtime;
@@ -1162,9 +1231,10 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
   const isLegacyAssetGrid = sectionClassTokens.includes('legacy-child-native-assets');
   const isPlannedGivingBulletGrid = isLegacyAssetGrid
     || sectionClassTokens.includes('legacy-giving-types')
+    || sectionClassTokens.includes('legacy-child-native-trusts-differences')
     || cardStyle === 'planned-giving-centered';
-  // Keep planned-giving bullet typography on block settings so admin changes
-  // the whole list, including rich HTML bullets, from one measurable control.
+  // Keep bullet typography on block settings so admin changes the whole list,
+  // including rich HTML bullets, from one measurable control.
   const plannedGivingBulletSizeRem = Number.isFinite(Number(cardBulletSizeRem))
     ? Number(cardBulletSizeRem)
     : DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM;
@@ -1206,6 +1276,10 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       bodySegments: card.bodySegments,
       list: Array.isArray(card.list) ? card.list : undefined,
       fineprint: card.fineprint || undefined,
+      fineprintJustify: card.fineprintJustify || 'left',
+      fineprintSpaceBeforeRem: card.fineprintSpaceBeforeRem,
+      fineprintLineHeight: card.fineprintLineHeight,
+      fineprintSpaceAfterRem: card.fineprintSpaceAfterRem,
       iconKey: card.iconKey || '',
       iconTone: card.iconTone || '',
       cardClass: card.cardClass,
@@ -1217,6 +1291,16 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
       accordions: Array.isArray(card.accordions) ? card.accordions : undefined,
     }))
     .filter(Boolean);
+  // A null count is the legacy/unbounded shape. Only filter when the blueprint
+  // provides an explicit positive count; Number(null) would otherwise hide every card.
+  const visibleCards = Number.isFinite(cardCount) && cardCount >= 1
+    ? cards.filter((card) => Number(card.slot) <= Number(cardCount))
+    : cards;
+  const hasCardBulletContent = visibleCards.some((card) => (
+    (Array.isArray(card.list) && card.list.some(Boolean))
+    || /<(?:ul|ol)\b/i.test(String(card.bodyHtml || ''))
+  ));
+  const hasControlledBulletTypography = isPlannedGivingBulletGrid || hasCardBulletContent;
 
   return {
     id: `${pathname}-dynamic-grid-${String(block.id || 'grid').trim() || 'grid'}`,
@@ -1227,6 +1311,11 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     titleClassName: titleClassName || undefined,
     titleHighlights: titleHighlights.length ? titleHighlights : [],
     subtitle: subtitle || undefined,
+    subtitleClassName: subtitleClassName || undefined,
+    subtitleHighlights: subtitleHighlights.length ? subtitleHighlights : [],
+    subtitleStyle: Number.isFinite(Number(headerSubheadSpaceRem))
+      ? { marginTop: `${headerSubheadSpaceRem}rem` }
+      : undefined,
     body: body ? [body] : [],
     html: bodyHtml,
     copyWrap: hasIntroCopy,
@@ -1240,13 +1329,15 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
     locationFilter: locationFilter || undefined,
     focusMessageCard: Boolean(locationFilter?.focusMessageCard),
     cardLayout,
-    cards,
+    cards: visibleCards,
     sectionStyle: {
+      ...(Number.isFinite(Number(paddingTopRem)) ? { paddingTop: `${paddingTopRem}rem` } : {}),
+      ...(Number.isFinite(Number(paddingBottomRem)) ? { paddingBottom: `${paddingBottomRem}rem` } : {}),
       '--dynamic-grid-card-padding': `${cardPaddingRem}rem`,
       '--dynamic-grid-card-title-size': `${cardTitleSizeRem}rem`,
       '--dynamic-grid-card-body-size': `${cardBodySizeRem}rem`,
       '--dynamic-grid-card-body-line-height': String(cardBodyLineHeight),
-      ...(isPlannedGivingBulletGrid
+      ...(hasControlledBulletTypography
         ? {
             '--planned-giving-bullet-size': `${plannedGivingBulletSizeRem}rem`,
             '--planned-giving-bullet-line-height': String(
@@ -1257,7 +1348,7 @@ function buildDynamicGridSection(block, pathname, { getConsultants = null } = {}
           }
         : {}),
     },
-    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${numberedStepCardsClassName ? ` ${numberedStepCardsClassName}` : ''}${isPlannedGivingBulletGrid ? ' is-planned-giving-bullet-grid' : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
+    className: `${sectionClassBase}${sectionClassName ? ` ${sectionClassName}` : ''}${numberedStepCardsClassName ? ` ${numberedStepCardsClassName}` : ''}${isPlannedGivingBulletGrid ? ' is-planned-giving-bullet-grid' : ''}${hasControlledBulletTypography ? ' is-card-grid-bullet-controlled' : ''} is-bg-${bgTone} is-width-${contentWidth} is-title-${titleTone} is-body-${bodyTone} ${presetRuntimeClassName} is-card-grid-style-${cardStyle}${cardStyle === 'none' ? ' is-card-none' : ''}`,
   };
 }
 
@@ -1297,6 +1388,8 @@ function buildDynamicColumnsSection(block, pathname) {
       slot: item.slot,
       type: isLegacyHighlight ? 'text' : item.type,
       title: item.title || '',
+      titleClassName: item.titleClassName || '',
+      titleHighlights: Array.isArray(item.titleHighlights) ? item.titleHighlights : [],
       body: !isLegacyHighlight && item.body ? [item.body] : [],
       html: !isLegacyHighlight ? (item.html || item.bodyHtml || '') : '',
       image: !isLegacyHighlight ? (item.imageUrl || '') : '',
@@ -1493,7 +1586,18 @@ function buildDynamicNewsletterSection(block, pathname) {
     return null;
   }
 
-  const { title, titleClassName, titleHighlights, bodyHtml, bgTone, textTone, formId, accountId, sourceId } = runtime;
+  const {
+    title,
+    titleClassName,
+    titleHighlights,
+    bodyHtml,
+    bodyColorClassName,
+    bgTone,
+    textTone,
+    formId,
+    accountId,
+    sourceId,
+  } = runtime;
   const sectionClassBase = pathname === '/test' ? 'test-dynamic-newsletter' : 'native-dynamic-newsletter';
 
   return {
@@ -1504,6 +1608,7 @@ function buildDynamicNewsletterSection(block, pathname) {
     titleClassName: titleClassName || undefined,
     titleHighlights: titleHighlights.length ? titleHighlights : [],
     html: bodyHtml,
+    htmlClassName: bodyColorClassName || undefined,
     form: {
       variant: 'dynamic-newsletter',
       title: 'Newsletter signup form',
@@ -1600,6 +1705,8 @@ function buildManagedBlockSection(block, {
     section = buildDynamicPageContentSection(renderBlock, pathname);
   } else if (renderBlock.kind === 'card_grid') {
     section = buildDynamicGridSection(renderBlock, pathname, { getConsultants });
+  } else if (renderBlock.kind === 'card_chart') {
+    section = buildDynamicCardChartSection(renderBlock, pathname);
   } else if (renderBlock.kind === 'columns') {
     section = buildDynamicColumnsSection(renderBlock, pathname);
   } else if (renderBlock.kind === 'newsletter') {
@@ -4615,9 +4722,14 @@ export default function NativeContentPage({ page }) {
   const { addResponse } = useConsultantResponses();
   const { testimonials: testimonialsLibrary } = useTestimonials();
   const baseNativeContent = getNativePageContent(templatePath, page.title);
-  const editableBlockPath = managedBlocksByPath[activePath]
+  const hasBlocksForPath = (pathname) => (
+    Boolean(pathname)
+    && Array.isArray(managedBlocksByPath?.[pathname])
+    && managedBlocksByPath[pathname].length > 0
+  );
+  const editableBlockPath = hasBlocksForPath(activePath)
     ? activePath
-    : (managedBlocksByPath[templatePath] ? templatePath : '');
+    : (hasBlocksForPath(templatePath) ? templatePath : '');
   const hasManagedBlockSource = Boolean(editableBlockPath);
   const shouldUseBlockOnlyShell = isBlockOnlyManagedPage
     && (!frontHudEnabled || hasAuthoringBlocksForPath || hasManagedBlockSource);
@@ -6646,7 +6758,9 @@ export default function NativeContentPage({ page }) {
                       className={['native-info-section-subtitle', section.subtitleClassName || ''].filter(Boolean).join(' ')}
                       style={section.subtitleStyle || undefined}
                     >
-                      {renderTextWithStrong(section.subtitle)}
+                      {Array.isArray(section.subtitleHighlights) && section.subtitleHighlights.length
+                        ? renderHighlightedText(section.subtitle, section.subtitleHighlights)
+                        : renderTextWithStrong(section.subtitle)}
                     </h3>
                   ) : null}
                   {section.leadLine ? (
@@ -6850,7 +6964,16 @@ export default function NativeContentPage({ page }) {
                       />
                     ) : null}
                     <div className="native-columns-copy">
-                      {column.title ? <h3>{renderTextWithStrong(column.title)}</h3> : null}
+                      {column.title ? (
+                        <h3
+                          className={column.titleClassName || undefined}
+                          aria-label={column.titleHighlights.length ? column.title : undefined}
+                        >
+                          {column.titleHighlights.length
+                            ? renderHighlightedText(column.title, column.titleHighlights)
+                            : renderTextWithStrong(column.title)}
+                        </h3>
+                      ) : null}
                       {!isLegacyHighlightColumns && Array.isArray(column.body) && column.body.length
                         ? column.body.map((paragraph) => <p key={`${sectionKey}-${column.slot || columnIndex + 1}-${paragraph}`}>{renderTextWithStrong(paragraph)}</p>)
                         : null}
@@ -6874,7 +6997,7 @@ export default function NativeContentPage({ page }) {
               <div className="investments-native-growth-grid native-value-cards-grid">
                 {visibleCards.map((card, cardIndex) => (
                   <article
-                    key={card.title}
+                    key={`value-card-${card.slot}`}
                     className={[
                       'investments-native-growth-card',
                       'investments-growth-scroll-reveal',
@@ -6891,11 +7014,13 @@ export default function NativeContentPage({ page }) {
                     data-investments-growth-shift-y="52"
                   >
                     <div className="native-columns-copy">
-                      <h3 className={card.titleClassName || undefined}>
-                        {Array.isArray(card.titleHighlights) && card.titleHighlights.length
-                          ? renderHighlightedText(card.title, card.titleHighlights)
-                          : card.title}
-                      </h3>
+                      {card.title ? (
+                        <h3 className={card.titleClassName || undefined}>
+                          {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                            ? renderHighlightedText(card.title, card.titleHighlights)
+                            : card.title}
+                        </h3>
+                      ) : null}
                       {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
                       {card.body ? <p>{renderTextWithStrong(card.body)}</p> : null}
                       {!isCgaAssetsGrid && card.bodyHtml ? <SafeRichText as="div" className="native-info-rich-html service-native-card-rich-body" html={card.bodyHtml} /> : null}
@@ -6937,19 +7062,21 @@ export default function NativeContentPage({ page }) {
 
                   return (
                     <article
-                      key={card.title}
+                      key={`certificate-card-${card.slot}`}
                       className={`service-native-card ${useRetirementCertificateCardLayout ? `retirement-account-card retirement-account-card--certificate retirement-account-card--${cardTone}` : `investments-native-cert-card investments-native-cert-card--${cardTone}`}${useCharitableTrustChoiceLayout ? ' charitable-trusts-native-choice-card' : ''} fade-up`}
                     >
-                      <div className={useRetirementCertificateCardLayout ? 'retirement-account-card__cap' : 'investments-native-cert-card__cap'}>
-                        <h3
-                          className={card.titleClassName || undefined}
-                          aria-label={Array.isArray(card.titleHighlights) && card.titleHighlights.length ? card.title : undefined}
-                        >
-                          {Array.isArray(card.titleHighlights) && card.titleHighlights.length
-                            ? renderHighlightedText(card.title, card.titleHighlights)
-                            : card.title}
-                        </h3>
-                      </div>
+                      {card.title ? (
+                        <div className={useRetirementCertificateCardLayout ? 'retirement-account-card__cap' : 'investments-native-cert-card__cap'}>
+                          <h3
+                            className={card.titleClassName || undefined}
+                            aria-label={Array.isArray(card.titleHighlights) && card.titleHighlights.length ? card.title : undefined}
+                          >
+                            {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                              ? renderHighlightedText(card.title, card.titleHighlights)
+                              : card.title}
+                          </h3>
+                        </div>
+                      ) : null}
                       <div className={useRetirementCertificateCardLayout ? 'retirement-account-card__body' : 'investments-native-cert-card__body'}>
                         {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
                         {description || minimum ? (
@@ -6988,17 +7115,19 @@ export default function NativeContentPage({ page }) {
                   const forceScrollRevealCard = shouldAnimateCard && sectionClassName.includes('legacy-giving-types');
 
                   return (
-                  <article key={card.title} className={`service-native-card ${shouldAnimateCard ? 'fade-up' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}`.trim()}>
+                  <article key={`grid-card-${card.slot}`} className={`service-native-card ${shouldAnimateCard ? 'fade-up fade-up-fail-open' : ''}${forceScrollRevealCard ? ' fade-up-force-observe' : ''} ${card.cardClass || 'card2'}${card.messagePanel && resolvedMessageLayout === 'inline' ? ' has-inline-message' : ''}`.trim()}>
                     <div className={card.messagePanel && resolvedMessageLayout === 'inline' ? 'consultant-card-details' : undefined}>
                       {card.iconKey ? (
                         <PlannedGivingStepIcon iconKey={card.iconKey} tone={card.iconTone} />
                       ) : null}
-                      <h3 className={card.titleClassName || undefined}>
-                        {Array.isArray(card.titleHighlights) && card.titleHighlights.length
-                          ? renderHighlightedText(card.title, card.titleHighlights)
-                          : card.title}
-                        {card.titleSuffix ? <span className="consultant-name-credentials">&nbsp;{card.titleSuffix}</span> : null}
-                      </h3>
+                      {card.title ? (
+                        <h3 className={card.titleClassName || undefined}>
+                          {Array.isArray(card.titleHighlights) && card.titleHighlights.length
+                            ? renderHighlightedText(card.title, card.titleHighlights)
+                            : card.title}
+                          {card.titleSuffix ? <span className="consultant-name-credentials">&nbsp;{card.titleSuffix}</span> : null}
+                        </h3>
+                      ) : null}
                       {card.subtitle ? <p className="service-native-card-subtitle">{renderTextWithStrong(card.subtitle)}</p> : null}
                       {card.phone ? (
                         <p className="service-native-card-phone">
@@ -7039,12 +7168,19 @@ export default function NativeContentPage({ page }) {
                       {card.fineprint ? (
                         Array.isArray(card.fineprint)
                           ? card.fineprint.map((line, index) => (
-                            <p key={`${card.title}-fineprint-${index + 1}`} className="service-native-card-fineprint">
+                            <p
+                              key={`${card.title}-fineprint-${index + 1}`}
+                              className="service-native-card-fineprint"
+                              style={buildNativeCardFineprintStyle(card)}
+                            >
                               {renderTextWithStrong(line)}
                             </p>
                           ))
                           : (
-                            <p className="service-native-card-fineprint">
+                            <p
+                              className="service-native-card-fineprint"
+                              style={buildNativeCardFineprintStyle(card)}
+                            >
                               {renderTextWithStrong(card.fineprint)}
                             </p>
                           )
@@ -7155,6 +7291,7 @@ export default function NativeContentPage({ page }) {
                   rows={section.table.rows}
                   valueAlignment={section.table.valueAlignment}
                   firstColumnHeader={section.table.firstColumnHeader}
+                  columnTones={section.table.columnTones}
                 />
               </div>
             ) : null}
@@ -7182,9 +7319,9 @@ export default function NativeContentPage({ page }) {
             {section.fineprint ? (
               Array.isArray(section.fineprint)
                 ? section.fineprint.map((line, index) => (
-                  <p key={`${sectionKey}-fineprint-${index + 1}`} className="service-native-note">{renderTextWithStrong(line)}</p>
+                  <p key={`${sectionKey}-fineprint-${index + 1}`} className="service-native-note" style={section.fineprintStyle || undefined}>{renderTextWithStrong(line)}</p>
                 ))
-                : <p className="service-native-note">{renderTextWithStrong(section.fineprint)}</p>
+                : <p className="service-native-note" style={section.fineprintStyle || undefined}>{renderTextWithStrong(section.fineprint)}</p>
             ) : null}
 
             {Array.isArray(section.faqs) && section.faqs.length ? (

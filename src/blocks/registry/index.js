@@ -5,6 +5,7 @@ import { calculatorCtaBlockDefinition } from '../definitions/calculatorCta.defin
 import { calculatorIntroBlockDefinition } from '../definitions/calculatorIntro.definition';
 import { calculatorWidgetBlockDefinition } from '../definitions/calculatorWidget.definition';
 import { cardGridBlockDefinition } from '../definitions/cardGrid.definition';
+import { cardChartBlockDefinition } from '../definitions/cardChart.definition';
 import { columnsBlockDefinition } from '../definitions/columns.definition';
 import { ctaFormBlockDefinition } from '../definitions/ctaForm.definition';
 import { featurePanelBlockDefinition } from '../definitions/featurePanel.definition';
@@ -20,12 +21,14 @@ import { ratesBlockDefinition } from '../definitions/rates.definition';
 import { requestFormBlockDefinition } from '../definitions/requestForm.definition';
 import { servicesGridBlockDefinition } from '../definitions/servicesGrid.definition';
 import { siteFeatureBlockDefinition } from '../definitions/siteFeature.definition';
+import { supportLibraryBlockDefinition } from '../definitions/supportLibrary.definition';
 import { splitPanelBlockDefinition } from '../definitions/splitPanel.definition';
 import { testimonialsBlockDefinition } from '../definitions/testimonials.definition';
 import { topStripBlockDefinition } from '../definitions/topStrip.definition';
 
 const MIGRATED_BLOCK_DEFINITIONS = Object.freeze({
   content: pageContentBlockDefinition,
+  support_library: supportLibraryBlockDefinition,
   calculator_cta: calculatorCtaBlockDefinition,
   calculator_intro: calculatorIntroBlockDefinition,
   calculator_widget: calculatorWidgetBlockDefinition,
@@ -41,6 +44,7 @@ const MIGRATED_BLOCK_DEFINITIONS = Object.freeze({
   feature_panel: featurePanelBlockDefinition,
   photo_column: photoColumnBlockDefinition,
   card_grid: cardGridBlockDefinition,
+  card_chart: cardChartBlockDefinition,
   newsletter: newsletterBlockDefinition,
   rates: ratesBlockDefinition,
   services_grid: servicesGridBlockDefinition,

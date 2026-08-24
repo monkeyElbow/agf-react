@@ -596,41 +596,6 @@
   text-decoration: none;
 }
 
-.service-native-card.has-stretched-link {
-  position: relative;
-}
-
-.service-native-card.has-stretched-link > :not(.service-native-card-stretched-link) {
-  position: relative;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.service-native-card.has-stretched-link .service-native-card-stretched-link {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-}
-
-.service-native-card.has-stretched-link .service-native-btn.is-static {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.service-native-card-stretched-link-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 @keyframes loans-hero-unblur {
   from {
     opacity: 0;
@@ -2573,7 +2538,7 @@
 }
 
 .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-title-alternating {
-  --dynamic-grid-alt-title-one: var(--ag-color-atlantean-dark);
+  --dynamic-grid-alt-title-one: var(--ag-color-atlantean);
   --dynamic-grid-alt-title-two: var(--ag-color-mango);
   --dynamic-grid-alt-title-three: var(--ag-color-melon);
 }
@@ -4236,17 +4201,12 @@ p.impact-proof-story-proof-body {
   line-height: 1.5;
 }
 
-.impact-native-stats .impact-native-card.has-stretched-link {
-  cursor: pointer;
-}
-
 .impact-native-stats .impact-native-card .service-native-action-row {
   justify-content: flex-start;
   align-items: flex-start;
 }
 
-.impact-native-stats .impact-native-card .service-native-action-row .service-native-btn,
-.impact-native-stats .impact-native-card .service-native-action-row .service-native-btn.is-static {
+.impact-native-stats .impact-native-card .service-native-action-row .service-native-btn {
   display: inline-block;
   width: auto;
   max-width: none;
@@ -4255,11 +4215,6 @@ p.impact-proof-story-proof-body {
   white-space: nowrap;
   line-height: 1;
   padding: 0.68rem 1.4rem;
-}
-
-.impact-native-stats .impact-native-card .service-native-card-stretched-link:focus-visible {
-  outline: 2px solid var(--ag-color-atlantean);
-  outline-offset: 4px;
 }
 
 .impact-native-stats .impact-native-card--loans {

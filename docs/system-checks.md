@@ -2,6 +2,8 @@
 
 System Checks are the repeatable safety gate for the block-first site. They are tooling and verification only; they must not change public copy, visual styling, page layout, or block behavior.
 
+The [Harly Bobber Crew](./harly-bobber-crew.md) is the ongoing reasoning and evidence policy used while making changes; these system checks are its repeatable automated release gates.
+
 ## Package Scripts
 
 - `npm run scan:static`: fails if production source or active managed-content snapshots reintroduce static block creation or `mode: 'static'` block records.

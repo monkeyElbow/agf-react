@@ -92,7 +92,6 @@ const REQUEST_FORM_SPECIFIC_FIELD_IDS = Object.freeze([
 ]);
 
 const REQUEST_FORM_EXCLUSIVE_FIELD_IDS = Object.freeze([
-  'subtitle',
   'body',
   'textTone',
   'spaceBeforeRem',

@@ -65,10 +65,10 @@ describe('page article feature link guardrails', () => {
   it('keeps bottom article teaser copy vertically centered inside the full teaser height', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.service-native-article-teaser .service-native-dark-feature-inner {');
+    expect(cssSource).toContain('.service-native-article-teaser .service-native-dark-feature-inner,');
     expect(cssSource).toContain('min-height: clamp(340px, 52vh, 620px);');
     expect(cssSource).toContain('align-items: stretch;');
-    expect(cssSource).toContain('.service-native-article-teaser .service-native-dark-feature-copy {');
+    expect(cssSource).toContain('.service-native-article-teaser .service-native-dark-feature-copy,');
     expect(cssSource).toContain('display: flex;');
     expect(cssSource).toContain('flex-direction: column;');
     expect(cssSource).toContain('justify-content: center;');
@@ -95,7 +95,7 @@ describe('page article feature link guardrails', () => {
 
     expect(cssSource).toContain('@media (max-width: 760px) {');
     [
-      '.service-native-section.service-native-article-teaser',
+      '.service-native-section:is(.service-native-article-teaser, .service-native-feature-panel)',
       '.native-info-page--insurance .insurance-native-fraud',
       '.native-info-page--legacy-giving .legacy-giving-opportunity',
       '.native-info-page--mission-assure .mission-assure-native-camp-safety',

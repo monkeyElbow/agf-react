@@ -289,7 +289,7 @@ export default function CtaHudEditorPanel({
                 preventMouseDown
                 onChange={(nextValue) => {
                   if (hasTitleSelection) {
-                    onApplySelectionColor?.(nextValue);
+                    onApplySelectionColor?.(nextValue, titleSelection);
                     return;
                   }
                   onTitleColorChange?.(nextValue === autoTitleColorValue ? '' : nextValue);

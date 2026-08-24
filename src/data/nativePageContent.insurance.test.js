@@ -57,7 +57,10 @@ describe('insurance native page content', () => {
       'organization',
       'coverageFocus',
     ]);
-    expect(missionAssureBlock?.settings?.sectionClassName).toBe('insurance-native-mission-assure');
+    expect(missionAssureBlock?.kind).toBe('columns');
+    expect(missionAssureBlock?.presetId).toBe('housing-allowance');
+    expect(missionAssureBlock?.settings?.col2Title).toBe('Full coverage for mission trips, retreats…');
+    expect(missionAssureBlock?.settings?.logoKey).toBeUndefined();
     expect(missionAssureBlock?.settings?.targetSectionKey).toBeUndefined();
   });
 

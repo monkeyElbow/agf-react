@@ -205,14 +205,14 @@ describe('planned giving and IRA source defaults', () => {
     expect(ministryImpactStockSection?.settings?.card2ButtonDocumentId).toBe('document-planned-giving-brokerage-loa-form');
     expect(ministryImpactRequestSection?.settings).toMatchObject({
       titleClassName: '',
-      titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+      titleHighlightsJson: '[{"text":"Unlocked","className":"is-white"},{"text":"expanded","className":"is-white"}]',
       textTone: 'white',
       spaceAfterRem: 4.2,
       hideStepTitles: true,
       step1Title: '',
       step1Note: '',
     });
-    expect(ministryImpactRequestSection?.settings?.step1FieldsJson).toContain('"firstName"');
+    expect(ministryImpactRequestSection?.settings?.step1FieldsJson).toContain('"id":"name"');
     expect(charitableTrustsContent).toMatchObject({
       pageClass: 'native-info-page--legacy-child native-info-page--legacy-trusts',
       compact: true,
@@ -243,9 +243,9 @@ describe('planned giving and IRA source defaults', () => {
       openInNewWindow: false,
     });
     expect(charitableTrustsCrt?.settings?.anchorId).toBe('crt');
-    expect(charitableTrustsTypes).toMatchObject({ kind: 'card_grid', mode: 'dynamic' });
+    expect(charitableTrustsTypes).toMatchObject({ kind: 'card_chart', mode: 'dynamic' });
     expect(charitableTrustsClt?.settings?.anchorId).toBe('clt');
-    expect(charitableTrustsCltTypes).toMatchObject({ kind: 'card_grid', mode: 'dynamic' });
+    expect(charitableTrustsCltTypes).toMatchObject({ kind: 'card_chart', mode: 'dynamic' });
     expect(charitableTrustsTrigger).toBeUndefined();
     expect(charitableTrustsInlineCta).toBeUndefined();
     expect(charitableTrustsRequest?.kind).toBe('request_form');

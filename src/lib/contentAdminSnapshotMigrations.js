@@ -1,5 +1,7 @@
 // Explicit snapshot migrations only. This module is not part of normal
 // browser/server normalization or renderer composition.
+import { resolveSiteFeatureCatalogEntry } from '../data/siteFeatureCatalog.js';
+
 export const RETIRED_TARGET_BRIDGE_SETTING_KEYS = Object.freeze([
   'targetSectionKey',
   'targetFineprintSectionKey',
@@ -32,6 +34,9 @@ export const INSURANCE_COVERAGE_CTA_MIGRATION_ID = 'insurance-coverage-cta-field
 export const INSURANCE_COVERAGE_CTA_MIGRATION_VERSION = 1;
 export const INSURANCE_PATH = '/services/insurance';
 
+export const INSURANCE_FEATURE_COLUMNS_MIGRATION_ID = 'insurance-features-to-columns';
+export const INSURANCE_FEATURE_COLUMNS_MIGRATION_VERSION = 1;
+
 export const INSURANCE_PC_RESOURCES_MIGRATION_ID = 'insurance-pc-resource-card-lists';
 export const INSURANCE_PC_RESOURCES_MIGRATION_VERSION = 1;
 export const INSURANCE_PC_RESOURCES_PATH = '/services/insurance/property-casualty-insurance';
@@ -39,6 +44,193 @@ export const INSURANCE_PC_RESOURCES_PATH = '/services/insurance/property-casualt
 export const ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_ID = 'online-contributions-step-cards';
 export const ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_VERSION = 1;
 export const ONLINE_CONTRIBUTIONS_PATH = '/online-contributions';
+
+export const NUMBERED_STEP_CARDS_MIGRATION_ID = 'numbered-step-cards-preset-metadata';
+export const NUMBERED_STEP_CARDS_MIGRATION_VERSION = 1;
+
+export const SITE_FEATURE_COLLECTIONS_MIGRATION_ID = 'site-feature-repeatable-content-fields';
+export const SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION = 1;
+
+export const SUPPORT_LIBRARY_BLOCK_MIGRATION_ID = 'support-library-block-kind';
+export const SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION = 1;
+export const SUPPORT_LIBRARY_PATH = '/services/insurance/ministers-group-life-plan';
+
+export const ENDOWMENTS_PRESENTATION_MIGRATION_ID = 'endowments-billboard-and-contact-headline';
+export const ENDOWMENTS_PRESENTATION_MIGRATION_VERSION = 1;
+export const ENDOWMENTS_PRESENTATION_PATH = '/services/planned-giving/endowments';
+
+export const MIF_REQUEST_HEADLINE_COLOR_MIGRATION_ID = 'mif-request-headline-highlight-colors';
+export const MIF_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION = 1;
+export const MIF_REQUEST_HEADLINE_COLOR_PATH = '/services/planned-giving/ministry-impact-fund';
+
+export const QCD_REQUEST_HEADLINE_COLOR_MIGRATION_ID = 'qcd-request-headline-highlight-colors';
+export const QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION = 1;
+export const QCD_REQUEST_HEADLINE_COLOR_PATH = '/services/planned-giving/qualified-charitable-distribution';
+
+const NUMBERED_STEP_CARD_SECTION_TOKENS = new Set([
+  'ministers-group-life-native-enroll',
+  'online-contrib-native-steps',
+  'retirement-403b-group-enrollment-steps',
+  'retirement-403b-native-loan-apply',
+  'retirement-individual-enrollment-steps',
+]);
+
+export function migrateSupportLibraryBlock(pathname, block) {
+  if (String(pathname || '').trim() !== SUPPORT_LIBRARY_PATH || !block || typeof block !== 'object') {
+    return block;
+  }
+  if (String(block.id || '').trim() !== 'support' || String(block.kind || '').trim() !== 'content') {
+    return block;
+  }
+  const supportGroupsJson = String(block.settings?.supportGroupsJson || '').trim();
+  if (!supportGroupsJson) {
+    return block;
+  }
+  return { ...cloneJson(block), kind: 'support_library' };
+}
+
+export function migrateSupportLibraryState(rawState) {
+  const source = rawState && typeof rawState === 'object' ? cloneJson(rawState) : {};
+  const blocksByPath = source.blocksByPath && typeof source.blocksByPath === 'object'
+    ? source.blocksByPath
+    : {};
+  const currentBlocks = Array.isArray(blocksByPath[SUPPORT_LIBRARY_PATH])
+    ? blocksByPath[SUPPORT_LIBRARY_PATH]
+    : [];
+  const migratedBlocks = currentBlocks.map((block) => migrateSupportLibraryBlock(SUPPORT_LIBRARY_PATH, block));
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(currentBlocks);
+  return {
+    state: changed
+      ? { ...source, blocksByPath: { ...blocksByPath, [SUPPORT_LIBRARY_PATH]: migratedBlocks } }
+      : source,
+    changed,
+  };
+}
+
+function migrateEndowmentsPresentationBlock(block) {
+  if (!block || typeof block !== 'object') {
+    return block;
+  }
+
+  const blockId = String(block.id || '').trim();
+  const settings = block.settings && typeof block.settings === 'object' ? block.settings : null;
+  if (!settings || !['give_forever', 'request_form'].includes(blockId)) {
+    return block;
+  }
+
+  const nextSettings = { ...settings };
+  let changed = false;
+
+  // Match the DAF billboard's measured Helv tracking without changing an
+  // administrator's later typography choice.
+  if (blockId === 'give_forever' && Number(settings.titleLetterSpacingEm) === -0.035) {
+    nextSettings.titleLetterSpacingEm = -0.03;
+    changed = true;
+  }
+
+  // This is a punctuation-only repair for the legacy seeded headline. Keep
+  // custom administrator copy untouched.
+  if (blockId === 'request_form' && String(settings.title || '').trim() === "Let's get started") {
+    nextSettings.title = "Let's get started.";
+    changed = true;
+  }
+
+  return changed ? { ...cloneJson(block), settings: nextSettings } : block;
+}
+
+export function migrateEndowmentsPresentationState(rawState) {
+  const source = rawState && typeof rawState === 'object' ? cloneJson(rawState) : {};
+  const blocksByPath = source.blocksByPath && typeof source.blocksByPath === 'object'
+    ? source.blocksByPath
+    : {};
+  const currentBlocks = Array.isArray(blocksByPath[ENDOWMENTS_PRESENTATION_PATH])
+    ? blocksByPath[ENDOWMENTS_PRESENTATION_PATH]
+    : [];
+  const migratedBlocks = currentBlocks.map(migrateEndowmentsPresentationBlock);
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(currentBlocks);
+  return {
+    state: changed
+      ? { ...source, blocksByPath: { ...blocksByPath, [ENDOWMENTS_PRESENTATION_PATH]: migratedBlocks } }
+      : source,
+    changed,
+  };
+}
+
+function migrateMifRequestHeadlineBlock(block) {
+  if (!block || typeof block !== 'object' || String(block.id || '').trim() !== 'request_form') {
+    return block;
+  }
+  const settings = block.settings && typeof block.settings === 'object' ? block.settings : null;
+  if (!settings || String(settings.title || '').trim() !== 'Ministry support. Unlocked and expanded.') {
+    return block;
+  }
+  if (String(settings.titleHighlightsJson || '').trim()) {
+    return block;
+  }
+  return {
+    ...cloneJson(block),
+    settings: {
+      ...settings,
+      titleHighlightsJson: '[{"text":"Unlocked","className":"is-white"},{"text":"expanded","className":"is-white"}]',
+    },
+  };
+}
+
+export function migrateMifRequestHeadlineColorState(rawState) {
+  const source = rawState && typeof rawState === 'object' ? cloneJson(rawState) : {};
+  const blocksByPath = source.blocksByPath && typeof source.blocksByPath === 'object'
+    ? source.blocksByPath
+    : {};
+  const currentBlocks = Array.isArray(blocksByPath[MIF_REQUEST_HEADLINE_COLOR_PATH])
+    ? blocksByPath[MIF_REQUEST_HEADLINE_COLOR_PATH]
+    : [];
+  const migratedBlocks = currentBlocks.map(migrateMifRequestHeadlineBlock);
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(currentBlocks);
+  return {
+    state: changed
+      ? { ...source, blocksByPath: { ...blocksByPath, [MIF_REQUEST_HEADLINE_COLOR_PATH]: migratedBlocks } }
+      : source,
+    changed,
+  };
+}
+
+function migrateQcdRequestHeadlineBlock(block) {
+  if (!block || typeof block !== 'object' || String(block.id || '').trim() !== 'request_form') {
+    return block;
+  }
+  const settings = block.settings && typeof block.settings === 'object' ? block.settings : null;
+  if (!settings || String(settings.title || '').trim() !== 'Your IRA. Their gain.') {
+    return block;
+  }
+  if (String(settings.titleHighlightsJson || '').trim()) {
+    return block;
+  }
+  return {
+    ...cloneJson(block),
+    settings: {
+      ...settings,
+      titleHighlightsJson: '[{"text":"gain","className":"is-white"}]',
+    },
+  };
+}
+
+export function migrateQcdRequestHeadlineColorState(rawState) {
+  const source = rawState && typeof rawState === 'object' ? cloneJson(rawState) : {};
+  const blocksByPath = source.blocksByPath && typeof source.blocksByPath === 'object'
+    ? source.blocksByPath
+    : {};
+  const currentBlocks = Array.isArray(blocksByPath[QCD_REQUEST_HEADLINE_COLOR_PATH])
+    ? blocksByPath[QCD_REQUEST_HEADLINE_COLOR_PATH]
+    : [];
+  const migratedBlocks = currentBlocks.map(migrateQcdRequestHeadlineBlock);
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(currentBlocks);
+  return {
+    state: changed
+      ? { ...source, blocksByPath: { ...blocksByPath, [QCD_REQUEST_HEADLINE_COLOR_PATH]: migratedBlocks } }
+      : source,
+    changed,
+  };
+}
 
 const CGA_SECURE_ACT_BODY_HTML = '<p><strong><span class="is-atlantean">The SECURE 2.0 Act of 2022</span></strong> allows you to fund a Charitable Gift Annuity with funds distributed from your IRA—up to $50,000* of your annual Qualified Charitable Distribution limit (QCD). This charitable distribution amount is both retirement income for you, and a gift of support to a ministry you choose. Even better, this distribution can count toward your IRA’s annual Required Minimum Distribution (RMD). <strong>You’re permitted to take advantage of this unique opportunity only once.</strong></p>';
 
@@ -80,6 +272,262 @@ function parseCgaBulletItems(value) {
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function convertInsuranceFeaturePanelToColumnsBlock(pathname, block) {
+  const source = cloneJson(block);
+  if (
+    String(pathname || '').trim() !== INSURANCE_PATH
+    || !['risk_management', 'mission_assure'].includes(String(source?.id || '').trim())
+    || String(source?.kind || '').trim() !== 'feature_panel'
+    || String(source?.mode || '').trim() !== 'dynamic'
+  ) {
+    return source;
+  }
+
+  const settings = source.settings && typeof source.settings === 'object' ? source.settings : {};
+  const isRisk = String(source.id || '').trim() === 'risk_management';
+  const buttonFields = {
+    buttonLabel: String(settings.buttonLabel || '').trim(),
+    buttonUrl: String(settings.buttonUrl || '').trim(),
+    buttonPageRef: String(settings.buttonPageRef || '').trim(),
+    buttonStyle: String(settings.buttonStyle || 'blue').trim() || 'blue',
+    buttonTone: String(settings.buttonTone || 'atlantean').trim() || 'atlantean',
+    buttonOpenInNewWindow: Boolean(settings.buttonOpenInNewWindow),
+  };
+  const baseColumnSettings = {
+    title: '',
+    leadLine: '',
+    followupLine: '',
+    titleClassName: '',
+    titleHighlightsJson: '',
+    bodyHtml: '',
+    columnsStyle: 'retirement',
+    bgTone: isRisk ? 'white' : 'sand',
+    contentWidth: 'content',
+    columns: 'two',
+    sectionClassName: '',
+    col1Enabled: true,
+    col1Type: isRisk ? 'text' : 'photo',
+    col1Title: isRisk ? String(settings.title || '') : '',
+    col1TitleClassName: isRisk ? String(settings.titleClassName || '') : '',
+    col1TitleHighlightsJson: isRisk ? String(settings.titleHighlightsJson || '') : '',
+    col1Body: isRisk ? String(settings.body || '') : '',
+    col1BodyHtml: isRisk ? String(settings.bodyHtml || '') : '',
+    col1ImageUrl: isRisk ? '' : String(settings.imageUrl || ''),
+    col1ImageAlt: isRisk ? '' : String(settings.imageAlt || ''),
+    col1ButtonLabel: isRisk ? buttonFields.buttonLabel : '',
+    col1ButtonUrl: isRisk ? buttonFields.buttonUrl : '',
+    col1ButtonPageRef: isRisk ? buttonFields.buttonPageRef : '',
+    col1ButtonStyle: isRisk ? buttonFields.buttonStyle : 'blue',
+    col1ButtonTone: isRisk ? buttonFields.buttonTone : 'atlantean',
+    col1ButtonOpenInNewWindow: isRisk ? buttonFields.buttonOpenInNewWindow : false,
+    col2Enabled: true,
+    col2Type: isRisk ? 'photo' : 'text',
+    col2Title: isRisk ? '' : String(settings.title || ''),
+    col2TitleClassName: isRisk ? '' : String(settings.titleClassName || ''),
+    col2TitleHighlightsJson: isRisk ? '' : String(settings.titleHighlightsJson || ''),
+    col2Body: isRisk ? '' : String(settings.body || ''),
+    col2BodyHtml: isRisk ? '' : String(settings.bodyHtml || ''),
+    col2ImageUrl: isRisk ? String(settings.imageUrl || '') : '',
+    col2ImageAlt: isRisk ? String(settings.imageAlt || '') : '',
+    col2ButtonLabel: isRisk ? '' : buttonFields.buttonLabel,
+    col2ButtonUrl: isRisk ? '' : buttonFields.buttonUrl,
+    col2ButtonPageRef: isRisk ? '' : buttonFields.buttonPageRef,
+    col2ButtonStyle: isRisk ? 'blue' : buttonFields.buttonStyle,
+    col2ButtonTone: isRisk ? 'atlantean' : buttonFields.buttonTone,
+    col2ButtonOpenInNewWindow: isRisk ? false : buttonFields.buttonOpenInNewWindow,
+    col3Enabled: false,
+    col3Type: 'text',
+    col3Title: '',
+    col3Body: '',
+    col3BodyHtml: '',
+    col3ImageUrl: '',
+    col3ImageAlt: '',
+    col4Enabled: false,
+    col4Type: 'text',
+    col4Title: '',
+    col4Body: '',
+    col4BodyHtml: '',
+    col4ImageUrl: '',
+    col4ImageAlt: '',
+  };
+
+  return {
+    ...source,
+    kind: 'columns',
+    templateId: 'columns',
+    presetId: isRisk ? 'do-the-math' : 'housing-allowance',
+    settings: baseColumnSettings,
+  };
+}
+
+export function migrateInsuranceFeaturePanelToColumnsBlock(pathname, block) {
+  return convertInsuranceFeaturePanelToColumnsBlock(pathname, block);
+}
+
+export function migrateInsuranceFeatureColumnsState(rawState) {
+  const source = cloneJson(rawState) || {};
+  const blocks = source?.blocksByPath?.[INSURANCE_PATH];
+  if (!Array.isArray(blocks)) {
+    return { state: source, changed: false };
+  }
+  const migratedBlocks = blocks.map((block) => convertInsuranceFeaturePanelToColumnsBlock(INSURANCE_PATH, block));
+  const changed = JSON.stringify(migratedBlocks) !== JSON.stringify(blocks);
+  return {
+    state: changed
+      ? {
+          ...source,
+          blocksByPath: {
+            ...(source.blocksByPath || {}),
+            [INSURANCE_PATH]: migratedBlocks,
+          },
+        }
+      : source,
+    changed,
+  };
+}
+
+const SITE_FEATURE_COLLECTION_FIELD_BY_ID = Object.freeze({
+  home_services_feature_animation: 'panelsJson',
+  home_impact_story: 'metricsJson',
+  impact_proof_story: 'metricsJson',
+  about_history_feature: 'cardsJson',
+  legacy_giving_stewardship_story: 'beatsJson',
+  retirement_plan_feature: 'panelsJson',
+  investments_growth_feature: 'panelsJson',
+});
+
+function editableActionPath(action) {
+  return String(action?.to || action?.href || '').trim();
+}
+
+function mapRuntimeCollectionItem(featureId, item) {
+  const source = item && typeof item === 'object' ? item : {};
+  if (featureId === 'legacy_giving_stewardship_story') {
+    return { copy: String(typeof item === 'string' ? item : source.copy || '').trim() };
+  }
+  if (featureId === 'home_services_feature_animation') {
+    return {
+      title: String(source.title || '').trim(),
+      body: String(source.body || '').trim(),
+      tone: String(source.tone || '').trim(),
+      buttonLabel: String(source.action?.label || '').trim(),
+      buttonPath: editableActionPath(source.action),
+      buttonOpenInNewWindow: Boolean(source.action?.openInNewWindow),
+    };
+  }
+  if (featureId === 'home_impact_story') {
+    return {
+      value: String(source.value || '').trim(),
+      label: String(source.label || '').trim(),
+      valueTone: String(source.valueTone || '').trim(),
+      labelBreak: String(source.labelBreak || '').trim(),
+      tone: String(source.tone || '').trim(),
+      buttonLabel: String(source.action?.label || '').trim(),
+      buttonPath: editableActionPath(source.action),
+    };
+  }
+  if (featureId === 'impact_proof_story') {
+    return {
+      value: String(source.value || '').trim(),
+      eyebrow: String(source.eyebrow || '').trim(),
+      label: String(source.label || '').trim(),
+      body: String(source.body || '').trim(),
+      valueTone: String(source.valueTone || '').trim(),
+      labelBreak: String(source.labelBreak || '').trim(),
+      tone: String(source.tone || '').trim(),
+      nativeCardClass: String(source.nativeCardClass || '').trim(),
+      buttonLabel: String(source.action?.label || '').trim(),
+      buttonPath: editableActionPath(source.action),
+    };
+  }
+  if (featureId === 'about_history_feature') {
+    return {
+      title: String(source.title || '').trim(),
+      body: String(source.body || '').trim(),
+      titleClassName: String(source.titleClassName || '').trim(),
+      panelTone: String(source.panelTone || '').trim(),
+      cardClass: String(source.cardClass || '').trim(),
+    };
+  }
+  return {
+    kind: String(source.kind || '').trim(),
+    title: String(source.title || '').trim(),
+    body: String(source.body || '').trim(),
+    tone: String(source.tone || '').trim(),
+    surfaceTone: String(source.surfaceTone || '').trim(),
+  };
+}
+
+function parseFeatureIntro(rawValue) {
+  try {
+    const parsed = typeof rawValue === 'string' ? JSON.parse(rawValue || '{}') : rawValue;
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Seeds repeatable site-feature content into explicit settings fields.
+ * Existing fields always win. This is intentionally a migration, never a
+ * renderer repair, so adding/removing/reordering items remains normal editor
+ * data after the one-time conversion.
+ */
+export function migrateSiteFeatureCollectionsBlock(block) {
+  const source = cloneJson(block);
+  if (
+    String(source?.kind || '').trim() !== 'site_feature'
+    || String(source?.mode || '').trim() !== 'dynamic'
+  ) {
+    return source;
+  }
+  const settings = source.settings && typeof source.settings === 'object'
+    ? { ...source.settings }
+    : {};
+  const featureId = String(settings.featureId || '').trim();
+  const collectionField = SITE_FEATURE_COLLECTION_FIELD_BY_ID[featureId];
+  if (!collectionField) {
+    return source;
+  }
+  const runtime = resolveSiteFeatureCatalogEntry(featureId)?.buildRuntime?.({ settings }) || {};
+  let changed = false;
+  if (!Object.prototype.hasOwnProperty.call(settings, collectionField)) {
+    const runtimeItems = Array.isArray(runtime[collectionField === 'beatsJson' ? 'beats' : collectionField.replace(/Json$/, '')])
+      ? runtime[collectionField === 'beatsJson' ? 'beats' : collectionField.replace(/Json$/, '')]
+      : [];
+    settings[collectionField] = JSON.stringify(runtimeItems.map((item) => mapRuntimeCollectionItem(featureId, item)));
+    changed = true;
+  }
+  if (featureId === 'impact_proof_story') {
+    const intro = parseFeatureIntro(settings.featureIntroJson);
+    [['introHeading', 'heading'], ['introBody', 'body'], ['introEmphasis', 'emphasis']].forEach(([fieldId, introKey]) => {
+      if (!Object.prototype.hasOwnProperty.call(settings, fieldId) && Object.prototype.hasOwnProperty.call(intro, introKey)) {
+        settings[fieldId] = String(intro[introKey] || '').trim();
+        changed = true;
+      }
+    });
+  }
+  return changed ? { ...source, settings } : source;
+}
+
+export function migrateSiteFeatureCollectionsState(rawState) {
+  const source = cloneJson(rawState) || {};
+  let changed = false;
+  const blocksByPath = Object.fromEntries(
+    Object.entries(source.blocksByPath || {}).map(([pathname, blocks]) => {
+      const migratedBlocks = (Array.isArray(blocks) ? blocks : []).map(migrateSiteFeatureCollectionsBlock);
+      if (JSON.stringify(migratedBlocks) !== JSON.stringify(blocks)) {
+        changed = true;
+      }
+      return [pathname, migratedBlocks];
+    }),
+  );
+  return {
+    state: changed ? { ...source, blocksByPath } : source,
+    changed,
+  };
 }
 
 export function migratePlannedGivingStepsBlock(pathname, block) {
@@ -288,6 +736,57 @@ export function migrateOnlineContributionsStepsState(rawState) {
           },
         }
       : source,
+    changed,
+  };
+}
+
+/**
+ * Adds only the missing preset identity needed by the shared numbered-card
+ * renderer. Content, order, and all settings remain byte-for-byte unchanged.
+ * Rendering never calls this function; the dev migration endpoint creates a
+ * backup before applying it to authoring and published snapshots.
+ */
+export function migrateNumberedStepCardsBlock(pathname, block) {
+  void pathname;
+  const source = cloneJson(block);
+  if (
+    String(source?.kind || '').trim() !== 'card_grid'
+    || String(source?.mode || '').trim() !== 'dynamic'
+  ) {
+    return source;
+  }
+
+  const presetId = String(source?.presetId || '').trim().toLowerCase();
+  if (presetId && presetId !== 'default') {
+    return source;
+  }
+
+  const sectionTokens = String(source?.settings?.sectionClassName || '')
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!sectionTokens.some((token) => NUMBERED_STEP_CARD_SECTION_TOKENS.has(token))) {
+    return source;
+  }
+
+  return { ...source, presetId: 'step-cards' };
+}
+
+export function migrateNumberedStepCardsState(rawState) {
+  const source = cloneJson(rawState) || {};
+  let changed = false;
+  const blocksByPath = Object.fromEntries(
+    Object.entries(source.blocksByPath || {}).map(([pathname, blocks]) => {
+      const migratedBlocks = (Array.isArray(blocks) ? blocks : [])
+        .map((block) => migrateNumberedStepCardsBlock(pathname, block));
+      if (JSON.stringify(migratedBlocks) !== JSON.stringify(blocks)) {
+        changed = true;
+      }
+      return [pathname, migratedBlocks];
+    }),
+  );
+
+  return {
+    state: changed ? { ...source, blocksByPath } : source,
     changed,
   };
 }

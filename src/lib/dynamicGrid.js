@@ -20,6 +20,11 @@ const GRID_COLUMNS_SET = new Set(['one', 'two', 'three', 'four']);
 const GRID_WIDTH_SET = new Set(['content', 'browser']);
 const GRID_BULLET_SIZE_SET = new Set(['daf', 'large']);
 
+// Shared planned-giving bullet contract. Keep authoring defaults and renderer
+// fallbacks identical so missing legacy fields cannot silently shrink lists.
+export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM = 1.55;
+export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT = 1.5;
+
 export function normalizeGridBgTone(value) {
   const token = String(value || 'white').trim().toLowerCase();
   return GRID_BG_TONE_SET.has(token) ? token : 'white';
@@ -148,7 +153,7 @@ export function normalizeDynamicGridCardTitleSizeRem(value) {
   if (!Number.isFinite(numeric)) {
     return 1.14;
   }
-  return Math.max(0.9, Math.min(2, Number(numeric.toFixed(2))));
+  return Math.max(0.9, Math.min(3, Number(numeric.toFixed(2))));
 }
 
 export function normalizeDynamicGridCardBodySizeRem(value) {
@@ -164,10 +169,30 @@ export function normalizeDynamicGridCardBulletSize(value) {
   return GRID_BULLET_SIZE_SET.has(token) ? token : 'daf';
 }
 
+export function normalizeDynamicGridCardBulletSizeRem(value) {
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) {
+    return Math.max(1.1, Math.min(2, Number(numeric.toFixed(2))));
+  }
+  return DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM;
+}
+
 export function normalizeDynamicGridCardBodyLineHeight(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
     return 1.58;
+  }
+  return Math.max(1.1, Math.min(2.1, Number(numeric.toFixed(2))));
+}
+
+export function normalizeDynamicGridCardBulletLineHeight(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT;
+  }
+  // 1 was written by an old token field, not an intentional readable value.
+  if (numeric < 1.1) {
+    return DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT;
   }
   return Math.max(1.1, Math.min(2.1, Number(numeric.toFixed(2))));
 }

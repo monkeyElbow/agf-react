@@ -4,18 +4,38 @@ import { normalizeContentAdminState } from './contentAdminNormalization';
 import {
   CGA_PATH,
   CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
+  INSURANCE_FEATURE_COLUMNS_MIGRATION_VERSION,
+  ENDOWMENTS_PRESENTATION_MIGRATION_VERSION,
+  ENDOWMENTS_PRESENTATION_PATH,
+  MIF_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+  MIF_REQUEST_HEADLINE_COLOR_PATH,
+  QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+  QCD_REQUEST_HEADLINE_COLOR_PATH,
   INSURANCE_PC_RESOURCES_PATH,
   INSURANCE_PATH,
   GENEROSITY_FUND_PATH,
   GENEROSITY_FUND_SNAPSHOT_MIGRATION_VERSION,
+  SUPPORT_LIBRARY_PATH,
+  SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
   migrateQcdCenteredCardGridBlock,
   migrateQcdCenteredCardGridState,
   migrateCgaSecureActCardState,
   migrateInsuranceCoverageCtaState,
+  migrateInsuranceFeatureColumnsState,
+  migrateInsuranceFeaturePanelToColumnsBlock,
   migrateInsurancePcResourceCardsBlock,
   migrateInsurancePcResourceCardsState,
   migratePlannedGivingStepsBlock,
+  migrateNumberedStepCardsBlock,
+  migrateNumberedStepCardsState,
+  migrateSiteFeatureCollectionsBlock,
+  migrateSiteFeatureCollectionsState,
   migrateGenerosityFundSnapshot,
+  migrateSupportLibraryBlock,
+  migrateSupportLibraryState,
+  migrateEndowmentsPresentationState,
+  migrateMifRequestHeadlineColorState,
+  migrateQcdRequestHeadlineColorState,
   stripRetiredTargetBridgeSettingsFromState,
 } from './contentAdminSnapshotMigrations';
 
@@ -38,6 +58,203 @@ const legacyState = {
 };
 
 describe('content-admin snapshot migrations', () => {
+  it('moves insurance Risk Management and Mission Assure into shared columns presets without losing authored content', () => {
+    const risk = {
+      id: 'risk_management',
+      kind: 'feature_panel',
+      mode: 'dynamic',
+      settings: {
+        title: 'Risk Management',
+        titleHighlightsJson: '[{"text":"Risk","className":"is-melon"}]',
+        bodyHtml: '<p>Focus on your ministry.</p>',
+        imageUrl: '/risk.jpg',
+        imageAlt: 'Risk guide',
+        buttonLabel: 'Download the guide',
+        buttonUrl: 'https://example.com/risk.pdf',
+        buttonOpenInNewWindow: true,
+        sectionClassName: 'insurance-native-risk',
+      },
+    };
+    const mission = {
+      id: 'mission_assure',
+      kind: 'feature_panel',
+      mode: 'dynamic',
+      settings: {
+        title: 'Full coverage for mission trips, retreats…',
+        body: '…and everything in between.',
+        imageUrl: '/mission.jpg',
+        imageAlt: 'Mission Assure coverage',
+        logoKey: 'mission-assure',
+        buttonLabel: 'Let’s go',
+        buttonUrl: '/services/insurance/mission-assure',
+      },
+    };
+
+    const migratedRisk = migrateInsuranceFeaturePanelToColumnsBlock(INSURANCE_PATH, risk);
+    const migratedMission = migrateInsuranceFeaturePanelToColumnsBlock(INSURANCE_PATH, mission);
+
+    expect(migratedRisk).toMatchObject({
+      id: 'risk_management',
+      kind: 'columns',
+      presetId: 'do-the-math',
+      settings: {
+        col1Title: 'Risk Management',
+        col1TitleHighlightsJson: risk.settings.titleHighlightsJson,
+        col1BodyHtml: risk.settings.bodyHtml,
+        col2ImageUrl: risk.settings.imageUrl,
+        col1ButtonUrl: risk.settings.buttonUrl,
+        col1ButtonOpenInNewWindow: true,
+      },
+    });
+    expect(migratedRisk.settings.sectionClassName).toBe('');
+    expect(migratedMission).toMatchObject({
+      id: 'mission_assure',
+      kind: 'columns',
+      presetId: 'housing-allowance',
+      settings: {
+        col1ImageUrl: mission.settings.imageUrl,
+        col2Title: mission.settings.title,
+        col2Body: mission.settings.body,
+        col2ButtonUrl: mission.settings.buttonUrl,
+      },
+    });
+    expect(migratedMission.settings.logoKey).toBeUndefined();
+
+    const migratedState = migrateInsuranceFeatureColumnsState({
+      blocksByPath: { [INSURANCE_PATH]: [risk, mission] },
+    });
+    expect(migratedState.changed).toBe(true);
+    expect(INSURANCE_FEATURE_COLUMNS_MIGRATION_VERSION).toBe(1);
+    expect(migrateInsuranceFeatureColumnsState(migratedState.state).changed).toBe(false);
+  });
+
+  it('promotes the support block without changing its ID or payload', () => {
+    const legacyBlock = {
+      id: 'support',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Support for current clients',
+        html: '<p>Call us.</p>',
+        supportGroupsJson: JSON.stringify([{ title: 'Plan details', links: [{ label: 'Plan PDF', documentId: 'doc-1' }] }]),
+        supportGroupsExpanded: true,
+        supportGroupsCollapsible: false,
+      },
+    };
+    const migratedBlock = migrateSupportLibraryBlock(SUPPORT_LIBRARY_PATH, legacyBlock);
+    expect(migratedBlock).toEqual({ ...legacyBlock, kind: 'support_library' });
+    expect(migrateSupportLibraryBlock('/test', legacyBlock)).toEqual(legacyBlock);
+    expect(SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION).toBe(1);
+
+    const migratedState = migrateSupportLibraryState({
+      blocksByPath: { [SUPPORT_LIBRARY_PATH]: [legacyBlock] },
+    });
+    expect(migratedState.changed).toBe(true);
+    expect(migratedState.state.blocksByPath[SUPPORT_LIBRARY_PATH][0]).toEqual(migratedBlock);
+  });
+
+  it('matches the Endowments billboard tracking and repairs only the legacy contact punctuation', () => {
+    const state = {
+      blocksByPath: {
+        [ENDOWMENTS_PRESENTATION_PATH]: [
+          {
+            id: 'give_forever',
+            kind: 'billboard',
+            mode: 'dynamic',
+            settings: { title: 'Give once, forever.', titleLetterSpacingEm: -0.035 },
+          },
+          {
+            id: 'request_form',
+            kind: 'request_form',
+            mode: 'dynamic',
+            settings: { title: "Let's get started" },
+          },
+          {
+            id: 'custom',
+            kind: 'content',
+            mode: 'dynamic',
+            settings: { title: 'Keep this custom content' },
+          },
+        ],
+      },
+    };
+
+    const migrated = migrateEndowmentsPresentationState(state);
+    const blocks = migrated.state.blocksByPath[ENDOWMENTS_PRESENTATION_PATH];
+
+    expect(migrated.changed).toBe(true);
+    expect(blocks.find((block) => block.id === 'give_forever').settings.titleLetterSpacingEm).toBe(-0.03);
+    expect(blocks.find((block) => block.id === 'request_form').settings.title).toBe("Let's get started.");
+    expect(blocks.find((block) => block.id === 'custom').settings.title).toBe('Keep this custom content');
+    expect(ENDOWMENTS_PRESENTATION_MIGRATION_VERSION).toBe(1);
+  });
+
+  it('adds white highlights to the legacy MIF request headline without touching custom headlines', () => {
+    const state = {
+      blocksByPath: {
+        [MIF_REQUEST_HEADLINE_COLOR_PATH]: [
+          {
+            id: 'request_form',
+            kind: 'request_form',
+            mode: 'dynamic',
+            settings: {
+              title: 'Ministry support. Unlocked and expanded.',
+              titleHighlightsJson: '',
+            },
+          },
+          {
+            id: 'other',
+            kind: 'request_form',
+            mode: 'dynamic',
+            settings: { title: 'Custom headline', titleHighlightsJson: '' },
+          },
+        ],
+      },
+    };
+
+    const migrated = migrateMifRequestHeadlineColorState(state);
+    const blocks = migrated.state.blocksByPath[MIF_REQUEST_HEADLINE_COLOR_PATH];
+
+    expect(migrated.changed).toBe(true);
+    expect(blocks[0].settings.titleHighlightsJson).toContain('Unlocked');
+    expect(blocks[0].settings.titleHighlightsJson).toContain('expanded');
+    expect(blocks[1].settings.titleHighlightsJson).toBe('');
+    expect(MIF_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION).toBe(1);
+  });
+
+  it('adds a white highlight to the legacy QCD request headline without touching custom headlines', () => {
+    const state = {
+      blocksByPath: {
+        [QCD_REQUEST_HEADLINE_COLOR_PATH]: [
+          {
+            id: 'request_form',
+            kind: 'request_form',
+            settings: {
+              title: 'Your IRA. Their gain.',
+              titleHighlightsJson: '',
+            },
+          },
+          {
+            id: 'custom-request',
+            kind: 'request_form',
+            settings: {
+              title: 'Your IRA. Their gain.',
+              titleHighlightsJson: '[{"text":"IRA","className":"is-atlantean"}]',
+            },
+          },
+        ],
+      },
+    };
+
+    const migrated = migrateQcdRequestHeadlineColorState(state);
+    const blocks = migrated.state.blocksByPath[QCD_REQUEST_HEADLINE_COLOR_PATH];
+
+    expect(migrated.changed).toBe(true);
+    expect(blocks[0].settings.titleHighlightsJson).toContain('gain');
+    expect(blocks[1].settings.titleHighlightsJson).toContain('is-atlantean');
+    expect(QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION).toBe(1);
+  });
+
   it('does not run retired target-field cleanup during ordinary normalization', () => {
     const normalized = normalizeContentAdminState(legacyState);
     expect(normalized.blocksByPath['/test'][0].settings.targetSectionKey)
@@ -242,6 +459,110 @@ describe('content-admin snapshot migrations', () => {
       card2ListJson: JSON.stringify(['Online safety tools', '**Comprehensive risk management guide**']),
     });
     expect(migrateInsurancePcResourceCardsBlock('/test', block)).toEqual(block);
+  });
+
+  it('adds numbered step-card preset metadata without changing authored content', () => {
+    const block = {
+      id: 'enroll_steps',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      presetId: 'default',
+      settings: {
+        sectionClassName: 'ministers-group-life-native-enroll',
+        card1Title: '01',
+        card1Body: 'Exact authored copy',
+        card1ButtonLabel: 'Keep this button',
+      },
+    };
+    const migrated = migrateNumberedStepCardsBlock('/services/insurance/ministers-group-life-plan', block);
+
+    expect(migrated).toEqual({ ...block, presetId: 'step-cards' });
+    expect(migrated.settings).toEqual(block.settings);
+    expect(migrateNumberedStepCardsBlock('/test', {
+      ...block,
+      settings: { ...block.settings, sectionClassName: 'unrelated-section' },
+    })).toEqual({
+      ...block,
+      settings: { ...block.settings, sectionClassName: 'unrelated-section' },
+    });
+  });
+
+  it('exposes repeatable site-feature copy without overwriting existing admin fields', () => {
+    const legacyBlock = {
+      id: 'impact_proof_story',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'impact_proof_story',
+        featureIntroJson: JSON.stringify({
+          heading: 'Existing heading',
+          body: 'Existing body',
+          emphasis: 'Existing emphasis',
+        }),
+      },
+    };
+    const migrated = migrateSiteFeatureCollectionsBlock(legacyBlock);
+    const metrics = JSON.parse(migrated.settings.metricsJson);
+
+    expect(metrics).toHaveLength(4);
+    expect(metrics[1]).toMatchObject({
+      value: '$450 million',
+      eyebrow: 'Planned Giving',
+      buttonLabel: 'Plan with us',
+      tone: 'mango',
+    });
+    expect(migrated.settings).toMatchObject({
+      introHeading: 'Existing heading',
+      introBody: 'Existing body',
+      introEmphasis: 'Existing emphasis',
+    });
+
+    const edited = migrateSiteFeatureCollectionsBlock({
+      ...legacyBlock,
+      settings: {
+        ...legacyBlock.settings,
+        metricsJson: JSON.stringify([{ value: 'Edited value', label: 'Edited label' }]),
+        introHeading: 'Admin heading',
+      },
+    });
+    expect(JSON.parse(edited.settings.metricsJson)).toEqual([{ value: 'Edited value', label: 'Edited label' }]);
+    expect(edited.settings.introHeading).toBe('Admin heading');
+  });
+
+  it('migrates all repeatable feature collections across state without touching navigation features', () => {
+    const state = {
+      blocksByPath: {
+        '/': [{ id: 'feature', kind: 'site_feature', mode: 'dynamic', settings: { featureId: 'home_services_feature_animation' } }],
+        '/services': [{ id: 'feature', kind: 'site_feature', mode: 'dynamic', settings: { featureId: 'services_breakdown' } }],
+      },
+    };
+    const migrated = migrateSiteFeatureCollectionsState(state);
+    expect(migrated.changed).toBe(true);
+    expect(migrated.state.blocksByPath['/'][0].settings.panelsJson).toBeTruthy();
+    expect(migrated.state.blocksByPath['/services'][0]).toEqual(state.blocksByPath['/services'][0]);
+  });
+
+  it('migrates active and base numbered-card metadata without touching other blocks', () => {
+    const state = {
+      blocksByPath: {
+        '/services/insurance/ministers-group-life-plan': [{
+          id: 'enroll_steps',
+          kind: 'card_grid',
+          mode: 'dynamic',
+          presetId: 'default',
+          settings: { sectionClassName: 'ministers-group-life-native-enroll', card1Body: 'Keep' },
+        }],
+        '/test': [{ id: 'copy', kind: 'content', mode: 'dynamic', settings: { body: 'Keep' } }],
+      },
+    };
+    const migrated = migrateNumberedStepCardsState(state);
+
+    expect(migrated.changed).toBe(true);
+    expect(migrated.state.blocksByPath['/services/insurance/ministers-group-life-plan'][0].presetId)
+      .toBe('step-cards');
+    expect(migrated.state.blocksByPath['/services/insurance/ministers-group-life-plan'][0].settings.card1Body)
+      .toBe('Keep');
+    expect(migrated.state.blocksByPath['/test']).toEqual(state.blocksByPath['/test']);
   });
 
   it('migrates P&C resource cards through the explicit state helper', () => {

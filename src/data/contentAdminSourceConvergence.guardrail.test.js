@@ -401,10 +401,7 @@ describe('architecture.content-admin active-state hygiene', () => {
       if (
         (
           pathname === '/services/retirement/403b'
-          && (
-            blockId === 'strategy_enroll_cta'
-            || (blockId === 'investment_strategy_options' && block?.kind === 'card_grid')
-          )
+          && blockId === 'strategy_enroll_cta'
         ) || (
           pathname === '/services/planned-giving'
           && (

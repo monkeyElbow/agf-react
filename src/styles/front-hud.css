@@ -10,7 +10,7 @@
   position: relative;
   isolation: isolate;
   z-index: 0;
-  transition: box-shadow 2000ms cubic-bezier(0.22, 1, 0.36, 1), filter 2000ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: filter 2000ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .service-native-page :is(.service-native-hero, .service-native-intro, .service-native-section)::after {
@@ -37,7 +37,7 @@
   position: relative;
   isolation: isolate;
   z-index: 0;
-  transition: box-shadow 2000ms cubic-bezier(0.22, 1, 0.36, 1), filter 2000ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: filter 2000ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .home-native-page :is(
@@ -244,10 +244,20 @@
   opacity: var(--ag-admin-front-hud-dim-strength, 0.42);
 }
 
+/* Ownership badges identify passive drafts, but they do not make a block the
+   active editor. Keep every non-focused block visually subordinate while a
+   HUD panel is open, including blocks with another admin's saved draft. */
+.service-native-page.has-active-front-hud-panel
+  :is(.service-native-hero, .service-native-intro, .service-native-section).is-admin-owned-drafted-other:not(.is-hud-focus-target)::after,
+.service-native-page.has-active-front-hud-panel
+  :is(.service-native-hero, .service-native-intro, .service-native-section).is-admin-owned-saved-other:not(.is-hud-focus-target)::after {
+  opacity: var(--ag-admin-front-hud-dim-strength, 0.42) !important;
+}
+
 .service-native-page.has-active-front-hud-panel :is(.service-native-hero, .service-native-intro, .service-native-section).is-hud-focus-target {
   z-index: 4;
   filter: none;
-  box-shadow: inset 0 0 0 1px rgba(0, 138, 171, 0.26);
+  box-shadow: none;
 }
 
 /* Hidden blocks stay out of public rendering, but remain inspectable in HUD.
@@ -285,6 +295,29 @@
   opacity: var(--ag-admin-front-hud-dim-strength, 0.42);
 }
 
+.home-native-page.has-active-front-hud-panel
+  :is(
+    .home-native-strip,
+    .home-native-hero,
+    .home-native-services,
+    .home-native-impact,
+    .service-native-section,
+    .home-native-feature,
+    .home-native-newsletter
+  ).is-admin-owned-drafted-other:not(.is-hud-focus-target)::after,
+.home-native-page.has-active-front-hud-panel
+  :is(
+    .home-native-strip,
+    .home-native-hero,
+    .home-native-services,
+    .home-native-impact,
+    .service-native-section,
+    .home-native-feature,
+    .home-native-newsletter
+  ).is-admin-owned-saved-other:not(.is-hud-focus-target)::after {
+  opacity: var(--ag-admin-front-hud-dim-strength, 0.42) !important;
+}
+
 .home-native-page.has-active-front-hud-panel.hud-focus-home-top-strip [data-block-id="top_strip"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-hero [data-block-id="hero"],
 .home-native-page.has-active-front-hud-panel.hud-focus-home-services-feature-animation [data-block-id="home_services_feature_animation"],
@@ -296,7 +329,7 @@
 .home-native-page.has-active-front-hud-panel.hud-focus-home-impact-stat [data-block-id="impact_stat"] {
   z-index: 4;
   filter: none;
-  box-shadow: inset 0 0 0 1px rgba(0, 138, 171, 0.26);
+  box-shadow: none;
 }
 
 .home-native-page.has-active-front-hud-panel.hud-focus-home-top-strip [data-block-id="top_strip"]::after,
@@ -2692,11 +2725,12 @@
   min-height: 30px;
   border-radius: var(--ag-field-radius);
   border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.28);
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--ag-admin-field-bg);
   color: var(--ag-admin-hud-control-text);
   font: inherit;
   font-size: 0.85rem;
   padding: 0.3rem 0.48rem;
+  transition: var(--ag-admin-field-transition);
   outline: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.16);
   outline-offset: 0;
   box-shadow:
@@ -2709,9 +2743,10 @@
 .admin-front-hud-tool .admin-front-hud-field > select,
 .admin-front-hud-tool .admin-front-hud-field > textarea {
   border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.28) !important;
-  background: rgba(255, 255, 255, 0.98) !important;
+  background: var(--ag-admin-field-bg) !important;
   outline: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.16) !important;
   outline-offset: 0 !important;
+  transition: var(--ag-admin-field-transition);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.72),
     inset 0 0 0 1px rgba(var(--ag-admin-hud-accent-rgb), 0.06) !important;
@@ -2751,12 +2786,13 @@
   min-height: 86px;
   border-radius: 18px;
   border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.28);
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--ag-admin-field-bg);
   color: var(--ag-admin-hud-control-text);
   font: inherit;
   font-size: 0.78rem;
   line-height: 1.35;
   padding: 0.4rem 0.48rem;
+  transition: var(--ag-admin-field-transition);
   resize: vertical;
   outline: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.16);
   outline-offset: 0;
@@ -2777,6 +2813,10 @@
     0 0 0 4px rgba(var(--ag-admin-hud-accent-soft-rgb), 0.18);
 }
 
+.admin-front-hud-field :is(select, input[type='text'], input[type='number'], textarea):focus {
+  background: var(--ag-admin-field-bg-focus);
+}
+
 .admin-front-hud-tool .admin-front-hud-field > input[type='text']:focus-visible,
 .admin-front-hud-tool .admin-front-hud-field > input[type='number']:focus-visible,
 .admin-front-hud-tool .admin-front-hud-field > select:focus-visible,
@@ -2787,6 +2827,12 @@
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.8),
     0 0 0 3px rgba(var(--ag-admin-hud-accent-soft-rgb), 0.16) !important;
+}
+
+.admin-front-hud-tool .admin-front-hud-field > :is(
+  input[type='text'], input[type='number'], select, textarea
+):focus {
+  background: var(--ag-admin-field-bg-focus) !important;
 }
 
 .admin-front-hud-mode-toggle,
@@ -3098,6 +3144,26 @@
 .admin-front-hud-page-content-mini-html-wrap .admin-html-editor.is-compact .admin-html-editor-surface,
 .admin-front-hud-page-content-mini-html-wrap .admin-html-editor.is-compact .admin-html-editor-source {
   min-height: 280px;
+}
+
+.admin-front-hud-page-content-editor .admin-page-content-editor-preview {
+  margin-top: 0.55rem;
+}
+
+.admin-front-hud-page-content-editor .admin-page-content-editor-preview-surface {
+  min-height: 5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+}
+
+.admin-front-hud-page-content-editor .admin-page-content-editor-preview-surface h3 {
+  font-size: 1rem;
+}
+
+.admin-front-hud-page-content-editor .admin-page-content-editor-preview-surface .native-info-rich-html,
+.admin-front-hud-page-content-editor .admin-page-content-editor-preview-surface .native-info-rich-html p {
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 .admin-front-hud-page-content-settings {
@@ -4264,6 +4330,18 @@
 .admin-intro-hud-live-heading.is-white,
 .admin-intro-hud-live-heading mark.is-white {
   color: #ffffff;
+}
+
+/* The Intro HUD preview must remain readable when the stored public text tone
+   is white but the editor preview surface is light. The public block keeps
+   its real tone; this is editor-only contrast, matching the request-form
+   preview contract. */
+.admin-intro-hud-heading-preview.is-bg-white .admin-intro-hud-live-heading.is-white,
+.admin-intro-hud-heading-preview.is-bg-white .admin-intro-hud-live-heading mark.is-white,
+.admin-intro-hud-heading-preview.is-bg-sand .admin-intro-hud-live-heading.is-white,
+.admin-intro-hud-heading-preview.is-bg-sand .admin-intro-hud-live-heading mark.is-white {
+  color: var(--ag-color-super-grey);
+  text-shadow: 0 0 0.5px rgba(65, 64, 66, 0.35), 0 1px 0 rgba(65, 64, 66, 0.12);
 }
 
 .admin-intro-hud-heading-editor .admin-front-hud-hero-live-input {
@@ -7052,6 +7130,8 @@
   grid-row: 1;
   gap: var(--ag-hud-editor-row-gap);
   min-width: 0;
+  overflow: hidden;
+  transition: height 100ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .admin-hud-editor-model-layout > .admin-hud-editor-panel-stack > :is(
@@ -7367,6 +7447,338 @@
   display: none;
 }
 
+/* Support library HUD contract. Keep the library editor on the same shared
+   page rail as the other editors, with one calm surface per page. Group and
+   link rows are controls, not nested cards. */
+.admin-hud-editor-shared-surface .admin-support-library-hud-editor
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-support-library-hud-page, .admin-hud-editor-block-options-page) {
+  display: grid;
+  align-content: start;
+  gap: var(--ag-hud-editor-row-gap);
+  min-width: 0;
+  margin: 0;
+  padding: var(--ag-hud-editor-panel-padding);
+  border: 1px solid var(--ag-hud-editor-border);
+  border-radius: var(--ag-hud-editor-radius);
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-hud-editor.is-section-content
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-support-library-hud-page--library, .admin-support-library-hud-page--options, .admin-hud-editor-block-options-page),
+.admin-hud-editor-shared-surface .admin-support-library-hud-editor.is-section-library
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-support-library-hud-page--content, .admin-support-library-hud-page--options, .admin-hud-editor-block-options-page),
+.admin-hud-editor-shared-surface .admin-support-library-hud-editor.is-section-options
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-support-library-hud-page--content, .admin-support-library-hud-page--library, .admin-hud-editor-block-options-page),
+.admin-hud-editor-shared-surface .admin-support-library-hud-editor.is-section-block
+  > .admin-hud-editor-panel-stack
+  > :not(.admin-hud-editor-block-options-page) {
+  display: none;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor,
+.admin-hud-editor-shared-surface .admin-support-library-group-list,
+.admin-hud-editor-shared-surface .admin-support-library-group,
+.admin-hud-editor-shared-surface .admin-support-library-links,
+.admin-hud-editor-shared-surface .admin-support-library-link {
+  min-width: 0;
+}
+
+/* Card Chart HUD pages are sibling glass surfaces. Keep the card editors in
+   two columns without adding another panel around the whole page. */
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor
+  > .admin-hud-editor-panel-stack
+  > .admin-card-chart-hud-page {
+  display: grid;
+  align-content: start;
+  gap: var(--ag-hud-editor-row-gap);
+  min-width: 0;
+  margin: 0;
+  padding: var(--ag-hud-editor-panel-padding);
+  border: 1px solid var(--ag-hud-editor-border);
+  border-radius: var(--ag-hud-editor-radius);
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-header
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--cards, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-spacing
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--cards, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-cards
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-layout
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--cards, .admin-hud-editor-block-options-page),
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-block
+  > .admin-hud-editor-panel-stack
+  > :not(.admin-hud-editor-block-options-page) {
+  display: none;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page .admin-card-chart-card-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page .admin-card-chart-card-editor {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
+  .admin-content-field-list [data-editor-field-id='title'] textarea {
+  min-height: 5rem;
+  font-size: 1.18rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
+  > .admin-content-field-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
+  > .admin-content-field-list > label {
+  grid-column: span 1;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
+  .admin-card-chart-fineprint-controls {
+  grid-column: 1 / -1;
+  padding: 0.8rem;
+  border: 1px solid var(--ag-hud-editor-border);
+  border-radius: var(--ag-hud-editor-radius);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
+  .admin-card-chart-fineprint-controls .admin-content-field-list {
+  grid-template-columns: minmax(0, 2fr) minmax(8rem, 0.75fr) minmax(8rem, 0.75fr);
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
+  .admin-card-chart-fineprint-controls [data-editor-field-id='fineprint'] textarea {
+  min-height: 5rem;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+/* Card Chart is a copy-heavy editor. Override the shared HUD micro-control
+   sizing so all of its fields use normal readable typography. */
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor
+  :is(.admin-content-field-list, .admin-content-field-list--inline)
+  > label {
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor
+  :is(.admin-content-field-list, .admin-content-field-list--inline)
+  > label
+  > :is(input:not([type='checkbox']), select, textarea) {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-header-fields {
+  width: 100%;
+  max-width: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-header-fields > label {
+  grid-column: span 1;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-spacing-controls .admin-content-field-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  column-gap: var(--ag-hud-editor-field-gap);
+  row-gap: 0.65rem;
+  min-width: 0;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-spacing-controls .admin-range-number-control {
+  grid-template-columns: minmax(0, 1fr) 3.1rem 1.55rem;
+  min-width: 0;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-spacing-controls .admin-range-number-control > input[type='range'] {
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .admin-card-chart-fineprint-controls .admin-content-field-list,
+  .admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
+    .admin-card-chart-fineprint-controls .admin-content-field-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-hud-editor-shared-surface .admin-card-chart-hud-page .admin-card-chart-card-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
+    > .admin-content-field-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-hud-editor-shared-surface .admin-card-chart-header-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor {
+  display: grid;
+  gap: var(--ag-hud-editor-row-gap);
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor
+  :is(.admin-grid-resource-link-list, .admin-grid-accordion-list) {
+  display: grid;
+  gap: var(--ag-hud-editor-row-gap);
+}
+
+/* Remove the generic resource/accordion card treatment inside this editor. */
+.admin-hud-editor-shared-surface .admin-support-library-editor
+  :is(.admin-grid-accordion-card, .admin-grid-resource-link-card) {
+  display: grid;
+  gap: var(--ag-hud-editor-field-gap);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-group {
+  gap: var(--ag-hud-editor-row-gap);
+  padding-block: 0.22rem 0.5rem;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-group + .admin-support-library-group {
+  padding-top: 0.55rem;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-group
+  > .admin-grid-resource-link-toprow {
+  grid-template-columns: minmax(0, 1fr) repeat(3, max-content);
+  gap: var(--ag-hud-editor-field-gap);
+  align-items: center;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-link
+  > .admin-grid-resource-link-toprow {
+  grid-template-columns: minmax(0, 1.55fr) minmax(8rem, 0.85fr) repeat(3, max-content);
+  gap: var(--ag-hud-editor-field-gap);
+  align-items: center;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor
+  :is(input:not([type='checkbox']), select, textarea) {
+  min-width: 0;
+  min-height: var(--ag-hud-editor-compact-control-height);
+  height: var(--ag-hud-editor-compact-control-height);
+  padding: 0 0.56rem;
+  border: 1px solid var(--ag-admin-hud-control-border);
+  border-radius: 999px;
+  background: var(--ag-admin-hud-control-bg);
+  color: var(--ag-admin-hud-control-text);
+  font-family: var(--ag-font-helv);
+  font-size: 0.74rem;
+  line-height: 1.1;
+  box-shadow: none;
+  transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor
+  :is(input:not([type='checkbox']), select, textarea):focus {
+  border-color: var(--ag-admin-hud-control-border-strong);
+  background: rgba(255, 255, 255, 0.96);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 161, 184, 0.12);
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor textarea {
+  height: 2.1rem;
+  min-height: 2.1rem;
+  padding-block: 0.42rem;
+  border-radius: 14px;
+  resize: vertical;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor select option {
+  font-family: var(--ag-font-helv);
+  font-size: 0.82rem;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor
+  .admin-grid-resource-checkbox {
+  min-height: var(--ag-hud-editor-compact-control-height);
+  gap: 0.3rem;
+  color: var(--ag-admin-hud-control-muted);
+  font-size: var(--ag-hud-editor-label-size);
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor
+  .admin-grid-resource-checkbox input[type='checkbox'] {
+  width: 0.82rem;
+  height: 0.82rem;
+  accent-color: var(--ag-admin-hud-accent);
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor
+  :is(.action-btn, .admin-highlight-remove-btn) {
+  min-height: var(--ag-hud-editor-compact-control-height);
+  padding-inline: 0.62rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor .admin-support-library-warning {
+  margin: 0;
+  padding: 0.46rem 0.62rem;
+  border-radius: 12px;
+  font-size: var(--ag-hud-editor-label-size);
+}
+
+.admin-hud-editor-shared-surface .admin-support-library-editor .admin-support-library-help,
+.admin-hud-editor-shared-surface .admin-support-library-editor .admin-grid-resource-empty {
+  margin: 0;
+  color: var(--ag-admin-hud-control-muted);
+  font-size: var(--ag-hud-editor-label-size);
+  line-height: 1.25;
+}
+
+.admin-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 @media (max-width: 680px) {
   .admin-hud-editor-model-layout {
     grid-template-columns: 1fr;
@@ -7384,6 +7796,12 @@
   .admin-hud-editor-model-layout > .admin-hud-editor-panel-stack {
     grid-column: 1;
     grid-row: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-hud-editor-model-layout > .admin-hud-editor-panel-stack {
+    transition: none;
   }
 }
 
@@ -7617,12 +8035,9 @@
   }
 }
 
-/* All reference editors share the Billboard host treatment, including the shell itself. */
-.admin-front-hud-tool.is-panel-active:has(:is(
-  .admin-billboard-hud-editor--reference,
-  .admin-cta-hud-editor--reference,
-  .admin-top-strip-hud-editor--reference
-)) {
+/* All shared HUD editors use one Billboard-derived host treatment. The
+   editor kind owns its controls; the outer frame owns its geometry. */
+.admin-front-hud-tool.is-panel-active:has(.admin-hud-editor-shared-surface) {
   --ag-admin-hud-panel-surface-alpha: clamp(0.025, calc(0.01 + var(--ag-admin-front-hud-opacity, 0.15) * 0.64), 0.66);
   --ag-admin-hud-panel-surface-alpha-strong: clamp(0.04, calc(0.015 + var(--ag-admin-front-hud-opacity, 0.15) * 0.7), 0.76);
   --ag-admin-hud-panel-bg: linear-gradient(
@@ -7630,15 +8045,17 @@
     rgba(255, 255, 255, var(--ag-admin-hud-panel-surface-alpha)) 0%,
     rgba(224, 241, 252, var(--ag-admin-hud-panel-surface-alpha-strong)) 100%
   );
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0.62rem 0.72rem calc(0.76rem + var(--ag-admin-hud-safe-bottom, 0px));
+  border-radius: 16px 16px 0 0;
   border-top-color: rgba(255, 255, 255, 0.96) !important;
   border-bottom: 0;
 }
 
-.admin-front-hud-tool:has(:is(
-  .admin-billboard-hud-editor--reference,
-  .admin-cta-hud-editor--reference,
-  .admin-top-strip-hud-editor--reference
-)) {
+.admin-front-hud-tool:has(.admin-hud-editor-shared-surface) {
   width: 100%;
   max-width: none;
   gap: 0.08rem;
@@ -7653,11 +8070,7 @@
 }
 
 :is(.service-native-page, .home-native-page, .rates-page, .native-info-page).is-front-hud-docked
-  .admin-front-hud-tool:has(:is(
-    .admin-billboard-hud-editor--reference,
-    .admin-cta-hud-editor--reference,
-    .admin-top-strip-hud-editor--reference
-  )) > .admin-front-hud-tool-head {
+  .admin-front-hud-tool:has(.admin-hud-editor-shared-surface) > .admin-front-hud-tool-head {
   margin-bottom: 0;
   margin-inline: -0.9rem;
   display: grid;
@@ -7671,11 +8084,7 @@
 }
 
 :is(.service-native-page, .home-native-page, .rates-page, .native-info-page).is-front-hud-docked
-  .admin-front-hud-tool:has(:is(
-    .admin-billboard-hud-editor--reference,
-    .admin-cta-hud-editor--reference,
-    .admin-top-strip-hud-editor--reference
-  )) > .admin-front-hud-tool-head > span:first-child {
+  .admin-front-hud-tool:has(.admin-hud-editor-shared-surface) > .admin-front-hud-tool-head > span:first-child {
   position: relative;
   z-index: 1;
   min-width: 0;
@@ -7687,11 +8096,7 @@
 }
 
 :is(.service-native-page, .home-native-page, .rates-page, .native-info-page).is-front-hud-docked
-  .admin-front-hud-tool:has(:is(
-    .admin-billboard-hud-editor--reference,
-    .admin-cta-hud-editor--reference,
-    .admin-top-strip-hud-editor--reference
-  )) > .admin-front-hud-tool-head > .admin-front-hud-tool-close {
+  .admin-front-hud-tool:has(.admin-hud-editor-shared-surface) > .admin-front-hud-tool-head > .admin-front-hud-tool-close {
   position: absolute;
   z-index: 2;
   right: 0.72rem;
@@ -7700,11 +8105,7 @@
 
 @media (max-width: 760px) {
   :is(.service-native-page, .home-native-page, .rates-page, .native-info-page).is-front-hud-docked
-    .admin-front-hud-tool.is-mobile-sheet:has(:is(
-      .admin-billboard-hud-editor--reference,
-      .admin-cta-hud-editor--reference,
-      .admin-top-strip-hud-editor--reference
-    )) > .admin-front-hud-tool-head {
+    .admin-front-hud-tool.is-mobile-sheet:has(.admin-hud-editor-shared-surface) > .admin-front-hud-tool-head {
     margin-inline: -0.78rem;
     padding: 0.28rem 0.62rem 0.28rem 0;
   }
@@ -7896,12 +8297,41 @@
   grid-template-columns: minmax(0, 1.35fr) minmax(14rem, 0.85fr);
 }
 
+/* Card Grid fine print is a deliberate three-column control row: copy,
+   justification, then the compact spacing sliders. The broad compatibility
+   auto-fit rule above must not collapse that row inside a narrow HUD panel. */
+.admin-hud-editor-shared-surface
+  .admin-card-grid-editor-disclosure-body
+  > .admin-content-field-list.admin-card-grid-fineprint-editor {
+  grid-template-columns: minmax(0, 1.35fr) minmax(8rem, 0.85fr) minmax(0, 1fr);
+}
+
+.admin-hud-editor-shared-surface
+  .admin-card-grid-editor-disclosure-body
+  > .admin-content-field-list.admin-card-grid-fineprint-editor
+  > label:nth-child(n + 3) {
+  grid-column: 3;
+}
+
 @media (max-width: 760px) {
   .admin-hud-editor-shared-surface .admin-hud-editor-compatibility-content :is(
     .admin-dynamic-panel-primary-grid,
     .admin-grid-heading-row
   ) {
     grid-template-columns: 1fr;
+  }
+
+  .admin-hud-editor-shared-surface
+    .admin-card-grid-editor-disclosure-body
+    > .admin-content-field-list.admin-card-grid-fineprint-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-hud-editor-shared-surface
+    .admin-card-grid-editor-disclosure-body
+    > .admin-content-field-list.admin-card-grid-fineprint-editor
+    > label:nth-child(n + 3) {
+    grid-column: 1;
   }
 }
 
@@ -8095,8 +8525,9 @@
 
 .admin-hud-editor-shared-surface .admin-card-grid-hud-content-groups {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
   gap: var(--ag-hud-editor-row-gap);
+  align-items: start;
   min-width: 0;
 }
 
@@ -8107,6 +8538,8 @@
 
 .admin-hud-editor-compatibility-layout--card_grid.is-section-appearance
   .admin-card-grid-hud-page--appearance,
+.admin-hud-editor-compatibility-layout--card_grid.is-section-header
+  .admin-card-grid-hud-page--header,
 .admin-hud-editor-compatibility-layout--card_grid.is-section-layout
   .admin-card-grid-hud-page--layout,
 .admin-hud-editor-compatibility-layout--card_grid.is-section-typography
@@ -8129,6 +8562,7 @@
 
 .admin-hud-editor-shared-surface .admin-card-grid-hud-group {
   min-width: 0;
+  align-content: start;
 }
 
 /* PanelAppearanceControls is a shared behavior component. In this reference
@@ -8150,14 +8584,35 @@
 .admin-hud-editor-shared-surface .admin-card-grid-hud-group
   .admin-panel-appearance-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-  gap: var(--ag-hud-editor-field-gap);
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  align-content: start;
 }
 
 .admin-hud-editor-shared-surface .admin-card-grid-hud-group
   .admin-panel-appearance-grid label {
   min-width: 0;
-  gap: var(--ag-hud-editor-field-gap);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-hud-editor-shared-surface .admin-card-grid-hud-group
+  .admin-panel-appearance-grid label > span {
+  flex: 0 0 auto;
+}
+
+.admin-hud-editor-shared-surface .admin-card-grid-hud-group
+  .admin-panel-appearance-grid label .admin-front-hud-swatch-row {
+  width: auto;
+  max-width: none;
+  margin-left: auto;
 }
 
 .admin-hud-editor-shared-surface .admin-card-grid-hud-group
@@ -8169,14 +8624,16 @@
 
 .admin-hud-editor-shared-surface .admin-card-grid-hud-group
   .admin-front-hud-swatch-row {
+  flex-wrap: nowrap;
   gap: 0.24rem;
+  min-width: max-content;
 }
 
 .admin-hud-editor-shared-surface .admin-card-grid-hud-group
   .admin-front-hud-swatch {
-  width: var(--ag-hud-editor-compact-control-height);
-  height: var(--ag-hud-editor-compact-control-height);
-  min-height: var(--ag-hud-editor-compact-control-height);
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
   border-radius: 50%;
 }
 
@@ -8274,8 +8731,7 @@
   max-height: 132px;
 }
 
-.admin-hud-editor-shared-surface .admin-card-grid-hud-intro-copy > span,
-.admin-hud-editor-shared-surface .admin-card-grid-hud-bg-field > span {
+.admin-hud-editor-shared-surface .admin-card-grid-hud-intro-copy > span {
   font-size: var(--ag-hud-editor-label-size);
   font-weight: 700;
   line-height: 1.1;
@@ -8286,7 +8742,8 @@
   .admin-content-field-list.admin-card-grid-hud-fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-  gap: var(--ag-hud-editor-field-gap);
+  column-gap: var(--ag-hud-editor-field-gap);
+  row-gap: 0.65rem;
   min-width: 0;
 }
 
@@ -8304,6 +8761,22 @@
 .admin-hud-editor-shared-surface .admin-card-grid-hud-group
   .admin-card-grid-hud-fields input[type='number'] {
   border-radius: 999px;
+}
+
+.admin-hud-editor-shared-surface .admin-card-grid-hud-group
+  .admin-card-grid-hud-fields {
+  row-gap: 0.65rem;
+}
+
+.admin-hud-editor-shared-surface .admin-card-grid-hud-group
+  .admin-range-number-control {
+  grid-template-columns: minmax(0, 1fr) 3.1rem 1.55rem;
+  min-width: 0;
+}
+
+.admin-hud-editor-shared-surface .admin-card-grid-hud-group
+  .admin-range-number-control > input[type='range'] {
+  min-width: 0;
 }
 
 .admin-hud-editor-shared-surface .admin-card-grid-hud-cards-group {
@@ -8975,6 +9448,137 @@
 .admin-hud-editor-shared-surface .admin-request-form-step-settings-head span {
   color: var(--ag-admin-hud-control-muted);
   font-size: var(--ag-hud-editor-label-size);
+}
+
+/* Final shared field contract. This catches editor-specific search, URL, and
+   other text controls without touching swatches, sliders, toggles, or the
+   hero's transparent live-text editing surface. HUD fields use the quiet
+   editor treatment: grey at rest, white on focus, a subtle border, and no
+   decorative outline or shadow. Do not reintroduce field box shadows in a
+   feature-specific editor; this rule is the shared style authority. */
+:is(.admin-hud-editor-shared-surface, .admin-front-hud-tool) :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not(.admin-front-hud-hero-live-input),
+  select,
+  textarea:not(.admin-color-text-inline-input):not(.admin-front-hud-hero-live-input)
+) {
+  background: var(--ag-admin-field-bg) !important;
+  border: 1px solid rgba(var(--ag-admin-hud-accent-rgb), 0.28) !important;
+  font-family: var(--ag-font-body) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: var(--ag-admin-field-transition);
+}
+
+:is(.admin-hud-editor-shared-surface, .admin-front-hud-tool) :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not(.admin-front-hud-hero-live-input),
+  select,
+  textarea:not(.admin-color-text-inline-input):not(.admin-front-hud-hero-live-input)
+):focus {
+  background: var(--ag-admin-field-bg-focus) !important;
+  border-color: rgba(var(--ag-admin-hud-accent-rgb), 0.52) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Code-managed feature editors use their own markup, so bring those controls
+   onto the same compact HUD field geometry as the migrated editors. */
+:is(.admin-hud-editor-shared-surface, .admin-front-hud-tool) :is(
+  .admin-site-feature-field > :is(input, select, textarea),
+  .admin-site-feature-collection-fields :is(input, select, textarea)
+) {
+  min-height: var(--ag-hud-editor-control-height, 28px);
+  border-radius: var(--ag-field-radius) !important;
+  padding: 0.3rem 0.48rem;
+  font-family: var(--ag-font-body) !important;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+:is(.admin-hud-editor-shared-surface, .admin-front-hud-tool) :is(
+  .admin-site-feature-field > textarea,
+  .admin-site-feature-collection-fields textarea
+) {
+  min-height: 86px;
+  border-radius: 18px !important;
+  resize: vertical;
+}
+
+/* Site Feature uses the compatibility shell, so its section rail needs an
+   explicit visibility contract. The old shell exposed the second rail button
+   but left the first page mounted, making the click appear inert. */
+.admin-hud-editor-compatibility-layout--site_feature.is-section-feature
+  > .admin-hud-editor-panel-stack
+  > .admin-hud-editor-compatibility-content
+  .admin-site-feature-editor-page--panels,
+.admin-hud-editor-compatibility-layout--site_feature.is-section-feature
+  > .admin-hud-editor-panel-stack
+  > .admin-hud-editor-compatibility-content
+  .admin-site-feature-editor-page--action,
+.admin-hud-editor-compatibility-layout--site_feature.is-section-panels
+  > .admin-hud-editor-panel-stack
+  > .admin-hud-editor-compatibility-content
+  .admin-site-feature-editor-page--feature,
+.admin-hud-editor-compatibility-layout--site_feature.is-section-panels
+  > .admin-hud-editor-panel-stack
+  > .admin-hud-editor-compatibility-content
+  .admin-site-feature-editor-page--action,
+.admin-hud-editor-compatibility-layout--site_feature.is-section-action
+  > .admin-hud-editor-panel-stack
+  > .admin-hud-editor-compatibility-content
+  .admin-site-feature-editor-page--feature,
+.admin-hud-editor-compatibility-layout--site_feature.is-section-action
+  > .admin-hud-editor-panel-stack
+  > .admin-hud-editor-compatibility-content
+  .admin-site-feature-editor-page--panels {
+  display: none;
+}
+
+.admin-hud-editor-compatibility-layout--site_feature:not(.is-section-block)
+  > .admin-hud-editor-panel-stack
+  > .admin-hud-editor-block-options-page {
+  display: none;
+}
+
+.admin-hud-editor-compatibility-layout--site_feature.is-section-block
+  > .admin-hud-editor-panel-stack
+  > :not(.admin-hud-editor-block-options-page) {
+  display: none;
+}
+
+.admin-hud-editor-shared-surface .admin-site-feature-collection-list {
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.admin-hud-editor-shared-surface .admin-site-feature-collection-list.is-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-hud-editor-shared-surface .admin-site-feature-collection-list.is-three-or-more {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .admin-hud-editor-shared-surface .admin-site-feature-collection-list.is-three-or-more {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-hud-editor-shared-surface .admin-site-feature-collection-list.is-2,
+  .admin-hud-editor-shared-surface .admin-site-feature-collection-list.is-three-or-more {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The inline text editor is a transparent interaction layer over the visible
+   preview. It must not inherit the ordinary field fill, or it will cover the
+   preview and make heading colors/backgrounds appear non-functional. */
+.admin-hud-editor-shared-surface textarea.admin-color-text-inline-input,
+.admin-hud-editor-shared-surface textarea.admin-color-text-inline-input:focus {
+  background: transparent !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
 }
 
 @media (max-width: 760px) {

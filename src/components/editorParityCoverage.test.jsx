@@ -23,6 +23,7 @@ import {
   RequestFormBlockEditor,
   ServicesGridBlockEditor,
   SiteFeatureBlockEditor,
+  SupportLibraryBlockEditor,
   SplitPanelBlockEditor,
   TestimonialsBlockEditor,
   TopStripBlockEditor,
@@ -62,8 +63,10 @@ const ADMIN_RENDERERS_BY_KIND = {
   site_feature: SiteFeatureBlockEditor,
   split_panel: SplitPanelBlockEditor,
   card_grid: GridBlockEditor,
+  card_chart: null,
   testimonials: TestimonialsBlockEditor,
   top_strip: TopStripBlockEditor,
+  support_library: SupportLibraryBlockEditor,
 };
 
 const SAMPLE_KIND_BY_EDITOR_TYPE = {
@@ -79,6 +82,7 @@ const SAMPLE_KIND_BY_EDITOR_TYPE = {
   billboard: 'billboard',
   feature_panel: 'feature_panel',
   card_grid: 'card_grid',
+  card_chart: { kind: 'card_chart', id: 'comparison_table' },
   cta_form: 'cta_form',
   request_form: 'request_form',
   columns: 'columns',
@@ -92,10 +96,21 @@ const SAMPLE_KIND_BY_EDITOR_TYPE = {
   split_panel: 'split_panel',
   grid: 'card_grid',
   top_strip: 'top_strip',
+  support_library: 'support_library',
   fields: { __sample: 'fields' },
 };
 
 const PARITY_ASSERTIONS = {
+  card_chart: {
+    admin: () => {
+      expect(screen.getByRole('textbox', { name: 'Chart heading' })).toBeTruthy();
+      expect(screen.getByRole('textbox', { name: 'Card 1 comparison points' })).toBeTruthy();
+    },
+    hud: () => {
+      expect(screen.getByRole('textbox', { name: 'Chart heading' })).toBeTruthy();
+      expect(screen.getByRole('textbox', { name: 'Card 1 comparison points' })).toBeTruthy();
+    },
+  },
   hero: {
     admin: () => {
       expect(screen.getByLabelText('Hero editor preview surface')).toBeTruthy();
@@ -190,13 +205,13 @@ const PARITY_ASSERTIONS = {
   },
   site_feature: {
     admin: () => {
-      expect(screen.getByText('Code-managed editorial placeholder for future art-directed storytelling moments.')).toBeTruthy();
+      expect(screen.getByText('Editorial spotlight overrides')).toBeTruthy();
       expect(screen.getByLabelText('Code-managed feature')).toBeTruthy();
       expect(screen.getByLabelText('Headline override')).toBeTruthy();
       expect(screen.getByLabelText('CTA label override')).toBeTruthy();
     },
     hud: () => {
-      expect(screen.getByText('Code-managed editorial placeholder for future art-directed storytelling moments.')).toBeTruthy();
+      expect(screen.getByText('Editorial spotlight overrides')).toBeTruthy();
       expect(screen.getByLabelText('Code-managed feature')).toBeTruthy();
       expect(screen.getByLabelText('Headline override')).toBeTruthy();
       expect(screen.getByLabelText('CTA label override')).toBeTruthy();
@@ -285,6 +300,7 @@ const PARITY_ASSERTIONS = {
   content: {
     admin: () => {
       expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
+      expect(screen.getByRole('region', { name: 'Page content block preview' })).toBeTruthy();
       expect(screen.getByRole('button', { name: 'View HTML (advanced)' })).toBeTruthy();
       expect(screen.getByRole('group', { name: 'Page content width presets' })).toBeTruthy();
       expect(screen.getByRole('button', { name: 'Advanced layout' })).toBeTruthy();
@@ -292,6 +308,7 @@ const PARITY_ASSERTIONS = {
     hud: () => {
       expect(screen.getByRole('group', { name: 'Page content editor type' })).toBeTruthy();
       expect(screen.getByRole('toolbar', { name: 'Article body formatting' })).toBeTruthy();
+      expect(screen.getByRole('region', { name: 'Page content block preview' })).toBeTruthy();
       expect(screen.getByRole('group', { name: 'Page content width presets' })).toBeTruthy();
       expect(screen.getByRole('button', { name: 'Advanced layout' })).toBeTruthy();
     },
@@ -354,6 +371,22 @@ const PARITY_ASSERTIONS = {
       expect(screen.getByRole('radiogroup', { name: /Top strip background color/i })).toBeTruthy();
       expect(screen.getByLabelText('Login Label')).toBeTruthy();
       expect(screen.getByLabelText('Rates URL / Path')).toBeTruthy();
+    },
+  },
+  support_library: {
+    admin: () => {
+      expect(screen.getByRole('button', { name: 'Add group' })).toBeTruthy();
+      expect(screen.getAllByRole('button', { name: 'Add link' }).length).toBeGreaterThan(0);
+    },
+    hud: () => {
+      expect(screen.getByRole('button', { name: 'Add group' })).toBeTruthy();
+      expect(screen.getAllByRole('button', { name: 'Add link' }).length).toBeGreaterThan(0);
+      const editor = document.querySelector('.admin-support-library-hud-editor');
+      expect(editor).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: 'Library' }));
+      expect(editor.classList.contains('is-section-library')).toBe(true);
+      fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+      expect(editor.classList.contains('is-section-options')).toBe(true);
     },
   },
   grid: {
@@ -570,6 +603,32 @@ function renderHudSurface(block) {
 }
 
 describe('editor parity coverage', () => {
+  it('loads legacy page-content address copy into HTML editor and promotes it on edit', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(PageContentBlockEditor, {
+      block: {
+        kind: 'content',
+        settings: {
+          html: '<p></p>',
+          addressTitle: 'Mail or fax completed forms to:',
+          addressLines: 'AGFinancial Insurance\nPO Box 10263\nSpringfield, MO 65808-0263',
+        },
+      },
+      onSettingChange,
+    }));
+
+    const editor = screen.getByRole('textbox', { name: 'HTML content' });
+    expect(editor.textContent).toContain('Mail or fax completed forms to:');
+    expect(editor.textContent).toContain('Springfield, MO 65808-0263');
+
+    editor.innerHTML = '<p>Updated mail instructions.</p>';
+    fireEvent.input(editor);
+
+    expect(onSettingChange).toHaveBeenCalledWith('html', '<p>Updated mail instructions.</p>');
+    expect(onSettingChange).toHaveBeenCalledWith('addressTitle', '');
+    expect(onSettingChange).toHaveBeenCalledWith('addressLines', '');
+  });
+
   it('keeps every HUD editor type mapped to a parity contract', () => {
     const editorTypes = new Set(
       allBlueprintBlocks

@@ -102,6 +102,7 @@ import { normalizeTestimonialRecord } from '../lib/testimonials';
 import {
   EDITOR_DRAFT_FLUSH_EVENT,
   EDITOR_DRAFT_PUBLISHED_EVENT,
+  EDITOR_DRAFT_RESET_EVENT,
   LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS,
 } from '../lib/contentAdminTiming';
 import {
@@ -2596,6 +2597,38 @@ export function ContentAdminProvider({ children, initialState = null }) {
     );
   };
 
+  const cancelPendingBlockDraftSync = (pathname, blockId) => {
+    const normalizedPath = String(pathname || '').trim();
+    const normalizedBlockId = String(blockId || '').trim();
+    const syncKey = `${normalizedPath}::${normalizedBlockId}`;
+    const pendingEntries = pendingBlockDraftSyncEntriesRef.current;
+    const pendingEntry = pendingEntries.get(syncKey);
+    if (!pendingEntry) {
+      return { inFlight: false };
+    }
+    if (typeof window !== 'undefined' && pendingEntry.timeoutId) {
+      window.clearTimeout(pendingEntry.timeoutId);
+    }
+    pendingEntry.timeoutId = null;
+    pendingEntry.queued = false;
+    if (pendingEntry.inFlight) {
+      // Keep the entry until the request settles, but prevent its finally
+      // handler from re-queuing the stale pre-reset block.
+      pendingEntry.discardAfterFailure = true;
+      pendingEntries.set(syncKey, pendingEntry);
+      refreshSharedSyncState();
+      return { inFlight: true };
+    } else {
+      pendingEntries.delete(syncKey);
+    }
+    refreshSharedSyncState(
+      pendingSharedMutationCountRef.current > 0
+        ? {}
+        : { lastSettledAt: Date.now() },
+    );
+    return { inFlight: false };
+  };
+
   const updateBufferedBlockSettingDrafts = (updater) => {
     // Keep the imperative buffer current before the next React render. Save and
     // publish actions flush this buffer synchronously after an editor blur/change.
@@ -4016,10 +4049,10 @@ export function ContentAdminProvider({ children, initialState = null }) {
 
     const renameDevIdentity = (nextDisplayName) => {
       const nextIdentity = devIdentity?.userId
-        ? updateStoredDevAdminProfile(devIdentity.userId, {
+        ? (updateStoredDevAdminProfile(devIdentity.userId, {
             fullName: devIdentity.fullName || nextDisplayName,
             nickname: nextDisplayName,
-          })
+          }) || renameStoredDevIdentity(nextDisplayName))
         : renameStoredDevIdentity(nextDisplayName);
       if (nextIdentity) {
         setDevIdentity(getOrCreateDevIdentity());
@@ -4030,7 +4063,8 @@ export function ContentAdminProvider({ children, initialState = null }) {
 
     const setDevIdentityAccentColor = (nextAccentColor) => {
       const nextIdentity = devIdentity?.userId
-        ? updateStoredDevAdminProfile(devIdentity.userId, { accentColor: nextAccentColor })
+        ? (updateStoredDevAdminProfile(devIdentity.userId, { accentColor: nextAccentColor })
+          || setStoredDevIdentityAccentColor(nextAccentColor))
         : setStoredDevIdentityAccentColor(nextAccentColor);
       if (nextIdentity) {
         setDevIdentity(getOrCreateDevIdentity());
@@ -4579,6 +4613,94 @@ export function ContentAdminProvider({ children, initialState = null }) {
       if (pendingRouteSave && typeof pendingRouteSave.then === 'function') {
         await pendingRouteSave.catch(() => null);
       }
+    };
+
+    const resetBlockToSavedDraft = (pathname, blockId) => {
+      const normalizedPath = String(pathname || '').trim();
+      const normalizedBlockId = String(blockId || '').trim();
+      if (!normalizedPath || !normalizedBlockId) {
+        return { ok: false, reason: 'invalid-block-target' };
+      }
+
+      const pendingSync = cancelPendingBlockDraftSync(normalizedPath, normalizedBlockId);
+      if (pendingSync?.inFlight) {
+        return {
+          ok: false,
+          reason: 'draft-save-pending',
+          details: 'Wait for the current block draft save to finish before resetting local edits.',
+        };
+      }
+
+      clearBufferedBlockSettingCommitTimer(normalizedPath, normalizedBlockId);
+      updateBufferedBlockSettingDrafts((previous) => {
+        const previousPathEntry = previous?.[normalizedPath];
+        if (!previousPathEntry?.[normalizedBlockId]) {
+          return previous;
+        }
+        const nextPathEntry = { ...previousPathEntry };
+        delete nextPathEntry[normalizedBlockId];
+        if (Object.keys(nextPathEntry).length) {
+          return { ...previous, [normalizedPath]: nextPathEntry };
+        }
+        const nextValue = { ...previous };
+        delete nextValue[normalizedPath];
+        return nextValue;
+      });
+      clearPendingBlockDraftSyncTimer(normalizedPath, normalizedBlockId);
+      latestSharedMutationIdRef.current += 1;
+
+      const savedBlocks = Array.isArray(
+        persistedSharedAuthoringStateRef.current.blocksByPath?.[normalizedPath],
+      )
+        ? persistedSharedAuthoringStateRef.current.blocksByPath[normalizedPath]
+        : [];
+      const savedBlock = savedBlocks.find((entry) => String(entry?.id || '').trim() === normalizedBlockId) || null;
+      let didReset = false;
+
+      saveState((previousState) => {
+        const currentBlocks = Array.isArray(previousState.blocksByPath?.[normalizedPath])
+          ? previousState.blocksByPath[normalizedPath]
+          : [];
+        const currentIndex = currentBlocks.findIndex((entry) => String(entry?.id || '').trim() === normalizedBlockId);
+        if (currentIndex < 0 && !savedBlock) {
+          return previousState;
+        }
+
+        const nextBlocks = currentBlocks.filter((entry) => String(entry?.id || '').trim() !== normalizedBlockId);
+        if (savedBlock) {
+          const savedIndex = savedBlocks.findIndex((entry) => String(entry?.id || '').trim() === normalizedBlockId);
+          const insertIndex = Math.min(
+            Math.max(currentIndex >= 0 ? currentIndex : savedIndex, 0),
+            nextBlocks.length,
+          );
+          nextBlocks.splice(insertIndex, 0, savedBlock);
+        }
+        didReset = true;
+        return {
+          ...previousState,
+          blocksByPath: {
+            ...(previousState.blocksByPath || {}),
+            [normalizedPath]: nextBlocks,
+          },
+        };
+      });
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(EDITOR_DRAFT_RESET_EVENT, {
+          detail: {
+            pathname: normalizedPath,
+            blockId: normalizedBlockId,
+          },
+        }));
+      }
+
+      return {
+        ok: true,
+        didReset,
+        scope: 'block',
+        pathname: normalizedPath,
+        blockId: normalizedBlockId,
+      };
     };
 
     const discardSharedPageDraftNow = async (pathname, summary = '') => {
@@ -5487,6 +5609,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
       ),
       saveSharedDraftNow,
       saveSharedBlockDraftNow,
+      resetBlockToSavedDraft,
       discardSharedPageDraft: discardSharedPageDraftNow,
       discardSharedBlockDraft: discardSharedBlockDraftNow,
       publishSharedPageNow,

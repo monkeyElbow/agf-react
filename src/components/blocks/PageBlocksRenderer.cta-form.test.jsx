@@ -92,6 +92,24 @@ describe('PageBlocksRenderer CTA form', () => {
     expect(screen.getByRole('button', { name: 'Follow up with me' })).toBeTruthy();
   });
 
+  it('keeps the saved body color class on the direct block-renderer callout', () => {
+    const { container } = renderCtaBlock({
+      id: 'cta_form',
+      type: 'cta_form',
+      kind: 'cta_form',
+      mode: 'dynamic',
+      title: 'Ready to talk?',
+      bodyHtml: '<p>Color-controlled CTA copy.</p>',
+      bodyColorClassName: 'is-melon',
+      submitLabel: 'Follow up with me',
+      fieldsJson: ctaFieldsJson([
+        { id: 'name', label: 'Name', type: 'text', required: true },
+      ]),
+    });
+
+    expect(container.querySelector('.dynamic-cta-form-callout')?.className).toContain('is-melon');
+  });
+
   it('preserves the planned-giving CTA copy and bordered form contract', () => {
     const { container } = renderCtaBlock({
       id: 'cta_form',

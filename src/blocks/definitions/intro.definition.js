@@ -2,17 +2,10 @@ import introHudIcon from '../../assets/admin-block-icons/intro.svg';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 import { buildDynamicIntroFromBlock } from '../../lib/dynamicPageBlocks';
-import { getTokenSwatch } from '../../lib/colorSystem';
+import { getTokenSwatch, SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT } from '../../lib/colorSystem';
 import { validateLinkFieldGroups } from '../../lib/linkValue';
 
-const SHARED_HEADING_TONE_OPTIONS = [
-  { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
-  { value: 'is-atlantean', label: 'Blue', swatch: getTokenSwatch('atlantean') },
-  { value: 'is-mango', label: 'Mango', swatch: 'linear-gradient(145deg, #f6b146 0%, #e8991f 100%)' },
-  { value: 'is-melon', label: 'Melon', swatch: 'linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)' },
-  { value: 'is-super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
-  { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-];
+const SHARED_HEADING_TONE_OPTIONS = SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT;
 
 const INTRO_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },

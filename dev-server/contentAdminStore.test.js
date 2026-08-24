@@ -1414,10 +1414,14 @@ describe('createDevContentAuthorityStore', () => {
     const store = createStore(persistenceFile);
     const comparisonBlock = store.getSnapshot().state.blocksByPath[pathname][0];
 
-    expect(comparisonBlock.settings.tableHeadersJson).toEqual(['Key difference', 'Traditional IRA', 'Roth IRA']);
-    expect(comparisonBlock.settings.tableRowsJson).toEqual([
-      ['Eligibility', 'Must have earned income.', 'Must meet Roth IRA limits.'],
-    ]);
+    expect(comparisonBlock.kind).toBe('card_chart');
+    expect(comparisonBlock.settings.cardCount).toBe('3');
+    expect(comparisonBlock.settings.card1Title).toBe('Key difference');
+    expect(comparisonBlock.settings.card2Title).toBe('Traditional IRA');
+    expect(comparisonBlock.settings.card3Title).toBe('Roth IRA');
+    expect(comparisonBlock.settings.card1Bullets).toBe('Eligibility');
+    expect(comparisonBlock.settings.card2Bullets).toBe('Must have earned income.');
+    expect(comparisonBlock.settings.card3Bullets).toBe('Must meet Roth IRA limits.');
   });
 
   it('resets the shared state back to seed', () => {
@@ -1524,7 +1528,7 @@ describe('createDevContentAuthorityStore', () => {
 
     expect(valueCards.presetId).toBe('value-cards');
     expect(investorCta.id).toBe('dashboard_login_cta');
-    expect(investorCta.templateId).toBe('cta_band');
+    expect(investorCta.templateId).toBe('billboard');
     expect(investorCta.presetId).toBe('dashboard-login');
     expect(loanApply.presetId).toBe('step-cards');
   });
@@ -1664,6 +1668,101 @@ describe('createDevContentAuthorityStore', () => {
     expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
   });
 
+  it('migrates the support library kind without changing the support payload', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+    const actor = createActor();
+    const pathname = '/services/insurance/ministers-group-life-plan';
+    const supportBlock = {
+      id: 'support',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        title: 'Support for current clients',
+        html: '<p>Call us.</p>',
+        supportGroupsJson: JSON.stringify([{ title: 'Plan details', links: [{ label: 'Plan PDF', documentId: 'doc-1' }] }]),
+        supportGroupsExpanded: true,
+        supportGroupsCollapsible: false,
+      },
+    };
+    store.resetFromSeed({
+      pageHierarchy: { [pathname]: { path: pathname, title: 'Ministers Group Life' } },
+      blocksByPath: { [pathname]: [supportBlock] },
+      pathAliases: {},
+      collaborationByPath: { [pathname]: { blocks: {}, history: [] } },
+    }, { actor });
+
+    const migrated = store.migrateSupportLibrarySnapshot({
+      actor,
+      reason: 'promote support block to first-class editor',
+    });
+    expect(migrated.ok).toBe(true);
+    expect(migrated.migration).toMatchObject({
+      id: 'support-library-block-kind',
+      version: 1,
+      didMigrate: true,
+    });
+    expect(migrated.state.blocksByPath[pathname][0]).toEqual({ ...supportBlock, kind: 'support_library' });
+    expect(migrated.baseSnapshot.blocksByPath[pathname][0]).toEqual({ ...supportBlock, kind: 'support_library' });
+    expect(migrated.backup.reason).toBe('before-support-library-block-migration');
+
+    const reloaded = createStore(persistenceFile, { backupDir });
+    const secondPass = reloaded.migrateSupportLibrarySnapshot({
+      actor,
+      reason: 'repeat should be a no-op',
+    });
+    expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
+  });
+
+  it('seeds repeatable site-feature fields with a backup and preserves existing edits', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+    const actor = createActor();
+    const pathname = '/about-us/impact';
+    const impactBlock = {
+      id: 'impact_proof_story',
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'impact_proof_story',
+        featureIntroJson: JSON.stringify({ heading: 'Keep heading' }),
+      },
+    };
+    const state = {
+      pageHierarchy: { [pathname]: { path: pathname, title: 'Impact' } },
+      blocksByPath: { [pathname]: [impactBlock] },
+      pathAliases: {},
+      collaborationByPath: { [pathname]: { blocks: {}, history: [] } },
+    };
+
+    store.resetFromSeed(state, { actor });
+    const migrated = store.migrateSiteFeatureCollectionsSnapshot({
+      actor,
+      reason: 'expose one-off feature content as repeatable admin fields',
+    });
+    const migratedBlock = migrated.state.blocksByPath[pathname][0];
+
+    expect(migrated.ok).toBe(true);
+    expect(migrated.migration).toMatchObject({
+      id: 'site-feature-repeatable-content-fields',
+      version: 1,
+      didMigrate: true,
+    });
+    expect(JSON.parse(migratedBlock.settings.metricsJson)).toHaveLength(4);
+    expect(migratedBlock.settings.introHeading).toBe('Keep heading');
+    expect(migrated.backup.reason).toBe('before-site-feature-collections-migration');
+    expect(migrated.snapshotMigrations['site-feature-repeatable-content-fields']).toBe(1);
+
+    const reloaded = createStore(persistenceFile, { backupDir });
+    const secondPass = reloaded.migrateSiteFeatureCollectionsSnapshot({
+      actor,
+      reason: 'repeat should be a no-op',
+    });
+    expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
+  });
+
   it('migrates Online Contributions setup cards onto the shared numbered-step preset', () => {
     const persistenceFile = makeTempFile();
     const backupDir = path.join(path.dirname(persistenceFile), 'backups');
@@ -1726,6 +1825,51 @@ describe('createDevContentAuthorityStore', () => {
       reason: 'repeat should be a no-op',
     });
     expect(secondPass.migration).toMatchObject({ alreadyApplied: true, didMigrate: false });
+  });
+
+  it('adds numbered-card preset metadata with a recoverable snapshot backup', () => {
+    const persistenceFile = makeTempFile();
+    const backupDir = path.join(path.dirname(persistenceFile), 'backups');
+    const store = createStore(persistenceFile, { backupDir });
+    const actor = createActor();
+    const pathname = '/services/insurance/ministers-group-life-plan';
+    const enrollSteps = {
+      id: 'enroll_steps',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      presetId: 'default',
+      settings: {
+        sectionClassName: 'ministers-group-life-native-enroll',
+        card1Title: '01',
+        card1Body: 'Keep this authored body',
+      },
+    };
+    const state = {
+      pageHierarchy: { [pathname]: { path: pathname, title: 'Ministers Group Life' } },
+      blocksByPath: { [pathname]: [enrollSteps] },
+      pathAliases: {},
+      collaborationByPath: { [pathname]: { blocks: {}, history: [] } },
+    };
+
+    store.resetFromSeed(state, { actor });
+    const migrated = store.migrateNumberedStepCardsSnapshot({
+      actor,
+      reason: 'move numbered cards to the shared renderer contract',
+    });
+
+    expect(migrated.ok).toBe(true);
+    expect(migrated.migration).toMatchObject({
+      id: 'numbered-step-cards-preset-metadata',
+      version: 1,
+      didMigrate: true,
+    });
+    expect(migrated.state.blocksByPath[pathname][0]).toEqual({
+      ...enrollSteps,
+      presetId: 'step-cards',
+      templateId: 'card_grid',
+    });
+    expect(migrated.backup.reason).toBe('before-numbered-step-cards-migration');
+    expect(migrated.snapshotMigrations['numbered-step-cards-preset-metadata']).toBe(1);
   });
 
   it('restoring a page revision creates new current draft state without mutating the old revision', () => {

@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ColorPalette from './ColorPalette';
+import {
+  SEMANTIC_TEXT_COLOR_HEX_VALUES,
+  SEMANTIC_TEXT_COLOR_OPTIONS,
+} from '../lib/colorSystem';
 
 function ensureHtml(value) {
   const html = String(value || '').trim();
@@ -10,13 +14,12 @@ function hasHtmlEditorSemanticColorMarkup(value) {
   return /<font\b|color\s*=|style\s*=\s*["'][^"']*color\s*:/i.test(String(value || ''));
 }
 
-export const HTML_EDITOR_COLOR_SWATCHES = [
-  { id: 'atlantean', label: 'Blue', value: '#00adbb', className: 'is-atlantean' },
-  { id: 'mango', label: 'Mango', value: '#faa31a', className: 'is-mango' },
-  { id: 'melon', label: 'Melon', value: '#f26660', className: 'is-melon' },
-  { id: 'super-grey', label: 'Super Grey', value: '#414042', className: 'is-super-grey' },
-  { id: 'white', label: 'White', value: '#ffffff', className: 'is-white' },
-];
+export const HTML_EDITOR_COLOR_SWATCHES = SEMANTIC_TEXT_COLOR_OPTIONS.map((option) => ({
+  id: String(option.value || '').replace(/^is-/, ''),
+  label: option.label,
+  value: SEMANTIC_TEXT_COLOR_HEX_VALUES[option.value] || '#414042',
+  className: option.value,
+}));
 export const HTML_EDITOR_TEXT_SIZE_OPTIONS = [
   { id: 'fine-print', label: 'Fine print', commandValue: '1', className: 'is-text-fine-print' },
   { id: 'small', label: 'Small', commandValue: '2', className: 'is-text-small' },
@@ -234,8 +237,16 @@ export function normalizeHtmlEditorTextSizes(value) {
   return root.innerHTML.trim();
 }
 
+function normalizeHtmlEditorTrailingSpaces(value) {
+  return String(value || '').replace(/(?:&nbsp;)+(?=\s*<\/[a-z][^>]*>)/gi, (match) => (
+    ' '.repeat((match.match(/&nbsp;/gi) || []).length)
+  ));
+}
+
 function normalizeHtmlEditorFormatting(value) {
-  return normalizeHtmlEditorTextSizes(normalizeHtmlEditorSemanticColors(value));
+  return normalizeHtmlEditorTextSizes(
+    normalizeHtmlEditorSemanticColors(normalizeHtmlEditorTrailingSpaces(value)),
+  );
 }
 
 export default function AdminHtmlEditor({

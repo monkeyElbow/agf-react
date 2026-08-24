@@ -13,6 +13,7 @@ function readSource(relativePath) {
 describe('online contributions review polish guardrail', () => {
   it('keeps the setup route visibly structured as overview, steps, and help', () => {
     const cssSource = readSource('../styles/service-native.css');
+    const numberedCardSource = readSource('../styles/service-native-numbered-cards.css');
     const blueprintSource = readSource('../data/contentBlockBlueprints.js');
 
     expect(blueprintSource).toContain("'/online-contributions': [");
@@ -29,29 +30,18 @@ describe('online contributions review polish guardrail', () => {
     expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-step-cards .service-native-grid {');
     expect(cssSource).toContain('grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);');
     expect(cssSource).toContain('font-size: clamp(2.55rem, 4.35vw, 3.2rem);');
-    expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-steps .service-native-card {');
-    expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-steps > :is(.native-info-full-bleed, .ag-panel-rail, .ag-panel-rail-wide) {');
-    expect(cssSource).toContain('max-width: 74rem !important;');
-    expect(cssSource).toContain('margin-inline: auto !important;');
-    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr) !important;');
-    expect(cssSource).toContain('width: min(100%, 82ch) !important;');
-    expect(cssSource).toContain('grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);');
-    expect(cssSource).toContain('font-size: clamp(2.55rem, 4.35vw, 3.2rem) !important;');
-    expect(cssSource).toContain('--ret403b-step-accent: var(--ag-color-atlantean);');
-    expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n + 2) {');
-    expect(cssSource).toContain('--ret403b-step-accent: var(--ag-color-mango);');
-    expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n) {');
-    expect(cssSource).toContain('--ret403b-step-accent: var(--ag-color-sandstone-dark);');
-    expect(cssSource).toContain('border: 2px solid var(--ret403b-step-accent) !important;');
-    expect(cssSource).toContain('border-color: var(--ag-color-mango) !important;');
-    expect(cssSource).toContain('border-color: var(--ag-color-sandstone-dark) !important;');
-    expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n + 1) h3 {');
-    expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n + 2) h3 {');
-    expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-steps .service-native-card:nth-child(3n) h3 {');
-    expect(cssSource).toContain('color: var(--ag-color-atlantean) !important;');
-    expect(cssSource).toContain('color: var(--ag-color-mango) !important;');
-    expect(cssSource).toContain('color: var(--ag-color-sandstone-dark) !important;');
-    expect(cssSource).toContain('border-radius: 1.75rem !important;');
+    expect(numberedCardSource).toContain('.is-numbered-step-cards > :is(.ag-panel-rail, .ag-panel-rail-wide, .native-info-full-bleed) {');
+    expect(numberedCardSource).toContain('margin-inline: auto;');
+    expect(numberedCardSource).toContain('grid-template-columns: minmax(0, 1fr);');
+    expect(numberedCardSource).toContain('width: min(100%, 82ch);');
+    expect(numberedCardSource).toContain('grid-template-columns: var(--numbered-step-card-column) minmax(0, 1fr);');
+    expect(numberedCardSource).toContain('font-size: var(--numbered-step-card-number-size) !important;');
+    expect(numberedCardSource).toContain('--numbered-step-card-accent: var(--ag-color-mango);');
+    expect(numberedCardSource).toContain('--numbered-step-card-accent: var(--ag-color-sandstone-dark);');
+    expect(numberedCardSource).toContain('border-color: var(--ag-color-mango) !important;');
+    expect(numberedCardSource).toContain('border-color: var(--ag-color-sandstone-dark) !important;');
+    expect(numberedCardSource).toContain('border-radius: var(--numbered-step-card-radius) !important;');
+    expect(cssSource).not.toContain('.native-info-page--online-contributions .online-contrib-native-steps .service-native-card {');
     expect(cssSource).toContain('.native-info-page--online-contributions .online-contrib-native-help .native-info-section-copy > h2 {');
     expect(cssSource).toContain('letter-spacing: var(--ag-letter-spacing-helv-heading);');
   });

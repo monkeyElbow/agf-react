@@ -1,7 +1,8 @@
-import { createElement } from 'react';
+import { createElement, useState } from 'react';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ContentAdminContext } from '../context/ContentAdminContext';
+import { DocumentsContext } from '../context/DocumentsContext';
 import useLocalBlockDrafts from '../hooks/useLocalBlockDrafts';
 import { LOCAL_BLOCK_DRAFT_IDLE_COMMIT_DELAY_MS } from '../lib/contentAdminTiming';
 import { getEditableFieldsForKind } from '../blocks/registry';
@@ -27,6 +28,23 @@ function IntroHudLocalDraftProbe({
       }}
     />
   );
+}
+
+function CardGridSettingsProbe({ initialSettings, routeOptions = [], onSettingChange = () => {} }) {
+  const [settings, setSettings] = useState(initialSettings);
+  return createElement(BlockHudPanelHost, {
+    block: {
+      id: 'card-grid-settings-probe',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings,
+    },
+    routeOptions,
+    onSettingChange: (key, value) => {
+      onSettingChange(key, value);
+      setSettings((current) => ({ ...current, [key]: value }));
+    },
+  });
 }
 
 describe('BlockHudPanelHost', () => {
@@ -64,6 +82,7 @@ describe('BlockHudPanelHost', () => {
           bodyHtml: '<p>Starter copy</p>',
           bgTone: 'white',
           columns: 'three',
+          cardCount: '6',
           cardStyle: 'none',
           card1Title: 'Starter card',
           card1Body: 'Starter card copy',
@@ -73,18 +92,105 @@ describe('BlockHudPanelHost', () => {
     }));
 
     expect(screen.getByRole('navigation', { name: 'Card Grid · Flexible cards editor sections' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Header' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cards' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Block options' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Block options' }).className).toContain('is-block-options');
     expect(screen.queryByRole('button', { name: 'Content' })).toBeNull();
     expect(screen.getAllByRole('region', { name: 'Block options' })).toHaveLength(1);
+    expect(screen.getByLabelText('Grid header text')).toBeTruthy();
+    expect(screen.getByLabelText('Grid subhead text')).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Grid header color controls' })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Grid subhead color controls' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Block padding above' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Block padding below' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Header/subhead space' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
     expect(document.querySelector('.admin-card-grid-hud-group--heading')).toBeNull();
     expect(document.querySelector('.admin-card-grid-hud-group--appearance')).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-hud-group--layout')).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-hud-group--typography')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--appearance')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--layout')).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--typography')).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-hud-reference .admin-front-hud-swatch-row')).toBeTruthy();
-    expect(screen.getByText('Card 1 body')).toBeTruthy();
-    expect(document.querySelector('.admin-card-grid-hud-reference .admin-swatch-list')).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Grid background' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Card 1: Starter card' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Card 6' })).toBeTruthy();
+    expect(document.querySelector('.admin-card-grid-card-preview')).toBeNull();
+    expect(document.querySelector('.admin-card-grid-hud-reference .admin-front-hud-swatch-row')).toBeTruthy();
+  });
+
+  it('keeps card setting writes bound to the selected slot with six cards', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'six-card-grid',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          cardCount: '6',
+          columns: 'three',
+          card1Title: 'Card one',
+          card4Title: 'Card four',
+        },
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    const cardNav = screen.getByRole('navigation', { name: 'Cards' });
+    expect(within(cardNav).getAllByRole('button')).toHaveLength(6);
+    fireEvent.click(within(cardNav).getByRole('button', { name: /^Card 1:/ }));
+
+    const titleInput = screen.getByDisplayValue('Card one');
+    fireEvent.change(titleInput, { target: { value: 'Updated card one' } });
+    fireEvent.blur(titleInput);
+
+    expect(onSettingChange).toHaveBeenCalledWith('card1Title', 'Updated card one');
+    expect(onSettingChange).not.toHaveBeenCalledWith('card4Title', 'Updated card one');
+    expect(document.querySelector('[data-card-slot="1"]')).toBeTruthy();
+  });
+
+  it('adds a filter beside card-grid PDF selectors', () => {
+    render(
+      <DocumentsContext.Provider
+        value={{
+          documents: [
+            { id: 'doc-retirement', title: 'Retirement guide', topic: 'Retirement', active: true },
+            { id: 'doc-insurance', title: 'Insurance guide', topic: 'Insurance', active: true },
+          ],
+        }}
+      >
+        {createElement(BlockHudPanelHost, {
+          block: {
+            id: 'card-grid-document-filter',
+            kind: 'card_grid',
+            mode: 'dynamic',
+            settings: {
+              cardCount: '1',
+              card1Title: 'Documents',
+              card1LinksJson: JSON.stringify([
+                { label: 'Guide', kind: 'document', documentId: '' },
+              ]),
+            },
+          },
+          onSettingChange: vi.fn(),
+        })}
+      </DocumentsContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Links/ }));
+
+    const filter = screen.getByRole('searchbox', { name: 'Filter documents for link 1' });
+    expect(filter).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'Retirement guide - Retirement' })).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'Insurance guide - Insurance' })).toBeTruthy();
+
+    fireEvent.change(filter, { target: { value: 'insurance' } });
+    expect(screen.queryByRole('option', { name: 'Retirement guide - Retirement' })).toBeNull();
+    expect(screen.getByRole('option', { name: 'Insurance guide - Insurance' })).toBeTruthy();
   });
 
   it('shows editable bullets inside each flexible card', () => {
@@ -106,15 +212,256 @@ describe('BlockHudPanelHost', () => {
       onSettingChange,
     }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    const cardsButton = screen.getByRole('button', { name: 'Cards' });
+    if (cardsButton.getAttribute('aria-pressed') !== 'true') {
+      fireEvent.click(cardsButton);
+    }
+    const bulletsButton = screen.getByRole('button', { name: /^Bullets/ });
+    if (bulletsButton.getAttribute('aria-expanded') !== 'true') {
+      fireEvent.click(bulletsButton);
+    }
 
-    const firstBullet = screen.getByLabelText('Card 1 bullets 1');
+    const firstBullet = screen.getAllByLabelText('Card 1 bullets 1')[0];
     expect(firstBullet.value).toBe('First requirement');
     fireEvent.change(firstBullet, { target: { value: 'Updated requirement' } });
     expect(onSettingChange).toHaveBeenCalledWith(
       'card1ListJson',
       JSON.stringify(['Updated requirement', 'Second requirement']),
     );
+  });
+
+  it('reveals an empty bullet field when a new card adds its first bullet', () => {
+    const onSettingChange = vi.fn();
+    const view = render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'new-card-grid',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          title: 'New cards',
+          bgTone: 'white',
+          columns: 'one',
+          cardStyle: 'none',
+          card1Title: 'New card',
+        },
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    const bulletsButtonAfterRerender = screen.getByRole('button', { name: /^Bullets/ });
+    if (bulletsButtonAfterRerender.getAttribute('aria-expanded') !== 'true') {
+      fireEvent.click(bulletsButtonAfterRerender);
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Add bullet' }));
+
+    view.rerender(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'new-card-grid',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          title: 'New cards',
+          bgTone: 'white',
+          columns: 'one',
+          cardStyle: 'none',
+          card1Title: 'New card',
+          card1ListJson: JSON.stringify(['']),
+        },
+      },
+      onSettingChange,
+    }));
+    const cardsButtonAfterRerender = screen.getByRole('button', { name: 'Cards' });
+    if (cardsButtonAfterRerender.getAttribute('aria-pressed') !== 'true') {
+      fireEvent.click(cardsButtonAfterRerender);
+    }
+    const bulletsButtonAfterBlockRerender = screen.getByRole('button', { name: /^Bullets/ });
+    if (bulletsButtonAfterBlockRerender.getAttribute('aria-expanded') !== 'true') {
+      fireEvent.click(bulletsButtonAfterBlockRerender);
+    }
+
+    const firstBullet = screen.getAllByLabelText('Card 1 bullets 1')[0];
+    expect(firstBullet).toBeTruthy();
+    expect(onSettingChange).toHaveBeenCalledWith('card1ListJson', JSON.stringify(['']));
+
+    fireEvent.change(firstBullet, { target: { value: 'First bullet' } });
+    expect(onSettingChange).toHaveBeenLastCalledWith(
+      'card1ListJson',
+      JSON.stringify(['First bullet']),
+    );
+  });
+
+  it('keeps a new accordion group available while it is being filled in', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'accordion-card-grid',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          title: 'Investment options',
+          columns: 'two',
+          cardStyle: 'none',
+          card1Title: 'MBA Income Fund',
+        },
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    const detailsButton = screen.getByRole('button', { name: /^More details/ });
+    if (detailsButton.getAttribute('aria-expanded') !== 'true') {
+      fireEvent.click(detailsButton);
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Add accordion' }));
+
+    expect(onSettingChange).toHaveBeenLastCalledWith(
+      'card1AccordionsJson',
+      JSON.stringify([{ title: '', links: [] }]),
+    );
+  });
+
+  it('preserves spaces while editing bullet text', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'bullet-space-grid',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          card1Title: 'Card one',
+          card1ListJson: JSON.stringify(['First bullet']),
+        },
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Card 1:/ }));
+    const bulletsButton = screen.getByRole('button', { name: /^Bullets/ });
+    if (bulletsButton.getAttribute('aria-expanded') !== 'true') {
+      fireEvent.click(bulletsButton);
+    }
+
+    fireEvent.change(screen.getByLabelText('Card 1 bullets 1'), {
+      target: { value: 'First bullet ' },
+    });
+
+    expect(onSettingChange).toHaveBeenLastCalledWith(
+      'card1ListJson',
+      JSON.stringify(['First bullet ']),
+    );
+  });
+
+  it('shows fineprint justify options beside the fineprint field', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(CardGridSettingsProbe, {
+      initialSettings: {
+        card1Title: 'Card one',
+        card1Fineprint: 'Additional note',
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Card 1:/ }));
+    const contentButton = screen.getByRole('button', { name: /^Title and body/ });
+    if (contentButton.getAttribute('aria-expanded') !== 'true') {
+      fireEvent.click(contentButton);
+    }
+
+    expect(screen.getByRole('radiogroup', { name: 'Card 1 fineprint justify' })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'Left' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('slider', { name: 'Card 1 fineprint space above' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Card 1 fineprint line height' })).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Card 1 fineprint space below' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'Right' }));
+    expect(onSettingChange).toHaveBeenLastCalledWith('card1FineprintJustify', 'right');
+  });
+
+  it('keeps multiple accordion links through the complete editor flow', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(CardGridSettingsProbe, {
+      initialSettings: {
+        cardCount: '1',
+        card1Title: 'Investment option',
+      },
+      routeOptions: [
+        { label: 'Prospectus', value: '/prospectus' },
+      ],
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Card 1:/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^More details/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add accordion' }));
+    fireEvent.change(screen.getByPlaceholderText('Accordion heading'), {
+      target: { value: 'Fund PDFs' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add accordion link' }));
+    const firstLink = screen.getAllByPlaceholderText('Example: Read the article')[0];
+    fireEvent.change(firstLink, { target: { value: 'Prospectus' } });
+    const firstLinkCard = firstLink.closest('.admin-grid-resource-link-card');
+    fireEvent.change(firstLinkCard.querySelector('select[aria-label="Link type"]'), {
+      target: { value: 'internal' },
+    });
+    fireEvent.change(within(firstLinkCard).getByLabelText('Select internal page'), {
+      target: { value: '/prospectus' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add accordion link' }));
+    const secondLink = screen.getAllByPlaceholderText('Example: Read the article')[1];
+    fireEvent.change(secondLink, { target: { value: 'Annual report' } });
+    const secondLinkCard = secondLink.closest('.admin-grid-resource-link-card');
+    fireEvent.change(secondLinkCard.querySelector('select[aria-label="Link type"]'), {
+      target: { value: 'external' },
+    });
+    fireEvent.change(within(secondLinkCard).getByPlaceholderText('https://...'), {
+      target: { value: 'https://example.com/annual-report.pdf' },
+    });
+
+    expect(onSettingChange).toHaveBeenLastCalledWith(
+      'card1AccordionsJson',
+      JSON.stringify([{
+        title: 'Fund PDFs',
+        links: [
+          { label: 'Prospectus', to: '/prospectus' },
+          { label: 'Annual report', href: 'https://example.com/annual-report.pdf' },
+        ],
+      }]),
+    );
+  });
+
+  it('routes shared bullet typography controls to measurable block settings', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'qcd-card-grid-typography',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          title: 'It starts here.',
+          bgTone: 'white',
+          columns: 'one',
+          cardStyle: 'planned-giving-centered',
+          card1Title: 'A few things to know',
+          card1ListJson: JSON.stringify(['First requirement']),
+          cardBulletSizeRem: 1.35,
+          cardBulletLineHeight: 1.32,
+        },
+      },
+      onSettingChange,
+    }));
+
+    const sizeSlider = screen.getByRole('slider', { name: 'Bullet size (rem)' });
+    fireEvent.change(sizeSlider, { target: { value: '1.7' } });
+    expect(onSettingChange).toHaveBeenCalledWith('cardBulletSizeRem', 1.7);
+
+    const lineHeightSlider = screen.getByRole('slider', { name: 'Bullet line height' });
+    fireEvent.change(lineHeightSlider, { target: { value: '1.8' } });
+    expect(onSettingChange).toHaveBeenCalledWith('cardBulletLineHeight', 1.8);
   });
 
   it('renders intro blocks with the HUD intro editor', () => {
@@ -531,6 +878,7 @@ describe('BlockHudPanelHost', () => {
   });
 
   it('renders request form blocks with the dedicated request form editor', () => {
+    const onSettingChange = vi.fn();
     render(createElement(BlockHudPanelHost, {
       block: {
         id: 'request_form',
@@ -574,7 +922,7 @@ describe('BlockHudPanelHost', () => {
           step5FieldsJson: '[]',
         },
       },
-      onSettingChange: vi.fn(),
+      onSettingChange,
     }));
 
     expect(screen.getByLabelText('Form heading text')).toBeTruthy();
@@ -586,6 +934,18 @@ describe('BlockHudPanelHost', () => {
     expect(screen.queryByText('Set the heading and supporting copy shown beside the form.')).toBeNull();
     expect(screen.getByRole('radiogroup', { name: 'Text color' })).toBeTruthy();
     expect(document.querySelector('.admin-color-text-swatch-list.hud-standard-swatch-palette')).toBeTruthy();
+    const headingColorControls = screen.getByRole('radiogroup', { name: 'Form heading color controls' });
+    [
+      ['Blue', 'is-atlantean'],
+      ['Mango', 'is-mango'],
+      ['Melon', 'is-melon'],
+      ['Sandstone', 'is-sandstone'],
+      ['Super Grey', 'is-super-grey'],
+      ['White', 'is-white'],
+    ].forEach(([label, value]) => {
+      fireEvent.click(within(headingColorControls).getByRole('radio', { name: label }));
+      expect(onSettingChange).toHaveBeenCalledWith('titleClassName', value);
+    });
     expect(screen.getByLabelText('Step 1 field 1 label')).toBeTruthy();
     expect(screen.getByRole('navigation', { name: 'Request form editor sections' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Content' })).toBeTruthy();
@@ -805,32 +1165,74 @@ describe('BlockHudPanelHost', () => {
   });
 
   it('renders grid HUD panels with normalized route options', () => {
+    const onSettingChange = vi.fn();
     render(createElement(BlockHudPanelHost, {
       block: {
         id: 'grid',
         kind: 'card_grid',
         editableFields: [
-          { id: 'title', label: 'Grid heading', type: 'textarea', rows: 2 },
-          { id: 'card1Action', label: 'Card 1 action', type: 'text' },
-          { id: 'card1Path', label: 'Card 1 path', type: 'text' },
-          { id: 'card1PageRef', label: 'Card 1 page ref', type: 'text' },
+          { id: 'card1Title', label: 'Card 1 title', type: 'text' },
+          { id: 'card1ButtonLabel', label: 'Card 1 button label', type: 'text' },
+          { id: 'card1ButtonLinkJson', label: 'Card 1 button link', type: 'route-link' },
         ],
         settings: {
-          title: 'Grid heading',
-          card1Action: 'Learn more',
-          card1Path: '/contact-us',
-          card1PageRef: '/contact-us',
+          card1Title: 'Contact us',
+          card1ButtonLabel: 'Learn more',
+          card1ButtonLinkJson: JSON.stringify({ kind: 'internal', openInNewWindow: false, to: '/contact-us' }),
+          card1LinksJson: '',
         },
       },
       routeOptions: [
         { label: 'Contact Us', value: '/contact-us' },
         { label: 'Services', value: '/services' },
       ],
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Cards' })).getByRole('button', { name: /^Card 1/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Buttons/ }));
+    expect(screen.getAllByRole('option', { name: '/contact-us — Contact Us' }).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: /^Links/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add link' }));
+    const labelInput = screen.getByPlaceholderText('Example: Read the article');
+    fireEvent.change(labelInput, { target: { value: 'Read the article' } });
+    const linkRow = labelInput.closest('.admin-grid-resource-link-card');
+    fireEvent.change(linkRow.querySelector('select[aria-label="Link type"]'), { target: { value: 'internal' } });
+    const pagePicker = within(linkRow).getByLabelText('Select internal page');
+    fireEvent.change(pagePicker, { target: { value: '/services' } });
+    expect(labelInput.value).toBe('Read the article');
+    expect(pagePicker.value).toBe('/services');
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'card1LinksJson',
+      JSON.stringify([{ label: 'Read the article', to: '/services' }]),
+    );
+  });
+
+  it('gives each card button its own destination editor surface', () => {
+    render(createElement(BlockHudPanelHost, {
+      block: {
+        id: 'button-layout-grid',
+        kind: 'card_grid',
+        mode: 'dynamic',
+        settings: {
+          cardCount: '1',
+          card1Title: 'Contact us',
+          card1ButtonLabel: 'Learn more',
+          card1Button2Label: 'Call us',
+        },
+      },
       onSettingChange: vi.fn(),
     }));
 
-    fireEvent.click(screen.getByRole('button', { name: /card 1/i }));
-    expect(screen.getAllByRole('option', { name: '/contact-us — Contact Us' }).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Card 1:/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Buttons/ }));
+
+    expect(document.querySelectorAll('.admin-card-grid-action-card')).toHaveLength(2);
+    expect(document.querySelectorAll('.admin-card-grid-action-fields')).toHaveLength(2);
+    expect(screen.getAllByText('Destination')).toHaveLength(2);
+    expect(screen.getAllByText('Open button in new window')).toHaveLength(2);
   });
 
   it('renders columns HUD panels with normalized route options', () => {

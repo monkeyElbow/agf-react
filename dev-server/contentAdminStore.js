@@ -35,18 +35,39 @@ import {
   CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
   INSURANCE_COVERAGE_CTA_MIGRATION_ID,
   INSURANCE_COVERAGE_CTA_MIGRATION_VERSION,
+  INSURANCE_FEATURE_COLUMNS_MIGRATION_ID,
+  INSURANCE_FEATURE_COLUMNS_MIGRATION_VERSION,
   INSURANCE_PC_RESOURCES_MIGRATION_ID,
   INSURANCE_PC_RESOURCES_MIGRATION_VERSION,
   ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_ID,
   ONLINE_CONTRIBUTIONS_STEPS_MIGRATION_VERSION,
+  NUMBERED_STEP_CARDS_MIGRATION_ID,
+  NUMBERED_STEP_CARDS_MIGRATION_VERSION,
+  SITE_FEATURE_COLLECTIONS_MIGRATION_ID,
+  SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION,
+  SUPPORT_LIBRARY_BLOCK_MIGRATION_ID,
+  SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
   QCD_CENTERED_CARD_GRID_MIGRATION_ID,
   QCD_CENTERED_CARD_GRID_MIGRATION_VERSION,
+  ENDOWMENTS_PRESENTATION_MIGRATION_ID,
+  ENDOWMENTS_PRESENTATION_MIGRATION_VERSION,
+  MIF_REQUEST_HEADLINE_COLOR_MIGRATION_ID,
+  MIF_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+  QCD_REQUEST_HEADLINE_COLOR_MIGRATION_ID,
+  QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
   migrateGenerosityFundSnapshot,
   migrateQcdCenteredCardGridState,
   migrateCgaSecureActCardState,
   migrateInsuranceCoverageCtaState,
+  migrateInsuranceFeatureColumnsState,
   migrateInsurancePcResourceCardsState,
   migrateOnlineContributionsStepsState,
+  migrateNumberedStepCardsState,
+  migrateSiteFeatureCollectionsState,
+  migrateSupportLibraryState,
+  migrateEndowmentsPresentationState,
+  migrateMifRequestHeadlineColorState,
+  migrateQcdRequestHeadlineColorState,
   migratePlannedGivingStepsBlock,
   stripRetiredTargetBridgeSettingsFromBlock,
   stripRetiredTargetBridgeSettingsFromBlocks,
@@ -3687,6 +3708,332 @@ export function createJsonContentStore({
       };
     },
 
+    migrateNumberedStepCardsSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[NUMBERED_STEP_CARDS_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= NUMBERED_STEP_CARDS_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: NUMBERED_STEP_CARDS_MIGRATION_ID,
+            version: NUMBERED_STEP_CARDS_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateNumberedStepCardsState(record.state);
+      const baseMigration = migrateNumberedStepCardsState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-numbered-step-cards-migration', {
+            action: 'numbered-step-cards-migration',
+            migrationId: NUMBERED_STEP_CARDS_MIGRATION_ID,
+            migrationVersion: NUMBERED_STEP_CARDS_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [NUMBERED_STEP_CARDS_MIGRATION_ID]: NUMBERED_STEP_CARDS_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Numbered step-card preset metadata migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: NUMBERED_STEP_CARDS_MIGRATION_ID,
+          version: NUMBERED_STEP_CARDS_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateSiteFeatureCollectionsSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[SITE_FEATURE_COLLECTIONS_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: SITE_FEATURE_COLLECTIONS_MIGRATION_ID,
+            version: SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateSiteFeatureCollectionsState(record.state);
+      const baseMigration = migrateSiteFeatureCollectionsState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-site-feature-collections-migration', {
+            action: 'site-feature-collections-migration',
+            migrationId: SITE_FEATURE_COLLECTIONS_MIGRATION_ID,
+            migrationVersion: SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [SITE_FEATURE_COLLECTIONS_MIGRATION_ID]: SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Site-feature repeatable content migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: SITE_FEATURE_COLLECTIONS_MIGRATION_ID,
+          version: SITE_FEATURE_COLLECTIONS_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateSupportLibrarySnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(record.snapshotMigrations?.[SUPPORT_LIBRARY_BLOCK_MIGRATION_ID] || 0);
+      if (currentVersion >= SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: SUPPORT_LIBRARY_BLOCK_MIGRATION_ID,
+            version: SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateSupportLibraryState(record.state);
+      const baseMigration = migrateSupportLibraryState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-support-library-block-migration', {
+            action: 'support-library-block-migration',
+            migrationId: SUPPORT_LIBRARY_BLOCK_MIGRATION_ID,
+            migrationVersion: SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [SUPPORT_LIBRARY_BLOCK_MIGRATION_ID]: SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Support library block schema migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: SUPPORT_LIBRARY_BLOCK_MIGRATION_ID,
+          version: SUPPORT_LIBRARY_BLOCK_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateInsuranceFeatureColumnsSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(
+        record.snapshotMigrations?.[INSURANCE_FEATURE_COLUMNS_MIGRATION_ID] || 0,
+      );
+      if (currentVersion >= INSURANCE_FEATURE_COLUMNS_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: INSURANCE_FEATURE_COLUMNS_MIGRATION_ID,
+            version: INSURANCE_FEATURE_COLUMNS_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateInsuranceFeatureColumnsState(record.state);
+      const baseMigration = migrateInsuranceFeatureColumnsState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-insurance-feature-columns-migration', {
+            action: 'insurance-feature-columns-migration',
+            migrationId: INSURANCE_FEATURE_COLUMNS_MIGRATION_ID,
+            migrationVersion: INSURANCE_FEATURE_COLUMNS_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [INSURANCE_FEATURE_COLUMNS_MIGRATION_ID]: INSURANCE_FEATURE_COLUMNS_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Insurance feature sections to shared columns migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: INSURANCE_FEATURE_COLUMNS_MIGRATION_ID,
+          version: INSURANCE_FEATURE_COLUMNS_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
     migrateInsuranceCoverageCtaSnapshot({ actor, reason = '' } = {}) {
       const normalizedActor = normalizeActor(actor);
       const normalizedReason = String(reason || '').trim();
@@ -3929,6 +4276,246 @@ export function createJsonContentStore({
         migration: {
           id: CGA_SECURE_ACT_CARD_MIGRATION_ID,
           version: CGA_SECURE_ACT_CARD_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateEndowmentsPresentationSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(record.snapshotMigrations?.[ENDOWMENTS_PRESENTATION_MIGRATION_ID] || 0);
+      if (currentVersion >= ENDOWMENTS_PRESENTATION_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: ENDOWMENTS_PRESENTATION_MIGRATION_ID,
+            version: ENDOWMENTS_PRESENTATION_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateEndowmentsPresentationState(record.state);
+      const baseMigration = migrateEndowmentsPresentationState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-endowments-presentation-migration', {
+            action: 'endowments-presentation-migration',
+            migrationId: ENDOWMENTS_PRESENTATION_MIGRATION_ID,
+            migrationVersion: ENDOWMENTS_PRESENTATION_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [ENDOWMENTS_PRESENTATION_MIGRATION_ID]: ENDOWMENTS_PRESENTATION_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'Endowments billboard and contact headline migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: ENDOWMENTS_PRESENTATION_MIGRATION_ID,
+          version: ENDOWMENTS_PRESENTATION_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateMifRequestHeadlineColorSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(record.snapshotMigrations?.[MIF_REQUEST_HEADLINE_COLOR_MIGRATION_ID] || 0);
+      if (currentVersion >= MIF_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: MIF_REQUEST_HEADLINE_COLOR_MIGRATION_ID,
+            version: MIF_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateMifRequestHeadlineColorState(record.state);
+      const baseMigration = migrateMifRequestHeadlineColorState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-mif-request-headline-color-migration', {
+            action: 'mif-request-headline-color-migration',
+            migrationId: MIF_REQUEST_HEADLINE_COLOR_MIGRATION_ID,
+            migrationVersion: MIF_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [MIF_REQUEST_HEADLINE_COLOR_MIGRATION_ID]: MIF_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'MIF request headline color migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: MIF_REQUEST_HEADLINE_COLOR_MIGRATION_ID,
+          version: MIF_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+          didMigrate: changed,
+          alreadyApplied: false,
+        },
+      };
+    },
+
+    migrateQcdRequestHeadlineColorSnapshot({ actor, reason = '' } = {}) {
+      const normalizedActor = normalizeActor(actor);
+      const normalizedReason = String(reason || '').trim();
+      if (!normalizedActor || !normalizedReason) {
+        return { ok: false, error: 'migration-actor-and-reason-required', ...publishSnapshot() };
+      }
+
+      const currentVersion = Number(record.snapshotMigrations?.[QCD_REQUEST_HEADLINE_COLOR_MIGRATION_ID] || 0);
+      if (currentVersion >= QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION) {
+        return {
+          ok: true,
+          ...publishSnapshot(),
+          migration: {
+            id: QCD_REQUEST_HEADLINE_COLOR_MIGRATION_ID,
+            version: QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+            didMigrate: false,
+            alreadyApplied: true,
+          },
+        };
+      }
+
+      const stateMigration = migrateQcdRequestHeadlineColorState(record.state);
+      const baseMigration = migrateQcdRequestHeadlineColorState(record.baseSnapshot);
+      const changed = Boolean(stateMigration.changed || baseMigration.changed);
+      let backup = null;
+      if (changed) {
+        try {
+          backup = createSharedContentBackup('before-qcd-request-headline-color-migration', {
+            action: 'qcd-request-headline-color-migration',
+            migrationId: QCD_REQUEST_HEADLINE_COLOR_MIGRATION_ID,
+            migrationVersion: QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+            actor: normalizedActor,
+            operationReason: normalizedReason,
+          });
+        } catch (error) {
+          return {
+            ok: false,
+            error: 'backup-failed',
+            details: error instanceof Error ? error.message : 'backup-failed',
+            ...publishSnapshot(),
+          };
+        }
+      }
+
+      const timestamp = now();
+      const previousState = record.state;
+      record = {
+        ...record,
+        initialized: true,
+        updatedAt: timestamp,
+        state: normalizeSharedState(stateMigration.state),
+        baseSnapshot: normalizeSharedState(baseMigration.state),
+        snapshotMigrations: {
+          ...(record.snapshotMigrations || {}),
+          [QCD_REQUEST_HEADLINE_COLOR_MIGRATION_ID]: QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
+        },
+      };
+      if (changed) {
+        addRevisionsForChangedPaths(previousState, record.state, {
+          actor: normalizedActor,
+          reason: normalizedReason,
+          summary: 'QCD request headline color migration',
+        });
+      }
+      persistRecord();
+      return {
+        ok: true,
+        actor: normalizedActor,
+        reason: normalizedReason,
+        backup,
+        ...publishSnapshot(),
+        migration: {
+          id: QCD_REQUEST_HEADLINE_COLOR_MIGRATION_ID,
+          version: QCD_REQUEST_HEADLINE_COLOR_MIGRATION_VERSION,
           didMigrate: changed,
           alreadyApplied: false,
         },

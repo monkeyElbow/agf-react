@@ -229,6 +229,9 @@ describe('planned giving review polish guardrail', () => {
   it('keeps charitable trusts difference columns aligned to the Ministry Impact how-it-works spacing and type scale', () => {
     const cssSource = readSource('../styles/service-native.css');
 
+    expect(cssSource).toContain('.service-native-section.native-dynamic-grid.is-card-none .service-native-card.card-none,');
+    expect(cssSource).toContain('padding: var(--dynamic-grid-card-padding, var(--native-card-shell-padding));');
+    expect(cssSource).toContain('padding-bottom: calc(var(--dynamic-grid-card-padding, var(--native-card-shell-padding)) * 1.35);');
     expect(cssSource).toContain('.legacy-child-native-trusts-differences > :is(.ag-panel-rail, .ag-panel-rail-wide) {');
     expect(cssSource).toContain('width: min(calc(100% - (var(--ag-panel-gutter) * 1.4)), 76rem);');
     expect(cssSource).toContain('.legacy-child-native-trusts-differences.native-dynamic-grid .service-native-grid {');

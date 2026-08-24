@@ -6,16 +6,18 @@ import { normalizeCollaborationState } from './contentAdminCollaboration.js';
 
 // This version describes the record transformations below, not the renderer schema.
 // Increment it when a new, non-destructive stored-record migration is introduced.
-export const CONTENT_ADMIN_NORMALIZATION_VERSION = 3;
+export const CONTENT_ADMIN_NORMALIZATION_VERSION = 5;
 
 // Migrated editors resolve their field catalog from the block registry. Keeping
 // the same catalog on every stored block makes the shared snapshot needlessly
 // large, so only legacy/unknown kinds retain an inline fallback catalog.
 const REGISTRY_BACKED_DYNAMIC_BLOCK_KINDS = new Set([
   'content',
+  'support_library',
   'calculator_cta',
   'calculator_intro',
   'calculator_widget',
+  'card_chart',
   'cta_form',
   'request_form',
   'hero',
@@ -41,6 +43,7 @@ const RETIRED_DAF_PATH = '/services/planned-giving/generosity-fund';
 const DAF_PATH = '/services/planned-giving/donor-advised-fund';
 const LEGACY_DAF_PATH = '/services/legacy-giving/generosity-fund';
 const PLANNED_GIVING_PATH = '/services/planned-giving';
+const CHARITABLE_TRUSTS_PATH = '/services/planned-giving/charitable-trusts';
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
 }
@@ -155,6 +158,116 @@ function normalizeBlockSettings(settings) {
   return next;
 }
 
+function normalizeLegacyIraComparisonChart(pathname, rawBlock) {
+  if (normalizeManagedContentPath(pathname) !== '/services/retirement/iras' || !isObject(rawBlock)) {
+    return rawBlock;
+  }
+  if (String(rawBlock.id || '').trim() !== 'comparison_table' || String(rawBlock.kind || '').trim() !== 'content') {
+    return rawBlock;
+  }
+
+  const settings = isObject(rawBlock.settings) ? rawBlock.settings : {};
+  const headers = Array.isArray(settings.tableHeadersJson) ? settings.tableHeadersJson : [];
+  const rows = Array.isArray(settings.tableRowsJson) ? settings.tableRowsJson : [];
+  const values = Array.isArray(rows[0]) ? rows[0] : [];
+  if (headers.length < 2 || values.length < 2) {
+    return rawBlock;
+  }
+
+  const nextSettings = { ...settings, cardCount: String(Math.min(6, headers.length)) };
+  headers.slice(0, 6).forEach((header, index) => {
+    nextSettings[`card${index + 1}Title`] = String(header || '').trim();
+    nextSettings[`card${index + 1}Bullets`] = String(values[index] || '')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .join('\n');
+  });
+  ['tableHeadersJson', 'tableRowsJson', 'tableValueAlignment', 'tableFirstColumnHeader', 'tableChartId'].forEach((key) => {
+    delete nextSettings[key];
+  });
+
+  return {
+    ...rawBlock,
+    name: 'IRA Card Chart',
+    kind: 'card_chart',
+    settings: nextSettings,
+  };
+}
+
+function parseLegacyCardGridPoints(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+  const source = String(value || '').trim();
+  if (!source) {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(source);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item) => String(item || '').trim()).filter(Boolean);
+    }
+  } catch {
+    // Preserve hand-edited legacy values as newline-delimited points below.
+  }
+  return source.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+}
+
+function normalizeLegacyCharitableTrustTypeChart(pathname, rawBlock) {
+  if (normalizeManagedContentPath(pathname) !== CHARITABLE_TRUSTS_PATH || !isObject(rawBlock)) {
+    return rawBlock;
+  }
+  const blockId = String(rawBlock.id || '').trim();
+  const chartMeta = {
+    remainder_trust_type_cards: {
+      name: 'Remainder Trust Type Chart',
+      sectionClassName: 'legacy-child-native-trusts-crt-types',
+    },
+    lead_trust_type_cards: {
+      name: 'Lead Trust Type Chart',
+      sectionClassName: 'legacy-child-native-trusts-clt-types',
+    },
+  }[blockId];
+  if (!chartMeta || String(rawBlock.kind || '').trim() !== 'card_grid') {
+    return rawBlock;
+  }
+
+  const settings = isObject(rawBlock.settings) ? rawBlock.settings : {};
+  const nextSettings = {
+    title: String(settings.title || '').trim(),
+    titleClassName: String(settings.titleClassName || '').trim(),
+    titleHighlightsJson: String(settings.titleHighlightsJson || '').trim(),
+    justify: 'center',
+    cardCount: '2',
+    card1Title: String(settings.card1Title || '').trim(),
+    card1Color: 'atlantean',
+    card1Bullets: parseLegacyCardGridPoints(settings.card1ListJson).join('\n'),
+    card2Title: String(settings.card2Title || '').trim(),
+    card2Color: 'mango',
+    card2Bullets: parseLegacyCardGridPoints(settings.card2ListJson).join('\n'),
+    fineprint: '',
+    fineprintJustify: 'center',
+    fineprintSizeRem: 0.88,
+    fullBleed: false,
+    spaceBeforeRem: 0,
+    spaceAfterRem: 0,
+    paddingTopRem: 2.4,
+    paddingBottomRem: 2.4,
+    cellPaddingRem: 0.9,
+    contentMaxWidthPx: 1180,
+    anchorId: String(settings.anchorId || '').trim(),
+    sectionClassName: String(settings.sectionClassName || chartMeta.sectionClassName).trim(),
+  };
+
+  return {
+    ...rawBlock,
+    name: chartMeta.name,
+    kind: 'card_chart',
+    settings: nextSettings,
+  };
+}
+
 function normalizeLegacyBlockFamily(rawBlock) {
   const kind = String(rawBlock?.kind || rawBlock?.type || '').trim().toLowerCase();
   const presetId = String(rawBlock?.presetId || '').trim().toLowerCase();
@@ -259,7 +372,12 @@ export function normalizeContentAdminState(rawState, options = {}) {
       const pathname = normalizeManagedContentPath(rawPath);
       return [pathname || rawPath, (Array.isArray(rawBlocks) ? rawBlocks : [])
         .filter((block) => !isRetiredNonDynamicContentAdminBlock(block))
-        .map(normalizeContentAdminBlock)];
+        .map((block) => normalizeContentAdminBlock(
+          normalizeLegacyCharitableTrustTypeChart(
+            pathname,
+            normalizeLegacyIraComparisonChart(pathname, block),
+          ),
+        ))];
     }),
   );
 

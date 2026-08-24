@@ -608,7 +608,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
         },
         {
           id: 'impact_proof_story',
-          name: 'Site Feature · Impact proof story',
+          name: 'Feature - Impact proof story',
           kind: 'site_feature',
           mode: 'dynamic',
           hidden: false,
@@ -649,7 +649,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Intro HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Billboard HUD panel' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Open Site Feature · Impact proof story HUD panel' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open Feature - Impact proof story HUD panel' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Open Page Content HUD panel' })).toBeNull();
   });
 

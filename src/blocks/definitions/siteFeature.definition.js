@@ -44,7 +44,21 @@ const sections = [
         type: 'textarea',
         rows: 4,
       }),
+      defineEditorField({ id: 'introHeading', label: 'Feature intro heading', type: 'text' }),
+      defineEditorField({ id: 'introBody', label: 'Feature intro body', type: 'textarea', rows: 4 }),
+      defineEditorField({ id: 'introEmphasis', label: 'Feature intro emphasis', type: 'text' }),
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
+    ],
+  },
+  {
+    id: 'panels',
+    title: 'Panels',
+    surfaces: ['hud', 'admin'],
+    fields: [
+      defineEditorField({ id: 'panelsJson', label: 'Feature panels', type: 'feature_collection' }),
+      defineEditorField({ id: 'metricsJson', label: 'Feature metrics', type: 'feature_collection' }),
+      defineEditorField({ id: 'cardsJson', label: 'Feature cards', type: 'feature_collection' }),
+      defineEditorField({ id: 'beatsJson', label: 'Feature story beats', type: 'feature_collection' }),
     ],
   },
   {
@@ -91,8 +105,8 @@ export const siteFeatureBlockDefinition = createBlockDefinition({
   },
   editor: {
     sections,
-    hudSectionIds: ['feature', 'action'],
-    adminSectionIds: ['feature', 'action'],
+    hudSectionIds: ['feature', 'panels', 'action'],
+    adminSectionIds: ['feature', 'panels', 'action'],
   },
   validators: [
     (block) => Boolean(buildDynamicSiteFeatureFromBlock(block)),

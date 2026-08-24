@@ -239,24 +239,12 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('padding-bottom: clamp(5.2rem, 8.5vw, 7rem) !important;');
     expect(cssSource).toContain('.native-info-page--group-life-quote .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).group-life-native-benefits {');
     expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll {');
-    expect(cssSource).toContain('background: #faf7f1;');
+    expect(cssSource).toContain('background: #ffffff !important;');
     expect(cssSource).toContain('padding: clamp(3.9rem, 7.4vw, 6.2rem) 0 clamp(2.15rem, 4.6vw, 3.4rem);');
-    expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card {');
-    expect(cssSource).toContain('grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);');
-    expect(cssSource).toContain('border: 2px solid var(--ministers-group-life-step-accent);');
-    expect(cssSource).toContain('background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);');
-    expect(cssSource).toContain('align-items: center;');
+    // Enrollment steps use the shared numbered-step-card surface; the old
+    // route-specific card shell was intentionally removed.
+    expect(cssSource).not.toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card {');
     expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card h3 {');
-    expect(cssSource).toContain('font-size: clamp(2.55rem, 4.35vw, 3.2rem) !important;');
-    expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(2) {');
-    expect(cssSource).toContain('--ministers-group-life-step-accent: var(--ag-color-mango);');
-    expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card:nth-child(1) h3,');
-    expect(cssSource).toContain('border-color: var(--ag-color-atlantean) !important;');
-    expect(cssSource).toContain('color: var(--ag-color-mango) !important;');
-    expect(cssSource).toContain('color: var(--ag-color-sandstone-dark) !important;');
-    expect(cssSource).toContain('border-radius: 1.75rem !important;');
-    expect(cssSource).toContain('.native-info-page--ministers-group-life-plan .ministers-group-life-native-enroll .service-native-card p {');
-    expect(cssSource).toContain('line-height: 1.58;');
     expect(cssSource).toContain('.native-info-page--mission-assure .mission-assure-native-get-covered h2 {');
     expect(cssSource).toContain('font-size: clamp(2.5rem, 5.6vw, 4.4rem) !important;');
     expect(cssSource).toContain('letter-spacing: var(--ag-letter-spacing-avenir-heading) !important;');

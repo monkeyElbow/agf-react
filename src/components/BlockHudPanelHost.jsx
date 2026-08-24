@@ -16,11 +16,10 @@ import { normalizeCtaHudSubmitStyle, normalizeCtaHudSubmitTone } from '../lib/ct
 import { getBlockHudDefinition } from '../lib/blockHudRegistry';
 import { getBlockEditorSections } from '../blocks/registry';
 import {
-  applySelectionColor,
   extractHeroLineColorToken,
   removeSelectionRange,
-  replaceHeroLineColorClass,
 } from '../lib/heroHudRanges';
+import { applyTextColorSelection } from '../lib/textColorSelection';
 import {
   buildCtaFormSettingsPatch,
   extractCtaFormFields,
@@ -64,7 +63,9 @@ const HUD_EDITORS_WITH_SECTION_RAIL = new Set([
   'top_strip',
   'testimonials',
   'billboard',
+  'card_chart',
   'request_form',
+  'support_library',
 ]);
 
 function HudEditorCompatibilityShell({ blockKind, blockLabel, children, blockOptions = null }) {
@@ -72,9 +73,8 @@ function HudEditorCompatibilityShell({ blockKind, blockLabel, children, blockOpt
   const definitionSections = getBlockEditorSections(blockKind, 'hud');
   const cardGridSections = blockKind === 'card_grid'
     ? [
+      { id: 'header', label: 'Header', icon: 'H' },
       { id: 'appearance', label: 'Appearance', icon: '◉' },
-      { id: 'layout', label: 'Layout', icon: '◫' },
-      { id: 'typography', label: 'Typography', icon: 'Aa' },
       { id: 'cards', label: 'Cards', icon: '▦' },
     ]
     : null;
@@ -329,20 +329,31 @@ export default function BlockHudPanelHost({
               onSubmitStyleChange={(nextValue) => blockedOnSettingChange('submitStyle', nextValue)}
               onSubmitToneChange={(nextValue) => blockedOnSettingChange('submitTone', nextValue)}
               onBgToneChange={(nextValue) => blockedOnSettingChange('bgTone', nextValue)}
-              onApplySelectionColor={(colorValue) => {
+              onApplySelectionColor={(colorValue, selectedTitle = ctaTitleSelection) => {
                 const sourceText = String(settings.title || '');
-                const safeStart = Math.max(0, Math.min(Number(ctaTitleSelection.start) || 0, sourceText.length));
-                const safeEnd = Math.max(safeStart, Math.min(Number(ctaTitleSelection.end) || 0, sourceText.length));
-                if (safeEnd <= safeStart) {
+                const result = applyTextColorSelection({
+                  text: sourceText,
+                  lineClassName: String(settings.titleClassName || ''),
+                  highlightsJson: settings.titleHighlightsJson,
+                  selection: selectedTitle,
+                  colorValue,
+                });
+                if (result.target !== 'selection') {
                   return;
                 }
                 blockedOnSettingChange(
                   'titleHighlightsJson',
-                  applySelectionColor(settings.titleHighlightsJson, sourceText, safeStart, safeEnd, colorValue),
+                  result.highlightsJson,
                 );
               }}
               onTitleColorChange={(colorValue) => {
-                blockedOnSettingChange('titleClassName', replaceHeroLineColorClass(String(settings.titleClassName || ''), colorValue));
+                blockedOnSettingChange('titleClassName', applyTextColorSelection({
+                  text: String(settings.title || ''),
+                  lineClassName: String(settings.titleClassName || ''),
+                  highlightsJson: settings.titleHighlightsJson,
+                  selection: { start: 0, end: 0 },
+                  colorValue,
+                }).lineClassName);
               }}
               onRemoveTitleSpan={(index) => {
                 blockedOnSettingChange(

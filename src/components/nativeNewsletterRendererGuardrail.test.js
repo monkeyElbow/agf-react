@@ -22,7 +22,8 @@ describe('native newsletter renderer guardrail', () => {
     expect(source).toContain('function buildManagedBlockSection(block, {');
     expect(source).toContain("if (renderBlock.kind === 'newsletter') {");
     expect(source).toContain('buildDynamicNewsletterSection(renderBlock, pathname);');
-    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(source).toContain('htmlClassName: bodyColorClassName || undefined,');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
     expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).toContain('<NewsletterSignupForm className="is-native-newsletter" />');
   });

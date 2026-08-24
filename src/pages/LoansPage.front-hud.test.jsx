@@ -89,7 +89,7 @@ describe('LoansPage front HUD', () => {
     expect(screen.getByRole('button', { name: 'Intro' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Request Form' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Value Cards' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Billboard' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Billboard' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'CTA Form' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Testimonials' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Request Form HUD panel' })).toBeTruthy();
@@ -103,7 +103,7 @@ describe('LoansPage front HUD', () => {
     expect(screen.getByRole('textbox', { name: 'Lead Copy' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Add step 4' })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Billboard' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Billboard' })[0]);
     expect(screen.getByLabelText('Title')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'CTA Form' }));

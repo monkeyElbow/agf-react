@@ -372,14 +372,14 @@ describe('implementation-ownership.service-native style ownership', () => {
       'padding: var(--investments-cert-body-padding-top) var(--investments-cert-body-padding-inline) var(--investments-cert-body-padding-bottom);',
       '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate),',
       '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) h3,',
-      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) :is(p, li, a:not(.service-native-btn)),',
+      '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) :is(p, a:not(.service-native-btn)),',
       '.service-native-section.native-dynamic-grid .service-native-card:not(.investments-native-cert-card):not(.retirement-account-card--certificate) .service-native-action-row:last-child,',
       '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card h3,',
       '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card h3::after {',
       '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card .service-native-card-bullet-list li,',
       '.native-info-page--legacy-child .legacy-child-native-options .service-native-card:not(.investments-native-cert-card),',
       '.native-info-page--legacy-child .legacy-child-native-options .service-native-card:not(.investments-native-cert-card) h3,',
-      '.native-info-page--legacy-child .legacy-child-native-options .service-native-card:not(.investments-native-cert-card):hover,',
+      '.native-info-page--legacy-child .legacy-child-native-options .service-native-card:not(.investments-native-cert-card):hover {',
       '.service-native-section.native-dynamic-grid.legacy-child-native-assets .service-native-card .service-native-card-bullet-list li,',
       '.service-native-section.native-dynamic-grid.legacy-child-native-cga-assets .service-native-card .service-native-card-bullet-list li {',
       'font-size: clamp(1.1rem, 2vw, 1.35rem);',
@@ -493,6 +493,17 @@ describe('implementation-ownership.service-native style ownership', () => {
     expect(infoTableSource).toContain(
       '.info-table-sheet[data-info-table-first-column-header="false"] .info-table-sheet__card-value {',
     );
+  });
+
+  it('gives reusable Card Chart cells a comfortable default padding budget', () => {
+    const source = readFileSync(path.resolve(__dirname, './service-native.css'), 'utf8');
+
+    expect(source).toContain(
+      '.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) {',
+    );
+    expect(source).toContain('--card-chart-cell-padding: clamp(1.05rem, 1.8vw, 1.35rem) clamp(1.15rem, 2vw, 1.55rem);');
+    expect(source).toContain('padding: var(--card-chart-cell-padding);');
+    expect(source).toContain('padding: var(--card-chart-mobile-cell-padding);');
   });
 
   it('keeps the IRA type cards free from shared card title top spacing', () => {

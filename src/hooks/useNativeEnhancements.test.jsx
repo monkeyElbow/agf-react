@@ -21,8 +21,8 @@ function ForceObserveHookHarness() {
 
   return (
     <div ref={ref} className="service-native-page">
-      <div data-testid="force-fade-0" className="fade-up fade-up-force-observe">First</div>
-      <div data-testid="force-fade-1" className="fade-up fade-up-force-observe">Second</div>
+      <div data-testid="force-fade-0" className="fade-up fade-up-force-observe fade-up-fail-open">First</div>
+      <div data-testid="force-fade-1" className="fade-up fade-up-force-observe fade-up-fail-open">Second</div>
     </div>
   );
 }
@@ -266,6 +266,31 @@ describe('useNativeEnhancements fade-up reveal', () => {
     expect(first.getAttribute('data-fade-state')).toBe('pending');
     expect(second.getAttribute('data-fade-state')).toBe('pending');
     expect(observedTargets).toHaveLength(2);
+  });
+
+  it('fails open for visible card targets when the observer does not report', () => {
+    Element.prototype.getBoundingClientRect = function mockedRect() {
+      return {
+        top: 40,
+        bottom: 140,
+        left: 0,
+        right: 0,
+        width: 0,
+        height: 100,
+        x: 0,
+        y: 40,
+        toJSON: () => ({}),
+      };
+    };
+
+    const { getByTestId } = render(<ForceObserveHookHarness />);
+    const first = getByTestId('force-fade-0');
+
+    expect(first.getAttribute('data-fade-state')).toBe('pending');
+    vi.advanceTimersByTime(500);
+
+    expect(first.classList.contains('is-visible')).toBe(true);
+    expect(first.hasAttribute('data-fade-state')).toBe(false);
   });
 
   it('uses a custom observer root margin when a fade-up node opts into mid-screen billboard reveal timing', () => {

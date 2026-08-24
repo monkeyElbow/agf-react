@@ -2,18 +2,18 @@ import gridHudIcon from '../../assets/admin-block-icons/grid.svg';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 import { buildDynamicGridFromBlock } from '../../lib/dynamicPageBlocks';
-import { getTokenSwatch } from '../../lib/colorSystem';
+import {
+  getTokenSwatch,
+  SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT,
+} from '../../lib/colorSystem';
 import { getCardGridPresetDefinitions } from '../../lib/cardGridPresets';
 import { validateLinkFieldGroups } from '../../lib/linkValue';
+import {
+  DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
+  DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+} from '../../lib/dynamicGrid';
 
-const GRID_HEADING_TONE_OPTIONS = [
-  { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
-  { value: 'is-atlantean', label: 'Blue', swatch: getTokenSwatch('atlantean') },
-  { value: 'is-mango', label: 'Mango', swatch: 'linear-gradient(145deg, #f6b146 0%, #e8991f 100%)' },
-  { value: 'is-melon', label: 'Melon', swatch: 'linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)' },
-  { value: 'is-super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
-  { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-];
+const GRID_HEADING_TONE_OPTIONS = SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT;
 
 const GRID_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
@@ -24,10 +24,9 @@ const GRID_BACKGROUND_OPTIONS = [
 
 const GRID_CARD_STYLE_OPTIONS = [
   { value: 'card1', label: 'Card 1' },
-  { value: 'card2', label: 'Card 2' },
   { value: 'card3', label: 'Card 3' },
   { value: 'card4', label: 'Card 4' },
-  { value: 'none', label: 'No card style' },
+  { value: 'none', label: 'Minimal card' },
   { value: 'borderless-shadow', label: 'Borderless with shadow' },
   { value: 'planned-giving-centered', label: 'Centered bullet panel (like CGA)' },
 ];
@@ -43,6 +42,12 @@ const GRID_TEXT_TONE_OPTIONS = [
 const GRID_CARD_TITLE_TONE_OPTIONS = [
   ...GRID_TEXT_TONE_OPTIONS,
   { value: 'alternating', label: 'Alternating brand colors', swatch: 'linear-gradient(90deg, #00adbb 0 33%, #f6b146 33% 66%, #f48f7a 66%)' },
+];
+
+const GRID_FINEPRINT_JUSTIFY_OPTIONS = [
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Center' },
+  { value: 'right', label: 'Right' },
 ];
 
 const sections = [
@@ -64,8 +69,48 @@ const sections = [
         type: 'highlight_list',
         options: GRID_HEADING_TONE_OPTIONS.filter((option) => option.value),
       }),
+      defineEditorField({ id: 'subtitle', label: 'Grid subhead', type: 'textarea', rows: 2 }),
+      defineEditorField({
+        id: 'subtitleClassName',
+        label: 'Grid subhead color',
+        type: 'swatch',
+        options: SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT,
+      }),
+      defineEditorField({
+        id: 'subtitleHighlightsJson',
+        label: 'Grid subhead highlights',
+        type: 'highlight_list',
+        options: GRID_HEADING_TONE_OPTIONS.filter((option) => option.value),
+      }),
       defineEditorField({ id: 'bodyHtml', label: 'Grid intro HTML', type: 'html' }),
       defineEditorField({ id: 'body', label: 'Fallback body text', type: 'textarea', rows: 3 }),
+      defineEditorField({
+        id: 'paddingTopRem',
+        label: 'Block padding above',
+        type: 'range',
+        min: 0,
+        max: 8,
+        step: 0.05,
+        defaultValue: 3.8,
+      }),
+      defineEditorField({
+        id: 'paddingBottomRem',
+        label: 'Block padding below',
+        type: 'range',
+        min: 0,
+        max: 8,
+        step: 0.05,
+        defaultValue: 3.8,
+      }),
+      defineEditorField({
+        id: 'headerSubheadSpaceRem',
+        label: 'Header/subhead space',
+        type: 'range',
+        min: 0,
+        max: 4,
+        step: 0.05,
+        defaultValue: 0.45,
+      }),
       defineEditorField({
         id: 'bgTone',
         label: 'Grid background',
@@ -93,22 +138,38 @@ const sections = [
         ],
       }),
       defineEditorField({
+        id: 'cardCount',
+        label: 'Number of cards',
+        type: 'select',
+        options: Array.from({ length: 8 }, (_, index) => ({
+          value: String(index + 1),
+          label: `${index + 1} card${index === 0 ? '' : 's'}`,
+        })),
+      }),
+      defineEditorField({
         id: 'cardStyle',
         label: 'Card style',
         type: 'select',
         options: GRID_CARD_STYLE_OPTIONS,
       }),
       defineEditorField({ id: 'cardPaddingRem', label: 'Card padding (rem)', type: 'number', min: 0.75, max: 3, step: 0.05 }),
-      defineEditorField({ id: 'cardTitleSizeRem', label: 'Card title size (rem)', type: 'number', min: 0.9, max: 2, step: 0.05 }),
+      defineEditorField({ id: 'cardTitleSizeRem', label: 'Card title size (rem)', type: 'number', min: 0.9, max: 3, step: 0.05 }),
       defineEditorField({ id: 'cardBodySizeRem', label: 'Card body size (rem)', type: 'number', min: 0.8, max: 1.5, step: 0.05 }),
       defineEditorField({
-        id: 'cardBulletSize',
-        label: 'Bullet size',
-        type: 'select',
-        options: [
-          { value: 'daf', label: 'DAF standard' },
-          { value: 'large', label: 'Large' },
-        ],
+        id: 'cardBulletSizeRem',
+        label: 'Bullet size (rem)',
+        type: 'range',
+        min: 1.1,
+        max: 2,
+        step: 0.05,
+      }),
+      defineEditorField({
+        id: 'cardBulletLineHeight',
+        label: 'Bullet line height',
+        type: 'number',
+        min: 1.1,
+        max: 2.1,
+        step: 0.05,
       }),
       defineEditorField({ id: 'cardBodyLineHeight', label: 'Card body line height', type: 'number', min: 1.1, max: 2.1, step: 0.05 }),
       defineEditorField({
@@ -123,7 +184,6 @@ const sections = [
         type: 'swatch',
         options: GRID_TEXT_TONE_OPTIONS,
       }),
-      defineEditorField({ id: 'subtitle', label: 'Grid subtitle', type: 'textarea', rows: 2 }),
       defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),
       defineEditorField({ id: 'fullBleed', label: 'Use full-bleed rail', type: 'boolean' }),
@@ -179,7 +239,12 @@ const sections = [
     fields: [
       ...[1, 2, 3, 4, 5, 6, 7, 8].flatMap((slot) => ([
         defineEditorField({ id: `card${slot}Title`, label: `Card ${slot} title`, type: 'text' }),
-        defineEditorField({ id: `card${slot}TitleClassName`, label: `Card ${slot} title class name`, type: 'text' }),
+        defineEditorField({
+          id: `card${slot}TitleClassName`,
+          label: `Card ${slot} title color`,
+          type: 'swatch',
+          options: SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT,
+        }),
         defineEditorField({ id: `card${slot}ClassName`, label: `Card ${slot} class name`, type: 'text' }),
         defineEditorField({ id: `card${slot}IconKey`, label: `Card ${slot} icon key`, type: 'text' }),
         defineEditorField({
@@ -192,6 +257,40 @@ const sections = [
         defineEditorField({ id: `card${slot}Body`, label: `Card ${slot} body`, type: 'textarea', rows: 2 }),
         defineEditorField({ id: `card${slot}ListJson`, label: `Card ${slot} bullets`, type: 'textarea', rows: 5 }),
         defineEditorField({ id: `card${slot}Fineprint`, label: `Card ${slot} fineprint`, type: 'textarea', rows: 2 }),
+        defineEditorField({
+          id: `card${slot}FineprintJustify`,
+          label: `Card ${slot} fineprint justify`,
+          type: 'select',
+          options: GRID_FINEPRINT_JUSTIFY_OPTIONS,
+        }),
+        defineEditorField({
+          id: `card${slot}FineprintSpaceBeforeRem`,
+          label: `Card ${slot} fineprint space above`,
+          type: 'range',
+          min: 0,
+          max: 3,
+          step: 0.05,
+          defaultValue: 0.55,
+        }),
+        defineEditorField({
+          id: `card${slot}FineprintLineHeight`,
+          label: `Card ${slot} fineprint line height`,
+          type: 'range',
+          min: 1.1,
+          max: 2.4,
+          step: 0.05,
+          defaultValue: 1.5,
+          suffix: '',
+        }),
+        defineEditorField({
+          id: `card${slot}FineprintSpaceAfterRem`,
+          label: `Card ${slot} fineprint space below`,
+          type: 'range',
+          min: 0,
+          max: 2,
+          step: 0.05,
+          defaultValue: 0,
+        }),
         defineEditorField({ id: `card${slot}LinksJson`, label: `Card ${slot} PDF / link list JSON`, type: 'textarea', rows: 4 }),
         defineEditorField({ id: `card${slot}AccordionsJson`, label: `Card ${slot} accordion JSON`, type: 'textarea', rows: 6 }),
         ...defineTransitionalActionFields({
@@ -264,6 +363,8 @@ export const cardGridBlockDefinition = createBlockDefinition({
     cardTitleSizeRem: 1.14,
     cardBodySizeRem: 1,
     cardBulletSize: 'daf',
+    cardBulletSizeRem: DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+    cardBulletLineHeight: DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
     cardBodyLineHeight: 1.58,
     anchorId: '',
     buttonLabel: '',

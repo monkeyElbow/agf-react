@@ -58,6 +58,14 @@ describe('ContentAdminContext state normalization', () => {
       'generosity-fund-donor-advised-fund-refresh',
       'retirement-403b-snapshot-repairs',
       'planned-giving-retired-static-comparison',
+      'qcd-centered-card-grid',
+      'online-contributions-step-cards',
+      'numbered-step-cards-preset-metadata',
+      'site-feature-repeatable-content-fields',
+      'support-library-block-kind',
+      'insurance-coverage-cta-fields',
+      'insurance-feature-columns',
+      'insurance-pc-resource-card-lists',
       'retirement-ira-block-shape',
       'loans-dynamic-block-upgrade',
       'property-casualty-request-repair',
@@ -65,6 +73,7 @@ describe('ContentAdminContext state normalization', () => {
       'split-link-compatibility',
       'cta-form-slot-compatibility',
       'cga-secure-act-content-compatibility',
+      'cga-secure-act-card',
     ]);
 
     inventory.forEach((entry) => {
@@ -1289,7 +1298,7 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(requestBlock?.settings).toMatchObject({
       titleClassName: '',
-      titleHighlightsJson: '[{"text":"legacy","className":"is-white"}]',
+      titleHighlightsJson: '',
       bgTone: 'blue',
       textTone: 'white',
       spaceBeforeRem: 3.6,
@@ -3153,8 +3162,8 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(growthFeatureBlock).toBeTruthy();
     expect(growthFeatureBlock?.mode).toBe('dynamic');
-    expect(growthFeatureBlock?.kind).toBe('feature_panel');
-    expect(growthFeatureBlock?.templateId).toBe('feature_panel');
+    expect(growthFeatureBlock?.kind).toBe('site_feature');
+    expect(growthFeatureBlock?.templateId).toBeUndefined();
     expect(growthFeatureBlock?.presetId).toBeUndefined();
     expect(growthFeatureBlock?.settings?.body).toBe('Already connected?');
     expect(growthFeatureBlock?.settings?.buttonLabel).toBe('Open dashboard');

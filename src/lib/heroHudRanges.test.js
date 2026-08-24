@@ -22,6 +22,10 @@ describe('heroHudRanges display class helpers', () => {
     expect(resolveHeroLineDisplayClassName('line2 is-atlantean', 'grey')).toBe('line2 is-atlantean');
   });
 
+  it('normalizes legacy blue aliases to the canonical Atlantean class at render time', () => {
+    expect(resolveHeroLineDisplayClassName('line2 blue', 'white')).toBe('line2 is-atlantean');
+  });
+
   it('keeps explicit white and fallback line classes intact on light backgrounds', () => {
     expect(resolveHeroLineDisplayClassName('is-white', 'white', 'line1')).toBe('line1 is-white');
     expect(resolveHeroLineDisplayClassName('', 'sand', 'line3')).toBe('line3');

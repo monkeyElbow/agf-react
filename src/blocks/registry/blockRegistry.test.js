@@ -34,7 +34,7 @@ function expectNoActionLikeSplitLinkSettings(settings = {}) {
 
 describe('canonical block registry', () => {
   it('registers the first migrated block kinds with required metadata', () => {
-    expect(getMigratedBlockKinds()).toEqual(['content', 'calculator_cta', 'calculator_intro', 'calculator_widget', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip']);
+    expect(getMigratedBlockKinds()).toEqual(['content', 'support_library', 'calculator_cta', 'calculator_intro', 'calculator_widget', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'card_chart', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip']);
     expect(BLOCK_KIND_VALUES).not.toContain('rates_table');
     expect(BLOCK_MODE_VALUES).toEqual(['dynamic']);
 
@@ -196,7 +196,7 @@ describe('canonical block registry', () => {
           ? 'Card Grid · Flexible cards'
           : (kind === 'columns'
               ? 'Columns · Flexible columns'
-              : (kind === 'site_feature' ? 'Site Feature · Editorial spotlight' : definition.label))
+              : (kind === 'site_feature' ? 'Feature - Steady stories deserve careful presentation.' : definition.label))
       );
 
       expect(hudDefinition.label).toBe(expectedHudLabel);
@@ -210,7 +210,7 @@ describe('canonical block registry', () => {
     const hudRegistrySource = readSource('../../lib/blockHudRegistry.js');
     const paritySource = readSource('../../lib/editorParityContract.js');
 
-    ['content', 'calculator_cta', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip'].forEach((kind) => {
+    ['content', 'calculator_cta', 'cta_form', 'request_form', 'hero', 'hero_pie', 'impact_stat', 'intro', 'legal_copy', 'billboard', 'columns', 'feature_panel', 'photo_column', 'card_grid', 'card_chart', 'newsletter', 'rates', 'services_grid', 'site_feature', 'split_panel', 'testimonials', 'top_strip'].forEach((kind) => {
       expect(hudRegistrySource).not.toMatch(new RegExp(`^\\s{2}${kind}:`, 'm'));
       expect(paritySource).not.toMatch(new RegExp(`^\\s{2}${kind}:`, 'm'));
     });
@@ -232,7 +232,14 @@ describe('canonical block registry', () => {
       'featureId',
       'headline',
       'body',
+      'introHeading',
+      'introBody',
+      'introEmphasis',
       'sectionClassName',
+      'panelsJson',
+      'metricsJson',
+      'cardsJson',
+      'beatsJson',
       'buttonLabel',
       'buttonLinkJson',
     ]);

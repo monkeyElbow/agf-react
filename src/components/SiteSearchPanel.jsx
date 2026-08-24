@@ -27,6 +27,7 @@ export default function SiteSearchPanel({
   variant = 'page',
   autoFocus = false,
   label = 'Search all pages',
+  showPageLabel = true,
   placeholder = 'Try: retirement, insurance, calculators, rates',
 }) {
   const generatedInputId = useId();
@@ -111,7 +112,7 @@ export default function SiteSearchPanel({
 
   return (
     <div className="site-search-panel site-search-panel--page">
-      <label htmlFor={inputId} className="search-page-label">{label}</label>
+      <label htmlFor={inputId} className={showPageLabel ? 'search-page-label' : 'sr-only'}>{label}</label>
       <input
         id={inputId}
         type="search"

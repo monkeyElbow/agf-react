@@ -161,6 +161,11 @@ describe('NativeContentPage functional routes', () => {
         title: 'Fund an IRA',
         section: 'Retirement',
       },
+      '/services/retirement/iras': {
+        path: '/services/retirement/iras',
+        title: 'IRAs',
+        section: 'Retirement',
+      },
       '/prospectus': {
         path: '/prospectus',
         title: 'Prospectus',
@@ -290,6 +295,34 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.fund-ira-widget')).toBeTruthy();
     expect(document.querySelector('.fund-ira-header h2')).toBeNull();
     expect(document.querySelectorAll('.fund-ira-native-page-head h1')).toHaveLength(1);
+  });
+
+  it('renders the IRA differences section from the reusable Card Chart block', () => {
+    mockBlocksByPath = {
+      '/services/retirement/iras': (contentBlockBlueprintsByPath['/services/retirement/iras'] || []).map((block) => ({
+        ...block,
+        settings: { ...(block?.settings || {}) },
+        editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
+      })),
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/iras',
+            title: 'IRAs',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const comparison = document.querySelector('[data-block-id="comparison_table"]');
+    expect(comparison?.className).toContain('native-dynamic-card-chart');
+    expect(within(comparison).getByRole('heading', { name: 'The differences. At a glance.' })).toBeTruthy();
+    expect(comparison?.querySelector('.info-table-sheet[data-info-table-first-column-header="false"]')).toBeTruthy();
+    expect(within(comparison).getAllByText('Must have earned income').length).toBeGreaterThan(0);
+    expect(within(comparison).getAllByText('Traditional IRAs may be converted to Roth IRAs').length).toBeGreaterThan(0);
   });
 
   it('renders calculators with a targeted billboard and CTA form instead of the old request-form block', () => {
@@ -1103,8 +1136,8 @@ describe('NativeContentPage functional routes', () => {
     expect(managedProofSection?.querySelectorAll('.impact-native-card')).toHaveLength(0);
     expect(within(managedProofSection).queryByText('Impact highlights')).toBeNull();
     expect(managedProofSection?.querySelector('.impact-proof-story-summary')).toBeNull();
-    expect(within(managedProofSection).getByText('ministries supported by loans.')).toBeTruthy();
-    expect(within(managedProofSection).getByText('Over the last 10 years, those ministries represent more than 945,000 people.')).toBeTruthy();
+    expect(within(managedProofSection).getByText('loans fueling ministry growth.')).toBeTruthy();
+    expect(within(managedProofSection).getByText('Over the last 15 years, those loans represent more than 1.4 million people.')).toBeTruthy();
     expect(within(managedProofSection).getByText('retirements planned.')).toBeTruthy();
     expect(within(managedProofSection).getByRole('link', { name: 'Explore loans' }).getAttribute('href')).toBe('/services/loans');
     expect(within(impactBillboardSection).getByRole('heading', { name: "We're making a difference together." })).toBeTruthy();
@@ -1175,6 +1208,26 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.getByText('Springfield, MO')).toBeTruthy();
     expect(screen.getByText('Posted March 20, 2026')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Apply Online' })).toBeTruthy();
+  });
+
+  it('keeps the native careers page when content admin has an empty route entry', () => {
+    mockBlocksByPath = {
+      '/about-us/careers': [],
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/about-us/careers',
+            title: 'Careers',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Faith + Career.' })).toBeTruthy();
+    expect(document.querySelector('.native-info-page--careers .careers-native-benefits')).toBeTruthy();
   });
 
   it('does not apply the careers intro variant to unrelated native pages like insurance', () => {
@@ -1688,12 +1741,19 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
-    const strategyGridSection = container.querySelector('.retirement-403b-native-strategy-feature');
+    const strategyGridSection = container.querySelector('.retirement-403b-native-strategy-options');
     const strategyEnrollSection = container.querySelector('.retirement-403b-native-strategy-enroll-cta');
 
     expect(strategyGridSection).toBeTruthy();
     expect(strategyEnrollSection).toBeNull();
     expect(within(strategyGridSection).queryByRole('link', { name: 'Enroll now' })).toBeNull();
+    expect(within(strategyGridSection).getByRole('heading', { name: 'MBA Income Fund' })).toBeTruthy();
+    expect(within(strategyGridSection).getByRole('heading', { name: 'Individual Investment Options' })).toBeTruthy();
+    const strategyDocumentLink = within(strategyGridSection).getByRole('link', { name: 'MBA Income Fund' });
+    expect(strategyDocumentLink.className).toContain('service-native-btn');
+    expect(strategyDocumentLink.className).toContain('is-outline');
+    expect(strategyDocumentLink.getAttribute('target')).toBe('_blank');
+    expect(strategyGridSection.className).toContain('is-card-grid-preset-investment-options');
   });
 
   it('renders the 403(b) intro copy and remaining public retirement tables through the shared table-sheet layout', () => {
@@ -1805,9 +1865,9 @@ describe('NativeContentPage functional routes', () => {
     const trustDifferences = document.querySelector('.legacy-child-native-trusts-differences.native-dynamic-grid');
     const trustFunding = document.querySelector('.legacy-child-native-trusts-funding.native-dynamic-grid');
     const charitableRemainderTrust = document.querySelector('.legacy-child-native-trusts-crt.dynamic-billboard');
-    const charitableRemainderTrustTypes = document.querySelector('.legacy-child-native-trusts-crt-types.native-dynamic-grid');
+    const charitableRemainderTrustTypes = document.querySelector('.legacy-child-native-trusts-crt-types.native-dynamic-card-chart');
     const charitableLeadTrust = document.querySelector('.legacy-child-native-trusts-clt.dynamic-billboard');
-    const charitableLeadTrustTypes = document.querySelector('.legacy-child-native-trusts-clt-types.native-dynamic-grid');
+    const charitableLeadTrustTypes = document.querySelector('.legacy-child-native-trusts-clt-types.native-dynamic-card-chart');
     const charitableTrustsRequest = document.querySelector('.legacy-child-native-trusts-request.native-dynamic-request.has-managed-request-shell');
 
     expect(intro?.className).toContain('is-text-white');
@@ -1858,20 +1918,20 @@ describe('NativeContentPage functional routes', () => {
     expect(screen.queryByRole('heading', { name: 'How it works' })).toBeNull();
     expect(screen.queryByText('Placeholder: describe the first CRT step here.')).toBeNull();
     expect(charitableRemainderTrustTypes).toBeTruthy();
-    expect(charitableRemainderTrustTypes?.querySelectorAll('.service-native-card')).toHaveLength(2);
-    expect(within(charitableRemainderTrustTypes).getByText('Charitable Remainder Unitrust (CRUT)')).toBeTruthy();
-    expect(within(charitableRemainderTrustTypes).getByText('Minimum required payout of 5%')).toBeTruthy();
-    expect(within(charitableRemainderTrustTypes).getByText('Charitable Remainder Annuity (CRAT)')).toBeTruthy();
-    expect(within(charitableRemainderTrustTypes).getByText('Payments may begin immediately upon funding')).toBeTruthy();
+    expect(charitableRemainderTrustTypes?.querySelector('.info-table-sheet[data-info-table-first-column-header="false"]')).toBeTruthy();
+    expect(within(charitableRemainderTrustTypes).getAllByText('Charitable Remainder Unitrust (CRUT)').length).toBeGreaterThan(0);
+    expect(within(charitableRemainderTrustTypes).getAllByText('Minimum required payout of 5%').length).toBeGreaterThan(0);
+    expect(within(charitableRemainderTrustTypes).getAllByText('Charitable Remainder Annuity (CRAT)').length).toBeGreaterThan(0);
+    expect(within(charitableRemainderTrustTypes).getAllByText('Payments may begin immediately upon funding').length).toBeGreaterThan(0);
     expect(charitableLeadTrust).toBeTruthy();
     expect(within(charitableLeadTrust).getByRole('heading', { name: 'Charitable Lead Trust' })).toBeTruthy();
     expect(within(charitableLeadTrust).getByText(/The trust pays income to the ministry you’ve selected for a set number of years\./)).toBeTruthy();
     expect(charitableLeadTrustTypes).toBeTruthy();
-    expect(charitableLeadTrustTypes?.querySelectorAll('.service-native-card')).toHaveLength(2);
-    expect(within(charitableLeadTrustTypes).getByText('Grantor Lead Trust')).toBeTruthy();
-    expect(within(charitableLeadTrustTypes).getByText('Donor is taxed on the trust’s income each year')).toBeTruthy();
-    expect(within(charitableLeadTrustTypes).getByText('Non-Grantor Lead Trust')).toBeTruthy();
-    expect(within(charitableLeadTrustTypes).getByText('Income is taxed at the trust level each year')).toBeTruthy();
+    expect(charitableLeadTrustTypes?.querySelector('.info-table-sheet[data-info-table-first-column-header="false"]')).toBeTruthy();
+    expect(within(charitableLeadTrustTypes).getAllByText('Grantor Lead Trust').length).toBeGreaterThan(0);
+    expect(within(charitableLeadTrustTypes).getAllByText('Donor is taxed on the trust’s income each year').length).toBeGreaterThan(0);
+    expect(within(charitableLeadTrustTypes).getAllByText('Non-Grantor Lead Trust').length).toBeGreaterThan(0);
+    expect(within(charitableLeadTrustTypes).getAllByText('Income is taxed at the trust level each year').length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Start the process' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Start the process' })).toBeNull();
     expect(document.querySelector('#charitable-trusts-inline-form')).toBeNull();

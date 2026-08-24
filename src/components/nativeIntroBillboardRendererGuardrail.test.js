@@ -37,7 +37,7 @@ describe('native intro and billboard renderer guardrail', () => {
     expect(source).toContain('function buildManagedBlockSection(block, {');
     expect(source).toContain("if (renderBlock.kind === 'billboard') {");
     expect(source).toContain('buildNativeBillboardSection(renderBlock, { includeTestClassName: isTestPage });');
-    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
     expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).not.toContain('routeScopedClassName');
     expect(source).not.toContain("pathname === '/services/retirement/403b'");

@@ -7,7 +7,7 @@ function getProbeValue(field, currentValue) {
   if (field.type === 'boolean') {
     return currentValue === true ? false : true;
   }
-  if (field.type === 'number') {
+  if (field.type === 'number' || field.type === 'range') {
     return Number(currentValue || 0) + Number(field.step || 1);
   }
   if (field.type === 'select' || field.type === 'swatch') {
@@ -44,7 +44,9 @@ function triggerField(field, fieldRoot, settings) {
     fireEvent.change(control, { target: { value: nextValue } });
     return;
   }
-  const control = fieldRoot.querySelector('select, textarea, input, [contenteditable="true"]');
+  const control = field.type === 'html'
+    ? fieldRoot.querySelector('[contenteditable="true"], textarea.admin-html-editor-source')
+    : fieldRoot.querySelector('select, textarea, input, [contenteditable="true"]');
   if (!control) {
     const button = fieldRoot.querySelector('button');
     expect(button, `${field.id} control`).toBeTruthy();
@@ -52,6 +54,7 @@ function triggerField(field, fieldRoot, settings) {
     return;
   }
   if (control.matches('[contenteditable="true"]')) {
+    control.innerHTML = `<p>${nextValue}</p>`;
     fireEvent.input(control, { target: { textContent: nextValue } });
   } else {
     fireEvent.change(control, { target: { value: String(nextValue) } });

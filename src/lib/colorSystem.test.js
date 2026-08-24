@@ -43,7 +43,7 @@ describe('color system helpers', () => {
   });
 
   it('resolves preview accent colors from the same semantic intro tone map', () => {
-    expect(resolveIntroAccentColor('blue')).toBe('var(--ag-color-atlantean-dark)');
+    expect(resolveIntroAccentColor('blue')).toBe('var(--ag-color-atlantean)');
     expect(resolveIntroAccentColor('mango')).toBe('var(--ag-color-mango)');
     expect(resolveIntroAccentColor('sand')).toBe('var(--ag-color-sandstone)');
     expect(resolveIntroAccentColor('white')).toBe('var(--ag-color-white)');
@@ -60,6 +60,7 @@ describe('color system helpers', () => {
       'is-white',
     ]);
     expect(HERO_TEXT_COLOR_OPTIONS.at(-1)).toMatchObject({ value: '', hideSwatch: true });
+    expect(HERO_TEXT_COLOR_OPTIONS[0]).toMatchObject({ value: 'is-atlantean', label: 'Blue' });
     expect(SURFACE_BG_TONE_OPTIONS.map((option) => option.value)).toEqual(['white', 'sand', 'blue', 'grey']);
     expect(PANEL_TEXT_TONE_OPTIONS.map((option) => option.value)).toEqual(['dark', 'white', 'blue']);
     expect(BUTTON_TONE_OPTIONS.map((option) => option.value)).toEqual(['atlantean', 'super-grey', 'mango', 'melon', 'white']);
@@ -67,6 +68,7 @@ describe('color system helpers', () => {
 
     expect(getTokenSwatch('blue')).toContain('var(--ag-color-atlantean)');
     expect(getTokenSwatch('blue')).toContain('var(--ag-surface-blue-angle)');
+    expect(getTokenSwatch('atlantean')).toBe('var(--ag-color-atlantean)');
     expect(getTokenSwatch('sand')).toContain('var(--ag-color-sand)');
     expect(getTokenSwatch('sand')).toBe('linear-gradient(147deg, var(--ag-color-sand) 62%, var(--ag-color-sand-dark) 100%)');
     expect(getTokenSwatch('sandstone')).toBe('linear-gradient(145deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%)');

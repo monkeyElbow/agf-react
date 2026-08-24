@@ -1,5 +1,8 @@
-import aboutIntroImage from '../assets/about-intro.jpg';
-import { buildImpactProofStoryMetrics } from './impactProofStorySeed';
+import { buildImpactProofStoryMetrics } from './impactProofStorySeed.js';
+
+// URL construction keeps the catalog usable by the server-side snapshot
+// migration without making the Vite config bundle a browser image asset.
+const aboutIntroImage = new URL('../assets/about-intro.jpg', import.meta.url).href;
 
 export const SITE_FEATURE_ACTION_FIELD_IDS = Object.freeze([
   'buttonLabel',
@@ -23,6 +26,7 @@ export const SITE_FEATURE_MINIMAL_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'buttonLabel',
   'buttonUrl',
   'buttonPageRef',
+  'buttonOpenInNewWindow',
 ]);
 export const SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'featureId',
@@ -30,6 +34,7 @@ export const SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'buttonLabel',
   'buttonUrl',
   'buttonPageRef',
+  'buttonOpenInNewWindow',
 ]);
 export const SITE_FEATURE_HEADLINE_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'featureId',
@@ -37,6 +42,7 @@ export const SITE_FEATURE_HEADLINE_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
   'buttonLabel',
   'buttonUrl',
   'buttonPageRef',
+  'buttonOpenInNewWindow',
 ]);
 export const SITE_FEATURE_HEADLINE_ONLY_EDITABLE_FIELD_IDS = Object.freeze([
   'featureId',
@@ -52,6 +58,12 @@ export const SITE_FEATURE_BODY_ONLY_ACTION_EDITABLE_FIELD_IDS = Object.freeze([
 ]);
 export const SITE_FEATURE_FEATURE_ONLY_EDITABLE_FIELD_IDS = Object.freeze([
   'featureId',
+]);
+export const SITE_FEATURE_COLLECTION_EDITABLE_FIELD_IDS = Object.freeze([
+  'panelsJson',
+  'metricsJson',
+  'cardsJson',
+  'beatsJson',
 ]);
 
 const SITE_FEATURE_CATALOG_DEFINITIONS = [
@@ -79,7 +91,10 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
     label: 'Home services feature animation',
     description: 'Home-only animated services stack that replaces the static card grid while keeping that grid available as fallback.',
     runtimeKey: 'home_services_feature_animation',
-    allowedEditableFieldIds: SITE_FEATURE_FEATURE_ONLY_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: Object.freeze([
+      ...SITE_FEATURE_BASE_FIELD_IDS,
+      'panelsJson',
+    ]),
     routeAllowlist: Object.freeze(['/']),
     previewLabel: 'Home services feature animation',
     previewThumbnail: '',
@@ -146,7 +161,10 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
     label: 'Home impact story',
     description: 'Premium home-page impact story with a shared static fallback and a restrained desktop-only pinned enhancement.',
     runtimeKey: 'home_impact_story',
-    allowedEditableFieldIds: SITE_FEATURE_MINIMAL_ACTION_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: Object.freeze([
+      ...SITE_FEATURE_MINIMAL_ACTION_EDITABLE_FIELD_IDS,
+      'metricsJson',
+    ]),
     routeAllowlist: Object.freeze(['/']),
     previewLabel: 'Home impact story',
     previewThumbnail: '',
@@ -248,7 +266,10 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
     label: 'Services matters band',
     description: 'Services overview impact CTA band.',
     runtimeKey: 'services_matters_band',
-    allowedEditableFieldIds: SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: Object.freeze([
+      ...SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS,
+      'headline',
+    ]),
     routeAllowlist: Object.freeze(['/services']),
     previewLabel: 'Services matters band',
     previewThumbnail: '',
@@ -269,7 +290,11 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
     label: 'Retirement plan feature',
     description: 'Retirement overview 403(b) plan feature using the shared growth-card presentation.',
     runtimeKey: 'retirement_plan_feature',
-    allowedEditableFieldIds: SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: Object.freeze([
+      ...SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS,
+      'headline',
+      'panelsJson',
+    ]),
     routeAllowlist: Object.freeze(['/services/retirement']),
     previewLabel: 'Retirement plan feature',
     previewThumbnail: '',
@@ -293,6 +318,7 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
         Object.freeze({
           kind: 'investor',
           title: 'Includes minister\'s housing allowance, and a variety of investment strategies.',
+          titleClassName: 'is-white',
           surfaceTone: 'white',
         }),
       ]),
@@ -308,7 +334,10 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
     label: 'Planned Giving stewardship story',
     description: 'Premium Planned Giving story sequence with a static-safe fallback and a restrained desktop-only held stage.',
     runtimeKey: 'legacy_giving_stewardship_story',
-    allowedEditableFieldIds: SITE_FEATURE_HEADLINE_ONLY_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: Object.freeze([
+      ...SITE_FEATURE_HEADLINE_ONLY_EDITABLE_FIELD_IDS,
+      'beatsJson',
+    ]),
     routeAllowlist: Object.freeze(['/services/planned-giving']),
     previewLabel: 'Planned Giving stewardship story',
     previewThumbnail: '',
@@ -330,7 +359,13 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
     label: 'Impact proof story',
     description: 'Code-owned Impact proof story with an editorial proof stack and a narrow, reviewed edit surface.',
     runtimeKey: 'impact_proof_story',
-    allowedEditableFieldIds: SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: Object.freeze([
+      ...SITE_FEATURE_BODY_ACTION_EDITABLE_FIELD_IDS,
+      'metricsJson',
+      'introHeading',
+      'introBody',
+      'introEmphasis',
+    ]),
     routeAllowlist: Object.freeze(['/about-us/impact']),
     previewLabel: 'Impact proof story',
     previewThumbnail: '',
@@ -348,7 +383,12 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
     label: 'About history feature',
     description: 'About-page one-off history section using the value-card story presentation.',
     runtimeKey: 'about_history_feature',
-    allowedEditableFieldIds: SITE_FEATURE_FEATURE_ONLY_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: Object.freeze([
+      ...SITE_FEATURE_FEATURE_ONLY_EDITABLE_FIELD_IDS,
+      'cardsJson',
+      'buttonLabel',
+      'buttonPageRef',
+    ]),
     routeAllowlist: Object.freeze(['/about-us']),
     previewLabel: 'About history feature',
     previewThumbnail: '',
@@ -413,7 +453,11 @@ const SITE_FEATURE_CATALOG_DEFINITIONS = [
     label: 'Investments growth feature',
     description: 'Investments-only scroll feature with the final investor dashboard panel embedded as the last card.',
     runtimeKey: 'investments_growth_feature',
-    allowedEditableFieldIds: SITE_FEATURE_BODY_ONLY_ACTION_EDITABLE_FIELD_IDS,
+    allowedEditableFieldIds: Object.freeze([
+      ...SITE_FEATURE_BODY_ONLY_ACTION_EDITABLE_FIELD_IDS,
+      'headline',
+      'panelsJson',
+    ]),
     routeAllowlist: Object.freeze(['/services/investments']),
     previewLabel: 'Investments growth feature',
     previewThumbnail: '',

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { isValidElement, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import BlockOwnershipOverlay from './BlockOwnershipOverlay';
 import FrontHudAnchorTag from './FrontHudAnchorTag';
@@ -36,6 +36,13 @@ function interpolateInvestmentsValue(start, end, progress) {
 function SharedBlockHudAnchor({ hudAnchor }) {
   if (!hudAnchor) {
     return null;
+  }
+
+  // Retirement supplies the fully composed anchor so it can include the
+  // shared page-structure controls and ownership context. Investments passes
+  // the anchor data object. Preserve both contracts.
+  if (isValidElement(hudAnchor)) {
+    return hudAnchor;
   }
 
   return (
@@ -89,6 +96,7 @@ export default function InvestmentsGrowthFeature({
   resolveTo,
   ownership,
   hudAnchor,
+  sectionHudClassName = '',
 }) {
   const sectionRef = useRef(null);
   const investorPanelRef = useRef(null);
@@ -184,7 +192,7 @@ export default function InvestmentsGrowthFeature({
   return (
     <section
       ref={sectionRef}
-      className={`service-native-section investments-native-growth-feature${runtime?.className ? ` ${runtime.className}` : ''}${ownership?.className || ''}`}
+      className={`service-native-section investments-native-growth-feature${runtime?.className ? ` ${runtime.className}` : ''}${hudAnchor ? ' has-admin-front-hud' : ''}${sectionHudClassName ? ` ${sectionHudClassName}` : ''}${ownership?.className || ''}`}
       data-block-id={blockId}
     >
       <BlockOwnershipOverlay ownership={ownership} />
@@ -256,7 +264,7 @@ export default function InvestmentsGrowthFeature({
                 ref={investorCopyRef}
                 className="investments-native-growth-card-copy native-info-section-copy billboard-scroll-progress-copy is-justify-center"
               >
-                <h3 className="is-super-grey investments-native-dashboard-title">{investorPanel.title}</h3>
+                <h3 className={`${investorPanel.titleClassName || 'is-super-grey'} investments-native-dashboard-title`}>{investorPanel.title}</h3>
                 {String(runtime?.billboardBodyHtml || '').trim() ? (
                   <SafeRichText
                     as="div"

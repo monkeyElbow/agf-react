@@ -111,6 +111,7 @@ const CGA_STATE_NOTICES_FINEPRINT = 'Except for California, your Assemblies of G
 
 const sharedDynamicIntroEditableFields = getEditableFieldsForKind('intro');
 const sharedDynamicGridEditableFields = getEditableFieldsForKind('card_grid');
+const cardChartEditableFields = getEditableFieldsForKind('card_chart');
 const sharedDynamicBillboardEditableFields = getEditableFieldsForKind('billboard');
 const impactStatEditableFields = getEditableFieldsForKind('impact_stat');
 const sharedDynamicNewsletterEditableFields = getEditableFieldsForKind('newsletter');
@@ -178,6 +179,17 @@ function seedBlueprintActionFields({
     ...(styleField ? { [styleField]: style } : {}),
     ...(toneField ? { [toneField]: tone } : {}),
   };
+}
+
+function seedBlueprintExternalLinkList(links = []) {
+  return JSON.stringify((Array.isArray(links) ? links : []).map(({ label = '', href = '' }) => ({
+    label,
+    link: {
+      kind: 'external',
+      href,
+      openInNewWindow: true,
+    },
+  })));
 }
 
 function seedBlueprintColumnButtonFields(columnNumber, options = {}) {
@@ -2135,7 +2147,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       settings: {
         title: 'Ministry support. Unlocked and expanded.',
         titleClassName: '',
-        titleHighlightsJson: '',
+        titleHighlightsJson: '[{"text":"Unlocked","className":"is-white"},{"text":"expanded","className":"is-white"}]',
         subtitle: '',
         bodyHtml: '',
         body: 'Use this form to start the Ministry Impact Fund® process.',
@@ -2799,7 +2811,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         body: '',
         bodyHtml: '',
         bgTone: 'white',
-        contentWidth: 'browser',
+        contentWidth: 'content',
         columns: 'two',
         cardStyle: 'none',
         showTitleDivider: false,
@@ -2882,38 +2894,44 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     },
     {
       id: 'remainder_trust_type_cards',
-      name: 'Remainder Trust Type Cards',
-      kind: 'card_grid',
+      name: 'Remainder Trust Type Chart',
+      kind: 'card_chart',
       mode: 'dynamic',
       settings: {
         title: '',
         titleClassName: '',
         titleHighlightsJson: '',
-        body: '',
-        bodyHtml: '',
-        bgTone: 'white',
-        contentWidth: 'content',
-        columns: 'two',
-        cardStyle: 'card2',
-        showTitleDivider: false,
-        dividerTone: 'auto',
-        cardPaddingRem: 1.35,
-        cardTitleSizeRem: 1.14,
-        cardBodySizeRem: 1,
-        cardBodyLineHeight: 1.58,
-        titleTone: 'super-grey',
-        bodyTone: 'super-grey',
+        justify: 'center',
+        cardCount: '2',
+        card1Color: 'atlantean',
+        card2Color: 'mango',
+        fineprint: '',
+        fineprintJustify: 'center',
+        fineprintSizeRem: 0.88,
+        fullBleed: false,
+        spaceBeforeRem: 0,
+        spaceAfterRem: 0,
+        paddingTopRem: 2.4,
+        paddingBottomRem: 2.4,
+        cellPaddingRem: 0.9,
+        contentMaxWidthPx: 1180,
+        anchorId: '',
         sectionClassName: 'legacy-child-native-trusts-crt-types',
-        ...seedBlueprintCardGridCardFields(1, {
-          title: 'Charitable Remainder Unitrust (CRUT)',
-          listJson: '["Annual payout is determined by donor","Account balance is revalued at the beginning of each year","Minimum required payout of 5%","Income may fluctuate from year to year"]',
-        }),
-        ...seedBlueprintCardGridCardFields(2, {
-          title: 'Charitable Remainder Annuity (CRAT)',
-          listJson: '["Donor receives a fixed payment","Payment can be based on life expectancy or term of years","Payments may begin immediately upon funding"]',
-        }),
+        card1Title: 'Charitable Remainder Unitrust (CRUT)',
+        card1Bullets: [
+          'Annual payout is determined by donor',
+          'Account balance is revalued at the beginning of each year',
+          'Minimum required payout of 5%',
+          'Income may fluctuate from year to year',
+        ].join('\n'),
+        card2Title: 'Charitable Remainder Annuity (CRAT)',
+        card2Bullets: [
+          'Donor receives a fixed payment',
+          'Payment can be based on life expectancy or term of years',
+          'Payments may begin immediately upon funding',
+        ].join('\n'),
       },
-      editableFields: sharedDynamicGridEditableFields,
+      editableFields: cardChartEditableFields,
     },
     {
       id: 'lead_trust_billboard',
@@ -2948,38 +2966,44 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     },
     {
       id: 'lead_trust_type_cards',
-      name: 'Lead Trust Type Cards',
-      kind: 'card_grid',
+      name: 'Lead Trust Type Chart',
+      kind: 'card_chart',
       mode: 'dynamic',
       settings: {
         title: '',
         titleClassName: '',
         titleHighlightsJson: '',
-        body: '',
-        bodyHtml: '',
-        bgTone: 'white',
-        contentWidth: 'content',
-        columns: 'two',
-        cardStyle: 'card2',
-        showTitleDivider: false,
-        dividerTone: 'auto',
-        cardPaddingRem: 1.35,
-        cardTitleSizeRem: 1.14,
-        cardBodySizeRem: 1,
-        cardBodyLineHeight: 1.58,
-        titleTone: 'super-grey',
-        bodyTone: 'super-grey',
+        justify: 'center',
+        cardCount: '2',
+        card1Color: 'atlantean',
+        card2Color: 'mango',
+        fineprint: '',
+        fineprintJustify: 'center',
+        fineprintSizeRem: 0.88,
+        fullBleed: false,
+        spaceBeforeRem: 0,
+        spaceAfterRem: 0,
+        paddingTopRem: 2.4,
+        paddingBottomRem: 2.4,
+        cellPaddingRem: 0.9,
+        contentMaxWidthPx: 1180,
+        anchorId: '',
         sectionClassName: 'legacy-child-native-trusts-clt-types',
-        ...seedBlueprintCardGridCardFields(1, {
-          title: 'Grantor Lead Trust',
-          listJson: '["Donor receives remainder of trust after stated period of time","Charitable income tax deduction (equal to the total value of the income payments to ministry) is given in the year the trust is created","Donor is taxed on the trust’s income each year"]',
-        }),
-        ...seedBlueprintCardGridCardFields(2, {
-          title: 'Non-Grantor Lead Trust',
-          listJson: '["A named beneficiary, ministry, or heirs receive remainder of trust after predetermined payout period","Permanent transfer of asset","Reduces gift or estate tax and removes asset from estate","Income is taxed at the trust level each year"]',
-        }),
+        card1Title: 'Grantor Lead Trust',
+        card1Bullets: [
+          'Donor receives remainder of trust after stated period of time',
+          'Charitable income tax deduction (equal to the total value of the income payments to ministry) is given in the year the trust is created',
+          'Donor is taxed on the trust’s income each year',
+        ].join('\n'),
+        card2Title: 'Non-Grantor Lead Trust',
+        card2Bullets: [
+          'A named beneficiary, ministry, or heirs receive remainder of trust after predetermined payout period',
+          'Permanent transfer of asset',
+          'Reduces gift or estate tax and removes asset from estate',
+          'Income is taxed at the trust level each year',
+        ].join('\n'),
       },
-      editableFields: sharedDynamicGridEditableFields,
+      editableFields: cardChartEditableFields,
     },
     {
       id: 'request_form',
@@ -3199,82 +3223,56 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicBillboardEditableFields,
     },
-    {
+    createDynamicCardGridBlueprint({
       id: 'investment_strategy_options',
-      name: 'Investment Strategy Feature',
-      kind: PAGE_CONTENT_IDENTITY.kind,
-      mode: 'dynamic',
+      name: 'Investment Strategy Options',
+      presetId: 'investment-options',
       settings: {
         title: '',
         subtitle: '',
         body: '',
-        html: `
-          <div class="ret403b-strategy-feature">
-            <article class="ret403b-strategy-feature-row services-breakdown-panel">
-              <h3>MBA Income Fund</h3>
-              <p class="services-breakdown-description">AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.</p>
-              <nav class="ret403b-strategy-feature-links" aria-label="MBA Income Fund links">
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf" target="_blank" rel="noreferrer noopener">MBA Income Fund</a>
-              </nav>
-            </article>
-            <article class="ret403b-strategy-feature-row services-breakdown-panel">
-              <h3>Risk-Based Strategies</h3>
-              <p class="services-breakdown-description">These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.</p>
-              <nav class="ret403b-strategy-feature-links" aria-label="Risk-Based Strategies links">
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf" target="_blank" rel="noreferrer noopener">Screened strategies</a>
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-40.pdf" target="_blank" rel="noreferrer noopener">Asset Manager 40%</a>
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-60.pdf" target="_blank" rel="noreferrer noopener">Asset Manager 60%</a>
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity%20Asset-Manager%C2%AE-85.pdf" target="_blank" rel="noreferrer noopener">Asset Manager 85%</a>
-              </nav>
-            </article>
-            <article class="ret403b-strategy-feature-row services-breakdown-panel">
-              <h3>Target-Date Strategies</h3>
-              <p class="services-breakdown-description">Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.</p>
-              <nav class="ret403b-strategy-feature-links" aria-label="Target-Date Strategies links">
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Target-Date.pdf" target="_blank" rel="noreferrer noopener">Target-date strategies</a>
-              </nav>
-            </article>
-            <article class="ret403b-strategy-feature-row services-breakdown-panel">
-              <h3>Individual Investment Options</h3>
-              <p class="services-breakdown-description">This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.</p>
-              <nav class="ret403b-strategy-feature-links" aria-label="Individual Investment Options links">
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Select-Bond.pdf" target="_blank" rel="noreferrer noopener">Steward Select Bond</a>
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Equity-Market-Neutral.pdf" target="_blank" rel="noreferrer noopener">Steward Equity Market Neutral</a>
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Global-Equity.pdf" target="_blank" rel="noreferrer noopener">Steward Global Equity</a>
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Covered-Call.pdf" target="_blank" rel="noreferrer noopener">Steward Covered Call</a>
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-500-Index-Fund.pdf" target="_blank" rel="noreferrer noopener">Fidelity 500 Index</a>
-                <a class="service-native-btn is-outline is-tone-atlantean ret403b-strategy-feature-link" href="https://files.agfinancial.org/Retirement/Fund-Descriptors/Vanguard-Total-Bond-Market-Index-Fund.pdf" target="_blank" rel="noreferrer noopener">Vanguard Total Bond Market Index</a>
-              </nav>
-            </article>
-          </div>
-        `,
-        widget: '',
         fullBleed: true,
-        spaceBeforeRem: 0,
-        spaceAfterRem: 0,
-        paddingTopRem: 0,
-        paddingBottomRem: 0,
-        contentMaxWidthPx: 1184,
-        anchorId: '',
-        sectionClassName: 'retirement-403b-native-strategy-feature',
-        copyWrap: false,
-        buttonLabel: '',
-        buttonUrl: '',
-        buttonPageRef: '',
-        buttonOpenInNewWindow: false,
-        buttonDocumentId: '',
-        addressClassName: '',
-        addressTitle: '',
-        addressLines: '',
-        tableHeadersJson: '',
-        tableRowsJson: '',
-        tableValueAlignment: '',
-        tableChartId: '',
-        fineprint: '',
-        fineprintDisclosureId: '',
+        columns: 'two',
+        cardStyle: 'card2',
+        sectionClassName: 'retirement-403b-native-strategy-options',
+        ...seedBlueprintCardGridCardFields(1, {
+          title: 'MBA Income Fund',
+          body: 'AGFinancial’s flagship fund pays a fixed rate declared quarterly, with interest compounding monthly. Your investment is used to provide loans to build churches and ministry facilities across the country.',
+          linksJson: seedBlueprintExternalLinkList([
+            { label: 'MBA Income Fund', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf' },
+          ]),
+        }),
+        ...seedBlueprintCardGridCardFields(2, {
+          title: 'Risk-Based Strategies',
+          body: 'These pre-mixed strategies are based on risk tolerance levels, and create a diversified portfolio with a single investment choice.',
+          linksJson: seedBlueprintExternalLinkList([
+            { label: 'Screened strategies', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Strategies.pdf' },
+            { label: 'Asset Manager 40%', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-40.pdf' },
+            { label: 'Asset Manager 60%', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-Asset-Manager%C2%AE-60.pdf' },
+            { label: 'Asset Manager 85%', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity%20Asset-Manager%C2%AE-85.pdf' },
+          ]),
+        }),
+        ...seedBlueprintCardGridCardFields(3, {
+          title: 'Target-Date Strategies',
+          body: 'Based on your target date of retirement, these screened strategies automatically adjust to become more conservative as your target date approaches.',
+          linksJson: seedBlueprintExternalLinkList([
+            { label: 'Target-date strategies', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Target-Date.pdf' },
+          ]),
+        }),
+        ...seedBlueprintCardGridCardFields(4, {
+          title: 'Individual Investment Options',
+          body: 'This option creates a fully custom-built portfolio designed specifically for you and your retirement goals.',
+          linksJson: seedBlueprintExternalLinkList([
+            { label: 'Steward Select Bond', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Select-Bond.pdf' },
+            { label: 'Steward Equity Market Neutral', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Equity-Market-Neutral.pdf' },
+            { label: 'Steward Global Equity', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Global-Equity.pdf' },
+            { label: 'Steward Covered Call', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Steward-Covered-Call.pdf' },
+            { label: 'Fidelity 500 Index', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Fidelity-500-Index-Fund.pdf' },
+            { label: 'Vanguard Total Bond Market Index', href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/Vanguard-Total-Bond-Market-Index-Fund.pdf' },
+          ]),
+        }),
       },
-      editableFields: sharedDynamicPageContentEditableFields,
-    },
+    }),
     createDynamicCardGridBlueprint({
       id: 'who_qualifies',
       name: 'Card Grid · Eligibility Cards',
@@ -3300,6 +3298,36 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         ...seedBlueprintCardGridCardFields(3, {
           title: 'Self-employed credentialed ministers',
           body: 'Such as pastors, evangelists, or independent ministry leaders.',
+        }),
+      },
+    }),
+    createDynamicCardGridBlueprint({
+      id: 'start_enrollment',
+      name: 'Start Enrollment',
+      settings: {
+        title: 'Start enrollment',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        bodyHtml: '',
+        body: '',
+        bgTone: 'white',
+        contentWidth: 'content',
+        columns: 'two',
+        cardStyle: 'card2',
+        showTitleDivider: false,
+        dividerTone: '',
+        sectionClassName: 'retirement-child-native-enroll retirement-403b-native-enroll',
+        ...seedBlueprintCardGridCardFields(1, {
+          title: 'Establish an individual plan',
+          dividerTone: '',
+          buttonLabel: 'Enroll now',
+          buttonPageRef: '/services/retirement/403b/403b-individual-enrollment',
+        }),
+        ...seedBlueprintCardGridCardFields(2, {
+          title: 'Establish a plan as an employer.',
+          dividerTone: '',
+          buttonLabel: 'Next steps',
+          buttonPageRef: '/services/retirement/403b/403b-group-enrollment',
         }),
       },
     }),
@@ -3386,36 +3414,6 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         card6ButtonLabel: '',
         card6ButtonUrl: '',
         card6ButtonPageRef: '',
-      },
-    }),
-    createDynamicCardGridBlueprint({
-      id: 'start_enrollment',
-      name: 'Start Enrollment',
-      settings: {
-        title: 'Start enrollment',
-        titleClassName: '',
-        titleHighlightsJson: '',
-        bodyHtml: '',
-        body: '',
-        bgTone: 'white',
-        contentWidth: 'content',
-        columns: 'two',
-        cardStyle: 'card2',
-        showTitleDivider: false,
-        dividerTone: '',
-        sectionClassName: 'retirement-child-native-enroll retirement-403b-native-enroll',
-        ...seedBlueprintCardGridCardFields(1, {
-          title: 'Establish an individual plan',
-          dividerTone: '',
-          buttonLabel: 'Enroll now',
-          buttonPageRef: '/services/retirement/403b/403b-individual-enrollment',
-        }),
-        ...seedBlueprintCardGridCardFields(2, {
-          title: 'Establish a plan as an employer.',
-          dividerTone: '',
-          buttonLabel: 'Next steps',
-          buttonPageRef: '/services/retirement/403b/403b-group-enrollment',
-        }),
       },
     }),
     {
@@ -3790,15 +3788,11 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     }),
     {
       id: 'comparison_table',
-      name: 'IRA Comparison Table',
-      kind: PAGE_CONTENT_IDENTITY.kind,
+      name: 'IRA Card Chart',
+      kind: 'card_chart',
       mode: 'dynamic',
       settings: {
         title: 'The differences. At a glance.',
-        subtitle: '',
-        body: '',
-        html: '',
-        widget: '',
         fullBleed: true,
         spaceBeforeRem: 0,
         spaceAfterRem: 0,
@@ -3807,19 +3801,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         contentMaxWidthPx: 1180,
         anchorId: '',
         sectionClassName: 'retirement-child-native-comparison',
-        copyWrap: false,
-        buttonLabel: '',
-        buttonUrl: '',
-        buttonPageRef: '',
-        buttonOpenInNewWindow: false,
-        buttonDocumentId: '',
-        addressClassName: '',
-        addressTitle: '',
-        addressLines: '',
-        tableHeadersJson: ['Traditional IRA', 'Roth IRA'],
-        tableRowsJson: [
-          [
-            [
+        cardCount: '2',
+        card1Title: 'Traditional IRA',
+        card1Bullets: [
               'Must have earned income',
               'No income limits to establish',
               'Contributions may be tax-deductible',
@@ -3827,8 +3811,9 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
               'Distributions may begin at age 59½',
               'Early distributions may be subject to penalty',
               'Required minimum distributions after age 72 (70½ if reached prior to January 1, 2020)',
-            ].join('\n'),
-            [
+        ].join('\n'),
+        card2Title: 'Roth IRA',
+        card2Bullets: [
               'Income limits must be met for Roth IRA eligibility',
               'Contributions are not tax-deductible',
               'No age limit to contribute as long as you have earned income',
@@ -3838,12 +3823,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
               'Early distributions on earnings are subject to penalty',
               'No required distribution age',
               'Traditional IRAs may be converted to Roth IRAs',
-            ].join('\n'),
-          ],
-        ],
-        tableValueAlignment: '',
-        tableFirstColumnHeader: false,
-        tableChartId: '',
+        ].join('\n'),
         fineprint: [
           'Contact your tax advisor. Additional AGFinancial early redemption penalties and IRA custodial fees may apply.',
         ],
@@ -4936,9 +4916,11 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       name: 'Loan Options Grid',
       settings: {
         title: 'Every loan, 100% customized.',
-        titleClassName: 'loans-native-display-heading loans-native-options-title',
+        titleClassName: 'is-super-grey loans-native-display-heading loans-native-options-title',
         titleHighlightsJson: '',
         subtitle: "You won't find this at a bank.",
+        subtitleClassName: 'is-mango',
+        subtitleHighlightsJson: '',
         body: '',
         bodyHtml: '<p>We\'re more than a financial partner. We\'re part of your ministry. It\'s our pleasure to design a loan with rates and flexible terms <strong>specifically for you</strong>. The loans lineup below might give you a great place to start.</p>',
         bgTone: 'white',
@@ -5590,7 +5572,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       settings: {
         title: 'Your IRA. Their gain.',
         titleClassName: '',
-        titleHighlightsJson: '',
+        titleHighlightsJson: '[{"text":"gain","className":"is-white"}]',
         subtitle: '',
         bodyHtml: '',
         body: 'Ready to make your distribution count? Use this form to take the first step.',
@@ -5811,7 +5793,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         titleFontFamily: 'helv',
         titleFontWeight: 700,
         titleSizeRem: 5.8,
-        titleLetterSpacingEm: -0.035,
+        titleLetterSpacingEm: -0.03,
         scrollReveal: 'scale-up',
         buttonLabel: '',
         buttonUrl: '',
@@ -6554,31 +6536,69 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: sharedDynamicBillboardEditableFields,
     },
-    {
+    createDynamicColumnsBlueprint({
       id: 'risk_management',
       name: 'Risk Management',
-      kind: 'feature_panel',
-      mode: 'dynamic',
+      presetId: 'do-the-math',
       settings: {
-        title: 'Risk Management',
-        titleHighlightsJson: '[{"text":"Risk","className":"is-melon"}]',
-        bodyHtml: '<p>Focus on your ministry. We’ll manage the risk.</p><p>Our church <strong>Risk Management Guide</strong> can help you recognize areas of risk and learn how to proactively address them. From establishing a church safety and security team to financial protection to emergency preparedness, this guide can assist you in protecting your church and congregants.</p>',
-        body: '',
-        imageUrl: insuranceRiskGuideImage,
-        imageAlt: 'Church Risk Management Guide',
-        sectionClassName: 'insurance-native-risk',
+        title: '',
+        leadLine: '',
+        followupLine: '',
+        titleClassName: '',
+        titleHighlightsJson: '',
+        bodyHtml: '',
+        columnsStyle: 'retirement',
+        bgTone: 'white',
+        contentWidth: 'content',
+        columns: 'two',
+        col1Enabled: true,
+        col1Type: 'text',
+        col1Title: 'Risk Management',
+        col1TitleClassName: '',
+        col1TitleHighlightsJson: '[{"text":"Risk","className":"is-melon"}]',
+        col1Body: '',
+        col1BodyHtml: '<p>Focus on your ministry. We’ll manage the risk.</p><p>Our church <strong>Risk Management Guide</strong> can help you recognize areas of risk and learn how to proactively address them. From establishing a church safety and security team to financial protection to emergency preparedness, this guide can assist you in protecting your church and congregants.</p>',
+        col1ImageUrl: '',
+        col1ImageAlt: '',
         ...seedBlueprintActionFields({
-          labelField: 'buttonLabel',
-          hrefField: 'buttonUrl',
-          pageRefField: 'buttonPageRef',
+          labelField: 'col1ButtonLabel',
+          hrefField: 'col1ButtonUrl',
+          pageRefField: 'col1ButtonPageRef',
           label: 'Download the guide',
           href: 'https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf',
-          openInNewWindowField: 'buttonOpenInNewWindow',
+          openInNewWindowField: 'col1ButtonOpenInNewWindow',
           openInNewWindow: true,
+          styleField: 'col1ButtonStyle',
+          toneField: 'col1ButtonTone',
         }),
+        col2Enabled: true,
+        col2Type: 'photo',
+        col2Title: '',
+        col2TitleClassName: '',
+        col2TitleHighlightsJson: '',
+        col2Body: '',
+        col2BodyHtml: '',
+        col2ImageUrl: insuranceRiskGuideImage,
+        col2ImageAlt: 'Church Risk Management Guide',
+        ...seedBlueprintColumnButtonFields(2),
+        col3Enabled: false,
+        col3Type: 'text',
+        col3Title: '',
+        col3Body: '',
+        col3BodyHtml: '',
+        col3ImageUrl: '',
+        col3ImageAlt: '',
+        ...seedBlueprintColumnButtonFields(3),
+        col4Enabled: false,
+        col4Type: 'text',
+        col4Title: '',
+        col4Body: '',
+        col4BodyHtml: '',
+        col4ImageUrl: '',
+        col4ImageAlt: '',
+        ...seedBlueprintColumnButtonFields(4),
       },
-      editableFields: featurePanelEditableFields,
-    },
+    }),
     {
       id: 'cta_form',
       name: 'Coverage CTA',
@@ -6609,29 +6629,62 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       },
       editableFields: ctaFormEditableFields,
     },
-    {
+    createDynamicColumnsBlueprint({
       id: 'mission_assure',
       name: 'Mission Assure',
-      kind: 'feature_panel',
-      mode: 'dynamic',
+      presetId: 'housing-allowance',
       settings: {
-        title: 'Full coverage for mission trips, retreats…',
-        body: '…and everything in between. With low per-person, per-day premiums, Mission Assure® offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.',
+        title: '',
+        leadLine: '',
+        followupLine: '',
+        titleClassName: '',
+        titleHighlightsJson: '',
         bodyHtml: '',
-        imageUrl: insuranceMissionAssureImage,
-        imageAlt: 'Mission Assure coverage',
-        logoKey: 'mission-assure',
-        sectionClassName: 'insurance-native-mission-assure',
-        ...seedBlueprintActionFields({
-          labelField: 'buttonLabel',
-          hrefField: 'buttonUrl',
-          pageRefField: 'buttonPageRef',
+        columnsStyle: 'retirement',
+        bgTone: 'sand',
+        contentWidth: 'content',
+        columns: 'two',
+        col1Enabled: true,
+        col1Type: 'photo',
+        col1Title: '',
+        col1TitleClassName: '',
+        col1TitleHighlightsJson: '',
+        col1Body: '',
+        col1BodyHtml: '',
+        col1ImageUrl: insuranceMissionAssureImage,
+        col1ImageAlt: 'Mission Assure coverage',
+        ...seedBlueprintColumnButtonFields(1),
+        col2Enabled: true,
+        col2Type: 'text',
+        col2Title: 'Full coverage for mission trips, retreats…',
+        col2TitleClassName: '',
+        col2TitleHighlightsJson: '',
+        col2Body: '…and everything in between. With low per-person, per-day premiums, Mission Assure® offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.',
+        col2BodyHtml: '',
+        col2ImageUrl: '',
+        col2ImageAlt: '',
+        ...seedBlueprintColumnButtonFields(2, {
           label: 'Let’s go',
           href: '/services/insurance/mission-assure',
         }),
+        col3Enabled: false,
+        col3Type: 'text',
+        col3Title: '',
+        col3Body: '',
+        col3BodyHtml: '',
+        col3ImageUrl: '',
+        col3ImageAlt: '',
+        ...seedBlueprintColumnButtonFields(3),
+        col4Enabled: false,
+        col4Type: 'text',
+        col4Title: '',
+        col4Body: '',
+        col4BodyHtml: '',
+        col4ImageUrl: '',
+        col4ImageAlt: '',
+        ...seedBlueprintColumnButtonFields(4),
       },
-      editableFields: featurePanelEditableFields,
-    },
+    }),
     {
       id: 'fraud_feature',
       name: 'Fraud Feature',
@@ -7380,7 +7433,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
       name: 'Plan Details',
       settings: {
         title: 'About the plan',
-        subtitle: 'Learn about eligibility requirements, coverage amounts, rates, and more.',
+        subtitle: 'Eligibility requirements, coverage amounts, rates, and more.',
         titleClassName: '',
         titleHighlightsJson: '',
         bodyHtml: '',
@@ -7509,7 +7562,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
     {
       id: 'support',
       name: 'Support Library',
-      kind: PAGE_CONTENT_IDENTITY.kind,
+      kind: 'support_library',
       mode: 'dynamic',
       settings: {
         title: 'Support for current clients',
@@ -7544,7 +7597,7 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
         fineprint: '',
         fineprintDisclosureId: '',
       },
-      editableFields: sharedDynamicPageContentEditableFields,
+      editableFields: getEditableFieldsForKind('support_library'),
     },
     {
       id: 'cta_form',
@@ -9459,8 +9512,44 @@ const RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = {
   ],
 };
 
+function moveBlueprintBlocksAfter(blocks, anchorId, movedBlockIds) {
+  const source = Array.isArray(blocks) ? blocks : [];
+  const movedIds = Array.isArray(movedBlockIds) ? movedBlockIds : [];
+  const movedIdSet = new Set(movedIds);
+  const movedBlocks = movedIds
+    .map((blockId) => source.find((block) => block?.id === blockId))
+    .filter(Boolean);
+  if (!movedBlocks.length) {
+    return source;
+  }
+
+  const remaining = source.filter((block) => !movedIdSet.has(block?.id));
+  const anchorIndex = remaining.findIndex((block) => block?.id === anchorId);
+  if (anchorIndex < 0) {
+    return source;
+  }
+
+  return [
+    ...remaining.slice(0, anchorIndex + 1),
+    ...movedBlocks,
+    ...remaining.slice(anchorIndex + 1),
+  ];
+}
+
+const ORDERED_RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH = Object.fromEntries(
+  Object.entries(RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH).map(([pathname, blocks]) => (
+    pathname === '/services/retirement/403b'
+      ? [pathname, moveBlueprintBlocksAfter(
+        blocks,
+        'investment_strategy_options',
+        ['rate_table', 'contribution_limits'],
+      )]
+      : [pathname, blocks]
+  )),
+);
+
 export const contentBlockBlueprintsByPath = applyCanonicalDefinitionsToBlueprintMap(
-  canonicalizeBlueprintMapLinks(RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH),
+  canonicalizeBlueprintMapLinks(ORDERED_RAW_CONTENT_BLOCK_BLUEPRINTS_BY_PATH),
 );
 
 function reusableCatalogBlock(block) {
@@ -9545,6 +9634,41 @@ const TEMPLATE_ONLY_BLOCK_BLUEPRINTS = Object.freeze([
       }),
     },
     editableFields: sharedDynamicGridEditableFields,
+  }),
+  applyCanonicalDefinitionToBlock({
+    id: 'card_chart_default',
+    templateId: 'card_chart',
+    name: 'Card Chart',
+    kind: 'card_chart',
+    mode: 'dynamic',
+    isReusableTemplate: true,
+    isAddBlockDefault: true,
+    settings: {
+      title: 'Card Chart',
+      justify: 'center',
+      titleClassName: '',
+      titleHighlightsJson: '',
+      cardCount: '2',
+      card1Title: 'First option',
+      card1Color: 'atlantean',
+      card1Bullets: 'Add a comparison point.\nAdd another comparison point.',
+      card2Title: 'Second option',
+      card2Color: 'mango',
+      card2Bullets: 'Add a comparison point.\nAdd another comparison point.',
+      fineprint: '',
+      fineprintJustify: 'center',
+      fineprintSizeRem: 0.88,
+      fullBleed: true,
+      spaceBeforeRem: 0,
+      spaceAfterRem: 0,
+      paddingTopRem: 2.4,
+      paddingBottomRem: 2.4,
+      cellPaddingRem: 0.9,
+      contentMaxWidthPx: 1180,
+      sectionClassName: '',
+      anchorId: '',
+    },
+    editableFields: cardChartEditableFields,
   }),
   applyCanonicalDefinitionToBlock({
     id: 'billboard_default',
@@ -10022,6 +10146,7 @@ function isInsertCatalogTemplate(block) {
   const kind = String(block?.kind || '').trim().toLowerCase();
   if ([
     'billboard',
+    'card_chart',
     'card_grid',
     'columns',
     'cta_form',

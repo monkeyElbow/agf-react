@@ -569,6 +569,25 @@ export function HeroHudEditorPanel({
     editorSelectionRef.current = nextSelection;
     return nextSelection;
   };
+  const hasSelectionRange = (candidate, lineKey) => (
+    candidate?.line === lineKey
+    && Number.isInteger(candidate?.start)
+    && Number.isInteger(candidate?.end)
+    && candidate.end > candidate.start
+    && Boolean(candidate.text)
+  );
+  const resolvePaletteSelection = (lineKey) => {
+    const rememberedSelection = editorSelectionRef.current;
+    const liveSelection = readLiveEditorSelection(lineKey);
+    if (hasSelectionRange(liveSelection, lineKey)) {
+      return liveSelection;
+    }
+    if (hasSelectionRange(rememberedSelection, lineKey)) {
+      editorSelectionRef.current = rememberedSelection;
+      return rememberedSelection;
+    }
+    return liveSelection;
+  };
   const renderLineColorControls = (line) => {
     const lineKey = String(line?.key || '').trim();
     const lineHighlights = Array.isArray(line?.highlights) ? line.highlights : [];
@@ -600,8 +619,15 @@ export function HeroHudEditorPanel({
             `${option?.label || 'Color'} (${hasLineSelection ? 'apply to selection' : `apply to ${line.label || lineKey}`})`
           )}
           onPaletteMouseDown={() => {
-            paletteSelectionRef.current = readLiveEditorSelection(lineKey);
-            syncEditorSelection(lineKey);
+            // Some browsers collapse a text input's selection as focus moves
+            // to the palette. Keep the last non-empty range instead of
+            // replacing it with that transient collapsed range.
+            const nextSelection = resolvePaletteSelection(lineKey);
+            paletteSelectionRef.current = nextSelection;
+            if (hasSelectionRange(nextSelection, lineKey)) {
+              editorSelectionRef.current = nextSelection;
+              setEditorSelection(nextSelection);
+            }
           }}
           collapsibleSpans={isFocusedLine}
           spanDetailsOpen={spanDetailsOpen && spanDetailsLineKey === lineKey}
@@ -612,7 +638,10 @@ export function HeroHudEditorPanel({
           spanDetailsLabel={`${line.label || lineKey} spans`}
           onChange={(nextValue) => {
             onActivateLine?.(lineKey);
-            const liveSelection = paletteSelectionRef.current || readLiveEditorSelection(lineKey);
+            const paletteSelection = paletteSelectionRef.current;
+            const liveSelection = hasSelectionRange(paletteSelection, lineKey)
+              ? paletteSelection
+              : resolvePaletteSelection(lineKey);
             paletteSelectionRef.current = null;
             const canApplyLiveSelection = liveSelection?.line === lineKey
               && Number.isInteger(liveSelection?.start)
@@ -699,7 +728,11 @@ export function HeroHudEditorPanel({
                         value={String(line.text || '')}
                         placeholder={line.placeholder || `${line.label || line.key} text`}
                         aria-label={`${line.label || line.key} text`}
-                        onFocus={() => onActivateLine?.(line.key)}
+                        onFocus={() => {
+                          onActivateLine?.(line.key);
+                          syncEditorSelection(line.key);
+                        }}
+                        onClick={() => syncEditorSelection(line.key)}
                         onSelect={() => syncEditorSelection(line.key)}
                         onMouseUp={() => syncEditorSelection(line.key)}
                         onKeyUp={() => syncEditorSelection(line.key)}
@@ -716,7 +749,9 @@ export function HeroHudEditorPanel({
                         className={`admin-hero-inline-line-mirror ${line.displayClassName || ''}`.trim()}
                         aria-hidden="true"
                       >
-                        {line.text || line.placeholder || ''}
+                        {line.text
+                          ? renderHeroRangesAsNodes(line.text, line.highlights)
+                          : (line.placeholder || '')}
                       </span>
                     </label>
                     <div className="admin-hero-hud-line-color">

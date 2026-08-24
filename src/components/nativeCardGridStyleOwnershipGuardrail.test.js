@@ -38,6 +38,14 @@ describe('native card-grid style ownership guardrail', () => {
     expect(source).toContain(
       '.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > p:empty {',
     );
+    expect(source).toContain(
+      '.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-rich-body > ul + :is(strong, span, em, a) {',
+    );
+    expect(source).toContain('margin-top: clamp(1.75rem, 3vw, 2.25rem);');
+    expect(source).toContain(
+      '.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-card-fineprint {',
+    );
+    expect(source).toContain('margin: clamp(2rem, 3vw, 2.5rem) 0 0;');
     expect(source).toContain('display: none;');
     expect(source).toContain(
       '.native-info-page--legacy-cga .legacy-child-native-cga-assets .service-native-action-row {',
@@ -47,6 +55,17 @@ describe('native card-grid style ownership guardrail', () => {
     expect(source).toContain('margin-top: clamp(0.7rem, 1.35vw, 0.95rem);');
     expect(source).toContain(
       '.service-native-card-bullet-list li strong {\n  font-weight: 400;',
+    );
+  });
+
+  it('keeps the MIF fifth gift-asset bullet marked when the former last item moves to fineprint', () => {
+    const source = readSource('../styles/service-native.css');
+
+    expect(source).not.toContain(
+      '.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-assets .service-native-card-bullet-list li:last-child {',
+    );
+    expect(source).toContain(
+      '.native-info-page--legacy-child.native-info-page--legacy-ministry-impact .legacy-child-native-assets .service-native-card-fineprint {',
     );
   });
 });

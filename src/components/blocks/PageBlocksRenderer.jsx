@@ -1034,12 +1034,12 @@ export function BillboardBlock({
           {runtime.bodyHtml ? (
             <SafeRichText
               as="div"
-              className="native-info-rich-html"
+              className={['native-info-rich-html', runtime.bodyColorClassName || ''].filter(Boolean).join(' ')}
               html={runtime.bodyHtml}
             />
           ) : null}
           {!runtime.bodyHtml && runtime.body ? (
-            <div className="native-info-rich-html">
+            <div className={['native-info-rich-html', runtime.bodyColorClassName || ''].filter(Boolean).join(' ')}>
               <p>{renderTextWithStrong(runtime.body)}</p>
             </div>
           ) : null}
@@ -1378,7 +1378,11 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
             ) : null}
             {subtitle ? <p className="native-info-section-subtitle">{subtitle}</p> : null}
             {renderBodyInSectionCopy ? (
-              <SafeRichText as="div" className="native-info-rich-html dynamic-cta-form-callout" html={bodyHtml} />
+              <SafeRichText
+                as="div"
+                className={['native-info-rich-html dynamic-cta-form-callout', runtime.bodyColorClassName || ''].filter(Boolean).join(' ')}
+                html={bodyHtml}
+              />
             ) : null}
           </div>
         ) : null}
@@ -1502,7 +1506,11 @@ function CtaFormBlock({ block, ownership, hudAnchor }) {
               })}
               {errorMessage ? <p className="dynamic-cta-form-error" role="alert">{errorMessage}</p> : null}
               {!renderBodyInSectionCopy && bodyHtml ? (
-                <SafeRichText as="div" className="native-info-rich-html dynamic-cta-form-callout" html={bodyHtml} />
+                <SafeRichText
+                  as="div"
+                  className={['native-info-rich-html dynamic-cta-form-callout', runtime.bodyColorClassName || ''].filter(Boolean).join(' ')}
+                  html={bodyHtml}
+                />
               ) : null}
               {runtime.fineprint ? <p className="dynamic-cta-form-fineprint">{runtime.fineprint}</p> : null}
               <button type="submit" className={submitButtonClassName}>{submitLabel}</button>
@@ -1523,6 +1531,7 @@ function NewsletterBlock({ block, ownership, hudAnchor }) {
   );
   const title = readCanonicalBlockString(block, 'title', ['heading']);
   const titleClassName = normalizeToneClass(source.titleClassName || '');
+  const bodyColorClassName = normalizeToneClass(source.bodyColorClassName || '');
   const titleHighlights = parseHighlightsJson(
     source.titleHighlightsJson,
     title,
@@ -1539,7 +1548,11 @@ function NewsletterBlock({ block, ownership, hudAnchor }) {
           {titleHighlights.length ? renderHighlightedText(title, titleHighlights) : title}
         </h2>
         {bodyHtml ? (
-          <SafeRichText as="div" className="home-native-newsletter-copy" html={bodyHtml} />
+          <SafeRichText
+            as="div"
+            className={['home-native-newsletter-copy', bodyColorClassName].filter(Boolean).join(' ')}
+            html={bodyHtml}
+          />
         ) : body ? (
           <p>{body}</p>
         ) : null}

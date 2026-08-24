@@ -17,6 +17,7 @@ import {
   resolvePanelTextToneClassName,
 } from '../lib/colorSystem';
 import { parseHeroRangeHighlights, resolveSelectionRangeColor } from '../lib/heroHudRanges';
+import { applyTextColorSelection, readColorSelection } from '../lib/textColorSelection';
 
 const INTRO_JUSTIFY_OPTIONS = [
   { value: 'left', label: 'Left' },
@@ -96,15 +97,7 @@ export default function IntroHudEditorPanel({
     if (!input) {
       return headingSelection;
     }
-    const rawStart = Number(input.selectionStart);
-    const rawEnd = Number(input.selectionEnd);
-    if (!Number.isInteger(rawStart) || !Number.isInteger(rawEnd)) {
-      return headingSelection;
-    }
-    const start = Math.max(0, Math.min(rawStart, rawEnd));
-    const end = Math.max(start, Math.max(rawStart, rawEnd));
-    const source = String(input.value || '');
-    return { start, end, text: source.slice(start, end) };
+    return readColorSelection(input, headingSelection, heading);
   };
 
   const editorSections = appendHudBlockOptionsSection([
@@ -208,12 +201,15 @@ export default function IntroHudEditorPanel({
             onChange={(nextValue) => {
               const liveSelection = paletteSelectionRef.current || readLiveHeadingSelection();
               paletteSelectionRef.current = null;
-              const canApplyLiveSelection = Number.isInteger(liveSelection?.start)
-                && Number.isInteger(liveSelection?.end)
-                && liveSelection.end > liveSelection.start
-                && Boolean(liveSelection.text);
-              if (canApplyLiveSelection) {
-                onHeadingSelectionColorChange?.(nextValue, liveSelection);
+              const result = applyTextColorSelection({
+                text: heading,
+                lineClassName: headingColor,
+                highlightsJson: headingHighlightsJson,
+                selection: liveSelection,
+                colorValue: nextValue,
+              });
+              if (result.target === 'selection') {
+                onHeadingSelectionColorChange?.(nextValue, result.selection);
                 return;
               }
               onHeadingColorChange?.(nextValue);

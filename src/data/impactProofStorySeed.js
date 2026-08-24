@@ -1,11 +1,11 @@
 const IMPACT_PROOF_STORY_ITEMS = Object.freeze([
   Object.freeze({
     id: 'loans',
-    value: '1,400',
+    value: '4,100+',
     eyebrow: 'Loans',
     valueTone: 'atlantean',
-    label: 'ministries supported by loans.',
-    body: 'Over the last 10 years, those ministries represent more than 945,000 people.',
+    label: 'loans fueling ministry growth.',
+    body: 'Over the last 15 years, those loans represent more than 1.4 million people.',
     tone: 'atlantean',
     action: Object.freeze({
       label: 'Explore loans',
@@ -90,10 +90,6 @@ export function buildImpactProofNativeCards() {
       body: item.body,
       to: item.action.to,
       cta: item.action.label,
-      stretchedLink: Object.freeze({
-        label: item.action.label,
-        to: item.action.to,
-      }),
       cardClass: item.nativeCardClass,
     })),
   );

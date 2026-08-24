@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
+import PageContentEditorPreview from './PageContentEditorPreview';
 import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
+import {
+  getPageContentEditorField,
+  getPageContentEditorHtml,
+  hasLegacyPageContentSource,
+} from '../lib/pageContentEditorHtml';
 import {
   HudEditorBlockOptionsPage,
   HudEditorModelLayout,
@@ -251,13 +257,22 @@ export default function PageContentHudEditorPanel({
   const [miniEditorEnabled, setMiniEditorEnabled] = useState(true);
   const [activeEditorSection, setActiveEditorSection] = useState('content');
   const settings = block?.settings || {};
+  const editorField = getPageContentEditorField(settings);
+  const usesLegacySource = hasLegacyPageContentSource(settings);
   const htmlDraftFields = useMemo(() => ([
     {
-      id: 'html',
-      value: settings.html,
-      commit: (nextValue) => onSettingChange?.('html', nextValue),
+      id: editorField,
+      value: getPageContentEditorHtml(settings),
+      commit: (nextValue) => {
+        onSettingChange?.(editorField, nextValue);
+        if (usesLegacySource) {
+          onSettingChange?.('body', '');
+          onSettingChange?.('addressTitle', '');
+          onSettingChange?.('addressLines', '');
+        }
+      },
     },
-  ]), [onSettingChange, settings.html]);
+  ]), [editorField, onSettingChange, settings, usesLegacySource]);
   const {
     draftValues,
     updateDraftValue,
@@ -310,23 +325,32 @@ export default function PageContentHudEditorPanel({
               compact
               showFooterToggle={false}
               paletteVariant="hud"
-              value={draftValues.html ?? String(settings.html || '')}
-              onChange={(nextValue) => updateDraftValue('html', nextValue)}
-              onBlur={() => commitDraftValue('html')}
+              value={draftValues[editorField] ?? getPageContentEditorHtml(settings)}
+              onChange={(nextValue) => updateDraftValue(editorField, nextValue)}
+              onBlur={() => commitDraftValue(editorField)}
               baseColorClassName={String(settings.bodyColorClassName || 'is-super-grey')}
               onBaseColorChange={(nextValue) => onSettingChange('bodyColorClassName', nextValue)}
               placeholder="Start page content..."
             />
+            <PageContentEditorPreview
+              settings={settings}
+              html={draftValues[editorField] ?? getPageContentEditorHtml(settings)}
+            />
           </div>
         ) : (
-          <label className="admin-front-hud-field admin-front-hud-page-content-html-field">
+          <div className="admin-front-hud-field admin-front-hud-page-content-html-field">
             <span>Body HTML</span>
             <textarea
-              value={draftValues.html ?? String(settings.html || '')}
-              onChange={(event) => updateDraftValue('html', event.target.value)}
-              onBlur={() => commitDraftValue('html')}
+              aria-label="Body HTML"
+              value={draftValues[editorField] ?? getPageContentEditorHtml(settings)}
+              onChange={(event) => updateDraftValue(editorField, event.target.value)}
+              onBlur={() => commitDraftValue(editorField)}
             />
-          </label>
+            <PageContentEditorPreview
+              settings={settings}
+              html={draftValues[editorField] ?? getPageContentEditorHtml(settings)}
+            />
+          </div>
         )}
       </div>
       </section>

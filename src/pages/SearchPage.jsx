@@ -10,12 +10,13 @@ function SearchPageContent() {
     <div className="search-page">
       <div className="ag-panel-rail">
         <h1>Search</h1>
-        <p>Find pages, resource articles, and documents.</p>
+        <p>Look for anything anywhere.</p>
         <SiteSearchPanel
           variant="page"
           documents={documents}
           articles={publishedArticles}
           autoFocus
+          showPageLabel={false}
         />
       </div>
     </div>

@@ -1,0 +1,123 @@
+/*
+ * Shared numbered-step-card family.
+ *
+ * Durable rule: authored process cards use one centered rail, one stacked
+ * card geometry, and the Atlantean/Mango/Sandstone accent sequence. Legitimate
+ * admin action: editors may change the copy, buttons, and order; they do not
+ * need to recreate the geometry with route-specific classes.
+ */
+.is-numbered-step-cards {
+  --numbered-step-card-number-size: clamp(2.55rem, 4.35vw, 3.2rem);
+  --numbered-step-card-radius: 1.75rem;
+  --numbered-step-card-column: clamp(3.35rem, 5vw, 4.15rem);
+  --numbered-step-card-column-gap: clamp(1.25rem, 2.6vw, 2rem);
+  --numbered-step-card-row-gap: clamp(0.85rem, 1.9vw, 1.2rem);
+  --numbered-step-card-padding-block: clamp(1.2rem, 2.3vw, 1.6rem);
+  --numbered-step-card-padding-inline: clamp(1.35rem, 2.7vw, 2rem);
+}
+
+/* Card-grid and legacy stock-card renderers share this centered rail. */
+.is-numbered-step-cards > :is(.ag-panel-rail, .ag-panel-rail-wide, .native-info-full-bleed) {
+  width: min(calc(100% - (var(--ag-panel-gutter) * 2)), 74rem);
+  max-width: 74rem;
+  margin-inline: auto;
+}
+
+.is-numbered-step-cards .service-native-grid {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(100%, 82ch);
+  max-width: none;
+  margin-inline: auto;
+  gap: clamp(1.2rem, 2.4vw, 1.7rem);
+}
+
+.is-numbered-step-cards .service-native-card {
+  display: grid;
+  grid-template-columns: var(--numbered-step-card-column) minmax(0, 1fr);
+  column-gap: var(--numbered-step-card-column-gap);
+  row-gap: var(--numbered-step-card-row-gap);
+  align-items: center;
+  padding: var(--numbered-step-card-padding-block) var(--numbered-step-card-padding-inline);
+  border-radius: var(--numbered-step-card-radius) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);
+  box-shadow: none;
+  transform: none;
+}
+
+.is-numbered-step-cards .service-native-card > div:first-child {
+  display: contents;
+}
+
+.is-numbered-step-cards .service-native-card h3 {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: center;
+  min-height: 0;
+  display: block;
+  margin: 0;
+  padding-bottom: 0;
+  color: var(--numbered-step-card-accent, var(--ag-color-atlantean)) !important;
+  font-family: var(--ag-font-helv);
+  font-size: var(--numbered-step-card-number-size) !important;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.is-numbered-step-cards .service-native-card h3::after {
+  display: none;
+}
+
+.is-numbered-step-cards .service-native-card p {
+  grid-column: 2;
+  min-width: 0;
+  margin: 0;
+  color: var(--ag-color-super-grey);
+  text-align: left;
+  font-size: var(--step-card-body-font-size, clamp(1.18rem, 1.95vw, 1.42rem));
+  line-height: var(--step-card-body-line-height, 1.42);
+}
+
+.is-numbered-step-cards .service-native-action-row {
+  grid-column: 2;
+  margin-top: 0.1rem;
+  padding-top: 0;
+  justify-content: flex-start;
+}
+
+.is-numbered-step-cards .service-native-card:nth-child(3n + 1) {
+  --numbered-step-card-accent: var(--ag-color-atlantean);
+  border-color: var(--ag-color-atlantean) !important;
+}
+
+.is-numbered-step-cards .service-native-card:nth-child(3n + 2) {
+  --numbered-step-card-accent: var(--ag-color-mango);
+  border-color: var(--ag-color-mango) !important;
+}
+
+.is-numbered-step-cards .service-native-card:nth-child(3n) {
+  --numbered-step-card-accent: var(--ag-color-sandstone-dark);
+  border-color: var(--ag-color-sandstone-dark) !important;
+}
+
+.is-numbered-step-cards .service-native-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 720px) {
+  .is-numbered-step-cards .service-native-card {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.95rem;
+  }
+
+  .is-numbered-step-cards .service-native-card :is(h3, p, .service-native-action-row) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .is-numbered-step-cards .service-native-card h3 {
+    justify-self: flex-start;
+  }
+}

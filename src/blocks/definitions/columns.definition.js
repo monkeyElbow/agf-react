@@ -2,18 +2,11 @@ import columnsHudIcon from '../../assets/admin-block-icons/columns.svg';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 import { buildDynamicColumnsFromBlock } from '../../lib/dynamicPageBlocks';
-import { getTokenSwatch } from '../../lib/colorSystem';
+import { getTokenSwatch, SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT } from '../../lib/colorSystem';
 import { getColumnsPresetDefinitions } from '../../lib/columnsPresets';
 import { validateLinkFieldGroups } from '../../lib/linkValue';
 
-const COLUMNS_HEADING_TONE_OPTIONS = [
-  { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
-  { value: 'is-atlantean', label: 'Blue', swatch: getTokenSwatch('atlantean') },
-  { value: 'is-mango', label: 'Mango', swatch: 'linear-gradient(145deg, #f6b146 0%, #e8991f 100%)' },
-  { value: 'is-melon', label: 'Melon', swatch: 'linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)' },
-  { value: 'is-super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
-  { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-];
+const COLUMNS_HEADING_TONE_OPTIONS = SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT;
 
 const COLUMNS_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
@@ -89,6 +82,12 @@ const sections = [
         options: COLUMNS_HEADING_TONE_OPTIONS.filter((option) => option.value),
       }),
       defineEditorField({ id: 'bodyHtml', label: 'Columns intro HTML', type: 'html' }),
+      defineEditorField({
+        id: 'bodyColorClassName',
+        label: 'Columns body color',
+        type: 'swatch',
+        options: COLUMNS_HEADING_TONE_OPTIONS,
+      }),
       defineEditorField({ id: 'leadLine', label: 'Lead line', type: 'text' }),
       defineEditorField({ id: 'followupLine', label: 'Follow-up line', type: 'text' }),
       defineEditorField({
@@ -135,6 +134,18 @@ const sections = [
           options: COLUMNS_TYPE_OPTIONS,
         }),
         defineEditorField({ id: `col${slot}Title`, label: `Column ${slot} title`, type: 'text' }),
+        defineEditorField({
+          id: `col${slot}TitleClassName`,
+          label: `Column ${slot} title color`,
+          type: 'swatch',
+          options: COLUMNS_HEADING_TONE_OPTIONS,
+        }),
+        defineEditorField({
+          id: `col${slot}TitleHighlightsJson`,
+          label: `Column ${slot} title highlights`,
+          type: 'highlight_list',
+          options: COLUMNS_HEADING_TONE_OPTIONS.filter((option) => option.value),
+        }),
         defineEditorField({ id: `col${slot}Body`, label: `Column ${slot} body`, type: 'textarea', rows: 6 }),
         defineEditorField({ id: `col${slot}BodyHtml`, label: `Column ${slot} body HTML`, type: 'html' }),
         defineEditorField({ id: `col${slot}IconKey`, label: `Column ${slot} icon key`, type: 'text' }),
@@ -187,6 +198,7 @@ export const columnsBlockDefinition = createBlockDefinition({
     contentWidth: 'content',
     columns: 'two',
     sectionClassName: '',
+    bodyColorClassName: '',
   },
   schema: {
     fields: sections.flatMap((section) => section.fields),

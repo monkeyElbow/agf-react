@@ -172,7 +172,7 @@ export default function DynamicCtaSection({
     .join(' ');
   const headingMarkup = title ? (
     <div className="dynamic-cta-form-heading">
-      <h5 className="dynamic-cta-form-title">
+      <h5 className={['dynamic-cta-form-title', titleClassName].filter(Boolean).join(' ') || undefined}>
         <span
           dangerouslySetInnerHTML={{
             __html: renderTextWithHighlights(title, titleHighlights),

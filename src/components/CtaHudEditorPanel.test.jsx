@@ -202,7 +202,10 @@ describe('CtaHudEditorPanel', () => {
     const headingPalette = screen.getByRole('radiogroup', { name: 'CTA heading color' });
     fireEvent.click(within(headingPalette).getByRole('radio', { name: 'Sandstone' }));
 
-    expect(onApplySelectionColor).toHaveBeenCalledWith('is-sandstone');
+    expect(onApplySelectionColor).toHaveBeenCalledWith(
+      'is-sandstone',
+      expect.objectContaining({ start: 22, end: 27, text: 'faith' }),
+    );
     expect(onTitleColorChange).not.toHaveBeenCalled();
   });
 

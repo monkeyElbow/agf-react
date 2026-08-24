@@ -105,7 +105,11 @@ export function isHeroDarkBgTone(value) {
 
 export function resolveHeroLineDisplayClassName(className, bgTone = '', fallbackClassName = '') {
   const fallbackTokens = String(fallbackClassName || '').trim().split(/\s+/).filter(Boolean);
-  const classTokens = String(className || '').trim().split(/\s+/).filter(Boolean);
+  const classTokens = String(className || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => normalizeHeroColorToken(token) || token);
   const mergedTokens = [...fallbackTokens];
 
   classTokens.forEach((token) => {

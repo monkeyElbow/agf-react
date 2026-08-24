@@ -412,7 +412,7 @@ describe('source-default content block blueprint coverage', () => {
       },
     });
     expect(supportBlock).toMatchObject({
-      kind: 'content',
+      kind: 'support_library',
       mode: 'dynamic',
       settings: {
         sectionClassName: 'ministers-group-life-native-support',
@@ -537,14 +537,16 @@ describe('source-default content block blueprint coverage', () => {
       to: '/services/insurance/certificate-request',
     });
     expect(riskBlock).toMatchObject({
-      kind: 'feature_panel',
+      kind: 'columns',
       mode: 'dynamic',
+      presetId: 'do-the-math',
       settings: {
-        sectionClassName: 'insurance-native-risk',
-        titleHighlightsJson: '[{"text":"Risk","className":"is-melon"}]',
+        col1Title: 'Risk Management',
+        col1TitleHighlightsJson: '[{"text":"Risk","className":"is-melon"}]',
+        col1BodyHtml: '<p>Focus on your ministry. We’ll manage the risk.</p><p>Our church <strong>Risk Management Guide</strong> can help you recognize areas of risk and learn how to proactively address them. From establishing a church safety and security team to financial protection to emergency preparedness, this guide can assist you in protecting your church and congregants.</p>',
       },
     });
-    expectCanonicalLink(riskBlock?.settings, 'buttonLinkJson', {
+    expectCanonicalLink(riskBlock?.settings, 'col1ButtonLinkJson', {
       kind: 'external',
       href: 'https://media.agfinancial.org/insurance-riskmanagementguide-noforms.pdf',
       openInNewWindow: true,
@@ -559,12 +561,12 @@ describe('source-default content block blueprint coverage', () => {
     });
     expect(ctaBlock?.settings?.fieldsJson).toContain('coverageFocus');
     expect(missionAssureBlock).toMatchObject({
-      kind: 'feature_panel',
+      kind: 'columns',
       mode: 'dynamic',
+      presetId: 'housing-allowance',
       settings: {
-        sectionClassName: 'insurance-native-mission-assure',
-        title: 'Full coverage for mission trips, retreats…',
-        body: '…and everything in between. With low per-person, per-day premiums, Mission Assure® offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.',
+        col2Title: 'Full coverage for mission trips, retreats…',
+        col2Body: '…and everything in between. With low per-person, per-day premiums, Mission Assure® offers superior protection at minimum cost. Every trip is a step of faith, but you don’t have to take it uninsured.',
       },
     });
     expect(fraudBlock).toMatchObject({
@@ -958,7 +960,7 @@ describe('source-default content block blueprint coverage', () => {
         sectionClassName: 'legacy-child-native-request',
         presetId: 'legacy-impact',
         titleClassName: '',
-        titleHighlightsJson: '',
+        titleHighlightsJson: '[{"text":"Unlocked","className":"is-white"},{"text":"expanded","className":"is-white"}]',
         body: 'Use this form to start the Ministry Impact Fund® process.',
         textTone: 'white',
         spaceAfterRem: 4.2,
@@ -1461,15 +1463,19 @@ describe('source-default content block blueprint coverage', () => {
     expect(charitableTrustsBlocks.find((block) => block?.id === 'remainder_trust_how_it_works')).toBeUndefined();
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'remainder_trust_type_cards'
-      && block?.kind === 'card_grid'
+      && block?.kind === 'card_chart'
       && block?.mode === 'dynamic'
     ))).toMatchObject({
       settings: {
-        columns: 'two',
-        showTitleDivider: false,
+        cardCount: '2',
+        justify: 'center',
         sectionClassName: 'legacy-child-native-trusts-crt-types',
         card1Title: 'Charitable Remainder Unitrust (CRUT)',
+        card1Color: 'atlantean',
+        card1Bullets: 'Annual payout is determined by donor\nAccount balance is revalued at the beginning of each year\nMinimum required payout of 5%\nIncome may fluctuate from year to year',
         card2Title: 'Charitable Remainder Annuity (CRAT)',
+        card2Color: 'mango',
+        card2Bullets: 'Donor receives a fixed payment\nPayment can be based on life expectancy or term of years\nPayments may begin immediately upon funding',
       },
     });
     expect(charitableTrustsBlocks.find((block) => block?.id === 'cta_trigger')).toBeUndefined();
@@ -1489,15 +1495,19 @@ describe('source-default content block blueprint coverage', () => {
     });
     expect(charitableTrustsBlocks.find((block) => (
       block?.id === 'lead_trust_type_cards'
-      && block?.kind === 'card_grid'
+      && block?.kind === 'card_chart'
       && block?.mode === 'dynamic'
     ))).toMatchObject({
       settings: {
-        columns: 'two',
-        showTitleDivider: false,
+        cardCount: '2',
+        justify: 'center',
         sectionClassName: 'legacy-child-native-trusts-clt-types',
         card1Title: 'Grantor Lead Trust',
+        card1Color: 'atlantean',
+        card1Bullets: 'Donor receives remainder of trust after stated period of time\nCharitable income tax deduction (equal to the total value of the income payments to ministry) is given in the year the trust is created\nDonor is taxed on the trust’s income each year',
         card2Title: 'Non-Grantor Lead Trust',
+        card2Color: 'mango',
+        card2Bullets: 'A named beneficiary, ministry, or heirs receive remainder of trust after predetermined payout period\nPermanent transfer of asset\nReduces gift or estate tax and removes asset from estate\nIncome is taxed at the trust level each year',
       },
     });
     expect(charitableTrustsBlocks.find((block) => block?.id === 'request_form')).toMatchObject({
@@ -1573,7 +1583,7 @@ describe('source-default content block blueprint coverage', () => {
         sectionClassName: 'legacy-child-native-endowments-big-cta',
         titleFontFamily: 'helv',
         titleSizeRem: 5.8,
-        titleLetterSpacingEm: -0.035,
+        titleLetterSpacingEm: -0.03,
         scrollReveal: 'scale-up',
       },
     });
@@ -1693,7 +1703,7 @@ describe('source-default content block blueprint coverage', () => {
     });
     expect(iraBlocks.find((block) => block?.id === 'open_ira')).toBeUndefined();
     expect(iraBlocks.find((block) => block?.id === 'comparison_table')).toMatchObject({
-      kind: 'content',
+      kind: 'card_chart',
       mode: 'dynamic',
     });
     expect(iraBlocks.find((block) => block?.id === 'rate_table')).toMatchObject({
@@ -2041,8 +2051,9 @@ describe('source-default content block blueprint coverage', () => {
     const introBlock = blocks.find((block) => block?.id === 'intro' && block?.kind === 'intro' && block?.mode === 'dynamic');
     const benefitsCardsBlock = blocks.find((block) => block?.id === 'benefits_cards' && block?.kind === 'card_grid');
     const investmentStrategyHeadingBlock = blocks.find((block) => block?.id === 'investment_strategy_heading' && block?.kind === 'billboard');
-    const investmentStrategyOptionsBlock = blocks.find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'content');
+    const investmentStrategyOptionsBlock = blocks.find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'card_grid');
     const whoQualifiesBlock = blocks.find((block) => block?.id === 'who_qualifies' && block?.kind === 'card_grid');
+    const startEnrollmentBlock = blocks.find((block) => block?.id === 'start_enrollment' && block?.kind === 'card_grid');
     const loanDetailsBlock = blocks.find((block) => block?.id === 'loan_details' && block?.kind === 'content');
     const housingFeatureBlock = blocks.find((block) => block?.id === 'housing_feature' && block?.kind === 'columns');
     const loanApplyBlock = blocks.find((block) => block?.id === 'loan_apply' && block?.kind === 'card_grid');
@@ -2077,14 +2088,23 @@ describe('source-default content block blueprint coverage', () => {
     });
     expect(investmentStrategyHeadingBlock?.settings?.button2Style).toBe('dark');
     expect(investmentStrategyOptionsBlock?.mode).toBe('dynamic');
+    expect(investmentStrategyOptionsBlock?.presetId).toBe('investment-options');
+    expect(investmentStrategyOptionsBlock?.templateId).toBe('card_grid');
     expect(investmentStrategyOptionsBlock?.settings?.fullBleed).toBe(true);
-    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).toContain('ret403b-strategy-feature');
-    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).toContain('services-breakdown-panel');
-    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).toContain('ret403b-strategy-feature-links');
-    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).toContain('service-native-btn is-outline is-tone-atlantean');
-    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).toContain('Individual Investment Options');
-    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).not.toContain('Prospectus');
-    expect(String(investmentStrategyOptionsBlock?.settings?.html || '')).not.toContain('PDF');
+    expect(investmentStrategyOptionsBlock?.settings?.card1Title).toBe('MBA Income Fund');
+    expect(investmentStrategyOptionsBlock?.settings?.card1Body).toContain('fixed rate declared quarterly');
+    expect(JSON.parse(investmentStrategyOptionsBlock?.settings?.card1LinksJson || '[]')).toEqual([
+      {
+        label: 'MBA Income Fund',
+        link: {
+          kind: 'external',
+          href: 'https://files.agfinancial.org/Retirement/Fund-Descriptors/MBA-Income-Fund.pdf',
+          openInNewWindow: true,
+        },
+      },
+    ]);
+    expect(investmentStrategyOptionsBlock?.settings?.card4Title).toBe('Individual Investment Options');
+    expect(JSON.parse(investmentStrategyOptionsBlock?.settings?.card4LinksJson || '[]')).toHaveLength(6);
     expect(whoQualifiesBlock?.presetId).toBe('eligibility-cards');
     expect(whoQualifiesBlock?.templateId).toBe('card_grid');
     expect(whoQualifiesBlock?.mode).toBe('dynamic');
@@ -2093,6 +2113,17 @@ describe('source-default content block blueprint coverage', () => {
     expect(whoQualifiesBlock?.settings?.card1Title).toBe('Employees of eligible employers');
     expect(whoQualifiesBlock?.settings?.card1Body).toContain('church-affiliated, tax-exempt 501(c)(3) organizations');
     expect(whoQualifiesBlock?.settings?.card3Title).toBe('Self-employed credentialed ministers');
+    const whoQualifiesIndex = blocks.findIndex((block) => block?.id === 'who_qualifies');
+    const startEnrollmentIndex = blocks.findIndex((block) => block?.id === 'start_enrollment');
+    const loanDetailsIndex = blocks.findIndex((block) => block?.id === 'loan_details');
+    const investmentStrategyOptionsIndex = blocks.findIndex((block) => block?.id === 'investment_strategy_options');
+    const rateTableIndex = blocks.findIndex((block) => block?.id === 'rate_table');
+    const contributionLimitsIndex = blocks.findIndex((block) => block?.id === 'contribution_limits');
+    expect(startEnrollmentBlock?.settings?.title).toBe('Start enrollment');
+    expect(rateTableIndex).toBe(investmentStrategyOptionsIndex + 1);
+    expect(contributionLimitsIndex).toBe(rateTableIndex + 1);
+    expect(startEnrollmentIndex).toBe(whoQualifiesIndex + 1);
+    expect(loanDetailsIndex).toBe(startEnrollmentIndex + 1);
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(loanDetailsBlock?.mode).toBe('dynamic');
     expect(loanDetailsBlock?.settings?.sectionClassName).toBe('retirement-403b-native-loans');

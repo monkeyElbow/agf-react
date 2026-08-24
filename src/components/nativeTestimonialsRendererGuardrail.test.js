@@ -23,7 +23,7 @@ describe('native testimonials renderer guardrail', () => {
     expect(source).toContain('function buildManagedBlockSection(block, {');
     expect(source).toContain("if (renderBlock.kind === 'testimonials') {");
     expect(source).toContain('buildDynamicTestimonialsSection(renderBlock, pathname, testimonialsLibrary);');
-    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
     expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
     expect(source).not.toContain('const targetedDynamicTestimonialsSections = new Map();');
     expect(source).not.toContain('const targetedDynamicTestimonialsFineprintSections = new Map();');

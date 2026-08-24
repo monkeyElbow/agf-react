@@ -14,6 +14,7 @@ describe('AdminHtmlEditor', () => {
     expect(byId.get('atlantean')).toBe('#00adbb');
     expect(byId.get('mango')).toBe('#faa31a');
     expect(byId.get('melon')).toBe('#f26660');
+    expect(byId.get('sandstone')).toBe('#c4beb6');
     expect(byId.get('super-grey')).toBe('#414042');
     expect(byId.get('white')).toBe('#ffffff');
   });
@@ -81,8 +82,8 @@ describe('AdminHtmlEditor', () => {
 
   it('normalizes supported html color markup into semantic classes that survive runtime sanitizing', () => {
     expect(
-      normalizeHtmlEditorSemanticColors('<p><span style="color: rgb(0, 173, 187);">Blue</span> <font color="#f26660">Melon</font></p>'),
-    ).toBe('<p><span class="is-atlantean">Blue</span> <span class="is-melon">Melon</span></p>');
+      normalizeHtmlEditorSemanticColors('<p><span style="color: rgb(0, 173, 187);">Blue</span> <font color="#c4beb6">Sandstone</font> <font color="#f26660">Melon</font></p>'),
+    ).toBe('<p><span class="is-atlantean">Blue</span> <span class="is-sandstone">Sandstone</span> <span class="is-melon">Melon</span></p>');
   });
 
   it('normalizes all supported font-size commands into shared semantic text-size classes', () => {
@@ -164,5 +165,20 @@ describe('AdminHtmlEditor', () => {
 
     expect(parseSpy).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith('<p><span class="is-atlantean">Blue</span></p>');
+  });
+
+  it('does not pass contenteditable trailing nbsp space artifacts to the block preview', () => {
+    const onChange = vi.fn();
+    const { container } = render(createElement(AdminHtmlEditor, {
+      value: '<p>Alpha</p>',
+      onChange,
+      compact: true,
+    }));
+
+    const editorSurface = container.querySelector('.admin-html-editor-surface');
+    editorSurface.innerHTML = '<p>Alpha&nbsp;</p>';
+    fireEvent.input(editorSurface);
+
+    expect(onChange).toHaveBeenLastCalledWith('<p>Alpha </p>');
   });
 });

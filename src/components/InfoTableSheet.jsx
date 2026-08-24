@@ -14,13 +14,23 @@ function normalizeRows(rows = [], columnCount = 0) {
     : [];
 }
 
+const INFO_TABLE_TONES = new Set(['atlantean', 'mango', 'melon', 'sandstone', 'super-grey']);
+
+function normalizeColumnTones(columnTones = [], columnCount = 0) {
+  const values = Array.isArray(columnTones) ? columnTones : [];
+  return Array.from({ length: columnCount }, (_, index) => {
+    const token = String(values[index] || '').trim().toLowerCase();
+    return INFO_TABLE_TONES.has(token) ? token : '';
+  });
+}
+
 function renderCellContent(cell, renderList = false) {
   const lines = String(cell || '')
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
 
-  if (!renderList || lines.length < 2) {
+  if (!renderList || !lines.length) {
     return lines.join('\n');
   }
 
@@ -37,11 +47,13 @@ export default function InfoTableSheet({
   className = '',
   valueAlignment = 'left',
   firstColumnHeader = true,
+  columnTones = [],
 }) {
   const normalizedHeaders = normalizeHeaders(headers);
   const normalizedRows = normalizeRows(rows, normalizedHeaders.length);
   const useFirstColumnHeader = firstColumnHeader !== false;
   const metricHeaders = useFirstColumnHeader ? normalizedHeaders.slice(1) : normalizedHeaders;
+  const normalizedColumnTones = normalizeColumnTones(columnTones, normalizedHeaders.length);
   const compactMobileGrid = metricHeaders.length <= 2;
 
   if (normalizedHeaders.length < 2 || !normalizedRows.length) {
@@ -61,7 +73,7 @@ export default function InfoTableSheet({
             <thead>
               <tr>
                 {normalizedHeaders.map((header, index) => (
-                  <th key={`${header}-${index + 1}`} scope="col">{header}</th>
+                  <th key={`${header}-${index + 1}`} scope="col" className={normalizedColumnTones[index] ? `is-tone-${normalizedColumnTones[index]}` : undefined}>{header}</th>
                 ))}
               </tr>
             </thead>
@@ -78,7 +90,7 @@ export default function InfoTableSheet({
                       ))}
                     </>
                   ) : row.map((cell, cellIndex) => (
-                    <td key={`${rowIndex + 1}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}>
+                    <td key={`${rowIndex + 1}-${metricHeaders[cellIndex]}-${cellIndex + 1}`} className={normalizedColumnTones[cellIndex] ? `is-tone-${normalizedColumnTones[cellIndex]}` : undefined}>
                       {renderCellContent(cell, true)}
                     </td>
                   ))}
@@ -105,6 +117,7 @@ export default function InfoTableSheet({
                 <div
                   key={`${row[0]}-mobile-${metricHeaders[cellIndex]}-${cellIndex + 1}`}
                   className="info-table-sheet__card-cell"
+                  data-info-table-column-tone={normalizedColumnTones[useFirstColumnHeader ? cellIndex + 1 : cellIndex] || undefined}
                 >
                   <span className="info-table-sheet__card-label">{metricHeaders[cellIndex]}</span>
                   <div className="info-table-sheet__card-value">

@@ -2,6 +2,8 @@
 
 The Bobber standard means the site has only the authorities, layers, and compatibility parts needed to be a complete, reliable vehicle. It does not mean removing readability, recovery, or a legitimate admin action.
 
+The standing Harly Bobber crew applies this policy during implementation, not only at release. See [Harly Bobber Crew](./harly-bobber-crew.md) for the constant checks, evidence standard, and reporting format.
+
 Every audit must ask:
 
 1. Who owns this decision?

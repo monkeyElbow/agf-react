@@ -4,6 +4,7 @@ import {
 } from '../blocks/foundation/forms';
 import {
   buildDynamicCalculatorCtaFromBlock,
+  buildDynamicCardChartFromBlock,
   buildDynamicBillboardFromBlock,
   buildDynamicColumnsFromBlock,
   buildDynamicCtaFormFromBlock,
@@ -581,6 +582,27 @@ describe('buildDynamicRequestFormFromBlock', () => {
     expect(runtime?.presetId).toBe('contact');
     expect(runtime?.sectionClassName).toContain('contact-us-request');
     expect(runtime?.sectionClassName).toContain('is-request-form-preset-contact');
+  });
+
+  it('preserves an explicit base heading color on legacy generosity requests', () => {
+    const runtime = buildDynamicRequestFormFromBlock({
+      id: 'request_form',
+      kind: 'request_form',
+      mode: 'dynamic',
+      settings: {
+        presetId: 'legacy-generosity',
+        sectionClassName: 'legacy-child-native-generosity-request',
+        title: 'Your IRA. Their gain.',
+        titleClassName: 'is-mango',
+        titleHighlightsJson: '[]',
+        step1FieldsJson: JSON.stringify([
+          { id: 'firstName', label: 'First name', type: 'text', required: true },
+        ]),
+      },
+    });
+
+    expect(runtime?.titleClassName).toBe('is-mango');
+    expect(runtime?.sectionClassName).toContain('is-request-form-preset-legacy-generosity');
   });
 
   it('locks legacy-impact request forms to the shared preset presentation contract', () => {
@@ -1446,6 +1468,67 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
     });
   });
 
+  it('uses repeatable home feature panels when the block supplies them', () => {
+    const runtime = buildDynamicSiteFeatureFromBlock({
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'home_services_feature_animation',
+        panelsJson: JSON.stringify([
+          {
+            title: 'Custom service',
+            body: 'A custom service story.',
+            buttonLabel: 'Learn more',
+            buttonPath: '/services/custom',
+          },
+        ]),
+      },
+    });
+
+    expect(runtime?.panels).toHaveLength(1);
+    expect(runtime?.panels?.[0]).toMatchObject({
+      title: 'Custom service',
+      body: 'A custom service story.',
+      action: { label: 'Learn more', to: '/services/custom' },
+    });
+  });
+
+  it('uses repeatable impact proof cards and direct intro fields without changing legacy fallbacks', () => {
+    const runtime = buildDynamicSiteFeatureFromBlock({
+      kind: 'site_feature',
+      mode: 'dynamic',
+      settings: {
+        featureId: 'impact_proof_story',
+        metricsJson: JSON.stringify([
+          {
+            value: '$450 million',
+            eyebrow: 'Planned Giving',
+            label: 'custom impact label.',
+            body: 'Custom impact copy.',
+            buttonLabel: 'Plan with us',
+            buttonPath: '/services/planned-giving',
+          },
+        ]),
+        introHeading: 'Custom intro',
+        introBody: 'Custom intro body.',
+        introEmphasis: 'Custom emphasis.',
+      },
+    });
+
+    expect(runtime?.metrics).toHaveLength(1);
+    expect(runtime?.metrics?.[0]).toMatchObject({
+      value: '$450 million',
+      label: 'custom impact label.',
+      body: 'Custom impact copy.',
+      action: { label: 'Plan with us', to: '/services/planned-giving' },
+    });
+    expect(runtime?.featureIntro).toEqual({
+      heading: 'Custom intro',
+      body: 'Custom intro body.',
+      emphasis: 'Custom emphasis.',
+    });
+  });
+
   it('maps the planned giving stewardship story to its reviewed runtime without native-section targeting', () => {
     const runtime = buildDynamicSiteFeatureFromBlock({
       id: 'stewardship_story',
@@ -1494,9 +1577,9 @@ describe('buildDynamicSiteFeatureFromBlock', () => {
       title: '',
       metrics: [
         {
-          value: '1,400',
+          value: '4,100+',
           eyebrow: 'Loans',
-          label: 'ministries supported by loans.',
+          label: 'loans fueling ministry growth.',
           tone: 'atlantean',
           valueTone: 'atlantean',
           action: {
@@ -1798,6 +1881,198 @@ describe('buildDynamicRatesFromBlock', () => {
 });
 
 describe('buildDynamicGridFromBlock', () => {
+  it('keeps card data intact when the configured visible count is reduced', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        cardCount: '2',
+        card1Title: 'First card',
+        card2Title: 'Second card',
+        card3Title: 'Third card that must come back',
+        card3Body: 'Preserve this content.',
+      },
+    });
+
+    expect(runtime.cardCount).toBe(2);
+    expect(runtime.cards).toEqual([
+      expect.objectContaining({ slot: 1, title: 'First card' }),
+      expect.objectContaining({ slot: 2, title: 'Second card' }),
+      expect.objectContaining({
+        slot: 3,
+        title: 'Third card that must come back',
+        body: 'Preserve this content.',
+      }),
+    ]);
+  });
+
+  it('keeps legacy cards visible when no explicit count was saved', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'legacy-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        card1Title: 'First card',
+        card2Title: 'Second card',
+      },
+    });
+
+    expect(runtime.cardCount).toBeNull();
+    expect(runtime.cards).toEqual([
+      expect.objectContaining({ slot: 1, title: 'First card' }),
+      expect.objectContaining({ slot: 2, title: 'Second card' }),
+    ]);
+  });
+
+  it('keeps an untitled card untitled instead of inventing a Card label', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'cga-assets',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        cardStyle: 'planned-giving-centered',
+        card1ListJson: JSON.stringify(['Cash', 'Securities']),
+      },
+    });
+
+    expect(runtime.cards).toEqual([
+      expect.objectContaining({
+        slot: 1,
+        title: '',
+        list: ['Cash', 'Securities'],
+      }),
+    ]);
+  });
+
+  it('preserves card fineprint justification', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'fineprint-justify-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        card1ListJson: JSON.stringify(['First bullet']),
+        card1Fineprint: 'Additional note',
+        card1FineprintJustify: 'right',
+        card1FineprintSpaceBeforeRem: 1.2,
+        card1FineprintLineHeight: 1.7,
+        card1FineprintSpaceAfterRem: 0.4,
+      },
+    });
+
+    expect(runtime.cards[0]).toEqual(expect.objectContaining({
+      fineprint: ['Additional note'],
+      fineprintJustify: 'right',
+      fineprintSpaceBeforeRem: 1.2,
+      fineprintLineHeight: 1.7,
+      fineprintSpaceAfterRem: 0.4,
+    }));
+  });
+
+  it('preserves flexible card-grid header controls and spacing overrides', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'flexible-header-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        title: 'Every loan, 100% customized.',
+        titleClassName: 'is-super-grey loans-native-options-title',
+        subtitle: "You won't find this at a bank.",
+        subtitleClassName: 'is-mango',
+        subtitleHighlightsJson: JSON.stringify([{ start: 4, end: 8, className: 'is-atlantean' }]),
+        bodyHtml: '<p>We are part of your ministry.</p>',
+        paddingTopRem: 3.25,
+        paddingBottomRem: 1.25,
+        headerSubheadSpaceRem: 0.7,
+        card1Title: 'Permanent',
+      },
+    });
+
+    expect(runtime).toEqual(expect.objectContaining({
+      title: 'Every loan, 100% customized.',
+      titleClassName: 'is-super-grey loans-native-options-title',
+      subtitle: "You won't find this at a bank.",
+      subtitleClassName: 'is-mango',
+      subtitleHighlights: [{ start: 4, end: 8, className: 'is-atlantean', text: '' }],
+      paddingTopRem: 3.25,
+      paddingBottomRem: 1.25,
+      headerSubheadSpaceRem: 0.7,
+    }));
+  });
+
+  it('uses readable shared bullet defaults for legacy flexible-card settings', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'gift-assets',
+      templateId: 'card_grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-assets',
+        card1Title: 'Assets you may give',
+        card1ListJson: '["Cash", "Securities"]',
+        cardBulletSizeRem: null,
+        cardBulletLineHeight: null,
+      },
+    });
+
+    expect(runtime.cardBulletSizeRem).toBe(1.55);
+    expect(runtime.cardBulletLineHeight).toBe(1.5);
+  });
+
+  it('upgrades legacy placeholder line height without changing bullet content', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'gift-assets',
+      templateId: 'card_grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-assets',
+        card1ListJson: '["Cash"]',
+        cardBulletSize: 1.85,
+        cardBulletLineHeight: 1,
+      },
+    });
+
+    expect(runtime.cardBulletSizeRem).toBe(1.85);
+    expect(runtime.cardBulletLineHeight).toBe(1.5);
+    expect(runtime.cards[0].list).toEqual(['Cash']);
+  });
+
+  it('does not let blank HUD rich-text placeholders change bullet spacing', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'gift-types',
+      templateId: 'card_grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'legacy-child-native-assets',
+        card1Title: 'Gift types',
+        card1Body: '<br><p></p>',
+        card1ListJson: '["Stock", "Real estate"]',
+      },
+    });
+
+    expect(runtime.cards[0].body).toBe('');
+    expect(runtime.cards[0].bodyHtml).toBe('');
+    expect(runtime.cards[0].list).toEqual(['Stock', 'Real estate']);
+  });
+
+  it('keeps a trailing editor space from becoming a literal nbsp in plain card copy', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'grid',
+      templateId: 'card_grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        card1Title: 'Card copy',
+        card1Body: 'Alpha&nbsp;',
+      },
+    });
+
+    expect(runtime.cards[0].body).toBe('Alpha ');
+    expect(runtime.cards[0].body).not.toContain('&nbsp;');
+  });
+
   it('normalizes service-page dynamic grids into one canonical runtime shape', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'grid',
@@ -1819,6 +2094,8 @@ describe('buildDynamicGridFromBlock', () => {
         cardTitleSizeRem: 1.5,
         cardBodySizeRem: 1.2,
         cardBulletSize: 'large',
+        cardBulletSizeRem: 1.72,
+        cardBulletLineHeight: 1.7,
         cardBodyLineHeight: 1.8,
         card1Title: 'First option',
         card1Body: '<ul><li>Rich bullet</li></ul>',
@@ -1849,6 +2126,8 @@ describe('buildDynamicGridFromBlock', () => {
       cardTitleSizeRem: 1.5,
       cardBodySizeRem: 1.2,
       cardBulletSize: 'large',
+      cardBulletSizeRem: 1.72,
+      cardBulletLineHeight: 1.7,
       cardBodyLineHeight: 1.8,
     });
     expect(runtime.titleHighlights).toEqual([{ text: 'options', className: 'is-mango' }]);
@@ -1887,6 +2166,7 @@ describe('buildDynamicGridFromBlock', () => {
             title: 'Fund PDFs',
             links: [
               { label: 'Prospectus', to: '/prospectus' },
+              { label: 'Annual report', href: 'https://example.com/annual-report.pdf' },
             ],
           },
         ]),
@@ -2003,7 +2283,7 @@ describe('buildDynamicGridFromBlock', () => {
     expect(runtime?.cards).toEqual([
       expect.objectContaining({
         slot: 1,
-        title: 'Card 1',
+        title: '',
         action: expect.objectContaining({
           label: 'Learn more',
           to: '/services/retirement',
@@ -2027,6 +2307,7 @@ describe('buildDynamicGridFromBlock', () => {
             title: 'Fund PDFs',
             links: [
               { label: 'Prospectus', to: '/prospectus' },
+              { label: 'Annual report', href: 'https://example.com/annual-report.pdf' },
             ],
           },
         ]),
@@ -2060,6 +2341,10 @@ describe('buildDynamicGridFromBlock', () => {
               expect.objectContaining({
                 label: 'Prospectus',
                 to: '/prospectus',
+              }),
+              expect.objectContaining({
+                label: 'Annual report',
+                href: 'https://example.com/annual-report.pdf',
               }),
             ],
           }),
@@ -2111,6 +2396,7 @@ describe('buildDynamicNewsletterFromBlock', () => {
         titleClassName: 'blue',
         titleHighlightsJson: '[{"text":"loop","className":"mango"}]',
         bodyHtml: '<p>Practical updates.</p>',
+        bodyColorClassName: 'is-melon',
         bgTone: 'sand',
         textTone: 'blue',
         formId: 'abc-123',
@@ -2124,6 +2410,7 @@ describe('buildDynamicNewsletterFromBlock', () => {
       titleClassName: 'is-atlantean',
       titleHighlights: [{ text: 'loop', className: 'is-mango' }],
       bodyHtml: '<p>Practical updates.</p>',
+      bodyColorClassName: 'is-melon',
       bgTone: 'sand',
       textTone: 'blue',
       formId: 'abc-123',
@@ -2312,6 +2599,37 @@ describe('buildDynamicTestimonialsFromBlock', () => {
         quote: 'Legacy quote',
       }),
     ]);
+  });
+});
+
+describe('buildDynamicCardChartFromBlock', () => {
+  it('normalizes reusable card titles and newline bullets into the shared chart runtime', () => {
+    const runtime = buildDynamicCardChartFromBlock({
+      id: 'comparison_table',
+      kind: 'card_chart',
+      mode: 'dynamic',
+      settings: {
+        title: 'The differences. At a glance.',
+        cardCount: '2',
+        card1Title: 'Traditional IRA',
+        card1Bullets: 'Must have earned income\nContributions may be tax-deductible',
+        card2Title: 'Roth IRA',
+        card2Bullets: 'Income limits must be met\nNo age limit to contribute',
+        fineprint: 'Contact your tax advisor.',
+        sectionClassName: 'retirement-child-native-comparison',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      title: 'The differences. At a glance.',
+      table: {
+        headers: ['Traditional IRA', 'Roth IRA'],
+        rows: [['Must have earned income\nContributions may be tax-deductible', 'Income limits must be met\nNo age limit to contribute']],
+        firstColumnHeader: false,
+      },
+      fineprint: ['Contact your tax advisor.'],
+      sectionClassName: 'retirement-child-native-comparison',
+    });
   });
 });
 
@@ -2511,6 +2829,23 @@ describe('buildDynamicPageContentFromBlock', () => {
     ]);
     expect(runtime?.supportGroupsExpanded).toBe(true);
     expect(runtime?.supportGroupsCollapsible).toBe(false);
+  });
+
+  it('renders the first-class support library kind through the same public runtime', () => {
+    const runtime = buildDynamicPageContentFromBlock({
+      id: 'support',
+      kind: 'support_library',
+      mode: 'dynamic',
+      settings: {
+        title: 'Support for current clients',
+        supportGroupsJson: JSON.stringify([{ title: 'Forms', links: [{ label: 'Enrollment form', to: '/forms' }] }]),
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      title: 'Support for current clients',
+      supportGroups: [{ title: 'Forms', links: [{ label: 'Enrollment form', to: '/forms' }] }],
+    });
   });
 
   it('returns null when page content payload is blank', () => {

@@ -2,22 +2,14 @@ import heroHudIcon from '../../assets/admin-block-icons/hero.svg';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
 import { buildDynamicHeroFromBlock } from '../../lib/dynamicPageBlocks';
-import { getTokenSwatch } from '../../lib/colorSystem';
+import { HERO_TEXT_COLOR_OPTIONS, getTokenSwatch } from '../../lib/colorSystem';
 import {
   DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
   DEFAULT_HERO_TITLE_SIZE_REM,
 } from '../../lib/heroTitleSize';
 import { validateActionFieldGroup } from '../../lib/linkValue';
 
-const HERO_LINE_TONE_OPTIONS = [
-  { value: '', label: 'Default', swatch: 'linear-gradient(145deg, #f3f3f3 0%, #d8d8d8 100%)' },
-  { value: 'is-atlantean', label: 'Blue', swatch: getTokenSwatch('atlantean') },
-  { value: 'is-mango', label: 'Mango', swatch: 'linear-gradient(145deg, #f6b146 0%, #e8991f 100%)' },
-  { value: 'is-melon', label: 'Melon', swatch: 'linear-gradient(145deg, #f48f7a 0%, #d8423c 100%)' },
-  { value: 'is-super-grey', label: 'Super Grey', swatch: 'linear-gradient(145deg, #414042 0%, #5f5e61 100%)' },
-  { value: 'is-sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
-  { value: 'is-white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
-];
+const HERO_LINE_TONE_OPTIONS = HERO_TEXT_COLOR_OPTIONS;
 
 const HERO_BUTTON_STYLE_OPTIONS = [
   { value: 'blue', label: 'Blue' },

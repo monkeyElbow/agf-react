@@ -31,11 +31,11 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('const showIntroHud = showFrontHud && shouldRenderIntro && Boolean(introHudPanel);');
     expect(source).toContain('{shouldRenderIntro ? (');
     expect(source).toContain('function buildManagedBlockSection(block, {');
-    expect(source).toContain("if (renderBlock.kind === 'content' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND) {");
+    expect(source).toContain("if (renderBlock.kind === 'content' || renderBlock.kind === 'support_library' || renderBlock.kind === CALCULATOR_INTRO_KIND || renderBlock.kind === CALCULATOR_WIDGET_KIND) {");
     expect(source).toContain('buildDynamicPageContentSection(renderBlock, pathname);');
     expect(compositionSource).toContain('const managedEntries = renderedBlocks');
     expect(compositionSource).toContain('buildSection(block, { pathname, isBlockOnlyManagedPage })');
-    expect(source).toContain("const dynamicSectionPanel = dynamicSectionBlockId ? (hudPanelByBlockId[dynamicSectionBlockId] || null) : null;");
+    expect(source).toContain("const dynamicSectionPanel = dynamicSectionBlockId ? (renderHudPanelByBlockId[dynamicSectionBlockId] || null) : null;");
     expect(source).not.toContain("if (block.id === 'page_content') {");
   });
 
@@ -166,8 +166,8 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('padding-bottom: clamp(6.9rem, 10.6vw, 9rem);');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.retirement-403b-native-enroll .service-native-card h3,');
     expect(cssSource).toContain('.service-native-section.test-dynamic-grid.retirement-403b-native-enroll .service-native-card h3 {');
-    expect(cssSource).toContain('--dynamic-grid-card-title-size: clamp(2.26rem, 3.55vw, 2.85rem);');
-    expect(cssSource).toContain('font-size: clamp(2.26rem, 3.55vw, 2.85rem) !important;');
+    expect(cssSource).toContain('--dynamic-grid-card-title-size: clamp(1.68rem, 2.45vw, 2.14rem);');
+    expect(cssSource).toContain('font-size: clamp(1.68rem, 2.45vw, 2.14rem) !important;');
     expect(cssSource).toContain('line-height: 0.9 !important;');
     expect(cssSource).toContain('letter-spacing: -0.035em;');
   });
@@ -260,10 +260,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('padding-bottom: clamp(0.85rem, 1.8vw, 1.25rem);');
     expect(cssSource).toContain('.service-native-section.dynamic-billboard.retirement-403b-native-strategy-heading .native-info-section-copy > h2 {');
     expect(cssSource).toContain('margin-bottom: clamp(0.55rem, 1.25vw, 0.9rem);');
-    expect(cssSource).toContain('.service-native-section.native-dynamic-page-content.retirement-403b-native-strategy-feature,');
-    expect(cssSource).toContain('.service-native-section.test-dynamic-page-content.retirement-403b-native-strategy-feature {');
-    expect(cssSource).toContain('padding-top: clamp(1.35rem, 3vw, 2.25rem);');
-    expect(cssSource).toContain('padding-bottom: clamp(0.7rem, 1.5vw, 1.05rem);');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options {');
     expect(cssSource).not.toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-heading');
   });
 
@@ -273,7 +270,7 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.retirement-403b-native-loan-apply {');
     expect(cssSource).toContain('padding-top: clamp(1.35rem, 2.6vw, 1.95rem);');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.retirement-403b-native-loan-apply .service-native-card {');
-    expect(cssSource).toContain('grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr) auto;');
+    expect(cssSource).toContain('grid-template-columns: clamp(3.35rem, 5vw, 4.15rem) minmax(0, 1fr);');
     expect(cssSource).toContain('align-content: center;');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.retirement-403b-native-loan-apply .service-native-card > div:first-child {');
     expect(cssSource).toContain('display: contents;');
@@ -281,32 +278,25 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('grid-row: 1;');
     expect(cssSource).toContain('align-self: center;');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid.retirement-403b-native-loan-apply .service-native-card .service-native-action-row,');
-    expect(cssSource).toContain('grid-column: 3;');
-    expect(cssSource).toContain('align-self: center;');
-    expect(cssSource).toContain('justify-content: flex-end;');
+    expect(cssSource).toContain('grid-column: 2;');
+    expect(cssSource).toContain('align-self: start;');
+    expect(cssSource).toContain('justify-content: flex-start;');
   });
 
-  it('keeps explicit sibling spacing between 403(b) strategy panels so row separation does not depend on wrapper gap rendering', () => {
+  it('removes the retired raw-HTML 403(b) strategy panel contract', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.ret403b-strategy-feature {');
-    expect(cssSource).toContain('display: block;');
-    expect(cssSource).toContain('.ret403b-strategy-feature > .ret403b-strategy-feature-row.services-breakdown-panel + .ret403b-strategy-feature-row.services-breakdown-panel {');
-    expect(cssSource).toContain('margin-top: clamp(0.8rem, 1.45vw, 1.05rem) !important;');
-    expect(cssSource).toContain('.retirement-403b-native-strategy-feature .native-info-rich-html .services-breakdown-panel + .services-breakdown-panel,');
-    expect(cssSource).toContain('.retirement-403b-native-strategy-feature .native-info-rich-html .ret403b-strategy-feature-row + .ret403b-strategy-feature-row {');
-    expect(cssSource).not.toContain('.native-info-page--retirement-403b .ret403b-strategy-feature {');
+    expect(cssSource).not.toContain('ret403b-strategy-feature');
+    expect(cssSource).not.toContain('services-breakdown-panel');
   });
 
-  it('forces 403(b) strategy document links into block-owned outline buttons even when older stored markup still uses services-breakdown-links', () => {
+  it('keeps 403(b) strategy document links on the shared card-grid link renderer', () => {
+    const source = readSource('./NativeContentPage.jsx');
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) {');
-    expect(cssSource).toContain('.retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) a,');
-    expect(cssSource).toContain('background: transparent !important;');
-    expect(cssSource).toContain('border: 1px solid var(--btn-color) !important;');
-    expect(cssSource).toContain('box-shadow: none !important;');
-    expect(cssSource).not.toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-feature .native-info-rich-html :is(.services-breakdown-links, .ret403b-strategy-feature-links) {');
+    expect(source).toContain('card.links.map((item) =>');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-link-list');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options .service-native-card-link-list .service-native-btn');
   });
 
   it('keeps promoted 403(b) block-owned class families out of route-scoped CSS selectors', () => {
@@ -433,13 +423,15 @@ describe('native page content renderer guardrail', () => {
     expect(source).toContain('const shouldUseBlockOnlyShell = isBlockOnlyManagedPage');
     expect(source).toContain('const baseContent = shouldUseBlockOnlyShell');
     expect(source).toContain('? toBlockOnlyManagedPageShell(baseNativeContent)');
+    expect(source).toContain('const hasBlocksForPath = (pathname) => (');
+    expect(source).toContain('&& managedBlocksByPath[pathname].length > 0');
     expect(source).toContain('const hasManagedBlockSource = Boolean(editableBlockPath);');
     expect(source).toContain('preIntroSections: [],');
     expect(source).toContain('sections: [],');
     expect(source).toContain(': (hasManagedBlockSource ? null : heroBase);');
     expect(compositionSource).toContain('const orderedBlocks = composeManagedBlockOrder(blocks);');
-    expect(compositionSource).toContain('const visibleBlocks = orderedBlocks');
-    expect(compositionSource).toContain('const managedEntries = visibleBlocks');
+    expect(compositionSource).toContain('const renderedBlocks = orderedBlocks');
+    expect(compositionSource).toContain('const managedEntries = renderedBlocks');
     expect(source).not.toContain('const allowTargetedDynamicSections = !isBlockOnlyManagedPage;');
     expect(source).not.toContain('targetedDynamicCtaSections');
     expect(source).not.toContain('mappedSection');

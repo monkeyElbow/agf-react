@@ -120,8 +120,7 @@ function isRetiredBlock(pathname, block) {
   if (pathname === '/services/retirement/403b') {
     return blockId === 'strategy_enroll_cta'
       || blockId === 'page_content'
-      || kind === 'page_content'
-      || (blockId === 'investment_strategy_options' && kind === 'card_grid');
+      || kind === 'page_content';
   }
 
   if (pathname === '/services/planned-giving') {

@@ -54,6 +54,89 @@ describe('content-admin normalization parity', () => {
     normalizeInBoth(input);
   });
 
+  it('upgrades the legacy IRA comparison table to the reusable card chart shape', () => {
+    const input = state([], {
+      blocksByPath: {
+        '/services/retirement/iras': [block('comparison_table', {
+          settings: {
+            title: 'The differences. At a glance.',
+            tableHeadersJson: ['Traditional IRA', 'Roth IRA'],
+            tableRowsJson: [['Traditional bullet', 'Roth bullet']],
+          },
+        })],
+      },
+    });
+    const normalized = normalizeInBoth(input);
+    expect(normalized.blocksByPath['/services/retirement/iras'][0]).toMatchObject({
+      id: 'comparison_table',
+      kind: 'card_chart',
+      settings: {
+        cardCount: '2',
+        card1Title: 'Traditional IRA',
+        card1Bullets: 'Traditional bullet',
+        card2Title: 'Roth IRA',
+        card2Bullets: 'Roth bullet',
+      },
+    });
+    expect(normalized.blocksByPath['/services/retirement/iras'][0].settings).not.toHaveProperty('tableRowsJson');
+  });
+
+  it('upgrades the charitable remainder trust type cards to the reusable card chart shape', () => {
+    const input = state([], {
+      blocksByPath: {
+        '/services/planned-giving/charitable-trusts': [block('remainder_trust_type_cards', {
+          kind: 'card_grid',
+          settings: {
+            sectionClassName: 'legacy-child-native-trusts-crt-types',
+            card1Title: 'Charitable Remainder Unitrust (CRUT)',
+            card1ListJson: '["Annual payout is determined by donor","Income may fluctuate from year to year"]',
+            card2Title: 'Charitable Remainder Annuity (CRAT)',
+            card2ListJson: '["Donor receives a fixed payment"]',
+          },
+        })],
+      },
+    });
+    const normalized = normalizeInBoth(input);
+    expect(normalized.blocksByPath['/services/planned-giving/charitable-trusts'][0]).toMatchObject({
+      id: 'remainder_trust_type_cards',
+      kind: 'card_chart',
+      name: 'Remainder Trust Type Chart',
+      settings: {
+        cardCount: '2',
+        card1Color: 'atlantean',
+        card1Bullets: 'Annual payout is determined by donor\nIncome may fluctuate from year to year',
+        card2Color: 'mango',
+        card2Bullets: 'Donor receives a fixed payment',
+      },
+    });
+  });
+
+  it('upgrades the charitable lead trust type cards to the reusable card chart shape', () => {
+    const input = state([], {
+      blocksByPath: {
+        '/services/planned-giving/charitable-trusts': [block('lead_trust_type_cards', {
+          kind: 'card_grid',
+          settings: {
+            card1Title: 'Grantor Lead Trust',
+            card1ListJson: '["Donor receives remainder of trust after stated period of time"]',
+            card2Title: 'Non-Grantor Lead Trust',
+            card2ListJson: '["Permanent transfer of asset","Income is taxed at the trust level each year"]',
+          },
+        })],
+      },
+    });
+    const normalized = normalizeInBoth(input);
+    expect(normalized.blocksByPath['/services/planned-giving/charitable-trusts'][0]).toMatchObject({
+      id: 'lead_trust_type_cards',
+      kind: 'card_chart',
+      name: 'Lead Trust Type Chart',
+      settings: {
+        card1Bullets: 'Donor receives remainder of trust after stated period of time',
+        card2Bullets: 'Permanent transfer of asset\nIncome is taxed at the trust level each year',
+      },
+    });
+  });
+
   it('normalizes legacy fields and preset-owned presentation fields identically', () => {
     const input = state([
       block('legacy-link', {

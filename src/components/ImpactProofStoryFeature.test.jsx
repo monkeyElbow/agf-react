@@ -62,8 +62,8 @@ describe('ImpactProofStoryFeature', () => {
     expect(container.querySelectorAll('.impact-proof-story-proof-eyebrow')).toHaveLength(0);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-left')).toHaveLength(2);
     expect(container.querySelectorAll('.impact-proof-story-proof.is-right')).toHaveLength(2);
-    expect(screen.getByRole('heading', { name: '1,400 ministries supported by loans.' })).toBeTruthy();
-    expect(screen.getByText('Over the last 10 years, those ministries represent more than 945,000 people.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '4,100+ loans fueling ministry growth.' })).toBeTruthy();
+    expect(screen.getByText('Over the last 15 years, those loans represent more than 1.4 million people.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: '$450 million distributed to ministries through AG Foundation.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: '5,117 mission trips covered and protected.' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: '29,000+ retirements planned.' })).toBeTruthy();

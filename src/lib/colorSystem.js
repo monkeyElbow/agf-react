@@ -5,7 +5,9 @@ export const SANDSTONE_GRADIENT_SWATCH = 'linear-gradient(145deg, var(--ag-color
 export const SAND_SURFACE_GRADIENT_SWATCH = 'linear-gradient(147deg, var(--ag-color-sand) 62%, var(--ag-color-sand-dark) 100%)';
 
 const TOKEN_SWATCHS = Object.freeze({
-  atlantean: BLUE_SURFACE_SWATCH,
+  // Semantic text blue is the light brand Atlantean. Surface gradients keep
+  // their own `blue` token so text swatches cannot preview the dark endpoint.
+  atlantean: 'var(--ag-color-atlantean)',
   mango: 'linear-gradient(145deg, var(--ag-color-mango) 0%, var(--ag-color-mango-dark) 100%)',
   melon: 'linear-gradient(145deg, var(--ag-color-melon) 0%, var(--ag-color-melon-dark) 100%)',
   sandstone: SANDSTONE_GRADIENT_SWATCH,
@@ -54,6 +56,18 @@ export const SEMANTIC_TEXT_COLOR_VALUES = Object.freeze([
   'is-super-grey',
   'is-white',
 ]);
+
+// The editor needs concrete values when it applies a selection through the
+// browser editing API. Keep those values beside the semantic classes so the
+// visual editor and rendered CSS cannot drift into separate palettes.
+export const SEMANTIC_TEXT_COLOR_HEX_VALUES = Object.freeze({
+  'is-atlantean': '#00adbb',
+  'is-mango': '#faa31a',
+  'is-melon': '#f26660',
+  'is-sandstone': '#c4beb6',
+  'is-super-grey': '#414042',
+  'is-white': '#ffffff',
+});
 
 export const SURFACE_BG_TONE_VALUES = Object.freeze(['white', 'sand', 'blue', 'grey']);
 export const PANEL_TEXT_TONE_VALUES = Object.freeze(['dark', 'white', 'blue']);
@@ -180,7 +194,7 @@ export function resolveIntroAccentColor(value) {
     return '';
   }
   if (tone === 'atlantean') {
-    return 'var(--ag-color-atlantean-dark)';
+    return 'var(--ag-color-atlantean)';
   }
   if (tone === 'mango') {
     return 'var(--ag-color-mango)';

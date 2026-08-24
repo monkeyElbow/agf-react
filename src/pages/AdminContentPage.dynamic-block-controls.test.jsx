@@ -132,7 +132,9 @@ function getField(block, fieldId) {
 }
 
 function getRouteLinkTextInput(label) {
-  const labelNode = screen.getByText(label).closest('label');
+  const labelNode = screen.getAllByText(label)
+    .map((node) => node.closest('label'))
+    .find(Boolean);
   const input = labelNode?.querySelector('input[type="text"]');
   if (!input) {
     throw new Error(`Missing route-link text input for "${label}".`);
@@ -646,7 +648,8 @@ describe('dynamic block control wiring', () => {
     fireEvent.select(lineInput);
 
     lineInput.setSelectionRange(0, 0);
-    fireEvent.click(screen.getByRole('radio', { name: 'Mango (apply to selection)' }));
+    fireEvent.click(lineInput);
+    fireEvent.click(screen.getByRole('radio', { name: 'Mango (apply to Line 1)' }));
 
     expect(onSettingChange).toHaveBeenCalledWith('line1ClassName', 'home-native-eyebrow is-mango');
     expect(onSettingChange).not.toHaveBeenCalledWith(
@@ -669,7 +672,8 @@ describe('dynamic block control wiring', () => {
     fireEvent.select(lineInput);
 
     lineInput.setSelectionRange(0, 0);
-    fireEvent.mouseDown(screen.getByRole('radio', { name: 'Mango (apply to selection)' }));
+    fireEvent.click(lineInput);
+    fireEvent.mouseDown(screen.getByRole('radio', { name: 'Mango (apply to Line 1)' }));
 
     expect(screen.getByRole('radio', { name: 'Mango (apply to Line 1)' })).toBeTruthy();
   });
@@ -710,7 +714,6 @@ describe('dynamic block control wiring', () => {
     lineInput.setSelectionRange(0, 5);
     fireEvent.select(lineInput);
 
-    fireEvent.mouseDown(swatch);
     lineInput.setSelectionRange(0, 0);
     fireEvent.click(swatch);
 
@@ -1603,11 +1606,12 @@ describe('dynamic block control wiring', () => {
     onSettingChange.mockClear();
 
     fireEvent.click(screen.getByText('Card 1').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
     expect(screen.queryByRole('button', { name: 'Clear Card 1 line color override' })).toBeNull();
     expect(screen.getByLabelText('Card 1 title')).toBeTruthy();
   });
 
-  it('shows grid heading spans inline with a clear-spans action and keeps intro body under the heading editor', () => {
+  it('keeps the removed legacy grid heading editor out of the card workspace', () => {
     const block = getDynamicBlock('card_grid');
     const onSettingChange = vi.fn();
     block.settings.title = 'Grid intro heading';
@@ -1615,10 +1619,8 @@ describe('dynamic block control wiring', () => {
 
     const { container } = render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    expect(screen.queryByRole('button', { name: /show span details/i })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Clear spans' })).toBeTruthy();
-    expect(container.querySelector('.admin-grid-heading-editor .admin-hero-inline-span-chip-list')).toBeTruthy();
-    expect(container.querySelector('.admin-grid-heading-editor .admin-grid-body-editor .admin-html-editor')).toBeTruthy();
+    expect(screen.getByText('Grid header')).toBeTruthy();
+    expect(container.querySelector('.admin-grid-heading-editor')).toBeNull();
   });
 
   it('does not render placeholder heading text in the grid preview when the intro heading is empty', () => {
@@ -1630,46 +1632,19 @@ describe('dynamic block control wiring', () => {
     const { container } = render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
     const preview = container.querySelector('.admin-grid-heading-editor .admin-color-text-preview');
 
-    expect(preview).toBeTruthy();
-    expect(preview.textContent).toBe('');
+    expect(preview).toBeNull();
     expect(screen.queryByText('Grid heading')).toBeNull();
   });
 
-  it('keeps shared heading highlight actions aligned with the local grid heading draft', () => {
-    vi.useFakeTimers();
+  it('does not expose legacy grid heading draft actions in the card workspace', () => {
     const block = getDynamicBlock('card_grid');
     const onSettingChange = vi.fn();
     block.settings.title = 'Grid intro heading';
     block.settings.titleHighlightsJson = '';
 
-    try {
-      const { container } = render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
-      const headingEditor = container.querySelector('.admin-grid-heading-editor');
-      const headingInput = screen.getByLabelText('Grid intro heading text');
-      if (!headingEditor) {
-        throw new Error('Missing grid heading editor.');
-      }
-
-      fireEvent.change(headingInput, {
-        target: { value: 'Grid heading draft' },
-      });
-
-      expect(onSettingChange).not.toHaveBeenCalledWith('title', 'Grid heading draft');
-
-      headingInput.focus();
-      headingInput.setSelectionRange(5, 12);
-      fireEvent.select(headingInput);
-      fireEvent.click(within(headingEditor).getByRole('radio', { name: 'Sandstone' }));
-
-      expect(onSettingChange).toHaveBeenCalledWith('title', 'Grid heading draft');
-      expect(onSettingChange).toHaveBeenCalledWith(
-        'titleHighlightsJson',
-        expect.stringContaining('"text":"heading"'),
-      );
-    } finally {
-      vi.runOnlyPendingTimers();
-      vi.useRealTimers();
-    }
+    const { container } = render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
+    expect(container.querySelector('.admin-grid-heading-editor')).toBeNull();
+    expect(screen.queryByLabelText('Grid intro heading text')).toBeNull();
   });
 
   it('wires services grid controls through the migrated services grid editor', () => {
@@ -1860,8 +1835,6 @@ describe('dynamic block control wiring', () => {
 
     render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
 
-    expect(screen.getByText('Grid intro heading')).toBeTruthy();
-
     const titlePalette = screen.getByRole('radiogroup', { name: 'Card title color' });
     const bodyPalette = screen.getByRole('radiogroup', { name: 'Body color' });
 
@@ -1913,24 +1886,26 @@ describe('dynamic block control wiring', () => {
 
       const progressiveLabels = Array.from(container.querySelectorAll('.admin-progressive-slot-kicker')).map((node) => node.textContent);
       expect(progressiveLabels).toContain('Card 1');
-      expect(progressiveLabels).toContain('Card 2');
+      expect(progressiveLabels).not.toContain('Card 2');
       expect(progressiveLabels).not.toContain('Card 3');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Add card 3' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Add card 2' }));
 
-      expect(Array.from(container.querySelectorAll('.admin-progressive-slot-kicker')).map((node) => node.textContent)).toContain('Card 3');
+      expect(Array.from(container.querySelectorAll('.admin-progressive-slot-kicker')).map((node) => node.textContent)).toContain('Card 2');
 
-      fireEvent.change(screen.getByLabelText('Card 3 title'), {
-        target: { value: 'Card title three' },
+      fireEvent.click(screen.getByRole('button', { name: 'Card 2' }));
+      fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
+      fireEvent.change(screen.getByLabelText('Card 2 title'), {
+        target: { value: 'Card title two' },
       });
 
-      expect(onSettingChange).not.toHaveBeenCalledWith('card3Title', 'Card title three');
+      expect(onSettingChange).not.toHaveBeenCalledWith('card2Title', 'Card title two');
 
       act(() => {
         vi.advanceTimersByTime(350);
       });
 
-      expect(onSettingChange).toHaveBeenCalledWith('card3Title', 'Card title three');
+      expect(onSettingChange).toHaveBeenCalledWith('card2Title', 'Card title two');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -1952,6 +1927,7 @@ describe('dynamic block control wiring', () => {
       );
 
       fireEvent.click(screen.getByText('Card 1').closest('button'));
+      fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
 
       const titleInput = screen.getByLabelText('Card 1 title');
       fireEvent.change(titleInput, {
@@ -1990,17 +1966,17 @@ describe('dynamic block control wiring', () => {
       render(<GridBlockEditor block={getDynamicBlock('card_grid')} onSettingChange={onSettingChange} routeOptions={[]} />);
 
       fireEvent.click(screen.getByText('Card 1').closest('button'));
+      fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
 
-      const bodyInput = screen.getByLabelText('Card 1 body');
-      fireEvent.change(bodyInput, {
-        target: { value: 'Drafted grid card body' },
-      });
+      const bodyInput = screen.getAllByLabelText('Card 1 body')[0];
+      bodyInput.innerHTML = '<p>Drafted grid card body</p>';
+      fireEvent.input(bodyInput);
 
       expect(onSettingChange).not.toHaveBeenCalledWith('card1Body', 'Drafted grid card body');
 
       fireEvent.blur(bodyInput);
 
-      expect(onSettingChange).toHaveBeenCalledWith('card1Body', 'Drafted grid card body');
+      expect(onSettingChange).toHaveBeenCalledWith('card1Body', '<p>Drafted grid card body</p>');
     } finally {
       vi.runOnlyPendingTimers();
       vi.useRealTimers();
@@ -2011,8 +1987,6 @@ describe('dynamic block control wiring', () => {
     vi.useFakeTimers();
     const block = getDynamicBlock('card_grid');
     const onSettingChange = vi.fn();
-    const buttonUrlField = getField(block, 'card1ButtonLinkJson');
-
     try {
       render(
         <GridBlockEditor
@@ -2023,7 +1997,8 @@ describe('dynamic block control wiring', () => {
       );
 
       fireEvent.click(screen.getByText('Card 1').closest('button'));
-      fireEvent.change(getRouteLinkTextInput(buttonUrlField.label), {
+      fireEvent.click(screen.getByRole('button', { name: /^Buttons/ }));
+      fireEvent.change(getRouteLinkTextInput('Destination'), {
         target: { value: '/contact-us' },
       });
 
@@ -2065,8 +2040,9 @@ describe('dynamic block control wiring', () => {
     expect(gridCardToggles.length).toBeGreaterThanOrEqual(2);
 
     fireEvent.click(gridCardToggles[1]);
+    fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
 
-    expect(screen.getByLabelText('Card 2 title')).toBeTruthy();
+    expect(screen.getByLabelText('Card 3 title')).toBeTruthy();
   });
 
   it('keeps a grid card visible in the editor when it still has a configured action', () => {
@@ -2134,25 +2110,23 @@ describe('dynamic block control wiring', () => {
     expect(container.textContent).toContain('1 direct links');
   });
 
-  it('keeps the migrated investment options section on the page content editor', () => {
+  it('keeps investment options on the shared card-grid editor', () => {
     const block = cloneBlock(
       (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
         .find((entry) => entry?.id === 'investment_strategy_options'),
     );
     const onSettingChange = vi.fn();
 
-    render(<PageContentBlockEditor block={block} onSettingChange={onSettingChange} />);
+    render(<GridBlockEditor block={block} onSettingChange={onSettingChange} routeOptions={[]} />);
 
-    expect(block?.kind).toBe('content');
-    expect(block?.settings?.sectionClassName).toBe('retirement-403b-native-strategy-feature');
-    expect(screen.queryByText('Card Grid Preset')).toBeNull();
+    expect(block?.kind).toBe('card_grid');
+    expect(block?.presetId).toBe('investment-options');
+    expect(block?.settings?.sectionClassName).toBe('retirement-403b-native-strategy-options');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Advanced layout' }));
-    fireEvent.change(screen.getByLabelText('Content max width (px)'), {
-      target: { value: '1200' },
-    });
-
-    expect(onSettingChange).toHaveBeenCalledWith('contentMaxWidthPx', 1200);
+    expect(screen.queryByRole('button', { name: 'Add card 5' })).toBeNull();
+    fireEvent.click(screen.getByText('Card 1').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
+    expect(screen.getByLabelText('Card 1 body')).toBeTruthy();
   });
 
   it('bounds the eligibility preset to plain-text cards without card-level actions or resource stacks', () => {
@@ -2167,6 +2141,7 @@ describe('dynamic block control wiring', () => {
     expect(screen.queryByRole('button', { name: 'Add card 4' })).toBeNull();
 
     fireEvent.click(screen.getByText('Card 1').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /^Title and body/ }));
 
     expect(screen.queryByLabelText('Card 1 button label')).toBeNull();
     expect(screen.queryByLabelText('Card 1 button 2 label')).toBeNull();
@@ -2185,9 +2160,10 @@ describe('dynamic block control wiring', () => {
     expect(screen.queryByRole('button', { name: 'Add card 4' })).toBeNull();
 
     fireEvent.click(screen.getByText('Card 1').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /^Buttons/ }));
 
-    expect(screen.getByLabelText('Card 1 button label')).toBeTruthy();
-    expect(screen.queryByLabelText('Card 1 button 2 label')).toBeNull();
+    expect(screen.getAllByLabelText('Button label').length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText('Button 2 label')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add direct link' })).toBeNull();
   });
 
