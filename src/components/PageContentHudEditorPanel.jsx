@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import AdminHtmlEditor from './AdminHtmlEditor';
+import ColorPalette from './ColorPalette';
 import PageContentEditorPreview from './PageContentEditorPreview';
 import useBufferedFieldDrafts from '../hooks/useBufferedFieldDrafts';
 import {
@@ -7,6 +8,10 @@ import {
   getPageContentEditorHtml,
   hasLegacyPageContentSource,
 } from '../lib/pageContentEditorHtml';
+import {
+  PANEL_TEXT_TONE_OPTIONS,
+  SURFACE_BG_TONE_OPTIONS,
+} from '../lib/colorSystem';
 import {
   HudEditorBlockOptionsPage,
   HudEditorModelLayout,
@@ -72,6 +77,44 @@ function getPageContentSpacingValues(settings = {}) {
     paddingTopRem: toPageContentNumber(settings.paddingTopRem, 2.4),
     paddingBottomRem: toPageContentNumber(settings.paddingBottomRem, 2.4),
   };
+}
+
+function PageContentSurfaceToneControls({ settings = {}, onSettingChange }) {
+  if (typeof onSettingChange !== 'function') {
+    return null;
+  }
+
+  return (
+    <section className="admin-page-content-layout-card admin-page-content-surface-tone-card">
+      <span className="admin-front-hud-control-label">Surface</span>
+      <div className="admin-page-content-surface-tone-grid">
+        <label>
+          <span>Section background</span>
+          <ColorPalette
+            variant="admin"
+            className="is-compact admin-hero-inline-swatch-list is-icon-only"
+            ariaLabel="Section background"
+            options={SURFACE_BG_TONE_OPTIONS}
+            value={String(settings.bgTone || 'white')}
+            preventMouseDown
+            onChange={(nextValue) => onSettingChange('bgTone', nextValue)}
+          />
+        </label>
+        <label>
+          <span>Section text color</span>
+          <ColorPalette
+            variant="admin"
+            className="is-compact admin-hero-inline-swatch-list is-icon-only"
+            ariaLabel="Section text color"
+            options={PANEL_TEXT_TONE_OPTIONS}
+            value={String(settings.textTone || 'dark')}
+            preventMouseDown
+            onChange={(nextValue) => onSettingChange('textTone', nextValue)}
+          />
+        </label>
+      </div>
+    </section>
+  );
 }
 
 export function resolvePageContentWidthPreset(settings = {}) {
@@ -356,6 +399,10 @@ export default function PageContentHudEditorPanel({
       </section>
 
       <section className="admin-hud-editor-panel admin-front-hud-page-content-layout-panel">
+        <PageContentSurfaceToneControls
+          settings={settings}
+          onSettingChange={onSettingChange}
+        />
         <PageContentLayoutControls
           settings={settings}
           onSettingChange={onSettingChange}

@@ -35,6 +35,42 @@ describe('buildHudPanelsFromBlocks', () => {
     expect(panels.map((panel) => panel.id)).toEqual(['block:home_ministry_allies', 'block:home_do_the_math']);
   });
 
+  it('uses each managed Rates block identity for separate badges and anchors', () => {
+    const blocks = [
+      {
+        id: 'certificates_table',
+        kind: 'rates',
+        mode: 'dynamic',
+        settings: {
+          displayName: 'Certificates Rates',
+          panelId: 'rates-certificates',
+          anchorId: 'certificates-rates',
+        },
+      },
+      {
+        id: 'ira_table',
+        kind: 'rates',
+        mode: 'dynamic',
+        settings: {
+          displayName: 'IRA Rates',
+          panelId: 'rates-ira',
+          anchorId: 'ira-rates',
+        },
+      },
+    ];
+
+    const panels = buildHudPanelsFromBlocks(blocks, {
+      anchorSelectorById: {
+        certificates_table: '#certificates-rates',
+        ira_table: '#ira-rates',
+      },
+    });
+
+    expect(panels.map((panel) => panel.id)).toEqual(['rates-certificates', 'rates-ira']);
+    expect(panels.map((panel) => panel.anchorSelector)).toEqual(['#certificates-rates', '#ira-rates']);
+    expect(panels.map((panel) => panel.label)).toEqual(['Rates - Certificates Rates', 'Rates - IRA Rates']);
+  });
+
   it('ignores kind-wide panel-id overrides for non-singleton kinds', () => {
     const panels = buildHudPanelsFromBlocks(
       [

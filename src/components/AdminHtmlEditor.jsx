@@ -260,6 +260,7 @@ export default function AdminHtmlEditor({
   ariaLabel = 'HTML content',
   baseColorClassName = '',
   className = '',
+  style,
   onBaseColorChange,
 }) {
   const editorRef = useRef(null);
@@ -375,7 +376,10 @@ export default function AdminHtmlEditor({
   }
 
   return (
-    <div className={`admin-html-editor${compact ? ' is-compact' : ''}${baseColorClassName ? ` ${baseColorClassName}` : ''}${className ? ` ${className}` : ''}`}>
+    <div
+      className={`admin-html-editor${compact ? ' is-compact' : ''}${baseColorClassName ? ` ${baseColorClassName}` : ''}${className ? ` ${className}` : ''}`}
+      style={style}
+    >
       <div className="admin-html-editor-toolbar" role="toolbar" aria-label="Article body formatting">
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('bold')} title="Bold"><strong>B</strong></button>
         <button type="button" onMouseDown={preserveSelection} onClick={() => applyCommand('italic')} title="Italic"><em>I</em></button>

@@ -703,6 +703,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       kind: 'billboard',
       mode: 'dynamic',
       settings: {
+        logoKey: 'mission-assure',
         title: 'Ready to move?',
         titleClassName: 'blue',
         titleHighlightsJson: '[{"text":"move","className":"mango"}]',
@@ -722,6 +723,7 @@ describe('buildDynamicBillboardFromBlock', () => {
         titleLetterSpacingEm: -0.015,
         headlineMaxWidthPx: 980,
         contentMaxWidthPx: 1100,
+        paddingBottomRem: 7.5,
         actionsBeforeCards: true,
         buttonLabel: 'Take the next step',
         buttonLinkJson: serializeLinkValue({
@@ -741,6 +743,7 @@ describe('buildDynamicBillboardFromBlock', () => {
     });
 
     expect(runtime).toMatchObject({
+      logoKey: 'mission-assure',
       title: 'Ready to move?',
       titleClassName: 'blue',
       titleHighlights: [{ text: 'move', className: 'is-mango' }],
@@ -755,6 +758,7 @@ describe('buildDynamicBillboardFromBlock', () => {
       copyFadeRootMargin: '',
       copyStyle: { '--dynamic-billboard-copy-max-width': '1100px' },
       contentMaxWidthPx: 1100,
+      paddingBottomRem: 7.5,
       actionsBeforeCards: true,
       action: expect.objectContaining({
         label: 'Take the next step',
@@ -928,6 +932,24 @@ describe('buildDynamicBillboardFromBlock', () => {
     }));
   });
 
+  it('routes the lead-copy size setting to the rendered rich body', () => {
+    const runtime = buildDynamicBillboardFromBlock({
+      id: 'lead_copy_size_billboard',
+      kind: 'billboard',
+      mode: 'dynamic',
+      settings: {
+        title: 'Already have an IRA? Simplify.',
+        bodyHtml: '<p>Rolling over your other retirement savings is simple.</p>',
+        leadCopySizeRem: 1.85,
+      },
+    });
+
+    expect(runtime?.leadCopySizeRem).toBe(1.85);
+    expect(runtime?.bodyHtmlStyle).toEqual({
+      '--dynamic-billboard-lead-copy-size': 'clamp(calc(1.85rem * 0.68), 2.1vw, 1.85rem)',
+    });
+  });
+
   it('ignores stale target-section wiring for native billboards', () => {
     const runtime = buildDynamicBillboardFromBlock({
       id: 'daily_billboard',
@@ -985,6 +1007,8 @@ describe('buildDynamicHeroFromBlock', () => {
         titleSizeRem: 7.6,
         titleLetterSpacingEm: -0.11,
         lineHeight: 1.02,
+        paddingTopRem: 3.25,
+        paddingBottomRem: 4.5,
         button1Label: 'Talk with us',
         button1LinkJson: serializeLinkValue({
           kind: 'internal',
@@ -1004,6 +1028,8 @@ describe('buildDynamicHeroFromBlock', () => {
       titleLetterSpacingEm: -0.08,
       lineGap: 0,
       lineHeight: 1.02,
+      paddingTopRem: 3.25,
+      paddingBottomRem: 4.5,
       actions: [
         expect.objectContaining({
           label: 'Talk with us',
@@ -1855,16 +1881,45 @@ describe('buildDynamicRatesFromBlock', () => {
     });
 
     expect(certificatesRuntime).toMatchObject({
+      dataset: 'certificates',
       tableKey: 'certificates',
       sectionKey: 'certificates',
-      label: 'Certificates table',
+      panelId: 'rates-certificates',
+      anchorId: 'certificates-rates',
+      displayName: 'Certificates Rates',
+      label: 'Certificates Rates',
       adminHref: '/admin/rates',
     });
     expect(iraRuntime).toMatchObject({
+      dataset: 'ira',
       tableKey: 'ira',
       sectionKey: 'ira',
-      label: 'IRA table',
+      panelId: 'rates-ira',
+      anchorId: 'ira-rates',
+      displayName: 'IRA Rates',
+      label: 'IRA Rates',
       adminHref: '/admin/rates',
+    });
+  });
+
+  it('keeps the 403(b) dataset identity explicit instead of inferring it from a page-content widget', () => {
+    expect(buildDynamicRatesFromBlock({
+      id: 'rate_table',
+      kind: 'rates',
+      mode: 'dynamic',
+      variant: 'inline',
+      settings: {
+        dataset: '403b',
+        panelId: 'rates-403b-investment-rate',
+        anchorId: '403b-investment-rate',
+        displayName: '403(b) Investment Rate',
+      },
+    })).toMatchObject({
+      dataset: '403b',
+      panelId: 'rates-403b-investment-rate',
+      anchorId: '403b-investment-rate',
+      displayName: '403(b) Investment Rate',
+      label: '403(b) Investment Rate',
     });
   });
 
@@ -1905,6 +1960,156 @@ describe('buildDynamicGridFromBlock', () => {
         body: 'Preserve this content.',
       }),
     ]);
+  });
+
+  it('preserves the sandstone surface for card grids', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'loan-apply',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        title: 'How to apply',
+        bgTone: 'sandstone',
+        card1Title: '1',
+        card1Body: 'Review the loan rules.',
+      },
+    });
+
+    expect(runtime).toEqual(expect.objectContaining({
+      bgTone: 'sandstone',
+    }));
+  });
+
+  it('keeps legacy subhead and body fields rendering separately until the merged field is edited', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'legacy-step-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        title: 'How to enroll',
+        subtitle: 'Easy steps.',
+        bodyHtml: '<p>Follow the path below.</p>',
+        card1Title: '1',
+      },
+    });
+
+    expect(runtime).toEqual(expect.objectContaining({
+      subtitle: 'Easy steps.',
+      bodyHtml: '<p>Follow the path below.</p>',
+      hasMergedIntro: false,
+    }));
+  });
+
+  it('renders canonical merged intro HTML as one rich content stream', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'merged-step-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        title: 'How to enroll',
+        introHtml: '<h3>Easy steps.</h3><p>Follow the path below.</p>',
+        subtitle: 'Stale legacy value',
+        bodyHtml: '<p>Stale legacy body.</p>',
+        card1Title: '1',
+      },
+    });
+
+    expect(runtime).toEqual(expect.objectContaining({
+      subtitle: '',
+      bodyHtml: '<h3>Easy steps.</h3><p>Follow the path below.</p>',
+      hasMergedIntro: true,
+    }));
+  });
+
+  it('keeps step-card defaults, authored colors, and header spacing in the shared runtime', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'step-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      presetId: 'step-cards',
+      settings: {
+        title: 'Three clear steps',
+        introHtml: '<h3><span class="is-text-large">Start here.</span></h3>',
+        bgTone: 'sandstone',
+        titleTone: 'melon',
+        bodyTone: 'mango',
+        headerSizeRem: 3.1,
+        subheadSizeRem: 1.6,
+        card1Title: 'First step',
+        card1TitleClassName: 'is-atlantean',
+        card1Body: 'Follow the first instruction.',
+      },
+    });
+
+    expect(runtime).toEqual(expect.objectContaining({
+      bgTone: 'sandstone',
+      titleTone: 'melon',
+      bodyTone: 'mango',
+      headerSizeRem: 3.1,
+      subheadSizeRem: 1.6,
+      headerSubheadSpaceRem: 0.7,
+      bodyHtml: '<h3><span class="is-text-large">Start here.</span></h3>',
+      subheadTone: 'super-grey',
+    }));
+    expect(runtime.cards[0]).toEqual(expect.objectContaining({
+      titleClassName: 'is-atlantean',
+    }));
+  });
+
+  it('normalizes Card Grid header colors to the same single token used by preview CSS', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'colored-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        title: 'How to apply',
+        titleClassName: 'is-sandstone is-white',
+        introHtml: '<h3 class="is-sandstone is-white">Start here.</h3><p>Follow the steps.</p>',
+      },
+    });
+
+    expect(runtime.titleClassName).toBe('is-white');
+    expect(runtime.bodyHtml).toBe('<h3 class="is-white">Start here.</h3><p>Follow the steps.</p>');
+  });
+
+  it('uses alternating title colors as the step-card default without overriding an explicit choice', () => {
+    const defaultRuntime = buildDynamicGridFromBlock({
+      id: 'default-step-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      presetId: 'step-cards',
+      settings: { card1Title: 'First step' },
+    });
+    const explicitRuntime = buildDynamicGridFromBlock({
+      id: 'explicit-step-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      presetId: 'step-cards',
+      settings: { titleTone: 'super-grey', card1Title: 'First step' },
+    });
+
+    expect(defaultRuntime.titleTone).toBe('alternating');
+    expect(explicitRuntime.titleTone).toBe('super-grey');
+  });
+
+  it('does not replace an authored card title color when the grid background changes', () => {
+    const runtime = buildDynamicGridFromBlock({
+      id: 'dark-step-grid',
+      kind: 'card_grid',
+      mode: 'dynamic',
+      presetId: 'step-cards',
+      settings: {
+        bgTone: 'grey',
+        titleTone: 'super-grey',
+        card1Title: 'First step',
+        card2Title: 'Second step',
+      },
+    });
+
+    expect(runtime).toEqual(expect.objectContaining({
+      bgTone: 'grey',
+      titleTone: 'super-grey',
+    }));
   });
 
   it('keeps legacy cards visible when no explicit count was saved', () => {
@@ -2175,7 +2380,7 @@ describe('buildDynamicGridFromBlock', () => {
 
     expect(runtime).toMatchObject({
       presetId: 'investment-options',
-      columns: 'two',
+      columns: 'one',
       cards: [
         expect.objectContaining({
           title: 'MBA Income Fund',
@@ -2238,7 +2443,7 @@ describe('buildDynamicGridFromBlock', () => {
     });
   });
 
-  it('keeps light backgrounds on safe tones and card styles', () => {
+  it('preserves authored tones while still keeping the card style compatible', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'grid',
       kind: 'card_grid',
@@ -2252,7 +2457,7 @@ describe('buildDynamicGridFromBlock', () => {
       },
     });
 
-    expect(runtime?.titleTone).toBe('super-grey');
+    expect(runtime?.titleTone).toBe('white');
     expect(runtime?.bodyTone).toBe('super-grey');
     expect(runtime?.cardStyle).toBe('card2');
     expect(runtime?.cards).toEqual([
@@ -2366,7 +2571,7 @@ describe('buildDynamicGridFromBlock', () => {
     ]);
   });
 
-  it('forces dark-background grid title and body tones onto the shared white contrast default', () => {
+  it('preserves authored card title color when the grid background is dark', () => {
     const runtime = buildDynamicGridFromBlock({
       id: 'grid',
       kind: 'card_grid',
@@ -2379,7 +2584,7 @@ describe('buildDynamicGridFromBlock', () => {
       },
     });
 
-    expect(runtime?.titleTone).toBe('white');
+    expect(runtime?.titleTone).toBe('super-grey');
     expect(runtime?.bodyTone).toBe('white');
     expect(runtime?.cardStyle).toBe('card1');
   });
@@ -2616,6 +2821,8 @@ describe('buildDynamicCardChartFromBlock', () => {
         card2Title: 'Roth IRA',
         card2Bullets: 'Income limits must be met\nNo age limit to contribute',
         fineprint: 'Contact your tax advisor.',
+        fineprintDisclosureId: 'ira-comparison-disclosure',
+        valueAlignment: 'left',
         sectionClassName: 'retirement-child-native-comparison',
       },
     });
@@ -2628,7 +2835,53 @@ describe('buildDynamicCardChartFromBlock', () => {
         firstColumnHeader: false,
       },
       fineprint: ['Contact your tax advisor.'],
+      fineprintDisclosureId: 'ira-comparison-disclosure',
       sectionClassName: 'retirement-child-native-comparison',
+    });
+    expect(runtime.table.valueAlignment).toBe('left');
+  });
+
+  it('defaults and normalizes chart spacing and content width in the shared runtime', () => {
+    const baseBlock = {
+      id: 'contribution_limits',
+      kind: 'card_chart',
+      mode: 'dynamic',
+      settings: {
+        title: 'Annual Contribution Limits',
+        cardCount: '2',
+        card1Title: '2026',
+        card1Bullets: 'Under 50: $24,500',
+        card2Title: '2025',
+        card2Bullets: 'Under 50: $23,500',
+      },
+    };
+
+    expect(buildDynamicCardChartFromBlock(baseBlock)).toMatchObject({
+      headerGapRem: 2.4,
+      paddingTopRem: 2.4,
+      paddingBottomRem: 2.4,
+      cellTextSizeRem: 1.05,
+      cellTextWeight: 650,
+      contentMaxWidthPx: 1180,
+    });
+    expect(buildDynamicCardChartFromBlock({
+      ...baseBlock,
+      settings: {
+        ...baseBlock.settings,
+        headerGapRem: 4.25,
+        paddingTopRem: 1.5,
+        paddingBottomRem: 3.75,
+        cellTextSizeRem: 1.3,
+        cellTextWeight: 780,
+        contentMaxWidthPx: 1320,
+      },
+    })).toMatchObject({
+      headerGapRem: 4.25,
+      paddingTopRem: 1.5,
+      paddingBottomRem: 3.75,
+      cellTextSizeRem: 1.3,
+      cellTextWeight: 780,
+      contentMaxWidthPx: 1320,
     });
   });
 });
@@ -2686,6 +2939,8 @@ describe('buildDynamicPageContentFromBlock', () => {
       logoImage: '/logo.png',
       logoAlt: 'Partner logo',
       logoText: '',
+      bgTone: 'white',
+      textTone: 'dark',
       table: {
         headers: ['Limit', '2026'],
         rows: [['Under 50', '$24,500']],
@@ -2730,6 +2985,24 @@ describe('buildDynamicPageContentFromBlock', () => {
         title: 'AGFinancial',
         lines: ['PO Box 2515', 'Springfield MO 65801'],
       },
+    });
+  });
+
+  it('carries admin-selected surface and text tones into the shared page-content runtime', () => {
+    const runtime = buildDynamicPageContentFromBlock({
+      id: 'loan_details',
+      kind: 'content',
+      mode: 'dynamic',
+      settings: {
+        html: '<div class="retirement-403b-loan-copy"><h2>403(b) Plan Loans</h2></div>',
+        bgTone: 'grey',
+        textTone: 'white',
+      },
+    });
+
+    expect(runtime).toMatchObject({
+      bgTone: 'grey',
+      textTone: 'white',
     });
   });
 

@@ -87,19 +87,10 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('--insurance-coverage-card-cap-bg: linear-gradient(135deg, #ef816a 0%, var(--ag-color-melon) 100%);');
     expect(cssSource).toContain('.native-info-page--insurance .service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).insurance-native-coverage .service-native-card:nth-child(4) {');
     expect(cssSource).toContain('--insurance-coverage-card-cap-bg: linear-gradient(135deg, #4f5053 0%, var(--ag-color-super-grey) 100%);');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure {');
-    expect(cssSource).toContain('background: linear-gradient(145deg, var(--ag-color-sand) 0%, var(--ag-color-sandstone) 100%);');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-inner {');
-    expect(cssSource).toContain('grid-template-columns: minmax(18rem, 25rem) minmax(0, 36rem);');
-    expect(cssSource).toContain('justify-content: center;');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-media {');
-    expect(cssSource).toContain('aspect-ratio: 4 / 3;');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy {');
-    expect(cssSource).toContain('justify-items: center;');
-    expect(cssSource).toContain('width: min(100%, 36rem);');
-    expect(cssSource).toContain('max-width: 100%;');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .native-info-feature-logo {');
-    expect(cssSource).toContain('width: min(320px, 94%);');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance,');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math {');
+    expect(cssSource).toContain('grid-template-columns: clamp(22.5rem, 34vw, 26rem) minmax(0, 1fr);');
+    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr) clamp(22.5rem, 34vw, 26rem);');
     expect(cssSource).toContain('.impact-proof-story-proof.is-tone-atlantean {');
     expect(cssSource).toContain('.impact-proof-story-proof.is-tone-mango {');
     expect(cssSource).toContain('.impact-proof-story-proof.is-tone-super-grey {');
@@ -113,12 +104,8 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('letter-spacing: -1.35px;');
     expect(cssSource).toContain('.native-info-page--insurance .insurance-native-certificate-proof {');
     expect(cssSource).toContain('background: linear-gradient(145deg, var(--ag-color-super-grey) 0%, #636265 100%);');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-copy h3 mark.is-melon {');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-inner,');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-inner {\n  min-height: 0;');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy {\n  min-height: 0;');
-    expect(cssSource).toContain('/* Mission Assure already has a dedicated content rail. Do not inset the copy');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy {\n  padding-inline: 0;');
+    expect(cssSource).not.toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature');
+    expect(cssSource).not.toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature');
   });
 
   it('keeps P&C resource cards on the shared retirement certificate-card contract', () => {
@@ -134,7 +121,7 @@ describe('insurance overview review polish guardrail', () => {
     expect(cssSource).toContain('min-height: clamp(28rem, 32vw, 36rem);');
     expect(cssSource).toContain('border: 2px solid rgba(0, 138, 171, 0.17);');
     expect(cssSource).toContain('backdrop-filter: none;');
-    expect(cssSource).toContain('font-size: clamp(2.15rem, 3.2vw, 3rem);');
+    expect(cssSource).toContain('font-size: var(--dynamic-grid-card-title-size, clamp(2.15rem, 3.2vw, 3rem));');
     expect(cssSource).toContain('font-size: clamp(1.18rem, 1.6vw, 1.45rem);');
     expect(cssSource).toContain('font-size: clamp(1.1rem, 1.6vw, 1.22rem);');
     expect(cssSource).toContain('line-height: 1.6;');
@@ -147,16 +134,8 @@ describe('insurance overview review polish guardrail', () => {
     expect(source).toContain("logoComponent: runtime.logoKey === 'mission-assure' ? MissionAssureLogo : undefined,");
   });
 
-  it('keeps the insurance Mission Assure heading and copy aligned to the 403(b) housing allowance reference', () => {
+  it('keeps insurance feature copy on the shared 403(b) housing allowance and do-the-math contracts', () => {
     const cssSource = readSource('../styles/service-native.css');
-    const missionHeadingRule = readRuleBlock(
-      cssSource,
-      '.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy h3',
-    );
-    const missionCopyRule = readRuleBlock(
-      cssSource,
-      '.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy p',
-    );
     const housingHeadingRule = readRuleBlock(
       cssSource,
       '.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance',
@@ -170,36 +149,22 @@ describe('insurance overview review polish guardrail', () => {
       '.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance .native-columns-copy p',
     );
 
-    expect(missionHeadingRule).toContain('max-width: 22em;');
-    expect(missionHeadingRule).toContain('font-size: clamp(2rem, 4.6vw, 3.1rem);');
-    expect(missionHeadingRule).toContain('text-wrap: balance;');
-    expect(cssSource).toContain('grid-template-columns: minmax(18rem, 25rem) minmax(0, 36rem);');
-    expect(cssSource).toContain('gap: clamp(1rem, 3vw, 2.8rem);');
     expect(housingHeadingRule).toContain('--dynamic-columns-column-title-size: clamp(2rem, 4.6vw, 3.1rem);');
     expect(housingHeadingRule).toContain('--dynamic-columns-photo-max-width: 26rem;');
     expect(housingHeadingRule).toContain('--dynamic-columns-photo-aspect: 1 / 1;');
-    expect(missionCopyRule).toContain('font-size: 20.12px;');
-    expect(missionCopyRule).toContain('line-height: 29px;');
-    expect(missionCopyRule).toContain('letter-spacing: -0.012em;');
-    expect(missionCopyRule).toContain('max-width: 100%;');
     expect(housingSharedCopyRule).toContain('font-size: 20.12px;');
     expect(housingSharedCopyRule).toContain('line-height: 29px;');
     expect(housingCopyRule).toContain('letter-spacing: -0.012em;');
   });
 
-  it('keeps the insurance risk heading the same size as the 403(b) housing allowance heading', () => {
+  it('keeps the insurance risk heading on the shared do-the-math heading contract', () => {
     const cssSource = readSource('../styles/service-native.css');
-    const riskHeadingRule = readRuleBlock(
+    const doTheMathPresetRule = readRuleBlock(
       cssSource,
-      '.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-copy h3',
-    );
-    const housingPresetRule = readRuleBlock(
-      cssSource,
-      '.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance',
+      '.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math',
     );
 
-    expect(riskHeadingRule).toContain('font-size: clamp(2rem, 4.6vw, 3.1rem);');
-    expect(housingPresetRule).toContain('--dynamic-columns-column-title-size: clamp(2rem, 4.6vw, 3.1rem);');
+    expect(doTheMathPresetRule).toContain('--dynamic-columns-column-title-size: clamp(2rem, 4.6vw, 3.1rem);');
   });
 
   it('keeps ministers group life plan detail cards centered with breathing room under the buttons', () => {

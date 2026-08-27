@@ -2,6 +2,7 @@ import { createElement } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { HeroHudEditorPanel, HeroInlineLiveEditor } from './HeroHudEditorShared';
+import { HeroBlockEditor } from './block-editors/migratedBlockEditors';
 
 describe('HeroInlineLiveEditor', () => {
   it('keeps focus, select, and mouse-up interaction events available for parent selection sync', () => {
@@ -117,6 +118,27 @@ describe('HeroInlineLiveEditor', () => {
     }));
 
     expect(container.querySelector('.admin-front-hud-hero-live-line mark.is-sandstone')?.textContent).toBe('together');
+  });
+
+  it('can provide only the transparent interaction surface without rendering a second heading', () => {
+    const { container } = render(createElement(HeroInlineLiveEditor, {
+      interactionOnly: true,
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Visible Hero.',
+        className: 'is-super-grey',
+        highlights: [{ start: 8, end: 12, className: 'is-melon', text: 'Hero' }],
+      }],
+      activeLineKey: 'line1',
+      lineHeight: 0.9,
+      lineGap: 0,
+    }));
+
+    expect(container.querySelector('.admin-front-hud-hero-live-editor.is-interaction-layer')).toBeTruthy();
+    expect(container.querySelector('.admin-front-hud-hero-live-line > h1')).toBeNull();
+    expect(container.querySelector('textarea[data-hero-line-key="line1"]')).toBeTruthy();
+    expect(container.querySelector('mark')).toBeNull();
   });
 
   it('applies clamped headline tracking to both preview text and the live input', () => {
@@ -265,6 +287,31 @@ describe('HeroInlineLiveEditor', () => {
     }
   });
 
+  it('replaces a select-all range on the first input event without waiting for parent reconciliation', () => {
+    const onLineTextChange = vi.fn();
+
+    render(createElement(HeroInlineLiveEditor, {
+      lines: [{
+        key: 'line2',
+        label: 'Line 2',
+        text: 'Original line two.',
+        className: 'line2',
+        highlights: [],
+      }],
+      activeLineKey: 'line2',
+      lineHeight: 0.9,
+      onLineTextChange,
+    }));
+
+    const input = screen.getByLabelText('Line 2');
+    input.focus();
+    input.setSelectionRange(0, input.value.length);
+    fireEvent.select(input);
+    fireEvent.change(input, { target: { value: 'R' } });
+
+    expect(input.value).toBe('R');
+  });
+
   it('commits hero line text on blur without waiting for debounce', () => {
     vi.useFakeTimers();
     const onLineTextChange = vi.fn();
@@ -389,6 +436,94 @@ describe('HeroInlineLiveEditor', () => {
 });
 
 describe('HeroHudEditorPanel', () => {
+  it('keeps the HUD Hero preview surface tied to the selected background', () => {
+    const { rerender } = render(createElement(HeroHudEditorPanel, {
+      lines: [{ key: 'line1', label: 'Line 1', text: 'Hero surface.', lineColor: '', highlights: [] }],
+      activeLineKey: 'line1',
+      bgTone: 'blue',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+    }));
+
+    expect(document.querySelector('.admin-hero-hud-card--controls.is-bg-blue')).toBeTruthy();
+
+    rerender(createElement(HeroHudEditorPanel, {
+      lines: [{ key: 'line1', label: 'Line 1', text: 'Hero surface.', lineColor: '', highlights: [] }],
+      activeLineKey: 'line1',
+      bgTone: 'grey',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+    }));
+
+    expect(document.querySelector('.admin-hero-hud-card--controls.is-bg-grey')).toBeTruthy();
+    expect(document.querySelector('.admin-hero-hud-card--controls.is-bg-blue')).toBeNull();
+  });
+
+  it('propagates a selected color through the real Hero block editor callback', () => {
+    const onSettingChange = vi.fn();
+
+    render(createElement(HeroBlockEditor, {
+      block: {
+        id: 'hero',
+        kind: 'hero',
+        settings: {
+          line1Text: 'Hero copy.',
+          line1ClassName: 'is-super-grey',
+          line1HighlightsJson: '',
+          line2Text: 'Second line.',
+          line2ClassName: 'is-super-grey',
+          line2HighlightsJson: '',
+        },
+        editableFields: [],
+      },
+      selection: { line: 'line1', start: 0, end: 4, text: 'Hero' },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('radio', { name: /Mango \(apply to selection\)/ }));
+
+    expect(onSettingChange).toHaveBeenCalledWith('line1HighlightsJson', '[{"start":0,"end":4,"className":"is-mango","text":"Hero"}]');
+  });
+
+  it('uses the valid canonical padding default and keeps top and bottom sliders independent', () => {
+    const onPaddingTopRemChange = vi.fn();
+    const onPaddingBottomRemChange = vi.fn();
+
+    render(createElement(HeroHudEditorPanel, {
+      lines: [{ key: 'line1', label: 'Line 1', text: 'Canonical padding.', lineColor: '', highlights: [] }],
+      activeLineKey: 'line1',
+      selection: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      onPaddingTopRemChange,
+      onPaddingBottomRemChange,
+    }));
+
+    const top = screen.getByLabelText('Hero top padding');
+    const bottom = screen.getByLabelText('Hero bottom padding');
+    expect(top.value).toBe('2.5');
+    expect(bottom.value).toBe('2.5');
+    expect(top.step).toBe('0.25');
+    expect(bottom.step).toBe('0.25');
+    expect(top.closest('label')?.textContent).toContain('2.50rem');
+    expect(bottom.closest('label')?.textContent).toContain('2.50rem');
+
+    fireEvent.change(top, { target: { value: '2.75' } });
+    expect(onPaddingTopRemChange).toHaveBeenCalledWith(2.75);
+    expect(onPaddingBottomRemChange).not.toHaveBeenCalled();
+
+    fireEvent.change(bottom, { target: { value: '2.25' } });
+    expect(onPaddingBottomRemChange).toHaveBeenCalledWith(2.25);
+    expect(onPaddingTopRemChange).toHaveBeenCalledTimes(1);
+  });
+
   it('renders stored highlight colors in the visible line mirror', () => {
     const { container } = render(createElement(HeroHudEditorPanel, {
       lines: [{
@@ -408,7 +543,66 @@ describe('HeroHudEditorPanel', () => {
       lineHeight: 0.9,
     }));
 
-    expect(container.querySelector('.admin-hero-inline-line-mirror mark.is-mango')?.textContent).toBe('faith');
+    expect(container.querySelector('.admin-hero-hud-live-heading mark.is-mango')?.textContent).toBe('faith');
+  });
+
+  it('keeps the hero line preview visible and applies the stored full-line color', () => {
+    const onPaddingTopRemChange = vi.fn();
+    const onPaddingBottomRemChange = vi.fn();
+    const { container } = render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Visible hero text.',
+        lineColor: 'is-mango',
+        displayClassName: 'is-mango',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      paddingTopRem: 2.5,
+      paddingBottomRem: 2.5,
+      onPaddingTopRemChange,
+      onPaddingBottomRemChange,
+    }));
+
+    const preview = container.querySelector('.admin-hero-hud-live-heading');
+    expect(preview?.textContent).toBe('Visible hero text.');
+    expect(preview?.classList.contains('admin-hero-inline-line-mirror')).toBe(false);
+    expect(preview?.classList.contains('is-mango')).toBe(true);
+
+    fireEvent.change(screen.getByLabelText('Hero top padding'), { target: { value: '4.5' } });
+    fireEvent.change(screen.getByLabelText('Hero bottom padding'), { target: { value: '5.5' } });
+    expect(onPaddingTopRemChange).toHaveBeenCalledWith(4.5);
+    expect(onPaddingBottomRemChange).toHaveBeenCalledWith(5.5);
+  });
+
+  it('uses the line color fallback in the preview without forcing public headline size', () => {
+    const { container } = render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Compact hero preview.',
+        lineColor: 'is-mango',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 9,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+    }));
+
+    const preview = container.querySelector('.admin-hero-hud-live-heading');
+    expect(preview?.classList.contains('is-mango')).toBe(true);
+    expect(preview?.getAttribute('style') || '').not.toContain('font-size');
   });
 
   it('passes the current highlighted input range to the color callback', () => {
@@ -452,6 +646,40 @@ describe('HeroHudEditorPanel', () => {
     );
   });
 
+  it('uses a selection captured by the inline hero preview when the HUD editor opens', () => {
+    const onApplySelectionColor = vi.fn();
+
+    render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Every trip is a step of faith.',
+        lineColor: 'is-super-grey',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      selection: { line: 'line1', start: 24, end: 29, text: 'faith' },
+      driftReport: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [
+        { value: 'is-mango', label: 'Mango', swatch: '#faa31a' },
+      ],
+      onApplySelectionColor,
+    }));
+
+    fireEvent.click(screen.getByRole('radio', { name: /Mango \(apply to selection\)/ }));
+
+    expect(onApplySelectionColor).toHaveBeenCalledWith(
+      'line1',
+      'is-mango',
+      expect.objectContaining({ start: 24, end: 29, text: 'faith' }),
+    );
+  });
+
   it('keeps a highlighted range when the browser collapses it before palette mousedown', () => {
     const onApplySelectionColor = vi.fn();
 
@@ -481,6 +709,7 @@ describe('HeroHudEditorPanel', () => {
     input.focus();
     input.setSelectionRange(24, 29);
     fireEvent.select(input);
+    fireEvent.mouseUp(input);
     input.setSelectionRange(0, 0);
 
     const swatch = screen.getByRole('radio', { name: /Mango/ });
@@ -523,6 +752,7 @@ describe('HeroHudEditorPanel', () => {
     input.focus();
     input.setSelectionRange(24, 29);
     fireEvent.select(input);
+    fireEvent.mouseUp(input);
     input.setSelectionRange(0, 0);
 
     fireEvent.click(screen.getByRole('radio', { name: /Mango/ }));
@@ -532,6 +762,149 @@ describe('HeroHudEditorPanel', () => {
       'is-mango',
       expect.objectContaining({ start: 24, end: 29, text: 'faith' }),
     );
+  });
+
+  it('clears the selection transaction after applying a selection color', () => {
+    const onApplySelectionColor = vi.fn();
+
+    render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Every trip is a step of faith.',
+        lineColor: 'is-super-grey',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [
+        { value: 'is-melon', label: 'Melon', swatch: '#f26660' },
+      ],
+      onApplySelectionColor,
+    }));
+
+    const input = screen.getByLabelText('Line 1 text');
+    input.focus();
+    input.setSelectionRange(24, 29);
+    fireEvent.select(input);
+    fireEvent.mouseUp(input);
+    fireEvent.click(screen.getByRole('radio', { name: /Melon \(apply to selection\)/ }));
+
+    expect(onApplySelectionColor).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('radio', { name: /Melon \(apply to selection\)/ })).toBeNull();
+    expect(screen.getByRole('radio', { name: /Melon \(apply to Line 1\)/ })).toBeTruthy();
+  });
+
+  it('clears a selection on outside click so a core color affects the whole line', () => {
+    const onApplyLineColor = vi.fn();
+    const onApplySelectionColor = vi.fn();
+
+    render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Every trip is a step of faith.',
+        lineColor: 'is-super-grey',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [
+        { value: 'is-atlantean', label: 'Atlantean', swatch: '#00adbb' },
+      ],
+      onApplyLineColor,
+      onApplySelectionColor,
+    }));
+
+    const input = screen.getByLabelText('Line 1 text');
+    input.focus();
+    input.setSelectionRange(24, 29);
+    fireEvent.select(input);
+    fireEvent.mouseUp(input);
+    fireEvent.pointerDown(document.body);
+
+    const coreColor = screen.getByRole('radio', { name: /Atlantean \(apply to Line 1\)/ });
+    fireEvent.click(coreColor);
+
+    expect(onApplyLineColor).toHaveBeenCalledWith('line1', 'is-atlantean');
+    expect(onApplySelectionColor).not.toHaveBeenCalled();
+  });
+
+  it('clears a selection when the line text is edited', () => {
+    const onApplyLineColor = vi.fn();
+
+    render(createElement(HeroHudEditorPanel, {
+      lines: [{
+        key: 'line1',
+        label: 'Line 1',
+        text: 'Every trip is a step of faith.',
+        lineColor: 'is-super-grey',
+        highlights: [],
+      }],
+      activeLineKey: 'line1',
+      selection: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [
+        { value: 'is-atlantean', label: 'Atlantean', swatch: '#00adbb' },
+      ],
+      onApplyLineColor,
+    }));
+
+    const input = screen.getByLabelText('Line 1 text');
+    input.focus();
+    input.setSelectionRange(24, 29);
+    fireEvent.select(input);
+    fireEvent.change(input, { target: { value: 'Edited line text.' } });
+
+    fireEvent.click(screen.getByRole('radio', { name: /Atlantean \(apply to Line 1\)/ }));
+
+    expect(onApplyLineColor).toHaveBeenCalledWith('line1', 'is-atlantean');
+  });
+
+  it('clears a selection when focus moves to another Hero line', () => {
+    const onApplyLineColor = vi.fn();
+
+    render(createElement(HeroHudEditorPanel, {
+      lines: [
+        { key: 'line1', label: 'Line 1', text: 'First line.', lineColor: 'is-super-grey', highlights: [] },
+        { key: 'line2', label: 'Line 2', text: 'Second line.', lineColor: 'is-super-grey', highlights: [] },
+      ],
+      activeLineKey: 'line1',
+      selection: null,
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [
+        { value: 'is-atlantean', label: 'Atlantean', swatch: '#00adbb' },
+      ],
+      onApplyLineColor,
+    }));
+
+    const lineOne = screen.getByLabelText('Line 1 text');
+    lineOne.focus();
+    lineOne.setSelectionRange(0, 5);
+    fireEvent.select(lineOne);
+    fireEvent.focus(screen.getByLabelText('Line 2 text'));
+
+    fireEvent.click(screen.getByRole('radio', { name: /Atlantean \(apply to Line 1\)/ }));
+
+    expect(onApplyLineColor).toHaveBeenCalledWith('line1', 'is-atlantean');
   });
 
   it('surfaces headline tracking controls with hero guardrails', () => {
@@ -552,7 +925,7 @@ describe('HeroHudEditorPanel', () => {
 
     expect(screen.getByText('Headline Tracking')).toBeTruthy();
     expect(screen.getByText('0.040em')).toBeTruthy();
-    expect(document.querySelectorAll('.admin-billboard-editor-slider strong')).toHaveLength(3);
+    expect(document.querySelectorAll('.admin-billboard-editor-slider strong')).toHaveLength(5);
     expect(document.querySelectorAll('.admin-front-hud-range-controls > input:not([type="range"])')).toHaveLength(0);
 
     const range = screen.getAllByRole('slider')[2];
@@ -560,7 +933,7 @@ describe('HeroHudEditorPanel', () => {
     expect(onTitleLetterSpacingChange).toHaveBeenCalledWith(-0.03);
   });
 
-  it('keeps line span controls in a side rail beside the swatches', () => {
+  it('shows color selection badges and clear spans without line navigation controls', () => {
     render(createElement(HeroHudEditorPanel, {
       lines: [{
         key: 'line1',
@@ -581,9 +954,48 @@ describe('HeroHudEditorPanel', () => {
 
     const lineColorControls = document.querySelector('.admin-hero-hud-line-color-controls');
     expect(lineColorControls).toBeTruthy();
-    const showSpanDetails = screen.getByRole('button', { name: 'Show span details' });
-    expect(showSpanDetails).toBeTruthy();
-    fireEvent.click(showSpanDetails);
     expect(lineColorControls?.querySelector('.admin-front-hud-hero-span-chip-list')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Show span details' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Go to .*spans/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Line 1 \(1 spans\)/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Clear spans' })).toBeTruthy();
+  });
+
+  it('keeps line one and line two color palettes mounted when the active line changes', () => {
+    const { rerender } = render(createElement(HeroHudEditorPanel, {
+      lines: [
+        { key: 'line1', label: 'Line 1', text: 'Faith and finance', lineColor: 'is-atlantean', highlights: [] },
+        { key: 'line2', label: 'Line 2', text: 'Plan ahead', lineColor: 'is-mango', highlights: [] },
+      ],
+      activeLineKey: 'line1',
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [{ value: 'is-mango', label: 'Mango', swatch: '#faa31a' }],
+    }));
+
+    expect(screen.getByLabelText('Hero color controls')).toBeTruthy();
+    expect(screen.getByLabelText('Line 2 color controls')).toBeTruthy();
+
+    rerender(createElement(HeroHudEditorPanel, {
+      lines: [
+        { key: 'line1', label: 'Line 1', text: 'Faith and finance', lineColor: 'is-atlantean', highlights: [] },
+        { key: 'line2', label: 'Line 2', text: 'Plan ahead', lineColor: 'is-mango', highlights: [] },
+      ],
+      activeLineKey: 'line2',
+      bgTone: 'white',
+      justify: 'center',
+      titleSizeRem: 7,
+      titleLetterSpacingEm: 0,
+      lineHeight: 0.9,
+      lineColorOptions: [{ value: 'is-mango', label: 'Mango', swatch: '#faa31a' }],
+    }));
+
+    expect(screen.getByLabelText('Hero color controls')).toBeTruthy();
+    expect(screen.getByLabelText('Line 2 color controls')).toBeTruthy();
+    expect(screen.queryByText('Heading')).toBeNull();
+    expect(screen.queryByText('Appearance')).toBeNull();
   });
 });

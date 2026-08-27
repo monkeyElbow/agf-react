@@ -101,15 +101,19 @@ describe('admin editor control rounding', () => {
     expect(hudSource).toContain('.admin-hud-editor-shared-surface .admin-request-form-hud-editor .admin-color-text-controls-row {');
   });
 
-  it('gives Hero line swatches room and keeps span items beneath them', () => {
+  it('gives Hero line swatches room and keeps selection badges beneath them', () => {
     const hudSource = readSource('../styles/front-hud.css');
 
     expect(hudSource).toContain(
-      '.admin-hud-editor-shared-surface .admin-hero-hud-line-row {\n  display: grid;\n  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);',
+      '.admin-hud-editor-shared-surface .admin-hero-hud-line-inputs {\n  display: grid;\n  grid-template-columns: 1fr;',
     );
     expect(hudSource).toContain(
-      'grid-template-areas:\n    "swatches"\n    "details"\n    "toggle";',
+      '.admin-hud-editor-shared-surface .admin-hero-hud-line-row {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.46fr);',
     );
+    expect(hudSource).toContain(
+      'grid-template-areas:\n    "swatches"\n    "details";',
+    );
+    expect(hudSource).not.toContain('grid-area: toggle;');
   });
 
   it('keeps Hero Actions fields compact and filling the available HUD width', () => {

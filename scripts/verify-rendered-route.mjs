@@ -11,7 +11,7 @@ const args = new Map(
 );
 
 const pathname = String(args.get('path') || process.env.VERIFY_ROUTE || '/online-contributions').trim() || '/';
-const baseUrl = String(args.get('url') || process.env.VITE_DEV_URL || 'http://127.0.0.1:5173').replace(/\/$/, '');
+const baseUrl = String(args.get('url') || process.env.VITE_DEV_URL || 'http://127.0.0.1:5174').replace(/\/$/, '');
 const auditWidths = String(args.get('widths') || process.env.VERIFY_WIDTHS || '1440')
   .split(',')
   .map((width) => Number(width.trim()))

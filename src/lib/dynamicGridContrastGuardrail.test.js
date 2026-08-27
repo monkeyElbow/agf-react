@@ -15,17 +15,21 @@ describe('dynamic grid contrast guardrail', () => {
     const helperSource = readSource('./dynamicGrid.js');
     const runtimeSource = readSource('./dynamicPageBlocks.js');
     const editorSource = readSource('../components/block-editors/migratedBlockEditors.jsx');
+    const definitionSource = readSource('../blocks/definitions/cardGrid.definition.js');
 
     expect(helperSource).toContain("export function getGridDefaultToneForBg(bgTone)");
-    expect(helperSource).toContain("'super-grey': new Set(['white', 'sand'])");
+    expect(helperSource).toContain("'super-grey': new Set(['white', 'sand', 'sandstone'])");
     expect(helperSource).toContain("return normalizedBgTone === 'blue' || normalizedBgTone === 'grey' ? 'white' : 'super-grey';");
 
-    expect(runtimeSource).toContain("const titleTone = getGridSafeToneForBg(settings.titleTone, bgTone, 'super-grey');");
+    expect(runtimeSource).toContain('const titleTone = normalizeGridToneToken(');
+    expect(runtimeSource).toContain('Background and card-title color are separate authored controls.');
     expect(runtimeSource).toContain("const bodyTone = getGridSafeToneForBg(settings.bodyTone, bgTone, 'super-grey');");
 
-    expect(editorSource).toContain("const nextTitleTone = getGridSafeToneForBg(settings.titleTone, gridBgTone, 'super-grey', titleToneFieldBase.options);");
-    expect(editorSource).toContain("const nextBodyTone = getGridSafeToneForBg(settings.bodyTone, gridBgTone, 'super-grey', bodyToneFieldBase.options);");
-    expect(editorSource).toContain("onSettingChange('titleTone', getGridSafeToneForBg(settings.titleTone, nextBgTone, 'super-grey', titleToneFieldBase.options));");
-    expect(editorSource).toContain("onSettingChange('bodyTone', getGridSafeToneForBg(settings.bodyTone, nextBgTone, 'super-grey', bodyToneFieldBase.options));");
+    expect(editorSource).toContain('const titleToneField = titleToneFieldBase;');
+    expect(editorSource).toContain('const bodyToneField = bodyToneFieldBase;');
+    expect(editorSource).toContain("onSettingChange('bgTone', nextBgTone);");
+    expect(editorSource).not.toContain("onSettingChange('titleTone', getGridSafeToneForBg(settings.titleTone, nextBgTone");
+    expect(editorSource).not.toContain("onSettingChange('bodyTone', getGridSafeToneForBg(settings.bodyTone, nextBgTone");
+    expect(definitionSource).not.toContain("'atlantean-dark'");
   });
 });

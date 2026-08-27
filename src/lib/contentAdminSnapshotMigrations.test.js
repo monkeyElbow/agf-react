@@ -103,6 +103,7 @@ describe('content-admin snapshot migrations', () => {
         col1BodyHtml: risk.settings.bodyHtml,
         col2ImageUrl: risk.settings.imageUrl,
         col1ButtonUrl: risk.settings.buttonUrl,
+        col1ButtonLinkJson: JSON.stringify({ kind: 'external', href: risk.settings.buttonUrl, openInNewWindow: true }),
         col1ButtonOpenInNewWindow: true,
       },
     });
@@ -116,6 +117,7 @@ describe('content-admin snapshot migrations', () => {
         col2Title: mission.settings.title,
         col2Body: mission.settings.body,
         col2ButtonUrl: mission.settings.buttonUrl,
+        col2ButtonLinkJson: JSON.stringify({ kind: 'internal', to: mission.settings.buttonUrl, openInNewWindow: false }),
       },
     });
     expect(migratedMission.settings.logoKey).toBeUndefined();

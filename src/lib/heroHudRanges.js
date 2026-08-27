@@ -110,16 +110,25 @@ export function resolveHeroLineDisplayClassName(className, bgTone = '', fallback
     .split(/\s+/)
     .filter(Boolean)
     .map((token) => normalizeHeroColorToken(token) || token);
-  const mergedTokens = [...fallbackTokens];
+  const explicitColorTokens = [...fallbackTokens, ...classTokens]
+    .map((token) => normalizeHeroColorToken(token))
+    .filter(Boolean);
+  const mergedTokens = [];
+  [...fallbackTokens, ...classTokens]
+    .filter((token) => !normalizeHeroColorToken(token))
+    .forEach((token) => {
+      if (!mergedTokens.includes(token)) {
+        mergedTokens.push(token);
+      }
+    });
 
-  classTokens.forEach((token) => {
-    if (!mergedTokens.includes(token)) {
-      mergedTokens.push(token);
-    }
-  });
-
-  const hasExplicitLineColor = mergedTokens.some((token) => Boolean(normalizeHeroColorToken(token)));
-  if (!hasExplicitLineColor && isHeroDarkBgTone(bgTone)) {
+  // Keep one semantic color token. Legacy/draft classes can contain more
+  // than one color; public and HUD stylesheets have different selector order,
+  // so preserving both makes the same saved line render different colors.
+  const explicitLineColor = explicitColorTokens.at(-1) || '';
+  if (explicitLineColor) {
+    mergedTokens.push(explicitLineColor);
+  } else if (isHeroDarkBgTone(bgTone)) {
     mergedTokens.push('is-white');
   }
 

@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks';
 
-const baseUrl = String(process.env.VITE_DEV_URL || 'http://127.0.0.1:5173').replace(/\/$/, '');
+const baseUrl = String(process.env.VITE_DEV_URL || 'http://127.0.0.1:5174').replace(/\/$/, '');
 const routes = ['/', '/services/planned-giving', '/services/planned-giving/charitable-trusts'];
 
 async function measure(pathname) {

@@ -58,6 +58,7 @@ describe('insurance native page content', () => {
       'coverageFocus',
     ]);
     expect(missionAssureBlock?.kind).toBe('columns');
+    expect(missionAssureBlock?.name).toBe('Mission Assure');
     expect(missionAssureBlock?.presetId).toBe('housing-allowance');
     expect(missionAssureBlock?.settings?.col2Title).toBe('Full coverage for mission trips, retreats…');
     expect(missionAssureBlock?.settings?.logoKey).toBeUndefined();
@@ -87,13 +88,17 @@ describe('insurance native page content', () => {
 
   it('keeps Mission Assure intro identity and emphasis in the managed block blueprint', () => {
     const blocks = contentBlockBlueprintsByPath['/services/insurance/mission-assure'] || [];
-    const introBlock = blocks.find((block) => block?.id === 'intro_pricing');
+    const introBlock = blocks.find((block) => block?.id === 'intro_billboard');
+    const bodyBlock = blocks.find((block) => block?.id === 'intro_body');
+    const pricingBlock = blocks.find((block) => block?.id === 'pricing_columns');
     const getCoveredBlock = blocks.find((block) => block?.id === 'get_covered_billboard');
     const claimBlock = blocks.find((block) => block?.id === 'report_claim_billboard');
 
     expect(introBlock?.settings?.logoKey).toBe('mission-assure');
     expect(introBlock?.settings?.titleHighlightsJson).toContain('faith');
     expect(introBlock?.settings?.subtitle).toBe('As low as **$1.25/day**');
+    expect(bodyBlock?.settings?.body).toContain('Mission Assure® helps take the “what if”');
+    expect(pricingBlock?.settings?.col1BodyHtml).toContain('$1.25/day');
     expect(getCoveredBlock?.settings?.sectionClassName).toBe('mission-assure-native-get-covered');
     expect(claimBlock?.settings?.bodyHtml).toBe('<p>Start here.</p>');
   });

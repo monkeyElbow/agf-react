@@ -2893,15 +2893,12 @@ export function createJsonContentStore({
       });
 
       const blockedBlockIds = new Set(blockedBlocks.map((entry) => entry.blockId));
-      const publishableBlockIds = [...new Set([
-        ...publishSummary.changedBlockIds,
+      const publishableBlockIds = [
+        ...publishSummary.changedBlockIds.filter((blockId) => !blockedBlockIds.has(blockId)),
         ...publishOrderChangedBlockIds,
-      ])].filter((blockId) => !blockedBlockIds.has(blockId));
-      const blockedOrderChange = publishOrderChangedBlockIds
-        .some((blockId) => blockedBlockIds.has(blockId));
+      ].filter((blockId, index, blockIds) => blockIds.indexOf(blockId) === index);
       const canPartiallyPublish = Boolean(
         blockedBlocks.length
-        && !blockedOrderChange
         && !publishSummary.hasPageMetaChanges,
       );
 
@@ -2968,11 +2965,24 @@ export function createJsonContentStore({
         ? cloneJson(record.baseSnapshot.blocksByPath?.[normalizedPath] || [])
         : cloneJson(currentBlocks);
       if (blockedBlocks.length) {
-        nextPublishedBlocks = mergePublishedManagedBlocks(
-          nextPublishedBlocks,
-          currentBlocks,
-          publishableBlockIds,
-        ).map(cloneJson);
+        if (publishSummary.hasOrderChanges) {
+          // Order is a page-level concern. Keep a foreign block's content at
+          // its published version, but still apply the admin's legitimate
+          // page-order change around it.
+          const publishedById = indexBlocksById(nextPublishedBlocks);
+          nextPublishedBlocks = currentBlocks.map((block) => {
+            const blockId = String(block?.id || '').trim();
+            return blockedBlockIds.has(blockId)
+              ? cloneJson(publishedById.get(blockId) || block)
+              : cloneJson(block);
+          });
+        } else {
+          nextPublishedBlocks = mergePublishedManagedBlocks(
+            nextPublishedBlocks,
+            currentBlocks,
+            publishableBlockIds,
+          ).map(cloneJson);
+        }
       }
       const nextPublishedState = normalizeSharedState(record.baseSnapshot);
       nextPublishedState.blocksByPath[normalizedPath] = nextPublishedBlocks;

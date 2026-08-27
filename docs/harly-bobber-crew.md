@@ -16,6 +16,23 @@ The crew may combine checks when they use the same evidence, but it must not omi
 - the durable rule it protects; and
 - the legitimate admin action it still allows.
 
+## Verification port rule
+
+Port `5173` is reserved for human use. Codex, automated tests, browser probes,
+and local preview verification must use an alternate loopback port starting at
+`5174` and incrementing as needed (`5174`, `5175`, …). Never start, restart,
+kill, or take over the human server on `5173`, and never report verification
+against `5173` as agent-run proof. If the selected verification port is
+occupied or serving stale content, stop and report the conflict; do not take
+over that process. Verification that can mutate content must also use isolated
+test data and state.
+
+Durable rule protected: human control of the shared `5173` workspace and
+separation of verification state from normal content.
+
+Legitimate admin action still allowed: humans may continue using, restarting,
+and inspecting the server on `5173` without agent interference.
+
 ## The crew
 
 ### Code Double Checker

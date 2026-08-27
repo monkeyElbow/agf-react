@@ -6,7 +6,7 @@ import { normalizeCollaborationState } from './contentAdminCollaboration.js';
 
 // This version describes the record transformations below, not the renderer schema.
 // Increment it when a new, non-destructive stored-record migration is introduced.
-export const CONTENT_ADMIN_NORMALIZATION_VERSION = 5;
+export const CONTENT_ADMIN_NORMALIZATION_VERSION = 7;
 
 // Migrated editors resolve their field catalog from the block registry. Keeping
 // the same catalog on every stored block makes the shared snapshot needlessly
@@ -156,6 +156,211 @@ function normalizeBlockSettings(settings) {
   let next = normalizeSplitLinkFieldSettings(cloneJson(settings), { stripSplitFields: true });
   next = { ...next };
   return next;
+}
+
+export function normalizeRetirement403bRatesBlock(pathname, rawBlock) {
+  if (normalizeManagedContentPath(pathname) !== '/services/retirement/403b' || !isObject(rawBlock)) {
+    return rawBlock;
+  }
+  if (String(rawBlock.id || '').trim() !== 'rate_table') {
+    return rawBlock;
+  }
+
+  const kind = String(rawBlock.kind || '').trim().toLowerCase();
+  const settings = isObject(rawBlock.settings) ? rawBlock.settings : {};
+  if (kind === 'rates' && String(settings.dataset || '').trim().toLowerCase() === '403b') {
+    return rawBlock;
+  }
+
+  return {
+    ...cloneJson(rawBlock),
+    name: '403(b) Investment Rate',
+    kind: 'rates',
+    variant: 'inline',
+    settings: {
+      ...settings,
+      dataset: '403b',
+      panelId: String(settings.panelId || '').trim() || 'rates-403b-investment-rate',
+      anchorId: String(settings.anchorId || '').trim() || '403b-investment-rate',
+      displayName: '403(b) Investment Rate',
+      titleClassName: 'is-atlantean',
+      sectionClassName: String(settings.sectionClassName || '').trim() || 'retirement-403b-native-rate-table',
+    },
+  };
+}
+
+export function normalizeRetirementIraRatesBlock(pathname, rawBlock) {
+  if (normalizeManagedContentPath(pathname) !== '/services/retirement/iras' || !isObject(rawBlock)) {
+    return rawBlock;
+  }
+  if (String(rawBlock.id || '').trim() !== 'rate_table') {
+    return rawBlock;
+  }
+
+  const kind = String(rawBlock.kind || '').trim().toLowerCase();
+  const settings = isObject(rawBlock.settings) ? rawBlock.settings : {};
+  if (kind === 'rates' && String(settings.dataset || '').trim().toLowerCase() === 'ira') {
+    return rawBlock;
+  }
+
+  return {
+    ...cloneJson(rawBlock),
+    name: 'IRA Investment Rates',
+    kind: 'rates',
+    variant: 'inline',
+    settings: {
+      ...settings,
+      dataset: 'ira',
+      panelId: String(settings.panelId || '').trim() || 'rates-ira',
+      anchorId: String(settings.anchorId || '').trim() || 'ira-rates',
+      displayName: 'IRA Investment Rates',
+      sectionClassName: String(settings.sectionClassName || '').trim() || 'retirement-ira-native-rates',
+      paddingTopRem: Number.isFinite(Number(settings.paddingTopRem)) ? Number(settings.paddingTopRem) : 5.8,
+      paddingBottomRem: Number.isFinite(Number(settings.paddingBottomRem)) ? Number(settings.paddingBottomRem) : 2.4,
+    },
+  };
+}
+
+export function normalizeLegacyIraContributionLimitsChart(pathname, rawBlock) {
+  if (normalizeManagedContentPath(pathname) !== '/services/retirement/iras' || !isObject(rawBlock)) {
+    return rawBlock;
+  }
+  if (String(rawBlock.id || '').trim() !== 'contribution_limits') {
+    return rawBlock;
+  }
+  if (String(rawBlock.kind || '').trim().toLowerCase() === 'card_chart') {
+    return rawBlock;
+  }
+
+  const settings = isObject(rawBlock.settings) ? rawBlock.settings : {};
+  const headers = Array.isArray(settings.tableHeadersJson)
+    ? settings.tableHeadersJson.map((value) => String(value || '').trim())
+    : [];
+  const rows = Array.isArray(settings.tableRowsJson)
+    ? settings.tableRowsJson.filter((row) => Array.isArray(row) && row.length >= 2)
+    : [];
+  const metricHeaders = headers.slice(1).filter(Boolean).slice(0, 6);
+  if (metricHeaders.length < 2 || !rows.length) {
+    return rawBlock;
+  }
+
+  const nextSettings = {
+    title: String(settings.title || '').trim(),
+    titleClassName: String(settings.titleClassName || '').trim(),
+    titleHighlightsJson: settings.titleHighlightsJson || '',
+    justify: 'center',
+    cardCount: String(metricHeaders.length),
+    fineprint: settings.fineprint || '',
+    fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
+    fineprintJustify: 'center',
+    fineprintSizeRem: 0.88,
+    valueAlignment: String(settings.tableValueAlignment || '').trim(),
+    fullBleed: Boolean(settings.fullBleed),
+    spaceBeforeRem: Number.isFinite(Number(settings.spaceBeforeRem)) ? Number(settings.spaceBeforeRem) : 0,
+    spaceAfterRem: Number.isFinite(Number(settings.spaceAfterRem)) ? Number(settings.spaceAfterRem) : 0,
+    headerGapRem: Number.isFinite(Number(settings.headerGapRem)) ? Number(settings.headerGapRem) : 2.4,
+    paddingTopRem: Number.isFinite(Number(settings.paddingTopRem)) ? Number(settings.paddingTopRem) : 2.4,
+    paddingBottomRem: Number.isFinite(Number(settings.paddingBottomRem)) ? Number(settings.paddingBottomRem) : 2.4,
+    cellPaddingRem: 0.9,
+    cellTextSizeRem: 1.05,
+    cellTextWeight: '650',
+    contentMaxWidthPx: Number.isFinite(Number(settings.contentMaxWidthPx)) ? Number(settings.contentMaxWidthPx) : 980,
+    anchorId: String(settings.anchorId || '').trim() || 'IRA-contribution-limits',
+    sectionClassName: String(settings.sectionClassName || '').trim() || 'retirement-ira-native-limits',
+  };
+
+  metricHeaders.forEach((header, metricIndex) => {
+    const slot = metricIndex + 1;
+    nextSettings[`card${slot}Title`] = header;
+    nextSettings[`card${slot}Color`] = ['atlantean', 'mango', 'melon', 'sandstone', 'super-grey', 'atlantean'][metricIndex];
+    nextSettings[`card${slot}Bullets`] = rows
+      .map((row) => {
+        const label = String(row[0] || '').trim();
+        const value = String(row[metricIndex + 1] || '').trim();
+        return label && value ? `${label}: ${value}` : (label || value);
+      })
+      .filter(Boolean)
+      .join('\n');
+  });
+
+  return {
+    ...cloneJson(rawBlock),
+    name: 'IRA Contribution Limits Chart',
+    kind: 'card_chart',
+    variant: 'default',
+    settings: nextSettings,
+  };
+}
+
+export function normalizeLegacy403bContributionLimitsChart(pathname, rawBlock) {
+  if (normalizeManagedContentPath(pathname) !== '/services/retirement/403b' || !isObject(rawBlock)) {
+    return rawBlock;
+  }
+  if (String(rawBlock.id || '').trim() !== 'contribution_limits') {
+    return rawBlock;
+  }
+  if (String(rawBlock.kind || '').trim().toLowerCase() === 'card_chart') {
+    return rawBlock;
+  }
+
+  const settings = isObject(rawBlock.settings) ? rawBlock.settings : {};
+  const headers = Array.isArray(settings.tableHeadersJson)
+    ? settings.tableHeadersJson.map((value) => String(value || '').trim())
+    : [];
+  const rows = Array.isArray(settings.tableRowsJson)
+    ? settings.tableRowsJson.filter((row) => Array.isArray(row) && row.length >= 2)
+    : [];
+  const metricHeaders = headers.slice(1).filter(Boolean).slice(0, 6);
+  if (metricHeaders.length < 2 || !rows.length) {
+    return rawBlock;
+  }
+
+  const nextSettings = {
+    title: String(settings.title || '').trim(),
+    titleClassName: String(settings.titleClassName || '').trim(),
+    titleHighlightsJson: settings.titleHighlightsJson || '',
+    justify: 'center',
+    cardCount: String(metricHeaders.length),
+    fineprint: settings.fineprint || '',
+    fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
+    fineprintJustify: 'center',
+    fineprintSizeRem: 0.88,
+    valueAlignment: String(settings.tableValueAlignment || '').trim(),
+    fullBleed: Boolean(settings.fullBleed),
+    spaceBeforeRem: Number.isFinite(Number(settings.spaceBeforeRem)) ? Number(settings.spaceBeforeRem) : 0,
+    spaceAfterRem: Number.isFinite(Number(settings.spaceAfterRem)) ? Number(settings.spaceAfterRem) : 0,
+    headerGapRem: Number.isFinite(Number(settings.headerGapRem)) ? Number(settings.headerGapRem) : 2.4,
+    paddingTopRem: Number.isFinite(Number(settings.paddingTopRem)) ? Number(settings.paddingTopRem) : 0,
+    paddingBottomRem: Number.isFinite(Number(settings.paddingBottomRem)) ? Number(settings.paddingBottomRem) : 0,
+    cellPaddingRem: 0.9,
+    contentMaxWidthPx: Number.isFinite(Number(settings.contentMaxWidthPx)) ? Number(settings.contentMaxWidthPx) : 980,
+    anchorId: String(settings.anchorId || '').trim(),
+    sectionClassName: [
+      String(settings.sectionClassName || '').trim(),
+      'retirement-403b-native-contribution-limits',
+    ].filter(Boolean).filter((value, index, values) => values.indexOf(value) === index).join(' '),
+  };
+
+  metricHeaders.forEach((header, metricIndex) => {
+    const slot = metricIndex + 1;
+    nextSettings[`card${slot}Title`] = header;
+    nextSettings[`card${slot}Color`] = ['atlantean', 'mango', 'melon', 'sandstone', 'super-grey', 'atlantean'][metricIndex];
+    nextSettings[`card${slot}Bullets`] = rows
+      .map((row) => {
+        const label = String(row[0] || '').trim();
+        const value = String(row[metricIndex + 1] || '').trim();
+        return label && value ? `${label}: ${value}` : (label || value);
+      })
+      .filter(Boolean)
+      .join('\n');
+  });
+
+  return {
+    ...cloneJson(rawBlock),
+    name: 'Annual Contribution Limits Chart',
+    kind: 'card_chart',
+    settings: nextSettings,
+  };
 }
 
 function normalizeLegacyIraComparisonChart(pathname, rawBlock) {
@@ -373,9 +578,21 @@ export function normalizeContentAdminState(rawState, options = {}) {
       return [pathname || rawPath, (Array.isArray(rawBlocks) ? rawBlocks : [])
         .filter((block) => !isRetiredNonDynamicContentAdminBlock(block))
         .map((block) => normalizeContentAdminBlock(
-          normalizeLegacyCharitableTrustTypeChart(
+          normalizeRetirement403bRatesBlock(
             pathname,
-            normalizeLegacyIraComparisonChart(pathname, block),
+            normalizeRetirementIraRatesBlock(
+              pathname,
+              normalizeLegacyIraContributionLimitsChart(
+                pathname,
+                normalizeLegacy403bContributionLimitsChart(
+                  pathname,
+                  normalizeLegacyCharitableTrustTypeChart(
+                    pathname,
+                    normalizeLegacyIraComparisonChart(pathname, block),
+                  ),
+                ),
+              ),
+            ),
           ),
         ))];
     }),

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildBillboardLeadCopyStyle,
   buildBillboardSubtitleStyle,
   buildBillboardTitleStyle,
+  normalizeBillboardLeadCopySizeRem,
   normalizeBillboardSubtitleSizeRem,
   normalizeIntroLineSpacing,
 } from './dynamicSectionTypography';
@@ -18,6 +20,16 @@ describe('dynamicSectionTypography', () => {
     expect(normalizeBillboardSubtitleSizeRem(undefined)).toBe(1.18);
     expect(normalizeBillboardSubtitleSizeRem(1.36)).toBe(1.36);
     expect(normalizeBillboardSubtitleSizeRem(0.2)).toBe(1);
+  });
+
+  it('normalizes and builds the shared billboard lead-copy size style', () => {
+    expect(normalizeBillboardLeadCopySizeRem(undefined)).toBe(1.65);
+    expect(normalizeBillboardLeadCopySizeRem(0.2)).toBe(1);
+    expect(normalizeBillboardLeadCopySizeRem(4.8)).toBe(4);
+    expect(buildBillboardLeadCopyStyle(undefined)).toBeUndefined();
+    expect(buildBillboardLeadCopyStyle(1.85)).toEqual({
+      '--dynamic-billboard-lead-copy-size': 'clamp(calc(1.85rem * 0.68), 2.1vw, 1.85rem)',
+    });
   });
 
   it('builds shared billboard title and subtitle styles from the same normalized inputs', () => {

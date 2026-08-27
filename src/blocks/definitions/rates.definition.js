@@ -1,13 +1,25 @@
 import ratesHudIcon from '../../assets/admin-block-icons/rates.svg';
 import { buildDynamicRatesFromBlock } from '../../lib/dynamicPageBlocks';
 import { createBlockDefinition } from '../foundation/models';
+import { defineEditorField } from '../foundation/editorDescriptors';
+
+const DATASET_OPTIONS = [
+  { value: 'certificates', label: 'Certificates' },
+  { value: 'ira', label: 'IRA' },
+  { value: '403b', label: '403(b) Investment Rate' },
+];
 
 const sections = [
   {
     id: 'management',
     title: 'Management',
     surfaces: ['hud', 'admin'],
-    fields: [],
+    fields: [
+      defineEditorField({ id: 'dataset', label: 'Rates dataset', type: 'select', options: DATASET_OPTIONS }),
+      defineEditorField({ id: 'displayName', label: 'Display name', type: 'text' }),
+      defineEditorField({ id: 'panelId', label: 'HUD panel ID', type: 'text' }),
+      defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
+    ],
   },
 ];
 
@@ -16,11 +28,16 @@ export const ratesBlockDefinition = createBlockDefinition({
   label: 'Rates',
   icon: ratesHudIcon,
   editorType: 'rates',
-  allowedVariants: ['default'],
+  allowedVariants: ['default', 'inline'],
   supportedModes: ['dynamic'],
-  defaults: {},
+  defaults: {
+    dataset: 'certificates',
+    displayName: 'Certificates Rates',
+    panelId: 'rates-certificates',
+    anchorId: 'certificates-rates',
+  },
   schema: {
-    fields: [],
+    fields: sections.flatMap((section) => section.fields),
   },
   renderer: {
     buildRuntime: buildDynamicRatesFromBlock,

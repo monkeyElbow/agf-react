@@ -2469,6 +2469,57 @@ describe('createDevContentAuthorityStore', () => {
     expect(published.state.blocksByPath['/services/loans'][0].settings.line1Text).toBe('Keep this draft unpublished');
   });
 
+  it('publishes page order while preserving a foreign block content draft', () => {
+    const persistenceFile = makeTempFile();
+    const actor = createActor();
+    const otherActor = createActor({
+      userId: 'dev-other',
+      displayName: 'Other editor',
+      initials: 'OE',
+      accentColor: '#3355cc',
+    });
+    const store = createStore(persistenceFile);
+    store.resetFromSeed(buildSeedState(), { actor });
+
+    const foreignDraft = cloneJson(store.readCurrentState());
+    foreignDraft.blocksByPath['/services/loans'][0].settings.line1Text = 'Keep this content draft unpublished';
+    store.syncBlockDraft('/services/loans', 'hero', foreignDraft.blocksByPath['/services/loans'][0], {
+      actor: otherActor,
+    });
+
+    const reorderedState = cloneJson(store.readCurrentState());
+    reorderedState.blocksByPath['/services/loans'] = [
+      reorderedState.blocksByPath['/services/loans'][1],
+      reorderedState.blocksByPath['/services/loans'][0],
+    ];
+    const saved = store.saveRouteDraft('/services/loans', {
+      pageHierarchy: { '/services/loans': reorderedState.pageHierarchy['/services/loans'] },
+      blocksByPath: { '/services/loans': reorderedState.blocksByPath['/services/loans'] },
+      collaborationByPath: { '/services/loans': reorderedState.collaborationByPath['/services/loans'] },
+      pathAliases: reorderedState.pathAliases,
+    }, { actor, summary: 'move CTA above hero' });
+    expect(saved.ok).toBe(true);
+
+    const published = store.publishPage('/services/loans', { actor, summary: 'publish page order' });
+
+    expect(published.ok).toBe(true);
+    expect(published.publishResult.status).toBe('partially-published');
+    expect(published.publishResult.hasOrderChangesByPath['/services/loans']).toBe(true);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'].map((block) => block.id)).toEqual([
+      'cta_form',
+      'hero',
+    ]);
+    expect(published.baseSnapshot.blocksByPath['/services/loans'][1].settings.line1Text)
+      .toBe('Original title');
+    expect(published.state.blocksByPath['/services/loans'].map((block) => block.id)).toEqual([
+      'cta_form',
+      'hero',
+    ]);
+    expect(published.state.blocksByPath['/services/loans'][1].settings.line1Text)
+      .toBe('Keep this content draft unpublished');
+    expect(published.state.collaborationByPath['/services/loans'].blocks.hero.draftedBy).toEqual(otherActor);
+  });
+
   it('publishes a deleted hero while preserving foreign drafts on the remaining page blocks', () => {
     const persistenceFile = makeTempFile();
     const store = createStore(persistenceFile);

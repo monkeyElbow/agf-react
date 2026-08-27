@@ -11,6 +11,8 @@ import { validateLinkFieldGroups } from '../../lib/linkValue';
 import {
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM,
+  DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM,
+  DEFAULT_DYNAMIC_GRID_SUBHEAD_SIZE_REM,
 } from '../../lib/dynamicGrid';
 
 const GRID_HEADING_TONE_OPTIONS = SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT;
@@ -18,6 +20,7 @@ const GRID_HEADING_TONE_OPTIONS = SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT;
 const GRID_BACKGROUND_OPTIONS = [
   { value: 'white', label: 'White', swatch: 'linear-gradient(145deg, #ffffff 0%, #ededed 100%)' },
   { value: 'sand', label: 'Sand Gradient', swatch: getTokenSwatch('sand') },
+  { value: 'sandstone', label: 'Sandstone', swatch: getTokenSwatch('sandstone') },
   { value: 'blue', label: 'Blue Gradient', swatch: getTokenSwatch('blue') },
   { value: 'grey', label: 'Super Grey Gradient', swatch: 'linear-gradient(145deg, #414042 0%, #636265 100%)' },
 ];
@@ -39,6 +42,11 @@ const GRID_TEXT_TONE_OPTIONS = [
   { value: 'white', label: 'White', swatch: '#ffffff' },
 ];
 
+const GRID_CARD_BODY_TONE_OPTIONS = [
+  ...GRID_TEXT_TONE_OPTIONS,
+  { value: 'alternating', label: 'Alternating brand colors', swatch: 'linear-gradient(90deg, #00adbb 0 33%, #f6b146 33% 66%, #f48f7a 66%)' },
+];
+
 const GRID_CARD_TITLE_TONE_OPTIONS = [
   ...GRID_TEXT_TONE_OPTIONS,
   { value: 'alternating', label: 'Alternating brand colors', swatch: 'linear-gradient(90deg, #00adbb 0 33%, #f6b146 33% 66%, #f48f7a 66%)' },
@@ -58,6 +66,15 @@ const sections = [
     fields: [
       defineEditorField({ id: 'title', label: 'Grid heading', type: 'textarea', rows: 2 }),
       defineEditorField({
+        id: 'headerSizeRem',
+        label: 'Header size (rem)',
+        type: 'range',
+        min: 1.9,
+        max: 4.5,
+        step: 0.05,
+        defaultValue: 2.9,
+      }),
+      defineEditorField({
         id: 'titleClassName',
         label: 'Grid heading color',
         type: 'swatch',
@@ -69,6 +86,7 @@ const sections = [
         type: 'highlight_list',
         options: GRID_HEADING_TONE_OPTIONS.filter((option) => option.value),
       }),
+      defineEditorField({ id: 'introHtml', label: 'Grid subhead and intro copy', type: 'html' }),
       defineEditorField({ id: 'subtitle', label: 'Grid subhead', type: 'textarea', rows: 2 }),
       defineEditorField({
         id: 'subtitleClassName',
@@ -109,7 +127,16 @@ const sections = [
         min: 0,
         max: 4,
         step: 0.05,
-        defaultValue: 0.45,
+        defaultValue: DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM,
+      }),
+      defineEditorField({
+        id: 'subheadSizeRem',
+        label: 'Grid subhead size (rem)',
+        type: 'range',
+        min: 0.9,
+        max: 2.4,
+        step: 0.05,
+        defaultValue: DEFAULT_DYNAMIC_GRID_SUBHEAD_SIZE_REM,
       }),
       defineEditorField({
         id: 'bgTone',
@@ -182,7 +209,7 @@ const sections = [
         id: 'bodyTone',
         label: 'Body color',
         type: 'swatch',
-        options: GRID_TEXT_TONE_OPTIONS,
+        options: GRID_CARD_BODY_TONE_OPTIONS,
       }),
       defineEditorField({ id: 'anchorId', label: 'Anchor ID', type: 'text' }),
       defineEditorField({ id: 'sectionClassName', label: 'Section class name', type: 'text' }),

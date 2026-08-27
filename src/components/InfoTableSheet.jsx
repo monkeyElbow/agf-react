@@ -84,13 +84,21 @@ export default function InfoTableSheet({
                     <>
                       <th scope="row">{row[0]}</th>
                       {row.slice(1).map((cell, cellIndex) => (
-                        <td key={`${row[0]}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}>
+                        <td
+                          key={`${row[0]}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}
+                          className={normalizedColumnTones[cellIndex + 1] ? `is-tone-${normalizedColumnTones[cellIndex + 1]}` : undefined}
+                          data-info-table-column-tone={normalizedColumnTones[cellIndex + 1] || undefined}
+                        >
                           {renderCellContent(cell)}
                         </td>
                       ))}
                     </>
                   ) : row.map((cell, cellIndex) => (
-                    <td key={`${rowIndex + 1}-${metricHeaders[cellIndex]}-${cellIndex + 1}`} className={normalizedColumnTones[cellIndex] ? `is-tone-${normalizedColumnTones[cellIndex]}` : undefined}>
+                    <td
+                      key={`${rowIndex + 1}-${metricHeaders[cellIndex]}-${cellIndex + 1}`}
+                      className={normalizedColumnTones[cellIndex] ? `is-tone-${normalizedColumnTones[cellIndex]}` : undefined}
+                      data-info-table-column-tone={normalizedColumnTones[cellIndex] || undefined}
+                    >
                       {renderCellContent(cell, true)}
                     </td>
                   ))}

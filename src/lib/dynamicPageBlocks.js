@@ -10,6 +10,7 @@ import {
 import {
   getGridSafeCardStyleForBg,
   getGridSafeToneForBg,
+  DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM,
   normalizeDynamicGridCardBodyLineHeight,
   normalizeDynamicGridCardBulletLineHeight,
   normalizeDynamicGridCardBulletSize,
@@ -17,17 +18,22 @@ import {
   normalizeDynamicGridCardBodySizeRem,
   normalizeDynamicGridCardPaddingRem,
   normalizeDynamicGridCardTitleSizeRem,
+  normalizeDynamicGridHeaderSizeRem,
+  normalizeDynamicGridSubheadSizeRem,
   normalizeDynamicGridColumns,
   normalizeDynamicGridWidth,
   normalizeGridBgTone,
+  normalizeGridToneToken,
 } from './dynamicGrid';
 import { resolveBillboardPresetId } from './billboardPresets';
-import { resolveCardGridPresetId } from './cardGridPresets';
+import { resolveCardGridPresetDefinition, resolveCardGridPresetId } from './cardGridPresets';
+import { buildCardGridIntroHtml, hasCardGridIntroHtml } from './cardGridIntro';
 import { resolveColumnsPresetId } from './columnsPresets';
 import {
   normalizeButtonTone,
   normalizePanelTextTone as normalizeSharedPanelTextTone,
   normalizeSemanticTextColorClass,
+  normalizeSemanticTextColorClasses,
   normalizeSurfaceBgTone,
   resolveIntroAccentColor,
 } from './colorSystem';
@@ -37,9 +43,11 @@ import {
 } from './heroTitleSize';
 import { normalizeHeroLineGapEm } from './heroLineStyle';
 import {
+  buildBillboardLeadCopyStyle,
   buildBillboardSubtitleStyle,
   buildBillboardTitleStyle,
   normalizeBillboardSubtitleDisplay,
+  normalizeBillboardLeadCopySizeRem,
   normalizeBillboardSubtitleSizeRem,
   normalizeBillboardTitleFontFamily,
   normalizeBillboardTitleFontWeight,
@@ -52,6 +60,7 @@ import {
 } from './blockPresentationContracts';
 import { resolveSiteFeatureCatalogEntry } from '../data/siteFeatureCatalog';
 import { parseSupportLibraryGroups } from './supportLibrary';
+import { normalizeHeroPaddingRem } from './heroPadding';
 
 export { DEFAULT_RATES_LEGAL_COPY_SETTINGS } from './ratesLegalCopyDefaults';
 
@@ -64,15 +73,7 @@ function sanitizeClassName(value) {
 }
 
 function normalizeHighlightClassName(value) {
-  const sanitized = sanitizeClassName(value);
-  if (!sanitized) {
-    return '';
-  }
-
-  return sanitized
-    .split(/\s+/)
-    .map((token) => normalizeSemanticTextColorClass(token) || token)
-    .join(' ');
+  return normalizeSemanticTextColorClasses(sanitizeClassName(value));
 }
 
 function escapeHtml(value) {
@@ -714,7 +715,7 @@ function parseSiteFeatureIntroJson(value) {
   }
 }
 
-const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline', 'ghost']);
+const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'white', 'outline', 'ghost']);
 const IMPACT_STAT_TONE_SET = new Set(['atlantean', 'mango', 'melon', 'sandstone', 'super-grey', 'white']);
 const DYNAMIC_COLUMNS_STYLE_SET = new Set(['retirement', 'legacy-highlight', 'loans-value']);
 const DYNAMIC_COLUMNS_TYPE_SET = new Set(['text', 'photo', 'flow-step', 'support']);
@@ -1069,6 +1070,7 @@ export function buildDynamicBillboardFromBlock(block) {
   const normalizedBlock = normalizeBlockForRender(block);
   const settings = normalizedBlock?.settings || {};
   const title = String(settings.title || '').trim();
+  const logoKey = String(settings.logoKey || '').trim().toLowerCase();
   const titleClassName = sanitizeClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
   const subtitle = String(settings.subtitle || '').trim();
@@ -1096,11 +1098,26 @@ export function buildDynamicBillboardFromBlock(block) {
   const subtitleSizeRem = subtitleHasExplicitSize
     ? normalizeBillboardSubtitleSizeRem(settings.subtitleSizeRem)
     : null;
+  const leadCopyHasExplicitSize = String(settings.leadCopySizeRem ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.leadCopySizeRem));
+  const leadCopySizeRem = leadCopyHasExplicitSize
+    ? normalizeBillboardLeadCopySizeRem(settings.leadCopySizeRem)
+    : null;
   const subtitleResolvedColor = resolveBillboardSubtitleColor(subtitleClassName);
   const hasContentWidthOverride = String(settings.contentMaxWidthPx ?? '').trim() !== ''
     && Number.isFinite(Number(settings.contentMaxWidthPx));
   const contentMaxWidthPx = hasContentWidthOverride
     ? normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 920)
+    : null;
+  const hasPaddingTopOverride = String(settings.paddingTopRem ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.paddingTopRem));
+  const paddingTopRem = hasPaddingTopOverride
+    ? normalizePageContentSpaceRem(settings.paddingTopRem, 4, 0, 8)
+    : null;
+  const hasPaddingBottomOverride = String(settings.paddingBottomRem ?? '').trim() !== ''
+    && Number.isFinite(Number(settings.paddingBottomRem));
+  const paddingBottomRem = hasPaddingBottomOverride
+    ? normalizePageContentSpaceRem(settings.paddingBottomRem, 4, 0, 8)
     : null;
   const actions = [
     buildCanonicalActionLinkFromFields(settings, {
@@ -1145,6 +1162,7 @@ export function buildDynamicBillboardFromBlock(block) {
 
   return {
     presetId: resolveBillboardPresetId(block),
+    ...(logoKey ? { logoKey } : {}),
     title,
     titleClassName,
     titleHighlights,
@@ -1162,6 +1180,8 @@ export function buildDynamicBillboardFromBlock(block) {
       titleSizeRem,
       titleLetterSpacingEm,
     }),
+    leadCopySizeRem,
+    bodyHtmlStyle: buildBillboardLeadCopyStyle(leadCopySizeRem),
     titleStyle: buildBillboardTitleStyle({
       lineSpacing,
       titleFontFamily,
@@ -1189,6 +1209,8 @@ export function buildDynamicBillboardFromBlock(block) {
       || (scrollReveal === 'scale-up' ? 'fade-up fade-up-force-observe fade-up-repeat-observe billboard-scroll-reveal-scale-up' : ''),
     copyFadeRootMargin: scrollReveal === 'scale-up' ? '0px 0px -20% 0px' : '',
     contentMaxWidthPx,
+    paddingTopRem,
+    paddingBottomRem,
     action: actions[0] || null,
     actions,
     actionsBeforeCards: toBoolean(settings.actionsBeforeCards),
@@ -2367,12 +2389,40 @@ export function buildDynamicRatesFromBlock(block) {
   }
 
   const blockId = String(block.id || '').trim();
-  const isIra = blockId === 'ira_table';
+  const settings = block.settings && typeof block.settings === 'object' ? block.settings : {};
+  const datasetToken = String(settings.dataset || '').trim().toLowerCase();
+  const dataset = ['certificates', 'ira', '403b'].includes(datasetToken)
+    ? datasetToken
+    : (blockId === 'ira_table' ? 'ira' : (blockId === 'rate_table' ? '403b' : 'certificates'));
+  const datasetDefaults = {
+    certificates: {
+      displayName: 'Certificates Rates',
+      panelId: 'rates-certificates',
+      anchorId: 'certificates-rates',
+    },
+    ira: {
+      displayName: 'IRA Rates',
+      panelId: 'rates-ira',
+      anchorId: 'ira-rates',
+    },
+    '403b': {
+      displayName: '403(b) Investment Rate',
+      panelId: 'rates-403b-investment-rate',
+      anchorId: '403b-investment-rate',
+    },
+  }[dataset];
+  const displayName = String(settings.displayName || '').trim() || datasetDefaults.displayName;
+  const panelId = String(settings.panelId || '').trim() || datasetDefaults.panelId;
+  const anchorId = String(settings.anchorId || '').trim() || datasetDefaults.anchorId;
 
   return {
-    tableKey: isIra ? 'ira' : 'certificates',
-    sectionKey: isIra ? 'ira' : 'certificates',
-    label: isIra ? 'IRA table' : 'Certificates table',
+    dataset,
+    tableKey: dataset,
+    sectionKey: dataset,
+    panelId,
+    anchorId,
+    displayName,
+    label: displayName,
     adminHref: '/admin/rates',
   };
 }
@@ -2401,6 +2451,7 @@ export function buildDynamicGridFromBlock(block) {
 
   const settings = block.settings || {};
   const presetId = resolveCardGridPresetId(block);
+  const presetDefinition = resolveCardGridPresetDefinition(block);
   const sectionClassName = sanitizeClassName(settings.sectionClassName || '');
   const presetToken = String(block?.presetId || settings.cardsPreset || '').trim().toLowerCase();
   const cardsPreset = presetToken === 'value-cards' || sectionClassName.split(/\s+/).includes('about-native-values')
@@ -2409,17 +2460,27 @@ export function buildDynamicGridFromBlock(block) {
   const title = String(settings.title || '').trim();
   const titleClassName = normalizeHighlightClassName(settings.titleClassName || '');
   const titleHighlights = parseTextHighlights(settings.titleHighlightsJson);
-  const subtitle = String(settings.subtitle || '').trim();
-  const subtitleClassName = normalizeHighlightClassName(settings.subtitleClassName || '');
-  const subtitleHighlights = parseTextHighlights(settings.subtitleHighlightsJson);
+  const legacySubtitle = String(settings.subtitle || '').trim();
+  const legacySubtitleClassName = normalizeHighlightClassName(settings.subtitleClassName || '');
+  const legacySubtitleHighlights = parseTextHighlights(settings.subtitleHighlightsJson);
   const body = String(settings.body || '').trim();
   const bodyHtmlSource = String(settings.bodyHtml || '').trim();
-  const bodyHtml = (!bodyHtmlSource || bodyHtmlSource === '<p></p>' || bodyHtmlSource === '<p><br></p>')
+  const legacyBodyHtml = (!bodyHtmlSource || bodyHtmlSource === '<p></p>' || bodyHtmlSource === '<p><br></p>')
     ? ''
     : bodyHtmlSource;
+  const hasMergedIntro = hasCardGridIntroHtml(settings);
+  const mergedIntroHtml = buildCardGridIntroHtml(settings);
+  const subtitle = hasMergedIntro ? '' : legacySubtitle;
+  const subtitleClassName = hasMergedIntro ? '' : legacySubtitleClassName;
+  const subtitleHighlights = hasMergedIntro ? [] : legacySubtitleHighlights;
+  const bodyHtml = hasMergedIntro ? mergedIntroHtml : legacyBodyHtml;
   const bgTone = normalizeGridBgTone(settings.bgTone || 'white');
   const contentWidth = normalizeDynamicGridWidth(settings.contentWidth);
-  const columns = normalizeDynamicGridColumns(settings.columns);
+  // The investment-options preset owns its stacked-row layout; ignore stale
+  // persisted column counts because the preset editor does not expose them.
+  const columns = presetId === 'investment-options'
+    ? 'one'
+    : normalizeDynamicGridColumns(settings.columns);
   const parsedCardCount = Number(settings.cardCount);
   const cardCount = Number.isFinite(parsedCardCount) && parsedCardCount >= 1
     ? Math.max(1, Math.min(8, Math.round(parsedCardCount)))
@@ -2439,8 +2500,18 @@ export function buildDynamicGridFromBlock(block) {
       }
     : null;
   const cardStyle = getGridSafeCardStyleForBg(settings.cardStyle, bgTone);
-  const titleTone = getGridSafeToneForBg(settings.titleTone, bgTone, 'super-grey');
+  // Background and card-title color are separate authored controls. Cards
+  // have their own surface, so changing the section background must not
+  // silently replace the admin's title color with white.
+  const titleTone = normalizeGridToneToken(
+    settings.titleTone ?? presetDefinition?.defaults?.titleTone,
+  );
   const bodyTone = getGridSafeToneForBg(settings.bodyTone, bgTone, 'super-grey');
+  // Merged intro HTML has its own text-selection colors. Keep its unmarked
+  // first block independent from the card-body swatch.
+  const subheadTone = normalizeGridToneToken(
+    String(settings.subtitleClassName || '').trim().replace(/^is-/, ''),
+  );
   const cardPaddingRem = normalizeDynamicGridCardPaddingRem(settings.cardPaddingRem);
   const cardTitleSizeRem = normalizeDynamicGridCardTitleSizeRem(settings.cardTitleSizeRem);
   const cardBodySizeRem = normalizeDynamicGridCardBodySizeRem(settings.cardBodySizeRem);
@@ -2463,7 +2534,17 @@ export function buildDynamicGridFromBlock(block) {
     ? normalizePageContentSpaceRem(settings.paddingBottomRem, 3.8, 0, 8)
     : undefined;
   const headerSubheadSpaceRem = hasHeaderSubheadSpace
-    ? normalizePageContentSpaceRem(settings.headerSubheadSpaceRem, 0.45, 0, 4)
+    ? normalizePageContentSpaceRem(settings.headerSubheadSpaceRem, DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM, 0, 4)
+    : DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM;
+  const hasSubheadSize = settings.subheadSizeRem !== null && settings.subheadSizeRem !== ''
+    && Number.isFinite(Number(settings.subheadSizeRem));
+  const subheadSizeRem = hasSubheadSize
+    ? normalizeDynamicGridSubheadSizeRem(settings.subheadSizeRem)
+    : undefined;
+  const hasHeaderSize = settings.headerSizeRem !== null && settings.headerSizeRem !== ''
+    && Number.isFinite(Number(settings.headerSizeRem));
+  const headerSizeRem = hasHeaderSize
+    ? normalizeDynamicGridHeaderSizeRem(settings.headerSizeRem)
     : undefined;
   const resolvedCardClass = cardStyle === 'none' ? 'card-none' : cardStyle;
   const sectionAction = buildCanonicalActionLinkFromFields(settings, {
@@ -2596,6 +2677,7 @@ export function buildDynamicGridFromBlock(block) {
     subtitleHighlights,
     body,
     bodyHtml,
+    hasMergedIntro,
     anchorId: String(settings.anchorId || '').trim(),
     bgTone,
     contentWidth,
@@ -2609,6 +2691,7 @@ export function buildDynamicGridFromBlock(block) {
     cardStyle,
     titleTone,
     bodyTone,
+    subheadTone,
     cardPaddingRem,
     cardTitleSizeRem,
     cardBodySizeRem,
@@ -2619,6 +2702,8 @@ export function buildDynamicGridFromBlock(block) {
     paddingTopRem,
     paddingBottomRem,
     headerSubheadSpaceRem,
+    subheadSizeRem,
+    headerSizeRem,
     actions: sectionAction ? [sectionAction] : [],
     cards,
   };
@@ -2712,6 +2797,8 @@ export function buildDynamicPageContentFromBlock(block) {
   const body = parsePageContentTextLines(settings.body);
   const html = String(settings.html || '').trim();
   const bodyColorClassName = normalizeHighlightClassName(settings.bodyColorClassName || '');
+  const bgTone = normalizeSurfaceBgTone(settings.bgTone, 'white');
+  const textTone = normalizeSharedPanelTextTone(settings.textTone, 'dark');
   const widget = String(settings.widget || '').trim();
   const logoKey = String(settings.logoKey || '').trim().toLowerCase();
   const logoImage = String(settings.logoImage || '').trim();
@@ -2790,6 +2877,8 @@ export function buildDynamicPageContentFromBlock(block) {
     body,
     html: normalizedHtml,
     ...(bodyColorClassName ? { bodyColorClassName } : {}),
+    bgTone,
+    textTone,
     widget,
     ...(logoKey ? { logoKey } : {}),
     logoImage,
@@ -2861,6 +2950,7 @@ export function buildDynamicCardChartFromBlock(block) {
       firstColumnHeader: false,
     },
     fineprint: parsePageContentTextLines(settings.fineprint),
+    fineprintDisclosureId: String(settings.fineprintDisclosureId || '').trim(),
     fineprintJustify: ['left', 'center', 'right'].includes(String(settings.fineprintJustify || '').trim())
       ? String(settings.fineprintJustify).trim()
       : 'center',
@@ -2868,9 +2958,15 @@ export function buildDynamicCardChartFromBlock(block) {
     fullBleed: toBoolean(settings.fullBleed),
     spaceBeforeRem: normalizePageContentSpaceRem(settings.spaceBeforeRem, 0, 0, 8),
     spaceAfterRem: normalizePageContentSpaceRem(settings.spaceAfterRem, 0, 0, 8),
+    headerGapRem: normalizePageContentSpaceRem(settings.headerGapRem, 2.4, 0.5, 6),
     paddingTopRem: normalizePageContentSpaceRem(settings.paddingTopRem, 2.4, 0, 8),
     paddingBottomRem: normalizePageContentSpaceRem(settings.paddingBottomRem, 2.4, 0, 8),
     cellPaddingRem: normalizePageContentSpaceRem(settings.cellPaddingRem, 0.9, 0.55, 1.8),
+    cellTextSizeRem: normalizePageContentSpaceRem(settings.cellTextSizeRem, 1.05, 0.8, 1.5),
+    cellTextWeight: (() => {
+      const value = Number(settings.cellTextWeight);
+      return Number.isFinite(value) ? Math.max(400, Math.min(800, Math.round(value / 10) * 10)) : 650;
+    })(),
     contentMaxWidthPx: normalizePageContentMaxWidthPx(settings.contentMaxWidthPx, 1180),
     anchorId: String(settings.anchorId || '').trim(),
     sectionClassName: sanitizeClassName(settings.sectionClassName || ''),
@@ -2962,6 +3058,8 @@ export function buildDynamicHeroFromBlock(block) {
   const lineHeight = Number.isFinite(Number(settings.lineHeight)) ? Number(settings.lineHeight) : 0.9;
   const heightMode = String(settings.heightMode || 'default').trim() === 'custom' ? 'custom' : 'default';
   const heightSvh = Number.isFinite(Number(settings.heightSvh)) ? Number(settings.heightSvh) : undefined;
+  const paddingTopRem = normalizeHeroPaddingRem(settings.paddingTopRem);
+  const paddingBottomRem = normalizeHeroPaddingRem(settings.paddingBottomRem);
   const lineGap = normalizeHeroLineGapEm(settings.lineGap);
   const actionJustifyToken = String(settings.actionJustify || justify || 'center').trim().toLowerCase();
   const actionJustify = actionJustifyToken === 'left' || actionJustifyToken === 'right' ? actionJustifyToken : 'center';
@@ -2976,6 +3074,8 @@ export function buildDynamicHeroFromBlock(block) {
     lineGap,
     heightMode,
     ...(heightSvh !== undefined ? { heightSvh } : {}),
+    paddingTopRem,
+    paddingBottomRem,
     lineHeight,
     actions,
     actionJustify,

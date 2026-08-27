@@ -11,8 +11,21 @@ import {
   SEMANTIC_TEXT_COLOR_OPTIONS,
   SURFACE_BG_TONE_OPTIONS,
 } from '../lib/colorSystem';
-import { resolveSelectionRangeColor } from '../lib/heroHudRanges';
+import {
+  extractHeroLineColorToken,
+  parseHeroRangeHighlights,
+  resolveHeroLineDisplayClassName,
+  resolveSelectionRangeColor,
+} from '../lib/heroHudRanges';
+import { resolveVisibleHeroLineKeys } from '../lib/heroEditorLines';
 import { normalizeHeroTitleLetterSpacingEm } from '../lib/heroTitleSize';
+import {
+  HERO_PADDING_DEFAULT_REM,
+  HERO_PADDING_MAX_REM,
+  HERO_PADDING_MIN_REM,
+  HERO_PADDING_STEP_REM,
+  normalizeHeroPaddingRem,
+} from '../lib/heroPadding';
 import { EDITOR_DRAFT_FLUSH_EVENT } from '../lib/contentAdminTiming';
 import { useOptionalContentAdmin } from '../context/ContentAdminContextCore';
 import {
@@ -308,8 +321,42 @@ export function renderHeroRangesAsNodes(source, ranges) {
   return pieces;
 }
 
+export function buildHeroInlineLinesFromBlock(
+  editableHeroBlock,
+  { lineKeys = ['line1', 'line2', 'line3'], includeOptionalLine3 = false } = {},
+) {
+  const settings = editableHeroBlock?.settings && typeof editableHeroBlock.settings === 'object'
+    ? editableHeroBlock.settings
+    : null;
+  if (!settings) {
+    return [];
+  }
+
+  return resolveVisibleHeroLineKeys({ settings, lineKeys, includeOptionalLine3 })
+    .map((lineKey, index) => {
+      const text = String(settings[`${lineKey}Text`] || '');
+      const className = String(settings[`${lineKey}ClassName`] || '').trim() || `line${index + 1}`;
+      return {
+        key: lineKey,
+        label: `Line ${index + 1}`,
+        placeholder: `Line ${index + 1} text`,
+        text,
+        className,
+        lineColor: extractHeroLineColorToken(className),
+        displayClassName: resolveHeroLineDisplayClassName(className, settings.bgTone, lineKey),
+        highlights: parseHeroRangeHighlights(
+          settings[`${lineKey}HighlightsJson`],
+          text,
+        ),
+      };
+    });
+}
+
 export function HeroInlineLiveEditor({
   lines,
+  editableHeroBlock = null,
+  lineKeys,
+  includeOptionalLine3 = false,
   activeLineKey = '',
   fontSize,
   lineHeight,
@@ -319,17 +366,21 @@ export function HeroInlineLiveEditor({
   showPlaceholders = false,
   onLineTextChange,
   onLineDraftChange,
+  onLineTextBlur,
   onLineInteract,
   setLineInputRef,
   renderLineContent,
   resolveLineClassName,
   resolveLineTagName,
+  interactionOnly = false,
   commitOnBlurOnly = false,
   readOnly = false,
 }) {
   const normalizedLetterSpacing = normalizeHeroTitleLetterSpacingEm(letterSpacing);
   const normalizedLineGap = Math.max(-0.18, Math.min(0.4, Number(Number(lineGap || 0).toFixed(2)) || 0));
-  const safeLines = Array.isArray(lines) ? lines : [];
+  const safeLines = editableHeroBlock
+    ? buildHeroInlineLinesFromBlock(editableHeroBlock, { lineKeys, includeOptionalLine3 })
+    : (Array.isArray(lines) ? lines : []);
   const {
     draftTexts,
     updateLineDraft,
@@ -386,6 +437,9 @@ export function HeroInlineLiveEditor({
 
   const notifyLineInteract = (lineKey, options = {}) => {
     const meta = buildSelectionMeta(options.target);
+    if (options.clearCollapsed) {
+      meta.clearCollapsed = true;
+    }
     if (options.defer) {
       window.requestAnimationFrame(() => {
         onLineInteract?.(lineKey, meta);
@@ -405,25 +459,28 @@ export function HeroInlineLiveEditor({
   };
 
   return (
-    <div className="admin-front-hud-hero-live-editor">
+    <div className={`admin-front-hud-hero-live-editor${interactionOnly ? ' is-interaction-layer' : ''}`}>
       {visibleLines.map((line, index) => (
         <div
           key={`hero-inline-${line.key || index + 1}`}
           className={`admin-front-hud-hero-live-line${index > 0 ? ' is-offset' : ''}`}
           style={{ marginTop: index > 0 && normalizedLineGap !== 0 ? `${normalizedLineGap}em` : undefined }}
         >
-          {(() => {
+          {!interactionOnly ? (() => {
             const LineTag = typeof resolveLineTagName === 'function'
               ? (resolveLineTagName(line, index) || 'h1')
               : 'h1';
             const resolvedFontSize = typeof line?.fontSize === 'string' && line.fontSize.trim()
               ? line.fontSize.trim()
               : fontSize;
+            const resolvedDisplayClassName = String(
+              line.displayClassName || line.lineColor || line.className || '',
+            ).trim();
             return (
               <LineTag
                 className={typeof resolveLineClassName === 'function'
                   ? resolveLineClassName(line, index)
-                  : (String(line.className || `line${index + 1}`).trim() || undefined)}
+                  : (resolvedDisplayClassName || `line${index + 1}`)}
                 style={{ lineHeight, fontSize: resolvedFontSize, letterSpacing: `${normalizedLetterSpacing}em` }}
               >
                 {String(line.text || '').length
@@ -437,13 +494,14 @@ export function HeroInlineLiveEditor({
                   )}
               </LineTag>
             );
-          })()}
+          })() : null}
           <textarea
             ref={(node) => {
               if (typeof setLineInputRef === 'function') {
                 setLineInputRef(line.key, node);
               }
             }}
+            data-hero-line-key={line.key || undefined}
             rows={1}
             className="admin-front-hud-hero-live-input"
             value={String(line.text || '')}
@@ -457,8 +515,12 @@ export function HeroInlineLiveEditor({
             readOnly={readOnly}
             aria-readonly={readOnly}
             onFocus={(event) => notifyLineInteract(line.key, { target: event.currentTarget })}
-            onSelect={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
+            onSelect={(event) => notifyLineInteract(line.key, { target: event.currentTarget })}
             onMouseUp={(event) => notifyLineInteract(line.key, { defer: true, target: event.currentTarget })}
+            onClick={(event) => notifyLineInteract(line.key, {
+              target: event.currentTarget,
+              clearCollapsed: true,
+            })}
             onKeyUp={(event) => {
               if (!shouldSyncInteractionOnKeyUp(event)) {
                 return;
@@ -466,7 +528,10 @@ export function HeroInlineLiveEditor({
               notifyLineInteract(line.key, { defer: true, target: event.currentTarget });
             }}
             onChange={readOnly ? undefined : (event) => updateLineDraft(line.key, event.target.value)}
-            onBlur={readOnly ? undefined : () => commitLineDraftOnBlur(line.key)}
+            onBlur={readOnly ? undefined : () => {
+              commitLineDraftOnBlur(line.key);
+              onLineTextBlur?.(line.key);
+            }}
             spellCheck="false"
             aria-label={line.label || `Line ${index + 1}`}
           />
@@ -478,6 +543,9 @@ export function HeroInlineLiveEditor({
 
 export function HeroHudEditorPanel({
   lines,
+  editableHeroBlock = null,
+  lineKeys,
+  includeOptionalLine3 = false,
   activeLineKey,
   selection,
   driftReport,
@@ -486,6 +554,9 @@ export function HeroHudEditorPanel({
   titleSizeRem,
   titleLetterSpacingEm,
   lineHeight,
+  lineGap = 0,
+  paddingTopRem = HERO_PADDING_DEFAULT_REM,
+  paddingBottomRem = HERO_PADDING_DEFAULT_REM,
   lineColorOptions = SEMANTIC_TEXT_COLOR_OPTIONS,
   bgToneOptions = HERO_BG_TONE_OPTIONS,
   onLineTextChange,
@@ -500,36 +571,99 @@ export function HeroHudEditorPanel({
   onTitleSizeChange,
   onTitleLetterSpacingChange,
   onLineHeightChange,
+  onPaddingTopRemChange,
+  onPaddingBottomRemChange,
   canAddOptionalLine = false,
   onAddOptionalLine,
   canRemoveOptionalLine = false,
   onRemoveOptionalLine,
-  extraControlsLabel = 'Actions',
   blockOptions = null,
   children,
 }) {
-  const safeLines = Array.isArray(lines) ? lines : [];
+  const safeLines = editableHeroBlock
+    ? buildHeroInlineLinesFromBlock(editableHeroBlock, { lineKeys, includeOptionalLine3 })
+    : (Array.isArray(lines) ? lines : []);
   const lineInputRefs = useRef({});
   const [editorSelection, setEditorSelection] = useState({ line: '', start: 0, end: 0, text: '' });
   const editorSelectionRef = useRef({ line: '', start: 0, end: 0, text: '' });
   const paletteSelectionRef = useRef(null);
-  const [spanDetailsOpen, setSpanDetailsOpen] = useState(false);
-  const [spanDetailsLineKey, setSpanDetailsLineKey] = useState(activeLineKey || safeLines[0]?.key || '');
-  const resolvedSelection = selection?.line && selection?.text
-    ? selection
-    : editorSelection;
+  const selectionTransactionRef = useRef(null);
+  const [selectionInvalidated, setSelectionInvalidated] = useState(false);
   const hasExtraControls = Boolean(children);
-  useEffect(() => {
-    if (activeLineKey && safeLines.some((line) => line.key === activeLineKey) && activeLineKey !== spanDetailsLineKey) {
-      setSpanDetailsLineKey(activeLineKey);
-    }
-  }, [activeLineKey, safeLines, spanDetailsLineKey]);
   const [activeEditorSection, setActiveEditorSection] = useState('content');
   const editorSections = appendHudBlockOptionsSection([
     { id: 'content', label: 'Content', icon: 'Aa' },
     ...(hasExtraControls ? [{ id: 'actions', label: 'Actions', icon: '↗' }] : []),
-  ], blockOptions);
-  const syncEditorSelection = (lineKey) => {
+    ], blockOptions);
+  const hasSelectionRange = (candidate, lineKey = candidate?.line) => (
+    candidate?.line === lineKey
+    && Number.isInteger(candidate?.start)
+    && Number.isInteger(candidate?.end)
+    && candidate.end > candidate.start
+    && Boolean(candidate.text)
+  );
+  const clearSelectionState = (lineKey = '') => {
+    const currentLineKey = String(lineKey || editorSelectionRef.current?.line || activeLineKey || '').trim();
+    const nextSelection = { line: currentLineKey, start: 0, end: 0, text: '' };
+    selectionTransactionRef.current = null;
+    paletteSelectionRef.current = null;
+    editorSelectionRef.current = nextSelection;
+    setSelectionInvalidated(true);
+    setEditorSelection(nextSelection);
+  };
+  const recordSelection = (nextSelection) => {
+    if (!hasSelectionRange(nextSelection)) {
+      editorSelectionRef.current = nextSelection;
+      setEditorSelection(nextSelection);
+      return;
+    }
+    const normalized = { ...nextSelection };
+    selectionTransactionRef.current = normalized;
+    editorSelectionRef.current = normalized;
+    setSelectionInvalidated(false);
+    setEditorSelection(normalized);
+  };
+  const resolvedSelection = selectionInvalidated
+    ? null
+    : (hasSelectionRange(editorSelection, activeLineKey)
+      ? editorSelection
+      : (hasSelectionRange(selection, activeLineKey) ? selection : null));
+  useEffect(() => {
+    if (hasSelectionRange(selection)) {
+      const normalized = { ...selection };
+      selectionTransactionRef.current = normalized;
+      editorSelectionRef.current = normalized;
+      setSelectionInvalidated(false);
+      setEditorSelection(normalized);
+      return;
+    }
+    if (selection?.line) {
+      clearSelectionState(selection.line);
+    }
+  }, [selection?.line, selection?.start, selection?.end, selection?.text]);
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      const target = event?.target;
+      if (!target || typeof target.closest !== 'function') {
+        return;
+      }
+      if (target.closest('button[aria-label*="apply to selection"]')) {
+        return;
+      }
+      const lineInput = target.closest('textarea[data-hero-line-key]');
+      if (lineInput) {
+        const lineKey = String(lineInput.getAttribute('data-hero-line-key') || '').trim();
+        if (selectionTransactionRef.current?.line && selectionTransactionRef.current.line !== lineKey) {
+          clearSelectionState(lineKey);
+        }
+        return;
+      }
+      clearSelectionState();
+    };
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    return () => document.removeEventListener('pointerdown', handlePointerDown, true);
+  }, [activeLineKey]);
+  const syncEditorSelection = (lineKey, { clearCollapsed = false } = {}) => {
     const input = lineInputRefs.current[lineKey];
     if (!input) {
       return;
@@ -545,8 +679,16 @@ export function HeroHudEditorPanel({
       end: Math.max(start, end),
       text: String(input.value || '').slice(Math.min(start, end), Math.max(start, end)),
     };
-    editorSelectionRef.current = nextSelection;
-    setEditorSelection(nextSelection);
+    if (nextSelection.end <= nextSelection.start) {
+      if (!clearCollapsed && hasSelectionRange(selectionTransactionRef.current, lineKey)) {
+        editorSelectionRef.current = selectionTransactionRef.current;
+        setEditorSelection(selectionTransactionRef.current);
+        return;
+      }
+      clearSelectionState(lineKey);
+      return;
+    }
+    recordSelection(nextSelection);
   };
   const readLiveEditorSelection = (lineKey) => {
     const input = lineInputRefs.current[lineKey];
@@ -566,33 +708,23 @@ export function HeroHudEditorPanel({
       end: normalizedEnd,
       text: String(input.value || '').slice(normalizedStart, normalizedEnd),
     };
-    editorSelectionRef.current = nextSelection;
+    if (nextSelection.end > nextSelection.start) {
+      recordSelection(nextSelection);
+    }
     return nextSelection;
   };
-  const hasSelectionRange = (candidate, lineKey) => (
-    candidate?.line === lineKey
-    && Number.isInteger(candidate?.start)
-    && Number.isInteger(candidate?.end)
-    && candidate.end > candidate.start
-    && Boolean(candidate.text)
-  );
   const resolvePaletteSelection = (lineKey) => {
-    const rememberedSelection = editorSelectionRef.current;
     const liveSelection = readLiveEditorSelection(lineKey);
     if (hasSelectionRange(liveSelection, lineKey)) {
       return liveSelection;
     }
-    if (hasSelectionRange(rememberedSelection, lineKey)) {
-      editorSelectionRef.current = rememberedSelection;
-      return rememberedSelection;
-    }
-    return liveSelection;
+    return hasSelectionRange(selectionTransactionRef.current, lineKey)
+      ? selectionTransactionRef.current
+      : (hasSelectionRange(selection, lineKey) ? selection : liveSelection);
   };
   const renderLineColorControls = (line) => {
     const lineKey = String(line?.key || '').trim();
     const lineHighlights = Array.isArray(line?.highlights) ? line.highlights : [];
-    const focusedLineKey = activeLineKey || safeLines[0]?.key || '';
-    const isFocusedLine = lineKey === focusedLineKey;
     const lineSelection = resolvedSelection?.line === lineKey ? resolvedSelection : null;
     const selectedText = String(lineSelection?.text || '');
     const hasLineSelection = Number.isInteger(lineSelection?.start)
@@ -618,81 +750,49 @@ export function HeroHudEditorPanel({
           getOptionLabel={(option) => (
             `${option?.label || 'Color'} (${hasLineSelection ? 'apply to selection' : `apply to ${line.label || lineKey}`})`
           )}
-          onPaletteMouseDown={() => {
-            // Some browsers collapse a text input's selection as focus moves
-            // to the palette. Keep the last non-empty range instead of
-            // replacing it with that transient collapsed range.
-            const nextSelection = resolvePaletteSelection(lineKey);
+          onPaletteMouseDown={(option, optionIndex, event) => {
+            const paletteLabel = String(event?.currentTarget?.getAttribute?.('aria-label') || '');
+            const nextSelection = paletteLabel.includes('apply to selection')
+              ? resolvePaletteSelection(lineKey)
+              : null;
             paletteSelectionRef.current = nextSelection;
-            if (hasSelectionRange(nextSelection, lineKey)) {
-              editorSelectionRef.current = nextSelection;
-              setEditorSelection(nextSelection);
-            }
           }}
-          collapsibleSpans={isFocusedLine}
-          spanDetailsOpen={spanDetailsOpen && spanDetailsLineKey === lineKey}
-          onSpanDetailsToggle={(nextValue) => {
-            setSpanDetailsLineKey(lineKey);
-            setSpanDetailsOpen(nextValue);
-          }}
-          spanDetailsLabel={`${line.label || lineKey} spans`}
+          spanDetailsLabel=""
           onChange={(nextValue) => {
             onActivateLine?.(lineKey);
             const paletteSelection = paletteSelectionRef.current;
-            const liveSelection = hasSelectionRange(paletteSelection, lineKey)
-              ? paletteSelection
-              : resolvePaletteSelection(lineKey);
+            const liveSelection = hasLineSelection
+              ? (hasSelectionRange(paletteSelection, lineKey)
+                ? paletteSelection
+                : resolvePaletteSelection(lineKey))
+              : null;
             paletteSelectionRef.current = null;
             const canApplyLiveSelection = liveSelection?.line === lineKey
               && Number.isInteger(liveSelection?.start)
               && Number.isInteger(liveSelection?.end)
               && liveSelection.end > liveSelection.start
               && liveSelection.text;
+            const liveInput = lineInputRefs.current[lineKey];
+            const liveText = liveInput ? String(liveInput.value || '') : String(line.text || '');
             if (canApplyLiveSelection) {
-              onApplySelectionColor?.(lineKey, nextValue, liveSelection);
+              onApplySelectionColor?.(lineKey, nextValue, {
+                ...liveSelection,
+                sourceText: liveText,
+              });
+              clearSelectionState(lineKey);
               return;
             }
+            if (liveText !== String(line.text || '')) {
+              onLineTextChange?.(lineKey, liveText);
+            }
             onApplyLineColor?.(lineKey, nextValue);
+            clearSelectionState(lineKey);
           }}
           sourceText={line.text}
           highlightRanges={lineHighlights}
           onRemoveSpan={(rangeIndex) => onRemoveSpan?.(lineKey, rangeIndex)}
           onClearSpans={() => onClearLineSpans?.(lineKey)}
         />
-        {isFocusedLine && spanDetailsOpen && spanDetailsLineKey === lineKey ? (
-          <div className="admin-hero-hud-span-line-nav" aria-label="Hero span lines">
-            {safeLines.filter((candidate) => Array.isArray(candidate.highlights) && candidate.highlights.length > 0).map((candidate) => (
-              <span key={`hero-span-line-nav-${candidate.key}`} className="admin-hero-hud-span-line-nav-item">
-                {candidate.key !== lineKey ? (
-                  <button
-                    type="button"
-                    className="admin-front-hud-mini-action"
-                    aria-label={`Go to ${candidate.label || candidate.key} spans (${candidate.highlights.length})`}
-                    onClick={() => {
-                      onActivateLine?.(candidate.key);
-                      setSpanDetailsLineKey(candidate.key);
-                      setSpanDetailsOpen(true);
-                    }}
-                  >
-                    Go to
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="admin-front-hud-segment-btn"
-                  aria-pressed={spanDetailsLineKey === candidate.key}
-                  onClick={() => {
-                    onActivateLine?.(candidate.key);
-                    setSpanDetailsLineKey(candidate.key);
-                    setSpanDetailsOpen(true);
-                  }}
-                >
-                  {`${candidate.label || candidate.key} (${candidate.highlights.length} spans)`}
-                </button>
-              </span>
-            ))}
-          </div>
-        ) : null}
       </>
     );
   };
@@ -703,57 +803,71 @@ export function HeroHudEditorPanel({
         className="admin-hero-hud-editor"
         sections={editorSections}
         activeSection={activeEditorSection}
-        onSectionChange={setActiveEditorSection}
+        onSectionChange={(nextSection) => {
+          clearSelectionState();
+          setActiveEditorSection(nextSection);
+        }}
         label="Hero editor sections"
       >
         <div className="admin-hero-hud-content-grid">
           <div
-            className="admin-front-hud-card admin-hero-hud-card admin-hero-hud-card--controls"
+            className={`admin-front-hud-card admin-hero-hud-card admin-hero-hud-card--controls is-bg-${String(bgTone || 'white').trim() || 'white'}`}
             aria-label="Hero editor preview surface"
           >
-            <div className="admin-front-hud-card-head">
-              <h4>Heading</h4>
-            </div>
             <div className="admin-front-hud-hero-top-controls">
               <div className="admin-hero-hud-line-inputs">
                 {safeLines.map((line) => (
                   <div key={`hero-line-row-${line.key}`} className="admin-hero-hud-line-row">
-                    <label className="admin-front-hud-field">
-                      <span>{line.label || line.key}</span>
-                      <input
-                        ref={(node) => {
-                          lineInputRefs.current[line.key] = node;
-                        }}
-                        type="text"
-                        value={String(line.text || '')}
+                    <div className="admin-hero-hud-line-preview" aria-label={`${line.label || line.key} preview`}>
+                      <span className="admin-front-hud-line-label">{line.label || line.key}</span>
+                      <HeroInlineLiveEditor
+                        lines={[{ ...line, label: `${line.label || line.key} text` }]}
+                        activeLineKey={line.key}
+                        lineHeight={lineHeight}
+                        lineGap={lineGap}
+                        letterSpacing={titleLetterSpacingEm}
                         placeholder={line.placeholder || `${line.label || line.key} text`}
-                        aria-label={`${line.label || line.key} text`}
-                        onFocus={() => {
-                          onActivateLine?.(line.key);
-                          syncEditorSelection(line.key);
+                        showPlaceholders
+                        onLineDraftChange={(lineKey) => clearSelectionState(lineKey)}
+                        onLineTextChange={(lineKey, nextValue) => {
+                          clearSelectionState(lineKey);
+                          onLineTextChange?.(lineKey, nextValue);
                         }}
-                        onClick={() => syncEditorSelection(line.key)}
-                        onSelect={() => syncEditorSelection(line.key)}
-                        onMouseUp={() => syncEditorSelection(line.key)}
-                        onKeyUp={() => syncEditorSelection(line.key)}
-                        onChange={(event) => {
-                          onActivateLine?.(line.key);
-                          onLineTextChange?.(line.key, event.target.value);
-                          syncEditorSelection(line.key);
+                        onLineTextBlur={(lineKey) => onLineTextBlur?.(lineKey)}
+                        onLineInteract={(lineKey, interactionMeta) => {
+                          if (editorSelectionRef.current?.line && editorSelectionRef.current.line !== lineKey) {
+                            clearSelectionState(lineKey);
+                          }
+                          onActivateLine?.(lineKey);
+                          const selectionStart = Number(interactionMeta?.selectionStart);
+                          const selectionEnd = Number(interactionMeta?.selectionEnd);
+                          const value = String(interactionMeta?.value || '');
+                          const hasInteractionSelection = Number.isInteger(selectionStart) && Number.isInteger(selectionEnd);
+                          if (hasInteractionSelection && selectionEnd > selectionStart) {
+                            const nextSelection = {
+                              line: lineKey,
+                              start: Math.min(selectionStart, selectionEnd),
+                              end: Math.max(selectionStart, selectionEnd),
+                              text: value.slice(Math.min(selectionStart, selectionEnd), Math.max(selectionStart, selectionEnd)),
+                            };
+                            recordSelection(nextSelection);
+                          }
+                          if (!hasInteractionSelection || selectionEnd <= selectionStart) {
+                            syncEditorSelection(lineKey, {
+                              clearCollapsed: Boolean(interactionMeta?.clearCollapsed),
+                            });
+                          }
                         }}
-                        onBlur={() => onLineTextBlur?.(line.key)}
-                        autoComplete="off"
-                        spellCheck="false"
+                        setLineInputRef={(lineKey, node) => {
+                          lineInputRefs.current[lineKey] = node;
+                        }}
+                        renderLineContent={(previewLine) => renderHeroRangesAsNodes(previewLine.text, previewLine.highlights)}
+                        resolveLineTagName={() => 'h2'}
+                        resolveLineClassName={(previewLine) => (
+                          `admin-hero-hud-live-heading ${previewLine.displayClassName || previewLine.lineColor || previewLine.className || ''}`.trim()
+                        )}
                       />
-                      <span
-                        className={`admin-hero-inline-line-mirror ${line.displayClassName || ''}`.trim()}
-                        aria-hidden="true"
-                      >
-                        {line.text
-                          ? renderHeroRangesAsNodes(line.text, line.highlights)
-                          : (line.placeholder || '')}
-                      </span>
-                    </label>
+                    </div>
                     <div className="admin-hero-hud-line-color">
                       <div className="admin-hero-hud-line-color-controls">
                         {renderLineColorControls(line)}
@@ -800,9 +914,6 @@ export function HeroHudEditorPanel({
             </div>
           </div>
           <div className="admin-front-hud-card admin-hero-hud-card admin-hero-hud-card--type">
-            <div className="admin-front-hud-card-head">
-              <h4>Appearance</h4>
-            </div>
             <div className="admin-front-hud-row">
               <span>Background</span>
               <ColorPalette
@@ -844,13 +955,30 @@ export function HeroHudEditorPanel({
               displayValue={`${normalizeHeroTitleLetterSpacingEm(titleLetterSpacingEm).toFixed(3)}em`}
               onChange={onTitleLetterSpacingChange}
             />
+            <BillboardSlider
+              label="Top Padding"
+              ariaLabel="Hero top padding"
+              value={normalizeHeroPaddingRem(paddingTopRem)}
+              min={HERO_PADDING_MIN_REM}
+              max={HERO_PADDING_MAX_REM}
+              step={HERO_PADDING_STEP_REM}
+              displayValue={`${normalizeHeroPaddingRem(paddingTopRem).toFixed(2)}rem`}
+              onChange={onPaddingTopRemChange}
+            />
+            <BillboardSlider
+              label="Bottom Padding"
+              ariaLabel="Hero bottom padding"
+              value={normalizeHeroPaddingRem(paddingBottomRem)}
+              min={HERO_PADDING_MIN_REM}
+              max={HERO_PADDING_MAX_REM}
+              step={HERO_PADDING_STEP_REM}
+              displayValue={`${normalizeHeroPaddingRem(paddingBottomRem).toFixed(2)}rem`}
+              onChange={onPaddingBottomRemChange}
+            />
           </div>
         </div>
         {hasExtraControls ? (
           <div className="admin-front-hud-card admin-hero-hud-card admin-hero-hud-card--actions">
-            <div className="admin-front-hud-card-head">
-              <h4>{extraControlsLabel}</h4>
-            </div>
             <div className="admin-hero-hud-button-fields">
               {children}
             </div>

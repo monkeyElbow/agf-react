@@ -11,19 +11,15 @@ function readSource(relativePath) {
 }
 
 describe('insurance risk guide mobile layout guardrail', () => {
-  it('keeps the insurance risk feature stacked and cover-sized on mobile', () => {
+  it('uses the shared do-the-math columns mobile contract', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('@media (max-width: 980px) {');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-inner {');
-    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-copy {');
-    expect(cssSource).toContain('width: 100%;');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature-media {');
-    expect(cssSource).toContain('width: min(240px, 100%);');
-    expect(cssSource).toContain('aspect-ratio: 4 / 3;');
-    expect(cssSource).toContain('min-height: 0;');
-    expect(cssSource).toContain('margin: clamp(0.75rem, 3vw, 1.25rem) auto 0;');
-    expect(cssSource).toContain('justify-self: center;');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math .native-columns-grid {');
+    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr) clamp(22.5rem, 34vw, 26rem);');
+    expect(cssSource).toContain('@media (max-width: 760px) {');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math .native-columns-grid {\n    grid-template-columns: minmax(0, 1fr);');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-do-the-math .native-columns-item:not(.is-photo) .native-columns-copy {');
+    expect(cssSource).toContain('padding-bottom: clamp(1.6rem, 7vw, 2.7rem);');
+    expect(cssSource).not.toContain('.native-info-page--insurance .insurance-native-risk .service-native-dark-feature');
   });
 });

@@ -54,6 +54,10 @@ import {
   isRetiredNonDynamicContentAdminBlock,
   normalizeContentAdminBlock,
   normalizeContentAdminState,
+  normalizeLegacyIraContributionLimitsChart,
+  normalizeLegacy403bContributionLimitsChart,
+  normalizeRetirementIraRatesBlock,
+  normalizeRetirement403bRatesBlock,
 } from '../lib/contentAdminNormalization';
 import { normalizeContentAdminAuthorityState } from '../lib/contentAdminStateBoundary';
 import {
@@ -174,6 +178,8 @@ function describeAuthorityFailure(error, fallbackError) {
     details: error?.payload?.details || error?.message || fallbackError,
     statusCode: Number(error?.status) || null,
     endpoint: error?.endpoint || '',
+    owner: error?.payload?.owner || null,
+    state: error?.payload?.state || '',
   };
 }
 
@@ -1854,7 +1860,11 @@ export function normalizeStoredConfig(payload) {
 
     const defaultForPath = Array.isArray(defaultBlocks[path]) ? defaultBlocks[path] : [];
     const defaultById = new Map(defaultForPath.map((block) => [block.id, block]));
-    const normalizedStoredBlocks = dedupeBlocksByIdPreferLatest(storedBlocks);
+    const normalizedStoredBlocks = dedupeBlocksByIdPreferLatest(storedBlocks)
+      .map((block) => normalizeLegacyIraContributionLimitsChart(path, block))
+      .map((block) => normalizeLegacy403bContributionLimitsChart(path, block))
+      .map((block) => normalizeRetirementIraRatesBlock(path, block))
+      .map((block) => normalizeRetirement403bRatesBlock(path, block));
     const canonicalFormOwner = inferCanonicalFormOwner(defaultForPath);
     let retiredBlockOnlyShellBlock = false;
     const seenIds = new Set();
@@ -3318,8 +3328,10 @@ export function ContentAdminProvider({ children, initialState = null }) {
           lastError: {
             operation: operationLabel,
             status: Number(error?.status) || null,
-            message: error?.payload?.error || error?.message || 'The shared content request failed.',
+            message: error?.payload?.details || error?.payload?.error || error?.message || 'The shared content request failed.',
             endpoint: error?.endpoint || '',
+            owner: error?.payload?.owner || null,
+            state: error?.payload?.state || '',
             updatedAt: Date.now(),
           },
         });
@@ -3833,6 +3845,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         && currentActor
         && getBlockCollaboration(pathname, blockId).lockedBy?.userId !== currentActor.userId
       );
+      let didMove = false;
       saveState((prevState) => {
         const prevBlocksByPath = prevState.blocksByPath || {};
         const pageBlocks = prevBlocksByPath[pathname] || [];
@@ -3846,6 +3859,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         if (toIndex < 0 || toIndex >= pageBlocks.length) {
           return prevState;
         }
+        didMove = true;
         const nextBlocks = [...pageBlocks];
         const [moved] = nextBlocks.splice(fromIndex, 1);
         nextBlocks.splice(toIndex, 0, moved);
@@ -3876,6 +3890,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
           { mergeCollaborationOnlyWhenDirty: true, scopedPath: pathname },
         );
       }
+      if (didMove && sharedAuthorityEnabled && currentActor) {
+        void queueSharedRouteDraftSave('Move block in page draft', pathname);
+      }
     };
 
     const moveBlockToIndex = (pathname, blockId, toIndexRaw) => {
@@ -3884,6 +3901,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         && currentActor
         && getBlockCollaboration(pathname, blockId).lockedBy?.userId !== currentActor.userId
       );
+      let didMove = false;
       saveState((prevState) => {
         const prevBlocksByPath = prevState.blocksByPath || {};
         const pageBlocks = prevBlocksByPath[pathname] || [];
@@ -3900,6 +3918,7 @@ export function ContentAdminProvider({ children, initialState = null }) {
         if (toIndex === fromIndex) {
           return prevState;
         }
+        didMove = true;
         const nextBlocks = [...pageBlocks];
         const [moved] = nextBlocks.splice(fromIndex, 1);
         nextBlocks.splice(toIndex, 0, moved);
@@ -3929,6 +3948,9 @@ export function ContentAdminProvider({ children, initialState = null }) {
           () => acquireSharedBlockLock(pathname, blockId, currentActor),
           { mergeCollaborationOnlyWhenDirty: true, scopedPath: pathname },
         );
+      }
+      if (didMove && sharedAuthorityEnabled && currentActor) {
+        void queueSharedRouteDraftSave('Move block in page draft', pathname);
       }
     };
 
@@ -5044,6 +5066,19 @@ export function ContentAdminProvider({ children, initialState = null }) {
         stateRef.current,
         bufferedBlockSettingEditsRef.current,
       );
+      const currentComparableAuthoringState = toComparableAuthoringState(currentAuthoringState);
+      const publishPageSummary = summarizeComparableAuthoringPageChanges(
+        currentComparableAuthoringState,
+        publishedSharedAuthoringStateRef.current,
+        normalizedPath,
+      );
+      // Block content and page order have different ownership boundaries. If
+      // the selected block is part of an order change, publish the route so
+      // the order can go live without attempting to overwrite another
+      // admin's content draft through the block endpoint.
+      if (publishPageSummary.hasOrderChanges) {
+        return publishSharedPageNow(normalizedPath, summary);
+      }
       let expectedBlock = currentAuthoringState.blocksByPath?.[normalizedPath]
         ?.find((block) => String(block?.id || '').trim() === normalizedBlockId) || null;
       let expectedDraftRevision = '';

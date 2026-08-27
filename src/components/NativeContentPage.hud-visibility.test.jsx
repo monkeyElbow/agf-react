@@ -16,6 +16,7 @@ const mockRemoveBlock = vi.fn();
 const mockSetActiveBlockLock = vi.fn(() => ({ ok: true }));
 const mockGetBlockCollaboration = vi.fn(() => ({}));
 let mockBlocksByPath = {};
+let mockPublishedBlocksByPath = null;
 let mockPageHierarchy = {};
 let mockResolveDocumentLink = () => '';
 let mockMobileFrontHud = false;
@@ -76,6 +77,7 @@ vi.mock('../context/ContentAdminContextCore', async () => {
     ...actual,
     useContentAdmin: () => ({
       blocksByPath: mockBlocksByPath,
+      publishedBlocksByPath: mockPublishedBlocksByPath,
       pageHierarchy: mockPageHierarchy,
       resolveManagedPathFromRef: (pathRef, fallback = '') => pathRef || fallback,
       updateBlockSetting: vi.fn(),
@@ -114,6 +116,7 @@ vi.mock('../context/ContentAdminContextCore', async () => {
 describe('NativeContentPage HUD visibility boundaries', () => {
   beforeEach(() => {
     mockFrontHudEnabled = false;
+    mockPublishedBlocksByPath = null;
     mockMobileFrontHud = false;
     mockSaveSharedDraftNow.mockReset();
     mockSetFrontHudEnabled.mockReset();
@@ -234,6 +237,71 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.queryByLabelText('Open in admin content editor (new window)')).toBeNull();
   });
 
+  it('keeps an unsaved HUD hero draft out of the public render when HUD closes', async () => {
+    const publishedBlocks = structuredClone(mockBlocksByPath['/services/insurance/ministers-group-life-plan']);
+    publishedBlocks[0].settings.line1Text = 'Published hero line';
+    const authoringBlocks = structuredClone(mockBlocksByPath['/services/insurance/ministers-group-life-plan']);
+    authoringBlocks[0].settings.line1Text = 'Draft hero line';
+    mockPublishedBlocksByPath = {
+      '/services/insurance/ministers-group-life-plan': publishedBlocks,
+    };
+    mockBlocksByPath = {
+      ...mockBlocksByPath,
+      '/services/insurance/ministers-group-life-plan': authoringBlocks,
+    };
+
+    const rendered = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/ministers-group-life-plan',
+            title: 'Ministers Group Life Plan',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Published hero line' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Draft hero line' })).toBeNull();
+
+    mockFrontHudEnabled = true;
+    rendered.rerender(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/ministers-group-life-plan',
+            title: 'Ministers Group Life Plan',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Draft hero line' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Published hero line' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Hero HUD panel' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Toggle view live' }));
+    expect(Array.from(document.querySelectorAll('.service-native-hero h1')).map((node) => node.textContent)).toContain('Published hero line');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle view draft' }));
+    expect(Array.from(document.querySelectorAll('.service-native-hero h1')).map((node) => node.textContent)).toContain('Draft hero line');
+
+    mockFrontHudEnabled = false;
+    rendered.rerender(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/insurance/ministers-group-life-plan',
+            title: 'Ministers Group Life Plan',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Published hero line' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Draft hero line' })).toBeNull();
+  });
+
   it('keeps a hidden CGA page-content block out of the HUD-off render', () => {
     mockBlocksByPath = {
       '/services/planned-giving/charitable-gift-annuities': [
@@ -311,6 +379,98 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     expect(screen.getByRole('button', { name: 'Open Hero HUD panel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Page Content HUD panel' })).toBeTruthy();
     expect(screen.queryByLabelText('Hero mobile HUD actions')).toBeNull();
+  });
+
+  it('carries a test-page Hero preview selection into the HUD color assignment', async () => {
+    mockFrontHudEnabled = true;
+    const testHero = structuredClone(contentBlockBlueprintsByPath['/test'] || []).find((block) => block?.id === 'hero');
+    testHero.settings = {
+      ...testHero.settings,
+      line1Text: "Don't be a hero.",
+      line1ClassName: 'is-mango',
+      line1HighlightsJson: '[{"start":11,"end":15,"className":"is-super-grey","text":"hero"}]',
+      line2Text: 'I like ice cream',
+      line2ClassName: 'is-super-grey',
+      line2HighlightsJson: '[{"start":7,"end":16,"className":"is-mango","text":"ice cream"}]',
+    };
+    mockBlocksByPath = {
+      '/test': [testHero],
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/test',
+            title: 'Test',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Hero HUD panel' }));
+    const inlineLineInput = await screen.findByLabelText('Line 1');
+    expect(container.querySelector('.service-native-hero > .ag-panel-rail h1 mark.is-super-grey')?.textContent).toBe('hero');
+    expect(container.querySelector('.service-native-hero > .ag-panel-rail h1 mark.is-mango')?.textContent).toBe('ice cream');
+    expect(container.querySelector('.service-native-hero > .ag-panel-rail > h1')?.className).toContain('is-mango');
+    expect(container.querySelectorAll('.service-native-hero > .ag-panel-rail h1 mark.is-super-grey').length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('.service-native-hero > .ag-panel-rail h1 mark.is-mango').length).toBeGreaterThan(0);
+    const heroColorControls = await screen.findByRole('radiogroup', { name: 'Hero color controls' });
+    expect(within(heroColorControls).getByRole('radio', { name: 'Mango (apply to Line 1)' }).getAttribute('aria-checked')).toBe('true');
+    inlineLineInput.focus();
+    inlineLineInput.setSelectionRange(0, 3);
+    fireEvent.select(inlineLineInput);
+
+    const selectionSwatch = await screen.findByRole('radio', { name: 'Mango (apply to selection)' });
+    fireEvent.click(selectionSwatch);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close panel' }));
+
+    await waitFor(() => {
+      expect(container.querySelector('.service-native-hero mark.is-mango')?.textContent).toBe('Don');
+    });
+  });
+
+  it('keeps Hero line colors identical when switching between public and HUD renderers', async () => {
+    const testHero = structuredClone(contentBlockBlueprintsByPath['/test'] || []).find((block) => block?.id === 'hero');
+    testHero.settings = {
+      ...testHero.settings,
+      line1Text: 'Public and HUD.',
+      line1ClassName: 'is-super-grey is-white',
+      line1HighlightsJson: '',
+      line2Text: 'Use one color.',
+      line2ClassName: 'is-white is-super-grey',
+      line2HighlightsJson: '',
+    };
+    mockBlocksByPath = { '/test': [testHero] };
+
+    const rendered = render(
+      <MemoryRouter>
+        <NativeContentPage page={{ path: '/test', title: 'Test' }} />
+      </MemoryRouter>,
+    );
+
+    const publicLineClasses = [...document.querySelectorAll('.service-native-hero > .ag-panel-rail > h1')]
+      .map((node) => node.className);
+    const publicHeroMarkup = [...document.querySelectorAll('.service-native-hero > .ag-panel-rail > h1')]
+      .map((node) => node.outerHTML);
+    expect(publicLineClasses).toEqual(['line1 is-white', 'line2 is-super-grey']);
+
+    mockFrontHudEnabled = true;
+    rendered.rerender(
+      <MemoryRouter>
+        <NativeContentPage page={{ path: '/test', title: 'Test' }} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Open Hero HUD panel' }));
+
+    const hudLineClasses = [...document.querySelectorAll('.service-native-hero > .ag-panel-rail > h1')]
+      .map((node) => node.className);
+    expect(hudLineClasses).toEqual(publicLineClasses);
+    expect([...document.querySelectorAll('.service-native-hero > .ag-panel-rail > h1')]
+      .map((node) => node.outerHTML)).toEqual(publicHeroMarkup);
+    expect(document.querySelector('.service-native-hero .admin-front-hud-hero-live-line > h1')).toBeNull();
+    expect(document.querySelector('.service-native-hero textarea[data-hero-line-key="line1"]')).toBeTruthy();
   });
 
   it('closes only the desktop HUD block editor while keeping HUD enabled', async () => {
@@ -1358,7 +1518,7 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     });
   });
 
-  it('applies billboard width overrides and extra bottom spacing when a billboard action is present', () => {
+  it('applies billboard width overrides and explicit top/bottom spacing when a billboard action is present', () => {
     mockBlocksByPath = {
       '/test': [
         {
@@ -1376,6 +1536,8 @@ describe('NativeContentPage HUD visibility boundaries', () => {
             subtitle: 'Supporting billboard copy',
             titleFontWeight: 900,
             contentMaxWidthPx: 1100,
+            paddingTopRem: 5.25,
+            paddingBottomRem: 6.5,
             buttonLabel: 'Learn more',
             buttonLinkJson: serializeLinkValue({
               kind: 'internal',
@@ -1404,7 +1566,8 @@ describe('NativeContentPage HUD visibility boundaries', () => {
     const billboardCopy = billboardSection?.querySelector('.native-info-section-copy');
     const billboardSubtitle = billboardCopy?.querySelector('h3');
 
-    expect(billboardSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-bottom: clamp(4.1rem, 8vw, 6.8rem)');
+    expect(billboardSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-top: 5.25rem');
+    expect(billboardSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-bottom: 6.5rem');
     expect(billboardRail?.getAttribute('style') || '').toContain('--dynamic-billboard-max-width: 1100px');
     expect(billboardHeading.style.fontWeight).toBe('900');
     expect(billboardCopy?.className).toContain('is-justify-right');

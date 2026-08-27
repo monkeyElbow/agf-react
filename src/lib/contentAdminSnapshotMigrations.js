@@ -274,6 +274,27 @@ function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
 }
 
+function migrateFeaturePanelActionLink(settings) {
+  const source = settings && typeof settings === 'object' ? settings : {};
+  const canonicalLinkJson = String(source.buttonLinkJson || '').trim();
+  if (canonicalLinkJson) {
+    return canonicalLinkJson;
+  }
+
+  const href = String(source.buttonUrl || '').trim();
+  const to = String(source.buttonPageRef || '').trim();
+  const internalTarget = to || (href.startsWith('/') ? href : '');
+  if (!href && !internalTarget) {
+    return '';
+  }
+
+  return JSON.stringify({
+    kind: internalTarget ? 'internal' : 'external',
+    ...(internalTarget ? { to: internalTarget } : { href }),
+    openInNewWindow: Boolean(source.buttonOpenInNewWindow),
+  });
+}
+
 function convertInsuranceFeaturePanelToColumnsBlock(pathname, block) {
   const source = cloneJson(block);
   if (
@@ -289,6 +310,7 @@ function convertInsuranceFeaturePanelToColumnsBlock(pathname, block) {
   const isRisk = String(source.id || '').trim() === 'risk_management';
   const buttonFields = {
     buttonLabel: String(settings.buttonLabel || '').trim(),
+    buttonLinkJson: migrateFeaturePanelActionLink(settings),
     buttonUrl: String(settings.buttonUrl || '').trim(),
     buttonPageRef: String(settings.buttonPageRef || '').trim(),
     buttonStyle: String(settings.buttonStyle || 'blue').trim() || 'blue',
@@ -317,6 +339,7 @@ function convertInsuranceFeaturePanelToColumnsBlock(pathname, block) {
     col1ImageUrl: isRisk ? '' : String(settings.imageUrl || ''),
     col1ImageAlt: isRisk ? '' : String(settings.imageAlt || ''),
     col1ButtonLabel: isRisk ? buttonFields.buttonLabel : '',
+    col1ButtonLinkJson: isRisk ? buttonFields.buttonLinkJson : '',
     col1ButtonUrl: isRisk ? buttonFields.buttonUrl : '',
     col1ButtonPageRef: isRisk ? buttonFields.buttonPageRef : '',
     col1ButtonStyle: isRisk ? buttonFields.buttonStyle : 'blue',
@@ -332,6 +355,7 @@ function convertInsuranceFeaturePanelToColumnsBlock(pathname, block) {
     col2ImageUrl: isRisk ? String(settings.imageUrl || '') : '',
     col2ImageAlt: isRisk ? String(settings.imageAlt || '') : '',
     col2ButtonLabel: isRisk ? '' : buttonFields.buttonLabel,
+    col2ButtonLinkJson: isRisk ? '' : buttonFields.buttonLinkJson,
     col2ButtonUrl: isRisk ? '' : buttonFields.buttonUrl,
     col2ButtonPageRef: isRisk ? '' : buttonFields.buttonPageRef,
     col2ButtonStyle: isRisk ? 'blue' : buttonFields.buttonStyle,

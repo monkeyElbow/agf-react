@@ -3,7 +3,11 @@ import { buildDynamicPageContentFromBlock } from '../../lib/dynamicPageBlocks';
 import { PAGE_CONTENT_IDENTITY } from '../../lib/pageContentIdentity';
 import { createBlockDefinition } from '../foundation/models';
 import { defineEditorField, defineTransitionalActionFields } from '../foundation/editorDescriptors';
-import { getTokenSwatch, SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT } from '../../lib/colorSystem';
+import {
+  PANEL_TEXT_TONE_OPTIONS,
+  SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT,
+  SURFACE_BG_TONE_OPTIONS,
+} from '../../lib/colorSystem';
 
 const PAGE_CONTENT_HEADING_TONE_OPTIONS = SEMANTIC_TEXT_COLOR_OPTIONS_WITH_DEFAULT;
 
@@ -32,6 +36,20 @@ const sections = [
       defineEditorField({ id: 'body', label: 'Section body', type: 'textarea', rows: 4 }),
       defineEditorField({ id: 'html', label: 'Page Content HTML', type: 'html' }),
       defineEditorField({ id: 'bodyColorClassName', label: 'Body color', type: 'swatch', options: PAGE_CONTENT_HEADING_TONE_OPTIONS }),
+      defineEditorField({
+        id: 'bgTone',
+        label: 'Section background',
+        type: 'swatch',
+        layout: 'half',
+        options: SURFACE_BG_TONE_OPTIONS,
+      }),
+      defineEditorField({
+        id: 'textTone',
+        label: 'Section text color',
+        type: 'swatch',
+        layout: 'half',
+        options: PANEL_TEXT_TONE_OPTIONS,
+      }),
       defineEditorField({ id: 'widget', label: 'Widget key', type: 'text' }),
     ],
   },
@@ -153,6 +171,8 @@ export const pageContentBlockDefinition = createBlockDefinition({
     body: '',
     html: '',
     bodyColorClassName: '',
+    bgTone: 'white',
+    textTone: 'dark',
     widget: '',
     logoImage: '',
     logoAlt: '',

@@ -62,6 +62,15 @@ const sections = [
     fields: [
       defineEditorField({ id: 'title', label: 'Billboard title', type: 'textarea', rows: 2 }),
       defineEditorField({
+        id: 'logoKey',
+        label: 'Billboard logo',
+        type: 'select',
+        options: [
+          { value: '', label: 'No logo' },
+          { value: 'mission-assure', label: 'Mission Assure' },
+        ],
+      }),
+      defineEditorField({
         id: 'titleClassName',
         label: 'Billboard title color',
         type: 'swatch',
@@ -110,6 +119,7 @@ const sections = [
       defineEditorField({ id: 'titleSizeRem', label: 'Billboard heading size (rem)', type: 'number', min: 2.4, max: 8, step: 0.05 }),
       defineEditorField({ id: 'titleLetterSpacingEm', label: 'Billboard heading letter spacing (em)', type: 'number', min: -0.12, max: 0.04, step: 0.005 }),
       defineEditorField({ id: 'bodyHtml', label: 'Billboard body HTML', type: 'html' }),
+      defineEditorField({ id: 'leadCopySizeRem', label: 'Lead copy size (rem)', type: 'range', min: 1, max: 4, step: 0.05, defaultValue: 1.65, suffix: 'rem' }),
       defineEditorField({ id: 'bodyColorClassName', label: 'Body color', type: 'swatch', options: BILLBOARD_TITLE_TONE_OPTIONS }),
       defineEditorField({ id: 'body', label: 'Fallback body text', type: 'textarea', rows: 3 }),
       defineEditorField({ id: 'fineprint', label: 'Fineprint', type: 'textarea', rows: 4 }),
@@ -138,6 +148,8 @@ const sections = [
       }),
       defineEditorField({ id: 'lineSpacing', label: 'Billboard title line spacing', type: 'number' }),
       defineEditorField({ id: 'contentMaxWidthPx', label: 'Billboard content max width (px)', type: 'number', min: 560, max: 1440, step: 10 }),
+      defineEditorField({ id: 'paddingTopRem', label: 'Billboard top padding (rem)', type: 'number', min: 0, max: 8, step: 0.25 }),
+      defineEditorField({ id: 'paddingBottomRem', label: 'Billboard bottom padding (rem)', type: 'number', min: 0, max: 8, step: 0.25 }),
     ],
   },
   {
@@ -211,6 +223,7 @@ export const billboardBlockDefinition = createBlockDefinition({
   allowedVariants: ['default', 'feature'],
   supportedModes: ['dynamic'],
   defaults: {
+    logoKey: '',
     bodyColorClassName: '',
     bgTone: 'blue',
     textTone: 'white',

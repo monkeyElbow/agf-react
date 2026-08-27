@@ -25,6 +25,13 @@ export const ADMIN_BLOCKS_AUDIT_SURFACE = Object.freeze({
   retireWhen: 'Keep as a permanent admin health dashboard or remove once snapshot recovery is observable elsewhere.',
 });
 
+export function mergeAdminBlockSources(authoringBlocksByPath = {}, fallbackBlocksByPath = {}) {
+  return {
+    ...(fallbackBlocksByPath && typeof fallbackBlocksByPath === 'object' ? fallbackBlocksByPath : {}),
+    ...(authoringBlocksByPath && typeof authoringBlocksByPath === 'object' ? authoringBlocksByPath : {}),
+  };
+}
+
 function normalizeBlockMode(value) {
   const token = String(value || '').trim().toLowerCase();
   if (token === 'dynamic') {
@@ -130,8 +137,11 @@ export default function AdminBlocksPage() {
     authoringBlocksByPath,
     authoringPageHierarchy,
   } = useContentAdmin();
-  const adminBlocksByPath = authoringBlocksByPath || blocksByPath;
-  const adminPageHierarchy = authoringPageHierarchy || pageHierarchy;
+  const adminBlocksByPath = mergeAdminBlockSources(authoringBlocksByPath, blocksByPath);
+  const adminPageHierarchy = {
+    ...(pageHierarchy && typeof pageHierarchy === 'object' ? pageHierarchy : {}),
+    ...(authoringPageHierarchy && typeof authoringPageHierarchy === 'object' ? authoringPageHierarchy : {}),
+  };
   const [search, setSearch] = useState('');
   const [modeFilter, setModeFilter] = useState('all');
   const [issueFilter, setIssueFilter] = useState('all');

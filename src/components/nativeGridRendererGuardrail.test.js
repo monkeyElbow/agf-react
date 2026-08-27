@@ -29,5 +29,7 @@ describe('native grid renderer guardrail', () => {
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid .native-info-section-copy > p,');
     expect(cssSource).toContain('.service-native-section.native-dynamic-grid .native-info-section-copy .native-info-rich-html > p:first-child,');
     expect(cssSource).toContain('font-size: clamp(1.08rem, 1.9vw, 1.26rem);');
+    expect(cssSource).toContain(':is(.native-info-rich-html, .service-native-card-rich-body) .is-text-display {\n  font-size: 1.3em !important;\n}');
+    expect(cssSource).toContain('var(--dynamic-grid-subhead-color)');
   });
 });

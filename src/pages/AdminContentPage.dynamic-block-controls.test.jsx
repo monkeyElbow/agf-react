@@ -13,6 +13,7 @@ import {
 } from './AdminContentPage';
 import {
   BillboardBlockEditor,
+  CardChartBlockEditor,
   CalculatorCtaBlockEditor,
   CtaFormBlockEditor,
   ColumnsBlockEditor,
@@ -38,6 +39,7 @@ import { remapHighlightsJsonForTextChange } from '../lib/heroHudRanges';
 
 void [
   BillboardBlockEditor,
+  CardChartBlockEditor,
   CalculatorCtaBlockEditor,
   ColumnsBlockEditor,
   FeaturePanelBlockEditor,
@@ -539,7 +541,7 @@ describe('dynamic block control wiring', () => {
     };
 
     const { container } = render(<HeroBlockEditor block={block} onSettingChange={onSettingChange} />);
-    const previewLine = container.querySelector('.admin-hero-inline-line-mirror');
+    const previewLine = container.querySelector('.admin-hero-hud-live-heading');
 
     expect(previewLine?.className).toContain('is-white');
     expect(previewLine?.className).toContain('home-native-eyebrow');
@@ -555,7 +557,7 @@ describe('dynamic block control wiring', () => {
     };
 
     const { container } = render(<HeroBlockEditor block={block} onSettingChange={onSettingChange} />);
-    const previewLine = container.querySelector('.admin-hero-inline-line-mirror');
+    const previewLine = container.querySelector('.admin-hero-hud-live-heading');
 
     expect(previewLine?.className).toContain('is-super-grey');
     expect(previewLine?.className).not.toContain('is-white');
@@ -645,6 +647,7 @@ describe('dynamic block control wiring', () => {
     const lineInput = screen.getByLabelText('Line 1 text');
     lineInput.focus();
     lineInput.setSelectionRange(0, 5);
+    fireEvent.mouseUp(lineInput);
     fireEvent.select(lineInput);
 
     lineInput.setSelectionRange(0, 0);
@@ -669,6 +672,7 @@ describe('dynamic block control wiring', () => {
     const lineInput = screen.getByLabelText('Line 1 text');
     lineInput.focus();
     lineInput.setSelectionRange(0, 5);
+    fireEvent.mouseUp(lineInput);
     fireEvent.select(lineInput);
 
     lineInput.setSelectionRange(0, 0);
@@ -690,6 +694,7 @@ describe('dynamic block control wiring', () => {
     const lineInput = screen.getByLabelText('Line 1 text');
     lineInput.focus();
     lineInput.setSelectionRange(0, 5);
+    fireEvent.mouseUp(lineInput);
     fireEvent.select(lineInput);
     fireEvent.click(screen.getByRole('radio', { name: 'Melon (apply to selection)' }));
 
@@ -697,6 +702,71 @@ describe('dynamic block control wiring', () => {
       'line1HighlightsJson',
       expect.stringContaining(`"start":0,"end":5,"className":"is-melon","text":"${expectedSelectedText}"`),
     );
+  });
+
+  it('applies hero span color to a selection captured from the inline front HUD preview', () => {
+    const block = cloneBlock(
+      contentBlockBlueprintsByPath['/']
+        .find((entry) => entry?.id === 'hero' && entry?.mode === 'dynamic'),
+    );
+    const onSettingChange = vi.fn();
+
+    render(
+      <HeroBlockEditor
+        block={block}
+        selection={{ line: 'line2', start: 0, end: 4, text: String(block.settings.line2Text || '').slice(0, 4) }}
+        onSettingChange={onSettingChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Mango (apply to selection)' }));
+
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'line2HighlightsJson',
+      expect.stringContaining('"start":0,"end":4,"className":"is-mango"'),
+    );
+  });
+
+  it('gives Card Chart heading selection colors the same live preview as Hero', () => {
+    const block = getDynamicBlock('card_chart');
+    const onSettingChange = vi.fn();
+    block.settings = {
+      ...block.settings,
+      title: 'Compare these options',
+      titleHighlightsJson: '',
+    };
+
+    const { container } = render(
+      <CardChartBlockEditor block={block} onSettingChange={onSettingChange} />,
+    );
+
+    const titleInput = screen.getByLabelText('Chart heading');
+    const headingEditor = container.querySelector('.admin-color-text-editor.is-card-chart-heading');
+    titleInput.focus();
+    titleInput.setSelectionRange(0, 7);
+    fireEvent.select(titleInput);
+    fireEvent.click(within(headingEditor).getByRole('radio', { name: 'Mango' }));
+
+    expect(container.querySelector('.admin-color-text-editor.is-card-chart-heading .admin-color-text-preview mark.is-mango')?.textContent)
+      .toBe('Compare');
+    expect(onSettingChange).toHaveBeenCalledWith(
+      'titleHighlightsJson',
+      expect.stringContaining('"className":"is-mango"'),
+    );
+  });
+
+  it('gives Card Chart spacing, fineprint, and card points their own admin controls', () => {
+    const block = getDynamicBlock('card_chart');
+    const onSettingChange = vi.fn();
+
+    render(<CardChartBlockEditor block={block} onSettingChange={onSettingChange} />);
+
+    expect(screen.getByText('Space below heading (rem)')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Cards' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Fineprint' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Add comparison point' }).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByLabelText('Comparison point 1').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByLabelText('Chart width (px)')).toBeTruthy();
   });
 
   it('keeps line 1 swatch application on the selected range even if the browser collapses focus before click', () => {
@@ -712,6 +782,7 @@ describe('dynamic block control wiring', () => {
     const swatch = screen.getByRole('radio', { name: 'Mango (apply to Line 1)' });
     lineInput.focus();
     lineInput.setSelectionRange(0, 5);
+    fireEvent.mouseUp(lineInput);
     fireEvent.select(lineInput);
 
     lineInput.setSelectionRange(0, 0);
@@ -998,7 +1069,7 @@ describe('dynamic block control wiring', () => {
     }
   });
 
-  it('renders the migrated rates editor note instead of the generic field grid blank state', () => {
+  it('renders the compact shared rates editor and preview', () => {
     const block = getDynamicBlock('rates');
 
     render(
@@ -1008,8 +1079,9 @@ describe('dynamic block control wiring', () => {
       />,
     );
 
-    expect(screen.getByText('Table rows and published rates are managed in the Rates admin screen.')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Open rates admin ↗' })).toBeTruthy();
+    expect(screen.getByLabelText('Rates dataset')).toBeTruthy();
+    expect(screen.getByText('This compact preview follows the selected dataset. Rate rows remain managed in Rates admin.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Manage published rate rows ↗' })).toBeTruthy();
   });
 
   it('wires intro block controls', () => {
@@ -1211,6 +1283,12 @@ describe('dynamic block control wiring', () => {
     });
 
     expect(onSettingChange).toHaveBeenCalledWith('contentMaxWidthPx', 1040);
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Billboard bottom padding' }), {
+      target: { value: '7.5' },
+    });
+
+    expect(onSettingChange).toHaveBeenCalledWith('paddingBottomRem', 7.5);
   });
 
   it('keeps billboard text drafts stable through stale shared rerenders', () => {
@@ -1826,7 +1904,7 @@ describe('dynamic block control wiring', () => {
     }
   });
 
-  it('keeps grid title/body tone palettes safe on light backgrounds', () => {
+  it('keeps grid title/body tone palettes authored on light backgrounds', () => {
     const block = getDynamicBlock('card_grid');
     block.settings.bgTone = 'white';
     block.settings.titleTone = 'white';
@@ -1836,15 +1914,15 @@ describe('dynamic block control wiring', () => {
     render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
 
     const titlePalette = screen.getByRole('radiogroup', { name: 'Card title color' });
-    const bodyPalette = screen.getByRole('radiogroup', { name: 'Body color' });
+    const bodyPalette = screen.getByRole('radiogroup', { name: 'Card body color' });
 
-    expect(within(titlePalette).queryByRole('radio', { name: 'White' })).toBeNull();
-    expect(within(bodyPalette).queryByRole('radio', { name: 'White' })).toBeNull();
-    expect(onSettingChange).toHaveBeenCalledWith('titleTone', 'super-grey');
-    expect(onSettingChange).toHaveBeenCalledWith('bodyTone', 'super-grey');
+    expect(within(titlePalette).getByRole('radio', { name: 'White' })).toBeTruthy();
+    expect(within(bodyPalette).getByRole('radio', { name: 'White' })).toBeTruthy();
+    expect(onSettingChange).not.toHaveBeenCalledWith('titleTone', 'super-grey');
+    expect(onSettingChange).not.toHaveBeenCalledWith('bodyTone', 'super-grey');
   });
 
-  it('keeps grid title/body tone palettes on white contrast defaults for dark backgrounds', () => {
+  it('keeps grid title/body tone palettes authored on dark backgrounds', () => {
     const block = getDynamicBlock('card_grid');
     block.settings.bgTone = 'blue';
     block.settings.titleTone = 'super-grey';
@@ -1854,14 +1932,12 @@ describe('dynamic block control wiring', () => {
     render(<GridBlockEditor block={block} onSettingChange={onSettingChange} />);
 
     const titlePalette = screen.getByRole('radiogroup', { name: 'Card title color' });
-    const bodyPalette = screen.getByRole('radiogroup', { name: 'Body color' });
+    const bodyPalette = screen.getByRole('radiogroup', { name: 'Card body color' });
 
-    expect(within(titlePalette).queryByRole('radio', { name: 'Super Grey' })).toBeNull();
-    expect(within(bodyPalette).queryByRole('radio', { name: 'Super Grey' })).toBeNull();
-    expect(within(titlePalette).getByRole('radio', { name: 'White' })).toBeTruthy();
-    expect(within(bodyPalette).getByRole('radio', { name: 'White' })).toBeTruthy();
-    expect(onSettingChange).toHaveBeenCalledWith('titleTone', 'white');
-    expect(onSettingChange).toHaveBeenCalledWith('bodyTone', 'white');
+    expect(within(titlePalette).getByRole('radio', { name: 'Super Grey' })).toBeTruthy();
+    expect(within(bodyPalette).getByRole('radio', { name: 'Super Grey' })).toBeTruthy();
+    expect(onSettingChange).not.toHaveBeenCalledWith('titleTone', 'white');
+    expect(onSettingChange).not.toHaveBeenCalledWith('bodyTone', 'white');
   });
 
   it('shows only existing grid cards until the next one is explicitly added', () => {
@@ -2165,6 +2241,24 @@ describe('dynamic block control wiring', () => {
     expect(screen.getAllByLabelText('Button label').length).toBeGreaterThan(0);
     expect(screen.queryByLabelText('Button 2 label')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add direct link' })).toBeNull();
+  });
+
+  it('keeps the How to apply section background wired to the block background control', () => {
+    const block = cloneBlock(
+      (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
+        .find((entry) => entry?.id === 'loan_apply'),
+    );
+    const onSettingChange = vi.fn();
+
+    render(<GridBlockEditor block={block} onSettingChange={onSettingChange} routeOptions={[]} />);
+
+    expect(block?.settings?.bgTone).toBe('sandstone');
+    expect(screen.queryByPlaceholderText('Card Grid subhead')).toBeNull();
+
+    fireEvent.click(screen.getAllByRole('radio', { name: 'Sandstone' })
+      .find((option) => option.classList.contains('admin-bg-swatch-option')));
+
+    expect(onSettingChange).toHaveBeenCalledWith('bgTone', 'sandstone');
   });
 
   it('keeps columns layout controls wired without a preset banner', () => {

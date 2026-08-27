@@ -126,6 +126,8 @@ export default function BlockHudPanelHost({
   onBlockDeleted = null,
   showWorkflowActions = true,
   showPublishAction = true,
+  heroSelection = null,
+  onHeroSelectionClear = null,
   onSettingChange,
 }) {
   const ctaTitleInputRef = useRef(null);
@@ -242,6 +244,8 @@ export default function BlockHudPanelHost({
         hudMode
         sourceRevision={contentAdmin?.sharedSnapshotUpdatedAt || 0}
         ratesContext={ratesContext}
+        selection={block.kind === 'hero' ? heroSelection : null}
+        onSelectionClear={block.kind === 'hero' ? onHeroSelectionClear : null}
         onSettingChange={blockedOnSettingChange}
         blockOptions={blockOptionsMarkup}
       />

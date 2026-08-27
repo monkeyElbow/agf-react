@@ -34,7 +34,7 @@ describe('online contributions review polish guardrail', () => {
     expect(numberedCardSource).toContain('margin-inline: auto;');
     expect(numberedCardSource).toContain('grid-template-columns: minmax(0, 1fr);');
     expect(numberedCardSource).toContain('width: min(100%, 82ch);');
-    expect(numberedCardSource).toContain('grid-template-columns: var(--numbered-step-card-column) minmax(0, 1fr);');
+    expect(numberedCardSource).toContain('grid-template-columns: minmax(var(--numbered-step-card-column), 18%) minmax(0, 1fr);');
     expect(numberedCardSource).toContain('font-size: var(--numbered-step-card-number-size) !important;');
     expect(numberedCardSource).toContain('--numbered-step-card-accent: var(--ag-color-mango);');
     expect(numberedCardSource).toContain('--numbered-step-card-accent: var(--ag-color-sandstone-dark);');

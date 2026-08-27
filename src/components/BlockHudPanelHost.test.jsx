@@ -72,6 +72,7 @@ describe('BlockHudPanelHost', () => {
   });
 
   it('routes card grid HUD blocks through the shared model rail and block options page', () => {
+    const onSettingChange = vi.fn();
     render(createElement(BlockHudPanelHost, {
       block: {
         id: 'card-grid-flexible-cards',
@@ -80,7 +81,10 @@ describe('BlockHudPanelHost', () => {
         settings: {
           title: 'Flexible cards',
           bodyHtml: '<p>Starter copy</p>',
-          bgTone: 'white',
+          introHtml: '<h3>Starter subhead.</h3><p>Starter copy</p>',
+          bgTone: 'blue',
+          subtitleClassName: 'is-mango',
+          subheadSizeRem: 1.6,
           columns: 'three',
           cardCount: '6',
           cardStyle: 'none',
@@ -88,7 +92,7 @@ describe('BlockHudPanelHost', () => {
           card1Body: 'Starter card copy',
         },
       },
-      onSettingChange: vi.fn(),
+      onSettingChange,
     }));
 
     expect(screen.getByRole('navigation', { name: 'Card Grid · Flexible cards editor sections' })).toBeTruthy();
@@ -99,12 +103,29 @@ describe('BlockHudPanelHost', () => {
     expect(screen.queryByRole('button', { name: 'Content' })).toBeNull();
     expect(screen.getAllByRole('region', { name: 'Block options' })).toHaveLength(1);
     expect(screen.getByLabelText('Grid header text')).toBeTruthy();
-    expect(screen.getByLabelText('Grid subhead text')).toBeTruthy();
+    expect(screen.getByLabelText('Grid subhead and intro copy')).toBeTruthy();
+    expect(screen.getAllByRole('textbox', { name: 'Grid subhead and intro copy' })).toHaveLength(1);
     expect(screen.getByRole('radiogroup', { name: 'Grid header color controls' })).toBeTruthy();
-    expect(screen.getByRole('radiogroup', { name: 'Grid subhead color controls' })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Text color' })).toBeTruthy();
+    const introEditor = document.querySelector('.admin-card-grid-header-editor .admin-html-editor');
+    expect(introEditor?.className).toContain('is-bg-blue');
+    expect(introEditor?.className).toContain('is-mango');
+    expect(introEditor?.className).toContain('is-subhead-sized');
+    expect(introEditor?.style.getPropertyValue('--dynamic-grid-subhead-size')).toBe('1.6rem');
+    expect(document.querySelector('.admin-card-grid-header-editor .admin-color-text-preview-wrap.is-bg-blue')).toBeTruthy();
+    expect(screen.getByRole('slider', { name: 'Header size (rem)' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Block padding above' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Block padding below' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Header/subhead space' })).toBeTruthy();
+    const subheadSize = screen.getByRole('slider', { name: 'Grid subhead size (rem)' });
+    fireEvent.change(subheadSize, { target: { value: '1.95' } });
+    expect(onSettingChange).toHaveBeenCalledWith('subheadSizeRem', 1.95);
+    const headerPage = document.querySelector('.admin-card-grid-hud-page--header');
+    expect(headerPage?.querySelector('.admin-card-grid-header-editor-copy')).toBeTruthy();
+    expect(headerPage?.querySelector('.admin-card-grid-header-editor-controls')).toBeTruthy();
+    expect(headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]')).toHaveLength(5);
+    expect([...headerPage?.querySelectorAll('.admin-card-grid-header-editor-controls input[type="range"]') || []][0]?.getAttribute('aria-label')).toBe('Header size (rem)');
+    expect(document.querySelector('.admin-card-grid-hud-page--appearance .admin-card-grid-hud-group--spacing')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
     expect(document.querySelector('.admin-card-grid-hud-group--heading')).toBeNull();
     expect(document.querySelector('.admin-card-grid-hud-group--appearance')).toBeTruthy();
@@ -119,6 +140,35 @@ describe('BlockHudPanelHost', () => {
     expect(screen.getByRole('button', { name: 'Card 6' })).toBeTruthy();
     expect(document.querySelector('.admin-card-grid-card-preview')).toBeNull();
     expect(document.querySelector('.admin-card-grid-hud-reference .admin-front-hud-swatch-row')).toBeTruthy();
+  });
+
+  it('keeps card title and body swatches independent from the grid background', () => {
+    const onSettingChange = vi.fn();
+    render(createElement(CardGridSettingsProbe, {
+      initialSettings: {
+        bgTone: 'white',
+        titleTone: 'melon',
+        bodyTone: 'melon',
+        cardStyle: 'none',
+        card1Title: 'Step one',
+      },
+      onSettingChange,
+    }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+    const titlePalette = screen.getByRole('radiogroup', { name: 'Card title color' });
+    const bodyPalette = screen.getByRole('radiogroup', { name: 'Card body color' });
+    expect(within(titlePalette).getByRole('radio', { name: 'Melon' }).getAttribute('aria-checked')).toBe('true');
+    expect(within(bodyPalette).getByRole('radio', { name: 'Melon' }).getAttribute('aria-checked')).toBe('true');
+    expect(within(bodyPalette).getByRole('radio', { name: 'Alternating brand colors' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Super Grey Gradient' }));
+
+    expect(onSettingChange).toHaveBeenCalledWith('bgTone', 'grey');
+    expect(onSettingChange).not.toHaveBeenCalledWith('titleTone', 'white');
+    expect(onSettingChange).not.toHaveBeenCalledWith('bodyTone', 'white');
+    expect(within(titlePalette).getByRole('radio', { name: 'Melon' }).getAttribute('aria-checked')).toBe('true');
+    expect(within(bodyPalette).getByRole('radio', { name: 'Melon' }).getAttribute('aria-checked')).toBe('true');
   });
 
   it('keeps card setting writes bound to the selected slot with six cards', () => {
@@ -1160,8 +1210,9 @@ describe('BlockHudPanelHost', () => {
       onSettingChange: vi.fn(),
     }));
 
-    expect(screen.getByText('Table rows and published rates are managed in the Rates admin screen.')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Open rates admin ↗' })).toBeTruthy();
+    expect(screen.getByLabelText('Rates dataset')).toBeTruthy();
+    expect(screen.getByText('This compact preview follows the selected dataset. Rate rows remain managed in Rates admin.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Manage published rate rows ↗' })).toBeTruthy();
   });
 
   it('renders grid HUD panels with normalized route options', () => {

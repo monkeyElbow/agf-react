@@ -29,7 +29,7 @@ describe('card grid preset definitions', () => {
   it('keeps preset defaults and editor guardrails intentionally bounded', () => {
     expect(buildCardGridPresetSettings('investment-options')).toMatchObject({
       contentWidth: 'browser',
-      columns: 'two',
+      columns: 'one',
     });
     expect(getCardGridPresetDefinition('eligibility-cards')?.editor).toMatchObject({
       maxCards: 3,

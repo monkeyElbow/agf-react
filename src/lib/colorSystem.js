@@ -136,6 +136,42 @@ export function normalizeSemanticTextColorClass(value) {
   return SEMANTIC_TEXT_COLOR_ALIASES[token] || '';
 }
 
+// A setting may contain legacy formatting classes plus more than one semantic
+// color class. Keep the last authored color and preserve the other classes so
+// editor previews and public CSS cannot resolve the same value differently.
+export function normalizeSemanticTextColorClasses(value) {
+  const semanticColorClasses = [];
+  const nonColorClasses = [];
+  let lastSemanticColorIndex = -1;
+  let tokenIndex = 0;
+  String(value || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .forEach((token) => {
+      const semanticClass = normalizeSemanticTextColorClass(token);
+      if (semanticClass) {
+        semanticColorClasses.push(semanticClass);
+        lastSemanticColorIndex = tokenIndex;
+      } else {
+        nonColorClasses.push(token);
+      }
+      tokenIndex += 1;
+    });
+  const lastSemanticColorClass = semanticColorClasses.at(-1) || '';
+  if (!lastSemanticColorClass) {
+    return nonColorClasses.join(' ');
+  }
+  const nonColorBeforeLastColor = String(value || '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, lastSemanticColorIndex)
+    .filter((token) => !normalizeSemanticTextColorClass(token)).length;
+  const normalized = [...nonColorClasses];
+  normalized.splice(nonColorBeforeLastColor, 0, lastSemanticColorClass);
+  return normalized.join(' ');
+}
+
 export function normalizeSurfaceBgTone(value, fallback = 'white') {
   const token = String(value || '').trim().toLowerCase();
   if (SURFACE_BG_TONE_VALUES.includes(token)) {

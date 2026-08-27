@@ -6,6 +6,30 @@ import { PUBLISH_STATUS } from '../lib/contentAdminPublishing';
 
 const HUD_WORKFLOW_SETTLED_STATUS_DELAY_MS = 1400;
 
+function formatDraftSaveFailure(result) {
+  const reason = String(result?.reason || result?.saveResult?.error || '').trim();
+  if (reason === 'content-admin-request-timeout') {
+    return 'Save timed out';
+  }
+
+  const ownerName = String(
+    result?.saveResult?.owner?.displayName
+      || result?.saveResult?.owner?.name
+      || result?.owner?.displayName
+      || result?.owner?.name
+      || 'another admin',
+  ).trim();
+  if (reason === 'drafted-by-other') {
+    return `Draft belongs to ${ownerName}; take over the draft before saving.`;
+  }
+  if (reason === 'locked-by-other') {
+    return `${ownerName} is editing this block; take over the edit before saving.`;
+  }
+
+  const details = String(result?.saveResult?.details || result?.details || '').trim();
+  return details ? `Save failed: ${details}` : 'Save failed';
+}
+
 function formatRelativeTime(value) {
   const timestamp = Number(value);
   if (!Number.isFinite(timestamp) || timestamp <= 0) {
@@ -134,6 +158,7 @@ export default function FrontHudPageWorkflow({
   isBillboardEditor = false,
   isLivePreview = false,
   onToggleLivePreview = null,
+  livePreviewAvailable = true,
 }) {
   const {
     isPageDirty = () => false,
@@ -197,6 +222,12 @@ export default function FrontHudPageWorkflow({
   const publishSummary = normalizedPath
     ? (getPagePublishSummary(normalizedPath) || {})
     : {};
+  const hasBlockOrderChange = Boolean(
+    normalizedBlockId
+    && !publishSummary?.isDeletionOnlyOrderChange
+    && Array.isArray(publishSummary?.orderChangedBlockIds)
+    && publishSummary.orderChangedBlockIds.includes(normalizedBlockId),
+  );
   const workflowActivity = normalizedPath
     ? (getPageWorkflowActivity(normalizedPath) || {})
     : {};
@@ -274,7 +305,7 @@ export default function FrontHudPageWorkflow({
 
   const saveFeedbackLabel = sharedSyncFailureLabel
     ? sharedSyncFailureLabel
-    : blockDraftSaveFailed
+    : blockDraftSaveFailed && !hasBlockOrderChange
       ? `${saveError || 'Draft save failed'}; save again before Make live`
     : saveError
     ? saveError
@@ -420,16 +451,14 @@ export default function FrontHudPageWorkflow({
     : (Array.isArray(publishSummary?.orderChangedBlockIds)
       ? publishSummary.orderChangedBlockIds
       : []);
-  const publishablePageBlockIds = (Array.isArray(publishSummary?.changedBlockIds) ? publishSummary.changedBlockIds : [])
-    .concat(publishOrderChangedBlockIds)
-    .filter((blockId, index, blockIds) => blockIds.indexOf(blockId) === index)
-    .filter((blockId) => !foreignPublishBlockIds.has(String(blockId || '').trim()));
-  const blockedOrderChange = publishOrderChangedBlockIds
-    .some((blockId) => foreignPublishBlockIds.has(String(blockId || '').trim()));
+  const publishablePageBlockIds = [
+    ...(Array.isArray(publishSummary?.changedBlockIds) ? publishSummary.changedBlockIds : [])
+      .filter((blockId) => !foreignPublishBlockIds.has(String(blockId || '').trim())),
+    ...publishOrderChangedBlockIds,
+  ].filter((blockId, index, blockIds) => blockIds.indexOf(blockId) === index);
   const canPartiallyPublishPage = Boolean(
     !normalizedBlockId
     && publishBlockedByOtherDraft
-    && !blockedOrderChange
     && !publishSummary?.hasPageMetaChanges
     && publishablePageBlockIds.length,
   );
@@ -493,13 +522,15 @@ export default function FrontHudPageWorkflow({
     && !isPublishing
     && !isDiscarding
     && !isSharedWorkflowBusy
-    && !(normalizedBlockId && blockDraftSaveFailed)
-    && (!publishBlockedByOtherDraft || canPartiallyPublishPage)
+    && (!(normalizedBlockId && blockDraftSaveFailed) || hasBlockOrderChange)
+    && (!publishBlockedByOtherDraft || canPartiallyPublishPage || hasBlockOrderChange)
     && (normalizedBlockId
       ? hasBlockPublishChanges || hasPendingExternalDraftOnBlock
       : pageDirty || hasPublishChanges || hasPendingExternalDraftsOnPage);
-  const makeLiveTitle = blockDraftSaveFailed
+  const makeLiveTitle = blockDraftSaveFailed && !hasBlockOrderChange
     ? 'Save block draft must succeed before this block can be made live.'
+    : hasBlockOrderChange
+    ? 'Make this page order change live; another admin’s block content will remain draft.'
     : publishBlockedByOtherDraft
     ? canPartiallyPublishPage
       ? `Make live will publish ${publishablePageBlockIds.length} eligible block${publishablePageBlockIds.length === 1 ? '' : 's'}; ${workflowActivity.otherActorBlockCount || 1} other-admin block${workflowActivity.otherActorBlockCount === 1 ? '' : 's'} will remain draft.`
@@ -573,7 +604,7 @@ export default function FrontHudPageWorkflow({
         : await saveSharedDraftNow('');
       if (result?.ok === false) {
         setBlockDraftSaveFailed(Boolean(normalizedBlockId));
-        setSaveError(result?.reason === 'content-admin-request-timeout' ? 'Save timed out' : 'Save failed');
+        setSaveError(formatDraftSaveFailure(result));
       } else {
         setBlockDraftSaveFailed(false);
         setSaveOutcome({
@@ -581,9 +612,9 @@ export default function FrontHudPageWorkflow({
           updatedAt: Number(result?.saveResult?.updatedAt || result?.snapshot?.updatedAt || Date.now()),
         });
       }
-    } catch {
+    } catch (error) {
       setBlockDraftSaveFailed(Boolean(normalizedBlockId));
-      setSaveError('Save failed');
+      setSaveError(formatDraftSaveFailure({ details: error?.message }));
     } finally {
       setIsSaving(false);
     }
@@ -599,7 +630,9 @@ export default function FrontHudPageWorkflow({
     setIsPublishing(true);
     try {
       const result = normalizedBlockId
-        ? await publishSharedBlockNow(normalizedPath, normalizedBlockId, 'HUD block publish')
+        ? hasBlockOrderChange
+          ? await publishSharedPageNow(normalizedPath, 'HUD page order publish')
+          : await publishSharedBlockNow(normalizedPath, normalizedBlockId, 'HUD block publish')
         : await publishSharedPageNow(normalizedPath, '');
       if (result?.ok === false) {
         if (normalizedBlockId && (
@@ -620,6 +653,9 @@ export default function FrontHudPageWorkflow({
         } else {
           setPublishError('Live publish failed');
         }
+      } else if (hasBlockOrderChange) {
+        setBlockDraftSaveFailed(false);
+        setSaveError('');
       }
     } catch {
       setPublishError('Live publish failed');
@@ -766,11 +802,14 @@ export default function FrontHudPageWorkflow({
               type="button"
               className={`admin-front-hud-page-workflow-action is-secondary${isLivePreview ? ' is-live-preview' : ''}`}
               aria-pressed={typeof onToggleLivePreview === 'function' ? isLivePreview : undefined}
+              disabled={typeof onToggleLivePreview === 'function' && !livePreviewAvailable && !isLivePreview}
               onClick={handleViewLive}
               title={typeof onToggleLivePreview === 'function'
                 ? (isLivePreview
                   ? 'Return this block to its editable draft view.'
-                  : 'Preview this block as currently published without closing the editor.')
+                  : livePreviewAvailable
+                    ? 'Preview this block as currently published without closing the editor.'
+                    : 'Published preview is not available yet; refresh the page before switching views.')
                 : 'Show the published page and close the editing HUD.'}
             >
               {typeof onToggleLivePreview === 'function'

@@ -34,6 +34,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "preview:prod": "vite preview --port 4173 --strictPort",
+    "preview:verify": "vite preview --host 127.0.0.1 --port 5174 --strictPort",
     "measure:dev": "node scripts/measure-vite-dev.mjs",
     "verify:route": "node scripts/verify-rendered-route.mjs",
     "verify:authority": "node scripts/verify-rendered-route.mjs",

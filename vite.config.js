@@ -651,9 +651,17 @@ function contentAdminDevPlugin() {
             });
             return;
           }
+          const errorDetails = error instanceof Error
+            ? error.message
+            : String(error || 'Unknown content-admin server error');
+          console.error('[content-admin] request failed', {
+            method: req.method,
+            path: url.pathname,
+            error: errorDetails,
+          });
           sendJson(res, 500, {
             error: 'content-admin-dev-server-error',
-            details: 'The content-admin request could not be completed.',
+            details: `The content-admin request could not be completed: ${errorDetails}`,
           });
         } finally {
           const durationMs = performance.now() - requestStartedAt;

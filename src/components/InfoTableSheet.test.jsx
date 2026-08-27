@@ -64,4 +64,19 @@ describe('InfoTableSheet', () => {
     // presentation keeps the single comparison point as a bullet.
     expect(container.querySelectorAll('.info-table-sheet__cell-list li')).toHaveLength(4);
   });
+
+  it('keeps each card tone on the matching desktop and mobile column', () => {
+    const { container } = render(
+      <InfoTableSheet
+        headers={['Blue', 'Mango', 'Melon']}
+        rows={[['Blue copy', 'Mango copy', 'Melon copy']]}
+        firstColumnHeader={false}
+        columnTones={['atlantean', 'mango', 'melon']}
+      />,
+    );
+
+    expect(container.querySelector('thead th:nth-child(1)')?.className).toContain('is-tone-atlantean');
+    expect(container.querySelector('tbody td:nth-child(2)')?.className).toContain('is-tone-mango');
+    expect(container.querySelector('.info-table-sheet__card-cell[data-info-table-column-tone="melon"]')).toBeTruthy();
+  });
 });

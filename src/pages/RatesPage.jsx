@@ -10,8 +10,7 @@ import {
 import FrontHudAnchorTag from '../components/FrontHudAnchorTag';
 import PageShell from '../components/PageShell';
 import SafeRichText from '../components/SafeRichText';
-import CertificateRatesSheet from '../components/CertificateRatesSheet';
-import IraRatesSheet from '../components/IraRatesSheet';
+import RatesBlock from '../components/RatesBlock';
 import { pageByPath } from '../data/siteMap';
 import { useRates } from '../context/RatesContext';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
@@ -42,9 +41,11 @@ export default function RatesPage() {
   const { rates, iraRates, ratesMeta, legalCopy } = useRates();
   const pageRef = useRef(null);
   const managedBlockRef = useRef(null);
-  const certificatesSectionRef = useRef(null);
-  const iraSectionRef = useRef(null);
-  const { clearActiveBlockLock = () => ({ ok: false }) } = useContentAdmin();
+  const rateSectionRefs = useRef({});
+  const {
+    clearActiveBlockLock = () => ({ ok: false }),
+    updateBlockSetting = () => {},
+  } = useContentAdmin();
   const {
     enabled: frontHudEnabled,
     opacity: frontHudOpacity,
@@ -90,7 +91,9 @@ export default function RatesPage() {
     () => buildHudPanelsFromBlocks(
       dynamicRatesPageBlocks.map((entry) => entry.block),
       {
-        panelIdByKind: { rates: 'rates-table' },
+        anchorSelectorById: Object.fromEntries(
+          dynamicRatesPageBlocks.map((entry) => [entry.block.id, `#${entry.runtime.anchorId}`]),
+        ),
         includeHidden: true,
       },
     ),
@@ -168,6 +171,18 @@ export default function RatesPage() {
     setFrontHudEnabled?.(false);
   };
 
+  const setRateSectionRef = (anchorId, node) => {
+    const key = String(anchorId || '').trim();
+    if (!key) {
+      return;
+    }
+    if (node) {
+      rateSectionRefs.current[key] = node;
+    } else {
+      delete rateSectionRefs.current[key];
+    }
+  };
+
   useEffect(() => () => {
     const activeHudBlockId = String(activeHudPanel?.block?.id || '').trim();
     if (activeHudBlockId) {
@@ -191,6 +206,30 @@ export default function RatesPage() {
         layerClassName={layerClassName}
         style={{ '--ag-admin-front-hud-opacity': String(frontHudOpacityRatio) }}
       />
+    );
+  };
+
+  const renderManagedRateBlock = ({ block, runtime }, index) => {
+    const dataset = String(runtime?.dataset || '').trim();
+    const legalHtml = dataset === 'ira'
+      ? legalCopyRuntime?.iraHtml
+      : (dataset === 'certificates' ? legalCopyRuntime?.certificatesHtml : '');
+    return (
+      <div
+        key={block.id}
+        ref={(node) => setRateSectionRef(runtime.anchorId, node)}
+        id={runtime.anchorId || undefined}
+        className={`rates-page-managed-rate rates-page-managed-rate--${dataset || 'unknown'} fade-up`}
+        data-rates-managed-order={String(index)}
+        data-rates-managed-block-id={block.id}
+        data-rates-managed-panel-id={runtime.panelId}
+      >
+        {renderHudAnchor(runtime.panelId)}
+        <RatesBlock runtime={runtime} rates={rates} iraRates={iraRates} ratesMeta={ratesMeta} />
+        {legalHtml ? (
+          <SafeRichText as="div" html={legalHtml} className="rates-disclaimer fade-up" />
+        ) : null}
+      </div>
     );
   };
 
@@ -255,10 +294,14 @@ export default function RatesPage() {
             block={activeHudPanel.block}
             pathname="/rates"
             ratesContext={{
-              scrollToCertificates: () => scrollToElement(certificatesSectionRef.current),
-              scrollToIra: () => scrollToElement(iraSectionRef.current),
+              rates,
+              iraRates,
+              ratesMeta,
+              scrollToCertificates: () => scrollToElement(rateSectionRefs.current['certificates-rates']),
+              scrollToIra: () => scrollToElement(rateSectionRefs.current['ira-rates']),
+              scrollTo403b: () => scrollToElement(rateSectionRefs.current['403b-investment-rate']),
             }}
-            onSettingChange={() => {}}
+            onSettingChange={(settingKey, nextValue) => updateBlockSetting('/rates', activeHudPanel.block.id, settingKey, nextValue)}
           />
         </FrontHudPanelShell>
       ) : null}
@@ -271,27 +314,7 @@ export default function RatesPage() {
           className="rates-page-managed-block"
           style={showFrontHud ? { position: 'relative' } : undefined}
         >
-          {renderHudAnchor('rates-table')}
-          <div ref={certificatesSectionRef} className="rates-page-certificate-block fade-up">
-            <CertificateRatesSheet rates={rates} />
-          </div>
-
-          <SafeRichText
-            as="div"
-            html={legalCopyRuntime?.certificatesHtml || ''}
-            className="rates-disclaimer fade-up"
-          />
-
-          <h2 ref={iraSectionRef} className="rates-page-subheading">IRA Investment Rates</h2>
-          <div className="rates-page-ira-block fade-up">
-            <IraRatesSheet rates={iraRates} />
-          </div>
-
-          <SafeRichText
-            as="div"
-            html={legalCopyRuntime?.iraHtml || ''}
-            className="rates-disclaimer fade-up"
-          />
+          {dynamicRatesPageBlocks.map(renderManagedRateBlock)}
         </section>
       </PageShell>
     </div>

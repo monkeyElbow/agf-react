@@ -67,6 +67,7 @@ const ASSERT_PREVIEW_BY_KIND = {
   card_grid: () => {
     expect(screen.getByRole('radiogroup', { name: /Grid background/i })).toBeTruthy();
     expect(screen.getByText(/Grid header|Grid intro heading|Intro handled outside this preset/i)).toBeTruthy();
+    expect(screen.getByText('Subtitle color')).toBeTruthy();
   },
 };
 

@@ -6,6 +6,7 @@ import {
 } from '../pages/AdminContentPage';
 import {
   BillboardBlockEditor,
+  CardChartBlockEditor,
   CalculatorCtaBlockEditor,
   CtaFormBlockEditor,
   ColumnsBlockEditor,
@@ -63,7 +64,7 @@ const ADMIN_RENDERERS_BY_KIND = {
   site_feature: SiteFeatureBlockEditor,
   split_panel: SplitPanelBlockEditor,
   card_grid: GridBlockEditor,
-  card_chart: null,
+  card_chart: CardChartBlockEditor,
   testimonials: TestimonialsBlockEditor,
   top_strip: TopStripBlockEditor,
   support_library: SupportLibraryBlockEditor,
@@ -104,11 +105,11 @@ const PARITY_ASSERTIONS = {
   card_chart: {
     admin: () => {
       expect(screen.getByRole('textbox', { name: 'Chart heading' })).toBeTruthy();
-      expect(screen.getByRole('textbox', { name: 'Card 1 comparison points' })).toBeTruthy();
+      expect(screen.getAllByRole('textbox', { name: 'Comparison point 1' }).length).toBeGreaterThanOrEqual(2);
     },
     hud: () => {
       expect(screen.getByRole('textbox', { name: 'Chart heading' })).toBeTruthy();
-      expect(screen.getByRole('textbox', { name: 'Card 1 comparison points' })).toBeTruthy();
+      expect(screen.getAllByRole('textbox', { name: 'Comparison point 1' }).length).toBeGreaterThanOrEqual(2);
     },
   },
   hero: {
@@ -339,12 +340,12 @@ const PARITY_ASSERTIONS = {
   },
   rates: {
     admin: () => {
-      expect(screen.getByText('Table rows and published rates are managed in the Rates admin screen.')).toBeTruthy();
-      expect(screen.getByRole('link', { name: 'Open rates admin ↗' })).toBeTruthy();
+      expect(screen.getByLabelText('Rates dataset')).toBeTruthy();
+      expect(screen.getByText('This compact preview follows the selected dataset. Rate rows remain managed in Rates admin.')).toBeTruthy();
     },
     hud: () => {
-      expect(screen.getByText('Table rows and published rates are managed in the Rates admin screen.')).toBeTruthy();
-      expect(screen.getByRole('link', { name: 'Open rates admin ↗' })).toBeTruthy();
+      expect(screen.getByLabelText('Rates dataset')).toBeTruthy();
+      expect(screen.getByText('This compact preview follows the selected dataset. Rate rows remain managed in Rates admin.')).toBeTruthy();
     },
   },
   services_grid: {

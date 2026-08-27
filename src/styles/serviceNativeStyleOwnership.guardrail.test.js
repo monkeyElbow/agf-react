@@ -227,6 +227,8 @@ describe('implementation-ownership.service-native style ownership', () => {
     const source = readSource('./service-native.css');
 
     [
+      '.native-info-page--loans-consultant .loans-consultant-native-locations .service-native-grid {',
+      'margin-top: clamp(1.8rem, 3vw, 2.7rem);',
       '.native-info-page--loans-consultant .consultant-native-page-head.native-functional-page-head {',
       'padding: clamp(2.1rem, 4vw, 3rem) 0 clamp(1.15rem, 3vw, 1.9rem);',
       '.native-info-page--loans-consultant .consultant-native-page-head > .ag-panel-rail {',
@@ -242,6 +244,13 @@ describe('implementation-ownership.service-native style ownership', () => {
       'border-radius: 999px;',
       'appearance: none;',
       '.native-info-page--loans-consultant .native-info-location-filter select:focus-visible {',
+      '.native-info-page--loans-consultant .loans-consultant-native-locations .service-native-card h3 {',
+      'font-size: clamp(2rem, 3.25vw, 2.7rem);',
+      'white-space: nowrap;',
+      '.native-info-page--loans-consultant .loans-consultant-native-locations .service-native-card h3 .consultant-name-credentials {',
+      'font-size: 0.52em;',
+      '.native-info-page--loans-consultant .loans-consultant-native-locations .service-native-card-phone {',
+      'font-size: clamp(1.2rem, 1.65vw, 1.42rem);',
     ].forEach((expectedSelector) => {
       expect(source).toContain(expectedSelector);
     });
@@ -495,15 +504,25 @@ describe('implementation-ownership.service-native style ownership', () => {
     );
   });
 
-  it('gives reusable Card Chart cells a comfortable default padding budget', () => {
+  it('keeps reusable Card Chart ranges semantic and cells content-sized', () => {
     const source = readFileSync(path.resolve(__dirname, './service-native.css'), 'utf8');
 
     expect(source).toContain(
       '.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) {',
     );
-    expect(source).toContain('--card-chart-cell-padding: clamp(1.05rem, 1.8vw, 1.35rem) clamp(1.15rem, 2vw, 1.55rem);');
+    expect(source).toContain('--card-chart-cell-padding: 0.9rem 1rem;');
     expect(source).toContain('padding: var(--card-chart-cell-padding);');
-    expect(source).toContain('padding: var(--card-chart-mobile-cell-padding);');
+    expect(source).toContain('h2 mark.is-atlantean');
+    expect(source).toContain('h2 mark.is-mango');
+    expect(source).toContain('h2 mark.is-melon');
+    expect(source).not.toContain(
+      '.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__table tbody td {\n'
+        + '  min-height: 24rem;',
+    );
+    expect(source).not.toContain(
+      '.service-native-section:is(.native-dynamic-card-chart, .test-dynamic-card-chart) .info-table-sheet__cell-list {\n'
+        + '  min-height: 24rem;',
+    );
   });
 
   it('keeps the IRA type cards free from shared card title top spacing', () => {

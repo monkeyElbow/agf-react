@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SiteLayout from './SiteLayout';
@@ -119,6 +119,42 @@ describe('SiteLayout mobile nav drawer', () => {
 
     expect(screen.getByRole('button', { name: 'Collapse Services menu' }).getAttribute('aria-expanded')).toBe('true');
     expect(document.getElementById('site-nav-dropdown-services')).toBeTruthy();
+  });
+
+  it('restores the page position when the front HUD is toggled on', () => {
+    mockMatchMedia(true);
+    window.localStorage.clear();
+    mockUseContentAdmin.mockReturnValue({
+      resolveManagedPathFromRef: (pathRef, fallback) => fallback || pathRef || '/',
+    });
+    const originalScrollTo = window.scrollTo;
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const originalCancelAnimationFrame = window.cancelAnimationFrame;
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 640 });
+    Object.defineProperty(window, 'pageYOffset', { configurable: true, value: 640 });
+    window.scrollTo = vi.fn();
+    window.requestAnimationFrame = (callback) => {
+      callback();
+      return 1;
+    };
+    window.cancelAnimationFrame = vi.fn();
+
+    try {
+      renderLayout();
+      fireEvent.click(screen.getByRole('button', { name: 'Expand Admin menu' }));
+      const hudGroup = screen.getByRole('group', { name: 'Front-end HUD overlay' });
+      fireEvent.click(within(hudGroup).getByRole('radio', { name: 'On' }));
+
+      expect(window.scrollTo).toHaveBeenCalledWith({
+        left: 0,
+        top: 640,
+        behavior: 'auto',
+      });
+    } finally {
+      window.scrollTo = originalScrollTo;
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+      window.cancelAnimationFrame = originalCancelAnimationFrame;
+    }
   });
 
   it('shows the active admin nickname in the admin-color account badge', () => {

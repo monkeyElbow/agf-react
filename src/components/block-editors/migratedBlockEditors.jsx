@@ -3,9 +3,9 @@ import AdminNumberInput from '../AdminNumberInput';
 import AdminHtmlEditor from '../AdminHtmlEditor';
 import PageContentEditorPreview from '../PageContentEditorPreview';
 import SharedRouteLinkField from '../RouteLinkField';
-import BillboardHudEditorPanel, { BillboardSlider, normalizeBillboardWidth } from '../BillboardHudEditorPanel';
+import BillboardHudEditorPanel, { BillboardSlider, normalizeBillboardPadding, normalizeBillboardWidth } from '../BillboardHudEditorPanel';
 import ColorPalette from '../ColorPalette';
-import { HeroHudEditorPanel, useBufferedHeroLineTextDrafts } from '../HeroHudEditorShared';
+import { HeroHudEditorPanel } from '../HeroHudEditorShared';
 import IntroHudEditorPanel from '../IntroHudEditorShared';
 import PageContentHudEditorPanel, { PageContentLayoutControls } from '../PageContentHudEditorPanel';
 import TestimonialsHudEditorPanel from '../TestimonialsHudEditorPanel';
@@ -51,6 +51,8 @@ import {
   resolveVisibleHeroLineNumbers,
   supportsOptionalHeroLine3,
 } from '../../lib/heroEditorLines';
+import { normalizeHeroLineGapEm } from '../../lib/heroLineStyle';
+import { normalizeHeroPaddingRem } from '../../lib/heroPadding';
 import {
   DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
   DEFAULT_HERO_TITLE_SIZE_REM,
@@ -58,6 +60,7 @@ import {
   normalizeHeroTitleSizeRem,
 } from '../../lib/heroTitleSize';
 import {
+  normalizeBillboardLeadCopySizeRem,
   normalizeBillboardLineSpacing,
   normalizeBillboardSubtitleSizeRem,
   normalizeBillboardTitleFontFamily,
@@ -84,7 +87,6 @@ import {
 } from '../../lib/testimonials';
 import {
   getGridCompatibleCardStyleOptions,
-  getGridCompatibleToneOptions,
   getGridSafeCardStyleForBg,
   getGridSafeToneForBg,
   DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT,
@@ -93,6 +95,7 @@ import {
   normalizeGridCardStyleToken,
   normalizeGridToneToken,
 } from '../../lib/dynamicGrid';
+import { buildCardGridIntroHtml } from '../../lib/cardGridIntro';
 import {
   BUTTON_TONE_OPTIONS as SHARED_BUTTON_TONE_OPTIONS,
   HERO_TEXT_COLOR_OPTIONS,
@@ -101,6 +104,7 @@ import {
   normalizeButtonTone,
   normalizePanelTextTone,
   normalizeSemanticTextColorClass,
+  normalizeSemanticTextColorClasses,
   normalizeSurfaceBgTone,
   resolvePanelTextToneClassName,
   getTokenSwatch,
@@ -116,6 +120,7 @@ import {
   SiteFeatureCollectionEditor,
 } from './SiteFeatureCollectionEditor';
 import { buildDynamicRatesFromBlock } from '../../lib/dynamicPageBlocks';
+import { RatesBlockPreview } from '../RatesBlock';
 import { EDITOR_DRAFT_FLUSH_EVENT } from '../../lib/contentAdminTiming';
 import {
   getSupportLibraryUnresolvedDocumentIds,
@@ -337,7 +342,7 @@ const BUFFERED_STRING_DRAFT_BLOCK_KINDS = Object.freeze([
 ]);
 
 const JUSTIFY_ICON_ORDER = ['left', 'center', 'right'];
-const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline', 'ghost']);
+const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'white', 'outline', 'ghost']);
 const HERO_SWATCH_OPTIONS = HERO_TEXT_COLOR_OPTIONS;
 const BILLBOARD_BG_SWATCH_OPTIONS = SURFACE_BG_TONE_OPTIONS;
 const BILLBOARD_BUTTON_TONE_OPTIONS = SHARED_BUTTON_TONE_OPTIONS;
@@ -1085,6 +1090,7 @@ function CardGridEditorDisclosure({
 
 function CardGridHeaderEditor({
   fieldById,
+  headerControlFields = [],
   settings,
   onSettingChange,
   routeOptions,
@@ -1092,14 +1098,17 @@ function CardGridHeaderEditor({
 }) {
   const titleField = fieldById.get('title');
   const titleColorField = fieldById.get('titleClassName');
+  const introHtmlField = fieldById.get('introHtml');
   const subtitleField = fieldById.get('subtitle');
   const subtitleColorField = fieldById.get('subtitleClassName');
   const bodyHtmlField = fieldById.get('bodyHtml');
-  const spacingFields = [
-    fieldById.get('paddingTopRem'),
-    fieldById.get('paddingBottomRem'),
-    fieldById.get('headerSubheadSpaceRem'),
-  ].filter(Boolean);
+  const gridBgTone = normalizeGridBgTone(settings.bgTone);
+  const subheadSizeRem = Number.isFinite(Number(settings.subheadSizeRem))
+    ? Number(settings.subheadSizeRem)
+    : null;
+  const subheadPreviewStyle = subheadSizeRem !== null
+    ? { '--dynamic-grid-subhead-size': `${subheadSizeRem}rem` }
+    : undefined;
   const titleColorOptions = Array.isArray(titleColorField?.options) && titleColorField.options.length
     ? titleColorField.options
     : HERO_SWATCH_OPTIONS;
@@ -1109,64 +1118,86 @@ function CardGridHeaderEditor({
 
   return (
     <div className="admin-card-grid-header-editor">
-      {titleField ? (
-        <ColorTextSelectionEditor
-          label="Grid header"
-          text={settings.title ?? ''}
-          lineClassName={settings.titleClassName ?? ''}
-          highlightsJson={settings.titleHighlightsJson ?? ''}
-          onTextChange={(nextValue) => onSettingChange('title', nextValue)}
-          onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
-          onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
-          placeholder="Card Grid heading"
-          rows={2}
-          className="is-intro-heading"
-          unifiedPreviewEditor
-          previewTagName="h2"
-          spanDetailsUnderToggle
-          useResetForClear
-          swatchOptions={titleColorOptions}
-          swatchVariant={paletteVariant}
-        />
-      ) : null}
+      <div className="admin-card-grid-header-editor-columns">
+        <div className="admin-card-grid-header-editor-copy">
+          {titleField ? (
+            <ColorTextSelectionEditor
+              label="Grid header"
+              text={settings.title ?? ''}
+              lineClassName={settings.titleClassName ?? ''}
+              highlightsJson={settings.titleHighlightsJson ?? ''}
+              onTextChange={(nextValue) => onSettingChange('title', nextValue)}
+              onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
+              onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
+              placeholder="Card Grid heading"
+              rows={2}
+              className="is-intro-heading"
+              unifiedPreviewEditor
+              previewTagName="h2"
+              spanDetailsUnderToggle
+              useResetForClear
+              swatchOptions={titleColorOptions}
+              swatchVariant={paletteVariant}
+              previewWrapClassName={`is-bg-${gridBgTone}`}
+            />
+          ) : null}
 
-      {subtitleField ? (
-        <ColorTextSelectionEditor
-          label="Grid subhead"
-          text={settings.subtitle ?? ''}
-          lineClassName={settings.subtitleClassName ?? ''}
-          highlightsJson={settings.subtitleHighlightsJson ?? ''}
-          onTextChange={(nextValue) => onSettingChange('subtitle', nextValue)}
-          onLineClassNameChange={(nextValue) => onSettingChange('subtitleClassName', nextValue)}
-          onHighlightsJsonChange={(nextValue) => onSettingChange('subtitleHighlightsJson', nextValue)}
-          placeholder="Card Grid subhead"
-          rows={2}
-          unifiedPreviewEditor
-          previewTagName="h3"
-          spanDetailsUnderToggle
-          useResetForClear
-          swatchOptions={subtitleColorOptions}
-          swatchVariant={paletteVariant}
-        />
-      ) : null}
+          {introHtmlField ? (
+            <>
+              <span className="admin-card-grid-subtitle-color-label">Subtitle color</span>
+              <AdminHtmlEditor
+                compact
+                value={buildCardGridIntroHtml(settings)}
+                onChange={(nextValue) => onSettingChange('introHtml', nextValue)}
+                placeholder="Grid subhead and intro copy"
+                ariaLabel="Grid subhead and intro copy"
+                className={`is-bg-${gridBgTone}${subheadSizeRem !== null ? ' is-subhead-sized' : ''}`}
+                style={subheadPreviewStyle}
+                baseColorClassName={normalizeSemanticTextColorClass(settings.subtitleClassName)}
+                onBaseColorChange={(nextValue) => onSettingChange('subtitleClassName', nextValue)}
+              />
+            </>
+          ) : subtitleField ? (
+            <ColorTextSelectionEditor
+              label="Grid subhead"
+              text={settings.subtitle ?? ''}
+              lineClassName={settings.subtitleClassName ?? ''}
+              highlightsJson={settings.subtitleHighlightsJson ?? ''}
+              onTextChange={(nextValue) => onSettingChange('subtitle', nextValue)}
+              onLineClassNameChange={(nextValue) => onSettingChange('subtitleClassName', nextValue)}
+              onHighlightsJsonChange={(nextValue) => onSettingChange('subtitleHighlightsJson', nextValue)}
+              placeholder=""
+              rows={2}
+              unifiedPreviewEditor
+              previewTagName="h3"
+              spanDetailsUnderToggle
+              useResetForClear
+              swatchOptions={subtitleColorOptions}
+              swatchVariant={paletteVariant}
+              previewWrapClassName={`is-bg-${gridBgTone}`}
+            />
+          ) : null}
 
-      {bodyHtmlField ? (
-        <AdminHtmlEditor
-          compact
-          value={toEditorHtml(settings.bodyHtml, settings.body)}
-          onChange={(nextValue) => onSettingChange('bodyHtml', nextValue)}
-          placeholder="Grid intro copy"
-        />
-      ) : null}
+          {!introHtmlField && bodyHtmlField ? (
+            <AdminHtmlEditor
+              compact
+              value={toEditorHtml(settings.bodyHtml, settings.body)}
+              onChange={(nextValue) => onSettingChange('bodyHtml', nextValue)}
+              placeholder="Grid intro copy"
+            />
+          ) : null}
+        </div>
+        {headerControlFields.length ? (
+          <FieldControlGrid
+            fields={headerControlFields}
+            settings={settings}
+            onSettingChange={onSettingChange}
+            className="admin-content-field-list--inline admin-card-grid-header-editor-controls"
+            paletteVariant={paletteVariant}
+          />
+        ) : null}
+      </div>
 
-      <FieldControlGrid
-        fields={spacingFields}
-        settings={settings}
-        onSettingChange={onSettingChange}
-        routeOptions={routeOptions}
-        paletteVariant={paletteVariant}
-        className="admin-content-field-list--inline admin-card-grid-header-spacing"
-      />
     </div>
   );
 }
@@ -1407,7 +1438,65 @@ function CardGridCardEditor({
   );
 }
 
-function CardChartBlockEditor({
+function parseCardChartComparisonPoints(value) {
+  const points = Array.isArray(value)
+    ? value.map((point) => String(point || '').trim())
+    : String(value || '').split(/\r?\n/).map((point) => point.trim());
+  return points.length ? points : [''];
+}
+
+function CardChartComparisonPointsEditor({ value, onChange }) {
+  const points = parseCardChartComparisonPoints(value);
+  const updatePoint = (index, nextValue) => {
+    const nextPoints = [...points];
+    nextPoints[index] = nextValue;
+    onChange(nextPoints.join('\n'));
+  };
+  const removePoint = (index) => {
+    const nextPoints = points.filter((_, pointIndex) => pointIndex !== index);
+    onChange(nextPoints.join('\n'));
+  };
+
+  return (
+    <div className="admin-card-chart-points-editor">
+      <div className="admin-card-chart-points-editor__heading">
+        <span>Comparison points</span>
+        <span className="admin-card-chart-points-editor__hint">One point per row</span>
+      </div>
+      <div className="admin-card-chart-points-editor__list">
+        {points.map((point, index) => (
+          <div className="admin-card-chart-point-row" key={`card-chart-point-${index}`}>
+            <span className="admin-card-chart-point-row__number" aria-hidden="true">{index + 1}</span>
+            <input
+              type="text"
+              value={point}
+              aria-label={`Comparison point ${index + 1}`}
+              placeholder="Add a comparison point"
+              onChange={(event) => updatePoint(index, event.target.value)}
+            />
+            <button
+              type="button"
+              className="admin-card-chart-point-row__remove"
+              aria-label={`Remove comparison point ${index + 1}`}
+              onClick={() => removePoint(index)}
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="admin-card-chart-points-editor__add"
+        onClick={() => onChange([...points, ''].join('\n'))}
+      >
+        Add comparison point
+      </button>
+    </div>
+  );
+}
+
+export function CardChartBlockEditor({
   block,
   onSettingChange,
   routeOptions = [],
@@ -1418,18 +1507,20 @@ function CardChartBlockEditor({
   const settings = block?.settings || {};
   const fields = resolveEditorFields('card_chart', hudMode ? 'hud' : 'admin', block?.editableFields);
   const fieldById = new Map(fields.map((field) => [field.id, field]));
-  const headerFields = ['title', 'justify', 'titleClassName', 'titleHighlightsJson']
+  const titleField = fieldById.get('title');
+  const titleColorField = fieldById.get('titleClassName');
+  const headerFields = ['justify']
     .map((fieldId) => fieldById.get(fieldId))
     .filter(Boolean);
   const countField = fieldById.get('cardCount');
-  const fineprintField = fieldById.get('fineprint');
-  const fineprintControls = ['fineprintJustify', 'fineprintSizeRem']
+  const fineprintFields = ['fineprint', 'fineprintJustify']
     .map((fieldId) => fieldById.get(fieldId))
     .filter(Boolean);
-  const spacingFields = ['spaceBeforeRem', 'spaceAfterRem', 'paddingTopRem', 'paddingBottomRem', 'cellPaddingRem']
+  const fineprintSizeField = fieldById.get('fineprintSizeRem');
+  const spacingFields = ['headerGapRem', 'spaceBeforeRem', 'spaceAfterRem', 'paddingTopRem', 'paddingBottomRem', 'cellPaddingRem', 'cellTextSizeRem', 'cellTextWeight']
     .map((fieldId) => fieldById.get(fieldId))
     .filter(Boolean);
-  const layoutFields = ['fullBleed', 'contentMaxWidthPx', 'sectionClassName', 'anchorId']
+  const layoutFields = ['fullBleed', 'contentMaxWidthPx', 'anchorId']
     .map((fieldId) => fieldById.get(fieldId))
     .filter(Boolean);
   const requestedCount = Number(settings.cardCount);
@@ -1467,13 +1558,19 @@ function CardChartBlockEditor({
         <section className="admin-card-chart-card-editor" key={`card-chart-card-${group.slot}`}>
           <h4>Card {group.slot}</h4>
           <FieldControlGrid
-            fields={group.fields}
+            fields={group.fields.filter((field) => field.id !== `card${group.slot}Bullets`)}
             settings={settings}
             onSettingChange={onSettingChange}
             routeOptions={routeOptions}
             sourceRevision={sourceRevision}
             className="admin-content-field-list--inline"
           />
+          {group.fields.find((field) => field.id === `card${group.slot}Bullets`) ? (
+            <CardChartComparisonPointsEditor
+              value={settings[`card${group.slot}Bullets`]}
+              onChange={(nextValue) => onSettingChange(`card${group.slot}Bullets`, nextValue)}
+            />
+          ) : null}
         </section>
       ))}
     </div>
@@ -1492,7 +1589,7 @@ function CardChartBlockEditor({
         />
       ) : null}
       <p className="admin-card-chart-control-help">
-        Sets the number of comparison columns. Increasing this adds another editable card and chart column. Enter one comparison point per line; press Enter to add another point.
+        Sets the number of comparison columns. Increasing this adds another editable card and chart column.
       </p>
       {cardControls}
     </div>
@@ -1511,27 +1608,39 @@ function CardChartBlockEditor({
     </div>
   ) : null;
 
-  const fineprintControlsMarkup = fineprintField || fineprintControls.length ? (
-    <div className="admin-card-chart-fineprint-controls">
+  const fineprintControlsMarkup = fineprintFields.length || fineprintSizeField ? (
+    <>
       <FieldControlGrid
-        fields={[fineprintField, ...fineprintControls].filter(Boolean)}
+        fields={fineprintFields}
         settings={settings}
         onSettingChange={onSettingChange}
         routeOptions={routeOptions}
         sourceRevision={sourceRevision}
-        className="admin-content-field-list--inline"
+        className="admin-content-field-list--inline admin-card-chart-fineprint-fields"
       />
-    </div>
+      {fineprintSizeField ? (
+        <FieldControlGrid
+          fields={[fineprintSizeField]}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          routeOptions={routeOptions}
+          sourceRevision={sourceRevision}
+          className="admin-content-field-list--inline admin-card-chart-fineprint-size-control"
+        />
+      ) : null}
+    </>
   ) : null;
 
+  const editorSections = appendHudBlockOptionsSection([
+    { id: 'header', label: 'Header', icon: 'H' },
+    { id: 'spacing', label: 'Spacing', icon: '↕' },
+    { id: 'cards', label: 'Cards', icon: '▦' },
+    { id: 'fineprint', label: 'Fineprint', icon: '※' },
+    { id: 'layout', label: 'Layout', icon: '⚙' },
+  ], blockOptions);
+  const [activeSection, setActiveSection] = useState(editorSections[0]?.id || 'header');
+
   if (hudMode) {
-    const editorSections = appendHudBlockOptionsSection([
-      { id: 'header', label: 'Header', icon: 'H' },
-      { id: 'spacing', label: 'Spacing', icon: '↕' },
-      { id: 'cards', label: 'Cards', icon: '▦' },
-      { id: 'layout', label: 'Layout', icon: '⚙' },
-    ], blockOptions);
-    const [activeSection, setActiveSection] = useState(editorSections[0]?.id || 'header');
     return (
       <HudEditorModelLayout
         className="admin-card-chart-hud-editor"
@@ -1542,6 +1651,30 @@ function CardChartBlockEditor({
         panelClassName="admin-card-chart-hud-panels"
       >
         <section className="admin-card-chart-hud-page admin-card-chart-hud-page--header">
+          {titleField ? (
+            <ColorTextSelectionEditor
+              label={titleField.label || 'Chart heading'}
+              inputAriaLabel={titleField.label || 'Chart heading'}
+              text={settings.title ?? ''}
+              lineClassName={settings.titleClassName ?? ''}
+              highlightsJson={settings.titleHighlightsJson ?? ''}
+              onTextChange={(nextValue) => onSettingChange('title', nextValue)}
+              onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
+              onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
+              placeholder="Card Chart heading"
+              rows={titleField.rows || 2}
+              className="is-card-chart-heading"
+              unifiedPreviewEditor
+              previewTagName="h2"
+              previewClassName={`is-justify-${String(settings.justify || 'center').trim() || 'center'}`}
+              spanDetailsUnderToggle
+              useResetForClear
+              swatchOptions={Array.isArray(titleColorField?.options) && titleColorField.options.length
+                ? titleColorField.options
+                : HERO_SWATCH_OPTIONS}
+              swatchVariant={hudMode ? 'hud' : 'admin'}
+            />
+          ) : null}
           <FieldControlGrid
             fields={headerFields}
             settings={settings}
@@ -1550,13 +1683,15 @@ function CardChartBlockEditor({
             sourceRevision={sourceRevision}
             className="admin-content-field-list--inline admin-card-chart-header-fields"
           />
-          {fineprintControlsMarkup}
         </section>
         <section className="admin-card-chart-hud-page admin-card-chart-hud-page--spacing">
           {spacingControls}
         </section>
         <section className="admin-card-chart-hud-page admin-card-chart-hud-page--cards">
           {cardControlsPage}
+        </section>
+        <section className="admin-card-chart-hud-page admin-card-chart-hud-page--fineprint">
+          {fineprintControlsMarkup}
         </section>
         <section className="admin-card-chart-hud-page admin-card-chart-hud-page--layout">
           <FieldControlGrid
@@ -1577,6 +1712,29 @@ function CardChartBlockEditor({
     <div className="admin-card-chart-editor">
       <section className="admin-card-chart-editor-section admin-card-chart-editor-section--header">
         <h3>Header</h3>
+        {titleField ? (
+          <ColorTextSelectionEditor
+            label={titleField.label || 'Chart heading'}
+            inputAriaLabel={titleField.label || 'Chart heading'}
+            text={settings.title ?? ''}
+            lineClassName={settings.titleClassName ?? ''}
+            highlightsJson={settings.titleHighlightsJson ?? ''}
+            onTextChange={(nextValue) => onSettingChange('title', nextValue)}
+            onLineClassNameChange={(nextValue) => onSettingChange('titleClassName', nextValue)}
+            onHighlightsJsonChange={(nextValue) => onSettingChange('titleHighlightsJson', nextValue)}
+            placeholder="Card Chart heading"
+            rows={titleField.rows || 2}
+            className="is-card-chart-heading"
+            unifiedPreviewEditor
+            previewTagName="h2"
+            previewClassName={`is-justify-${String(settings.justify || 'center').trim() || 'center'}`}
+            spanDetailsUnderToggle
+            useResetForClear
+            swatchOptions={Array.isArray(titleColorField?.options) && titleColorField.options.length
+              ? titleColorField.options
+              : HERO_SWATCH_OPTIONS}
+          />
+        ) : null}
         <FieldControlGrid
           fields={headerFields}
           settings={settings}
@@ -1585,7 +1743,6 @@ function CardChartBlockEditor({
           sourceRevision={sourceRevision}
           className="admin-content-field-list--inline admin-card-chart-header-fields"
         />
-        {fineprintControlsMarkup}
       </section>
       <section className="admin-card-chart-editor-section admin-card-chart-editor-section--spacing">
         <h3>Spacing</h3>
@@ -1594,6 +1751,10 @@ function CardChartBlockEditor({
       <section className="admin-card-chart-editor-section admin-card-chart-editor-section--cards">
         <h3>Cards</h3>
         {cardControlsPage}
+      </section>
+      <section className="admin-card-chart-editor-section admin-card-chart-editor-section--fineprint">
+        <h3>Fineprint</h3>
+        {fineprintControlsMarkup}
       </section>
       <section className="admin-card-chart-editor-section admin-card-chart-editor-section--layout">
         <h3>Layout</h3>
@@ -2600,7 +2761,9 @@ export function EditorButtonPreview({ buttons, backgroundTone = 'white' }) {
         return null;
       }
       const style = normalizeActionButtonStyleToken(item?.style);
-      const defaultTone = style === 'dark' || style === 'ghost' ? 'super-grey' : 'atlantean';
+      const defaultTone = style === 'white'
+        ? 'white'
+        : (style === 'dark' || style === 'ghost' ? 'super-grey' : 'atlantean');
       const tone = style === 'outline'
         ? normalizeActionButtonToneToken(item?.tone, defaultTone)
         : defaultTone;
@@ -3754,6 +3917,7 @@ export function RequestFormBlockEditor({
 
 function ColorTextSelectionEditor({
   label,
+  inputAriaLabel = '',
   text,
   lineClassName,
   highlightsJson,
@@ -3792,7 +3956,7 @@ function ColorTextSelectionEditor({
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
   const value = draftText;
   const activeHighlightsJson = draftHighlightsJson;
-  const normalizedLineClass = String(lineClassName || '').trim();
+  const normalizedLineClass = normalizeSemanticTextColorClasses(lineClassName);
   const mergedPreviewClassName = mergePreviewClassNames(normalizedLineClass, previewClassName);
   const highlights = useMemo(() => parseHeroRangeHighlights(activeHighlightsJson, value), [activeHighlightsJson, value]);
   const hasSelection = selection.end > selection.start;
@@ -4027,7 +4191,7 @@ function ColorTextSelectionEditor({
         onKeyUp={syncSelection}
         onMouseUp={syncSelection}
         onChange={(event) => handleTextChange(event.target.value)}
-        aria-label={`${label} text`}
+        aria-label={inputAriaLabel || `${label} text`}
         spellCheck="false"
       />
       {useResetForClear ? (
@@ -4147,7 +4311,7 @@ function ColorTextSelectionEditor({
   );
 }
 
-export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOptions = [], blockOptions = null, sourceRevision = 0 }) {
+export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOptions = [], blockOptions = null, selection = null, onSelectionClear = null }) {
   const settings = block.settings || {};
   const heroInspection = useMemo(
     () => inspectDynamicHeroSettings(pathname, settings),
@@ -4155,6 +4319,9 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
   );
   const [activeLine, setActiveLine] = useState('line1');
   const [showOptionalLine3, setShowOptionalLine3] = useState(() => hasDisplayableHeroLineText(settings, 'line3'));
+  const heroLiveLineTextRef = useRef({});
+  const [heroSpanDetailsOpen, setHeroSpanDetailsOpen] = useState(false);
+  const [heroSpanDetailsLineKey, setHeroSpanDetailsLineKey] = useState('line1');
 
   const heroBgTone = (() => {
     const token = String(settings.bgTone || 'white').trim();
@@ -4172,6 +4339,8 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     }
     return Math.max(20, Math.min(90, Math.round(numeric)));
   })();
+  const heroPaddingTopRem = normalizeHeroPaddingRem(settings.paddingTopRem);
+  const heroPaddingBottomRem = normalizeHeroPaddingRem(settings.paddingBottomRem);
   const heroTitleSizeRem = normalizeHeroTitleSizeRem(settings.titleSizeRem);
   const heroTitleLetterSpacingEm = normalizeHeroTitleLetterSpacingEm(settings.titleLetterSpacingEm);
   const heroLineHeight = (() => {
@@ -4181,6 +4350,7 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     }
     return Math.max(0.72, Math.min(1.2, Number(numeric.toFixed(2))));
   })();
+  const heroLineGap = normalizeHeroLineGapEm(settings.lineGap);
   const editableFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(editableFields.map((field) => [field.id, field]));
   const actionJustifyField = fieldById.get('actionJustify') || null;
@@ -4197,6 +4367,12 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     settings,
     includeOptionalLine3: showOptionalLine3,
   });
+  useEffect(() => {
+    const selectedLine = String(selection?.line || '').trim();
+    if (selectedLine && resolvedLineNumbers.includes(Number(selectedLine.replace('line', '')))) {
+      setActiveLine(selectedLine);
+    }
+  }, [selection?.line, resolvedLineNumbers]);
   const canShowOptionalLine3 = supportsOptionalHeroLine3({ fieldById, settings }) && !showOptionalLine3;
   const rawLineConfigs = resolvedLineNumbers.map((lineNumber) => {
     const lineKey = `line${lineNumber}`;
@@ -4210,37 +4386,9 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
       className,
     };
   });
-  const {
-    draftTexts: heroLineDraftTexts,
-    updateLineDraft,
-    commitLineDraftOnBlur,
-  } = useBufferedHeroLineTextDrafts({
-    lines: rawLineConfigs,
-    onCommitLineText: (lineKey, nextText) => {
-      const previousText = String(settings?.[`${lineKey}Text`] ?? '');
-      onSettingChange(`${lineKey}Text`, nextText);
-      onSettingChange(
-        `${lineKey}HighlightsJson`,
-        remapHighlightsJsonForTextChange(settings?.[`${lineKey}HighlightsJson`], previousText, nextText),
-      );
-    },
-    sourceRevision,
-  });
-  const resolveCurrentLineText = (lineKey, fallback = '') => (
-    String(heroLineDraftTexts[lineKey] ?? fallback ?? '')
-  );
-  const resolveCurrentLineHighlightsJson = (lineKey, currentTextValue = '') => {
-    const externalText = String(settings?.[`${lineKey}Text`] ?? '');
-    const currentText = String(currentTextValue ?? '');
-    const rawHighlightsJson = String(settings?.[`${lineKey}HighlightsJson`] ?? '');
-    if (currentText === externalText) {
-      return rawHighlightsJson;
-    }
-    return remapHighlightsJsonForTextChange(rawHighlightsJson, externalText, currentText);
-  };
   const lineConfigs = rawLineConfigs.map((line) => {
-    const text = resolveCurrentLineText(line.key, line.text);
-    const highlights = parseHeroRangeHighlights(resolveCurrentLineHighlightsJson(line.key, text), text);
+    const text = line.text;
+    const highlights = parseHeroRangeHighlights(settings?.[`${line.key}HighlightsJson`], text);
     return {
       ...line,
       text,
@@ -4255,6 +4403,10 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
   };
 
   const canHideOptionalLine3 = showOptionalLine3 && !hasStoredLine3Content;
+  const heroSpanLines = lineConfigs.filter((line) => line.highlights.length > 0);
+  const activeHeroSpanLine = heroSpanLines.find((line) => line.key === heroSpanDetailsLineKey)
+    || heroSpanLines[0]
+    || null;
 
   const detailFieldIds = new Set([
     'animationPreset',
@@ -4262,6 +4414,8 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
     'bgTone',
     'heightMode',
     'heightSvh',
+    'paddingTopRem',
+    'paddingBottomRem',
     'titleSizeRem',
     'titleLetterSpacingEm',
     'lineHeight',
@@ -4292,49 +4446,68 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
   return (
     <HeroHudEditorPanel
       lines={lineConfigs}
+      editableHeroBlock={block}
+      lineKeys={resolvedLineNumbers.map((lineNumber) => `line${lineNumber}`)}
+      includeOptionalLine3={showOptionalLine3}
       activeLineKey={activeLine}
-      selection={{ line: activeLine, start: 0, end: 0, text: '' }}
+      selection={selection}
       driftReport={heroInspection}
       bgTone={heroBgTone}
       justify={heroJustify}
       titleSizeRem={heroTitleSizeRem}
       titleLetterSpacingEm={heroTitleLetterSpacingEm}
       lineHeight={heroLineHeight}
+      lineGap={heroLineGap}
+      paddingTopRem={heroPaddingTopRem}
+      paddingBottomRem={heroPaddingBottomRem}
       lineColorOptions={HERO_SWATCH_OPTIONS}
-      onLineTextChange={(lineKey, nextValue) => updateLineDraft(lineKey, nextValue)}
-      onLineTextBlur={(lineKey) => commitLineDraftOnBlur(lineKey)}
+      onLineTextChange={(lineKey, nextValue) => {
+        const previousText = String(settings?.[`${lineKey}Text`] ?? '');
+        const nextText = String(nextValue ?? '');
+        heroLiveLineTextRef.current[lineKey] = nextText;
+        onSettingChange(`${lineKey}Text`, nextText);
+        onSettingChange(
+          `${lineKey}HighlightsJson`,
+          remapHighlightsJsonForTextChange(settings?.[`${lineKey}HighlightsJson`], previousText, nextText),
+        );
+      }}
       onActivateLine={(lineKey) => setActiveLine(lineKey)}
       onApplyLineColor={(lineKey, colorValue) => {
         const line = lineByKey[lineKey] || lineByKey.line1;
         if (!line) {
           return;
         }
+        const text = String(heroLiveLineTextRef.current[lineKey] ?? line.text);
+        delete heroLiveLineTextRef.current[lineKey];
         const result = applyTextColorSelection({
-          text: line.text,
+          text,
           lineClassName: line.className,
-          highlightsJson: resolveCurrentLineHighlightsJson(lineKey, line.text),
+          highlightsJson: settings?.[`${lineKey}HighlightsJson`],
           selection: { start: 0, end: 0 },
           colorValue,
         });
         onSettingChange(lineKey + 'ClassName', result.lineClassName);
+        onSelectionClear?.();
       }}
       onApplySelectionColor={(lineKey, colorValue, selection) => {
         const line = lineByKey[lineKey] || lineByKey.line1;
         if (!line) {
           return;
         }
+        const text = String(selection?.sourceText ?? line.text);
         const result = applyTextColorSelection({
-          text: line.text,
+          text,
           lineClassName: line.className,
-          highlightsJson: resolveCurrentLineHighlightsJson(lineKey, line.text),
+          highlightsJson: settings?.[`${lineKey}HighlightsJson`],
           selection,
           colorValue,
         });
         if (result.target !== 'selection') {
           return;
         }
-        onSettingChange(lineKey + 'Text', line.text);
+        onSettingChange(lineKey + 'Text', text);
         onSettingChange(lineKey + 'HighlightsJson', result.highlightsJson);
+        onSelectionClear?.();
       }}
       onRemoveSpan={(lineKey, index) => {
         const line = lineByKey[lineKey] || lineByKey.line1;
@@ -4343,15 +4516,21 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
         }
         onSettingChange(
           lineKey + 'HighlightsJson',
-          removeSelectionRange(resolveCurrentLineHighlightsJson(lineKey, line.text), line.text, index),
+          removeSelectionRange(settings?.[`${lineKey}HighlightsJson`], line.text, index),
         );
+        onSelectionClear?.();
       }}
-      onClearLineSpans={(lineKey) => onSettingChange(lineKey + 'HighlightsJson', '')}
+      onClearLineSpans={(lineKey) => {
+        onSettingChange(lineKey + 'HighlightsJson', '');
+        onSelectionClear?.();
+      }}
       onBgToneChange={(nextValue) => onSettingChange('bgTone', nextValue)}
       onJustifyChange={(nextValue) => onSettingChange('justify', nextValue)}
       onTitleSizeChange={(nextValue) => onSettingChange('titleSizeRem', nextValue)}
       onTitleLetterSpacingChange={(nextValue) => onSettingChange('titleLetterSpacingEm', nextValue)}
       onLineHeightChange={(nextValue) => onSettingChange('lineHeight', nextValue)}
+      onPaddingTopRemChange={(nextValue) => onSettingChange('paddingTopRem', nextValue)}
+      onPaddingBottomRemChange={(nextValue) => onSettingChange('paddingBottomRem', nextValue)}
       canAddOptionalLine={canShowOptionalLine3}
       onAddOptionalLine={() => {
         setShowOptionalLine3(true);
@@ -4364,10 +4543,60 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
           setActiveLine('line2');
         }
       }}
-      extraControlsLabel="More controls"
       blockOptions={blockOptions}
     >
       <div className="admin-hero-hud-extra-grid" aria-label="Hero settings">
+        {heroSpanLines.length ? (
+          <div className="admin-hero-hud-span-summary">
+            <button
+              type="button"
+              className="admin-front-hud-mini-action"
+              onClick={() => {
+                setHeroSpanDetailsOpen((current) => !current);
+                if (!heroSpanDetailsLineKey || !heroSpanLines.some((line) => line.key === heroSpanDetailsLineKey)) {
+                  setHeroSpanDetailsLineKey(heroSpanLines[0].key);
+                }
+              }}
+            >
+              {heroSpanDetailsOpen ? 'Hide span details' : 'Show span details'}
+            </button>
+            {heroSpanDetailsOpen && activeHeroSpanLine ? (
+              <div className="admin-hero-hud-span-summary-details">
+                <span>{activeHeroSpanLine.label} spans</span>
+                <div className="admin-hero-hud-span-line-nav" aria-label="Hero span lines">
+                  {heroSpanLines.map((line) => (
+                    <span key={`hero-span-summary-${line.key}`} className="admin-hero-hud-span-line-nav-item">
+                      {line.key !== activeHeroSpanLine.key ? (
+                        <button
+                          type="button"
+                          className="admin-front-hud-mini-action"
+                          aria-label={`Go to ${line.label} spans (${line.highlights.length})`}
+                          onClick={() => {
+                            setActiveLine(line.key);
+                            setHeroSpanDetailsLineKey(line.key);
+                          }}
+                        >
+                          Go to
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="admin-front-hud-segment-btn"
+                        aria-pressed={heroSpanDetailsLineKey === line.key}
+                        onClick={() => {
+                          setActiveLine(line.key);
+                          setHeroSpanDetailsLineKey(line.key);
+                        }}
+                      >
+                        {`${line.label} (${line.highlights.length} spans)`}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         <div className="admin-hero-hud-extra-row">
           <label className="admin-front-hud-field">
             <span>Hero animation</span>
@@ -4464,7 +4693,6 @@ export function HeroBlockEditor({ block, pathname = '', onSettingChange, routeOp
 
         {miscFields.length ? (
           <section className="admin-hero-hud-action-group" aria-label="Additional Hero settings">
-            <h5>Additional settings</h5>
             <FieldControlGrid
               fields={miscFields}
               settings={settings}
@@ -4982,6 +5210,7 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
     billboardTitleFontFamily,
   );
   const billboardSubtitleSizeRem = normalizeBillboardSubtitleSizeRem(effectiveBillboardSettings.subtitleSizeRem);
+  const billboardLeadCopySizeRem = normalizeBillboardLeadCopySizeRem(effectiveBillboardSettings.leadCopySizeRem);
   const billboardTextTone = normalizePanelTextTone(effectiveBillboardSettings.textTone, 'white');
   const billboardTitleInputRef = useRef(null);
   const [billboardTitleSelection, setBillboardTitleSelection] = useState({
@@ -5080,6 +5309,8 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       bodyHtml={String(draftValues.bodyHtml || '')}
       onBodyHtmlChange={(nextValue) => updateDraftField('bodyHtml', nextValue)}
       onBodyHtmlBlur={() => commitDraftOnBlur('bodyHtml')}
+      leadCopySizeRem={billboardLeadCopySizeRem}
+      onLeadCopySizeRemChange={(nextValue) => onSettingChange('leadCopySizeRem', Number(nextValue))}
       bodyColorClassName={String(effectiveBillboardSettings.bodyColorClassName || resolvePanelTextToneClassName(billboardTextTone, 'white'))}
       onBodyColorChange={(nextValue) => onSettingChange('bodyColorClassName', nextValue)}
       bgTone={billboardBgTone}
@@ -5165,6 +5396,10 @@ export function BillboardBlockEditor({ block, onSettingChange, routeOptions = []
       button2ToneOptions={Array.isArray(button2ToneField?.options) && button2ToneField.options.length ? button2ToneField.options : BILLBOARD_BUTTON_TONE_OPTIONS}
       contentMaxWidthPx={effectiveBillboardSettings.contentMaxWidthPx ?? null}
       onContentMaxWidthPxChange={(nextValue) => onSettingChange('contentMaxWidthPx', nextValue == null || nextValue === '' ? '' : normalizeBillboardWidth(nextValue))}
+      paddingTopRem={effectiveBillboardSettings.paddingTopRem ?? null}
+      onPaddingTopRemChange={(nextValue) => onSettingChange('paddingTopRem', normalizeBillboardPadding(nextValue))}
+      paddingBottomRem={effectiveBillboardSettings.paddingBottomRem ?? null}
+      onPaddingBottomRemChange={(nextValue) => onSettingChange('paddingBottomRem', normalizeBillboardPadding(nextValue))}
       blockOptions={blockOptions}
     />
   );
@@ -6454,30 +6689,16 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
   const allFields = resolveEditorFields(block.kind, 'admin', block.editableFields);
   const fieldById = new Map(allFields.map((field) => [field.id, field]));
   const bgToneField = fieldById.get('bgTone') || null;
+  const headerSizeField = fieldById.get('headerSizeRem') || null;
   const titleToneFieldBase = fieldById.get('titleTone') || null;
   const bodyToneFieldBase = fieldById.get('bodyTone') || null;
+  const subheadSizeField = fieldById.get('subheadSizeRem') || null;
   const cardStyleFieldBase = fieldById.get('cardStyle') || null;
   const gridBgTone = normalizeGridBgTone(settings.bgTone);
-  const titleToneField = useMemo(() => {
-    if (!titleToneFieldBase) {
-      return null;
-    }
-    const compatibleOptions = getGridCompatibleToneOptions(titleToneFieldBase.options, gridBgTone);
-    return {
-      ...titleToneFieldBase,
-      options: compatibleOptions.length ? compatibleOptions : (Array.isArray(titleToneFieldBase.options) ? titleToneFieldBase.options : []),
-    };
-  }, [gridBgTone, titleToneFieldBase]);
-  const bodyToneField = useMemo(() => {
-    if (!bodyToneFieldBase) {
-      return null;
-    }
-    const compatibleOptions = getGridCompatibleToneOptions(bodyToneFieldBase.options, gridBgTone);
-    return {
-      ...bodyToneFieldBase,
-      options: compatibleOptions.length ? compatibleOptions : (Array.isArray(bodyToneFieldBase.options) ? bodyToneFieldBase.options : []),
-    };
-  }, [bodyToneFieldBase, gridBgTone]);
+  // Color controls are authored independently. Changing the section surface
+  // must not hide or rewrite the title/body color choices.
+  const titleToneField = titleToneFieldBase;
+  const bodyToneField = bodyToneFieldBase;
   const cardStyleField = useMemo(() => {
     if (!cardStyleFieldBase) {
       return null;
@@ -6515,7 +6736,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
       label: field.id === 'titleTone'
         ? 'Card title color'
         : field.id === 'bodyTone'
-          ? 'Body color'
+          ? 'Card body color'
           : 'Grid background',
       compact: true,
       iconOnly: true,
@@ -6527,6 +6748,12 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     cardStyleField,
     fieldById.get('cardCount'),
   ].filter((field) => field && allowedLayoutFieldIds.has(field.id));
+  const spacingFields = [
+    fieldById.get('paddingTopRem'),
+    fieldById.get('paddingBottomRem'),
+    fieldById.get('headerSubheadSpaceRem'),
+  ].filter(Boolean);
+  const headerControlFields = [headerSizeField, subheadSizeField, ...spacingFields].filter(Boolean);
   const cardTypographyFields = [
     fieldById.get('cardPaddingRem'),
     fieldById.get('cardTitleSizeRem'),
@@ -6574,49 +6801,9 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
     }
   }, [cardStyleFieldBase, gridBgTone, onSettingChange, settings.cardStyle]);
 
-  useEffect(() => {
-    if (!titleToneFieldBase) {
-      return;
-    }
-    const nextTitleTone = getGridSafeToneForBg(settings.titleTone, gridBgTone, 'super-grey', titleToneFieldBase.options);
-    if (nextTitleTone !== normalizeGridToneToken(settings.titleTone)) {
-      onSettingChange('titleTone', nextTitleTone);
-    }
-  }, [gridBgTone, onSettingChange, settings.titleTone, titleToneFieldBase]);
-
-  useEffect(() => {
-    if (!bodyToneFieldBase) {
-      return;
-    }
-    const nextBodyTone = getGridSafeToneForBg(settings.bodyTone, gridBgTone, 'super-grey', bodyToneFieldBase.options);
-    if (nextBodyTone !== normalizeGridToneToken(settings.bodyTone)) {
-      onSettingChange('bodyTone', nextBodyTone);
-    }
-  }, [bodyToneFieldBase, gridBgTone, onSettingChange, settings.bodyTone]);
-
   const handleGridBackgroundChange = (nextBgToneRaw) => {
     const nextBgTone = normalizeGridBgTone(nextBgToneRaw);
     onSettingChange('bgTone', nextBgTone);
-    if (!cardStyleFieldBase) {
-      if (titleToneFieldBase) {
-        onSettingChange('titleTone', getGridSafeToneForBg(settings.titleTone, nextBgTone, 'super-grey', titleToneFieldBase.options));
-      }
-      if (bodyToneFieldBase) {
-        onSettingChange('bodyTone', getGridSafeToneForBg(settings.bodyTone, nextBgTone, 'super-grey', bodyToneFieldBase.options));
-      }
-      return;
-    }
-    const normalizedCurrentStyle = normalizeGridCardStyleToken(settings.cardStyle);
-    const nextStyle = getGridSafeCardStyleForBg(settings.cardStyle, nextBgTone, cardStyleFieldBase.options);
-    if (nextStyle !== normalizedCurrentStyle) {
-      onSettingChange('cardStyle', nextStyle);
-    }
-    if (titleToneFieldBase) {
-      onSettingChange('titleTone', getGridSafeToneForBg(settings.titleTone, nextBgTone, 'super-grey', titleToneFieldBase.options));
-    }
-    if (bodyToneFieldBase) {
-      onSettingChange('bodyTone', getGridSafeToneForBg(settings.bodyTone, nextBgTone, 'super-grey', bodyToneFieldBase.options));
-    }
   };
 
   const cardSlots = useMemo(() => (
@@ -6755,6 +6942,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
         <div className="admin-card-grid-hud-page admin-card-grid-hud-page--header">
           <CardGridHeaderEditor
             fieldById={fieldById}
+            headerControlFields={headerControlFields}
             settings={settings}
             onSettingChange={onSettingChange}
             routeOptions={normalizedRouteOptions}
@@ -6837,6 +7025,7 @@ export function GridBlockEditor({ block, onSettingChange, routeOptions = [], hud
         <h4>Header</h4>
         <CardGridHeaderEditor
           fieldById={fieldById}
+          headerControlFields={headerControlFields}
           settings={settings}
           onSettingChange={onSettingChange}
           routeOptions={normalizedRouteOptions}
@@ -6990,6 +7179,8 @@ export function NewsletterBlockEditor({ block, onSettingChange }) {
 
 export function PageContentBlockEditor({ block, onSettingChange }) {
   const settings = block.settings || {};
+  const fields = resolveEditorFields(block.kind, 'admin', block.editableFields);
+  const appearanceFields = fields.filter((field) => ['bgTone', 'textTone'].includes(field.id));
   const editorField = getPageContentEditorField(settings);
   const usesLegacySource = hasLegacyPageContentSource(settings);
 
@@ -7015,6 +7206,15 @@ export function PageContentBlockEditor({ block, onSettingChange }) {
           html={getPageContentEditorHtml(settings)}
         />
       </div>
+
+      {appearanceFields.length ? (
+        <FieldControlGrid
+          fields={appearanceFields}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          className="admin-content-field-list--inline admin-page-content-appearance-fields"
+        />
+      ) : null}
 
       <PageContentLayoutControls
         settings={settings}
@@ -7161,25 +7361,38 @@ export function HeroPieBlockEditor({ block, onSettingChange }) {
   );
 }
 
-export function RatesBlockEditor({ block, pathname = '', ratesContext = {} }) {
+export function RatesBlockEditor({ block, onSettingChange, ratesContext = {}, sourceRevision = 0 }) {
   const runtime = buildDynamicRatesFromBlock(block);
-  void block;
-  void pathname;
-  void ratesContext;
+  const settings = block?.settings || {};
+  const allFields = resolveEditorFields(block.kind, 'hud', block.editableFields);
+  const rates = Array.isArray(ratesContext?.rates) ? ratesContext.rates : [];
+  const iraRates = Array.isArray(ratesContext?.iraRates) ? ratesContext.iraRates : [];
+  const ratesMeta = ratesContext?.ratesMeta || {};
 
   return (
-    <div className="admin-intro-block-editor">
-      <p className="admin-front-hud-note">
-        Table rows and published rates are managed in the Rates admin screen.
-      </p>
-      <a
-        className="admin-testimonials-library-link"
-        href={runtime?.adminHref || '/admin/rates'}
-        target="_blank"
-        rel="noreferrer noopener"
-      >
-        Open rates admin ↗
-      </a>
+    <div className="admin-rates-editor" data-rates-editor-dataset={runtime?.dataset || undefined}>
+      <div className="admin-rates-editor__controls">
+        <FieldControlGrid
+          fields={allFields}
+          settings={settings}
+          onSettingChange={onSettingChange}
+          sourceRevision={sourceRevision}
+        />
+        <a
+          className="admin-testimonials-library-link"
+          href={runtime?.adminHref || '/admin/rates'}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Manage published rate rows ↗
+        </a>
+      </div>
+      <div className="admin-rates-editor__preview-wrap">
+        <RatesBlockPreview runtime={runtime} rates={rates} iraRates={iraRates} ratesMeta={ratesMeta} />
+        <div className="admin-rates-editor__preview-note">
+          This compact preview follows the selected dataset. Rate rows remain managed in Rates admin.
+        </div>
+      </div>
     </div>
   );
 }

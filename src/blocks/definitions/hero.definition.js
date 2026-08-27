@@ -8,12 +8,19 @@ import {
   DEFAULT_HERO_TITLE_SIZE_REM,
 } from '../../lib/heroTitleSize';
 import { validateActionFieldGroup } from '../../lib/linkValue';
+import {
+  HERO_PADDING_DEFAULT_REM,
+  HERO_PADDING_MAX_REM,
+  HERO_PADDING_MIN_REM,
+  HERO_PADDING_STEP_REM,
+} from '../../lib/heroPadding';
 
 const HERO_LINE_TONE_OPTIONS = HERO_TEXT_COLOR_OPTIONS;
 
 const HERO_BUTTON_STYLE_OPTIONS = [
   { value: 'blue', label: 'Blue' },
   { value: 'dark', label: 'Dark' },
+  { value: 'white', label: 'White' },
   { value: 'outline', label: 'Outline' },
 ];
 
@@ -114,6 +121,8 @@ const sections = [
         ],
       }),
       defineEditorField({ id: 'heightSvh', label: 'Hero height (% of viewport)', type: 'number' }),
+      defineEditorField({ id: 'paddingTopRem', label: 'Hero top padding (rem)', type: 'range', min: HERO_PADDING_MIN_REM, max: HERO_PADDING_MAX_REM, step: HERO_PADDING_STEP_REM, defaultValue: HERO_PADDING_DEFAULT_REM }),
+      defineEditorField({ id: 'paddingBottomRem', label: 'Hero bottom padding (rem)', type: 'range', min: HERO_PADDING_MIN_REM, max: HERO_PADDING_MAX_REM, step: HERO_PADDING_STEP_REM, defaultValue: HERO_PADDING_DEFAULT_REM }),
       defineEditorField({ id: 'titleSizeRem', label: 'Hero title size (rem)', type: 'number' }),
       defineEditorField({ id: 'titleLetterSpacingEm', label: 'Hero title tracking (em)', type: 'number' }),
       defineEditorField({ id: 'lineHeight', label: 'Hero text line height', type: 'number' }),
@@ -192,6 +201,8 @@ export const heroBlockDefinition = createBlockDefinition({
     justify: 'center',
     actionJustify: 'center',
     heightMode: 'default',
+    paddingTopRem: HERO_PADDING_DEFAULT_REM,
+    paddingBottomRem: HERO_PADDING_DEFAULT_REM,
     titleSizeRem: DEFAULT_HERO_TITLE_SIZE_REM,
     titleLetterSpacingEm: DEFAULT_HERO_TITLE_LETTER_SPACING_EM,
     lineHeight: 0.9,

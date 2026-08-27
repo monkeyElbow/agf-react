@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { navSections } from '../data/siteMap';
 import { useContentAdmin } from '../context/ContentAdminContextCore';
@@ -151,6 +151,7 @@ export default function SiteLayout({ children }) {
   });
   const frontHudEnabledRef = useRef(frontHudEnabled);
   const previousFrontHudEnabledRef = useRef(frontHudEnabled);
+  const pendingHudScrollRestoreRef = useRef(null);
   const frontHudOpacityRef = useRef(frontHudOpacity);
   const navHoverCloseTimeoutRef = useRef(null);
   const navRef = useRef(null);
@@ -426,6 +427,54 @@ export default function SiteLayout({ children }) {
     frontHudEnabledRef.current = frontHudEnabled;
   }, [frontHudEnabled]);
 
+  const captureHudToggleScroll = (nextEnabled) => {
+    if (typeof window === 'undefined' || Boolean(nextEnabled) === frontHudEnabledRef.current) {
+      return;
+    }
+    pendingHudScrollRestoreRef.current = {
+      left: Number(window.scrollX || window.pageXOffset || 0),
+      top: Number(window.scrollY || window.pageYOffset || 0),
+    };
+  };
+
+  useLayoutEffect(() => {
+    const pendingPosition = pendingHudScrollRestoreRef.current;
+    if (!pendingPosition || typeof window === 'undefined') {
+      return undefined;
+    }
+    pendingHudScrollRestoreRef.current = null;
+
+    let firstFrame = 0;
+    let secondFrame = 0;
+    let fallbackTimer = 0;
+    const restoreScrollPosition = () => {
+      window.scrollTo({
+        left: pendingPosition.left,
+        top: pendingPosition.top,
+        behavior: 'auto',
+      });
+    };
+    const requestFrame = (callback) => (
+      typeof window.requestAnimationFrame === 'function'
+        ? window.requestAnimationFrame(callback)
+        : window.setTimeout(callback, 0)
+    );
+
+    firstFrame = requestFrame(() => {
+      restoreScrollPosition();
+      secondFrame = requestFrame(restoreScrollPosition);
+    });
+    fallbackTimer = window.setTimeout(restoreScrollPosition, 120);
+
+    return () => {
+      if (typeof window.cancelAnimationFrame === 'function') {
+        window.cancelAnimationFrame(firstFrame);
+        window.cancelAnimationFrame(secondFrame);
+      }
+      window.clearTimeout(fallbackTimer);
+    };
+  }, [frontHudEnabled]);
+
   useEffect(() => {
     const previousEnabled = previousFrontHudEnabledRef.current;
     if (!previousEnabled && frontHudEnabled) {
@@ -459,6 +508,7 @@ export default function SiteLayout({ children }) {
     }
 
     const setHudEnabledImmediate = (nextEnabled) => {
+      captureHudToggleScroll(nextEnabled);
       frontHudEnabledRef.current = Boolean(nextEnabled);
       if (nextEnabled) {
         activateAdminProvider();
@@ -537,6 +587,7 @@ export default function SiteLayout({ children }) {
   };
 
   const setFrontHudEnabledWithActivation = (nextEnabled) => {
+    captureHudToggleScroll(nextEnabled);
     if (nextEnabled) {
       activateAdminProvider();
     }

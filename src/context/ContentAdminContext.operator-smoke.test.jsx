@@ -670,7 +670,7 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     expect(screen.getByTestId('block-ids').textContent).toContain('billboard_2');
   });
 
-  it('keeps block reordering dirty until the explicit page draft save', async () => {
+  it('persists block reordering through the route draft save path', async () => {
     authorityMocks.saveSharedRouteDraft.mockImplementation((pathname, routeState, _actor, summary) => Promise.resolve({
       ok: true,
       state: {
@@ -699,12 +699,6 @@ describe('ContentAdminContext operator smoke and recovery', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Move billboard up' }));
-    await waitFor(() => {
-      expect(screen.getByTestId('dirty').textContent).toBe('true');
-      expect(authorityMocks.saveSharedRouteDraft).toHaveBeenCalledTimes(1);
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => {
       expect(authorityMocks.saveSharedRouteDraft).toHaveBeenCalledTimes(2);
     });
@@ -952,8 +946,10 @@ describe('ContentAdminContext operator smoke and recovery', () => {
         expect.objectContaining({ userId: CURRENT_ACTOR.userId }),
       );
     });
-    expect(screen.getByTestId('action-result').textContent).toBe('page-restored');
-    expect(screen.getByTestId('hero-text').textContent).toBe('Page revision hero');
+    await waitFor(() => {
+      expect(screen.getByTestId('action-result').textContent).toBe('page-restored');
+      expect(screen.getByTestId('hero-text').textContent).toBe('Page revision hero');
+    });
 
     fireEvent.click(screen.getByRole('button', { name: 'Restore block' }));
     await waitFor(() => {
@@ -964,8 +960,10 @@ describe('ContentAdminContext operator smoke and recovery', () => {
         expect.objectContaining({ userId: CURRENT_ACTOR.userId }),
       );
     });
-    expect(screen.getByTestId('action-result').textContent).toBe('block-restored');
-    expect(screen.getByTestId('hero-text').textContent).toBe('Block revision hero');
+    await waitFor(() => {
+      expect(screen.getByTestId('action-result').textContent).toBe('block-restored');
+      expect(screen.getByTestId('hero-text').textContent).toBe('Block revision hero');
+    });
 
     fireEvent.click(screen.getByRole('button', { name: 'Restore backup' }));
     await waitFor(() => {
@@ -973,8 +971,10 @@ describe('ContentAdminContext operator smoke and recovery', () => {
         expect.objectContaining({ userId: CURRENT_ACTOR.userId }),
       );
     });
-    expect(screen.getByTestId('action-result').textContent).toBe('backup-restored');
-    expect(screen.getByTestId('hero-text').textContent).toBe('Backup hero');
+    await waitFor(() => {
+      expect(screen.getByTestId('action-result').textContent).toBe('backup-restored');
+      expect(screen.getByTestId('hero-text').textContent).toBe('Backup hero');
+    });
   }, 15000);
 
   it('blocks passive foreign edits, allows explicit takeover, and reports workflow ownership', async () => {

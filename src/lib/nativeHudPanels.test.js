@@ -36,6 +36,30 @@ describe('buildNativeHudPanels', () => {
     ]);
   });
 
+  it('keeps the 403(b) HUD order aligned with the public block order', () => {
+    const blocks = (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
+      .filter((block) => block?.mode === 'dynamic');
+    const panels = buildNativeHudPanels({ blocks });
+
+    expect(panels.map((panel) => panel.block.id)).toEqual([
+      'hero',
+      'intro',
+      'benefits_cards',
+      'investment_strategy_heading',
+      'investment_strategy_options',
+      'rate_table',
+      'who_qualifies',
+      'contribution_limits',
+      'start_enrollment',
+      'loan_details',
+      'loan_apply',
+      'rollover_billboard',
+      'housing_feature',
+      'online_contributions',
+      'cta_form',
+    ]);
+  });
+
   it('keeps the insurance overview hero block in the native HUD dock', () => {
     const insuranceHeroBlock = (contentBlockBlueprintsByPath['/services/insurance'] || [])
       .find((block) => block?.id === 'hero' && block?.mode === 'dynamic');

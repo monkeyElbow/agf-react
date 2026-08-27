@@ -87,7 +87,12 @@ export function getBlockHudDefinition(block) {
   const siteFeatureTitle = blockKind === 'site_feature'
     ? resolveSiteFeatureTitle(block, siteFeatureEntry, override?.label)
     : '';
-  const baseLabel = blockKind === 'site_feature'
+  const ratesDisplayName = blockKind === 'rates'
+    ? normalizeHudTitle(block?.settings?.displayName)
+    : '';
+  const baseLabel = blockKind === 'rates' && ratesDisplayName
+    ? `Rates - ${ratesDisplayName}`
+    : blockKind === 'site_feature'
     ? `Feature${siteFeatureTitle ? ` - ${siteFeatureTitle}` : ''}`
     : override?.label
     || (kindDefinition?.label && presetLabel && kindDefinition.label !== presetLabel
@@ -127,7 +132,11 @@ export function buildHudPanelsFromBlocks(
     const blockKind = String(block?.kind || '').trim();
     const definition = getBlockHudDefinition(block);
     const usesSingletonPanelId = isSingletonBlockKind(blockKind) && Boolean(panelIdByKind[blockKind]);
-    const panelId = panelIdById[blockId] || (usesSingletonPanelId ? panelIdByKind[blockKind] : '') || `block:${blockId}`;
+    const explicitPanelId = String(block?.settings?.panelId || '').trim();
+    const panelId = panelIdById[blockId]
+      || explicitPanelId
+      || (usesSingletonPanelId ? panelIdByKind[blockKind] : '')
+      || `block:${blockId}`;
     const anchorSelector = anchorSelectorById[blockId]
       || (isSingletonBlockKind(blockKind) ? (anchorSelectorByKind[blockKind] || '') : '')
       || '';

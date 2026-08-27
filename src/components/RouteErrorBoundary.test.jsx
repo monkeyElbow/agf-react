@@ -24,4 +24,16 @@ describe('RouteErrorBoundary', () => {
     expect(screen.getByText('Failed to fetch dynamically imported module')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Refresh page' })).toBeTruthy();
   });
+
+  it('renders raw diagnostics only in development', () => {
+    vi.stubEnv('DEV', false);
+    render(
+      <RouteErrorBoundary>
+        <BrokenRoute />
+      </RouteErrorBoundary>,
+    );
+
+    expect(screen.getByRole('alert').textContent).not.toContain('Failed to fetch dynamically imported module');
+    expect(screen.getByRole('link', { name: 'Return home' }).getAttribute('href')).toBe('/');
+  });
 });

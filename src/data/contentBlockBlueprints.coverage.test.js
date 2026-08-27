@@ -537,6 +537,8 @@ describe('source-default content block blueprint coverage', () => {
       to: '/services/insurance/certificate-request',
     });
     expect(riskBlock).toMatchObject({
+      id: 'risk_management',
+      name: 'Risk Management',
       kind: 'columns',
       mode: 'dynamic',
       presetId: 'do-the-math',
@@ -561,6 +563,8 @@ describe('source-default content block blueprint coverage', () => {
     });
     expect(ctaBlock?.settings?.fieldsJson).toContain('coverageFocus');
     expect(missionAssureBlock).toMatchObject({
+      id: 'mission_assure',
+      name: 'Mission Assure',
       kind: 'columns',
       mode: 'dynamic',
       presetId: 'housing-allowance',
@@ -594,7 +598,9 @@ describe('source-default content block blueprint coverage', () => {
 
   it('seeds Mission Assure as block-owned content, billboard, and feature sections without bridge targets', () => {
     const blocks = contentBlockBlueprintsByPath['/services/insurance/mission-assure'] || [];
-    const introPricing = blocks.find((block) => block?.id === 'intro_pricing');
+    const introBillboard = blocks.find((block) => block?.id === 'intro_billboard');
+    const introBody = blocks.find((block) => block?.id === 'intro_body');
+    const pricingColumns = blocks.find((block) => block?.id === 'pricing_columns');
     const medicalIncluded = blocks.find((block) => block?.id === 'medical_included');
     const getCovered = blocks.find((block) => block?.id === 'get_covered_billboard');
     const reportClaim = blocks.find((block) => block?.id === 'report_claim_billboard');
@@ -602,15 +608,24 @@ describe('source-default content block blueprint coverage', () => {
 
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'dynamic')).toBe(true);
     expect(blocks.some((block) => block?.id === 'hero' && block?.kind === 'hero' && block?.mode === 'static')).toBe(false);
-    expect(introPricing).toMatchObject({
-      kind: 'content',
+    expect(introBillboard).toMatchObject({
+      kind: 'billboard',
       mode: 'dynamic',
       settings: {
-        widget: 'mission-assure-pricing',
-        sectionClassName: 'mission-assure-native-intro',
+        logoKey: 'mission-assure',
+        sectionClassName: 'mission-assure-native-intro-billboard',
       },
     });
-    expect(introPricing?.settings?.pricingEntriesJson).toContain('"Domestic"');
+    expect(introBody?.settings?.body).toContain('Mission Assure® helps take the “what if”');
+    expect(pricingColumns).toMatchObject({
+      kind: 'columns',
+      mode: 'dynamic',
+      settings: {
+        sectionClassName: 'mission-assure-native-pricing',
+        col1Title: 'Domestic',
+        col2Title: 'International',
+      },
+    });
     expect(medicalIncluded).toMatchObject({
       kind: 'content',
       mode: 'dynamic',
@@ -1707,12 +1722,29 @@ describe('source-default content block blueprint coverage', () => {
       mode: 'dynamic',
     });
     expect(iraBlocks.find((block) => block?.id === 'rate_table')).toMatchObject({
+      kind: 'rates',
+      variant: 'inline',
       settings: {
+        dataset: 'ira',
+        panelId: 'rates-ira',
+        anchorId: 'ira-rates',
+        displayName: 'IRA Investment Rates',
         paddingTopRem: 5.8,
-        fineprintDisclosureId: 'retirement-ira-rates-disclosure',
       },
     });
-    expect(iraBlocks.find((block) => block?.id === 'contribution_limits')?.settings?.fineprintDisclosureId).toBe('retirement-ira-contribution-limits-disclosure');
+    expect(iraBlocks.find((block) => block?.id === 'contribution_limits')).toMatchObject({
+      kind: 'card_chart',
+      mode: 'dynamic',
+      variant: 'default',
+      settings: {
+        title: 'Roth and Traditional IRA Contribution Limits',
+        cardCount: '2',
+        card1Title: '2025',
+        card2Title: '2024',
+        anchorId: 'IRA-contribution-limits',
+        fineprintDisclosureId: 'retirement-ira-contribution-limits-disclosure',
+      },
+    });
     expect(iraBlocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
   });
 
@@ -2053,6 +2085,7 @@ describe('source-default content block blueprint coverage', () => {
     const investmentStrategyHeadingBlock = blocks.find((block) => block?.id === 'investment_strategy_heading' && block?.kind === 'billboard');
     const investmentStrategyOptionsBlock = blocks.find((block) => block?.id === 'investment_strategy_options' && block?.kind === 'card_grid');
     const whoQualifiesBlock = blocks.find((block) => block?.id === 'who_qualifies' && block?.kind === 'card_grid');
+    const contributionLimitsBlock = blocks.find((block) => block?.id === 'contribution_limits');
     const startEnrollmentBlock = blocks.find((block) => block?.id === 'start_enrollment' && block?.kind === 'card_grid');
     const loanDetailsBlock = blocks.find((block) => block?.id === 'loan_details' && block?.kind === 'content');
     const housingFeatureBlock = blocks.find((block) => block?.id === 'housing_feature' && block?.kind === 'columns');
@@ -2113,20 +2146,41 @@ describe('source-default content block blueprint coverage', () => {
     expect(whoQualifiesBlock?.settings?.card1Title).toBe('Employees of eligible employers');
     expect(whoQualifiesBlock?.settings?.card1Body).toContain('church-affiliated, tax-exempt 501(c)(3) organizations');
     expect(whoQualifiesBlock?.settings?.card3Title).toBe('Self-employed credentialed ministers');
-    const whoQualifiesIndex = blocks.findIndex((block) => block?.id === 'who_qualifies');
-    const startEnrollmentIndex = blocks.findIndex((block) => block?.id === 'start_enrollment');
-    const loanDetailsIndex = blocks.findIndex((block) => block?.id === 'loan_details');
-    const investmentStrategyOptionsIndex = blocks.findIndex((block) => block?.id === 'investment_strategy_options');
-    const rateTableIndex = blocks.findIndex((block) => block?.id === 'rate_table');
-    const contributionLimitsIndex = blocks.findIndex((block) => block?.id === 'contribution_limits');
+    expect(contributionLimitsBlock).toMatchObject({
+      kind: 'card_chart',
+      mode: 'dynamic',
+      settings: {
+        title: 'Annual Contribution Limits',
+        cardCount: '2',
+        card1Title: '2026',
+        card2Title: '2025',
+        fineprintDisclosureId: 'retirement-403b-contribution-limits-disclosure',
+        sectionClassName: 'retirement-child-native-table retirement-403b-native-contribution-limits',
+      },
+    });
     expect(startEnrollmentBlock?.settings?.title).toBe('Start enrollment');
-    expect(rateTableIndex).toBe(investmentStrategyOptionsIndex + 1);
-    expect(contributionLimitsIndex).toBe(rateTableIndex + 1);
-    expect(startEnrollmentIndex).toBe(whoQualifiesIndex + 1);
-    expect(loanDetailsIndex).toBe(startEnrollmentIndex + 1);
+    expect(blocks.map((block) => block?.id)).toEqual([
+      'hero',
+      'intro',
+      'benefits_cards',
+      'investment_strategy_heading',
+      'investment_strategy_options',
+      'rate_table',
+      'who_qualifies',
+      'contribution_limits',
+      'start_enrollment',
+      'loan_details',
+      'loan_apply',
+      'rollover_billboard',
+      'housing_feature',
+      'online_contributions',
+      'cta_form',
+    ]);
     expect(blocks.some((block) => block?.id === 'page_content' && block?.kind === 'content')).toBe(false);
     expect(loanDetailsBlock?.mode).toBe('dynamic');
     expect(loanDetailsBlock?.settings?.sectionClassName).toBe('retirement-403b-native-loans');
+    expect(loanDetailsBlock?.settings?.paddingTopRem).toBe(4.8);
+    expect(loanDetailsBlock?.settings?.paddingBottomRem).toBe(4.8);
     expect(String(loanDetailsBlock?.settings?.html || '')).toContain('403(b) Plan Loans');
     expect(String(loanDetailsBlock?.settings?.html || '')).toContain('The requested 403(b) loan amount cannot be less than $1,500');
     expect(String(loanDetailsBlock?.settings?.html || '')).toContain('retirement-403b-loan-detail-card');

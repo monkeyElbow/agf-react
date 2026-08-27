@@ -40,12 +40,12 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: 'investment-options',
     label: 'Investment options',
-    description: 'Two-column investment cards paired with a separate billboard heading.',
+    description: 'Stacked investment rows with title, body, and action columns paired with a separate billboard heading.',
     templateIds: Object.freeze([]),
     defaults: Object.freeze({
       bgTone: 'white',
       contentWidth: 'browser',
-      columns: 'two',
+      columns: 'one',
       cardStyle: 'card2',
       titleTone: 'super-grey',
       bodyTone: 'super-grey',
@@ -113,7 +113,7 @@ const CARD_GRID_PRESET_DEFINITIONS = Object.freeze([
       contentWidth: 'content',
       columns: 'two',
       cardStyle: 'card2',
-      titleTone: 'super-grey',
+      titleTone: 'alternating',
       bodyTone: 'super-grey',
       cardPaddingRem: 1.75,
       cardTitleSizeRem: 1.22,

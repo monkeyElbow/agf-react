@@ -232,6 +232,30 @@ describe('FrontHudPageWorkflow', () => {
     expect(mockPublishSharedBlockNow).not.toHaveBeenCalled();
   });
 
+  it('explains which admin owns a blocked block draft', async () => {
+    mockSaveSharedBlockDraftNow.mockResolvedValue({
+      ok: false,
+      reason: 'drafted-by-other',
+      saveResult: {
+        owner: { displayName: 'Mustang' },
+      },
+    });
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/services/loans"
+        blockId="hero"
+        placement="dock-inline"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save block draft' }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Draft belongs to Mustang; take over the draft before saving/)).toBeTruthy();
+    });
+  });
+
   it('keeps Save block draft available to stamp ownership after autosync settles', async () => {
     mockDirty = false;
     mockSharedSyncStatus = {
@@ -780,6 +804,26 @@ describe('FrontHudPageWorkflow', () => {
     expect(screen.getByRole('button', { name: 'Toggle view draft' })).toBeTruthy();
   });
 
+  it('does not offer a false live-preview transition before a published route is loaded', () => {
+    const handleToggleLivePreview = vi.fn();
+
+    render(
+      <FrontHudPageWorkflow
+        pathname="/test"
+        placement="dock-inline"
+        blockId="hero"
+        isBillboardEditor
+        livePreviewAvailable={false}
+        onToggleLivePreview={handleToggleLivePreview}
+      />,
+    );
+
+    const liveButton = screen.getByRole('button', { name: 'Toggle view live' });
+    expect(liveButton.disabled).toBe(true);
+    fireEvent.click(liveButton);
+    expect(handleToggleLivePreview).not.toHaveBeenCalled();
+  });
+
   it('publishes only the active block when the HUD workflow is scoped to a block', async () => {
     render(
       <FrontHudPageWorkflow
@@ -825,7 +869,7 @@ describe('FrontHudPageWorkflow', () => {
     });
   });
 
-  it('keeps a block publishable when only its published position is stale', async () => {
+  it('publishes the page when a selected block carries the page order change', async () => {
     mockDirty = false;
     mockPublishSummary = {
       changedBlockCount: 0,
@@ -853,7 +897,7 @@ describe('FrontHudPageWorkflow', () => {
     fireEvent.click(makeLiveButton);
 
     await waitFor(() => {
-      expect(mockPublishSharedBlockNow).toHaveBeenCalledWith('/test', 'hero', 'HUD block publish');
+      expect(mockPublishSharedPageNow).toHaveBeenCalledWith('/test', 'HUD page order publish');
     });
   });
 

@@ -4,9 +4,26 @@ import { describe, expect, it } from 'vitest';
 import {
   ADMIN_BLOCKS_AUDIT_SURFACE,
   collectBlockIssues,
+  mergeAdminBlockSources,
 } from './AdminBlocksPage';
 
 describe('collectBlockIssues', () => {
+  it('keeps the complete page set when authoring hydration only contains the active route', () => {
+    const merged = mergeAdminBlockSources(
+      { '/services/retirement/403b': [{ id: 'draft-loan', kind: 'content' }] },
+      {
+        '/services/investments': [{ id: 'investment-intro', kind: 'intro' }],
+        '/services/retirement/403b': [{ id: 'published-loan', kind: 'content' }],
+      },
+    );
+
+    expect(Object.keys(merged).sort()).toEqual([
+      '/services/investments',
+      '/services/retirement/403b',
+    ]);
+    expect(merged['/services/retirement/403b']).toEqual([{ id: 'draft-loan', kind: 'content' }]);
+  });
+
   it('does not render the retired mode column in the block audit table', () => {
     const source = readFileSync(path.resolve(process.cwd(), 'src/pages/AdminBlocksPage.jsx'), 'utf8');
 

@@ -1,6 +1,9 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import BillboardHudEditorPanel, { normalizeBillboardWidth } from './BillboardHudEditorPanel';
+import BillboardHudEditorPanel, {
+  normalizeBillboardPadding,
+  normalizeBillboardWidth,
+} from './BillboardHudEditorPanel';
 
 describe('BillboardHudEditorPanel reference layout', () => {
   it('normalizes width controls to the renderer bounds and uses nullish Auto values', () => {
@@ -8,6 +11,9 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(normalizeBillboardWidth('1450')).toBe(1440);
     expect(normalizeBillboardWidth('')).toBeNull();
     expect(normalizeBillboardWidth(null)).toBeNull();
+    expect(normalizeBillboardPadding('8.2')).toBe(8);
+    expect(normalizeBillboardPadding('7.5')).toBe(7.5);
+    expect(normalizeBillboardPadding('')).toBeNull();
   });
 
   it('uses an icon-driven rail to reveal one focused control group at a time', () => {
@@ -99,6 +105,24 @@ describe('BillboardHudEditorPanel reference layout', () => {
     expect(screen.getByTitle('Italic')).toBeTruthy();
   });
 
+  it('provides a lead-copy size slider in the copy panel', () => {
+    const onLeadCopySizeRemChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        bodyHtml="<p>Rolling over retirement savings is simple.</p>"
+        leadCopySizeRem={1.65}
+        onLeadCopySizeRemChange={onLeadCopySizeRemChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
+    const slider = screen.getByRole('slider', { name: 'Lead copy size' });
+    expect(slider.value).toBe('1.65');
+
+    fireEvent.change(slider, { target: { value: '1.85' } });
+    expect(onLeadCopySizeRemChange).toHaveBeenCalledWith(1.85);
+  });
+
   it('keeps rich body copy readable against the selected billboard background', () => {
     render(
       <BillboardHudEditorPanel
@@ -154,5 +178,39 @@ describe('BillboardHudEditorPanel reference layout', () => {
 
     fireEvent.change(slider, { target: { value: '900' } });
     expect(onContentMaxWidthPxChange).toHaveBeenCalledWith(900);
+  });
+
+  it('wires the billboard bottom padding slider', () => {
+    const onPaddingBottomRemChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        paddingBottomRem={7.5}
+        onPaddingBottomRemChange={onPaddingBottomRemChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    const slider = screen.getByRole('slider', { name: 'Billboard bottom padding' });
+    expect(slider.value).toBe('7.5');
+
+    fireEvent.change(slider, { target: { value: '8' } });
+    expect(onPaddingBottomRemChange).toHaveBeenCalledWith(8);
+  });
+
+  it('wires the billboard top padding slider', () => {
+    const onPaddingTopRemChange = vi.fn();
+    render(
+      <BillboardHudEditorPanel
+        paddingTopRem={5.25}
+        onPaddingTopRemChange={onPaddingTopRemChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Layout' }));
+    const slider = screen.getByRole('slider', { name: 'Billboard top padding' });
+    expect(slider.value).toBe('5.25');
+
+    fireEvent.change(slider, { target: { value: '6' } });
+    expect(onPaddingTopRemChange).toHaveBeenCalledWith(6);
   });
 });

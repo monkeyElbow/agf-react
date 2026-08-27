@@ -25,7 +25,7 @@ describe('native hero renderer guardrail', () => {
     expect(source).toContain('buildHero: (block) => buildDynamicHeroFromBlock(block),');
     expect(compositionSource).toContain("const primaryHeroBlock = renderedBlocks.find((block) => blockKind(block) === 'hero') || null;");
     expect(source).not.toContain('buildTestDynamicHero');
-    expect(source).toContain('const renderedHero = dynamicHeroBlock');
+    expect(source).toContain('const renderedHero = runtimeHeroBlock');
     expect(source).toContain('const renderedDynamicHero = useMemo(');
     expect(source).toContain('buildDynamicHeroFromBlock({');
     expect(source).toContain('const renderedHeroBgTone = normalizeHeroBgTone(renderedHero?.bgTone);');

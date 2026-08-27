@@ -8,10 +8,14 @@ import {
   appendHudBlockOptionsSection,
 } from './HudEditorShell';
 import { getTokenSwatch } from '../lib/colorSystem';
+import { normalizeBillboardLeadCopySizeRem } from '../lib/dynamicSectionTypography';
 
 export const BILLBOARD_WIDTH_MIN_PX = 560;
 export const BILLBOARD_WIDTH_MAX_PX = 1440;
 export const BILLBOARD_WIDTH_STEP_PX = 10;
+export const BILLBOARD_PADDING_MIN_REM = 0;
+export const BILLBOARD_PADDING_MAX_REM = 8;
+export const BILLBOARD_PADDING_STEP_REM = 0.25;
 
 export const BILLBOARD_EDITOR_SECTIONS = Object.freeze([
   { id: 'heading', label: 'Heading', icon: 'Aa' },
@@ -77,6 +81,18 @@ export function normalizeBillboardWidth(value) {
   }
   const clamped = Math.min(BILLBOARD_WIDTH_MAX_PX, Math.max(BILLBOARD_WIDTH_MIN_PX, numericValue));
   return Math.round(clamped / BILLBOARD_WIDTH_STEP_PX) * BILLBOARD_WIDTH_STEP_PX;
+}
+
+export function normalizeBillboardPadding(value) {
+  if (value == null || String(value).trim() === '') {
+    return null;
+  }
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+  const clamped = Math.min(BILLBOARD_PADDING_MAX_REM, Math.max(BILLBOARD_PADDING_MIN_REM, numericValue));
+  return Number((Math.round(clamped / BILLBOARD_PADDING_STEP_REM) * BILLBOARD_PADDING_STEP_REM).toFixed(2));
 }
 
 function BillboardField({ label, children, className = '' }) {
@@ -245,6 +261,8 @@ export default function BillboardHudEditorPanel({
   bodyHtml,
   onBodyHtmlChange,
   onBodyHtmlBlur,
+  leadCopySizeRem,
+  onLeadCopySizeRemChange,
   bodyColorClassName,
   onBodyColorChange,
   bgTone,
@@ -299,6 +317,10 @@ export default function BillboardHudEditorPanel({
   button2ToneOptions = [],
   contentMaxWidthPx,
   onContentMaxWidthPxChange,
+  paddingTopRem,
+  onPaddingTopRemChange,
+  paddingBottomRem,
+  onPaddingBottomRemChange,
   blockOptions = null,
 }) {
   const [activeSection, setActiveSection] = useState('heading');
@@ -428,6 +450,16 @@ export default function BillboardHudEditorPanel({
                 <textarea aria-label="Lead copy" value={String(body || '')} onChange={(event) => onBodyChange?.(event.target.value)} onBlur={() => onBodyBlur?.()} rows={5} />
                 <small>Plain text shown before the rich body.</small>
               </BillboardField>
+              <BillboardSlider
+                label="Lead copy size"
+                ariaLabel="Lead copy size"
+                value={normalizeBillboardLeadCopySizeRem(leadCopySizeRem)}
+                min={1}
+                max={4}
+                step={0.05}
+                displayValue={`${normalizeBillboardLeadCopySizeRem(leadCopySizeRem).toFixed(2)}rem`}
+                onChange={onLeadCopySizeRemChange}
+              />
               <BillboardControlField label="Body HTML">
                 <div className={`admin-billboard-hud-copy-editor is-bg-${String(bgTone || 'white').trim() || 'white'} ${String(bodyColorClassName || '').trim()}`}>
                   <AdminHtmlEditor
@@ -530,8 +562,28 @@ export default function BillboardHudEditorPanel({
           <BillboardPanel id="04" title="Layout" description="Bounded width and surface">
             <div className="admin-billboard-editor-width-grid">
               <BillboardWidthControl label="Content width" autoLabel="Page default" value={contentMaxWidthPx} onChange={onContentMaxWidthPxChange} />
+              <BillboardSlider
+                label="Top padding"
+                ariaLabel="Billboard top padding"
+                value={normalizeBillboardPadding(paddingTopRem) ?? 4}
+                min={BILLBOARD_PADDING_MIN_REM}
+                max={BILLBOARD_PADDING_MAX_REM}
+                step={BILLBOARD_PADDING_STEP_REM}
+                displayValue={`${normalizeBillboardPadding(paddingTopRem) ?? 4}rem`}
+                onChange={onPaddingTopRemChange}
+              />
+              <BillboardSlider
+                label="Bottom padding"
+                ariaLabel="Billboard bottom padding"
+                value={normalizeBillboardPadding(paddingBottomRem) ?? 4}
+                min={BILLBOARD_PADDING_MIN_REM}
+                max={BILLBOARD_PADDING_MAX_REM}
+                step={BILLBOARD_PADDING_STEP_REM}
+                displayValue={`${normalizeBillboardPadding(paddingBottomRem) ?? 4}rem`}
+                onChange={onPaddingBottomRemChange}
+              />
             </div>
-            <p className="admin-page-content-layout-hint">The heading follows this same content width before it wraps.</p>
+            <p className="admin-page-content-layout-hint">The heading follows this same content width before it wraps. Top and bottom padding control the space around the billboard copy and actions.</p>
           </BillboardPanel>
         ) : null}
 

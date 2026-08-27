@@ -120,10 +120,9 @@ describe('native page content renderer guardrail', () => {
   it('keeps native public tables on the shared table-sheet renderer instead of legacy data-table markup', () => {
     const source = readSource('./NativeContentPage.jsx');
 
-    expect(source).toContain("import InfoTableSheet from './InfoTableSheet';");
+    expect(source).toContain("import RatesBlock from './RatesBlock';");
     expect(source).toContain('function Retirement403bRateTableWidget({ rates, ratesMeta }) {');
-    expect(source).toContain('<InfoTableSheet');
-    expect(source).toContain("headers={['Investment Type', 'Rate', 'APY*']}");
+    expect(source).toContain('<RatesBlock');
     expect(source).toContain('headers={section.table.headers}');
     expect(source).toContain('rows={section.table.rows}');
     expect(source).not.toContain('<table className="data-table data-table--fixed">');
@@ -139,8 +138,9 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('list-style: none;');
     expect(cssSource).toContain('padding-left: 0;');
     expect(cssSource).toContain('.service-native-card-link-list:has(.service-native-btn) {');
-    expect(cssSource).toContain('padding-inline: 0.1rem;');
-    expect(cssSource).toContain('padding: 0.2rem 0.85rem 0.85rem;');
+    expect(cssSource).toContain('padding-inline: 0;');
+    expect(cssSource).toContain('padding: 0;');
+    expect(cssSource).toContain('flex-wrap: wrap;');
   });
 
   it('keeps 403(b) benefits and enrollment card sizing on the rendered block-owned variables', () => {
@@ -170,6 +170,30 @@ describe('native page content renderer guardrail', () => {
     expect(cssSource).toContain('font-size: clamp(1.68rem, 2.45vw, 2.14rem) !important;');
     expect(cssSource).toContain('line-height: 0.9 !important;');
     expect(cssSource).toContain('letter-spacing: -0.035em;');
+  });
+
+  it('keeps 403(b) loans surface and text tones on the shared page-content contract', () => {
+    const rendererSource = readSource('./NativeContentPage.jsx');
+    const runtimeSource = readSource('../lib/dynamicPageBlocks.js');
+    const definitionSource = readSource('../blocks/definitions/pageContent.definition.js');
+    const adminEditorSource = readSource('./block-editors/migratedBlockEditors.jsx');
+    const hudEditorSource = readSource('./PageContentHudEditorPanel.jsx');
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(runtimeSource).toContain('const bgTone = normalizeSurfaceBgTone(settings.bgTone, \'white\');');
+    expect(runtimeSource).toContain('const textTone = normalizeSharedPanelTextTone(settings.textTone, \'dark\');');
+    expect(rendererSource).toContain('is-bg-${bgTone} is-text-${textTone}');
+    expect(definitionSource).toContain("id: 'bgTone'");
+    expect(definitionSource).toContain("id: 'textTone'");
+    expect(adminEditorSource).toContain("['bgTone', 'textTone'].includes(field.id)");
+    expect(hudEditorSource).toContain('PageContentSurfaceToneControls');
+    expect(cssSource).toContain('.retirement-403b-native-loans.is-bg-grey');
+    expect(cssSource).toContain('.retirement-403b-native-loans.is-bg-sand');
+    expect(cssSource).toContain('.retirement-403b-native-loans.is-text-white');
+    expect(cssSource).toContain('color: var(--ag-color-mango) !important;');
+    expect(cssSource).not.toContain('--dyn-content-padding-top: clamp(10rem, 15vw, 13rem);');
+    expect(cssSource).not.toContain('padding-top: clamp(5rem, 8.5vw, 6.75rem);');
+    expect(cssSource).not.toContain('.native-info-page--retirement-403b .retirement-403b-native-loans');
   });
 
   it('keeps the About building photo as a true viewport-width image block', () => {
@@ -256,12 +280,39 @@ describe('native page content renderer guardrail', () => {
     const cssSource = readSource('../styles/service-native.css');
 
     expect(cssSource).toContain('.service-native-section.dynamic-billboard.retirement-403b-native-strategy-heading {');
-    expect(cssSource).toContain('padding-top: clamp(1.4rem, 3vw, 2.05rem);');
-    expect(cssSource).toContain('padding-bottom: clamp(0.85rem, 1.8vw, 1.25rem);');
+    expect(cssSource).toContain('padding-top: var(--dynamic-billboard-padding-top, clamp(1.4rem, 3vw, 2.05rem));');
+    expect(cssSource).toContain('padding-bottom: var(--dynamic-billboard-padding-bottom, clamp(0.85rem, 1.8vw, 1.25rem));');
     expect(cssSource).toContain('.service-native-section.dynamic-billboard.retirement-403b-native-strategy-heading .native-info-section-copy > h2 {');
     expect(cssSource).toContain('margin-bottom: clamp(0.55rem, 1.25vw, 0.9rem);');
     expect(cssSource).toContain('.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-investment-options {');
     expect(cssSource).not.toContain('.native-info-page--retirement-403b .retirement-403b-native-strategy-heading');
+  });
+
+  it('keeps investment option row content centered in its shared three-column layout', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('.is-card-grid-preset-investment-options .service-native-card {');
+    expect(cssSource).toContain('align-items: stretch;');
+    expect(cssSource).toContain('.is-card-grid-preset-investment-options .service-native-card h3,');
+    expect(cssSource).toContain('align-self: center;');
+  });
+
+  it('keeps the card-grid sandstone option as the shared gradient surface', () => {
+    const cssSource = readSource('../styles/service-native.css');
+
+    expect(cssSource).toContain('background: linear-gradient(145deg, var(--ag-color-sandstone) 0%, var(--ag-color-sandstone-dark) 100%);');
+  });
+
+  it('keeps the first eligibility card on semantic atlantean instead of the dark endpoint', () => {
+    const cssSource = readSource('../styles/service-native.css');
+    const firstCardSelector = '.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-card-grid-preset-eligibility-cards .service-native-card:nth-child(1) h3';
+    const firstCardRuleStart = cssSource.indexOf(`${firstCardSelector} {`);
+    const firstCardRule = firstCardRuleStart >= 0
+      ? cssSource.slice(firstCardRuleStart, cssSource.indexOf('}', firstCardRuleStart) + 1)
+      : '';
+
+    expect(firstCardRule).toContain('color: var(--ag-color-atlantean);');
+    expect(firstCardRule).not.toContain('var(--ag-color-atlantean-dark)');
   });
 
   it('keeps the 403(b) loan apply card copy vertically centered beside the step numbers', () => {

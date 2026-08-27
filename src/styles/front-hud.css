@@ -2529,6 +2529,32 @@
   min-width: 0;
 }
 
+/* Native HeroTitle remains the only visible title renderer while the HUD is
+   open. This layer keeps the existing textarea selection/editing surface
+   over that title without rendering another heading or highlight tree. */
+.service-native-hero > .ag-panel-rail {
+  position: relative;
+}
+
+.admin-front-hud-hero-live-editor.is-interaction-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.admin-front-hud-hero-live-editor.is-interaction-layer .admin-front-hud-hero-live-line {
+  width: 100%;
+  pointer-events: none;
+}
+
+.admin-front-hud-hero-live-editor.is-interaction-layer .admin-front-hud-hero-live-input {
+  pointer-events: auto;
+}
+
 .admin-front-hud-hero-live-line {
   position: relative;
   display: grid;
@@ -2585,32 +2611,32 @@
 
 .admin-front-hud-hero-live-line > :is(h1, h2, h3, h4, p).is-atlantean,
 .admin-front-hud-hero-live-line mark.is-atlantean {
-  color: var(--ag-color-atlantean);
+  color: var(--ag-color-atlantean) !important;
 }
 
 .admin-front-hud-hero-live-line > :is(h1, h2, h3, h4, p).is-mango,
 .admin-front-hud-hero-live-line mark.is-mango {
-  color: var(--ag-color-mango);
+  color: var(--ag-color-mango) !important;
 }
 
 .admin-front-hud-hero-live-line > :is(h1, h2, h3, h4, p).is-melon,
 .admin-front-hud-hero-live-line mark.is-melon {
-  color: var(--ag-color-melon);
+  color: var(--ag-color-melon) !important;
 }
 
 .admin-front-hud-hero-live-line > :is(h1, h2, h3, h4, p).is-sandstone,
 .admin-front-hud-hero-live-line mark.is-sandstone {
-  color: var(--ag-color-sandstone);
+  color: var(--ag-color-sandstone) !important;
 }
 
 .admin-front-hud-hero-live-line > :is(h1, h2, h3, h4, p).is-super-grey,
 .admin-front-hud-hero-live-line mark.is-super-grey {
-  color: var(--ag-color-super-grey);
+  color: var(--ag-color-super-grey) !important;
 }
 
 .admin-front-hud-hero-live-line > :is(h1, h2, h3, h4, p).is-white,
 .admin-front-hud-hero-live-line mark.is-white {
-  color: #ffffff;
+  color: #ffffff !important;
   text-shadow: 0 0 0.5px rgba(65, 64, 66, 0.35), 0 1px 0 rgba(65, 64, 66, 0.12);
 }
 
@@ -7022,9 +7048,68 @@
 
 .admin-hud-editor-shared-surface .admin-hero-hud-line-inputs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--ag-hud-editor-field-gap);
   min-width: 0;
+}
+
+.admin-hud-editor-shared-surface .admin-hero-hud-line-preview {
+  display: grid;
+  gap: var(--ag-hud-editor-field-gap);
+  min-width: 0;
+  align-content: start;
+}
+
+.admin-hud-editor-shared-surface .admin-hero-hud-line-preview .admin-front-hud-hero-live-line {
+  min-height: 2.65rem;
+  padding: var(--ag-hud-editor-space-2);
+  border: 1px solid var(--ag-hud-editor-border);
+  border-radius: var(--ag-hud-editor-radius);
+  background: rgba(255, 255, 255, 0.58);
+  overflow: hidden;
+}
+
+/* Hero HUD preview surface follows the saved Hero background. */
+.admin-hud-editor-shared-surface .admin-hero-hud-card--controls.is-bg-white {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 241, 241, 0.96) 100%);
+}
+
+.admin-hud-editor-shared-surface .admin-hero-hud-card--controls.is-bg-sand {
+  background: linear-gradient(147deg, rgba(242, 238, 235, 0.98) 62%, rgba(218, 215, 208, 0.96) 100%);
+}
+
+.admin-hud-editor-shared-surface .admin-hero-hud-card--controls.is-bg-blue {
+  background: var(--ag-surface-blue-preview-gradient);
+}
+
+.admin-hud-editor-shared-surface .admin-hero-hud-card--controls.is-bg-grey {
+  background: linear-gradient(145deg, rgba(65, 64, 66, 0.96) 0%, rgba(99, 98, 101, 0.96) 100%);
+}
+
+.admin-hud-editor-shared-surface .admin-hero-hud-card--controls.is-bg-blue .admin-hero-hud-line-preview .admin-front-hud-hero-live-line,
+.admin-hud-editor-shared-surface .admin-hero-hud-card--controls.is-bg-grey .admin-hero-hud-line-preview .admin-front-hud-hero-live-line {
+  background: rgba(20, 35, 48, 0.28);
+  border-color: rgba(255, 255, 255, 0.34);
+}
+
+.admin-hud-editor-shared-surface .admin-hero-hud-line-preview .admin-front-hud-hero-live-input {
+  min-height: 2.65rem;
+  padding: var(--ag-hud-editor-space-2);
+}
+
+/* Hero editor mirrors use the live Hero weight, but stay compact like the
+   Intro preview. The public headline size is intentionally not reused here;
+   the editor needs to show controls and swatches without becoming a tall
+   panel. */
+.admin-hud-editor-shared-surface .admin-hero-hud-live-heading,
+.admin-hud-editor-shared-surface .admin-hero-hud-line-preview .admin-front-hud-hero-live-input {
+  margin: 0;
+  font-family: var(--ag-font-heading);
+  font-size: clamp(1.45rem, 1.12rem + 1.25vw, 2.35rem);
+  font-weight: 800;
+  line-height: inherit;
+  letter-spacing: var(--ag-letter-spacing-avenir-heading);
+  text-wrap: balance;
 }
 
 .admin-hud-editor-shared-surface .admin-hud-sr-only {
@@ -7507,20 +7592,29 @@
 
 .admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-header
   > .admin-hud-editor-panel-stack
-  > :is(.admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--cards, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
+  > :is(.admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--fineprint, .admin-card-chart-hud-page--cards, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
 .admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-spacing
   > .admin-hud-editor-panel-stack
-  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--cards, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
+  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--fineprint, .admin-card-chart-hud-page--cards, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
 .admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-cards
   > .admin-hud-editor-panel-stack
-  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
+  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--fineprint, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
 .admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-layout
   > .admin-hud-editor-panel-stack
-  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--cards, .admin-hud-editor-block-options-page),
+  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--fineprint, .admin-card-chart-hud-page--cards, .admin-hud-editor-block-options-page),
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-fineprint
+  > .admin-hud-editor-panel-stack
+  > :is(.admin-card-chart-hud-page--header, .admin-card-chart-hud-page--spacing, .admin-card-chart-hud-page--cards, .admin-card-chart-hud-page--layout, .admin-hud-editor-block-options-page),
 .admin-hud-editor-shared-surface .admin-card-chart-hud-editor.is-section-block
   > .admin-hud-editor-panel-stack
   > :not(.admin-hud-editor-block-options-page) {
   display: none;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-editor
+  > .admin-hud-editor-panel-stack
+  > .admin-card-chart-hud-page--fineprint {
+  grid-column: 1 / -1;
 }
 
 .admin-hud-editor-shared-surface .admin-card-chart-hud-page .admin-card-chart-card-list {
@@ -7551,25 +7645,21 @@
   grid-column: span 1;
 }
 
-.admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
-  .admin-card-chart-fineprint-controls {
-  grid-column: 1 / -1;
-  padding: 0.8rem;
-  border: 1px solid var(--ag-hud-editor-border);
-  border-radius: var(--ag-hud-editor-radius);
-  background: rgba(255, 255, 255, 0.14);
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page--fineprint
+  .admin-card-chart-fineprint-fields {
+  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(9rem, 0.55fr));
 }
 
-.admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
-  .admin-card-chart-fineprint-controls .admin-content-field-list {
-  grid-template-columns: minmax(0, 2fr) minmax(8rem, 0.75fr) minmax(8rem, 0.75fr);
-}
-
-.admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
-  .admin-card-chart-fineprint-controls [data-editor-field-id='fineprint'] textarea {
-  min-height: 5rem;
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page--fineprint
+  .admin-card-chart-fineprint-fields [data-editor-field-id='fineprint'] textarea {
+  min-height: 18rem;
   font-size: 1.05rem;
   line-height: 1.45;
+}
+
+.admin-hud-editor-shared-surface .admin-card-chart-hud-page--fineprint
+  .admin-card-chart-fineprint-size-control {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* Card Chart is a copy-heavy editor. Override the shared HUD micro-control
@@ -7617,9 +7707,9 @@
 }
 
 @media (max-width: 760px) {
-  .admin-card-chart-fineprint-controls .admin-content-field-list,
-  .admin-hud-editor-shared-surface .admin-card-chart-hud-page--header
-    .admin-card-chart-fineprint-controls .admin-content-field-list {
+  .admin-card-chart-fineprint-fields,
+  .admin-hud-editor-shared-surface .admin-card-chart-hud-page--fineprint
+    .admin-card-chart-fineprint-fields {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -7803,20 +7893,6 @@
   .admin-hud-editor-model-layout > .admin-hud-editor-panel-stack {
     transition: none;
   }
-}
-
-.admin-hud-editor-shared-surface .admin-hero-hud-span-line-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ag-hud-editor-field-gap);
-  align-items: center;
-}
-
-.admin-hud-editor-shared-surface .admin-hero-hud-span-line-nav-item {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: var(--ag-hud-editor-field-gap);
-  align-items: center;
 }
 
 .admin-hud-editor-shared-surface .admin-hero-hud-extra-row,
@@ -8168,7 +8244,7 @@
 
 .admin-hud-editor-shared-surface .admin-hero-hud-line-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.46fr);
   align-items: center;
   gap: var(--ag-hud-editor-row-gap);
   min-width: 0;
@@ -8185,11 +8261,13 @@
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     "swatches"
-    "details"
-    "toggle";
+    "details";
   align-items: start;
   gap: var(--ag-hud-editor-field-gap);
   min-width: 0;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .admin-hud-editor-shared-surface .admin-hero-hud-line-color-controls > .admin-front-hud-row {
@@ -8199,16 +8277,10 @@
   align-content: start;
 }
 
-.admin-hud-editor-shared-surface .admin-hero-hud-line-color-controls > .admin-front-hud-mini-action {
-  grid-area: toggle;
-  align-self: start;
-  justify-self: start;
-}
-
 .admin-hud-editor-shared-surface .admin-hero-hud-line-color-controls > .admin-front-hud-hero-span-tools {
   grid-area: details;
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--ag-hud-editor-field-gap);
   min-width: 0;
@@ -8217,10 +8289,6 @@
 .admin-hud-editor-shared-surface .admin-hero-hud-line-color-controls
   > .admin-front-hud-hero-span-tools .admin-front-hud-hero-span-chip-list {
   min-width: 0;
-}
-
-.admin-hud-editor-shared-surface .admin-hero-hud-line-color-controls > .admin-hero-hud-span-line-nav {
-  grid-column: 1 / -1;
 }
 
 .admin-hud-editor-shared-surface .admin-hero-hud-line-color .admin-front-hud-row {
@@ -8239,6 +8307,10 @@
 }
 
 @media (max-width: 760px) {
+  .admin-hud-editor-shared-surface .admin-hero-hud-line-inputs {
+    grid-template-columns: 1fr;
+  }
+
   .admin-hud-editor-shared-surface .admin-hero-hud-content-grid,
   .admin-hud-editor-shared-surface .admin-hero-hud-line-row,
   .admin-hud-editor-shared-surface .admin-hero-hud-card--type {
@@ -8249,8 +8321,7 @@
     grid-template-columns: 1fr;
     grid-template-areas:
       "swatches"
-      "details"
-      "toggle";
+      "details";
   }
 }
 

@@ -22,7 +22,13 @@ describe('native page disclosure wiring', () => {
     expect(Array.isArray(retirement403b.sections) ? retirement403b.sections : []).toEqual([]);
     expect(Array.isArray(retirement403bGroup.sections) ? retirement403bGroup.sections : []).toEqual([]);
     expect(Array.isArray(retirementIras.sections) ? retirementIras.sections : []).toEqual([]);
-    expect(iraBlocks.find((block) => block?.id === 'rate_table')?.settings?.fineprintDisclosureId).toBe('retirement-ira-rates-disclosure');
-    expect(iraBlocks.find((block) => block?.id === 'contribution_limits')?.settings?.fineprintDisclosureId).toBe('retirement-ira-contribution-limits-disclosure');
+    expect(iraBlocks.find((block) => block?.id === 'rate_table')).toMatchObject({
+      kind: 'rates',
+      settings: { dataset: 'ira' },
+    });
+    expect(iraBlocks.find((block) => block?.id === 'contribution_limits')).toMatchObject({
+      kind: 'card_chart',
+      settings: { fineprintDisclosureId: 'retirement-ira-contribution-limits-disclosure' },
+    });
   });
 });

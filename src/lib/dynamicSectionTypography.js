@@ -4,6 +4,7 @@ export const DEFAULT_BILLBOARD_TITLE_SIZE_REM = 3.4;
 export const DEFAULT_BILLBOARD_TITLE_FONT_WEIGHT = 800;
 export const DEFAULT_BILLBOARD_TITLE_LETTER_SPACING_EM = -0.03;
 export const DEFAULT_BILLBOARD_SUBTITLE_SIZE_REM = 1.18;
+export const DEFAULT_BILLBOARD_LEAD_COPY_SIZE_REM = 1.65;
 
 export function normalizeIntroLineSpacing(value, fallback = DEFAULT_INTRO_LINE_SPACING) {
   const numeric = Number(value);
@@ -73,6 +74,14 @@ export function normalizeBillboardSubtitleSizeRem(value, fallback = DEFAULT_BILL
   return Math.max(1, Math.min(8, Number(numeric.toFixed(2))));
 }
 
+export function normalizeBillboardLeadCopySizeRem(value, fallback = DEFAULT_BILLBOARD_LEAD_COPY_SIZE_REM) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.max(1, Math.min(4, Number(numeric.toFixed(2))));
+}
+
 export function buildBillboardTitleStyle({
   lineSpacing,
   titleFontFamily,
@@ -134,5 +143,16 @@ export function buildBillboardSubtitleStyle({
     ...(normalizedDisplay !== 'headline' && normalizedSubtitleSizeRem
       ? { fontSize: `clamp(calc(${normalizedSubtitleSizeRem}rem * 0.68), 5vw, ${normalizedSubtitleSizeRem}rem)` }
       : {}),
+  };
+}
+
+export function buildBillboardLeadCopyStyle(leadCopySizeRem) {
+  if (leadCopySizeRem == null || String(leadCopySizeRem).trim() === '') {
+    return undefined;
+  }
+
+  const normalizedSizeRem = normalizeBillboardLeadCopySizeRem(leadCopySizeRem);
+  return {
+    '--dynamic-billboard-lead-copy-size': `clamp(calc(${normalizedSizeRem}rem * 0.68), 2.1vw, ${normalizedSizeRem}rem)`,
   };
 }

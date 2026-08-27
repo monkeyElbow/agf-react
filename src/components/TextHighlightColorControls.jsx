@@ -82,7 +82,9 @@ export default function TextHighlightColorControls({
       ) : null}
       {safeRanges.length && (!collapsibleSpans || showSpanDetails) ? (
         <div className="admin-front-hud-hero-span-tools">
-          <span className="admin-front-hud-control-label">{spanDetailsLabel}</span>
+          {spanDetailsLabel ? (
+            <span className="admin-front-hud-control-label">{spanDetailsLabel}</span>
+          ) : null}
           <div className="admin-front-hud-hero-span-chip-list">
             {safeRanges.map((range, rangeIndex) => {
               const chipText = String(sourceText || '').slice(range.start, range.end);

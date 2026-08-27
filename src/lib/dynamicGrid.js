@@ -1,20 +1,20 @@
-const GRID_BG_TONE_SET = new Set(['white', 'sand', 'blue', 'grey']);
+const GRID_BG_TONE_SET = new Set(['white', 'sand', 'sandstone', 'blue', 'grey']);
 const GRID_CARD_STYLE_BG_COMPATIBILITY = {
   card1: new Set(['blue']),
   card2: new Set(['white']),
-  card3: new Set(['sand', 'blue', 'grey']),
+  card3: new Set(['sand', 'sandstone', 'blue', 'grey']),
   card4: new Set(['grey']),
-  none: new Set(['white', 'sand', 'blue', 'grey']),
-  'borderless-shadow': new Set(['white', 'sand', 'blue', 'grey']),
-  'planned-giving-centered': new Set(['white', 'sand', 'blue', 'grey']),
+  none: new Set(['white', 'sand', 'sandstone', 'blue', 'grey']),
+  'borderless-shadow': new Set(['white', 'sand', 'sandstone', 'blue', 'grey']),
+  'planned-giving-centered': new Set(['white', 'sand', 'sandstone', 'blue', 'grey']),
 };
 const GRID_TEXT_TONE_BG_COMPATIBILITY = {
-  'super-grey': new Set(['white', 'sand']),
-  atlantean: new Set(['white', 'sand', 'blue', 'grey']),
-  mango: new Set(['white', 'sand', 'blue', 'grey']),
-  melon: new Set(['white', 'sand', 'blue', 'grey']),
+  'super-grey': new Set(['white', 'sand', 'sandstone']),
+  atlantean: new Set(['white', 'sand', 'sandstone', 'blue', 'grey']),
+  mango: new Set(['white', 'sand', 'sandstone', 'blue', 'grey']),
+  melon: new Set(['white', 'sand', 'sandstone', 'blue', 'grey']),
   white: new Set(['blue', 'grey']),
-  alternating: new Set(['white', 'sand', 'blue', 'grey']),
+  alternating: new Set(['white', 'sand', 'sandstone', 'blue', 'grey']),
 };
 const GRID_COLUMNS_SET = new Set(['one', 'two', 'three', 'four']);
 const GRID_WIDTH_SET = new Set(['content', 'browser']);
@@ -24,6 +24,13 @@ const GRID_BULLET_SIZE_SET = new Set(['daf', 'large']);
 // fallbacks identical so missing legacy fields cannot silently shrink lists.
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_SIZE_REM = 1.55;
 export const DEFAULT_DYNAMIC_GRID_CARD_BULLET_LINE_HEIGHT = 1.5;
+// Keep the header gap in the shared runtime contract so a legacy block with
+// no saved spacing key has the same result as a newly-authored block.
+export const DEFAULT_DYNAMIC_GRID_HEADER_SUBHEAD_SPACE_REM = 0.7;
+// Block-level subhead control keeps admin sizing separate from rich-text
+// selection markup. Missing legacy settings retain CSS's responsive default.
+export const DEFAULT_DYNAMIC_GRID_SUBHEAD_SIZE_REM = 1.26;
+export const DEFAULT_DYNAMIC_GRID_HEADER_SIZE_REM = 2.9;
 
 export function normalizeGridBgTone(value) {
   const token = String(value || 'white').trim().toLowerCase();
@@ -45,7 +52,7 @@ export function isGridCardStyleAllowedForBg(cardStyle, bgTone) {
 export function getGridDefaultCardStyleForBg(bgTone) {
   const normalizedBgTone = normalizeGridBgTone(bgTone);
   if (normalizedBgTone === 'white') return 'card2';
-  if (normalizedBgTone === 'sand') return 'card3';
+  if (normalizedBgTone === 'sand' || normalizedBgTone === 'sandstone') return 'card3';
   if (normalizedBgTone === 'blue') return 'card1';
   if (normalizedBgTone === 'grey') return 'card4';
   return 'card2';
@@ -133,6 +140,22 @@ export function normalizeDynamicGridColumns(value) {
   if (token === '3') return 'three';
   if (token === '4') return 'four';
   return GRID_COLUMNS_SET.has(token) ? token : 'three';
+}
+
+export function normalizeDynamicGridSubheadSizeRem(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_DYNAMIC_GRID_SUBHEAD_SIZE_REM;
+  }
+  return Math.max(0.9, Math.min(2.4, parsed));
+}
+
+export function normalizeDynamicGridHeaderSizeRem(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_DYNAMIC_GRID_HEADER_SIZE_REM;
+  }
+  return Math.min(4.5, Math.max(1.9, Number(parsed.toFixed(2))));
 }
 
 export function normalizeDynamicGridWidth(value) {

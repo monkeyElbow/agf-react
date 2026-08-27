@@ -321,6 +321,10 @@ describe('NativeContentPage functional routes', () => {
     expect(comparison?.className).toContain('native-dynamic-card-chart');
     expect(within(comparison).getByRole('heading', { name: 'The differences. At a glance.' })).toBeTruthy();
     expect(comparison?.querySelector('.info-table-sheet[data-info-table-first-column-header="false"]')).toBeTruthy();
+    expect(comparison?.style.getPropertyValue('--card-chart-cell-text-size')).toBe('1.05rem');
+    expect(comparison?.style.getPropertyValue('--card-chart-cell-text-weight')).toBe('650');
+    expect(comparison?.querySelector('tbody td[data-info-table-column-tone="atlantean"]')).toBeTruthy();
+    expect(comparison?.querySelector('tbody td[data-info-table-column-tone="mango"]')).toBeTruthy();
     expect(within(comparison).getAllByText('Must have earned income').length).toBeGreaterThan(0);
     expect(within(comparison).getAllByText('Traditional IRAs may be converted to Roth IRAs').length).toBeGreaterThan(0);
   });
@@ -581,7 +585,10 @@ describe('NativeContentPage functional routes', () => {
         contentBlockBlueprintsByPath['/services/insurance/property-casualty-insurance'] || []
       ).map((block) => ({
         ...block,
-        settings: { ...(block?.settings || {}) },
+        settings: {
+          ...(block?.settings || {}),
+          ...(block?.id === 'resources' ? { cardTitleSizeRem: 1.25 } : {}),
+        },
         editableFields: Array.isArray(block?.editableFields) ? [...block.editableFields] : [],
       })),
     };
@@ -601,6 +608,7 @@ describe('NativeContentPage functional routes', () => {
     expect(document.querySelector('.insurance-pc-native-ag-program.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('.insurance-pc-native-partner.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('.insurance-pc-native-resources.native-dynamic-grid')).toBeTruthy();
+    expect(document.querySelector('.insurance-pc-native-resources')?.getAttribute('style')).toContain('--dynamic-grid-card-title-size: 1.25rem');
     expect(document.querySelector('.insurance-pc-native-safe.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('.insurance-pc-native-fineprint.native-dynamic-page-content')).toBeTruthy();
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
@@ -1286,6 +1294,7 @@ describe('NativeContentPage functional routes', () => {
       </MemoryRouter>,
     );
 
+    expect(document.querySelector('[data-block-id="cta_form"]')).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Full name'), {
       target: { value: 'Taylor QA' },
     });
@@ -1458,7 +1467,13 @@ describe('NativeContentPage functional routes', () => {
     expect(introHeading.closest('section')?.className).toContain('is-text-white');
     expect(coverageHeading.closest('section')?.getAttribute('data-block-id')).toBe('coverage_solutions');
     expect(riskHeading.querySelector('mark.is-melon')?.textContent).toBe('Risk');
+    expect(riskHeading.closest('section')?.className).toContain('native-dynamic-columns');
+    expect(riskHeading.closest('section')?.className).toContain('is-columns-preset-do-the-math');
+    expect(riskHeading.closest('section')?.querySelector('.service-native-dark-feature')).toBeNull();
     expect(missionAssureHeading.closest('section')?.getAttribute('data-block-id')).toBe('mission_assure');
+    expect(missionAssureHeading.closest('section')?.className).toContain('native-dynamic-columns');
+    expect(missionAssureHeading.closest('section')?.className).toContain('is-columns-preset-housing-allowance');
+    expect(missionAssureHeading.closest('section')?.querySelector('.service-native-dark-feature')).toBeNull();
     expect(missionAssureHeading.closest('section')?.textContent).toContain('and everything in between.');
     expect(quoteFormHeading.closest('section')?.className).toContain('insurance-native-cta');
     expect(document.querySelector('[data-block-id="page_content"]')).toBeNull();
@@ -1561,6 +1576,51 @@ describe('NativeContentPage functional routes', () => {
     expect(qcdCard?.textContent).toContain('Your IRA can do more than fund your retirement. If you’re 70½ or older, a Qualified Charitable Distribution (QCD) lets you transfer up to $110,000 per year directly to your church or an eligible ministry tax-free, and straight from the source.');
     expect(within(qcdCard).getByRole('link', { name: 'Learn more' }).getAttribute('href')).toBe('/services/planned-giving/qualified-charitable-distribution');
     expect(document.querySelectorAll('section[data-block-id="giving_options"]')).toHaveLength(1);
+  });
+
+  it('passes card-grid subhead size to both legacy and rich-html subheads', () => {
+    const makeGrid = (id, settings) => ({
+      id,
+      kind: 'card_grid',
+      mode: 'dynamic',
+      settings: {
+        title: 'Grid heading',
+        card1Title: 'First card',
+        card1Body: 'Card copy',
+        ...settings,
+      },
+    });
+    mockBlocksByPath = {
+      '/test': [
+        makeGrid('legacy-subhead-grid', {
+          subtitle: 'Legacy subhead',
+          subheadSizeRem: 1.85,
+        }),
+        makeGrid('rich-subhead-grid', {
+          introHtml: 'Rich subhead<p>Intro copy</p>',
+          bgTone: 'grey',
+          bodyTone: 'white',
+          headerSizeRem: 3.1,
+          subheadSizeRem: 1.95,
+        }),
+      ],
+    };
+
+    render(
+      <MemoryRouter>
+        <NativeContentPage page={{ path: '/test', title: 'Test' }} />
+      </MemoryRouter>,
+    );
+
+    const legacy = document.querySelector('[data-block-id="legacy-subhead-grid"]');
+    const rich = document.querySelector('[data-block-id="rich-subhead-grid"]');
+    expect(legacy?.querySelector('.native-info-section-subtitle')?.getAttribute('style')).toContain('font-size: 1.85rem');
+    expect(rich?.querySelector('.native-info-rich-html')?.getAttribute('style')).toContain('--dynamic-grid-subhead-size: 1.95rem');
+    expect(rich?.querySelector('.native-info-rich-html > h3')?.textContent).toBe('Rich subhead');
+    expect(rich?.className).toContain('is-body-white');
+    expect(rich?.getAttribute('style')).toContain('--dynamic-grid-header-size: 3.1rem');
+    expect(rich?.className).toContain('is-subhead-super-grey');
+    expect(rich?.querySelector('.native-info-rich-html > h3')?.className).toBe('');
   });
 
   it('renders the qualified charitable distribution route through explicit planned giving blocks', () => {
@@ -1743,8 +1803,15 @@ describe('NativeContentPage functional routes', () => {
 
     const strategyGridSection = container.querySelector('.retirement-403b-native-strategy-options');
     const strategyEnrollSection = container.querySelector('.retirement-403b-native-strategy-enroll-cta');
+    const strategyHeadingSection = container.querySelector('.retirement-403b-native-strategy-heading');
+    const loanApplySection = container.querySelector('.retirement-403b-native-loan-apply');
+    const loanDetailsSection = container.querySelector('.retirement-403b-native-loans');
 
     expect(strategyGridSection).toBeTruthy();
+    expect(strategyHeadingSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-top: 4.8rem');
+    expect(strategyHeadingSection?.getAttribute('style') || '').toContain('--dynamic-billboard-padding-bottom: 7.6rem');
+    expect(loanApplySection?.className).toContain('is-bg-sandstone');
+    expect(loanDetailsSection?.getAttribute('style') || '').toContain('--dyn-content-padding-bottom: 4.8rem');
     expect(strategyEnrollSection).toBeNull();
     expect(within(strategyGridSection).queryByRole('link', { name: 'Enroll now' })).toBeNull();
     expect(within(strategyGridSection).getByRole('heading', { name: 'MBA Income Fund' })).toBeTruthy();
@@ -1756,7 +1823,7 @@ describe('NativeContentPage functional routes', () => {
     expect(strategyGridSection.className).toContain('is-card-grid-preset-investment-options');
   });
 
-  it('renders the 403(b) intro copy and remaining public retirement tables through the shared table-sheet layout', () => {
+  it('renders the 403(b) intro copy and contribution limits through the shared card-chart layout', () => {
     mockBlocksByPath = {
       '/services/retirement/403b': (contentBlockBlueprintsByPath['/services/retirement/403b'] || [])
         .filter((block) => block?.mode !== 'static'),
@@ -1775,11 +1842,67 @@ describe('NativeContentPage functional routes', () => {
 
     expect(screen.getByText('The AGFinancial 403(b) is designed specifically for ministers and ministry employees. It’s a powerful way to save while you serve.')).toBeTruthy();
     expect(container.querySelector('.retirement-403b-rate-widget .info-table-sheet')).toBeTruthy();
-    expect(container.querySelector('.retirement-child-native-table .info-table-sheet')).toBeTruthy();
+    const contributionLimitsChart = container.querySelector('.native-dynamic-card-chart.retirement-child-native-table.retirement-403b-native-contribution-limits');
+    expect(contributionLimitsChart).toBeTruthy();
+    expect(contributionLimitsChart?.querySelector('.info-table-sheet')).toBeTruthy();
+    expect(contributionLimitsChart?.getAttribute('style') || '').toContain('--card-chart-header-gap: 2.4rem');
+    expect(contributionLimitsChart?.getAttribute('style') || '').toContain('--dyn-content-max-width: 980px');
     expect(container.querySelector('.retirement-403b-rate-widget .data-table')).toBeNull();
     expect(container.querySelector('.retirement-child-native-table .data-table')).toBeNull();
     expect(screen.getAllByText('2026').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Under age 50 deferral limit (pre-tax and Roth after-tax)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Under age 50 deferral limit \(pre-tax and Roth after-tax\):/).length).toBeGreaterThan(0);
+  });
+
+  it('renders IRA investment rates through the shared Rates block and IRA dataset', () => {
+    mockBlocksByPath = {
+      '/services/retirement/iras': (contentBlockBlueprintsByPath['/services/retirement/iras'] || [])
+        .filter((block) => block?.mode !== 'static'),
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/iras',
+            title: 'IRAs',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const rateSection = container.querySelector('[data-block-id="rate_table"]');
+    expect(rateSection?.className).toContain('native-dynamic-rates');
+    expect(within(rateSection).getByRole('heading', { name: 'IRA Investment Rates' })).toBeTruthy();
+    expect(rateSection?.querySelector('[data-rates-block="true"][data-rates-dataset="ira"]')).toBeTruthy();
+    expect(rateSection?.querySelector('.retirement-ira-rate-widget')).toBeNull();
+    expect(rateSection?.querySelector('.rates-disclaimer')).toBeTruthy();
+  });
+
+  it('renders IRA contribution limits through the shared Card Chart block', () => {
+    mockBlocksByPath = {
+      '/services/retirement/iras': (contentBlockBlueprintsByPath['/services/retirement/iras'] || [])
+        .filter((block) => block?.mode !== 'static'),
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <NativeContentPage
+          page={{
+            path: '/services/retirement/iras',
+            title: 'IRAs',
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+    const chartSection = container.querySelector('[data-block-id="contribution_limits"]');
+    expect(chartSection?.className).toContain('native-dynamic-card-chart');
+    expect(chartSection?.className).toContain('retirement-ira-native-limits');
+    expect(within(chartSection).getByRole('heading', { name: 'Roth and Traditional IRA Contribution Limits' })).toBeTruthy();
+    expect(chartSection?.querySelector('.info-table-sheet')).toBeTruthy();
+    expect(chartSection?.querySelector('.native-dynamic-page-content')).toBeNull();
+    expect(within(chartSection).getAllByText('2025').length).toBeGreaterThan(0);
+    expect(within(chartSection).getAllByText('2024').length).toBeGreaterThan(0);
   });
 
   it('renders 409A through explicit blocks instead of page-owned sections', () => {

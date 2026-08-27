@@ -480,7 +480,7 @@ const HERO_ANIMATION_PRESET_OPTIONS = [
 
 const DEFAULT_HERO_LINE_GAP = 0;
 const JUSTIFY_ICON_ORDER = ['left', 'center', 'right'];
-const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'outline']);
+const ACTION_BUTTON_STYLE_SET = new Set(['blue', 'dark', 'white', 'outline']);
 
 function normalizeHeroColorClass(value) {
   return normalizeSemanticTextColorClass(value);
@@ -1095,7 +1095,9 @@ function EditorButtonPreview({ buttons }) {
     .map((item, index) => {
       const label = String(item?.label || '').trim() || `Button ${index + 1}`;
       const style = normalizeActionButtonStyleToken(item?.style);
-      const defaultTone = style === 'dark' ? 'super-grey' : 'atlantean';
+      const defaultTone = style === 'white'
+        ? 'white'
+        : (style === 'dark' ? 'super-grey' : 'atlantean');
       const tone = style === 'outline'
         ? normalizeActionButtonToneToken(item?.tone, defaultTone)
         : defaultTone;
@@ -1913,15 +1915,13 @@ export default function AdminContentPage() {
     : (Array.isArray(selectedPathPublishSummary?.orderChangedBlockIds)
       ? selectedPathPublishSummary.orderChangedBlockIds
       : []);
-  const publishablePageBlockIds = (Array.isArray(selectedPathPublishSummary?.changedBlockIds) ? selectedPathPublishSummary.changedBlockIds : [])
-    .concat(publishOrderChangedBlockIds)
-    .filter((blockId, index, blockIds) => blockIds.indexOf(blockId) === index)
-    .filter((blockId) => !foreignPublishBlockIds.has(String(blockId || '').trim()));
-  const blockedOrderChange = publishOrderChangedBlockIds
-    .some((blockId) => foreignPublishBlockIds.has(String(blockId || '').trim()));
+  const publishablePageBlockIds = [
+    ...(Array.isArray(selectedPathPublishSummary?.changedBlockIds) ? selectedPathPublishSummary.changedBlockIds : [])
+      .filter((blockId) => !foreignPublishBlockIds.has(String(blockId || '').trim())),
+    ...publishOrderChangedBlockIds,
+  ].filter((blockId, index, blockIds) => blockIds.indexOf(blockId) === index);
   const canPartiallyPublishPage = Boolean(
     publishBlockedByOtherDraft
-    && !blockedOrderChange
     && !selectedPathPublishSummary?.hasPageMetaChanges
     && publishablePageBlockIds.length,
   );
@@ -1978,6 +1978,11 @@ export default function AdminContentPage() {
   const selectedBlockTakeoverLabel = selectedBlockOwnership.state === 'editing-other'
     ? 'Take over edit'
     : 'Take over draft';
+  const selectedBlockOrderChanged = Boolean(
+    selectedBlock
+    && !selectedPathPublishSummary?.isDeletionOnlyOrderChange
+    && publishOrderChangedBlockIds.includes(selectedBlock.id),
+  );
   const changedBlockCount = Number(selectedPathChangeSummary?.changedBlockCount) || 0;
   const changedBlockLabel = changedBlockCount
     ? `${changedBlockCount} block${changedBlockCount === 1 ? '' : 's'} changed`
@@ -3332,11 +3337,13 @@ export default function AdminContentPage() {
                     type="button"
                     className="action-btn action-btn-outline"
                     onClick={() => handleMakeBlockLive(selectedBlock)}
-                    disabled={selectedBlockLockedByOther
-                      || selectedBlockDraftedByOther
-                      || !selectedPathPublishSummary?.changedBlockIds?.includes(selectedBlock.id)
+                    disabled={(!selectedBlockOrderChanged && (selectedBlockLockedByOther
+                      || selectedBlockDraftedByOther))
+                      || (!selectedBlockOrderChanged && !selectedPathPublishSummary?.changedBlockIds?.includes(selectedBlock.id))
                       || Boolean(blockPublishBusyId)}
-                    title="Publish only this block without publishing the rest of the page."
+                    title={selectedBlockOrderChanged
+                      ? 'Publish this page order change without publishing another admin’s block content.'
+                      : 'Publish only this block without publishing the rest of the page.'}
                   >
                     {blockPublishBusyId === selectedBlock.id ? 'Publishing...' : 'Make block live'}
                   </button>

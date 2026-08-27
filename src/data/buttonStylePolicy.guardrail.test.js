@@ -13,7 +13,7 @@ const SNAPSHOT_FILES = [
   '../../dev-data/content-admin-seed-baseline.json',
 ];
 
-const SUPPORTED_BUTTON_STYLES = new Set(['blue', 'dark', 'ghost', 'link', 'outline', 'primary']);
+const SUPPORTED_BUTTON_STYLES = new Set(['blue', 'dark', 'white', 'ghost', 'link', 'outline', 'primary']);
 const BUTTON_STYLE_KEYS = new Set([
   'buttonStyle',
   'button1Style',

@@ -55,7 +55,10 @@ import InvestmentsGrowthFeature from '../InvestmentsGrowthFeature';
 import LegacyGivingStewardshipStoryFeature from '../LegacyGivingStewardshipStoryFeature';
 import NewsletterSignupForm from '../NewsletterSignupForm';
 import PlannedGivingStepIcon from '../PlannedGivingStepIcon';
-import { extractHeroLineColorToken } from '../../lib/heroHudRanges';
+import {
+  extractHeroLineColorToken,
+  resolveHeroLineDisplayClassName,
+} from '../../lib/heroHudRanges';
 import {
   normalizeHeroTitleLetterSpacingEm,
   heroTitleSizeRemToRuntimeCss,
@@ -462,14 +465,23 @@ function HeroBlock({ block, resolveTo, heroHud, ownership, hudAnchor }) {
   }
   const line3Text = String(source.line3Text || '').trim();
   const line3Highlights = parseHighlightsJson(source.line3HighlightsJson, line3Text);
-  const line1ClassName = String(source.line1ClassName || 'home-native-eyebrow').trim() || 'home-native-eyebrow';
-  const line2ClassName = String(source.line2ClassName || 'home-native-title line1 line2').trim() || 'home-native-title line1 line2';
-  const line3ClassName = String(source.line3ClassName || 'home-native-title line3').trim() || 'home-native-title line3';
+  const bgTone = normalizePanelBgTone(source.bgTone || 'white');
+  const line1ClassName = resolveHeroLineDisplayClassName(
+    String(source.line1ClassName || 'home-native-eyebrow').trim() || 'home-native-eyebrow',
+    bgTone,
+  );
+  const line2ClassName = resolveHeroLineDisplayClassName(
+    String(source.line2ClassName || 'home-native-title line1 line2').trim() || 'home-native-title line1 line2',
+    bgTone,
+  );
+  const line3ClassName = resolveHeroLineDisplayClassName(
+    String(source.line3ClassName || 'home-native-title line3').trim() || 'home-native-title line3',
+    bgTone,
+  );
   const lineHeight = Number.isFinite(Number(source.lineHeight)) ? Number(source.lineHeight) : 0.9;
   const lineGap = normalizeHeroLineGapEm(source.lineGap);
   const heroTitleSize = heroTitleSizeRemToRuntimeCss(normalizeHeroTitleSizeRem(source.titleSizeRem));
   const heroTitleLetterSpacing = `${normalizeHeroTitleLetterSpacingEm(source.titleLetterSpacingEm)}em`;
-  const bgTone = normalizePanelBgTone(source.bgTone || 'white');
   const justify = ['left', 'center', 'right'].includes(String(source.justify || '').trim().toLowerCase())
     ? String(source.justify || '').trim().toLowerCase()
     : 'left';
@@ -1034,12 +1046,16 @@ export function BillboardBlock({
           {runtime.bodyHtml ? (
             <SafeRichText
               as="div"
-              className={['native-info-rich-html', runtime.bodyColorClassName || ''].filter(Boolean).join(' ')}
+              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' ')}
               html={runtime.bodyHtml}
+              style={runtime.bodyHtmlStyle || undefined}
             />
           ) : null}
           {!runtime.bodyHtml && runtime.body ? (
-            <div className={['native-info-rich-html', runtime.bodyColorClassName || ''].filter(Boolean).join(' ')}>
+            <div
+              className={['native-info-rich-html', runtime.bodyColorClassName || '', runtime.bodyHtmlStyle ? 'is-dynamic-billboard-lead-copy-sized' : ''].filter(Boolean).join(' ')}
+              style={runtime.bodyHtmlStyle || undefined}
+            >
               <p>{renderTextWithStrong(runtime.body)}</p>
             </div>
           ) : null}

@@ -11,21 +11,15 @@ function readSource(relativePath) {
 }
 
 describe('insurance Mission Assure mobile layout guardrail', () => {
-  it('keeps the Mission Assure feature stacked with visible copy and centered media on mobile', () => {
+  it('uses the shared housing-allowance columns mobile contract', () => {
     const cssSource = readSource('../styles/service-native.css');
 
-    expect(cssSource).toContain('@media (max-width: 980px) {');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-inner {');
-    expect(cssSource).toContain('grid-template-columns: minmax(0, 1fr);');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-copy {');
-    expect(cssSource).toContain('width: 100%;');
-    expect(cssSource).toContain('min-width: 0;');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature-media {');
-    expect(cssSource).toContain('width: min(26rem, 100%);');
-    expect(cssSource).toContain('aspect-ratio: 4 / 3;');
-    expect(cssSource).toContain('min-height: 0;');
-    expect(cssSource).toContain('justify-self: center;');
-    expect(cssSource).toContain('.native-info-page--insurance .insurance-native-mission-assure .native-info-feature-logo {');
-    expect(cssSource).toContain('width: min(250px, 84%);');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance .native-columns-grid,');
+    expect(cssSource).toContain('grid-template-columns: clamp(22.5rem, 34vw, 26rem) minmax(0, 1fr);');
+    expect(cssSource).toContain('@media (max-width: 760px) {');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance .native-columns-grid,');
+    expect(cssSource).toContain('.service-native-section:is(.native-dynamic-columns, .test-dynamic-columns).is-columns-preset-housing-allowance .native-columns-media-wrap,');
+    expect(cssSource).toContain('width: min(var(--dynamic-columns-photo-max-width, 372px), 100%);');
+    expect(cssSource).not.toContain('.native-info-page--insurance .insurance-native-mission-assure .service-native-dark-feature');
   });
 });

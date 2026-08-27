@@ -6,6 +6,8 @@ import {
   getGridSafeToneForBg,
   isGridCardStyleAllowedForBg,
   isGridToneAllowedForBg,
+  normalizeGridBgTone,
+  normalizeDynamicGridHeaderSizeRem,
 } from './dynamicGrid';
 
 const SHARED_TONE_OPTIONS = [
@@ -40,6 +42,9 @@ describe('dynamic grid contrast helpers', () => {
     expect(getGridDefaultToneForBg('sand')).toBe('super-grey');
     expect(getGridSafeToneForBg('white', 'white', 'super-grey', SHARED_TONE_OPTIONS)).toBe('super-grey');
     expect(getGridSafeToneForBg('white', 'sand', 'super-grey', SHARED_TONE_OPTIONS)).toBe('super-grey');
+    expect(normalizeGridBgTone('sandstone')).toBe('sandstone');
+    expect(getGridSafeToneForBg('super-grey', 'sandstone', 'super-grey', SHARED_TONE_OPTIONS)).toBe('super-grey');
+    expect(isGridCardStyleAllowedForBg('card3', 'sandstone')).toBe(true);
   });
 
   it('removes unsafe dark-tone options from dark background compatibility lists', () => {
@@ -48,5 +53,11 @@ describe('dynamic grid contrast helpers', () => {
     expect(getGridCompatibleToneOptions(SHARED_TONE_OPTIONS, 'blue').map((option) => option.value)).not.toContain('super-grey');
     expect(getGridCompatibleToneOptions(SHARED_TONE_OPTIONS, 'grey').map((option) => option.value)).not.toContain('super-grey');
     expect(getGridCompatibleToneOptions(SHARED_TONE_OPTIONS, 'blue').map((option) => option.value)).toContain('white');
+  });
+
+  it('normalizes the optional Card Grid header-size slider', () => {
+    expect(normalizeDynamicGridHeaderSizeRem(3.275)).toBe(3.27);
+    expect(normalizeDynamicGridHeaderSizeRem(99)).toBe(4.5);
+    expect(normalizeDynamicGridHeaderSizeRem(undefined)).toBe(2.9);
   });
 });

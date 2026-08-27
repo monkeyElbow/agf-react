@@ -33,7 +33,7 @@
 
 .is-numbered-step-cards .service-native-card {
   display: grid;
-  grid-template-columns: var(--numbered-step-card-column) minmax(0, 1fr);
+  grid-template-columns: minmax(var(--numbered-step-card-column), 18%) minmax(0, 1fr);
   column-gap: var(--numbered-step-card-column-gap);
   row-gap: var(--numbered-step-card-row-gap);
   align-items: center;
@@ -42,6 +42,13 @@
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 252, 0.98) 100%);
   box-shadow: none;
   transform: none;
+}
+
+/* Body-only steps need a real vertical field to center within. Cards that
+ * have actions, links, lists, or accordions keep their two-row layout so the
+ * copy and controls remain a single centered group. */
+.is-numbered-step-cards .service-native-card:not(:has(.service-native-action-row, .service-native-card-link-list, .service-native-card-bullet-list, .service-native-card-accordions)) {
+  min-height: clamp(6.8rem, 9vw, 8rem);
 }
 
 .is-numbered-step-cards .service-native-card > div:first-child {
@@ -73,10 +80,29 @@
   grid-column: 2;
   min-width: 0;
   margin: 0;
-  color: var(--ag-color-super-grey);
+  align-self: center;
+  color: var(--dynamic-grid-body-color);
   text-align: left;
   font-size: var(--step-card-body-font-size, clamp(1.18rem, 1.95vw, 1.42rem));
   line-height: var(--step-card-body-line-height, 1.42);
+}
+
+.is-numbered-step-cards .service-native-card :is(.service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions) {
+  grid-column: 2;
+  align-self: center;
+  min-width: 0;
+}
+
+.is-numbered-step-cards .service-native-card:not(:has(.service-native-action-row, .service-native-card-link-list, .service-native-card-bullet-list, .service-native-card-accordions)) p {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+/* Merged intro HTML uses a wrapper instead of a bare paragraph. Give its
+ * first block the same full card-height field, so edited HTML does not sit at
+ * the top while plain-text steps center correctly. */
+.is-numbered-step-cards .service-native-card:not(:has(.service-native-action-row, .service-native-card-link-list, .service-native-card-bullet-list, .service-native-card-accordions)) .service-native-card-rich-body {
+  grid-row: 1 / span 2;
 }
 
 .is-numbered-step-cards .service-native-action-row {
@@ -106,13 +132,102 @@
   box-shadow: none;
 }
 
+/* Step cards stay white inside the blue/grey section surface. Keep the first
+ * accent in the Atlantean/Mango/Sandstone sequence; the outer surface must
+ * not turn it white just because a different grid family needs contrast. */
+.is-numbered-step-cards.is-bg-blue,
+.is-numbered-step-cards.is-bg-grey {
+  --dynamic-grid-alt-title-one: var(--ag-color-atlantean);
+}
+
+/* The shared grid surface rule is more specific than the family shorthand
+ * above. Repeat the contract on the rendered section so blue/grey surfaces
+ * cannot turn step 1's authored accent white. */
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-numbered-step-cards.is-bg-blue,
+.service-native-section:is(.native-dynamic-grid, .test-dynamic-grid).is-numbered-step-cards.is-bg-grey {
+  --dynamic-grid-alt-title-one: var(--ag-color-atlantean);
+}
+
+/* Card title color is an editor setting. The accent sequence is the default
+ * for alternating titles, but it must yield to an explicit grid or card
+ * title color selected by the admin. */
+.is-numbered-step-cards:is(.is-title-super-grey, .is-title-atlantean, .is-title-mango, .is-title-melon, .is-title-white) .service-native-card h3 {
+  color: var(--dynamic-grid-card-title-color) !important;
+}
+
+.is-numbered-step-cards.is-title-alternating .service-native-card:nth-child(3n + 1) h3 {
+  color: var(--dynamic-grid-alt-title-one) !important;
+}
+
+.is-numbered-step-cards.is-title-alternating .service-native-card:nth-child(3n + 2) h3 {
+  color: var(--dynamic-grid-alt-title-two) !important;
+}
+
+.is-numbered-step-cards.is-title-alternating .service-native-card:nth-child(3n) h3 {
+  color: var(--dynamic-grid-alt-title-three) !important;
+}
+
+.is-numbered-step-cards:is(.is-title-alternating, .is-title-super-grey, .is-title-atlantean, .is-title-mango, .is-title-melon, .is-title-white) .service-native-card h3.is-atlantean {
+  color: var(--ag-color-atlantean) !important;
+}
+
+.is-numbered-step-cards:is(.is-title-alternating, .is-title-super-grey, .is-title-atlantean, .is-title-mango, .is-title-melon, .is-title-white) .service-native-card h3.is-mango {
+  color: var(--ag-color-mango) !important;
+}
+
+.is-numbered-step-cards:is(.is-title-alternating, .is-title-super-grey, .is-title-atlantean, .is-title-mango, .is-title-melon, .is-title-white) .service-native-card h3.is-melon {
+  color: var(--ag-color-melon) !important;
+}
+
+.is-numbered-step-cards:is(.is-title-alternating, .is-title-super-grey, .is-title-atlantean, .is-title-mango, .is-title-melon, .is-title-white) .service-native-card h3.is-sandstone {
+  color: var(--ag-color-sandstone-dark) !important;
+}
+
+.is-numbered-step-cards:is(.is-title-alternating, .is-title-super-grey, .is-title-atlantean, .is-title-mango, .is-title-melon, .is-title-white) .service-native-card h3.is-super-grey {
+  color: var(--ag-color-super-grey) !important;
+}
+
+.is-numbered-step-cards:is(.is-title-alternating, .is-title-super-grey, .is-title-atlantean, .is-title-mango, .is-title-melon, .is-title-white) .service-native-card h3.is-white {
+  color: #ffffff !important;
+}
+
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li).is-text-fine-print,
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li) .is-text-fine-print {
+  font-size: 0.82em !important;
+}
+
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li).is-text-small,
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li) .is-text-small {
+  font-size: 0.9em !important;
+}
+
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li).is-text-body,
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li) .is-text-body {
+  font-size: 1em !important;
+}
+
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li).is-text-large,
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li) .is-text-large {
+  font-size: 1.08em !important;
+}
+
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li).is-text-lead,
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li) .is-text-lead {
+  font-size: 1.15em !important;
+}
+
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li).is-text-display,
+.is-numbered-step-cards .native-info-section-copy .native-info-rich-html :is(h1, h2, h3, h4, p, li) .is-text-display {
+  font-size: 1.3em !important;
+}
+
 @media (max-width: 720px) {
   .is-numbered-step-cards .service-native-card {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 0.95rem;
   }
 
-  .is-numbered-step-cards .service-native-card :is(h3, p, .service-native-action-row) {
+  .is-numbered-step-cards .service-native-card :is(h3, p, .service-native-action-row, .service-native-card-rich-body, .service-native-card-bullet-list, .service-native-card-link-list, .service-native-card-accordions) {
     grid-column: 1;
     grid-row: auto;
   }

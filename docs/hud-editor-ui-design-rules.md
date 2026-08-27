@@ -18,6 +18,9 @@ This is the canonical UI contract for front-of-site HUD editors. Billboard HUD i
 - HUD fields are small, rounded fields. No regular-sized fields.
 - HUD buttons are small pill buttons. Preview is the only regular-sized editor button.
 - Every HUD editor gets the page selector on the left to reduce scrolling.
+- Avoid eyebrow labels in editor groups unless they add context that the direct
+  field or group title cannot provide. Prefer a clear field label or compact
+  group title over decorative eyebrow text.
 
 ## Shared controls
 

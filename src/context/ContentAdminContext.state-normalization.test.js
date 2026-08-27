@@ -443,7 +443,13 @@ describe('ContentAdminContext state normalization', () => {
             kind: 'content',
             mode: 'dynamic',
             settings: {
+              title: 'Annual Contribution Limits',
               sectionClassName: 'retirement-child-native-table',
+              tableHeadersJson: ['403(b) Contribution Limit', '2026', '2025'],
+              tableRowsJson: [
+                ['Under age 50', '$24,500', '$23,500'],
+                ['Overall limit', '$72,000', '$70,000'],
+              ],
             },
           },
           {
@@ -462,6 +468,7 @@ describe('ContentAdminContext state normalization', () => {
 
     expect(blocksById.get('who_qualifies')?.settings?.sectionClassName).toContain('retirement-403b-native-qualify');
     expect(blocksById.get('start_enrollment')?.settings?.sectionClassName).toContain('retirement-403b-native-enroll');
+    expect(blocksById.get('contribution_limits')?.kind).toBe('card_chart');
     expect(blocksById.get('contribution_limits')?.settings?.sectionClassName).toContain('retirement-403b-native-contribution-limits');
     expect(blocksById.get('rollover_billboard')?.settings?.sectionClassName).toContain('retirement-403b-native-rollover');
     expect(blocksById.get('rollover_billboard')?.settings?.sectionClassName).toContain('retirement-everyday');

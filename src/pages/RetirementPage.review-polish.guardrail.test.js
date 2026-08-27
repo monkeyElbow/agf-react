@@ -54,7 +54,8 @@ describe('retirement 403(b) review polish guardrail', () => {
     expect(cssSource).toContain('.retirement-native-hero-line {');
     expect(cssSource).not.toContain('.retirement-native-hero-line + .retirement-native-hero-line {');
     expect(cssSource).toContain('--service-native-hero-rail-min-height: 373px;');
-    expect(cssSource).toContain('padding: clamp(2.45rem, 5.4vw, 3.3rem) 0;');
+    expect(cssSource).toContain('--service-native-hero-padding-top, 2.5rem');
+    expect(cssSource).toContain('--service-native-hero-padding-bottom, 2.5rem');
     expect(cssSource).not.toContain('--service-native-hero-rail-min-height: 300px;');
   });
 

@@ -81,6 +81,156 @@ describe('content-admin normalization parity', () => {
     expect(normalized.blocksByPath['/services/retirement/iras'][0].settings).not.toHaveProperty('tableRowsJson');
   });
 
+  it('converts the legacy 403(b) page-content rate widget to the shared Rates variant', () => {
+    const input = state([], {
+      pageHierarchy: {
+        '/services/retirement/403b': { path: '/services/retirement/403b', title: '403(b)' },
+      },
+      blocksByPath: {
+        '/services/retirement/403b': [block('rate_table', {
+          settings: {
+            title: '403(b) Investment Rate',
+            widget: 'retirement-403b-rate-table',
+            sectionClassName: 'retirement-403b-native-rate-table',
+          },
+        })],
+      },
+    });
+
+    const normalized = normalizeInBoth(input);
+    expect(normalized.blocksByPath['/services/retirement/403b'][0]).toMatchObject({
+      id: 'rate_table',
+      kind: 'rates',
+      variant: 'inline',
+      settings: {
+        dataset: '403b',
+        panelId: 'rates-403b-investment-rate',
+        anchorId: '403b-investment-rate',
+        displayName: '403(b) Investment Rate',
+        titleClassName: 'is-atlantean',
+      },
+    });
+  });
+
+  it('converts the legacy IRA rates widget to the shared IRA Rates block', () => {
+    const input = state([], {
+      pageHierarchy: {
+        '/services/retirement/iras': { path: '/services/retirement/iras', title: 'IRAs' },
+      },
+      blocksByPath: {
+        '/services/retirement/iras': [block('rate_table', {
+          settings: {
+            title: 'IRA Investment Rates',
+            widget: 'retirement-ira-rate-table',
+            paddingTopRem: 5.8,
+            sectionClassName: 'retirement-ira-native-rates',
+          },
+        })],
+      },
+    });
+
+    const normalized = normalizeInBoth(input);
+    expect(normalized.blocksByPath['/services/retirement/iras'][0]).toMatchObject({
+      id: 'rate_table',
+      name: 'IRA Investment Rates',
+      kind: 'rates',
+      variant: 'inline',
+      settings: {
+        dataset: 'ira',
+        panelId: 'rates-ira',
+        anchorId: 'ira-rates',
+        displayName: 'IRA Investment Rates',
+        paddingTopRem: 5.8,
+      },
+    });
+  });
+
+  it('converts legacy IRA contribution limits into the shared two-card chart', () => {
+    const input = state([], {
+      pageHierarchy: {
+        '/services/retirement/iras': { path: '/services/retirement/iras', title: 'IRAs' },
+      },
+      blocksByPath: {
+        '/services/retirement/iras': [block('contribution_limits', {
+          settings: {
+            title: 'Roth and Traditional IRA Contribution Limits',
+            sectionClassName: 'retirement-ira-native-limits',
+            tableHeadersJson: ['Age', '2025', '2024'],
+            tableRowsJson: [
+              ['Age 49 and under', '100% of compensation, up to $7,000', '100% of compensation, up to $7,000'],
+              ['Age 50 and older', '100% of compensation, up to $8,000', '100% of compensation, up to $8,000'],
+            ],
+            fineprint: ['Contact your tax advisor.'],
+            fineprintDisclosureId: 'retirement-ira-contribution-limits-disclosure',
+          },
+        })],
+      },
+    });
+
+    const normalized = normalizeInBoth(input);
+    expect(normalized.blocksByPath['/services/retirement/iras'][0]).toMatchObject({
+      id: 'contribution_limits',
+      name: 'IRA Contribution Limits Chart',
+      kind: 'card_chart',
+      variant: 'default',
+      settings: {
+        cardCount: '2',
+        card1Title: '2025',
+        card1Color: 'atlantean',
+        card1Bullets: 'Age 49 and under: 100% of compensation, up to $7,000\nAge 50 and older: 100% of compensation, up to $8,000',
+        card2Title: '2024',
+        card2Color: 'mango',
+        card2Bullets: 'Age 49 and under: 100% of compensation, up to $7,000\nAge 50 and older: 100% of compensation, up to $8,000',
+        anchorId: 'IRA-contribution-limits',
+        fineprintDisclosureId: 'retirement-ira-contribution-limits-disclosure',
+      },
+    });
+    expect(normalized.blocksByPath['/services/retirement/iras'][0].settings).not.toHaveProperty('tableRowsJson');
+  });
+
+  it('converts legacy 403(b) contribution limits into the shared two-card chart', () => {
+    const input = state([], {
+      pageHierarchy: {
+        '/services/retirement/403b': { path: '/services/retirement/403b', title: '403(b)' },
+      },
+      blocksByPath: {
+        '/services/retirement/403b': [block('contribution_limits', {
+          settings: {
+            title: 'Annual Contribution Limits',
+            sectionClassName: 'retirement-child-native-table',
+            tableHeadersJson: ['403(b) Contribution Limit', '2026', '2025'],
+            tableRowsJson: [
+              ['Under age 50', '$24,500', '$23,500'],
+              ['Overall limit', '$72,000', '$70,000'],
+            ],
+            tableValueAlignment: 'left',
+            fineprint: ['Contact your advisor.'],
+            fineprintDisclosureId: 'retirement-403b-contribution-limits-disclosure',
+          },
+        })],
+      },
+    });
+
+    const normalized = normalizeInBoth(input);
+    expect(normalized.blocksByPath['/services/retirement/403b'][0]).toMatchObject({
+      id: 'contribution_limits',
+      name: 'Annual Contribution Limits Chart',
+      kind: 'card_chart',
+      settings: {
+        cardCount: '2',
+        card1Title: '2026',
+        card1Color: 'atlantean',
+        card1Bullets: 'Under age 50: $24,500\nOverall limit: $72,000',
+        card2Title: '2025',
+        card2Color: 'mango',
+        card2Bullets: 'Under age 50: $23,500\nOverall limit: $70,000',
+        fineprintDisclosureId: 'retirement-403b-contribution-limits-disclosure',
+        sectionClassName: 'retirement-child-native-table retirement-403b-native-contribution-limits',
+      },
+    });
+    expect(normalized.blocksByPath['/services/retirement/403b'][0].settings).not.toHaveProperty('tableRowsJson');
+  });
+
   it('upgrades the charitable remainder trust type cards to the reusable card chart shape', () => {
     const input = state([], {
       blocksByPath: {
